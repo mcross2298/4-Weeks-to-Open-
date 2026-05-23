@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Not for the Faint of Heart</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#0a0000;min-height:100vh;color:#fff;padding:32px 18px 60px;}
+.container{max-width:680px;margin:0 auto;}
+.back-link{display:inline-block;color:#fca5a5;text-decoration:none;font-size:13px;font-weight:600;background:rgba(239,68,68,0.18);padding:6px 12px;border-radius:20px;border:1px solid rgba(239,68,68,0.4);margin-bottom:20px;}
+.back-link:active{background:rgba(239,68,68,0.3);}
+.header{margin-bottom:32px;}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.25em;color:#fca5a5;text-transform:uppercase;margin-bottom:8px;}
+.title{font-size:30px;font-weight:900;color:#fff;letter-spacing:-0.02em;line-height:1.1;}
+.subtitle{font-size:13px;color:#9ca3af;margin-top:6px;font-weight:500;}
+.plan-card{display:block;text-decoration:none;color:inherit;border-radius:18px;padding:24px 22px;margin-bottom:16px;position:relative;overflow:hidden;transition:transform 0.15s;border:1px solid rgba(239,68,68,0.2);}
+.plan-card:active{transform:scale(0.98);}
+.plan-card.red{background:linear-gradient(135deg,#7f1d1d,#3f0a0a);box-shadow:0 8px 24px rgba(239,68,68,0.2);}
+.plan-card.ember{background:linear-gradient(135deg,#9a3412,#3f1408);box-shadow:0 8px 24px rgba(234,88,12,0.22);}
+.plan-card.crimson{background:linear-gradient(135deg,#881337,#3f0518);box-shadow:0 8px 24px rgba(225,29,72,0.22);}
+.plan-tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:0.16em;padding:4px 10px;border-radius:5px;text-transform:uppercase;margin-bottom:12px;background:rgba(255,255,255,0.1);color:#fee2e2;border:1px solid rgba(255,255,255,0.15);}
+.plan-name{font-size:22px;font-weight:900;color:#fff;margin-bottom:6px;letter-spacing:-0.01em;padding-right:50px;}
+.plan-meta{font-size:13px;color:#fecaca;line-height:1.5;padding-right:50px;opacity:0.85;}
+.plan-arrow{position:absolute;right:22px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;}
+.plan-stats{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;}
+.stat{display:flex;align-items:center;gap:4px;font-size:11px;color:#fca5a5;font-weight:600;}
+.warning{background:rgba(239,68,68,0.08);border-left:3px solid #ef4444;padding:12px 14px;border-radius:6px;margin-bottom:24px;color:#fecaca;font-size:12px;line-height:1.6;}
+.warning strong{color:#fff;}
+
+  .plan-card.green{background:linear-gradient(135deg,#0a3d2e,#000);border-color:rgba(52,211,153,0.3);}
+  .plan-card.gold{background:linear-gradient(135deg,#1a1200,#000);border-color:rgba(212,175,55,0.3);}
+  .plan-card.teal{background:linear-gradient(135deg,#001a1a,#000);border-color:rgba(45,212,191,0.3);}
+</style>
+</head>
+<body>
+<div class="container">
+  <a href="index.html" class="back-link">← Categories</a>
+  <div class="header">
+    <div class="eyebrow">Category · Brutal</div>
+    <h1 class="title">Not for the Faint of Heart</h1>
+    <div class="subtitle">High-intensity circuits and challenge workouts</div>
+  </div>
+
+  <div class="warning"><strong>⚠️ Warning:</strong> These workouts are designed to push your limits. Bring water, towel, and the right mindset. NO QUITTING.</div>
+
+  <a href="the-500.html" class="plan-card red">
+    <div class="plan-tag">Challenge Workout</div>
+    <div class="plan-name">The 500</div>
+    <div class="plan-meta">300 walking lunges + 15 min jump rope + the 1–18 pushup ladder. A test of grit.</div>
+    <div class="plan-stats">
+      <span class="stat">🔥 ~45 min</span>
+      <span class="stat">💀 Full body</span>
+    </div>
+    <div class="plan-arrow">→</div>
+  </a>
+
+  <a href="driveway-demolition.html" class="plan-card ember">
+    <div class="plan-tag">Pushups + Core</div>
+    <div class="plan-name">Driveway Demolition</div>
+    <div class="plan-meta">The 1–18 pushup challenge (171 reps) paired with rotating 1-minute max-effort core circuits.</div>
+    <div class="plan-stats">
+      <span class="stat">⏱️ Daily</span>
+      <span class="stat">💪 Pushups + Core</span>
+    </div>
+    <div class="plan-arrow">→</div>
+  </a>
+
+  <a href="hell-week.html" class="plan-card crimson">
+    <div class="plan-tag">5 Rounds · No Quitting</div>
+    <div class="plan-name">Hell Week</div>
+    <div class="plan-meta">5 rounds of 1-min max effort exercises. Burpees, lunges, jump rope, and a finisher built to break you.</div>
+    <div class="plan-stats">
+      <span class="stat">🔥 5 rounds</span>
+      <span class="stat">💀 Elite only</span>
+    </div>
+    <div class="plan-arrow">→</div>
+  </a>
+
+  <a href="turn-and-burn.html" class="plan-card red">
+    <div class="plan-tag">30 Min · 2 Options</div>
+    <div class="plan-name">30 Minute Turn & Burn</div>
+    <div class="plan-meta">15 min jump rope + your choice: 10 rounds of max effort burpees OR the brutal 1–18 pushup ladder (171 reps).</div>
+    <div class="plan-stats">
+      <span class="stat">⏱️ 30 min</span>
+      <span class="stat">🔥 2 options</span>
+    </div>
+    <div class="plan-arrow">→</div>
+  </a>
+
+  <a href="full-body-pyramid.html" class="plan-card ember">
+    <div class="plan-tag">Pyramid · Timed + Reps</div>
+    <div class="plan-name">Full Body Pyramid</div>
+    <div class="plan-meta">Two pyramid formats — timed rounds (90s–2min per exercise) or rep-based with alternating ascending/descending rounds.</div>
+    <div class="plan-stats">
+      <span class="stat">🔺 2 formats</span>
+      <span class="stat">💀 Full body</span>
+    </div>
+    <div class="plan-arrow">→</div>
+  </a>
+  <a href="45-minute-burner.html" class="plan-card ember">
+    <div class="plan-tag">⏱️ 45 Min · Cardio Burn</div>
+    <div class="plan-name">45 Minute Burner</div>
+    <div class="plan-meta">Incline treadmill + jump rope + 10 rounds of max effort burpees. Structured cardio conditioning built to break you.</div>
+    <div class="plan-stats">
+      <span class="stat">⏱️ ~45 min</span>
+      <span class="stat">💀 10 rounds</span>
+    </div>
+    <div class="plan-arrow">→</div>
+  </a>
+
+  <a href="popeye.html" class="plan-card green">
+    <div class="plan-tag">💪 Forearm Destroyer</div>
+    <div class="plan-name">Popeye</div>
+    <div class="plan-meta">Forearm circuit — wrist rolls, reverse curls, and grip work on a 30s on / 30s off protocol. ~20-30 min.</div>
+    <div class="plan-stats">
+      <span class="stat">💪 Forearms</span>
+      <span class="stat">⏱️ ~25 min</span>
+    </div>
+    <div class="plan-arrow">→</div>
+  </a>
+
+  <a href="boxing-routine.html" class="plan-card gold">
+    <div class="plan-tag">🥊 3 Phases · ~50 Min</div>
+    <div class="plan-name">Boxing Routine</div>
+    <div class="plan-meta">3 rounds of jump rope + heavy bag, conditioning circuit (push-ups, burpees, shadow boxing), AMRAP sit-ups, and a 1–2 mile run.</div>
+    <div class="plan-stats">
+      <span class="stat">🥊 3 phases</span>
+      <span class="stat">⏱️ ~50 min</span>
+    </div>
+    <div class="plan-arrow">→</div>
+  </a>
+
+  <a href="battle-ropes.html" class="plan-card teal">
+    <div class="plan-tag">🪢 5 Levels · Gauntlet</div>
+    <div class="plan-name">Battle Ropes</div>
+    <div class="plan-meta">8-movement gauntlet across 5 difficulty levels — Basic through Advanced L3. Includes EMOM push-ups or burpees and jump rope finisher.</div>
+    <div class="plan-stats">
+      <span class="stat">🪢 5 levels</span>
+      <span class="stat">⚡ EMOM included</span>
+    </div>
+    <div class="plan-arrow">→</div>
+  </a>
+</div></body>
+</html>

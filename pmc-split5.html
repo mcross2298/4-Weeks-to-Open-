@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PMC – Split #5</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#0d0618;min-height:100vh;color:#fff;padding:0 0 60px;}
+.back-link{display:inline-block;color:#f5c842;text-decoration:none;font-size:13px;font-weight:700;background:rgba(245,200,66,0.1);padding:6px 14px;border-radius:20px;border:1px solid rgba(245,200,66,0.3);margin:20px 16px;letter-spacing:0.04em;}
+.hero{background:linear-gradient(135deg,#1f1800,#0d0618);padding:28px 20px 24px;border-bottom:1px solid rgba(245,200,66,0.15);}
+.hero-inner{max-width:680px;margin:0 auto;}
+.eyebrow{font-size:10px;font-weight:900;letter-spacing:0.28em;color:#f5c842;text-transform:uppercase;margin-bottom:8px;}
+.title{font-size:26px;font-weight:900;color:#fff;letter-spacing:-0.02em;margin-bottom:4px;}
+.subtitle{font-size:12px;color:#6b7280;line-height:1.5;}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.pill{background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.2);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:800;color:#f5c842;letter-spacing:0.06em;text-transform:uppercase;}
+.content{max-width:680px;margin:20px auto 0;padding:0 16px;}
+.section-head{font-size:10px;font-weight:900;letter-spacing:0.22em;color:#f5c842;text-transform:uppercase;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+.section-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(245,200,66,0.3),transparent);}
+.workout-card{display:block;text-decoration:none;color:inherit;border-radius:16px;padding:18px 20px;margin-bottom:12px;position:relative;overflow:hidden;transition:transform 0.15s;background:linear-gradient(135deg,rgba(245,200,66,0.06),#0d0618);border:1px solid rgba(245,200,66,0.22);}
+.workout-card:active{transform:scale(0.98);}
+.wc-tag{font-size:9px;font-weight:900;letter-spacing:0.18em;padding:3px 9px;border-radius:5px;text-transform:uppercase;margin-bottom:10px;display:inline-block;background:rgba(245,200,66,0.15);color:#f5c842;border:1px solid rgba(245,200,66,0.25);}
+.wc-name{font-size:19px;font-weight:900;color:#fff;margin-bottom:4px;padding-right:40px;letter-spacing:-0.01em;}
+.wc-focus{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;color:#f5c842;}
+.wc-criteria{display:flex;gap:5px;flex-wrap:wrap;}
+.crit{font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:0.04em;text-transform:uppercase;background:rgba(245,200,66,0.1);color:#f5c842;border:1px solid rgba(245,200,66,0.2);opacity:0.85;}
+.wc-arrow{position:absolute;right:16px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:rgba(245,200,66,0.15);border:1px solid rgba(245,200,66,0.2);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;}
+</style>
+</head>
+<body>
+<a href="pmc-home.html" class="back-link">← PMC Home</a>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">🔥 Project Muscle Confusion</div>
+    <h1 class="title">Split #5</h1>
+    <p class="subtitle">3 workouts + active rest · Push / Pull / Legs · 2-week rotation</p>
+    <div class="pills">
+      <span class="pill">Superset</span><span class="pill">Pyramid + Drop</span>
+      <span class="pill">Low Rep</span><span class="pill">Tempo</span>
+      <span class="pill">12-15 Reps</span><span class="pill">20-30 Reps</span>
+    </div>
+  </div>
+</div>
+
+<div class="week-tabs" style="background:#0d0618;border-bottom:1px solid rgba(245,200,66,0.1);padding:0 12px;position:sticky;top:0;z-index:8;">
+  <div class="wtabs" style="max-width:680px;margin:0 auto;display:flex;">
+    <button class="wtab active" data-w="1" style="flex:1;padding:13px 8px;border:none;cursor:pointer;font-weight:900;font-size:12px;background:transparent;border-bottom:3px solid #f5c842;color:#f5c842;text-align:center;letter-spacing:0.06em;">WEEK 1</button>
+    <button class="wtab" data-w="2" style="flex:1;padding:13px 8px;border:none;cursor:pointer;font-weight:900;font-size:12px;background:transparent;border-bottom:3px solid transparent;color:rgba(245,200,66,0.3);text-align:center;letter-spacing:0.06em;">WEEK 2</button>
+  </div>
+</div>
+<div class="content" id="content"></div>
+<script>
+let week=1;
+
+const WORKOUTS=[
+  {tag:'Push · Chest+Shoulders+Tris', name:'Push Day', focus:'Push Day', href:'pmc-s5-push.html',
+   criteria:['Superset','Pyramid+Drop','Low Rep','Tempo','12-15 Reps','20-30 Reps'],
+   meta:['Flat bench 6x4 drop, Arnold press tempo, incline press pyramid, flies × skull crusher superset, upright row × kickback superset, shrug pyramid/drop',
+         'DB bench 6x4, incline barbell pyramid, military press 5x5, alt incline press 12-15, flies × skull crusher superset, upright row 20-30']},
+  {tag:'Pull · Back+Biceps', name:'Pull Day', focus:'Pull Day', href:'pmc-s5-pull.html',
+   criteria:['Warmup: Pull-Ups','Superset','Pyramid+Drop','Low Rep','Tempo','12-15 Reps','20-30 Reps'],
+   meta:['Pendlay rows 5x5, incline row × spider curl superset, concentration curl pyramid, wide PD × barbell curl superset, straight arm PD 20-30 × preacher pyramid',
+         'Pendlay rows 5x5, incline row × incline curl superset, concentration pyramid, V-grip PD × barbell curl superset, straight arm PD 20-30 × preacher 12-15']},
+  {tag:'Legs · Quads+Hams', name:'Legs', focus:'Leg Day', href:'pmc-s5-legs.html',
+   criteria:['Superset','Pyramid+Drop','Low Rep','Tempo','12-15 Reps','20-30 Reps'],
+   meta:['Extension × ham curl superset, barbell squat 6x4, goblet squat pyramid/drop, split × cannonball superset, good mornings × RDL superset, calf raises 20',
+         'Extension × ham curl superset, close squat 6x4, goblet squat pyramid/drop, split squats 12-15, extensions 3sec neg tempo, calf raises 20']},
+  {tag:'Active Rest · Core+Forearms', name:'Forearms & Core', focus:'Circuit Day', href:'pmc-s5-core.html',
+   criteria:['Core Circuit','Forearm Work','Active Rest'],
+   meta:['6-inch/45/90 raises, USA twists, in & outs, around the worlds, side plank · behind back curl, reverse curl, DB twists',
+         'Same as Week 1 — increase difficulty or weight where possible']},
+];
+
+function renderCards(){
+  document.getElementById('content').innerHTML=
+    '<div class="section-head">Week '+week+' Workouts</div>'+
+    WORKOUTS.map(function(w){
+      var meta=week===1?w.meta[0]:w.meta[1];
+      return '<a href="'+w.href+'?w='+week+'" class="workout-card">'+
+        '<div class="wc-tag">'+w.tag+'</div>'+
+        '<div class="wc-name">'+w.name+'</div>'+
+        '<div class="wc-focus">'+w.focus+(week===2?' - Week 2':'')+'</div>'+
+        '<div class="wc-criteria">'+w.criteria.map(function(c){return '<span class="crit">'+c+'</span>';}).join('')+'</div>'+
+        '<div class="wc-arrow">→</div></a>';
+    }).join('');
+}
+document.querySelectorAll('.wtab').forEach(function(b){
+  b.addEventListener('click',function(){
+    week=parseInt(b.dataset.w);
+    document.querySelectorAll('.wtab').forEach(function(t){t.style.borderBottomColor='transparent';t.style.color='rgba(245,200,66,0.3)';});
+    b.style.borderBottomColor='#f5c842';b.style.color='#f5c842';
+    renderCards();
+  });
+});
+renderCards();
+</script>
+</body>
+</html>

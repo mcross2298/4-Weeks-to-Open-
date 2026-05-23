@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Daily Pump</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --bg:#060c16;
+    --gold:#fbbf24;
+    --gold-dim:rgba(251,191,36,0.15);
+    --green:#34d399;
+    --green-dim:rgba(52,211,153,0.13);
+    --orange:#fb923c;
+    --orange-dim:rgba(251,146,60,0.13);
+    --slate:#93c5fd;
+    --slate-dim:rgba(147,197,253,0.1);
+    --crimson:#f87171;
+    --crimson-dim:rgba(248,113,113,0.12);
+    --text:#f1f5f9;
+    --muted:#475569;
+  }
+
+  body{
+    background:var(--bg);
+    min-height:100vh;
+    color:var(--text);
+    font-family:'DM Sans',sans-serif;
+    overflow-x:hidden;
+  }
+
+  body::before{
+    content:'';
+    position:fixed;inset:0;
+    background-image:
+      linear-gradient(rgba(251,191,36,0.025) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(251,191,36,0.025) 1px,transparent 1px);
+    background-size:48px 48px;
+    pointer-events:none;z-index:0;
+  }
+
+  .wrap{max-width:640px;margin:0 auto;padding:40px 20px 80px;position:relative;z-index:1;}
+
+  .header{margin-bottom:44px;text-align:center;}
+  .eyebrow{
+    display:inline-block;font-size:10px;font-weight:700;
+    letter-spacing:0.35em;text-transform:uppercase;
+    color:var(--gold);background:var(--gold-dim);
+    border:1px solid rgba(251,191,36,0.25);
+    padding:5px 16px;border-radius:20px;margin-bottom:16px;
+  }
+  h1{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(52px,12vw,80px);
+    letter-spacing:0.04em;line-height:0.95;
+    background:linear-gradient(160deg,#fff 40%,#94a3b8);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+  .header-sub{font-size:13px;color:var(--muted);font-weight:500;margin-top:12px;letter-spacing:0.03em;}
+  .pulse-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--gold);margin-right:7px;animation:pulse 2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.7);}}
+
+  .inst-link{
+    display:inline-flex;align-items:center;gap:7px;
+    margin-bottom:32px;text-decoration:none;
+    background:rgba(251,191,36,0.08);
+    border:1px solid rgba(251,191,36,0.25);
+    color:var(--gold);font-size:11px;font-weight:700;
+    padding:9px 18px;border-radius:20px;
+    letter-spacing:0.06em;text-transform:uppercase;
+    transition:background 0.15s;
+  }
+  .inst-link:active{background:rgba(251,191,36,0.15);}
+
+  .modules{display:flex;flex-direction:column;gap:16px;}
+
+  .module{border-radius:20px;overflow:hidden;cursor:pointer;transition:transform 0.18s,box-shadow 0.18s;user-select:none;}
+  .module:active{transform:scale(0.985);}
+
+  .module-header{display:flex;align-items:center;padding:22px 24px;position:relative;gap:16px;}
+  .module-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+  .module-label{flex:1;}
+  .module-tag{font-size:9px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;margin-bottom:4px;opacity:0.8;}
+  .module-name{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.06em;line-height:1;}
+  .module-count{font-size:11px;font-weight:500;opacity:0.6;margin-top:3px;letter-spacing:0.02em;}
+  .chevron{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;transition:transform 0.25s;flex-shrink:0;}
+  .module.open .chevron{transform:rotate(90deg);}
+
+  .drill{max-height:0;overflow:hidden;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1);}
+  .module.open .drill{max-height:1400px;}
+  .drill-inner{padding:0 20px 20px;}
+  .drill-divider{height:1px;margin-bottom:16px;opacity:0.25;}
+
+  .workout-row{display:flex;align-items:center;padding:14px 16px;border-radius:12px;margin-bottom:8px;text-decoration:none;color:inherit;gap:14px;transition:background 0.15s;cursor:pointer;}
+  .workout-row:last-child{margin-bottom:0;}
+  .row-emoji{font-size:18px;flex-shrink:0;width:28px;text-align:center;}
+  .row-text{flex:1;}
+  .row-name{font-size:15px;font-weight:700;letter-spacing:-0.01em;}
+  .row-detail{font-size:11px;font-weight:500;margin-top:2px;opacity:0.6;}
+  .row-badge{font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;padding:4px 9px;border-radius:6px;white-space:nowrap;}
+  .row-arrow{font-size:12px;opacity:0.5;}
+
+  /* GOLD */
+  .m-gold{background:linear-gradient(135deg,#100e06,#0a0d16);border:1px solid rgba(251,191,36,0.22);box-shadow:0 8px 32px rgba(0,0,0,0.5),inset 0 1px 0 rgba(251,191,36,0.08);}
+  .m-gold .module-icon{background:var(--gold-dim);border:1px solid rgba(251,191,36,0.25);}
+  .m-gold .module-tag,.m-gold .module-count{color:var(--gold);}
+  .m-gold .module-name,.m-gold .chevron{color:var(--gold);}
+  .m-gold .chevron{background:var(--gold-dim);border:1px solid rgba(251,191,36,0.2);}
+  .m-gold .drill-divider{background:var(--gold);}
+  .m-gold .workout-row:hover{background:rgba(251,191,36,0.07);}
+  .m-gold .row-name{color:#fde68a;}
+  .m-gold .row-detail{color:#fbbf24;}
+  .m-gold .row-badge{background:rgba(251,191,36,0.12);color:#fbbf24;border:1px solid rgba(251,191,36,0.22);}
+
+  /* GREEN */
+  .m-green{background:linear-gradient(135deg,#050e0a,#0a0d16);border:1px solid rgba(52,211,153,0.2);box-shadow:0 8px 32px rgba(0,0,0,0.5),inset 0 1px 0 rgba(52,211,153,0.06);}
+  .m-green .module-icon{background:var(--green-dim);border:1px solid rgba(52,211,153,0.25);}
+  .m-green .module-tag,.m-green .module-count{color:var(--green);}
+  .m-green .module-name,.m-green .chevron{color:var(--green);}
+  .m-green .chevron{background:var(--green-dim);border:1px solid rgba(52,211,153,0.2);}
+  .m-green .drill-divider{background:var(--green);}
+  .m-green .workout-row:hover{background:rgba(52,211,153,0.07);}
+  .m-green .row-name{color:#a7f3d0;}
+  .m-green .row-detail{color:#34d399;}
+  .m-green .row-badge{background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.22);}
+
+  /* SLATE */
+  .m-slate{background:linear-gradient(135deg,#080c14,#0a0d16);border:1px solid rgba(147,197,253,0.18);box-shadow:0 8px 32px rgba(0,0,0,0.5),inset 0 1px 0 rgba(147,197,253,0.06);}
+  .m-slate .module-icon{background:var(--slate-dim);border:1px solid rgba(147,197,253,0.2);}
+  .m-slate .module-tag,.m-slate .module-count{color:var(--slate);}
+  .m-slate .module-name,.m-slate .chevron{color:var(--slate);}
+  .m-slate .chevron{background:var(--slate-dim);border:1px solid rgba(147,197,253,0.15);}
+  .m-slate .drill-divider{background:var(--slate);}
+  .m-slate .workout-row:hover{background:rgba(147,197,253,0.06);}
+  .m-slate .row-name{color:#bfdbfe;}
+  .m-slate .row-detail{color:#93c5fd;}
+  .m-slate .row-badge{background:rgba(147,197,253,0.08);color:#93c5fd;border:1px solid rgba(147,197,253,0.18);}
+
+  /* ORANGE */
+  .m-orange{background:linear-gradient(135deg,#120a04,#0a0d16);border:1px solid rgba(251,146,60,0.2);box-shadow:0 8px 32px rgba(0,0,0,0.5),inset 0 1px 0 rgba(251,146,60,0.06);}
+  .m-orange .module-icon{background:var(--orange-dim);border:1px solid rgba(251,146,60,0.25);}
+  .m-orange .module-tag,.m-orange .module-count{color:var(--orange);}
+  .m-orange .module-name,.m-orange .chevron{color:var(--orange);}
+  .m-orange .chevron{background:var(--orange-dim);border:1px solid rgba(251,146,60,0.2);}
+  .m-orange .drill-divider{background:var(--orange);}
+  .m-orange .workout-row:hover{background:rgba(251,146,60,0.07);}
+  .m-orange .row-name{color:#fed7aa;}
+  .m-orange .row-detail{color:#fb923c;}
+  .m-orange .row-badge{background:rgba(251,146,60,0.1);color:#fb923c;border:1px solid rgba(251,146,60,0.2);}
+
+  /* CRIMSON */
+  .m-crimson{background:linear-gradient(135deg,#140608,#0a0d16);border:1px solid rgba(248,113,113,0.22);box-shadow:0 8px 32px rgba(0,0,0,0.5),inset 0 1px 0 rgba(248,113,113,0.08);}
+  .m-crimson .module-icon{background:var(--crimson-dim);border:1px solid rgba(248,113,113,0.25);}
+  .m-crimson .module-tag,.m-crimson .module-count{color:var(--crimson);}
+  .m-crimson .module-name,.m-crimson .chevron{color:var(--crimson);}
+  .m-crimson .chevron{background:var(--crimson-dim);border:1px solid rgba(248,113,113,0.2);}
+  .m-crimson .drill-divider{background:var(--crimson);}
+  .m-crimson .workout-row:hover{background:rgba(248,113,113,0.07);}
+  .m-crimson .row-name{color:#fecaca;}
+  .m-crimson .row-detail{color:#f87171;}
+  .m-crimson .row-badge{background:rgba(248,113,113,0.1);color:#f87171;border:1px solid rgba(248,113,113,0.22);}
+
+  .footer{text-align:center;margin-top:48px;font-size:11px;color:var(--muted);letter-spacing:0.06em;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="eyebrow"><span class="pulse-dot"></span>Daily Pump</div>
+    <h1>CHOOSE<br>YOUR SPLIT</h1>
+    <div class="header-sub">Tap a module → drill into your workouts</div>
+  </div>
+
+  <div style="text-align:center;">
+    <a href="pump-instructions.html" class="inst-link">📋 Program Guide & Instructions</a>
+  </div>
+
+  <div class="modules">
+
+    <!-- SPLIT #1 -->
+    <div class="module m-gold" onclick="toggle(this)">
+      <div class="module-header">
+        <div class="module-icon">💪</div>
+        <div class="module-label">
+          <div class="module-tag">Split #1</div>
+          <div class="module-name">Arms + Shoulders</div>
+          <div class="module-count">3 workouts · 25 total variations</div>
+        </div>
+        <div class="chevron">›</div>
+      </div>
+      <div class="drill"><div class="drill-inner">
+        <div class="drill-divider"></div>
+        <a href="bis-tris-pump.html" class="workout-row">
+          <div class="row-emoji">💪</div>
+          <div class="row-text"><div class="row-name">Biceps & Triceps</div><div class="row-detail">Classic strength · Tempo · Drop sets · 21s · Gauntlets</div></div>
+          <div class="row-badge">9 var</div><div class="row-arrow">›</div>
+        </a>
+        <a href="shoulders-back-pump.html" class="workout-row">
+          <div class="row-emoji">🏔️</div>
+          <div class="row-text"><div class="row-name">Shoulders & Light Back</div><div class="row-detail">Classic · Drop sets · Tempo · Supersets</div></div>
+          <div class="row-badge">8 var</div><div class="row-arrow">›</div>
+        </a>
+        <a href="hams-glutes-pump.html" class="workout-row">
+          <div class="row-emoji">🍑</div>
+          <div class="row-text"><div class="row-name">Hamstrings & Glutes</div><div class="row-detail">Strength · Drop sets · Pyramid/Tempo · Isometric pause</div></div>
+          <div class="row-badge">8 var</div><div class="row-arrow">›</div>
+        </a>
+      </div></div>
+    </div>
+
+    <!-- SPLIT #2 -->
+    <div class="module m-green" onclick="toggle(this)">
+      <div class="module-header">
+        <div class="module-icon">🔄</div>
+        <div class="module-label">
+          <div class="module-tag">Split #2</div>
+          <div class="module-name">Full Body Rotation</div>
+          <div class="module-count">4 workouts · 30 total variations</div>
+        </div>
+        <div class="chevron">›</div>
+      </div>
+      <div class="drill"><div class="drill-inner">
+        <div class="drill-divider"></div>
+        <a href="back-traps-pump.html" class="workout-row">
+          <div class="row-emoji">🔙</div>
+          <div class="row-text"><div class="row-name">Back & Traps</div><div class="row-detail">Pyramids · Angles · Deadlift strength · Drop sets</div></div>
+          <div class="row-badge">7 var</div><div class="row-arrow">›</div>
+        </a>
+        <a href="chest-tri-pump.html" class="workout-row">
+          <div class="row-emoji">🫁</div>
+          <div class="row-text"><div class="row-name">Chest & Triceps</div><div class="row-detail">Strength pyramids · Descending reps · Cable focus · Tempo</div></div>
+          <div class="row-badge">7 var</div><div class="row-arrow">›</div>
+        </a>
+        <a href="shoulders-bis-forearms-pump.html" class="workout-row">
+          <div class="row-emoji">🏔️</div>
+          <div class="row-text"><div class="row-name">Shoulders / Biceps / Forearms</div><div class="row-detail">Strength pyramids · Drop sets · Cable/Tempo · Angles</div></div>
+          <div class="row-badge">7 var</div><div class="row-arrow">›</div>
+        </a>
+        <a href="legs-pump.html" class="workout-row">
+          <div class="row-emoji">🦵</div>
+          <div class="row-text"><div class="row-name">Quads / Hamstrings / Glutes</div><div class="row-detail">Classic strength · Tempo ladders · Mega drop sets · High-rep</div></div>
+          <div class="row-badge">9 var</div><div class="row-arrow">›</div>
+        </a>
+      </div></div>
+    </div>
+
+    <!-- BONUS -->
+    <div class="module m-slate" onclick="toggle(this)">
+      <div class="module-header">
+        <div class="module-icon">✦</div>
+        <div class="module-label">
+          <div class="module-tag">Bonus</div>
+          <div class="module-name">Bonus Workouts</div>
+          <div class="module-count">2 workouts · 16 total variations</div>
+        </div>
+        <div class="chevron">›</div>
+      </div>
+      <div class="drill"><div class="drill-inner">
+        <div class="drill-divider"></div>
+        <a href="bonus-pump-lats.html" class="workout-row">
+          <div class="row-emoji">🔝</div>
+          <div class="row-text"><div class="row-name">Lats / Traps / Biceps</div><div class="row-detail">Drop set gauntlets · Tempo ladders · Tri-sets · Strength days</div></div>
+          <div class="row-badge">8 var</div><div class="row-arrow">›</div>
+        </a>
+        <a href="bonus-pump-cst.html" class="workout-row">
+          <div class="row-emoji">🫸</div>
+          <div class="row-text"><div class="row-name">Chest / Shoulders / Triceps</div><div class="row-detail">Drop sets · Tri-sets · Tempo ladders · Hammer press · High-rep</div></div>
+          <div class="row-badge">8 var</div><div class="row-arrow">›</div>
+        </a>
+      </div></div>
+    </div>
+
+    <!-- SPLIT #3 -->
+    <div class="module m-orange" onclick="toggle(this)">
+      <div class="module-header">
+        <div class="module-icon">🔶</div>
+        <div class="module-label">
+          <div class="module-tag">Split #3</div>
+          <div class="module-name">Upper Body Rotation</div>
+          <div class="module-count">4 workouts · 12 total variations</div>
+        </div>
+        <div class="chevron">›</div>
+      </div>
+      <div class="drill"><div class="drill-inner">
+        <div class="drill-divider"></div>
+        <a href="s3-back-traps.html" class="workout-row">
+          <div class="row-emoji">🔙</div>
+          <div class="row-text"><div class="row-name">Back & Traps</div><div class="row-detail">Drop set strength · Volume/Tempo pairing</div></div>
+          <div class="row-badge">7 var</div><div class="row-arrow">›</div>
+        </a>
+        <a href="s3-chest-biceps.html" class="workout-row">
+          <div class="row-emoji">💪</div>
+          <div class="row-text"><div class="row-name">Chest & Biceps</div><div class="row-detail">Drop set strength · Volume pairing</div></div>
+          <div class="row-badge">2 var</div><div class="row-arrow">›</div>
+        </a>
+        <a href="s3-shoulders-triceps.html" class="workout-row">
+          <div class="row-emoji">🏔️</div>
+          <div class="row-text"><div class="row-name">Shoulders & Triceps</div><div class="row-detail">Drop set strength · Volume pairing</div></div>
+          <div class="row-badge">2 var</div><div class="row-arrow">›</div>
+        </a>
+        <a href="s3-upper-body.html" class="workout-row">
+          <div class="row-emoji">⚡</div>
+          <div class="row-text"><div class="row-name">Full Upper Body</div><div class="row-detail">Strength + High rep circuit — chest, back, shoulders, arms</div></div>
+          <div class="row-badge">1 var</div><div class="row-arrow">›</div>
+        </a>
+      </div></div>
+    </div>
+
+    <!-- SPLIT #4 -->
+    <div class="module m-crimson" onclick="toggle(this)">
+      <div class="module-header">
+        <div class="module-icon">⏱️</div>
+        <div class="module-label">
+          <div class="module-tag">Split #4 · Advanced</div>
+          <div class="module-name">Time Under Tension</div>
+          <div class="module-count">2 workouts · 12 total variations</div>
+        </div>
+        <div class="chevron">›</div>
+      </div>
+      <div class="drill"><div class="drill-inner">
+        <div class="drill-divider"></div>
+        <a href="s4-pull.html" class="workout-row">
+          <div class="row-emoji">🔙</div>
+          <div class="row-text"><div class="row-name">Pull — Lats / Traps / Biceps</div><div class="row-detail">Tempo pyramids · Angle focus · Drop set gauntlets · Superset circuits</div></div>
+          <div class="row-badge">6 var</div><div class="row-arrow">›</div>
+        </a>
+        <a href="s4-push.html" class="workout-row">
+          <div class="row-emoji">🫸</div>
+          <div class="row-text"><div class="row-name">Push — Chest / Shoulders / Triceps</div><div class="row-detail">Tempo strength · Cable focus · Drop set circuits · Superset pump</div></div>
+          <div class="row-badge">6 var</div><div class="row-arrow">›</div>
+        </a>
+      </div></div>
+    </div>
+
+  </div>
+
+  <div class="footer">Daily Pump · Choose. Drill. Lift.</div>
+</div>
+
+<script>
+  function toggle(el){
+    const wasOpen=el.classList.contains('open');
+    document.querySelectorAll('.module.open').forEach(m=>m.classList.remove('open'));
+    if(!wasOpen)el.classList.add('open');
+  }
+</script>
+</body>
+</html>

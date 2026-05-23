@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Project Muscle Confusion</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#0d0618;min-height:100vh;color:#fff;padding:32px 18px 60px;}
+.container{max-width:680px;margin:0 auto;}
+.back-link{display:inline-block;color:#c084fc;text-decoration:none;font-size:13px;font-weight:700;background:rgba(192,132,252,0.1);padding:6px 14px;border-radius:20px;border:1px solid rgba(192,132,252,0.3);margin-bottom:24px;letter-spacing:0.04em;}
+.back-link:active{background:rgba(192,132,252,0.2);}
+.header{margin-bottom:32px;position:relative;overflow:hidden;}
+.header::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(139,92,246,0.15),transparent 70%);pointer-events:none;}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.28em;color:#a855f7;text-transform:uppercase;margin-bottom:10px;}
+.title{font-size:30px;font-weight:900;color:#fff;letter-spacing:-0.02em;line-height:1.1;margin-bottom:4px;}
+.title span{color:#a855f7;}
+.subtitle{font-size:13px;color:#6b7280;margin-top:8px;font-weight:500;line-height:1.5;}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.pill{background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.25);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:800;color:#c084fc;letter-spacing:0.08em;text-transform:uppercase;}
+.section-head{font-size:10px;font-weight:900;letter-spacing:0.22em;color:#a855f7;text-transform:uppercase;margin:24px 0 12px;display:flex;align-items:center;gap:8px;}
+.section-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(168,85,247,0.3),transparent);}
+.plan-card{display:block;text-decoration:none;color:inherit;border-radius:16px;padding:20px 20px;margin-bottom:12px;position:relative;overflow:hidden;transition:transform 0.15s;}
+.plan-card:active{transform:scale(0.98);}
+.plan-card.pmc-main{background:linear-gradient(135deg,#1e0a3c,#0d0618);border:1px solid rgba(139,92,246,0.3);box-shadow:0 8px 28px rgba(139,92,246,0.2);}
+.plan-card.pmc-inst{background:linear-gradient(135deg,#130826,#0d0618);border:1px solid rgba(168,85,247,0.2);box-shadow:0 4px 16px rgba(0,0,0,0.4);}
+.plan-tag{display:inline-block;font-size:9px;font-weight:900;letter-spacing:0.18em;padding:4px 10px;border-radius:5px;text-transform:uppercase;margin-bottom:10px;background:rgba(139,92,246,0.15);color:#c084fc;border:1px solid rgba(139,92,246,0.3);}
+.plan-name{font-size:21px;font-weight:900;color:#fff;margin-bottom:5px;letter-spacing:-0.01em;padding-right:44px;}
+.plan-name span{color:#a855f7;}
+.plan-meta{font-size:12px;color:#9ca3af;line-height:1.55;padding-right:44px;}
+.plan-arrow{position:absolute;right:18px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.25);display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;}
+.plan-stats{display:flex;gap:14px;margin-top:10px;flex-wrap:wrap;}
+.stat{font-size:11px;font-weight:600;color:#a78bfa;}
+.legend{background:#130826;border:1px solid rgba(139,92,246,0.15);border-radius:12px;padding:14px 16px;margin-top:8px;}
+.legend-title{font-size:10px;font-weight:900;letter-spacing:0.16em;color:#a855f7;text-transform:uppercase;margin-bottom:10px;}
+.legend-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.legend-row:last-child{margin-bottom:0;}
+.legend-badge{font-size:9px;font-weight:800;padding:2px 8px;border-radius:4px;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;flex-shrink:0;}
+.lb-ss{background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.25);}
+.lb-py{background:rgba(249,115,22,0.15);color:#fb923c;border:1px solid rgba(249,115,22,0.25);}
+.lb-lr{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.25);}
+.lb-tm{background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.25);}
+.lb-hr{background:rgba(234,179,8,0.15);color:#fbbf24;border:1px solid rgba(234,179,8,0.25);}
+.lb-dr{background:rgba(244,63,94,0.15);color:#fb7185;border:1px solid rgba(244,63,94,0.25);}
+.lb-am{background:rgba(239,68,68,0.2);color:#ef4444;border:1px solid rgba(239,68,68,0.35);}
+.legend-desc{font-size:11px;color:#6b7280;}
+</style>
+</head>
+<body>
+<div class="container">
+  <a href="index.html" class="back-link">← Categories</a>
+  <div class="header">
+    <div class="eyebrow">⚡ Program · 2-Week Split</div>
+    <h1 class="title">Project <span>Muscle</span> Confusion</h1>
+    <p class="subtitle">A 2-week rotating split combining every training style — tempo, pyramids, drop sets, AMRAP, supersets, and more.</p>
+    <div class="pills">
+      <span class="pill">2-week split</span>
+      <span class="pill">5 workouts</span>
+      <span class="pill">Option 5 — Full Chaos</span>
+      <span class="pill">Deep violet theme</span>
+    </div>
+  </div>
+
+  <div class="section-head">Program</div>
+
+  <a href="pmc-home.html" class="plan-card pmc-main">
+    <div class="plan-tag">⚡ Active Program · Week 1 & 2</div>
+    <div class="plan-name">Project <span>Muscle</span> Confusion</div>
+    <div class="plan-meta">All 5 workouts across Week 1 and Week 2 — supersets, pyramids, drop sets, AMRAP, tempo, and high rep finishing.</div>
+    <div class="plan-stats">
+      <span class="stat">🦵 Legs ×2</span>
+      <span class="stat">💪 Chest & Shoulders</span>
+      <span class="stat">💥 Bis & Tris</span>
+      <span class="stat">🔙 Back</span>
+    </div>
+    <div class="plan-arrow">→</div>
+  </a>
+
+  <a href="pmc-instructions.html" class="plan-card pmc-inst">
+    <div class="plan-tag">📋 Program Guide</div>
+    <div class="plan-name">Instructions & Key</div>
+    <div class="plan-meta">Tempo ratios, lift types, program options, and how Option 5 (Full Chaos) is executed daily.</div>
+    <div class="plan-arrow">→</div>
+  </a>
+
+  <div class="section-head">Badge Key</div>
+  <div class="legend">
+    <div class="legend-title">Exercise Type Labels</div>
+    <div class="legend-row"><span class="legend-badge lb-ss">⚡ Superset</span><span class="legend-desc">Two exercises back to back, no rest between</span></div>
+    <div class="legend-row"><span class="legend-badge lb-py">📈 Pyramid</span><span class="legend-desc">Weight increases as reps decrease (12,10,8,8)</span></div>
+    <div class="legend-row"><span class="legend-badge lb-lr">🏋️ Low Rep</span><span class="legend-desc">Heavy load, high sets, low reps (5×5, 6×4)</span></div>
+    <div class="legend-row"><span class="legend-badge lb-tm">⏱️ Tempo</span><span class="legend-desc">Prescribed negatives or pauses (4:0:1:0)</span></div>
+    <div class="legend-row"><span class="legend-badge lb-hr">🔥 High Rep</span><span class="legend-desc">Pump-focused, high volume (5×20, 4×15)</span></div>
+    <div class="legend-row"><span class="legend-badge lb-dr">↘️ Drop Set</span><span class="legend-desc">Strip weight at end of set, continue immediately</span></div>
+    <div class="legend-row"><span class="legend-badge lb-am">💀 AMRAP</span><span class="legend-desc">As many reps as possible — push to failure</span></div>
+  </div>
+</div>
+</body>
+</html>

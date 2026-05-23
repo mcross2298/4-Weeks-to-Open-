@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Project Muscle Confusion – Instructions</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#0d0618;min-height:100vh;color:#fff;padding-bottom:60px;}
+.back-link{display:inline-block;color:#c084fc;text-decoration:none;font-size:13px;font-weight:700;background:rgba(192,132,252,0.1);padding:8px 16px;border-radius:20px;border:1px solid rgba(192,132,252,0.3);margin:20px 16px;letter-spacing:0.04em;}
+.hero{background:linear-gradient(135deg,#1e0a3c,#0d0618);padding:40px 20px 32px;border-bottom:1px solid rgba(192,132,252,0.15);position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;background:radial-gradient(circle,rgba(139,92,246,0.2),transparent 70%);pointer-events:none;}
+.hero-inner{max-width:680px;margin:0 auto;position:relative;}
+.hero-label{font-size:10px;font-weight:900;letter-spacing:0.3em;color:#a855f7;text-transform:uppercase;margin-bottom:10px;}
+.hero-title{font-size:32px;font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1.05;margin-bottom:6px;}
+.hero-title span{color:#a855f7;}
+.hero-sub{font-size:13px;color:#9ca3af;font-weight:500;line-height:1.5;}
+.hero-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.pill{background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:#c084fc;letter-spacing:0.06em;}
+.max-w{max-width:680px;margin:0 auto;padding:0 16px;}
+.section{margin-top:28px;}
+.section-title{font-size:11px;font-weight:900;letter-spacing:0.22em;color:#a855f7;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(168,85,247,0.3),transparent);}
+.card{background:#130826;border:1px solid rgba(139,92,246,0.18);border-radius:14px;padding:16px;margin-bottom:10px;}
+.card-head{font-size:14px;font-weight:800;color:#fff;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.card-icon{font-size:18px;}
+.card-body{font-size:12px;color:#9ca3af;line-height:1.65;}
+.card-body strong{color:#e2e8f0;}
+.ratio-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ratio-card{background:#130826;border:1px solid rgba(139,92,246,0.18);border-radius:10px;padding:12px;}
+.ratio-tempo{font-size:15px;font-weight:900;color:#a855f7;font-family:monospace;margin-bottom:4px;}
+.ratio-desc{font-size:11px;color:#9ca3af;line-height:1.5;}
+.lift-types{display:flex;flex-direction:column;gap:8px;}
+.lift-row{display:flex;align-items:flex-start;gap:10px;background:#130826;border:1px solid rgba(139,92,246,0.18);border-radius:10px;padding:12px 14px;}
+.lift-badge{background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.35);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:900;color:#c084fc;white-space:nowrap;letter-spacing:0.06em;flex-shrink:0;margin-top:1px;}
+.lift-detail{font-size:12px;color:#9ca3af;line-height:1.5;}
+.lift-detail strong{color:#e2e8f0;}
+.exec-steps{display:flex;flex-direction:column;gap:6px;}
+.exec-step{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:#130826;border-radius:10px;border:1px solid rgba(139,92,246,0.15);}
+.step-num{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:11px;font-weight:900;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.step-text{font-size:12px;color:#c4b5fd;font-weight:600;line-height:1.5;}
+.options-list{display:flex;flex-direction:column;gap:6px;}
+.option-row{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;background:#130826;border-radius:10px;border:1px solid rgba(139,92,246,0.15);}
+.opt-num{font-size:11px;font-weight:900;color:#a855f7;width:18px;flex-shrink:0;margin-top:1px;}
+.opt-text{font-size:12px;color:#9ca3af;line-height:1.5;}
+.opt-text strong{color:#e2e8f0;}
+.highlight-card{background:linear-gradient(135deg,#1e0a3c,#130826);border:1px solid rgba(168,85,247,0.4);border-radius:14px;padding:16px;margin-bottom:10px;}
+.highlight-card .card-head{color:#c084fc;}
+.duration-banner{background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(168,85,247,0.1));border:1px solid rgba(139,92,246,0.35);border-radius:12px;padding:16px;text-align:center;margin-top:20px;}
+.duration-num{font-size:36px;font-weight:900;color:#a855f7;}
+.duration-label{font-size:11px;font-weight:700;color:#9ca3af;letter-spacing:0.12em;text-transform:uppercase;margin-top:2px;}
+.nav-btn{display:block;text-decoration:none;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:14px;font-weight:900;text-align:center;padding:16px;border-radius:14px;margin-top:24px;letter-spacing:0.06em;}
+</style>
+</head>
+<body>
+<a href="pmc-home.html" class="back-link">← Program Home</a>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-label">📋 Program Guide</div>
+    <h1 class="hero-title">Project <span>Muscle</span> Confusion</h1>
+    <p class="hero-sub">A 2-week rotating split combining every training style — tempo, pyramids, drop sets, AMRAP, and superset chaos.</p>
+    <div class="hero-pills">
+      <span class="pill">2-WEEK SPLIT</span>
+      <span class="pill">OPTION 5 — FULL CHAOS</span>
+      <span class="pill">5 WORKOUTS/WEEK</span>
+    </div>
+  </div>
+</div>
+
+<div class="max-w">
+  <div class="duration-banner">
+    <div class="duration-num">2</div>
+    <div class="duration-label">Weeks Per Split · Then Repeat or Advance</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Tempo Ratios</div>
+    <div class="ratio-grid">
+      <div class="ratio-card">
+        <div class="ratio-tempo">4:0:1:0</div>
+        <div class="ratio-desc">4 sec negative, no pause, 1 sec lift, no pause</div>
+      </div>
+      <div class="ratio-card">
+        <div class="ratio-tempo">4:0:1:2</div>
+        <div class="ratio-desc">4 sec negative, no pause, 1 sec lift, 2 sec pause at top</div>
+      </div>
+      <div class="ratio-card">
+        <div class="ratio-tempo">1:0:1:2</div>
+        <div class="ratio-desc">Normal negative, 2 sec pause at bottom/top</div>
+      </div>
+      <div class="ratio-card">
+        <div class="ratio-tempo">1:2:1:2</div>
+        <div class="ratio-desc">2 sec pause at both bottom and top of movement</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Types of Lifts</div>
+    <div class="lift-types">
+      <div class="lift-row">
+        <span class="lift-badge">PYRAMID</span>
+        <div class="lift-detail"><strong>15, 12, 10, 10</strong> or <strong>12, 10, 8, 8</strong> — weight increases as reps decrease</div>
+      </div>
+      <div class="lift-row">
+        <span class="lift-badge">HIGH SET / LOW REP</span>
+        <div class="lift-detail"><strong>6×4</strong> or <strong>5×5</strong> — strength focus, heavy load</div>
+      </div>
+      <div class="lift-row">
+        <span class="lift-badge">LOW SET / LOW REP</span>
+        <div class="lift-detail"><strong>3×5</strong> or <strong>4×6</strong> — compound strength work</div>
+      </div>
+      <div class="lift-row">
+        <span class="lift-badge">HIGH SET / HIGH REP</span>
+        <div class="lift-detail"><strong>5×20</strong> or <strong>6×15</strong> — volume and pump</div>
+      </div>
+      <div class="lift-row">
+        <span class="lift-badge">LOW SET / HIGH REP</span>
+        <div class="lift-detail"><strong>4×20</strong> or <strong>3×30</strong> — metabolic stress</div>
+      </div>
+      <div class="lift-row">
+        <span class="lift-badge">MINIMAL REST</span>
+        <div class="lift-detail"><strong>5×8</strong> with 20 sec break between sets</div>
+      </div>
+      <div class="lift-row">
+        <span class="lift-badge">DROP SET</span>
+        <div class="lift-detail"><strong>4×12 drop 6/8/10</strong> or <strong>12, 10, 8 drop 12/15</strong> — strip weight, continue immediately</div>
+      </div>
+      <div class="lift-row">
+        <span class="lift-badge">AMRAP</span>
+        <div class="lift-detail">As many reps as possible — push until failure</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Program Options</div>
+    <div class="options-list">
+      <div class="option-row"><div class="opt-num">1</div><div class="opt-text"><strong>Time Under Tension</strong> — all sets use tempo ratios</div></div>
+      <div class="option-row"><div class="opt-num">2</div><div class="opt-text"><strong>Pyramid Set Program</strong> — all sets are pyramid structure</div></div>
+      <div class="option-row"><div class="opt-num">3</div><div class="opt-text"><strong>Low Sets / Low Reps</strong> — strength-only focus</div></div>
+      <div class="option-row"><div class="opt-num">4</div><div class="opt-text"><strong>Conventional Hypertrophy</strong> — 4×12, 3×8, etc.</div></div>
+      <div class="option-row" style="border-color:rgba(168,85,247,0.4);background:rgba(139,92,246,0.08);">
+        <div class="opt-num" style="color:#c084fc;">5</div>
+        <div class="opt-text"><strong style="color:#c084fc;">Ultimate Muscle Confusion ← THIS PROGRAM</strong> — combination of ALL the above every workout</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">How Each Workout Day Is Executed</div>
+    <div class="highlight-card">
+      <div class="card-head"><span class="card-icon">⚡</span>Option 5 — Daily Execution Pattern</div>
+      <div class="card-body">Every workout follows this structure — one of each lift type per session:</div>
+    </div>
+    <div class="exec-steps">
+      <div class="exec-step"><div class="step-num">1</div><div class="step-text">Superset — two exercises back to back, no rest</div></div>
+      <div class="exec-step"><div class="step-num">2</div><div class="step-text">Pyramid Lift — with drop set finishing (e.g. 12, 10, 8, 8 drop 12)</div></div>
+      <div class="exec-step"><div class="step-num">3</div><div class="step-text">Low Rep Lift — heavy, 4–6 reps per set</div></div>
+      <div class="exec-step"><div class="step-num">4</div><div class="step-text">Tempo / Ratio Lift — 4 sec negatives or 2 sec pauses</div></div>
+      <div class="exec-step"><div class="step-num">5</div><div class="step-text">High Reps / High Sets — 5×20 or 6×15 pump finisher</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Key Notes</div>
+    <div class="card">
+      <div class="card-head"><span class="card-icon">⭐</span>Exercises marked ** are alternatives</div>
+      <div class="card-body">When you see **, you can substitute with the listed variation. Choose based on equipment availability or preference.</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-icon">🚶</span>Optional Walking Lunges</div>
+      <div class="card-body">Leg days include an optional 100–200 walking lunges as a finisher. Highly recommended for glute/quad development.</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-icon">🔄</span>Week 1 vs Week 2</div>
+      <div class="card-body">Each muscle group has a Week 1 and Week 2 variation. Week 2 increases intensity — heavier drops, longer negatives, or reverse exercise order.</div>
+    </div>
+  </div>
+
+  <a href="pmc-home.html" class="nav-btn">→ START THE PROGRAM</a>
+</div>
+</body>
+</html>

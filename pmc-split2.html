@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PMC – Split #2</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#0d0618;min-height:100vh;color:#fff;padding:0 0 60px;}
+.back-link{display:inline-block;color:#c084fc;text-decoration:none;font-size:13px;font-weight:700;background:rgba(192,132,252,0.1);padding:6px 14px;border-radius:20px;border:1px solid rgba(192,132,252,0.3);margin:20px 16px;letter-spacing:0.04em;}
+.hero{background:linear-gradient(135deg,#1a0a00,#0d0618);padding:28px 20px 24px;border-bottom:1px solid rgba(251,113,133,0.15);}
+.hero-inner{max-width:680px;margin:0 auto;}
+.eyebrow{font-size:10px;font-weight:900;letter-spacing:0.28em;color:#fb7185;text-transform:uppercase;margin-bottom:8px;}
+.title{font-size:26px;font-weight:900;color:#fff;letter-spacing:-0.02em;margin-bottom:4px;}
+.subtitle{font-size:12px;color:#6b7280;line-height:1.5;}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.pill{background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.2);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:800;color:#fb7185;letter-spacing:0.06em;text-transform:uppercase;}
+.week-tabs{background:#0d0618;border-bottom:1px solid rgba(251,113,133,0.1);padding:0 12px;position:sticky;top:0;z-index:8;}
+.wtabs{max-width:680px;margin:0 auto;display:flex;}
+.wtab{flex:1;padding:13px 8px;border:none;cursor:pointer;font-weight:900;font-size:12px;background:transparent;color:#4c0519;border-bottom:3px solid transparent;text-align:center;letter-spacing:0.06em;}
+.wtab.active{color:#fb7185;border-bottom-color:#fb7185;}
+.content{max-width:680px;margin:20px auto 0;padding:0 16px;}
+.section-head{font-size:10px;font-weight:900;letter-spacing:0.22em;color:#fb7185;text-transform:uppercase;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+.section-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(251,113,133,0.3),transparent);}
+.workout-card{display:block;text-decoration:none;color:inherit;border-radius:16px;padding:18px 20px;margin-bottom:12px;position:relative;overflow:hidden;transition:transform 0.15s;}
+.workout-card:active{transform:scale(0.98);}
+.workout-card.rose{background:linear-gradient(135deg,#1f0a10,#0d0618);border:1px solid rgba(251,113,133,0.25);}
+.workout-card.emerald{background:linear-gradient(135deg,#052e1a,#0d0618);border:1px solid rgba(52,211,153,0.25);}
+.workout-card.sky{background:linear-gradient(135deg,#082f49,#0d0618);border:1px solid rgba(56,189,248,0.25);}
+.workout-card.amber{background:linear-gradient(135deg,#1c0a00,#0d0618);border:1px solid rgba(251,146,60,0.25);}
+.workout-card.violet{background:linear-gradient(135deg,#1e0a3c,#0d0618);border:1px solid rgba(167,139,250,0.25);}
+.wc-tag{font-size:9px;font-weight:900;letter-spacing:0.18em;padding:3px 9px;border-radius:5px;text-transform:uppercase;margin-bottom:10px;display:inline-block;}
+.rose .wc-tag{background:rgba(251,113,133,0.15);color:#fb7185;border:1px solid rgba(251,113,133,0.25);}
+.emerald .wc-tag{background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.25);}
+.sky .wc-tag{background:rgba(56,189,248,0.15);color:#38bdf8;border:1px solid rgba(56,189,248,0.25);}
+.amber .wc-tag{background:rgba(251,146,60,0.15);color:#fb923c;border:1px solid rgba(251,146,60,0.25);}
+.violet .wc-tag{background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.25);}
+.wc-name{font-size:19px;font-weight:900;color:#fff;margin-bottom:4px;padding-right:40px;letter-spacing:-0.01em;}
+.wc-focus{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;}
+.rose .wc-focus{color:#fb7185;}
+.emerald .wc-focus{color:#34d399;}
+.sky .wc-focus{color:#38bdf8;}
+.amber .wc-focus{color:#fb923c;}
+.violet .wc-focus{color:#a78bfa;}
+.wc-criteria{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
+.crit{font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:0.04em;text-transform:uppercase;background:rgba(251,113,133,0.1);color:#fda4af;border:1px solid rgba(251,113,133,0.2);}
+.wc-arrow{position:absolute;right:16px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;}
+</style>
+</head>
+<body>
+<a href="pmc-home.html" class="back-link">← PMC Home</a>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">⚡ Project Muscle Confusion</div>
+    <h1 class="title">Split #2</h1>
+    <p class="subtitle">5 workouts · 2-week rotation · Full chaos methodology</p>
+    <div class="pills">
+      <span class="pill">Superset</span>
+      <span class="pill">Pyramid + Drop</span>
+      <span class="pill">Low Rep</span>
+      <span class="pill">Tempo</span>
+      <span class="pill">12–15 Reps</span>
+      <span class="pill">20–30 Reps</span>
+    </div>
+  </div>
+</div>
+<div class="week-tabs">
+  <div class="wtabs">
+    <button class="wtab active" data-w="1">WEEK 1</button>
+    <button class="wtab" data-w="2">WEEK 2</button>
+  </div>
+</div>
+<div class="content" id="content"></div>
+<script>
+let week = 1;
+const WORKOUTS = [
+  {cls:'rose', tag:'Chest · Biceps', name:'Chest & Biceps', focus:'Push + Pull', href:'pmc-s2-chest-biceps.html',
+   criteria:['Superset','Pyramid+Drop','Low Rep','Tempo','12–15 Reps','20–30 Reps'],
+   meta:['Slight incline flies × hammer curl superset, flat press 5×5, incline machine pyramid/drop, high incline tempo, pec deck + cable curl pump',
+         'Machine press × incline curl superset, high incline 5×5, flat machine pyramid/drop, slight incline tempo, pec deck + cable curl pump']},
+  {cls:'emerald', tag:'Legs · Quad Focus', name:'Leg Day — Quads', focus:'Quad Dominant', href:'pmc-s2-legs-quad.html',
+   criteria:['Superset','Pyramid+Drop','Low Rep','Tempo','12–15 Reps','20–30 Reps'],
+   meta:['Extension × lying curl superset, neutral squat 5×5, cannonball leg press pyramid/drop, split squat tempo, leg press + calf raises pump',
+         'Seated curl × extension superset, close stance 5×5, neutral leg press pyramid/drop, goblet squat tempo, extension + calf raises pump']},
+  {cls:'sky', tag:'Back', name:'Back', focus:'Pull Day', href:'pmc-s2-back.html',
+   criteria:['Warmup: Pull-Ups','Superset','Pyramid+Drop','Low Rep','Tempo','20–30 Reps'],
+   meta:['Wide PD × straight arm PD superset, Pendlay rows 5×5, machine low row pyramid/drop, incline DB row tempo, machine high row pump',
+         'Reverse grip PD × machine high row superset, bent over row 5×5, close grip shrug pyramid/drop, wide PD tempo, seated cable row pump']},
+  {cls:'amber', tag:'Chest · Shoulders · Triceps', name:'Chest / Shoulders / Triceps', focus:'Push Day', href:'pmc-s2-cst.html',
+   criteria:['Superset','Pyramid+Drop','Low Rep','Tempo','12–15 Reps','20–30 Reps'],
+   meta:['Pec deck × reverse pec deck superset, close grip 5×5, incline machine pyramid/drop, high incline tempo, rope + upright row + V-bar pump',
+         'Pec deck pyramid × reverse fly superset, flat press 5×5, incline machine pyramid/drop, hammer incline tempo, rope + reverse + cable pump']},
+  {cls:'violet', tag:'Legs · Day 2', name:'Legs — Day 2', focus:'Posterior Chain', href:'pmc-s2-legs-day2.html',
+   criteria:['Compound Sub Rule','Superset','Pyramid+Drop','Low Rep','Tempo','20–30 Reps'],
+   meta:['Extension × lying curl superset, goblet squat 5×5, leg press wide pyramid/drop, good mornings tempo, seated curl + leg press pump + lunge finisher',
+         'Seated curl × extension superset, barbell squat 5×5, leg press wide pyramid/drop, good mornings tempo, lying curl + leg press pump + lunge finisher']},
+];
+
+function render() {
+  document.getElementById('content').innerHTML =
+    '<div class="section-head">Week ' + week + ' Workouts</div>' +
+    WORKOUTS.map(function(w) {
+      var meta = week === 1 ? w.meta[0] : w.meta[1];
+      return '<a href="' + w.href + '?w=' + week + '" class="workout-card ' + w.cls + '">' +
+        '<div class="wc-tag">' + w.tag + '</div>' +
+        '<div class="wc-name">' + w.name + '</div>' +
+        '<div class="wc-focus">' + w.focus + (week === 2 ? ' — Week 2' : '') + '</div>' +
+        '<div class="wc-criteria">' +
+        w.criteria.map(function(c) { return '<span class="crit">' + c + '</span>'; }).join('') +
+        '</div>' +
+        '<div class="wc-arrow">→</div>' +
+        '</a>';
+    }).join('');
+}
+
+document.querySelectorAll('.wtab').forEach(function(b) {
+  b.addEventListener('click', function() {
+    week = parseInt(b.dataset.w);
+    document.querySelectorAll('.wtab').forEach(function(t) { t.classList.remove('active'); });
+    b.classList.add('active');
+    render();
+  });
+});
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>STNDR â Programs</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
+.container{max-width:680px;margin:0 auto;}
+.back-link{display:inline-block;color:#93c5fd;text-decoration:none;font-size:13px;font-weight:700;background:rgba(59,130,246,0.12);padding:6px 14px;border-radius:20px;border:1px solid rgba(59,130,246,0.3);margin-bottom:24px;letter-spacing:0.04em;}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.25em;color:#93c5fd;text-transform:uppercase;margin-bottom:10px;}
+.title{font-size:30px;font-weight:900;color:#fff;letter-spacing:-0.02em;margin-bottom:6px;}
+.subtitle{font-size:13px;color:#475569;margin-bottom:6px;}
+.designer{font-size:12px;font-weight:700;color:#60a5fa;opacity:0.8;margin-bottom:16px;}
+.inst-link{display:inline-flex;align-items:center;gap:6px;margin-bottom:24px;text-decoration:none;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);color:#60a5fa;font-size:11px;font-weight:800;padding:7px 14px;border-radius:20px;letter-spacing:0.06em;}
+.plan-card{display:block;text-decoration:none;color:inherit;border-radius:18px;padding:24px 22px;margin-bottom:14px;position:relative;overflow:hidden;transition:transform 0.15s;}
+.plan-card:active{transform:scale(0.98);}
+.plan-card.blue{background:linear-gradient(135deg,#0d1f3c,#0a0a0a);border:1px solid rgba(59,130,246,0.25);box-shadow:0 8px 24px rgba(59,130,246,0.12);}
+.plan-card.orange{background:linear-gradient(135deg,#2a0e04,#0a0a0a);border:1px solid rgba(249,115,22,0.22);box-shadow:0 8px 24px rgba(249,115,22,0.12);}
+.plan-card.purple{background:linear-gradient(135deg,#1e0a3c,#0a0a0a);border:1px solid rgba(168,85,247,0.22);box-shadow:0 8px 24px rgba(168,85,247,0.12);}
+.plan-card.green{background:linear-gradient(135deg,#052e1c,#0a0a0a);border:1px solid rgba(16,185,129,0.22);box-shadow:0 8px 24px rgba(16,185,129,0.12);}
+.plan-tag{display:inline-block;font-size:9px;font-weight:900;letter-spacing:0.18em;padding:3px 10px;border-radius:5px;text-transform:uppercase;margin-bottom:10px;}
+.plan-card.blue .plan-tag{background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);}
+.plan-card.orange .plan-tag{background:rgba(249,115,22,0.15);color:#fdba74;border:1px solid rgba(249,115,22,0.3);}
+.plan-card.purple .plan-tag{background:rgba(168,85,247,0.15);color:#d8b4fe;border:1px solid rgba(168,85,247,0.3);}
+.plan-card.green .plan-tag{background:rgba(16,185,129,0.15);color:#6ee7b7;border:1px solid rgba(16,185,129,0.3);}
+.plan-name{font-size:21px;font-weight:900;color:#fff;margin-bottom:5px;padding-right:44px;letter-spacing:-0.01em;}
+.plan-meta{font-size:12px;line-height:1.55;padding-right:44px;}
+.plan-card.blue .plan-meta{color:#93c5fd;opacity:0.75;}
+.plan-card.orange .plan-meta{color:#fdba74;opacity:0.75;}
+.plan-card.purple .plan-meta{color:#d8b4fe;opacity:0.75;}
+.plan-card.green .plan-meta{color:#6ee7b7;opacity:0.75;}
+.plan-arrow{position:absolute;right:18px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;}
+.plan-card.blue .plan-arrow{background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.25);}
+.plan-card.orange .plan-arrow{background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.25);}
+.plan-card.purple .plan-arrow{background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.25);}
+.plan-card.green .plan-arrow{background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.25);}
+.plan-stats{display:flex;gap:14px;margin-top:10px;flex-wrap:wrap;}
+.plan-card.blue .stat{color:#93c5fd;opacity:0.7;}
+.plan-card.orange .stat{color:#fdba74;opacity:0.7;}
+.plan-card.purple .stat{color:#d8b4fe;opacity:0.7;}
+.plan-card.green .stat{color:#6ee7b7;opacity:0.7;}
+.stat{font-size:11px;font-weight:600;}
+</style>
+</head>
+<body>
+<div class="container">
+  <a href="index.html" class="back-link">← Categories</a>
+  <div class="eyebrow">⚡ STNDR</div>
+  <h1 class="title">STNDR</h1>
+  <p class="subtitle">Bodybuilding & strength programs</p>
+  <div class="designer">✍️ Designed by CBUM</div>
+  <a href="stndr-instructions.html" class="inst-link">📋 Program Guide & Instructions</a>
+
+  <a href="weeks-to-open.html" class="plan-card blue">
+    <div class="plan-tag">4-Week Program</div>
+    <div class="plan-name">Weeks to Open</div>
+    <div class="plan-meta">Upper/Lower split with progressive overload, drop sets, and AMRAP intensifiers.</div>
+    <div class="plan-stats"><span class="stat">📅 4 weeks</span><span class="stat">🏋️ 5/wk</span></div>
+    <div class="plan-arrow">→</div>
+  </a>
+
+  <a href="push-pull-legs.html" class="plan-card orange">
+    <div class="plan-tag">PPL · 2 Phases</div>
+    <div class="plan-name">Push / Pull / Legs</div>
+    <div class="plan-meta">Two-phase PPL with TUT-focused supersets, tri-sets, and strength-to-volume waves.</div>
+    <div class="plan-stats"><span class="stat">🔁 3 on / 1 off</span><span class="stat">🔥 5 cycles</span></div>
+    <div class="plan-arrow">→</div>
+  </a>
+
+  <a href="legacy-prep.html" class="plan-card purple">
+    <div class="plan-tag">CBUM · Bodybuilding</div>
+    <div class="plan-name">Legacy Prep</div>
+    <div class="plan-meta">Hardcore prep with cluster sets, drop AMRAPs, and aggressive volume.</div>
+    <div class="plan-stats"><span class="stat">💀 Advanced</span><span class="stat">🏆 Prep-style</span></div>
+    <div class="plan-arrow">→</div>
+  </a>
+
+  <a href="bro-split.html" class="plan-card green">
+    <div class="plan-tag">2 Phases · 6 Weeks</div>
+    <div class="plan-name">The Bro Split</div>
+    <div class="plan-meta">Classic body-part split with 1-¼ reps, stretch holds, and tri-set intensifiers.</div>
+    <div class="plan-stats"><span class="stat">📅 6 weeks</span><span class="stat">💪 Hypertrophy</span></div>
+    <div class="plan-arrow">→</div>
+  </a>
+</div>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PMC – Split #4</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#0d0618;min-height:100vh;color:#fff;padding:0 0 60px;}
+.back-link{display:inline-block;color:#7fa8c9;text-decoration:none;font-size:13px;font-weight:700;background:rgba(127,168,201,0.1);padding:6px 14px;border-radius:20px;border:1px solid rgba(127,168,201,0.3);margin:20px 16px;letter-spacing:0.04em;}
+.hero{background:linear-gradient(135deg,#0a1a2a,#0d0618);padding:28px 20px 24px;border-bottom:1px solid rgba(127,168,201,0.15);}
+.hero-inner{max-width:680px;margin:0 auto;}
+.eyebrow{font-size:10px;font-weight:900;letter-spacing:0.28em;color:#7fa8c9;text-transform:uppercase;margin-bottom:8px;}
+.title{font-size:26px;font-weight:900;color:#fff;letter-spacing:-0.02em;margin-bottom:4px;}
+.subtitle{font-size:12px;color:#6b7280;line-height:1.5;}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.pill{background:rgba(127,168,201,0.1);border:1px solid rgba(127,168,201,0.2);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:800;color:#7fa8c9;letter-spacing:0.06em;text-transform:uppercase;}
+.week-tabs{background:#0d0618;border-bottom:1px solid rgba(127,168,201,0.1);padding:0 12px;position:sticky;top:0;z-index:8;}
+.wtabs{max-width:680px;margin:0 auto;display:flex;}
+.wtab{flex:1;padding:13px 8px;border:none;cursor:pointer;font-weight:900;font-size:12px;background:transparent;color:#1a3a5a;border-bottom:3px solid transparent;text-align:center;letter-spacing:0.06em;}
+.wtab.active{color:#7fa8c9;border-bottom-color:#7fa8c9;}
+.content{max-width:680px;margin:20px auto 0;padding:0 16px;}
+.section-head{font-size:10px;font-weight:900;letter-spacing:0.22em;color:#7fa8c9;text-transform:uppercase;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+.section-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(127,168,201,0.3),transparent);}
+.workout-card{display:block;text-decoration:none;color:inherit;border-radius:16px;padding:18px 20px;margin-bottom:12px;position:relative;overflow:hidden;transition:transform 0.15s;background:linear-gradient(135deg,#0a1520,#0d0618);border:1px solid rgba(127,168,201,0.22);}
+.workout-card:active{transform:scale(0.98);}
+.wc-tag{font-size:9px;font-weight:900;letter-spacing:0.18em;padding:3px 9px;border-radius:5px;text-transform:uppercase;margin-bottom:10px;display:inline-block;background:rgba(127,168,201,0.15);color:#7fa8c9;border:1px solid rgba(127,168,201,0.25);}
+.wc-name{font-size:19px;font-weight:900;color:#fff;margin-bottom:4px;padding-right:40px;letter-spacing:-0.01em;}
+.wc-focus{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;color:#7fa8c9;}
+.wc-criteria{display:flex;gap:5px;flex-wrap:wrap;}
+.crit{font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:0.04em;text-transform:uppercase;background:rgba(127,168,201,0.1);color:#bfdbf7;border:1px solid rgba(127,168,201,0.2);}
+.wc-arrow{position:absolute;right:16px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:rgba(127,168,201,0.15);border:1px solid rgba(127,168,201,0.2);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;}
+</style>
+</head>
+<body>
+<a href="pmc-home.html" class="back-link">← PMC Home</a>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">🔥 Project Muscle Confusion</div>
+    <h1 class="title">Split #4</h1>
+    <p class="subtitle">5 workouts · 2-week rotation · Slate / Steel Blue theme</p>
+    <div class="pills">
+      <span class="pill">Superset</span><span class="pill">Pyramid + Drop</span>
+      <span class="pill">Low Rep</span><span class="pill">Tempo</span>
+      <span class="pill">12–15 Reps</span><span class="pill">20–30 Reps</span>
+    </div>
+  </div>
+</div>
+<div class="week-tabs">
+  <div class="wtabs">
+    <button class="wtab active" data-w="1">WEEK 1</button>
+    <button class="wtab" data-w="2">WEEK 2</button>
+  </div>
+</div>
+<div class="content" id="content"></div>
+<script>
+let week = 1;
+const WORKOUTS = [
+  {tag:'Legs + Back · 2 Muscles', name:'Legs & Back', focus:'Compound Day', href:'pmc-s4-legs-back.html',
+   criteria:['Warmup: Pull-Ups','Superset','Pyramid+Drop','Low Rep','Tempo','12–15 Reps','20–30 Reps'],
+   meta:['Good mornings × DB row superset, barbell row tempo, hack squat 5x5, V-grip PD × wide squat superset pyramid/drop, lunge finisher',
+         'Goblet squat × wide PD superset, Pendlay row × RDL superset pyramid, hack squat pyramid/drop, single arm row tempo, quad ext pyramid/drop, barbell shrug 5x5']},
+  {tag:'Chest + Triceps · 2 Muscles', name:'Chest & Triceps', focus:'Push Day', href:'pmc-s4-chest-tris.html',
+   criteria:['Superset','Pyramid+Drop','Low Rep','Tempo','12–15 Reps','20–30 Reps'],
+   meta:['Diamond push-ups AMRAP, dips AMRAP, bench 1.5 reps pyramid/drop, bench 5x5 tempo, skull crushers tempo, close grip × tri machine superset, cable flies 20-30',
+         'Close grip bench 5x5, high incline tempo, underhand bench 12-15, skull crusher pyramid/drop, pec deck × tri machine superset, machine × neutral PD superset 20-30']},
+  {tag:'Shoulders · 1 Muscle', name:'Shoulders', focus:'Shoulder Day', href:'pmc-s4-shoulders.html',
+   criteria:['Superset','Pyramid+Drop','Low Rep','Tempo','12–15 Reps','20–30 Reps'],
+   meta:['Lateral raises 12-15, DB shrugs 5x5, reverse pec deck × supermans superset pyramid/drop, incline raises × palms press superset tempo, shrug drop set, upright row 20-30',
+         'Reverse cable flies 12-15, shoulder press 6x4, lateral × alt DB raises superset drop, face pulls × reverse pec deck superset pyramid/drop, close grip shrug drop set']},
+  {tag:'Legs · Day 2 · Compound Sub', name:'Legs — Day 2', focus:'Posterior Chain', href:'pmc-s4-legs-day2.html',
+   criteria:['Compound Sub Rule','Superset','Pyramid+Drop','Low Rep','Tempo','12–15 Reps','20–30 Reps'],
+   meta:['Quad ext tempo, barbell squat pyramid, goblet squat 12-15, step-ups × lunges superset 12-15, split squat pyramid/drop, quad ext finisher 20-30, calf raises 12-15',
+         'Ham curl pyramid/tempo, deadlift 5x5, wide squat 12-15, goblet squat pyramid/drop, good mornings × lunges superset, calf raises × split squat superset 20-30']},
+  {tag:'Biceps + Triceps · 2 Muscles', name:'Biceps & Triceps', focus:'Arms Day', href:'pmc-s4-bis-tris.html',
+   criteria:['Superset','Pyramid+Drop','Low Rep','Tempo','12–15 Reps','20–30 Reps'],
+   meta:['Pinwheel × lying ext superset pyramid, incline hammer × kickback superset, 21s × French press superset pyramid/drop, barbell curl 5x5 × tricep PD superset',
+         'Alt DB curl × dips superset pyramid, spider curl × cable ext superset tempo, close grip curl 5x5 × incline skull crusher superset, 15s × tri machine superset pyramid']},
+];
+function render(){
+  document.getElementById('content').innerHTML=
+    '<div class="section-head">Week '+week+' Workouts</div>'+
+    WORKOUTS.map(function(w){
+      return '<a href="'+w.href+'?w='+week+'" class="workout-card">'+
+        '<div class="wc-tag">'+w.tag+'</div>'+
+        '<div class="wc-name">'+w.name+'</div>'+
+        '<div class="wc-focus">'+w.focus+(week===2?' — Week 2':'')+'</div>'+
+        '<div class="wc-criteria">'+w.criteria.map(function(c){return '<span class="crit">'+c+'</span>';}).join('')+'</div>'+
+        '<div class="wc-arrow">→</div></a>';
+    }).join('');
+}
+document.querySelectorAll('.wtab').forEach(function(b){
+  b.addEventListener('click',function(){
+    week=parseInt(b.dataset.w);
+    document.querySelectorAll('.wtab').forEach(function(t){t.classList.remove('active');});
+    b.classList.add('active');
+    render();
+  });
+});
+render();
+</script>
+</body>
+</html>

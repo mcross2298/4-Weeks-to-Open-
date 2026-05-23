@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Popeye</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#0a3d2e;min-height:100vh;padding-bottom:40px;}
+.app{background:linear-gradient(135deg,#0a3d2e 0%,#166534 50%,#0a3d2e 100%);min-height:100vh;}
+.back-link{position:absolute;top:18px;left:18px;color:#86efac;text-decoration:none;font-size:13px;font-weight:600;background:rgba(22,163,74,0.22);padding:6px 12px;border-radius:20px;border:1px solid rgba(22,163,74,0.5);z-index:10;}
+.back-link:active{background:rgba(22,163,74,0.35);}
+.header{background:linear-gradient(90deg,#166534,#0a3d2e);padding:60px 20px 22px;border-bottom:1px solid rgba(255,255,255,0.08);position:relative;}
+.header-inner{max-width:680px;margin:0 auto;}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.22em;color:#86efac;text-transform:uppercase;margin-bottom:8px;}
+.title{font-size:30px;font-weight:900;color:#fff;margin-bottom:10px;letter-spacing:-0.02em;}
+.badge{display:inline-block;background:rgba(22,163,74,0.25);border:1px solid rgba(22,163,74,0.55);border-radius:6px;padding:5px 12px;font-size:12px;color:#bbf7d0;font-weight:800;letter-spacing:0.1em;}
+.content{max-width:680px;margin:24px auto 0;padding:0 16px;}
+.rules-banner{background:rgba(22,163,74,0.12);border-left:3px solid #16a34a;padding:14px 16px;border-radius:8px;margin-bottom:24px;color:#bbf7d0;font-size:13px;line-height:1.7;}
+.rules-banner strong{color:#fff;}
+.section-card{background:#fff;border-radius:16px;margin-bottom:18px;box-shadow:0 4px 16px rgba(0,0,0,0.3);overflow:hidden;}
+.section-head{background:linear-gradient(135deg,#166534,#14532d);color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;}
+.section-head.rolls{background:linear-gradient(135deg,#0891b2,#155e75);}
+.section-icon{font-size:26px;}
+.section-text{flex:1;}
+.section-eyebrow{font-size:10px;font-weight:800;letter-spacing:0.2em;color:#bbf7d0;text-transform:uppercase;margin-bottom:4px;}
+.section-card:has(.section-head.rolls) .section-eyebrow{color:#a5f3fc;}
+.section-title-head{font-size:20px;font-weight:900;letter-spacing:-0.01em;}
+.section-body{padding:14px 18px 18px;}
+.protocol-bar{background:linear-gradient(135deg,#dcfce7,#bbf7d0);border:1px solid #86efac;border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.protocol-bar.rolls{background:linear-gradient(135deg,#cffafe,#a5f3fc);border-color:#67e8f9;}
+.protocol-icon{font-size:22px;}
+.protocol-text{font-size:13px;font-weight:700;color:#14532d;}
+.section-card:has(.section-head.rolls) .protocol-text{color:#155e75;}
+.protocol-bold{font-weight:900;color:#15803d;}
+.section-card:has(.section-head.rolls) .protocol-bold{color:#0891b2;}
+.ex-list{display:flex;flex-direction:column;gap:8px;}
+.ex-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f0fdf4;border-radius:10px;border:1px solid #bbf7d0;cursor:pointer;transition:all 0.15s;user-select:none;}
+.ex-item.rolls{background:#ecfeff;border-color:#a5f3fc;}
+.ex-item:active{transform:scale(0.98);}
+.ex-item.checked{opacity:0.6;}
+.ex-item.checked .ex-name{text-decoration:line-through;color:#16a34a;}
+.ex-item.checked .checkbox{background:#16a34a;border-color:#16a34a;}
+.ex-item.checked .checkbox::after{content:"✓";color:#fff;font-weight:900;font-size:13px;}
+.checkbox{width:22px;height:22px;border:2px solid #15803d;border-radius:5px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ex-item.rolls .checkbox{border-color:#0891b2;}
+.ex-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:#15803d;color:#fff;border-radius:50%;font-size:11px;font-weight:900;flex-shrink:0;}
+.ex-item.rolls .ex-num{background:#0891b2;}
+.ex-name{font-weight:700;font-size:13px;color:#111827;flex:1;line-height:1.4;}
+.ex-target{background:#15803d;color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:5px;letter-spacing:0.04em;white-space:nowrap;flex-shrink:0;}
+.ex-item.rolls .ex-target{background:#0891b2;}
+.tap-hint{font-size:11px;color:#15803d;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;text-align:center;}
+.section-card:has(.section-head.rolls) .tap-hint{color:#0891b2;}
+
+.totals-section{margin-top:24px;padding:0 0 8px;}
+.totals-head{font-size:10px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;opacity:0.8;}
+.totals-head::after{content:'';flex:1;height:1px;}
+.totals-card{border-radius:14px;padding:18px;margin-bottom:8px;}
+.total-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom-width:1px;border-bottom-style:solid;}
+.total-row:last-child{border-bottom:none;padding-bottom:0;}
+.total-label{font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.total-icon{font-size:15px;}
+.total-value{font-size:13px;font-weight:900;text-align:right;}
+.total-divider{height:1px;margin:10px 0;}
+.grand-row{display:flex;justify-content:space-between;align-items:center;padding-top:10px;}
+.grand-label{font-size:13px;font-weight:900;color:#fff;}
+.grand-value{font-size:20px;font-weight:900;}
+
+/* ── TIMER ── */
+.rest-timer{
+  display:inline-flex;align-items:center;gap:6px;
+  cursor:pointer;user-select:none;
+  padding:4px 10px;border-radius:8px;
+  transition:all 0.15s;position:relative;
+}
+.rest-timer:active{transform:scale(0.96);}
+.rest-timer.idle{background:rgba(100,116,139,0.12);border:1px solid rgba(100,116,139,0.2);}
+.rest-timer.running{background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.35);animation:timerPulse 1s ease-in-out infinite;}
+.rest-timer.done{background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.35);}
+.rest-timer.overtime{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);}
+@keyframes timerPulse{0%,100%{opacity:1;}50%{opacity:0.7;}}
+.rest-timer-icon{font-size:13px;}
+.rest-timer-label{font-size:11px;font-weight:800;letter-spacing:0.04em;}
+.rest-timer.idle .rest-timer-label{color:#64748b;}
+.rest-timer.running .rest-timer-label{color:#fbbf24;}
+.rest-timer.done .rest-timer-label{color:#34d399;}
+.rest-timer.overtime .rest-timer-label{color:#f87171;}
+.rest-timer-hint{font-size:9px;color:#475569;margin-top:2px;font-style:italic;}
+
+/* Floating timer display — shows when running */
+.timer-float{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:rgba(10,10,16,0.95);backdrop-filter:blur(16px);
+  border-radius:20px;padding:14px 24px;
+  display:none;flex-direction:column;align-items:center;gap:4px;
+  border:1px solid rgba(255,255,255,0.1);
+  box-shadow:0 8px 32px rgba(0,0,0,0.6);
+  z-index:100;min-width:200px;
+}
+.timer-float.visible{display:flex;}
+.timer-float-label{font-size:10px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:#475569;}
+.timer-float-time{font-size:42px;font-weight:900;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:#fbbf24;}
+.timer-float-time.done{color:#34d399;}
+.timer-float-time.overtime{color:#f87171;}
+.timer-float-ex{font-size:11px;color:#64748b;text-align:center;max-width:180px;line-height:1.4;}
+.timer-float-bar{width:100%;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:4px;overflow:hidden;}
+.timer-float-progress{height:100%;background:#fbbf24;border-radius:2px;transition:width 0.5s linear;width:100%;}
+.timer-float-progress.done{background:#34d399;}
+.timer-float-progress.overtime{background:#f87171;}
+.timer-float-actions{display:flex;gap:8px;margin-top:6px;}
+.timer-float-btn{padding:6px 14px;border-radius:8px;border:none;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:0.06em;}
+.timer-float-skip{background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3);}
+.timer-float-reset{background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.2);}
+
+.sum-section{margin:32px 16px 0;}.sum-hd{font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;color:#ef4444;margin-bottom:12px;display:flex;align-items:center;gap:8px;}.sum-card{border-radius:14px;padding:16px;margin-bottom:32px;}.sum-sub{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;opacity:0.8;}.sum-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #ffffff08;}.sum-row:last-of-type{border-bottom:none;}.sum-ico{font-size:14px;width:22px;text-align:center;flex-shrink:0;}.sum-nm{flex:1;font-size:12px;font-weight:600;color:#e2e8f0;}.sum-dt{display:flex;flex-direction:column;align-items:flex-end;gap:2px;}.sum-st{font-size:11px;font-weight:800;}.sum-rp{font-size:10px;font-weight:600;opacity:0.75;}.sum-div{height:1px;margin:14px 0;}.sum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}.sum-tot{border-radius:10px;padding:10px 8px;text-align:center;}.sum-tv{font-size:13px;font-weight:900;letter-spacing:-0.01em;}.sum-tl{font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-top:3px;opacity:0.7;}
+.prog-bar-wrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:999;background:rgba(255,255,255,0.06);}
+.prog-bar-fill{height:3px;background:linear-gradient(90deg,#22d3ee,#a78bfa);transition:width 0.4s ease;border-radius:0 2px 2px 0;}
+.timer-presets{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;justify-content:center;}
+.timer-preset{padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.07);color:#94a3b8;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:0.05em;}
+.timer-preset:active{background:rgba(212,175,55,0.2);color:#fbbf24;border-color:rgba(212,175,55,0.4);}
+
+/* ── WEIGHT NOTES ── */
+.ex-notes-toggle{display:inline-flex;align-items:center;gap:4px;margin-top:6px;cursor:pointer;font-size:10px;font-weight:800;color:#475569;letter-spacing:0.06em;text-transform:uppercase;user-select:none;}
+.ex-notes-toggle:active{color:#94a3b8;}
+.ex-notes-wrap{display:none;margin-top:8px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.08);}
+.ex-notes-wrap.open{display:block;}
+.ex-notes-input{width:100%;background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;font-weight:600;font-family:inherit;resize:none;line-height:1.5;}
+.ex-notes-input::placeholder{color:#334155;}
+.ex-notes-label{font-size:9px;font-weight:800;letter-spacing:0.15em;color:#475569;text-transform:uppercase;margin-bottom:4px;}
+</style>
+</head>
+<body>
+<div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
+<div class="app" id="app"></div>
+<script>
+const state = {};
+
+const RICE_BUCKET = [
+  "Crab Grabbers",
+  "Deep Dives (fingers together)",
+  "Dive and Cup",
+  "Side Dive and Cup",
+  "Twists (clockwise / palms open)",
+  "Twists (counter-clockwise / palms open)",
+  "Twists (clockwise / closed fists)",
+  "Twists (counter-clockwise / closed fists)",
+  "Motorcycles (closed fists)"
+];
+
+const WRIST_ROLLS = [
+  { name: "Wrist Rolls — Forward", reps: "10 reps", weight: "5–10 lbs" },
+  { name: "Wrist Rolls — Backward", reps: "10 reps", weight: "5–10 lbs" }
+];
+
+function render(){
+  const rbHtml = RICE_BUCKET.map((ex,i)=>{
+    const id = `rb-${i}`;
+    const checked = state[id] ? "checked" : "";
+    return `<div class="ex-item ${checked}" data-id="${id}">
+      <div class="checkbox"></div>
+      <span class="ex-num">${i+1}</span>
+      <span class="ex-name">${ex}</span>
+      <span class="ex-target">30s ON / 30s OFF</span>
+    </div>`;
+  }).join("");
+
+  const wrHtml = WRIST_ROLLS.map((ex,i)=>{
+    const id = `wr-${i}`;
+    const checked = state[id] ? "checked" : "";
+    return `<div class="ex-item rolls ${checked}" data-id="${id}">
+      <div class="checkbox"></div>
+      <span class="ex-num">${i+1}</span>
+      <span class="ex-name">${ex.name}<br/><span style="font-size:11px;color:#155e75;font-weight:600">${ex.weight}</span></span>
+      <span class="ex-target">${ex.reps}</span>
+    </div>`;
+  }).join("");
+
+  document.getElementById("app").innerHTML = `
+    <div class="header">
+      <a href="cat-faint.html" class="back-link">← Back</a>
+      <div class="header-inner">
+        <div class="eyebrow">Forearm & Grip</div>
+        <div class="title">The Popeye</div>
+        <div><span class="badge">💪 Grip Builder</span></div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="rules-banner">
+        <strong>THE CRITERIA:</strong><br/>
+        • Rice Bucket + Wrist Rolls combo<br/>
+        • Rice Bucket: <strong>30 sec on / 30 sec off</strong><br/>
+        • Wrist Rolls: <strong>10 forward, 10 backward</strong>
+      </div>
+
+      <div class="section-card">
+        <div class="section-head">
+          <span class="section-icon">🌾</span>
+          <div class="section-text">
+            <div class="section-eyebrow">Part 1</div>
+            <div class="section-title-head">Rice Bucket</div>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="protocol-bar">
+            <span class="protocol-icon">⏱️</span>
+            <div class="protocol-text"><span class="protocol-bold">30 sec ON</span> · <span class="protocol-bold">30 sec OFF</span> per exercise</div>
+          </div>
+          <div id="swContainer" style="max-width:680px;margin:0 auto;padding:0 16px;">
+
+</div>
+<div class="tap-hint">Tap to check off as you complete</div>
+          <div class="ex-list">${rbHtml}</div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-head rolls">
+          <span class="section-icon">🔄</span>
+          <div class="section-text">
+            <div class="section-eyebrow">Part 2</div>
+            <div class="section-title-head">Wrist Rolls</div>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="protocol-bar rolls">
+            <span class="protocol-icon">🏋️</span>
+            <div class="protocol-text"><span class="protocol-bold">5–10 lb</span> weight · Roll until full extension</div>
+          </div>
+          <div class="tap-hint">Tap to check off</div>
+          <div class="ex-list">${wrHtml}</div>
+        </div>
+      </div>
+    </div>`;
+
+  document.querySelectorAll(".ex-item").forEach(item=>{
+    item.addEventListener("click",()=>{
+      const id = item.dataset.id;
+      state[id] = !state[id];
+      item.classList.toggle("checked");
+    });
+  });
+}
+
+render();
+if(typeof updateProgress!=="undefined")updateProgress();
+buildStopwatch(document.getElementById('swContainer'));
+
+// ── TIMER ENGINE ──────────────────────────────────────────────────
+const TMR = {
+  interval: null,
+  startTime: null,
+  duration: 0,
+  activeEl: null,
+  activeName: '',
+
+  parseSeconds(str) {
+    if (!str || str === '—') return 0;
+    str = str.toLowerCase().trim();
+    // e.g. "90 sec", "2 min", "75 sec between & after", "30, 30, 30 sec"
+    const minMatch = str.match(/(\d+)\s*min/);
+    const secMatch = str.match(/(\d+)\s*sec/);
+    let secs = 0;
+    if (minMatch) secs += parseInt(minMatch[1]) * 60;
+    if (secMatch) secs += parseInt(secMatch[1]);
+    if (!secs) {
+      // plain number
+      const plain = str.match(/^(\d+)/);
+      if (plain) secs = parseInt(plain[1]);
+    }
+    return secs;
+  },
+
+  formatTime(secs) {
+    const neg = secs < 0;
+    const abs = Math.abs(secs);
+    const m = Math.floor(abs / 60);
+    const s = abs % 60;
+    return (neg ? '+' : '') + (m > 0 ? m + ':' + String(s).padStart(2,'0') : String(s) + 's');
+  },
+
+  buzz() {
+    // Vibrate
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+    // Sound — Web Audio API beep
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const times = [0, 0.3, 0.6];
+      times.forEach((t, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = i === 2 ? 880 : 660;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.4, ctx.currentTime + t);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.25);
+        osc.start(ctx.currentTime + t);
+        osc.stop(ctx.currentTime + t + 0.25);
+      });
+    } catch(e) {}
+  },
+
+  start(el, durationSecs, exerciseName) {
+    this.stop();
+    this.duration = durationSecs;
+    this.startTime = Date.now();
+    this.activeEl = el;
+    this.activeName = exerciseName;
+
+    el.className = 'rest-timer running';
+    el.querySelector('.rest-timer-label').textContent = this.formatTime(durationSecs);
+
+    const float = document.getElementById('timerFloat');
+    const floatTime = document.getElementById('timerFloatTime');
+    const floatProgress = document.getElementById('timerFloatProgress');
+    const floatEx = document.getElementById('timerFloatEx');
+    const floatLabel = document.getElementById('timerFloatLabel');
+
+    float.classList.add('visible');
+    floatEx.textContent = exerciseName;
+    floatLabel.textContent = 'REST';
+    floatTime.className = 'timer-float-time';
+    floatProgress.className = 'timer-float-progress';
+    floatProgress.style.width = '100%';
+
+    this.interval = setInterval(() => {
+      const elapsed = (Date.now() - this.startTime) / 1000;
+      const remaining = Math.ceil(this.duration - elapsed);
+
+      // Update card badge
+      if (el) {
+        el.querySelector('.rest-timer-label').textContent = this.formatTime(remaining);
+      }
+
+      // Update float
+      floatTime.textContent = this.formatTime(remaining);
+
+      if (remaining > 0) {
+        const pct = (remaining / this.duration) * 100;
+        floatProgress.style.width = pct + '%';
+        floatTime.className = 'timer-float-time';
+        floatProgress.className = 'timer-float-progress';
+        if (el) el.className = 'rest-timer running';
+      } else if (remaining === 0 || remaining === -0) {
+        this.buzz();
+        floatTime.className = 'timer-float-time done';
+        floatProgress.className = 'timer-float-progress done';
+        floatProgress.style.width = '100%';
+        floatLabel.textContent = 'DONE!';
+        if (el) el.className = 'rest-timer done';
+      } else {
+        // Overtime
+        floatTime.textContent = '+' + this.formatTime(-remaining);
+        floatTime.className = 'timer-float-time overtime';
+        floatProgress.className = 'timer-float-progress overtime';
+        floatLabel.textContent = 'OVERTIME';
+        if (el) el.className = 'rest-timer overtime';
+      }
+    }, 500);
+  },
+
+  stop() {
+    if (this.interval) clearInterval(this.interval);
+    this.interval = null;
+    if (this.activeEl) {
+      const secs = this.parseSeconds(this.activeEl.dataset.rest);
+      this.activeEl.querySelector('.rest-timer-label').textContent = this.activeEl.dataset.label;
+      this.activeEl.className = 'rest-timer idle';
+      this.activeEl = null;
+    }
+    const float = document.getElementById('timerFloat');
+    if (float) float.classList.remove('visible');
+  },
+
+  toggle(el, durationSecs, exerciseName) {
+    if (this.activeEl === el && this.interval) {
+      this.stop();
+    } else {
+      this.start(el, durationSecs, exerciseName);
+    }
+  },
+  setTime(secs,label){
+    if(this.interval){clearInterval(this.interval);this.interval=null;}
+    this.duration=secs;this.startTime=Date.now();
+    const ft=document.getElementById("timerFloat");
+    if(ft){
+      const tl=ft.querySelector(".timer-float-label"),tt=ft.querySelector(".timer-float-time"),tp=ft.querySelector(".timer-float-progress");
+      if(tl)tl.textContent=label||(secs+"s");
+      if(tt){tt.textContent=secs+"s";tt.className="timer-float-time";}
+      if(tp){tp.style.width="100%";tp.className="timer-float-progress";}
+      ft.classList.add("visible");
+    }
+    this.activeEl=null;
+    this.interval=setInterval(()=>{
+      const rem=Math.ceil(this.duration-(Date.now()-this.startTime)/1000);
+      const ft2=document.getElementById("timerFloat");if(!ft2)return;
+      const tt2=ft2.querySelector(".timer-float-time"),tp2=ft2.querySelector(".timer-float-progress"),tl2=ft2.querySelector(".timer-float-label");
+      if(rem>0){if(tt2){tt2.textContent=rem+"s";tt2.className="timer-float-time";}if(tp2){tp2.style.width=Math.round((rem/this.duration)*100)+"%";tp2.className="timer-float-progress";}}
+      else if(rem===0){if(tt2){tt2.textContent="DONE!";tt2.className="timer-float-time done";}if(tp2){tp2.style.width="100%";tp2.className="timer-float-progress done";}if(tl2)tl2.textContent="DONE ✓";try{navigator.vibrate&&navigator.vibrate([200,100,200,100,400]);}catch(e){}}
+      else{if(tt2){tt2.textContent="+"+Math.abs(rem)+"s";tt2.className="timer-float-time overtime";}if(tp2)tp2.className="timer-float-progress overtime";}
+    },500);
+  }
+};
+
+function buildTimerFloat() {
+  if (document.getElementById('timerFloat')) return;
+  const div = document.createElement('div');
+  div.id = 'timerFloat';
+  div.className = 'timer-float';
+  div.innerHTML = `
+    <div id="timerFloatLabel" class="timer-float-label">REST</div>
+    <div id="timerFloatTime" class="timer-float-time">0s</div>
+    <div id="timerFloatEx" class="timer-float-ex"></div>
+    <div class="timer-float-bar"><div id="timerFloatProgress" class="timer-float-progress"></div></div>
+    <div class="timer-float-actions">
+      <button class="timer-float-btn timer-float-skip" onclick="TMR.stop()">✓ Done</button>
+      <button class="timer-float-btn timer-float-reset" onclick="TMR.stop()">✕ Cancel</button>
+    </div>`;
+  document.body.appendChild(div);
+}
+
+function makeRestTimer(restStr, exerciseName) {
+  const secs = TMR.parseSeconds(restStr);
+  if (!secs) return '<span class="ex-sets" style="opacity:0.5">⏱️ ' + restStr + '</span>';
+  const label = restStr;
+  return '<span class="rest-timer idle" data-rest="' + restStr + '" data-label="' + label + '" ' +
+    'onclick="buildTimerFloat();TMR.toggle(this,' + secs + ',\'' + exerciseName.replace(/'/g,"\'").substring(0,30) + '...\')" ' +
+    'title="Tap to start rest timer">' +
+    '<span class="rest-timer-icon">⏱️</span>' +
+    '<span class="rest-timer-label">' + label + '</span>' +
+    '</span>';
+}
+
+
+// ── STOPWATCH ENGINE (cardio pages) ──────────────────────────────
+const SW = {
+  interval: null,
+  startTime: null,
+  elapsed: 0,
+  running: false,
+
+  formatTime(ms) {
+    const total = Math.floor(ms / 1000);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    if (h > 0) return h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  },
+
+  toggle() {
+    if (this.running) {
+      clearInterval(this.interval);
+      this.elapsed += Date.now() - this.startTime;
+      this.running = false;
+      const btn = document.getElementById('swBtn');
+      if (btn) { btn.textContent = '▶ Resume'; btn.style.background = 'rgba(52,211,153,0.15)'; btn.style.color = '#34d399'; }
+    } else {
+      this.startTime = Date.now();
+      this.running = true;
+      this.interval = setInterval(() => {
+        const total = this.elapsed + (Date.now() - this.startTime);
+        const el = document.getElementById('swDisplay');
+        if (el) el.textContent = this.formatTime(total);
+      }, 100);
+      const btn = document.getElementById('swBtn');
+      if (btn) { btn.textContent = '⏸ Pause'; btn.style.background = 'rgba(251,191,36,0.15)'; btn.style.color = '#fbbf24'; }
+    }
+  },
+
+  reset() {
+    clearInterval(this.interval);
+    this.elapsed = 0;
+    this.running = false;
+    const el = document.getElementById('swDisplay');
+    if (el) el.textContent = '00:00';
+    const btn = document.getElementById('swBtn');
+    if (btn) { btn.textContent = '▶ Start'; btn.style.background = 'rgba(52,211,153,0.15)'; btn.style.color = '#34d399'; }
+  },
+
+  lap() {
+    if (!this.running && this.elapsed === 0) return;
+    const total = this.elapsed + (this.running ? Date.now() - this.startTime : 0);
+    const list = document.getElementById('swLaps');
+    if (list) {
+      const count = list.children.length + 1;
+      const item = document.createElement('div');
+      item.style.cssText = 'display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;';
+      item.innerHTML = '<span style="color:#64748b;">Lap ' + count + '</span><span style="color:#e2e8f0;font-weight:700;">' + this.formatTime(total) + '</span>';
+      list.prepend(item);
+    }
+  }
+};
+
+function buildStopwatch(container) {
+  const el = document.createElement('div');
+  el.style.cssText = 'background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:20px;margin:16px 0;text-align:center;';
+  el.innerHTML = `
+    <div style="font-size:10px;font-weight:900;letter-spacing:0.2em;color:#475569;text-transform:uppercase;margin-bottom:10px;">⏱️ Stopwatch</div>
+    <div id="swDisplay" style="font-size:52px;font-weight:900;color:#e2e8f0;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;margin-bottom:16px;">00:00</div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      <button id="swBtn" onclick="SW.toggle()" style="padding:10px 20px;border-radius:10px;border:none;cursor:pointer;font-size:12px;font-weight:800;background:rgba(52,211,153,0.15);color:#34d399;letter-spacing:0.06em;">▶ Start</button>
+      <button onclick="SW.lap()" style="padding:10px 20px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-size:12px;font-weight:800;background:transparent;color:#64748b;letter-spacing:0.06em;">Lap</button>
+      <button onclick="SW.reset()" style="padding:10px 20px;border-radius:10px;border:none;cursor:pointer;font-size:12px;font-weight:800;background:rgba(239,68,68,0.1);color:#f87171;letter-spacing:0.06em;">Reset</button>
+    </div>
+    <div id="swLaps" style="margin-top:12px;max-height:120px;overflow-y:auto;"></div>
+  `;
+  container.appendChild(el);
+}
+
+buildTimerFloat();
+</script>
+
+<div style="max-width:680px;margin:0 auto;">
+<div class="sum-section">
+  <div class="sum-hd" style="color:#ef4444;">📊 Workout Summary<span style="flex:1;height:1px;background:linear-gradient(90deg,#ef44444d,transparent);display:block;margin-left:8px;"></span></div>
+  <div class="sum-card" style="background:#1a0505;border:1px solid #ef444433;"><div class="sum-sub" style="color:#ef4444;">Forearms · Wrists · Grip</div><div class="sum-row" style="border-bottom-color:#ef444422;"><span class="sum-ico">🔧</span><span class="sum-nm">Wrist Rolls — 30s on / 30s off</span><div class="sum-dt"><span class="sum-st" style="color:#ef4444;">4 sets</span><span class="sum-rp" style="color:#ef4444;">30 sec intervals</span></div></div><div class="sum-row" style="border-bottom-color:#ef444422;"><span class="sum-ico">💪</span><span class="sum-nm">Reverse Curls — 30s on / 30s off</span><div class="sum-dt"><span class="sum-st" style="color:#ef4444;">4 sets</span><span class="sum-rp" style="color:#ef4444;">30 sec intervals</span></div></div><div class="sum-row" style="border-bottom-color:#ef444422;"><span class="sum-ico">🤜</span><span class="sum-nm">Grip Work — 30s on / 30s off</span><div class="sum-dt"><span class="sum-st" style="color:#ef4444;">4 sets</span><span class="sum-rp" style="color:#ef4444;">30 sec intervals</span></div></div><div class="sum-div" style="background:#ef444426;"></div><div class="sum-grid"><div class="sum-tot" style="background:#ef444414;border:1px solid #ef444426;"><div class="sum-tv" style="color:#ef4444;">12 sets</div><div class="sum-tl" style="color:#ef4444;">Total Sets</div></div><div class="sum-tot" style="background:#ef444414;border:1px solid #ef444426;"><div class="sum-tv" style="color:#ef4444;">~150–200 total reps</div><div class="sum-tl" style="color:#ef4444;">Est. Reps</div></div><div class="sum-tot" style="background:#ef444414;border:1px solid #ef444426;"><div class="sum-tv" style="color:#ef4444;">~20–30 min</div><div class="sum-tl" style="color:#ef4444;">Est. Time</div></div></div></div>
+</div></div>
+<script>
+// ── SESSION PROGRESS BAR ──
+function updateProgress() {
+  const all = document.querySelectorAll('.ex-card, .ss-ex');
+  const done = document.querySelectorAll('.ex-card.checked, .ss-ex.checked');
+  const pct = all.length ? Math.round((done.length / all.length) * 100) : 0;
+  const fill = document.getElementById('progFill');
+  if (fill) fill.style.width = pct + '%';
+}
+// Observe DOM for check changes
+const _progObs = new MutationObserver(updateProgress);
+document.addEventListener('DOMContentLoaded', function() {
+  const app = document.getElementById('app');
+  if (app) _progObs.observe(app, {subtree:true, attributes:true, attributeFilter:['class']});
+  updateProgress();
+});
+
+// ── TIMER PRESETS ──
+function addTimerPresets() {
+  const tf = document.getElementById('timerFloat');
+  if (!tf || tf.querySelector('.timer-presets')) return;
+  const presets = document.createElement('div');
+  presets.className = 'timer-presets';
+  presets.innerHTML = ['45s','60s','90s','2min'].map(function(l) {
+    const s = l==='2min'?120:parseInt(l);
+    return '<button class="timer-preset" onclick="TMR.setTime && TMR.setTime('+s+',\''+l+'\')" >' + l + '</button>';
+  }).join('');
+  tf.appendChild(presets);
+}
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(addTimerPresets, 500);
+});
+</script>
+<script>
+// ── WEIGHT / NOTES PER EXERCISE ──
+const NOTES_KEY = 'mc_notes';
+function getNotes() { try { return JSON.parse(localStorage.getItem(NOTES_KEY)||'{}'); } catch(e) { return {}; } }
+function saveNote(exId, val) {
+  const notes = getNotes();
+  if (val.trim()) notes[exId] = val.trim();
+  else delete notes[exId];
+  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+}
+function initNotes() {
+  const notes = getNotes();
+  document.querySelectorAll('.ex-card[data-id]').forEach(card => {
+    const id = card.dataset.id;
+    if (!id || card.querySelector('.ex-notes-wrap')) return;
+    const existing = notes[id] || '';
+    const toggle = document.createElement('div');
+    toggle.className = 'ex-notes-toggle';
+    toggle.innerHTML = existing ? '✏️ ' + existing.substring(0,20) + (existing.length>20?'…':'') : '✚ Add weight/notes';
+    const wrap = document.createElement('div');
+    wrap.className = 'ex-notes-wrap' + (existing ? ' open' : '');
+    wrap.innerHTML = '<div class="ex-notes-label">Weight / Notes</div><textarea class="ex-notes-input" rows="1" placeholder="e.g. 135 lbs · 3x10 felt easy">' + existing + '</textarea>';
+    toggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      wrap.classList.toggle('open');
+    });
+    const textarea = wrap.querySelector('textarea');
+    textarea.addEventListener('input', function() {
+      saveNote(id, this.value);
+      toggle.innerHTML = this.value.trim() ? '✏️ ' + this.value.trim().substring(0,20) + (this.value.trim().length>20?'…':'') : '✚ Add weight/notes';
+    });
+    const content = card.querySelector('.ex-content');
+    if (content) { content.appendChild(toggle); content.appendChild(wrap); }
+  });
+}
+// Run after every render
+const _notesOrig = window._notesInit;
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(initNotes, 300);
+});
+// Also expose for manual call after tab switches
+window.initNotes = initNotes;
+</script>
+<script>
+// ── REPLACE EXERCISE ──
+(function() {
+  const REPLACE_KEY = 'mc_replacements';
+  function applyReplacements() {
+    const replacements = JSON.parse(localStorage.getItem(REPLACE_KEY)||'{}');
+    if (!Object.keys(replacements).length) return;
+    document.querySelectorAll('.ex-card, .ex-item, .lift-card').forEach(card => {
+      const nameEl = card.querySelector('.ex-name, .lift-name');
+      if (!nameEl) return;
+      const origName = nameEl.textContent.trim();
+      const replacement = replacements[origName.toLowerCase()];
+      if (replacement) {
+        nameEl.textContent = replacement;
+        nameEl.style.color = '#22d3ee';
+        if (!card.querySelector('.replaced-badge')) {
+          const badge = document.createElement('span');
+          badge.className = 'replaced-badge';
+          badge.style.cssText = 'font-size:9px;font-weight:900;color:#22d3ee;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.25);border-radius:4px;padding:2px 5px;margin-left:6px;letter-spacing:0.06em;vertical-align:middle;';
+          badge.textContent = 'REPLACED';
+          nameEl.parentNode.insertBefore(badge, nameEl.nextSibling);
+        }
+      }
+    });
+  }
+  // Run after render
+  if (typeof render === 'function') {
+    const origRender = render;
+    window.render = function() { origRender.apply(this, arguments); setTimeout(applyReplacements, 100); };
+  }
+  document.addEventListener('DOMContentLoaded', function() { setTimeout(applyReplacements, 400); });
+  // Long press to replace
+  let pressTimer;
+  document.addEventListener('touchstart', function(e) {
+    const card = e.target.closest('.ex-card, .ex-item, .lift-card');
+    if (!card) return;
+    pressTimer = setTimeout(function() {
+      const nameEl = card.querySelector('.ex-name, .lift-name');
+      if (!nameEl) return;
+      const origName = nameEl.dataset.orig || nameEl.textContent.trim();
+      nameEl.dataset.orig = origName;
+      // Navigate to library with exercise pre-selected
+      const url = 'exercise-library.html?replace=' + encodeURIComponent(origName);
+      if (confirm('Replace "' + origName.substring(0,40) + '"?\nTap OK to open Exercise Library.')) {
+        window.location.href = url;
+      }
+    }, 600);
+  }, {passive: true});
+  document.addEventListener('touchend', function() { clearTimeout(pressTimer); }, {passive: true});
+  document.addEventListener('touchmove', function() { clearTimeout(pressTimer); }, {passive: true});
+})();
+</script>
+</body>
+</html>

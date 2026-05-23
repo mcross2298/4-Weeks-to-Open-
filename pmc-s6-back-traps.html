@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PMC - Back & Traps</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#0d0618;min-height:100vh;padding-bottom:48px;}
+.back-link{position:absolute;top:18px;left:18px;color:#c084fc;text-decoration:none;font-size:13px;font-weight:700;background:rgba(192,132,252,0.1);padding:6px 14px;border-radius:20px;border:1px solid rgba(192,132,252,0.3);z-index:10;}
+.week-tabs{padding:0 12px;position:sticky;top:0;z-index:8;background:#0d0618;}
+.wtabs{max-width:680px;margin:0 auto;display:flex;}
+.wtab{flex:1;padding:13px 8px;border:none;cursor:pointer;font-weight:900;font-size:12px;background:transparent;border-bottom:3px solid transparent;text-align:center;letter-spacing:0.06em;}
+.content{max-width:680px;margin:20px auto 0;padding:0 16px;}
+.tap-hint{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;text-align:center;opacity:0.6;}
+.warmup-card{border-radius:14px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:flex-start;gap:10px;}
+.wu-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+.wu-text{font-size:13px;font-weight:700;line-height:1.4;}
+.wu-sub{font-size:11px;opacity:0.8;margin-top:3px;}
+.ex-card{border-radius:14px;border:1.5px solid;margin-bottom:12px;overflow:hidden;cursor:pointer;transition:all 0.15s;}
+.ex-card:active{transform:scale(0.99);}
+.ex-card.checked{background:#0a2a1a!important;border-color:rgba(52,211,153,0.45)!important;}
+.ex-card.checked .ex-name{text-decoration:line-through;color:#34d399;}
+.ex-card.checked .ex-num{background:#065f46!important;border-color:transparent!important;}
+.ex-row{display:flex;gap:10px;align-items:flex-start;padding:13px 14px;}
+.ex-num{display:inline-flex;align-items:center;justify-content:center;min-width:28px;width:28px;height:28px;border-radius:50%;font-size:12px;font-weight:900;margin-top:1px;flex-shrink:0;}
+.ex-content{flex:1;min-width:0;}
+.ex-name{font-weight:700;font-size:13px;color:#e2e8f0;line-height:1.4;margin-bottom:7px;}
+.ex-tags{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+.ex-sets{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:5px;}
+.ex-note{font-size:11px;margin-top:5px;font-style:italic;opacity:0.85;line-height:1.4;}
+.ss-card{border-radius:14px;border:1.5px solid rgba(168,85,247,0.3);margin-bottom:12px;overflow:hidden;}
+.ss-header{background:rgba(168,85,247,0.12);padding:7px 14px;display:flex;align-items:center;gap:6px;border-bottom:1px solid rgba(168,85,247,0.15);}
+.ss-label{font-size:10px;font-weight:900;letter-spacing:0.18em;color:#c084fc;text-transform:uppercase;}
+.ss-ex{display:flex;gap:10px;align-items:flex-start;padding:11px 14px;cursor:pointer;}
+.ss-ex:not(:last-child){border-bottom:1px solid rgba(168,85,247,0.1);}
+.ss-ex.checked .ss-name{text-decoration:line-through;color:#34d399;}
+.ss-ex.checked .ss-num{background:#065f46!important;border-color:transparent!important;color:#fff!important;}
+.ss-num{display:inline-flex;align-items:center;justify-content:center;min-width:28px;width:28px;height:28px;background:rgba(168,85,247,0.18);color:#c084fc;border-radius:50%;font-size:12px;font-weight:900;border:1px solid rgba(168,85,247,0.28);margin-top:1px;flex-shrink:0;}
+.ss-content{flex:1;min-width:0;}
+.ss-name{font-weight:700;font-size:13px;color:#e2e8f0;line-height:1.4;margin-bottom:6px;}
+.ss-divider{display:flex;align-items:center;justify-content:center;padding:4px 0;background:rgba(168,85,247,0.06);}
+.ss-x{font-size:11px;font-weight:900;color:#a855f7;letter-spacing:0.12em;}
+.type-badge{display:inline-block;font-size:10px;font-weight:800;padding:3px 8px;border-radius:5px;letter-spacing:0.05em;text-transform:uppercase;}
+.tb-pyramid{background:rgba(249,115,22,0.15);color:#fb923c;border:1px solid rgba(249,115,22,0.25);}
+.tb-lowrep{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.25);}
+.tb-tempo{background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.25);}
+.tb-highrep12{background:rgba(234,179,8,0.15);color:#fbbf24;border:1px solid rgba(234,179,8,0.25);}
+.tb-highrep20{background:rgba(217,119,6,0.2);color:#fb923c;border:1px solid rgba(217,119,6,0.3);}
+.tb-drop{background:rgba(244,63,94,0.15);color:#fb7185;border:1px solid rgba(244,63,94,0.25);}
+.tb-amrap{background:rgba(239,68,68,0.2);color:#ef4444;border:1px solid rgba(239,68,68,0.35);}
+.tb-minrest{background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.25);}
+.tb-optional{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.25);}
+.tb-finisher{background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.25);}
+
+.header{padding:60px 20px 22px;border-bottom:1px solid rgba(163,230,53,0.15);position:relative;background:linear-gradient(135deg,#0a1f00,#0d0618);}
+.header-inner{max-width:680px;margin:0 auto;}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.25em;color:#a3e635;text-transform:uppercase;margin-bottom:8px;}
+.title{font-size:24px;font-weight:900;color:#fff;margin-bottom:8px;letter-spacing:-0.02em;}
+.week-badge{display:inline-block;background:rgba(163,230,53,0.15);border:1px solid rgba(163,230,53,0.35);border-radius:6px;padding:5px 14px;font-size:12px;color:#a3e635;font-weight:700;}
+.week-tabs{border-bottom:1px solid rgba(163,230,53,0.1);}
+.wtab{color:#1a3a00;}
+.wtab.active{color:#a3e635;border-bottom-color:#a3e635;}
+.tap-hint{color:#a3e635;}
+.ex-card{background:#0a1800;border-color:rgba(163,230,53,0.2);}
+.ss-card{background:#0a1800;}
+.ex-num{background:rgba(163,230,53,0.18);color:#a3e635;border:1px solid rgba(163,230,53,0.28);}
+.ex-sets{background:rgba(163,230,53,0.1);color:#d9f99d;border:1px solid rgba(163,230,53,0.2);}
+.ex-note{color:#bef264;}
+
+
+.sum-section{margin-top:28px;padding:0 16px 24px;}
+.sum-hd{font-size:10px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;opacity:0.85;}
+.sum-hd::after{content:'';flex:1;height:1px;}
+.sum-card{border-radius:14px;padding:16px 18px;margin-bottom:8px;}
+.sum-sub{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;opacity:0.75;}
+.sum-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid;}
+.sum-row:last-of-type{border-bottom:none;}
+.sum-ico{font-size:16px;flex-shrink:0;width:22px;text-align:center;}
+.sum-nm{font-size:12px;font-weight:700;color:#e2e8f0;flex:1;line-height:1.3;}
+.sum-dt{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;}
+.sum-st{font-size:11px;font-weight:900;text-align:right;}
+.sum-rp{font-size:10px;text-align:right;opacity:0.75;}
+.sum-div{height:1px;margin:12px 0;}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;}
+.sum-tot{border-radius:8px;padding:10px;text-align:center;}
+.sum-tv{font-size:15px;font-weight:900;}
+.sum-tl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px;opacity:0.7;}
+
+
+/* ── TIMER ── */
+.rest-timer{
+  display:inline-flex;align-items:center;gap:6px;
+  cursor:pointer;user-select:none;
+  padding:4px 10px;border-radius:8px;
+  transition:all 0.15s;position:relative;
+}
+.rest-timer:active{transform:scale(0.96);}
+.rest-timer.idle{background:rgba(100,116,139,0.12);border:1px solid rgba(100,116,139,0.2);}
+.rest-timer.running{background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.35);animation:timerPulse 1s ease-in-out infinite;}
+.rest-timer.done{background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.35);}
+.rest-timer.overtime{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);}
+@keyframes timerPulse{0%,100%{opacity:1;}50%{opacity:0.7;}}
+.rest-timer-icon{font-size:13px;}
+.rest-timer-label{font-size:11px;font-weight:800;letter-spacing:0.04em;}
+.rest-timer.idle .rest-timer-label{color:#64748b;}
+.rest-timer.running .rest-timer-label{color:#fbbf24;}
+.rest-timer.done .rest-timer-label{color:#34d399;}
+.rest-timer.overtime .rest-timer-label{color:#f87171;}
+.rest-timer-hint{font-size:9px;color:#475569;margin-top:2px;font-style:italic;}
+
+/* Floating timer display — shows when running */
+.timer-float{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:rgba(10,10,16,0.95);backdrop-filter:blur(16px);
+  border-radius:20px;padding:14px 24px;
+  display:none;flex-direction:column;align-items:center;gap:4px;
+  border:1px solid rgba(255,255,255,0.1);
+  box-shadow:0 8px 32px rgba(0,0,0,0.6);
+  z-index:100;min-width:200px;
+}
+.timer-float.visible{display:flex;}
+.timer-float-label{font-size:10px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:#475569;}
+.timer-float-time{font-size:42px;font-weight:900;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:#fbbf24;}
+.timer-float-time.done{color:#34d399;}
+.timer-float-time.overtime{color:#f87171;}
+.timer-float-ex{font-size:11px;color:#64748b;text-align:center;max-width:180px;line-height:1.4;}
+.timer-float-bar{width:100%;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:4px;overflow:hidden;}
+.timer-float-progress{height:100%;background:#fbbf24;border-radius:2px;transition:width 0.5s linear;width:100%;}
+.timer-float-progress.done{background:#34d399;}
+.timer-float-progress.overtime{background:#f87171;}
+.timer-float-actions{display:flex;gap:8px;margin-top:6px;}
+.timer-float-btn{padding:6px 14px;border-radius:8px;border:none;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:0.06em;}
+.timer-float-skip{background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3);}
+.timer-float-reset{background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.2);}
+
+
+.prog-bar-wrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:999;background:rgba(255,255,255,0.06);}
+.prog-bar-fill{height:3px;background:linear-gradient(90deg,#22d3ee,#a78bfa);transition:width 0.4s ease;border-radius:0 2px 2px 0;}
+.timer-presets{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;justify-content:center;}
+.timer-preset{padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.07);color:#94a3b8;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:0.05em;}
+.timer-preset:active{background:rgba(212,175,55,0.2);color:#fbbf24;border-color:rgba(212,175,55,0.4);}
+
+/* ── WEIGHT NOTES ── */
+.ex-notes-toggle{display:inline-flex;align-items:center;gap:4px;margin-top:6px;cursor:pointer;font-size:10px;font-weight:800;color:#475569;letter-spacing:0.06em;text-transform:uppercase;user-select:none;}
+.ex-notes-toggle:active{color:#94a3b8;}
+.ex-notes-wrap{display:none;margin-top:8px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.08);}
+.ex-notes-wrap.open{display:block;}
+.ex-notes-input{width:100%;background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;font-weight:600;font-family:inherit;resize:none;line-height:1.5;}
+.ex-notes-input::placeholder{color:#334155;}
+.ex-notes-label{font-size:9px;font-weight:800;letter-spacing:0.15em;color:#475569;text-transform:uppercase;margin-bottom:4px;}
+</style>
+</head>
+<body>
+<div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
+<div id="app"></div>
+<script>
+// ── TIMER ENGINE (hoisted) ──
+const TMR = {
+  interval: null,
+  startTime: null,
+  duration: 0,
+  activeEl: null,
+  activeName: '',
+
+  parseSeconds(str) {
+    if (!str || str === '—') return 0;
+    str = str.toLowerCase().trim();
+    // e.g. "90 sec", "2 min", "75 sec between & after", "30, 30, 30 sec"
+    const minMatch = str.match(/(\d+)\s*min/);
+    const secMatch = str.match(/(\d+)\s*sec/);
+    let secs = 0;
+    if (minMatch) secs += parseInt(minMatch[1]) * 60;
+    if (secMatch) secs += parseInt(secMatch[1]);
+    if (!secs) {
+      // plain number
+      const plain = str.match(/^(\d+)/);
+      if (plain) secs = parseInt(plain[1]);
+    }
+    return secs;
+  },
+
+  formatTime(secs) {
+    const neg = secs < 0;
+    const abs = Math.abs(secs);
+    const m = Math.floor(abs / 60);
+    const s = abs % 60;
+    return (neg ? '+' : '') + (m > 0 ? m + ':' + String(s).padStart(2,'0') : String(s) + 's');
+  },
+
+  buzz() {
+    // Vibrate
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+    // Sound — Web Audio API beep
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const times = [0, 0.3, 0.6];
+      times.forEach((t, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = i === 2 ? 880 : 660;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.4, ctx.currentTime + t);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.25);
+        osc.start(ctx.currentTime + t);
+        osc.stop(ctx.currentTime + t + 0.25);
+      });
+    } catch(e) {}
+  },
+
+  start(el, durationSecs, exerciseName) {
+    this.stop();
+    this.duration = durationSecs;
+    this.startTime = Date.now();
+    this.activeEl = el;
+    this.activeName = exerciseName;
+
+    el.className = 'rest-timer running';
+    el.querySelector('.rest-timer-label').textContent = this.formatTime(durationSecs);
+
+    const float = document.getElementById('timerFloat');
+    const floatTime = document.getElementById('timerFloatTime');
+    const floatProgress = document.getElementById('timerFloatProgress');
+    const floatEx = document.getElementById('timerFloatEx');
+    const floatLabel = document.getElementById('timerFloatLabel');
+
+    float.classList.add('visible');
+    floatEx.textContent = exerciseName;
+    floatLabel.textContent = 'REST';
+    floatTime.className = 'timer-float-time';
+    floatProgress.className = 'timer-float-progress';
+    floatProgress.style.width = '100%';
+
+    this.interval = setInterval(() => {
+      const elapsed = (Date.now() - this.startTime) / 1000;
+      const remaining = Math.ceil(this.duration - elapsed);
+
+      // Update card badge
+      if (el) {
+        el.querySelector('.rest-timer-label').textContent = this.formatTime(remaining);
+      }
+
+      // Update float
+      floatTime.textContent = this.formatTime(remaining);
+
+      if (remaining > 0) {
+        const pct = (remaining / this.duration) * 100;
+        floatProgress.style.width = pct + '%';
+        floatTime.className = 'timer-float-time';
+        floatProgress.className = 'timer-float-progress';
+        if (el) el.className = 'rest-timer running';
+      } else if (remaining === 0 || remaining === -0) {
+        this.buzz();
+        floatTime.className = 'timer-float-time done';
+        floatProgress.className = 'timer-float-progress done';
+        floatProgress.style.width = '100%';
+        floatLabel.textContent = 'DONE!';
+        if (el) el.className = 'rest-timer done';
+      } else {
+        // Overtime
+        floatTime.textContent = '+' + this.formatTime(-remaining);
+        floatTime.className = 'timer-float-time overtime';
+        floatProgress.className = 'timer-float-progress overtime';
+        floatLabel.textContent = 'OVERTIME';
+        if (el) el.className = 'rest-timer overtime';
+      }
+    }, 500);
+  },
+
+  stop() {
+    if (this.interval) clearInterval(this.interval);
+    this.interval = null;
+    if (this.activeEl) {
+      const secs = this.parseSeconds(this.activeEl.dataset.rest);
+      this.activeEl.querySelector('.rest-timer-label').textContent = this.activeEl.dataset.label;
+      this.activeEl.className = 'rest-timer idle';
+      this.activeEl = null;
+    }
+    const float = document.getElementById('timerFloat');
+    if (float) float.classList.remove('visible');
+  },
+
+  toggle(el, durationSecs, exerciseName) {
+    if (this.activeEl === el && this.interval) {
+      this.stop();
+    } else {
+      this.start(el, durationSecs, exerciseName);
+    }
+  },
+  setTime(secs,label){
+    if(this.interval){clearInterval(this.interval);this.interval=null;}
+    this.duration=secs;this.startTime=Date.now();
+    const ft=document.getElementById("timerFloat");
+    if(ft){
+      const tl=ft.querySelector(".timer-float-label"),tt=ft.querySelector(".timer-float-time"),tp=ft.querySelector(".timer-float-progress");
+      if(tl)tl.textContent=label||(secs+"s");
+      if(tt){tt.textContent=secs+"s";tt.className="timer-float-time";}
+      if(tp){tp.style.width="100%";tp.className="timer-float-progress";}
+      ft.classList.add("visible");
+    }
+    this.activeEl=null;
+    this.interval=setInterval(()=>{
+      const rem=Math.ceil(this.duration-(Date.now()-this.startTime)/1000);
+      const ft2=document.getElementById("timerFloat");if(!ft2)return;
+      const tt2=ft2.querySelector(".timer-float-time"),tp2=ft2.querySelector(".timer-float-progress"),tl2=ft2.querySelector(".timer-float-label");
+      if(rem>0){if(tt2){tt2.textContent=rem+"s";tt2.className="timer-float-time";}if(tp2){tp2.style.width=Math.round((rem/this.duration)*100)+"%";tp2.className="timer-float-progress";}}
+      else if(rem===0){if(tt2){tt2.textContent="DONE!";tt2.className="timer-float-time done";}if(tp2){tp2.style.width="100%";tp2.className="timer-float-progress done";}if(tl2)tl2.textContent="DONE ✓";try{navigator.vibrate&&navigator.vibrate([200,100,200,100,400]);}catch(e){}}
+      else{if(tt2){tt2.textContent="+"+Math.abs(rem)+"s";tt2.className="timer-float-time overtime";}if(tp2)tp2.className="timer-float-progress overtime";}
+    },500);
+  }
+};
+
+function buildTimerFloat() {
+  if (document.getElementById('timerFloat')) return;
+  const div = document.createElement('div');
+  div.id = 'timerFloat';
+  div.className = 'timer-float';
+  div.innerHTML = `
+    <div id="timerFloatLabel" class="timer-float-label">REST</div>
+    <div id="timerFloatTime" class="timer-float-time">0s</div>
+    <div id="timerFloatEx" class="timer-float-ex"></div>
+    <div class="timer-float-bar"><div id="timerFloatProgress" class="timer-float-progress"></div></div>
+    <div class="timer-float-actions">
+      <button class="timer-float-btn timer-float-skip" onclick="TMR.stop()">✓ Done</button>
+      <button class="timer-float-btn timer-float-reset" onclick="TMR.stop()">✕ Cancel</button>
+    </div>`;
+  document.body.appendChild(div);
+}
+
+function makeRestTimer(restStr, exerciseName) {
+  const secs = TMR.parseSeconds(restStr);
+  if (!secs) return '<span class="ex-sets" style="opacity:0.5">⏱️ ' + restStr + '</span>';
+  const label = restStr;
+  return '<span class="rest-timer idle" data-rest="' + restStr + '" data-label="' + label + '" ' +
+    'onclick="buildTimerFloat();TMR.toggle(this,' + secs + ',\'' + exerciseName.replace(/'/g,"\'").substring(0,30) + '...\')" ' +
+    'title="Tap to start rest timer">' +
+    '<span class="rest-timer-icon">⏱️</span>' +
+    '<span class="rest-timer-label">' + label + '</span>' +
+    '</span>';
+}
+buildTimerFloat();
+
+
+let activeWeek=new URLSearchParams(location.search).get('w')==='2'?2:1;
+
+const checkState={};
+function badges(arr){
+  const LBL={'tb-pyramid':'📈 Pyramid','tb-lowrep':'🏋️ Low Rep','tb-tempo':'⏱️ Tempo',
+    'tb-highrep12':'🔥 12-15 Reps','tb-highrep20':'🔥 20-30 Reps','tb-drop':'↘️ Drop Set',
+    'tb-amrap':'💀 AMRAP','tb-minrest':'⚡ 20s Rest','tb-optional':'⭐ Optional',
+    'tb-finisher':'🏁 Finisher','tb-superset':'⚡ Superset'};
+  return arr.map(function(b){return '<span class="type-badge '+b+'">'+LBL[b]+'</span>';}).join('');
+}
+function renderSingle(ex,wk){
+  var id=wk+'-s-'+ex.num; var ck=checkState[id]?'checked':'';
+  return '<div class="ex-card '+ck+'" data-id="'+id+'" data-type="single">'+
+    '<div class="ex-row"><div class="ex-num">'+ex.num+'</div>'+
+    '<div class="ex-content"><div class="ex-name">'+ex.name+'</div>'+
+    '<div class="ex-tags"><span class="ex-sets">'+ex.sets+'</span>'+badges(ex.badges)+'</div>'+
+    '<div class="ex-rest">'+makeRestTimer(ex.rest||'60 sec',ex.name)+'</div>'+
+    (ex.note?'<div class="ex-note">'+ex.note+'</div>':'')+
+    '</div></div></div>';
+}
+function renderSS(ex,wk){
+  var ida=wk+'-ss-'+ex.num+'a', idb=wk+'-ss-'+ex.num+'b';
+  var cka=checkState[ida]?'checked':'', ckb=checkState[idb]?'checked':'';
+  return '<div class="ss-card">'+
+    '<div class="ss-header"><span class="ss-label">⚡ Superset #'+ex.num+'</span></div>'+
+    '<div class="ss-ex '+cka+'" data-id="'+ida+'" data-type="ssex">'+
+    '<div class="ss-num">A</div><div class="ss-content"><div class="ss-name">'+ex.a.name+'</div>'+
+    '<div class="ex-tags"><span class="ex-sets">'+ex.a.sets+'</span>'+badges(ex.a.badges)+'</div>'+
+    '<div class="ex-rest">'+makeRestTimer('120 sec',ex.a.name)+'</div>'+
+    (ex.a.note?'<div class="ex-note">'+ex.a.note+'</div>':'')+
+    '</div></div><div class="ss-divider"><span class="ss-x">× SUPERSET ×</span></div>'+
+    '<div class="ss-ex '+ckb+'" data-id="'+idb+'" data-type="ssex">'+
+    '<div class="ss-num">B</div><div class="ss-content"><div class="ss-name">'+ex.b.name+'</div>'+
+    '<div class="ex-tags"><span class="ex-sets">'+ex.b.sets+'</span>'+badges(ex.b.badges)+'</div>'+
+    '<div class="ex-rest">'+makeRestTimer('120 sec',ex.b.name)+'</div>'+
+    (ex.b.note?'<div class="ex-note">'+ex.b.note+'</div>':'')+
+    '</div></div></div>';
+}
+function renderEx(ex,wk){return ex.type==='superset'?renderSS(ex,wk):renderSingle(ex,wk);}
+function attachEvents(){
+  document.querySelectorAll('[data-type="single"]').forEach(function(c){
+    c.addEventListener('click',function(){var id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');});
+  });
+  document.querySelectorAll('[data-type="ssex"]').forEach(function(c){
+    c.addEventListener('click',function(e){e.stopPropagation();var id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');});
+  });
+  document.querySelectorAll('.wtab').forEach(function(b){
+    b.addEventListener('click',function(){activeWeek=parseInt(b.dataset.w);render();});
+  });
+}
+
+
+const DATA={
+  1:[
+    {type:'single',num:1,name:'Wide Grip Lat Pulldowns',sets:'12,10,8,8',badges:['tb-pyramid'],note:'Pyramid up · full stretch at top'},
+    {type:'single',num:2,name:'Pendlay Rows',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · reset each rep · explosive pull'},
+    {type:'single',num:3,name:'Wide Barbell Shrugs',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · 2 sec pause at top · 1:0:1:2'},
+    {type:'single',num:4,name:'Wide Grip Cable Rows',sets:'4x15',badges:['tb-highrep12'],note:'12-15 reps · 2 sec pause at peak · 1:0:1:2'},
+    {type:'single',num:5,name:'Incline DB Row',sets:'4x12 drop 15',badges:['tb-highrep12','tb-drop','tb-tempo'],note:'12-15 reps · 2 sec pause at top · 1:0:1:2 · drop set final set'},
+    {type:'superset',num:6,
+     a:{name:'Seated Shrugs',sets:'4xfailure',badges:['tb-superset','tb-amrap'],note:'⚡ Superset A · 4 sets to failure · squeeze hard at top'},
+     b:{name:'Wide Grip Lat Pulldowns',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 reps · bilateral · full stretch'}},
+  ],
+  2:[
+    {type:'single',num:1,name:'Wide Grip Lat Pulldowns',sets:'12,10,8,8',badges:['tb-pyramid'],note:'Pyramid up · increase weight from W1'},
+    {type:'single',num:2,name:'Pendlay Rows',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavier than W1'},
+    {type:'single',num:3,name:'Wide Barbell Shrugs',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · 2 sec pause · heavier than W1'},
+    {type:'single',num:4,name:'Wide Grip Cable Rows',sets:'4x15',badges:['tb-highrep12'],note:'12-15 reps · 2 sec pause at peak'},
+    {type:'single',num:5,name:'Incline DB Row',sets:'4x12 drop 15',badges:['tb-highrep12','tb-drop'],note:'12-15 reps · 2 sec pause · drop set final set'},
+    {type:'superset',num:6,
+     a:{name:'Seated Shrugs',sets:'4xfailure',badges:['tb-superset','tb-amrap'],note:'⚡ Superset A · 4 sets to failure · heavier than W1'},
+     b:{name:'Wide Grip Lat Pulldowns',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 reps · bilateral'}},
+  ]
+};
+
+function render(){
+  var w1=activeWeek===1?'active':'',w2=activeWeek===2?'active':'';
+  document.getElementById('app').innerHTML=
+    '<div class="header"><a href="pmc-split6.html" class="back-link">← Split #6</a>'+
+    '<div class="header-inner"><div class="eyebrow">🔙 PMC · Split #6</div>'+
+    '<div class="title">Back & Traps</div><div><span class="week-badge">Week '+activeWeek+'</span></div></div></div>'+
+    '<div class="week-tabs"><div class="wtabs"><button class="wtab '+w1+'" data-w="1">WEEK 1</button><button class="wtab '+w2+'" data-w="2">WEEK 2</button></div></div>'+
+    '<div class="content"><div class="tap-hint">Tap any exercise to check off</div>'+
+    DATA[activeWeek].map(function(e){return renderEx(e,activeWeek);}).join('')+'</div>';
+  attachEvents();
+}
+render();
+if(typeof updateProgress!=="undefined")updateProgress();
+
+// ── TIMER ENGINE ──────────────────────────────────────────────────
+
+
+
+
+
+
+</script>
+<div style="max-width:680px;margin:0 auto;">
+<div class="sum-section">
+  <div class="sum-hd" style="color:#a3e635;">📊 Workout Summary
+    <span style="flex:1;height:1px;background:linear-gradient(90deg,rgba(163,230,53,0.3),transparent);display:block;margin-left:8px;"></span>
+  </div>
+  <div class="sum-card" style="background:#0a1800;border:1px solid rgba(163,230,53,0.2);">
+    <div class="sum-sub" style="color:#a3e635;">Lats · Mid Back · Traps</div>
+    <div class="sum-row" style="border-bottom-color:rgba(163,230,53,0.08);"><span class="sum-ico">📈</span><span class="sum-nm">Wide Grip Lat Pulldowns</span><div class="sum-dt"><span class="sum-st" style="color:#a3e635;">4 sets</span><span class="sum-rp" style="color:#a3e635;">12,10,8,8 pyramid</span></div></div><div class="sum-row" style="border-bottom-color:rgba(163,230,53,0.08);"><span class="sum-ico">🏋️</span><span class="sum-nm">Pendlay Rows</span><div class="sum-dt"><span class="sum-st" style="color:#a3e635;">5 sets</span><span class="sum-rp" style="color:#a3e635;">5 reps — heavy</span></div></div><div class="sum-row" style="border-bottom-color:rgba(163,230,53,0.08);"><span class="sum-ico">🔥</span><span class="sum-nm">Wide Barbell Shrugs</span><div class="sum-dt"><span class="sum-st" style="color:#a3e635;">4 sets</span><span class="sum-rp" style="color:#a3e635;">20 reps — 2 sec pause</span></div></div><div class="sum-row" style="border-bottom-color:rgba(163,230,53,0.08);"><span class="sum-ico">💪</span><span class="sum-nm">Wide Grip Cable Rows</span><div class="sum-dt"><span class="sum-st" style="color:#a3e635;">4 sets</span><span class="sum-rp" style="color:#a3e635;">15 reps — tempo</span></div></div><div class="sum-row" style="border-bottom-color:rgba(163,230,53,0.08);"><span class="sum-ico">↘️</span><span class="sum-nm">Incline DB Row</span><div class="sum-dt"><span class="sum-st" style="color:#a3e635;">4 sets</span><span class="sum-rp" style="color:#a3e635;">12 reps drop 15 — tempo</span></div></div><div class="sum-row" style="border-bottom-color:rgba(163,230,53,0.08);"><span class="sum-ico">🔀</span><span class="sum-nm">Seated Shrugs × Wide PD</span><div class="sum-dt"><span class="sum-st" style="color:#a3e635;">4 sets</span><span class="sum-rp" style="color:#a3e635;">AMRAP / 20 reps</span></div></div>
+    <div class="sum-div" style="background:rgba(163,230,53,0.15);"></div>
+    <div class="sum-grid">
+      <div class="sum-tot" style="background:rgba(163,230,53,0.08);border:1px solid rgba(163,230,53,0.15);">
+        <div class="sum-tv" style="color:#a3e635;">25-26 sets</div>
+        <div class="sum-tl" style="color:#a3e635;">Total Sets</div>
+      </div>
+      <div class="sum-tot" style="background:rgba(163,230,53,0.08);border:1px solid rgba(163,230,53,0.15);">
+        <div class="sum-tv" style="color:#a3e635;">~260-300 reps</div>
+        <div class="sum-tl" style="color:#a3e635;">Est. Reps</div>
+      </div>
+      <div class="sum-tot" style="background:rgba(163,230,53,0.08);border:1px solid rgba(163,230,53,0.15);">
+        <div class="sum-tv" style="color:#a3e635;">50-60 min</div>
+        <div class="sum-tl" style="color:#a3e635;">Est. Time</div>
+      </div>
+    </div>
+  </div>
+</div></div>
+<script>
+// ── SESSION PROGRESS BAR ──
+function updateProgress() {
+  const all = document.querySelectorAll('.ex-card, .ss-ex');
+  const done = document.querySelectorAll('.ex-card.checked, .ss-ex.checked');
+  const pct = all.length ? Math.round((done.length / all.length) * 100) : 0;
+  const fill = document.getElementById('progFill');
+  if (fill) fill.style.width = pct + '%';
+}
+// Observe DOM for check changes
+const _progObs = new MutationObserver(updateProgress);
+document.addEventListener('DOMContentLoaded', function() {
+  const app = document.getElementById('app');
+  if (app) _progObs.observe(app, {subtree:true, attributes:true, attributeFilter:['class']});
+  updateProgress();
+});
+
+// ── TIMER PRESETS ──
+function addTimerPresets() {
+  const tf = document.getElementById('timerFloat');
+  if (!tf || tf.querySelector('.timer-presets')) return;
+  const presets = document.createElement('div');
+  presets.className = 'timer-presets';
+  presets.innerHTML = ['45s','60s','90s','2min'].map(function(l) {
+    const s = l==='2min'?120:parseInt(l);
+    return '<button class="timer-preset" onclick="TMR.setTime && TMR.setTime('+s+',\''+l+'\')" >' + l + '</button>';
+  }).join('');
+  tf.appendChild(presets);
+}
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(addTimerPresets, 500);
+});
+</script>
+<script>
+// ── WEIGHT / NOTES PER EXERCISE ──
+const NOTES_KEY = 'mc_notes';
+function getNotes() { try { return JSON.parse(localStorage.getItem(NOTES_KEY)||'{}'); } catch(e) { return {}; } }
+function saveNote(exId, val) {
+  const notes = getNotes();
+  if (val.trim()) notes[exId] = val.trim();
+  else delete notes[exId];
+  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+}
+function initNotes() {
+  const notes = getNotes();
+  document.querySelectorAll('.ex-card[data-id]').forEach(card => {
+    const id = card.dataset.id;
+    if (!id || card.querySelector('.ex-notes-wrap')) return;
+    const existing = notes[id] || '';
+    const toggle = document.createElement('div');
+    toggle.className = 'ex-notes-toggle';
+    toggle.innerHTML = existing ? '✏️ ' + existing.substring(0,20) + (existing.length>20?'…':'') : '✚ Add weight/notes';
+    const wrap = document.createElement('div');
+    wrap.className = 'ex-notes-wrap' + (existing ? ' open' : '');
+    wrap.innerHTML = '<div class="ex-notes-label">Weight / Notes</div><textarea class="ex-notes-input" rows="1" placeholder="e.g. 135 lbs · 3x10 felt easy">' + existing + '</textarea>';
+    toggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      wrap.classList.toggle('open');
+    });
+    const textarea = wrap.querySelector('textarea');
+    textarea.addEventListener('input', function() {
+      saveNote(id, this.value);
+      toggle.innerHTML = this.value.trim() ? '✏️ ' + this.value.trim().substring(0,20) + (this.value.trim().length>20?'…':'') : '✚ Add weight/notes';
+    });
+    const content = card.querySelector('.ex-content');
+    if (content) { content.appendChild(toggle); content.appendChild(wrap); }
+  });
+}
+// Run after every render
+const _notesOrig = window._notesInit;
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(initNotes, 300);
+});
+// Also expose for manual call after tab switches
+window.initNotes = initNotes;
+</script>
+<script>
+// ── REPLACE EXERCISE ──
+(function() {
+  const REPLACE_KEY = 'mc_replacements';
+  function applyReplacements() {
+    const replacements = JSON.parse(localStorage.getItem(REPLACE_KEY)||'{}');
+    if (!Object.keys(replacements).length) return;
+    document.querySelectorAll('.ex-card, .ex-item, .lift-card').forEach(card => {
+      const nameEl = card.querySelector('.ex-name, .lift-name');
+      if (!nameEl) return;
+      const origName = nameEl.textContent.trim();
+      const replacement = replacements[origName.toLowerCase()];
+      if (replacement) {
+        nameEl.textContent = replacement;
+        nameEl.style.color = '#22d3ee';
+        if (!card.querySelector('.replaced-badge')) {
+          const badge = document.createElement('span');
+          badge.className = 'replaced-badge';
+          badge.style.cssText = 'font-size:9px;font-weight:900;color:#22d3ee;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.25);border-radius:4px;padding:2px 5px;margin-left:6px;letter-spacing:0.06em;vertical-align:middle;';
+          badge.textContent = 'REPLACED';
+          nameEl.parentNode.insertBefore(badge, nameEl.nextSibling);
+        }
+      }
+    });
+  }
+  // Run after render
+  if (typeof render === 'function') {
+    const origRender = render;
+    window.render = function() { origRender.apply(this, arguments); setTimeout(applyReplacements, 100); };
+  }
+  document.addEventListener('DOMContentLoaded', function() { setTimeout(applyReplacements, 400); });
+  // Long press to replace
+  let pressTimer;
+  document.addEventListener('touchstart', function(e) {
+    const card = e.target.closest('.ex-card, .ex-item, .lift-card');
+    if (!card) return;
+    pressTimer = setTimeout(function() {
+      const nameEl = card.querySelector('.ex-name, .lift-name');
+      if (!nameEl) return;
+      const origName = nameEl.dataset.orig || nameEl.textContent.trim();
+      nameEl.dataset.orig = origName;
+      // Navigate to library with exercise pre-selected
+      const url = 'exercise-library.html?replace=' + encodeURIComponent(origName);
+      if (confirm('Replace "' + origName.substring(0,40) + '"?\nTap OK to open Exercise Library.')) {
+        window.location.href = url;
+      }
+    }, 600);
+  }, {passive: true});
+  document.addEventListener('touchend', function() { clearTimeout(pressTimer); }, {passive: true});
+  document.addEventListener('touchmove', function() { clearTimeout(pressTimer); }, {passive: true});
+})();
+</script>
+</body>
+</html>

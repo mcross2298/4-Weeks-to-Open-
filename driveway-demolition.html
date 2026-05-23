@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Driveway Demolition</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#3f1408;min-height:100vh;padding-bottom:40px;}
+.app{background:linear-gradient(135deg,#3f1408 0%,#9a3412 50%,#3f1408 100%);min-height:100vh;}
+.back-link{position:absolute;top:18px;left:18px;color:#fdba74;text-decoration:none;font-size:13px;font-weight:600;background:rgba(234,88,12,0.22);padding:6px 12px;border-radius:20px;border:1px solid rgba(234,88,12,0.5);z-index:10;}
+.back-link:active{background:rgba(234,88,12,0.35);}
+.header{background:linear-gradient(90deg,#9a3412,#3f1408);padding:60px 20px 22px;border-bottom:1px solid rgba(255,255,255,0.08);position:relative;}
+.header-inner{max-width:680px;margin:0 auto;}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.22em;color:#fdba74;text-transform:uppercase;margin-bottom:8px;}
+.title{font-size:30px;font-weight:900;color:#fff;margin-bottom:10px;letter-spacing:-0.02em;}
+.schedule{display:inline-block;background:rgba(234,88,12,0.22);border:1px solid rgba(234,88,12,0.5);border-radius:6px;padding:5px 12px;font-size:12px;color:#fed7aa;font-weight:700;}
+.tabs-bar{background:#3f1408;border-bottom:1px solid rgba(255,255,255,0.07);padding:0 20px;}
+.tabs{max-width:680px;margin:0 auto;display:flex;gap:4px;overflow-x:auto;}
+.tab{padding:12px 22px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:transparent;color:#92857a;border-bottom:3px solid transparent;white-space:nowrap;letter-spacing:0.04em;}
+.tab.active{color:#fb923c;border-bottom-color:#fb923c;}
+.content{max-width:680px;margin:24px auto 0;padding:0 16px;}
+.section-card{background:#fff;border-radius:16px;padding:0;margin-bottom:18px;box-shadow:0 4px 16px rgba(0,0,0,0.3);overflow:hidden;}
+.section-head{background:linear-gradient(135deg,#9a3412,#7c2d12);color:#fff;padding:16px 20px;}
+.section-eyebrow{font-size:10px;font-weight:800;letter-spacing:0.2em;color:#fed7aa;text-transform:uppercase;margin-bottom:4px;}
+.section-title{font-size:20px;font-weight:900;letter-spacing:-0.01em;}
+.section-body{padding:18px 20px;}
+.rules-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+.rules-list li{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#374151;line-height:1.5;}
+.rules-list li::before{content:"▸";color:#ea580c;font-weight:900;font-size:14px;flex-shrink:0;}
+.rules-list strong{color:#9a3412;}
+.big-number{display:inline-block;background:linear-gradient(135deg,#ea580c,#9a3412);color:#fff;font-size:32px;font-weight:900;padding:12px 22px;border-radius:12px;letter-spacing:-0.02em;box-shadow:0 4px 14px rgba(234,88,12,0.4);}
+.big-number .unit{font-size:13px;font-weight:700;opacity:0.9;margin-left:8px;letter-spacing:0.06em;}
+.target-row{display:flex;gap:10px;align-items:center;margin-top:14px;padding:10px 14px;background:#fff7ed;border-radius:8px;border:1px solid #fed7aa;}
+.target-label{font-size:10px;font-weight:800;color:#9a3412;letter-spacing:0.12em;text-transform:uppercase;}
+.target-value{font-size:18px;font-weight:900;color:#7c2d12;}
+.day-block{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+.day-block-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.day-pill{background:#9a3412;color:#fff;font-size:10px;font-weight:800;padding:3px 9px;border-radius:5px;letter-spacing:0.08em;}
+.day-title{font-size:13px;font-weight:800;color:#7c2d12;}
+.ex-list{list-style:none;display:flex;flex-direction:column;gap:6px;}
+.ex-list li{display:flex;gap:10px;align-items:center;font-size:13px;color:#374151;}
+.ex-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#fff;border:1.5px solid #fed7aa;border-radius:50%;font-size:11px;font-weight:900;color:#9a3412;flex-shrink:0;}
+.ex-text{font-weight:600;}
+.optional-banner{background:linear-gradient(135deg,#fef3c7,#fde68a);border-left:3px solid #f59e0b;padding:12px 14px;border-radius:8px;margin-top:14px;font-size:12px;color:#78350f;line-height:1.5;}
+.optional-banner strong{color:#92400e;}
+
+.totals-section{margin-top:24px;padding:0 0 8px;}
+.totals-head{font-size:10px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;opacity:0.8;}
+.totals-head::after{content:'';flex:1;height:1px;}
+.totals-card{border-radius:14px;padding:18px;margin-bottom:8px;}
+.total-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom-width:1px;border-bottom-style:solid;}
+.total-row:last-child{border-bottom:none;padding-bottom:0;}
+.total-label{font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.total-icon{font-size:15px;}
+.total-value{font-size:13px;font-weight:900;text-align:right;}
+.total-divider{height:1px;margin:10px 0;}
+.grand-row{display:flex;justify-content:space-between;align-items:center;padding-top:10px;}
+.grand-label{font-size:13px;font-weight:900;color:#fff;}
+.grand-value{font-size:20px;font-weight:900;}
+
+/* ── TIMER ── */
+.rest-timer{
+  display:inline-flex;align-items:center;gap:6px;
+  cursor:pointer;user-select:none;
+  padding:4px 10px;border-radius:8px;
+  transition:all 0.15s;position:relative;
+}
+.rest-timer:active{transform:scale(0.96);}
+.rest-timer.idle{background:rgba(100,116,139,0.12);border:1px solid rgba(100,116,139,0.2);}
+.rest-timer.running{background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.35);animation:timerPulse 1s ease-in-out infinite;}
+.rest-timer.done{background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.35);}
+.rest-timer.overtime{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);}
+@keyframes timerPulse{0%,100%{opacity:1;}50%{opacity:0.7;}}
+.rest-timer-icon{font-size:13px;}
+.rest-timer-label{font-size:11px;font-weight:800;letter-spacing:0.04em;}
+.rest-timer.idle .rest-timer-label{color:#64748b;}
+.rest-timer.running .rest-timer-label{color:#fbbf24;}
+.rest-timer.done .rest-timer-label{color:#34d399;}
+.rest-timer.overtime .rest-timer-label{color:#f87171;}
+.rest-timer-hint{font-size:9px;color:#475569;margin-top:2px;font-style:italic;}
+
+/* Floating timer display — shows when running */
+.timer-float{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:rgba(10,10,16,0.95);backdrop-filter:blur(16px);
+  border-radius:20px;padding:14px 24px;
+  display:none;flex-direction:column;align-items:center;gap:4px;
+  border:1px solid rgba(255,255,255,0.1);
+  box-shadow:0 8px 32px rgba(0,0,0,0.6);
+  z-index:100;min-width:200px;
+}
+.timer-float.visible{display:flex;}
+.timer-float-label{font-size:10px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:#475569;}
+.timer-float-time{font-size:42px;font-weight:900;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:#fbbf24;}
+.timer-float-time.done{color:#34d399;}
+.timer-float-time.overtime{color:#f87171;}
+.timer-float-ex{font-size:11px;color:#64748b;text-align:center;max-width:180px;line-height:1.4;}
+.timer-float-bar{width:100%;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:4px;overflow:hidden;}
+.timer-float-progress{height:100%;background:#fbbf24;border-radius:2px;transition:width 0.5s linear;width:100%;}
+.timer-float-progress.done{background:#34d399;}
+.timer-float-progress.overtime{background:#f87171;}
+.timer-float-actions{display:flex;gap:8px;margin-top:6px;}
+.timer-float-btn{padding:6px 14px;border-radius:8px;border:none;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:0.06em;}
+.timer-float-skip{background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3);}
+.timer-float-reset{background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.2);}
+
+.sum-section{margin:32px 16px 0;}.sum-hd{font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;color:#ef4444;margin-bottom:12px;display:flex;align-items:center;gap:8px;}.sum-card{border-radius:14px;padding:16px;margin-bottom:32px;}.sum-sub{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;opacity:0.8;}.sum-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #ffffff08;}.sum-row:last-of-type{border-bottom:none;}.sum-ico{font-size:14px;width:22px;text-align:center;flex-shrink:0;}.sum-nm{flex:1;font-size:12px;font-weight:600;color:#e2e8f0;}.sum-dt{display:flex;flex-direction:column;align-items:flex-end;gap:2px;}.sum-st{font-size:11px;font-weight:800;}.sum-rp{font-size:10px;font-weight:600;opacity:0.75;}.sum-div{height:1px;margin:14px 0;}.sum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}.sum-tot{border-radius:10px;padding:10px 8px;text-align:center;}.sum-tv{font-size:13px;font-weight:900;letter-spacing:-0.01em;}.sum-tl{font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-top:3px;opacity:0.7;}
+.prog-bar-wrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:999;background:rgba(255,255,255,0.06);}
+.prog-bar-fill{height:3px;background:linear-gradient(90deg,#22d3ee,#a78bfa);transition:width 0.4s ease;border-radius:0 2px 2px 0;}
+.timer-presets{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;justify-content:center;}
+.timer-preset{padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.07);color:#94a3b8;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:0.05em;}
+.timer-preset:active{background:rgba(212,175,55,0.2);color:#fbbf24;border-color:rgba(212,175,55,0.4);}
+
+/* ── WEIGHT NOTES ── */
+.ex-notes-toggle{display:inline-flex;align-items:center;gap:4px;margin-top:6px;cursor:pointer;font-size:10px;font-weight:800;color:#475569;letter-spacing:0.06em;text-transform:uppercase;user-select:none;}
+.ex-notes-toggle:active{color:#94a3b8;}
+.ex-notes-wrap{display:none;margin-top:8px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.08);}
+.ex-notes-wrap.open{display:block;}
+.ex-notes-input{width:100%;background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;font-weight:600;font-family:inherit;resize:none;line-height:1.5;}
+.ex-notes-input::placeholder{color:#334155;}
+.ex-notes-label{font-size:9px;font-weight:800;letter-spacing:0.15em;color:#475569;text-transform:uppercase;margin-bottom:4px;}
+</style>
+</head>
+<body>
+<div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
+<div class="app" id="app"></div>
+<script>
+const DATA = {
+  schedule: "Daily Driveway Beatdown"
+};
+let activeTab = "pushups";
+
+function render(){
+  document.getElementById("app").innerHTML = `
+    <div class="header">
+      <a href="cat-faint.html" class="back-link">← Back</a>
+      <div class="header-inner">
+        <div class="eyebrow">Pushups + Core</div>
+        <div class="title">Driveway Demolition</div>
+        <div><span class="schedule">🔥 ${DATA.schedule}</span></div>
+      </div>
+    </div>
+    <div class="tabs-bar"><div class="tabs">
+      <button class="tab ${activeTab==='pushups'?'active':''}" data-tab="pushups">💪 Pushups</button>
+      <button class="tab ${activeTab==='core'?'active':''}" data-tab="core">🔥 Core</button>
+    </div></div>
+    <div class="content">
+<div id="swContainer" style="max-width:680px;margin:0 auto;padding:0 16px;">
+
+</div>${activeTab==='pushups'?renderPushups():renderCore()}</div>`;
+  document.querySelectorAll(".tab").forEach(b=>{
+    b.addEventListener("click",()=>{activeTab=b.dataset.tab;render();});
+  });
+}
+
+function renderPushups(){
+  return `
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-eyebrow">The Challenge</div>
+        <div class="section-title">1–18 Pushup Ladder</div>
+      </div>
+      <div class="section-body">
+        <span class="big-number">171<span class="unit">TOTAL REPS</span></span>
+        <ul class="rules-list" style="margin-top:16px">
+          <li><strong>18 sets total.</strong> Set 1 = 1 rep, Set 2 = 2 reps, all the way to Set 18 = 18 reps.</li>
+          <li><strong>15 seconds rest</strong> between sets.</li>
+          <li>When you reach failure, complete remaining sets with <strong>knee pushups until collapse.</strong></li>
+          <li>Target goal: <strong>execute all 171 pushups</strong> (sets 1–18).</li>
+        </ul>
+        <div class="target-row">
+          <div>
+            <div class="target-label">Current Daily Target</div>
+            <div class="target-value">150 Pushups</div>
+          </div>
+        </div>
+        <div class="optional-banner">
+          <strong>Optional:</strong> 5 min jump rope before pushups and after core.
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderCore(){
+  return `
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-eyebrow">Core Circuit</div>
+        <div class="section-title">1-Minute Max Effort</div>
+      </div>
+      <div class="section-body">
+        <ul class="rules-list">
+          <li><strong>1 minute max effort</strong> per exercise.</li>
+          <li><strong>15 seconds rest</strong> between exercises.</li>
+          <li>Rotate through the day's prescribed 3-exercise circuit.</li>
+        </ul>
+
+        <div class="day-block">
+          <div class="day-block-head"><span class="day-pill">DAYS 1 & 2</span></div>
+          <ul class="ex-list">
+            <li><span class="ex-num">1</span><span class="ex-text">2× Heels to Heaven</span></li>
+            <li><span class="ex-num">2</span><span class="ex-text">2× Flutter Kicks</span></li>
+            <li><span class="ex-num">3</span><span class="ex-text">2× 6" / 45 / 90</span></li>
+          </ul>
+        </div>
+
+        <div class="day-block">
+          <div class="day-block-head"><span class="day-pill">DAYS 3 & 4</span></div>
+          <ul class="ex-list">
+            <li><span class="ex-num">1</span><span class="ex-text">Mountain Climbers</span></li>
+            <li><span class="ex-num">2</span><span class="ex-text">Planks</span></li>
+            <li><span class="ex-num">3</span><span class="ex-text">Around the Worlds</span></li>
+          </ul>
+        </div>
+
+        <div class="day-block">
+          <div class="day-block-head"><span class="day-pill">DAYS 5 & 6</span></div>
+          <ul class="ex-list">
+            <li><span class="ex-num">1</span><span class="ex-text">USA Twists</span></li>
+            <li><span class="ex-num">2</span><span class="ex-text">In and Outs</span></li>
+            <li><span class="ex-num">3</span><span class="ex-text">Bicycle Kicks</span></li>
+          </ul>
+        </div>
+
+        <div class="optional-banner">
+          <strong>Optional:</strong> 5 min jump rope before pushups and after core.
+        </div>
+      </div>
+    </div>`;
+}
+
+render();
+if(typeof updateProgress!=="undefined")updateProgress();
+buildStopwatch(document.getElementById('swContainer'));
+
+// ── TIMER ENGINE ──────────────────────────────────────────────────
+const TMR = {
+  interval: null,
+  startTime: null,
+  duration: 0,
+  activeEl: null,
+  activeName: '',
+
+  parseSeconds(str) {
+    if (!str || str === '—') return 0;
+    str = str.toLowerCase().trim();
+    // e.g. "90 sec", "2 min", "75 sec between & after", "30, 30, 30 sec"
+    const minMatch = str.match(/(\d+)\s*min/);
+    const secMatch = str.match(/(\d+)\s*sec/);
+    let secs = 0;
+    if (minMatch) secs += parseInt(minMatch[1]) * 60;
+    if (secMatch) secs += parseInt(secMatch[1]);
+    if (!secs) {
+      // plain number
+      const plain = str.match(/^(\d+)/);
+      if (plain) secs = parseInt(plain[1]);
+    }
+    return secs;
+  },
+
+  formatTime(secs) {
+    const neg = secs < 0;
+    const abs = Math.abs(secs);
+    const m = Math.floor(abs / 60);
+    const s = abs % 60;
+    return (neg ? '+' : '') + (m > 0 ? m + ':' + String(s).padStart(2,'0') : String(s) + 's');
+  },
+
+  buzz() {
+    // Vibrate
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+    // Sound — Web Audio API beep
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const times = [0, 0.3, 0.6];
+      times.forEach((t, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = i === 2 ? 880 : 660;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.4, ctx.currentTime + t);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.25);
+        osc.start(ctx.currentTime + t);
+        osc.stop(ctx.currentTime + t + 0.25);
+      });
+    } catch(e) {}
+  },
+
+  start(el, durationSecs, exerciseName) {
+    this.stop();
+    this.duration = durationSecs;
+    this.startTime = Date.now();
+    this.activeEl = el;
+    this.activeName = exerciseName;
+
+    el.className = 'rest-timer running';
+    el.querySelector('.rest-timer-label').textContent = this.formatTime(durationSecs);
+
+    const float = document.getElementById('timerFloat');
+    const floatTime = document.getElementById('timerFloatTime');
+    const floatProgress = document.getElementById('timerFloatProgress');
+    const floatEx = document.getElementById('timerFloatEx');
+    const floatLabel = document.getElementById('timerFloatLabel');
+
+    float.classList.add('visible');
+    floatEx.textContent = exerciseName;
+    floatLabel.textContent = 'REST';
+    floatTime.className = 'timer-float-time';
+    floatProgress.className = 'timer-float-progress';
+    floatProgress.style.width = '100%';
+
+    this.interval = setInterval(() => {
+      const elapsed = (Date.now() - this.startTime) / 1000;
+      const remaining = Math.ceil(this.duration - elapsed);
+
+      // Update card badge
+      if (el) {
+        el.querySelector('.rest-timer-label').textContent = this.formatTime(remaining);
+      }
+
+      // Update float
+      floatTime.textContent = this.formatTime(remaining);
+
+      if (remaining > 0) {
+        const pct = (remaining / this.duration) * 100;
+        floatProgress.style.width = pct + '%';
+        floatTime.className = 'timer-float-time';
+        floatProgress.className = 'timer-float-progress';
+        if (el) el.className = 'rest-timer running';
+      } else if (remaining === 0 || remaining === -0) {
+        this.buzz();
+        floatTime.className = 'timer-float-time done';
+        floatProgress.className = 'timer-float-progress done';
+        floatProgress.style.width = '100%';
+        floatLabel.textContent = 'DONE!';
+        if (el) el.className = 'rest-timer done';
+      } else {
+        // Overtime
+        floatTime.textContent = '+' + this.formatTime(-remaining);
+        floatTime.className = 'timer-float-time overtime';
+        floatProgress.className = 'timer-float-progress overtime';
+        floatLabel.textContent = 'OVERTIME';
+        if (el) el.className = 'rest-timer overtime';
+      }
+    }, 500);
+  },
+
+  stop() {
+    if (this.interval) clearInterval(this.interval);
+    this.interval = null;
+    if (this.activeEl) {
+      const secs = this.parseSeconds(this.activeEl.dataset.rest);
+      this.activeEl.querySelector('.rest-timer-label').textContent = this.activeEl.dataset.label;
+      this.activeEl.className = 'rest-timer idle';
+      this.activeEl = null;
+    }
+    const float = document.getElementById('timerFloat');
+    if (float) float.classList.remove('visible');
+  },
+
+  toggle(el, durationSecs, exerciseName) {
+    if (this.activeEl === el && this.interval) {
+      this.stop();
+    } else {
+      this.start(el, durationSecs, exerciseName);
+    }
+  },
+  setTime(secs,label){
+    if(this.interval){clearInterval(this.interval);this.interval=null;}
+    this.duration=secs;this.startTime=Date.now();
+    const ft=document.getElementById("timerFloat");
+    if(ft){
+      const tl=ft.querySelector(".timer-float-label"),tt=ft.querySelector(".timer-float-time"),tp=ft.querySelector(".timer-float-progress");
+      if(tl)tl.textContent=label||(secs+"s");
+      if(tt){tt.textContent=secs+"s";tt.className="timer-float-time";}
+      if(tp){tp.style.width="100%";tp.className="timer-float-progress";}
+      ft.classList.add("visible");
+    }
+    this.activeEl=null;
+    this.interval=setInterval(()=>{
+      const rem=Math.ceil(this.duration-(Date.now()-this.startTime)/1000);
+      const ft2=document.getElementById("timerFloat");if(!ft2)return;
+      const tt2=ft2.querySelector(".timer-float-time"),tp2=ft2.querySelector(".timer-float-progress"),tl2=ft2.querySelector(".timer-float-label");
+      if(rem>0){if(tt2){tt2.textContent=rem+"s";tt2.className="timer-float-time";}if(tp2){tp2.style.width=Math.round((rem/this.duration)*100)+"%";tp2.className="timer-float-progress";}}
+      else if(rem===0){if(tt2){tt2.textContent="DONE!";tt2.className="timer-float-time done";}if(tp2){tp2.style.width="100%";tp2.className="timer-float-progress done";}if(tl2)tl2.textContent="DONE ✓";try{navigator.vibrate&&navigator.vibrate([200,100,200,100,400]);}catch(e){}}
+      else{if(tt2){tt2.textContent="+"+Math.abs(rem)+"s";tt2.className="timer-float-time overtime";}if(tp2)tp2.className="timer-float-progress overtime";}
+    },500);
+  }
+};
+
+function buildTimerFloat() {
+  if (document.getElementById('timerFloat')) return;
+  const div = document.createElement('div');
+  div.id = 'timerFloat';
+  div.className = 'timer-float';
+  div.innerHTML = `
+    <div id="timerFloatLabel" class="timer-float-label">REST</div>
+    <div id="timerFloatTime" class="timer-float-time">0s</div>
+    <div id="timerFloatEx" class="timer-float-ex"></div>
+    <div class="timer-float-bar"><div id="timerFloatProgress" class="timer-float-progress"></div></div>
+    <div class="timer-float-actions">
+      <button class="timer-float-btn timer-float-skip" onclick="TMR.stop()">✓ Done</button>
+      <button class="timer-float-btn timer-float-reset" onclick="TMR.stop()">✕ Cancel</button>
+    </div>`;
+  document.body.appendChild(div);
+}
+
+function makeRestTimer(restStr, exerciseName) {
+  const secs = TMR.parseSeconds(restStr);
+  if (!secs) return '<span class="ex-sets" style="opacity:0.5">⏱️ ' + restStr + '</span>';
+  const label = restStr;
+  return '<span class="rest-timer idle" data-rest="' + restStr + '" data-label="' + label + '" ' +
+    'onclick="buildTimerFloat();TMR.toggle(this,' + secs + ',\'' + exerciseName.replace(/'/g,"\'").substring(0,30) + '...\')" ' +
+    'title="Tap to start rest timer">' +
+    '<span class="rest-timer-icon">⏱️</span>' +
+    '<span class="rest-timer-label">' + label + '</span>' +
+    '</span>';
+}
+
+
+// ── STOPWATCH ENGINE (cardio pages) ──────────────────────────────
+const SW = {
+  interval: null,
+  startTime: null,
+  elapsed: 0,
+  running: false,
+
+  formatTime(ms) {
+    const total = Math.floor(ms / 1000);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    if (h > 0) return h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  },
+
+  toggle() {
+    if (this.running) {
+      clearInterval(this.interval);
+      this.elapsed += Date.now() - this.startTime;
+      this.running = false;
+      const btn = document.getElementById('swBtn');
+      if (btn) { btn.textContent = '▶ Resume'; btn.style.background = 'rgba(52,211,153,0.15)'; btn.style.color = '#34d399'; }
+    } else {
+      this.startTime = Date.now();
+      this.running = true;
+      this.interval = setInterval(() => {
+        const total = this.elapsed + (Date.now() - this.startTime);
+        const el = document.getElementById('swDisplay');
+        if (el) el.textContent = this.formatTime(total);
+      }, 100);
+      const btn = document.getElementById('swBtn');
+      if (btn) { btn.textContent = '⏸ Pause'; btn.style.background = 'rgba(251,191,36,0.15)'; btn.style.color = '#fbbf24'; }
+    }
+  },
+
+  reset() {
+    clearInterval(this.interval);
+    this.elapsed = 0;
+    this.running = false;
+    const el = document.getElementById('swDisplay');
+    if (el) el.textContent = '00:00';
+    const btn = document.getElementById('swBtn');
+    if (btn) { btn.textContent = '▶ Start'; btn.style.background = 'rgba(52,211,153,0.15)'; btn.style.color = '#34d399'; }
+  },
+
+  lap() {
+    if (!this.running && this.elapsed === 0) return;
+    const total = this.elapsed + (this.running ? Date.now() - this.startTime : 0);
+    const list = document.getElementById('swLaps');
+    if (list) {
+      const count = list.children.length + 1;
+      const item = document.createElement('div');
+      item.style.cssText = 'display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;';
+      item.innerHTML = '<span style="color:#64748b;">Lap ' + count + '</span><span style="color:#e2e8f0;font-weight:700;">' + this.formatTime(total) + '</span>';
+      list.prepend(item);
+    }
+  }
+};
+
+function buildStopwatch(container) {
+  const el = document.createElement('div');
+  el.style.cssText = 'background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:20px;margin:16px 0;text-align:center;';
+  el.innerHTML = `
+    <div style="font-size:10px;font-weight:900;letter-spacing:0.2em;color:#475569;text-transform:uppercase;margin-bottom:10px;">⏱️ Stopwatch</div>
+    <div id="swDisplay" style="font-size:52px;font-weight:900;color:#e2e8f0;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;margin-bottom:16px;">00:00</div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      <button id="swBtn" onclick="SW.toggle()" style="padding:10px 20px;border-radius:10px;border:none;cursor:pointer;font-size:12px;font-weight:800;background:rgba(52,211,153,0.15);color:#34d399;letter-spacing:0.06em;">▶ Start</button>
+      <button onclick="SW.lap()" style="padding:10px 20px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-size:12px;font-weight:800;background:transparent;color:#64748b;letter-spacing:0.06em;">Lap</button>
+      <button onclick="SW.reset()" style="padding:10px 20px;border-radius:10px;border:none;cursor:pointer;font-size:12px;font-weight:800;background:rgba(239,68,68,0.1);color:#f87171;letter-spacing:0.06em;">Reset</button>
+    </div>
+    <div id="swLaps" style="margin-top:12px;max-height:120px;overflow-y:auto;"></div>
+  `;
+  container.appendChild(el);
+}
+
+buildTimerFloat();
+</script>
+
+<div style="max-width:680px;margin:0 auto;">
+<div class="sum-section">
+  <div class="sum-hd" style="color:#ef4444;">📊 Workout Summary<span style="flex:1;height:1px;background:linear-gradient(90deg,#ef44444d,transparent);display:block;margin-left:8px;"></span></div>
+  <div class="sum-card" style="background:#1a0505;border:1px solid #ef444433;"><div class="sum-sub" style="color:#ef4444;">Push-ups · Core · Daily Challenge</div><div class="sum-row" style="border-bottom-color:#ef444422;"><span class="sum-ico">💪</span><span class="sum-nm">1–18 Push-up Ladder</span><div class="sum-dt"><span class="sum-st" style="color:#ef4444;">18 sets</span><span class="sum-rp" style="color:#ef4444;">171 total push-ups</span></div></div><div class="sum-row" style="border-bottom-color:#ef444422;"><span class="sum-ico">🔥</span><span class="sum-nm">1-Minute Max Core Circuits</span><div class="sum-dt"><span class="sum-st" style="color:#ef4444;">6 sets</span><span class="sum-rp" style="color:#ef4444;">Rotating core exercises</span></div></div><div class="sum-div" style="background:#ef444426;"></div><div class="sum-grid"><div class="sum-tot" style="background:#ef444414;border:1px solid #ef444426;"><div class="sum-tv" style="color:#ef4444;">24 sets</div><div class="sum-tl" style="color:#ef4444;">Total Sets</div></div><div class="sum-tot" style="background:#ef444414;border:1px solid #ef444426;"><div class="sum-tv" style="color:#ef4444;">~220–260 total reps</div><div class="sum-tl" style="color:#ef4444;">Est. Reps</div></div><div class="sum-tot" style="background:#ef444414;border:1px solid #ef444426;"><div class="sum-tv" style="color:#ef4444;">~30–40 min</div><div class="sum-tl" style="color:#ef4444;">Est. Time</div></div></div></div>
+</div></div>
+<script>
+// ── SESSION PROGRESS BAR ──
+function updateProgress() {
+  const all = document.querySelectorAll('.ex-card, .ss-ex');
+  const done = document.querySelectorAll('.ex-card.checked, .ss-ex.checked');
+  const pct = all.length ? Math.round((done.length / all.length) * 100) : 0;
+  const fill = document.getElementById('progFill');
+  if (fill) fill.style.width = pct + '%';
+}
+// Observe DOM for check changes
+const _progObs = new MutationObserver(updateProgress);
+document.addEventListener('DOMContentLoaded', function() {
+  const app = document.getElementById('app');
+  if (app) _progObs.observe(app, {subtree:true, attributes:true, attributeFilter:['class']});
+  updateProgress();
+});
+
+// ── TIMER PRESETS ──
+function addTimerPresets() {
+  const tf = document.getElementById('timerFloat');
+  if (!tf || tf.querySelector('.timer-presets')) return;
+  const presets = document.createElement('div');
+  presets.className = 'timer-presets';
+  presets.innerHTML = ['45s','60s','90s','2min'].map(function(l) {
+    const s = l==='2min'?120:parseInt(l);
+    return '<button class="timer-preset" onclick="TMR.setTime && TMR.setTime('+s+',\''+l+'\')" >' + l + '</button>';
+  }).join('');
+  tf.appendChild(presets);
+}
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(addTimerPresets, 500);
+});
+</script>
+<script>
+// ── WEIGHT / NOTES PER EXERCISE ──
+const NOTES_KEY = 'mc_notes';
+function getNotes() { try { return JSON.parse(localStorage.getItem(NOTES_KEY)||'{}'); } catch(e) { return {}; } }
+function saveNote(exId, val) {
+  const notes = getNotes();
+  if (val.trim()) notes[exId] = val.trim();
+  else delete notes[exId];
+  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+}
+function initNotes() {
+  const notes = getNotes();
+  document.querySelectorAll('.ex-card[data-id]').forEach(card => {
+    const id = card.dataset.id;
+    if (!id || card.querySelector('.ex-notes-wrap')) return;
+    const existing = notes[id] || '';
+    const toggle = document.createElement('div');
+    toggle.className = 'ex-notes-toggle';
+    toggle.innerHTML = existing ? '✏️ ' + existing.substring(0,20) + (existing.length>20?'…':'') : '✚ Add weight/notes';
+    const wrap = document.createElement('div');
+    wrap.className = 'ex-notes-wrap' + (existing ? ' open' : '');
+    wrap.innerHTML = '<div class="ex-notes-label">Weight / Notes</div><textarea class="ex-notes-input" rows="1" placeholder="e.g. 135 lbs · 3x10 felt easy">' + existing + '</textarea>';
+    toggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      wrap.classList.toggle('open');
+    });
+    const textarea = wrap.querySelector('textarea');
+    textarea.addEventListener('input', function() {
+      saveNote(id, this.value);
+      toggle.innerHTML = this.value.trim() ? '✏️ ' + this.value.trim().substring(0,20) + (this.value.trim().length>20?'…':'') : '✚ Add weight/notes';
+    });
+    const content = card.querySelector('.ex-content');
+    if (content) { content.appendChild(toggle); content.appendChild(wrap); }
+  });
+}
+// Run after every render
+const _notesOrig = window._notesInit;
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(initNotes, 300);
+});
+// Also expose for manual call after tab switches
+window.initNotes = initNotes;
+</script>
+<script>
+// ── REPLACE EXERCISE ──
+(function() {
+  const REPLACE_KEY = 'mc_replacements';
+  function applyReplacements() {
+    const replacements = JSON.parse(localStorage.getItem(REPLACE_KEY)||'{}');
+    if (!Object.keys(replacements).length) return;
+    document.querySelectorAll('.ex-card, .ex-item, .lift-card').forEach(card => {
+      const nameEl = card.querySelector('.ex-name, .lift-name');
+      if (!nameEl) return;
+      const origName = nameEl.textContent.trim();
+      const replacement = replacements[origName.toLowerCase()];
+      if (replacement) {
+        nameEl.textContent = replacement;
+        nameEl.style.color = '#22d3ee';
+        if (!card.querySelector('.replaced-badge')) {
+          const badge = document.createElement('span');
+          badge.className = 'replaced-badge';
+          badge.style.cssText = 'font-size:9px;font-weight:900;color:#22d3ee;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.25);border-radius:4px;padding:2px 5px;margin-left:6px;letter-spacing:0.06em;vertical-align:middle;';
+          badge.textContent = 'REPLACED';
+          nameEl.parentNode.insertBefore(badge, nameEl.nextSibling);
+        }
+      }
+    });
+  }
+  // Run after render
+  if (typeof render === 'function') {
+    const origRender = render;
+    window.render = function() { origRender.apply(this, arguments); setTimeout(applyReplacements, 100); };
+  }
+  document.addEventListener('DOMContentLoaded', function() { setTimeout(applyReplacements, 400); });
+  // Long press to replace
+  let pressTimer;
+  document.addEventListener('touchstart', function(e) {
+    const card = e.target.closest('.ex-card, .ex-item, .lift-card');
+    if (!card) return;
+    pressTimer = setTimeout(function() {
+      const nameEl = card.querySelector('.ex-name, .lift-name');
+      if (!nameEl) return;
+      const origName = nameEl.dataset.orig || nameEl.textContent.trim();
+      nameEl.dataset.orig = origName;
+      // Navigate to library with exercise pre-selected
+      const url = 'exercise-library.html?replace=' + encodeURIComponent(origName);
+      if (confirm('Replace "' + origName.substring(0,40) + '"?\nTap OK to open Exercise Library.')) {
+        window.location.href = url;
+      }
+    }, 600);
+  }, {passive: true});
+  document.addEventListener('touchend', function() { clearTimeout(pressTimer); }, {passive: true});
+  document.addEventListener('touchmove', function() { clearTimeout(pressTimer); }, {passive: true});
+})();
+</script>
+</body>
+</html>
