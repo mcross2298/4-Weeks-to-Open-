@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mike Cross Training</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="MC Training"/>
+<meta name="theme-color" content="#0a0a0a"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
+.container{max-width:680px;margin:0 auto;}
+.header{text-align:center;margin-bottom:40px;padding-top:20px;}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.25em;color:#a78bfa;text-transform:uppercase;margin-bottom:10px;}
+.title{font-size:34px;font-weight:900;color:#fff;letter-spacing:-0.02em;line-height:1.1;}
+.subtitle{font-size:14px;color:#9ca3af;margin-top:8px;font-weight:500;}
+.cat-card{display:block;text-decoration:none;color:inherit;border-radius:18px;padding:26px 24px;margin-bottom:16px;position:relative;overflow:hidden;transition:transform 0.15s;border:1px solid rgba(255,255,255,0.06);}
+.cat-card:active{transform:scale(0.98);}
+.cat-card.stndr{background:linear-gradient(135deg,#1e3a5f,#0f172a);box-shadow:0 8px 28px rgba(59,130,246,0.18);}
+.cat-card.pump{background:linear-gradient(135deg,#831843,#1a0511);box-shadow:0 8px 28px rgba(236,72,153,0.18);}
+.cat-card.gainz{background:linear-gradient(135deg,#365314,#0a0f04);box-shadow:0 8px 28px rgba(132,204,22,0.2);}
+.cat-card.faint{background:linear-gradient(135deg,#7f1d1d,#0a0000);box-shadow:0 8px 28px rgba(239,68,68,0.25);border-color:rgba(239,68,68,0.3);}
+.cat-card.psu{background:linear-gradient(135deg,#041e42,#000814);box-shadow:0 8px 28px rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.2);}
+  .cat-card.pmc{background:linear-gradient(135deg,#1e0a3c,#0d0618);box-shadow:0 8px 28px rgba(139,92,246,0.25);border-color:rgba(139,92,246,0.3);}
+  .cat-card.mc{background:linear-gradient(135deg,#0a1628,#020b18);box-shadow:0 8px 28px rgba(212,175,55,0.2);border-color:rgba(212,175,55,0.25);}
+  .cat-card.mc .cat-designer{color:#d4af37;}
+.cat-icon{position:absolute;right:24px;top:24px;font-size:38px;opacity:0.2;}
+.cat-tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:0.16em;padding:4px 10px;border-radius:5px;text-transform:uppercase;margin-bottom:10px;}
+.cat-card.stndr .cat-tag{background:rgba(59,130,246,0.25);color:#93c5fd;border:1px solid rgba(59,130,246,0.4);}
+.cat-card.pump .cat-tag{background:rgba(236,72,153,0.22);color:#fbcfe8;border:1px solid rgba(236,72,153,0.4);}
+.cat-card.gainz .cat-tag{background:rgba(132,204,22,0.22);color:#d9f99d;border:1px solid rgba(132,204,22,0.4);}
+.cat-card.faint .cat-tag{background:rgba(239,68,68,0.25);color:#fca5a5;border:1px solid rgba(239,68,68,0.5);}
+.cat-card.psu .cat-tag{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.35);}
+.cat-name{font-size:24px;font-weight:900;color:#fff;margin-bottom:6px;letter-spacing:-0.01em;padding-right:50px;}
+.cat-meta{font-size:13px;color:#cbd5e1;line-height:1.5;padding-right:50px;}
+.cat-count{margin-top:10px;display:inline-block;font-size:11px;color:#94a3b8;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
+.cat-designer{margin-top:8px;font-size:11px;font-weight:700;letter-spacing:0.04em;opacity:0.8;display:flex;align-items:center;gap:5px;}
+.cat-card.stndr .cat-designer{color:#93c5fd;}
+.cat-card.pump .cat-designer{color:#f9a8d4;}
+.cat-card.gainz .cat-designer{color:#d9f99d;}
+.cat-card.faint .cat-designer{color:#fca5a5;}
+.cat-card.psu .cat-designer{color:#e2e8f0;}
+.cat-card.pmc .cat-designer{color:#c084fc;}
+.footer{text-align:center;margin-top:40px;font-size:11px;color:#475569;letter-spacing:0.08em;}
+
+/* ── RECENTLY VISITED ── */
+.rv-section{margin-bottom:32px;}
+.rv-head{font-size:10px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;color:#475569;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.rv-clear{font-size:10px;color:#334155;cursor:pointer;font-weight:700;padding:4px 8px;border-radius:6px;background:rgba(255,255,255,0.05);}
+.rv-cards{display:flex;flex-direction:column;gap:8px;}
+.rv-card{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px 14px;text-decoration:none;color:#e2e8f0;transition:all 0.15s;}
+.rv-card:active{transform:scale(0.98);background:rgba(255,255,255,0.07);}
+.rv-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.rv-name{font-size:13px;font-weight:700;flex:1;}
+.rv-prog{font-size:11px;color:#64748b;font-weight:600;}
+.rv-arrow{font-size:14px;color:#475569;}
+/* ── OFFLINE INDICATOR ── */
+.offline-bar{display:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:8px 14px;margin-bottom:20px;font-size:12px;font-weight:700;color:#f87171;text-align:center;letter-spacing:0.04em;}
+.offline-bar.show{display:block;}
+/* ── SW UPDATE BANNER ── */
+.sw-update{display:none;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);border-radius:10px;padding:10px 14px;margin-bottom:20px;font-size:12px;font-weight:700;color:#34d399;text-align:center;cursor:pointer;letter-spacing:0.04em;}
+.sw-update.show{display:block;}
+
+/* ── WORKOUT HISTORY ── */
+.hist-section{margin-bottom:28px;}
+.hist-head{font-size:10px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;color:#475569;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.hist-clear{font-size:10px;color:#334155;cursor:pointer;font-weight:700;padding:4px 8px;border-radius:6px;background:rgba(255,255,255,0.05);}
+.hist-cards{display:flex;flex-direction:column;gap:6px;}
+.hist-card{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:10px 14px;}
+.hist-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:#22d3ee;}
+.hist-name{flex:1;font-size:12px;font-weight:700;color:#e2e8f0;}
+.hist-date{font-size:11px;color:#475569;font-weight:600;}
+/* ── STREAK ── */
+.streak-bar{display:flex;align-items:center;gap:10px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:12px;padding:12px 16px;margin-bottom:20px;}
+.streak-fire{font-size:22px;}
+.streak-text{flex:1;}
+.streak-num{font-size:18px;font-weight:900;color:#fbbf24;line-height:1;}
+.streak-label{font-size:11px;color:#78716c;font-weight:600;margin-top:2px;}
+.streak-zero{display:none;}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="eyebrow">Training Categories</div>
+    <h1 class="title">Choose Your Path</h1>
+    <div class="subtitle">Pick a category to see all programs</div>
+  </div>
+
+
+  <div class="sw-update" id="swUpdate" onclick="doSwUpdate()">🔄 Update available — tap to reload</div>
+  <div class="offline-bar" id="offlineBar">📵 You are offline — showing cached content</div>
+
+  <div class="streak-bar" id="streakBar" style="display:none;">
+    <div class="streak-fire">🔥</div>
+    <div class="streak-text">
+      <div class="streak-num">0 days</div>
+      <div class="streak-label">current streak</div>
+    </div>
+  </div>
+  <div class="hist-section" id="histSection" style="display:none;">
+    <div class="hist-head">
+      <span>📋 Recent Workouts</span>
+      <span class="hist-clear" onclick="clearHist()">Clear</span>
+    </div>
+    <div class="hist-cards" id="histCards"></div>
+  </div>
+
+  <div class="rv-section" id="rvSection" style="display:none;">
+    <div class="rv-head">
+      <span>⏱ Recently Visited</span>
+      <span class="rv-clear" onclick="clearRV()">Clear</span>
+    </div>
+    <div class="rv-cards" id="rvCards"></div>
+  </div>
+
+
+  <a href="exercise-library.html" style="display:flex;align-items:center;gap:12px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);border-radius:14px;padding:14px 18px;text-decoration:none;color:#e2e8f0;margin-bottom:24px;">
+    <div style="font-size:22px;">📚</div>
+    <div style="flex:1;">
+      <div style="font-size:14px;font-weight:900;color:#fbbf24;">Exercise Library</div>
+      <div style="font-size:11px;color:#64748b;font-weight:600;margin-top:2px;">1020 exercises · search by muscle group · save replacements</div>
+    </div>
+    <div style="color:#475569;font-size:16px;">→</div>
+  </a>
+
+  <a href="cat-stndr.html" class="cat-card stndr">
+    <span class="cat-icon">🏋️</span>
+    <div class="cat-tag">Bodybuilding · Strength</div>
+    <div class="cat-name">STNDR</div>
+    <div class="cat-meta">Structured lifting programs with progressive overload, supersets, and periodization.</div>
+    <div class="cat-count">4 Programs →</div>
+    <div class="cat-designer">✍️ Designed by CBUM</div>
+  </a>
+
+  <a href="cat-faint.html" class="cat-card faint">
+    <span class="cat-icon">🔥</span>
+    <div class="cat-tag">High Intensity · Conditioning</div>
+    <div class="cat-name">Not for the Faint of Heart</div>
+    <div class="cat-meta">Brutal challenges, circuits, and finishers built to test your limits.</div>
+    <div class="cat-count">9 Workouts →</div>
+    <div class="cat-designer">✍️ Designed by Mike Cross</div>
+  </a>
+
+  <a href="cat-gainz.html" class="cat-card gainz">
+    <span class="cat-icon">💪</span>
+    <div class="cat-tag">Volume · Daily</div>
+    <div class="cat-name">Daily Gainz</div>
+    <div class="cat-meta">Daily volume-builders for consistent muscle growth.</div>
+    <div class="cat-count">8 Programs →</div>
+    <div class="cat-designer">✍️ Designed by Bradley Martyn</div>
+  </a>
+
+  <a href="cat-pump-new4.html" class="cat-card pump">
+    <span class="cat-icon">💗</span>
+    <div class="cat-tag">Pump · Daily</div>
+    <div class="cat-name">Daily Pump</div>
+    <div class="cat-meta">Quick pump-focused sessions for daily activation.</div>
+    <div class="cat-count">1 Program →</div>
+    <div class="cat-designer">✍️ Designed by Julian Smith</div>
+  </a>
+
+  <a href="cat-psu.html" class="cat-card psu">
+    <span class="cat-icon">🦁</span>
+    <div class="cat-tag">Football · Strength</div>
+    <div class="cat-name">PSU Football</div>
+    <div class="cat-meta">Off-season strength training built for football. Periodized lifts with prescribed weights.</div>
+    <div class="cat-count">1 Program →</div>
+    <div class="cat-designer">✍️ Penn State Strength Program</div>
+  </a>
+
+  <a href="cat-pmc.html" class="cat-card pmc">
+    <span class="cat-icon">⚡</span>
+    <div class="cat-tag">2-Week Split · Muscle Confusion</div>
+    <div class="cat-name">Project Muscle Confusion</div>
+    <div class="cat-meta">Supersets, pyramids, drop sets, AMRAP, and tempo — all in one program. Full chaos methodology.</div>
+    <div class="cat-count">7 Splits · 2 Weeks Each →</div>
+    <div class="cat-designer">✍️ Designed by Mike Cross</div>
+  </a>
+
+  <a href="cat-mc.html" class="cat-card mc">
+    <span class="cat-icon">⚡</span>
+    <div class="cat-tag">Personal Program · 5 Splits</div>
+    <div class="cat-name">Mike Cross' Favorite Splits</div>
+    <div class="cat-meta">5 personal splits across every training style — 18 workouts, multiple set schemes, dedicated cardio page.</div>
+    <div class="cat-count">5 Splits · 18 Workouts →</div>
+    <div class="cat-designer">✍️ Designed by Mike Cross</div>
+  </a>
+
+  <div class="footer">TAP A CATEGORY TO BEGIN</div>
+</div>
+
+<script>
+
+// ── RECENTLY VISITED ──
+const RV_KEY = 'mc_rv';
+const COLORS = {
+  mc:'#d4af37', pmc:'#a78bfa', pump:'#f472b6', gainz:'#4ade80',
+  stndr:'#60a5fa', faint:'#f87171', psu:'#94a3b8'
+};
+function getProgColor(url) {
+  for (const [k,v] of Object.entries(COLORS)) if (url.includes(k)) return v;
+  return '#64748b';
+}
+function getProgName(url) {
+  if (url.includes('pmc')) return 'Project Muscle Confusion';
+  if (url.includes('mc-')) return 'MC Favorite Splits';
+  if (url.includes('pump') || url.includes('s3-') || url.includes('s4-')) return 'Daily Pump';
+  if (url.includes('gainz') || url.includes('lean') || url.includes('shred') || url.includes('every') || url.includes('on-')) return 'Daily Gainz';
+  if (url.includes('stndr') || url.includes('bro') || url.includes('legacy') || url.includes('ppl') || url.includes('weeks')) return 'STNDR';
+  if (url.includes('psu')) return 'PSU Football';
+  if (url.includes('faint') || url.includes('500') || url.includes('driveway') || url.includes('hell') || url.includes('burn') || url.includes('pyramid') || url.includes('popeye') || url.includes('boxing') || url.includes('battle') || url.includes('turn')) return 'Faint of Heart';
+  return 'MC Training';
+}
+function getRV() { try { return JSON.parse(localStorage.getItem(RV_KEY)||'[]'); } catch(e) { return []; } }
+function renderRV() {
+  const items = getRV().slice(0,3);
+  const sec = document.getElementById('rvSection');
+  const cards = document.getElementById('rvCards');
+  if (!items.length) { sec.style.display='none'; return; }
+  sec.style.display='block';
+  cards.innerHTML = items.map(item => {
+    const color = getProgColor(item.url);
+    return '<a href="' + item.url + '" class="rv-card" onclick="trackRV(\'' + item.url + '\',\'' + item.name + '\')">' +
+      '<div class="rv-dot" style="background:' + color + ';box-shadow:0 0 6px ' + color + '44;"></div>' +
+      '<div><div class="rv-name">' + item.name + '</div><div class="rv-prog">' + item.prog + '</div></div>' +
+      '<div class="rv-arrow">→</div></a>';
+  }).join('');
+}
+function clearRV() { localStorage.removeItem(RV_KEY); renderRV(); }
+function trackRV(url, name) {
+  const prog = getProgName(url);
+  let items = getRV().filter(i => i.url !== url);
+  items.unshift({url, name, prog});
+  items = items.slice(0,5);
+  localStorage.setItem(RV_KEY, JSON.stringify(items));
+}
+// Track clicks on category cards
+document.querySelectorAll('.cat-card').forEach(a => {
+  a.addEventListener('click', () => trackRV(a.href, a.querySelector('.cat-name').textContent));
+});
+renderRV();
+
+// ── OFFLINE INDICATOR ──
+function updateOnlineStatus() {
+  const bar = document.getElementById('offlineBar');
+  if (bar) bar.classList.toggle('show', !navigator.onLine);
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// ── SW UPDATE BANNER ──
+let swWaiting = null;
+function doSwUpdate() {
+  if (swWaiting) { swWaiting.postMessage('skipWaiting'); }
+  else { window.location.reload(); }
+}
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+  navigator.serviceWorker.ready.then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      nw.addEventListener('statechange', () => {
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+          swWaiting = nw;
+          const banner = document.getElementById('swUpdate');
+          if (banner) banner.classList.add('show');
+        }
+      });
+    });
+  });
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.log('SW error:', err));
+  });
+}
+</script>
+<script>
+// ── WORKOUT HISTORY + STREAK ──
+const HIST_KEY = 'mc_hist';
+const STREAK_KEY = 'mc_streak';
+
+function getHist() { try { return JSON.parse(localStorage.getItem(HIST_KEY)||'[]'); } catch(e) { return []; } }
+function saveHist(h) { localStorage.setItem(HIST_KEY, JSON.stringify(h.slice(0,30))); }
+
+function logWorkout(name, url) {
+  const today = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  let hist = getHist();
+  // Remove duplicate from today
+  hist = hist.filter(h => !(h.name===name && h.date===today));
+  hist.unshift({name, url, date: today, ts: Date.now()});
+  saveHist(hist);
+  updateStreak();
+}
+
+function updateStreak() {
+  const hist = getHist();
+  if (!hist.length) return;
+  // Count consecutive days
+  const days = [...new Set(hist.map(h => new Date(h.ts).toDateString()))];
+  let streak = 1;
+  for (let i = 1; i < days.length; i++) {
+    const diff = (new Date(days[i-1]) - new Date(days[i])) / 86400000;
+    if (diff <= 1) streak++;
+    else break;
+  }
+  localStorage.setItem(STREAK_KEY, streak);
+  renderStreak();
+}
+
+function renderStreak() {
+  const streak = parseInt(localStorage.getItem(STREAK_KEY)||'0');
+  const bar = document.getElementById('streakBar');
+  if (!bar) return;
+  if (streak < 1) { bar.style.display='none'; return; }
+  bar.style.display='flex';
+  const num = bar.querySelector('.streak-num');
+  const lbl = bar.querySelector('.streak-label');
+  if (num) num.textContent = streak + (streak===1?' day':' days');
+  if (lbl) lbl.textContent = streak >= 7 ? 'On fire! Keep it up 🔥' : 'current streak';
+}
+
+function renderHist() {
+  const hist = getHist().slice(0,5);
+  const sec = document.getElementById('histSection');
+  const cards = document.getElementById('histCards');
+  if (!sec || !cards) return;
+  if (!hist.length) { sec.style.display='none'; return; }
+  sec.style.display='block';
+  const colors = ['#22d3ee','#a78bfa','#f472b6','#4ade80','#fbbf24'];
+  cards.innerHTML = hist.map((h,i) =>
+    '<div class="hist-card">' +
+    '<div class="hist-dot" style="background:'+colors[i%colors.length]+';"></div>' +
+    '<div class="hist-name">' + h.name + '</div>' +
+    '<div class="hist-date">' + h.date + '</div></div>'
+  ).join('');
+}
+
+function clearHist() {
+  localStorage.removeItem(HIST_KEY);
+  localStorage.removeItem(STREAK_KEY);
+  renderHist(); renderStreak();
+}
+
+// Track clicks on workout rows
+document.querySelectorAll('.workout-row, .rv-card').forEach(a => {
+  a.addEventListener('click', function() {
+    const name = (this.querySelector('.row-name, .rv-name')||{}).textContent || document.title;
+    logWorkout(name, this.href||window.location.href);
+  });
+});
+
+renderHist();
+renderStreak();
+</script>
+</body>
+</html>
