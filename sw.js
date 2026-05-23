@@ -1,9 +1,10 @@
 // MC Training — Service Worker
 // Caches all workout pages for offline use
 
-const CACHE_NAME = 'mc-training-v3';
+const CACHE_NAME = 'mc-training-v4';
 const CACHE_URLS = [
     './',
+    './exercise-library.html',
     './2on-1off.html',
     './3on-1off-high-freq.html',
     './45-minute-burner.html',
