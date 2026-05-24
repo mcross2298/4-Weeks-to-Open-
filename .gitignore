@@ -1,3 +1,5 @@
 *.lnk
 New folder/
 Deploy-Guide.docx
+__pycache__/
+*.pyc
