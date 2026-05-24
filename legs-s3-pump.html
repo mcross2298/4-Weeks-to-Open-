@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Quads / Hamstrings / Glutes</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+.back-link{position:absolute;top:18px;left:18px;text-decoration:none;font-size:13px;font-weight:700;padding:6px 14px;border-radius:20px;z-index:10;}
+.header{padding:60px 20px 22px;position:relative;}
+.header-inner{max-width:680px;margin:0 auto;}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.25em;text-transform:uppercase;margin-bottom:8px;}
+.title{font-size:24px;font-weight:900;color:#fff;margin-bottom:8px;letter-spacing:-0.02em;}
+.tabs-bar{padding:0 12px;position:sticky;top:0;z-index:8;}
+.tabs{max-width:680px;margin:0 auto;display:flex;gap:2px;overflow-x:auto;}
+.tab{padding:12px 14px;border:none;cursor:pointer;font-weight:800;font-size:12px;background:transparent;border-bottom:3px solid transparent;white-space:nowrap;letter-spacing:0.04em;flex-shrink:0;}
+.content{max-width:680px;margin:20px auto 0;padding:0 16px;}
+.workout-title{font-size:17px;font-weight:900;color:#fff;margin-bottom:6px;}
+.workout-note{font-size:12px;color:#94a3b8;margin-bottom:16px;line-height:1.5;border-left:3px solid rgba(251,191,36,0.4);padding:10px 14px;border-radius:0 6px 6px 0;}
+.tap-hint{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;text-align:center;opacity:0.8;}
+.ex-card{background:#0d1f3c;border-radius:12px;border:1.5px solid rgba(251,191,36,0.18);margin-bottom:10px;cursor:pointer;transition:all 0.15s;overflow:hidden;}
+.ex-card.checked{background:#0a2a1a;border-color:rgba(52,211,153,0.35);}
+.ex-card.checked .ex-name{text-decoration:line-through;color:#34d399;}
+.ex-card.checked .ex-num{background:#065f46;color:#fff;}
+.ex-row{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;}
+.ex-num{display:inline-flex;align-items:center;justify-content:center;min-width:28px;width:28px;height:28px;border-radius:50%;font-size:12px;font-weight:900;flex-shrink:0;margin-top:1px;}
+.ex-content{flex:1;min-width:0;}
+.ex-name{font-weight:700;font-size:13px;color:#e2e8f0;line-height:1.4;margin-bottom:5px;}
+.ex-sets-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.ex-sets{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:5px;}
+.ex-tempo{display:inline-block;background:rgba(255,255,255,0.05);color:#64748b;font-size:10px;font-weight:800;padding:3px 7px;border-radius:5px;font-family:monospace;}
+.ex-note{font-size:11px;color:#475569;margin-top:4px;line-height:1.4;font-style:italic;}
+.section-label{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:900;letter-spacing:0.2em;padding:5px 14px;border-radius:6px;margin:18px 0 12px;text-transform:uppercase;color:#fff;}
+.rest-timer{display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none;padding:4px 10px;border-radius:8px;transition:all 0.15s;margin-top:5px;}
+.rest-timer.idle{background:rgba(100,116,139,0.12);border:1px solid rgba(100,116,139,0.2);}
+.rest-timer.running{background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.35);animation:rp 1s ease-in-out infinite;}
+.rest-timer.done{background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.35);}
+.rest-timer.overtime{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);}
+@keyframes rp{0%,100%{opacity:1;}50%{opacity:0.7;}}
+.rest-timer-icon{font-size:13px;}
+.rest-timer-label{font-size:11px;font-weight:800;letter-spacing:0.04em;}
+.rest-timer.idle .rest-timer-label{color:#64748b;}
+.rest-timer.running .rest-timer-label{color:#fbbf24;}
+.rest-timer.done .rest-timer-label{color:#34d399;}
+.rest-timer.overtime .rest-timer-label{color:#f87171;}
+.timer-float{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(10,10,16,0.95);backdrop-filter:blur(16px);border-radius:20px;padding:14px 24px;display:none;flex-direction:column;align-items:center;gap:4px;border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 32px rgba(0,0,0,0.6);z-index:100;min-width:200px;}
+.timer-float.visible{display:flex;}
+.timer-float-label{font-size:10px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:#475569;}
+.timer-float-time{font-size:42px;font-weight:900;letter-spacing:-0.02em;color:#fbbf24;}
+.timer-float-time.done{color:#34d399;}.timer-float-time.overtime{color:#f87171;}
+.timer-float-ex{font-size:11px;color:#64748b;text-align:center;max-width:180px;line-height:1.4;}
+.timer-float-bar{width:100%;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:4px;overflow:hidden;}
+.timer-float-progress{height:100%;background:#fbbf24;border-radius:2px;transition:width 0.5s linear;width:100%;}
+.timer-float-progress.done{background:#34d399;}.timer-float-progress.overtime{background:#f87171;}
+.timer-float-actions{display:flex;gap:8px;margin-top:6px;}
+.timer-float-btn{padding:6px 14px;border-radius:8px;border:none;font-size:11px;font-weight:800;cursor:pointer;}
+.timer-float-skip{background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3);}
+.timer-float-reset{background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.2);}
+.prog-bar-wrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:999;background:rgba(255,255,255,0.06);}
+.prog-bar-fill{height:3px;background:linear-gradient(90deg,#22d3ee,#a78bfa);transition:width 0.4s ease;border-radius:0 2px 2px 0;}
+body{background:#060c16;min-height:100vh;padding-bottom:40px;}
+.back-link{color:#fb923c;background:rgba(251,146,60,0.13);border:1px solid #fb923c55;}
+.header{background:linear-gradient(135deg,#120a04,#060c16);border-bottom:1px solid #fb923c26;}
+.eyebrow{color:#fb923c;}
+.tabs-bar{background:#060c16;border-bottom:1px solid #fb923c1a;}
+.tab{color:#334155;}
+.tab.active{color:#fb923c;border-bottom-color:#fb923c;}
+.ex-num{background:rgba(251,146,60,0.13);color:#fb923c;border:1px solid #fb923c40;}
+.ex-sets{background:rgba(251,146,60,0.13);color:#fb923c;border:1px solid #fb923c33;}
+.workout-note{background:rgba(251,146,60,0.13);}
+.section-label{background:rgba(251,146,60,0.13);}
+</style>
+</head>
+<body>
+<div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
+<div id="app"></div>
+<script>
+
+const TMR={interval:null,startTime:null,duration:0,activeEl:null,
+  parseSeconds(s){if(!s||s==='—')return 0;s=s.toLowerCase().trim();const m=s.match(/(\d+)\s*min/),sec=s.match(/(\d+)\s*sec/);let t=0;if(m)t+=parseInt(m[1])*60;if(sec)t+=parseInt(sec[1]);if(!t){const p=s.match(/^(\d+)/);if(p)t=parseInt(p[1]);}return t;},
+  formatTime(s){const n=s<0,a=Math.abs(s),m=Math.floor(a/60),sc=a%60;return(n?'+':'')+(m>0?m+':'+String(sc).padStart(2,'0'):sc+'s');},
+  buzz(){try{navigator.vibrate&&navigator.vibrate([200,100,200,100,400]);const c=new(window.AudioContext||window.webkitAudioContext)();[0,0.3,0.6].forEach((t,i)=>{const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=i===2?880:660;g.gain.setValueAtTime(0.4,c.currentTime+t);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+t+0.25);o.start(c.currentTime+t);o.stop(c.currentTime+t+0.25);});}catch(e){}},
+  start(el,secs,nm){this.stop();this.duration=secs;this.startTime=Date.now();this.activeEl=el;el.className='rest-timer running';const ft=document.getElementById('timerFloat');if(ft){ft.querySelector('.timer-float-label').textContent='REST';ft.querySelector('.timer-float-ex').textContent=nm;ft.querySelector('.timer-float-time').className='timer-float-time';ft.querySelector('.timer-float-progress').style.width='100%';ft.classList.add('visible');}this.interval=setInterval(()=>{const rem=Math.ceil(this.duration-(Date.now()-this.startTime)/1000);if(el)el.querySelector('.rest-timer-label').textContent=this.formatTime(rem);const tt=document.querySelector('.timer-float-time'),tp=document.querySelector('.timer-float-progress'),tl=document.querySelector('.timer-float-label');if(tt)tt.textContent=this.formatTime(rem);if(rem>0){if(tp)tp.style.width=Math.round((rem/this.duration)*100)+'%';if(tt)tt.className='timer-float-time';if(tp)tp.className='timer-float-progress';if(el)el.className='rest-timer running';}else if(rem===0){this.buzz();if(tt)tt.className='timer-float-time done';if(tp){tp.className='timer-float-progress done';tp.style.width='100%';}if(tl)tl.textContent='DONE!';if(el)el.className='rest-timer done';}else{if(tt){tt.textContent='+'+this.formatTime(-rem);tt.className='timer-float-time overtime';}if(tp)tp.className='timer-float-progress overtime';if(tl)tl.textContent='OVERTIME';if(el)el.className='rest-timer overtime';}},500);},
+  stop(){if(this.interval)clearInterval(this.interval);this.interval=null;if(this.activeEl){this.activeEl.querySelector('.rest-timer-label').textContent=this.activeEl.dataset.label;this.activeEl.className='rest-timer idle';this.activeEl=null;}const ft=document.getElementById('timerFloat');if(ft)ft.classList.remove('visible');},
+  toggle(el,secs,nm){this.activeEl===el&&this.interval?this.stop():this.start(el,secs,nm);}
+};
+function buildTimerFloat(){if(document.getElementById('timerFloat'))return;const d=document.createElement('div');d.id='timerFloat';d.className='timer-float';d.innerHTML='<div class="timer-float-label">REST</div><div class="timer-float-time">0s</div><div class="timer-float-ex"></div><div class="timer-float-bar"><div class="timer-float-progress"></div></div><div class="timer-float-actions"><button class="timer-float-btn timer-float-skip" onclick="TMR.stop()">✓ Done</button><button class="timer-float-btn timer-float-reset" onclick="TMR.stop()">✕ Cancel</button></div>';document.body.appendChild(d);}
+buildTimerFloat();
+function makeRT(rest,nm){const s=TMR.parseSeconds(rest);if(!s)return '<span style="opacity:0.5">'+rest+'</span>';return '<span class="rest-timer idle" data-label="'+rest+'" onclick="buildTimerFloat();TMR.toggle(this,'+s+',\''+nm.substring(0,25).replace(/['"]/g,'')+'\')"><span class="rest-timer-icon">⏱️</span><span class="rest-timer-label">'+rest+'</span></span>';}
+function updateProgress(){const all=document.querySelectorAll('.ex-card');const done=document.querySelectorAll('.ex-card.checked');const pct=all.length?Math.round((done.length/all.length)*100):0;const fill=document.getElementById('progFill');if(fill)fill.style.width=pct+'%';}
+
+
+const WORKOUTS=[{id:'v1',label:'V1',title:'Heavy Base Day',note:'Follow the Split 3 structure: highset compound work, pyramid isolation, superset finishers.',sections:[{label:'Quads',emoji:'🦵',color:'rgba(251,146,60,0.15)',exercises:[{name:'Smith Machine Cannonball Squats',sets:'5×10',tempo:'3:0:1:0',rest:'90 sec',note:'Close stance · deep squat · heels elevated'},{name:'Leg Press (feet together, close stance)',sets:'12,10,8,8',tempo:'',rest:'90 sec',note:'Pyramid up · toes forward · quad emphasis'},{name:'Quad Extensions',sets:'4×15',tempo:'1:0:1:2',rest:'60 sec',note:'High rep · 2-second squeeze at full extension'}]},{label:'Hamstrings & Glutes',emoji:'🏋️',color:'rgba(251,146,60,0.10)',exercises:[{name:'Barbell Squat (feet outside shoulder width)',sets:'5×5',tempo:'',rest:'2 min',note:'Wide stance · shifts emphasis to posterior chain'},{name:'Romanian Deadlift',sets:'4×10',tempo:'3:0:1:0',rest:'90 sec',note:'Bilateral · 3-second eccentric · feel the stretch'},{name:'Goblet Squat (feet pointed out, outside shoulder width)',sets:'4×12',tempo:'1:2:1:0',rest:'60 sec',note:'Heels flat · deep squat · glute emphasis'},{name:'DB Walking Lunges',sets:'3×12 each leg',tempo:'1:2:1:0',rest:'60 sec',note:'Required for leg days · torso upright'}]},{label:'Calves',emoji:'🦶',color:'rgba(251,146,60,0.08)',exercises:[{name:'Seated Calf Raises (toes pointed out)',sets:'4×20',tempo:'1:2:1:2',rest:'60 sec',note:'Slight outward toe targets inner calf head'}]}]},{id:'v2',label:'V2',title:'Deadlift & Hack Focus',note:'Heavy posterior chain anchor with hack squat quad variation and walking lunges.',sections:[{label:'Quads',emoji:'🦵',color:'rgba(251,146,60,0.15)',exercises:[{name:'Barbell Squat (feet inside shoulder width)',sets:'5×10',tempo:'3:0:1:0',rest:'90 sec',note:'Close stance · toes forward · quad sweep focus'},{name:'Hack Squat (low and inside shoulder width)',sets:'12,10,8,8',tempo:'4:0:1:0',rest:'90 sec',note:'Pyramid up · low foot placement'},{name:'Quad Extensions',sets:'4×12',tempo:'1:0:1:2',rest:'60 sec',note:'2-second squeeze at full extension'}]},{label:'Hamstrings & Glutes',emoji:'🏋️',color:'rgba(251,146,60,0.10)',exercises:[{name:'Deadlifts',sets:'5×5',tempo:'',rest:'2 min',note:'Low rep heavy · reset each rep · full stop at bottom'},{name:'Leg Press (high and wide)',sets:'4×10',tempo:'2:0:1:0',rest:'90 sec',note:'High foot placement · wide stance · glute/ham emphasis'},{name:'Smith Machine Hip Thrust',sets:'4×15',tempo:'1:0:1:2',rest:'60 sec',note:'Full hip extension · 2-second squeeze at top'},{name:'DB Walking Lunges',sets:'3×12 each leg',tempo:'1:2:1:0',rest:'60 sec',note:'Required · torso upright · drive through front heel'}]},{label:'Calves',emoji:'🦶',color:'rgba(251,146,60,0.08)',exercises:[{name:'Smith Machine Calf Raises',sets:'4×20',tempo:'1:2:1:2',rest:'60 sec',note:'Full plantarflexion at top · deep stretch at bottom'}]}]},{id:'v3',label:'V3',title:'Drop Set Volume Day',note:'Pyramid into drop sets on key lifts. Posterior chain heavy anchor keeps intensity high.',sections:[{label:'Quads',emoji:'🦵',color:'rgba(251,146,60,0.15)',exercises:[{name:'Goblet Squat (heels elevated and together)',sets:'5×10',tempo:'3:0:1:0',rest:'90 sec',note:'Heels elevated · close stance · deep range'},{name:'Leg Press (feet together)',sets:'12,10,8 drop 8',tempo:'',rest:'90 sec',note:'Drop set final — drop weight, no rest, 8 more'},{name:'Quad Extensions',sets:'12,10,8 drop 8',tempo:'1:0:1:2',rest:'60 sec',note:'Drop set — squeeze at full extension'}]},{label:'Hamstrings & Glutes',emoji:'🏋️',color:'rgba(251,146,60,0.10)',exercises:[{name:'Romanian Dead Lift',sets:'5×5',tempo:'',rest:'2 min',note:'Low rep heavy · bilateral · full hip hinge'},{name:'Smith Machine Hip Thrust',sets:'4×12',tempo:'1:0:1:2',rest:'60 sec',note:'Full hip extension · 2-second squeeze at top'},{name:'Goblet Squat (feet pointed out, outside shoulder width)',sets:'4×15',tempo:'1:2:1:0',rest:'60 sec',note:'Toes out · heels flat · glute focus'},{name:'DB Walking Lunges',sets:'3×12 each leg',tempo:'1:2:1:0',rest:'60 sec',note:'Required · continuous · drive through front heel'}]},{label:'Calves',emoji:'🦶',color:'rgba(251,146,60,0.08)',exercises:[{name:'Seated Calf Raises',sets:'12,10,8 drop 15',tempo:'1:2:1:2',rest:'60 sec',note:'Drop set finisher — drop weight, pump out 15 more'}]}]},{id:'v4',label:'V4',title:'Pause & Isometric Day',note:'Isometric holds and long eccentrics. Heavy posterior chain anchor with pause squats.',sections:[{label:'Quads',emoji:'🦵',color:'rgba(251,146,60,0.15)',exercises:[{name:'Hack Squat (low and inside shoulder width)',sets:'4×8',tempo:'4:3:1:0',rest:'90 sec',note:'3-second isometric hold at bottom · heavy'},{name:'Barbell Squat (feet inside shoulder width)',sets:'4×10',tempo:'1:2:1:0',rest:'90 sec',note:'Pause at bottom eliminates bounce'},{name:'Leg Press (feet together)',sets:'4×10',tempo:'2:2:1:0',rest:'90 sec',note:'2-second pause at bottom of each rep'}]},{label:'Hamstrings & Glutes',emoji:'🏋️',color:'rgba(251,146,60,0.10)',exercises:[{name:'Barbell Squat (feet outside shoulder width)',sets:'5×5',tempo:'',rest:'2 min',note:'Wide stance · heavy · posterior chain anchor'},{name:'Romanian Deadlift',sets:'4×8',tempo:'4:2:1:0',rest:'90 sec',note:'4-second eccentric · 2-second stretch hold at bottom'},{name:'Smith Machine Hip Thrust',sets:'4×15',tempo:'1:0:1:2',rest:'60 sec',note:'2-second squeeze at top each rep'},{name:'DB Walking Lunges',sets:'3 sets to failure',tempo:'1:2:1:0',rest:'90 sec',note:'Required · walk to technical failure'}]},{label:'Calves',emoji:'🦶',color:'rgba(251,146,60,0.08)',exercises:[{name:'Seated Calf Raises (toes pointed out)',sets:'4×15',tempo:'1:3:1:2',rest:'60 sec',note:'3-second isometric stretch at bottom · matches pause theme'}]}]},{id:'v5',label:'V5',title:'High Volume Pump Day',note:'Moderate weight, maximum reps. High-set quad burnout and hamstring volume.',sections:[{label:'Quads',emoji:'🦵',color:'rgba(251,146,60,0.15)',exercises:[{name:'Goblet Squat (heels elevated and together)',sets:'5×10',tempo:'3:0:1:0',rest:'60 sec',note:'High rep primer · heels elevated · deep range'},{name:'Quad Extensions',sets:'5×15',tempo:'1:0:1:2',rest:'60 sec',note:'High sets · 2-second squeeze at full extension'},{name:'Leg Press (feet together)',sets:'4×20',tempo:'1:0:1:0',rest:'60 sec',note:'High rep pump · moderate weight'}]},{label:'Hamstrings & Glutes',emoji:'🏋️',color:'rgba(251,146,60,0.10)',exercises:[{name:'Deadlifts',sets:'5×5',tempo:'',rest:'2 min',note:'Low rep heavy anchor · reset each rep'},{name:'Leg Press (high and wide)',sets:'4×15',tempo:'2:0:1:0',rest:'60 sec',note:'High foot placement · glute/ham emphasis'},{name:'Goblet Squat (feet pointed out, outside shoulder width)',sets:'4×15',tempo:'1:2:1:0',rest:'60 sec',note:'Toes out · high rep glute pump'},{name:'DB Walking Lunges',sets:'4×12 each leg',tempo:'1:2:1:0',rest:'60 sec',note:'Required · high rep · continuous'}]},{label:'Calves',emoji:'🦶',color:'rgba(251,146,60,0.08)',exercises:[{name:'Standing Leg Press Calf Raise',sets:'4×20',tempo:'1:2:1:2',rest:'60 sec',note:'20 reps · full ROM · 2-second pause at top'}]}]},{id:'v6',label:'V6',title:'Pyramid & Superset Day',note:'Pyramid loading into supersets. Full quad/posterior chain coverage with finisher lunges.',sections:[{label:'Quads',emoji:'🦵',color:'rgba(251,146,60,0.15)',exercises:[{name:'Smith Machine Cannonball Squats',sets:'12,10,8,8',tempo:'3:0:1:0',rest:'90 sec',note:'Pyramid up · close stance · deep squat'},{name:'Hack Squat (low and inside shoulder width)',sets:'12,10,8,8',tempo:'4:0:1:0',rest:'90 sec',note:'Pyramid up · quad emphasis'},{name:'Leg Press (feet together) / Quad Extensions (superset)',sets:'4×10 / 15',tempo:'',rest:'90 sec',note:'Complete leg press immediately into extensions — no rest'}]},{label:'Hamstrings & Glutes',emoji:'🏋️',color:'rgba(251,146,60,0.10)',exercises:[{name:'Barbell Squat (feet outside shoulder width)',sets:'5×5',tempo:'',rest:'2 min',note:'Wide stance · heavy · posterior chain anchor'},{name:'Romanian Deadlift',sets:'4×12',tempo:'3:0:1:0',rest:'90 sec',note:'Bilateral · 3-second eccentric'},{name:'Goblet Squat (feet pointed out, outside shoulder width)',sets:'4×15',tempo:'1:2:1:0',rest:'60 sec',note:'Toes out · glute emphasis'},{name:'DB Walking Lunges',sets:'3 sets to failure',tempo:'1:2:1:0',rest:'90 sec',note:'Required · walk to technical failure'}]},{label:'Calves',emoji:'🦶',color:'rgba(251,146,60,0.08)',exercises:[{name:'Smith Machine Calf Raises',sets:'12,10,8,8',tempo:'1:2:1:2',rest:'60 sec',note:'Pyramid up · 2-second squeeze at top'}]}]}];
+
+let activeIdx=0;
+const checkState={};
+
+function render(){
+  const w=WORKOUTS[activeIdx];
+  const tabs=WORKOUTS.map((wo,i)=>'<button class="tab '+(i===activeIdx?'active':'')+'" data-i="'+i+'">'+wo.label+'</button>').join('');
+  let body='';
+  w.sections.forEach(sec=>{
+    body+='<div class="section-label" style="background:'+sec.color+'">'+sec.emoji+' '+sec.label.toUpperCase()+'</div>';
+    sec.exercises.forEach((ex,ei)=>{
+      const id=activeIdx+'-'+sec.label.substring(0,2)+'-'+ei;
+      const ck=checkState[id]?'checked':'';
+      const tpo=ex.tempo?'<span class="ex-tempo">'+ex.tempo+'</span>':'';
+      const note=ex.note?'<div class="ex-note">'+ex.note+'</div>':'';
+      body+='<div class="ex-card '+ck+'" data-id="'+id+'"><div class="ex-row"><div class="ex-num">'+(ei+1)+'</div><div class="ex-content"><div class="ex-name">'+ex.name+'</div><div class="ex-sets-row"><span class="ex-sets">'+ex.sets+'</span>'+tpo+'</div><div>'+makeRT(ex.rest||'60 sec',ex.name)+'</div>'+note+'</div></div></div>';
+    });
+  });
+  const noteHtml=w.note?'<div class="workout-note">'+w.note+'</div>':'';
+  document.getElementById('app').innerHTML=
+    '<div class="header"><a href="cat-pump-new4.html" class="back-link">← Back</a><div class="header-inner"><div class="eyebrow">🦵 Daily Pump · Split #3 · Legs</div><div class="title">Quads / Hamstrings / Glutes</div></div></div>'+
+    '<div class="tabs-bar"><div class="tabs">'+tabs+'</div></div>'+
+    '<div class="content"><div style="font-size:17px;font-weight:900;color:#fff;margin-bottom:6px;">'+w.title+'</div>'+noteHtml+'<div class="tap-hint">Tap any exercise to check off</div>'+body+'</div>';
+  document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{activeIdx=parseInt(b.dataset.i);render();updateProgress();setTimeout(initNotes,200);}));
+  document.querySelectorAll('.ex-card').forEach(c=>c.addEventListener('click',()=>{const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');updateProgress();}));
+  updateProgress();setTimeout(initNotes,200);
+}
+render();
+
+const NOTES_KEY='mc_notes_legs-s3-pump';
+function getNotes(){try{return JSON.parse(localStorage.getItem(NOTES_KEY)||'{}');}catch(e){return{};}}
+function saveNote(id,val){const n=getNotes();if(val.trim())n[id]=val.trim();else delete n[id];localStorage.setItem(NOTES_KEY,JSON.stringify(n));}
+function initNotes(){
+  const notes=getNotes();
+  document.querySelectorAll('.ex-card[data-id]').forEach(card=>{
+    const id=card.dataset.id;
+    if(!id||card.querySelector('.ex-notes-wrap'))return;
+    const ex=notes[id]||'';
+    const tog=document.createElement('div');tog.className='ex-notes-toggle';tog.style.cssText='display:inline-flex;align-items:center;gap:4px;margin-top:6px;cursor:pointer;font-size:10px;font-weight:800;color:#475569;letter-spacing:0.06em;text-transform:uppercase;user-select:none;';tog.innerHTML=ex?'✏️ '+ex.substring(0,20):'✚ Add weight/notes';
+    const wrap=document.createElement('div');wrap.style.cssText='display:none;margin-top:8px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.08);';wrap.innerHTML='<div style="font-size:9px;font-weight:800;letter-spacing:0.15em;color:#475569;text-transform:uppercase;margin-bottom:4px;">Weight / Notes</div><textarea rows="1" placeholder="e.g. 135 lbs" style="width:100%;background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;font-family:inherit;resize:none;">'+ex+'</textarea>';
+    if(ex)wrap.style.display='block';
+    tog.addEventListener('click',e=>{e.stopPropagation();wrap.style.display=wrap.style.display==='block'?'none':'block';});
+    const ta=wrap.querySelector('textarea');ta.addEventListener('input',()=>{saveNote(id,ta.value);tog.innerHTML=ta.value.trim()?'✏️ '+ta.value.trim().substring(0,20):'✚ Add weight/notes';});
+    const cont=card.querySelector('.ex-content');if(cont){cont.appendChild(tog);cont.appendChild(wrap);}
+  });
+}
+</script>
+</body>
+</html>
