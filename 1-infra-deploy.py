@@ -2,7 +2,7 @@
 # Group 1-infra: 4 files
 import os,sys,base64,json,urllib.request,urllib.error
 
-GITHUB_TOKEN="YOUR_GITHUB_TOKEN_HERE"
+GITHUB_TOKEN="ghp_dkCxPFypC5TcmE2Mij1LOwE43zYh7"
 REPO_OWNER="mcross2298"
 REPO_NAME="4-Weeks-to-Open-"
 BRANCH="main"
