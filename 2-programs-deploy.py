@@ -1029,207 +1029,113 @@ function initNotes(){{
 </html>"""
 
 
-# ── mc-s1-quads-calves.html data ─────────────────────────────────────────────
-S1_QC_WORKOUTS = [
-  { 'id':'v1','label':'V1','title':'Classic Strength Pyramid',
-    'note':'Pyramid up in weight as reps drop. Control every rep — tempo is your friend on quads.',
-    'sections':[
-      {'label':'Quads','emoji':'🦵','color':'rgba(245,200,66,0.18)','exercises':[
-        {'name':'Leg Extension (activation, feet neutral)','sets':'15,12,10,10','tempo':'1:2:1:0','rest':'60 sec'},
-        {'name':'Close Stance Barbell Back Squat','sets':'15,12,10,10','tempo':'1:2:1:0','rest':'90 sec','note':'Feet inside shoulder width · toes forward'},
-        {'name':'Hack Squat (low foot placement, close stance)','sets':'4×8','tempo':'4:0:1:0','rest':'90 sec','note':'Low stance maximizes quad stretch'},
-        {'name':'Goblet Squat (heels elevated, together)','sets':'4×10','tempo':'1:2:1:0','rest':'60 sec','note':'Drive knees out · upright torso'},
-        {'name':'Leg Extension (finisher, feet neutral)','sets':'3×15','tempo':'1:0:1:4','rest':'60 sec','note':'4-second squeeze at full extension'},
-      ]},
-      {'label':'Calves','emoji':'🦶','color':'rgba(245,200,66,0.10)','exercises':[
-        {'name':'Standing Calf Raise (feet neutral)','sets':'15,12,10,10','tempo':'1:2:1:0','rest':'60 sec','note':'Deep stretch at bottom — full plantarflexion at top'},
-        {'name':'Seated Calf Raise (feet neutral)','sets':'4×15','tempo':'1:2:1:2','rest':'60 sec','note':'2-second squeeze at top — isolates soleus'},
-      ]},
-    ]},
-  { 'id':'v2','label':'V2','title':'Tempo & Time Under Tension',
-    'note':'Full TUT — slow down every rep, pause at stretch, squeeze at top. No momentum.',
-    'sections':[
-      {'label':'Quads','emoji':'🦵','color':'rgba(245,200,66,0.18)','exercises':[
-        {'name':'Leg Extension (feet slightly turned out)','sets':'4×12','tempo':'4:2:1:2','rest':'60 sec','note':'Full TUT — slow down, pause at stretch'},
-        {'name':'Barbell Squat (feet inside shoulder width)','sets':'4×10','tempo':'4:2:1:0','rest':'90 sec','note':'Toes forward — shifts emphasis to outer quad sweep'},
-        {'name':'Hack Squat (low foot placement, close stance)','sets':'4×8','tempo':'4:2:1:2','rest':'90 sec'},
-        {'name':'Leg Press (feet together)','sets':'4×12','tempo':'2:0:1:0','rest':'90 sec','note':'Full ROM · control the eccentric'},
-        {'name':'Bodyweight Sissy Squats','sets':'3×12','tempo':'3:0:1:0','rest':'60 sec','note':'Lean back · heels up · full quad stretch'},
-      ]},
-      {'label':'Calves','emoji':'🦶','color':'rgba(245,200,66,0.10)','exercises':[
-        {'name':'Seated Calf Raise (feet neutral)','sets':'4×12','tempo':'4:2:1:2','rest':'60 sec','note':'Full TUT — matches slow tempo theme'},
-        {'name':'Smith Machine Calf Raises','sets':'4×15','tempo':'2:0:1:2','rest':'60 sec','note':'2-second squeeze at top each rep'},
-      ]},
-    ]},
-  { 'id':'v3','label':'V3','title':'Drop Set Volume Day',
-    'note':'Last sets are drop sets — drop weight immediately with no rest and keep going.',
-    'sections':[
-      {'label':'Quads','emoji':'🦵','color':'rgba(245,200,66,0.18)','exercises':[
-        {'name':'Leg Extension (feet neutral)','sets':'12,10,8 drop 8','tempo':'1:2:1:0','rest':'60 sec','note':'Drop set on last set — drop weight, no rest'},
-        {'name':'Close Stance Barbell Back Squat','sets':'4×8','tempo':'1:2:1:0','rest':'90 sec'},
-        {'name':'Hack Squat (low foot placement, close stance)','sets':'12,10,8 drop 8','tempo':'4:0:1:0','rest':'90 sec','note':'Drop set final — stay on machine, pump out 8 more'},
-        {'name':'Goblet Squat (heels elevated, together)','sets':'4×12','tempo':'1:2:1:0','rest':'60 sec'},
-        {'name':'Leg Extension (inner quad finisher, feet turned in)','sets':'3×10 drop 15','tempo':'1:0:1:4','rest':'60 sec','note':'Drop set — 4-second squeeze at top each rep'},
-      ]},
-      {'label':'Calves','emoji':'🦶','color':'rgba(245,200,66,0.10)','exercises':[
-        {'name':'Standing Calf Raise (toes pointed out)','sets':'12,10,8 drop 8','tempo':'1:2:1:0','rest':'60 sec','note':'Drop set on final — matches drop theme'},
-        {'name':'Seated Calf Raise (feet neutral)','sets':'3×15','tempo':'1:2:1:2','rest':'60 sec','note':'High-rep soleus burnout'},
-      ]},
-    ]},
-  { 'id':'v4','label':'V4','title':'Pause & Isometric Hold Day',
-    'note':'Isometric holds eliminate momentum entirely. Heavy but controlled.',
-    'sections':[
-      {'label':'Quads','emoji':'🦵','color':'rgba(245,200,66,0.18)','exercises':[
-        {'name':'Leg Extension (feet neutral, activation)','sets':'4×10','tempo':'1:0:1:2','rest':'60 sec','note':'2-second hold at top each rep'},
-        {'name':'Smith Machine Cannonball Squats','sets':'4×8','tempo':'1:3:1:0','rest':'90 sec','note':'3-second isometric hold at full depth'},
-        {'name':'Hack Squat (low placement, close stance)','sets':'4×6','tempo':'4:3:1:0','rest':'90 sec','note':'Heavy — slow eccentric into a 3-second hold'},
-        {'name':'Barbell Squat (feet inside shoulder width)','sets':'3×10','tempo':'1:2:1:0','rest':'90 sec','note':'Pause removes bounce — loads quad deeply'},
-        {'name':'Leg Extension (isometric finisher)','sets':'3×8','tempo':'1:0:1:4','rest':'60 sec','note':'5-second hold at top on final rep only'},
-      ]},
-      {'label':'Calves','emoji':'🦶','color':'rgba(245,200,66,0.10)','exercises':[
-        {'name':'Seated Calf Raise (feet neutral)','sets':'4×10','tempo':'1:3:1:2','rest':'60 sec','note':'Isometric stretch at bottom — matches pause theme'},
-        {'name':'Standing Leg Press Calf Raise','sets':'4×12','tempo':'1:0:1:2','rest':'60 sec','note':'Hold peak contraction — eliminates bounce'},
-      ]},
-    ]},
-  { 'id':'v5','label':'V5','title':'Heavy Strength Day',
-    'note':'Heavy compound loading. Primer sets get blood in before the heavy work.',
-    'sections':[
-      {'label':'Quads','emoji':'🦵','color':'rgba(245,200,66,0.18)','exercises':[
-        {'name':'Leg Extension (feet neutral, primer)','sets':'4×15','tempo':'1:0:1:2','rest':'60 sec','note':'High-rep primer — get blood into quad before loading heavy'},
-        {'name':'Close Stance Barbell Back Squat','sets':'3×6','tempo':'4:4:1:0','rest':'2 min','note':'4-second eccentric, 4-second stretch hold — heavy'},
-        {'name':'Hack Squat (low foot placement, close stance)','sets':'4×8','tempo':'4:0:1:0','rest':'90 sec'},
-        {'name':'Leg Press (feet together)','sets':'3×6','tempo':'3:0:1:0','rest':'2 min','note':'Heavy close stance · full ROM'},
-        {'name':'Leg Extension (squeeze finisher)','sets':'3×15','tempo':'1:0:1:4','rest':'60 sec','note':'4-second hold at top — total burnout'},
-      ]},
-      {'label':'Calves','emoji':'🦶','color':'rgba(245,200,66,0.10)','exercises':[
-        {'name':'Standing Calf Raise (feet neutral)','sets':'3×6','tempo':'4:4:1:0','rest':'90 sec','note':'Heavy — matches the strength tempo'},
-        {'name':'Seated Calf Raise (feet neutral)','sets':'4×10','tempo':'1:2:1:2','rest':'60 sec','note':'Soleus work — 2-second squeeze at top'},
-      ]},
-    ]},
-  { 'id':'v6','label':'V6','title':'Pyramid & Superset Day',
-    'note':'Descending reps as weight climbs — finish with a superset to burn it all out.',
-    'sections':[
-      {'label':'Quads','emoji':'🦵','color':'rgba(245,200,66,0.18)','exercises':[
-        {'name':'Leg Extension (feet neutral)','sets':'15,12,10,10','tempo':'1:2:1:0','rest':'60 sec'},
-        {'name':'Barbell Squat (feet inside shoulder width)','sets':'12,10,8,6','tempo':'1:2:1:0','rest':'90 sec','note':'Descending reps — add weight each set'},
-        {'name':'Hack Squat (low foot placement, close stance)','sets':'12,10,8,6','tempo':'4:2:1:0','rest':'90 sec'},
-        {'name':'Goblet Squat (heels elevated) / Leg Extension (superset)','sets':'3×10 / 15','tempo':'Goblet: 1:2:1:0 / Extension: 1:0:1:2','rest':'90 sec','note':'Complete goblet squat immediately into leg extension'},
-        {'name':'DB Walking Lunges','sets':'3 sets to failure','tempo':'1:2:1:0','rest':'90 sec','note':'Walk to technical failure each set'},
-      ]},
-      {'label':'Calves','emoji':'🦶','color':'rgba(245,200,66,0.10)','exercises':[
-        {'name':'Standing Calf Raise (feet neutral)','sets':'12,10,8,6','tempo':'1:2:1:0','rest':'60 sec','note':'Descending reps — matches pyramid theme'},
-        {'name':'Seated Calf Raise (toes pointed out)','sets':'3×20','tempo':'1:2:1:2','rest':'60 sec','note':'High-rep inner calf burnout'},
-      ]},
-    ]},
-]
-
-# ── mc-s3-legs-quads.html data ────────────────────────────────────────────────
+# ── legs-s3-pump.html data (Daily Pump Split #3 · Quads/Hams/Glutes) ─────────
 S3_LQ_WORKOUTS = [
   { 'id':'v1','label':'V1','title':'Heavy Base Day',
     'note':'Follow the Split 3 structure: highset compound work, pyramid isolation, superset finishers.',
     'sections':[
-      {'label':'Quads','emoji':'🦵','color':'rgba(52,211,153,0.15)','exercises':[
+      {'label':'Quads','emoji':'🦵','color':'rgba(251,146,60,0.15)','exercises':[
         {'name':'Smith Machine Cannonball Squats','sets':'5×10','tempo':'3:0:1:0','rest':'90 sec','note':'Close stance · deep squat · heels elevated'},
         {'name':'Leg Press (feet together, close stance)','sets':'12,10,8,8','tempo':'','rest':'90 sec','note':'Pyramid up · toes forward · quad emphasis'},
         {'name':'Quad Extensions','sets':'4×15','tempo':'1:0:1:2','rest':'60 sec','note':'High rep · 2-second squeeze at full extension'},
       ]},
-      {'label':'Hamstrings & Glutes','emoji':'🏋️','color':'rgba(52,211,153,0.10)','exercises':[
+      {'label':'Hamstrings & Glutes','emoji':'🏋️','color':'rgba(251,146,60,0.10)','exercises':[
         {'name':'Barbell Squat (feet outside shoulder width)','sets':'5×5','tempo':'','rest':'2 min','note':'Wide stance · shifts emphasis to posterior chain'},
         {'name':'Romanian Deadlift','sets':'4×10','tempo':'3:0:1:0','rest':'90 sec','note':'Bilateral · 3-second eccentric · feel the stretch'},
         {'name':'Goblet Squat (feet pointed out, outside shoulder width)','sets':'4×12','tempo':'1:2:1:0','rest':'60 sec','note':'Heels flat · deep squat · glute emphasis'},
         {'name':'DB Walking Lunges','sets':'3×12 each leg','tempo':'1:2:1:0','rest':'60 sec','note':'Required for leg days · torso upright'},
       ]},
-      {'label':'Calves','emoji':'🦶','color':'rgba(52,211,153,0.08)','exercises':[
+      {'label':'Calves','emoji':'🦶','color':'rgba(251,146,60,0.08)','exercises':[
         {'name':'Seated Calf Raises (toes pointed out)','sets':'4×20','tempo':'1:2:1:2','rest':'60 sec','note':'Slight outward toe targets inner calf head'},
       ]},
     ]},
   { 'id':'v2','label':'V2','title':'Deadlift & Hack Focus',
     'note':'Heavy posterior chain anchor with hack squat quad variation and walking lunges.',
     'sections':[
-      {'label':'Quads','emoji':'🦵','color':'rgba(52,211,153,0.15)','exercises':[
+      {'label':'Quads','emoji':'🦵','color':'rgba(251,146,60,0.15)','exercises':[
         {'name':'Barbell Squat (feet inside shoulder width)','sets':'5×10','tempo':'3:0:1:0','rest':'90 sec','note':'Close stance · toes forward · quad sweep focus'},
         {'name':'Hack Squat (low and inside shoulder width)','sets':'12,10,8,8','tempo':'4:0:1:0','rest':'90 sec','note':'Pyramid up · low foot placement'},
         {'name':'Quad Extensions','sets':'4×12','tempo':'1:0:1:2','rest':'60 sec','note':'2-second squeeze at full extension'},
       ]},
-      {'label':'Hamstrings & Glutes','emoji':'🏋️','color':'rgba(52,211,153,0.10)','exercises':[
+      {'label':'Hamstrings & Glutes','emoji':'🏋️','color':'rgba(251,146,60,0.10)','exercises':[
         {'name':'Deadlifts','sets':'5×5','tempo':'','rest':'2 min','note':'Low rep heavy · reset each rep · full stop at bottom'},
         {'name':'Leg Press (high and wide)','sets':'4×10','tempo':'2:0:1:0','rest':'90 sec','note':'High foot placement · wide stance · glute/ham emphasis'},
         {'name':'Smith Machine Hip Thrust','sets':'4×15','tempo':'1:0:1:2','rest':'60 sec','note':'Full hip extension · 2-second squeeze at top'},
         {'name':'DB Walking Lunges','sets':'3×12 each leg','tempo':'1:2:1:0','rest':'60 sec','note':'Required · torso upright · drive through front heel'},
       ]},
-      {'label':'Calves','emoji':'🦶','color':'rgba(52,211,153,0.08)','exercises':[
+      {'label':'Calves','emoji':'🦶','color':'rgba(251,146,60,0.08)','exercises':[
         {'name':'Smith Machine Calf Raises','sets':'4×20','tempo':'1:2:1:2','rest':'60 sec','note':'Full plantarflexion at top · deep stretch at bottom'},
       ]},
     ]},
   { 'id':'v3','label':'V3','title':'Drop Set Volume Day',
     'note':'Pyramid into drop sets on key lifts. Posterior chain heavy anchor keeps intensity high.',
     'sections':[
-      {'label':'Quads','emoji':'🦵','color':'rgba(52,211,153,0.15)','exercises':[
+      {'label':'Quads','emoji':'🦵','color':'rgba(251,146,60,0.15)','exercises':[
         {'name':'Goblet Squat (heels elevated and together)','sets':'5×10','tempo':'3:0:1:0','rest':'90 sec','note':'Heels elevated · close stance · deep range'},
         {'name':'Leg Press (feet together)','sets':'12,10,8 drop 8','tempo':'','rest':'90 sec','note':'Drop set final — drop weight, no rest, 8 more'},
         {'name':'Quad Extensions','sets':'12,10,8 drop 8','tempo':'1:0:1:2','rest':'60 sec','note':'Drop set — squeeze at full extension'},
       ]},
-      {'label':'Hamstrings & Glutes','emoji':'🏋️','color':'rgba(52,211,153,0.10)','exercises':[
+      {'label':'Hamstrings & Glutes','emoji':'🏋️','color':'rgba(251,146,60,0.10)','exercises':[
         {'name':'Romanian Dead Lift','sets':'5×5','tempo':'','rest':'2 min','note':'Low rep heavy · bilateral · full hip hinge'},
         {'name':'Smith Machine Hip Thrust','sets':'4×12','tempo':'1:0:1:2','rest':'60 sec','note':'Full hip extension · 2-second squeeze at top'},
         {'name':'Goblet Squat (feet pointed out, outside shoulder width)','sets':'4×15','tempo':'1:2:1:0','rest':'60 sec','note':'Toes out · heels flat · glute focus'},
         {'name':'DB Walking Lunges','sets':'3×12 each leg','tempo':'1:2:1:0','rest':'60 sec','note':'Required · continuous · drive through front heel'},
       ]},
-      {'label':'Calves','emoji':'🦶','color':'rgba(52,211,153,0.08)','exercises':[
+      {'label':'Calves','emoji':'🦶','color':'rgba(251,146,60,0.08)','exercises':[
         {'name':'Seated Calf Raises','sets':'12,10,8 drop 15','tempo':'1:2:1:2','rest':'60 sec','note':'Drop set finisher — drop weight, pump out 15 more'},
       ]},
     ]},
   { 'id':'v4','label':'V4','title':'Pause & Isometric Day',
     'note':'Isometric holds and long eccentrics. Heavy posterior chain anchor with pause squats.',
     'sections':[
-      {'label':'Quads','emoji':'🦵','color':'rgba(52,211,153,0.15)','exercises':[
+      {'label':'Quads','emoji':'🦵','color':'rgba(251,146,60,0.15)','exercises':[
         {'name':'Hack Squat (low and inside shoulder width)','sets':'4×8','tempo':'4:3:1:0','rest':'90 sec','note':'3-second isometric hold at bottom · heavy'},
         {'name':'Barbell Squat (feet inside shoulder width)','sets':'4×10','tempo':'1:2:1:0','rest':'90 sec','note':'Pause at bottom eliminates bounce'},
         {'name':'Leg Press (feet together)','sets':'4×10','tempo':'2:2:1:0','rest':'90 sec','note':'2-second pause at bottom of each rep'},
       ]},
-      {'label':'Hamstrings & Glutes','emoji':'🏋️','color':'rgba(52,211,153,0.10)','exercises':[
+      {'label':'Hamstrings & Glutes','emoji':'🏋️','color':'rgba(251,146,60,0.10)','exercises':[
         {'name':'Barbell Squat (feet outside shoulder width)','sets':'5×5','tempo':'','rest':'2 min','note':'Wide stance · heavy · posterior chain anchor'},
         {'name':'Romanian Deadlift','sets':'4×8','tempo':'4:2:1:0','rest':'90 sec','note':'4-second eccentric · 2-second stretch hold at bottom'},
         {'name':'Smith Machine Hip Thrust','sets':'4×15','tempo':'1:0:1:2','rest':'60 sec','note':'2-second squeeze at top each rep'},
         {'name':'DB Walking Lunges','sets':'3 sets to failure','tempo':'1:2:1:0','rest':'90 sec','note':'Required · walk to technical failure'},
       ]},
-      {'label':'Calves','emoji':'🦶','color':'rgba(52,211,153,0.08)','exercises':[
+      {'label':'Calves','emoji':'🦶','color':'rgba(251,146,60,0.08)','exercises':[
         {'name':'Seated Calf Raises (toes pointed out)','sets':'4×15','tempo':'1:3:1:2','rest':'60 sec','note':'3-second isometric stretch at bottom · matches pause theme'},
       ]},
     ]},
   { 'id':'v5','label':'V5','title':'High Volume Pump Day',
     'note':'Moderate weight, maximum reps. High-set quad burnout and hamstring volume.',
     'sections':[
-      {'label':'Quads','emoji':'🦵','color':'rgba(52,211,153,0.15)','exercises':[
+      {'label':'Quads','emoji':'🦵','color':'rgba(251,146,60,0.15)','exercises':[
         {'name':'Goblet Squat (heels elevated and together)','sets':'5×10','tempo':'3:0:1:0','rest':'60 sec','note':'High rep primer · heels elevated · deep range'},
         {'name':'Quad Extensions','sets':'5×15','tempo':'1:0:1:2','rest':'60 sec','note':'High sets · 2-second squeeze at full extension'},
         {'name':'Leg Press (feet together)','sets':'4×20','tempo':'1:0:1:0','rest':'60 sec','note':'High rep pump · moderate weight'},
       ]},
-      {'label':'Hamstrings & Glutes','emoji':'🏋️','color':'rgba(52,211,153,0.10)','exercises':[
+      {'label':'Hamstrings & Glutes','emoji':'🏋️','color':'rgba(251,146,60,0.10)','exercises':[
         {'name':'Deadlifts','sets':'5×5','tempo':'','rest':'2 min','note':'Low rep heavy anchor · reset each rep'},
         {'name':'Leg Press (high and wide)','sets':'4×15','tempo':'2:0:1:0','rest':'60 sec','note':'High foot placement · glute/ham emphasis'},
         {'name':'Goblet Squat (feet pointed out, outside shoulder width)','sets':'4×15','tempo':'1:2:1:0','rest':'60 sec','note':'Toes out · high rep glute pump'},
         {'name':'DB Walking Lunges','sets':'4×12 each leg','tempo':'1:2:1:0','rest':'60 sec','note':'Required · high rep · continuous'},
       ]},
-      {'label':'Calves','emoji':'🦶','color':'rgba(52,211,153,0.08)','exercises':[
+      {'label':'Calves','emoji':'🦶','color':'rgba(251,146,60,0.08)','exercises':[
         {'name':'Standing Leg Press Calf Raise','sets':'4×20','tempo':'1:2:1:2','rest':'60 sec','note':'20 reps · full ROM · 2-second pause at top'},
       ]},
     ]},
   { 'id':'v6','label':'V6','title':'Pyramid & Superset Day',
     'note':'Pyramid loading into supersets. Full quad/posterior chain coverage with finisher lunges.',
     'sections':[
-      {'label':'Quads','emoji':'🦵','color':'rgba(52,211,153,0.15)','exercises':[
+      {'label':'Quads','emoji':'🦵','color':'rgba(251,146,60,0.15)','exercises':[
         {'name':'Smith Machine Cannonball Squats','sets':'12,10,8,8','tempo':'3:0:1:0','rest':'90 sec','note':'Pyramid up · close stance · deep squat'},
         {'name':'Hack Squat (low and inside shoulder width)','sets':'12,10,8,8','tempo':'4:0:1:0','rest':'90 sec','note':'Pyramid up · quad emphasis'},
         {'name':'Leg Press (feet together) / Quad Extensions (superset)','sets':'4×10 / 15','tempo':'','rest':'90 sec','note':'Complete leg press immediately into extensions — no rest'},
       ]},
-      {'label':'Hamstrings & Glutes','emoji':'🏋️','color':'rgba(52,211,153,0.10)','exercises':[
+      {'label':'Hamstrings & Glutes','emoji':'🏋️','color':'rgba(251,146,60,0.10)','exercises':[
         {'name':'Barbell Squat (feet outside shoulder width)','sets':'5×5','tempo':'','rest':'2 min','note':'Wide stance · heavy · posterior chain anchor'},
         {'name':'Romanian Deadlift','sets':'4×12','tempo':'3:0:1:0','rest':'90 sec','note':'Bilateral · 3-second eccentric'},
         {'name':'Goblet Squat (feet pointed out, outside shoulder width)','sets':'4×15','tempo':'1:2:1:0','rest':'60 sec','note':'Toes out · glute emphasis'},
         {'name':'DB Walking Lunges','sets':'3 sets to failure','tempo':'1:2:1:0','rest':'90 sec','note':'Required · walk to technical failure'},
       ]},
-      {'label':'Calves','emoji':'🦶','color':'rgba(52,211,153,0.08)','exercises':[
+      {'label':'Calves','emoji':'🦶','color':'rgba(251,146,60,0.08)','exercises':[
         {'name':'Smith Machine Calf Raises','sets':'12,10,8,8','tempo':'1:2:1:2','rest':'60 sec','note':'Pyramid up · 2-second squeeze at top'},
       ]},
     ]},
@@ -1248,40 +1154,33 @@ def main():
 
     generated = []
 
-    # ── Phase 2: Generate new leg day HTML files ─────────────────────────────
-    print("\n── Phase 2: Generating new leg day HTML pages ──")
+    # ── Phase 2: Generate Daily Pump leg day pages ───────────────────────────
+    print("\n── Phase 2: Generating Daily Pump leg day pages ──")
 
-    s1qc_html = make_leg_html(
-        filename   = 'mc-s1-quads-calves',
-        back_href  = 'mc-split1.html',
-        eyebrow    = '🦵 Split 1 · Legs',
-        page_title = 'Quads & Calves',
-        accent     = '#f5c842',
-        accent_dim = 'rgba(245,200,66,0.15)',
-        body_bg    = '#1a1200',
-        header_bg  = 'linear-gradient(135deg,#2a1d00,#1a1200)',
-        workouts   = S1_QC_WORKOUTS,
-    )
-    with open('mc-s1-quads-calves.html', 'w', encoding='utf-8') as f:
-        f.write(s1qc_html)
-    print("  WROTE mc-s1-quads-calves.html")
-    generated.append(('mc-s1-quads-calves.html', 'mc-s1-quads-calves.html'))
+    # Split #1 (quads-pump.html) already exists — just deploy it
+    generated.append(('quads-pump.html', 'quads-pump.html'))
+    print("  QUEUED quads-pump.html (Daily Pump Split #1 · Quads & Calves)")
 
-    s3lq_html = make_leg_html(
-        filename   = 'mc-s3-legs-quads',
-        back_href  = 'mc-split3.html',
-        eyebrow    = '🦵 Split 3 · Legs',
-        page_title = 'Legs — Quads / Hamstrings / Glutes',
-        accent     = '#34d399',
-        accent_dim = 'rgba(52,211,153,0.15)',
-        body_bg    = '#061a10',
-        header_bg  = 'linear-gradient(135deg,#082e1a,#061a10)',
+    # Split #3 — new pump-style quads/hams/glutes page (orange theme)
+    s3_legs_html = make_leg_html(
+        filename   = 'legs-s3-pump',
+        back_href  = 'cat-pump-new4.html',
+        eyebrow    = '🦵 Daily Pump · Split #3 · Legs',
+        page_title = 'Quads / Hamstrings / Glutes',
+        accent     = '#fb923c',
+        accent_dim = 'rgba(251,146,60,0.13)',
+        body_bg    = '#060c16',
+        header_bg  = 'linear-gradient(135deg,#120a04,#060c16)',
         workouts   = S3_LQ_WORKOUTS,
     )
-    with open('mc-s3-legs-quads.html', 'w', encoding='utf-8') as f:
-        f.write(s3lq_html)
-    print("  WROTE mc-s3-legs-quads.html")
-    generated.append(('mc-s3-legs-quads.html', 'mc-s3-legs-quads.html'))
+    with open('legs-s3-pump.html', 'w', encoding='utf-8') as f:
+        f.write(s3_legs_html)
+    print("  WROTE legs-s3-pump.html (Daily Pump Split #3 · Quads/Hams/Glutes)")
+    generated.append(('legs-s3-pump.html', 'legs-s3-pump.html'))
+
+    # Deploy updated category page
+    generated.append(('cat-pump-new4.html', 'cat-pump-new4.html'))
+    print("  QUEUED cat-pump-new4.html (updated with new leg day entries)")
 
     # ── Phase 6: Patch MC workout files with weeks 2/3/4 ────────────────────
     print("\n── Phase 6: Injecting Weeks 2/3/4 into MC workout files ──")
