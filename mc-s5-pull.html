@@ -355,7 +355,7 @@ function makeRestTimer(restStr, exerciseName) {
 buildTimerFloat();
 
 
-let activeWeek=new URLSearchParams(location.search).get('w')==='2'?2:1;
+let activeWeek=parseInt(new URLSearchParams(location.search).get('w'))||1;
 
 const checkState={};
 function B(arr){
