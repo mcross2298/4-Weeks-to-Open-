@@ -23,7 +23,46 @@ body{background:#1a1000;min-height:100vh;color:#fff;padding:0 0 60px;}
 .wcard-name{font-size:19px;font-weight:900;color:#fff;margin-bottom:4px;padding-right:40px;letter-spacing:-0.01em;}
 .wcard-meta{font-size:12px;color:#6b7280;line-height:1.5;padding-right:40px;}
 .wcard-arrow{position:absolute;right:16px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.2);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;}
-</style></head><body>
+</style>
+<style>
+.week-tabs{display:flex;gap:8px;padding:14px 16px 0;max-width:680px;margin:0 auto;}
+.week-tab{flex:1;padding:10px 0;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:0.04em;background:rgba(255,255,255,0.06);color:#64748b;transition:all 0.15s;}
+.week-tab.active{background:rgba(245,200,66,0.15);color:#f5c842;border:1px solid rgba(245,200,66,0.3);}
+</style>
+<script>
+(function(){
+  var w=parseInt(new URLSearchParams(location.search).get('w'))||1;
+  document.addEventListener('DOMContentLoaded',function(){
+    // Build tab bar
+    var bar=document.createElement('div');
+    bar.className='week-tabs';
+    [1,2,3,4].forEach(function(n){
+      var b=document.createElement('button');
+      b.className='week-tab'+(n===w?' active':'');
+      b.textContent='Week '+n;
+      b.onclick=function(){
+        var u=new URL(location.href);
+        u.searchParams.set('w',n);
+        location.href=u.toString();
+      };
+      bar.appendChild(b);
+    });
+    // Insert after first .header or at top of body
+    var h=document.querySelector('.header')||document.querySelector('.split-header');
+    if(h)h.after(bar);else document.body.prepend(bar);
+
+    // Patch all wcard links to pass ?w=N
+    document.querySelectorAll('a.wcard').forEach(function(a){
+      var href=a.getAttribute('href');
+      if(href&&!href.includes('?')){
+        a.setAttribute('href',href+'?w='+w);
+      }
+    });
+  });
+})();
+</script>
+
+</head><body>
 <a href="mc-home.html" class="back-link">← MC Home</a>
 <div class="hero"><div class="hero-inner">
   <div class="eyebrow">⚡ Mike Cross · Split #4</div>
