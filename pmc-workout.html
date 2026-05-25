@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PMC Workout</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#0d0618;min-height:100vh;padding-bottom:60px;}
+/* ── LAYOUT ── */
+.prog-bar-wrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:999;background:rgba(255,255,255,0.06);}
+.prog-bar-fill{height:3px;background:linear-gradient(90deg,#22d3ee,#a78bfa);transition:width 0.4s ease;border-radius:0 2px 2px 0;}
+.back-link{position:absolute;top:18px;left:18px;text-decoration:none;font-size:13px;font-weight:700;background:rgba(192,132,252,0.1);padding:6px 14px;border-radius:20px;border:1px solid rgba(192,132,252,0.3);z-index:10;color:#c084fc;}
+.header{padding:60px 20px 22px;border-bottom:1px solid rgba(255,255,255,0.08);position:relative;}
+.header-inner{max-width:680px;margin:0 auto;}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.25em;text-transform:uppercase;margin-bottom:8px;}
+.title{font-size:26px;font-weight:900;color:#fff;margin-bottom:8px;letter-spacing:-0.02em;}
+.week-badge{display:inline-block;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:700;border:1px solid;}
+/* ── WEEK TABS ── */
+.week-tabs{position:sticky;top:0;z-index:8;background:#0d0618;padding:0 12px;}
+.wtabs{max-width:680px;margin:0 auto;display:flex;}
+.wtab{flex:1;padding:13px 8px;border:none;cursor:pointer;font-weight:900;font-size:12px;background:transparent;border-bottom:3px solid transparent;text-align:center;letter-spacing:0.06em;color:#334155;transition:color 0.15s,border-color 0.15s;}
+/* ── CONTENT ── */
+.content{max-width:680px;margin:20px auto 0;padding:0 16px;}
+.tap-hint{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;text-align:center;opacity:0.5;}
+/* ── CONFUSION BANNER ── */
+.confusion-banner{background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.25);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:#fb923c;font-weight:700;line-height:1.5;}
+.confusion-banner span{opacity:0.7;font-weight:500;}
+/* ── WARMUP CARD ── */
+.warmup-card{border-radius:14px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:flex-start;gap:10px;}
+.wu-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+.wu-text{font-size:13px;font-weight:700;line-height:1.4;}
+.wu-sub{font-size:11px;opacity:0.8;margin-top:3px;}
+/* ── EXERCISE CARDS ── */
+.ex-card{border-radius:14px;border:1.5px solid rgba(255,255,255,0.1);margin-bottom:12px;overflow:hidden;cursor:pointer;transition:all 0.15s;background:rgba(255,255,255,0.03);}
+.ex-card:active{transform:scale(0.99);}
+.ex-card.checked{background:#0a2a1a!important;border-color:rgba(52,211,153,0.45)!important;}
+.ex-card.checked .ex-name{text-decoration:line-through;color:#34d399;}
+.ex-card.checked .ex-num{background:#065f46!important;border-color:transparent!important;color:#fff!important;}
+.ex-row{display:flex;gap:10px;align-items:flex-start;padding:13px 14px;}
+.ex-num{display:inline-flex;align-items:center;justify-content:center;min-width:28px;width:28px;height:28px;border-radius:50%;font-size:12px;font-weight:900;margin-top:1px;flex-shrink:0;background:rgba(255,255,255,0.1);color:#94a3b8;border:1px solid rgba(255,255,255,0.15);}
+.ex-content{flex:1;min-width:0;}
+.ex-name{font-weight:700;font-size:13px;color:#e2e8f0;line-height:1.4;margin-bottom:7px;}
+.ex-tags{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:4px;}
+.ex-sets{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:5px;background:rgba(255,255,255,0.08);color:#cbd5e1;border:1px solid rgba(255,255,255,0.12);}
+.ex-note{font-size:11px;margin-top:5px;font-style:italic;opacity:0.75;line-height:1.4;color:#94a3b8;}
+/* ── SUPERSET CARDS ── */
+.ss-card{border-radius:14px;border:1.5px solid rgba(168,85,247,0.3);margin-bottom:12px;overflow:hidden;background:rgba(168,85,247,0.04);}
+.ss-header{background:rgba(168,85,247,0.12);padding:7px 14px;display:flex;align-items:center;gap:6px;border-bottom:1px solid rgba(168,85,247,0.15);}
+.ss-label{font-size:10px;font-weight:900;letter-spacing:0.18em;color:#c084fc;text-transform:uppercase;}
+.ss-ex{display:flex;gap:10px;align-items:flex-start;padding:11px 14px;cursor:pointer;}
+.ss-ex:not(:last-of-type){border-bottom:1px solid rgba(168,85,247,0.1);}
+.ss-ex.checked .ss-name{text-decoration:line-through;color:#34d399;}
+.ss-ex.checked .ss-num{background:#065f46!important;border-color:transparent!important;color:#fff!important;}
+.ss-num{display:inline-flex;align-items:center;justify-content:center;min-width:28px;width:28px;height:28px;background:rgba(168,85,247,0.18);color:#c084fc;border-radius:50%;font-size:12px;font-weight:900;border:1px solid rgba(168,85,247,0.28);margin-top:1px;flex-shrink:0;}
+.ss-content{flex:1;min-width:0;}
+.ss-name{font-weight:700;font-size:13px;color:#e2e8f0;line-height:1.4;margin-bottom:6px;}
+.ss-divider{display:flex;align-items:center;justify-content:center;padding:4px 0;background:rgba(168,85,247,0.06);}
+.ss-x{font-size:11px;font-weight:900;color:#a855f7;letter-spacing:0.12em;}
+/* ── UGEE / BLOCKS CARDS ── */
+.block-card{border-radius:14px;margin-bottom:14px;overflow:hidden;border:1.5px solid rgba(251,146,60,0.3);background:rgba(251,146,60,0.04);}
+.block-header{background:rgba(251,146,60,0.12);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(251,146,60,0.15);}
+.block-title{font-size:13px;font-weight:900;color:#fb923c;}
+.block-rounds{font-size:11px;font-weight:800;color:#fb923c;background:rgba(251,146,60,0.15);padding:3px 10px;border-radius:20px;border:1px solid rgba(251,146,60,0.3);}
+.block-note{font-size:11px;color:#94a3b8;padding:8px 16px;border-bottom:1px solid rgba(251,146,60,0.1);font-style:italic;}
+.block-warmup{font-size:11px;font-weight:700;color:#fb923c;padding:6px 16px;border-bottom:1px solid rgba(251,146,60,0.1);background:rgba(251,146,60,0.06);}
+.block-warmup-label{font-size:9px;font-weight:900;letter-spacing:0.15em;color:#fb923c;opacity:0.6;margin-right:6px;}
+.block-ex{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);}
+.block-ex:last-of-type{border-bottom:none;}
+.block-ex.checked .block-ex-name{text-decoration:line-through;color:#34d399;}
+.block-ex-dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(251,146,60,0.5);flex-shrink:0;transition:all 0.15s;}
+.block-ex.checked .block-ex-dot{background:#34d399;border-color:#34d399;}
+.block-ex-name{font-size:13px;font-weight:600;color:#e2e8f0;}
+.block-rounds-btns{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px 14px;}
+.round-btn{padding:7px 16px;border-radius:8px;border:1px solid rgba(251,146,60,0.35);background:rgba(251,146,60,0.08);color:#fb923c;font-size:11px;font-weight:800;cursor:pointer;transition:all 0.15s;letter-spacing:0.05em;}
+.round-btn.done{background:rgba(52,211,153,0.15);border-color:rgba(52,211,153,0.4);color:#34d399;}
+.round-btn:active{transform:scale(0.97);}
+/* ── TYPE BADGES ── */
+.type-badge{display:inline-block;font-size:10px;font-weight:800;padding:3px 8px;border-radius:5px;letter-spacing:0.05em;text-transform:uppercase;}
+.tb-pyramid{background:rgba(249,115,22,0.15);color:#fb923c;border:1px solid rgba(249,115,22,0.25);}
+.tb-lowrep{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.25);}
+.tb-tempo{background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.25);}
+.tb-highrep12{background:rgba(234,179,8,0.15);color:#fbbf24;border:1px solid rgba(234,179,8,0.25);}
+.tb-highrep20{background:rgba(217,119,6,0.2);color:#fb923c;border:1px solid rgba(217,119,6,0.3);}
+.tb-drop{background:rgba(244,63,94,0.15);color:#fb7185;border:1px solid rgba(244,63,94,0.25);}
+.tb-amrap{background:rgba(239,68,68,0.2);color:#ef4444;border:1px solid rgba(239,68,68,0.35);}
+.tb-minrest{background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.25);}
+.tb-optional{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.25);}
+.tb-finisher{background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.25);}
+.tb-superset{background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.25);}
+.tb-dumbbell{background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.25);}
+.tb-cable{background:rgba(34,211,238,0.12);color:#22d3ee;border:1px solid rgba(34,211,238,0.25);}
+/* ── REST TIMER ── */
+.rest-timer{display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none;padding:4px 10px;border-radius:8px;transition:all 0.15s;margin-top:5px;}
+.rest-timer:active{transform:scale(0.96);}
+.rest-timer.idle{background:rgba(100,116,139,0.12);border:1px solid rgba(100,116,139,0.2);}
+.rest-timer.running{background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.35);animation:timerPulse 1s ease-in-out infinite;}
+.rest-timer.done{background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.35);}
+.rest-timer.overtime{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);}
+@keyframes timerPulse{0%,100%{opacity:1;}50%{opacity:0.7;}}
+.rest-timer-icon{font-size:13px;}
+.rest-timer-label{font-size:11px;font-weight:800;letter-spacing:0.04em;color:#64748b;}
+.rest-timer.running .rest-timer-label{color:#fbbf24;}
+.rest-timer.done .rest-timer-label{color:#34d399;}
+.rest-timer.overtime .rest-timer-label{color:#f87171;}
+/* ── FLOATING TIMER ── */
+.timer-float{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(10,10,16,0.97);backdrop-filter:blur(16px);border-radius:20px;padding:14px 24px;display:none;flex-direction:column;align-items:center;gap:4px;border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 32px rgba(0,0,0,0.7);z-index:100;min-width:200px;}
+.timer-float.visible{display:flex;}
+.timer-float-label{font-size:10px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:#475569;}
+.timer-float-time{font-size:42px;font-weight:900;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:#fbbf24;}
+.timer-float-time.done{color:#34d399;}
+.timer-float-time.overtime{color:#f87171;}
+.timer-float-ex{font-size:11px;color:#64748b;text-align:center;max-width:180px;line-height:1.4;}
+.timer-float-bar{width:100%;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:4px;overflow:hidden;}
+.timer-float-progress{height:100%;background:#fbbf24;border-radius:2px;transition:width 0.5s linear;width:100%;}
+.timer-float-progress.done{background:#34d399;}
+.timer-float-progress.overtime{background:#f87171;}
+.timer-float-actions{display:flex;gap:8px;margin-top:6px;}
+.timer-float-btn{padding:6px 14px;border-radius:8px;border:none;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:0.06em;}
+.timer-float-skip{background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3);}
+.timer-float-reset{background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.2);}
+.timer-presets{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;justify-content:center;}
+.timer-preset{padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.07);color:#94a3b8;font-size:11px;font-weight:800;cursor:pointer;}
+.timer-preset:active{background:rgba(212,175,55,0.2);color:#fbbf24;border-color:rgba(212,175,55,0.4);}
+/* ── NOTES ── */
+.ex-notes-toggle{display:inline-flex;align-items:center;gap:4px;margin-top:6px;cursor:pointer;font-size:10px;font-weight:800;color:#475569;letter-spacing:0.06em;text-transform:uppercase;user-select:none;}
+.ex-notes-wrap{display:none;margin-top:8px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.08);}
+.ex-notes-wrap.open{display:block;}
+.ex-notes-input{width:100%;background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;font-weight:600;font-family:inherit;resize:none;line-height:1.5;}
+.ex-notes-input::placeholder{color:#334155;}
+.ex-notes-label{font-size:9px;font-weight:800;letter-spacing:0.15em;color:#475569;text-transform:uppercase;margin-bottom:4px;}
+/* ── SUMMARY ── */
+.sum-section{max-width:680px;margin:28px auto 0;padding:0 16px 32px;}
+.sum-card{border-radius:14px;padding:16px;}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px;}
+.sum-tot{border-radius:8px;padding:10px;text-align:center;}
+.sum-tv{font-size:15px;font-weight:900;}
+.sum-tl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px;opacity:0.7;}
+
+/* ── PICKER ── */
+.picker-header{padding:60px 20px 24px;background:linear-gradient(135deg,#1a0040,#0d0618);text-align:center;border-bottom:1px solid rgba(192,132,252,0.15);}
+.picker-title{font-size:24px;font-weight:900;color:#fff;margin-bottom:6px;}
+.picker-sub{font-size:12px;color:#475569;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;}
+.picker-content{max-width:680px;margin:0 auto;padding:20px 16px 48px;}
+.picker-split{margin-bottom:24px;}
+.picker-split-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px;}
+.picker-split-name{font-size:15px;font-weight:900;}
+.picker-split-label{font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;opacity:0.6;}
+.picker-workout{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1.5px solid;margin-bottom:8px;cursor:pointer;transition:all 0.15s;}
+.picker-workout:active{transform:scale(0.98);}
+.picker-icon{font-size:18px;flex-shrink:0;}
+.picker-name{flex:1;font-size:13px;font-weight:700;color:#e2e8f0;}
+.picker-arrow{font-size:16px;font-weight:900;}
+/* ── NOT FOUND ── */
+.not-found{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;color:#475569;text-align:center;gap:12px;}
+.not-found h2{font-size:20px;font-weight:900;color:#64748b;}
+</style>
+</head>
+<body>
+<div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
+<div id="app"></div>
+
+<script>
+/**
+ * pmc-data.js — Single source of truth for all PMC workout data
+ * 7 splits · 30 workouts · Weeks 1–2 original · Weeks 3–4 confusion swaps
+ */
+
+const PMC_SPLITS = {
+  'split1_legs': {
+    id: 'split1_legs', file: 'pmc-legs-quad.html', split: 'Split 1',
+    title: 'Leg Day — Quad Focus', icon: '🦵', color: '#4ade80', bg: '#052e16',
+    backUrl: 'pmc-split1.html', type: 'standard',
+    data: {
+  1:[
+    {type:'superset',num:1,
+     a:{name:'Quad Extensions',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12–15 reps · 2 sec pause · 1:0:1:2'},
+     b:{name:'Romanian Deadlifts (Barbell or DB)**',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12–15 reps · feel the hamstring stretch'}},
+    {type:'single',num:2,name:'Close Stance Barbell Squats or Goblet Squats**',sets:'5×5',badges:['tb-lowrep'],note:'Low rep · heavy · drive through heels'},
+    {type:'single',num:3,name:'Quad Extensions',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up in weight · drop set on final set'},
+    {type:'single',num:4,name:'Smith Machine Split Squats',sets:'4×10',badges:['tb-tempo'],note:'4 sec negative on descent · 4:0:1:0'},
+    {type:'single',num:5,name:'Leg Press (feet shoulder width)',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · moderate weight · full ROM · not a compound primary'},
+    {type:'single',num:6,name:'Calf Raises',sets:'5×15',badges:['tb-highrep12'],note:'20+ reps · 2 sec pause at top · 1:0:1:2'},
+    {type:'single',num:7,name:'Walking Lunges',sets:'100–200 reps',badges:['tb-optional'],note:'⭐ Optional finisher'},
+  ],
+  2:[
+    {type:'superset',num:1,
+     a:{name:'Leg Press (feet shoulder width)',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12–15 reps · 4 sec negative · 4:0:1:0'},
+     b:{name:'Lying Hamstring Curl',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12–15 reps · 2 sec pause at peak'}},
+    {type:'single',num:2,name:'Neutral Stance Barbell or Goblet Squats**',sets:'12,10,8,8 drop 12',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:3,name:'Cannonball Hack Squat or Leg Press (feet touching, heels elevated)**',sets:'4×6',badges:['tb-lowrep'],note:'Low rep · heavy · feet touching · heels elevated'},
+    {type:'single',num:4,name:'Seated Leg Extension',sets:'4×12',badges:['tb-tempo'],note:'4 sec negatives · 4:0:1:0 · slow and controlled'},
+    {type:'single',num:5,name:'Seated Hamstring Curl',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · 2 sec pause at peak · 1:0:1:2'},
+    {type:'single',num:6,name:'Calf Raises',sets:'5×15',badges:['tb-highrep12'],note:'20+ reps · 2 sec pause at top · 1:0:1:2'},
+    {type:'single',num:7,name:'Walking Lunges',sets:'100–200 reps',badges:['tb-optional'],note:'⭐ Optional finisher'},
+  ]
+},
+  },
+
+  'split1_back': {
+    id: 'split1_back', file: 'pmc-back.html', split: 'Split 1',
+    title: 'Back', icon: '🔙', color: '#22d3ee', bg: '#042f2e',
+    backUrl: 'pmc-split1.html', type: 'standard',
+    data: {
+  1:{warmup:true, exercises:[
+    {type:'superset',num:1,
+     a:{name:'Wide Grip Lat Pulldown',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12–15 reps · full stretch at top'},
+     b:{name:'Seated Cable Row (close V grip)',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12–15 reps · squeeze at peak'}},
+    {type:'single',num:2,name:'Barbell Pendlay Rows',sets:'5×5',badges:['tb-lowrep'],note:'Low rep · heavy · explosive pull · reset each rep'},
+    {type:'single',num:3,name:'Machine Low Row',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:4,name:'Incline DB Row (bilateral)',sets:'4×12',badges:['tb-tempo'],note:'2 sec pause at top · 1:0:1:2 · bilateral hold'},
+    {type:'single',num:5,name:'Straight Arm Lat Pulldown (cable)',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · constant tension · no lockout · bilateral'},
+    {type:'single',num:6,name:'Machine High Row',sets:'4×15',badges:['tb-highrep12'],note:'12–15 reps · lean back slightly · machine pull'},
+    {type:'single',num:7,name:'Cable Shrug (bilateral)',sets:'4×15',badges:['tb-highrep12'],note:'12–15 reps · squeeze at top · 1:0:1:2'},
+  ]},
+  2:{warmup:true, exercises:[
+    {type:'superset',num:1,
+     a:{name:'Reverse Grip Lat Pulldown',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12–15 reps · underhand grip'},
+     b:{name:'Wide Grip Seated Cable Row',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12–15 reps · 2 sec pause at peak'}},
+    {type:'single',num:2,name:'Barbell Pendlay or Bent Over Row**',sets:'5×5',badges:['tb-lowrep'],note:'Low rep · heavy · drive elbows back'},
+    {type:'single',num:3,name:'Wide Grip Lat Pulldown',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:4,name:'V Grip Lat Pulldown',sets:'4×10',badges:['tb-tempo'],note:'4 sec negatives · 4:0:1:0 · slow controlled pull'},
+    {type:'single',num:5,name:'Straight Arm Lat Pulldown (cable)',sets:'5×20',badges:['tb-highrep20'],note:'20 reps · constant tension · no lockout'},
+    {type:'single',num:6,name:'Machine Mid Row',sets:'4×15',badges:['tb-highrep12'],note:'12–15 reps · bilateral pull · squeeze at peak'},
+    {type:'single',num:7,name:'Barbell Shrug (wide grip)',sets:'4×15',badges:['tb-highrep12'],note:'12–15 reps · hold at top · 1:0:1:2'},
+  ]}
+},
+  },
+
+  'split1_chest': {
+    id: 'split1_chest', file: 'pmc-chest-shoulders.html', split: 'Split 1',
+    title: 'Chest & Shoulders', icon: '💪', color: '#c084fc', bg: '#1e1040',
+    backUrl: 'pmc-split1.html', type: 'standard',
+    data: {
+  1:[
+    {type:'superset',num:1,
+     a:{name:'High Incline DB Flies',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12–15 reps · full stretch at bottom'},
+     b:{name:'Side Lateral Raises',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12–15 reps · squeeze at top'}},
+    {type:'single',num:2,name:'Incline Barbell or DB Press**',sets:'5×5',badges:['tb-lowrep'],note:'Low rep · heavy compound · drive the bar'},
+    {type:'single',num:3,name:'Flat Machine Chest Press',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:4,name:'Slight Incline DB Press',sets:'4×12',badges:['tb-tempo'],note:'2 sec pause at bottom · 1:2:1:0'},
+    {type:'single',num:5,name:'Pec Deck Fly Machine',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · 2 sec pause at peak · machine not compound'},
+    {type:'single',num:6,name:'Reverse Pec Deck (Rear Delts)',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · squeeze rear delt at peak · 1:0:1:2'},
+    {type:'single',num:7,name:'Cable Upright Row',sets:'4×15',badges:['tb-highrep12'],note:'12–15 reps · 2 sec pause at top · bilateral cable'},
+  ],
+  2:[
+    {type:'superset',num:1,
+     a:{name:'High Incline DB Flies',sets:'4×12',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 2 sec pause at stretch · 1:2:1:2'},
+     b:{name:'Seated DB Side Lateral',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12–15 reps · constant tension'}},
+    {type:'single',num:2,name:'Slight Incline DB Press',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set final set'},
+    {type:'single',num:3,name:'Incline Barbell or DB Press**',sets:'4×6',badges:['tb-lowrep'],note:'Low rep · 4 sec negatives · 4:0:1:0'},
+    {type:'single',num:4,name:'Flat Machine Chest Press',sets:'4×12',badges:['tb-tempo'],note:'3 sec negatives · 4:0:1:0 · controlled'},
+    {type:'single',num:5,name:'Pec Deck Fly Machine',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · 2 sec pause at peak squeeze'},
+    {type:'single',num:6,name:'Reverse Pec Deck',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · rear delt pump · 1:0:1:2'},
+    {type:'single',num:7,name:'Cable Lateral Raise (bilateral)',sets:'4×15',badges:['tb-highrep12'],note:'12–15 reps · bilateral cable · squeeze at top'},
+  ]
+},
+  },
+
+  'split1_bistris': {
+    id: 'split1_bistris', file: 'pmc-bis-tris.html', split: 'Split 1',
+    title: 'Bis & Tris', icon: '💪', color: '#f472b6', bg: '#2d0a1e',
+    backUrl: 'pmc-split1.html', type: 'standard',
+    data: {
+  1:[
+    {type:'superset',num:1,
+     a:{name:'Double Arm DB Curls',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12–15 reps · full supination at top'},
+     b:{name:'Tricep Dip Machine',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12–15 reps · full ROM'}},
+    {type:'single',num:2,name:'Barbell Curls (close grip)',sets:'5×5',badges:['tb-lowrep'],note:'Low rep · heavy · strong bicep contraction'},
+    {type:'single',num:3,name:'Machine Preacher Curl',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:4,name:'Skull Crushers (Barbell or EZ-Bar)',sets:'4×10',badges:['tb-tempo'],note:'2 sec pause at bottom · 1:2:1:0'},
+    {type:'single',num:5,name:'Tricep Rope Pushdowns',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · bilateral rope · constant tension · squeeze at bottom'},
+    {type:'single',num:6,name:'Cable Curl (bilateral W-bar)',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · W-bar · both arms · constant tension'},
+    {type:'single',num:7,name:'Preacher Curl Machine',sets:'5×12',badges:['tb-minrest'],note:'5 sets · 20 sec rest between sets'},
+  ],
+  2:[
+    {type:'superset',num:1,
+     a:{name:'Incline DB Curl (bilateral)',sets:'4×12',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · both arms together · 12 reps'},
+     b:{name:'Overhead Tricep Rope Extension (bilateral)',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · both arms · 12–15 reps'}},
+    {type:'single',num:2,name:'Barbell Curls (wide grip)',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · 3 sec negatives · drop set final set · 4:0:1:0'},
+    {type:'single',num:3,name:'Smith Machine Close Grip Bench',sets:'4×6',badges:['tb-lowrep'],note:'Low rep · heavy · tricep emphasis'},
+    {type:'single',num:4,name:'Machine Preacher Curl',sets:'4×10',badges:['tb-tempo'],note:'2 sec pause at bottom · 1:2:1:0'},
+    {type:'single',num:5,name:'Tricep V-Bar Pushdowns',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · bilateral · squeeze fully at bottom'},
+    {type:'single',num:6,name:'Cable Curl (bilateral EZ-bar)',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · EZ-bar · both arms together'},
+    {type:'single',num:7,name:'Skull Crushers',sets:'5×10',badges:['tb-minrest'],note:'5 sets · 20 sec rest between sets'},
+  ]
+},
+  },
+
+  'split1_leghams': {
+    id: 'split1_leghams', file: 'pmc-legs-hams.html', split: 'Split 1',
+    title: 'Leg Day — Ham Focus', icon: '🦵', color: '#34d399', bg: '#052e1a',
+    backUrl: 'pmc-split1.html', type: 'standard',
+    data: {
+  1:[
+    {type:'superset',num:1,
+     a:{name:'Lying Hamstring Curl',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12–15 reps · 2 sec pause at peak'},
+     b:{name:'Leg Extension',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12–15 reps · squeeze at full extension'}},
+    {type:'single',num:2,name:'Barbell or DB RDL (bilateral)**',sets:'5×5',badges:['tb-lowrep'],note:'Low rep · heavy bilateral · drive hips back'},
+    {type:'single',num:3,name:'Seated Hamstring Curl',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:4,name:'Barbell Good Mornings',sets:'4×10',badges:['tb-tempo'],note:'2 sec pause at bottom · 1:2:1:0 · hip hinge focus'},
+    {type:'single',num:5,name:'Glute Bridge Machine or Hip Thrust Machine',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · machine variation · not barbell compound · squeeze glutes'},
+    {type:'single',num:6,name:'Leg Press (feet high and wide)',sets:'4×20',badges:['tb-highrep12'],note:'12-15 reps · high/wide position · glute/ham emphasis'},
+    {type:'single',num:7,name:'Walking Lunges',sets:'100–200 reps',badges:['tb-optional'],note:'⭐ Optional finisher'},
+  ],
+  2:[
+    {type:'superset',num:1,
+     a:{name:'Seated Hamstring Curl',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12–15 reps · 2 sec pause at peak'},
+     b:{name:'Leg Extension',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12–15 reps · squeeze at top'}},
+    {type:'single',num:2,name:'Barbell RDL or Conventional Deadlift**',sets:'5×5',badges:['tb-lowrep'],note:'Low rep · heavy bilateral compound'},
+    {type:'single',num:3,name:'Lying Hamstring Curl',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:4,name:'Barbell Good Mornings',sets:'4×10',badges:['tb-tempo'],note:'2 sec pause at bottom · 1:2:1:0'},
+    {type:'single',num:5,name:'Glute Bridge Machine or Hip Thrust Machine',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · machine variation · squeeze fully at top'},
+    {type:'single',num:6,name:'Leg Press (feet high and wide)',sets:'4×15',badges:['tb-highrep12'],note:'12-15 reps · posterior chain emphasis'},
+    {type:'single',num:7,name:'Walking Lunges',sets:'100–200 reps',badges:['tb-optional'],note:'⭐ Optional finisher'},
+  ]
+},
+  },
+
+  'split2_legs': {
+    id: 'split2_legs', file: 'pmc-s2-legs-quad.html', split: 'Split 2',
+    title: 'Leg Day — Quad Focus', icon: '🦵', color: '#4ade80', bg: '#052e16',
+    backUrl: 'pmc-split2.html', type: 'standard',
+    data: {
+  1:[
+    {type:'superset',num:1,
+     a:{name:'Leg Extension',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12–15 reps · squeeze at top'},
+     b:{name:'Lying Hamstring Curl',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12–15 reps · 2 sec pause at peak'}},
+    {type:'single',num:2,name:'Neutral Stance Barbell or DB Squat**',sets:'5×5',badges:['tb-lowrep'],note:'Low rep · heavy compound · full depth'},
+    {type:'single',num:3,name:'Close Stance Cannonball Leg Press (heels elevated)',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · feet touching · heels elevated · drop set final set'},
+    {type:'single',num:4,name:'Smith Machine Split Squat',sets:'4×10',badges:['tb-tempo'],note:'3 sec negative on descent · 4:0:1:0'},
+    {type:'single',num:5,name:'Leg Press (feet shoulder width)',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · full ROM · not a primary compound position'},
+    {type:'single',num:6,name:'Seated Hamstring Curl',sets:'4×15',badges:['tb-highrep12'],note:'12–15 reps · 2 sec pause at peak · 1:0:1:2'},
+    {type:'single',num:7,name:'Calf Raises',sets:'5×15',badges:['tb-highrep12'],note:'20 reps · 2 sec pause at top · 1:0:1:2'},
+    {type:'single',num:8,name:'Walking Lunges',sets:'100–200 reps',badges:['tb-optional'],note:'⭐ Optional finisher'},
+  ],
+  2:[
+    {type:'superset',num:1,
+     a:{name:'Seated Hamstring Curl',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12–15 reps · 2 sec pause at peak'},
+     b:{name:'Leg Extension',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12–15 reps · squeeze at full extension'}},
+    {type:'single',num:2,name:'Close Stance Barbell or Goblet Squat (heels elevated)**',sets:'5×5',badges:['tb-lowrep'],note:'Low rep · heavy · heels elevated on plate'},
+    {type:'single',num:3,name:'Neutral Stance Leg Press',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:4,name:'Goblet Squat (heels elevated)',sets:'4×12',badges:['tb-tempo'],note:'4 sec negative · 4:0:1:0 · heels elevated · upright torso'},
+    {type:'single',num:5,name:'Leg Extension',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · 3 sec negative · constant tension'},
+    {type:'single',num:6,name:'Lying Hamstring Curl',sets:'4×15',badges:['tb-highrep12'],note:'12–15 reps · 2 sec pause at peak · 1:0:1:2'},
+    {type:'single',num:7,name:'Calf Raises',sets:'5×15',badges:['tb-highrep12'],note:'20 reps · 2 sec pause at top · 1:0:1:2'},
+    {type:'single',num:8,name:'Walking Lunges',sets:'100–200 reps',badges:['tb-optional'],note:'⭐ Optional finisher'},
+  ]
+},
+  },
+
+  'split2_chest': {
+    id: 'split2_chest', file: 'pmc-s2-chest-biceps.html', split: 'Split 2',
+    title: 'Chest & Biceps', icon: '💪', color: '#c084fc', bg: '#1e1040',
+    backUrl: 'pmc-split2.html', type: 'standard',
+    data: {
+  1:[
+    {type:'superset',num:1,
+     a:{name:'Slight Incline DB Flies',sets:'12,10,8,8',badges:['tb-superset','tb-pyramid'],note:'⚡ Superset A · Pyramid up in weight'},
+     b:{name:'Double Arm Hammer Curls',sets:'12,10,8,8',badges:['tb-superset','tb-pyramid'],note:'⚡ Superset B · Pyramid — match flies cadence'}},
+    {type:'single',num:2,name:'Flat Barbell or DB Press**',sets:'5×5',badges:['tb-lowrep'],note:'Low rep · heavy compound'},
+    {type:'single',num:3,name:'Incline Machine Chest Press',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set · not free weight compound'},
+    {type:'single',num:4,name:'High Incline DB Press',sets:'4×12',badges:['tb-tempo'],note:'2 sec pause at bottom · 1:2:1:0 · 12–15 rep range'},
+    {type:'single',num:5,name:'Pec Deck Fly Machine',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · 2 sec pause at peak · machine not compound'},
+    {type:'single',num:6,name:'Cable Curl (bilateral W-bar)',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · W-bar · both arms · constant tension'},
+    {type:'single',num:7,name:'Machine Preacher Curl',sets:'5×12',badges:['tb-highrep12','tb-minrest'],note:'12 reps · 5 sets · 20 sec rest between sets'},
+  ],
+  2:[
+    {type:'superset',num:1,
+     a:{name:'Incline Machine Chest Press',sets:'4×12',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12 reps · 2 sec pause at bottom'},
+     b:{name:'Incline DB Curl (bilateral)',sets:'12,10,8,8',badges:['tb-superset','tb-pyramid'],note:'⚡ Superset B · Pyramid set · both arms together'}},
+    {type:'single',num:2,name:'High Incline Barbell or DB Press**',sets:'5×5',badges:['tb-lowrep'],note:'Low rep · heavy · 2 sec pause at bottom'},
+    {type:'single',num:3,name:'Flat Machine Press',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:4,name:'Slight Incline DB Press',sets:'4×10',badges:['tb-tempo'],note:'4 sec negatives · 4:0:1:0 · controlled descent'},
+    {type:'single',num:5,name:'Pec Deck Fly Machine',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · machine · 2 sec pause at squeeze'},
+    {type:'single',num:6,name:'Cable Curl (bilateral EZ-bar)',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · EZ-bar · both arms · constant tension'},
+    {type:'single',num:7,name:'Barbell Curls',sets:'5×12',badges:['tb-highrep12','tb-minrest'],note:'12 reps · 5 sets · 20 sec rest between sets'},
+  ]
+},
+  },
+
+  'split2_back': {
+    id: 'split2_back', file: 'pmc-s2-back.html', split: 'Split 2',
+    title: 'Back', icon: '🔙', color: '#22d3ee', bg: '#042f2e',
+    backUrl: 'pmc-split2.html', type: 'standard',
+    data: {
+  1:{warmup:true, exercises:[
+    {type:'superset',num:1,
+     a:{name:'Wide Grip Lat Pulldown',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12–15 reps · full stretch at top'},
+     b:{name:'Straight Arm Lat Pulldown (cable)',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12–15 reps · constant tension'}},
+    {type:'single',num:2,name:'Barbell Pendlay Rows',sets:'5×5',badges:['tb-lowrep'],note:'Low rep · heavy · explosive pull · reset each rep'},
+    {type:'single',num:3,name:'Machine Low Row',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:4,name:'Incline DB Row (bilateral)',sets:'4×12',badges:['tb-tempo'],note:'2 sec pause at top · 1:0:1:2 · both arms together'},
+    {type:'single',num:5,name:'Machine High Row',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · bilateral machine pull · lean back slightly'},
+    {type:'single',num:6,name:'Seated Cable Row (bilateral, wide grip)',sets:'4×15',badges:['tb-highrep12'],note:'12–15 reps · wide bilateral grip · squeeze at peak'},
+    {type:'single',num:7,name:'Cable Shrug (bilateral)',sets:'4×15',badges:['tb-highrep12'],note:'12–15 reps · squeeze and hold at top · 1:0:1:2'},
+  ]},
+  2:{warmup:true, exercises:[
+    {type:'superset',num:1,
+     a:{name:'Reverse Grip Lat Pulldown',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12–15 reps · underhand grip'},
+     b:{name:'Machine High Row',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12–15 reps · lean back slightly'}},
+    {type:'single',num:2,name:'Barbell Bent Over Row',sets:'5×5',badges:['tb-lowrep'],note:'Low rep · heavy · drive elbows back hard'},
+    {type:'single',num:3,name:'Close Grip Barbell Shrug',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:4,name:'Wide Grip Lat Pulldown',sets:'4×10',badges:['tb-tempo'],note:'4 sec negatives · 4:0:1:0 · slow controlled pull'},
+    {type:'single',num:5,name:'Seated Cable Row (bilateral, close grip)',sets:'4×15',badges:['tb-highrep12'],note:'12–15 reps · 2 sec pause at peak · bilateral'},
+    {type:'single',num:6,name:'Straight Arm Lat Pulldown (cable)',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · constant tension · bilateral cable'},
+    {type:'single',num:7,name:'Machine Shrug',sets:'4×15',badges:['tb-highrep12'],note:'12–15 reps · squeeze at top · 1:0:1:2'},
+  ]}
+},
+  },
+
+  'split2_cst': {
+    id: 'split2_cst', file: 'pmc-s2-cst.html', split: 'Split 2',
+    title: 'Calves, Shoulders & Tris', icon: '💪', color: '#fb923c', bg: '#2d1500',
+    backUrl: 'pmc-split2.html', type: 'standard',
+    data: {
+  1:[
+    {type:'superset',num:1,
+     a:{name:'Pec Deck Fly Machine',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12–15 reps · 2 sec pause at peak'},
+     b:{name:'Reverse Pec Deck (Rear Delts)',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12–15 reps · squeeze rear delt at peak'}},
+    {type:'single',num:2,name:'Close Grip Barbell or DB Press**',sets:'5×5',badges:['tb-lowrep'],note:'Low rep · heavy · tricep emphasis'},
+    {type:'single',num:3,name:'Incline Machine Press',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:4,name:'High Incline DB or Barbell Press**',sets:'4×10',badges:['tb-tempo'],note:'2 sec pause at bottom · 1:2:1:0'},
+    {type:'single',num:5,name:'Tricep Rope Pushdowns (bilateral)',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · bilateral rope · constant tension · squeeze at bottom'},
+    {type:'single',num:6,name:'Cable Upright Row (bilateral)',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · bilateral cable · 2 sec pause at top'},
+    {type:'single',num:7,name:'V Grip Tricep Pushdown (bilateral)',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · bilateral V grip · squeeze fully at bottom'},
+  ],
+  2:[
+    {type:'superset',num:1,
+     a:{name:'Pec Deck Machine',sets:'12,10,8,8',badges:['tb-superset','tb-pyramid'],note:'⚡ Superset A · Pyramid · 2 sec pause at peak squeeze'},
+     b:{name:'Reverse Pec Deck Fly',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12–15 reps · rear delt focus'}},
+    {type:'single',num:2,name:'Flat Barbell or DB Press**',sets:'5×5',badges:['tb-lowrep'],note:'Low rep · heavy · strong chest drive'},
+    {type:'single',num:3,name:'Incline Machine Press',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:4,name:'DB Hammer Incline Press',sets:'4×12',badges:['tb-tempo'],note:'4 sec negatives · 4:0:1:0 · neutral grip'},
+    {type:'single',num:5,name:'Tricep Rope Pushdown (bilateral)',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · bilateral rope · constant tension'},
+    {type:'single',num:6,name:'Reverse Grip Tricep Pushdown (bilateral)',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · underhand bilateral grip · squeeze at bottom'},
+    {type:'single',num:7,name:'Cable Lateral Raise (bilateral)',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · bilateral cable · not single arm'},
+  ]
+},
+  },
+
+  'split2_legs2': {
+    id: 'split2_legs2', file: 'pmc-s2-legs-day2.html', split: 'Split 2',
+    title: 'Leg Day 2', icon: '🦵', color: '#34d399', bg: '#052e1a',
+    backUrl: 'pmc-split2.html', type: 'standard',
+    data: {
+  1:[
+    {type:'superset',num:1,
+     a:{name:'Leg Extension',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12–15 reps · squeeze at top'},
+     b:{name:'Lying Hamstring Curl',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12–15 reps · 2 sec pause at peak'}},
+    {type:'single',num:2,name:'Wide Stance Goblet or Barbell Squat [COMPOUND SUB]**',sets:'5×5',badges:['tb-lowrep'],note:'Low rep · heavy · sub DB if needed'},
+    {type:'single',num:3,name:'Leg Press (wide stance, feet high)',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · glute/ham emphasis · drop set final set'},
+    {type:'single',num:4,name:'Barbell Good Mornings',sets:'4×10',badges:['tb-tempo'],note:'2 sec pause at bottom · 1:2:1:0 · hip hinge focus'},
+    {type:'single',num:5,name:'Seated Hamstring Curl',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · 2 sec pause at peak · not single leg'},
+    {type:'single',num:6,name:'Leg Press (bilateral, feet shoulder width)',sets:'4×15',badges:['tb-highrep12'],note:'12–15 reps · bilateral · full ROM'},
+    {type:'single',num:7,name:'Calf Raises',sets:'5×15',badges:['tb-highrep12'],note:'20 reps · 2 sec pause at top · 1:0:1:2'},
+    {type:'single',num:8,name:'Walking Lunges',sets:'200 reps',badges:['tb-finisher'],note:'🏁 Finisher'},
+  ],
+  2:[
+    {type:'superset',num:1,
+     a:{name:'Seated Hamstring Curl',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12–15 reps · 2 sec pause at peak'},
+     b:{name:'Leg Extension',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12–15 reps · squeeze at full extension'}},
+    {type:'single',num:2,name:'Wide or Neutral Stance Barbell Squat [COMPOUND SUB]**',sets:'5×5',badges:['tb-lowrep'],note:'Low rep · heavy · sub DB if needed'},
+    {type:'single',num:3,name:'Leg Press (bilateral, wide stance)',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:4,name:'Barbell Good Mornings',sets:'4×10',badges:['tb-tempo'],note:'2 sec pause at bottom · 1:2:1:0'},
+    {type:'single',num:5,name:'Lying Hamstring Curl',sets:'4×20',badges:['tb-highrep20'],note:'20 reps · 2 sec pause at peak · bilateral machine'},
+    {type:'single',num:6,name:'Leg Extension',sets:'4×15',badges:['tb-highrep12'],note:'12–15 reps · 3 sec negative · bilateral'},
+    {type:'single',num:7,name:'Calf Raises',sets:'5×15',badges:['tb-highrep12'],note:'20 reps · 2 sec pause at top · 1:0:1:2'},
+    {type:'single',num:8,name:'Walking Lunges',sets:'100–200 reps',badges:['tb-finisher'],note:'🏁 Finisher'},
+  ]
+},
+  },
+
+  'split3_back': {
+    id: 'split3_back', file: 'pmc-s3-back.html', split: 'Split 3',
+    title: 'Back', icon: '🔙', color: '#22d3ee', bg: '#042f2e',
+    backUrl: 'pmc-split3.html', type: 'standard',
+    data: {
+  1:{warmup:true,exercises:[
+    {type:'single',num:1,name:'Barbell Row',sets:'12,10,8,8',badges:['tb-pyramid'],note:'Pyramid up — increase weight each set'},
+    {type:'single',num:2,name:'Wide Grip Barbell Shrugs',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · squeeze at top'},
+    {type:'superset',num:3,
+     a:{name:'V Grip Pulldowns',sets:'4x12',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 2 sec pause at bottom · 1:0:1:2'},
+     b:{name:'Reverse Pec Deck Fly',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · rear delt squeeze'}},
+    {type:'single',num:4,name:'Reverse Grip Pulldowns',sets:'4x12',badges:['tb-tempo'],note:'4 sec negatives · 4:0:1:0'},
+    {type:'single',num:5,name:'Straight Arm Lat Pulldown',sets:'4x25',badges:['tb-highrep20'],note:'20-30 rep range · constant tension · bilateral cable'},
+    {type:'single',num:6,name:'High Incline DB Row',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:7,name:'Seated Cable Row (wide grip)',sets:'5x12',badges:['tb-minrest'],note:'5-6 sets · 20 sec rest between sets'},
+  ]},
+  2:{warmup:true,exercises:[
+    {type:'single',num:1,name:'Pendlay Rows (wide grip)',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · explosive pull · reset each rep'},
+    {type:'superset',num:2,
+     a:{name:'Rope Attachment Pulldowns',sets:'12,10,8,8 drop 15',badges:['tb-superset','tb-pyramid','tb-drop'],note:'⚡ Superset A · pyramid up · drop set final set'},
+     b:{name:'Straight Arm Lat Pulldowns',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · constant tension'}},
+    {type:'single',num:3,name:'Wide Grip Cable Row',sets:'4x12',badges:['tb-tempo'],note:'2 sec pause at peak · 1:0:1:2'},
+    {type:'single',num:4,name:'Close Grip Barbell Shrugs',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:5,name:'Standing Double Arm Row',sets:'4x20',badges:['tb-highrep20'],note:'20-30 rep range · bilateral · squeeze at peak'},
+    {type:'single',num:6,name:'T-Bar Row',sets:'4x12',badges:['tb-tempo'],note:'2 sec pause at peak · 1:0:1:2'},
+    {type:'single',num:7,name:'Machine High Row',sets:'4x15',badges:['tb-highrep12'],note:'12-15 reps · bilateral machine pull'},
+  ]}
+},
+  },
+
+  'split3_legs': {
+    id: 'split3_legs', file: 'pmc-s3-legs.html', split: 'Split 3',
+    title: 'Legs', icon: '🦵', color: '#4ade80', bg: '#052e16',
+    backUrl: 'pmc-split3.html', type: 'standard',
+    data: {
+  1:[
+    {type:'superset',num:1,
+     a:{name:'Quad Extensions',sets:'4x12',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 4 sec negatives · 4:0:1:0'},
+     b:{name:'B-Stance DB RDLs',sets:'4x12 each',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · hinge and hold'}},
+    {type:'single',num:2,name:'Barbell or DB Squats (shoulder width or cannonball)',sets:'12,10,8,8',badges:['tb-pyramid'],note:'Pyramid up · increase weight each set'},
+    {type:'single',num:3,name:'Deadlifts or Barbell RDLs',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy bilateral compound'},
+    {type:'single',num:4,name:'Leg Press',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:5,name:'Barbell Good Mornings',sets:'4x12',badges:['tb-tempo'],note:'2 sec pause at bottom · 1:2:1:0'},
+    {type:'single',num:6,name:'Weighted Walking Lunges',sets:'5x12 drop 15BW',badges:['tb-highrep12'],note:'12-15 reps weighted · drop set: 15 bodyweight lunges after each set'},
+    {type:'single',num:7,name:'Quad Extension Finisher',sets:'5x20',badges:['tb-highrep20','tb-minrest'],note:'20-30 reps · 5-6 sets · 20 sec rest between sets'},
+  ],
+  2:[
+    {type:'single',num:1,name:'Goblet Squats (shoulder width, 1.5 reps)',sets:'4x12',badges:['tb-highrep12'],note:'12-15 reps · full rep + half rep = 1 · heels elevated'},
+    {type:'single',num:2,name:'Hack Squat (shoulder width)',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · full ROM'},
+    {type:'single',num:3,name:'Deadlifts or Barbell RDLs',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy bilateral'},
+    {type:'single',num:4,name:'Leg Press (high and wide, pyramid)',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · high and wide foot position · drop set final set'},
+    {type:'superset',num:5,
+     a:{name:'Barbell Good Mornings',sets:'4x10',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 2 sec pause at bottom · 1:2:1:0'},
+     b:{name:'Cannonball Squats',sets:'3xfailure',badges:['tb-superset','tb-amrap'],note:'⚡ Superset B · 3 sets to failure · feet touching heels elevated'}},
+    {type:'single',num:6,name:'Calf Raises',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · 2 sec pause at top · 1:0:1:2'},
+    {type:'single',num:7,name:'Walking Lunges',sets:'100-200 reps',badges:['tb-optional'],note:'⭐ Optional finisher'},
+  ]
+},
+  },
+
+  'split3_chest': {
+    id: 'split3_chest', file: 'pmc-s3-chest.html', split: 'Split 3',
+    title: 'Chest', icon: '💪', color: '#c084fc', bg: '#1e1040',
+    backUrl: 'pmc-split3.html', type: 'standard',
+    data: {
+  1:[
+    {type:'single',num:1,name:'Weighted Push-Ups or Push-Ups',sets:'4x12',badges:['tb-tempo'],note:'3-4 sec negatives · 4:0:1:0 · full ROM'},
+    {type:'single',num:2,name:'Flat Barbell Bench (1-1/4 reps)',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · full rep + quarter rep at bottom = 1 rep'},
+    {type:'single',num:3,name:'Decline or Incline Barbell or DB Bench',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:4,name:'Slight Incline DB Hammer Press',sets:'4x12',badges:['tb-highrep12'],note:'12-15 reps · neutral grip · full ROM'},
+    {type:'single',num:5,name:'Chest Fly Machine (pronated grip)',sets:'12,10,8,8 drop 20',badges:['tb-pyramid','tb-drop'],note:'2 sec pause at peak · drop to neutral grip 20 reps · 1:2:1:0'},
+    {type:'superset',num:6,
+     a:{name:'Floor Press',sets:'4x12',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · elbows stop at floor'},
+     b:{name:'DB Chest Flies',sets:'4x8',badges:['tb-superset','tb-tempo'],note:'⚡ Superset B · 5-10 sec stretch hold · 5-8 reps · feel the eccentric'}},
+    {type:'single',num:7,name:'Standing Plate Press Finisher',sets:'3xfailure',badges:['tb-amrap'],note:'3-4 sets to failure · squeeze plates together throughout'},
+  ],
+  2:[
+    {type:'single',num:1,name:'Deficit Push-Ups',sets:'4x12',badges:['tb-tempo'],note:'2 sec pause at bottom · 1:2:1:0 · hands on plates or DB handles'},
+    {type:'single',num:2,name:'Barbell Bench',sets:'12,10,8,8',badges:['tb-pyramid','tb-tempo'],note:'Pyramid up · 2 sec pause at bottom each rep · 1:2:1:0'},
+    {type:'single',num:3,name:'Slight Incline DB Bench',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · slight incline'},
+    {type:'single',num:4,name:'DB Floor Press',sets:'4x12',badges:['tb-highrep12'],note:'12-15 reps · elbows stop at floor · full pause'},
+    {type:'superset',num:5,
+     a:{name:'DB Chest Flies (pronated grip)',sets:'12,10,8,8 drop 15',badges:['tb-superset','tb-pyramid','tb-drop'],note:'⚡ Superset A · pyramid · drop set final set'},
+     b:{name:'Incline Cable Flies',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 reps · constant cable tension · squeeze at peak'}},
+    {type:'single',num:6,name:'Incline or Decline Chest Press Machine',sets:'4x15',badges:['tb-highrep12'],note:'12-15 reps · bilateral machine · squeeze at top'},
+  ]
+},
+  },
+
+  'split3_shoulders': {
+    id: 'split3_shoulders', file: 'pmc-s3-shoulders-tris.html', split: 'Split 3',
+    title: 'Shoulders & Tris', icon: '💪', color: '#fb923c', bg: '#2d1500',
+    backUrl: 'pmc-split3.html', type: 'standard',
+    data: {
+  1:[
+    {type:'single',num:1,name:'Barbell or DB Shoulder Press',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy compound press'},
+    {type:'single',num:2,name:'Cable Tricep Crossover',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · bilateral cables · squeeze at bottom'},
+    {type:'superset',num:3,
+     a:{name:'Seated Side Lateral Raises (1/4-1/2 reps)',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · partial range lateral emphasis'},
+     b:{name:'Skull Crushers',sets:'12,10,8,8 drop 12',badges:['tb-superset','tb-pyramid','tb-drop'],note:'⚡ Superset B · pyramid up · drop set on final set'}},
+    {type:'superset',num:4,
+     a:{name:'Pelican Raises',sets:'4x12',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 2 sec pause at top · 1:0:1:2'},
+     b:{name:'Cross Chest Lying DB Tricep Extension',sets:'4x12',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · extend across to opposite shoulder'}},
+    {type:'superset',num:5,
+     a:{name:'Standing DB Shrugs',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset A · 20 reps · 2 sec pause at top · 1:0:1:2'},
+     b:{name:'Rope Pushdowns',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · 2 sec pause at bottom · 1:0:1:2'}},
+  ],
+  2:[
+    {type:'single',num:1,name:'Arnold Press',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · full rotation'},
+    {type:'superset',num:2,
+     a:{name:'Seated Side Lateral Raises',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · 2 sec pause at top'},
+     b:{name:'Double Arm Lying Tricep Extension',sets:'12,10,8,8 drop 12',badges:['tb-superset','tb-pyramid','tb-drop'],note:'⚡ Superset B · pyramid up · drop set final set'}},
+    {type:'superset',num:3,
+     a:{name:'Barbell Incline Face Pulls',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · rear delt focus'},
+     b:{name:'Slight Incline Skull Crushers',sets:'4x12',badges:['tb-superset','tb-tempo'],note:'⚡ Superset B · 2 sec pause at bottom · 1:2:1:0'}},
+    {type:'superset',num:4,
+     a:{name:'Barbell Upright Row',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · elbows drive up'},
+     b:{name:'Reverse Grip Pushdowns',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 reps · underhand bilateral grip'}},
+    {type:'single',num:5,name:'Rope Tricep Pulldowns',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · bilateral rope · constant tension'},
+  ]
+},
+  },
+
+  'split3_back2': {
+    id: 'split3_back2', file: 'pmc-s3-back-bis-forearms.html', split: 'Split 3',
+    title: 'Back, Bis & Forearms', icon: '🔙', color: '#22d3ee', bg: '#042f2e',
+    backUrl: 'pmc-split3.html', type: 'standard',
+    data: {
+  1:[
+    {type:'single',num:1,name:'Wide Grip Lat Pulldowns',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · full stretch at top'},
+    {type:'single',num:2,name:'Pinwheel Curls',sets:'12,10,8,8 drop 12',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'superset',num:3,
+     a:{name:'Double Arm DB Incline Row',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · 2 sec pause at top'},
+     b:{name:'Spider Curls',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · squeeze at peak contraction'}},
+    {type:'single',num:4,name:'Reverse Barbell Curls',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · bilateral · pronated grip · forearm activation'},
+    {type:'superset',num:5,
+     a:{name:'Barbell Curls (2 close grip / 2 wide grip)',sets:'4x12',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 2 sets close / 2 sets wide · 2 sec pause · 1:0:1:2'},
+     b:{name:'Kneeling Reverse Forearm Curls (bench supported)',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 reps · 2 sec pause at top · 1:0:1:2'}},
+    {type:'single',num:6,name:'Bench Supported Kneeling Forearm Curl',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · bilateral · squeeze forearms at top'},
+  ],
+  2:[
+    {type:'single',num:1,name:'Straight Arm Lat Pulldowns',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · bilateral cable · constant tension'},
+    {type:'single',num:2,name:'Wide Grip Lat Pulldown',sets:'12,10,8,8 drop 12',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'superset',num:3,
+     a:{name:'Double Arm DB Slight Incline Row',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · slight incline'},
+     b:{name:'Pinwheel Curls',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · alternate arms'}},
+    {type:'single',num:4,name:'Spider Curls',sets:'4x12',badges:['tb-tempo'],note:'2 sec pause at peak contraction · 1:0:1:2'},
+    {type:'superset',num:5,
+     a:{name:'Barbell Curls (2 close grip / 2 wide grip)',sets:'4x12',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 2 sets each grip · 2 sec pause · 1:0:1:2'},
+     b:{name:'Kneeling Reverse Forearm Curls (bench supported)',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 reps · 2 sec pause · 1:0:1:2'}},
+    {type:'single',num:6,name:'Bench Supported Kneeling Forearm Curl',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · 2 sec pause at top · 1:0:1:2'},
+  ]
+},
+  },
+
+  'split4_legsback': {
+    id: 'split4_legsback', file: 'pmc-s4-legs-back.html', split: 'Split 4',
+    title: 'Legs & Back', icon: '🦵', color: '#4ade80', bg: '#052e16',
+    backUrl: 'pmc-split4.html', type: 'standard',
+    data: {
+  1:{warmup:true,exercises:[
+    {type:'superset',num:1,
+     a:{name:'Barbell Good Mornings',sets:'4x12',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 2 sec pause at bottom · 1:2:1:0'},
+     b:{name:'Double Arm DB Row',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · squeeze at peak'}},
+    {type:'single',num:2,name:'Barbell Row',sets:'4x12',badges:['tb-tempo'],note:'2 sec pause at peak · 1:0:1:2'},
+    {type:'single',num:3,name:'Hack Squat or Goblet Squat (neutral stance)',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · neutral stance'},
+    {type:'superset',num:4,
+     a:{name:'V-Grip Lat Pulldowns',sets:'12,10,8,8 drop 15',badges:['tb-superset','tb-pyramid','tb-drop'],note:'⚡ Superset A · pyramid up · drop set final set'},
+     b:{name:'Barbell Squats (wide stance)',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 reps · wide stance · controlled descent'}},
+    {type:'single',num:5,name:'Walking Lunges',sets:'100-200 reps',badges:['tb-finisher'],note:'🏁 Finisher — loaded if possible'},
+  ]},
+  2:{warmup:true,exercises:[
+    {type:'superset',num:1,
+     a:{name:'Goblet Squats (cannonball, 1.5 reps)',sets:'4x12',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · full + half rep · heels elevated'},
+     b:{name:'Wide Grip Lat Pulldowns',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · full stretch at top'}},
+    {type:'superset',num:2,
+     a:{name:'Wide Grip Pendlay Rows',sets:'12,10,8,8',badges:['tb-superset','tb-pyramid'],note:'⚡ Superset A · pyramid up · explosive pull'},
+     b:{name:'Barbell RDLs',sets:'4x12',badges:['tb-superset','tb-tempo'],note:'⚡ Superset B · 3 sec negative · 4:0:1:0'}},
+    {type:'single',num:3,name:'Hack Squat or Leg Press (feet touching, pyramid)',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:4,name:'Single Arm DB Row',sets:'4x12',badges:['tb-tempo'],note:'2 sec pause at top · 1:0:1:2 · brace core'},
+    {type:'single',num:5,name:'Quad Extension',sets:'12,10,8,8 drop 20',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop to 20 reps · squeeze at extension'},
+    {type:'single',num:6,name:'Barbell Shrugs',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · squeeze at top'},
+  ]}
+},
+  },
+
+  'split4_chesttris': {
+    id: 'split4_chesttris', file: 'pmc-s4-chest-tris.html', split: 'Split 4',
+    title: 'Chest & Tris', icon: '💪', color: '#c084fc', bg: '#1e1040',
+    backUrl: 'pmc-split4.html', type: 'standard',
+    data: {
+  1:[
+    {type:'single',num:1,name:'Diamond Push-Ups',sets:'3xfailure',badges:['tb-amrap'],note:'3 sets to failure · tricep emphasis'},
+    {type:'single',num:2,name:'Dips or Weighted Dips',sets:'4xfailure',badges:['tb-amrap'],note:'4 sets to failure · lean slightly forward for chest'},
+    {type:'single',num:3,name:'Barbell or Smith Machine Bench (1.5 reps)',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · full + quarter rep at bottom = 1 · drop set final set'},
+    {type:'single',num:4,name:'Barbell or Smith Machine Bench',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · 2 sec pause at bottom · 1:2:1:0'},
+    {type:'single',num:5,name:'Barbell Skull Crushers',sets:'4x12',badges:['tb-tempo'],note:'2 sec pause at bottom · 1:2:1:0'},
+    {type:'superset',num:6,
+     a:{name:'Close Grip DB Press (DBs touching)',sets:'12,10,8,8',badges:['tb-superset','tb-pyramid'],note:'⚡ Superset A · pyramid up · DBs touching throughout'},
+     b:{name:'Tricep Extension Machine',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 reps · bilateral machine · squeeze at bottom'}},
+    {type:'single',num:7,name:'Cable Decline or Incline Flies',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · bilateral cable · constant tension · squeeze at peak'},
+  ],
+  2:[
+    {type:'single',num:1,name:'Barbell Close Grip Bench',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · tricep dominant'},
+    {type:'single',num:2,name:'High Incline DB Bench',sets:'4x12',badges:['tb-tempo'],note:'2 sec pause at bottom · 1:2:1:0'},
+    {type:'single',num:3,name:'Barbell Bench (underhand grip)',sets:'4x12',badges:['tb-highrep12'],note:'12-15 reps · reverse grip · lower chest emphasis'},
+    {type:'single',num:4,name:'Barbell Skull Crushers',sets:'12,10,8,8 drop 12',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'superset',num:5,
+     a:{name:'Pec Deck Flies (pronated grip)',sets:'12,10,8,8 drop 15',badges:['tb-superset','tb-pyramid','tb-drop'],note:'⚡ Superset A · pyramid up · drop set final set'},
+     b:{name:'Machine Tricep Extension',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 reps · bilateral machine · squeeze at bottom'}},
+    {type:'superset',num:6,
+     a:{name:'Incline or Decline Chest Press Machine',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · bilateral machine'},
+     b:{name:'Neutral Grip Tricep Pushdowns',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 reps · 2 sec pause at bottom · 1:0:1:2'}},
+  ]
+},
+  },
+
+  'split4_shoulders': {
+    id: 'split4_shoulders', file: 'pmc-s4-shoulders.html', split: 'Split 4',
+    title: 'Shoulders', icon: '💪', color: '#fb923c', bg: '#2d1500',
+    backUrl: 'pmc-split4.html', type: 'standard',
+    data: {
+  1:[
+    {type:'single',num:1,name:'Seated Side Lateral Raises',sets:'4x15',badges:['tb-highrep12'],note:'12-15 reps · slow controlled · squeeze at top'},
+    {type:'single',num:2,name:'Seated DB Shrugs',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · 2 sec squeeze at top'},
+    {type:'superset',num:3,
+     a:{name:'Reverse Pec Deck',sets:'12,10,8,8 drop 12',badges:['tb-superset','tb-pyramid','tb-drop'],note:'⚡ Superset A · pyramid up · drop set final set'},
+     b:{name:'Supermans',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · full extension hold at top'}},
+    {type:'superset',num:4,
+     a:{name:'Incline Bench Barbell Front Raises',sets:'4x12',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 2 sec pause at top · 1:0:1:2'},
+     b:{name:'Palms Facing Shoulder Press',sets:'4x12',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · neutral grip press'}},
+    {type:'single',num:5,name:'Behind the Back Barbell Shrug drop Wide Grip Barbell Shrug',sets:'4x12 drop 20',badges:['tb-drop'],note:'Behind back 12 reps · drop to wide grip 20 reps'},
+    {type:'single',num:6,name:'Barbell Upright Row',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · bilateral · 2 sec pause at top · 1:0:1:2'},
+  ],
+  2:[
+    {type:'single',num:1,name:'Standing Reverse Delt Cable Flies',sets:'4x15',badges:['tb-highrep12'],note:'12-15 reps · bilateral cable · rear delt focus'},
+    {type:'single',num:2,name:'Barbell or DB Shoulder Press',sets:'6x4',badges:['tb-lowrep'],note:'Low rep · very heavy · 6 sets 4 reps'},
+    {type:'superset',num:3,
+     a:{name:'Seated Side Lateral Raises (half reps heavy, then high rep)',sets:'4x8 drop 20',badges:['tb-superset','tb-drop'],note:'⚡ Superset A · 8 heavy half reps · drop to 20 full reps lighter'},
+     b:{name:'Seated Alternating DB Raises',sets:'12,10,8,8',badges:['tb-superset','tb-pyramid'],note:'⚡ Superset B · pyramid up · alternate each arm'}},
+    {type:'superset',num:4,
+     a:{name:'Reverse Incline Face Pulls',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · rear delt squeeze'},
+     b:{name:'Reverse Pec Deck',sets:'12,10,8,8 drop 12',badges:['tb-superset','tb-pyramid','tb-drop'],note:'⚡ Superset B · pyramid up · drop set final set'}},
+    {type:'single',num:5,name:'Close Grip Barbell Shrug',sets:'4x12 drop 20',badges:['tb-drop'],note:'12 reps heavy · drop to 20 reps · 2 sec pause at top'},
+  ]
+},
+  },
+
+  'split4_legs2': {
+    id: 'split4_legs2', file: 'pmc-s4-legs-day2.html', split: 'Split 4',
+    title: 'Leg Day 2', icon: '🦵', color: '#34d399', bg: '#052e1a',
+    backUrl: 'pmc-split4.html', type: 'standard',
+    data: {
+  1:[
+    {type:'single',num:1,name:'Quad Extensions',sets:'4x12',badges:['tb-tempo'],note:'2 sec pause at top · 1:0:1:2'},
+    {type:'single',num:2,name:'Barbell Squat (neutral stance)',sets:'12,10,8,8',badges:['tb-pyramid','tb-lowrep'],note:'Pyramid up · keep heavy and low rep'},
+    {type:'single',num:3,name:'Goblet Squat (cannonball) [COMPOUND SUB]**',sets:'4x12',badges:['tb-highrep12'],note:'12-15 reps · feet together heels elevated · sub DB if needed'},
+    {type:'superset',num:4,
+     a:{name:'Box Same Leg Step-Ups',sets:'4x12 each leg',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps each leg · drive through heel'},
+     b:{name:'Weighted Walking Lunges',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · loaded · torso upright'}},
+    {type:'single',num:5,name:'Smith Machine Split Squats',sets:'12,10,8,8 drop 12',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'single',num:6,name:'Quad Extension Finisher',sets:'5x20',badges:['tb-highrep20','tb-minrest'],note:'20 reps · AMRAP style · 5-6 sets · 20 sec rest'},
+    {type:'single',num:7,name:'Calf Raises',sets:'4x15',badges:['tb-highrep12'],note:'12-15 reps · 2 sec pause at top · 1:0:1:2'},
+  ],
+  2:[
+    {type:'single',num:1,name:'Lying or Seated Hamstring Curls',sets:'12,10,8,8',badges:['tb-pyramid','tb-tempo'],note:'Pyramid up · 2 sec pause at peak · 1:0:1:2'},
+    {type:'single',num:2,name:'Barbell Deadlift or Barbell RDLs [COMPOUND SUB]**',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · sub DB if needed'},
+    {type:'single',num:3,name:'Wide Stance Barbell Squats (toes pointed out)',sets:'4x12',badges:['tb-highrep12'],note:'12-15 reps · wide stance · glute emphasis'},
+    {type:'single',num:4,name:'Goblet Squats',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set'},
+    {type:'superset',num:5,
+     a:{name:'Good Mornings',sets:'4x12',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 2 sec pause at bottom · 1:2:1:0'},
+     b:{name:'Weighted Walking Lunges',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · loaded · keep torso upright'}},
+    {type:'superset',num:6,
+     a:{name:'Seated Calf Raises',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset A · 20 reps · 2 sec pause at top · 1:0:1:2'},
+     b:{name:'Smith Machine Split Squats',sets:'4x12',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · controlled descent'}},
+  ]
+},
+  },
+
+  'split4_bistris': {
+    id: 'split4_bistris', file: 'pmc-s4-bis-tris.html', split: 'Split 4',
+    title: 'Bis & Tris', icon: '💪', color: '#f472b6', bg: '#2d0a1e',
+    backUrl: 'pmc-split4.html', type: 'standard',
+    data: {
+  1:[
+    {type:'superset',num:1,
+     a:{name:'Pinwheel Curls',sets:'12,10,8,8',badges:['tb-superset','tb-pyramid'],note:'⚡ Superset A · pyramid up · alternate arms'},
+     b:{name:'Lying DB Extension + Cross Chest Extension',sets:'12,10,8,8',badges:['tb-superset','tb-pyramid'],note:'⚡ Superset B · pyramid · 1 rep to ear + 1 rep across chest = 1 rep'}},
+    {type:'superset',num:2,
+     a:{name:'Double Arm Incline Hammer Curl',sets:'12,10,8,8',badges:['tb-superset','tb-pyramid'],note:'⚡ Superset A · pyramid up · both arms together'},
+     b:{name:'Bent Over DB Tricep Kickbacks',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · both arms · squeeze at full extension'}},
+    {type:'superset',num:3,
+     a:{name:'21s',sets:'4x21',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 7 lower half / 7 upper half / 7 full reps'},
+     b:{name:'French Press',sets:'12,10,8,8 drop 12',badges:['tb-superset','tb-pyramid','tb-drop'],note:'⚡ Superset B · pyramid up · drop set on final set'}},
+    {type:'superset',num:4,
+     a:{name:'Barbell Curl (close grip)',sets:'5x5',badges:['tb-superset','tb-lowrep'],note:'⚡ Superset A · low rep · heavy · 5x5 · strong contraction'},
+     b:{name:'Tricep Pushdown',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 reps · bilateral · squeeze at bottom'}},
+  ],
+  2:[
+    {type:'superset',num:1,
+     a:{name:'Seated Alternating DB Curl',sets:'12,10,8,8',badges:['tb-superset','tb-pyramid'],note:'⚡ Superset A · pyramid up · alternate arms · full supination'},
+     b:{name:'Dips or Dip Machine',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · full ROM'}},
+    {type:'superset',num:2,
+     a:{name:'Barbell Spider Curls',sets:'4x12',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 2 sec pause at peak contraction · 1:0:1:2'},
+     b:{name:'Double Arm Tricep Cable Extension',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 reps · bilateral cable · squeeze at bottom'}},
+    {type:'superset',num:3,
+     a:{name:'Close Grip Barbell Curls',sets:'5x5',badges:['tb-superset','tb-lowrep'],note:'⚡ Superset A · low rep · heavy · 5x5 · 3 sec negatives · 4:0:1:0'},
+     b:{name:'Incline Skull Crushers',sets:'12,10,8,8 drop 12',badges:['tb-superset','tb-pyramid','tb-drop'],note:'⚡ Superset B · pyramid up · drop set final set'}},
+    {type:'superset',num:4,
+     a:{name:'15s (5 double arm / 5 hammer / 5 chicken wing)',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 5 reps each variation'},
+     b:{name:'Tricep Extension Machine',sets:'12,10,8,8',badges:['tb-superset','tb-pyramid','tb-tempo'],note:'⚡ Superset B · pyramid up · 2 sec pause at top and bottom · 1:2:1:2'}},
+  ]
+},
+  },
+
+  'split5_push': {
+    id: 'split5_push', file: 'pmc-s5-push.html', split: 'Split 5',
+    title: 'Push', icon: '💪', color: '#c084fc', bg: '#1e1040',
+    backUrl: 'pmc-split5.html', type: 'standard',
+    data: {
+  1:[
+    {type:'single',num:1,name:'Flat Barbell Bench',sets:'6x4 drop 15',badges:['tb-lowrep','tb-drop'],note:'Low rep · high sets · drop set each set to 15 reps'},
+    {type:'single',num:2,name:'Arnold Press',sets:'4x10',badges:['tb-tempo'],note:'3 sec negative · 4:0:1:0 · full rotation'},
+    {type:'single',num:3,name:'Alternating Incline DB Press',sets:'12,10,8,8',badges:['tb-pyramid'],note:'Pyramid up · alternate arms each rep'},
+    {type:'superset',num:4,
+     a:{name:'Pronated DB Chest Flies',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · 2 sec pause at stretch'},
+     b:{name:'Close Grip Skull Crushers drop Double Arm DB Tricep Extensions',sets:'4x12 drop 20',badges:['tb-superset','tb-drop'],note:'⚡ Superset B · 12 reps skull crusher · drop to 20 reps extensions'}},
+    {type:'superset',num:5,
+     a:{name:'Barbell Upright Row',sets:'12,10,8,8',badges:['tb-superset','tb-pyramid'],note:'⚡ Superset A · pyramid up · elbows drive high'},
+     b:{name:'Double Arm Cable Tricep Kickbacks',sets:'12,10,8,8',badges:['tb-superset','tb-pyramid'],note:'⚡ Superset B · pyramid up · bilateral cable'}},
+    {type:'single',num:6,name:'Barbell Shrugs (neutral grip)',sets:'12,10,8,8 drop 20',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · 2 sec pause at top · drop set final set · 1:0:1:2'},
+  ],
+  2:[
+    {type:'single',num:1,name:'DB Flat Bench',sets:'6x4',badges:['tb-lowrep'],note:'Low rep · high sets · go heavy'},
+    {type:'single',num:2,name:'Incline Barbell Bench',sets:'12,10,8,8',badges:['tb-pyramid'],note:'Pyramid up · increase weight each set'},
+    {type:'single',num:3,name:'Barbell or DB Military Press',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · strict press · no leg drive'},
+    {type:'single',num:4,name:'Alternating Incline DB Press',sets:'4x12',badges:['tb-highrep12'],note:'12-15 reps · alternate arms · full ROM'},
+    {type:'superset',num:5,
+     a:{name:'Slight Incline Chest Flies',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · deep stretch'},
+     b:{name:'Skull Crushers',sets:'4x12',badges:['tb-superset','tb-tempo'],note:'⚡ Superset B · 2 sec pause at bottom · 1:2:1:0'}},
+    {type:'single',num:6,name:'Barbell Upright Row',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · bilateral · 2 sec pause at top · 1:0:1:2'},
+  ]
+},
+  },
+
+  'split5_pull': {
+    id: 'split5_pull', file: 'pmc-s5-pull.html', split: 'Split 5',
+    title: 'Pull', icon: '🔙', color: '#22d3ee', bg: '#042f2e',
+    backUrl: 'pmc-split5.html', type: 'standard',
+    data: {
+  1:{warmup:true,exercises:[
+    {type:'single',num:1,name:'Barbell Pendlay Rows',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · explosive pull · reset each rep'},
+    {type:'superset',num:2,
+     a:{name:'DB Incline Row',sets:'6x4',badges:['tb-superset','tb-lowrep'],note:'⚡ Superset A · low rep · high sets · 2 sec pause at top'},
+     b:{name:'DB Spider Curls',sets:'4x12',badges:['tb-superset','tb-tempo'],note:'⚡ Superset B · 2 sec pause at peak contraction · 1:0:1:2'}},
+    {type:'single',num:3,name:'Concentration Curls',sets:'12,10,8,8',badges:['tb-pyramid'],note:'Pyramid up · single arm at a time · squeeze at top'},
+    {type:'superset',num:4,
+     a:{name:'Wide Grip Lat Pulldowns',sets:'12,10,8,8',badges:['tb-superset','tb-pyramid'],note:'⚡ Superset A · pyramid up · full stretch at top'},
+     b:{name:'Barbell Curls (wide grip)',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · controlled eccentric'}},
+    {type:'superset',num:5,
+     a:{name:'Straight Arm Lat Pulldowns',sets:'4x25',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset A · 20-30 reps · bilateral cable · constant tension'},
+     b:{name:'Preacher Curls',sets:'12,10,8,8',badges:['tb-superset','tb-pyramid'],note:'⚡ Superset B · pyramid up · 2 sec pause at bottom'}},
+  ]},
+  2:{warmup:true,exercises:[
+    {type:'single',num:1,name:'Barbell Pendlay Rows',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · drive elbows back hard'},
+    {type:'superset',num:2,
+     a:{name:'DB Incline Row',sets:'4x12',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · 2 sec pause at top · 1:0:1:2'},
+     b:{name:'Double Arm Incline DB Curl',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · both arms together · full supination'}},
+    {type:'single',num:3,name:'Concentration Curls',sets:'12,10,8,8',badges:['tb-pyramid'],note:'Pyramid up · squeeze hard at peak · alternate arms'},
+    {type:'superset',num:4,
+     a:{name:'V Grip Lat Pulldowns',sets:'12,10,8,8',badges:['tb-superset','tb-pyramid'],note:'⚡ Superset A · pyramid up · 2 sec pause at bottom'},
+     b:{name:'Barbell Curls (close grip)',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · controlled eccentric'}},
+    {type:'superset',num:5,
+     a:{name:'Straight Arm Lat Pulldowns',sets:'4x25',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset A · 20-30 reps · bilateral cable · constant tension'},
+     b:{name:'Preacher Curls',sets:'4x12',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · 2 sec pause at bottom'}},
+  ]}
+},
+  },
+
+  'split5_legs': {
+    id: 'split5_legs', file: 'pmc-s5-legs.html', split: 'Split 5',
+    title: 'Legs', icon: '🦵', color: '#4ade80', bg: '#052e16',
+    backUrl: 'pmc-split5.html', type: 'standard',
+    data: {
+  1:[
+    {type:'superset',num:1,
+     a:{name:'Quad Extensions',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · squeeze at full extension'},
+     b:{name:'Lying Hamstring Curl',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · 2 sec pause at peak'}},
+    {type:'single',num:2,name:'Barbell Squat (neutral stance)',sets:'6x4',badges:['tb-lowrep'],note:'Low rep · high sets · go heavy · full depth'},
+    {type:'single',num:3,name:'Goblet Squats (wide stance, toes pointed out)',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set on final set · sumo stance'},
+    {type:'superset',num:4,
+     a:{name:'Smith Machine Split Squats',sets:'4x12',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · 3 sec negative'},
+     b:{name:'Cannonball Smith Machine Squats',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · feet together heels elevated'}},
+    {type:'superset',num:5,
+     a:{name:'Barbell Good Mornings',sets:'4x12',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 2 sec pause at bottom · 1:2:1:0'},
+     b:{name:'DB RDLs',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 reps · bilateral DBs · feel the stretch'}},
+    {type:'single',num:6,name:'Calf Raises',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · 2 sec pause at top · 1:0:1:2'},
+  ],
+  2:[
+    {type:'superset',num:1,
+     a:{name:'Quad Extensions',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · 3 sec negatives · 4:0:1:0'},
+     b:{name:'Lying Hamstring Curl',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · 2 sec pause at peak'}},
+    {type:'single',num:2,name:'Barbell/Smith/Goblet Squat (close stance)',sets:'6x4',badges:['tb-lowrep'],note:'Low rep · high sets · close stance · heels elevated'},
+    {type:'single',num:3,name:'Goblet Squats (neutral stance)',sets:'12,10,8,8 drop 15',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · 2 sec pause at bottom · drop set final set'},
+    {type:'single',num:4,name:'Smith Machine Split Squats',sets:'4x12',badges:['tb-highrep12'],note:'12-15 reps · 3 sec negative on descent'},
+    {type:'single',num:5,name:'Quad Extensions',sets:'4x12',badges:['tb-tempo'],note:'3 sec negatives · 4:0:1:0 · squeeze at top'},
+    {type:'single',num:6,name:'Calf Raises',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · 2 sec pause at top · 1:0:1:2'},
+  ]
+},
+  },
+
+  'split6_chest': {
+    id: 'split6_chest', file: 'pmc-s6-chest.html', split: 'Split 6',
+    title: 'Chest', icon: '💪', color: '#c084fc', bg: '#1e1040',
+    backUrl: 'pmc-split6.html', type: 'standard',
+    data: {
+  1:[
+    {type:'single',num:1,name:'Weighted Push-Ups',sets:'4x12',badges:['tb-tempo'],note:'3-4 sec negatives · 4:0:1:0 · plate on back'},
+    {type:'single',num:2,name:'Barbell or DB Bench (heavy)',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · strong chest drive'},
+    {type:'single',num:3,name:'Incline Alternating DB Press',sets:'12,10,8,8',badges:['tb-pyramid'],note:'Pyramid up · alternate arms · full ROM'},
+    {type:'single',num:4,name:'Barbell 1-¼ Rep Bench',sets:'4x12 drop 20',badges:['tb-highrep12','tb-drop'],note:'12-15 reps · full + quarter rep at bottom · drop set final set'},
+    {type:'superset',num:5,
+     a:{name:'Slight Incline Flies',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · deep stretch at bottom'},
+     b:{name:'Slight Incline Hammer Press',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 reps · neutral grip · bilateral'}},
+  ],
+  2:[
+    {type:'single',num:1,name:'Weighted Push-Ups',sets:'4x12',badges:['tb-tempo'],note:'3-4 sec negatives · 4:0:1:0'},
+    {type:'single',num:2,name:'Barbell or DB Bench (heavy)',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · increase weight from W1'},
+    {type:'single',num:3,name:'Incline Alternating DB Press',sets:'12,10,8,8',badges:['tb-pyramid'],note:'Pyramid up · alternate arms'},
+    {type:'single',num:4,name:'Barbell 1-¼ Rep Bench',sets:'4x12 drop 20',badges:['tb-highrep12','tb-drop'],note:'12-15 reps · quarter rep at bottom · drop set final set'},
+    {type:'superset',num:5,
+     a:{name:'Slight Incline Flies',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · 2 sec pause at stretch'},
+     b:{name:'Slight Incline Hammer Press',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 reps · neutral grip · heavier than W1'}},
+  ]
+},
+  },
+
+  'split6_deltsarms': {
+    id: 'split6_deltsarms', file: 'pmc-s6-delts-arms.html', split: 'Split 6',
+    title: 'Delts & Arms', icon: '💪', color: '#fb923c', bg: '#2d1500',
+    backUrl: 'pmc-split6.html', type: 'standard',
+    data: {
+  1:[
+    {type:'single',num:1,name:'Reverse Pec Deck Flies',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · bilateral · rear delt squeeze at peak'},
+    {type:'superset',num:2,
+     a:{name:'Side Lateral Raises',sets:'12,10,8,8 drop 15',badges:['tb-superset','tb-pyramid','tb-drop'],note:'⚡ Superset A · pyramid up · drop set final set'},
+     b:{name:'Skull Crushers',sets:'5x5',badges:['tb-superset','tb-lowrep'],note:'⚡ Superset B · low rep · heavy · 2 sec pause at bottom'}},
+    {type:'single',num:3,name:'Barbell Curls (close grip)',sets:'4x12',badges:['tb-tempo'],note:'3 sec negatives · 4:0:1:0 · strict form'},
+    {type:'superset',num:4,
+     a:{name:'Concentration Curls',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · 2 sec pause at peak · 1:0:1:2'},
+     b:{name:'Lying Single Arm Tricep Extension',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · full overhead extension'}},
+    {type:'single',num:5,name:'Incline Barbell Face Pulls',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · rear delt / upper trap focus · bilateral'},
+    {type:'single',num:6,name:'Tricep Pushdowns',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · bilateral · 2 sec pause at bottom · 1:0:1:2'},
+  ],
+  2:[
+    {type:'single',num:1,name:'Reverse Pec Deck Flies',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · bilateral · increase weight from W1'},
+    {type:'superset',num:2,
+     a:{name:'Side Lateral Raises',sets:'12,10,8,8 drop 15',badges:['tb-superset','tb-pyramid','tb-drop'],note:'⚡ Superset A · pyramid up · drop set final set'},
+     b:{name:'Skull Crushers',sets:'5x5',badges:['tb-superset','tb-lowrep'],note:'⚡ Superset B · low rep · heavy'}},
+    {type:'single',num:3,name:'Barbell Curls (close grip)',sets:'4x12',badges:['tb-tempo'],note:'3 sec negatives · 4:0:1:0'},
+    {type:'superset',num:4,
+     a:{name:'Concentration Curls',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · 2 sec pause · heavier than W1'},
+     b:{name:'Lying Single Arm Tricep Extension',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · both arms'}},
+    {type:'single',num:5,name:'Incline Barbell Face Pulls',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · bilateral · heavier than W1'},
+    {type:'single',num:6,name:'Tricep Pushdowns',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · bilateral · 2 sec pause at bottom'},
+  ]
+},
+  },
+
+  'split6_legs': {
+    id: 'split6_legs', file: 'pmc-s6-legs.html', split: 'Split 6',
+    title: 'Legs', icon: '🦵', color: '#4ade80', bg: '#052e16',
+    backUrl: 'pmc-split6.html', type: 'standard',
+    data: {
+  1:[
+    {type:'single',num:1,name:'Quad Extensions',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · 3 sec negatives · constant tension'},
+    {type:'superset',num:2,
+     a:{name:'Goblet Cannonball Squats',sets:'4x12',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · feet together heels elevated'},
+     b:{name:'DB RDLs',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · bilateral · feel the hamstring stretch'}},
+    {type:'single',num:3,name:'Neutral Stance Barbell Front or Back Squat',sets:'5x5',badges:['tb-lowrep','tb-tempo'],note:'Low rep · heavy · 3 sec negative on descent · 4:0:1:0'},
+    {type:'single',num:4,name:'Weighted Walking Lunges',sets:'12,10,8,8 drop 15BW',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set: 15 bodyweight lunges after each set'},
+    {type:'single',num:5,name:'Same Leg Step-Ups',sets:'4x12 each leg',badges:['tb-highrep12'],note:'12-15 reps · drive through the heel · controlled descent'},
+    {type:'single',num:6,name:'Calf Raises',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · 2 sec pause at top · 1:0:1:2'},
+  ],
+  2:[
+    {type:'single',num:1,name:'Quad Extensions',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · 3 sec negatives · heavier than W1'},
+    {type:'superset',num:2,
+     a:{name:'Goblet Cannonball Squats',sets:'4x12',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 12-15 reps · heavier than W1'},
+     b:{name:'DB RDLs',sets:'4x15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 12-15 reps · bilateral'}},
+    {type:'single',num:3,name:'Neutral Stance Barbell Front or Back Squat',sets:'5x5',badges:['tb-lowrep','tb-tempo'],note:'Low rep · heavier than W1 · 3 sec negative · 4:0:1:0'},
+    {type:'single',num:4,name:'Weighted Walking Lunges',sets:'12,10,8,8 drop 15BW',badges:['tb-pyramid','tb-drop'],note:'Pyramid up · drop set bodyweight lunges'},
+    {type:'single',num:5,name:'Same Leg Step-Ups',sets:'4x12 each leg',badges:['tb-highrep12'],note:'12-15 reps each leg · heavier than W1'},
+    {type:'single',num:6,name:'Calf Raises',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · 2 sec pause at top · heavier than W1'},
+  ]
+},
+  },
+
+  'split6_backtraps': {
+    id: 'split6_backtraps', file: 'pmc-s6-back-traps.html', split: 'Split 6',
+    title: 'Back & Traps', icon: '🔙', color: '#22d3ee', bg: '#042f2e',
+    backUrl: 'pmc-split6.html', type: 'standard',
+    data: {
+  1:[
+    {type:'single',num:1,name:'Wide Grip Lat Pulldowns',sets:'12,10,8,8',badges:['tb-pyramid'],note:'Pyramid up · full stretch at top'},
+    {type:'single',num:2,name:'Pendlay Rows',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavy · reset each rep · explosive pull'},
+    {type:'single',num:3,name:'Wide Barbell Shrugs',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · 2 sec pause at top · 1:0:1:2'},
+    {type:'single',num:4,name:'Wide Grip Cable Rows',sets:'4x15',badges:['tb-highrep12'],note:'12-15 reps · 2 sec pause at peak · 1:0:1:2'},
+    {type:'single',num:5,name:'Incline DB Row',sets:'4x12 drop 15',badges:['tb-highrep12','tb-drop','tb-tempo'],note:'12-15 reps · 2 sec pause at top · 1:0:1:2 · drop set final set'},
+    {type:'superset',num:6,
+     a:{name:'Seated Shrugs',sets:'4xfailure',badges:['tb-superset','tb-amrap'],note:'⚡ Superset A · 4 sets to failure · squeeze hard at top'},
+     b:{name:'Wide Grip Lat Pulldowns',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 reps · bilateral · full stretch'}},
+  ],
+  2:[
+    {type:'single',num:1,name:'Wide Grip Lat Pulldowns',sets:'12,10,8,8',badges:['tb-pyramid'],note:'Pyramid up · increase weight from W1'},
+    {type:'single',num:2,name:'Pendlay Rows',sets:'5x5',badges:['tb-lowrep'],note:'Low rep · heavier than W1'},
+    {type:'single',num:3,name:'Wide Barbell Shrugs',sets:'4x20',badges:['tb-highrep20'],note:'20 reps · 2 sec pause · heavier than W1'},
+    {type:'single',num:4,name:'Wide Grip Cable Rows',sets:'4x15',badges:['tb-highrep12'],note:'12-15 reps · 2 sec pause at peak'},
+    {type:'single',num:5,name:'Incline DB Row',sets:'4x12 drop 15',badges:['tb-highrep12','tb-drop'],note:'12-15 reps · 2 sec pause · drop set final set'},
+    {type:'superset',num:6,
+     a:{name:'Seated Shrugs',sets:'4xfailure',badges:['tb-superset','tb-amrap'],note:'⚡ Superset A · 4 sets to failure · heavier than W1'},
+     b:{name:'Wide Grip Lat Pulldowns',sets:'4x20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 reps · bilateral'}},
+  ]
+},
+  },
+
+  'split5_core': {
+    id: 'split5_core', file: 'pmc-s5-core.html', split: 'Split 5',
+    title: 'Core', icon: '🎯', color: '#a78bfa', bg: '#1a0d40',
+    backUrl: 'pmc-split5.html', type: 'blocks',
+    data: [
+  {num:1,name:'6-Inch / 45° / 90° Leg Raises',sets:'10 reps at each angle',note:'30 total reps · control the descent · no swinging'},
+  {num:2,name:'USA Kettlebell Twist',sets:'3x20 each side',note:'Rotate fully · keep core braced throughout'},
+  {num:3,name:'In & Outs',sets:'3x20',note:'Extend fully · tuck knees to chest · no floor contact'},
+  {num:4,name:'Around the Worlds',sets:'3x10 each direction',note:'Full circular rotation · controlled movement'},
+  {num:5,name:'Side Plank',sets:'30 sec each side',note:'Stack feet or stagger · hips level · brace obliques'},
+],
+  },
+
+  'split6_abs': {
+    id: 'split6_abs', file: 'pmc-s6-abs-circuit.html', split: 'Split 6',
+    title: 'Abs Circuit', icon: '🎯', color: '#a78bfa', bg: '#1a0d40',
+    backUrl: 'pmc-split6.html', type: 'blocks',
+    data: [
+  {num:1,name:'6-Inch / 45° / 90° Leg Raises',sets:'3x30 (10 at each angle)',note:'Hold each position · slow and controlled · no swinging'},
+  {num:2,name:'In & Outs',sets:'3x20',note:'Full extension · tuck knees · keep feet off floor'},
+  {num:3,name:'USA Twists',sets:'3x20 each side',note:'Rotate fully · feet off floor · brace obliques'},
+  {num:4,name:'Heels to Heaven',sets:'3x20',note:'Straight legs · drive heels up · hips off floor'},
+],
+  },
+
+  'split7_ugee': {
+    id: 'split7_ugee', file: 'pmc-s7-giant.html', split: 'Split 7',
+    title: 'UGEE SETS', icon: '⚡', color: '#fb923c', bg: '#2d1500',
+    backUrl: 'pmc-split7.html', type: 'blocks',
+    data: [
+  {title:'Chest Giant Set',rounds:5,
+   warmup:'Push-Ups — 3 sets warmup',
+   note:'Complete all 5 exercises back to back = 1 round. Rest 2-3 min between rounds.',
+   exercises:[
+     'DB Flat Bench',
+     'Slight Incline DB Bench',
+     'High Incline DB Press',
+     'High Incline DB Flies',
+     'Pronated Flat Bench Flies',
+   ]},
+  {title:'Arms Giant Set',rounds:5,
+   warmup:'Dips — 3 sets warmup',
+   note:'Complete all 6 exercises consecutively = 1 round. Rest 2-3 min between rounds.',
+   exercises:[
+     'Double Arm Incline Curl',
+     'DB Spider Curl',
+     'Concentration Curls',
+     'Flat Bench Skull Crushers',
+     'Double Arm DB Skull Crushers',
+   ]},
+  {title:'Back Giant Set',rounds:5,
+   warmup:'Pull-Ups — 3 sets warmup',
+   note:'Complete all 5 exercises back to back = 1 round. Rest 2-3 min between rounds.',
+   exercises:[
+     'Wide Grip Lat Pulldown',
+     'Wide Grip Cable Row',
+     'V Grip Lat Pulldown',
+     'Double Arm DB Row',
+     'Straight Arm Lat Pulldown',
+   ]},
+  {title:'Shoulder Giant Set',rounds:5,
+   note:'Complete all 6 exercises consecutively = 1 round. Rest 2-3 min between rounds.',
+   exercises:[
+     'Seated Side Lateral Raises',
+     'Double Arm Incline Bench Front Raises',
+     'Barbell Upright Row',
+     'Barbell Face Pulls',
+     'Reverse Incline Bench DB Delt Flies',
+     'Seated DB Shrugs',
+   ]},
+],
+  },
+
+};
+
+const PMC_SPLIT_META = {
+  'split1': { name: 'The Original', color: '#4ade80', workouts: ['split1_legs', 'split1_back', 'split1_chest', 'split1_bistris', 'split1_leghams'] },
+  'split2': { name: 'The Rematch', color: '#22d3ee', workouts: ['split2_legs', 'split2_chest', 'split2_back', 'split2_cst', 'split2_legs2'] },
+  'split3': { name: 'The Inferno', color: '#f87171', workouts: ['split3_back', 'split3_legs', 'split3_chest', 'split3_shoulders', 'split3_back2'] },
+  'split4': { name: 'The Blueprint', color: '#c084fc', workouts: ['split4_legsback', 'split4_chesttris', 'split4_shoulders', 'split4_legs2', 'split4_bistris'] },
+  'split5': { name: 'Push/Pull/Legs', color: '#fb923c', workouts: ['split5_push', 'split5_pull', 'split5_legs', 'split5_core'] },
+  'split6': { name: 'Body Part Split', color: '#a78bfa', workouts: ['split6_chest', 'split6_deltsarms', 'split6_legs', 'split6_backtraps', 'split6_abs'] },
+  'split7': { name: 'UGEE SETS', color: '#fb923c', workouts: ['split7_ugee'] },
+};
+</script>
+<script>
+// ── TIMER ENGINE ──────────────────────────────────────────────────
+const TMR={
+  interval:null,startTime:null,duration:0,activeEl:null,
+  parseSeconds(str){if(!str||str==='—')return 0;str=str.toLowerCase().trim();const mn=str.match(/(\d+)\s*min/),sc=str.match(/(\d+)\s*sec/);let s=0;if(mn)s+=parseInt(mn[1])*60;if(sc)s+=parseInt(sc[1]);if(!s){const p=str.match(/^(\d+)/);if(p)s=parseInt(p[1]);}return s;},
+  formatTime(secs){const neg=secs<0,abs=Math.abs(secs),m=Math.floor(abs/60),s=abs%60;return(neg?'+':'')+(m>0?m+':'+String(s).padStart(2,'0'):String(s)+'s');},
+  buzz(){if(navigator.vibrate)navigator.vibrate([200,100,200,100,400]);try{const ctx=new(window.AudioContext||window.webkitAudioContext)();[0,0.3,0.6].forEach((t,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=i===2?880:660;o.type='sine';g.gain.setValueAtTime(0.4,ctx.currentTime+t);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+t+0.25);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+0.25);});}catch(e){}},
+  start(el,dur,name){
+    this.stop();this.duration=dur;this.startTime=Date.now();this.activeEl=el;
+    el.className='rest-timer running';el.querySelector('.rest-timer-label').textContent=this.formatTime(dur);
+    const fl=document.getElementById('timerFloat'),ft=document.getElementById('timerFloatTime'),fp=document.getElementById('timerFloatProgress'),fe=document.getElementById('timerFloatEx'),fla=document.getElementById('timerFloatLabel');
+    fl.classList.add('visible');fe.textContent=name;fla.textContent='REST';ft.className='timer-float-time';fp.className='timer-float-progress';fp.style.width='100%';
+    this.interval=setInterval(()=>{
+      const rem=Math.ceil(this.duration-(Date.now()-this.startTime)/1000);
+      if(el)el.querySelector('.rest-timer-label').textContent=this.formatTime(rem);
+      ft.textContent=this.formatTime(rem);
+      if(rem>0){fp.style.width=((rem/this.duration)*100)+'%';ft.className='timer-float-time';fp.className='timer-float-progress';if(el)el.className='rest-timer running';}
+      else if(rem===0){this.buzz();ft.className='timer-float-time done';fp.className='timer-float-progress done';fp.style.width='100%';fla.textContent='DONE!';if(el)el.className='rest-timer done';}
+      else{ft.textContent='+'+this.formatTime(-rem);ft.className='timer-float-time overtime';fp.className='timer-float-progress overtime';fla.textContent='OVERTIME';if(el)el.className='rest-timer overtime';}
+    },500);
+  },
+  stop(){if(this.interval)clearInterval(this.interval);this.interval=null;if(this.activeEl){this.activeEl.querySelector('.rest-timer-label').textContent=this.activeEl.dataset.label;this.activeEl.className='rest-timer idle';this.activeEl=null;}const fl=document.getElementById('timerFloat');if(fl)fl.classList.remove('visible');},
+  toggle(el,dur,name){if(this.activeEl===el&&this.interval)this.stop();else this.start(el,dur,name);},
+  setTime(secs,label){if(this.interval){clearInterval(this.interval);this.interval=null;}this.duration=secs;this.startTime=Date.now();const ft=document.getElementById('timerFloat');if(ft){const tl=ft.querySelector('.timer-float-label'),tt=ft.querySelector('.timer-float-time'),tp=ft.querySelector('.timer-float-progress');if(tl)tl.textContent=label||(secs+'s');if(tt){tt.textContent=secs+'s';tt.className='timer-float-time';}if(tp){tp.style.width='100%';tp.className='timer-float-progress';}ft.classList.add('visible');}this.activeEl=null;this.interval=setInterval(()=>{const rem=Math.ceil(this.duration-(Date.now()-this.startTime)/1000);const ft2=document.getElementById('timerFloat');if(!ft2)return;const tt2=ft2.querySelector('.timer-float-time'),tp2=ft2.querySelector('.timer-float-progress'),tl2=ft2.querySelector('.timer-float-label');if(rem>0){if(tt2){tt2.textContent=rem+'s';tt2.className='timer-float-time';}if(tp2){tp2.style.width=Math.round((rem/this.duration)*100)+'%';tp2.className='timer-float-progress';}}else if(rem===0){if(tt2){tt2.textContent='DONE!';tt2.className='timer-float-time done';}if(tp2){tp2.style.width='100%';tp2.className='timer-float-progress done';}if(tl2)tl2.textContent='DONE ✓';try{navigator.vibrate&&navigator.vibrate([200,100,200,100,400]);}catch(e){}}else{if(tt2){tt2.textContent='+'+Math.abs(rem)+'s';tt2.className='timer-float-time overtime';}if(tp2)tp2.className='timer-float-progress overtime';}},500);}
+};
+
+// Build floating timer DOM once
+(function(){
+  const div=document.createElement('div');div.id='timerFloat';div.className='timer-float';
+  div.innerHTML=`<div id="timerFloatLabel" class="timer-float-label">REST</div><div id="timerFloatTime" class="timer-float-time">0s</div><div id="timerFloatEx" class="timer-float-ex"></div><div class="timer-float-bar"><div id="timerFloatProgress" class="timer-float-progress"></div></div><div class="timer-float-actions"><button class="timer-float-btn timer-float-skip" onclick="TMR.stop()">✓ Done</button><button class="timer-float-btn timer-float-reset" onclick="TMR.stop()">✕ Cancel</button></div><div class="timer-presets"></div>`;
+  document.body.appendChild(div);
+  ['45s','60s','90s','2min'].forEach(l=>{const s=l==='2min'?120:parseInt(l);const b=document.createElement('button');b.className='timer-preset';b.textContent=l;b.onclick=()=>TMR.setTime(s,l);div.querySelector('.timer-presets').appendChild(b);});
+})();
+
+function makeRestTimer(r,n){
+  const s=TMR.parseSeconds(r);
+  if(!s)return `<span class="ex-sets" style="opacity:0.5">⏱️ ${r}</span>`;
+  const safe=n.replace(/'/g,"\\'").substring(0,30);
+  return `<span class="rest-timer idle" data-rest="${r}" data-label="${r}" onclick="TMR.toggle(this,${s},'${safe}')" title="Tap to start rest timer"><span class="rest-timer-icon">⏱️</span><span class="rest-timer-label">${r}</span></span>`;
+}
+
+// ── STATE ─────────────────────────────────────────────────────────
+let activeWeek = 1;
+let currentWorkoutId = null;
+const checkState = {};
+const roundState = {};
+
+// ── BADGE LABELS ──────────────────────────────────────────────────
+const BADGE_LABELS = {
+  'tb-pyramid':'📈 Pyramid','tb-lowrep':'🏋️ Low Rep','tb-tempo':'⏱️ Tempo',
+  'tb-highrep12':'🔥 12–15 Reps','tb-highrep20':'🔥 20–30 Reps','tb-drop':'↘️ Drop Set',
+  'tb-amrap':'💀 AMRAP','tb-minrest':'⚡ 20s Rest','tb-optional':'⭐ Optional',
+  'tb-finisher':'🏁 Finisher','tb-superset':'⚡ Superset','tb-dumbbell':'🏋️ Dumbbell',
+  'tb-cable':'🔗 Cable',
+};
+function badges(arr){
+  return (arr||[]).map(b=>`<span class="type-badge ${b}">${BADGE_LABELS[b]||b}</span>`).join('');
+}
+
+// ── RENDER HELPERS ────────────────────────────────────────────────
+function renderSingle(ex, wk){
+  const id=`${wk}-s-${ex.num}`, ck=checkState[id]?'checked':'';
+  const rest=ex.rest||'90 sec';
+  return `<div class="ex-card ${ck}" data-id="${id}" data-type="single">
+    <div class="ex-row"><div class="ex-num">${ex.num}</div>
+    <div class="ex-content"><div class="ex-name">${ex.name}</div>
+    <div class="ex-tags"><span class="ex-sets">${ex.sets}</span>${badges(ex.badges)}</div>
+    ${makeRestTimer(rest,ex.name)}
+    ${ex.note?`<div class="ex-note">${ex.note}</div>`:''}
+    </div></div></div>`;
+}
+
+function renderSS(ex, wk){
+  const ida=`${wk}-ss-${ex.num}a`, idb=`${wk}-ss-${ex.num}b`;
+  const cka=checkState[ida]?'checked':'', ckb=checkState[idb]?'checked':'';
+  return `<div class="ss-card">
+    <div class="ss-header"><span class="ss-label">⚡ Superset #${ex.num}</span></div>
+    <div class="ss-ex ${cka}" data-id="${ida}" data-type="ssex">
+      <div class="ss-num">A</div><div class="ss-content">
+      <div class="ss-name">${ex.a.name}</div>
+      <div class="ex-tags"><span class="ex-sets">${ex.a.sets}</span>${badges(ex.a.badges)}</div>
+      ${makeRestTimer('120 sec',ex.a.name)}
+      ${ex.a.note?`<div class="ex-note">${ex.a.note}</div>`:''}
+      </div></div>
+    <div class="ss-divider"><span class="ss-x">× SUPERSET ×</span></div>
+    <div class="ss-ex ${ckb}" data-id="${idb}" data-type="ssex">
+      <div class="ss-num">B</div><div class="ss-content">
+      <div class="ss-name">${ex.b.name}</div>
+      <div class="ex-tags"><span class="ex-sets">${ex.b.sets}</span>${badges(ex.b.badges)}</div>
+      ${makeRestTimer('120 sec',ex.b.name)}
+      ${ex.b.note?`<div class="ex-note">${ex.b.note}</div>`:''}
+      </div></div></div>`;
+}
+
+function renderEx(ex, wk){
+  return ex.type==='superset' ? renderSS(ex,wk) : renderSingle(ex,wk);
+}
+
+function renderBlocks(blocks, wid){
+  return blocks.map((block, bi)=>{
+    const rounds = block.rounds || 5;
+    const exHtml = block.exercises.map((name, ei)=>{
+      const id=`${wid}-b${bi}-e${ei}`, ck=checkState[id]?'checked':'';
+      return `<div class="block-ex ${ck}" data-id="${id}" data-type="bex"><div class="block-ex-dot"></div><div class="block-ex-name">${name}</div></div>`;
+    }).join('');
+    const roundBtns = Array.from({length:rounds},(_,i)=>{
+      const rid=`${wid}-b${bi}-r${i}`, ck=roundState[rid]?'done':'';
+      return `<button class="round-btn ${ck}" data-rid="${rid}" onclick="toggleRound(this,'${rid}')">${ck?'✓ ':''} Round ${i+1}</button>`;
+    }).join('');
+    return `<div class="block-card">
+      <div class="block-header"><span class="block-title">${block.title}</span><span class="block-rounds">${rounds} ROUNDS</span></div>
+      ${block.note?`<div class="block-note">${block.note}</div>`:''}
+      ${block.warmup?`<div class="block-warmup"><span class="block-warmup-label">WARMUP</span>${block.warmup}</div>`:''}
+      ${exHtml}
+      <div class="block-rounds-btns">${roundBtns}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleRound(btn, rid){
+  roundState[rid] = !roundState[rid];
+  btn.classList.toggle('done', roundState[rid]);
+  btn.textContent = roundState[rid] ? `✓ ${btn.textContent.replace('✓ ','')}` : btn.textContent.replace('✓ ','');
+  updateProgress();
+}
+
+// ── CONFUSION BANNER ──────────────────────────────────────────────
+function confusionBanner(wk){
+  if(wk<=2) return '';
+  return `<div class="confusion-banner">🔀 Muscle Confusion Active — Week ${wk}<br><span>Same exercises · lift type rotated · your muscles won't see it coming</span></div>`;
+}
+
+// ── WEEK 3–4 CONFUSION SWAPS ──────────────────────────────────────
+// Applied per-workout based on the confusion map from the deploy script
+const CONFUSION_SWAPS = {
+  'split1_legs': {
+    3: [
+      {type:'single',num:1,name:'Quad Extensions',sets:'4×6',rest:'120 sec',badges:['tb-lowrep'],note:'🔀 was superset/high rep → low rep heavy'},
+      {type:'single',num:2,name:'Romanian Deadlifts (Barbell or DB)**',sets:'4×6',rest:'120 sec',badges:['tb-lowrep'],note:'🔀 was superset/high rep → low rep heavy'},
+      {type:'single',num:3,name:'Close Stance Barbell Squats or Goblet Squats**',sets:'12,10,8,8 drop 15',rest:'90 sec',badges:['tb-pyramid','tb-drop'],note:'🔀 was low rep → pyramid + drop set'},
+      {type:'single',num:4,name:'Quad Extensions',sets:'4×20',rest:'60 sec',badges:['tb-highrep20'],note:'🔀 was pyramid/drop → high rep constant tension'},
+      {type:'single',num:5,name:'Smith Machine Split Squats',sets:'AMRAP',rest:'90 sec',badges:['tb-amrap'],note:'🔀 was tempo → AMRAP · push to failure'},
+      {type:'single',num:6,name:'Leg Press (feet shoulder width)',sets:'4×6',rest:'120 sec',badges:['tb-lowrep'],note:'🔀 was high rep → low rep heavy'},
+      {type:'single',num:7,name:'Calf Raises',sets:'4×12',rest:'60 sec',badges:['tb-tempo'],note:'🔀 was high rep → tempo · 2:2:1:0'},
+      {type:'single',num:8,name:'Walking Lunges',sets:'100–200 reps',rest:'60 sec',badges:['tb-optional'],note:'⭐ Optional finisher'},
+    ],
+    4: [
+      {type:'single',num:1,name:'Leg Press (feet shoulder width)',sets:'4×6',rest:'120 sec',badges:['tb-lowrep'],note:'🔀 was superset/high rep → low rep heavy'},
+      {type:'single',num:2,name:'Lying Hamstring Curl',sets:'4×6',rest:'120 sec',badges:['tb-lowrep'],note:'🔀 was superset/high rep → low rep heavy'},
+      {type:'single',num:3,name:'Neutral Stance Barbell or Goblet Squats**',sets:'4×20',rest:'75 sec',badges:['tb-highrep20'],note:'🔀 was pyramid/drop → high rep'},
+      {type:'single',num:4,name:'Cannonball Hack Squat or Leg Press (heels elevated)**',sets:'4×8',rest:'90 sec',badges:['tb-tempo'],note:'🔀 was low rep → tempo · 3:0:1:0'},
+      {type:'single',num:5,name:'Seated Leg Extension',sets:'12,10,8 drop 15',rest:'75 sec',badges:['tb-pyramid','tb-drop'],note:'🔀 was high rep → pyramid + drop'},
+      {type:'single',num:6,name:'Seated Hamstring Curl',sets:'AMRAP',rest:'75 sec',badges:['tb-amrap'],note:'🔀 was high rep → AMRAP · push to failure'},
+      {type:'single',num:7,name:'Calf Raises',sets:'4×12',rest:'60 sec',badges:['tb-tempo'],note:'🔀 was high rep → tempo · 2:2:1:0'},
+      {type:'single',num:8,name:'Walking Lunges',sets:'100–200 reps',rest:'60 sec',badges:['tb-optional'],note:'⭐ Optional finisher'},
+    ],
+  },
+  'split1_back': {
+    3: [
+      {type:'single',num:1,name:'Wide Grip Lat Pulldown',sets:'12,10,8,6',rest:'90 sec',badges:['tb-pyramid'],note:'🔀 was superset/high rep → pyramid'},
+      {type:'single',num:2,name:'Seated Cable Row (close V grip)',sets:'12,10,8,6',rest:'90 sec',badges:['tb-pyramid'],note:'🔀 was superset/high rep → pyramid'},
+      {type:'single',num:3,name:'Barbell Pendlay Rows',sets:'4×8',rest:'90 sec',badges:['tb-tempo'],note:'🔀 was low rep → tempo · 4:0:1:0'},
+      {type:'single',num:4,name:'Machine Low Row',sets:'4×20',rest:'60 sec',badges:['tb-highrep20'],note:'🔀 was pyramid/drop → high rep'},
+      {type:'single',num:5,name:'Incline DB Row (bilateral)',sets:'4×5',rest:'120 sec',badges:['tb-lowrep'],note:'🔀 was tempo → low rep heavy'},
+      {type:'single',num:6,name:'Straight Arm Lat Pulldown (cable)',sets:'4×12 drop 20',rest:'60 sec',badges:['tb-drop'],note:'🔀 was high rep → drop set'},
+      {type:'single',num:7,name:'Machine High Row',sets:'AMRAP',rest:'75 sec',badges:['tb-amrap'],note:'🔀 was high rep → AMRAP'},
+      {type:'single',num:8,name:'Cable Shrug (bilateral)',sets:'15,12,10,8',rest:'60 sec',badges:['tb-pyramid'],note:'🔀 was high rep → pyramid'},
+    ],
+    4: [
+      {type:'single',num:1,name:'Reverse Grip Lat Pulldown',sets:'12,10,8,6',rest:'90 sec',badges:['tb-pyramid'],note:'🔀 was superset/high rep → pyramid'},
+      {type:'single',num:2,name:'Wide Grip Seated Cable Row',sets:'12,10,8,6',rest:'90 sec',badges:['tb-pyramid'],note:'🔀 was superset/high rep → pyramid'},
+      {type:'single',num:3,name:'Barbell Pendlay or Bent Over Row**',sets:'4×8',rest:'90 sec',badges:['tb-tempo'],note:'🔀 was low rep → tempo · 4:0:1:0'},
+      {type:'single',num:4,name:'Wide Grip Lat Pulldown',sets:'4×20',rest:'60 sec',badges:['tb-highrep20'],note:'🔀 was pyramid/drop → high rep'},
+      {type:'single',num:5,name:'V Grip Lat Pulldown',sets:'4×5',rest:'120 sec',badges:['tb-lowrep'],note:'🔀 was tempo → low rep heavy'},
+      {type:'single',num:6,name:'Straight Arm Lat Pulldown (cable)',sets:'5×12 drop 20',rest:'60 sec',badges:['tb-drop'],note:'🔀 was high rep → drop set'},
+      {type:'single',num:7,name:'Machine Mid Row',sets:'AMRAP',rest:'75 sec',badges:['tb-amrap'],note:'🔀 was high rep → AMRAP'},
+      {type:'single',num:8,name:'Barbell Shrug (wide grip)',sets:'15,12,10,8',rest:'60 sec',badges:['tb-pyramid'],note:'🔀 was high rep → pyramid'},
+    ],
+  },
+  // Additional splits will use auto-generated swaps via autoConfusion()
+};
+
+// ── AUTO CONFUSION GENERATOR (for splits without manual maps) ─────
+// Applies generic lift type rotation rules to any week 1/2 data
+function autoConfusion(exercises, sourceWeek){
+  return exercises.map(ex => {
+    if(ex.type === 'superset'){
+      // Break superset into individual cards with swapped types
+      return [
+        Object.assign({}, ex.a, {type:'single', num:ex.num+'a',
+          sets: swapSets(ex.a.sets, ex.a.badges),
+          badges: swapBadges(ex.a.badges),
+          note: '🔀 was superset → ' + (ex.a.note||'').substring(0,40)
+        }),
+        Object.assign({}, ex.b, {type:'single', num:ex.num+'b',
+          sets: swapSets(ex.b.sets, ex.b.badges),
+          badges: swapBadges(ex.b.badges),
+          note: '🔀 was superset → ' + (ex.b.note||'').substring(0,40)
+        }),
+      ];
+    }
+    return Object.assign({}, ex, {
+      sets: swapSets(ex.sets, ex.badges),
+      badges: swapBadges(ex.badges),
+      note: '🔀 ' + (ex.note||'').substring(0,50),
+    });
+  }).flat();
+}
+
+function swapSets(sets, badges){
+  if(!badges) return sets;
+  if(badges.includes('tb-lowrep'))    return '4×8';       // low rep → tempo
+  if(badges.includes('tb-pyramid'))   return '4×20';      // pyramid → high rep
+  if(badges.includes('tb-drop'))      return '4×20';      // drop → high rep
+  if(badges.includes('tb-tempo'))     return 'AMRAP';     // tempo → AMRAP
+  if(badges.includes('tb-highrep20')) return '4×6';       // high rep → low rep
+  if(badges.includes('tb-highrep12')) return '4×6';       // high rep → low rep
+  if(badges.includes('tb-amrap'))     return '12,10,8,8'; // AMRAP → pyramid
+  return sets;
+}
+function swapBadges(badges){
+  if(!badges) return [];
+  if(badges.includes('tb-lowrep'))    return ['tb-tempo'];
+  if(badges.includes('tb-pyramid'))   return ['tb-highrep20'];
+  if(badges.includes('tb-drop'))      return ['tb-highrep20'];
+  if(badges.includes('tb-tempo'))     return ['tb-amrap'];
+  if(badges.includes('tb-highrep20')) return ['tb-lowrep'];
+  if(badges.includes('tb-highrep12')) return ['tb-lowrep'];
+  if(badges.includes('tb-amrap'))     return ['tb-pyramid'];
+  return badges;
+}
+
+// ── GET EXERCISES FOR WEEK ─────────────────────────────────────────
+function getWeekData(workout, week){
+  const raw = workout.data;
+  if(workout.type === 'blocks') return null; // blocks handled separately
+
+  // Normalize data structure (some files wrap in {warmup, exercises})
+  function getExercises(weekData){
+    if(!weekData) return [];
+    if(Array.isArray(weekData)) return weekData;
+    if(weekData.exercises) return weekData.exercises;
+    return [];
+  }
+  function hasWarmup(weekData){
+    if(!weekData) return false;
+    return weekData.warmup === true;
+  }
+
+  if(week <= 2){
+    const wd = raw[week] || raw[1];
+    return { exercises: getExercises(wd), warmup: hasWarmup(wd) };
+  }
+
+  // Weeks 3–4: check manual map first, then auto-generate
+  const manualKey = workout.id;
+  if(CONFUSION_SWAPS[manualKey] && CONFUSION_SWAPS[manualKey][week]){
+    const backWeek = week === 3 ? 1 : 2;
+    const bwd = raw[backWeek] || raw[1];
+    return { exercises: CONFUSION_SWAPS[manualKey][week], warmup: hasWarmup(bwd) };
+  }
+
+  // Auto-generate from base week
+  const baseWeek = week === 3 ? 1 : 2;
+  const bwd = raw[baseWeek] || raw[1];
+  const baseExercises = getExercises(bwd);
+  return { exercises: autoConfusion(baseExercises, baseWeek), warmup: hasWarmup(bwd) };
+}
+
+// ── APPLY THEME ───────────────────────────────────────────────────
+function applyTheme(workout){
+  const c = workout.color || '#c084fc';
+  const bg = workout.bg || '#1a0040';
+  document.querySelector('.header').style.background = `linear-gradient(135deg,${bg},#0d0618)`;
+  document.querySelector('.header').style.borderBottomColor = c+'33';
+  document.querySelector('.eyebrow').style.color = c;
+  document.querySelector('.week-badge').style.color = c;
+  document.querySelector('.week-badge').style.background = c+'22';
+  document.querySelector('.week-badge').style.borderColor = c+'55';
+  document.querySelector('.week-tabs').style.borderBottomColor = c+'1a';
+  document.querySelectorAll('.wtab.active').forEach(t=>{t.style.color=c;t.style.borderBottomColor=c;});
+  document.querySelectorAll('.ex-num').forEach(n=>{n.style.background=c+'2e';n.style.color=c;n.style.borderColor=c+'44';});
+  document.querySelectorAll('.ex-sets').forEach(s=>{s.style.background=c+'1a';s.style.borderColor=c+'33';});
+  document.querySelectorAll('.ex-note').forEach(n=>{n.style.color=c+'cc';});
+  document.querySelector('.tap-hint').style.color = c;
+}
+
+// ── MAIN RENDER ───────────────────────────────────────────────────
+function render(){
+  const workout = PMC_SPLITS[currentWorkoutId];
+  if(!workout){ renderNotFound(); return; }
+
+  const tabs = [1,2,3,4].map(w=>
+    `<button class="wtab${activeWeek===w?' active':''}" data-w="${w}" style="${activeWeek===w?`color:${workout.color};border-bottom-color:${workout.color}`:''}">WEEK ${w}</button>`
+  ).join('');
+
+  let contentHtml = '';
+
+  if(workout.type === 'blocks'){
+    // UGEE SETS / Core / Abs — block format, no week tabs
+    const wid = `${currentWorkoutId}-${activeWeek}`;
+    contentHtml = renderBlocks(workout.data, wid);
+    document.getElementById('app').innerHTML = `
+      <div class="header">
+        <a href="${workout.backUrl}" class="back-link">← ${workout.split}</a>
+        <div class="header-inner">
+          <div class="eyebrow">${workout.icon} PMC · ${workout.split}</div>
+          <div class="title">${workout.title}</div>
+          <span class="week-badge">complete 5–10 rounds per lift</span>
+        </div>
+      </div>
+      <div class="content">
+        <div class="tap-hint">Tap exercises to check off · tap round buttons when complete</div>
+        ${contentHtml}
+      </div>`;
+  } else {
+    const weekData = getWeekData(workout, activeWeek);
+    const exercises = weekData ? weekData.exercises : [];
+    const showWarmup = weekData ? weekData.warmup : false;
+
+    const warmupHtml = showWarmup ? `
+      <div class="warmup-card" style="background:${workout.color}14;border:1px solid ${workout.color}4d;">
+        <div class="wu-icon">🔥</div>
+        <div><div class="wu-text" style="color:${workout.color}">WARMUP: Pull-Ups (AMRAP)</div>
+        <div class="wu-sub" style="color:${workout.color}cc">max reps · full hang · no kipping</div></div>
+      </div>` : '';
+
+    contentHtml = warmupHtml + confusionBanner(activeWeek) + exercises.map(e=>renderEx(e,activeWeek)).join('');
+
+    document.getElementById('app').innerHTML = `
+      <div class="header">
+        <a href="${workout.backUrl}" class="back-link">← ${workout.split}</a>
+        <div class="header-inner">
+          <div class="eyebrow">${workout.icon} PMC · ${workout.split}</div>
+          <div class="title">${workout.title}</div>
+          <span class="week-badge">Week ${activeWeek}</span>
+        </div>
+      </div>
+      <div class="week-tabs" style="border-bottom:1px solid ${workout.color}1a;">
+        <div class="wtabs">${tabs}</div>
+      </div>
+      <div class="content">
+        <div class="tap-hint">Tap any exercise to check off</div>
+        ${contentHtml}
+      </div>`;
+  }
+
+  attachEvents();
+  applyTheme(workout);
+  setTimeout(initNotes, 200);
+  updateProgress();
+}
+
+function renderNotFound(){
+  // Show a full split/workout picker
+  const splitOrder = ['split1','split2','split3','split4','split5','split6','split7'];
+  const splitCards = splitOrder.map(sid => {
+    const meta = PMC_SPLIT_META[sid];
+    if(!meta) return '';
+    const workoutLinks = meta.workouts.map(wid => {
+      const w = PMC_SPLITS[wid];
+      if(!w) return '';
+      return `<div class="picker-workout" onclick="selectWorkout('${wid}')" style="border-color:${meta.color}33;background:${meta.color}08;">
+        <span class="picker-icon">${w.icon}</span>
+        <span class="picker-name">${w.title}</span>
+        <span class="picker-arrow" style="color:${meta.color}">→</span>
+      </div>`;
+    }).join('');
+    return `<div class="picker-split">
+      <div class="picker-split-header" style="color:${meta.color}">
+        <span class="picker-split-name">${meta.name}</span>
+        <span class="picker-split-label">PMC · ${sid.replace('split','Split ')}</span>
+      </div>
+      ${workoutLinks}
+    </div>`;
+  }).join('');
+
+  document.getElementById('app').innerHTML = `
+    <div class="picker-header">
+      <div class="picker-title">⚡ Project Muscle Confusion</div>
+      <div class="picker-sub">Select a split and workout</div>
+    </div>
+    <div class="picker-content">${splitCards}</div>`;
+}
+
+function selectWorkout(wid){
+  currentWorkoutId = wid;
+  activeWeek = 1;
+  history.pushState(null,'',`#${wid}`);
+  render();
+}
+
+// ── EVENTS ────────────────────────────────────────────────────────
+function attachEvents(){
+  document.querySelectorAll('[data-type="single"]').forEach(c=>{
+    c.addEventListener('click',()=>{const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');updateProgress();});
+  });
+  document.querySelectorAll('[data-type="ssex"]').forEach(c=>{
+    c.addEventListener('click',e=>{e.stopPropagation();const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');updateProgress();});
+  });
+  document.querySelectorAll('[data-type="bex"]').forEach(c=>{
+    c.addEventListener('click',()=>{const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');updateProgress();});
+  });
+  document.querySelectorAll('.wtab').forEach(b=>{
+    b.addEventListener('click',()=>{activeWeek=parseInt(b.dataset.w);render();});
+  });
+}
+
+// ── PROGRESS BAR ──────────────────────────────────────────────────
+function updateProgress(){
+  const all=document.querySelectorAll('.ex-card,.ss-ex,.block-ex');
+  const done=document.querySelectorAll('.ex-card.checked,.ss-ex.checked,.block-ex.checked');
+  const pct=all.length?Math.round((done.length/all.length)*100):0;
+  const fill=document.getElementById('progFill');
+  if(fill)fill.style.width=pct+'%';
+}
+
+// ── NOTES ─────────────────────────────────────────────────────────
+function initNotes(){
+  const NOTES_KEY='pmc_notes_'+currentWorkoutId;
+  let notes={};try{notes=JSON.parse(localStorage.getItem(NOTES_KEY)||'{}');}catch(e){}
+  document.querySelectorAll('.ex-card[data-id]').forEach(card=>{
+    const id=card.dataset.id;if(!id||card.querySelector('.ex-notes-wrap'))return;
+    const existing=notes[id]||'';
+    const toggle=document.createElement('div');toggle.className='ex-notes-toggle';
+    toggle.innerHTML=existing?`✏️ ${existing.substring(0,20)}${existing.length>20?'…':''}`:'✚ Add weight/notes';
+    const wrap=document.createElement('div');wrap.className=`ex-notes-wrap${existing?' open':''}`;
+    wrap.innerHTML=`<div class="ex-notes-label">Weight / Notes</div><textarea class="ex-notes-input" rows="1" placeholder="e.g. 135 lbs · felt strong">${existing}</textarea>`;
+    toggle.addEventListener('click',e=>{e.stopPropagation();wrap.classList.toggle('open');});
+    const ta=wrap.querySelector('textarea');
+    ta.addEventListener('input',function(){
+      notes[id]=this.value.trim();
+      if(!notes[id])delete notes[id];
+      localStorage.setItem(NOTES_KEY,JSON.stringify(notes));
+      toggle.innerHTML=this.value.trim()?`✏️ ${this.value.trim().substring(0,20)}${this.value.trim().length>20?'…':''}`:'✚ Add weight/notes';
+    });
+    const content=card.querySelector('.ex-content');
+    if(content){content.appendChild(toggle);content.appendChild(wrap);}
+  });
+}
+
+// ── ROUTING ───────────────────────────────────────────────────────
+function route(){
+  const hash = location.hash.replace('#','');
+  const parts = hash.split('-w');
+  const workoutId = parts[0];
+  const weekParam = parts[1] ? parseInt(parts[1]) : 1;
+
+  if(workoutId && PMC_SPLITS[workoutId]){
+    currentWorkoutId = workoutId;
+    activeWeek = weekParam;
+    document.title = `PMC — ${PMC_SPLITS[workoutId].title}`;
+  } else {
+    currentWorkoutId = null;
+    document.title = 'PMC — Project Muscle Confusion';
+  }
+  render();
+}
+
+window.addEventListener('hashchange', route);
+
+// Also support ?id= param for backward compat
+const urlParams = new URLSearchParams(location.search);
+const idParam = urlParams.get('id');
+if(idParam && !location.hash){
+  history.replaceState(null,'',`#${idParam}`);
+}
+
+route();
+</script>
+</body>
+</html>
