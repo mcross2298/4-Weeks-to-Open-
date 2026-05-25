@@ -1,34 +1,655 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mike Cross — Favorite Splits</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
-body{background:#020b18;min-height:100vh;color:#fff;padding:32px 18px 60px;}
-.container{max-width:680px;margin:0 auto;}
-.back-link{display:inline-block;color:#d4af37;text-decoration:none;font-size:13px;font-weight:700;background:rgba(212,175,55,0.1);padding:6px 14px;border-radius:20px;border:1px solid rgba(212,175,55,0.3);margin-bottom:24px;}
-.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.28em;color:#d4af37;text-transform:uppercase;margin-bottom:10px;}
-.title{font-size:30px;font-weight:900;color:#fff;letter-spacing:-0.02em;line-height:1.1;margin-bottom:8px;}
-.title span{color:#d4af37;}
-.subtitle{font-size:13px;color:#6b7280;margin-bottom:12px;line-height:1.5;}
-.designer{font-size:12px;font-weight:700;color:#d4af37;opacity:0.8;margin-bottom:20px;}
-.plan-card{display:block;text-decoration:none;color:inherit;border-radius:16px;padding:20px;margin-bottom:12px;position:relative;overflow:hidden;transition:transform 0.15s;background:linear-gradient(135deg,#0a1628,#020b18);border:1px solid rgba(212,175,55,0.2);box-shadow:0 6px 20px rgba(0,0,0,0.4);}
-.plan-card:active{transform:scale(0.98);}
-.plan-tag{font-size:9px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:10px;display:inline-block;background:rgba(212,175,55,0.15);color:#d4af37;border:1px solid rgba(212,175,55,0.3);border-radius:5px;padding:3px 9px;}
-.plan-name{font-size:21px;font-weight:900;color:#fff;margin-bottom:5px;padding-right:44px;}
-.plan-meta{font-size:12px;color:#9ca3af;line-height:1.55;padding-right:44px;}
-.plan-arrow{position:absolute;right:18px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.25);display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;}
-</style></head><body>
-<div class="container">
-  <a href="index.html" class="back-link">← Categories</a>
-  <div class="eyebrow">⚡ Personal Program</div>
-  <h1 class="title">Mike Cross'<br/><span>5 Favorite Splits</span></h1>
-  <p class="subtitle">5 personal splits across every major training style — 7-day weeks, push/pull/legs, body part splits, and more.</p>
-  <div class="designer">✍️ Designed by Mike Cross</div>
-  <a href="mc-home.html" class="plan-card">
-    <div class="plan-tag">⚡ 5 Splits · 18 Workouts</div>
-    <div class="plan-name">Enter the Program</div>
-    <div class="plan-meta">Gold · Crimson · Emerald · Amber · Electric Purple — each split with its own color, workout cards, and drill-ins.</div>
-    <div class="plan-arrow">→</div>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111;
+    --border: #1e1e1e;
+    --text: #e5e5e5;
+    --muted: #6b7280;
+    --accent: #d4af37;
+    --accent-dim: rgba(212,175,55,0.12);
+    --accent-glow: rgba(212,175,55,0.25);
+    --crimson: #dc2626;
+    --emerald: #10b981;
+    --amber: #f59e0b;
+    --purple: #8b5cf6;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  .page-wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+
+  /* ── Back Nav ── */
+  .back-nav {
+    padding: 16px 0 0;
+  }
+  .back-nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+  .back-nav a:hover { color: var(--accent); }
+
+  /* ── Program Header ── */
+  .program-header {
+    margin-top: 20px;
+    padding: 24px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent);
+    border-radius: 12px;
+  }
+
+  .program-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .program-header h1 {
+    font-size: clamp(22px, 5vw, 28px);
+    font-weight: 800;
+    line-height: 1.15;
+    color: #fff;
+    margin-bottom: 10px;
+  }
+
+  .program-tagline {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 18px;
+  }
+
+  .program-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  .meta-badge {
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-glow);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.03em;
+  }
+
+  .designer-credit {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .guide-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-glow);
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    margin-top: 16px;
+    transition: background 0.15s;
+  }
+  .guide-link:hover { background: rgba(212,175,55,0.2); }
+
+  /* ── Active Program Module ── */
+  .active-program {
+    margin-top: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .active-program-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .active-program-header span {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .active-program-body {
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .active-split-info {
+    flex: 1;
+  }
+
+  .active-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+
+  .active-split-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .active-split-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  .resume-btn {
+    background: var(--accent);
+    color: #000;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: opacity 0.15s;
+  }
+  .resume-btn:hover { opacity: 0.88; }
+
+  .select-prompt {
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* ── Section Title ── */
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 28px 0 12px;
+  }
+
+  /* ── Split Cards ── */
+  .split-card {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 18px;
+    margin-bottom: 10px;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s, background 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .split-card:hover {
+    background: #161616;
+  }
+
+  .split-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+  }
+
+  .split-gold::before   { background: #d4af37; }
+  .split-crimson::before { background: #dc2626; }
+  .split-emerald::before { background: #10b981; }
+  .split-amber::before  { background: #f59e0b; }
+  .split-purple::before { background: #8b5cf6; }
+  .split-cardio::before { background: #06b6d4; }
+
+  .split-card:hover.split-gold   { border-color: rgba(212,175,55,0.35); }
+  .split-card:hover.split-crimson { border-color: rgba(220,38,38,0.35); }
+  .split-card:hover.split-emerald { border-color: rgba(16,185,129,0.35); }
+  .split-card:hover.split-amber  { border-color: rgba(245,158,11,0.35); }
+  .split-card:hover.split-purple { border-color: rgba(139,92,246,0.35); }
+  .split-card:hover.split-cardio { border-color: rgba(6,182,212,0.35); }
+
+  .split-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .split-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .split-emoji {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .split-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .split-subtitle {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+
+  .split-arrow {
+    color: var(--muted);
+    font-size: 16px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .split-days {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    padding-left: 26px;
+  }
+
+  .split-count {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+    padding-left: 26px;
+  }
+
+  /* ── Badge Key ── */
+  .badge-key {
+    margin-top: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .badge-key-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .badge-key-header span {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex: 1;
+  }
+
+  .badge-toggle {
+    font-size: 12px;
+    color: var(--muted);
+    transition: transform 0.2s;
+  }
+
+  .badge-toggle.open { transform: rotate(180deg); }
+
+  .badge-key-body {
+    padding: 16px 18px;
+    display: none;
+  }
+  .badge-key-body.open { display: block; }
+
+  .badge-subtitle {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 14px;
+  }
+
+  .badge-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .badge-row:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .badge-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    width: 28px;
+    text-align: center;
+  }
+
+  .badge-text strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+
+  .badge-text p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  /* ── Bottom Back ── */
+  .bottom-back {
+    margin-top: 28px;
+    text-align: center;
+  }
+  .bottom-back a {
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .bottom-back a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- Back Nav -->
+  <div class="back-nav">
+    <a href="index.html">← Programs</a>
+  </div>
+
+  <!-- ① Program Overview -->
+  <div class="program-header">
+    <div class="program-eyebrow">⚡ Program · Personal Collection</div>
+    <h1>Mike Cross'<br>5 Favorite Splits</h1>
+    <p class="program-tagline">
+      5 personal splits across every major training style — 7-day weeks, push/pull/legs, body part splits, and more. Each split has its own color, workout cards, and drill-ins.
+    </p>
+    <div class="program-meta">
+      <span class="meta-badge">5 Splits</span>
+      <span class="meta-badge">18 Workouts</span>
+      <span class="meta-badge">Week 1 + Week 2</span>
+      <span class="meta-badge">Full Program</span>
+    </div>
+    <div class="designer-credit">✍️ Designed by Mike Cross</div>
+    <a class="guide-link" href="mc-instructions.html">📋 Program Guide &amp; Instructions →</a>
+  </div>
+
+  <!-- ② Active Program Module -->
+  <div class="active-program">
+    <div class="active-program-header">
+      <span>▶️ Active Program</span>
+    </div>
+    <div class="active-program-body" id="activeBody">
+      <div class="active-split-info">
+        <div class="active-label">Currently Running</div>
+        <div class="active-split-name" id="activeSplitName">—</div>
+        <div class="active-split-sub" id="activeSplitSub">Select a split below to begin</div>
+      </div>
+      <a href="#splits" class="resume-btn" id="resumeBtn" style="display:none">▶ Resume →</a>
+    </div>
+  </div>
+
+  <!-- ③ Select Split -->
+  <div class="section-title" id="splits">Choose Your Split</div>
+
+  <a href="mc-split1.html" class="split-card split-gold" onclick="setActive('Split 1 — Gold','The 7-Day Week · 5 workouts + cardio','mc-split1.html')">
+    <div class="split-card-top">
+      <div class="split-label">
+        <span class="split-emoji">💛</span>
+        <div>
+          <div class="split-name">Split 1 — Gold</div>
+          <div class="split-subtitle">The 7-Day Week</div>
+        </div>
+      </div>
+      <span class="split-arrow">›</span>
+    </div>
+    <div class="split-count">5 Workouts + Cardio Day + Rest</div>
+    <div class="split-days">Legs · Chest &amp; Shoulders · Bis &amp; Tris · Back · Legs Day 2 · Cardio · Rest</div>
   </a>
-</div></body></html>
+
+  <a href="mc-split2.html" class="split-card split-crimson" onclick="setActive('Split 2 — Crimson','The 5-Day Split · 5 workouts','mc-split2.html')">
+    <div class="split-card-top">
+      <div class="split-label">
+        <span class="split-emoji">❤️</span>
+        <div>
+          <div class="split-name">Split 2 — Crimson</div>
+          <div class="split-subtitle">The 5-Day</div>
+        </div>
+      </div>
+      <span class="split-arrow">›</span>
+    </div>
+    <div class="split-count">5 Workouts</div>
+    <div class="split-days">Chest &amp; Biceps · Legs · Back · Chest / Shoulders / Tris · Legs Day 2</div>
+  </a>
+
+  <a href="mc-split3.html" class="split-card split-emerald" onclick="setActive('Split 3 — Emerald','The 6-Workout · 6 workouts','mc-split3.html')">
+    <div class="split-card-top">
+      <div class="split-label">
+        <span class="split-emoji">💚</span>
+        <div>
+          <div class="split-name">Split 3 — Emerald</div>
+          <div class="split-subtitle">The 6-Workout</div>
+        </div>
+      </div>
+      <span class="split-arrow">›</span>
+    </div>
+    <div class="split-count">6 Workouts</div>
+    <div class="split-days">Back · Legs · Chest · Shoulders &amp; Tris · Back / Bis / Forearms · Legs &amp; Back</div>
+  </a>
+
+  <a href="mc-split4.html" class="split-card split-amber" onclick="setActive('Split 4 — Amber','The 4-Workout · 4 workouts','mc-split4.html')">
+    <div class="split-card-top">
+      <div class="split-label">
+        <span class="split-emoji">🟡</span>
+        <div>
+          <div class="split-name">Split 4 — Amber</div>
+          <div class="split-subtitle">The 4-Workout</div>
+        </div>
+      </div>
+      <span class="split-arrow">›</span>
+    </div>
+    <div class="split-count">4 Workouts</div>
+    <div class="split-days">Chest &amp; Triceps · Shoulders · Biceps &amp; Triceps · Legs</div>
+  </a>
+
+  <a href="mc-split5.html" class="split-card split-purple" onclick="setActive('Split 5 — Electric Purple','Push / Pull / Legs · 3-day rotation','mc-split5.html')">
+    <div class="split-card-top">
+      <div class="split-label">
+        <span class="split-emoji">💜</span>
+        <div>
+          <div class="split-name">Split 5 — Electric Purple</div>
+          <div class="split-subtitle">Push / Pull / Legs</div>
+        </div>
+      </div>
+      <span class="split-arrow">›</span>
+    </div>
+    <div class="split-count">3-Day Rotation</div>
+    <div class="split-days">Push Day · Pull Day · Leg Day</div>
+  </a>
+
+  <a href="mc-cardio.html" class="split-card split-cardio">
+    <div class="split-card-top">
+      <div class="split-label">
+        <span class="split-emoji">🏃</span>
+        <div>
+          <div class="split-name">Cardio Plan</div>
+          <div class="split-subtitle">All Splits</div>
+        </div>
+      </div>
+      <span class="split-arrow">›</span>
+    </div>
+    <div class="split-count">Post-Workout + Dedicated Cardio Day</div>
+    <div class="split-days">Incline Treadmill · Jump Rope · Recovery</div>
+  </a>
+
+  <!-- ④ Badge Key -->
+  <div class="badge-key">
+    <div class="badge-key-header" onclick="toggleBadgeKey()">
+      <span>🏷 Badge Key</span>
+      <div class="badge-toggle" id="badgeToggle">▼</div>
+    </div>
+    <div class="badge-key-body" id="badgeKeyBody">
+      <div class="badge-subtitle">Exercise Type Labels</div>
+
+      <div class="badge-row">
+        <div class="badge-icon">⚡</div>
+        <div class="badge-text">
+          <strong>Superset</strong>
+          <p>Two exercises back to back, no rest between</p>
+        </div>
+      </div>
+      <div class="badge-row">
+        <div class="badge-icon">📈</div>
+        <div class="badge-text">
+          <strong>Pyramid</strong>
+          <p>Weight increases as reps decrease (12, 10, 8, 8)</p>
+        </div>
+      </div>
+      <div class="badge-row">
+        <div class="badge-icon">🏋️</div>
+        <div class="badge-text">
+          <strong>Low Rep</strong>
+          <p>Heavy load, high sets, low reps (5×5, 6×4)</p>
+        </div>
+      </div>
+      <div class="badge-row">
+        <div class="badge-icon">⏱️</div>
+        <div class="badge-text">
+          <strong>Tempo</strong>
+          <p>Prescribed negatives or pauses (4:0:1:0)</p>
+        </div>
+      </div>
+      <div class="badge-row">
+        <div class="badge-icon">🔥</div>
+        <div class="badge-text">
+          <strong>High Rep</strong>
+          <p>Pump-focused, high volume (5×20, 4×15)</p>
+        </div>
+      </div>
+      <div class="badge-row">
+        <div class="badge-icon">↘️</div>
+        <div class="badge-text">
+          <strong>Drop Set</strong>
+          <p>Strip weight at end of set, continue immediately</p>
+        </div>
+      </div>
+      <div class="badge-row">
+        <div class="badge-icon">💀</div>
+        <div class="badge-text">
+          <strong>AMRAP</strong>
+          <p>As many reps as possible — push until failure</p>
+        </div>
+      </div>
+      <div class="badge-row">
+        <div class="badge-icon">⚡</div>
+        <div class="badge-text">
+          <strong>20s Rest</strong>
+          <p>Minimal rest between sets — metabolic stress</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-back">
+    <a href="index.html">← Back to Programs</a>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<script>
+  // Active Program persistence
+  function setActive(name, sub, href) {
+    try {
+      localStorage.setItem('mc_active_split_name', name);
+      localStorage.setItem('mc_active_split_sub', sub);
+      localStorage.setItem('mc_active_split_href', href);
+    } catch(e) {}
+  }
+
+  function loadActive() {
+    try {
+      const name = localStorage.getItem('mc_active_split_name');
+      const sub  = localStorage.getItem('mc_active_split_sub');
+      const href = localStorage.getItem('mc_active_split_href');
+      if (name) {
+        document.getElementById('activeSplitName').textContent = name;
+        document.getElementById('activeSplitSub').textContent  = sub || '';
+        const btn = document.getElementById('resumeBtn');
+        btn.href = href || '#splits';
+        btn.style.display = 'inline-flex';
+      }
+    } catch(e) {}
+  }
+
+  // Badge key toggle
+  function toggleBadgeKey() {
+    const body    = document.getElementById('badgeKeyBody');
+    const toggle  = document.getElementById('badgeToggle');
+    const isOpen  = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    toggle.classList.toggle('open', !isOpen);
+    toggle.textContent = isOpen ? '▼' : '▲';
+  }
+
+  // Init
+  loadActive();
+</script>
+</body>
+</html>
