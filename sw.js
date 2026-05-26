@@ -1,7 +1,7 @@
 // MC Training — Service Worker v2
 // Absolute URL cache for GitHub Pages
 
-const CACHE_NAME = 'mc-training-v6';
+const CACHE_NAME = 'mc-training-v7';
 const BASE = 'https://mcross2298.github.io/4-Weeks-to-Open-/';
 const CACHE_URLS = [
     'https://mcross2298.github.io/4-Weeks-to-Open-/',
@@ -159,7 +159,7 @@ self.addEventListener('activate', event => {
     self.clients.claim();
 });
 
-// Fetch — cache first, update in background
+// Fetch — NETWORK FIRST, fall back to cache
 self.addEventListener('fetch', event => {
     const url = event.request.url;
 
@@ -167,23 +167,18 @@ self.addEventListener('fetch', event => {
     if (!url.startsWith('https://mcross2298.github.io')) return;
 
     event.respondWith(
-        caches.match(event.request).then(cached => {
-            if (cached) {
-                // Serve from cache, refresh in background
-                fetch(event.request).then(resp => {
-                    if (resp && resp.status === 200) {
-                        caches.open(CACHE_NAME).then(c => c.put(event.request, resp));
-                    }
-                }).catch(() => {});
-                return cached;
-            }
-            // Not cached — fetch and store
-            return fetch(event.request).then(resp => {
-                if (!resp || resp.status !== 200) return resp;
+        fetch(event.request).then(resp => {
+            // Got a good response — update cache and return
+            if (resp && resp.status === 200) {
                 const clone = resp.clone();
                 caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
-                return resp;
-            }).catch(() => {
+            }
+            return resp;
+        }).catch(() => {
+            // Network failed — fall back to cache
+            return caches.match(event.request).then(cached => {
+                if (cached) return cached;
+                // Nothing in cache either — show offline page
                 return new Response(
                     '<html><body style="background:#0a0a0a;color:#fff;font-family:sans-serif;text-align:center;padding:60px 20px"><h2 style="color:#d4af37">MC Training</h2><p style="color:#9ca3af;margin-top:12px">You are offline. Open this page while online to cache it.</p><a href="/" style="display:inline-block;margin-top:20px;color:#d4af37">← Home</a></body></html>',
                     {headers: {'Content-Type': 'text/html'}}
