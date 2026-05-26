@@ -1,80 +1,279 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PMC – Split #7</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
-body{background:#0d0618;min-height:100vh;color:#fff;padding:0 0 60px;}
-.back-link{display:inline-block;color:#ff6b00;text-decoration:none;font-size:13px;font-weight:700;background:rgba(255,107,0,0.1);padding:6px 14px;border-radius:20px;border:1px solid rgba(255,107,0,0.3);margin:20px 16px;letter-spacing:0.04em;}
-.hero{background:linear-gradient(135deg,#1a0800,#0d0618);padding:28px 20px 24px;border-bottom:1px solid rgba(255,107,0,0.15);}
-.hero-inner{max-width:680px;margin:0 auto;}
-.eyebrow{font-size:10px;font-weight:900;letter-spacing:0.28em;color:#ff6b00;text-transform:uppercase;margin-bottom:8px;}
-.title{font-size:26px;font-weight:900;color:#fff;letter-spacing:-0.02em;margin-bottom:4px;}
-.subtitle{font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:10px;}
-.how-it-works{background:rgba(255,107,0,0.08);border:1px solid rgba(255,107,0,0.2);border-radius:10px;padding:12px 14px;margin-top:12px;font-size:12px;color:#fdba74;line-height:1.6;}
-.how-it-works strong{color:#ff6b00;}
-.content{max-width:680px;margin:20px auto 0;padding:0 16px;}
-.section-head{font-size:10px;font-weight:900;letter-spacing:0.22em;color:#ff6b00;text-transform:uppercase;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
-.section-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,107,0,0.3),transparent);}
-.workout-card{display:block;text-decoration:none;color:inherit;border-radius:16px;padding:18px 20px;margin-bottom:12px;position:relative;overflow:hidden;transition:transform 0.15s;background:linear-gradient(135deg,rgba(255,107,0,0.06),#0d0618);border:1px solid rgba(255,107,0,0.22);}
-.workout-card:active{transform:scale(0.98);}
-.wc-tag{font-size:9px;font-weight:900;letter-spacing:0.18em;padding:3px 9px;border-radius:5px;text-transform:uppercase;margin-bottom:10px;display:inline-block;background:rgba(255,107,0,0.15);color:#ff6b00;border:1px solid rgba(255,107,0,0.25);}
-.wc-name{font-size:19px;font-weight:900;color:#fff;margin-bottom:4px;padding-right:40px;}
-.wc-focus{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;color:#ff6b00;}
-.wc-meta{font-size:12px;color:#9ca3af;line-height:1.5;padding-right:40px;}
-.wc-criteria{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
-.crit{font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:0.04em;text-transform:uppercase;background:rgba(255,107,0,0.1);color:#ff6b00;border:1px solid rgba(255,107,0,0.2);opacity:0.85;}
-.wc-arrow{position:absolute;right:16px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:rgba(255,107,0,0.15);border:1px solid rgba(255,107,0,0.2);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;}
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    color: #f5f5f5;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  /* Header */
+  .header {
+    background: #111;
+    border-bottom: 1px solid #1e1e1e;
+    padding: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .back-link {
+    color: #ff6b2b;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .back-link:hover { opacity: 0.8; }
+  .program-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #ff6b2b;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .header .subtitle {
+    font-size: 13px;
+    color: #9ca3af;
+    margin-top: 4px;
+  }
+
+  /* How it works callout */
+  .how-it-works {
+    margin: 20px 16px 0;
+    background: #111;
+    border: 1px solid #ff6b2b40;
+    border-left: 3px solid #ff6b2b;
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .how-it-works p {
+    font-size: 13px;
+    color: #d1d5db;
+    line-height: 1.6;
+  }
+  .how-it-works strong {
+    color: #ff6b2b;
+  }
+
+  /* Section label */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #6b7280;
+    padding: 24px 16px 10px;
+  }
+
+  /* Workout cards */
+  .cards {
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .card {
+    background: #111;
+    border: 1px solid #1e1e1e;
+    border-radius: 14px;
+    padding: 18px;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: border-color 0.2s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: #ff6b2b;
+    border-radius: 3px 0 0 3px;
+  }
+  .card:hover {
+    border-color: #ff6b2b60;
+    transform: translateY(-1px);
+  }
+  .card:active { transform: scale(0.99); }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .card-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #ff6b2b;
+    background: #ff6b2b15;
+    border: 1px solid #ff6b2b30;
+    border-radius: 4px;
+    padding: 3px 8px;
+    white-space: nowrap;
+  }
+  .card-arrow {
+    color: #ff6b2b;
+    font-size: 18px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .card-title {
+    font-size: 19px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .card-meta {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 10px;
+  }
+  .card-warmup {
+    font-size: 11px;
+    color: #ff6b2b;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .card-exercises {
+    font-size: 12px;
+    color: #9ca3af;
+    line-height: 1.5;
+  }
+  .card-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #1e1e1e;
+  }
+  .footer-tag {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .footer-tag span {
+    color: #ff6b2b;
+  }
 </style>
 </head>
 <body>
-<a href="pmc-home.html" class="back-link">← PMC Home</a>
-<div class="hero">
-  <div class="hero-inner">
-    <div class="eyebrow">🔥 Project Muscle Confusion</div>
-    <h1 class="title">Split #7 — Giant Sets</h1>
-    <p class="subtitle">4 body parts · 3–5 rounds each · Electric Orange</p>
-    <div class="how-it-works">
-      <strong>How Giant Sets Work:</strong> Complete every exercise in the list back to back with no rest between exercises. When all exercises are done = <strong>1 Round</strong>. Rest 2–3 min. Repeat for 3–5 rounds total. Week 1 and Week 2 use the same exercises — aim for more rounds or heavier weight in W2.
+
+<div class="header">
+  <a href="pmc-home.html" class="back-link">← PMC Home</a>
+  <div class="program-badge">🔥 Project Muscle Confusion</div>
+  <h1>Split #7 — Giant Sets</h1>
+  <div class="subtitle">4 body parts · 3–5 rounds each · Electric Orange</div>
+</div>
+
+<div class="how-it-works">
+  <p>
+    <strong>How Giant Sets Work:</strong> Complete every exercise in the list back to back with no rest between exercises. When all exercises are done = <strong>1 Round</strong>. Rest 2–3 min. Repeat for 3–5 rounds total. Week 1 and Week 2 use the same exercises — aim for more rounds or heavier weight in W2.
+  </p>
+</div>
+
+<div class="section-label">Body Parts — Tap to Begin</div>
+
+<div class="cards">
+
+  <!-- Chest -->
+  <a href="pmc-s7-giant.html" class="card">
+    <div class="card-top">
+      <span class="card-badge">Giant Set</span>
+      <span class="card-arrow">→</span>
     </div>
-  </div>
+    <div class="card-title">Chest</div>
+    <div class="card-meta">5 Exercises · 3–5 Rounds</div>
+    <div class="card-warmup">Warmup: Push-Ups</div>
+    <div class="card-exercises">DB flat → slight incline → high incline press → high incline flies → pronated flat flies</div>
+    <div class="card-footer">
+      <div class="footer-tag">🔥 <span>Giant Sets</span></div>
+      <div class="footer-tag">🔄 <span>3–5 Rounds</span></div>
+      <div class="footer-tag">💪 <span>Warmup →</span></div>
+    </div>
+  </a>
+
+  <!-- Arms -->
+  <a href="pmc-s7-giant.html" class="card">
+    <div class="card-top">
+      <span class="card-badge">Giant Set</span>
+      <span class="card-arrow">→</span>
+    </div>
+    <div class="card-title">Arms</div>
+    <div class="card-meta">5 Exercises · 3–5 Rounds</div>
+    <div class="card-warmup">Warmup: Dips</div>
+    <div class="card-exercises">Incline curl → spider curl → concentration curls → bench skull crushers → double arm skull crushers</div>
+    <div class="card-footer">
+      <div class="footer-tag">🔥 <span>Giant Sets</span></div>
+      <div class="footer-tag">🔄 <span>3–5 Rounds</span></div>
+      <div class="footer-tag">💪 <span>Warmup →</span></div>
+    </div>
+  </a>
+
+  <!-- Back -->
+  <a href="pmc-s7-giant.html" class="card">
+    <div class="card-top">
+      <span class="card-badge">Giant Set</span>
+      <span class="card-arrow">→</span>
+    </div>
+    <div class="card-title">Back</div>
+    <div class="card-meta">5 Exercises · 3–5 Rounds</div>
+    <div class="card-warmup">Warmup: Pull-Ups</div>
+    <div class="card-exercises">Wide PD → wide cable row → V-grip PD → double arm DB row → straight arm PD</div>
+    <div class="card-footer">
+      <div class="footer-tag">🔥 <span>Giant Sets</span></div>
+      <div class="footer-tag">🔄 <span>3–5 Rounds</span></div>
+      <div class="footer-tag">💪 <span>Warmup →</span></div>
+    </div>
+  </a>
+
+  <!-- Shoulders -->
+  <a href="pmc-s7-giant.html" class="card">
+    <div class="card-top">
+      <span class="card-badge">Giant Set</span>
+      <span class="card-arrow">→</span>
+    </div>
+    <div class="card-title">Shoulders</div>
+    <div class="card-meta">6 Exercises · 3–5 Rounds</div>
+    <div class="card-exercises">Lateral raises → incline front raises → upright row → face pulls → reverse incline flies → DB shrugs</div>
+    <div class="card-footer">
+      <div class="footer-tag">🔥 <span>Giant Sets</span></div>
+      <div class="footer-tag">🔄 <span>3–5 Rounds</span></div>
+    </div>
+  </a>
+
 </div>
-<div class="content">
-  <div class="section-head">Body Parts — Tap to Begin</div>
-  <a href="pmc-s7-giant.html" class="workout-card">
-    <div class="wc-tag">Giant Set · Chest</div>
-    <div class="wc-name">Chest</div>
-    <div class="wc-focus">5 Exercises · 3–5 Rounds · Warmup: Push-Ups</div>
-    <div class="wc-meta">DB flat → slight incline → high incline press → high incline flies → pronated flat flies</div>
-    <div class="wc-criteria"><span class="crit">Giant Sets</span><span class="crit">3–5 Rounds</span><span class="crit">Warmup</span></div>
-    <div class="wc-arrow">→</div>
-  </a>
-  <a href="pmc-s7-giant.html" class="workout-card">
-    <div class="wc-tag">Giant Set · Arms</div>
-    <div class="wc-name">Arms</div>
-    <div class="wc-focus">5 Exercises · 3–5 Rounds · Warmup: Dips</div>
-    <div class="wc-meta">Incline curl → spider curl → concentration curls → bench skull crushers → double arm skull crushers</div>
-    <div class="wc-criteria"><span class="crit">Giant Sets</span><span class="crit">3–5 Rounds</span><span class="crit">Warmup</span></div>
-    <div class="wc-arrow">→</div>
-  </a>
-  <a href="pmc-s7-giant.html" class="workout-card">
-    <div class="wc-tag">Giant Set · Back</div>
-    <div class="wc-name">Back</div>
-    <div class="wc-focus">5 Exercises · 3–5 Rounds · Warmup: Pull-Ups</div>
-    <div class="wc-meta">Wide PD → wide cable row → V-grip PD → double arm DB row → straight arm PD</div>
-    <div class="wc-criteria"><span class="crit">Giant Sets</span><span class="crit">3–5 Rounds</span><span class="crit">Warmup</span></div>
-    <div class="wc-arrow">→</div>
-  </a>
-  <a href="pmc-s7-giant.html" class="workout-card">
-    <div class="wc-tag">Giant Set · Shoulders</div>
-    <div class="wc-name">Shoulders</div>
-    <div class="wc-focus">6 Exercises · 3–5 Rounds</div>
-    <div class="wc-meta">Lateral raises → incline front raises → upright row → face pulls → reverse incline flies → DB shrugs</div>
-    <div class="wc-criteria"><span class="crit">Giant Sets</span><span class="crit">3–5 Rounds</span></div>
-    <div class="wc-arrow">→</div>
-  </a>
-</div>
+
 </body>
 </html>
