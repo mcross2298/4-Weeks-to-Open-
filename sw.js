@@ -1,7 +1,7 @@
 // MC Training — Service Worker v2
 // Absolute URL cache for GitHub Pages
 
-const CACHE_NAME = 'mc-training-v5';
+const CACHE_NAME = 'mc-training-v6';
 const BASE = 'https://mcross2298.github.io/4-Weeks-to-Open-/';
 const CACHE_URLS = [
     'https://mcross2298.github.io/4-Weeks-to-Open-/',
@@ -21,7 +21,7 @@ const CACHE_URLS = [
     'https://mcross2298.github.io/4-Weeks-to-Open-/cat-mc.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/cat-pmc.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/cat-psu.html',
-    'https://mcross2298.github.io/4-Weeks-to-Open-/cat-pump.html',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/cat-pump-new4.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/cat-stndr.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/chest-tri-pump.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/driveway-demolition.html',
@@ -123,6 +123,9 @@ const CACHE_URLS = [
     'https://mcross2298.github.io/4-Weeks-to-Open-/turn-and-burn.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/weeks-to-open.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/exercise-library.html',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/quads-pump.html',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/s4-pull.html',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/s4-push.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/manifest.json',
     'https://mcross2298.github.io/4-Weeks-to-Open-/sw.js'
 ];
