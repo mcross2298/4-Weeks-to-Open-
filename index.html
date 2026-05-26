@@ -277,9 +277,28 @@ if ('serviceWorker' in navigator) {
 }
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('SW registered:', reg.scope))
+  window.addEventListener('load', async () => {
+    // Unregister any broken/stuck service workers first
+    const regs = await navigator.serviceWorker.getRegistrations();
+    for (const reg of regs) {
+      const sw = reg.active || reg.installing || reg.waiting;
+      if (sw) {
+        try {
+          const resp = await fetch(reg.scope + 'sw.js', {cache: 'no-store'});
+          const txt = await resp.text();
+          if (!txt.includes('mc-training-v6')) {
+            console.log('[MC] Old SW detected, unregistering...');
+            await reg.unregister();
+          }
+        } catch(e) {}
+      }
+    }
+    // Register fresh
+    navigator.serviceWorker.register('./sw.js', {updateViaCache: 'none'})
+      .then(reg => {
+        console.log('SW registered:', reg.scope);
+        reg.update();
+      })
       .catch(err => console.log('SW error:', err));
   });
 }
