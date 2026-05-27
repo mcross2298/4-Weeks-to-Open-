@@ -85,8 +85,9 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 .sync-btn{display:block;width:100%;margin-bottom:16px;padding:12px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:12px;color:#34d399;font-size:13px;font-weight:800;letter-spacing:0.06em;text-align:center;cursor:pointer;font-family:inherit;}
 .sync-btn:active{opacity:0.7;}
 
+
 /* ─────────────────────────────────────────
-   WAVE 1 — Block 1
+   WAVE 1 — Block 1 (mobile-safe)
 ───────────────────────────────────────── */
 
 /* 1. Per-program color top borders */
@@ -115,14 +116,13 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
     min-height: 108px;
 }
 
-/* 3. Gold glow on tap */
+/* 3. Gold glow on tap — mobile safe, no transform */
 .cat-card {
-    transition: transform 0.15s, box-shadow 0.1s ease !important;
     -webkit-tap-highlight-color: transparent;
 }
 .cat-card:active {
-    transform: scale(0.98) !important;
     box-shadow: 0 0 0 2px #d4af37, 0 0 18px rgba(212,175,55,0.3) !important;
+    opacity: 0.92;
 }
 
 </style>
