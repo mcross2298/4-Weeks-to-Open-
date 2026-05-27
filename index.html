@@ -86,6 +86,46 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 .sync-btn:active{opacity:0.7;}
 
 
+
+/* ─────────────────────────────────────────
+   WAVE 1 — Block 1 (mobile-safe)
+───────────────────────────────────────── */
+
+/* 1. Per-program color top borders */
+.cat-card.stndr { border-top: 3px solid #1D9E75; }
+.cat-card.pump   { border-top: 3px solid #D85A30; }
+.cat-card.gainz  { border-top: 3px solid #378ADD; }
+.cat-card.faint  { border-top: 3px solid #E24B4A; }
+.cat-card.psu    { border-top: 3px solid #639922; }
+.cat-card.pmc    { border-top: 3px solid #7F77DD; }
+.cat-card.mc     { border-top: 3px solid #d4af37; }
+
+/* 2. Bigger program card text */
+.cat-name {
+    font-size: 26px !important;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+}
+.cat-meta {
+    font-size: 13px !important;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.5;
+}
+.cat-card {
+    padding: 24px 22px !important;
+    min-height: 108px;
+}
+
+/* 3. Gold glow on tap — no transform, iPhone safe */
+.cat-card {
+    -webkit-tap-highlight-color: transparent;
+}
+.cat-card:active {
+    box-shadow: 0 0 0 2px #d4af37, 0 0 18px rgba(212,175,55,0.3) !important;
+    opacity: 0.9;
+}
+
 </style>
 </head>
 <body>
