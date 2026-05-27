@@ -373,6 +373,7 @@ function renderSS(ex,wk){
     '<div class="ss-ex '+cka+'" data-id="'+ida+'" data-type="ssex">'+
     '<div class="ss-num">A</div><div class="ss-content"><div class="ss-name">'+ex.a.name+'</div>'+
     '<div class="ex-tags"><span class="ex-sets">'+ex.a.sets+'</span>'+badges(ex.a.badges)+'</div>'+
+    '<div class="ex-rest">'+makeRestTimer('120 sec',ex.a.name)+'</div>'+
     (ex.a.note?'<div class="ex-note">'+ex.a.note+'</div>':'')+
     '</div></div><div class="ss-divider"><span class="ss-x">× SUPERSET ×</span></div>'+
     '<div class="ss-ex '+ckb+'" data-id="'+idb+'" data-type="ssex">'+
