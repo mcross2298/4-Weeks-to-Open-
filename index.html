@@ -311,21 +311,7 @@ function doSwUpdate() {
   if (swWaiting) { swWaiting.postMessage('skipWaiting'); }
   else { window.location.reload(); }
 }
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
-  navigator.serviceWorker.ready.then(reg => {
-    reg.addEventListener('updatefound', () => {
-      const nw = reg.installing;
-      nw.addEventListener('statechange', () => {
-        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-          swWaiting = nw;
-          const banner = document.getElementById('swUpdate');
-          if (banner) banner.classList.add('show');
-        }
-      });
-    });
-  });
-}
+
 
 // ── FORCE SYNC FUNCTION ──
 async function forceSync() {
@@ -349,7 +335,6 @@ if ('serviceWorker' in navigator) {
       })
       .catch(err => console.log('SW error:', err));
   });
-  navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
 }
 </script>
 <script>
