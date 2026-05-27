@@ -163,6 +163,51 @@ body{background:#1a1200;min-height:100vh;padding-bottom:48px;}
 .next-workout-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .next-workout-name{font-size:15px;font-weight:900;flex:1;}
 .next-workout-arrow{font-size:18px;color:#475569;}
+
+/* ── WAVE3-LOG: Structured weight logger ── */
+.log-row{
+  display:flex;gap:6px;align-items:center;
+  margin-top:8px;padding-top:8px;
+  border-top:1px solid rgba(255,255,255,0.06);
+}
+.log-input{
+  width:62px;padding:5px 6px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:7px;color:#e2e8f0;
+  font-size:13px;font-weight:700;
+  text-align:center;font-family:inherit;
+  outline:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.log-input:focus{
+  border-color:rgba(212,175,55,0.5);
+  background:rgba(212,175,55,0.06);
+}
+.log-input::placeholder{color:#334155;font-weight:600;}
+.log-btn{
+  padding:5px 12px;
+  background:#d4af37;color:#000;
+  border:none;border-radius:7px;
+  font-size:12px;font-weight:900;
+  cursor:pointer;font-family:inherit;
+  letter-spacing:0.03em;
+  -webkit-tap-highlight-color:transparent;
+  flex-shrink:0;
+}
+.log-btn:active{opacity:0.8;transform:scale(0.97);}
+.log-last{
+  font-size:11px;font-weight:700;
+  color:rgba(212,175,55,0.65);
+  flex:1;text-align:right;
+  line-height:1.3;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+}
+.log-saved-flash{
+  color:#34d399 !important;
+  transition:color 0.3s;
+}
+
 </style></head><body>
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
 <div id="app"></div>
@@ -546,48 +591,130 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <script>
-// ── WEIGHT / NOTES PER EXERCISE ──
-const NOTES_KEY = 'mc_notes';
-function getNotes() { try { return JSON.parse(localStorage.getItem(NOTES_KEY)||'{}'); } catch(e) { return {}; } }
-function saveNote(exId, val) {
-  const notes = getNotes();
-  if (val.trim()) notes[exId] = val.trim();
-  else delete notes[exId];
-  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+// ── WAVE3-LOG: Structured weight logger ──
+const LOG_KEY = 'mc_log_v1';
+
+function logStore() {
+  try { return JSON.parse(localStorage.getItem(LOG_KEY) || '{}'); } catch(e) { return {}; }
 }
-function initNotes() {
-  const notes = getNotes();
+
+function saveLog(exId, weight, reps) {
+  if (!weight && !reps) return;
+  const store = logStore();
+  if (!store[exId]) store[exId] = [];
+  const entry = {
+    w: weight,
+    r: reps,
+    d: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'})
+  };
+  store[exId].unshift(entry);
+  store[exId] = store[exId].slice(0, 10); // keep last 10
+  localStorage.setItem(LOG_KEY, JSON.stringify(store));
+  return entry;
+}
+
+function getLastLog(exId) {
+  const store = logStore();
+  return (store[exId] || [])[0] || null;
+}
+
+function renderLastLog(exId) {
+  const el = document.getElementById('log-last-' + exId);
+  if (!el) return;
+  const last = getLastLog(exId);
+  if (last) {
+    const parts = [];
+    if (last.w) parts.push(last.w + ' lb');
+    if (last.r) parts.push(last.r + ' reps');
+    el.textContent = parts.join(' · ') + ' (' + last.d + ')';
+  } else {
+    el.textContent = 'No log yet';
+  }
+}
+
+function handleLog(exId) {
+  const wInput = document.getElementById('log-w-' + exId);
+  const rInput = document.getElementById('log-r-' + exId);
+  const lastEl = document.getElementById('log-last-' + exId);
+  if (!wInput || !rInput) return;
+  const weight = wInput.value.trim();
+  const reps   = rInput.value.trim();
+  if (!weight && !reps) return;
+  saveLog(exId, weight, reps);
+  // Flash confirmation
+  if (lastEl) {
+    lastEl.classList.add('log-saved-flash');
+    renderLastLog(exId);
+    setTimeout(() => lastEl.classList.remove('log-saved-flash'), 1200);
+  }
+  // Clear inputs after logging
+  wInput.value = '';
+  rInput.value = '';
+}
+
+function buildLogRow(exId, exName) {
+  return '<div class="log-row">' +
+    '<input class="log-input" id="log-w-' + exId + '" ' +
+    'type="number" inputmode="decimal" placeholder="lb" ' +
+    'onclick="event.stopPropagation()" ' +
+    'onfocus="this.select()">' +
+    '<input class="log-input" id="log-r-' + exId + '" ' +
+    'type="number" inputmode="numeric" placeholder="reps" ' +
+    'onclick="event.stopPropagation()" ' +
+    'onfocus="this.select()">' +
+    '<button class="log-btn" ' +
+    'onclick="event.stopPropagation();handleLog('' + exId + '')">' +
+    'LOG</button>' +
+    '<span class="log-last" id="log-last-' + exId + '">—</span>' +
+    '</div>';
+}
+
+function initLogger() {
+  // Single exercise cards
   document.querySelectorAll('.ex-card[data-id]').forEach(card => {
+    if (card.querySelector('.log-row')) return; // already built
     const id = card.dataset.id;
-    if (!id || card.querySelector('.ex-notes-wrap')) return;
-    const existing = notes[id] || '';
-    const toggle = document.createElement('div');
-    toggle.className = 'ex-notes-toggle';
-    toggle.innerHTML = existing ? '✏️ ' + existing.substring(0,20) + (existing.length>20?'…':'') : '✚ Add weight/notes';
-    const wrap = document.createElement('div');
-    wrap.className = 'ex-notes-wrap' + (existing ? ' open' : '');
-    wrap.innerHTML = '<div class="ex-notes-label">Weight / Notes</div><textarea class="ex-notes-input" rows="1" placeholder="e.g. 135 lbs · 3x10 felt easy">' + existing + '</textarea>';
-    toggle.addEventListener('click', function(e) {
-      e.stopPropagation();
-      wrap.classList.toggle('open');
-    });
-    const textarea = wrap.querySelector('textarea');
-    textarea.addEventListener('input', function() {
-      saveNote(id, this.value);
-      toggle.innerHTML = this.value.trim() ? '✏️ ' + this.value.trim().substring(0,20) + (this.value.trim().length>20?'…':'') : '✚ Add weight/notes';
-    });
+    const nameEl = card.querySelector('.ex-name');
+    const name = nameEl ? nameEl.textContent.trim() : id;
     const content = card.querySelector('.ex-content');
-    if (content) { content.appendChild(toggle); content.appendChild(wrap); }
+    if (!content) return;
+    // Remove old freeform notes toggle if present
+    const oldToggle = content.querySelector('.ex-notes-toggle');
+    const oldWrap   = content.querySelector('.ex-notes-wrap');
+    if (oldToggle) oldToggle.remove();
+    if (oldWrap)   oldWrap.remove();
+    // Append new log row
+    content.insertAdjacentHTML('beforeend', buildLogRow(id, name));
+    renderLastLog(id);
+  });
+
+  // Superset exercise rows
+  document.querySelectorAll('.ss-ex[data-id]').forEach(row => {
+    if (row.querySelector('.log-row')) return;
+    const id = row.dataset.id;
+    const nameEl = row.querySelector('.ss-name');
+    const name = nameEl ? nameEl.textContent.trim() : id;
+    const content = row.querySelector('.ss-content');
+    if (!content) return;
+    content.insertAdjacentHTML('beforeend', buildLogRow(id, name));
+    renderLastLog(id);
   });
 }
-// Run after every render
-const _notesOrig = window._notesInit;
+
+// Run after render() builds the DOM
+const _origRender = window.render;
+if (typeof _origRender === 'function') {
+  window.render = function() {
+    _origRender.apply(this, arguments);
+    setTimeout(initLogger, 150);
+  };
+}
 document.addEventListener('DOMContentLoaded', function() {
-  setTimeout(initNotes, 300);
+  setTimeout(initLogger, 300);
 });
-// Also expose for manual call after tab switches
-window.initNotes = initNotes;
+window.initLogger = initLogger;
 </script>
+
 
 <a href="mc-s1-bis-tris.html" class="next-workout"><div class="next-workout-label">Up Next in this Split</div><div class="next-workout-row"><div class="next-workout-dot" style="background:#d4af37;box-shadow:0 0 6px #d4af3766;"></div><div class="next-workout-name">Bis & Tris</div><div class="next-workout-arrow">→</div></div></a>
 <script>
