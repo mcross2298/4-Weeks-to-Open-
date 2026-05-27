@@ -199,18 +199,17 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 </div>
 
 <script>
-// ── FORCE SW REFRESH ON EVERY LOAD ──
-// Unregisters any existing service worker and re-registers fresh.
-// This fixes devices stuck on old cached versions from previous installs.
+// ── ONE-TIME SW RESET (runs once per session, never loops) ──
 (async function() {
-  if ("serviceWorker" in navigator) {
+  if ("serviceWorker" in navigator && !sessionStorage.getItem("sw_reset_v9")) {
+    sessionStorage.setItem("sw_reset_v9", "1");
     try {
       const regs = await navigator.serviceWorker.getRegistrations();
       for (const reg of regs) { await reg.unregister(); }
       await caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
     } catch(e) {}
-    navigator.serviceWorker.register("./sw.js", {updateViaCache: "none"})
-      .catch(() => {});
+    window.location.reload();
+    return;
   }
 })();
 
@@ -399,4 +398,5 @@ renderStreak();
 </script>
 </body>
 </html>
+
 
