@@ -154,6 +154,95 @@ body{background:#061a10;min-height:100vh;padding-bottom:48px;}
 .ex-notes-input{width:100%;background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;font-weight:600;font-family:inherit;resize:none;line-height:1.5;}
 .ex-notes-input::placeholder{color:#334155;}
 .ex-notes-label{font-size:9px;font-weight:800;letter-spacing:0.15em;color:#475569;text-transform:uppercase;margin-bottom:4px;}
+
+/* ── WAVE3-SETLOG ── */
+.setlog-wrap{
+  margin-top:8px;
+  border-top:1px solid rgba(255,255,255,0.07);
+  padding-top:2px;
+  display:none;  /* collapsed by default */
+}
+.setlog-wrap.open{ display:block; }
+
+.setlog-toggle{
+  display:flex;align-items:center;gap:5px;
+  margin-top:6px;cursor:pointer;user-select:none;
+  font-size:10px;font-weight:900;
+  color:#475569;letter-spacing:0.08em;
+  text-transform:uppercase;
+  -webkit-tap-highlight-color:transparent;
+}
+.setlog-toggle .sl-chevron{ transition:transform 0.2s; }
+.setlog-wrap.open ~ .setlog-toggle .sl-chevron,
+.setlog-toggle.open .sl-chevron{ transform:rotate(180deg); }
+
+.setlog-hist{
+  font-size:10px;font-weight:700;
+  color:rgba(212,175,55,0.55);
+  margin-left:auto;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+  max-width:140px;
+}
+
+.set-row{
+  display:grid;
+  grid-template-columns:28px 1fr 1fr 36px;
+  gap:6px;align-items:center;
+  padding:7px 4px;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.set-row:last-child{ border-bottom:none; }
+
+.set-num{
+  font-size:11px;font-weight:900;
+  color:#475569;text-align:center;
+}
+.set-input{
+  width:100%;padding:6px 4px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:7px;color:#e2e8f0;
+  font-size:13px;font-weight:700;
+  text-align:center;font-family:inherit;
+  outline:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.set-input:focus{
+  border-color:rgba(212,175,55,0.45);
+  background:rgba(212,175,55,0.06);
+}
+.set-input::placeholder{ color:#2d3748;font-size:11px; }
+
+.set-check{
+  width:32px;height:32px;
+  border-radius:8px;
+  border:1.5px solid rgba(255,255,255,0.15);
+  background:transparent;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:14px;
+  -webkit-tap-highlight-color:transparent;
+  transition:all 0.15s;
+}
+.set-check.done{
+  background:rgba(52,211,153,0.15);
+  border-color:rgba(52,211,153,0.4);
+}
+.set-row.done-row .set-input{
+  opacity:0.45;
+  text-decoration:line-through;
+}
+
+.setlog-header{
+  display:grid;
+  grid-template-columns:28px 1fr 1fr 36px;
+  gap:6px;padding:4px 4px 2px;
+}
+.setlog-col-label{
+  font-size:9px;font-weight:900;
+  letter-spacing:0.1em;text-transform:uppercase;
+  color:#334155;text-align:center;
+}
+
 </style></head><body>
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
 <div id="app"></div>
@@ -536,49 +625,7 @@ document.addEventListener('DOMContentLoaded', function() {
   setTimeout(addTimerPresets, 500);
 });
 </script>
-<script>
-// ── WEIGHT / NOTES PER EXERCISE ──
-const NOTES_KEY = 'mc_notes';
-function getNotes() { try { return JSON.parse(localStorage.getItem(NOTES_KEY)||'{}'); } catch(e) { return {}; } }
-function saveNote(exId, val) {
-  const notes = getNotes();
-  if (val.trim()) notes[exId] = val.trim();
-  else delete notes[exId];
-  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
-}
-function initNotes() {
-  const notes = getNotes();
-  document.querySelectorAll('.ex-card[data-id]').forEach(card => {
-    const id = card.dataset.id;
-    if (!id || card.querySelector('.ex-notes-wrap')) return;
-    const existing = notes[id] || '';
-    const toggle = document.createElement('div');
-    toggle.className = 'ex-notes-toggle';
-    toggle.innerHTML = existing ? '✏️ ' + existing.substring(0,20) + (existing.length>20?'…':'') : '✚ Add weight/notes';
-    const wrap = document.createElement('div');
-    wrap.className = 'ex-notes-wrap' + (existing ? ' open' : '');
-    wrap.innerHTML = '<div class="ex-notes-label">Weight / Notes</div><textarea class="ex-notes-input" rows="1" placeholder="e.g. 135 lbs · 3x10 felt easy">' + existing + '</textarea>';
-    toggle.addEventListener('click', function(e) {
-      e.stopPropagation();
-      wrap.classList.toggle('open');
-    });
-    const textarea = wrap.querySelector('textarea');
-    textarea.addEventListener('input', function() {
-      saveNote(id, this.value);
-      toggle.innerHTML = this.value.trim() ? '✏️ ' + this.value.trim().substring(0,20) + (this.value.trim().length>20?'…':'') : '✚ Add weight/notes';
-    });
-    const content = card.querySelector('.ex-content');
-    if (content) { content.appendChild(toggle); content.appendChild(wrap); }
-  });
-}
-// Run after every render
-const _notesOrig = window._notesInit;
-document.addEventListener('DOMContentLoaded', function() {
-  setTimeout(initNotes, 300);
-});
-// Also expose for manual call after tab switches
-window.initNotes = initNotes;
-</script>
+
 <script>
 // ── REPLACE EXERCISE ──
 (function() {
@@ -631,4 +678,268 @@ window.initNotes = initNotes;
   document.addEventListener('touchmove', function() { clearTimeout(pressTimer); }, {passive: true});
 })();
 </script>
+
+<script>
+/* ── WAVE3-SETLOG MODULE ── */
+(function(){
+  const STORE_KEY = 'mc_setlog_v1';
+  const PAGE_ID   = location.pathname.split('/').pop().replace('.html','');
+
+  function store(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)||'{}'); }catch(e){ return {}; } }
+  function exKey(exId){ return PAGE_ID + '|' + exId; }
+
+  function saveSet(exId, setNum, weight, reps){
+    const s = store();
+    const k = exKey(exId);
+    if(!s[k]) s[k] = [];
+    // find today's entry or create
+    const today = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    let session = s[k][0];
+    if(!session || session.d !== today){
+      session = { d: today, sets: {} };
+      s[k].unshift(session);
+      s[k] = s[k].slice(0,20);
+    }
+    session.sets[setNum] = { w: weight, r: reps };
+    localStorage.setItem(STORE_KEY, JSON.stringify(s));
+  }
+
+  function getLastSession(exId){
+    const s = store();
+    const history = s[exKey(exId)] || [];
+    return history[0] || null;
+  }
+
+  function getLastSetData(exId, setNum){
+    const session = getLastSession(exId);
+    if(!session) return null;
+    return session.sets[setNum] || null;
+  }
+
+  function renderHistBadge(exId, el){
+    const session = getLastSession(exId);
+    if(!session || !el) return;
+    const sets = Object.values(session.sets);
+    if(!sets.length) return;
+    const weights = sets.map(s=>s.w).filter(Boolean);
+    const maxW = weights.length ? Math.max(...weights.map(w=>parseFloat(w)||0)) : null;
+    el.textContent = maxW ? 'Last: ' + maxW + ' lb · ' + session.d : session.d;
+  }
+
+  // Parse set count from sets string e.g. "5x5" → 5, "12,10,8,8" → 4, "4x12" → 4
+  function parseSetCount(setsStr){
+    if(!setsStr) return 3;
+    const xMatch = setsStr.match(/^(\d+)\s*[x×]/i);
+    if(xMatch) return parseInt(xMatch[1]);
+    const commas = setsStr.split(',');
+    if(commas.length > 1) return commas.length;
+    const numMatch = setsStr.match(/^(\d+)/);
+    return numMatch ? Math.min(parseInt(numMatch[1]), 8) : 3;
+  }
+
+  // Parse prescribed reps for each set
+  function parseReps(setsStr, setIndex){
+    if(!setsStr) return '';
+    // pyramid: "12,10,8,8"
+    const commas = setsStr.split(',');
+    if(commas.length > 1) return commas[setIndex] ? commas[setIndex].trim() : commas[commas.length-1].trim();
+    // "4x12" or "5x5"
+    const xMatch = setsStr.match(/[x×](\d+)/i);
+    if(xMatch) return xMatch[1];
+    return '';
+  }
+
+  function buildSetRows(exId, setsStr, restSecs){
+    const count = parseSetCount(setsStr);
+    let html = '<div class="setlog-header">' +
+      '<div class="setlog-col-label">SET</div>' +
+      '<div class="setlog-col-label">WEIGHT</div>' +
+      '<div class="setlog-col-label">REPS</div>' +
+      '<div class="setlog-col-label"></div>' +
+      '</div>';
+    for(let i=0;i<count;i++){
+      const setNum = i+1;
+      const lastData = getLastSetData(exId, setNum);
+      const prescribedReps = parseReps(setsStr, i);
+      const wPlaceholder = lastData && lastData.w ? lastData.w + ' lb' : 'lb';
+      const rPlaceholder = prescribedReps || (lastData && lastData.r ? lastData.r : 'reps');
+      html += '<div class="set-row" id="set-row-'+exId+'-'+setNum+'">' +
+        '<div class="set-num">'+setNum+'</div>' +
+        '<input class="set-input" id="sl-w-'+exId+'-'+setNum+'" ' +
+        'type="number" inputmode="decimal" placeholder="'+wPlaceholder+'" ' +
+        'onclick="event.stopPropagation()" onfocus="this.select()">' +
+        '<input class="set-input" id="sl-r-'+exId+'-'+setNum+'" ' +
+        'type="number" inputmode="numeric" placeholder="'+rPlaceholder+'" ' +
+        'onclick="event.stopPropagation()" onfocus="this.select()">' +
+        '<div class="set-check" id="sl-ck-'+exId+'-'+setNum+'" ' +
+        'onclick="event.stopPropagation();window._SL.checkSet(''+exId+'','+setNum+','+restSecs+')" ' +
+        'title="Mark set done">☐</div>' +
+        '</div>';
+    }
+    return html;
+  }
+
+  function checkSet(exId, setNum, restSecs){
+    const wEl = document.getElementById('sl-w-'+exId+'-'+setNum);
+    const rEl = document.getElementById('sl-r-'+exId+'-'+setNum);
+    const ckEl = document.getElementById('sl-ck-'+exId+'-'+setNum);
+    const rowEl = document.getElementById('set-row-'+exId+'-'+setNum);
+    if(!ckEl) return;
+
+    const isDone = ckEl.classList.contains('done');
+    if(isDone){
+      ckEl.classList.remove('done');
+      ckEl.textContent = '☐';
+      if(rowEl) rowEl.classList.remove('done-row');
+      return;
+    }
+
+    // Save the log
+    const weight = wEl ? wEl.value.trim() : '';
+    const reps   = rEl ? rEl.value.trim() : '';
+    saveSet(exId, setNum, weight, reps);
+
+    // Mark done
+    ckEl.classList.add('done');
+    ckEl.textContent = '✓';
+    if(rowEl) rowEl.classList.add('done-row');
+
+    // Auto-start rest timer if TMR exists
+    if(restSecs > 0 && typeof TMR !== 'undefined'){
+      // Find or create a dummy timer element
+      let timerEl = document.getElementById('sl-timer-'+exId);
+      if(!timerEl){
+        timerEl = document.createElement('span');
+        timerEl.id = 'sl-timer-'+exId;
+        timerEl.className = 'rest-timer idle';
+        timerEl.dataset.rest = restSecs+'s';
+        timerEl.dataset.label = restSecs+'s';
+        timerEl.innerHTML = '<span class="rest-timer-icon">⏱️</span><span class="rest-timer-label">'+restSecs+'s</span>';
+        document.body.appendChild(timerEl);
+      }
+      if(typeof buildTimerFloat === 'function') buildTimerFloat();
+      TMR.start(timerEl, restSecs, 'Rest after set '+setNum);
+    }
+
+    // Update hist badge
+    const histEl = document.getElementById('sl-hist-'+exId);
+    renderHistBadge(exId, histEl);
+  }
+
+  function initLogger(){
+    // Single exercise cards
+    document.querySelectorAll('.ex-card[data-id]').forEach(card => {
+      if(card.querySelector('.setlog-wrap')) return;
+      const exId   = card.dataset.id;
+      const nameEl = card.querySelector('.ex-name');
+      const setsEl = card.querySelector('.ex-sets');
+      const setsStr = setsEl ? setsEl.textContent.trim() : '3x10';
+      // Get rest from existing timer or default
+      let restSecs = 60;
+      const timerEl = card.querySelector('.rest-timer');
+      if(timerEl && timerEl.dataset.rest){
+        restSecs = TMR ? TMR.parseSeconds(timerEl.dataset.rest) : 60;
+      }
+
+      const content = card.querySelector('.ex-content');
+      if(!content) return;
+
+      // Remove old freeform notes
+      const oldToggle = content.querySelector('.ex-notes-toggle');
+      const oldWrap   = content.querySelector('.ex-notes-wrap');
+      if(oldToggle) oldToggle.remove();
+      if(oldWrap)   oldWrap.remove();
+      // Remove old simple log row from Wave 3 pilot
+      const oldLog = content.querySelector('.log-row');
+      if(oldLog) oldLog.remove();
+
+      // Build toggle button
+      const histId = 'sl-hist-'+exId;
+      const toggleDiv = document.createElement('div');
+      toggleDiv.className = 'setlog-toggle';
+      toggleDiv.id = 'sl-tgl-'+exId;
+      toggleDiv.innerHTML = '▾ <span class="sl-chevron">LOG SETS</span>' +
+        '<span class="setlog-hist" id="'+histId+'"></span>';
+      toggleDiv.addEventListener('click', function(e){
+        e.stopPropagation();
+        const wrap = document.getElementById('sl-wrap-'+exId);
+        if(!wrap) return;
+        const isOpen = wrap.classList.toggle('open');
+        toggleDiv.querySelector('.sl-chevron').textContent = isOpen ? '▴ HIDE' : '▾ LOG SETS';
+      });
+
+      // Build set rows container
+      const wrapDiv = document.createElement('div');
+      wrapDiv.className = 'setlog-wrap';
+      wrapDiv.id = 'sl-wrap-'+exId;
+      wrapDiv.innerHTML = buildSetRows(exId, setsStr, restSecs);
+
+      content.appendChild(toggleDiv);
+      content.appendChild(wrapDiv);
+      renderHistBadge(exId, document.getElementById(histId));
+    });
+
+    // Superset rows
+    document.querySelectorAll('.ss-ex[data-id]').forEach(row => {
+      if(row.querySelector('.setlog-wrap')) return;
+      const exId   = row.dataset.id;
+      const setsEl = row.querySelector('.ex-sets');
+      const setsStr = setsEl ? setsEl.textContent.trim() : '4x12';
+      const content = row.querySelector('.ss-content');
+      if(!content) return;
+
+      // Remove old notes
+      const oldToggle = content.querySelector('.ex-notes-toggle');
+      const oldWrap   = content.querySelector('.ex-notes-wrap');
+      if(oldToggle) oldToggle.remove();
+      if(oldWrap)   oldWrap.remove();
+      const oldLog = content.querySelector('.log-row');
+      if(oldLog) oldLog.remove();
+
+      const histId = 'sl-hist-'+exId;
+      const toggleDiv = document.createElement('div');
+      toggleDiv.className = 'setlog-toggle';
+      toggleDiv.id = 'sl-tgl-'+exId;
+      toggleDiv.innerHTML = '▾ <span class="sl-chevron">LOG SETS</span>' +
+        '<span class="setlog-hist" id="'+histId+'"></span>';
+      toggleDiv.addEventListener('click', function(e){
+        e.stopPropagation();
+        const wrap = document.getElementById('sl-wrap-'+exId);
+        if(!wrap) return;
+        const isOpen = wrap.classList.toggle('open');
+        toggleDiv.querySelector('.sl-chevron').textContent = isOpen ? '▴ HIDE' : '▾ LOG SETS';
+      });
+
+      const wrapDiv = document.createElement('div');
+      wrapDiv.className = 'setlog-wrap';
+      wrapDiv.id = 'sl-wrap-'+exId;
+      wrapDiv.innerHTML = buildSetRows(exId, setsStr, 90);
+
+      content.appendChild(toggleDiv);
+      content.appendChild(wrapDiv);
+      renderHistBadge(exId, document.getElementById(histId));
+    });
+  }
+
+  // Expose
+  window._SL = { checkSet, initLogger };
+
+  // Hook into render() for JS-rendered pages
+  if(typeof render === 'function'){
+    const _orig = render;
+    window.render = function(){
+      _orig.apply(this, arguments);
+      setTimeout(initLogger, 200);
+    };
+  }
+
+  // DOMContentLoaded for static pages
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(initLogger, 300); });
+  } else {
+    setTimeout(initLogger, 300);
+  }
+})();
+</script>
+
 </body></html>
