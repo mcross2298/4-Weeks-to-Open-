@@ -216,6 +216,7 @@ body{background:#050d1a;min-height:100vh;padding-bottom:40px;}
 
 
 
+
 /* ── WAVE3-SETLOG ── */
 .setlog-wrap{margin-top:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:2px;display:none;}
 .setlog-wrap.open{display:block;}
@@ -843,7 +844,7 @@ document.addEventListener('DOMContentLoaded', function() {
     tgl.className='setlog-toggle';tgl.id='slt-'+exId;
     tgl.innerHTML='<span id="sla-'+exId+'">\u25be</span>&nbsp;<span id="sll-'+exId+'">LOG SETS</span><span class="setlog-hist" id="slh-'+exId+'"></span>';
     tgl.addEventListener('click',function(e){
-      e.stopPropagation();
+      e.stopPropagation();e.preventDefault();
       var wrap=document.getElementById('slwrap-'+exId);if(!wrap)return;
       var open=wrap.classList.toggle('open');
       document.getElementById('sll-'+exId).textContent=open?'HIDE':'LOG SETS';
@@ -852,6 +853,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var wrap=document.createElement('div');
     wrap.className='setlog-wrap';wrap.id='slwrap-'+exId;
     wrap.innerHTML=buildRows(exId,setsStr,restSecs);
+    wrap.addEventListener('click',function(e){e.stopPropagation();});
     content.appendChild(tgl);
     content.appendChild(wrap);
     renderHist(exId);
