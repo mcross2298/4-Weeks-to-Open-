@@ -59,7 +59,8 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 .rv-prog{font-size:11px;color:#64748b;font-weight:600;}
 .rv-arrow{font-size:14px;color:#475569;}
 /* ── OFFLINE INDICATOR ── */
-
+.offline-bar{display:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:8px 14px;margin-bottom:20px;font-size:12px;font-weight:700;color:#f87171;text-align:center;letter-spacing:0.04em;}
+.offline-bar.show{display:block;}
 /* ── SW UPDATE BANNER ── */
 .sw-update{display:none;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);border-radius:10px;padding:10px 14px;margin-bottom:20px;font-size:12px;font-weight:700;color:#34d399;text-align:center;cursor:pointer;letter-spacing:0.04em;}
 .sw-update.show{display:block;}
@@ -80,9 +81,50 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 .streak-num{font-size:18px;font-weight:900;color:#fbbf24;line-height:1;}
 .streak-label{font-size:11px;color:#78716c;font-weight:600;margin-top:2px;}
 .streak-zero{display:none;}
-
+/* ── SYNC BUTTON ── */
 .sync-btn{display:block;width:100%;margin-bottom:16px;padding:12px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:12px;color:#34d399;font-size:13px;font-weight:800;letter-spacing:0.06em;text-align:center;cursor:pointer;font-family:inherit;}
 .sync-btn:active{opacity:0.7;}
+
+/* ─────────────────────────────────────────
+   WAVE 1 — Block 1
+───────────────────────────────────────── */
+
+/* 1. Per-program color top borders */
+.cat-card.stndr { border-top: 3px solid #1D9E75; }
+.cat-card.pump   { border-top: 3px solid #D85A30; }
+.cat-card.gainz  { border-top: 3px solid #378ADD; }
+.cat-card.faint  { border-top: 3px solid #E24B4A; }
+.cat-card.psu    { border-top: 3px solid #639922; }
+.cat-card.pmc    { border-top: 3px solid #7F77DD; }
+.cat-card.mc     { border-top: 3px solid #d4af37; }
+
+/* 2. Bigger program card text */
+.cat-name {
+    font-size: 26px !important;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+}
+.cat-meta {
+    font-size: 13px !important;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.5;
+}
+.cat-card {
+    padding: 24px 22px !important;
+    min-height: 108px;
+}
+
+/* 3. Gold glow on tap */
+.cat-card {
+    transition: transform 0.15s, box-shadow 0.1s ease !important;
+    -webkit-tap-highlight-color: transparent;
+}
+.cat-card:active {
+    transform: scale(0.98) !important;
+    box-shadow: 0 0 0 2px #d4af37, 0 0 18px rgba(212,175,55,0.3) !important;
+}
+
 </style>
 </head>
 <body>
@@ -94,6 +136,9 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
   </div>
 
 
+  <div class="sw-update" id="swUpdate" onclick="doSwUpdate()">🔄 Update available — tap to reload</div>
+  <button class="sync-btn" onclick="forceSync()">🔄 SYNC UPDATES</button>
+  <div class="offline-bar" id="offlineBar">📵 You are offline — showing cached content</div>
 
   <div class="streak-bar" id="streakBar" style="display:none;">
     <div class="streak-fire">🔥</div>
@@ -195,6 +240,21 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 </div>
 
 <script>
+// ── FORCE SW REFRESH ON EVERY LOAD ──
+// Unregisters any existing service worker and re-registers fresh.
+// This fixes devices stuck on old cached versions from previous installs.
+(async function() {
+  if ("serviceWorker" in navigator) {
+    try {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const reg of regs) { await reg.unregister(); }
+      await caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+    } catch(e) {}
+    navigator.serviceWorker.register("./sw.js", {updateViaCache: "none"})
+      .catch(() => {});
+  }
+})();
+
 // ── RECENTLY VISITED ──
 const RV_KEY = 'mc_rv';
 const COLORS = {
@@ -244,12 +304,60 @@ document.querySelectorAll('.cat-card').forEach(a => {
 });
 renderRV();
 
-// ── PERMANENT SW REMOVAL — unregisters any existing worker ──
+// ── OFFLINE INDICATOR ──
+function updateOnlineStatus() {
+  const bar = document.getElementById('offlineBar');
+  if (bar) bar.classList.toggle('show', !navigator.onLine);
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// ── SW UPDATE BANNER ──
+let swWaiting = null;
+function doSwUpdate() {
+  if (swWaiting) { swWaiting.postMessage('skipWaiting'); }
+  else { window.location.reload(); }
+}
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(reg => reg.unregister());
+  navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+  navigator.serviceWorker.ready.then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      nw.addEventListener('statechange', () => {
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+          swWaiting = nw;
+          const banner = document.getElementById('swUpdate');
+          if (banner) banner.classList.add('show');
+        }
+      });
+    });
   });
-  caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+}
+
+// ── FORCE SYNC FUNCTION ──
+async function forceSync() {
+  if ('serviceWorker' in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    for (const reg of regs) { await reg.unregister(); }
+  }
+  // Clear all caches
+  const keys = await caches.keys();
+  for (const key of keys) { await caches.delete(key); }
+  window.location.reload(true);
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js', {updateViaCache: 'none'})
+      .then(reg => {
+        console.log('SW registered:', reg.scope);
+        // Always check for updates on load
+        reg.update();
+      })
+      .catch(err => console.log('SW error:', err));
+  });
+  navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
 }
 </script>
 <script>
@@ -332,5 +440,4 @@ renderStreak();
 </script>
 </body>
 </html>
-
 
