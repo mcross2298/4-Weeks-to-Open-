@@ -232,7 +232,8 @@ body{background:#0d0618;min-height:100vh;padding-bottom:48px;}
 
 
 
-/* ── WAVE3-SETLOG ── */
+
+/* — WAVE3-SETLOG — */
 .setlog-wrap{margin-top:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:2px;display:none;}
 .setlog-wrap.open{display:block;}
 .setlog-toggle{display:flex;align-items:center;gap:5px;margin-top:8px;cursor:pointer;user-select:none;font-size:10px;font-weight:900;color:#475569;letter-spacing:0.08em;text-transform:uppercase;-webkit-tap-highlight-color:transparent;}
@@ -660,9 +661,8 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 </script>
 
-
 <script>
-/* ── WAVE3-SETLOG MODULE ── */
+/* — WAVE3-SETLOG MODULE — */
 (function(){
   var SK='mc_setlog_v1';
   var PID=location.pathname.split('/').pop().replace('.html','');
@@ -722,7 +722,6 @@ document.addEventListener('DOMContentLoaded', function() {
   function grs(el){var t=el.querySelector('.rest-timer');if(t&&t.dataset&&t.dataset.rest&&typeof TMR!=='undefined')return TMR.parseSeconds(t.dataset.rest)||60;return 60;}
   function attach(el,exId,ss,rs){
     if(!el||el.querySelector('.setlog-toggle'))return;
-    // remove old notes
     ['ex-notes-toggle','ex-notes-wrap','.log-row'].forEach(function(s){var o=el.querySelector(s);while(o){o.remove();o=el.querySelector(s);}});
     var tgl=document.createElement('div');
     tgl.className='setlog-toggle';
@@ -741,24 +740,20 @@ document.addEventListener('DOMContentLoaded', function() {
     el.appendChild(tgl);el.appendChild(wp);hist(exId);
   }
   function run(){
-    // ex-card (MC, PMC, Pump)
     document.querySelectorAll('.ex-card[data-id]').forEach(function(c){
-      var content=c.querySelector('.ex-content');if(!content)return;
+      var ct=c.querySelector('.ex-content');if(!ct)return;
       var se=c.querySelector('.ex-sets');
-      attach(content,c.dataset.id,se?se.textContent.trim():'3x10',grs(c));
+      attach(ct,c.dataset.id,se?se.textContent.trim():'3x10',grs(c));
     });
-    // ss-ex (supersets)
     document.querySelectorAll('.ss-ex[data-id]').forEach(function(c){
-      var content=c.querySelector('.ss-content');if(!content)return;
+      var ct=c.querySelector('.ss-content');if(!ct)return;
       var se=c.querySelector('.ex-sets');
-      attach(content,c.dataset.id,se?se.textContent.trim():'4x12',90);
+      attach(ct,c.dataset.id,se?se.textContent.trim():'4x12',90);
     });
-    // ex-item (Gainz, STNDR, Faint)
     document.querySelectorAll('.ex-item[data-id]').forEach(function(c){
       var se=c.querySelector('.ex-sets');
       attach(c,c.dataset.id,se?se.textContent.trim():'3x10',grs(c));
     });
-    // lift-card (PSU Football)
     document.querySelectorAll('.lift-card').forEach(function(c){
       var nm=c.querySelector('.lift-name');if(!nm)return;
       var exId='psu-'+nm.textContent.trim().replace(/\s+/g,'-').toLowerCase().slice(0,20);
