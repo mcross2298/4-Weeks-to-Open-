@@ -199,6 +199,20 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 </div>
 
 <script>
+// ── FORCE SW REFRESH ON EVERY LOAD ──
+// Unregisters any existing service worker and re-registers fresh.
+// This fixes devices stuck on old cached versions from previous installs.
+(async function() {
+  if ("serviceWorker" in navigator) {
+    try {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const reg of regs) { await reg.unregister(); }
+      await caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+    } catch(e) {}
+    navigator.serviceWorker.register("./sw.js", {updateViaCache: "none"})
+      .catch(() => {});
+  }
+})();
 
 // ── RECENTLY VISITED ──
 const RV_KEY = 'mc_rv';
@@ -385,3 +399,4 @@ renderStreak();
 </script>
 </body>
 </html>
+
