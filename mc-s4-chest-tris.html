@@ -250,66 +250,24 @@ body{background:#1a1000;min-height:100vh;padding-bottom:48px;}
 }
 
 
+
+
 /* ── WAVE3-SETLOG ── */
-.setlog-wrap{
-  margin-top:8px;
-  border-top:1px solid rgba(255,255,255,0.07);
-  padding-top:2px;
-  display:none;
-}
-.setlog-wrap.open{ display:block; }
-.setlog-toggle{
-  display:flex;align-items:center;gap:5px;
-  margin-top:6px;cursor:pointer;user-select:none;
-  font-size:10px;font-weight:900;
-  color:#475569;letter-spacing:0.08em;text-transform:uppercase;
-  -webkit-tap-highlight-color:transparent;
-}
-.setlog-hist{
-  font-size:10px;font-weight:700;
-  color:rgba(212,175,55,0.6);
-  margin-left:auto;white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis;max-width:150px;
-}
-.set-row{
-  display:grid;
-  grid-template-columns:24px 1fr 1fr 34px;
-  gap:5px;align-items:center;
-  padding:6px 2px;
-  border-bottom:1px solid rgba(255,255,255,0.04);
-}
-.set-row:last-child{ border-bottom:none; }
+.setlog-wrap{margin-top:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:2px;display:none;}
+.setlog-wrap.open{display:block;}
+.setlog-toggle{display:flex;align-items:center;gap:5px;margin-top:8px;cursor:pointer;user-select:none;font-size:10px;font-weight:900;color:#475569;letter-spacing:0.08em;text-transform:uppercase;-webkit-tap-highlight-color:transparent;}
+.setlog-hist{font-size:10px;font-weight:700;color:rgba(212,175,55,0.6);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
+.set-row{display:grid;grid-template-columns:24px 1fr 1fr 32px;gap:5px;align-items:center;padding:6px 2px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.set-row:last-child{border-bottom:none;}
 .set-num{font-size:11px;font-weight:900;color:#475569;text-align:center;}
-.set-input{
-  width:100%;padding:6px 4px;
-  background:rgba(255,255,255,0.05);
-  border:1px solid rgba(255,255,255,0.1);
-  border-radius:7px;color:#e2e8f0;
-  font-size:13px;font-weight:700;text-align:center;
-  font-family:inherit;outline:none;
-  -webkit-tap-highlight-color:transparent;
-}
+.set-input{width:100%;padding:6px 4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:#e2e8f0;font-size:13px;font-weight:700;text-align:center;font-family:inherit;outline:none;-webkit-tap-highlight-color:transparent;}
 .set-input:focus{border-color:rgba(212,175,55,0.45);background:rgba(212,175,55,0.06);}
 .set-input::placeholder{color:#2d3748;font-size:11px;}
-.set-check{
-  width:30px;height:30px;border-radius:7px;
-  border:1.5px solid rgba(255,255,255,0.15);
-  background:transparent;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:14px;
-  -webkit-tap-highlight-color:transparent;transition:all 0.15s;
-}
+.set-check{width:30px;height:30px;border-radius:7px;border:1.5px solid rgba(255,255,255,0.15);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;-webkit-tap-highlight-color:transparent;transition:all 0.15s;}
 .set-check.done{background:rgba(52,211,153,0.15);border-color:rgba(52,211,153,0.4);}
 .set-row.done-row .set-input{opacity:0.4;}
-.setlog-col-hdr{
-  display:grid;grid-template-columns:24px 1fr 1fr 34px;
-  gap:5px;padding:4px 2px 2px;
-}
-.setlog-col-label{
-  font-size:9px;font-weight:900;letter-spacing:0.1em;
-  text-transform:uppercase;color:#2d3748;text-align:center;
-}
-
+.setlog-hdr{display:grid;grid-template-columns:24px 1fr 1fr 32px;gap:5px;padding:3px 2px 1px;}
+.setlog-hl{font-size:9px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#2d3748;text-align:center;}
 </style></head><body>
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
 <div id="app"></div>
@@ -746,161 +704,143 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 </script>
 
-
 <script>
 /* ── WAVE3-SETLOG MODULE ── */
 (function(){
-  const STORE_KEY = 'mc_setlog_v1';
-  const PAGE_ID   = location.pathname.split('/').pop().replace('.html','');
-
-  function store(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)||'{}'); }catch(e){ return {}; } }
-  function exKey(id){ return PAGE_ID+'|'+id; }
-
-  function saveSet(exId,setNum,weight,reps){
-    const s=store(), k=exKey(exId);
-    if(!s[k]) s[k]=[];
-    const today=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
-    let sess=s[k][0];
-    if(!sess||sess.d!==today){ sess={d:today,sets:{}}; s[k].unshift(sess); s[k]=s[k].slice(0,20); }
-    sess.sets[setNum]={w:weight,r:reps};
-    localStorage.setItem(STORE_KEY,JSON.stringify(s));
+  var SKEY='mc_setlog_v1';
+  var PID=location.pathname.split('/').pop().replace('.html','');
+  function store(){try{return JSON.parse(localStorage.getItem(SKEY)||'{}')}catch(e){return{}}}
+  function ek(id){return PID+'|'+id}
+  function saveSet(exId,sn,w,r){
+    var s=store(),k=ek(exId);if(!s[k])s[k]=[];
+    var d=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    var sess=s[k][0];
+    if(!sess||sess.d!==d){sess={d:d,sets:{}};s[k].unshift(sess);s[k]=s[k].slice(0,20);}
+    sess.sets[sn]={w:w,r:r};localStorage.setItem(SKEY,JSON.stringify(s));
   }
-
-  function getLastSession(exId){ const s=store(); return (s[exKey(exId)]||[])[0]||null; }
-  function getLastSet(exId,setNum){ const sess=getLastSession(exId); return sess?sess.sets[setNum]||null:null; }
-
+  function lastSess(exId){var s=store();return(s[ek(exId)]||[])[0]||null;}
+  function lastSet(exId,sn){var sess=lastSess(exId);return sess?sess.sets[sn]||null:null;}
   function renderHist(exId){
-    const el=document.getElementById('sl-hist-'+exId);
-    if(!el) return;
-    const sess=getLastSession(exId);
-    if(!sess){ el.textContent=''; return; }
-    const ws=Object.values(sess.sets).map(s=>parseFloat(s.w)||0).filter(Boolean);
-    el.textContent=ws.length?'Last: '+Math.max(...ws)+' lb \u00b7 '+sess.d:sess.d;
+    var el=document.getElementById('slh-'+exId);if(!el)return;
+    var sess=lastSess(exId);if(!sess){el.textContent='';return;}
+    var ws=Object.values(sess.sets).map(function(s){return parseFloat(s.w)||0;}).filter(Boolean);
+    el.textContent=ws.length?'Last: '+Math.max.apply(null,ws)+' lb \u00b7 '+sess.d:sess.d;
   }
-
-  function parseSetCount(s){
-    if(!s) return 3;
-    const x=s.match(/^(\d+)\s*[x\u00d7]/i); if(x) return Math.min(parseInt(x[1]),10);
-    const c=s.split(','); if(c.length>1) return c.length;
-    const n=s.match(/^(\d+)/); return n?Math.min(parseInt(n[1]),8):3;
+  function pCount(s){
+    if(!s)return 3;
+    var x=s.match(/^(\d+)\s*[x\u00d7]/i);if(x)return Math.min(parseInt(x[1]),10);
+    var c=s.split(',');if(c.length>1)return c.length;
+    var n=s.match(/^(\d+)/);return n?Math.min(parseInt(n[1]),8):3;
   }
-
-  function parseReps(s,i){
-    if(!s) return '';
-    const c=s.split(','); if(c.length>1) return (c[i]||c[c.length-1]).trim();
-    const x=s.match(/[x\u00d7](\d+)/i); if(x) return x[1];
-    return '';
+  function pReps(s,i){
+    if(!s)return'';
+    var c=s.split(',');if(c.length>1)return(c[i]||c[c.length-1]).trim();
+    var x=s.match(/[x\u00d7](\d+)/i);if(x)return x[1];return'';
   }
-
   function buildRows(exId,setsStr,restSecs){
-    const n=parseSetCount(setsStr);
-    let h='<div class="setlog-col-hdr"><div class="setlog-col-label">SET</div><div class="setlog-col-label">WEIGHT</div><div class="setlog-col-label">REPS</div><div class="setlog-col-label"></div></div>';
-    for(let i=0;i<n;i++){
-      const sn=i+1;
-      const last=getLastSet(exId,sn);
-      const pr=parseReps(setsStr,i);
-      const wp=last&&last.w?last.w+' lb':'lb';
-      const rp=pr||(last&&last.r?last.r:'reps');
+    var n=pCount(setsStr),h='';
+    h+='<div class="setlog-hdr"><div class="setlog-hl">SET</div><div class="setlog-hl">WEIGHT</div><div class="setlog-hl">REPS</div><div class="setlog-hl"></div></div>';
+    for(var i=0;i<n;i++){
+      var sn=i+1,last=lastSet(exId,sn),pr=pReps(setsStr,i);
+      var wp=last&&last.w?last.w+' lb':'lb';
+      var rp=pr||(last&&last.r?last.r:'reps');
       h+='<div class="set-row" id="sr-'+exId+'-'+sn+'">'+
         '<div class="set-num">'+sn+'</div>'+
-        '<input class="set-input" id="sl-w-'+exId+'-'+sn+'" type="number" inputmode="decimal" placeholder="'+wp+'" onclick="event.stopPropagation()" onfocus="this.select()">'+
-        '<input class="set-input" id="sl-r-'+exId+'-'+sn+'" type="number" inputmode="numeric" placeholder="'+rp+'" onclick="event.stopPropagation()" onfocus="this.select()">'+
-        '<div class="set-check" id="sl-ck-'+exId+'-'+sn+'" onclick="event.stopPropagation();_SL.ck(\''+exId+'\','+sn+','+restSecs+')">&#9744;</div>'+
+        '<input class="set-input" id="slw-'+exId+'-'+sn+'" type="number" inputmode="decimal" placeholder="'+wp+'" onclick="event.stopPropagation()" onfocus="this.select()">'+
+        '<input class="set-input" id="slr-'+exId+'-'+sn+'" type="number" inputmode="numeric" placeholder="'+rp+'" onclick="event.stopPropagation()" onfocus="this.select()">'+
+        '<div class="set-check" id="slc-'+exId+'-'+sn+'" onclick="event.stopPropagation();_SL(\''+exId+'\','+sn+','+restSecs+')" title="Done">\u2610</div>'+
         '</div>';
     }
     return h;
   }
-
-  function ck(exId,setNum,restSecs){
-    const wEl=document.getElementById('sl-w-'+exId+'-'+setNum);
-    const rEl=document.getElementById('sl-r-'+exId+'-'+setNum);
-    const ckEl=document.getElementById('sl-ck-'+exId+'-'+setNum);
-    const rowEl=document.getElementById('sr-'+exId+'-'+setNum);
-    if(!ckEl) return;
-    if(ckEl.classList.contains('done')){
-      ckEl.classList.remove('done'); ckEl.innerHTML='&#9744;';
-      if(rowEl) rowEl.classList.remove('done-row'); return;
+  function checkSet(exId,sn,restSecs){
+    var wEl=document.getElementById('slw-'+exId+'-'+sn);
+    var rEl=document.getElementById('slr-'+exId+'-'+sn);
+    var ck=document.getElementById('slc-'+exId+'-'+sn);
+    var row=document.getElementById('sr-'+exId+'-'+sn);
+    if(!ck)return;
+    if(ck.classList.contains('done')){
+      ck.classList.remove('done');ck.innerHTML='\u2610';
+      if(row)row.classList.remove('done-row');return;
     }
-    saveSet(exId,setNum,wEl?wEl.value.trim():'',rEl?rEl.value.trim():'');
-    ckEl.classList.add('done'); ckEl.textContent='\u2713';
-    if(rowEl) rowEl.classList.add('done-row');
-    // Fire rest timer if available
+    saveSet(exId,sn,wEl?wEl.value.trim():'',rEl?rEl.value.trim():'');
+    ck.classList.add('done');ck.textContent='\u2713';
+    if(row)row.classList.add('done-row');
     if(restSecs>0&&typeof TMR!=='undefined'){
-      const existing=document.querySelector('.rest-timer.idle, .rest-timer[data-rest]');
-      if(existing) TMR.start(existing,restSecs,'Rest');
+      var t=document.querySelector('.rest-timer');
+      if(t)TMR.start(t,restSecs,'Rest');
     }
     renderHist(exId);
   }
-
+  window._SL=checkSet;
   function getRestSecs(card){
-    const t=card.querySelector('.rest-timer');
-    if(t&&t.dataset&&t.dataset.rest&&typeof TMR!=='undefined'){
-      return TMR.parseSeconds(t.dataset.rest)||60;
-    }
+    var t=card.querySelector('.rest-timer');
+    if(t&&t.dataset&&t.dataset.rest&&typeof TMR!=='undefined')return TMR.parseSeconds(t.dataset.rest)||60;
     return 60;
   }
-
-  function addLogger(el, exId, setsStr, restSecs, isSS){
-    if(el.querySelector('.setlog-wrap')) return;
-    // Clean up old loggers
-    ['ex-notes-toggle','ex-notes-wrap','.log-row'].forEach(sel=>{
-      const old=el.querySelector(sel); if(old) old.remove();
-    });
-    const histId='sl-hist-'+exId;
-    const tgl=document.createElement('div');
-    tgl.className='setlog-toggle';
-    tgl.id='sl-tgl-'+exId;
-    tgl.innerHTML='<span class="sl-arr">\u25be</span>\u00a0<span class="sl-lbl">LOG SETS</span><span class="setlog-hist" id="'+histId+'"></span>';
+  function attachLogger(content,exId,setsStr,restSecs){
+    if(!content||content.querySelector('.setlog-toggle'))return;
+    // Remove any old notes UI
+    var old=content.querySelector('.ex-notes-toggle,.ex-notes-wrap,.log-row');
+    while(old){old.remove();old=content.querySelector('.ex-notes-toggle,.ex-notes-wrap,.log-row');}
+    // Toggle button
+    var tgl=document.createElement('div');
+    tgl.className='setlog-toggle';tgl.id='slt-'+exId;
+    tgl.innerHTML='<span id="sla-'+exId+'">\u25be</span>&nbsp;<span id="sll-'+exId+'">LOG SETS</span><span class="setlog-hist" id="slh-'+exId+'"></span>';
     tgl.addEventListener('click',function(e){
       e.stopPropagation();
-      const wrap=document.getElementById('sl-wrap-'+exId);
-      if(!wrap) return;
-      const open=wrap.classList.toggle('open');
-      tgl.querySelector('.sl-lbl').textContent=open?'HIDE':'LOG SETS';
-      tgl.querySelector('.sl-arr').textContent=open?'\u25b4':'\u25be';
+      var wrap=document.getElementById('slw-'+exId+'-wrap');if(!wrap)return;
+      var open=wrap.classList.toggle('open');
+      document.getElementById('sll-'+exId).textContent=open?'HIDE':'LOG SETS';
+      document.getElementById('sla-'+exId).textContent=open?'\u25b4':'\u25be';
     });
-    const wrap=document.createElement('div');
-    wrap.className='setlog-wrap'; wrap.id='sl-wrap-'+exId;
+    // Rows container
+    var wrap=document.createElement('div');
+    wrap.className='setlog-wrap';wrap.id='slw-'+exId+'-wrap';
     wrap.innerHTML=buildRows(exId,setsStr,restSecs);
-    el.appendChild(tgl);
-    el.appendChild(wrap);
+    content.appendChild(tgl);
+    content.appendChild(wrap);
     renderHist(exId);
   }
-
   function initLogger(){
     // Single exercise cards
-    document.querySelectorAll('.ex-card[data-id]').forEach(card=>{
-      const exId=card.dataset.id;
-      const content=card.querySelector('.ex-content');
-      if(!content) return;
-      const setsStr=(card.querySelector('.ex-sets')||{}).textContent||'3x10';
-      const restSecs=getRestSecs(card);
-      addLogger(content,exId,setsStr.trim(),restSecs,false);
+    document.querySelectorAll('.ex-card[data-id]').forEach(function(card){
+      var exId=card.dataset.id;
+      var content=card.querySelector('.ex-content');if(!content)return;
+      var setsEl=card.querySelector('.ex-sets');
+      var setsStr=setsEl?setsEl.textContent.trim():'3x10';
+      attachLogger(content,exId,setsStr,getRestSecs(card));
     });
     // Superset exercise rows
-    document.querySelectorAll('.ss-ex[data-id]').forEach(row=>{
-      const exId=row.dataset.id;
-      const content=row.querySelector('.ss-content');
-      if(!content) return;
-      const setsStr=(row.querySelector('.ex-sets')||{}).textContent||'4x12';
-      addLogger(content,exId,setsStr.trim(),90,true);
+    document.querySelectorAll('.ss-ex[data-id]').forEach(function(row){
+      var exId=row.dataset.id;
+      var content=row.querySelector('.ss-content');if(!content)return;
+      var setsEl=row.querySelector('.ex-sets');
+      var setsStr=setsEl?setsEl.textContent.trim():'4x12';
+      attachLogger(content,exId,setsStr,90);
     });
   }
-
-  window._SL={ck,initLogger};
-
-  // Hook into existing render()
-  const _origRender=window.render;
-  if(typeof _origRender==='function'){
-    window.render=function(){
-      _origRender.apply(this,arguments);
-      setTimeout(initLogger,250);
-    };
+  // Use MutationObserver to detect when render() populates #app
+  // This avoids ALL render() wrapping issues
+  function watchForCards(){
+    var app=document.getElementById('app');
+    if(!app){setTimeout(watchForCards,100);return;}
+    // If already populated, run immediately
+    if(app.querySelector('.ex-card')){initLogger();return;}
+    var obs=new MutationObserver(function(muts,o){
+      if(app.querySelector('.ex-card')){
+        o.disconnect();
+        setTimeout(initLogger,50);
+      }
+    });
+    obs.observe(app,{childList:true,subtree:true});
+    // Fallback timeout
+    setTimeout(function(){initLogger();},600);
   }
   if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',function(){ setTimeout(initLogger,350); });
-  } else {
-    setTimeout(initLogger,350);
+    document.addEventListener('DOMContentLoaded',watchForCards);
+  }else{
+    watchForCards();
   }
 })();
 </script>
