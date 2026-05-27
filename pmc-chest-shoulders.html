@@ -245,6 +245,7 @@ body{background:#0d0618;min-height:100vh;padding-bottom:48px;}
 
 
 
+
 /* ── WAVE3-SETLOG ── */
 .setlog-wrap{margin-top:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:2px;display:none;}
 .setlog-wrap.open{display:block;}
@@ -747,62 +748,48 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   function attachLogger(content,exId,setsStr,restSecs){
     if(!content||content.querySelector('.setlog-toggle'))return;
-    // Remove any old notes UI
     var old=content.querySelector('.ex-notes-toggle,.ex-notes-wrap,.log-row');
     while(old){old.remove();old=content.querySelector('.ex-notes-toggle,.ex-notes-wrap,.log-row');}
-    // Toggle button
     var tgl=document.createElement('div');
     tgl.className='setlog-toggle';tgl.id='slt-'+exId;
     tgl.innerHTML='<span id="sla-'+exId+'">\u25be</span>&nbsp;<span id="sll-'+exId+'">LOG SETS</span><span class="setlog-hist" id="slh-'+exId+'"></span>';
     tgl.addEventListener('click',function(e){
       e.stopPropagation();
-      var wrap=document.getElementById('slw-'+exId+'-wrap');if(!wrap)return;
+      var wrap=document.getElementById('slwrap-'+exId);if(!wrap)return;
       var open=wrap.classList.toggle('open');
       document.getElementById('sll-'+exId).textContent=open?'HIDE':'LOG SETS';
       document.getElementById('sla-'+exId).textContent=open?'\u25b4':'\u25be';
     });
-    // Rows container
     var wrap=document.createElement('div');
-    wrap.className='setlog-wrap';wrap.id='slw-'+exId+'-wrap';
+    wrap.className='setlog-wrap';wrap.id='slwrap-'+exId;
     wrap.innerHTML=buildRows(exId,setsStr,restSecs);
     content.appendChild(tgl);
     content.appendChild(wrap);
     renderHist(exId);
   }
   function initLogger(){
-    // Single exercise cards
     document.querySelectorAll('.ex-card[data-id]').forEach(function(card){
       var exId=card.dataset.id;
       var content=card.querySelector('.ex-content');if(!content)return;
       var setsEl=card.querySelector('.ex-sets');
-      var setsStr=setsEl?setsEl.textContent.trim():'3x10';
-      attachLogger(content,exId,setsStr,getRestSecs(card));
+      attachLogger(content,exId,setsEl?setsEl.textContent.trim():'3x10',getRestSecs(card));
     });
-    // Superset exercise rows
     document.querySelectorAll('.ss-ex[data-id]').forEach(function(row){
       var exId=row.dataset.id;
       var content=row.querySelector('.ss-content');if(!content)return;
       var setsEl=row.querySelector('.ex-sets');
-      var setsStr=setsEl?setsEl.textContent.trim():'4x12';
-      attachLogger(content,exId,setsStr,90);
+      attachLogger(content,exId,setsEl?setsEl.textContent.trim():'4x12',90);
     });
   }
-  // Use MutationObserver to detect when render() populates #app
-  // This avoids ALL render() wrapping issues
   function watchForCards(){
     var app=document.getElementById('app');
     if(!app){setTimeout(watchForCards,100);return;}
-    // If already populated, run immediately
     if(app.querySelector('.ex-card')){initLogger();return;}
     var obs=new MutationObserver(function(muts,o){
-      if(app.querySelector('.ex-card')){
-        o.disconnect();
-        setTimeout(initLogger,50);
-      }
+      if(app.querySelector('.ex-card')){o.disconnect();setTimeout(initLogger,50);}
     });
     obs.observe(app,{childList:true,subtree:true});
-    // Fallback timeout
-    setTimeout(function(){initLogger();},600);
+    setTimeout(initLogger,600);
   }
   if(document.readyState==='loading'){
     document.addEventListener('DOMContentLoaded',watchForCards);
