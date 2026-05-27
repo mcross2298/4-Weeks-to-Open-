@@ -59,8 +59,7 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 .rv-prog{font-size:11px;color:#64748b;font-weight:600;}
 .rv-arrow{font-size:14px;color:#475569;}
 /* ── OFFLINE INDICATOR ── */
-.offline-bar{display:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:8px 14px;margin-bottom:20px;font-size:12px;font-weight:700;color:#f87171;text-align:center;letter-spacing:0.04em;}
-.offline-bar.show{display:block;}
+
 /* ── SW UPDATE BANNER ── */
 .sw-update{display:none;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);border-radius:10px;padding:10px 14px;margin-bottom:20px;font-size:12px;font-weight:700;color:#34d399;text-align:center;cursor:pointer;letter-spacing:0.04em;}
 .sw-update.show{display:block;}
@@ -81,7 +80,7 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 .streak-num{font-size:18px;font-weight:900;color:#fbbf24;line-height:1;}
 .streak-label{font-size:11px;color:#78716c;font-weight:600;margin-top:2px;}
 .streak-zero{display:none;}
-/* ── SYNC BUTTON ── */
+
 .sync-btn{display:block;width:100%;margin-bottom:16px;padding:12px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:12px;color:#34d399;font-size:13px;font-weight:800;letter-spacing:0.06em;text-align:center;cursor:pointer;font-family:inherit;}
 .sync-btn:active{opacity:0.7;}
 </style>
@@ -95,9 +94,6 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
   </div>
 
 
-  <div class="sw-update" id="swUpdate" onclick="doSwUpdate()">🔄 Update available — tap to reload</div>
-  <button class="sync-btn" onclick="forceSync()">🔄 SYNC UPDATES</button>
-  <div class="offline-bar" id="offlineBar">📵 You are offline — showing cached content</div>
 
   <div class="streak-bar" id="streakBar" style="display:none;">
     <div class="streak-fire">🔥</div>
@@ -199,20 +195,6 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 </div>
 
 <script>
-// ── ONE-TIME SW RESET (runs once per session, never loops) ──
-(async function() {
-  if ("serviceWorker" in navigator && !sessionStorage.getItem("sw_reset_v9")) {
-    sessionStorage.setItem("sw_reset_v9", "1");
-    try {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      for (const reg of regs) { await reg.unregister(); }
-      await caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
-    } catch(e) {}
-    window.location.reload();
-    return;
-  }
-})();
-
 // ── RECENTLY VISITED ──
 const RV_KEY = 'mc_rv';
 const COLORS = {
@@ -262,60 +244,12 @@ document.querySelectorAll('.cat-card').forEach(a => {
 });
 renderRV();
 
-// ── OFFLINE INDICATOR ──
-function updateOnlineStatus() {
-  const bar = document.getElementById('offlineBar');
-  if (bar) bar.classList.toggle('show', !navigator.onLine);
-}
-window.addEventListener('online', updateOnlineStatus);
-window.addEventListener('offline', updateOnlineStatus);
-updateOnlineStatus();
-
-// ── SW UPDATE BANNER ──
-let swWaiting = null;
-function doSwUpdate() {
-  if (swWaiting) { swWaiting.postMessage('skipWaiting'); }
-  else { window.location.reload(); }
-}
+// ── PERMANENT SW REMOVAL — unregisters any existing worker ──
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
-  navigator.serviceWorker.ready.then(reg => {
-    reg.addEventListener('updatefound', () => {
-      const nw = reg.installing;
-      nw.addEventListener('statechange', () => {
-        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-          swWaiting = nw;
-          const banner = document.getElementById('swUpdate');
-          if (banner) banner.classList.add('show');
-        }
-      });
-    });
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(reg => reg.unregister());
   });
-}
-
-// ── FORCE SYNC FUNCTION ──
-async function forceSync() {
-  if ('serviceWorker' in navigator) {
-    const regs = await navigator.serviceWorker.getRegistrations();
-    for (const reg of regs) { await reg.unregister(); }
-  }
-  // Clear all caches
-  const keys = await caches.keys();
-  for (const key of keys) { await caches.delete(key); }
-  window.location.reload(true);
-}
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js', {updateViaCache: 'none'})
-      .then(reg => {
-        console.log('SW registered:', reg.scope);
-        // Always check for updates on load
-        reg.update();
-      })
-      .catch(err => console.log('SW error:', err));
-  });
-  navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+  caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
 }
 </script>
 <script>
