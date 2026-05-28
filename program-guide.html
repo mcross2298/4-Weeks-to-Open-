@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Program Guide — MC Training</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
+body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
+.topbar{display:flex;align-items:center;gap:12px;padding:20px 18px 14px;position:sticky;top:0;z-index:20;background:linear-gradient(to bottom,#0a0a0a 80%,transparent);}
+.back{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:#111;border:1px solid rgba(255,255,255,0.1);color:#d4af37;font-size:16px;text-decoration:none;flex-shrink:0;}
+.topbar-title{font-size:18px;font-weight:900;letter-spacing:-0.02em;}
+.topbar-sub{font-size:12px;color:#64748b;margin-top:1px;}
+.hero{background:linear-gradient(135deg,#0a1628,#020b18);border-bottom:1px solid rgba(212,175,55,0.15);padding:20px 18px 24px;margin-bottom:24px;}
+.hero-eyebrow{font-size:10px;font-weight:900;letter-spacing:0.25em;color:#d4af37;text-transform:uppercase;margin-bottom:8px;}
+.hero-title{font-size:28px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;}
+.hero-sub{font-size:13px;color:#6b7280;line-height:1.5;}
+.section{padding:0 18px;margin-bottom:8px;}
+.section-label{font-size:10px;font-weight:900;letter-spacing:0.2em;color:#475569;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.08),transparent);}
+.prog-card{display:flex;align-items:center;gap:14px;padding:16px;border-radius:16px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.07);background:#111;text-decoration:none;color:#fff;transition:border-color 0.15s;position:relative;overflow:hidden;}
+.prog-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c,#d4af37);border-radius:0 2px 2px 0;}
+.prog-card:active{border-color:var(--c,#d4af37);box-shadow:0 0 0 1px var(--c,#d4af37);}
+.prog-icon{width:44px;height:44px;border-radius:12px;background:#161616;border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.prog-info{flex:1;min-width:0;}
+.prog-name{font-size:15px;font-weight:800;color:#fff;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.prog-meta{font-size:11px;color:#64748b;font-weight:600;}
+.prog-arrow{font-size:14px;color:#334155;flex-shrink:0;}
+.no-guide{display:flex;align-items:center;gap:14px;padding:16px;border-radius:16px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.04);background:#0d0d0d;opacity:0.5;position:relative;overflow:hidden;}
+.no-guide::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#334155;border-radius:0 2px 2px 0;}
+.no-guide-tag{font-size:10px;background:#1a1a1a;color:#475569;border-radius:6px;padding:2px 8px;font-weight:700;letter-spacing:0.06em;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="dashboard.html" class="back">←</a>
+  <div><div class="topbar-title">Program Guide</div><div class="topbar-sub">Instructions for every program</div></div>
+</div>
+<div class="hero">
+  <div class="hero-eyebrow">📋 Training Reference</div>
+  <h1 class="hero-title">Program Guide</h1>
+  <p class="hero-sub">Rules, set styles, rep ranges, and methodology for all 7 programs. Tap any program to open its full guide.</p>
+</div>
+<div class="section">
+  <div class="section-label">All Programs</div>
+  <a href="mc-instructions.html" class="prog-card" style="--c:#d4af37;">
+    <div class="prog-icon">⚡</div>
+    <div class="prog-info"><div class="prog-name">Mike Cross' Favorite Splits</div><div class="prog-meta">Set styles · rep ranges · cardio rules</div></div>
+    <div class="prog-arrow">→</div>
+  </a>
+  <a href="pmc-instructions.html" class="prog-card" style="--c:#7F77DD;">
+    <div class="prog-icon">⚡</div>
+    <div class="prog-info"><div class="prog-name">Project Muscle Confusion</div><div class="prog-meta">Superset rules · progression · methodology</div></div>
+    <div class="prog-arrow">→</div>
+  </a>
+  <a href="stndr-instructions.html" class="prog-card" style="--c:#1D9E75;">
+    <div class="prog-icon">🏋️</div>
+    <div class="prog-info"><div class="prog-name">STNDR</div><div class="prog-meta">Progressive overload · periodization · CBUM method</div></div>
+    <div class="prog-arrow">→</div>
+  </a>
+  <a href="pump-instructions.html" class="prog-card" style="--c:#D85A30;">
+    <div class="prog-icon">⚡</div>
+    <div class="prog-info"><div class="prog-name">Daily Pump</div><div class="prog-meta">High rep · isolation · Julian Smith protocol</div></div>
+    <div class="prog-arrow">→</div>
+  </a>
+  <a href="gainz-instructions.html" class="prog-card" style="--c:#378ADD;">
+    <div class="prog-icon">💪</div>
+    <div class="prog-info"><div class="prog-name">Daily Gainz</div><div class="prog-meta">Volume methodology · Bradley Martyn approach</div></div>
+    <div class="prog-arrow">→</div>
+  </a>
+  <a href="faint-instructions.html" class="prog-card" style="--c:#E24B4A;">
+    <div class="prog-icon">🔥</div>
+    <div class="prog-info"><div class="prog-name">Not for the Faint of Heart</div><div class="prog-meta">Circuit rules · intensity guidelines · scaling</div></div>
+    <div class="prog-arrow">→</div>
+  </a>
+  <div class="no-guide">
+    <div class="prog-icon" style="opacity:0.4;">🏈</div>
+    <div class="prog-info"><div class="prog-name" style="color:#475569;">PSU Football</div><div class="prog-meta" style="margin-top:4px;"><span class="no-guide-tag">Guide coming soon</span></div></div>
+  </div>
+</div>
+<script>
+/* ── SMART BACK NAV ── */
+(function(){
+  var back = sessionStorage.getItem('mc_back_to');
+  if(!back) return;
+  // Find all back links pointing to index/home and redirect to dashboard
+  document.querySelectorAll('a').forEach(function(a){
+    var href = a.getAttribute('href')||'';
+    if(href === 'index.html' || href === '../' || href === '/' ||
+       href.includes('index') || a.textContent.trim().startsWith('←')){
+      a.href = back;
+      a.addEventListener('click', function(){
+        sessionStorage.removeItem('mc_back_to');
+      });
+    }
+  });
+})();
+</script>
+</body>
+</html>
