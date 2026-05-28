@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MC Training</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="MC Training"/>
+<meta name="theme-color" content="#0a0a0a"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0a0a0a;
+  --surface:#111;
+  --surface2:#161616;
+  --border:rgba(255,255,255,0.06);
+  --border2:rgba(255,255,255,0.1);
+  --gold:#d4af37;
+  --gold-dim:rgba(212,175,55,0.15);
+  --gold-glow:rgba(212,175,55,0.25);
+  --text:#fff;
+  --muted:#9ca3af;
+  --muted2:#64748b;
+  --tab-h:64px;
+}
+body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(--tab-h);}
+
+/* ── SCREENS ── */
+.screen{display:none;min-height:calc(100vh - var(--tab-h));padding-bottom:24px;}
+.screen.active{display:block;}
+
+/* ── TOP BAR ── */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 18px 12px;
+  position:sticky;top:0;z-index:20;
+  background:linear-gradient(to bottom, var(--bg) 80%, transparent);
+}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.avatar{
+  width:42px;height:42px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#d4af37,#8a6a10);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:900;color:#000;letter-spacing:0.5px;
+  border:1.5px solid rgba(212,175,55,0.4);
+}
+.topbar-title{font-size:19px;font-weight:900;color:var(--text);letter-spacing:-0.02em;}
+.topbar-sub{font-size:12px;color:var(--muted2);margin-top:1px;}
+.topbar-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--surface);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+
+/* ── SECTION HEADERS ── */
+.sec-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px;margin-bottom:12px;
+}
+.sec-title{font-size:20px;font-weight:900;letter-spacing:-0.02em;color:var(--text);}
+.sec-link{font-size:13px;color:var(--gold);font-weight:700;cursor:pointer;letter-spacing:0.02em;}
+
+/* ── HERO CARD ── */
+.hero-wrap{padding:0 18px;margin-bottom:28px;}
+
+.hero-empty{
+  border-radius:18px;border:1.5px dashed rgba(255,255,255,0.1);
+  padding:36px 20px;text-align:center;cursor:pointer;
+  transition:border-color 0.2s,box-shadow 0.2s;
+  background:var(--surface);
+}
+.hero-empty:active{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold),0 0 18px var(--gold-glow);}
+.hero-empty-icon{font-size:30px;margin-bottom:12px;}
+.hero-empty-title{font-size:16px;font-weight:900;color:var(--text);margin-bottom:6px;letter-spacing:-0.01em;}
+.hero-empty-sub{font-size:13px;color:var(--muted2);}
+.hero-empty-btn{
+  display:inline-block;margin-top:16px;padding:10px 24px;
+  background:var(--gold);color:#000;border-radius:10px;
+  font-size:13px;font-weight:900;letter-spacing:0.03em;
+}
+
+.hero-card{
+  border-radius:18px;overflow:hidden;position:relative;
+  background:linear-gradient(135deg,#0a1628,#020b18);
+  border:1px solid rgba(212,175,55,0.25);
+  box-shadow:0 8px 28px rgba(212,175,55,0.12);
+  cursor:pointer;display:none;
+  transition:box-shadow 0.15s;
+}
+.hero-card:active{box-shadow:0 0 0 2px var(--gold),0 0 24px var(--gold-glow);}
+.hero-glow{
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 20% 50%,rgba(212,175,55,0.08) 0%,transparent 60%);
+}
+.hero-inner{padding:22px 20px 20px;position:relative;}
+.hero-top-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
+.hero-badge{
+  background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.3);
+  border-radius:20px;padding:4px 12px;
+  font-size:10px;font-weight:800;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;
+}
+.hero-ring{
+  width:56px;height:56px;border-radius:50%;
+  border:2.5px solid rgba(255,255,255,0.08);
+  border-top-color:var(--gold);border-right-color:var(--gold);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  transition:border-top-color 0.3s,border-right-color 0.3s;
+}
+.hero-ring-num{font-size:17px;font-weight:900;color:var(--gold);line-height:1;}
+.hero-ring-lbl{font-size:8px;color:var(--muted2);font-weight:700;letter-spacing:0.08em;}
+.hero-name{font-size:22px;font-weight:900;letter-spacing:-0.02em;color:var(--text);line-height:1.2;margin-bottom:6px;}
+.hero-desc{font-size:13px;color:var(--muted2);line-height:1.5;margin-bottom:14px;}
+.hero-phases{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:6px;}
+.phase-pill{
+  padding:5px 13px;border-radius:20px;font-size:11px;font-weight:700;
+  border:1.5px solid rgba(255,255,255,0.1);color:var(--muted2);
+  background:rgba(255,255,255,0.04);
+}
+.phase-pill.active{background:var(--gold);color:#000;border-color:var(--gold);}
+.hero-tap{font-size:11px;color:var(--muted2);font-weight:600;letter-spacing:0.04em;margin-top:10px;}
+
+/* ── TOOLS GRID ── */
+.tools-wrap{padding:0 18px;margin-bottom:28px;}
+.tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.tool-card{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:16px;padding:16px 14px;cursor:pointer;
+  transition:border-color 0.15s,box-shadow 0.15s;
+  text-decoration:none;color:inherit;display:block;
+}
+.tool-card:active{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 12px var(--gold-dim);}
+.tool-icon-wrap{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--surface2);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;margin-bottom:10px;
+}
+.tool-card.gold .tool-icon-wrap{
+  background:rgba(212,175,55,0.08);border-color:rgba(212,175,55,0.2);
+}
+.tool-name{font-size:14px;font-weight:800;color:var(--text);margin-bottom:3px;letter-spacing:-0.01em;}
+.tool-sub{font-size:11px;color:var(--muted2);line-height:1.4;}
+
+/* ── OFFLINE / UPDATE BANNERS ── */
+.offline-bar{display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);
+  border-radius:10px;padding:8px 14px;margin:0 18px 16px;font-size:12px;font-weight:700;
+  color:#f87171;text-align:center;letter-spacing:0.04em;}
+.offline-bar.show{display:block;}
+.sw-update{display:none;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.25);
+  border-radius:10px;padding:8px 14px;margin:0 18px 16px;font-size:12px;font-weight:700;
+  color:#34d399;text-align:center;cursor:pointer;letter-spacing:0.04em;}
+.sw-update.show{display:block;}
+
+/* ── PROGRAMS SCREEN (mirrors index.html) ── */
+.prog-screen-inner{max-width:680px;margin:0 auto;padding:0 18px;}
+.prog-header{text-align:center;margin-bottom:28px;padding-top:8px;}
+.prog-eyebrow{font-size:11px;font-weight:800;letter-spacing:0.25em;color:#a78bfa;text-transform:uppercase;margin-bottom:8px;}
+.prog-title{font-size:30px;font-weight:900;color:var(--text);letter-spacing:-0.02em;line-height:1.1;}
+.prog-sub{font-size:13px;color:var(--muted);margin-top:6px;}
+
+/* Reuse exact cat-card styles from index.html */
+.cat-card{display:block;text-decoration:none;color:inherit;border-radius:18px;padding:24px 22px;margin-bottom:14px;position:relative;overflow:hidden;transition:box-shadow 0.15s;border:1px solid rgba(255,255,255,0.06);}
+.cat-card:active{box-shadow:0 0 0 2px var(--gold),0 0 18px var(--gold-glow);opacity:0.9;}
+.cat-card.stndr{background:linear-gradient(135deg,#1e3a5f,#0f172a);box-shadow:0 8px 28px rgba(59,130,246,0.18);border-top:3px solid #1D9E75;}
+.cat-card.pump{background:linear-gradient(135deg,#831843,#1a0511);box-shadow:0 8px 28px rgba(236,72,153,0.18);border-top:3px solid #D85A30;}
+.cat-card.gainz{background:linear-gradient(135deg,#365314,#0a0f04);box-shadow:0 8px 28px rgba(132,204,22,0.2);border-top:3px solid #378ADD;}
+.cat-card.faint{background:linear-gradient(135deg,#7f1d1d,#0a0000);box-shadow:0 8px 28px rgba(239,68,68,0.25);border-color:rgba(239,68,68,0.3);border-top:3px solid #E24B4A;}
+.cat-card.psu{background:linear-gradient(135deg,#041e42,#000814);box-shadow:0 8px 28px rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.2);border-top:3px solid #639922;}
+.cat-card.pmc{background:linear-gradient(135deg,#1e0a3c,#0d0618);box-shadow:0 8px 28px rgba(139,92,246,0.25);border-color:rgba(139,92,246,0.3);border-top:3px solid #7F77DD;}
+.cat-card.mc{background:linear-gradient(135deg,#0a1628,#020b18);box-shadow:0 8px 28px rgba(212,175,55,0.2);border-color:rgba(212,175,55,0.25);border-top:3px solid #d4af37;}
+.cat-icon{position:absolute;right:22px;top:22px;font-size:36px;opacity:0.18;}
+.cat-tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:0.14em;padding:3px 9px;border-radius:5px;text-transform:uppercase;margin-bottom:8px;}
+.cat-card.stndr .cat-tag{background:rgba(59,130,246,0.2);color:#93c5fd;border:1px solid rgba(59,130,246,0.35);}
+.cat-card.pump .cat-tag{background:rgba(236,72,153,0.2);color:#fbcfe8;border:1px solid rgba(236,72,153,0.35);}
+.cat-card.gainz .cat-tag{background:rgba(132,204,22,0.2);color:#d9f99d;border:1px solid rgba(132,204,22,0.35);}
+.cat-card.faint .cat-tag{background:rgba(239,68,68,0.22);color:#fca5a5;border:1px solid rgba(239,68,68,0.45);}
+.cat-card.psu .cat-tag{background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.3);}
+.cat-card.pmc .cat-tag{background:rgba(139,92,246,0.2);color:#c084fc;border:1px solid rgba(139,92,246,0.35);}
+.cat-card.mc .cat-tag{background:rgba(212,175,55,0.12);color:#d4af37;border:1px solid rgba(212,175,55,0.3);}
+.cat-name{font-size:24px;font-weight:900;color:#fff;margin-bottom:5px;letter-spacing:-0.01em;padding-right:48px;}
+.cat-meta{font-size:13px;color:#cbd5e1;line-height:1.5;padding-right:48px;}
+.cat-count{margin-top:8px;display:inline-block;font-size:11px;color:#94a3b8;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
+.cat-designer{margin-top:7px;font-size:11px;font-weight:700;letter-spacing:0.03em;opacity:0.8;display:flex;align-items:center;gap:5px;}
+.cat-card.stndr .cat-designer{color:#93c5fd;}
+.cat-card.pump .cat-designer{color:#f9a8d4;}
+.cat-card.gainz .cat-designer{color:#d9f99d;}
+.cat-card.faint .cat-designer{color:#fca5a5;}
+.cat-card.psu .cat-designer{color:#e2e8f0;}
+.cat-card.pmc .cat-designer{color:#c084fc;}
+.cat-card.mc .cat-designer{color:#d4af37;}
+
+/* Exercise library link */
+.lib-link{display:flex;align-items:center;gap:12px;background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.22);border-radius:14px;padding:14px 16px;text-decoration:none;color:#e2e8f0;margin-bottom:20px;}
+.lib-link:active{background:rgba(212,175,55,0.12);}
+.lib-name{font-size:14px;font-weight:900;color:#fbbf24;}
+.lib-sub{font-size:11px;color:var(--muted2);font-weight:600;margin-top:2px;}
+
+/* ── BOTTOM TAB BAR ── */
+.tab-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  height:var(--tab-h);
+  background:rgba(10,10,10,0.96);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid rgba(255,255,255,0.07);
+  display:flex;z-index:50;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:4px;cursor:pointer;
+  font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;
+  color:var(--muted2);transition:color 0.15s;
+}
+.tab.active{color:var(--gold);}
+.tab-icon{font-size:20px;line-height:1;}
+
+/* ── PROGRAM SELECT SHEET ── */
+.ps-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.85);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  display:none;align-items:flex-end;z-index:60;
+}
+.ps-overlay.open{display:flex;}
+.ps-sheet{
+  width:100%;background:#0e0e0e;
+  border-top:1px solid rgba(255,255,255,0.1);
+  border-radius:24px 24px 0 0;
+  padding:20px 18px calc(40px + env(safe-area-inset-bottom));
+  max-height:85vh;overflow-y:auto;
+}
+.ps-handle{width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 20px;}
+.ps-title{font-size:18px;font-weight:900;margin-bottom:3px;letter-spacing:-0.01em;}
+.ps-sub{font-size:13px;color:var(--muted2);margin-bottom:18px;}
+.ps-card{
+  display:flex;align-items:center;gap:12px;
+  padding:14px;border-radius:14px;
+  border:1px solid rgba(255,255,255,0.07);
+  margin-bottom:8px;cursor:pointer;
+  background:var(--surface);transition:all 0.15s;
+  position:relative;
+}
+.ps-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;background:var(--prog-color,var(--gold));}
+.ps-card:active{background:var(--surface2);}
+.ps-card.sel{border-color:var(--prog-color,var(--gold));background:var(--surface2);}
+.ps-icon{font-size:22px;width:38px;text-align:center;flex-shrink:0;}
+.ps-info{flex:1;min-width:0;}
+.ps-name{font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ps-meta{font-size:11px;color:var(--muted2);margin-top:2px;}
+.ps-check{
+  width:22px;height:22px;border-radius:50%;
+  border:2px solid rgba(255,255,255,0.12);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:10px;font-weight:900;
+  transition:all 0.15s;
+}
+.ps-card.sel .ps-check{background:var(--prog-color,var(--gold));border-color:var(--prog-color,var(--gold));color:#000;}
+.ps-confirm{
+  width:100%;padding:14px;background:var(--gold);border:none;
+  border-radius:14px;color:#000;font-size:15px;font-weight:900;
+  cursor:pointer;font-family:inherit;letter-spacing:0.03em;margin-top:12px;
+}
+.ps-confirm:active{opacity:0.85;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     DASHBOARD SCREEN
+══════════════════════════════════════ -->
+<div class="screen active" id="scr-dashboard">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="avatar">MC</div>
+      <div>
+        <div class="topbar-title">Workout</div>
+        <div class="topbar-sub" id="todayDate"></div>
+      </div>
+    </div>
+    <div class="topbar-icon">📅</div>
+  </div>
+
+  <div id="offlineBar" class="offline-bar">📵 Offline — showing cached content</div>
+  <div id="swUpdate" class="sw-update" onclick="doSwUpdate()">🔄 Update available — tap to reload</div>
+
+  <!-- Current Program -->
+  <div class="sec-header">
+    <div class="sec-title">Current Program</div>
+    <div class="sec-link" onclick="openProgSelect()">See all</div>
+  </div>
+  <div class="hero-wrap">
+
+    <div class="hero-empty" id="heroEmpty" onclick="openProgSelect()">
+      <div class="hero-empty-icon">⚡</div>
+      <div class="hero-empty-title">No active program set</div>
+      <div class="hero-empty-sub">Pin a program to track your training</div>
+      <div class="hero-empty-btn">Choose Program</div>
+    </div>
+
+    <div class="hero-card" id="heroCard" onclick="openProgSelect()">
+      <div class="hero-glow"></div>
+      <div class="hero-inner">
+        <div class="hero-top-row">
+          <div class="hero-badge" id="heroBadge">Active</div>
+          <div class="hero-ring" id="heroRing">
+            <div class="hero-ring-num" id="heroDay">—</div>
+            <div class="hero-ring-lbl">SPLIT</div>
+          </div>
+        </div>
+        <div class="hero-name" id="heroName"></div>
+        <div class="hero-desc" id="heroDesc"></div>
+        <div class="hero-phases" id="heroPhases"></div>
+        <div class="hero-tap">Tap to change program →</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Training Tools -->
+  <div class="sec-header">
+    <div class="sec-title">Training Tools</div>
+  </div>
+  <div class="tools-wrap">
+    <div class="tools-grid">
+      <a href="exercise-library.html" class="tool-card gold">
+        <div class="tool-icon-wrap">📚</div>
+        <div class="tool-name">Exercise Library</div>
+        <div class="tool-sub">1,020+ exercises by muscle group</div>
+      </a>
+      <a href="log-history.html" class="tool-card">
+        <div class="tool-icon-wrap">📊</div>
+        <div class="tool-name">Workout Logs</div>
+        <div class="tool-sub">Full logging history + PRs</div>
+      </a>
+      <a href="build-workout.html" class="tool-card">
+        <div class="tool-icon-wrap">🔧</div>
+        <div class="tool-name">Build Your Own</div>
+        <div class="tool-sub">Create workouts from the library</div>
+      </a>
+      <a href="mc-instructions.html" class="tool-card gold">
+        <div class="tool-icon-wrap">📋</div>
+        <div class="tool-name">Program Guide</div>
+        <div class="tool-sub">Instructions for every program</div>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════
+     PROGRAMS SCREEN
+══════════════════════════════════════ -->
+<div class="screen" id="scr-programs">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Programs</div>
+      <div class="topbar-sub">7 training programs</div>
+    </div>
+  </div>
+  <div class="prog-screen-inner">
+    <div class="prog-header">
+      <div class="prog-eyebrow">Training Categories</div>
+      <h1 class="prog-title">Choose Your Path</h1>
+      <div class="prog-sub">Pick a category to see all programs</div>
+    </div>
+
+    <a href="exercise-library.html" class="lib-link">
+      <div style="font-size:22px;">📚</div>
+      <div>
+        <div class="lib-name">Exercise Library</div>
+        <div class="lib-sub">1020 exercises · search by muscle group · save replacements</div>
+      </div>
+      <div style="color:#475569;font-size:16px;margin-left:auto;">→</div>
+    </a>
+
+    <a href="cat-stndr.html" class="cat-card stndr">
+      <span class="cat-icon">🏋️</span>
+      <div class="cat-tag">Bodybuilding · Strength</div>
+      <div class="cat-name">STNDR</div>
+      <div class="cat-meta">Structured lifting programs with progressive overload, supersets, and periodization.</div>
+      <div class="cat-count">4 Programs →</div>
+      <div class="cat-designer">✍️ Designed by CBUM</div>
+    </a>
+
+    <a href="cat-faint.html" class="cat-card faint">
+      <span class="cat-icon">🔥</span>
+      <div class="cat-tag">High Intensity · Conditioning</div>
+      <div class="cat-name">Not for the Faint of Heart</div>
+      <div class="cat-meta">Brutal challenges, circuits, and finishers built to test your limits.</div>
+      <div class="cat-count">9 Workouts →</div>
+      <div class="cat-designer">✍️ Designed by Mike Cross</div>
+    </a>
+
+    <a href="cat-gainz.html" class="cat-card gainz">
+      <span class="cat-icon">💪</span>
+      <div class="cat-tag">Volume · Daily</div>
+      <div class="cat-name">Daily Gainz</div>
+      <div class="cat-meta">Daily volume-builders for consistent muscle growth.</div>
+      <div class="cat-count">8 Programs →</div>
+      <div class="cat-designer">✍️ Designed by Bradley Martyn</div>
+    </a>
+
+    <a href="cat-pump-new4.html" class="cat-card pump">
+      <span class="cat-icon">⚡</span>
+      <div class="cat-tag">Pump · Isolation</div>
+      <div class="cat-name">Daily Pump</div>
+      <div class="cat-meta">High-rep isolation work for maximum pump and muscle fullness.</div>
+      <div class="cat-count">10 Workouts →</div>
+      <div class="cat-designer">✍️ Designed by Julian Smith</div>
+    </a>
+
+    <a href="cat-psu.html" class="cat-card psu">
+      <span class="cat-icon">🏈</span>
+      <div class="cat-tag">Strength · Athletic</div>
+      <div class="cat-name">PSU Football</div>
+      <div class="cat-meta">Penn State strength and conditioning — built for athletic performance.</div>
+      <div class="cat-count">1 Program →</div>
+      <div class="cat-designer">✍️ Penn State Strength Staff</div>
+    </a>
+
+    <a href="cat-pmc.html" class="cat-card pmc">
+      <span class="cat-icon">⚡</span>
+      <div class="cat-tag">Muscle Confusion · Advanced</div>
+      <div class="cat-name">Project Muscle Confusion</div>
+      <div class="cat-meta">Supersets, pyramids, drop sets, AMRAP, and tempo — 7 splits across 2 weeks each.</div>
+      <div class="cat-count">7 Splits →</div>
+      <div class="cat-designer">✍️ Designed by Mike Cross</div>
+    </a>
+
+    <a href="cat-mc.html" class="cat-card mc">
+      <span class="cat-icon">⚡</span>
+      <div class="cat-tag">Personal · All Styles</div>
+      <div class="cat-name">Mike Cross' Favorite Splits</div>
+      <div class="cat-meta">5 personal splits across every major training style — 18 workouts total.</div>
+      <div class="cat-count">5 Splits →</div>
+      <div class="cat-designer">✍️ Designed by Mike Cross</div>
+    </a>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     BOTTOM TAB BAR
+══════════════════════════════════════ -->
+<div class="tab-bar">
+  <div class="tab active" id="tab-dashboard" onclick="switchTab('dashboard')">
+    <div class="tab-icon">⚡</div>
+    <div>Dashboard</div>
+  </div>
+  <div class="tab" id="tab-programs" onclick="switchTab('programs')">
+    <div class="tab-icon">🏋️</div>
+    <div>Programs</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PROGRAM SELECT SHEET
+══════════════════════════════════════ -->
+<div class="ps-overlay" id="psOverlay" onclick="closeProgSelectOutside(event)">
+  <div class="ps-sheet">
+    <div class="ps-handle"></div>
+    <div class="ps-title">Set Active Program</div>
+    <div class="ps-sub">Pins to your dashboard hero card.</div>
+    <div id="psCards"></div>
+    <button class="ps-confirm" onclick="confirmProg()">Set as Active Program</button>
+  </div>
+</div>
+
+<script>
+// ── DATE ──
+const d=new Date();
+document.getElementById('todayDate').textContent=d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+
+// ── PROGRAMS DATA ──
+const PROGS=[
+  {id:'mc',icon:'⚡',name:"Mike Cross' Favorite Splits",meta:'5 Splits · 18 Workouts',color:'#d4af37',desc:'5 personal splits across every major training style',href:'cat-mc.html',splits:['Split 1','Split 2','Split 3','Split 4','Split 5']},
+  {id:'pmc',icon:'⚡',name:'Project Muscle Confusion',meta:'7 Splits · 2 Weeks Each',color:'#7F77DD',desc:'Supersets, pyramids, drop sets, AMRAP, and tempo',href:'cat-pmc.html',splits:['Split 1','Split 2','Split 3','Split 4','Split 5','Split 6','Split 7']},
+  {id:'stndr',icon:'🏋️',name:'STNDR',meta:'4 Programs',color:'#1D9E75',desc:'Structured progressive overload — CBUM method',href:'cat-stndr.html',splits:['Phase 1','Phase 2','Phase 3','Phase 4']},
+  {id:'pump',icon:'⚡',name:'Daily Pump',meta:'10 Workouts',color:'#D85A30',desc:'Julian Smith pump protocols — in and out fast',href:'cat-pump-new4.html',splits:['Back','Chest','Shoulders','Arms','Legs']},
+  {id:'gainz',icon:'💪',name:'Daily Gainz',meta:'8 Programs',color:'#378ADD',desc:'Bradley Martyn volume — built for size',href:'cat-gainz.html',splits:['Bro Split','Push/Pull','5 On 2 Off','3 On 1 Off']},
+  {id:'faint',icon:'🔥',name:'Not for the Faint of Heart',meta:'9 Workouts',color:'#E24B4A',desc:'High intensity circuits built to break you',href:'cat-faint.html',splits:['Week 1','Week 2','Week 3']},
+  {id:'psu',icon:'🏈',name:'PSU Football',meta:'Strength Program',color:'#639922',desc:'Penn State strength and conditioning',href:'cat-psu.html',splits:['Phase 1','Phase 2','Phase 3']},
+];
+
+// ── STATE ──
+const STORE='mc_active_prog';
+let activeProg=null;
+let tempSel=null;
+
+function loadState(){
+  try{const s=localStorage.getItem(STORE);if(s){activeProg=JSON.parse(s);renderHero();}}catch(e){}
+}
+
+// ── TABS ──
+function switchTab(tab){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('scr-'+tab).classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── HERO ──
+function renderHero(){
+  const empty=document.getElementById('heroEmpty');
+  const card=document.getElementById('heroCard');
+  if(!activeProg){empty.style.display='block';card.style.display='none';return;}
+  empty.style.display='none';
+  card.style.display='block';
+  card.style.borderColor=activeProg.color+'44';
+  card.style.boxShadow='0 8px 28px '+activeProg.color+'22';
+  document.getElementById('heroName').textContent=activeProg.name;
+  document.getElementById('heroDesc').textContent=activeProg.desc;
+  document.getElementById('heroDay').textContent=activeProg.splits.length;
+  const ring=document.getElementById('heroRing');
+  ring.style.borderTopColor=activeProg.color;
+  ring.style.borderRightColor=activeProg.color;
+  // Phases
+  const ph=document.getElementById('heroPhases');
+  ph.innerHTML=activeProg.splits.slice(0,4).map((s,i)=>
+    `<div class="phase-pill${i===0?' active':''}">${s}</div>`
+  ).join('');
+}
+
+// ── PROGRAM SELECT ──
+function buildProgCards(){
+  const wrap=document.getElementById('psCards');
+  wrap.innerHTML='';
+  PROGS.forEach(p=>{
+    const d=document.createElement('div');
+    d.className='ps-card'+(activeProg&&activeProg.id===p.id?' sel':'');
+    d.id='psc-'+p.id;
+    d.style.setProperty('--prog-color',p.color);
+    d.innerHTML=`<div class="ps-icon">${p.icon}</div><div class="ps-info"><div class="ps-name">${p.name}</div><div class="ps-meta">${p.meta}</div></div><div class="ps-check" id="pschk-${p.id}">${activeProg&&activeProg.id===p.id?'✓':''}</div>`;
+    d.onclick=()=>selectProg(p.id);
+    wrap.appendChild(d);
+  });
+  tempSel=activeProg?activeProg.id:null;
+}
+
+function openProgSelect(){
+  buildProgCards();
+  document.getElementById('psOverlay').classList.add('open');
+}
+
+function closeProgSelectOutside(e){
+  if(e.target===document.getElementById('psOverlay'))
+    document.getElementById('psOverlay').classList.remove('open');
+}
+
+function selectProg(id){
+  tempSel=id;
+  PROGS.forEach(p=>{
+    const c=document.getElementById('psc-'+p.id);
+    const ch=document.getElementById('pschk-'+p.id);
+    if(c){c.classList.toggle('sel',p.id===id);}
+    if(ch){ch.textContent=p.id===id?'✓':'';}
+  });
+}
+
+function confirmProg(){
+  if(!tempSel)return;
+  activeProg=PROGS.find(p=>p.id===tempSel);
+  try{localStorage.setItem(STORE,JSON.stringify(activeProg));}catch(e){}
+  document.getElementById('psOverlay').classList.remove('open');
+  renderHero();
+}
+
+// ── OFFLINE ──
+window.addEventListener('online',()=>document.getElementById('offlineBar').classList.remove('show'));
+window.addEventListener('offline',()=>document.getElementById('offlineBar').classList.add('show'));
+if(!navigator.onLine)document.getElementById('offlineBar').classList.add('show');
+
+// ── SW ──
+let swWaiting=null;
+function doSwUpdate(){if(swWaiting)swWaiting.postMessage({type:'SKIP_WAITING'});location.reload();}
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{});
+  navigator.serviceWorker.ready.then(reg=>{
+    reg.addEventListener('updatefound',()=>{
+      const nw=reg.installing;
+      nw.addEventListener('statechange',()=>{
+        if(nw.state==='installed'&&navigator.serviceWorker.controller){
+          swWaiting=nw;
+          document.getElementById('swUpdate').classList.add('show');
+        }
+      });
+    });
+  });
+}
+
+// ── INIT ──
+loadState();
+</script>
+</body>
+</html>
