@@ -265,6 +265,59 @@ body{background:#1a1200;min-height:100vh;padding-bottom:48px;}
 .sl-row.sl-done .sl-inp{opacity:0.4;}
 .sl-hdr{display:grid;grid-template-columns:24px 1fr 1fr 32px;gap:5px;padding:3px 2px 1px;}
 .sl-hl{font-size:9px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#2d3748;text-align:center;}
+
+/* ── FINISH-WORKOUT ── */
+.fw-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+  background:rgba(10,10,10,0.96);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-top:1px solid rgba(255,255,255,0.07);
+  z-index:40;display:flex;gap:10px;align-items:center;
+}
+.fw-btn{
+  flex:1;padding:13px;
+  background:#d4af37;border:none;border-radius:12px;
+  color:#000;font-size:15px;font-weight:900;
+  cursor:pointer;font-family:inherit;letter-spacing:0.03em;
+  -webkit-tap-highlight-color:transparent;
+}
+.fw-btn:active{opacity:0.85;transform:scale(0.98);}
+.fw-progress{
+  font-size:11px;font-weight:700;color:#475569;
+  white-space:nowrap;letter-spacing:0.04em;
+}
+.fw-modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.88);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  display:none;align-items:flex-end;padding:16px;z-index:60;
+}
+.fw-modal-overlay.open{display:flex;}
+.fw-modal{
+  width:100%;background:#0e0e0e;
+  border:1px solid rgba(255,255,255,0.1);border-radius:20px;
+  padding:24px 20px 20px;
+}
+.fw-modal-title{font-size:20px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;}
+.fw-modal-sub{font-size:13px;color:#64748b;margin-bottom:18px;line-height:1.5;}
+.fw-summary{background:#111;border-radius:12px;padding:14px;margin-bottom:16px;}
+.fw-summary-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;}
+.fw-summary-row:last-child{border-bottom:none;}
+.fw-summary-label{color:#64748b;font-weight:600;}
+.fw-summary-val{color:#fff;font-weight:800;}
+.fw-modal-btns{display:flex;gap:10px;}
+.fw-cancel{flex:1;padding:12px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.fw-confirm{flex:2;padding:12px;background:#d4af37;border:none;border-radius:12px;color:#000;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.02em;}
+.fw-auto-banner{
+  position:fixed;top:0;left:0;right:0;
+  background:rgba(52,211,153,0.12);border-bottom:1px solid rgba(52,211,153,0.3);
+  padding:12px 16px;text-align:center;
+  font-size:13px;font-weight:800;color:#34d399;
+  z-index:50;display:none;letter-spacing:0.02em;
+  cursor:pointer;
+}
+.fw-auto-banner.show{display:block;}
+
 </style></head><body>
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
 <div id="app"></div>
@@ -806,6 +859,186 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',watch);}
   else{watch();}
+})();
+</script>
+
+<script>
+/* ── FINISH-WORKOUT MODULE ── */
+(function(){
+  var WL_KEY='mc_workout_log_v1';
+  var SL_KEY='mc_setlog_v1';
+  var startTime=Date.now();
+  var pageId=location.pathname.split('/').pop().replace('.html','');
+
+  // Get workout name from page title
+  function getWorkoutName(){
+    var t=document.title||pageId;
+    return t.replace(' — MC Training','').replace('MC — ','').replace('PMC — ','');
+  }
+
+  // Get duration string
+  function getDuration(){
+    var mins=Math.round((Date.now()-startTime)/60000);
+    if(mins<1)return '<1 min';
+    return mins+' min';
+  }
+
+  // Count checked sets
+  function getCheckedSets(){
+    return document.querySelectorAll('.sl-ck.done,.set-check.done').length;
+  }
+  function getTotalSets(){
+    return document.querySelectorAll('.sl-ck,.set-check').length;
+  }
+
+  // Get all logged set data for this session
+  function getSessionSets(){
+    try{
+      var store=JSON.parse(localStorage.getItem(SL_KEY)||'{}');
+      var today=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      var sets=[];
+      Object.keys(store).forEach(function(k){
+        if(!k.startsWith(pageId+'|'))return;
+        var exName=k.split('|')[1]||k;
+        var sess=store[k][0];
+        if(sess&&sess.d===today){
+          Object.keys(sess.sets).forEach(function(sn){
+            var s=sess.sets[sn];
+            sets.push({name:exName,setNum:parseInt(sn),weight:s.w,reps:s.r,pr:false});
+          });
+        }
+      });
+      // Detect PRs — compare to previous sessions
+      sets.forEach(function(s){
+        var k=pageId+'|'+s.name;
+        var history=store[k]||[];
+        if(history.length<2)return;
+        var prevMax=0;
+        history.slice(1).forEach(function(sess){
+          Object.values(sess.sets).forEach(function(set){
+            if(parseFloat(set.w)>prevMax)prevMax=parseFloat(set.w);
+          });
+        });
+        if(parseFloat(s.weight)>prevMax&&prevMax>0)s.pr=true;
+      });
+      return sets;
+    }catch(e){return[];}
+  }
+
+  // Save to workout log
+  function saveWorkout(){
+    var sets=getSessionSets();
+    var prs=sets.filter(function(s){return s.pr;}).length;
+    var entry={
+      pageId:pageId,
+      workoutName:getWorkoutName(),
+      date:new Date().toISOString(),
+      time:new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),
+      duration:getDuration(),
+      sets:sets,
+      prs:prs,
+      setsChecked:getCheckedSets()
+    };
+    try{
+      var logs=JSON.parse(localStorage.getItem(WL_KEY)||'[]');
+      logs.unshift(entry);
+      logs=logs.slice(0,200);// keep last 200 workouts
+      localStorage.setItem(WL_KEY,JSON.stringify(logs));
+    }catch(e){}
+    return entry;
+  }
+
+  // Update progress display
+  function updateProgress(){
+    var done=getCheckedSets();
+    var total=getTotalSets();
+    var el=document.getElementById('fwProgress');
+    if(el)el.textContent=done+' / '+total+' sets';
+    // Auto-detect all sets done
+    if(total>0&&done>=total){
+      var banner=document.getElementById('fwAutoBanner');
+      if(banner)banner.classList.add('show');
+    }
+  }
+
+  // Build the bottom bar HTML
+  var barHTML='<div class="fw-bar" id="fwBar">'+
+    '<span class="fw-progress" id="fwProgress">0 / 0 sets</span>'+
+    '<button class="fw-btn" onclick="_FW.open()">Finish Workout ✓</button>'+
+    '</div>';
+
+  // Build modal HTML
+  var modalHTML='<div class="fw-modal-overlay" id="fwModal">'+
+    '<div class="fw-modal">'+
+      '<div class="fw-modal-title">🏆 Finish Workout?</div>'+
+      '<div class="fw-modal-sub">This will save your session to Workout Logs.</div>'+
+      '<div class="fw-summary" id="fwSummary"></div>'+
+      '<div class="fw-modal-btns">'+
+        '<button class="fw-cancel" onclick="_FW.close()">Cancel</button>'+
+        '<button class="fw-confirm" onclick="_FW.confirm()">Save & Finish</button>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+
+  var autoBanner='<div class="fw-auto-banner" id="fwAutoBanner" onclick="_FW.open()">'+
+    '🏆 All sets complete — tap to finish workout</div>';
+
+  // Inject UI
+  function inject(){
+    document.body.insertAdjacentHTML('beforeend',barHTML+modalHTML+autoBanner);
+    // Watch for set check changes
+    document.addEventListener('click',function(e){
+      if(e.target.classList.contains('sl-ck')||
+         e.target.classList.contains('set-check')||
+         e.target.id==='fwAutoBanner'){
+        setTimeout(updateProgress,100);
+      }
+    });
+    updateProgress();
+    // Update every 10s for dynamic pages
+    setInterval(updateProgress,10000);
+  }
+
+  window._FW={
+    open:function(){
+      var sets=getSessionSets();
+      var prs=sets.filter(function(s){return s.pr;}).length;
+      var summary=document.getElementById('fwSummary');
+      if(summary){
+        summary.innerHTML=
+          '<div class="fw-summary-row"><span class="fw-summary-label">Workout</span><span class="fw-summary-val">'+getWorkoutName()+'</span></div>'+
+          '<div class="fw-summary-row"><span class="fw-summary-label">Duration</span><span class="fw-summary-val">'+getDuration()+'</span></div>'+
+          '<div class="fw-summary-row"><span class="fw-summary-label">Sets checked</span><span class="fw-summary-val">'+getCheckedSets()+' / '+getTotalSets()+'</span></div>'+
+          '<div class="fw-summary-row"><span class="fw-summary-label">Sets logged</span><span class="fw-summary-val">'+sets.length+'</span></div>'+
+          (prs?'<div class="fw-summary-row"><span class="fw-summary-label">PRs set</span><span class="fw-summary-val" style="color:#d4af37;">🏆 '+prs+'</span></div>':'');
+      }
+      var m=document.getElementById('fwModal');
+      if(m)m.classList.add('open');
+    },
+    close:function(){
+      var m=document.getElementById('fwModal');
+      if(m)m.classList.remove('open');
+    },
+    confirm:function(){
+      saveWorkout();
+      window._FW.close();
+      // Flash confirmation
+      var btn=document.querySelector('.fw-btn');
+      if(btn){btn.textContent='✓ Saved!';btn.style.background='#34d399';}
+      var banner=document.getElementById('fwAutoBanner');
+      if(banner)banner.classList.remove('show');
+      setTimeout(function(){
+        if(btn){btn.textContent='Finish Workout ✓';btn.style.background='';}
+      },2000);
+    }
+  };
+
+  // Run after DOM ready
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',inject);
+  }else{
+    inject();
+  }
 })();
 </script>
 
