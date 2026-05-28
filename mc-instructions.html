@@ -76,4 +76,22 @@ body{background:#020b18;min-height:100vh;color:#fff;padding:0 0 60px;}
     <div class="card"><div class="card-head"><span class="card-icon">🟡</span>Split 4 — 4 Workouts</div><div class="card-body">Chest/Tris · Shoulders · Bis/Tris · Legs</div></div>
     <div class="card"><div class="card-head"><span class="card-icon">💜</span>Split 5 — Push/Pull/Legs</div><div class="card-body">3-day rotation — Push · Pull · Legs</div></div>
   </div>
-</div></body></html>
+</div><script>
+/* ── SMART BACK NAV ── */
+(function(){
+  var back = sessionStorage.getItem('mc_back_to');
+  if(!back) return;
+  // Find all back links pointing to index/home and redirect to dashboard
+  document.querySelectorAll('a').forEach(function(a){
+    var href = a.getAttribute('href')||'';
+    if(href === 'index.html' || href === '../' || href === '/' ||
+       href.includes('index') || a.textContent.trim().startsWith('←')){
+      a.href = back;
+      a.addEventListener('click', function(){
+        sessionStorage.removeItem('mc_back_to');
+      });
+    }
+  });
+})();
+</script>
+</body></html>
