@@ -93,4 +93,22 @@ body{background:#0f172a;min-height:100vh;color:#fff;padding:0 0 60px;}
     <div class="card"><div class="card-head"><span class="card-icon">💪</span>Bro Split</div><div class="card-body">Traditional body part split — one muscle group per day. Moderate volume, hypertrophy rep ranges, standard CBUM exercise selection.</div></div>
   </div>
 
-</div></body></html>
+</div><script>
+/* ── SMART BACK NAV ── */
+(function(){
+  var back = sessionStorage.getItem('mc_back_to');
+  if(!back) return;
+  // Find all back links pointing to index/home and redirect to dashboard
+  document.querySelectorAll('a').forEach(function(a){
+    var href = a.getAttribute('href')||'';
+    if(href === 'index.html' || href === '../' || href === '/' ||
+       href.includes('index') || a.textContent.trim().startsWith('←')){
+      a.href = back;
+      a.addEventListener('click', function(){
+        sessionStorage.removeItem('mc_back_to');
+      });
+    }
+  });
+})();
+</script>
+</body></html>
