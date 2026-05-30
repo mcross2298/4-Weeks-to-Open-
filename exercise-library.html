@@ -78,8 +78,14 @@ var MUSCLE_COLORS={"Back":"#22d3ee","Chest":"#f472b6","Shoulders":"#60a5fa","Bic
 var MUSCLE_ICONS={"Back":"&#128281;","Chest":"&#129521;","Shoulders":"&#127956;","Biceps":"&#128170;","Triceps":"&#128165;","Legs - Quads":"&#129461;","Legs - Hamstrings":"&#127825;","Legs - Glutes":"&#127825;","Calves":"&#129462;","Core":"&#128293;","Forearms":"&#128295;","Cardio":"&#127939;","Full Body":"&#9889;","Adductors":"&#8592;"};
 var activeFilter="All";
 
+// Phase 1: cardio/conditioning/core work now lives in the Conditioning tab.
+// These muscle groups are filtered OUT of the main library (data is kept intact
+// in EXERCISES — this is a display filter only, reversible and Phase-3 ready).
+var CONDITIONING_MUSCLES=["Cardio","Core"];
+function isConditioning(ex){return CONDITIONING_MUSCLES.indexOf(ex.muscle)!==-1;}
+
 function buildFilters(){
-  var muscles=["All"].concat(Object.keys(MUSCLE_COLORS).sort());
+  var muscles=["All"].concat(Object.keys(MUSCLE_COLORS).filter(function(m){return CONDITIONING_MUSCLES.indexOf(m)===-1;}).sort());
   var html="";
   for(var i=0;i<muscles.length;i++){
     var m=muscles[i];
@@ -156,6 +162,7 @@ function filterExercises(){
 
   for(i=0;i<EXERCISES.length;i++){
     var e=EXERCISES[i];
+    if(isConditioning(e)) continue; // cardio/core moved to the Conditioning tab
     if(activeFilter!=="All" && e.muscle!==activeFilter) continue;
     if(q && e.name.toLowerCase().indexOf(q)===-1) continue;
     filtered.push(e);
@@ -201,7 +208,7 @@ function filterExercises(){
   list.innerHTML=masterHTML+standaloneHTML;
 }
 
-document.getElementById("totalCount").textContent=EXERCISES.length+" exercises across all programs";
+document.getElementById("totalCount").textContent=EXERCISES.filter(function(e){return !isConditioning(e);}).length+" exercises across all programs";
 buildFilters();
 filterExercises();
 
