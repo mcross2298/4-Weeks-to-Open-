@@ -157,7 +157,7 @@ def push(local,repo):
     print("  FAIL "+repo+" -- "+str(st)); return False
 
 def main():
-    if GITHUB_TOKEN=="YOUR_PERSONAL_ACCESS_TOKEN_HERE":
+    if GITHUB_TOKEN in ("YOUR_GITHUB_TOKEN_HERE", "YOUR_PERSONAL_ACCESS_TOKEN_HERE", ""):
         print("Set your GITHUB_TOKEN first."); sys.exit(1)
     print("Deploying "+str(len(FILES))+" files (Quick Wins)...")
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
