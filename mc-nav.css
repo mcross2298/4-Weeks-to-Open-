@@ -1,0 +1,22 @@
+/* mc-nav.css — shared bottom navigation (Phase 2.1) */
+.mc-nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:140;
+  display:flex;
+  background:rgba(8,10,16,0.96);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  border-top:1px solid rgba(255,255,255,0.10);
+  padding:6px 0 calc(6px + env(safe-area-inset-bottom));
+}
+.mc-nav-tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  text-decoration:none;color:#94a3b8;
+  font-family:inherit;font-size:10px;font-weight:800;letter-spacing:0.03em;
+  padding:4px 0;-webkit-tap-highlight-color:transparent;
+  transition:color 0.15s;
+}
+.mc-nav-tab .mc-nav-ico{font-size:19px;line-height:1;}
+.mc-nav-tab:active{color:#fff;transform:scale(0.94);}
+
+/* keep page content and the floating rest timer clear of the fixed bar */
+body.mc-has-nav{padding-bottom:76px !important;}
+body.mc-has-nav .timer-float{bottom:88px;}
