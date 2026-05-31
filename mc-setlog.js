@@ -91,8 +91,11 @@
   // ---- render the logger onto a host element -----------------------------
   function build(host, card, exId, setsStr, rs) {
     if (!host) return;
-    // remove any native logger so there is exactly one
-    Array.prototype.forEach.call(host.querySelectorAll('.setlog-toggle, .setlog-wrap'), function (n) { n.remove(); });
+    // remove any older logger / notes UI so there is exactly one logger
+    Array.prototype.forEach.call(
+      host.querySelectorAll('.setlog-toggle, .setlog-wrap, .note-btn, .note-area, .ex-notes-toggle, .ex-notes-wrap, .log-row'),
+      function (n) { n.remove(); }
+    );
     if (host.querySelector('.mcl-wrap')) return;   // ours already present
 
     var cid = cssId(exId), n = setCount(setsStr);
@@ -144,23 +147,38 @@
     return 'psu-' + ((nm ? nm.textContent : '').trim().replace(/\s+/g, '-').toLowerCase().slice(0, 20) || 'x');
   }
   function setsOf(card) { var se = card.querySelector('.ex-sets'); return se ? se.textContent.trim() : ''; }
+  // Deterministic id from the exercise name (NO random fallback — that would
+  // change every pass, breaking persistence and re-rendering forever).
+  // Duplicate names are disambiguated by their occurrence order in the DOM.
   function nameId(card) {
     var nm = card.querySelector('.ex-name, .ss-name, .lift-name');
-    return 'x-' + ((nm ? nm.textContent : '').trim().replace(/\s+/g, '-').toLowerCase().slice(0, 24) || Math.random().toString(36).slice(2, 7));
+    var base = (nm ? nm.textContent : '').trim().replace(/\s+/g, '-').toLowerCase().slice(0, 24) || 'ex';
+    var all = document.querySelectorAll('.ex-name, .ss-name, .lift-name');
+    var occ = 0, mine = card.querySelector('.ex-name, .ss-name, .lift-name');
+    for (var i = 0; i < all.length; i++) {
+      var t = all[i].textContent.trim().replace(/\s+/g, '-').toLowerCase().slice(0, 24) || 'ex';
+      if (t === base) { if (all[i] === mine) break; occ++; }
+    }
+    return 'x-' + base + (occ ? '-' + occ : '');
   }
 
   function run() {
-    document.querySelectorAll('.ex-card[data-id]').forEach(function (c) {
-      build(c.querySelector('.ex-content') || c, c, c.dataset.id, setsOf(c), restSecs(c));
+    // Match cards WITH OR WITHOUT data-id. Older templates (STNDR push-pull-legs,
+    // PSU psu-strength, weeks-to-open, legacy-prep, s4-*, most of pmc-workout)
+    // render .ex-card/.lift-card with no data-id, so a data-id-only selector
+    // silently skipped them. Fall back to a stable id derived from the name.
+    document.querySelectorAll('.ex-card').forEach(function (c) {
+      // host varies by template: .ex-content (PMC/MC), .ex-body (STNDR), else card
+      build(c.querySelector('.ex-content') || c.querySelector('.ex-body') || c, c, c.dataset.id || nameId(c), setsOf(c), restSecs(c));
     });
-    document.querySelectorAll('.ss-ex[data-id]').forEach(function (c) {
-      build(c.querySelector('.ss-content') || c, c, c.dataset.id, setsOf(c), 90);
+    document.querySelectorAll('.ss-ex').forEach(function (c) {
+      build(c.querySelector('.ss-content') || c.querySelector('.ex-body') || c, c, c.dataset.id || nameId(c), setsOf(c), 90);
     });
     document.querySelectorAll('.ex-item').forEach(function (c) {
       build(c, c, c.dataset.id || nameId(c), setsOf(c), restSecs(c));
     });
     document.querySelectorAll('.lift-card').forEach(function (c) {
-      build(c, c, liftId(c), (function () { var m = c.querySelector('.lift-meta'); return m ? m.textContent.trim() : ''; })(), restSecs(c));
+      build(c, c, c.dataset.id || liftId(c), (function () { var m = c.querySelector('.lift-meta'); return m ? m.textContent.trim() : ''; })(), restSecs(c));
     });
   }
 
