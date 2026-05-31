@@ -192,6 +192,31 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .cat-card.pmc .cat-designer{color:#c084fc;}
 .cat-card.mc .cat-designer{color:#d4af37;}
 
+/* ── Daily Gainz — premium dynamic card (Phase 2) ── */
+.cat-card.gainz{border-top-width:3px;}
+.cat-card.gainz .cat-icon{animation:gzPulse 3.2s ease-in-out infinite;}
+@keyframes gzPulse{0%,100%{opacity:0.18;transform:scale(1);}50%{opacity:0.32;transform:scale(1.06);}}
+.gz-sheen{position:absolute;top:0;left:-60%;width:40%;height:100%;pointer-events:none;
+  background:linear-gradient(105deg,transparent,rgba(217,249,157,0.10),transparent);
+  transform:skewX(-18deg);animation:gzSheen 5.5s ease-in-out infinite;}
+@keyframes gzSheen{0%{left:-60%;}55%,100%{left:140%;}}
+.gz-live{margin-top:12px;padding-top:12px;border-top:1px solid rgba(217,249,157,0.18);
+  display:flex;flex-direction:column;gap:9px;}
+.gz-streak{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;
+  color:#d9f99d;letter-spacing:0.02em;}
+.gz-streak .gz-flame{font-size:15px;filter:drop-shadow(0 0 6px rgba(132,204,22,0.55));}
+.gz-streak .gz-streak-sub{color:#94a3b8;font-weight:700;}
+.gz-resume{display:flex;align-items:center;gap:10px;background:rgba(132,204,22,0.12);
+  border:1px solid rgba(132,204,22,0.32);border-radius:12px;padding:9px 12px;
+  -webkit-tap-highlight-color:transparent;transition:background 0.15s,transform 0.1s;}
+.gz-resume:active{background:rgba(132,204,22,0.22);transform:scale(0.985);}
+.gz-resume-ico{font-size:18px;}
+.gz-resume-body{min-width:0;flex:1;}
+.gz-resume-lbl{font-size:9px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#84cc16;}
+.gz-resume-name{font-size:13px;font-weight:800;color:#f0fdf4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gz-resume-prog{font-size:11px;font-weight:700;color:#a3e635;margin-left:auto;flex-shrink:0;}
+.gz-resume-arrow{color:#d9f99d;font-size:15px;flex-shrink:0;}
+
 /* Exercise library link */
 .lib-link{display:flex;align-items:center;gap:12px;background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.22);border-radius:14px;padding:14px 16px;text-decoration:none;color:#e2e8f0;margin-bottom:20px;}
 .lib-link:active{background:rgba(212,175,55,0.12);}
@@ -411,11 +436,16 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <div class="cat-designer">✍️ Designed by CBUM</div>
     </a>
 
-    <a href="cat-gainz.html" class="cat-card gainz">
+    <a href="cat-gainz.html" class="cat-card gainz" id="gainzCard">
       <span class="cat-icon">💪</span>
+      <span class="gz-sheen"></span>
       <div class="cat-tag">Volume · Daily</div>
       <div class="cat-name">Daily Gainz</div>
       <div class="cat-meta">Daily volume-builders for consistent muscle growth.</div>
+      <div class="gz-live" id="gzLive" style="display:none;">
+        <div class="gz-streak" id="gzStreak"></div>
+        <div class="gz-resume" id="gzResume" style="display:none;"></div>
+      </div>
       <div class="cat-count">8 Programs →</div>
       <div class="cat-designer">✍️ Designed by Bradley Martyn</div>
     </a>
@@ -511,10 +541,45 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 </div>
 
 <script src="conditioning-data.js"></script>
+<script src="mc-live-tracker.js"></script>
 <script>
 // ── DATE ──
 const d=new Date();
 document.getElementById('todayDate').textContent=d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+
+// ── DAILY GAINZ — dynamic live strip (Phase 2) ──
+(function populateGainz(){
+  if(!window.MCActivity) return;
+  var a=window.MCActivity.get();
+  var live=document.getElementById('gzLive'), streakEl=document.getElementById('gzStreak'), resumeEl=document.getElementById('gzResume');
+  if(!live||!streakEl||!resumeEl) return;
+
+  var hasStreak=a.streak>0, hasResume=!!a.last;
+  if(!hasStreak && !hasResume){ live.style.display='none'; return; }
+  live.style.display='flex';
+
+  if(hasStreak){
+    streakEl.innerHTML='<span class="gz-flame">🔥</span>'+a.streak+'-day streak'+
+      (a.trainedToday?' <span class="gz-streak-sub">· trained today</span>':' <span class="gz-streak-sub">· keep it alive</span>');
+  } else {
+    streakEl.innerHTML='<span class="gz-flame">✨</span><span class="gz-streak-sub">Start your streak — log a session</span>';
+  }
+
+  if(hasResume){
+    var L=a.last, prog=(L.total?Math.round((L.done/L.total)*100):0);
+    resumeEl.style.display='flex';
+    resumeEl.innerHTML='<span class="gz-resume-ico">↩️</span>'+
+      '<div class="gz-resume-body"><div class="gz-resume-lbl">Resume last workout</div>'+
+      '<div class="gz-resume-name"></div></div>'+
+      '<span class="gz-resume-prog">'+L.done+'/'+L.total+'</span>'+
+      '<span class="gz-resume-arrow">→</span>';
+    resumeEl.querySelector('.gz-resume-name').textContent=L.title; // textContent = no HTML injection
+    resumeEl.addEventListener('click',function(ev){
+      ev.preventDefault(); ev.stopPropagation();
+      location.href=L.pageId;
+    });
+  } else { resumeEl.style.display='none'; }
+})();
 
 // ── PROGRAMS DATA ──
 const PROGS=[
