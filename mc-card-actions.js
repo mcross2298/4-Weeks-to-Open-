@@ -17,8 +17,11 @@
   if (window.__mcCardActions) return;      // guard against double-include
   window.__mcCardActions = true;
 
-  var CARD_SEL = '.ex-card, .ex-item, .lift-card';
-  var NAME_SEL = '.ex-name, .lift-name, .var-name';
+  var CARD_SEL = '.ex-card, .ex-item, .lift-card, .ss-ex';
+  var NAME_SEL = '.ex-name, .lift-name, .var-name, .ss-name';
+  // body/content wrapper inside a card — meatball, note and arrows mount here.
+  // .ss-ex (superset sub-exercise) uses .ss-content as its body.
+  var BODY_SEL = '.ex-body, .ss-content';
   var PAGE_ID  = (location.pathname.split('/').pop() || 'index.html');
 
   var ORDER_KEY = 'mc_ex_order';   // { pageId: { containerKey: [name, name, ...] } }
@@ -177,7 +180,7 @@
   function renderNote(card) {
     var name = cardName(card);
     var text = getNote(name);
-    var body = card.querySelector('.ex-body') || card;
+    var body = card.querySelector(BODY_SEL) || card;
     var existing = card.querySelector('.mc-note');
     if (text) {
       if (!existing) { existing = document.createElement('div'); existing.className = 'mc-note'; body.appendChild(existing); }
@@ -220,7 +223,7 @@
     ctrls.className = 'mc-reorder-ctrls';
     ctrls.innerHTML = '<button class="mc-arrow mc-up" aria-label="Move up">▲</button>' +
                       '<button class="mc-arrow mc-down" aria-label="Move down">▼</button>';
-    (card.querySelector('.ex-body') || card).appendChild(ctrls);
+    (card.querySelector(BODY_SEL) || card).appendChild(ctrls);
     ctrls.querySelector('.mc-up').addEventListener('click', function (e) { e.stopPropagation(); move(card, -1); });
     ctrls.querySelector('.mc-down').addEventListener('click', function (e) { e.stopPropagation(); move(card, 1); });
   }
@@ -279,7 +282,7 @@
   //  INJECTION + HYDRATION                                                 //
   // ====================================================================== //
   function injectMeatball(card) {
-    var host = card.querySelector('.ex-body') || card;
+    var host = card.querySelector(BODY_SEL) || card;
     if (host.querySelector(':scope > .mc-meatball')) return;
     if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
     var nameEl = card.querySelector(NAME_SEL);
