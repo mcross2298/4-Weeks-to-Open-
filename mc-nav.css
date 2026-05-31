@@ -20,3 +20,18 @@
 /* keep page content and the floating rest timer clear of the fixed bar */
 body.mc-has-nav{padding-bottom:76px !important;}
 body.mc-has-nav .timer-float{bottom:88px;}
+
+/* Finish-Workout bar must sit ABOVE the nav bar (nav is z-index:140, bottom:0),
+   slimmed down so the bottom stays clean. mc-nav.js adds .mc-has-fw when a
+   .fw-bar is present. */
+body.mc-has-nav .fw-bar{
+  bottom:60px;z-index:120;
+  padding:8px 14px calc(8px + env(safe-area-inset-bottom));
+  gap:8px;
+}
+body.mc-has-nav .fw-btn{
+  flex:1 1 auto;padding:9px 14px;font-size:13px;border-radius:10px;
+}
+body.mc-has-nav.mc-has-fw{padding-bottom:132px !important;}
+body.mc-has-nav.mc-has-fw .timer-float{bottom:140px;}
+

@@ -34,6 +34,13 @@
     });
     document.body.appendChild(nav);
     document.body.classList.add('mc-has-nav');
+    // a fixed Finish-Workout bar needs to clear the nav bar + extra body padding.
+    // It is often rendered late by the page's own JS, so re-check for a bit.
+    flagFinishBar();
+    [300, 900, 1800].forEach(function (d) { setTimeout(flagFinishBar, d); });
+  }
+  function flagFinishBar() {
+    if (document.querySelector('.fw-bar')) document.body.classList.add('mc-has-fw');
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build);
