@@ -1,0 +1,7168 @@
+[
+  {
+    "name": "Adduction Machine",
+    "muscle": "Adductors",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Adduction Machine (Cluster)",
+    "muscle": "Adductors",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Adductor Machine",
+    "muscle": "Adductors",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Back Extension",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Bent Over Row",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Deadlift",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Deadlift (snatch grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Incline Face Pulls",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Pendlay Rows",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump",
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Row",
+    "muscle": "Back",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Row (overhand grip)",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Upright Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump",
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Upright Row (hands touching)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Bent Over Barbell Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Bent Over Row",
+    "muscle": "Back",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Bent Over Smith Machine Rows",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Face Pull",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Rear Delt Fly (face pull variation)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Row",
+    "muscle": "Back",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Row (low pulley · wide bar)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Upright Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Upright Row (bilateral)",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Chest-Supported Row (pronated)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Close Grip Cable Rows",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Incline Row",
+    "muscle": "Back",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Seal Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Slight Incline Row",
+    "muscle": "Back",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Deadlift",
+    "muscle": "Back",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Arm Bent Over DB Row",
+    "muscle": "Back",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Arm DB Incline Row",
+    "muscle": "Back",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Arm DB Row",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Arm DB Slight Incline Row",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Handle Kneeling Straight Arm Lat Pulldowns",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Straight Arm Lat Pulldown"
+  },
+  {
+    "name": "Face Pull (rope)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Face Pulls (rope)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hammer Strength High Row",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hammer Strength Seated Row",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "High Incline Bench Support Double Arm DB Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "High Incline DB Row",
+    "muscle": "Back",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "High Pull",
+    "muscle": "Back",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hyperextensions",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Barbell Face Pulls",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Bench Face Pulls",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Bench Support Double Arm DB Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Bench Supported Double Arm DB Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline DB Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump",
+      "PMC",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline DB Row (bilateral)",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline DB Row (high incline)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline DB Row (medium)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline DB Row (slight)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Pronated DB Rows",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Kneeling Lat Pull Down (attachment of choice)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Kneeling Straight Arm Lat Pulldowns",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Straight Arm Lat Pulldown"
+  },
+  {
+    "name": "Lat Pull Down",
+    "muscle": "Back",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pull Down (outside shoulder width)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pulldown Leaning Away",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pulldowns (behind neck)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pulldowns (wide)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Leaning Away Lat Pulldown",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Machine High Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Machine High Row (variation of choice)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Machine Low Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Machine Mid Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Neutral Grip Wide Seated Cable Rows",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Over Arched Pull Up",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pendlay Barbell Rows",
+    "muscle": "Back",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pendlay Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pendlay Rows (wide grip)",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pull Ups (outside shoulder width)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pull-ups",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump",
+      "MC",
+      "PSU Football",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pull-Ups (AMRAP warm-up)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pull-Ups (weighted if possible)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Incline Face Pulls",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Seated Pulldowns",
+    "muscle": "Back",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Rope Attachment Pulldowns",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Rope Tricep Pulldowns",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Cable Mid Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Cable Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Cable Row (bilateral, close grip)",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Cable Row (bilateral, wide grip)",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Cable Row (close V grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Cable Row (neutral grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Cable Row (rope attachment)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Cable Row (shoulder width D grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Cable Row (shoulder width)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Cable Row (wide D grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Cable Row (wide grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Cable Row V Grip",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated V Grip Cable Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Cable Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Cable Row (low pulley)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm DB Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump",
+      "PMC",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Hammer Strength Row",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Hammer Strength Seated Row",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Slight Incline Bench Support Double Arm DB Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Slight Incline DB Row",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Smith Machine Bent Over Row",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Double Arm Row",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Straight Arm Cable Pulldown",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Straight Arm Lat Pull Down",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Straight Arm Lat Pulldown"
+  },
+  {
+    "name": "Straight Arm Lat Pulldown",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": "Straight Arm Lat Pulldown"
+  },
+  {
+    "name": "Straight Arm Lat Pulldown (cable)",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": "Straight Arm Lat Pulldown"
+  },
+  {
+    "name": "Straight Arm Lat Pulldowns (rope)",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": "Straight Arm Lat Pulldown"
+  },
+  {
+    "name": "Straight Arm Pulldown",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Straight Arm Pulldown (rope)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Straight Arm Rope Pulldown",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "T-Bar Row",
+    "muscle": "Back",
+    "programs": [
+      "PMC",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Trap Bar Deadlift",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Underhand Bent Over Barbell Rows",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Underhand Cable Rows",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Underhand Lat Pulldown",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Underhand Lat Pulldown (Cluster)",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Upright Row",
+    "muscle": "Back",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "V Grip Cable Rows",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Weighted Back Hyperextensions",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Wide Grip Cable Row",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Wide Grip Pendlay Rows",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Wide Grip Seated Cable Row",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Wide Lat Pulldowns",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "100 Rep Bicep Easy Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "21s",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Alternating DB Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Alternating Hammer Curls",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Alternating Incline DB Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Alternating Standing Hammer Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump",
+      "MC"
+    ],
+    "library_visible": true,
+    "master": "Barbell Curl"
+  },
+  {
+    "name": "Barbell Curl (close grip)",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": "Barbell Curl"
+  },
+  {
+    "name": "Barbell Curl (heavy)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Barbell Curl (inside shoulder width)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Barbell Curl"
+  },
+  {
+    "name": "Barbell Curl (inside shoulder)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Barbell Curl"
+  },
+  {
+    "name": "Barbell Curl (outside shoulder width)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Barbell Curl"
+  },
+  {
+    "name": "Barbell Curl (outside shoulder)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Barbell Curl"
+  },
+  {
+    "name": "Barbell Curl (outside/shoulder/touching)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Barbell Curl"
+  },
+  {
+    "name": "Barbell Curl (shoulder width)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Barbell Curl"
+  },
+  {
+    "name": "Barbell Curls (close grip)",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": "Barbell Curl"
+  },
+  {
+    "name": "Barbell Curls (shoulder width)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Barbell Curl"
+  },
+  {
+    "name": "Barbell Curls (wide grip)",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": "Barbell Curl"
+  },
+  {
+    "name": "Barbell Hammer Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Preacher (shoulder width)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Preacher Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Preacher Curl (hands touching)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Preacher Curl (inside grip)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Preacher Curl (inside shoulder width)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Preacher Curl (inside shoulder)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Preacher Curl (shoulder width)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Preacher Curls (outside grip)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Reverse Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Reverse Wrist Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Spider Curls",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Wrist Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Behind the Back Barbell Forearm Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Bicep Cable Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Curl (bilateral EZ-bar)",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Curl (bilateral W-bar)",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Curl (EZ bar)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Curl (shoulder width)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Curl (W-bar · inside shoulder width)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Rope Hammer Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Close Grip Barbell Curls",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": "Barbell Curl"
+  },
+  {
+    "name": "Concentration Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "D Grip Hammer Cable Curls",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "D-Grip Hammer Cable Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Curl (warm-up)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Spider Curls",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Arm DB Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Arm Hammer Curls",
+    "muscle": "Biceps",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Arm Hammer Preacher Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Arm Incline DB Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Arm Incline Hammer Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "EZ Bar Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "EZ Bar Spider Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat Bar Cable Curl (hands touching)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Floor Cable Concentration Curl *",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Floor Seated Cable Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hammer Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Heavy EZ Bar Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline DB Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline DB Curl (bilateral)",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline DB Hammer Curls",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline DB Spider Curls (3 grip widths)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Double Arm DB Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Spider Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Kneeling Reverse Forearm Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Machine Preacher Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump",
+      "PMC",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Machine Preacher Curl (Cluster)",
+    "muscle": "Biceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Machine Preacher Curl (inside shoulder width)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pinwheel Curls",
+    "muscle": "Biceps",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Preacher Curl Machine",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Preacher Curl ¼ Reps (up + ¼ + full rep = 1)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Preacher Curls",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump",
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Barbell Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": "Reverse Barbell Curl"
+  },
+  {
+    "name": "Reverse Barbell Wrist Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Curl (barbell)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Grip Barbell Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Reverse Barbell Curl"
+  },
+  {
+    "name": "Reverse Grip Barbell Preacher Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Grip Preacher Curls",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Alternating DB Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Barbell Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Barbell Curl"
+  },
+  {
+    "name": "Seated DB Curls",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Double Arm DB Curls",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Double Arm Dumbbell Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Double Arm Dumbbell Hammer Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Double Arm Hammer Curls",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Cable Curls",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Dumbbell Concentration Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Preacher Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Spider Curls",
+    "muscle": "Biceps",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Barbell Curls (wide grip)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Barbell Curl"
+  },
+  {
+    "name": "Standing Behind the Back Wrist Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Double Arm Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Straight Bar Cable Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Straight Bar Cable Curl (Cluster)",
+    "muscle": "Biceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "W Bar Cable Curls",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "W Grip Cable Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "W-Bar Cable Curl (inside shoulder width)",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Calf Raises",
+    "muscle": "Calves",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Calf Raise (feet neutral)",
+    "muscle": "Calves",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Calf Raises",
+    "muscle": "Calves",
+    "programs": [
+      "PMC",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Calf Raise",
+    "muscle": "Calves",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Calf Raise (feet neutral)",
+    "muscle": "Calves",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Calf Raise (toes slightly turned out)",
+    "muscle": "Calves",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Smith Machine Calf Raises",
+    "muscle": "Calves",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Battle Ropes Phase 1 — Basic",
+    "muscle": "Cardio",
+    "programs": [
+      "Faint of Heart"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Battle Ropes — Advanced Level 1",
+    "muscle": "Cardio",
+    "programs": [
+      "Faint of Heart"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Battle Ropes — Advanced Level 2",
+    "muscle": "Cardio",
+    "programs": [
+      "Faint of Heart"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Battle Ropes — Advanced Level 3",
+    "muscle": "Cardio",
+    "programs": [
+      "Faint of Heart"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Battle Ropes — Intermediate",
+    "muscle": "Cardio",
+    "programs": [
+      "Faint of Heart"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Burpees",
+    "muscle": "Cardio",
+    "programs": [
+      "Faint of Heart"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Jump Rope",
+    "muscle": "Cardio",
+    "programs": [
+      "Faint of Heart"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Run",
+    "muscle": "Cardio",
+    "programs": [
+      "Faint of Heart"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Walk the Line",
+    "muscle": "Cardio",
+    "programs": [
+      "Faint of Heart"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Alternating Incline DB Press",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell 1-¼ Rep Bench",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Bench",
+    "muscle": "Chest",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Bench (underhand grip)",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Close Grip Bench",
+    "muscle": "Chest",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Floor Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Bench",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Bench Press",
+    "muscle": "Chest",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Bench Supported Kneeling Forearm Curl",
+    "muscle": "Forearms",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Bent Over Rear Delt DB Fly",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Bent Over Rear Delt Dumbbell Fly",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Bodyweight Diamond Push Up",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Bodyweight Push Up",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Chest Press (standing)",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Fly",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Fly (chest height)",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Rear Delt Fly",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Chest Dips",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Close Grip Bench",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Close Grip Bench Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Close Grip DB Press (DBs touching)",
+    "muscle": "Chest",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Chest Flies",
+    "muscle": "Chest",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Flat Bench",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Floor Press",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Hammer Incline Press",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Incline Press",
+    "muscle": "Chest",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Pullover",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Decline Barbell Skull Crusher (shoulder width)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Decline Bench Skull Crusher",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Decline Bench Skull Crusher (shoulder width)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Decline Cable Flies",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Decline Cable Fly",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Decline Chest Press",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Decline Dumbbell Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Decline Machine Press",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Decline Push-Up",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Deficit Push-Ups",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Diamond Push-Up",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Dip Machine",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Dips",
+    "muscle": "Chest",
+    "programs": [
+      "MC",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Dumbbell Floor Press (hammer grip)",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Dumbbell Pull Over",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat Barbell Bench",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat Barbell Bench (1-1/4 reps)",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat Barbell Bench Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat Barbell Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat Bench",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat Bench Cable Fly",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat Bench Hammer Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat Bench Skull Crushers",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat Chest Press",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat DB Bench",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat DB Flies",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat DB Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat Dumbbell Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat Dumbbell Press (neutral grip)",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat Hammer DB Press",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat Machine Chest Press",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat Machine Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Floor Press",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Fly",
+    "muscle": "Chest",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Fly to Press",
+    "muscle": "Chest",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hammer Grip DB Flat Bench",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hammer Grip DB Press",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hammer Strength Chest Press",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hammer Strength Decline Chest Press",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hammer Strength Decline Press",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hammer Strength Flat Chest Press",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hammer Strength Incline Press",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hammer Strength Incline Press (Cluster)",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "High Cable Fly (cross-body)",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "High Incline DB Bench",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "High Incline DB Flies",
+    "muscle": "Chest",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "High Incline DB Press",
+    "muscle": "Chest",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Alternating DB Press",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Barbell Bench",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Barbell Bench Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Barbell Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Bench",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Bench Alternating Dumbbell Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Bench Barbell Front Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Bench Cable Fly",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Bench Cable Fly (pronated)",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Bench DB Front Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Bench Double Arm Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Bench Double Arm Dumbbell Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Bench Pushdowns",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Bench Skullcrushers",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Cable Flies",
+    "muscle": "Chest",
+    "programs": [
+      "PMC",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Cable Fly",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Chest Flies",
+    "muscle": "Chest",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline DB Bench",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline DB Hammer Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline DB Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Hex Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Machine Chest Press",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Machine Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Press",
+    "muscle": "Chest",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Kneeling Reverse Forearm Curls (bench supported)",
+    "muscle": "Forearms",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Low Cable Fly (cross-body)",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Lying Flat Bench Supermans",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pec Deck",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pec Deck Fly",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pec Deck Fly Machine",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pec Deck Machine",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pelican Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pin Rack Bench",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pronated Chest Flies",
+    "muscle": "Chest",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pronated DB Chest Flies",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pronated DB Flies",
+    "muscle": "Chest",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pronated Incline DB Flies",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Push Ups",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Push-Up",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Rear Delt DB Fly (incline bench support)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse DB Flies",
+    "muscle": "Shoulders",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Incline Bench Concentration Curls",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Incline Bench Double Arm DB Spider Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Incline Bench Rear Delt Flies",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Incline Bench Support DB Spider Curl",
+    "muscle": "Biceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Incline Bench Support Rear Delt Dumbbell Fly",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Incline Rear Delt Fly",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Pec Deck",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Pec Deck (Rear Delts)",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Pec Deck Flies",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Pec Deck Fly",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Pec Deck Rear Delt Fly",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Bent Over Rear Delt DB Fly",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Cable Chest Flies",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Cable Flies",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated DB Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Decline Cable Fly",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Dip Machine",
+    "muscle": "Chest",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm DB Press (AMRAP)",
+    "muscle": "Chest",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Machine Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Slight Incline Chest Flies",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Slight Incline DB Bench",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Slight Incline DB Flies",
+    "muscle": "Chest",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Slight Incline DB Fly",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Slight Incline DB Fly Into Hex Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Slight Incline DB Hammer Press",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Slight Incline DB Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump",
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Slight Incline Dumbbell Fly (pronated)",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Slight Incline Dumbbell Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Slight Incline Dumbbell Press (neutral grip)",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Slight Incline Flies",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Slight Incline Hammer Press",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Slight Incline Smith Machine Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Smith Machine Close Grip Bench",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Smith Machine Close Grip Bench Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Smith Machine Flat Bench Press",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Cable Press (D grip)",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Plate Press Finisher",
+    "muscle": "Chest",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Standing Shoulder Cable Press (shoulder D grip)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Cable Press Down (V grip)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Dip Machine",
+    "muscle": "Triceps",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Weighted Chest Dip",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Weighted Dip",
+    "muscle": "Chest",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Weighted Push-up",
+    "muscle": "Chest",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Ab Wheel Rollout",
+    "muscle": "Core",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Abdominals",
+    "muscle": "Core",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Twists",
+    "muscle": "Core",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "GHD",
+    "muscle": "Core",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hanging Leg Raises",
+    "muscle": "Core",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Heavy Bag",
+    "muscle": "Core",
+    "programs": [
+      "Faint of Heart"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Heels to Heaven",
+    "muscle": "Core",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "High Pull Cable Crunch",
+    "muscle": "Core",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "In & Outs",
+    "muscle": "Core",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Jumping Jacks",
+    "muscle": "Core",
+    "programs": [
+      "Faint of Heart"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Plank",
+    "muscle": "Core",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Shadow Boxing",
+    "muscle": "Core",
+    "programs": [
+      "Faint of Heart"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Side Plank",
+    "muscle": "Core",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Sit-Ups (AMRAP)",
+    "muscle": "Core",
+    "programs": [
+      "Faint of Heart"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Supermans",
+    "muscle": "Core",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "USA Kettlebell Twist",
+    "muscle": "Core",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "USA Twists",
+    "muscle": "Core",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Cross Over (pronated grip)",
+    "muscle": "Forearms",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Chest Fly Machine (pronated grip)",
+    "muscle": "Forearms",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Close V Grip Lat Pulldowns",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "D Grip Tricep Pushdowns",
+    "muscle": "Forearms",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB 21",
+    "muscle": "Forearms",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Chest Flies (pronated grip)",
+    "muscle": "Forearms",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "EZ Bar Medium Grip",
+    "muscle": "Forearms",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Lat Pull Down (close V grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pull Down (close V-grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pull Down (inside shoulder width, reverse grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pull Down (shoulder width grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pull Down (wide D grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pull Down (wide grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pull Down (wide grip, behind neck)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pull Downs (shoulder width D grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pulldown (neutral grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pulldown (wide grip → neutral grip → underhand)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pulldown (wide grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pulldowns (close V grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pulldowns (reverse grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pulldowns (V grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Lat Pulldowns (wide D grip)",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Medium Grip Leaning Away Lat Pulldowns",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Medium Grip Leaning Away Lat Pulldowns ×",
+    "muscle": "Back",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Neutral Grip Tricep Pushdowns",
+    "muscle": "Forearms",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pec Deck Flies (pronated grip)",
+    "muscle": "Forearms",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pull Ups (wide grip)",
+    "muscle": "Forearms",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pull-Ups (wide grip)",
+    "muscle": "Forearms",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Grip Lat Pulldown",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Reverse Grip Pulldowns",
+    "muscle": "Forearms",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Grip Pushdowns",
+    "muscle": "Forearms",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Grip Tricep Pushdown (bilateral)",
+    "muscle": "Forearms",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Double Arm DB Front Raise (hammer grip)",
+    "muscle": "Forearms",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Slight Incline Dumbbell Fly (pronated grip)",
+    "muscle": "Forearms",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Pushdowns (V grip)",
+    "muscle": "Forearms",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "V Grip Lat Pulldown",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "V Grip Pulldowns",
+    "muscle": "Forearms",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "V Grip Tricep Pushdown (bilateral)",
+    "muscle": "Forearms",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "V Grip Tricep Pushdowns",
+    "muscle": "Forearms",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "V-Grip Lat Pulldowns",
+    "muscle": "Back",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "W Grip Pushdowns (hands touching)",
+    "muscle": "Forearms",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "W Grip Tricep Pushdowns (shoulder width)",
+    "muscle": "Forearms",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Weighted Pull Up (hammer grip)",
+    "muscle": "Forearms",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Wide D Grip Lat Pulldowns",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Wide D Grip Pulldown",
+    "muscle": "Forearms",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Wide Grip Behind Neck Lat Pulls",
+    "muscle": "Back",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Wide Grip Lat Pulldown",
+    "muscle": "Back",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": "Lat Pulldown"
+  },
+  {
+    "name": "Wide Grip Pulldowns",
+    "muscle": "Forearms",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Wide Grip Tricep Pulldowns",
+    "muscle": "Forearms",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Wrist Rolls — Backward",
+    "muscle": "Forearms",
+    "programs": [
+      "Faint of Heart"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Wrist Rolls — Forward",
+    "muscle": "Forearms",
+    "programs": [
+      "Faint of Heart"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Snatch Shrug",
+    "muscle": "Full Body",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hang Clean",
+    "muscle": "Full Body",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Power Clean",
+    "muscle": "Full Body",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Abduction Machine (Cluster)",
+    "muscle": "Legs - Glutes",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Barbell Hip Thrust",
+    "muscle": "Legs - Glutes",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Tricep Kickbacks",
+    "muscle": "Legs - Glutes",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Bent Over DB Tricep Kickbacks",
+    "muscle": "Legs - Glutes",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Arm Cable Tricep Kickbacks",
+    "muscle": "Legs - Glutes",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hip Thrust (variation of choice)",
+    "muscle": "Legs - Glutes",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Lying DB Kickbacks",
+    "muscle": "Legs - Glutes",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Double Arm DB Kickbacks",
+    "muscle": "Legs - Glutes",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Tricep Kickbacks",
+    "muscle": "Legs - Glutes",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "B-Stance DB RDLs",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Good Morning (feet touching)",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Good Morning (shoulder width)",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Good Mornings",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell RDL",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Stiff Leg Deadlift",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Stiff Leg Deadlift (shoulder width)",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB RDLs",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "MC",
+      "PMC",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Deficit Barbell Stiff Leg Deadlift (inside shoulder width)",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Dumbbell Leg Curl (variation of choice)",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Dumbbell Stiff Leg Deadlift",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat Bench Dumbbell Leg Curl",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Good Mornings",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Leg Curl (single leg, variation of choice)",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Lying Hamstring Curl",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Lying Leg Curl",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Lying Leg Curl (Cluster)",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Lying Leg Curl (feet shoulder width)",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Lying Leg Curl (single leg)",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "RDL",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Lying Leg Curl Hip Thrust",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Romanian Deadlifts",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Barbell Good Morning (outside shoulder width)",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Hamstring Curl",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Leg Curl",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump",
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Leg Curl (feet shoulder width)",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Leg Curl (feet touching)",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Leg Curl",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Leg Curl (variation of choice)",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Leg Lying Leg Curl",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Leg RDLs",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Stiff Leg Deadlift (using seated cable row)",
+    "muscle": "Legs - Hamstrings",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "[Squat variation — shoulder width stance]",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Back Squat",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Squat (feet shoulder width)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Squat (inside shoulder width stance)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Squat (inside shoulder width)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Squat (neutral stance)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Squat (outside shoulder width)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Squats (shoulder width)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Squats (wide stance)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Walking Lunge",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell/Smith/Goblet Squat (close stance)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Bodyweight Leg Extension",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Leg Extension"
+  },
+  {
+    "name": "Bodyweight Sissy Squat",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Box Same Leg Step-Ups",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Bulgarian Split Squats",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cannonball Hack Squat (feet low and touching)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cannonball Smith Machine Squats",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cannonball Squats",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Close Stance Barbell Back Squat",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Close Stance Cannonball Leg Press (heels elevated)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Close Stance Goblet Squat",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Close Stance Goblet Squat (deep range)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Bulg. Split Squat",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Goblet Squat",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Walking Lunges",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Dumbbell Goblet Squat (feet touching, heels elevated)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Dumbbell Walking Lunge",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Goblet Cannonball Squats",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Goblet Squat (cannonball) [COMPOUND SUB]**",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Goblet Squat (heels elevated)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Goblet Squats",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "MC",
+      "PMC",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Goblet Squats (cannonball, 1.5 reps)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Goblet Squats (neutral stance)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Goblet Squats (shoulder width, 1.5 reps)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Goblet Squats (wide stance, toes pointed out)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hack Squat",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "MC",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hack Squat (low foot placement · close stance)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hack Squat (medium to close stance)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hack Squat (medium-low foot placement)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hack Squat (shoulder width)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hack Squat Sissy Squat",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Knee To Toe Barbell Split Squat",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Leg Extension",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": "Leg Extension"
+  },
+  {
+    "name": "Leg Extension (Cluster)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Leg Extension (feet neutral — activation)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Leg Extension"
+  },
+  {
+    "name": "Leg Extension (feet neutral — burnout finisher)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Leg Extension (feet neutral — finisher)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Leg Extension (feet neutral — isometric finisher)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Leg Extension (feet neutral — primer)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Leg Extension (feet neutral — triple drop finisher)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Leg Extension (feet neutral — TUT finisher)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Leg Extension (feet neutral)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Leg Extension"
+  },
+  {
+    "name": "Leg Extension (feet slightly turned in — squeeze finisher)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Leg Extension (feet slightly turned out)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": "Leg Extension"
+  },
+  {
+    "name": "Leg Extensions (Cluster)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Leg Press",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "MC",
+      "PMC",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Leg Press (bilateral, feet shoulder width)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Leg Press (bilateral, wide stance)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Leg Press (Cluster)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Leg Press (feet high and outside shoulder width)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Leg Press (feet high and wide)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Leg Press (feet low and shoulder width)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Leg Press (feet low and touching on platform)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Leg Press (feet low and touching)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Leg Press (feet shoulder width)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Leg Press (high and wide, pyramid)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Leg Press (wide stance, feet high)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Medium Stance Leg Press",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Medium Stance Leg Press (Cluster)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Neutral Stance Goblet Squats",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Neutral Stance Leg Press",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Platz Hack Squat",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Same Leg Step-Ups",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Leg Extension",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": "Leg Extension"
+  },
+  {
+    "name": "Single Leg Press",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Leg Split Squats + Calf Raises",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Smith Machine Front Squat (inside shoulder width)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Smith Machine Split Squat",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Smith Machine Squat (outside shoulder width)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Smith Machine Squat (sumo stance)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Squat",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Walking Barbell Lunges",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Walking DB Lunges",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Walking Lunges",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Weighted Walking Lunges",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Wide Stance Barbell Squats (toes pointed out)",
+    "muscle": "Legs - Quads",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Alternating DB Front Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Alternating Dumbbell Front Raise",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Alternating Front Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Arnold Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Around the Worlds",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Band IR/ER",
+    "muscle": "Shoulders",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Front Raise",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Front Raise (hands touching)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Front Raises (hands touching)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Military Press (standing)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Preacher Front Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Rack Front Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Shrug",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Shrug (snatch grip)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Shrug (wide grip)",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Shrugs (heavy)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Barbell Shrugs (neutral grip)",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Behind Back Barbell Shrug",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Behind The Back Barbell Shrug (outside shoulder width)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Behind the Back Barbell Shrug drop Wide Grip Barbell Shrug",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Bent Over Rear Delt DB Flies",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Front Raise",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Lateral Raise (bilateral)",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Rope Front Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Shoulder Press (single arm)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Shrug (bilateral)",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Shrug (close V grip)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Shrug (shoulder width D grip)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Shrug (shoulder width)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Shrug (snatch grip)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Side Lateral Raise",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Side Laterals",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Close Grip Barbell Shrug",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cross Body Rear Delt Cable Flies",
+    "muscle": "Shoulders",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Alternating Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Front Raise (alternating)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Front Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Military Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Seated Lateral Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Shrug",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Dumbbell Shrug",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Dumbbell Side Lateral",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Front Raise (alternating DB)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hammer Strength Shoulder Press (Cluster)",
+    "muscle": "Shoulders",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Incline DB Rear Delt Flies",
+    "muscle": "Shoulders",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Kneeling Dumbbell Shrug",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Lying Cable Shoulder Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Machine Shoulder Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Machine Shoulder Press (Cluster)",
+    "muscle": "Shoulders",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Machine Shrug",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Machine Side Lateral",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Overhead Cable Side Lateral Raise",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Overload Side Lateral Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Palms Facing Shoulder Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Incline Rear Delt Flies",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Machine Shoulder Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seat. Military Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Alternating DB Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Arnold Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Barbell Shoulder Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Barbell/Smith Shoulder Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Cable Shoulder Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated DB Military",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated DB Military Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated DB Shrugs",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated DB Side Lateral",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated DB Side Lateral Raise",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated DB Side Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Double Arm DB Front Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Double Arm DB Side Lateral (hammer grip)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Dumbbell Shoulder Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Dumbbell Shrug",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Front Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Hammer Strength Shoulder Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Machine Shoulder Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Military BB Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Rope Front Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Shoulder Press (hammer)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Shrugs",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Side Lateral Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump",
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Side Lateral Raises (1/4-1/2 reps)",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Side Lateral Raises (half reps heavy, then high rep)",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Shrugs",
+    "muscle": "Shoulders",
+    "programs": [
+      "MC",
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Side Lateral Raise",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Side Lateral Raises (DBs at quads)",
+    "muscle": "Shoulders",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Side Lateral Raises (DBs outside thighs)",
+    "muscle": "Shoulders",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Cable Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Cable Shrug",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Cable Side Lateral",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Leaning Cable Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Pelican Cable Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Smith Machine Shoulder Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Smith Machine Shrug",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Smith Machine Shrugs (shoulder width)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Snatch Grip Shrugs",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Arnold Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing BB Military Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Cable Military Press (W-bar)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing DB Front Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing DB Lateral Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing DB Shoulder Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing DB Shrugs",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing DB Side Lateral",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Dumbbell Military Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Dumbbell Shrug",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Dumbbell Side Lateral",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Dumbbell Side Lateral (hammer grip)",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Front Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Lateral Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Overhead Press",
+    "muscle": "Shoulders",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Reverse Delt Cable Flies",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Side Lateral Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Side Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Underhand Barbell Front Raises",
+    "muscle": "Shoulders",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Wide Barbell Shrugs",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Wide Grip Barbell Shrugs",
+    "muscle": "Shoulders",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Skull Crusher (hands outside shoulder width)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Barbell Skull Crushers",
+    "muscle": "Triceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cable Tricep Crossover",
+    "muscle": "Triceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Cross Chest Lying DB Tricep Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Skullcrushers",
+    "muscle": "Triceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "DB Tricep Cross Face + 12 Straight Up",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Diamond Pushups",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Arm DB Tricep Extensions",
+    "muscle": "Triceps",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Arm Lying Tricep Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Arm Overhead Dumbbell Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Arm Overhead Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Arm Overhead Pin Rack Extensions",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Arm Tricep Cable Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Double Arm Tricep Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Flat Skullcrushers (hands touching)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Floor Skull Crushers (hands touching)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "French Press",
+    "muscle": "Triceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Hands Touching Skullcrushers",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Barbell Skullcrushers",
+    "muscle": "Triceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Skull Crushers",
+    "muscle": "Triceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Incline Skullcrushers",
+    "muscle": "Triceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Lying DB Extension + Cross Chest Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Lying Single Arm Tricep Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Machine Tricep Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Machine Tricep Press Down",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Overhead DB Extension (two hands)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Overhead Tricep Extension (cable rope)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Overhead Tricep Extension (cable)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Overhead Tricep Rope Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Overhead Tricep Rope Extension (bilateral)",
+    "muscle": "Triceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Pushups",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Quad Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Quad Extension Finisher",
+    "muscle": "Triceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": false,
+    "master": null
+  },
+  {
+    "name": "Quad Extensions (AMRAP)",
+    "muscle": "Triceps",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Reverse Tricep Pushdowns",
+    "muscle": "Triceps",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Rope Pushdowns",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump",
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Rope Tricep Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Rope Tricep Pushdowns",
+    "muscle": "Triceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Double Arm Dumbbell Kick Back",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Double Arm Overhead Dumbbell Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Double Arm Tricep Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Overhead DB Tricep Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Overhead EZ Bar Tricep Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Seated Overhead Tricep Cable Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Cross Body Tricep Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Overhead Cable Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Overhead Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Pushdown",
+    "muscle": "Triceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Tricep Pushdown (D-handle)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Arm Tricep Pushdowns",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Single Leg Quad Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Skull Crushers",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump",
+      "MC",
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Skull Crushers (EZ bar)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Skullcrushers",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Skullcrushers (outside/shoulder/touching)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Slight Incline Skull Crushers",
+    "muscle": "Triceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Double Arm Cable Kick Outs",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Standing Double Arm DB Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Straight Bar Cable Pushdowns",
+    "muscle": "Triceps",
+    "programs": [
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep",
+    "muscle": "Triceps",
+    "programs": [
+      "PSU Football"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Cable Press Down",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Cable Press Down (outside shoulder width)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Cable Press Down (rope)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Cable Pushdowns (shoulder width)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Extension",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Extension Machine",
+    "muscle": "Triceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Machine (your choice)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Pushdown",
+    "muscle": "Triceps",
+    "programs": [
+      "MC",
+      "PMC",
+      "STNDR"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Pushdown (rope)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Pushdown (V-bar)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Pushdowns (inside shoulder)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Pushdowns (light warm-up)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Pushdowns (outside shoulder)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Pushdowns (rope attachment)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Pushdowns (rope)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump",
+      "MC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Pushdowns (shoulder width)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Pushdowns (W bar)",
+    "muscle": "Triceps",
+    "programs": [
+      "Daily Pump"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Rope Pushdown (bilateral)",
+    "muscle": "Triceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Rope Pushdowns",
+    "muscle": "Triceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep Rope Pushdowns (bilateral)",
+    "muscle": "Triceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  },
+  {
+    "name": "Tricep V-Bar Pushdowns",
+    "muscle": "Triceps",
+    "programs": [
+      "PMC"
+    ],
+    "library_visible": true,
+    "master": null
+  }
+]
