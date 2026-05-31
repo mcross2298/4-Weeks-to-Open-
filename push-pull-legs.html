@@ -298,6 +298,7 @@ body{background:#06080f;min-height:100vh;padding-bottom:48px;color:#e2e8f0;}
 .fw-auto-banner.show{display:block;}
 
 </style>
+<link rel="stylesheet" href="mc-card-actions.css"/>
 </head>
 <body>
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
@@ -782,25 +783,9 @@ document.addEventListener('DOMContentLoaded', function() {
     window.render = function() { origRender.apply(this, arguments); setTimeout(applyReplacements, 100); };
   }
   document.addEventListener('DOMContentLoaded', function() { setTimeout(applyReplacements, 400); });
-  // Long press to replace
-  let pressTimer;
-  document.addEventListener('touchstart', function(e) {
-    const card = e.target.closest('.ex-card, .ex-item, .lift-card');
-    if (!card) return;
-    pressTimer = setTimeout(function() {
-      const nameEl = card.querySelector('.ex-name, .lift-name');
-      if (!nameEl) return;
-      const origName = nameEl.dataset.orig || nameEl.textContent.trim();
-      nameEl.dataset.orig = origName;
-      // Navigate to library with exercise pre-selected
-      const url = 'exercise-library.html?replace=' + encodeURIComponent(origName);
-      if (confirm('Replace "' + origName.substring(0,40) + '"?\nTap OK to open Exercise Library.')) {
-        window.location.href = url;
-      }
-    }, 600);
-  }, {passive: true});
-  document.addEventListener('touchend', function() { clearTimeout(pressTimer); }, {passive: true});
-  document.addEventListener('touchmove', function() { clearTimeout(pressTimer); }, {passive: true});
+  // NOTE: "Replace exercise" is now triggered from the meatball (⋮) menu in
+  // mc-card-actions.js (Phase 1 consolidation). applyReplacements() above is
+  // kept so previously saved replacements still render with their badge.
 })();
 </script>
 
@@ -1100,5 +1085,6 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 </script>
 
+<script src="mc-card-actions.js"></script>
 </body>
 </html>
