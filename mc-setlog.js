@@ -91,7 +91,10 @@
   // ---- render the logger onto a host element -----------------------------
   function build(host, card, exId, setsStr, rs) {
     if (!host) return;
-    // remove any older logger / notes UI so there is exactly one logger
+    // Strip any OTHER wave3 logger / notes UI EVERY pass (before the early
+    // return), so page-native scripts that re-add their UI after us (e.g.
+    // pmc-workout's .ex-notes) don't win the race. NOTE: we deliberately do NOT
+    // strip .set-row — that is PSU's native exercise content, not a stray logger.
     Array.prototype.forEach.call(
       host.querySelectorAll('.setlog-toggle, .setlog-wrap, .note-btn, .note-area, .ex-notes-toggle, .ex-notes-wrap, .log-row'),
       function (n) { n.remove(); }
@@ -146,7 +149,14 @@
     var nm = card.querySelector('.lift-name');
     return 'psu-' + ((nm ? nm.textContent : '').trim().replace(/\s+/g, '-').toLowerCase().slice(0, 20) || 'x');
   }
-  function setsOf(card) { var se = card.querySelector('.ex-sets'); return se ? se.textContent.trim() : ''; }
+  // Read the prescribed scheme from whichever element a template uses:
+  //   .ex-sets        (PMC/MC/Pump/Gainz chip)
+  //   [data-field=sets] / .notes-row  (STNDR editable)
+  //   .lift-meta      (PSU "4 × 5" scheme)
+  function setsOf(card) {
+    var se = card.querySelector('.ex-sets, [data-field="sets"], .notes-row, .lift-meta');
+    return se ? se.textContent.trim() : '';
+  }
   // Deterministic id from the exercise name (NO random fallback — that would
   // change every pass, breaking persistence and re-rendering forever).
   // Duplicate names are disambiguated by their occurrence order in the DOM.
@@ -177,9 +187,10 @@
     document.querySelectorAll('.ex-item').forEach(function (c) {
       build(c, c, c.dataset.id || nameId(c), setsOf(c), restSecs(c));
     });
-    document.querySelectorAll('.lift-card').forEach(function (c) {
-      build(c, c, c.dataset.id || liftId(c), (function () { var m = c.querySelector('.lift-meta'); return m ? m.textContent.trim() : ''; })(), restSecs(c));
-    });
+    // NOTE: .lift-card (PSU) is intentionally NOT handled here — PSU pages ship
+    // their own complete per-set logger (.set-row: Set 1/2/3 with reps+weight+
+    // checkbox). Rendering a second logger there caused duplicate rows and the
+    // stray strikethroughs. PSU keeps its native logger.
   }
 
   // ---- init: run now + retry passes to win any race with native render ---
