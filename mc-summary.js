@@ -123,9 +123,9 @@
       '<div class="sum-hd">📊 Workout Summary</div>' +
       '<div class="sum-card">' +
         '<div class="sum-grid">' +
-          '<div class="sum-tot"><div class="sum-tv">0 / 0</div><div class="sum-tl">Sets Done</div></div>' +
+          '<div class="sum-tot"><div class="sum-tv">0 / 0</div><div class="sum-tl">Exercises</div></div>' +
+          '<div class="sum-tot"><div class="sum-tv">0</div><div class="sum-tl">Sets Done</div></div>' +
           '<div class="sum-tot"><div class="sum-tv">0</div><div class="sum-tl">Reps Done</div></div>' +
-          '<div class="sum-tot"><div class="sum-tv">0%</div><div class="sum-tl">Complete</div></div>' +
         '</div>' +
         '<div class="mcs-today" id="mcsToday"></div>' +
       '</div>';
@@ -150,8 +150,11 @@
       fill = wrap.querySelector('#mcsFill');
       label = wrap.querySelector('#mcsPct');
     }
-    tvs = sumSection.querySelectorAll('.sum-tv');
-    tls = sumSection.querySelectorAll('.sum-tl');
+    // Cover both markups: the live .sum-tv/.sum-tl cards AND the MC/PMC gold
+    // static totals (.sum-total-val/.sum-total-label) — both get overwritten
+    // with live session metrics so every program shows session-specific data.
+    tvs = sumSection.querySelectorAll('.sum-tv, .sum-total-val');
+    tls = sumSection.querySelectorAll('.sum-tl, .sum-total-label');
     todayLine = sumSection.querySelector('.mcs-today');
     if (!todayLine) {
       todayLine = document.createElement('div');
@@ -172,15 +175,17 @@
     if (label) label.textContent = pct + '%';
     sumSection.classList.toggle('mcs-complete', pct === 100 && t.exTotal > 0);
 
+    // Session-specific metrics (Ideal State): exercises completed, total sets
+    // completed, total reps completed — replacing any static macro estimates.
     if (tvs && tvs.length >= 3) {
-      tvs[0].textContent = t.doneSets + ' / ' + t.planSets;
-      tvs[1].textContent = String(t.doneReps);
-      tvs[2].textContent = pct + '%';
+      tvs[0].textContent = t.exDone + ' / ' + t.exTotal;
+      tvs[1].textContent = String(t.doneSets);
+      tvs[2].textContent = String(t.doneReps);
     }
     if (tls && tls.length >= 3) {
-      tls[0].textContent = 'Sets Done';
-      tls[1].textContent = 'Reps Done';
-      tls[2].textContent = 'Complete';
+      tls[0].textContent = 'Exercises';
+      tls[1].textContent = 'Sets Done';
+      tls[2].textContent = 'Reps Done';
     }
 
     // persist today's session + reflect it on the card
