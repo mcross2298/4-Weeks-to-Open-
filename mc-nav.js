@@ -7,6 +7,26 @@
    ?tab=. Skips pages that already have a native .tab-bar (the dashboard).
    Self-contained IIFE; portable; no per-page wiring.
    ========================================================================== */
+
+// ── PWA COLD-LAUNCH GUARD (Phase 4) ──────────────────────────────────────────
+// When the app is opened as an installed PWA / standalone home-screen shell,
+// force the Dashboard as the landing page — iOS captures the install-time URL
+// and ignores the manifest start_url, so a stale bookmark can otherwise open a
+// deep page (e.g. the old programs screen) with no way back. Fires at most once
+// per launch via a session flag, so in-app navigation is never disturbed.
+(function () {
+  try {
+    var standalone = window.navigator.standalone === true ||
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+    if (!standalone) return;
+    if (sessionStorage.getItem('mc_launched')) return;   // already past the cold launch
+    sessionStorage.setItem('mc_launched', '1');
+    var page = (location.pathname.split('/').pop() || '').toLowerCase();
+    var onHub = page === '' || page === 'index.html' || page === 'dashboard.html';
+    if (!onHub) location.replace('dashboard.html');
+  } catch (e) {}
+})();
+
 (function () {
   if (window.__mcNav) return;
   window.__mcNav = true;
