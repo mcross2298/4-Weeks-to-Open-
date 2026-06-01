@@ -50,3 +50,17 @@
 }
 .mcl-ck.done{background:rgba(52,211,153,0.16);border-color:rgba(52,211,153,0.45);color:#34d399;}
 .mcl-row.done-row .mcl-inp{opacity:0.5;text-decoration:line-through;}
+
+/* ── Superset rest timer (Phase 3) ──────────────────────────────────────────
+   A single rest timer lives on the SECOND superset exercise, parked directly
+   under its "Log Sets" dropdown. Give it room and a clear "rest after superset"
+   look so it reads as the interval AFTER the pair, not a per-exercise pill. */
+.rest-timer.mcl-rest-under{
+  display:inline-flex;margin-top:10px;
+}
+.ss-ex > .ss-content > .rest-timer.mcl-rest-under,
+.ss-content > .rest-timer.mcl-rest-under{margin-top:10px;}
+/* clean visual separation between the A and B blocks of a superset */
+.ss-card .ss-ex{margin-bottom:6px;}
+.ss-card .ss-divider{margin:10px 0;}
+.ss-card .ss-ex:last-child{margin-bottom:2px;}
