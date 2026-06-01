@@ -145,7 +145,6 @@ function renderList(){
     rows += '<div class="ex-row'+(added?' added':'')+'" onclick="toggleEx('+i+')">'
       + '<div class="ex-dot" style="background:'+col+';box-shadow:0 0 5px '+col+'44;"></div>'
       + '<div style="flex:1;min-width:0;"><div class="ex-nm">'+esc(e.name)+'</div>'
-      + (e.programs&&e.programs.length?'<div class="ex-progs">'+esc(e.programs.join(' · '))+'</div>':'')
       + '</div>'
       + '<div class="ex-add">'+(added?'✓':'+')+'</div></div>';
   }
