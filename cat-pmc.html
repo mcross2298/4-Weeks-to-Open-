@@ -165,7 +165,9 @@ body{background:#0d0618;min-height:100vh;padding-bottom:60px;}
 .block-ex.checked .block-ex-name{text-decoration:line-through;color:#34d399;}
 .block-ex-dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(251,146,60,0.5);flex-shrink:0;transition:all 0.15s;}
 .block-ex.checked .block-ex-dot{background:#34d399;border-color:#34d399;}
-.block-ex-name{font-size:13px;font-weight:600;color:#e2e8f0;}
+.block-ex-name{font-size:13px;font-weight:600;color:#e2e8f0;flex:1;}
+.block-ex-reps{font-size:10px;font-weight:800;letter-spacing:0.03em;color:#a78bfa;background:rgba(139,92,246,0.15);border-radius:5px;padding:3px 8px;white-space:nowrap;flex-shrink:0;}
+.block-giant-badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:#fb923c;background:rgba(251,146,60,0.12);border:1px solid rgba(251,146,60,0.3);border-radius:6px;padding:4px 10px;margin:0 16px 10px;}
 .block-rounds-btns{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px 14px;}
 .round-btn{padding:7px 16px;border-radius:8px;border:1px solid rgba(251,146,60,0.35);background:rgba(251,146,60,0.08);color:#fb923c;font-size:11px;font-weight:800;cursor:pointer;transition:all 0.15s;letter-spacing:0.05em;}
 .round-btn.done{background:rgba(52,211,153,0.15);border-color:rgba(52,211,153,0.4);color:#34d399;}
@@ -341,6 +343,7 @@ body{background:#0d0618;min-height:100vh;padding-bottom:60px;}
 </div><!-- end #view-workout -->
 
 
+<script src="pmc-s7-data.js"></script>
 <script>
 
 // ══════════════════════════════════════════════════════════════
@@ -1210,49 +1213,10 @@ const PMC_SPLITS = {
   'split7_ugee': {
     id: 'split7_ugee', file: 'pmc-s7-giant.html', split: 'Split 7',
     title: 'UGEE SETS', icon: '⚡', color: '#fb923c', bg: '#2d1500',
-    backUrl: 'pmc-split7.html', type: 'blocks',
-    data: [
-  {title:'Chest Giant Set',rounds:5,
-   warmup:'Push-Ups — 3 sets warmup',
-   note:'Complete all 5 exercises back to back = 1 round. Rest 2-3 min between rounds.',
-   exercises:[
-     'DB Flat Bench',
-     'Slight Incline DB Bench',
-     'High Incline DB Press',
-     'High Incline DB Flies',
-     'Pronated Flat Bench Flies',
-   ]},
-  {title:'Arms Giant Set',rounds:5,
-   warmup:'Dips — 3 sets warmup',
-   note:'Complete all 6 exercises consecutively = 1 round. Rest 2-3 min between rounds.',
-   exercises:[
-     'Double Arm Incline Curl',
-     'DB Spider Curl',
-     'Concentration Curls',
-     'Flat Bench Skull Crushers',
-     'Double Arm DB Skull Crushers',
-   ]},
-  {title:'Back Giant Set',rounds:5,
-   warmup:'Pull-Ups — 3 sets warmup',
-   note:'Complete all 5 exercises back to back = 1 round. Rest 2-3 min between rounds.',
-   exercises:[
-     'Wide Grip Lat Pulldown',
-     'Wide Grip Cable Row',
-     'V Grip Lat Pulldown',
-     'Double Arm DB Row',
-     'Straight Arm Lat Pulldown',
-   ]},
-  {title:'Shoulder Giant Set',rounds:5,
-   note:'Complete all 6 exercises consecutively = 1 round. Rest 2-3 min between rounds.',
-   exercises:[
-     'Seated Side Lateral Raises',
-     'Double Arm Incline Bench Front Raises',
-     'Barbell Upright Row',
-     'Barbell Face Pulls',
-     'Reverse Incline Bench DB Delt Flies',
-     'Seated DB Shrugs',
-   ]},
-],
+    backUrl: 'pmc-split7.html', type: 'blocks', s7: true,
+    // Rendered from the shared single source pmc-s7-data.js (PMC_S7) — keeps
+    // the app's Split 7 in lockstep with pmc-s7-giant.html (reps, badges, weeks).
+    data: [],
   },
 
 };
@@ -1539,9 +1503,12 @@ function renderEx(ex, wk){
 function renderBlocks(blocks, wid){
   return blocks.map((block, bi)=>{
     const rounds = block.rounds || 5;
-    const exHtml = block.exercises.map((name, ei)=>{
+    const exHtml = block.exercises.map((ex, ei)=>{
+      // support both legacy name-strings and {name, reps} objects (S7 shared source)
+      const name = (typeof ex === 'string') ? ex : ex.name;
+      const reps = (typeof ex === 'string') ? '' : (ex.reps || '');
       const id=`${wid}-b${bi}-e${ei}`, ck=checkState[id]?'checked':'';
-      return `<div class="block-ex ${ck}" data-id="${id}" data-type="bex"><div class="block-ex-dot"></div><div class="block-ex-name">${name}</div></div>`;
+      return `<div class="block-ex ${ck}" data-id="${id}" data-type="bex"><div class="block-ex-dot"></div><div class="block-ex-name">${name}</div>${reps?`<span class="block-ex-reps">${reps} reps</span>`:''}</div>`;
     }).join('');
     const roundBtns = Array.from({length:rounds},(_,i)=>{
       const rid=`${wid}-b${bi}-r${i}`, ck=roundState[rid]?'done':'';
@@ -1549,6 +1516,8 @@ function renderBlocks(blocks, wid){
     }).join('');
     return `<div class="block-card">
       <div class="block-header"><span class="block-title">${block.title}</span><span class="block-rounds">${rounds} ROUNDS</span></div>
+      ${block.part?`<div class="block-giant-badge">⚡ Giant Set · ${block.part}</div>`:''}
+      ${block.replace?`<div class="block-note">🔄 Replace week — swap 2 exercises via the Exercise Library</div>`:''}
       ${block.note?`<div class="block-note">${block.note}</div>`:''}
       ${block.warmup?`<div class="block-warmup"><span class="block-warmup-label">WARMUP</span>${block.warmup}</div>`:''}
       ${exHtml}
@@ -1758,18 +1727,24 @@ function render(){
   let contentHtml = '';
 
   if(workout.type === 'blocks'){
-    // UGEE SETS / Core / Abs — block format, no week tabs
+    // UGEE SETS / Core / Abs — block format
     const wid = `${currentWorkoutId}-${activeWeek}`;
-    contentHtml = renderBlocks(workout.data, wid);
+    // Split 7 renders from the shared single source so reps/badges/weeks match
+    // pmc-s7-giant.html exactly; other block workouts use their inline data.
+    const blocks = (workout.s7 && window.PMC_S7) ? PMC_S7.blocksForWeek(activeWeek) : workout.data;
+    contentHtml = renderBlocks(blocks, wid);
+    // Split 7 cycles rep ranges across 4 weeks, so it needs the week tabs too.
+    const blockWeekTabs = workout.s7 ? `<div class="week-tabs" style="border-bottom:1px solid ${_wcolor}1a;"><div class="wtabs">${tabs}</div></div>` : '';
     document.getElementById('workoutContent').innerHTML = `
       <div class="header">
         <a href="${workout.backUrl}" class="back-link">← ${workout.split}</a>
         <div class="header-inner">
           <div class="eyebrow">${workout.icon} PMC · ${workout.split}</div>
           <div class="title">${workout.title}</div>
-          <span class="week-badge">complete 5–10 rounds per lift</span>
+          <span class="week-badge">Week ${activeWeek} · complete 5 rounds per lift</span>
         </div>
       </div>
+      ${blockWeekTabs}
       <div class="content">
         <div class="tap-hint">Tap exercises to check off · tap round buttons when complete</div>
         ${contentHtml}
