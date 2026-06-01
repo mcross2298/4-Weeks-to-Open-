@@ -80,9 +80,15 @@
     save(exId, sn, w ? w.value.trim() : '', r ? r.value.trim() : '');
     ck.classList.add('done'); ck.textContent = '✓'; row.classList.add('done-row');
     updateHist(card, exId);
-    if (rs > 0 && typeof TMR !== 'undefined') {
+    if (rs > 0 && typeof TMR !== 'undefined' && TMR.start) {
       var t = card.querySelector('.rest-timer');
-      if (t) { try { (typeof buildTimerFloat === 'function') && buildTimerFloat(); } catch (e) {} TMR.start(t, rs, 'Rest'); }
+      if (t) {
+        // Use the rest value carried on the timer (from the program's data),
+        // so the auto-countdown matches the prescribed rest exactly.
+        var secs = (TMR.parseSeconds && TMR.parseSeconds(t.dataset.rest)) || rs;
+        try { (typeof buildTimerFloat === 'function') && buildTimerFloat(); } catch (e) {}
+        TMR.start(t, secs, 'Rest');
+      }
     }
   }
   function updateHist(card, exId) {
@@ -185,7 +191,10 @@
       build(c.querySelector('.ex-content') || c.querySelector('.ex-body') || c, c, c.dataset.id || nameId(c), setsOf(c), restSecs(c));
     });
     document.querySelectorAll('.ss-ex').forEach(function (c) {
-      build(c.querySelector('.ss-content') || c.querySelector('.ex-body') || c, c, c.dataset.id || nameId(c), setsOf(c), 90);
+      // Read the prescribed rest from the exercise's own .rest-timer (data),
+      // not a hardcoded value — fallback 90s. The superset normalizer below
+      // then keeps a single timer on the SECOND row and parks it under the logger.
+      build(c.querySelector('.ss-content') || c.querySelector('.ex-body') || c, c, c.dataset.id || nameId(c), setsOf(c), restSecs(c) || 90);
     });
     document.querySelectorAll('.ex-item').forEach(function (c) {
       build(c, c, c.dataset.id || nameId(c), setsOf(c), restSecs(c));
@@ -194,6 +203,38 @@
     // their own complete per-set logger (.set-row: Set 1/2/3 with reps+weight+
     // checkbox). Rendering a second logger there caused duplicate rows and the
     // stray strikethroughs. PSU keeps its native logger.
+    normalizeSupersetTimers();
+  }
+
+  // ---- superset rest-timer normalization ---------------------------------
+  // A superset is "do A then B back-to-back, THEN rest". So there must be a
+  // SINGLE rest timer, and it belongs on the SECOND exercise (B) — not the
+  // first. We also park it directly under the "Log Sets" dropdown, so the rest
+  // auto-starts the moment B's set row is checked off (onCheck handles that).
+  function normalizeSupersetTimers() {
+    document.querySelectorAll('.ss-card').forEach(function (sc) {
+      var exs = sc.querySelectorAll('.ss-ex');
+      if (exs.length < 2) return;
+      var last = exs[exs.length - 1];
+      Array.prototype.forEach.call(exs, function (ex) {
+        var timers = ex.querySelectorAll('.rest-timer');
+        if (ex !== last) {
+          // strip rest timers from every non-final superset row
+          Array.prototype.forEach.call(timers, function (t) { t.remove(); });
+          return;
+        }
+        // final row (B): keep exactly one timer, parked under the logger
+        var keep = timers[0];
+        for (var i = 1; i < timers.length; i++) timers[i].remove();
+        if (!keep) return;
+        var host = ex.querySelector('.ss-content') || ex;
+        var wrap = host.querySelector('.mcl-wrap');
+        if (wrap && keep.parentNode && keep.previousElementSibling !== wrap) {
+          keep.classList.add('mcl-rest-under');
+          wrap.parentNode.insertBefore(keep, wrap.nextSibling);
+        }
+      });
+    });
   }
 
   // ---- init: run now + retry passes to win any race with native render ---
