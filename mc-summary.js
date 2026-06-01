@@ -1,26 +1,31 @@
 /* ==========================================================================
    mc-summary.js  —  live Workout Summary + daily session tracking
    --------------------------------------------------------------------------
-   Turns the previously STATIC "Workout Summary" card (hard-coded totals like
-   "32 sets / ~390 reps") into a LIVE readout driven by what the lifter actually
-   checks off during the workout:
-     • Sets   → completed / planned
-     • Reps   → completed (best-effort from the prescribed rep scheme)
-     • %      → exercises complete
-   Plus a live progress bar, completed-row strikethrough, and a compact
-   "📊 Summary" jump button injected into the Finish-Workout bar.
+   Universal, session-specific "Workout Summary" card across EVERY program.
 
-   Phase 1 (universal deployment):
-   - If a page has workout cards but NO static `.sum-section`, this module now
-     AUTO-BUILDS a self-contained summary card (styled by mc-summary.css), so the
-     summary is universal across every workout page regardless of template.
-   - DAILY SESSION TRACKING: every time progress changes, today's session for
-     this program is persisted to `mc_daily_v1` (keyed YYYY-MM-DD|pid), giving a
-     real per-day session history that workout-logs.html (and the card's "Today"
-     line) can read back.
+   The MC Splits card is the gold standard: a per-lift breakdown
+   (icon · name · sets/reps) inside a themed card, plus a live progress bar
+   and three live totals (Exercises / Sets Done / Reps Done).
 
-   Pure DOM; recomputes on every check-off via a class MutationObserver.
-   Self-contained IIFE.
+   This module makes every other program (PMC, STNDR, Daily Gainz, Daily Pump,
+   Faint, PSU, …) match that look:
+
+   PATH A — pages that ship the rich MC `.summary-section` (MC Splits):
+     keep their hand-authored gold breakdown; only overlay the live progress
+     bar + rewrite the three totals to live session metrics.
+
+   PATH B — every other workout page (static `.sum-section` OR pages that ship
+     no summary at all):
+     (RE)BUILD the entire card from the exercise cards CURRENTLY VISIBLE on the
+     page — i.e. the current day / current week — so the breakdown always
+     reflects today's actual workout instead of a static whole-program split.
+     Each program keeps its own accent colour (read from its `.sum-hd` theme).
+
+   DAILY SESSION TRACKING: every progress change persists today's session for
+   this program to `mc_daily_v1` (keyed YYYY-MM-DD|pid) for workout-logs.html.
+
+   Pure DOM, recomputes on every check-off via a class/childList
+   MutationObserver. Self-contained IIFE.
    ========================================================================== */
 (function () {
   if (window.__mcSummary) return;
@@ -28,15 +33,24 @@
 
   var CARD_SEL = '.ex-card, .ss-ex, .ex-item, .lift-card';
   var NAME_SEL = '.ex-name, .ss-name, .lift-name';
+  var SETS_SEL = '.ex-sets, .lift-meta, [data-field="sets"]';
   // Two summary markups exist in the app:
-  //   .sum-section    — Phase-3 live card (+ the auto-built card below)
-  //   .summary-section — MC-favorite / PMC gold card (rich static breakdown)
-  // We enhance BOTH into the same hybrid: rich breakdown + live progress bar.
+  //   .summary-section — MC gold card (rich hand-authored breakdown)  → PATH A
+  //   .sum-section     — every other program's card / auto-built card → PATH B
   var SUMSEC_SEL = '.sum-section, .summary-section';
-  var ROWNAME_SEL = '.sum-nm, .sum-name';
   var DAILY_KEY = 'mc_daily_v1';
   var PID = (window.MC_PID_OVERRIDE || location.pathname.split('/').pop().replace('.html', '') || 'workout');
 
+  var GOLD = { r: 245, g: 200, b: 66 };
+
+  // ---- small utils -------------------------------------------------------
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function isVisible(el) {
+    return !!(el && (el.offsetWidth || el.offsetHeight || el.getClientRects().length));
+  }
   function programName() {
     var h = document.querySelector('.workout-title, .wk-title, .topbar-title, h1');
     var t = (h && h.textContent || document.title || '').trim();
@@ -45,6 +59,11 @@
   function todayKey() {
     var d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  // ---- visible exercise cards (current day / current week only) ----------
+  function cards() {
+    return Array.prototype.filter.call(document.querySelectorAll(CARD_SEL), isVisible);
   }
 
   // ---- parse a "sets" string into {sets, reps} ---------------------------
@@ -67,22 +86,66 @@
     return { sets: sets, reps: reps };
   }
 
-  function cardSetsReps(card) {
-    var el = card.querySelector('.ex-sets, .lift-meta, [data-field="sets"]');
-    return parseSetsReps(el ? el.textContent : '');
+  function cardSetsText(card) {
+    var els = card.querySelectorAll(SETS_SEL);
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (el.classList && el.classList.contains('rest-timer')) continue;
+      var txt = (el.textContent || '').trim();
+      if (txt && /\d/.test(txt) && !/^⏱️/.test(txt)) return txt;
+    }
+    return els.length ? (els[0].textContent || '').trim() : '';
   }
+  function cardSetsReps(card) { return parseSetsReps(cardSetsText(card)); }
   function cardName(card) {
     var el = card.querySelector(NAME_SEL);
     return (el ? el.textContent : '').trim();
   }
+  function cleanScheme(txt) {
+    return (txt || '').replace(/⏱️[^]*$/, '').replace(/\s+/g, ' ').trim().slice(0, 42);
+  }
 
-  // ---- compute planned + completed totals --------------------------------
+  // ---- per-lift icon (cosmetic, keeps the MC "by-lift" feel) -------------
+  function iconFor(name, scheme) {
+    var n = ((name || '') + ' ' + (scheme || '')).toLowerCase();
+    if (/amrap|to failure|\bfailure\b/.test(n)) return '💀';
+    if (/calf|calves/.test(n)) return '🦶';
+    if (/shoulder|delt|lateral raise|overhead press|military|arnold|upright row|face pull/.test(n)) return '🏔️';
+    if (/squat|leg press|lunge|hack|leg extension|hip thrust|leg curl|hamstring|\bham\b|rdl|romanian|deadlift|good morning|glute|step.?up/.test(n)) return '🦵';
+    if (/tricep|pushdown|skull|kickback|overhead extension|\bdip\b/.test(n)) return '💪';
+    if (/back|\brow\b|pull-?up|pull-?down|chin|\blat\b|shrug|\btrap/.test(n)) return '🪝';
+    if (/bench|chest|\bfly\b|flye|incline|decline|\bpec\b|push-?up|press/.test(n)) return '🫷';
+    if (/\babs?\b|core|crunch|plank|knee raise|sit-?up|leg raise|hollow/.test(n)) return '🔥';
+    if (/bicep|curl|preacher|hammer/.test(n)) return '💪';
+    return '🏋️';
+  }
+
+  // ---- accent colour (each program keeps its own theme) ------------------
+  function parseRgb(s) {
+    var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(s || '');
+    return m ? { r: +m[1], g: +m[2], b: +m[3] } : null;
+  }
+  function isGray(c) { return Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) < 20; }
+  function rgb(c) { return 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')'; }
+  function rgba(c, a) { return 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + a + ')'; }
+  // Reads the page's own `.sum-hd { color: … }` theme via a throwaway probe so
+  // PMC stays cyan, STNDR blue, Pump green, etc. Falls back to MC gold.
+  function accentOf() {
+    var probe = document.createElement('div');
+    probe.className = 'sum-hd';
+    probe.style.cssText = 'position:absolute;left:-99999px;top:0;height:0;overflow:hidden;';
+    document.body.appendChild(probe);
+    var c = parseRgb(getComputedStyle(probe).color);
+    if (probe.parentNode) probe.parentNode.removeChild(probe);
+    if (!c || isGray(c)) return GOLD;
+    return c;
+  }
+
+  // ---- compute live session totals (visible cards only) ------------------
   function totals() {
-    var cards = document.querySelectorAll(CARD_SEL);
-    var t = { planSets: 0, planReps: 0, doneSets: 0, doneReps: 0, exTotal: 0, exDone: 0, doneNames: {} };
-    Array.prototype.forEach.call(cards, function (c) {
-      var sr = cardSetsReps(c);
-      t.planSets += sr.sets; t.planReps += sr.reps; t.exTotal++;
+    var t = { doneSets: 0, doneReps: 0, exTotal: 0, exDone: 0, doneNames: {} };
+    cards().forEach(function (c) {
+      var sr = cardSetsReps(c); t.exTotal++;
       if (c.classList.contains('checked')) {
         t.doneSets += sr.sets; t.doneReps += sr.reps; t.exDone++;
         var nm = cardName(c); if (nm) t.doneNames[nm] = true;
@@ -93,13 +156,13 @@
 
   // ---- daily session persistence -----------------------------------------
   function saveDaily(t, pct) {
-    if (!t.doneSets && !t.exDone) return;              // nothing logged yet today — don't create empty rows
+    if (!t.doneSets && !t.exDone) return;              // nothing logged yet today
     var store;
     try { store = JSON.parse(localStorage.getItem(DAILY_KEY) || '{}'); } catch (e) { store = {}; }
     var k = todayKey() + '|' + PID;
     store[k] = {
       date: todayKey(), pid: PID, program: programName(),
-      planSets: t.planSets, doneSets: t.doneSets, doneReps: t.doneReps,
+      doneSets: t.doneSets, doneReps: t.doneReps,
       exTotal: t.exTotal, exDone: t.exDone, pct: pct, ts: Date.now()
     };
     try { localStorage.setItem(DAILY_KEY, JSON.stringify(store)); } catch (e) {}
@@ -109,101 +172,143 @@
     try { store = JSON.parse(localStorage.getItem(DAILY_KEY) || '{}'); } catch (e) { return null; }
     return store[todayKey() + '|' + PID] || null;
   }
-
-  // ---- render ------------------------------------------------------------
-  var sumSection, sumCard, bar, fill, label, tvs, tls, todayLine;
-
-  // Build a self-contained summary card when a page ships none (Phase 1).
-  function autoBuild() {
-    if (document.querySelector(SUMSEC_SEL)) return;            // a static/live card already exists
-    if (!document.querySelectorAll(CARD_SEL).length) return;   // not a workout page
-    var sec = document.createElement('section');
-    sec.className = 'sum-section mcs-auto';
-    sec.innerHTML =
-      '<div class="sum-hd">📊 Workout Summary</div>' +
-      '<div class="sum-card">' +
-        '<div class="sum-grid">' +
-          '<div class="sum-tot"><div class="sum-tv">0 / 0</div><div class="sum-tl">Exercises</div></div>' +
-          '<div class="sum-tot"><div class="sum-tv">0</div><div class="sum-tl">Sets Done</div></div>' +
-          '<div class="sum-tot"><div class="sum-tv">0</div><div class="sum-tl">Reps Done</div></div>' +
-        '</div>' +
-        '<div class="mcs-today" id="mcsToday"></div>' +
-      '</div>';
-    var fw = document.querySelector('.fw-bar');
-    var main = document.querySelector('main, .content, .workout-wrap, #app') || document.body;
-    if (fw && fw.parentNode) fw.parentNode.insertBefore(sec, fw);
-    else main.appendChild(sec);
+  function todayLineText() {
+    var e = todayEntry();
+    return e ? '✅ Saved today · ' + e.doneSets + ' sets · ' + e.doneReps + ' reps logged' : '';
   }
 
-  function ensureChrome() {
-    sumSection = document.querySelector(SUMSEC_SEL);
-    if (!sumSection) return false;
-    sumCard = sumSection.querySelector('.sum-card') || sumSection;
-    if (!bar) {
+  // ---- a session subtitle (muscle groups / day title) --------------------
+  function subtitle() {
+    var el = document.querySelector('.sum-subtitle, .title, .workout-title, .day-session');
+    var s = el ? (el.textContent || '').trim() : '';
+    s = s.replace(/\s*[—-]\s*MC Training.*$/i, '').trim();
+    return s.slice(0, 60);
+  }
+
+  // =========================================================================
+  // PATH A — MC gold standard `.summary-section`: keep static breakdown,
+  //          overlay live progress bar + rewrite the three totals.
+  // =========================================================================
+  function renderMC(host) {
+    var card = host.querySelector('.sum-card') || host;
+    if (!host.querySelector('.mcs-progress')) {
       var wrap = document.createElement('div');
       wrap.className = 'mcs-progress';
       wrap.innerHTML = '<div class="mcs-progress-top"><span class="mcs-progress-label">Live progress</span>' +
                        '<span class="mcs-progress-pct" id="mcsPct">0%</span></div>' +
                        '<div class="mcs-progress-track"><div class="mcs-progress-fill" id="mcsFill"></div></div>';
-      sumCard.insertBefore(wrap, sumCard.firstChild);
-      bar = wrap;
-      fill = wrap.querySelector('#mcsFill');
-      label = wrap.querySelector('#mcsPct');
+      card.insertBefore(wrap, card.firstChild);
     }
-    // Cover both markups: the live .sum-tv/.sum-tl cards AND the MC/PMC gold
-    // static totals (.sum-total-val/.sum-total-label) — both get overwritten
-    // with live session metrics so every program shows session-specific data.
-    tvs = sumSection.querySelectorAll('.sum-tv, .sum-total-val');
-    tls = sumSection.querySelectorAll('.sum-tl, .sum-total-label');
-    todayLine = sumSection.querySelector('.mcs-today');
-    if (!todayLine) {
-      todayLine = document.createElement('div');
-      todayLine.className = 'mcs-today';
-      sumCard.appendChild(todayLine);
-    }
-    return true;
-  }
-
-  function recompute() {
-    autoBuild();
-    if (!ensureChrome()) return;
-    injectSummaryButton();   // the .fw-bar may be rendered late by the page's own JS
     var t = totals();
     var pct = t.exTotal ? Math.round((t.exDone / t.exTotal) * 100) : 0;
-
+    var fill = host.querySelector('#mcsFill'), label = host.querySelector('#mcsPct');
     if (fill) fill.style.width = pct + '%';
     if (label) label.textContent = pct + '%';
-    sumSection.classList.toggle('mcs-complete', pct === 100 && t.exTotal > 0);
+    host.classList.toggle('mcs-complete', pct === 100 && t.exTotal > 0);
 
-    // Session-specific metrics (Ideal State): exercises completed, total sets
-    // completed, total reps completed — replacing any static macro estimates.
-    if (tvs && tvs.length >= 3) {
+    var tvs = host.querySelectorAll('.sum-total-val');
+    var tls = host.querySelectorAll('.sum-total-label');
+    if (tvs.length >= 3) {
       tvs[0].textContent = t.exDone + ' / ' + t.exTotal;
       tvs[1].textContent = String(t.doneSets);
       tvs[2].textContent = String(t.doneReps);
     }
-    if (tls && tls.length >= 3) {
-      tls[0].textContent = 'Exercises';
-      tls[1].textContent = 'Sets Done';
-      tls[2].textContent = 'Reps Done';
+    if (tls.length >= 3) {
+      tls[0].textContent = 'Exercises'; tls[1].textContent = 'Sets Done'; tls[2].textContent = 'Reps Done';
     }
 
-    // persist today's session + reflect it on the card
     saveDaily(t, pct);
-    if (todayLine) {
-      var e = todayEntry();
-      todayLine.textContent = e
-        ? '✅ Saved today · ' + e.doneSets + ' sets · ' + e.doneReps + ' reps logged'
-        : '';
-      todayLine.style.display = e ? '' : 'none';
-    }
+    var tl = host.querySelector('.mcs-today');
+    if (!tl) { tl = document.createElement('div'); tl.className = 'mcs-today'; card.appendChild(tl); }
+    tl.textContent = todayLineText();
+    tl.style.display = tl.textContent ? '' : 'none';
 
-    // strike-through completed exercises in the summary list (match by name)
-    Array.prototype.forEach.call(sumSection.querySelectorAll('.sum-row'), function (row) {
-      var nm = row.querySelector(ROWNAME_SEL);
+    Array.prototype.forEach.call(host.querySelectorAll('.sum-row'), function (row) {
+      var nm = row.querySelector('.sum-name, .sum-nm');
       var done = nm && t.doneNames[nm.textContent.trim()];
       row.classList.toggle('mcs-row-done', !!done);
     });
+  }
+
+  // =========================================================================
+  // PATH B — every other program: (re)build the whole card from the exercise
+  //          cards currently visible (current day / week), themed per program.
+  // =========================================================================
+  function totCard(val, lbl, acc) {
+    return '<div class="sum-tot" style="background:' + rgba(acc, 0.08) + ';border:1px solid ' + rgba(acc, 0.16) + ';">' +
+             '<div class="sum-tv" style="color:' + rgb(acc) + ';">' + esc(val) + '</div>' +
+             '<div class="sum-tl" style="color:' + rgb(acc) + ';">' + esc(lbl) + '</div>' +
+           '</div>';
+  }
+  function rowsHTML(acc) {
+    var html = '';
+    cards().forEach(function (c) {
+      var nm = cardName(c); if (!nm) return;
+      var setsTxt = cardSetsText(c);
+      var sr = parseSetsReps(setsTxt);
+      var done = c.classList.contains('checked');
+      var setLabel = sr.sets ? (sr.sets + ' set' + (sr.sets > 1 ? 's' : '')) : '—';
+      var repLabel = cleanScheme(setsTxt);
+      html += '<div class="sum-row' + (done ? ' mcs-row-done' : '') + '" style="border-bottom-color:' + rgba(acc, 0.13) + ';">' +
+                '<span class="sum-ico">' + iconFor(nm, setsTxt) + '</span>' +
+                '<span class="sum-nm">' + esc(nm) + '</span>' +
+                '<div class="sum-dt">' +
+                  '<span class="sum-st" style="color:' + rgb(acc) + ';">' + setLabel + '</span>' +
+                  (repLabel ? '<span class="sum-rp" style="color:' + rgb(acc) + ';">' + esc(repLabel) + '</span>' : '') +
+                '</div>' +
+              '</div>';
+    });
+    return html;
+  }
+  function buildGenerated(host) {
+    var acc = accentOf();
+    var t = totals();
+    var pct = t.exTotal ? Math.round((t.exDone / t.exTotal) * 100) : 0;
+    // signature so we only touch the DOM when the visible workout/state changes
+    var sig = pct + '|' + cards().map(function (c) {
+      return cardName(c) + (c.classList.contains('checked') ? '1' : '0');
+    }).join('~') + '|' + todayLineText();
+    if (host.__mcsSig === sig) return;
+    host.__mcsSig = sig;
+
+    var sub = subtitle();
+    var today = todayLineText();
+    host.innerHTML =
+      '<div class="sum-hd" style="color:' + rgb(acc) + ';">📊 Workout Summary' +
+        '<span style="flex:1;height:1px;background:linear-gradient(90deg,' + rgba(acc, 0.3) + ',transparent);display:block;margin-left:8px;"></span>' +
+      '</div>' +
+      // dark base card (readable on both dark- and light-themed programs),
+      // matching the MC / static cards, with the program's accent border.
+      '<div class="sum-card" style="background:rgba(10,14,24,0.92);border:1px solid ' + rgba(acc, 0.28) + ';">' +
+        '<div class="mcs-progress">' +
+          '<div class="mcs-progress-top"><span class="mcs-progress-label">Live progress</span>' +
+          '<span class="mcs-progress-pct" style="color:' + rgb(acc) + ';">' + pct + '%</span></div>' +
+          '<div class="mcs-progress-track"><div class="mcs-progress-fill" style="width:' + pct + '%;background:' + rgb(acc) + ';"></div></div>' +
+        '</div>' +
+        (sub ? '<div class="sum-sub" style="color:' + rgb(acc) + ';">' + esc(sub) + '</div>' : '') +
+        '<div class="mcs-rows">' + rowsHTML(acc) + '</div>' +
+        '<div class="sum-div" style="background:' + rgba(acc, 0.18) + ';"></div>' +
+        '<div class="sum-grid">' +
+          totCard(t.exDone + ' / ' + t.exTotal, 'Exercises', acc) +
+          totCard(String(t.doneSets), 'Sets Done', acc) +
+          totCard(String(t.doneReps), 'Reps Done', acc) +
+        '</div>' +
+        (today ? '<div class="mcs-today">' + esc(today) + '</div>' : '') +
+      '</div>';
+    host.classList.toggle('mcs-complete', pct === 100 && t.exTotal > 0);
+    saveDaily(t, pct);
+  }
+
+  // ---- auto-build an empty host when a page ships no summary at all -------
+  function autoBuild() {
+    if (document.querySelector(SUMSEC_SEL)) return;            // a card already exists
+    if (!cards().length) return;                               // not a workout page
+    var sec = document.createElement('section');
+    sec.className = 'sum-section mcs-auto';
+    var fw = document.querySelector('.fw-bar');
+    var main = document.querySelector('main, .content, .workout-wrap, #app') || document.body;
+    if (fw && fw.parentNode) fw.parentNode.insertBefore(sec, fw);
+    else main.appendChild(sec);
   }
 
   // ---- "Summary" jump button in the Finish-Workout bar -------------------
@@ -216,19 +321,37 @@
     btn.innerHTML = '📊<span>Summary</span>';
     btn.addEventListener('click', function (e) {
       e.preventDefault(); e.stopPropagation();
-      if (sumSection) sumSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      var host = document.querySelector(SUMSEC_SEL);
+      if (host) host.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
     fwbar.insertBefore(btn, fwbar.firstChild);
   }
 
-  // ---- init --------------------------------------------------------------
-  var t = null;
-  function schedule() { clearTimeout(t); t = setTimeout(recompute, 150); }
+  // ---- main recompute ----------------------------------------------------
+  var writing = false;
+  function recompute() {
+    writing = true;
+    try {
+      autoBuild();
+      injectSummaryButton();
+      var host = document.querySelector(SUMSEC_SEL);
+      if (!host) return;
+      if (host.classList.contains('summary-section')) {
+        renderMC(host);                 // PATH A — MC gold standard
+      } else if (cards().length) {
+        buildGenerated(host);           // PATH B — regenerate from today's lifts
+      }
+      // else: a static `.sum-section` on a page with no standard exercise
+      // cards (e.g. conditioning rounds/steps/cardio) — leave it untouched.
+    } finally {
+      setTimeout(function () { writing = false; }, 0);
+    }
+  }
+
+  var tId = null;
+  function schedule() { if (writing) return; clearTimeout(tId); tId = setTimeout(recompute, 150); }
 
   function init() {
-    autoBuild();
-    ensureChrome();
-    injectSummaryButton();
     recompute();
     var mo = new MutationObserver(schedule);
     mo.observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: true, childList: true });
