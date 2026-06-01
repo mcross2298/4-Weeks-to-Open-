@@ -11,9 +11,9 @@
 .sum-section.mcs-complete .mcs-progress-fill{background:linear-gradient(90deg,#34d399,#a3e635);}
 .sum-section.mcs-complete .mcs-progress-pct{color:#a3e635;}
 
-/* completed exercises struck through in the summary list */
-.mcs-row-done .sum-nm{text-decoration:line-through;opacity:0.6;}
-.mcs-row-done .sum-ico{filter:grayscale(1);opacity:0.55;}
+/* completed exercises struck through in the summary list (both markups) */
+.mcs-row-done .sum-nm,.mcs-row-done .sum-name{text-decoration:line-through;opacity:0.6;}
+.mcs-row-done .sum-ico,.mcs-row-done .sum-icon{filter:grayscale(1);opacity:0.55;}
 
 /* compact "Summary" jump button injected into the Finish-Workout bar */
 .mcs-sumbtn{

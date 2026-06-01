@@ -28,6 +28,12 @@
 
   var CARD_SEL = '.ex-card, .ss-ex, .ex-item, .lift-card';
   var NAME_SEL = '.ex-name, .ss-name, .lift-name';
+  // Two summary markups exist in the app:
+  //   .sum-section    — Phase-3 live card (+ the auto-built card below)
+  //   .summary-section — MC-favorite / PMC gold card (rich static breakdown)
+  // We enhance BOTH into the same hybrid: rich breakdown + live progress bar.
+  var SUMSEC_SEL = '.sum-section, .summary-section';
+  var ROWNAME_SEL = '.sum-nm, .sum-name';
   var DAILY_KEY = 'mc_daily_v1';
   var PID = (window.MC_PID_OVERRIDE || location.pathname.split('/').pop().replace('.html', '') || 'workout');
 
@@ -109,7 +115,7 @@
 
   // Build a self-contained summary card when a page ships none (Phase 1).
   function autoBuild() {
-    if (document.querySelector('.sum-section')) return;
+    if (document.querySelector(SUMSEC_SEL)) return;            // a static/live card already exists
     if (!document.querySelectorAll(CARD_SEL).length) return;   // not a workout page
     var sec = document.createElement('section');
     sec.className = 'sum-section mcs-auto';
@@ -130,7 +136,7 @@
   }
 
   function ensureChrome() {
-    sumSection = document.querySelector('.sum-section');
+    sumSection = document.querySelector(SUMSEC_SEL);
     if (!sumSection) return false;
     sumCard = sumSection.querySelector('.sum-card') || sumSection;
     if (!bar) {
@@ -189,7 +195,7 @@
 
     // strike-through completed exercises in the summary list (match by name)
     Array.prototype.forEach.call(sumSection.querySelectorAll('.sum-row'), function (row) {
-      var nm = row.querySelector('.sum-nm');
+      var nm = row.querySelector(ROWNAME_SEL);
       var done = nm && t.doneNames[nm.textContent.trim()];
       row.classList.toggle('mcs-row-done', !!done);
     });
