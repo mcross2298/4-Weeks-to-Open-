@@ -1,5 +1,5 @@
 /* ==========================================================================
-   mc-summary.js  —  Phase 3 live Workout Summary
+   mc-summary.js  —  live Workout Summary + daily session tracking
    --------------------------------------------------------------------------
    Turns the previously STATIC "Workout Summary" card (hard-coded totals like
    "32 sets / ~390 reps") into a LIVE readout driven by what the lifter actually
@@ -10,8 +10,17 @@
    Plus a live progress bar, completed-row strikethrough, and a compact
    "📊 Summary" jump button injected into the Finish-Workout bar.
 
+   Phase 1 (universal deployment):
+   - If a page has workout cards but NO static `.sum-section`, this module now
+     AUTO-BUILDS a self-contained summary card (styled by mc-summary.css), so the
+     summary is universal across every workout page regardless of template.
+   - DAILY SESSION TRACKING: every time progress changes, today's session for
+     this program is persisted to `mc_daily_v1` (keyed YYYY-MM-DD|pid), giving a
+     real per-day session history that workout-logs.html (and the card's "Today"
+     line) can read back.
+
    Pure DOM; recomputes on every check-off via a class MutationObserver.
-   Runs only on pages that actually render a .sum-section. Self-contained IIFE.
+   Self-contained IIFE.
    ========================================================================== */
 (function () {
   if (window.__mcSummary) return;
@@ -19,6 +28,18 @@
 
   var CARD_SEL = '.ex-card, .ss-ex, .ex-item, .lift-card';
   var NAME_SEL = '.ex-name, .ss-name, .lift-name';
+  var DAILY_KEY = 'mc_daily_v1';
+  var PID = (window.MC_PID_OVERRIDE || location.pathname.split('/').pop().replace('.html', '') || 'workout');
+
+  function programName() {
+    var h = document.querySelector('.workout-title, .wk-title, .topbar-title, h1');
+    var t = (h && h.textContent || document.title || '').trim();
+    return t.replace(/\s*[—-]\s*MC Training.*$/i, '').slice(0, 60) || PID;
+  }
+  function todayKey() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
 
   // ---- parse a "sets" string into {sets, reps} ---------------------------
   // Handles: "12, 10, 8, 6" (4 sets / 36 reps), "5 × 5" (5 sets / 25 reps),
@@ -41,7 +62,7 @@
   }
 
   function cardSetsReps(card) {
-    var el = card.querySelector('.ex-sets');
+    var el = card.querySelector('.ex-sets, .lift-meta, [data-field="sets"]');
     return parseSetsReps(el ? el.textContent : '');
   }
   function cardName(card) {
@@ -64,8 +85,49 @@
     return t;
   }
 
+  // ---- daily session persistence -----------------------------------------
+  function saveDaily(t, pct) {
+    if (!t.doneSets && !t.exDone) return;              // nothing logged yet today — don't create empty rows
+    var store;
+    try { store = JSON.parse(localStorage.getItem(DAILY_KEY) || '{}'); } catch (e) { store = {}; }
+    var k = todayKey() + '|' + PID;
+    store[k] = {
+      date: todayKey(), pid: PID, program: programName(),
+      planSets: t.planSets, doneSets: t.doneSets, doneReps: t.doneReps,
+      exTotal: t.exTotal, exDone: t.exDone, pct: pct, ts: Date.now()
+    };
+    try { localStorage.setItem(DAILY_KEY, JSON.stringify(store)); } catch (e) {}
+  }
+  function todayEntry() {
+    var store;
+    try { store = JSON.parse(localStorage.getItem(DAILY_KEY) || '{}'); } catch (e) { return null; }
+    return store[todayKey() + '|' + PID] || null;
+  }
+
   // ---- render ------------------------------------------------------------
-  var sumSection, sumCard, bar, fill, label, tvs, tls;
+  var sumSection, sumCard, bar, fill, label, tvs, tls, todayLine;
+
+  // Build a self-contained summary card when a page ships none (Phase 1).
+  function autoBuild() {
+    if (document.querySelector('.sum-section')) return;
+    if (!document.querySelectorAll(CARD_SEL).length) return;   // not a workout page
+    var sec = document.createElement('section');
+    sec.className = 'sum-section mcs-auto';
+    sec.innerHTML =
+      '<div class="sum-hd">📊 Workout Summary</div>' +
+      '<div class="sum-card">' +
+        '<div class="sum-grid">' +
+          '<div class="sum-tot"><div class="sum-tv">0 / 0</div><div class="sum-tl">Sets Done</div></div>' +
+          '<div class="sum-tot"><div class="sum-tv">0</div><div class="sum-tl">Reps Done</div></div>' +
+          '<div class="sum-tot"><div class="sum-tv">0%</div><div class="sum-tl">Complete</div></div>' +
+        '</div>' +
+        '<div class="mcs-today" id="mcsToday"></div>' +
+      '</div>';
+    var fw = document.querySelector('.fw-bar');
+    var main = document.querySelector('main, .content, .workout-wrap, #app') || document.body;
+    if (fw && fw.parentNode) fw.parentNode.insertBefore(sec, fw);
+    else main.appendChild(sec);
+  }
 
   function ensureChrome() {
     sumSection = document.querySelector('.sum-section');
@@ -78,15 +140,23 @@
                        '<span class="mcs-progress-pct" id="mcsPct">0%</span></div>' +
                        '<div class="mcs-progress-track"><div class="mcs-progress-fill" id="mcsFill"></div></div>';
       sumCard.insertBefore(wrap, sumCard.firstChild);
+      bar = wrap;
       fill = wrap.querySelector('#mcsFill');
       label = wrap.querySelector('#mcsPct');
     }
     tvs = sumSection.querySelectorAll('.sum-tv');
     tls = sumSection.querySelectorAll('.sum-tl');
+    todayLine = sumSection.querySelector('.mcs-today');
+    if (!todayLine) {
+      todayLine = document.createElement('div');
+      todayLine.className = 'mcs-today';
+      sumCard.appendChild(todayLine);
+    }
     return true;
   }
 
   function recompute() {
+    autoBuild();
     if (!ensureChrome()) return;
     injectSummaryButton();   // the .fw-bar may be rendered late by the page's own JS
     var t = totals();
@@ -105,6 +175,16 @@
       tls[0].textContent = 'Sets Done';
       tls[1].textContent = 'Reps Done';
       tls[2].textContent = 'Complete';
+    }
+
+    // persist today's session + reflect it on the card
+    saveDaily(t, pct);
+    if (todayLine) {
+      var e = todayEntry();
+      todayLine.textContent = e
+        ? '✅ Saved today · ' + e.doneSets + ' sets · ' + e.doneReps + ' reps logged'
+        : '';
+      todayLine.style.display = e ? '' : 'none';
     }
 
     // strike-through completed exercises in the summary list (match by name)
@@ -135,15 +215,21 @@
   function schedule() { clearTimeout(t); t = setTimeout(recompute, 150); }
 
   function init() {
-    if (!document.querySelector('.sum-section')) return;   // nothing to make live
+    autoBuild();
     ensureChrome();
     injectSummaryButton();
     recompute();
     var mo = new MutationObserver(schedule);
-    mo.observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: true });
+    mo.observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: true, childList: true });
     setTimeout(recompute, 400);   // catch late render()/setTimeout pages
     setTimeout(recompute, 1000);
+    setTimeout(recompute, 2200);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
+
+  // expose the daily store for workout-logs.html
+  window.mcDailySessions = function () {
+    try { return JSON.parse(localStorage.getItem(DAILY_KEY) || '{}'); } catch (e) { return {}; }
+  };
 })();
