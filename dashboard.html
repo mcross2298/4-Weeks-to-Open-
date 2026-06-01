@@ -682,19 +682,27 @@ if(!navigator.onLine)document.getElementById('offlineBar').classList.add('show')
 
 // ── SW ──
 let swWaiting=null;
-function doSwUpdate(){if(swWaiting)swWaiting.postMessage({type:'SKIP_WAITING'});location.reload();}
+function doSwUpdate(){if(swWaiting)swWaiting.postMessage('skipWaiting');location.reload();}
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{});
-  navigator.serviceWorker.ready.then(reg=>{
+  navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>{
+    reg.update();   // force an update check on every visit to the hub
     reg.addEventListener('updatefound',()=>{
       const nw=reg.installing;
       nw.addEventListener('statechange',()=>{
         if(nw.state==='installed'&&navigator.serviceWorker.controller){
+          // New version installed — activate it immediately (auto-update),
+          // and still surface the banner as a manual fallback.
+          nw.postMessage('skipWaiting');
           swWaiting=nw;
-          document.getElementById('swUpdate').classList.add('show');
+          const b=document.getElementById('swUpdate'); if(b) b.classList.add('show');
         }
       });
     });
+  }).catch(()=>{});
+  // Reload once when the fresh worker takes control of the page.
+  let _swRefreshing=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(!_swRefreshing){_swRefreshing=true;window.location.reload();}
   });
 }
 

@@ -1,7 +1,7 @@
 // MC Training — Service Worker v2
 // Absolute URL cache for GitHub Pages
 
-const CACHE_NAME = 'mc-training-v23';
+const CACHE_NAME = 'mc-training-v24';
 const BASE = 'https://mcross2298.github.io/4-Weeks-to-Open-/';
 const CACHE_URLS = [
     'https://mcross2298.github.io/4-Weeks-to-Open-/',
@@ -160,17 +160,24 @@ self.addEventListener('install', event => {
     self.skipWaiting();
 });
 
-// Activate — remove old caches
+// Activate — remove ALL old caches, take control, and force-reload every open
+// tab so stale pages held by a previous worker are replaced immediately.
 self.addEventListener('activate', event => {
     event.waitUntil(
-        caches.keys().then(keys =>
-            Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => {
-                console.log('[SW] Removing old cache:', k);
-                return caches.delete(k);
+        caches.keys()
+            .then(keys => Promise.all(
+                keys.filter(k => k !== CACHE_NAME).map(k => {
+                    console.log('[SW] Removing old cache:', k);
+                    return caches.delete(k);
+                })
+            ))
+            .then(() => self.clients.claim())
+            .then(() => self.clients.matchAll({ type: 'window' }))
+            .then(clients => clients.forEach(c => {
+                // Reload each controlled tab once so it picks up fresh files.
+                try { c.navigate(c.url); } catch (e) {}
             }))
-        )
     );
-    self.clients.claim();
 });
 
 // Fetch — NETWORK FIRST, fall back to cache
