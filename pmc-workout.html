@@ -1501,7 +1501,6 @@ function render(){
 
   attachEvents();
   applyTheme(workout);
-  setTimeout(initNotes, 200);
   updateProgress();
 }
 
@@ -1574,7 +1573,10 @@ function initNotes(){
   const NOTES_KEY='pmc_notes_'+currentWorkoutId;
   let notes={};try{notes=JSON.parse(localStorage.getItem(NOTES_KEY)||'{}');}catch(e){}
   document.querySelectorAll('.ex-card[data-id]').forEach(card=>{
-    const id=card.dataset.id;if(!id||card.querySelector('${existing.length>20?'…':''}`:'✚ Add weight/notes';
+    const id=card.dataset.id;if(!id||card.querySelector('.ex-notes-wrap'))return;
+    const existing=notes[id]||'';
+    const toggle=document.createElement('div');toggle.className='ex-notes-toggle';
+    toggle.innerHTML=existing?`✏️ ${existing.substring(0,20)}${existing.length>20?'…':''}`:'✦ Add weight/notes';
     const wrap=document.createElement('div');wrap.className=`ex-notes-wrap${existing?' open':''}`;
     wrap.innerHTML=`<div class="ex-notes-label">Weight / Notes</div><textarea class="ex-notes-input" rows="1" placeholder="e.g. 135 lbs · felt strong">${existing}</textarea>`;
     toggle.addEventListener('click',e=>{e.stopPropagation();wrap.classList.toggle('open');});
@@ -1618,122 +1620,6 @@ if(idParam && !location.hash){
 }
 
 route();
-</script>
-
-<script>
-/* — WAVE3-SETLOG MODULE — */
-(function(){
-  var SK='mc_setlog_v1';
-  var PID=location.pathname.split('/').pop().replace('.html','');
-  function st(){try{return JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){return{}}}
-  function ek(id){return PID+'|'+id}
-  function save(exId,sn,w,r){
-    var s=st(),k=ek(exId);if(!s[k])s[k]=[];
-    var d=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
-    var sess=s[k][0];
-    if(!sess||sess.d!==d){sess={d:d,sets:{}};s[k].unshift(sess);s[k]=s[k].slice(0,20);}
-    sess.sets[sn]={w:w,r:r};localStorage.setItem(SK,JSON.stringify(s));
-  }
-  function lsess(exId){var s=st();return(s[ek(exId)]||[])[0]||null;}
-  function lset(exId,sn){var sess=lsess(exId);return sess?sess.sets[sn]||null:null;}
-  function hist(exId){
-    var el=document.getElementById('slh-'+exId);if(!el)return;
-    var sess=lsess(exId);if(!sess){el.textContent='';return;}
-    var ws=Object.values(sess.sets).map(function(s){return parseFloat(s.w)||0;}).filter(Boolean);
-    el.textContent=ws.length?'Last: '+Math.max.apply(null,ws)+' lb \u00b7 '+sess.d:sess.d;
-  }
-  function cnt(s){
-    if(!s)return 3;
-    var x=s.match(/^(\d+)\s*[x\u00d7]/i);if(x)return Math.min(parseInt(x[1]),10);
-    var c=s.split(',');if(c.length>1)return c.length;
-    var n=s.match(/^(\d+)/);return n?Math.min(parseInt(n[1]),8):3;
-  }
-  function rep(s,i){
-    if(!s)return'';
-    var c=s.split(',');if(c.length>1)return(c[i]||c[c.length-1]).trim();
-    var x=s.match(/[x\u00d7](\d+)/i);if(x)return x[1];return'';
-  }
-  function rows(exId,ss,rs){
-    var n=cnt(ss),h='<div class="sl-hdr"><div class="sl-hl">SET</div><div class="sl-hl">WEIGHT</div><div class="sl-hl">REPS</div><div class="sl-hl"></div></div>';
-    for(var i=0;i<n;i++){
-      var sn=i+1,last=lset(exId,sn),pr=rep(ss,i);
-      h+='<div class="sl-row" id="sr-'+exId+'-'+sn+'">'+
-        '<div class="sl-num">'+sn+'</div>'+
-        '<input class="sl-inp" id="slw-'+exId+'-'+sn+'" type="number" inputmode="decimal" placeholder="'+(last&&last.w?last.w+' lb':'lb')+'" onclick="event.stopPropagation()" onfocus="this.select()">'+
-        '<input class="sl-inp" id="slr-'+exId+'-'+sn+'" type="number" inputmode="numeric" placeholder="'+(pr||(last&&last.r?last.r:'reps'))+'" onclick="event.stopPropagation()" onfocus="this.select()">'+
-        '<div class="sl-ck" id="slc-'+exId+'-'+sn+'" onclick="event.stopPropagation();_SL(\''+exId+'\','+sn+','+rs+')">\u2610</div>'+
-        '</div>';
-    }
-    return h;
-  }
-  window._SL=function(exId,sn,rs){
-    var w=document.getElementById('slw-'+exId+'-'+sn);
-    var r=document.getElementById('slr-'+exId+'-'+sn);
-    var ck=document.getElementById('slc-'+exId+'-'+sn);
-    var row=document.getElementById('sr-'+exId+'-'+sn);
-    if(!ck)return;
-    if(ck.classList.contains('done')){ck.classList.remove('done');ck.innerHTML='\u2610';if(row)row.classList.remove('sl-done');return;}
-    save(exId,sn,w?w.value.trim():'',r?r.value.trim():'');
-    ck.classList.add('done');ck.textContent='\u2713';if(row)row.classList.add('sl-done');
-    if(rs>0&&typeof TMR!=='undefined'){var t=document.querySelector('.rest-timer');if(t)TMR.start(t,rs,'Rest');}
-    hist(exId);
-  };
-  function grs(el){var t=el.querySelector('.rest-timer');if(t&&t.dataset&&t.dataset.rest&&typeof TMR!=='undefined')return TMR.parseSeconds(t.dataset.rest)||60;return 60;}
-  function attach(el,exId,ss,rs){
-    if(!el||el.querySelector('.setlog-toggle'))return;
-    ['ex-notes-toggle','ex-notes-wrap','.log-row'].forEach(function(s){var o=el.querySelector(s);while(o){o.remove();o=el.querySelector(s);}});
-    var tgl=document.createElement('div');
-    tgl.className='setlog-toggle';
-    tgl.innerHTML='<span id="sla-'+exId+'">\u25be</span>&nbsp;<span id="sll-'+exId+'">LOG SETS</span><span class="setlog-hist" id="slh-'+exId+'"></span>';
-    tgl.addEventListener('click',function(e){
-      e.stopPropagation();e.preventDefault();
-      var wp=document.getElementById('slwp-'+exId);if(!wp)return;
-      var open=wp.classList.toggle('open');
-      document.getElementById('sll-'+exId).textContent=open?'HIDE':'LOG SETS';
-      document.getElementById('sla-'+exId).textContent=open?'\u25b4':'\u25be';
-    });
-    var wp=document.createElement('div');
-    wp.className='setlog-wrap';wp.id='slwp-'+exId;
-    wp.innerHTML=rows(exId,ss,rs);
-    wp.addEventListener('click',function(e){e.stopPropagation();});
-    el.appendChild(tgl);el.appendChild(wp);hist(exId);
-  }
-  function run(){
-    document.querySelectorAll('.ex-card[data-id]').forEach(function(c){
-      var ct=c.querySelector('.ex-content');if(!ct)return;
-      var se=c.querySelector('.ex-sets');
-      attach(ct,c.dataset.id,se?se.textContent.trim():'3x10',grs(c));
-    });
-    document.querySelectorAll('.ss-ex[data-id]').forEach(function(c){
-      var ct=c.querySelector('.ss-content');if(!ct)return;
-      var se=c.querySelector('.ex-sets');
-      attach(ct,c.dataset.id,se?se.textContent.trim():'4x12',90);
-    });
-    document.querySelectorAll('.ex-item[data-id]').forEach(function(c){
-      var se=c.querySelector('.ex-sets');
-      attach(c,c.dataset.id,se?se.textContent.trim():'3x10',grs(c));
-    });
-    document.querySelectorAll('.lift-card').forEach(function(c){
-      var nm=c.querySelector('.lift-name');if(!nm)return;
-      var exId='psu-'+nm.textContent.trim().replace(/\s+/g,'-').toLowerCase().slice(0,20);
-      if(c.querySelector('.setlog-toggle'))return;
-      var me=c.querySelector('.lift-meta');
-      attach(c,exId,me?me.textContent.trim():'3x5',grs(c));
-    });
-  }
-  function watch(){
-    var app=document.getElementById('app');
-    if(!app){setTimeout(watch,100);return;}
-    if(app.querySelector('.ex-card,.ex-item,.lift-card')){run();return;}
-    var obs=new MutationObserver(function(m,o){
-      if(app.querySelector('.ex-card,.ex-item,.lift-card')){o.disconnect();setTimeout(run,50);}
-    });
-    obs.observe(app,{childList:true,subtree:true});
-    setTimeout(run,600);
-  }
-  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',watch);}
-  else{watch();}
-})();
 </script>
 
 <script>
