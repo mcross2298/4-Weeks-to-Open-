@@ -21,7 +21,10 @@
   window.__mcSetlog = true;
 
   var SK  = 'mc_setlog_v1';
-  var PID = location.pathname.split('/').pop().replace('.html', '');
+  // PID namespaces persistence per program. Custom "Build Your Own" workouts run
+  // through run-workout.html and set window.MC_PID_OVERRIDE so each saved workout
+  // keeps its own logging history instead of colliding on the shared filename.
+  var PID = (window.MC_PID_OVERRIDE || location.pathname.split('/').pop().replace('.html', ''));
 
   // ---- storage (shape-compatible with the Finish-Workout module) ---------
   function st() { try { return JSON.parse(localStorage.getItem(SK) || '{}'); } catch (e) { return {}; } }
