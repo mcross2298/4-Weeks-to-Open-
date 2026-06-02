@@ -63,7 +63,8 @@ body{background:#1a0505;min-height:100vh;padding-bottom:48px;}
 .week-badge{background:rgba(248,113,113,0.15);border:1px solid rgba(248,113,113,0.35);color:#f87171;}
 .week-tabs{background:#1a0505;border-bottom:1px solid rgba(248,113,113,0.1);}
 .wtab{color:#5a1a1a;}
-.wtab.active{color:#f87171;border-bottom-color:#f87171;}
+.wtab.active{color:#f87171;border-bottom-color:#f87171;background:rgba(255,255,255,0.07);}
+.wtab:active{transform:scale(0.96);}
 .tap-hint{color:#f87171;}
 .sec-head{color:#f87171;}
 .sec-head::after{background:linear-gradient(90deg,rgba(248,113,113,0.3),transparent);}
@@ -242,6 +243,7 @@ const TMR = {
   duration: 0,
   activeEl: null,
   activeName: '',
+  _autoDismiss: null,
 
   parseSeconds(str) {
     if (!str || str === '—') return 0;
@@ -307,6 +309,7 @@ const TMR = {
     const floatLabel = document.getElementById('timerFloatLabel');
 
     float.classList.add('visible');
+    const _sov=document.getElementById('timerOverlay');if(_sov)_sov.style.display='block';
     floatEx.textContent = exerciseName;
     floatLabel.textContent = 'REST';
     floatTime.className = 'timer-float-time';
@@ -338,6 +341,7 @@ const TMR = {
         floatProgress.style.width = '100%';
         floatLabel.textContent = 'DONE!';
         if (el) el.className = 'rest-timer done';
+        if(!this._autoDismiss)this._autoDismiss=setTimeout(()=>this.stop(),4000);
       } else {
         // Overtime
         floatTime.textContent = '+' + this.formatTime(-remaining);
@@ -360,6 +364,8 @@ const TMR = {
     }
     const float = document.getElementById('timerFloat');
     if (float) float.classList.remove('visible');
+    const _ov=document.getElementById('timerOverlay');if(_ov)_ov.style.display='none';
+    if(this._autoDismiss){clearTimeout(this._autoDismiss);this._autoDismiss=null;}
   },
 
   toggle(el, durationSecs, exerciseName) {
@@ -386,7 +392,7 @@ const TMR = {
       const ft2=document.getElementById("timerFloat");if(!ft2)return;
       const tt2=ft2.querySelector(".timer-float-time"),tp2=ft2.querySelector(".timer-float-progress"),tl2=ft2.querySelector(".timer-float-label");
       if(rem>0){if(tt2){tt2.textContent=rem+"s";tt2.className="timer-float-time";}if(tp2){tp2.style.width=Math.round((rem/this.duration)*100)+"%";tp2.className="timer-float-progress";}}
-      else if(rem===0){if(tt2){tt2.textContent="DONE!";tt2.className="timer-float-time done";}if(tp2){tp2.style.width="100%";tp2.className="timer-float-progress done";}if(tl2)tl2.textContent="DONE ✓";try{navigator.vibrate&&navigator.vibrate([200,100,200,100,400]);}catch(e){}}
+      else if(rem===0){if(tt2){tt2.textContent="DONE!";tt2.className="timer-float-time done";}if(tp2){tp2.style.width="100%";tp2.className="timer-float-progress done";}if(tl2)tl2.textContent="DONE ✓";try{navigator.vibrate&&navigator.vibrate([200,100,200,100,400]);}catch(e){}if(!TMR._autoDismiss)TMR._autoDismiss=setTimeout(()=>TMR.stop(),4000);}
       else{if(tt2){tt2.textContent="+"+Math.abs(rem)+"s";tt2.className="timer-float-time overtime";}if(tp2)tp2.className="timer-float-progress overtime";}
     },1000);
   }
@@ -407,6 +413,7 @@ function buildTimerFloat() {
       <button class="timer-float-btn timer-float-reset" onclick="TMR.stop()">✕ Cancel</button>
     </div>`;
   document.body.appendChild(div);
+  if(!document.getElementById('timerOverlay')){const _tov=document.createElement('div');_tov.id='timerOverlay';_tov.style.cssText='position:fixed;inset:0;z-index:99;display:none;cursor:pointer;';_tov.addEventListener('click',function(){TMR.stop();});document.body.insertBefore(_tov,div);}
 }
 
 function makeRestTimer(restStr, exerciseName) {
@@ -894,6 +901,14 @@ document.addEventListener('DOMContentLoaded', function() {
     updateProgress();
   }
 
+
+  function getSkippedExercises(){
+    var sk=[];
+    document.querySelectorAll('.ex-card:not(.checked),.ss-ex:not(.checked)').forEach(function(c){
+      var nm=c.querySelector('.ex-name,.ss-name');if(nm)sk.push(nm.textContent.trim());
+    });
+    return sk;
+  }
   window._FW={
     open:function(){
       var sets=getSessionSets();
@@ -905,7 +920,8 @@ document.addEventListener('DOMContentLoaded', function() {
           '<div class="fw-summary-row"><span class="fw-summary-label">Duration</span><span class="fw-summary-val">'+getDuration()+'</span></div>'+
           '<div class="fw-summary-row"><span class="fw-summary-label">Sets checked</span><span class="fw-summary-val">'+getCheckedSets()+' / '+getTotalSets()+'</span></div>'+
           '<div class="fw-summary-row"><span class="fw-summary-label">Sets logged</span><span class="fw-summary-val">'+sets.length+'</span></div>'+
-          (prs?'<div class="fw-summary-row"><span class="fw-summary-label">PRs set</span><span class="fw-summary-val" style="color:#d4af37;">🏆 '+prs+'</span></div>':'');
+          (prs?'<div class="fw-summary-row"><span class="fw-summary-label">PRs set</span><span class="fw-summary-val" style="color:#d4af37;">🏆 '+prs+'</span></div>':'')+
+          (function(){var sk=getSkippedExercises();return sk.length?'<div class="fw-summary-row"><span class="fw-summary-label" style="color:#f87171;">Skipped</span><span class="fw-summary-val" style="color:#f87171;font-size:11px;">'+sk.join(', ')+'</span></div>':'';}());
       }
       var m=document.getElementById('fwModal');
       if(m)m.classList.add('open');
