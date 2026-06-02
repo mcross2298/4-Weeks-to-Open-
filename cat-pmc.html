@@ -9,6 +9,8 @@
 .header{background:linear-gradient(135deg,#1e0a3c,#0d0618);}
 .week-tabs{border-bottom:1px solid rgba(255,255,255,0.05);}
 /* ── VIEWS — only one visible at a time (restored: dropped in Phase 2) ── */
+#view-split{display:none;}
+#view-split.active{display:block;}
 #view-workout{display:none;}
 #view-workout.active{display:block;}
 #view-dashboard.hidden{display:none;}
@@ -172,8 +174,6 @@
     <div class="split-strip" id="splitStrip"></div>
   </div>
 
-  <div id="splitDetail"></div>
-
   <div class="badge-section">
     <div class="badge-section-head">🏷 Badge Key</div>
     <div class="badge-card">
@@ -192,11 +192,25 @@
 </div><!-- end #view-dashboard -->
 
 <!-- ═══════════════════════════════════
-     VIEW 2: WORKOUT (inline, no page load)
+     VIEW 2: SPLIT (breakout — workouts for the tapped split)
+════════════════════════════════════ -->
+<div id="view-split">
+  <div class="workout-view-header" id="splitViewHeader">
+    <button class="workout-back-btn" onclick="showDashboard()">← All Splits</button>
+    <div class="eyebrow" id="splitViewEyebrow"></div>
+    <div class="dash-title" id="splitViewTitle"></div>
+    <p class="subtitle" id="splitViewDesc"></p>
+    <div style="margin-top:8px;"><span class="header-pill" id="splitViewBadge"></span></div>
+  </div>
+  <div id="splitDetail"></div>
+</div><!-- end #view-split -->
+
+<!-- ═══════════════════════════════════
+     VIEW 3: WORKOUT (inline, no page load)
 ════════════════════════════════════ -->
 <div id="view-workout">
   <div class="workout-view-header" id="workoutViewHeader">
-    <button class="workout-back-btn" onclick="showDashboard()">← Back to Splits</button>
+    <button class="workout-back-btn" onclick="backToSplit()">← Back to Split</button>
     <div class="eyebrow" id="workoutEyebrow"></div>
     <div class="dash-title" id="workoutTitle"></div>
     <div style="margin-top:8px;"><span class="header-pill" id="workoutWeekBadge"></span></div>
@@ -1177,9 +1191,44 @@ const roundState     = {};
 // ══════════════════════════════════════════════════════════════
 function showDashboard(){
   document.getElementById('view-dashboard').classList.remove('hidden');
+  document.getElementById('view-split').classList.remove('active');
   document.getElementById('view-workout').classList.remove('active');
   window.scrollTo(0,0);
   if(TMR) TMR.stop();
+}
+
+// Drill into a split: its workouts live inside this view, not on the main page.
+function openSplit(id){
+  const split = SPLITS.find(s => s.id === id);
+  if(!split) return;
+  activeSplitId = id;
+  localStorage.setItem(STORAGE_KEY, id);
+  renderSplitDetail();
+  // Theme the split-view header with the split's colour
+  const c = split.color;
+  const hdr = document.getElementById('splitViewHeader');
+  hdr.style.background = `linear-gradient(135deg,${split.bg || '#1a0040'},#0d0618)`;
+  hdr.style.borderBottom = `1px solid ${c}22`;
+  const eb = document.getElementById('splitViewEyebrow');
+  eb.textContent = `⚡ Split #${split.num} · 4-Week Rotation`; eb.style.color = c;
+  document.getElementById('splitViewTitle').textContent = split.name;
+  document.getElementById('splitViewDesc').textContent  = split.desc || '';
+  const badge = document.getElementById('splitViewBadge');
+  badge.textContent = `${split.workouts.length} workouts`;
+  badge.style.background = c+'22'; badge.style.color = c; badge.style.border = `1px solid ${c}44`;
+  const back = document.querySelector('#view-split .workout-back-btn');
+  if(back){ back.style.color = c; back.style.background = c+'18'; back.style.borderColor = c+'44'; }
+  document.getElementById('view-dashboard').classList.add('hidden');
+  document.getElementById('view-workout').classList.remove('active');
+  document.getElementById('view-split').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// Back from a workout returns to its split's breakout (not the main list)
+function backToSplit(){
+  if(TMR) TMR.stop();
+  const split = SPLITS.find(s => s.workouts.some(w => w.id === currentWorkoutId));
+  if(split){ openSplit(split.id); } else { showDashboard(); }
 }
 
 function showWorkout(workoutId){
@@ -1194,6 +1243,7 @@ function showWorkout(workoutId){
     }));
   }
   document.getElementById('view-dashboard').classList.add('hidden');
+  document.getElementById('view-split').classList.remove('active');
   document.getElementById('view-workout').classList.add('active');
   window.scrollTo(0,0);
   renderWorkout();
@@ -1224,30 +1274,19 @@ function resumeLastWorkout(){
 function buildStrip(){
   document.getElementById('splitStrip').innerHTML = SPLITS.map(s => {
     const count = s.workouts.length;
-    const active = activeSplitId === s.id;
-    return `<button class="split-card-sel${active?' active':''}" style="--sp-color:${s.color};" onclick="selectSplit('${s.id}')">
+    return `<button class="split-card-sel" style="--sp-color:${s.color};" onclick="openSplit('${s.id}')">
       <div class="split-card-top">
         <div class="split-card-eyebrow">⚡ Split #${s.num} · 4 Weeks</div>
-        <div class="split-card-chev">${active?'●':'›'}</div>
+        <div class="split-card-chev">›</div>
       </div>
       <div class="split-card-name">${s.name}</div>
       ${s.desc?`<div class="split-card-desc">${s.desc}</div>`:''}
-      <div class="split-card-meta">${count} workout${count===1?'':'s'}${active?' · selected':''}</div>
+      <div class="split-card-meta">${count} workout${count===1?'':'s'}</div>
     </button>`;
   }).join('');
 }
 
-function selectSplit(id){
-  activeSplitId = id;
-  localStorage.setItem(STORAGE_KEY, id);
-  buildStrip();
-  renderSplitDetail();
-  setTimeout(()=>{
-    const d = document.getElementById('splitDetail');
-    if(d) d.scrollIntoView({behavior:'smooth',block:'start'});
-  },60);
-}
-
+// Renders the tapped split's workout breakout inside the split view.
 function renderSplitDetail(){
   const split = SPLITS.find(s => s.id === activeSplitId);
   if(!split){ document.getElementById('splitDetail').innerHTML=''; return; }
@@ -1270,9 +1309,6 @@ function renderSplitDetail(){
 
   document.getElementById('splitDetail').innerHTML = `
     <div class="split-detail">
-      <div class="split-detail-num" style="background:${split.color}18;color:${split.color};border:1px solid ${split.color}30;">⚡ Split #${split.num} · 4 Weeks</div>
-      <div class="split-detail-name">${split.name}</div>
-      <div class="split-detail-desc">${split.desc}</div>
       <div class="workouts-label">Workouts</div>
       ${cards}
     </div>`;
@@ -1586,9 +1622,13 @@ function render(){
     document.getElementById('workoutWeekBadge').style.border = `1px solid ${_color}44`;
     document.getElementById('workoutViewHeader').style.background = `linear-gradient(135deg,${_bg},#0d0618)`;
     document.getElementById('workoutViewHeader').style.borderBottom = `1px solid ${_color}22`;
-    document.querySelector('.workout-back-btn').style.color = _color;
-    document.querySelector('.workout-back-btn').style.background = _color+'18';
-    document.querySelector('.workout-back-btn').style.borderColor = _color+'44';
+    const _back = document.querySelector('#view-workout .workout-back-btn');
+    if(_back){
+      _back.textContent = `← ${_split ? _split.name : 'Back to Split'}`;
+      _back.style.color = _color;
+      _back.style.background = _color+'18';
+      _back.style.borderColor = _color+'44';
+    }
   }
   const workout = PMC_SPLITS[currentWorkoutId];
   if(!workout){ renderNotFound(); return; }
@@ -1765,10 +1805,10 @@ function renderWorkout(){
   ['45s','60s','90s','2min'].forEach(l=>{const s=l==='2min'?120:parseInt(l);const b=document.createElement('button');b.className='timer-preset';b.textContent=l;b.onclick=()=>TMR.setTime(s,l);div.querySelector('.timer-presets').appendChild(b);});
 })();
 
-// Dashboard init
+// Dashboard init — main page shows only the split cards;
+// the breakout renders inside the split view when a card is tapped.
 initResumeBanner();
 buildStrip();
-renderSplitDetail();
 
 </script>
 <script>
