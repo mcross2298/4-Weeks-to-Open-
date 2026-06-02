@@ -13,6 +13,113 @@
 <link rel="stylesheet" href="mc-nav.css"/>
 <link rel="stylesheet" href="mc-card-actions.css"/>
 <link rel="stylesheet" href="mc-setlog.css"/>
+<style>
+/* ── PAGE-SPECIFIC STYLES (restored) ──
+   These rules are unique to this page and are NOT part of base.css.
+   They were inadvertently dropped during the Phase 2 CSS extraction. */
+.dash-title{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.02em;line-height:1.1;margin-bottom:4px;}
+.dash-title span{color:#a855f7;}
+.subtitle{font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:12px;}
+.header-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0;}
+.header-pill{background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.25);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:800;color:#c084fc;letter-spacing:0.08em;text-transform:uppercase;}
+.inst-header-link{display:inline-flex;align-items:center;gap:8px;margin-top:14px;text-decoration:none;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);color:#c084fc;font-size:11px;font-weight:800;padding:8px 16px;border-radius:20px;letter-spacing:0.06em;transition:all 0.15s;}
+.inst-header-link:active{background:rgba(139,92,246,0.22);}
+/* Resume banner */
+.resume-banner{display:none;margin:16px 16px 0;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);border-radius:14px;padding:12px 16px;cursor:pointer;transition:all 0.15s;}
+.resume-banner.visible{display:flex;align-items:center;gap:12px;}
+.resume-banner:active{transform:scale(0.98);}
+.resume-icon{font-size:20px;flex-shrink:0;}
+.resume-text{flex:1;}
+.resume-label{font-size:11px;font-weight:900;letter-spacing:0.15em;text-transform:uppercase;color:#a855f7;margin-bottom:2px;}
+.resume-name{font-size:14px;font-weight:800;color:#fff;}
+.resume-sub{font-size:11px;color:#6b7280;margin-top:1px;}
+.resume-arrow{font-size:18px;color:#a855f7;font-weight:900;}
+/* Split strip */
+.split-strip-wrap{padding:16px 0 0;position:sticky;top:0;z-index:10;background:#0d0618;border-bottom:1px solid rgba(255,255,255,0.05);}
+.split-strip-label{font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;color:#475569;padding:0 16px;margin-bottom:10px;}
+.split-strip{display:flex;gap:8px;padding:0 16px 14px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.split-strip::-webkit-scrollbar{display:none;}
+.split-pill{flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid;font-size:11px;font-weight:900;cursor:pointer;transition:all 0.15s;letter-spacing:0.04em;white-space:nowrap;background:transparent;}
+.split-pill:active{transform:scale(0.96);}
+.split-pill.active{color:#0d0618!important;}
+/* Split detail */
+.split-detail{max-width:680px;margin:0 auto;padding:20px 16px 0;}
+.split-detail-num{font-size:11px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:8px;display:inline-block;}
+.split-detail-name{font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.01em;margin-bottom:4px;}
+.split-detail-desc{font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:16px;}
+.workouts-label{font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;color:#475569;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.workouts-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.06);}
+.workout-icon{font-size:20px;flex-shrink:0;width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;}
+.workout-info{flex:1;min-width:0;}
+.workout-name{font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;line-height:1.3;}
+.workout-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.workout-tag{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:2px 7px;border-radius:4px;}
+.workout-arrow{font-size:16px;color:#475569;flex-shrink:0;}
+/* Badge key */
+.badge-section{max-width:680px;margin:28px auto 0;padding:0 16px 40px;}
+.badge-section-head{font-size:11px;font-weight:900;letter-spacing:0.22em;color:#a855f7;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.badge-section-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(168,85,247,0.3),transparent);}
+.badge-card{background:#0f0f0f;border:1px solid rgba(139,92,246,0.15);border-radius:14px;padding:16px;}
+.badge-card-title{font-size:11px;font-weight:900;letter-spacing:0.16em;color:#a855f7;text-transform:uppercase;margin-bottom:12px;}
+.badge-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+.badge-row:last-child{margin-bottom:0;}
+.badge-demo{font-size:11px;font-weight:800;padding:3px 9px;border-radius:5px;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;flex-shrink:0;min-width:100px;text-align:center;}
+.badge-desc{font-size:11px;color:#6b7280;line-height:1.4;}
+.lb-ss{background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.25);}
+.lb-py{background:rgba(249,115,22,0.15);color:#fb923c;border:1px solid rgba(249,115,22,0.25);}
+.lb-lr{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.25);}
+.lb-tm{background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.25);}
+.lb-hr{background:rgba(234,179,8,0.15);color:#fbbf24;border:1px solid rgba(234,179,8,0.25);}
+.lb-dr{background:rgba(244,63,94,0.15);color:#fb7185;border:1px solid rgba(244,63,94,0.25);}
+.lb-am{background:rgba(239,68,68,0.2);color:#ef4444;border:1px solid rgba(239,68,68,0.35);}
+.lb-mr{background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.25);}
+/* ── CONFUSION BANNER ── */
+.confusion-banner{background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.25);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:#fb923c;font-weight:700;line-height:1.5;}
+.confusion-banner span{opacity:0.7;font-weight:500;}
+/* ── UGEE / BLOCKS CARDS ── */
+.block-card{border-radius:14px;margin-bottom:14px;overflow:hidden;border:1.5px solid rgba(251,146,60,0.3);background:rgba(251,146,60,0.04);}
+.block-header{background:rgba(251,146,60,0.12);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(251,146,60,0.15);}
+.block-title{font-size:13px;font-weight:900;color:#fb923c;}
+.block-rounds{font-size:11px;font-weight:800;color:#fb923c;background:rgba(251,146,60,0.15);padding:3px 10px;border-radius:20px;border:1px solid rgba(251,146,60,0.3);}
+.block-note{font-size:11px;color:#94a3b8;padding:8px 16px;border-bottom:1px solid rgba(251,146,60,0.1);font-style:italic;}
+.block-warmup{font-size:11px;font-weight:700;color:#fb923c;padding:6px 16px;border-bottom:1px solid rgba(251,146,60,0.1);background:rgba(251,146,60,0.06);}
+.block-warmup-label{font-size:11px;font-weight:900;letter-spacing:0.15em;color:#fb923c;opacity:0.6;margin-right:6px;}
+.block-ex{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);}
+.block-ex:last-of-type{border-bottom:none;}
+.block-ex.checked .block-ex-name{text-decoration:line-through;color:#34d399;}
+.block-ex-dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(251,146,60,0.5);flex-shrink:0;transition:all 0.15s;}
+.block-ex.checked .block-ex-dot{background:#34d399;border-color:#34d399;}
+.block-ex-name{font-size:13px;font-weight:600;color:#e2e8f0;flex:1;}
+.block-ex-reps{font-size:11px;font-weight:800;letter-spacing:0.03em;color:#a78bfa;background:rgba(139,92,246,0.15);border-radius:5px;padding:3px 8px;white-space:nowrap;flex-shrink:0;}
+.block-giant-badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:#fb923c;background:rgba(251,146,60,0.12);border:1px solid rgba(251,146,60,0.3);border-radius:6px;padding:4px 10px;margin:0 16px 10px;}
+.block-rounds-btns{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px 14px;}
+.round-btn{padding:7px 16px;border-radius:8px;border:1px solid rgba(251,146,60,0.35);background:rgba(251,146,60,0.08);color:#fb923c;font-size:11px;font-weight:800;cursor:pointer;transition:all 0.15s;letter-spacing:0.05em;}
+.round-btn.done{background:rgba(52,211,153,0.15);border-color:rgba(52,211,153,0.4);color:#34d399;}
+.round-btn:active{transform:scale(0.97);}
+.ex-notes-input{width:100%;background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;font-weight:600;font-family:inherit;resize:none;line-height:1.5;}
+.ex-notes-input::placeholder{color:#334155;}
+.ex-notes-label{font-size:11px;font-weight:800;letter-spacing:0.15em;color:#475569;text-transform:uppercase;margin-bottom:4px;}
+/* ── PICKER ── */
+.picker-header{padding:60px 20px 24px;background:linear-gradient(135deg,#1a0040,#0d0618);text-align:center;border-bottom:1px solid rgba(192,132,252,0.15);}
+.picker-title{font-size:24px;font-weight:900;color:#fff;margin-bottom:6px;}
+.picker-sub{font-size:12px;color:#475569;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;}
+.picker-content{max-width:680px;margin:0 auto;padding:20px 16px 48px;}
+.picker-split{margin-bottom:24px;}
+.picker-split-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px;}
+.picker-split-name{font-size:15px;font-weight:900;}
+.picker-split-label{font-size:11px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;opacity:0.6;}
+.picker-workout{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1.5px solid;margin-bottom:8px;cursor:pointer;transition:all 0.15s;}
+.picker-workout:active{transform:scale(0.98);}
+.picker-icon{font-size:18px;flex-shrink:0;}
+.picker-name{flex:1;font-size:13px;font-weight:700;color:#e2e8f0;}
+.picker-arrow{font-size:16px;font-weight:900;}
+/* ── WORKOUT VIEW HEADER ── */
+.workout-view-header{padding:52px 20px 20px;position:relative;}
+.workout-back-btn{display:inline-flex;align-items:center;gap:6px;color:#c084fc;font-size:13px;font-weight:700;background:rgba(192,132,252,0.1);padding:6px 14px;border-radius:20px;border:1px solid rgba(192,132,252,0.3);cursor:pointer;margin-bottom:20px;transition:all 0.15s;}
+.workout-back-btn:active{background:rgba(192,132,252,0.2);}
+/* ── WORKOUT CONTENT ── */
+.workout-content{max-width:680px;margin:20px auto 0;padding:0 16px;}
+</style>
 </head>
 <body>
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
