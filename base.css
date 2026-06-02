@@ -34,7 +34,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 }
 
 /* ── HEADER ─────────────────────────────────────────────────────── */
-.header{padding:60px 20px 22px;position:relative;}
+.header{padding:76px 20px 22px;position:relative;}
 .header-inner{max-width:680px;margin:0 auto;}
 .eyebrow{font-size:11px;font-weight:800;letter-spacing:0.25em;text-transform:uppercase;margin-bottom:8px;color:var(--accent);}
 .title{font-size:24px;font-weight:900;color:#fff;margin-bottom:8px;letter-spacing:-0.02em;}

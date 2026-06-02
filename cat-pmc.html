@@ -34,14 +34,21 @@
 .resume-name{font-size:14px;font-weight:800;color:#fff;}
 .resume-sub{font-size:11px;color:#6b7280;margin-top:1px;}
 .resume-arrow{font-size:18px;color:#a855f7;font-weight:900;}
-/* Split strip */
-.split-strip-wrap{padding:16px 0 0;position:sticky;top:0;z-index:10;background:#0d0618;border-bottom:1px solid rgba(255,255,255,0.05);}
-.split-strip-label{font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;color:#475569;padding:0 16px;margin-bottom:10px;}
-.split-strip{display:flex;gap:8px;padding:0 16px 14px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
-.split-strip::-webkit-scrollbar{display:none;}
-.split-pill{flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid;font-size:11px;font-weight:900;cursor:pointer;transition:all 0.15s;letter-spacing:0.04em;white-space:nowrap;background:transparent;}
-.split-pill:active{transform:scale(0.96);}
-.split-pill.active{color:#0d0618!important;}
+/* Split selector cards (vertical, MC-style) */
+.split-strip-wrap{padding:18px 0 4px;background:#0d0618;}
+.split-strip-label{font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;color:#475569;padding:0 16px;margin-bottom:12px;}
+.split-strip{display:flex;flex-direction:column;gap:10px;max-width:680px;margin:0 auto;padding:0 16px 8px;}
+.split-card-sel{display:block;width:100%;text-align:left;background:#0f0f0f;border:1.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 16px 14px 18px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;font-family:inherit;}
+.split-card-sel::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--sp-color,#a855f7);opacity:0.45;transition:opacity 0.15s;}
+.split-card-sel:active{transform:scale(0.99);}
+.split-card-sel.active{border-color:var(--sp-color,#a855f7);background:#150a26;}
+.split-card-sel.active::before{opacity:1;}
+.split-card-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px;}
+.split-card-eyebrow{font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:var(--sp-color,#a855f7);}
+.split-card-chev{font-size:18px;font-weight:900;color:var(--sp-color,#a855f7);flex-shrink:0;line-height:1;}
+.split-card-name{font-size:17px;font-weight:900;color:#fff;letter-spacing:-0.01em;margin-bottom:5px;}
+.split-card-desc{font-size:12px;color:#94a3b8;line-height:1.45;margin-bottom:8px;}
+.split-card-meta{font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#475569;}
 /* Split detail */
 .split-detail{max-width:680px;margin:0 auto;padding:20px 16px 0;}
 .split-detail-num{font-size:11px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:8px;display:inline-block;}
@@ -1209,9 +1216,19 @@ function resumeLastWorkout(){
 //  DASHBOARD — SPLIT STRIP & DETAIL
 // ══════════════════════════════════════════════════════════════
 function buildStrip(){
-  document.getElementById('splitStrip').innerHTML = SPLITS.map(s =>
-    `<button class="split-pill ${s.cls}${activeSplitId===s.id?' active':''}" onclick="selectSplit('${s.id}')">S${s.num} · ${s.name}</button>`
-  ).join('');
+  document.getElementById('splitStrip').innerHTML = SPLITS.map(s => {
+    const count = s.workouts.length;
+    const active = activeSplitId === s.id;
+    return `<button class="split-card-sel${active?' active':''}" style="--sp-color:${s.color};" onclick="selectSplit('${s.id}')">
+      <div class="split-card-top">
+        <div class="split-card-eyebrow">⚡ Split #${s.num} · 4 Weeks</div>
+        <div class="split-card-chev">${active?'●':'›'}</div>
+      </div>
+      <div class="split-card-name">${s.name}</div>
+      ${s.desc?`<div class="split-card-desc">${s.desc}</div>`:''}
+      <div class="split-card-meta">${count} workout${count===1?'':'s'}${active?' · selected':''}</div>
+    </button>`;
+  }).join('');
 }
 
 function selectSplit(id){
@@ -1220,9 +1237,9 @@ function selectSplit(id){
   buildStrip();
   renderSplitDetail();
   setTimeout(()=>{
-    const a = document.querySelector('.split-pill.active');
-    if(a) a.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
-  },50);
+    const d = document.getElementById('splitDetail');
+    if(d) d.scrollIntoView({behavior:'smooth',block:'start'});
+  },60);
 }
 
 function renderSplitDetail(){
@@ -1746,10 +1763,6 @@ function renderWorkout(){
 initResumeBanner();
 buildStrip();
 renderSplitDetail();
-setTimeout(()=>{
-  const a=document.querySelector('.split-pill.active');
-  if(a) a.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
-},100);
 
 </script>
 <script>
