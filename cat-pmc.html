@@ -1427,7 +1427,7 @@ const TMR={
       if(rem>0){fp.style.width=((rem/this.duration)*100)+'%';ft.className='timer-float-time';fp.className='timer-float-progress';if(el)el.className='rest-timer running';}
       else if(rem===0){this.buzz();ft.className='timer-float-time done';fp.className='timer-float-progress done';fp.style.width='100%';fla.textContent='DONE!';if(el)el.className='rest-timer done';}
       else{ft.textContent='+'+this.formatTime(-rem);ft.className='timer-float-time overtime';fp.className='timer-float-progress overtime';fla.textContent='OVERTIME';if(el)el.className='rest-timer overtime';}
-    },500);
+    },1000);
   },
   stop(){if(this.interval)clearInterval(this.interval);this.interval=null;if(this.activeEl){this.activeEl.querySelector('.rest-timer-label').textContent=this.activeEl.dataset.label;this.activeEl.className='rest-timer idle';this.activeEl=null;}const fl=document.getElementById('timerFloat');if(fl)fl.classList.remove('visible');},
   toggle(el,dur,name){if(this.activeEl===el&&this.interval)this.stop();else this.start(el,dur,name);},

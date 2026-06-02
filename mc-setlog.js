@@ -33,7 +33,7 @@
     var s = st(), k = ek(exId); if (!s[k]) s[k] = [];
     var d = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     var sess = s[k][0];
-    if (!sess || sess.d !== d) { sess = { d: d, sets: {} }; s[k].unshift(sess); s[k] = s[k].slice(0, 20); }
+    if (!sess || sess.d !== d) { sess = { d: d, sets: {} }; s[k].unshift(sess); s[k] = s[k].slice(0, 5); }
     sess.sets[sn] = { w: w, r: r };
     try { localStorage.setItem(SK, JSON.stringify(s)); } catch (e) {}
   }
