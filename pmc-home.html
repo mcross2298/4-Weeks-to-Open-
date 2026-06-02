@@ -6,18 +6,18 @@
 <title>Project Muscle Confusion</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
-body{background:#0d0618;min-height:100vh;color:#fff;padding:0 0 60px;}
+body{background:#0a0a0a;min-height:100vh;color:#fff;padding:0 0 60px;}
 .back-link{display:inline-block;color:#c084fc;text-decoration:none;font-size:13px;font-weight:700;background:rgba(192,132,252,0.1);padding:6px 14px;border-radius:20px;border:1px solid rgba(192,132,252,0.3);margin:20px 16px;letter-spacing:0.04em;}
 .hero{background:linear-gradient(135deg,#1e0a3c,#0d0618);padding:24px 20px;border-bottom:1px solid rgba(139,92,246,0.15);position:relative;overflow:hidden;}
 .hero::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(139,92,246,0.15),transparent 70%);pointer-events:none;}
 .hero-inner{max-width:680px;margin:0 auto;position:relative;}
-.eyebrow{font-size:10px;font-weight:900;letter-spacing:0.28em;color:#a855f7;text-transform:uppercase;margin-bottom:8px;}
+.eyebrow{font-size:11px;font-weight:900;letter-spacing:0.28em;color:#a855f7;text-transform:uppercase;margin-bottom:8px;}
 .title{font-size:26px;font-weight:900;color:#fff;letter-spacing:-0.02em;line-height:1.1;margin-bottom:5px;}
 .title span{color:#a855f7;}
 .subtitle{font-size:12px;color:#6b7280;line-height:1.5;}
 .inst-link{display:inline-flex;align-items:center;gap:6px;margin-top:12px;text-decoration:none;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);color:#c084fc;font-size:11px;font-weight:800;padding:7px 14px;border-radius:20px;letter-spacing:0.06em;}
 .content{max-width:680px;margin:20px auto 0;padding:0 16px;}
-.section-head{font-size:10px;font-weight:900;letter-spacing:0.22em;color:#a855f7;text-transform:uppercase;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+.section-head{font-size:11px;font-weight:900;letter-spacing:0.22em;color:#a855f7;text-transform:uppercase;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
 .section-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(168,85,247,0.3),transparent);}
 .split-card{display:block;text-decoration:none;color:inherit;border-radius:16px;padding:18px 20px;margin-bottom:12px;position:relative;overflow:hidden;transition:transform 0.15s;}
 .split-card:active{transform:scale(0.98);}
@@ -28,7 +28,7 @@ body{background:#0d0618;min-height:100vh;color:#fff;padding:0 0 60px;}
 .s5{background:linear-gradient(135deg,#1f1800,#0d0618);border:1px solid rgba(245,200,66,0.3);}
 .s6{background:linear-gradient(135deg,#0a1f00,#0d0618);border:1px solid rgba(163,230,53,0.3);}
 .s7{background:linear-gradient(135deg,#1a0800,#0d0618);border:1px solid rgba(255,107,0,0.3);}
-.split-num{font-size:9px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;display:inline-block;padding:3px 10px;border-radius:20px;}
+.split-num{font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;display:inline-block;padding:3px 10px;border-radius:20px;}
 .s1 .split-num{background:rgba(139,92,246,0.15);color:#c084fc;border:1px solid rgba(139,92,246,0.3);}
 .s2 .split-num{background:rgba(251,113,133,0.15);color:#fb7185;border:1px solid rgba(251,113,133,0.3);}
 .s3 .split-num{background:rgba(251,111,111,0.15);color:#fb6f6f;border:1px solid rgba(251,111,111,0.3);}
@@ -47,6 +47,7 @@ body{background:#0d0618;min-height:100vh;color:#fff;padding:0 0 60px;}
 .s7 .split-dot{background:#ff6b00;}
 .split-arrow{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;background:rgba(255,255,255,0.07);}
 </style>
+<link rel="stylesheet" href="mc-nav.css"/>
 </head>
 <body>
 <a href="cat-pmc.html" class="back-link">← PMC</a>
@@ -157,5 +158,6 @@ body{background:#0d0618;min-height:100vh;color:#fff;padding:0 0 60px;}
     <div class="split-arrow">→</div>
   </a>
 </div>
+<script src="mc-nav.js"></script>
 </body>
 </html>

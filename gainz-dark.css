@@ -1,0 +1,48 @@
+/* ==========================================================================
+   gainz-dark.css  —  Phase 3 design-system unification
+   --------------------------------------------------------------------------
+   Daily Gainz workout pages shipped with a light/white card template
+   (.day-card {background:#fff}, light-green .ex-item rows). This sheet reskins
+   them to the dark, premium look used by PMC / MC splits — single Gainz accent
+   (lime). Linked AFTER each page's inline <style>, so equal-specificity rules
+   win by source order; no per-page CSS rewrite needed (one source of truth for
+   all 8 Daily Gainz pages, which share this exact class structure).
+   ========================================================================== */
+
+:root{ --gz: #84cc16; --gz-bright:#a3e635; --gz-soft: rgba(132,204,22,0.14); }
+
+/* page shell */
+body{ background:#06120a; }
+.app{ background:linear-gradient(135deg,#050a04 0%,#0b1f10 50%,#050a04 100%); }
+.header{ background:linear-gradient(90deg,#0b1f10,#050a04); border-bottom:1px solid rgba(132,204,22,0.16); }
+
+/* day accordion cards */
+.day-card{
+  background:#0a1710;
+  border:1px solid rgba(132,204,22,0.22);
+  box-shadow:0 4px 20px rgba(0,0,0,0.15);
+}
+.day-card.open{ border-color:rgba(132,204,22,0.55); box-shadow:0 4px 20px rgba(132,204,22,0.15); }
+.day-card.open .day-header{ background:rgba(132,204,22,0.08); }
+.day-session{ color:#f0fdf4; }
+.day-meta{ color:#94a3b8; }
+.day-toggle{ background:rgba(132,204,22,0.12); color:var(--gz-bright); }
+.day-card.open .day-toggle{ background:var(--gz); color:#041006; }
+.exercises{ border-top:1px solid rgba(132,204,22,0.18); }
+
+/* exercise rows */
+.ex-item{
+  background:rgba(132,204,22,0.06);
+  border:1px solid rgba(132,204,22,0.20);
+}
+.ex-item:active{ background:rgba(132,204,22,0.12); }
+.ex-name{ color:#e2e8f0; }
+.ex-item.checked .ex-name{ color:var(--gz-bright); }
+.ex-item.checked .checkbox{ background:var(--gz); border-color:var(--gz); }
+.ex-item.checked .checkbox::after{ color:#041006; }
+.checkbox{ background:transparent; border:2px solid var(--gz); }
+.ex-sets{
+  background:rgba(132,204,22,0.16);
+  color:#d9f99d;
+  border:1px solid rgba(132,204,22,0.30);
+}

@@ -1,0 +1,111 @@
+/* ==========================================================================
+   mc-card-actions.css  —  Phase 1 shared module
+   Meatball (⋮) menu + Reorder mode + Notes for exercise cards.
+   Namespaced with .mc- to avoid collisions with per-page inline styles.
+   Visual idiom matches the existing .fw-modal bottom-sheet (blur + dark).
+   ========================================================================== */
+
+/* ── Meatball trigger button (injected into every .ex-body) ── */
+.mc-meatball{
+  position:absolute;top:6px;right:6px;z-index:4;
+  width:30px;height:30px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+  color:#cbd5e1;font-size:17px;line-height:1;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:background 0.15s;
+  padding:0;
+}
+.mc-meatball:active{background:rgba(255,255,255,0.14);}
+.mc-meatball .mc-dot-ind{
+  position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;
+  background:#fbbf24;border:1px solid rgba(0,0,0,0.4);display:none;
+}
+.mc-meatball.mc-has-note .mc-dot-ind{display:block;}
+
+/* ── Inline saved note shown under a card ── */
+.mc-note{
+  margin:8px 14px 12px;padding:8px 10px;border-radius:8px;
+  background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.22);
+  color:#fcd34d;font-size:12px;font-weight:600;line-height:1.45;
+  white-space:pre-wrap;word-break:break-word;
+}
+.mc-note::before{content:'📝 ';opacity:0.85;}
+
+/* ── Bottom-sheet action menu ── */
+.mc-menu-overlay{
+  position:fixed;inset:0;z-index:1200;display:none;
+  align-items:flex-end;padding:14px;
+  background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+.mc-menu-overlay.open{display:flex;}
+.mc-sheet{
+  width:100%;max-width:520px;margin:0 auto;
+  background:#0e0e0e;border:1px solid rgba(255,255,255,0.1);
+  border-radius:18px;padding:8px;
+  box-shadow:0 -8px 40px rgba(0,0,0,0.6);
+}
+.mc-sheet-title{
+  font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;
+  color:#64748b;padding:12px 14px 8px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.mc-item{
+  display:flex;align-items:center;gap:12px;width:100%;
+  padding:14px 14px;border-radius:12px;border:none;background:transparent;
+  color:#e2e8f0;font-size:15px;font-weight:600;text-align:left;cursor:pointer;
+  font-family:inherit;-webkit-tap-highlight-color:transparent;
+}
+.mc-item:active{background:rgba(255,255,255,0.06);}
+.mc-item .mc-ico{font-size:18px;width:22px;text-align:center;flex-shrink:0;}
+.mc-item-cancel{justify-content:center;color:#94a3b8;margin-top:4px;}
+
+/* ── Notes editor modal ── */
+.mc-note-modal{
+  width:100%;max-width:520px;margin:0 auto;
+  background:#0e0e0e;border:1px solid rgba(255,255,255,0.1);
+  border-radius:18px;padding:18px 16px 16px;
+}
+.mc-note-modal .mc-sheet-title{padding:0 2px 10px;}
+.mc-note-ta{
+  width:100%;min-height:120px;resize:vertical;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);
+  border-radius:12px;padding:12px;color:#e2e8f0;font-size:14px;line-height:1.5;
+  font-family:inherit;outline:none;
+}
+.mc-note-ta:focus{border-color:rgba(251,191,36,0.5);}
+.mc-note-btns{display:flex;gap:10px;margin-top:14px;}
+.mc-btn{
+  flex:1;padding:13px;border-radius:12px;border:none;cursor:pointer;
+  font-family:inherit;font-size:14px;font-weight:800;letter-spacing:0.02em;
+}
+.mc-btn-cancel{background:rgba(255,255,255,0.07);color:#cbd5e1;}
+.mc-btn-save{background:#fbbf24;color:#1a1200;}
+
+/* ── Reorder mode ── */
+.mc-reordering{outline:2px dashed rgba(251,191,36,0.35);outline-offset:3px;border-radius:14px;}
+.mc-reorder-ctrls{
+  position:absolute;top:6px;right:42px;z-index:5;display:flex;gap:4px;
+}
+.mc-arrow{
+  width:30px;height:30px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(251,191,36,0.14);border:1px solid rgba(251,191,36,0.4);
+  color:#fbbf24;font-size:15px;font-weight:900;cursor:pointer;padding:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.mc-arrow:active{background:rgba(251,191,36,0.28);}
+.mc-arrow[disabled]{opacity:0.3;pointer-events:none;}
+.mc-reorder-bar{
+  position:fixed;left:0;right:0;bottom:0;z-index:1190;
+  display:none;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+  background:rgba(14,14,14,0.97);border-top:1px solid rgba(251,191,36,0.3);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.mc-reorder-bar.open{display:flex;}
+.mc-reorder-bar .mc-rb-label{font-size:13px;font-weight:700;color:#fcd34d;}
+.mc-reorder-bar .mc-rb-done{
+  padding:10px 22px;border-radius:10px;border:none;cursor:pointer;
+  background:#fbbf24;color:#1a1200;font-weight:800;font-size:14px;font-family:inherit;
+}

@@ -1,0 +1,66 @@
+/* ==========================================================================
+   mc-setlog.css  —  shared set/rep logger (single source of truth)
+   Self-contained styling (mcl- prefix) so the logger looks identical on every
+   workout page regardless of that page's own CSS state. Matches the app's
+   dark logger look: SET · WEIGHT · REPS rows + a done checkbox.
+   ========================================================================== */
+.mcl-toggle{
+  display:flex;align-items:center;gap:6px;margin-top:8px;
+  cursor:pointer;user-select:none;
+  font-size:11px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;
+  color:#94a3b8;-webkit-tap-highlight-color:transparent;
+}
+.mcl-toggle .mcl-chev{transition:transform .2s;font-size:11px;}
+.mcl-toggle.open .mcl-chev{transform:rotate(180deg);}
+.mcl-hist{
+  font-size:11px;font-weight:700;color:rgba(212,175,55,0.6);
+  margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;
+}
+.mcl-wrap{margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:4px;display:none;}
+.mcl-wrap.open{display:block;}
+
+/* Daily Gainz: .ex-item is display:flex;align-items:center, so the logger would
+   sit to the SIDE. Force the row to wrap and the logger to span full width below
+   the exercise name/sets, full-width. */
+.ex-item{flex-wrap:wrap;}
+.ex-item > .mcl-toggle,
+.ex-item > .mcl-wrap{flex:0 0 100%;width:100%;}
+.ex-item > .mcl-toggle{margin-top:8px;}
+
+.mcl-hdr,.mcl-row{display:grid;grid-template-columns:30px 1fr 1fr 40px;gap:7px;align-items:center;}
+.mcl-hdr{padding:4px 2px 6px;}
+.mcl-hl{font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#475569;text-align:center;}
+.mcl-row{padding:6px 2px;border-bottom:1px solid rgba(255,255,255,0.05);}
+.mcl-row:last-child{border-bottom:none;}
+.mcl-num{font-size:12px;font-weight:900;color:#64748b;text-align:center;}
+.mcl-inp{
+  width:100%;padding:8px 4px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;color:#e2e8f0;font-size:14px;font-weight:700;text-align:center;
+  font-family:inherit;outline:none;-webkit-tap-highlight-color:transparent;
+}
+.mcl-inp:focus{border-color:rgba(212,175,55,0.5);background:rgba(212,175,55,0.07);}
+.mcl-inp::placeholder{color:#475569;font-size:12px;font-weight:600;}
+.mcl-ck{
+  width:34px;height:34px;border-radius:9px;
+  border:1.5px solid rgba(255,255,255,0.18);background:transparent;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:15px;color:#94a3b8;transition:all .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.mcl-ck.done{background:rgba(52,211,153,0.16);border-color:rgba(52,211,153,0.45);color:#34d399;}
+.mcl-row.done-row .mcl-inp{opacity:0.5;text-decoration:line-through;}
+
+/* ── Superset rest timer (Phase 3) ──────────────────────────────────────────
+   A single rest timer lives on the SECOND superset exercise, parked directly
+   under its "Log Sets" dropdown. Give it room and a clear "rest after superset"
+   look so it reads as the interval AFTER the pair, not a per-exercise pill. */
+.rest-timer.mcl-rest-under{
+  display:inline-flex;margin-top:10px;
+}
+.ss-ex > .ss-content > .rest-timer.mcl-rest-under,
+.ss-content > .rest-timer.mcl-rest-under{margin-top:10px;}
+/* clean visual separation between the A and B blocks of a superset */
+.ss-card .ss-ex{margin-bottom:6px;}
+.ss-card .ss-divider{margin:10px 0;}
+.ss-card .ss-ex:last-child{margin-bottom:2px;}

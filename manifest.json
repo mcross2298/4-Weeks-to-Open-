@@ -2,7 +2,7 @@
   "name": "Mike Cross Training",
   "short_name": "MC Training",
   "description": "Workout programs — STNDR, PMC, Daily Pump, Daily Gainz, and more",
-  "start_url": "/4-Weeks-to-Open-/",
+  "start_url": "/4-Weeks-to-Open-/dashboard.html",
   "scope": "/4-Weeks-to-Open-/",
   "display": "standalone",
   "orientation": "portrait",

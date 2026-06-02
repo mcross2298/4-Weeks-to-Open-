@@ -1,7 +1,7 @@
 // MC Training — Service Worker v2
 // Absolute URL cache for GitHub Pages
 
-const CACHE_NAME = 'mc-training-v11';
+const CACHE_NAME = 'mc-training-v34';
 const BASE = 'https://mcross2298.github.io/4-Weeks-to-Open-/';
 const CACHE_URLS = [
     'https://mcross2298.github.io/4-Weeks-to-Open-/',
@@ -129,7 +129,23 @@ const CACHE_URLS = [
     'https://mcross2298.github.io/4-Weeks-to-Open-/quads-pump.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/s4-pull.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/s4-push.html',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/mc-card-actions.js',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/mc-card-actions.css',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/conditioning-data.js',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/mc-live-tracker.js',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/mc-nav.js',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/mc-nav.css',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/mc-summary.js',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/mc-summary.css',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/stndr-checkoff.js',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/gainz-dark.css',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/mc-setlog.js',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/mc-setlog.css',
     'https://mcross2298.github.io/4-Weeks-to-Open-/manifest.json',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/build-workout.html',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/run-workout.html',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/exercise-catalog.js',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/pmc-s7-data.js',
     'https://mcross2298.github.io/4-Weeks-to-Open-/sw.js'
 ];
 
@@ -142,24 +158,31 @@ self.addEventListener('install', event => {
             const batch = (arr, size) => Array.from({length:Math.ceil(arr.length/size)}, (_,i) => arr.slice(i*size,i*size+size));
             const batches = batch(CACHE_URLS, 20);
             return batches.reduce((p, b) => p.then(() =>
-                cache.addAll(b).catch(err => console.log('[SW] Batch error:', err))
+                Promise.allSettled(b.map(u => cache.add(u).catch(err => console.log('[SW] Cache miss:', u, err))))
             ), Promise.resolve());
         })
     );
     self.skipWaiting();
 });
 
-// Activate — remove old caches
+// Activate — remove ALL old caches, take control, and force-reload every open
+// tab so stale pages held by a previous worker are replaced immediately.
 self.addEventListener('activate', event => {
     event.waitUntil(
-        caches.keys().then(keys =>
-            Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => {
-                console.log('[SW] Removing old cache:', k);
-                return caches.delete(k);
+        caches.keys()
+            .then(keys => Promise.all(
+                keys.filter(k => k !== CACHE_NAME).map(k => {
+                    console.log('[SW] Removing old cache:', k);
+                    return caches.delete(k);
+                })
+            ))
+            .then(() => self.clients.claim())
+            .then(() => self.clients.matchAll({ type: 'window' }))
+            .then(clients => clients.forEach(c => {
+                // Reload each controlled tab once so it picks up fresh files.
+                try { c.navigate(c.url); } catch (e) {}
             }))
-        )
     );
-    self.clients.claim();
 });
 
 // Fetch — NETWORK FIRST, fall back to cache

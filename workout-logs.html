@@ -15,7 +15,7 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 .topbar-sub{font-size:12px;color:#64748b;margin-top:1px;}
 
 .hero{background:linear-gradient(135deg,#0a1628,#020b18);border-bottom:1px solid rgba(212,175,55,0.15);padding:20px 18px 22px;margin-bottom:0;}
-.hero-eyebrow{font-size:10px;font-weight:900;letter-spacing:0.25em;color:#d4af37;text-transform:uppercase;margin-bottom:8px;}
+.hero-eyebrow{font-size:11px;font-weight:900;letter-spacing:0.25em;color:#d4af37;text-transform:uppercase;margin-bottom:8px;}
 .hero-title{font-size:26px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;}
 .hero-sub{font-size:13px;color:#6b7280;line-height:1.5;}
 
@@ -23,11 +23,11 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 .stats-bar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);}
 .stat{background:#0a0a0a;padding:14px 12px;text-align:center;}
 .stat-num{font-size:22px;font-weight:900;color:#d4af37;letter-spacing:-0.02em;}
-.stat-label{font-size:10px;font-weight:700;color:#475569;letter-spacing:0.08em;text-transform:uppercase;margin-top:2px;}
+.stat-label{font-size:11px;font-weight:700;color:#475569;letter-spacing:0.08em;text-transform:uppercase;margin-top:2px;}
 
 /* Content */
 .content{padding:20px 18px 0;}
-.section-label{font-size:10px;font-weight:900;letter-spacing:0.2em;color:#475569;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.section-label{font-size:11px;font-weight:900;letter-spacing:0.2em;color:#475569;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
 .section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.08),transparent);}
 
 /* Log cards */
@@ -37,13 +37,13 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 .log-name{font-size:15px;font-weight:800;color:#fff;line-height:1.3;}
 .log-date{font-size:11px;color:#475569;font-weight:600;white-space:nowrap;margin-left:8px;flex-shrink:0;}
 .log-meta-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
-.log-tag{font-size:10px;font-weight:800;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,0.05);color:#64748b;border:1px solid rgba(255,255,255,0.07);letter-spacing:0.05em;}
+.log-tag{font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,0.05);color:#64748b;border:1px solid rgba(255,255,255,0.07);letter-spacing:0.05em;}
 .log-tag.gold{background:rgba(212,175,55,0.1);color:#d4af37;border-color:rgba(212,175,55,0.25);}
 .log-sets{display:flex;flex-direction:column;gap:6px;}
 .set-row{display:flex;align-items:center;gap:10px;padding:7px 10px;background:#0d0d0d;border-radius:8px;}
 .set-ex{font-size:12px;font-weight:700;color:#e2e8f0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .set-data{font-size:12px;color:#d4af37;font-weight:700;white-space:nowrap;}
-.set-pr{font-size:9px;font-weight:900;background:rgba(212,175,55,0.15);color:#d4af37;border-radius:4px;padding:1px 5px;letter-spacing:0.06em;border:1px solid rgba(212,175,55,0.25);}
+.set-pr{font-size:11px;font-weight:900;background:rgba(212,175,55,0.15);color:#d4af37;border-radius:4px;padding:1px 5px;letter-spacing:0.06em;border:1px solid rgba(212,175,55,0.25);}
 .log-duration{font-size:11px;color:#475569;margin-top:8px;display:flex;align-items:center;gap:5px;}
 
 /* Empty state */
@@ -62,6 +62,9 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 }
 .clear-btn:active{background:rgba(239,68,68,0.15);}
 </style>
+<link rel="stylesheet" href="mc-nav.css"/>
+<link rel="stylesheet" href="mc-setlog.css"/>
+<link rel="stylesheet" href="mc-summary.css"/>
 </head>
 <body>
 
@@ -101,6 +104,37 @@ function getSetLogs(){
   try{ return JSON.parse(localStorage.getItem(SL_KEY)||'{}'); }catch(e){ return {}; }
 }
 
+const DAILY_KEY = 'mc_daily_v1';
+function getDaily(){
+  try{ return JSON.parse(localStorage.getItem(DAILY_KEY)||'{}'); }catch(e){ return {}; }
+}
+// Live per-day session tracking written by mc-summary.js as the lifter checks
+// off exercises (even before "Finish Workout" is tapped).
+function dailyHtml(){
+  const entries = Object.values(getDaily()).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  if(!entries.length) return '';
+  const byDate = {};
+  entries.forEach(e=>{ (byDate[e.date]=byDate[e.date]||[]).push(e); });
+  let h = '<div class="section-label">📅 Daily Sessions (live)</div>';
+  Object.keys(byDate).sort().reverse().forEach(date=>{
+    byDate[date].forEach(e=>{
+      h += `
+        <div class="log-card" style="--prog-color:#34d399">
+          <div class="log-header">
+            <div class="log-name">${e.program||e.pid}</div>
+            <div class="log-date">${e.date}</div>
+          </div>
+          <div class="log-meta-row">
+            <span class="log-tag">${e.doneSets} sets</span>
+            <span class="log-tag">${e.doneReps} reps</span>
+            <span class="log-tag gold">${e.pct}% complete</span>
+          </div>
+        </div>`;
+    });
+  });
+  return h;
+}
+
 const PROG_COLORS = {
   mc:'#d4af37', pmc:'#7F77DD', stndr:'#1D9E75',
   pump:'#D85A30', gainz:'#378ADD', faint:'#E24B4A', psu:'#639922'
@@ -137,7 +171,9 @@ function render(){
   document.getElementById('statSets').textContent = totalSets;
   document.getElementById('statPRs').textContent = totalPRs;
 
-  if(logs.length === 0){
+  const daily = dailyHtml();
+
+  if(logs.length === 0 && !daily){
     content.innerHTML = `
       <div class="empty">
         <div class="empty-icon">📋</div>
@@ -156,7 +192,7 @@ function render(){
     byDate[d].push(log);
   });
 
-  let html = '';
+  let html = daily;
   Object.keys(byDate).reverse().forEach(date=>{
     html += `<div class="section-label">${date}</div>`;
     byDate[date].forEach(log=>{
@@ -185,7 +221,7 @@ function render(){
     });
   });
 
-  html += `<button class="clear-btn" onclick="clearLogs()">🗑 Clear All Workout Logs</button>`;
+  if(logs.length) html += `<button class="clear-btn" onclick="clearLogs()">🗑 Clear All Workout Logs</button>`;
   content.innerHTML = html;
 }
 
@@ -216,5 +252,8 @@ render();
   });
 })();
 </script>
+<script src="mc-nav.js"></script>
+<script src="mc-setlog.js"></script>
+<script src="mc-summary.js"></script>
 </body>
 </html>
