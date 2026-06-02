@@ -8,6 +8,10 @@
 :root{--accent:#a855f7;--accent-rgb:168,85,247;}
 .header{background:linear-gradient(135deg,#1e0a3c,#0d0618);}
 .week-tabs{border-bottom:1px solid rgba(255,255,255,0.05);}
+/* ── VIEWS — only one visible at a time (restored: dropped in Phase 2) ── */
+#view-workout{display:none;}
+#view-workout.active{display:block;}
+#view-dashboard.hidden{display:none;}
 </style>
 <link rel="stylesheet" href="base.css"/>
 <link rel="stylesheet" href="mc-nav.css"/>
@@ -56,6 +60,8 @@
 .split-detail-desc{font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:16px;}
 .workouts-label{font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;color:#475569;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
 .workouts-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.06);}
+.workout-card{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;border:1.5px solid;margin-bottom:10px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;}
+.workout-card:active{transform:scale(0.98);}
 .workout-icon{font-size:20px;flex-shrink:0;width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;}
 .workout-info{flex:1;min-width:0;}
 .workout-name{font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;line-height:1.3;}
