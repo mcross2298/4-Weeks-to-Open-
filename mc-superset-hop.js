@@ -272,12 +272,17 @@
 
   // ---- one-time visible load confirmation (pilot diagnostic) -------------
   // Flashes a small badge so it's obvious on-device whether the new code is
-  // actually loaded (vs a stale cached copy). Safe to remove after the pilot.
+  // actually loaded (vs a stale cached copy). Only shows on pages that really
+  // have a superset/triset to hop, so it isn't noise everywhere. Safe to
+  // remove after the rollout is confirmed.
   function flashReady() {
+    if (!document.querySelector('.ss-ex[data-type="ssex"]')) return;
+    if (document.getElementById('sshop-ready')) return;
     var t = document.createElement('div');
+    t.id = 'sshop-ready';
     t.textContent = '⚡ Superset hop active';
     t.style.cssText = 'position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top));' +
-      'transform:translateX(-50%);z-index:200;background:rgba(168,85,247,0.96);color:#fff;' +
+      'transform:translateX(-50%);z-index:2000;background:rgba(168,85,247,0.96);color:#fff;' +
       'font:700 12px system-ui,-apple-system,sans-serif;padding:7px 14px;border-radius:20px;' +
       'box-shadow:0 4px 16px rgba(0,0,0,0.45);opacity:0;transition:opacity .3s;pointer-events:none;';
     (document.body || document.documentElement).appendChild(t);
@@ -287,8 +292,10 @@
       setTimeout(function () { t.remove(); }, 400);
     }, 2200);
   }
-  if (document.body) flashReady();
-  else document.addEventListener('DOMContentLoaded', flashReady);
+  // Give inline renderers a moment to build the cards before we check.
+  function maybeFlash() { setTimeout(flashReady, 1200); }
+  if (document.body) maybeFlash();
+  else document.addEventListener('DOMContentLoaded', maybeFlash);
 
   // ---- triggers (capture phase, before card/logger toggle their state) ----
   document.addEventListener('click', function (e) {
