@@ -1,6 +1,73 @@
-/* mc-summary.css — live Workout Summary (Phase 3) */
+/* mc-summary.css — live Workout Summary */
 
-/* live progress bar at the top of the summary card */
+/* ── STAT BAR (sticky top — timer + sets counter) ─────────────────── */
+.prog-bar-wrap.mcs-stat{
+  height:46px;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  background:rgba(10,10,10,0.97);backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  padding:0;
+}
+.mcs-stat-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px 5px;
+}
+.mcs-timer-wrap{display:flex;align-items:baseline;gap:5px;}
+.mcs-timer{
+  font-size:15px;font-weight:900;color:#fff;
+  font-variant-numeric:tabular-nums;letter-spacing:0.02em;
+}
+.mcs-timer-label{
+  font-size:10px;font-weight:700;color:#475569;
+  letter-spacing:0.1em;text-transform:uppercase;
+}
+.mcs-sets-wrap{display:flex;align-items:baseline;gap:4px;text-align:right;}
+.mcs-sets-live{
+  font-size:15px;font-weight:900;
+  font-variant-numeric:tabular-nums;letter-spacing:-0.01em;
+}
+.mcs-sets-label{
+  font-size:10px;font-weight:700;color:#475569;
+  letter-spacing:0.1em;text-transform:uppercase;
+}
+/* Thin progress fill sits at the very bottom of the stat bar */
+.prog-bar-wrap.mcs-stat .prog-bar-fill{
+  height:3px;width:0;
+  background:linear-gradient(90deg,#22d3ee,#a78bfa);
+  transition:width 0.4s ease;border-radius:0;margin:0;
+}
+
+/* Push page content below the 46px stat bar */
+body.mcs-stat-active .header{padding-top:74px;}
+body.mcs-stat-active .back-link{top:54px;}
+
+/* ── SUMMARY CARD VISIBILITY (hidden by default, toggled open) ────── */
+body.mcs-stat-active .sum-section,
+body.mcs-stat-active .summary-section{
+  display:none;
+}
+body.mcs-stat-active .sum-section.mcs-open,
+body.mcs-stat-active .summary-section.mcs-open{
+  display:block;
+}
+
+/* ── SUMMARY BUTTON ACTIVE STATE ─────────────────────────────────── */
+.mcs-sumbtn{
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;
+  padding:9px 12px;border-radius:10px;
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);
+  color:#cbd5e1;font-family:inherit;font-size:12px;font-weight:800;letter-spacing:0.03em;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap;
+  transition:all 0.15s;
+}
+.mcs-sumbtn:active{transform:scale(0.96);background:rgba(255,255,255,0.12);}
+.mcs-sumbtn.mcs-btn-open{
+  background:rgba(var(--accent-rgb,212,175,55),0.15);
+  border-color:rgba(var(--accent-rgb,212,175,55),0.4);
+  color:var(--accent,#d4af37);
+}
+
+/* ── IN-CARD PROGRESS BAR ────────────────────────────────────────── */
 .mcs-progress{margin-bottom:16px;}
 .mcs-progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
 .mcs-progress-label{font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;}
@@ -11,34 +78,18 @@
 .sum-section.mcs-complete .mcs-progress-fill{background:linear-gradient(90deg,#34d399,#a3e635);}
 .sum-section.mcs-complete .mcs-progress-pct{color:#a3e635;}
 
-/* completed exercises struck through in the summary list (both markups) */
+/* ── COMPLETED ROW STRIKE-THROUGH ────────────────────────────────── */
 .mcs-row-done .sum-nm,.mcs-row-done .sum-name{text-decoration:line-through;opacity:0.6;}
 .mcs-row-done .sum-ico,.mcs-row-done .sum-icon{filter:grayscale(1);opacity:0.55;}
 
-/* compact "Summary" jump button injected into the Finish-Workout bar */
-.mcs-sumbtn{
-  flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;
-  padding:9px 12px;border-radius:10px;
-  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);
-  color:#cbd5e1;font-family:inherit;font-size:12px;font-weight:800;letter-spacing:0.03em;
-  cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap;
-}
-.mcs-sumbtn:active{transform:scale(0.96);background:rgba(255,255,255,0.12);}
-
-/* "Saved today" daily-session readout inside the summary card */
+/* ── SAVED TODAY READOUT ─────────────────────────────────────────── */
 .mcs-today{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.07);
   font-size:11px;font-weight:700;letter-spacing:0.02em;color:#34d399;}
 
-/* ---- auto-built summary card (pages that ship no static summary) ---- */
+/* ── AUTO-BUILT SUMMARY CARD ─────────────────────────────────────── */
 .sum-section.mcs-auto{margin:28px 16px 96px;}
 
-/* ==========================================================================
-   Universal fallback styling for the PATH-B generated card. SCOPED to
-   `.sum-section` so it never touches the MC gold `.summary-section`.
-   Mirrors the per-program `.sum-*` block already shipped on most pages, so
-   pages that lack that block still render the by-lift card correctly. Colours
-   are applied inline (per-program accent) by mc-summary.js and win over these.
-   ========================================================================== */
+/* ── PATH-B GENERATED CARD STYLES ───────────────────────────────── */
 .sum-section .sum-hd{font-size:11px;font-weight:900;letter-spacing:0.2em;
   text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
 .sum-section .sum-card{border-radius:14px;padding:16px;margin-bottom:32px;}
