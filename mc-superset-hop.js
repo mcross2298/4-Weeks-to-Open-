@@ -1,25 +1,30 @@
 /* ==========================================================================
    mc-superset-hop.js  —  auto-advance ("hop") between superset / triset members
    --------------------------------------------------------------------------
-   When a user checks off one exercise inside a superset (A) or triset (A/B/C),
+   When a user finishes one exercise inside a superset (A) or triset (A/B/C),
    the app advances them to the NEXT exercise in that block instead of leaving
    them to scroll and hunt:  finish Quad Extensions  ->  hop to Romanian
-   Deadlifts. A short (default 10s) buffer with a SKIP button gives them time to
-   set up the next station; skipping or letting it run out smooth-scrolls the
-   next exercise into view and pulse-highlights it.
+   Deadlifts, with its set logger opened. A short (default 10s) buffer with a
+   SKIP button gives them time to set up the next station; skipping or letting
+   it run out smooth-scrolls the next exercise into view and pulse-highlights it.
+
+   What counts as "finishing" an exercise (either fires the hop):
+     1. Checking off the LAST set in that exercise's set logger (the natural
+        "I'm done logging this station" gesture), OR
+     2. Tapping the exercise card to check it off.
 
    Design notes
    - Works by DELEGATION on the document in the CAPTURE phase, so it needs no
-     edits to any page's inline render/click code and survives re-renders. The
-     per-card ".ss-ex" handler calls stopPropagation() in the bubble phase, which
-     does NOT affect a capture-phase listener that has already fired.
-   - At capture time the card has NOT yet toggled, so the PRE-toggle state tells
-     us whether this tap is checking the exercise ON (advance) or OFF (ignore).
-   - Members cycle with wrap-around: A->B and, for the last member, back to the
-     first — which matches how supersets are actually run (multiple rounds,
-     alternating stations). The user simply scrolls on when the block is done.
-   - Generic over N members, so a 3-exercise triset (A/B/C) advances A->B->C->A
-     with no extra code.
+     edits to any page's inline render/click code (or to mc-setlog.js) and it
+     survives re-renders. Both the card ".ss-ex" handler and the set-logger
+     ".mcl-ck" handler call stopPropagation() in the BUBBLE phase, which does
+     NOT affect a capture-phase listener that has already fired.
+   - At capture time the elements have NOT yet toggled, so we read the PRE-toggle
+     state to tell "checking ON" (advance) from "un-checking" (ignore), and we
+     re-check the settled state on a 0ms timeout for set completion.
+   - Advance is LINEAR: A->B (->C for trisets). The final member does NOT hop —
+     that is the rest period, owned by the existing rest timer. The user scrolls
+     back up for the next round.
    ========================================================================== */
 (function () {
   if (window.__mcSSHop) return;
@@ -29,7 +34,7 @@
   var RADIUS = 20;
   var C = 2 * Math.PI * RADIUS;  // progress-ring circumference
 
-  // Sub-elements inside a card that must NOT trigger a hop when tapped.
+  // Card sub-elements that must NOT trigger a hop via the CARD-tap path.
   var IGNORE_SEL = [
     '.mcl-toggle', '.mcl-wrap', '.mcl-ck', '.mcl-inp',
     '.setlog-toggle', '.setlog-wrap', '.set-check', '.set-input',
@@ -43,7 +48,7 @@
     var s = document.createElement('style');
     s.id = 'sshop-styles';
     s.textContent = [
-      '.ss-ex{scroll-margin-top:84px;scroll-margin-bottom:96px;}',
+      '.ss-ex{scroll-margin-top:84px;scroll-margin-bottom:140px;}',
       '.ss-ex.sshop-target{background:rgba(168,85,247,0.10);transition:background .3s;}',
       '.sshop-pulse{animation:sshopPulse 1.6s ease-out 1;}',
       '@keyframes sshopPulse{0%{box-shadow:inset 0 0 0 2px rgba(168,85,247,0.9);}' +
@@ -115,15 +120,16 @@
     return n ? n.textContent.trim() : 'Next exercise';
   }
 
-  // Next member in the same superset/triset block, wrapping around.
+  // Next member in the same superset/triset block. LINEAR (no wrap): the last
+  // member returns null, because that transition is the rest period.
   function nextTarget(fromEl) {
     var card = fromEl.closest('.ss-card');
     if (!card) return null;
     var members = Array.prototype.slice.call(card.querySelectorAll('.ss-ex'));
     if (members.length < 2) return null;
     var idx = members.indexOf(fromEl);
-    if (idx < 0) return null;
-    return members[(idx + 1) % members.length];
+    if (idx < 0 || idx >= members.length - 1) return null;
+    return members[idx + 1];
   }
 
   function startBuffer(target) {
@@ -156,7 +162,22 @@
     if (t) hopTo(t);
   }
 
+  // Open the target exercise's "Log Sets" dropdown so the user lands on its log.
+  function openLog(el) {
+    var wrap = el.querySelector('.mcl-wrap');
+    var tog = el.querySelector('.mcl-toggle');
+    if (wrap && !wrap.classList.contains('open')) {
+      wrap.classList.add('open');
+      if (tog) {
+        tog.classList.add('open');
+        var lbl = tog.querySelector('.mcl-lbl');
+        if (lbl) lbl.textContent = 'Hide';
+      }
+    }
+  }
+
   function hopTo(target) {
+    openLog(target);
     try { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
     catch (e) { target.scrollIntoView(); }
     target.classList.add('sshop-pulse', 'sshop-target');
@@ -164,18 +185,46 @@
     setTimeout(function () { target.classList.remove('sshop-target'); }, 2600);
   }
 
-  // ---- trigger (capture phase, before the card toggles .checked) ----------
+  // ---- hop dispatch (debounced so the two trigger paths don't double-fire) -
+  var lastFrom = null, lastT = 0;
+  function triggerHop(fromEx) {
+    var now = Date.now();
+    if (fromEx === lastFrom && now - lastT < 2500) return;
+    var target = nextTarget(fromEx);
+    if (!target || target === fromEx) return;
+    lastFrom = fromEx;
+    lastT = now;
+    setTimeout(function () { startBuffer(target); }, 60);
+  }
+
+  // ---- triggers (capture phase, before card/logger toggle their state) ----
   document.addEventListener('click', function (e) {
+    // (1) Set-logger checkbox: hop when the LAST set of the exercise is checked.
+    var ck = e.target.closest('.mcl-ck');
+    if (ck) {
+      var exC = ck.closest('.ss-ex[data-type="ssex"]');
+      if (!exC) return;
+      var wasDone = ck.classList.contains('done'); // pre-toggle
+      // Re-check the SETTLED state after mc-setlog's onCheck has toggled it.
+      setTimeout(function () {
+        if (wasDone) return;                       // they un-checked a set
+        var cks = exC.querySelectorAll('.mcl-ck');
+        if (!cks.length) return;
+        var allDone = Array.prototype.every.call(cks, function (c) {
+          return c.classList.contains('done');
+        });
+        if (allDone) triggerHop(exC);
+      }, 30);
+      return;
+    }
+
+    // (2) Tapping the exercise card to check it off.
     var ex = e.target.closest('.ss-ex[data-type="ssex"]');
     if (!ex) return;
     if (e.target.closest(IGNORE_SEL)) return;
-    // PRE-toggle state: unchecked now => this tap is checking it ON (advance).
-    var willCheck = !ex.classList.contains('checked');
-    if (!willCheck) return;            // un-checking -> never hop
-    var target = nextTarget(ex);
-    if (!target || target === ex) return;
-    // Let the card's own handler flip .checked first, then surface the buffer.
-    setTimeout(function () { startBuffer(target); }, 60);
+    var willCheck = !ex.classList.contains('checked'); // pre-toggle
+    if (!willCheck) return;                            // un-checking -> no hop
+    triggerHop(ex);
   }, true);
 
   injectStyles();
