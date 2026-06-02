@@ -19,7 +19,13 @@
   --muted:#7c8aa0;
   --muted2:#54607a;
   --hairline:rgba(255,255,255,0.07);
-  /* concept accents */
+  /* Concept A is accent-driven so each program keeps its own hue.
+     In production these come from the page's :root (gold / orange / green …).
+     Defaults here keep the standalone lab looking neon-cyan. */
+  --accent:#22d3ee;
+  --accent-rgb:34,211,238;
+  --special:#fb7185;     /* fixed intensity color for Drop / AMRAP reps */
+  /* page-chrome neon (lab identity only) */
   --neon:#22d3ee;        /* A — electric cyan */
   --neon2:#a3e635;       /* A — tech lime      */
   --hivis:#f97316;       /* B — high-vis orange*/
@@ -66,13 +72,13 @@ body{
 .a-card{
   position:relative;border-radius:16px;margin-bottom:14px;overflow:hidden;
   background:linear-gradient(180deg,#0d0f12,#0a0b0d);
-  border:1px solid rgba(34,211,238,0.16);
+  border:1px solid rgba(var(--accent-rgb),0.16);
   box-shadow:0 10px 34px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
 }
-.a-card::before{ /* neon rail */
+.a-card::before{ /* accent rail — adopts the program's hue */
   content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
-  background:linear-gradient(180deg,var(--neon),var(--neon2));
-  box-shadow:0 0 16px rgba(34,211,238,0.55);
+  background:linear-gradient(180deg,rgba(var(--accent-rgb),1),rgba(var(--accent-rgb),0.45));
+  box-shadow:0 0 16px rgba(var(--accent-rgb),0.55);
 }
 .a-card.is-ss::before{background:linear-gradient(180deg,var(--violet),#6d28d9);box-shadow:0 0 16px rgba(168,85,247,0.5);}
 .a-top{display:flex;align-items:flex-start;gap:11px;padding:14px 16px 12px 18px;}
@@ -80,7 +86,7 @@ body{
   font-size:13px;font-weight:900;font-variant-numeric:tabular-nums;
   min-width:30px;height:30px;border-radius:9px;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;margin-top:1px;
-  background:rgba(34,211,238,0.12);color:var(--neon);border:1px solid rgba(34,211,238,0.3);
+  background:rgba(var(--accent-rgb),0.12);color:var(--accent);border:1px solid rgba(var(--accent-rgb),0.3);
 }
 .a-card.is-ss .a-idx{background:rgba(168,85,247,0.14);color:#c084fc;border-color:rgba(168,85,247,0.35);}
 .a-head{flex:1;min-width:0;}
@@ -88,10 +94,10 @@ body{
 .a-badges{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;}
 .a-pill{font-size:10px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;padding:3px 8px;border-radius:6px;}
 .a-pill.ss{background:rgba(168,85,247,0.16);color:#c084fc;border:1px solid rgba(168,85,247,0.32);}
-.a-pill.tempo{background:rgba(34,211,238,0.1);color:var(--neon);border:1px solid rgba(34,211,238,0.28);font-family:"SF Mono",ui-monospace,monospace;letter-spacing:0.02em;}
+.a-pill.tempo{background:rgba(var(--accent-rgb),0.1);color:var(--accent);border:1px solid rgba(var(--accent-rgb),0.28);font-family:"SF Mono",ui-monospace,monospace;letter-spacing:0.02em;}
 .a-check{
   width:26px;height:26px;border-radius:8px;flex-shrink:0;margin-top:2px;
-  border:2px solid rgba(34,211,238,0.35);background:transparent;cursor:pointer;
+  border:2px solid rgba(var(--accent-rgb),0.35);background:transparent;cursor:pointer;
 }
 /* hero reps */
 .a-reps{padding:2px 16px 14px 18px;}
@@ -103,9 +109,9 @@ body{
 }
 .a-rep.live{
   color:#fff;
-  text-shadow:0 0 18px rgba(34,211,238,0.7);
+  text-shadow:0 0 18px rgba(var(--accent-rgb),0.7);
 }
-.a-rep.special{color:var(--neon2);font-size:19px;text-shadow:0 0 14px rgba(163,230,53,0.5);}
+.a-rep.special{color:var(--special);font-size:19px;text-shadow:0 0 14px rgba(251,113,133,0.45);}
 .a-sep{font-size:13px;color:var(--muted2);font-weight:900;align-self:center;}
 .a-legtag{font-size:9px;font-weight:900;letter-spacing:0.14em;color:var(--muted2);text-transform:uppercase;align-self:center;margin-right:2px;}
 /* metric strip */
@@ -117,17 +123,17 @@ body{
 .a-timer{
   display:inline-flex;align-items:center;gap:6px;align-self:flex-start;
   padding:4px 10px;border-radius:8px;cursor:pointer;
-  background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.28);
-  font-size:13px;font-weight:800;color:var(--neon);
+  background:rgba(var(--accent-rgb),0.1);border:1px solid rgba(var(--accent-rgb),0.28);
+  font-size:13px;font-weight:800;color:var(--accent);
 }
 .a-timer:active{transform:scale(0.96);}
 .a-log{
   display:flex;align-items:center;justify-content:center;gap:7px;
   padding:11px;border-top:1px solid var(--hairline);cursor:pointer;
-  font-size:11px;font-weight:900;letter-spacing:0.18em;color:var(--neon);text-transform:uppercase;
-  background:rgba(34,211,238,0.04);
+  font-size:11px;font-weight:900;letter-spacing:0.18em;color:var(--accent);text-transform:uppercase;
+  background:rgba(var(--accent-rgb),0.04);
 }
-.a-log:active{background:rgba(34,211,238,0.1);}
+.a-log:active{background:rgba(var(--accent-rgb),0.1);}
 
 /* ╔══════════════════════════════════════════════════════════════╗
    ║ CONCEPT B — CLEAN & BORDERED                                  ║
