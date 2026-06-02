@@ -154,8 +154,11 @@
   transition:width 0.4s ease;border-radius:0;margin:0;
 }
 
-/* Push page content below the 46px stat bar */
-body.mcs-stat-active .header{padding-top:74px;}
+/* Push page content below the 46px stat bar AND the back-link, which is
+   relocated to top:54px (≈30px tall → bottom ≈84px) to sit under the bar.
+   74px only cleared the bar, so the pill overlapped the eyebrow/title. */
+body.mcs-stat-active .header{padding-top:94px;}
+body.mcs-stat-active .hero{padding-top:94px;}
 body.mcs-stat-active .back-link{top:54px;}
 
 /* ── SUMMARY CARD VISIBILITY (hidden by default, toggled open) ────── */
