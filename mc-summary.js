@@ -364,6 +364,117 @@
     else main.appendChild(sec);
   }
 
+  /* ── FINISH WORKOUT RECAP ────────────────────────────────────────── */
+  function workoutName(){
+    var el=document.querySelector('.title,.workout-title,h1');
+    return (el?el.textContent:'').replace(/\s*[—-]\s*MC Training.*$/i,'').trim()||'Workout';
+  }
+  function todayLabel(){
+    var d=new Date();
+    return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  }
+
+  function buildRecapRows(t,acc){
+    var html='<div class="fw-recap-rows">';
+    cards().forEach(function(c){
+      var nm=cardName(c); if(!nm)return;
+      var setsTxt=cardSetsText(c);
+      var sr=parseSetsReps(setsTxt);
+      var done=c.classList.contains('checked');
+      var setLabel=sr.sets?(sr.sets+' set'+(sr.sets>1?'s':'')):'—';
+      html+='<div class="fw-recap-row'+(done?' fw-recap-done':'')+'">'+
+              '<span class="fw-recap-row-ico">'+iconFor(nm,setsTxt)+'</span>'+
+              '<span class="fw-recap-row-name">'+esc(nm)+'</span>'+
+              '<span class="fw-recap-row-sets" style="color:'+rgb(acc)+';">'+setLabel+'</span>'+
+            '</div>';
+    });
+    html+='</div>';
+    return html;
+  }
+
+  function showRecap(){
+    var existing=document.getElementById('fwRecap');
+    if(existing)existing.parentNode.removeChild(existing);
+
+    var t=totals();
+    var acc=accentOf();
+    var timeStr=fmtTime(_elapsedSecs);
+    var prs=[];
+    try{
+      if(window._FW&&window._FW._getPRs)prs=window._FW._getPRs();
+    }catch(e){}
+
+    var el=document.createElement('div');
+    el.className='fw-recap-overlay';
+    el.id='fwRecap';
+    el.innerHTML=
+      '<div class="fw-recap-sheet">'+
+        '<div class="fw-recap-handle"></div>'+
+        '<div class="fw-recap-header">'+
+          '<div class="fw-recap-badge">🏆</div>'+
+          '<div class="fw-recap-title">Workout Complete</div>'+
+          '<div class="fw-recap-sub">'+esc(workoutName())+' · '+todayLabel()+'</div>'+
+        '</div>'+
+        '<div class="fw-recap-hero">'+
+          '<div class="fw-recap-hero-time">'+esc(timeStr)+'</div>'+
+          '<div class="fw-recap-hero-label">Total Time</div>'+
+        '</div>'+
+        '<div class="fw-recap-stats">'+
+          '<div class="fw-recap-stat">'+
+            '<div class="fw-recap-stat-val" style="color:'+rgb(acc)+';">'+t.exDone+' <span style="font-size:13px;opacity:0.55;">/ '+t.exTotal+'</span></div>'+
+            '<div class="fw-recap-stat-label">Exercises</div>'+
+          '</div>'+
+          '<div class="fw-recap-stat">'+
+            '<div class="fw-recap-stat-val" style="color:'+rgb(acc)+';">'+t.doneSets+'</div>'+
+            '<div class="fw-recap-stat-label">Sets Done</div>'+
+          '</div>'+
+          '<div class="fw-recap-stat">'+
+            '<div class="fw-recap-stat-val" style="color:'+rgb(acc)+';">'+t.doneReps+'</div>'+
+            '<div class="fw-recap-stat-label">Reps Done</div>'+
+          '</div>'+
+        '</div>'+
+        buildRecapRows(t,acc)+
+        '<div class="fw-recap-actions">'+
+          '<button class="fw-recap-cancel" id="fwRecapCancel">← Keep Training</button>'+
+          '<button class="fw-recap-save" id="fwRecapSave" style="background:'+rgb(acc)+';">Save & Exit →</button>'+
+        '</div>'+
+      '</div>';
+
+    document.body.appendChild(el);
+
+    // Animate open next frame
+    requestAnimationFrame(function(){el.classList.add('open');});
+
+    // Cancel — close sheet
+    document.getElementById('fwRecapCancel').addEventListener('click',function(){
+      el.classList.remove('open');
+      setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},350);
+    });
+
+    // Save & Exit — save workout then go to dashboard
+    document.getElementById('fwRecapSave').addEventListener('click',function(){
+      // Run the page's own save if available
+      if(window._FW&&window._FW._save) window._FW._save();
+      else if(window.saveWorkout) window.saveWorkout();
+      // Also persist via daily session store
+      saveDaily(t, t.exTotal?Math.round((t.exDone/t.exTotal)*100):0);
+      // Stop the session timer
+      if(_timerInterval){clearInterval(_timerInterval);_timerInterval=null;}
+      // Navigate to dashboard
+      window.location.href='dashboard.html';
+    });
+  }
+
+  function patchFWOpen(){
+    if(!window._FW){setTimeout(patchFWOpen,100);return;}
+    // Store original for fallback
+    window._FW._origOpen=window._FW.open;
+    // Also expose save hook if the page has saveWorkout defined
+    if(window.saveWorkout) window._FW._save=window.saveWorkout;
+    // Replace open with recap
+    window._FW.open=function(){ showRecap(); };
+  }
+
   /* ── main recompute ──────────────────────────────────────────────── */
   var writing=false;
   function recompute(){
@@ -389,6 +500,7 @@
 
   function init(){
     recompute();
+    patchFWOpen();
     var mo=new MutationObserver(schedule);
     mo.observe(document.body,{attributes:true,attributeFilter:['class'],subtree:true,childList:true});
     setTimeout(recompute,400);
