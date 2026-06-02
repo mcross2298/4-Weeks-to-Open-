@@ -12,14 +12,21 @@
    unlogged set. When every set of every member is logged, the superset is
    complete and no hop fires — the rest period (existing rest timer) takes over.
 
+   LOGGER-AGNOSTIC: PMC pages ship two different per-set loggers and they can
+   even race each other in the DOM:
+     - mc-setlog.js  -> ".mcl-toggle / .mcl-wrap / .mcl-row / .mcl-ck"
+     - page-native   -> ".setlog-toggle / .setlog-wrap / .sl-row / .sl-ck"
+   Both mark a completed set checkbox with ".done", so this module supports
+   whichever one is actually rendered.
+
    Design notes
    - Pure DELEGATION on the document in the CAPTURE phase: no edits to any
-     page's inline code or to mc-setlog.js, and it survives re-renders. The set
-     logger's ".mcl-ck" handler calls stopPropagation() in the BUBBLE phase,
+     page's inline code or to mc-setlog.js, and it survives re-renders. Both
+     loggers' checkbox handlers call stopPropagation() in the BUBBLE phase,
      which does NOT affect a capture-phase listener that already fired.
-   - mc-setlog starts a rest timer when a set on the FINAL member is checked.
-     On an in-between hop that is premature (you go straight to the next
-     station), so we stop it; on the last set of the block we leave it running.
+   - A logger starts a rest timer when a set on the final member is checked. On
+     an in-between hop that is premature (you go straight to the next station),
+     so we stop it; on the last set of the block we leave it running.
    ========================================================================== */
 (function () {
   if (window.__mcSSHop) return;
@@ -29,10 +36,13 @@
   var RADIUS = 20;
   var C = 2 * Math.PI * RADIUS;  // progress-ring circumference
 
+  var CK_SEL = '.mcl-ck, .sl-ck'; // a "complete set" checkbox in either logger
+
   // Card sub-elements that must NOT trigger a hop via the CARD-tap path.
   var IGNORE_SEL = [
     '.mcl-toggle', '.mcl-wrap', '.mcl-ck', '.mcl-inp',
-    '.setlog-toggle', '.setlog-wrap', '.set-check', '.set-input',
+    '.setlog-toggle', '.setlog-wrap', '.sl-ck', '.sl-inp',
+    '.set-check', '.set-input',
     '.rest-timer', '.mc-meatball', '.mc-note', '.mc-reorder-ctrls',
     'input', 'button', 'a', 'select', 'textarea'
   ].join(',');
@@ -49,8 +59,8 @@
       '@keyframes sshopPulse{0%{box-shadow:inset 0 0 0 2px rgba(168,85,247,0.9);}' +
         '70%{box-shadow:inset 0 0 0 2px rgba(168,85,247,0);}' +
         '100%{box-shadow:inset 0 0 0 2px rgba(168,85,247,0);}}',
-      '.mcl-row.sshop-nextset{box-shadow:inset 0 0 0 1.5px rgba(168,85,247,0.85);' +
-        'border-radius:8px;}',
+      '.mcl-row.sshop-nextset,.sl-row.sshop-nextset{' +
+        'box-shadow:inset 0 0 0 1.5px rgba(168,85,247,0.85);border-radius:8px;}',
       '.sshop-buffer{position:fixed;left:0;right:0;bottom:0;z-index:130;' +
         'padding:14px 18px calc(14px + env(safe-area-inset-bottom));' +
         'background:rgba(13,6,24,0.97);backdrop-filter:blur(16px);' +
@@ -80,14 +90,25 @@
     (document.head || document.documentElement).appendChild(s);
   }
 
-  // ---- helpers ------------------------------------------------------------
+  // ---- logger-agnostic helpers -------------------------------------------
   function exName(el) {
     var n = el.querySelector('.ss-name, .ex-name, .lift-name');
     return n ? n.textContent.trim() : 'Next exercise';
   }
-  // Index (0-based) of the first unlogged set row in a member, or -1 if none.
+  // The active logger's set checkboxes for a member (prefer mcl, else native).
+  function setChecks(m) {
+    var mcl = m.querySelectorAll('.mcl-ck');
+    return mcl.length ? mcl : m.querySelectorAll('.sl-ck');
+  }
+  // The active logger's set rows for a member.
+  function setRows(m) {
+    return m.querySelector('.mcl-ck')
+      ? m.querySelectorAll('.mcl-row')
+      : m.querySelectorAll('.sl-row');
+  }
+  // Index (0-based) of the first unlogged set in a member, or -1 if none.
   function firstUndoneIdx(m) {
-    var cks = m.querySelectorAll('.mcl-ck');
+    var cks = setChecks(m);
     for (var i = 0; i < cks.length; i++) {
       if (!cks[i].classList.contains('done')) return i;
     }
@@ -110,6 +131,39 @@
       if (hasUndoneSet(m)) return m;
     }
     return null;
+  }
+
+  // Open the target's log dropdown (either logger) so the user lands on its log.
+  function openLog(el) {
+    var w = el.querySelector('.mcl-wrap'), t = el.querySelector('.mcl-toggle');
+    if (w) {
+      if (!w.classList.contains('open')) {
+        w.classList.add('open');
+        if (t) {
+          t.classList.add('open');
+          var l = t.querySelector('.mcl-lbl');
+          if (l) l.textContent = 'Hide';
+        }
+      }
+      return;
+    }
+    var nw = el.querySelector('.setlog-wrap'), nt = el.querySelector('.setlog-toggle');
+    if (nw && !nw.classList.contains('open')) {
+      nw.classList.add('open');
+      if (nt) {
+        var lbl = nt.querySelector('[id^="sll-"]'); if (lbl) lbl.textContent = 'HIDE';
+        var arr = nt.querySelector('[id^="sla-"]'); if (arr) arr.textContent = '▴';
+      }
+    }
+  }
+  // Outline the next set row to enter on the target.
+  function highlightNextSet(el) {
+    var idx = firstUndoneIdx(el);
+    if (idx < 0) return;
+    var row = setRows(el)[idx];
+    if (!row) return;
+    row.classList.add('sshop-nextset');
+    setTimeout(function () { row.classList.remove('sshop-nextset'); }, 3200);
   }
 
   // ---- buffer UI ----------------------------------------------------------
@@ -175,30 +229,6 @@
     if (t) hopTo(t);
   }
 
-  // Open the target's "Log Sets" dropdown so the user lands on its log.
-  function openLog(el) {
-    var wrap = el.querySelector('.mcl-wrap');
-    var tog = el.querySelector('.mcl-toggle');
-    if (wrap && !wrap.classList.contains('open')) {
-      wrap.classList.add('open');
-      if (tog) {
-        tog.classList.add('open');
-        var lbl = tog.querySelector('.mcl-lbl');
-        if (lbl) lbl.textContent = 'Hide';
-      }
-    }
-  }
-  // Outline the next set row to enter on the target.
-  function highlightNextSet(el) {
-    var idx = firstUndoneIdx(el);
-    if (idx < 0) return;
-    var rows = el.querySelectorAll('.mcl-row');
-    var row = rows[idx];
-    if (!row) return;
-    row.classList.add('sshop-nextset');
-    setTimeout(function () { row.classList.remove('sshop-nextset'); }, 3200);
-  }
-
   function hopTo(target) {
     openLog(target);
     try { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
@@ -225,8 +255,8 @@
 
   // ---- triggers (capture phase, before card/logger toggle their state) ----
   document.addEventListener('click', function (e) {
-    // (1) Set-logger checkbox: hop on EACH set completion.
-    var ck = e.target.closest('.mcl-ck');
+    // (1) Set-logger checkbox (either logger): hop on EACH set completion.
+    var ck = e.target.closest(CK_SEL);
     if (ck) {
       var exC = ck.closest('.ss-ex[data-type="ssex"]');
       if (!exC) return;
