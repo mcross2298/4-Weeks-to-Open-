@@ -479,6 +479,8 @@
   /* ── main recompute ──────────────────────────────────────────────── */
   var writing=false;
   function recompute(){
+    // Only activate on actual workout session pages (those with a finish-workout bar)
+    if(!document.querySelector('.fw-bar'))return;
     writing=true;
     try{
       autoBuild();
