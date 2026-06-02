@@ -191,6 +191,10 @@ body{background:#050d1a;min-height:100vh;padding-bottom:40px;}
 .fw-auto-banner.show{display:block;}
 
 </style>
+<link rel="stylesheet" href="mc-card-actions.css"/>
+<link rel="stylesheet" href="mc-nav.css"/>
+<link rel="stylesheet" href="mc-setlog.css"/>
+<link rel="stylesheet" href="mc-summary.css"/>
 </head>
 <body>
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
@@ -306,7 +310,7 @@ const TMR = {
         floatLabel.textContent = 'OVERTIME';
         if (el) el.className = 'rest-timer overtime';
       }
-    }, 500);
+    }, 1000);
   },
 
   stop() {
@@ -348,7 +352,7 @@ const TMR = {
       if(rem>0){if(tt2){tt2.textContent=rem+"s";tt2.className="timer-float-time";}if(tp2){tp2.style.width=Math.round((rem/this.duration)*100)+"%";tp2.className="timer-float-progress";}}
       else if(rem===0){if(tt2){tt2.textContent="DONE!";tt2.className="timer-float-time done";}if(tp2){tp2.style.width="100%";tp2.className="timer-float-progress done";}if(tl2)tl2.textContent="DONE ✓";try{navigator.vibrate&&navigator.vibrate([200,100,200,100,400]);}catch(e){}}
       else{if(tt2){tt2.textContent="+"+Math.abs(rem)+"s";tt2.className="timer-float-time overtime";}if(tp2)tp2.className="timer-float-progress overtime";}
-    },500);
+    },1000);
   }
 };
 
@@ -605,7 +609,7 @@ const _T={iv:null,st:null,dur:0,el:null,nm:'',
         if(fp)fp.style.width='100%';if(fl)fl.textContent='DONE!';if(el)el.className='rest-pill done';}
       else{if(ft){ft.textContent='+'+this.fmt(-rem);ft.className='tf-time over';}
         if(fp)fp.className='tf-prog over';if(fl)fl.textContent='OVERTIME';if(el)el.className='rest-pill over';}
-    },500);},
+    },1000);},
   toggle(el,secs,nm){this.el===el&&this.iv?this.stop():this.start(el,secs,nm);}};
 
 function _initTF(){if(document.getElementById('_tf'))return;
@@ -684,25 +688,9 @@ document.addEventListener('DOMContentLoaded', function() {
     window.render = function() { origRender.apply(this, arguments); setTimeout(applyReplacements, 100); };
   }
   document.addEventListener('DOMContentLoaded', function() { setTimeout(applyReplacements, 400); });
-  // Long press to replace
-  let pressTimer;
-  document.addEventListener('touchstart', function(e) {
-    const card = e.target.closest('.ex-card, .ex-item, .lift-card');
-    if (!card) return;
-    pressTimer = setTimeout(function() {
-      const nameEl = card.querySelector('.ex-name, .lift-name');
-      if (!nameEl) return;
-      const origName = nameEl.dataset.orig || nameEl.textContent.trim();
-      nameEl.dataset.orig = origName;
-      // Navigate to library with exercise pre-selected
-      const url = 'exercise-library.html?replace=' + encodeURIComponent(origName);
-      if (confirm('Replace "' + origName.substring(0,40) + '"?\nTap OK to open Exercise Library.')) {
-        window.location.href = url;
-      }
-    }, 600);
-  }, {passive: true});
-  document.addEventListener('touchend', function() { clearTimeout(pressTimer); }, {passive: true});
-  document.addEventListener('touchmove', function() { clearTimeout(pressTimer); }, {passive: true});
+  // NOTE: "Replace exercise" is now triggered from the meatball (⋮) menu in
+  // mc-card-actions.js (Phase 1 consolidation). applyReplacements() above is
+  // kept so previously saved replacements still render with their badge.
 })();
 </script>
 
@@ -955,8 +943,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     updateProgress();
-    // Update every 10s for dynamic pages
-    setInterval(updateProgress,10000);
   }
 
   window._FW={
@@ -1002,5 +988,10 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 </script>
 
+<script src="mc-card-actions.js"></script>
+<script src="mc-live-tracker.js"></script>
+<script src="mc-nav.js"></script>
+<script src="mc-setlog.js"></script>
+<script src="mc-summary.js"></script>
 </body>
 </html>

@@ -70,7 +70,9 @@ body{background:#0d0618;min-height:100vh;padding-bottom:60px;}
 .block-ex.checked .block-ex-name{text-decoration:line-through;color:#34d399;}
 .block-ex-dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(251,146,60,0.5);flex-shrink:0;transition:all 0.15s;}
 .block-ex.checked .block-ex-dot{background:#34d399;border-color:#34d399;}
-.block-ex-name{font-size:13px;font-weight:600;color:#e2e8f0;}
+.block-ex-name{font-size:13px;font-weight:600;color:#e2e8f0;flex:1;}
+.block-ex-reps{font-size:10px;font-weight:800;letter-spacing:0.03em;color:#a78bfa;background:rgba(139,92,246,0.15);border-radius:5px;padding:3px 8px;white-space:nowrap;flex-shrink:0;}
+.block-giant-badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:#fb923c;background:rgba(251,146,60,0.12);border:1px solid rgba(251,146,60,0.3);border-radius:6px;padding:4px 10px;margin:0 16px 10px;}
 .block-rounds-btns{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px 14px;}
 .round-btn{padding:7px 16px;border-radius:8px;border:1px solid rgba(251,146,60,0.35);background:rgba(251,146,60,0.08);color:#fb923c;font-size:11px;font-weight:800;cursor:pointer;transition:all 0.15s;letter-spacing:0.05em;}
 .round-btn.done{background:rgba(52,211,153,0.15);border-color:rgba(52,211,153,0.4);color:#34d399;}
@@ -123,12 +125,6 @@ body{background:#0d0618;min-height:100vh;padding-bottom:60px;}
 .timer-preset{padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.07);color:#94a3b8;font-size:11px;font-weight:800;cursor:pointer;}
 .timer-preset:active{background:rgba(212,175,55,0.2);color:#fbbf24;border-color:rgba(212,175,55,0.4);}
 /* ── NOTES ── */
-.ex-notes-toggle{display:inline-flex;align-items:center;gap:4px;margin-top:6px;cursor:pointer;font-size:10px;font-weight:800;color:#475569;letter-spacing:0.06em;text-transform:uppercase;user-select:none;}
-.ex-notes-wrap{display:none;margin-top:8px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.08);}
-.ex-notes-wrap.open{display:block;}
-.ex-notes-input{width:100%;background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;font-weight:600;font-family:inherit;resize:none;line-height:1.5;}
-.ex-notes-input::placeholder{color:#334155;}
-.ex-notes-label{font-size:9px;font-weight:800;letter-spacing:0.15em;color:#475569;text-transform:uppercase;margin-bottom:4px;}
 /* ── SUMMARY ── */
 .sum-section{max-width:680px;margin:28px auto 0;padding:0 16px 32px;}
 .sum-card{border-radius:14px;padding:16px;}
@@ -154,12 +150,91 @@ body{background:#0d0618;min-height:100vh;padding-bottom:60px;}
 /* ── NOT FOUND ── */
 .not-found{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;color:#475569;text-align:center;gap:12px;}
 .not-found h2{font-size:20px;font-weight:900;color:#64748b;}
+
+
+
+
+
+/* — WAVE3-SETLOG — */
+.setlog-wrap{margin-top:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:2px;display:none;}
+.setlog-wrap.open{display:block;}
+.setlog-toggle{display:flex;align-items:center;gap:5px;margin-top:8px;cursor:pointer;user-select:none;font-size:10px;font-weight:900;color:#475569;letter-spacing:0.08em;text-transform:uppercase;-webkit-tap-highlight-color:transparent;}
+.setlog-hist{font-size:10px;font-weight:700;color:rgba(212,175,55,0.6);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
+.sl-row{display:grid;grid-template-columns:24px 1fr 1fr 32px;gap:5px;align-items:center;padding:6px 2px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.sl-row:last-child{border-bottom:none;}
+.sl-num{font-size:11px;font-weight:900;color:#475569;text-align:center;}
+.sl-inp{width:100%;padding:6px 4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:#e2e8f0;font-size:13px;font-weight:700;text-align:center;font-family:inherit;outline:none;-webkit-tap-highlight-color:transparent;}
+.sl-inp:focus{border-color:rgba(212,175,55,0.45);background:rgba(212,175,55,0.06);}
+.sl-inp::placeholder{color:#2d3748;font-size:11px;}
+.sl-ck{width:30px;height:30px;border-radius:7px;border:1.5px solid rgba(255,255,255,0.15);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;-webkit-tap-highlight-color:transparent;transition:all 0.15s;}
+.sl-ck.done{background:rgba(52,211,153,0.15);border-color:rgba(52,211,153,0.4);}
+.sl-row.sl-done .sl-inp{opacity:0.4;}
+.sl-hdr{display:grid;grid-template-columns:24px 1fr 1fr 32px;gap:5px;padding:3px 2px 1px;}
+.sl-hl{font-size:9px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#2d3748;text-align:center;}
+
+/* ── FINISH-WORKOUT ── */
+.fw-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+  background:rgba(10,10,10,0.96);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-top:1px solid rgba(255,255,255,0.07);
+  z-index:40;display:flex;gap:10px;align-items:center;
+}
+.fw-btn{
+  flex:1;padding:13px;
+  background:#d4af37;border:none;border-radius:12px;
+  color:#000;font-size:15px;font-weight:900;
+  cursor:pointer;font-family:inherit;letter-spacing:0.03em;
+  -webkit-tap-highlight-color:transparent;
+}
+.fw-btn:active{opacity:0.85;transform:scale(0.98);}
+.fw-progress{
+  font-size:11px;font-weight:700;color:#475569;
+  white-space:nowrap;letter-spacing:0.04em;
+}
+.fw-modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.88);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  display:none;align-items:flex-end;padding:16px;z-index:60;
+}
+.fw-modal-overlay.open{display:flex;}
+.fw-modal{
+  width:100%;background:#0e0e0e;
+  border:1px solid rgba(255,255,255,0.1);border-radius:20px;
+  padding:24px 20px 20px;
+}
+.fw-modal-title{font-size:20px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;}
+.fw-modal-sub{font-size:13px;color:#64748b;margin-bottom:18px;line-height:1.5;}
+.fw-summary{background:#111;border-radius:12px;padding:14px;margin-bottom:16px;}
+.fw-summary-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;}
+.fw-summary-row:last-child{border-bottom:none;}
+.fw-summary-label{color:#64748b;font-weight:600;}
+.fw-summary-val{color:#fff;font-weight:800;}
+.fw-modal-btns{display:flex;gap:10px;}
+.fw-cancel{flex:1;padding:12px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.fw-confirm{flex:2;padding:12px;background:#d4af37;border:none;border-radius:12px;color:#000;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.02em;}
+.fw-auto-banner{
+  position:fixed;top:0;left:0;right:0;
+  background:rgba(52,211,153,0.12);border-bottom:1px solid rgba(52,211,153,0.3);
+  padding:12px 16px;text-align:center;
+  font-size:13px;font-weight:800;color:#34d399;
+  z-index:50;display:none;letter-spacing:0.02em;
+  cursor:pointer;
+}
+.fw-auto-banner.show{display:block;}
+
 </style>
+<link rel="stylesheet" href="mc-card-actions.css"/>
+<link rel="stylesheet" href="mc-nav.css"/>
+<link rel="stylesheet" href="mc-setlog.css"/>
+<link rel="stylesheet" href="mc-summary.css"/>
 </head>
 <body>
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
 <div id="app"></div>
 
+<script src="pmc-s7-data.js"></script>
 <script>
 /**
  * pmc-data.js — Single source of truth for all PMC workout data
@@ -1024,49 +1099,9 @@ const PMC_SPLITS = {
   'split7_ugee': {
     id: 'split7_ugee', file: 'pmc-s7-giant.html', split: 'Split 7',
     title: 'UGEE SETS', icon: '⚡', color: '#fb923c', bg: '#2d1500',
-    backUrl: 'pmc-split7.html', type: 'blocks',
-    data: [
-  {title:'Chest Giant Set',rounds:5,
-   warmup:'Push-Ups — 3 sets warmup',
-   note:'Complete all 5 exercises back to back = 1 round. Rest 2-3 min between rounds.',
-   exercises:[
-     'DB Flat Bench',
-     'Slight Incline DB Bench',
-     'High Incline DB Press',
-     'High Incline DB Flies',
-     'Pronated Flat Bench Flies',
-   ]},
-  {title:'Arms Giant Set',rounds:5,
-   warmup:'Dips — 3 sets warmup',
-   note:'Complete all 6 exercises consecutively = 1 round. Rest 2-3 min between rounds.',
-   exercises:[
-     'Double Arm Incline Curl',
-     'DB Spider Curl',
-     'Concentration Curls',
-     'Flat Bench Skull Crushers',
-     'Double Arm DB Skull Crushers',
-   ]},
-  {title:'Back Giant Set',rounds:5,
-   warmup:'Pull-Ups — 3 sets warmup',
-   note:'Complete all 5 exercises back to back = 1 round. Rest 2-3 min between rounds.',
-   exercises:[
-     'Wide Grip Lat Pulldown',
-     'Wide Grip Cable Row',
-     'V Grip Lat Pulldown',
-     'Double Arm DB Row',
-     'Straight Arm Lat Pulldown',
-   ]},
-  {title:'Shoulder Giant Set',rounds:5,
-   note:'Complete all 6 exercises consecutively = 1 round. Rest 2-3 min between rounds.',
-   exercises:[
-     'Seated Side Lateral Raises',
-     'Double Arm Incline Bench Front Raises',
-     'Barbell Upright Row',
-     'Barbell Face Pulls',
-     'Reverse Incline Bench DB Delt Flies',
-     'Seated DB Shrugs',
-   ]},
-],
+    backUrl: 'pmc-split7.html', type: 'blocks', s7: true,
+    // Rendered from the shared single source pmc-s7-data.js (PMC_S7).
+    data: [],
   },
 
 };
@@ -1100,7 +1135,7 @@ const TMR={
       if(rem>0){fp.style.width=((rem/this.duration)*100)+'%';ft.className='timer-float-time';fp.className='timer-float-progress';if(el)el.className='rest-timer running';}
       else if(rem===0){this.buzz();ft.className='timer-float-time done';fp.className='timer-float-progress done';fp.style.width='100%';fla.textContent='DONE!';if(el)el.className='rest-timer done';}
       else{ft.textContent='+'+this.formatTime(-rem);ft.className='timer-float-time overtime';fp.className='timer-float-progress overtime';fla.textContent='OVERTIME';if(el)el.className='rest-timer overtime';}
-    },500);
+    },1000);
   },
   stop(){if(this.interval)clearInterval(this.interval);this.interval=null;if(this.activeEl){this.activeEl.querySelector('.rest-timer-label').textContent=this.activeEl.dataset.label;this.activeEl.className='rest-timer idle';this.activeEl=null;}const fl=document.getElementById('timerFloat');if(fl)fl.classList.remove('visible');},
   toggle(el,dur,name){if(this.activeEl===el&&this.interval)this.stop();else this.start(el,dur,name);},
@@ -1162,6 +1197,7 @@ function renderSS(ex, wk){
       <div class="ss-num">A</div><div class="ss-content">
       <div class="ss-name">${ex.a.name}</div>
       <div class="ex-tags"><span class="ex-sets">${ex.a.sets}</span>${badges(ex.a.badges)}</div>
+      ${makeRestTimer('120 sec',ex.a.name)}
       ${ex.a.note?`<div class="ex-note">${ex.a.note}</div>`:''}
       </div></div>
     <div class="ss-divider"><span class="ss-x">× SUPERSET ×</span></div>
@@ -1181,9 +1217,12 @@ function renderEx(ex, wk){
 function renderBlocks(blocks, wid){
   return blocks.map((block, bi)=>{
     const rounds = block.rounds || 5;
-    const exHtml = block.exercises.map((name, ei)=>{
+    const exHtml = block.exercises.map((ex, ei)=>{
+      // support both legacy name-strings and {name, reps} objects (S7 shared source)
+      const name = (typeof ex === 'string') ? ex : ex.name;
+      const reps = (typeof ex === 'string') ? '' : (ex.reps || '');
       const id=`${wid}-b${bi}-e${ei}`, ck=checkState[id]?'checked':'';
-      return `<div class="block-ex ${ck}" data-id="${id}" data-type="bex"><div class="block-ex-dot"></div><div class="block-ex-name">${name}</div></div>`;
+      return `<div class="block-ex ${ck}" data-id="${id}" data-type="bex"><div class="block-ex-dot"></div><div class="block-ex-name">${name}</div>${reps?`<span class="block-ex-reps">${reps} reps</span>`:''}</div>`;
     }).join('');
     const roundBtns = Array.from({length:rounds},(_,i)=>{
       const rid=`${wid}-b${bi}-r${i}`, ck=roundState[rid]?'done':'';
@@ -1191,6 +1230,8 @@ function renderBlocks(blocks, wid){
     }).join('');
     return `<div class="block-card">
       <div class="block-header"><span class="block-title">${block.title}</span><span class="block-rounds">${rounds} ROUNDS</span></div>
+      ${block.part?`<div class="block-giant-badge">⚡ Giant Set · ${block.part}</div>`:''}
+      ${block.replace?`<div class="block-note">🔄 Replace week — swap 2 exercises via the Exercise Library</div>`:''}
       ${block.note?`<div class="block-note">${block.note}</div>`:''}
       ${block.warmup?`<div class="block-warmup"><span class="block-warmup-label">WARMUP</span>${block.warmup}</div>`:''}
       ${exHtml}
@@ -1379,18 +1420,21 @@ function render(){
   let contentHtml = '';
 
   if(workout.type === 'blocks'){
-    // UGEE SETS / Core / Abs — block format, no week tabs
+    // UGEE SETS / Core / Abs — block format
     const wid = `${currentWorkoutId}-${activeWeek}`;
-    contentHtml = renderBlocks(workout.data, wid);
+    const blocks = (workout.s7 && window.PMC_S7) ? PMC_S7.blocksForWeek(activeWeek) : workout.data;
+    contentHtml = renderBlocks(blocks, wid);
+    const blockWeekTabs = workout.s7 ? `<div class="week-tabs" style="border-bottom:1px solid ${workout.color}1a;"><div class="wtabs">${tabs}</div></div>` : '';
     document.getElementById('app').innerHTML = `
       <div class="header">
         <a href="${workout.backUrl}" class="back-link">← ${workout.split}</a>
         <div class="header-inner">
           <div class="eyebrow">${workout.icon} PMC · ${workout.split}</div>
           <div class="title">${workout.title}</div>
-          <span class="week-badge">complete 5–10 rounds per lift</span>
+          <span class="week-badge">Week ${activeWeek} · complete 5 rounds per lift</span>
         </div>
       </div>
+      ${blockWeekTabs}
       <div class="content">
         <div class="tap-hint">Tap exercises to check off · tap round buttons when complete</div>
         ${contentHtml}
@@ -1429,7 +1473,6 @@ function render(){
 
   attachEvents();
   applyTheme(workout);
-  setTimeout(initNotes, 200);
   updateProgress();
 }
 
@@ -1505,7 +1548,7 @@ function initNotes(){
     const id=card.dataset.id;if(!id||card.querySelector('.ex-notes-wrap'))return;
     const existing=notes[id]||'';
     const toggle=document.createElement('div');toggle.className='ex-notes-toggle';
-    toggle.innerHTML=existing?`✏️ ${existing.substring(0,20)}${existing.length>20?'…':''}`:'✚ Add weight/notes';
+    toggle.innerHTML=existing?`✏️ ${existing.substring(0,20)}${existing.length>20?'…':''}`:'✦ Add weight/notes';
     const wrap=document.createElement('div');wrap.className=`ex-notes-wrap${existing?' open':''}`;
     wrap.innerHTML=`<div class="ex-notes-label">Weight / Notes</div><textarea class="ex-notes-input" rows="1" placeholder="e.g. 135 lbs · felt strong">${existing}</textarea>`;
     toggle.addEventListener('click',e=>{e.stopPropagation();wrap.classList.toggle('open');});
@@ -1550,5 +1593,189 @@ if(idParam && !location.hash){
 
 route();
 </script>
+
+<script>
+/* ── FINISH-WORKOUT MODULE ── */
+(function(){
+  var WL_KEY='mc_workout_log_v1';
+  var SL_KEY='mc_setlog_v1';
+  var startTime=Date.now();
+  var pageId=location.pathname.split('/').pop().replace('.html','');
+
+  // Get workout name from page title
+  function getWorkoutName(){
+    var t=document.title||pageId;
+    return t.replace(' — MC Training','').replace('MC — ','').replace('PMC — ','');
+  }
+
+  // Get duration string
+  function getDuration(){
+    var mins=Math.round((Date.now()-startTime)/60000);
+    if(mins<1)return '<1 min';
+    return mins+' min';
+  }
+
+  // Count checked sets
+  function getCheckedSets(){
+    return document.querySelectorAll('.sl-ck.done,.set-check.done').length;
+  }
+  function getTotalSets(){
+    return document.querySelectorAll('.sl-ck,.set-check').length;
+  }
+
+  // Get all logged set data for this session
+  function getSessionSets(){
+    try{
+      var store=JSON.parse(localStorage.getItem(SL_KEY)||'{}');
+      var today=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      var sets=[];
+      Object.keys(store).forEach(function(k){
+        if(!k.startsWith(pageId+'|'))return;
+        var exName=k.split('|')[1]||k;
+        var sess=store[k][0];
+        if(sess&&sess.d===today){
+          Object.keys(sess.sets).forEach(function(sn){
+            var s=sess.sets[sn];
+            sets.push({name:exName,setNum:parseInt(sn),weight:s.w,reps:s.r,pr:false});
+          });
+        }
+      });
+      // Detect PRs — compare to previous sessions
+      sets.forEach(function(s){
+        var k=pageId+'|'+s.name;
+        var history=store[k]||[];
+        if(history.length<2)return;
+        var prevMax=0;
+        history.slice(1).forEach(function(sess){
+          Object.values(sess.sets).forEach(function(set){
+            if(parseFloat(set.w)>prevMax)prevMax=parseFloat(set.w);
+          });
+        });
+        if(parseFloat(s.weight)>prevMax&&prevMax>0)s.pr=true;
+      });
+      return sets;
+    }catch(e){return[];}
+  }
+
+  // Save to workout log
+  function saveWorkout(){
+    var sets=getSessionSets();
+    var prs=sets.filter(function(s){return s.pr;}).length;
+    var entry={
+      pageId:pageId,
+      workoutName:getWorkoutName(),
+      date:new Date().toISOString(),
+      time:new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),
+      duration:getDuration(),
+      sets:sets,
+      prs:prs,
+      setsChecked:getCheckedSets()
+    };
+    try{
+      var logs=JSON.parse(localStorage.getItem(WL_KEY)||'[]');
+      logs.unshift(entry);
+      logs=logs.slice(0,200);// keep last 200 workouts
+      localStorage.setItem(WL_KEY,JSON.stringify(logs));
+    }catch(e){}
+    return entry;
+  }
+
+  // Update progress display
+  function updateProgress(){
+    var done=getCheckedSets();
+    var total=getTotalSets();
+    var el=document.getElementById('fwProgress');
+    if(el)el.textContent=done+' / '+total+' sets';
+    // Auto-detect all sets done
+    if(total>0&&done>=total){
+      var banner=document.getElementById('fwAutoBanner');
+      if(banner)banner.classList.add('show');
+    }
+  }
+
+  // Build the bottom bar HTML
+  var barHTML='<div class="fw-bar" id="fwBar">'+
+    '<span class="fw-progress" id="fwProgress">0 / 0 sets</span>'+
+    '<button class="fw-btn" onclick="_FW.open()">Finish Workout ✓</button>'+
+    '</div>';
+
+  // Build modal HTML
+  var modalHTML='<div class="fw-modal-overlay" id="fwModal">'+
+    '<div class="fw-modal">'+
+      '<div class="fw-modal-title">🏆 Finish Workout?</div>'+
+      '<div class="fw-modal-sub">This will save your session to Workout Logs.</div>'+
+      '<div class="fw-summary" id="fwSummary"></div>'+
+      '<div class="fw-modal-btns">'+
+        '<button class="fw-cancel" onclick="_FW.close()">Cancel</button>'+
+        '<button class="fw-confirm" onclick="_FW.confirm()">Save & Finish</button>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+
+  var autoBanner='<div class="fw-auto-banner" id="fwAutoBanner" onclick="_FW.open()">'+
+    '🏆 All sets complete — tap to finish workout</div>';
+
+  // Inject UI
+  function inject(){
+    document.body.insertAdjacentHTML('beforeend',barHTML+modalHTML+autoBanner);
+    // Watch for set check changes
+    document.addEventListener('click',function(e){
+      if(e.target.classList.contains('sl-ck')||
+         e.target.classList.contains('set-check')||
+         e.target.id==='fwAutoBanner'){
+        setTimeout(updateProgress,100);
+      }
+    });
+    updateProgress();
+  }
+
+  window._FW={
+    open:function(){
+      var sets=getSessionSets();
+      var prs=sets.filter(function(s){return s.pr;}).length;
+      var summary=document.getElementById('fwSummary');
+      if(summary){
+        summary.innerHTML=
+          '<div class="fw-summary-row"><span class="fw-summary-label">Workout</span><span class="fw-summary-val">'+getWorkoutName()+'</span></div>'+
+          '<div class="fw-summary-row"><span class="fw-summary-label">Duration</span><span class="fw-summary-val">'+getDuration()+'</span></div>'+
+          '<div class="fw-summary-row"><span class="fw-summary-label">Sets checked</span><span class="fw-summary-val">'+getCheckedSets()+' / '+getTotalSets()+'</span></div>'+
+          '<div class="fw-summary-row"><span class="fw-summary-label">Sets logged</span><span class="fw-summary-val">'+sets.length+'</span></div>'+
+          (prs?'<div class="fw-summary-row"><span class="fw-summary-label">PRs set</span><span class="fw-summary-val" style="color:#d4af37;">🏆 '+prs+'</span></div>':'');
+      }
+      var m=document.getElementById('fwModal');
+      if(m)m.classList.add('open');
+    },
+    close:function(){
+      var m=document.getElementById('fwModal');
+      if(m)m.classList.remove('open');
+    },
+    confirm:function(){
+      saveWorkout();
+      window._FW.close();
+      // Flash confirmation
+      var btn=document.querySelector('.fw-btn');
+      if(btn){btn.textContent='✓ Saved!';btn.style.background='#34d399';}
+      var banner=document.getElementById('fwAutoBanner');
+      if(banner)banner.classList.remove('show');
+      setTimeout(function(){
+        if(btn){btn.textContent='Finish Workout ✓';btn.style.background='';}
+      },2000);
+    }
+  };
+
+  // Run after DOM ready
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',inject);
+  }else{
+    inject();
+  }
+})();
+</script>
+
+<script src="mc-card-actions.js"></script>
+<script src="mc-live-tracker.js"></script>
+<script src="mc-nav.js"></script>
+<script src="mc-setlog.js"></script>
+<script src="mc-summary.js"></script>
 </body>
 </html>

@@ -62,6 +62,9 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 }
 .clear-btn:active{background:rgba(239,68,68,0.15);}
 </style>
+<link rel="stylesheet" href="mc-nav.css"/>
+<link rel="stylesheet" href="mc-setlog.css"/>
+<link rel="stylesheet" href="mc-summary.css"/>
 </head>
 <body>
 
@@ -101,6 +104,37 @@ function getSetLogs(){
   try{ return JSON.parse(localStorage.getItem(SL_KEY)||'{}'); }catch(e){ return {}; }
 }
 
+const DAILY_KEY = 'mc_daily_v1';
+function getDaily(){
+  try{ return JSON.parse(localStorage.getItem(DAILY_KEY)||'{}'); }catch(e){ return {}; }
+}
+// Live per-day session tracking written by mc-summary.js as the lifter checks
+// off exercises (even before "Finish Workout" is tapped).
+function dailyHtml(){
+  const entries = Object.values(getDaily()).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  if(!entries.length) return '';
+  const byDate = {};
+  entries.forEach(e=>{ (byDate[e.date]=byDate[e.date]||[]).push(e); });
+  let h = '<div class="section-label">📅 Daily Sessions (live)</div>';
+  Object.keys(byDate).sort().reverse().forEach(date=>{
+    byDate[date].forEach(e=>{
+      h += `
+        <div class="log-card" style="--prog-color:#34d399">
+          <div class="log-header">
+            <div class="log-name">${e.program||e.pid}</div>
+            <div class="log-date">${e.date}</div>
+          </div>
+          <div class="log-meta-row">
+            <span class="log-tag">${e.doneSets} sets</span>
+            <span class="log-tag">${e.doneReps} reps</span>
+            <span class="log-tag gold">${e.pct}% complete</span>
+          </div>
+        </div>`;
+    });
+  });
+  return h;
+}
+
 const PROG_COLORS = {
   mc:'#d4af37', pmc:'#7F77DD', stndr:'#1D9E75',
   pump:'#D85A30', gainz:'#378ADD', faint:'#E24B4A', psu:'#639922'
@@ -137,7 +171,9 @@ function render(){
   document.getElementById('statSets').textContent = totalSets;
   document.getElementById('statPRs').textContent = totalPRs;
 
-  if(logs.length === 0){
+  const daily = dailyHtml();
+
+  if(logs.length === 0 && !daily){
     content.innerHTML = `
       <div class="empty">
         <div class="empty-icon">📋</div>
@@ -156,7 +192,7 @@ function render(){
     byDate[d].push(log);
   });
 
-  let html = '';
+  let html = daily;
   Object.keys(byDate).reverse().forEach(date=>{
     html += `<div class="section-label">${date}</div>`;
     byDate[date].forEach(log=>{
@@ -185,7 +221,7 @@ function render(){
     });
   });
 
-  html += `<button class="clear-btn" onclick="clearLogs()">🗑 Clear All Workout Logs</button>`;
+  if(logs.length) html += `<button class="clear-btn" onclick="clearLogs()">🗑 Clear All Workout Logs</button>`;
   content.innerHTML = html;
 }
 
@@ -216,5 +252,8 @@ render();
   });
 })();
 </script>
+<script src="mc-nav.js"></script>
+<script src="mc-setlog.js"></script>
+<script src="mc-summary.js"></script>
 </body>
 </html>

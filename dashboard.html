@@ -192,6 +192,31 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .cat-card.pmc .cat-designer{color:#c084fc;}
 .cat-card.mc .cat-designer{color:#d4af37;}
 
+/* ── Daily Gainz — premium dynamic card (Phase 2) ── */
+.cat-card.gainz{border-top-width:3px;}
+.cat-card.gainz .cat-icon{animation:gzPulse 3.2s ease-in-out infinite;}
+@keyframes gzPulse{0%,100%{opacity:0.18;transform:scale(1);}50%{opacity:0.32;transform:scale(1.06);}}
+.gz-sheen{position:absolute;top:0;left:-60%;width:40%;height:100%;pointer-events:none;
+  background:linear-gradient(105deg,transparent,rgba(217,249,157,0.10),transparent);
+  transform:skewX(-18deg);animation:gzSheen 5.5s ease-in-out infinite;}
+@keyframes gzSheen{0%{left:-60%;}55%,100%{left:140%;}}
+.gz-live{margin-top:12px;padding-top:12px;border-top:1px solid rgba(217,249,157,0.18);
+  display:flex;flex-direction:column;gap:9px;}
+.gz-streak{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;
+  color:#d9f99d;letter-spacing:0.02em;}
+.gz-streak .gz-flame{font-size:15px;filter:drop-shadow(0 0 6px rgba(132,204,22,0.55));}
+.gz-streak .gz-streak-sub{color:#94a3b8;font-weight:700;}
+.gz-resume{display:flex;align-items:center;gap:10px;background:rgba(132,204,22,0.12);
+  border:1px solid rgba(132,204,22,0.32);border-radius:12px;padding:9px 12px;
+  -webkit-tap-highlight-color:transparent;transition:background 0.15s,transform 0.1s;}
+.gz-resume:active{background:rgba(132,204,22,0.22);transform:scale(0.985);}
+.gz-resume-ico{font-size:18px;}
+.gz-resume-body{min-width:0;flex:1;}
+.gz-resume-lbl{font-size:9px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#84cc16;}
+.gz-resume-name{font-size:13px;font-weight:800;color:#f0fdf4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gz-resume-prog{font-size:11px;font-weight:700;color:#a3e635;margin-left:auto;flex-shrink:0;}
+.gz-resume-arrow{color:#d9f99d;font-size:15px;flex-shrink:0;}
+
 /* Exercise library link */
 .lib-link{display:flex;align-items:center;gap:12px;background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.22);border-radius:14px;padding:14px 16px;text-decoration:none;color:#e2e8f0;margin-bottom:20px;}
 .lib-link:active{background:rgba(212,175,55,0.12);}
@@ -263,6 +288,32 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   cursor:pointer;font-family:inherit;letter-spacing:0.03em;margin-top:12px;
 }
 .ps-confirm:active{opacity:0.85;}
+
+/* ── Conditioning tab (Phase 1) — accent colors applied inline by JS ── */
+.cond-sub{margin-bottom:26px;}
+.cond-sub-head{display:flex;align-items:center;gap:10px;margin:18px 0 12px;}
+.cond-sub-icon{
+  width:34px;height:34px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+}
+.cond-sub-name{font-size:16px;font-weight:900;color:var(--text);letter-spacing:-0.01em;}
+.cond-sub-blurb{font-size:12px;color:var(--muted);margin-top:2px;}
+.cond-card{
+  display:block;text-decoration:none;color:inherit;position:relative;
+  border-radius:16px;padding:16px 18px;margin-bottom:11px;overflow:hidden;
+  background:var(--surface);border:1px solid rgba(255,255,255,0.08);
+  transition:transform 0.15s;
+}
+.cond-card:active{transform:scale(0.985);}
+.cond-tag{font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#E24B4A;margin-bottom:6px;}
+.cond-name{font-size:17px;font-weight:900;color:var(--text);margin-bottom:5px;padding-right:28px;}
+.cond-meta{font-size:12px;color:var(--muted);line-height:1.5;}
+.cond-stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.cond-stat{font-size:11px;font-weight:700;color:#cbd5e1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:4px 10px;}
+.cond-arrow{position:absolute;right:16px;top:16px;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);}
+.cond-ex-grid{display:flex;flex-wrap:wrap;gap:7px;}
+.cond-ex-item{font-size:12px;font-weight:700;color:#cbd5e1;background:var(--surface);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:8px 12px;}
 </style>
 </head>
 <body>
@@ -335,7 +386,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
         <div class="tool-name">Workout Logs</div>
         <div class="tool-sub">Full logging history + PRs</div>
       </a>
-      <a href="exercise-library.html" class="tool-card">
+      <a href="build-workout.html" class="tool-card">
         <div class="tool-icon-wrap">🔧</div>
         <div class="tool-name">Build Your Own</div>
         <div class="tool-sub">Create workouts from the library</div>
@@ -357,7 +408,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   <div class="topbar">
     <div>
       <div class="topbar-title">Programs</div>
-      <div class="topbar-sub">7 training programs</div>
+      <div class="topbar-sub">6 training programs</div>
     </div>
   </div>
   <div class="prog-screen-inner">
@@ -385,20 +436,16 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <div class="cat-designer">✍️ Designed by CBUM</div>
     </a>
 
-    <a href="cat-faint.html" class="cat-card faint">
-      <span class="cat-icon">🔥</span>
-      <div class="cat-tag">High Intensity · Conditioning</div>
-      <div class="cat-name">Not for the Faint of Heart</div>
-      <div class="cat-meta">Brutal challenges, circuits, and finishers built to test your limits.</div>
-      <div class="cat-count">9 Workouts →</div>
-      <div class="cat-designer">✍️ Designed by Mike Cross</div>
-    </a>
-
-    <a href="cat-gainz.html" class="cat-card gainz">
+    <a href="cat-gainz.html" class="cat-card gainz" id="gainzCard">
       <span class="cat-icon">💪</span>
+      <span class="gz-sheen"></span>
       <div class="cat-tag">Volume · Daily</div>
       <div class="cat-name">Daily Gainz</div>
       <div class="cat-meta">Daily volume-builders for consistent muscle growth.</div>
+      <div class="gz-live" id="gzLive" style="display:none;">
+        <div class="gz-streak" id="gzStreak"></div>
+        <div class="gz-resume" id="gzResume" style="display:none;"></div>
+      </div>
       <div class="cat-count">8 Programs →</div>
       <div class="cat-designer">✍️ Designed by Bradley Martyn</div>
     </a>
@@ -443,6 +490,26 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 </div>
 
 <!-- ══════════════════════════════════════
+     CONDITIONING SCREEN  (Phase 1)
+══════════════════════════════════════ -->
+<div class="screen" id="scr-conditioning">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Conditioning</div>
+      <div class="topbar-sub">Cardio · conditioning · core</div>
+    </div>
+  </div>
+  <div class="prog-screen-inner">
+    <div class="prog-header">
+      <div class="prog-eyebrow">Conditioning Corner</div>
+      <h1 class="prog-title">Burn It Out</h1>
+      <div class="prog-sub">Finish a lift with conditioning, or run it as a standalone session.</div>
+    </div>
+    <div id="condBody"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
      BOTTOM TAB BAR
 ══════════════════════════════════════ -->
 <div class="tab-bar">
@@ -453,6 +520,10 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   <div class="tab" id="tab-programs" onclick="switchTab('programs')">
     <div class="tab-icon">🏋️</div>
     <div>Programs</div>
+  </div>
+  <div class="tab" id="tab-conditioning" onclick="switchTab('conditioning')">
+    <div class="tab-icon">🔥</div>
+    <div>Conditioning</div>
   </div>
 </div>
 
@@ -469,10 +540,46 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   </div>
 </div>
 
+<script src="conditioning-data.js"></script>
+<script src="mc-live-tracker.js"></script>
 <script>
 // ── DATE ──
 const d=new Date();
 document.getElementById('todayDate').textContent=d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+
+// ── DAILY GAINZ — dynamic live strip (Phase 2) ──
+(function populateGainz(){
+  if(!window.MCActivity) return;
+  var a=window.MCActivity.get();
+  var live=document.getElementById('gzLive'), streakEl=document.getElementById('gzStreak'), resumeEl=document.getElementById('gzResume');
+  if(!live||!streakEl||!resumeEl) return;
+
+  var hasStreak=a.streak>0, hasResume=!!a.last;
+  if(!hasStreak && !hasResume){ live.style.display='none'; return; }
+  live.style.display='flex';
+
+  if(hasStreak){
+    streakEl.innerHTML='<span class="gz-flame">🔥</span>'+a.streak+'-day streak'+
+      (a.trainedToday?' <span class="gz-streak-sub">· trained today</span>':' <span class="gz-streak-sub">· keep it alive</span>');
+  } else {
+    streakEl.innerHTML='<span class="gz-flame">✨</span><span class="gz-streak-sub">Start your streak — log a session</span>';
+  }
+
+  if(hasResume){
+    var L=a.last, prog=(L.total?Math.round((L.done/L.total)*100):0);
+    resumeEl.style.display='flex';
+    resumeEl.innerHTML='<span class="gz-resume-ico">↩️</span>'+
+      '<div class="gz-resume-body"><div class="gz-resume-lbl">Resume last workout</div>'+
+      '<div class="gz-resume-name"></div></div>'+
+      '<span class="gz-resume-prog">'+L.done+'/'+L.total+'</span>'+
+      '<span class="gz-resume-arrow">→</span>';
+    resumeEl.querySelector('.gz-resume-name').textContent=L.title; // textContent = no HTML injection
+    resumeEl.addEventListener('click',function(ev){
+      ev.preventDefault(); ev.stopPropagation();
+      location.href=L.pageId;
+    });
+  } else { resumeEl.style.display='none'; }
+})();
 
 // ── PROGRAMS DATA ──
 const PROGS=[
@@ -481,7 +588,6 @@ const PROGS=[
   {id:'stndr',icon:'🏋️',name:'STNDR',meta:'4 Programs',color:'#1D9E75',desc:'Structured progressive overload — CBUM method',href:'cat-stndr.html',splits:['Phase 1','Phase 2','Phase 3','Phase 4']},
   {id:'pump',icon:'⚡',name:'Daily Pump',meta:'10 Workouts',color:'#D85A30',desc:'Julian Smith pump protocols — in and out fast',href:'cat-pump-new4.html',splits:['Back','Chest','Shoulders','Arms','Legs']},
   {id:'gainz',icon:'💪',name:'Daily Gainz',meta:'8 Programs',color:'#378ADD',desc:'Bradley Martyn volume — built for size',href:'cat-gainz.html',splits:['Bro Split','Push/Pull','5 On 2 Off','3 On 1 Off']},
-  {id:'faint',icon:'🔥',name:'Not for the Faint of Heart',meta:'9 Workouts',color:'#E24B4A',desc:'High intensity circuits built to break you',href:'cat-faint.html',splits:['Week 1','Week 2','Week 3']},
   {id:'psu',icon:'🏈',name:'PSU Football',meta:'Strength Program',color:'#639922',desc:'Penn State strength and conditioning',href:'cat-psu.html',splits:['Phase 1','Phase 2','Phase 3']},
 ];
 
@@ -576,24 +682,74 @@ if(!navigator.onLine)document.getElementById('offlineBar').classList.add('show')
 
 // ── SW ──
 let swWaiting=null;
-function doSwUpdate(){if(swWaiting)swWaiting.postMessage({type:'SKIP_WAITING'});location.reload();}
+function doSwUpdate(){if(swWaiting)swWaiting.postMessage('skipWaiting');location.reload();}
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{});
-  navigator.serviceWorker.ready.then(reg=>{
+  navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>{
+    reg.update();   // force an update check on every visit to the hub
     reg.addEventListener('updatefound',()=>{
       const nw=reg.installing;
       nw.addEventListener('statechange',()=>{
         if(nw.state==='installed'&&navigator.serviceWorker.controller){
+          // New version installed — activate it immediately (auto-update),
+          // and still surface the banner as a manual fallback.
+          nw.postMessage('skipWaiting');
           swWaiting=nw;
-          document.getElementById('swUpdate').classList.add('show');
+          const b=document.getElementById('swUpdate'); if(b) b.classList.add('show');
         }
       });
     });
+  }).catch(()=>{});
+  // Reload once when the fresh worker takes control of the page.
+  let _swRefreshing=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(!_swRefreshing){_swRefreshing=true;window.location.reload();}
   });
+}
+
+// ── CONDITIONING TAB ──
+function hexA(hex,a){
+  var h=hex.replace('#','');
+  if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  var r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);
+  return 'rgba('+r+','+g+','+b+','+a+')';
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function renderConditioning(){
+  var body=document.getElementById('condBody');
+  if(!body||typeof CONDITIONING==='undefined'){return;}
+  var html='';
+  CONDITIONING.subcategories.forEach(function(sub){
+    var col=sub.color||'#E24B4A';
+    html+='<div class="cond-sub">';
+    html+='<div class="cond-sub-head">'
+        +'<div class="cond-sub-icon" style="background:'+hexA(col,0.14)+';border-color:'+hexA(col,0.4)+'">'+(sub.icon||'🔥')+'</div>'
+        +'<div><div class="cond-sub-name">'+esc(sub.name)+'</div>'
+        +(sub.blurb?'<div class="cond-sub-blurb">'+esc(sub.blurb)+'</div>':'')+'</div></div>';
+    if(sub.type==='routines'){
+      (sub.routines||[]).forEach(function(r){
+        html+='<a href="'+r.href+'" class="cond-card" style="background:linear-gradient(135deg,'+hexA(col,0.12)+','+'var(--surface));border-color:'+hexA(col,0.33)+'">'
+            +'<div class="cond-arrow" style="background:'+hexA(col,0.2)+';border-color:'+hexA(col,0.33)+'">→</div>'
+            +(r.tag?'<div class="cond-tag" style="color:'+col+'">'+esc(r.tag)+'</div>':'')
+            +'<div class="cond-name">'+esc(r.name)+'</div>'
+            +(r.meta?'<div class="cond-meta">'+esc(r.meta)+'</div>':'')
+            +((r.stats&&r.stats.length)?'<div class="cond-stats">'+r.stats.map(function(s){return '<span class="cond-stat">'+esc(s)+'</span>';}).join('')+'</div>':'')
+            +'</a>';
+      });
+    } else if(sub.type==='exercises'){
+      html+='<div class="cond-ex-grid">';
+      (sub.exercises||[]).forEach(function(e){html+='<span class="cond-ex-item">'+esc(e.name)+'</span>';});
+      html+='</div>';
+    }
+    html+='</div>';
+  });
+  body.innerHTML=html;
 }
 
 // ── INIT ──
 loadState();
+renderConditioning();
+// honor ?tab= deep-link from the global bottom nav (mc-nav.js)
+(function(){var t=new URLSearchParams(location.search).get('tab');if(t&&document.getElementById('scr-'+t))switchTab(t);})();
 </script>
 </body>
 </html>
