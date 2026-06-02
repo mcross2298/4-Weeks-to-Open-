@@ -155,11 +155,12 @@ body{
   background:var(--hivis);color:#1a0d02;
 }
 .b-card.is-ss .b-tag{background:var(--violet);color:#fff;}
-/* split grid */
-.b-grid{display:grid;grid-template-columns:1fr 1fr;}
+/* split grid — row-based so layout adapts without duplicate cells */
+.b-row{display:grid;grid-template-columns:1fr 1fr;}
+.b-row.single{grid-template-columns:1fr;}
+.b-row + .b-row{border-top:2px solid #23262d;}
+.b-row .b-box + .b-box{border-left:2px solid #23262d;}
 .b-box{padding:11px 14px;}
-.b-box:nth-child(odd){border-right:2px solid #23262d;}
-.b-box:nth-child(n+3){border-top:2px solid #23262d;}
 .b-k{font-size:9.5px;font-weight:900;letter-spacing:0.16em;color:var(--muted2);text-transform:uppercase;margin-bottom:6px;}
 .b-reps{display:flex;flex-wrap:wrap;gap:5px;}
 .b-chip{
@@ -341,21 +342,22 @@ function cardB(ex,i){
     return `${tag}${chips}`;
   }).join('');
   const tagHtml=ss?'<span class="b-tag">Superset</span>':'';
-  const tempoBox=tp.length
-    ?`<div class="b-box"><div class="b-k">Tempo</div>${tp.map(t=>`<span class="b-tempo">${esc(t)}</span>`).join(' ')}</div>`
-    :`<div class="b-box"><div class="b-k">Sets</div><div class="b-big">${totalSets(ex.sets)}<span class="u">working</span></div></div>`;
+  const repsBox=`<div class="b-box"><div class="b-k">Reps</div><div class="b-reps">${repHtml}</div></div>`;
+  const restBox=`<div class="b-box"><div class="b-k">Rest</div><div class="b-big">${esc(ex.rest)}</div></div>`;
+  const setsBox=`<div class="b-box"><div class="b-k">Sets</div><div class="b-big">${totalSets(ex.sets)}<span class="u">working</span></div></div>`;
+  const tempoBox=`<div class="b-box"><div class="b-k">Tempo</div>${tp.map(t=>`<span class="b-tempo">${esc(t)}</span>`).join(' ')}</div>`;
+  // Adaptive grid — no duplicate cells, no dead space.
+  // With tempo: [Reps | Rest] / [Tempo | Sets]. Without: [Reps (full)] / [Rest | Sets].
+  const grid=tp.length
+    ?`<div class="b-row">${repsBox}${restBox}</div><div class="b-row">${tempoBox}${setsBox}</div>`
+    :`<div class="b-row single">${repsBox}</div><div class="b-row">${restBox}${setsBox}</div>`;
   return `<div class="b-card ${ss?'is-ss':''}">
     <div class="b-bar">
       <div class="b-num">${i+1}</div>
       <div class="b-name">${esc(ex.name)}</div>
       ${tagHtml}
     </div>
-    <div class="b-grid">
-      <div class="b-box"><div class="b-k">Reps</div><div class="b-reps">${repHtml}</div></div>
-      <div class="b-box"><div class="b-k">Rest</div><div class="b-big">${esc(ex.rest)}</div></div>
-      ${tempoBox}
-      <div class="b-box"><div class="b-k">Sets</div><div class="b-big">${totalSets(ex.sets)}<span class="u">×</span></div></div>
-    </div>
+    ${grid}
     <div class="b-log" data-log>▤ Log Sets</div>
     ${drawer(ex)}
   </div>`;
