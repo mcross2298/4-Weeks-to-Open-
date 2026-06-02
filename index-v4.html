@@ -170,7 +170,7 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
     <div style="font-size:22px;">📚</div>
     <div style="flex:1;">
       <div style="font-size:14px;font-weight:900;color:#fbbf24;">Exercise Library</div>
-      <div style="font-size:11px;color:#64748b;font-weight:600;margin-top:2px;">1020 exercises · search by muscle group · save replacements</div>
+      <div id="libCount" style="font-size:11px;color:#64748b;font-weight:600;margin-top:2px;">317 exercises · search by muscle group · save replacements</div>
     </div>
     <div style="color:#475569;font-size:16px;">→</div>
   </a>
@@ -418,6 +418,17 @@ renderStreak();
 </script>
 <link rel="stylesheet" href="mc-nav.css"/>
 <script src="mc-nav.js"></script>
+<!-- Live exercise-library count: sourced from the shared catalog so it never drifts -->
+<script src="exercise-catalog.js"></script>
+<script>
+(function(){
+  var el=document.getElementById('libCount');
+  if(!el||!window.EXERCISES)return;
+  var skip={Cardio:1,Core:1}; // cardio/core live under the Conditioning tab
+  var n=EXERCISES.filter(function(e){return !skip[e.muscle];}).length;
+  el.textContent=n+' exercises · search by muscle group · save replacements';
+})();
+</script>
 </body>
 </html>
 
