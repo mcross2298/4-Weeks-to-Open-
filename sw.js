@@ -1,7 +1,7 @@
 // MC Training — Service Worker v2
 // Absolute URL cache for GitHub Pages
 
-const CACHE_NAME = 'mc-training-v33';
+const CACHE_NAME = 'mc-training-v34';
 const BASE = 'https://mcross2298.github.io/4-Weeks-to-Open-/';
 const CACHE_URLS = [
     'https://mcross2298.github.io/4-Weeks-to-Open-/',
@@ -158,7 +158,7 @@ self.addEventListener('install', event => {
             const batch = (arr, size) => Array.from({length:Math.ceil(arr.length/size)}, (_,i) => arr.slice(i*size,i*size+size));
             const batches = batch(CACHE_URLS, 20);
             return batches.reduce((p, b) => p.then(() =>
-                cache.addAll(b).catch(err => console.log('[SW] Batch error:', err))
+                Promise.allSettled(b.map(u => cache.add(u).catch(err => console.log('[SW] Cache miss:', u, err))))
             ), Promise.resolve());
         })
     );

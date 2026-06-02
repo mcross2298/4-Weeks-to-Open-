@@ -454,6 +454,7 @@ const TMR = {
     }
   },
   setTime(secs,label){
+    this.stop();
     if(this.interval){clearInterval(this.interval);this.interval=null;}
     this.duration=secs;this.startTime=Date.now();
     const ft=document.getElementById("timerFloat");
@@ -628,7 +629,19 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 // ── REPLACE EXERCISE ──
 (function() {
-  const REPLACE_KEY = 'mc_replacements';
+  const _PAGE_ID = location.pathname.split('/').pop().split('?')[0];
+  const REPLACE_KEY = 'mc_replacements|' + _PAGE_ID;
+  // Option-B migration: copy any existing global entries into this page's scoped key
+  (function(){
+    try{
+      var _old = JSON.parse(localStorage.getItem('mc_replacements')||'{}');
+      if(Object.keys(_old).length){
+        var _scoped = JSON.parse(localStorage.getItem(REPLACE_KEY)||'{}');
+        var _merged = Object.assign({}, _old, _scoped);
+        localStorage.setItem(REPLACE_KEY, JSON.stringify(_merged));
+      }
+    }catch(e){}
+  }());
   function applyReplacements() {
     const replacements = JSON.parse(localStorage.getItem(REPLACE_KEY)||'{}');
     if (!Object.keys(replacements).length) return;

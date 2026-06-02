@@ -573,7 +573,19 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(addTimerPr
 <a href="s4-pull.html" class="next-workout"><div class="next-workout-label">Up Next in this Split</div><div class="next-workout-row"><div class="next-workout-dot" style="background:#a78bfa;box-shadow:0 0 6px #a78bfa66;"></div><div class="next-workout-name">Pull Day</div><div class="next-workout-arrow">→</div></div></a>
 <script>
 (function() {
-  const REPLACE_KEY = 'mc_replacements';
+  const _PAGE_ID = location.pathname.split('/').pop().split('?')[0];
+  const REPLACE_KEY = 'mc_replacements|' + _PAGE_ID;
+  // Option-B migration: copy any existing global entries into this page's scoped key
+  (function(){
+    try{
+      var _old = JSON.parse(localStorage.getItem('mc_replacements')||'{}');
+      if(Object.keys(_old).length){
+        var _scoped = JSON.parse(localStorage.getItem(REPLACE_KEY)||'{}');
+        var _merged = Object.assign({}, _old, _scoped);
+        localStorage.setItem(REPLACE_KEY, JSON.stringify(_merged));
+      }
+    }catch(e){}
+  }());
   function applyReplacements() {
     const replacements = JSON.parse(localStorage.getItem(REPLACE_KEY)||'{}');
     if (!Object.keys(replacements).length) return;
