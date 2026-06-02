@@ -32,6 +32,9 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
   background:rgba(var(--accent-rgb),0.1);
   border:1px solid rgba(var(--accent-rgb),0.3);
 }
+/* The back-link floats absolutely; hero headers need top room so it
+   doesn't overlap the eyebrow/title (the .header class reserves 76px). */
+.back-link + .hero{padding-top:64px;}
 
 /* ── HEADER ─────────────────────────────────────────────────────── */
 .header{padding:76px 20px 22px;position:relative;}
@@ -83,11 +86,12 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 
 /* ── EXERCISE CARD ──────────────────────────────────────────────── */
 .ex-card{
-  border-radius:14px;border:1.5px solid rgba(var(--accent-rgb),0.2);
+  border-radius:14px;border:1.5px solid rgba(var(--accent-rgb),0.28);
   margin-bottom:10px;overflow:hidden;cursor:pointer;
   transition:all 0.15s;
   background:var(--card-bg);
   position:relative;
+  box-shadow:0 4px 20px rgba(0,0,0,0.18),inset 0 1px 0 rgba(255,255,255,0.06);
 }
 .ex-card:active{transform:scale(0.99);}
 /* Pre-check affordance — visible tap cue before interaction */
