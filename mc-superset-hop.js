@@ -61,7 +61,7 @@
         '100%{box-shadow:inset 0 0 0 2px rgba(168,85,247,0);}}',
       '.mcl-row.sshop-nextset,.sl-row.sshop-nextset{' +
         'box-shadow:inset 0 0 0 1.5px rgba(168,85,247,0.85);border-radius:8px;}',
-      '.sshop-buffer{position:fixed;left:0;right:0;bottom:0;z-index:130;' +
+      '.sshop-buffer{position:fixed;left:0;right:0;bottom:0;z-index:1000;' +
         'padding:14px 18px calc(14px + env(safe-area-inset-bottom));' +
         'background:rgba(13,6,24,0.97);backdrop-filter:blur(16px);' +
         '-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(168,85,247,0.45);' +
@@ -198,9 +198,26 @@
     });
   }
 
+  // Sit the buffer directly above any fixed bottom bar (e.g. the Finish
+  // Workout / Summary bar) so it is never clipped behind it.
+  function bottomOffset() {
+    var bars = document.querySelectorAll('.fw-bar, .timer-float');
+    var off = 0;
+    Array.prototype.forEach.call(bars, function (b) {
+      var cs = getComputedStyle(b);
+      if (cs.display !== 'none' && cs.visibility !== 'hidden' && cs.position === 'fixed') {
+        off = Math.max(off, b.offsetHeight || 0);
+      }
+    });
+    return off;
+  }
+
   function startBuffer(target) {
     pending = target;
     ensureBuffer();
+    var off = bottomOffset();
+    buffer.style.bottom = off + 'px';
+    buffer.style.paddingBottom = off > 0 ? '14px' : 'calc(14px + env(safe-area-inset-bottom))';
     var setIdx = firstUndoneIdx(target);
     nextEl.textContent = exName(target) + (setIdx >= 0 ? ' · Set ' + (setIdx + 1) : '');
     remaining = BUFFER_SECS;
