@@ -6,7 +6,7 @@
 <title>The 500</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
-body{background:#3f0a0a;min-height:100vh;padding-bottom:40px;}
+body{background:#0a0a0a;min-height:100vh;padding-bottom:40px;}
 .app{background:linear-gradient(135deg,#3f0a0a 0%,#7f1d1d 50%,#3f0a0a 100%);min-height:100vh;}
 .back-link{position:absolute;top:18px;left:18px;color:#fca5a5;text-decoration:none;font-size:13px;font-weight:600;background:rgba(239,68,68,0.2);padding:6px 12px;border-radius:20px;border:1px solid rgba(239,68,68,0.45);z-index:10;}
 .back-link:active{background:rgba(239,68,68,0.35);}
@@ -17,26 +17,26 @@ body{background:#3f0a0a;min-height:100vh;padding-bottom:40px;}
 .schedule{display:inline-block;background:rgba(239,68,68,0.22);border:1px solid rgba(239,68,68,0.5);border-radius:6px;padding:5px 12px;font-size:12px;color:#fecaca;font-weight:700;}
 .content{max-width:680px;margin:24px auto 0;padding:0 16px;}
 .hint{font-size:11px;color:#fca5a5;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;text-align:center;}
-.step-card{background:#fff;border-radius:14px;border:2px solid #fee2e2;box-shadow:0 4px 16px rgba(0,0,0,0.3);margin-bottom:14px;overflow:hidden;position:relative;}
-.step-number{position:absolute;top:14px;right:14px;background:#7f1d1d;color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;box-shadow:0 2px 8px rgba(127,29,29,0.4);}
+.step-card{background:#fff;border-radius:14px;border:2px solid #fee2e2;box-shadow:0 4px 20px rgba(0,0,0,0.15);margin-bottom:14px;overflow:hidden;position:relative;}
+.step-number{position:absolute;top:14px;right:14px;background:#7f1d1d;color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;box-shadow:0 4px 20px rgba(127,29,29,0.15);}
 .step-header{padding:18px 60px 0 18px;}
 .step-icon-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
 .step-icon{font-size:24px;}
 .step-name{font-weight:900;font-size:18px;color:#7f1d1d;letter-spacing:-0.01em;}
 .step-target{font-size:12px;color:#9a3412;font-weight:700;letter-spacing:0.04em;margin-bottom:14px;}
 .step-body{padding:0 18px 16px;}
-.big-number{display:inline-block;background:linear-gradient(135deg,#dc2626,#7f1d1d);color:#fff;font-size:28px;font-weight:900;padding:10px 18px;border-radius:10px;letter-spacing:-0.02em;box-shadow:0 4px 12px rgba(220,38,38,0.4);}
+.big-number{display:inline-block;background:linear-gradient(135deg,#dc2626,#7f1d1d);color:#fff;font-size:28px;font-weight:900;padding:10px 18px;border-radius:10px;letter-spacing:-0.02em;box-shadow:0 4px 20px rgba(220,38,38,0.15);}
 .big-number .unit{font-size:13px;font-weight:700;opacity:0.9;margin-left:6px;letter-spacing:0.06em;}
 .note-box{background:#fef2f2;border-left:3px solid #ef4444;padding:10px 12px;border-radius:6px;margin-top:12px;font-size:12px;color:#7f1d1d;line-height:1.5;font-weight:500;}
 .note-box strong{color:#991b1b;}
 .divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:#fca5a5;font-size:11px;font-weight:700;letter-spacing:0.16em;}
 .divider::before,.divider::after{content:"";flex:1;height:1px;background:rgba(252,165,165,0.2);}
-.total-card{background:linear-gradient(135deg,#dc2626,#7f1d1d);border-radius:16px;padding:20px;text-align:center;margin-top:20px;box-shadow:0 8px 24px rgba(220,38,38,0.35);}
+.total-card{background:linear-gradient(135deg,#dc2626,#7f1d1d);border-radius:16px;padding:20px;text-align:center;margin-top:20px;box-shadow:0 4px 20px rgba(220,38,38,0.15);}
 .total-label{font-size:11px;font-weight:800;letter-spacing:0.2em;color:#fecaca;text-transform:uppercase;margin-bottom:6px;}
 .total-value{font-size:32px;font-weight:900;color:#fff;letter-spacing:-0.02em;}
 
 .sum-section{margin-top:28px;padding:0 16px 24px;}
-.sum-hd{font-size:10px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;opacity:0.85;}
+.sum-hd{font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;opacity:0.85;}
 .sum-hd::after{content:'';flex:1;height:1px;}
 .sum-card{border-radius:14px;padding:16px 18px;margin-bottom:8px;}
 .sum-sub{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;opacity:0.75;}
@@ -46,12 +46,12 @@ body{background:#3f0a0a;min-height:100vh;padding-bottom:40px;}
 .sum-nm{font-size:12px;font-weight:700;color:#e2e8f0;flex:1;line-height:1.3;}
 .sum-dt{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;}
 .sum-st{font-size:11px;font-weight:900;text-align:right;}
-.sum-rp{font-size:10px;text-align:right;opacity:0.75;}
+.sum-rp{font-size:11px;text-align:right;opacity:0.75;}
 .sum-div{height:1px;margin:12px 0;}
 .sum-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;}
 .sum-tot{border-radius:8px;padding:10px;text-align:center;}
 .sum-tv{font-size:15px;font-weight:900;}
-.sum-tl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px;opacity:0.7;}
+.sum-tl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px;opacity:0.7;}
 
 
 /* ── TIMER ── */
@@ -73,20 +73,12 @@ body{background:#3f0a0a;min-height:100vh;padding-bottom:40px;}
 .rest-timer.running .rest-timer-label{color:#fbbf24;}
 .rest-timer.done .rest-timer-label{color:#34d399;}
 .rest-timer.overtime .rest-timer-label{color:#f87171;}
-.rest-timer-hint{font-size:9px;color:#475569;margin-top:2px;font-style:italic;}
+.rest-timer-hint{font-size:11px;color:#475569;margin-top:2px;font-style:italic;}
 
 /* Floating timer display — shows when running */
-.timer-float{
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
-  background:rgba(10,10,16,0.95);backdrop-filter:blur(16px);
-  border-radius:20px;padding:14px 24px;
-  display:none;flex-direction:column;align-items:center;gap:4px;
-  border:1px solid rgba(255,255,255,0.1);
-  box-shadow:0 8px 32px rgba(0,0,0,0.6);
-  z-index:100;min-width:200px;
-}
+.timer-float{position:fixed;bottom:0;left:0;right:0;width:100%;height:64px;background:rgba(10,10,10,0.97);backdrop-filter:blur(16px);display:none;flex-direction:row;align-items:center;justify-content:space-between;padding:0 20px;gap:12px;border-top:1px solid rgba(255,255,255,0.1);box-shadow:0 -4px 24px rgba(0,0,0,0.6);z-index:100;}
 .timer-float.visible{display:flex;}
-.timer-float-label{font-size:10px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:#475569;}
+.timer-float-label{font-size:11px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:#475569;}
 .timer-float-time{font-size:42px;font-weight:900;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:#fbbf24;}
 .timer-float-time.done{color:#34d399;}
 .timer-float-time.overtime{color:#f87171;}
@@ -106,8 +98,8 @@ body{background:#3f0a0a;min-height:100vh;padding-bottom:40px;}
 /* — WAVE3-SETLOG — */
 .setlog-wrap{margin-top:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:2px;display:none;}
 .setlog-wrap.open{display:block;}
-.setlog-toggle{display:flex;align-items:center;gap:5px;margin-top:8px;cursor:pointer;user-select:none;font-size:10px;font-weight:900;color:#475569;letter-spacing:0.08em;text-transform:uppercase;-webkit-tap-highlight-color:transparent;}
-.setlog-hist{font-size:10px;font-weight:700;color:rgba(212,175,55,0.6);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
+.setlog-toggle{display:flex;align-items:center;gap:5px;margin-top:8px;cursor:pointer;user-select:none;font-size:11px;font-weight:900;color:#475569;letter-spacing:0.08em;text-transform:uppercase;-webkit-tap-highlight-color:transparent;}
+.setlog-hist{font-size:11px;font-weight:700;color:rgba(212,175,55,0.6);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
 .sl-row{display:grid;grid-template-columns:24px 1fr 1fr 32px;gap:5px;align-items:center;padding:6px 2px;border-bottom:1px solid rgba(255,255,255,0.04);}
 .sl-row:last-child{border-bottom:none;}
 .sl-num{font-size:11px;font-weight:900;color:#475569;text-align:center;}
@@ -118,7 +110,7 @@ body{background:#3f0a0a;min-height:100vh;padding-bottom:40px;}
 .sl-ck.done{background:rgba(52,211,153,0.15);border-color:rgba(52,211,153,0.4);}
 .sl-row.sl-done .sl-inp{opacity:0.4;}
 .sl-hdr{display:grid;grid-template-columns:24px 1fr 1fr 32px;gap:5px;padding:3px 2px 1px;}
-.sl-hl{font-size:9px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#2d3748;text-align:center;}
+.sl-hl{font-size:11px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#2d3748;text-align:center;}
 
 /* ── FINISH-WORKOUT ── */
 .fw-bar{
@@ -267,7 +259,7 @@ body{background:#3f0a0a;min-height:100vh;padding-bottom:40px;}
   <div class="sum-hd" style="color:#ef4444;">📊 Workout Summary
     <span style="flex:1;height:1px;background:linear-gradient(90deg,rgba(239,68,68,0.3),transparent);display:block;margin-left:8px;"></span>
   </div>
-  <div class="sum-card" style="background:#1a0505;border:1px solid rgba(239,68,68,0.2);">
+  <div class="sum-card" style="background:#0f0f0f;border:1px solid rgba(239,68,68,0.2);">
     <div class="sum-sub" style="color:#ef4444;">Legs · Quads · Glutes</div>
     <div class="sum-row" style="border-bottom-color:rgba(239,68,68,0.08);"><span class="sum-ico">🏋️</span><span class="sum-nm">Walking Lunge Ladder</span><div class="sum-dt"><span class="sum-st" style="color:#ef4444;">18 sets sets</span><span class="sum-rp" style="color:#ef4444;">1-18 rungs = 300 total lunges</span></div></div><div class="sum-row" style="border-bottom-color:rgba(239,68,68,0.08);"><span class="sum-ico">💪</span><span class="sum-nm">Push-Up Ladder</span><div class="sum-dt"><span class="sum-st" style="color:#ef4444;">18 sets sets</span><span class="sum-rp" style="color:#ef4444;">1-18 = up to 171 push-ups · target 150+</span></div></div>
     <div class="sum-div" style="background:rgba(239,68,68,0.15);"></div>
@@ -546,7 +538,7 @@ function buildStopwatch(container) {
   const el = document.createElement('div');
   el.style.cssText = 'background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:20px;margin:16px 0;text-align:center;';
   el.innerHTML = `
-    <div style="font-size:10px;font-weight:900;letter-spacing:0.2em;color:#475569;text-transform:uppercase;margin-bottom:10px;">⏱️ Stopwatch</div>
+    <div style="font-size:11px;font-weight:900;letter-spacing:0.2em;color:#475569;text-transform:uppercase;margin-bottom:10px;">⏱️ Stopwatch</div>
     <div id="swDisplay" style="font-size:52px;font-weight:900;color:#e2e8f0;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;margin-bottom:16px;">00:00</div>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
       <button id="swBtn" onclick="SW.toggle()" style="padding:10px 20px;border-radius:10px;border:none;cursor:pointer;font-size:12px;font-weight:800;background:rgba(52,211,153,0.15);color:#34d399;letter-spacing:0.06em;">▶ Start</button>

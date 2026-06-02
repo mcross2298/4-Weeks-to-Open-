@@ -7,13 +7,13 @@
 .mcl-toggle{
   display:flex;align-items:center;gap:6px;margin-top:8px;
   cursor:pointer;user-select:none;
-  font-size:10px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;
+  font-size:11px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;
   color:#94a3b8;-webkit-tap-highlight-color:transparent;
 }
-.mcl-toggle .mcl-chev{transition:transform .2s;font-size:9px;}
+.mcl-toggle .mcl-chev{transition:transform .2s;font-size:11px;}
 .mcl-toggle.open .mcl-chev{transform:rotate(180deg);}
 .mcl-hist{
-  font-size:10px;font-weight:700;color:rgba(212,175,55,0.6);
+  font-size:11px;font-weight:700;color:rgba(212,175,55,0.6);
   margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;
 }
 .mcl-wrap{margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:4px;display:none;}
@@ -29,7 +29,7 @@
 
 .mcl-hdr,.mcl-row{display:grid;grid-template-columns:30px 1fr 1fr 40px;gap:7px;align-items:center;}
 .mcl-hdr{padding:4px 2px 6px;}
-.mcl-hl{font-size:9px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#475569;text-align:center;}
+.mcl-hl{font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#475569;text-align:center;}
 .mcl-row{padding:6px 2px;border-bottom:1px solid rgba(255,255,255,0.05);}
 .mcl-row:last-child{border-bottom:none;}
 .mcl-num{font-size:12px;font-weight:900;color:#64748b;text-align:center;}

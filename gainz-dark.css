@@ -20,9 +20,9 @@ body{ background:#06120a; }
 .day-card{
   background:#0a1710;
   border:1px solid rgba(132,204,22,0.22);
-  box-shadow:0 8px 26px rgba(0,0,0,0.45);
+  box-shadow:0 4px 20px rgba(0,0,0,0.15);
 }
-.day-card.open{ border-color:rgba(132,204,22,0.55); box-shadow:0 8px 26px rgba(132,204,22,0.18); }
+.day-card.open{ border-color:rgba(132,204,22,0.55); box-shadow:0 4px 20px rgba(132,204,22,0.15); }
 .day-card.open .day-header{ background:rgba(132,204,22,0.08); }
 .day-session{ color:#f0fdf4; }
 .day-meta{ color:#94a3b8; }

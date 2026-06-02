@@ -4,19 +4,19 @@
 <title>MC — Cardio</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
-body{background:#020b18;min-height:100vh;color:#fff;padding:0 0 60px;}
+body{background:#0a0a0a;min-height:100vh;color:#fff;padding:0 0 60px;}
 .back-link{display:inline-block;color:#38bdf8;text-decoration:none;font-size:13px;font-weight:700;background:rgba(56,189,248,0.1);padding:6px 14px;border-radius:20px;border:1px solid rgba(56,189,248,0.3);margin:20px 16px;}
 .hero{background:linear-gradient(135deg,#082f49,#020b18);padding:26px 20px 22px;border-bottom:1px solid rgba(56,189,248,0.15);}
 .hero-inner{max-width:680px;margin:0 auto;}
-.eyebrow{font-size:10px;font-weight:900;letter-spacing:0.28em;color:#38bdf8;text-transform:uppercase;margin-bottom:8px;}
+.eyebrow{font-size:11px;font-weight:900;letter-spacing:0.28em;color:#38bdf8;text-transform:uppercase;margin-bottom:8px;}
 .title{font-size:24px;font-weight:900;color:#fff;letter-spacing:-0.02em;margin-bottom:4px;}
 .subtitle{font-size:12px;color:#6b7280;}
 .max-w{max-width:680px;margin:20px auto 0;padding:0 16px;}
-.sec-head{font-size:10px;font-weight:900;letter-spacing:0.22em;color:#38bdf8;text-transform:uppercase;margin:20px 0 12px;display:flex;align-items:center;gap:8px;opacity:0.85;}
+.sec-head{font-size:11px;font-weight:900;letter-spacing:0.22em;color:#38bdf8;text-transform:uppercase;margin:20px 0 12px;display:flex;align-items:center;gap:8px;opacity:0.85;}
 .sec-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(56,189,248,0.3),transparent);}
 .opt-card{background:#051f30;border:1px solid rgba(56,189,248,0.2);border-radius:14px;padding:18px;margin-bottom:12px;}
 .opt-title{font-size:16px;font-weight:900;color:#fff;margin-bottom:4px;}
-.opt-tag{display:inline-block;background:rgba(56,189,248,0.12);color:#38bdf8;border:1px solid rgba(56,189,248,0.25);border-radius:5px;padding:3px 10px;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;}
+.opt-tag{display:inline-block;background:rgba(56,189,248,0.12);color:#38bdf8;border:1px solid rgba(56,189,248,0.25);border-radius:5px;padding:3px 10px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;}
 .ex-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(56,189,248,0.07);}
 .ex-row:last-child{border-bottom:none;}
 .ex-icon{font-size:18px;flex-shrink:0;}
@@ -51,20 +51,12 @@ body{background:#020b18;min-height:100vh;color:#fff;padding:0 0 60px;}
 .rest-timer.running .rest-timer-label{color:#fbbf24;}
 .rest-timer.done .rest-timer-label{color:#34d399;}
 .rest-timer.overtime .rest-timer-label{color:#f87171;}
-.rest-timer-hint{font-size:9px;color:#475569;margin-top:2px;font-style:italic;}
+.rest-timer-hint{font-size:11px;color:#475569;margin-top:2px;font-style:italic;}
 
 /* Floating timer display — shows when running */
-.timer-float{
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
-  background:rgba(10,10,16,0.95);backdrop-filter:blur(16px);
-  border-radius:20px;padding:14px 24px;
-  display:none;flex-direction:column;align-items:center;gap:4px;
-  border:1px solid rgba(255,255,255,0.1);
-  box-shadow:0 8px 32px rgba(0,0,0,0.6);
-  z-index:100;min-width:200px;
-}
+.timer-float{position:fixed;bottom:0;left:0;right:0;width:100%;height:64px;background:rgba(10,10,10,0.97);backdrop-filter:blur(16px);display:none;flex-direction:row;align-items:center;justify-content:space-between;padding:0 20px;gap:12px;border-top:1px solid rgba(255,255,255,0.1);box-shadow:0 -4px 24px rgba(0,0,0,0.6);z-index:100;}
 .timer-float.visible{display:flex;}
-.timer-float-label{font-size:10px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:#475569;}
+.timer-float-label{font-size:11px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:#475569;}
 .timer-float-time{font-size:42px;font-weight:900;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:#fbbf24;}
 .timer-float-time.done{color:#34d399;}
 .timer-float-time.overtime{color:#f87171;}
@@ -84,8 +76,8 @@ body{background:#020b18;min-height:100vh;color:#fff;padding:0 0 60px;}
 /* — WAVE3-SETLOG — */
 .setlog-wrap{margin-top:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:2px;display:none;}
 .setlog-wrap.open{display:block;}
-.setlog-toggle{display:flex;align-items:center;gap:5px;margin-top:8px;cursor:pointer;user-select:none;font-size:10px;font-weight:900;color:#475569;letter-spacing:0.08em;text-transform:uppercase;-webkit-tap-highlight-color:transparent;}
-.setlog-hist{font-size:10px;font-weight:700;color:rgba(212,175,55,0.6);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
+.setlog-toggle{display:flex;align-items:center;gap:5px;margin-top:8px;cursor:pointer;user-select:none;font-size:11px;font-weight:900;color:#475569;letter-spacing:0.08em;text-transform:uppercase;-webkit-tap-highlight-color:transparent;}
+.setlog-hist{font-size:11px;font-weight:700;color:rgba(212,175,55,0.6);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
 .sl-row{display:grid;grid-template-columns:24px 1fr 1fr 32px;gap:5px;align-items:center;padding:6px 2px;border-bottom:1px solid rgba(255,255,255,0.04);}
 .sl-row:last-child{border-bottom:none;}
 .sl-num{font-size:11px;font-weight:900;color:#475569;text-align:center;}
@@ -96,7 +88,7 @@ body{background:#020b18;min-height:100vh;color:#fff;padding:0 0 60px;}
 .sl-ck.done{background:rgba(52,211,153,0.15);border-color:rgba(52,211,153,0.4);}
 .sl-row.sl-done .sl-inp{opacity:0.4;}
 .sl-hdr{display:grid;grid-template-columns:24px 1fr 1fr 32px;gap:5px;padding:3px 2px 1px;}
-.sl-hl{font-size:9px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#2d3748;text-align:center;}
+.sl-hl{font-size:11px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#2d3748;text-align:center;}
 
 /* ── FINISH-WORKOUT ── */
 .fw-bar{
