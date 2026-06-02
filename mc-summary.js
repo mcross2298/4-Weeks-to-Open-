@@ -189,6 +189,7 @@
 
   /* ── STAT BAR ────────────────────────────────────────────────────── */
   function buildStatBar(){
+    if(!cards().length)return;  // only activate on actual workout pages
     var wrap=document.getElementById('progBarWrap')||document.querySelector('.prog-bar-wrap');
     if(!wrap||wrap.classList.contains('mcs-stat'))return;
 
