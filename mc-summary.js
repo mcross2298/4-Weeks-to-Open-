@@ -488,8 +488,10 @@
       if(!host)return;
       if(host.classList.contains('summary-section')){
         renderMC(host);
-      }else if(cards().length){
+      }else if(host.classList.contains('mcs-auto')&&cards().length){
         buildGenerated(host);
+      }else if(cards().length){
+        renderMC(host);  // pre-authored .sum-section: overlay progress, don't rewrite
       }
     }finally{
       setTimeout(function(){writing=false;},0);
