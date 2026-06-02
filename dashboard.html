@@ -681,31 +681,8 @@ window.addEventListener('online',()=>document.getElementById('offlineBar').class
 window.addEventListener('offline',()=>document.getElementById('offlineBar').classList.add('show'));
 if(!navigator.onLine)document.getElementById('offlineBar').classList.add('show');
 
-// ── SW ──
-let swWaiting=null;
-function doSwUpdate(){if(swWaiting)swWaiting.postMessage('skipWaiting');location.reload();}
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>{
-    reg.update();   // force an update check on every visit to the hub
-    reg.addEventListener('updatefound',()=>{
-      const nw=reg.installing;
-      nw.addEventListener('statechange',()=>{
-        if(nw.state==='installed'&&navigator.serviceWorker.controller){
-          // New version installed — activate it immediately (auto-update),
-          // and still surface the banner as a manual fallback.
-          nw.postMessage('skipWaiting');
-          swWaiting=nw;
-          const b=document.getElementById('swUpdate'); if(b) b.classList.add('show');
-        }
-      });
-    });
-  }).catch(()=>{});
-  // Reload once when the fresh worker takes control of the page.
-  let _swRefreshing=false;
-  navigator.serviceWorker.addEventListener('controllerchange',()=>{
-    if(!_swRefreshing){_swRefreshing=true;window.location.reload();}
-  });
-}
+// ── SW ── registration + reliable auto-update handled by mc-sw-update.js
+// (loaded near the end of body). It defines window.doSwUpdate for the banner.
 
 // ── CONDITIONING TAB ──
 function hexA(hex,a){
@@ -752,5 +729,6 @@ renderConditioning();
 // honor ?tab= deep-link from the global bottom nav (mc-nav.js)
 (function(){var t=new URLSearchParams(location.search).get('tab');if(t&&document.getElementById('scr-'+t))switchTab(t);})();
 </script>
+<script src="mc-sw-update.js?v=44"></script>
 </body>
 </html>
