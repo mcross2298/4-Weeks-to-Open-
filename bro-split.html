@@ -352,23 +352,42 @@ function renderReps(sets){
 }
 
 function renderExercise(ex,dIdx,eIdx){
-  const tagCls=ex.tag==="SUPERSET"?"superset":ex.tag==="TRI-SET"?"triset":"";
-  const tagHtml=ex.tag?`<div class="ex-tag ${tagCls}">${ex.tag}</div>`:"";
-  const notesHtml=ex.notes?`<div style="margin-top:6px;padding:6px 8px;background:rgba(16,185,129,0.08);border-left:3px solid rgba(16,185,129,0.5);border-radius:4px;font-size:11px;color:#6ee7b7;line-height:1.5">📝 ${escapeHtml(ex.notes)}</div>`:"";
-  return `<div class="ex-card ${tagCls}">${tagHtml}<div class="ex-body">
-    <div class="ex-name"><span class="editable" data-field="name" data-d="${dIdx}" data-e="${eIdx}">${escapeHtml(ex.name)}</span></div>
-    <div class="ex-grid">
-      <div>
-        <div class="label">Reps</div>
-        ${renderReps(ex.sets)}
-        <div style="margin-top:6px;">${makeRestTimer(ex.rest||'60 sec',ex.name)}</div>
-        <div class="notes-row"><span class="editable" data-field="sets" data-d="${dIdx}" data-e="${eIdx}">${escapeHtml(ex.sets)}</span></div>
-      </div>
-      <div>
-        <div class="label">Rest</div>
-        <div class="rest-line"><span style="font-size:15px">⏱️</span><span class="editable" data-field="rest" data-d="${dIdx}" data-e="${eIdx}">${escapeHtml(ex.rest)}</span></div>
+  // Concept A — accent-driven exercise card. Preserves all behavioural hooks
+  // (.ex-card/.ex-body/.ex-name/[data-field=sets|name|rest]/.rest-timer) that
+  // mc-setlog.js, mc-card-actions.js, mc-summary.js and stndr-checkoff.js use.
+  const grouped=ex.tag==="SUPERSET"||ex.tag==="TRI-SET";
+  const ssCls=grouped?" is-ss":(ex.tag==="CLUSTER"?" is-cluster":"");
+  const legsArr=String(ex.sets||"—").split("/").map(s=>s.trim());
+  const repsHtml=legsArr.map((part,pi)=>{
+    const reps=part.split(",").map(r=>r.trim());
+    const legTag=legsArr.length>1?`<span class="a-legtag">${pi===0?"A":"B"}</span>`:"";
+    const chips=reps.map((rep,ri)=>{
+      const special=rep.toUpperCase().includes("AMRAP")||rep.includes("Drop")||rep.includes("×");
+      const cls=special?"a-rep special":(ri===0?"a-rep live":"a-rep");
+      const sep=ri<reps.length-1?'<span class="a-sep">·</span>':"";
+      return `<span class="${cls}">${escapeHtml(rep)}</span>${sep}`;
+    }).join("");
+    return `<div class="a-leg">${legTag}${chips}</div>`;
+  }).join("");
+  const badges=[];
+  if(ex.tag)badges.push(`<span class="a-pill grp">${escapeHtml(ex.tag)}</span>`);
+  if(ex.tempo)ex.tempo.split("/").forEach(t=>badges.push(`<span class="a-pill tempo">⏱ ${escapeHtml(t.trim())}</span>`));
+  const badgeHtml=badges.length?`<div class="a-badges">${badges.join("")}</div>`:"";
+  const notesHtml=ex.notes?`<div class="a-notes">📝 ${escapeHtml(ex.notes)}</div>`:"";
+  return `<div class="ex-card a-card${ssCls}"><div class="ex-body">
+    <div class="a-top">
+      <div class="a-idx">${eIdx+1}</div>
+      <div class="a-head">
+        <div class="ex-name a-name"><span class="editable" data-field="name" data-d="${dIdx}" data-e="${eIdx}">${escapeHtml(ex.name)}</span></div>
+        ${badgeHtml}
       </div>
     </div>
+    <div class="a-reps">${repsHtml}</div>
+    <div class="a-strip">
+      <div class="a-cell"><span class="k">Sets</span><span class="v"><span class="editable" data-field="sets" data-d="${dIdx}" data-e="${eIdx}">${escapeHtml(ex.sets)}</span></span></div>
+      <div class="a-cell"><span class="k">Rest</span><span class="v"><span class="editable" data-field="rest" data-d="${dIdx}" data-e="${eIdx}">${escapeHtml(ex.rest)}</span></span></div>
+    </div>
+    <div class="a-timerbar">${makeRestTimer(ex.rest||'60 sec',ex.name)}</div>
     ${notesHtml}
   </div></div>`;
 }
