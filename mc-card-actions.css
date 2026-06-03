@@ -20,7 +20,45 @@
   position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;
   background:#fbbf24;border:1px solid rgba(0,0,0,0.4);display:none;
 }
-.mc-meatball.mc-has-note .mc-dot-ind{display:block;}
+.mc-meatball.mc-has-note .mc-dot-ind,
+.mc-meatball.mc-has-tempo .mc-dot-ind{display:block;}
+
+/* ── Tempo pill (on-demand add-in · STNDR notation) ── */
+.mc-tempo-pill{
+  display:inline-flex;align-items:center;
+  font-size:11px;font-weight:800;letter-spacing:0.02em;
+  padding:3px 8px;border-radius:6px;
+  font-family:"SF Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  background:rgba(var(--accent-rgb,225,29,72),0.12);
+  color:var(--accent,#fb7185);
+  border:1px solid rgba(var(--accent-rgb,225,29,72),0.32);
+}
+/* sit nicely inside the engine's .ex-tags flex row */
+.ex-tags .mc-tempo-pill{margin-left:2px;}
+
+/* ── Tempo picker sheet ── */
+.mc-tempo-legend{
+  font-size:11.5px;line-height:1.5;color:#94a3b8;
+  padding:0 14px 10px;
+}
+.mc-tempo-list{display:flex;flex-direction:column;gap:6px;padding:0 6px 6px;max-height:48vh;overflow-y:auto;}
+.mc-tempo-opt{
+  display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;cursor:pointer;
+  padding:11px 12px;border-radius:12px;font-family:inherit;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+  -webkit-tap-highlight-color:transparent;
+}
+.mc-tempo-opt:active{background:rgba(255,255,255,0.09);}
+.mc-tempo-opt.mc-tempo-active{
+  background:rgba(var(--accent-rgb,225,29,72),0.14);
+  border-color:rgba(var(--accent-rgb,225,29,72),0.5);
+}
+.mc-tempo-val{
+  font-size:14px;font-weight:900;color:#e2e8f0;
+  font-family:"SF Mono",ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:0.02em;
+}
+.mc-tempo-desc{font-size:12px;font-weight:600;color:#94a3b8;}
+.mc-tempo-remove{justify-content:center;color:#f87171;}
 
 /* ── Inline saved note shown under a card ── */
 .mc-note{

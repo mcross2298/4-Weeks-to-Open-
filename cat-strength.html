@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Strength &amp; Supersets</title>
+<style>
+:root{--accent:#e11d48;--accent-rgb:225,29,72;}
+.header{background:linear-gradient(135deg,#2a0710,#0d0618);}
+.week-tabs{border-bottom:1px solid rgba(255,255,255,0.05);}
+/* ── VIEWS — only one visible at a time (restored: dropped in Phase 2) ── */
+#view-split{display:none;}
+#view-split.active{display:block;}
+#view-workout{display:none;}
+#view-workout.active{display:block;}
+#view-dashboard.hidden{display:none;}
+</style>
+<link rel="stylesheet" href="base.css"/>
+<link rel="stylesheet" href="mc-nav.css"/>
+<link rel="stylesheet" href="mc-card-actions.css"/>
+<link rel="stylesheet" href="mc-setlog.css"/>
+<link rel="stylesheet" href="mc-summary.css"/>
+<style>
+/* ── PAGE-SPECIFIC STYLES (restored) ──
+   These rules are unique to this page and are NOT part of base.css.
+   They were inadvertently dropped during the Phase 2 CSS extraction. */
+.dash-title{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.02em;line-height:1.1;margin-bottom:4px;}
+.dash-title span{color:#a855f7;}
+.subtitle{font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:12px;}
+.header-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0;}
+.header-pill{background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.25);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:800;color:#c084fc;letter-spacing:0.08em;text-transform:uppercase;}
+.inst-header-link{display:inline-flex;align-items:center;gap:8px;margin-top:14px;text-decoration:none;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);color:#c084fc;font-size:11px;font-weight:800;padding:8px 16px;border-radius:20px;letter-spacing:0.06em;transition:all 0.15s;}
+.inst-header-link:active{background:rgba(139,92,246,0.22);}
+/* Resume banner */
+.resume-banner{display:none;margin:16px 16px 0;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);border-radius:14px;padding:12px 16px;cursor:pointer;transition:all 0.15s;}
+.resume-banner.visible{display:flex;align-items:center;gap:12px;}
+.resume-banner:active{transform:scale(0.98);}
+.resume-icon{font-size:20px;flex-shrink:0;}
+.resume-text{flex:1;}
+.resume-label{font-size:11px;font-weight:900;letter-spacing:0.15em;text-transform:uppercase;color:#a855f7;margin-bottom:2px;}
+.resume-name{font-size:14px;font-weight:800;color:#fff;}
+.resume-sub{font-size:11px;color:#6b7280;margin-top:1px;}
+.resume-arrow{font-size:18px;color:#a855f7;font-weight:900;}
+/* Split selector cards (vertical, MC-style) */
+.split-strip-wrap{padding:18px 0 4px;background:#0d0618;}
+.split-strip-label{font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;color:#475569;padding:0 16px;margin-bottom:12px;}
+.split-strip{display:flex;flex-direction:column;gap:10px;max-width:680px;margin:0 auto;padding:0 16px 8px;}
+.split-card-sel{display:block;width:100%;text-align:left;background:#0f0f0f;border:1.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 16px 14px 18px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;font-family:inherit;}
+.split-card-sel::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--sp-color,#a855f7);opacity:0.45;transition:opacity 0.15s;}
+.split-card-sel:active{transform:scale(0.99);}
+.split-card-sel.active{border-color:var(--sp-color,#a855f7);background:#150a26;}
+.split-card-sel.active::before{opacity:1;}
+.split-card-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px;}
+.split-card-eyebrow{font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:var(--sp-color,#a855f7);}
+.split-card-chev{font-size:18px;font-weight:900;color:var(--sp-color,#a855f7);flex-shrink:0;line-height:1;}
+.split-card-name{font-size:17px;font-weight:900;color:#fff;letter-spacing:-0.01em;margin-bottom:5px;}
+.split-card-desc{font-size:12px;color:#94a3b8;line-height:1.45;margin-bottom:8px;}
+.split-card-meta{font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#475569;}
+/* Split detail */
+.split-detail{max-width:680px;margin:0 auto;padding:20px 16px 0;}
+.split-detail-num{font-size:11px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:8px;display:inline-block;}
+.split-detail-name{font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.01em;margin-bottom:4px;}
+.split-detail-desc{font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:16px;}
+.workouts-label{font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;color:#475569;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.workouts-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.06);}
+.workout-card{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;border:1.5px solid;margin-bottom:10px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;}
+.workout-card:active{transform:scale(0.98);}
+.workout-icon{font-size:20px;flex-shrink:0;width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;}
+.workout-info{flex:1;min-width:0;}
+.workout-name{font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;line-height:1.3;}
+.workout-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.workout-tag{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:2px 7px;border-radius:4px;}
+.workout-arrow{font-size:16px;color:#475569;flex-shrink:0;}
+/* Badge key */
+.badge-section{max-width:680px;margin:28px auto 0;padding:0 16px 40px;}
+.badge-section-head{font-size:11px;font-weight:900;letter-spacing:0.22em;color:#a855f7;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.badge-section-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(168,85,247,0.3),transparent);}
+.badge-card{background:#0f0f0f;border:1px solid rgba(139,92,246,0.15);border-radius:14px;padding:16px;}
+.badge-card-title{font-size:11px;font-weight:900;letter-spacing:0.16em;color:#a855f7;text-transform:uppercase;margin-bottom:12px;}
+.badge-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+.badge-row:last-child{margin-bottom:0;}
+.badge-demo{font-size:11px;font-weight:800;padding:3px 9px;border-radius:5px;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;flex-shrink:0;min-width:100px;text-align:center;}
+.badge-desc{font-size:11px;color:#6b7280;line-height:1.4;}
+.lb-ss{background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.25);}
+.lb-py{background:rgba(249,115,22,0.15);color:#fb923c;border:1px solid rgba(249,115,22,0.25);}
+.lb-lr{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.25);}
+.lb-tm{background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.25);}
+.lb-hr{background:rgba(234,179,8,0.15);color:#fbbf24;border:1px solid rgba(234,179,8,0.25);}
+.lb-dr{background:rgba(244,63,94,0.15);color:#fb7185;border:1px solid rgba(244,63,94,0.25);}
+.lb-am{background:rgba(239,68,68,0.2);color:#ef4444;border:1px solid rgba(239,68,68,0.35);}
+.lb-mr{background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.25);}
+/* ── CONFUSION BANNER ── */
+.confusion-banner{background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.25);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:#fb923c;font-weight:700;line-height:1.5;}
+.confusion-banner span{opacity:0.7;font-weight:500;}
+/* ── UGEE / BLOCKS CARDS ── */
+.block-card{border-radius:14px;margin-bottom:14px;overflow:hidden;border:1.5px solid rgba(251,146,60,0.3);background:rgba(251,146,60,0.04);}
+.block-header{background:rgba(251,146,60,0.12);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(251,146,60,0.15);}
+.block-title{font-size:13px;font-weight:900;color:#fb923c;}
+.block-rounds{font-size:11px;font-weight:800;color:#fb923c;background:rgba(251,146,60,0.15);padding:3px 10px;border-radius:20px;border:1px solid rgba(251,146,60,0.3);}
+.block-note{font-size:11px;color:#94a3b8;padding:8px 16px;border-bottom:1px solid rgba(251,146,60,0.1);font-style:italic;}
+.block-warmup{font-size:11px;font-weight:700;color:#fb923c;padding:6px 16px;border-bottom:1px solid rgba(251,146,60,0.1);background:rgba(251,146,60,0.06);}
+.block-warmup-label{font-size:11px;font-weight:900;letter-spacing:0.15em;color:#fb923c;opacity:0.6;margin-right:6px;}
+.block-ex{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);}
+.block-ex:last-of-type{border-bottom:none;}
+.block-ex.checked .block-ex-name{text-decoration:line-through;color:#34d399;}
+.block-ex-dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(251,146,60,0.5);flex-shrink:0;transition:all 0.15s;}
+.block-ex.checked .block-ex-dot{background:#34d399;border-color:#34d399;}
+.block-ex-name{font-size:13px;font-weight:600;color:#e2e8f0;flex:1;}
+.block-ex-reps{font-size:11px;font-weight:800;letter-spacing:0.03em;color:#a78bfa;background:rgba(139,92,246,0.15);border-radius:5px;padding:3px 8px;white-space:nowrap;flex-shrink:0;}
+.block-giant-badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:#fb923c;background:rgba(251,146,60,0.12);border:1px solid rgba(251,146,60,0.3);border-radius:6px;padding:4px 10px;margin:0 16px 10px;}
+.block-rounds-btns{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px 14px;}
+.round-btn{padding:7px 16px;border-radius:8px;border:1px solid rgba(251,146,60,0.35);background:rgba(251,146,60,0.08);color:#fb923c;font-size:11px;font-weight:800;cursor:pointer;transition:all 0.15s;letter-spacing:0.05em;}
+.round-btn.done{background:rgba(52,211,153,0.15);border-color:rgba(52,211,153,0.4);color:#34d399;}
+.round-btn:active{transform:scale(0.97);}
+.ex-notes-input{width:100%;background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;font-weight:600;font-family:inherit;resize:none;line-height:1.5;}
+.ex-notes-input::placeholder{color:#334155;}
+.ex-notes-label{font-size:11px;font-weight:800;letter-spacing:0.15em;color:#475569;text-transform:uppercase;margin-bottom:4px;}
+/* ── PICKER ── */
+.picker-header{padding:60px 20px 24px;background:linear-gradient(135deg,#1a0040,#0d0618);text-align:center;border-bottom:1px solid rgba(192,132,252,0.15);}
+.picker-title{font-size:24px;font-weight:900;color:#fff;margin-bottom:6px;}
+.picker-sub{font-size:12px;color:#475569;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;}
+.picker-content{max-width:680px;margin:0 auto;padding:20px 16px 48px;}
+.picker-split{margin-bottom:24px;}
+.picker-split-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px;}
+.picker-split-name{font-size:15px;font-weight:900;}
+.picker-split-label{font-size:11px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;opacity:0.6;}
+.picker-workout{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1.5px solid;margin-bottom:8px;cursor:pointer;transition:all 0.15s;}
+.picker-workout:active{transform:scale(0.98);}
+.picker-icon{font-size:18px;flex-shrink:0;}
+.picker-name{flex:1;font-size:13px;font-weight:700;color:#e2e8f0;}
+.picker-arrow{font-size:16px;font-weight:900;}
+/* ── WORKOUT VIEW HEADER ── */
+.workout-view-header{padding:52px 20px 20px;position:relative;}
+.workout-back-btn{display:inline-flex;align-items:center;gap:6px;color:#c084fc;font-size:13px;font-weight:700;background:rgba(192,132,252,0.1);padding:6px 14px;border-radius:20px;border:1px solid rgba(192,132,252,0.3);cursor:pointer;margin-bottom:20px;transition:all 0.15s;}
+.workout-back-btn:active{background:rgba(192,132,252,0.2);}
+/* ── WORKOUT CONTENT ── */
+.workout-content{max-width:680px;margin:20px auto 0;padding:0 16px;}
+</style>
+</head>
+<body>
+<div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
+
+<!-- ═══════════════════════════════════
+     VIEW 1: DASHBOARD
+════════════════════════════════════ -->
+<div id="view-dashboard">
+
+  <div class="header">
+    <a href="dashboard.html" class="back-link">← Programs</a>
+    <div class="eyebrow">🏋️ Program · 6-Week Cycle</div>
+    <h1 class="dash-title">Strength <span>&amp;</span> Supersets</h1>
+    <p class="subtitle">6-week program · 5 training days · heavy compounds + high-volume supersets</p>
+    <div class="header-pills">
+      <span class="header-pill">6-week cycle</span>
+      <span class="header-pill">5 training days</span>
+      <span class="header-pill">by Mike Cross</span>
+    </div>
+  </div>
+
+  <div class="resume-banner" id="resumeBanner" onclick="resumeLastWorkout()">
+    <div class="resume-icon">▶️</div>
+    <div class="resume-text">
+      <div class="resume-label">Resume</div>
+      <div class="resume-name" id="resumeName">—</div>
+      <div class="resume-sub" id="resumeSub">—</div>
+    </div>
+    <div class="resume-arrow">→</div>
+  </div>
+
+  <div class="split-strip-wrap">
+    <div class="split-strip-label">Select a Workout</div>
+    <div class="split-strip" id="splitStrip"></div>
+  </div>
+
+  <div class="badge-section">
+    <div class="badge-section-head">🏷 Badge Key</div>
+    <div class="badge-card">
+      <div class="badge-card-title">Exercise Type Labels</div>
+      <div class="badge-row"><span class="badge-demo lb-ss">⚡ Superset</span><span class="badge-desc">Two exercises back to back, no rest between</span></div>
+      <div class="badge-row"><span class="badge-demo lb-py">📈 Pyramid</span><span class="badge-desc">Weight increases as reps decrease (12,10,8,8)</span></div>
+      <div class="badge-row"><span class="badge-demo lb-lr">🏋️ Low Rep</span><span class="badge-desc">Heavy load, low reps, strength focus (5×5, 6×4)</span></div>
+      <div class="badge-row"><span class="badge-demo lb-hr">🔥 High Rep</span><span class="badge-desc">Pump-focused, high volume (4×20, 3×30)</span></div>
+      <div class="badge-row"><span class="badge-demo lb-am">💀 AMRAP</span><span class="badge-desc">As many reps as possible — push the finisher to failure</span></div>
+    </div>
+  </div>
+
+  <div class="badge-section" style="margin-top:18px;">
+    <div class="badge-section-head">⏱️ Add Tempo (optional intensifier)</div>
+    <div class="badge-card">
+      <div class="badge-card-title">Tap the ⋮ on any exercise → Add Tempo</div>
+      <div class="badge-desc" style="margin-bottom:10px;">Tempo is a serviceable add-in — not prescribed. Too easy? Slow the lift down to cut reps and raise output (e.g. 12 reps at 110 lb on goblet squats → add a 3-sec negative).</div>
+      <div class="badge-card-title">How to read it — Eccentric : Pause&nbsp;bottom : Concentric : Pause&nbsp;top</div>
+      <div class="badge-row"><span class="badge-demo" style="background:rgba(225,29,72,0.12);color:#fb7185;border:1px solid rgba(225,29,72,0.3);font-family:ui-monospace,monospace;">⏱ 3:0:1:0</span><span class="badge-desc">3 sec lower · explosive lift up</span></div>
+      <div class="badge-row"><span class="badge-demo" style="background:rgba(225,29,72,0.12);color:#fb7185;border:1px solid rgba(225,29,72,0.3);font-family:ui-monospace,monospace;">⏱ 4:0:1:0</span><span class="badge-desc">4 sec negative · controlled lift</span></div>
+      <div class="badge-row"><span class="badge-demo" style="background:rgba(225,29,72,0.12);color:#fb7185;border:1px solid rgba(225,29,72,0.3);font-family:ui-monospace,monospace;">⏱ 3:1:1:0</span><span class="badge-desc">3 sec lower · 1 sec pause at bottom · 1 sec lift</span></div>
+      <div class="badge-row"><span class="badge-demo" style="background:rgba(225,29,72,0.12);color:#fb7185;border:1px solid rgba(225,29,72,0.3);font-family:ui-monospace,monospace;">⏱ 2:0:1:2</span><span class="badge-desc">2 sec lower · 1 sec lift · 2 sec squeeze at top</span></div>
+    </div>
+  </div>
+
+</div><!-- end #view-dashboard -->
+
+<!-- ═══════════════════════════════════
+     VIEW 2: SPLIT (breakout — workouts for the tapped split)
+════════════════════════════════════ -->
+<div id="view-split">
+  <div class="workout-view-header" id="splitViewHeader">
+    <button class="workout-back-btn" onclick="showDashboard()">← All Splits</button>
+    <div class="eyebrow" id="splitViewEyebrow"></div>
+    <div class="dash-title" id="splitViewTitle"></div>
+    <p class="subtitle" id="splitViewDesc"></p>
+    <div style="margin-top:8px;"><span class="header-pill" id="splitViewBadge"></span></div>
+  </div>
+  <div id="splitDetail"></div>
+</div><!-- end #view-split -->
+
+<!-- ═══════════════════════════════════
+     VIEW 3: WORKOUT (inline, no page load)
+════════════════════════════════════ -->
+<div id="view-workout">
+  <div class="workout-view-header" id="workoutViewHeader">
+    <button class="workout-back-btn" onclick="backToSplit()">← Back to Split</button>
+    <div class="eyebrow" id="workoutEyebrow"></div>
+    <div class="dash-title" id="workoutTitle"></div>
+    <div style="margin-top:8px;"><span class="header-pill" id="workoutWeekBadge"></span></div>
+  </div>
+  <div class="week-tabs" id="weekTabsWrap">
+    <div class="wtabs" id="weekTabs"></div>
+  </div>
+  <div class="workout-content" id="workoutContent"></div>
+</div><!-- end #view-workout -->
+
+
+<script>
+// Enable the on-demand "Add Tempo" add-in (shared mc-card-actions.js reads this flag).
+window.MC_TEMPO_ENABLED = true;
+</script>
+<script>
+
+// ══════════════════════════════════════════════════════════════
+//  PMC DATA
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * Strength & Supersets — workout data (designer: Mike Cross)
+ * 6-week cycle · 5 training days. Legs authored for Weeks 1–6; the other days
+ * are scaffolded (comingSoon) until their tables are added.
+ * Daily shape: 3 heavy compounds (4–8 reps, ≥1 pyramid) → 2 supersets
+ * (3–4 sets, 12–30 reps) → 1 AMRAP finisher. Tempo is NOT prescribed here —
+ * it is an optional add-in applied per-exercise via the ⋮ menu.
+ */
+
+const PMC_SPLITS = {
+  'legs': {
+    id:'legs', file:'cat-strength.html', split:'Strength & Supersets',
+    title:'Legs', icon:'🦵', color:'#e11d48', bg:'#2a0710',
+    backUrl:'cat-strength.html', type:'standard',
+    data:{
+  1:[
+    {type:'single',num:1,name:'Barbell Squat (shoulder width)',sets:'5×5',badges:['tb-lowrep'],note:'Heavy · drive through heels · reset each rep'},
+    {type:'single',num:2,name:'Barbell RDLs',sets:'4×6',badges:['tb-lowrep'],note:'Hip hinge · controlled · feel the hamstring stretch'},
+    {type:'single',num:3,name:'Goblet Squat (feet touching, heels elevated)',sets:'8,6,4,4',badges:['tb-pyramid'],note:'⛰ Pyramid up in weight · deep ROM · upright torso'},
+    {type:'superset',num:4,
+     a:{name:'Hack Squat (feet together)',sets:'20,15,12',badges:['tb-superset','tb-pyramid'],note:'⚡ Superset A · pyramid up in weight'},
+     b:{name:'Bodyweight Sissy Squats',sets:'3×20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · flat high volume · slow negative'}},
+    {type:'superset',num:5,
+     a:{name:'Leg Press (high & wide)',sets:'4×20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset A · full ROM · constant tension'},
+     b:{name:'Leg Press Calf Raises (toes pointed out)',sets:'4×25',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 2 sec pause at full stretch'}},
+    {type:'single',num:6,name:'Lying Hamstring Curls',sets:'AMRAP (50–100 reps)',badges:['tb-finisher','tb-amrap'],note:'🏁 Finisher · AMRAP · target 50–100 reps'},
+  ],
+  2:[
+    {type:'single',num:1,name:'Hack Squat (shoulder width)',sets:'8,6,4,4',badges:['tb-pyramid'],note:'⛰ Pyramid up in weight · controlled descent'},
+    {type:'single',num:2,name:'Leg Press (feet touching)',sets:'5×5',badges:['tb-lowrep'],note:'Heavy · feet touching · knees track over toes'},
+    {type:'single',num:3,name:'Hip Thrust',sets:'6×4',badges:['tb-lowrep'],note:'Heavy · full lockout · squeeze glutes at top'},
+    {type:'superset',num:4,
+     a:{name:'Quad Extension',sets:'12,15,18,20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset A · reverse pyramid · drop weight, add reps'},
+     b:{name:'DB Walking Lunges',sets:'3×20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 total steps · long stride'}},
+    {type:'superset',num:5,
+     a:{name:'Inner Thigh (Adductor)',sets:'4×20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset A · squeeze · 1 sec pause'},
+     b:{name:'Outer Thigh (Abductor)',sets:'4×20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · controlled · full ROM'}},
+    {type:'single',num:6,name:'Smith Machine Cannonball Squats',sets:'AMRAP (50–100 reps)',badges:['tb-finisher','tb-amrap'],note:'🏁 Finisher · AMRAP · target 50–100 reps'},
+  ],
+  3:[
+    {type:'single',num:1,name:'Barbell Squat (shoulder width)',sets:'8,6,4,4',badges:['tb-pyramid'],note:'⛰ Pyramid up in weight · brace hard'},
+    {type:'single',num:2,name:'Barbell RDLs',sets:'6×4',badges:['tb-lowrep'],note:'Heavy · slow stretch · drive hips back'},
+    {type:'single',num:3,name:'Hack Squat (feet touching, feet low)',sets:'5×5',badges:['tb-lowrep'],note:'Heavy · low foot placement · quad bias'},
+    {type:'superset',num:4,
+     a:{name:'Leg Press (high & wide)',sets:'3×30',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset A · flat high volume · constant tension'},
+     b:{name:'Leg Press Calf Raises',sets:'15,20,25',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · pyramid up reps · pause at stretch'}},
+    {type:'superset',num:5,
+     a:{name:'Barbell Good Mornings',sets:'3×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · soft knees · hinge · flat back'},
+     b:{name:'DB Step-ups',sets:'3×20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · 20 total · drive through heel'}},
+    {type:'single',num:6,name:'Quad Extension Burnout',sets:'AMRAP (50–100 reps)',badges:['tb-finisher','tb-amrap'],note:'🏁 Burnout · AMRAP · target 50–100 reps'},
+  ],
+  4:[
+    {type:'single',num:1,name:'Deadlift',sets:'5×5',badges:['tb-lowrep'],note:'Heavy · neutral spine · explosive off the floor'},
+    {type:'single',num:2,name:'Smith Machine Cannonball Squat',sets:'8,6,4,4',badges:['tb-pyramid'],note:'⛰ Pyramid up in weight · deep · upright'},
+    {type:'single',num:3,name:'Leg Press (medium stance)',sets:'6×4',badges:['tb-lowrep'],note:'Heavy · medium stance · full depth'},
+    {type:'superset',num:4,
+     a:{name:'Smith Machine Split Squats',sets:'3×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 15 per leg · controlled'},
+     b:{name:'Smith Machine Calf Raises (toes pointed out)',sets:'4×20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · toes out · pause at stretch'}},
+    {type:'superset',num:5,
+     a:{name:'DB Sumo Goblet Squats',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · wide stance · deep · elbows inside knees'},
+     b:{name:'Barbell Good Mornings',sets:'4×12',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · hinge · flat back'}},
+    {type:'single',num:6,name:'Walking Lunges',sets:'200 reps',badges:['tb-finisher'],note:'🏁 Finisher · 200 total reps · loaded if possible'},
+  ],
+  5:[
+    {type:'single',num:1,name:'Hack Squat (neutral stance)',sets:'6×4',badges:['tb-lowrep'],note:'Heavy · neutral stance · controlled descent'},
+    {type:'single',num:2,name:'Smith Machine RDLs',sets:'8,6,4,4',badges:['tb-pyramid'],note:'⛰ Pyramid up in weight · hamstring stretch'},
+    {type:'single',num:3,name:'DB Step-ups',sets:'4×8',badges:['tb-lowrep'],note:'Heavy DBs · 8 per leg · drive through heel'},
+    {type:'superset',num:4,
+     a:{name:'Lying Leg Curls',sets:'12,15,20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset A · reverse pyramid · squeeze at peak'},
+     b:{name:'DB Goblet Squat (heels elevated, feet together)',sets:'3×20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset B · heels elevated · deep ROM'}},
+    {type:'superset',num:5,
+     a:{name:'Single Leg Quad Extensions',sets:'3×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · 15 per leg · squeeze at top'},
+     b:{name:'Quad Extensions (2 sec pause)',sets:'4×12',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 2 sec pause at top · ~120 lb'}},
+    {type:'single',num:6,name:'Leg Press (high & wide)',sets:'AMRAP (50–100 reps)',badges:['tb-finisher','tb-amrap'],note:'🏁 Finisher · AMRAP · target 50–100 reps'},
+  ],
+  6:[
+    {type:'single',num:1,name:'Deadlift',sets:'6×4',badges:['tb-lowrep'],note:'Heavy · brace · explosive pull'},
+    {type:'single',num:2,name:'Barbell Squat (sumo stance)',sets:'5×5',badges:['tb-lowrep'],note:'Heavy · wide stance · toes out · upright'},
+    {type:'single',num:3,name:'Smith Machine Squat (heel elevated, feet together)',sets:'8,6,4,4',badges:['tb-pyramid'],note:'⛰ Pyramid up in weight · quad bias · deep'},
+    {type:'superset',num:4,
+     a:{name:'Barbell Good Mornings',sets:'3×20',badges:['tb-superset','tb-highrep20'],note:'⚡ Superset A · light · strict hinge · flat back'},
+     b:{name:'Barbell Split Squat',sets:'3×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · 15 per leg · tall torso'}},
+    {type:'superset',num:5,
+     a:{name:'DB Goblet Squats (neutral stance)',sets:'4×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset A · neutral stance · deep · controlled'},
+     b:{name:'Single DB Sumo RDLs',sets:'3×15',badges:['tb-superset','tb-highrep12'],note:'⚡ Superset B · single DB · hinge · stretch'}},
+    {type:'single',num:6,name:'Barbell Walking Lunges',sets:'AMRAP (target 100–200 reps)',badges:['tb-finisher','tb-amrap'],note:'🏁 Finisher · AMRAP · barbell on back'},
+  ]
+}
+  },
+  'chest':          { id:'chest',          file:'cat-strength.html', split:'Strength & Supersets', title:'Chest',            icon:'💪', color:'#e11d48', bg:'#2a0710', backUrl:'cat-strength.html', type:'standard', comingSoon:true, data:{} },
+  'back_shoulders': { id:'back_shoulders', file:'cat-strength.html', split:'Strength & Supersets', title:'Back & Shoulders', icon:'🔙', color:'#e11d48', bg:'#2a0710', backUrl:'cat-strength.html', type:'standard', comingSoon:true, data:{} },
+  'arms_forearms':  { id:'arms_forearms',  file:'cat-strength.html', split:'Strength & Supersets', title:'Arms & Forearms',  icon:'💥', color:'#e11d48', bg:'#2a0710', backUrl:'cat-strength.html', type:'standard', comingSoon:true, data:{} },
+  'cardio_calves':  { id:'cardio_calves',  file:'cat-strength.html', split:'Strength & Supersets', title:'Cardio & Calves',  icon:'🏃', color:'#e11d48', bg:'#2a0710', backUrl:'cat-strength.html', type:'standard', comingSoon:true, data:{} },
+};
+
+const PMC_SPLIT_META = {
+  'cycle': { name:'The 6-Week Cycle', color:'#e11d48', workouts:['legs','chest','back_shoulders','arms_forearms','cardio_calves'] },
+};
+
+// ══════════════════════════════════════════════════════════════
+//  WORKOUT LIST FOR DASHBOARD
+// ══════════════════════════════════════════════════════════════
+const SPLITS = [
+  { id:'cycle', num:1, cls:'sp1', name:'The 6-Week Cycle', color:'#e11d48', bg:'#2a0710',
+    desc:'Five training days per week — heavy compounds, high-volume supersets, AMRAP finishers.',
+    workouts:[
+      {id:'legs',           icon:'🦵', name:'Legs',             tags:['Quads','Hamstrings','Calves'], bg:'rgba(225,29,72,0.08)', border:'rgba(225,29,72,0.25)'},
+      {id:'chest',          icon:'💪', name:'Chest',            tags:['Chest','Push'],                bg:'rgba(225,29,72,0.05)', border:'rgba(225,29,72,0.16)', comingSoon:true},
+      {id:'back_shoulders', icon:'🔙', name:'Back & Shoulders', tags:['Back','Delts','Pull'],         bg:'rgba(225,29,72,0.05)', border:'rgba(225,29,72,0.16)', comingSoon:true},
+      {id:'arms_forearms',  icon:'💥', name:'Arms & Forearms',  tags:['Biceps','Triceps','Forearms'], bg:'rgba(225,29,72,0.05)', border:'rgba(225,29,72,0.16)', comingSoon:true},
+      {id:'cardio_calves',  icon:'🏃', name:'Cardio & Calves',  tags:['Conditioning','Calves'],       bg:'rgba(225,29,72,0.05)', border:'rgba(225,29,72,0.16)', comingSoon:true},
+    ]},
+];
+
+// ══════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════
+const STORAGE_KEY      = 'ss_active_split';
+const LAST_WORKOUT_KEY = 'ss_last_workout';
+let activeSplitId   = localStorage.getItem(STORAGE_KEY) || 'cycle';
+let currentWorkoutId = null;
+let activeWeek       = 1;
+const checkState     = {};
+const roundState     = {};
+
+// ══════════════════════════════════════════════════════════════
+//  VIEW SWITCHING
+// ══════════════════════════════════════════════════════════════
+function showDashboard(){
+  document.getElementById('view-dashboard').classList.remove('hidden');
+  document.getElementById('view-split').classList.remove('active');
+  document.getElementById('view-workout').classList.remove('active');
+  window.scrollTo(0,0);
+  if(TMR) TMR.stop();
+}
+
+// Drill into a split: its workouts live inside this view, not on the main page.
+function openSplit(id){
+  const split = SPLITS.find(s => s.id === id);
+  if(!split) return;
+  activeSplitId = id;
+  localStorage.setItem(STORAGE_KEY, id);
+  renderSplitDetail();
+  // Theme the split-view header with the split's colour
+  const c = split.color;
+  const hdr = document.getElementById('splitViewHeader');
+  hdr.style.background = `linear-gradient(135deg,${split.bg || '#1a0040'},#0d0618)`;
+  hdr.style.borderBottom = `1px solid ${c}22`;
+  const eb = document.getElementById('splitViewEyebrow');
+  eb.textContent = `⚡ Split #${split.num} · 4-Week Rotation`; eb.style.color = c;
+  document.getElementById('splitViewTitle').textContent = split.name;
+  document.getElementById('splitViewDesc').textContent  = split.desc || '';
+  const badge = document.getElementById('splitViewBadge');
+  badge.textContent = `${split.workouts.length} workouts`;
+  badge.style.background = c+'22'; badge.style.color = c; badge.style.border = `1px solid ${c}44`;
+  const back = document.querySelector('#view-split .workout-back-btn');
+  if(back){ back.style.color = c; back.style.background = c+'18'; back.style.borderColor = c+'44'; }
+  document.getElementById('view-dashboard').classList.add('hidden');
+  document.getElementById('view-workout').classList.remove('active');
+  document.getElementById('view-split').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// One 6-week cycle, no split sub-layer — back from a workout returns to the
+// main day list on the dashboard.
+function backToSplit(){
+  if(TMR) TMR.stop();
+  showDashboard();
+}
+
+function showWorkout(workoutId){
+  currentWorkoutId = workoutId;
+  activeWeek = 1;
+  // Save for resume
+  const w = PMC_SPLITS[workoutId];
+  if(w){
+    const split = SPLITS.find(s => s.workouts.some(wk => wk.id === workoutId));
+    localStorage.setItem(LAST_WORKOUT_KEY, JSON.stringify({
+      workoutId, week:1, name: w.title, splitName: split ? split.name : w.split
+    }));
+  }
+  document.getElementById('view-dashboard').classList.add('hidden');
+  document.getElementById('view-split').classList.remove('active');
+  document.getElementById('view-workout').classList.add('active');
+  window.scrollTo(0,0);
+  renderWorkout();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RESUME BANNER
+// ══════════════════════════════════════════════════════════════
+function initResumeBanner(){
+  const last = localStorage.getItem(LAST_WORKOUT_KEY);
+  if(!last) return;
+  try {
+    const { workoutId, week, name, splitName } = JSON.parse(last);
+    document.getElementById('resumeName').textContent = name;
+    document.getElementById('resumeSub').textContent  = `${splitName} · Week ${week}`;
+    document.getElementById('resumeBanner').classList.add('visible');
+    document.getElementById('resumeBanner')._data = { workoutId, week };
+  } catch(e){}
+}
+function resumeLastWorkout(){
+  const d = document.getElementById('resumeBanner')._data;
+  if(d){ currentWorkoutId = d.workoutId; activeWeek = d.week; showWorkout(d.workoutId); }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DASHBOARD — SPLIT STRIP & DETAIL
+// ══════════════════════════════════════════════════════════════
+// Single 6-week cycle → list its day workouts directly as cards (no split layer).
+function buildStrip(){
+  const split = SPLITS[0];
+  const c = split.color;
+  document.getElementById('splitStrip').innerHTML = split.workouts.map(w => {
+    const soon = !!w.comingSoon;
+    const tagHtml = (w.tags||[]).map(t =>
+      `<span class="workout-tag" style="background:${c}18;color:${c};border:1px solid ${c}30;">${t}</span>`
+    ).join('');
+    const onclick = soon ? '' : ` onclick="showWorkout('${w.id}')"`;
+    const meta = soon
+      ? `<span class="workout-tag" style="background:rgba(148,163,184,0.12);color:#94a3b8;border:1px solid rgba(148,163,184,0.3);">Coming soon</span>`
+      : `<span class="workout-tag" style="background:${c}18;color:${c};border:1px solid ${c}30;">6 weeks</span>`;
+    return `<div class="workout-card"${onclick}
+        style="background:${w.bg};border-color:${w.border};${soon?'opacity:0.6;cursor:default;':''}">
+      <div class="workout-icon" style="background:${c}18;">${w.icon}</div>
+      <div class="workout-info">
+        <div class="workout-name">${w.name}</div>
+        <div class="workout-tags">${tagHtml}${meta}</div>
+      </div>
+      <div class="workout-arrow">${soon?'⋯':'→'}</div>
+    </div>`;
+  }).join('');
+}
+
+// Renders the tapped split's workout breakout inside the split view.
+function renderSplitDetail(){
+  const split = SPLITS.find(s => s.id === activeSplitId);
+  if(!split){ document.getElementById('splitDetail').innerHTML=''; return; }
+
+  const cards = split.workouts.map(w => {
+    const tagHtml = w.tags.map(t =>
+      `<span class="workout-tag" style="background:${split.color}18;color:${split.color};border:1px solid ${split.color}30;">${t}</span>`
+    ).join('');
+    return `<div class="workout-card${w.ugee?' ugee-card':''}"
+        style="background:${w.bg};border-color:${w.border};"
+        onclick="showWorkout('${w.id}')">
+      <div class="workout-icon" style="background:${split.color}18;">${w.icon}</div>
+      <div class="workout-info">
+        <div class="workout-name">${w.name}</div>
+        <div class="workout-tags">${tagHtml}</div>
+      </div>
+      <div class="workout-arrow">→</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('splitDetail').innerHTML = `
+    <div class="split-detail">
+      <div class="workouts-label">Workouts</div>
+      ${cards}
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  WORKOUT ENGINE (adapted from pmc-workout.html)
+// ══════════════════════════════════════════════════════════════
+
+// ── TIMER ENGINE ──────────────────────────────────────────────────
+const TMR={
+  interval:null,startTime:null,duration:0,activeEl:null,
+  parseSeconds(str){if(!str||str==='—')return 0;str=str.toLowerCase().trim();const mn=str.match(/(\d+)\s*min/),sc=str.match(/(\d+)\s*sec/);let s=0;if(mn)s+=parseInt(mn[1])*60;if(sc)s+=parseInt(sc[1]);if(!s){const p=str.match(/^(\d+)/);if(p)s=parseInt(p[1]);}return s;},
+  formatTime(secs){const neg=secs<0,abs=Math.abs(secs),m=Math.floor(abs/60),s=abs%60;return(neg?'+':'')+(m>0?m+':'+String(s).padStart(2,'0'):String(s)+'s');},
+  buzz(){if(navigator.vibrate)navigator.vibrate([200,100,200,100,400]);try{const ctx=new(window.AudioContext||window.webkitAudioContext)();[0,0.3,0.6].forEach((t,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=i===2?880:660;o.type='sine';g.gain.setValueAtTime(0.4,ctx.currentTime+t);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+t+0.25);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+0.25);});}catch(e){}},
+  start(el,dur,name){
+    this.stop();this.duration=dur;this.startTime=Date.now();this.activeEl=el;
+    el.className='rest-timer running';el.querySelector('.rest-timer-label').textContent=this.formatTime(dur);
+    const fl=document.getElementById('timerFloat'),ft=document.getElementById('timerFloatTime'),fp=document.getElementById('timerFloatProgress'),fe=document.getElementById('timerFloatEx'),fla=document.getElementById('timerFloatLabel');
+    fl.classList.add('visible');fe.textContent=name;fla.textContent='REST';ft.className='timer-float-time';fp.className='timer-float-progress';fp.style.width='100%';
+    this.interval=setInterval(()=>{
+      const rem=Math.ceil(this.duration-(Date.now()-this.startTime)/1000);
+      if(el)el.querySelector('.rest-timer-label').textContent=this.formatTime(rem);
+      ft.textContent=this.formatTime(rem);
+      if(rem>0){fp.style.width=((rem/this.duration)*100)+'%';ft.className='timer-float-time';fp.className='timer-float-progress';if(el)el.className='rest-timer running';}
+      else if(rem===0){this.buzz();ft.className='timer-float-time done';fp.className='timer-float-progress done';fp.style.width='100%';fla.textContent='DONE!';if(el)el.className='rest-timer done';}
+      else{ft.textContent='+'+this.formatTime(-rem);ft.className='timer-float-time overtime';fp.className='timer-float-progress overtime';fla.textContent='OVERTIME';if(el)el.className='rest-timer overtime';}
+    },1000);
+  },
+  stop(){if(this.interval)clearInterval(this.interval);this.interval=null;if(this.activeEl){this.activeEl.querySelector('.rest-timer-label').textContent=this.activeEl.dataset.label;this.activeEl.className='rest-timer idle';this.activeEl=null;}const fl=document.getElementById('timerFloat');if(fl)fl.classList.remove('visible');},
+  toggle(el,dur,name){if(this.activeEl===el&&this.interval)this.stop();else this.start(el,dur,name);},
+  setTime(secs,label){if(this.interval){clearInterval(this.interval);this.interval=null;}this.duration=secs;this.startTime=Date.now();const ft=document.getElementById('timerFloat');if(ft){const tl=ft.querySelector('.timer-float-label'),tt=ft.querySelector('.timer-float-time'),tp=ft.querySelector('.timer-float-progress');if(tl)tl.textContent=label||(secs+'s');if(tt){tt.textContent=secs+'s';tt.className='timer-float-time';}if(tp){tp.style.width='100%';tp.className='timer-float-progress';}ft.classList.add('visible');}this.activeEl=null;this.interval=setInterval(()=>{const rem=Math.ceil(this.duration-(Date.now()-this.startTime)/1000);const ft2=document.getElementById('timerFloat');if(!ft2)return;const tt2=ft2.querySelector('.timer-float-time'),tp2=ft2.querySelector('.timer-float-progress'),tl2=ft2.querySelector('.timer-float-label');if(rem>0){if(tt2){tt2.textContent=rem+'s';tt2.className='timer-float-time';}if(tp2){tp2.style.width=Math.round((rem/this.duration)*100)+'%';tp2.className='timer-float-progress';}}else if(rem===0){if(tt2){tt2.textContent='DONE!';tt2.className='timer-float-time done';}if(tp2){tp2.style.width='100%';tp2.className='timer-float-progress done';}if(tl2)tl2.textContent='DONE ✓';try{navigator.vibrate&&navigator.vibrate([200,100,200,100,400]);}catch(e){}}else{if(tt2){tt2.textContent='+'+Math.abs(rem)+'s';tt2.className='timer-float-time overtime';}if(tp2)tp2.className='timer-float-progress overtime';}},500);}
+};
+
+// Build floating timer DOM once
+(function(){
+  const div=document.createElement('div');div.id='timerFloat';div.className='timer-float';
+  div.innerHTML=`<div id="timerFloatLabel" class="timer-float-label">REST</div><div id="timerFloatTime" class="timer-float-time">0s</div><div id="timerFloatEx" class="timer-float-ex"></div><div class="timer-float-bar"><div id="timerFloatProgress" class="timer-float-progress"></div></div><div class="timer-float-actions"><button class="timer-float-btn timer-float-skip" onclick="TMR.stop()">✓ Done</button><button class="timer-float-btn timer-float-reset" onclick="TMR.stop()">✕ Cancel</button></div><div class="timer-presets"></div>`;
+  document.body.appendChild(div);
+  ['45s','60s','90s','2min'].forEach(l=>{const s=l==='2min'?120:parseInt(l);const b=document.createElement('button');b.className='timer-preset';b.textContent=l;b.onclick=()=>TMR.setTime(s,l);div.querySelector('.timer-presets').appendChild(b);});
+})();
+
+function makeRestTimer(r,n){
+  const s=TMR.parseSeconds(r);
+  if(!s)return `<span class="ex-sets" style="opacity:0.5">⏱️ ${r}</span>`;
+  const safe=n.replace(/'/g,"\\'").substring(0,30);
+  return `<span class="rest-timer idle" data-rest="${r}" data-label="${r}" onclick="TMR.toggle(this,${s},'${safe}')" title="Tap to start rest timer"><span class="rest-timer-icon">⏱️</span><span class="rest-timer-label">${r}</span></span>`;
+}
+
+// ── STATE: vars declared in dashboard section above ──
+
+// ── BADGE LABELS ──────────────────────────────────────────────────
+const BADGE_LABELS = {
+  'tb-pyramid':'📈 Pyramid','tb-lowrep':'🏋️ Low Rep','tb-tempo':'⏱️ Tempo',
+  'tb-highrep12':'🔥 12–15 Reps','tb-highrep20':'🔥 20–30 Reps','tb-drop':'↘️ Drop Set',
+  'tb-amrap':'💀 AMRAP','tb-minrest':'⚡ 20s Rest','tb-optional':'⭐ Optional',
+  'tb-finisher':'🏁 Finisher','tb-superset':'⚡ Superset','tb-dumbbell':'🏋️ Dumbbell',
+  'tb-cable':'🔗 Cable',
+};
+function badges(arr){
+  return (arr||[]).map(b=>`<span class="type-badge ${b}">${BADGE_LABELS[b]||b}</span>`).join('');
+}
+
+// ── RENDER HELPERS ────────────────────────────────────────────────
+function renderSingle(ex, wk){
+  const id=`${wk}-s-${ex.num}`, ck=checkState[id]?'checked':'';
+  const rest=ex.rest||'90 sec';
+  return `<div class="ex-card ${ck}" data-id="${id}" data-type="single">
+    <div class="ex-row"><div class="ex-num">${ex.num}</div>
+    <div class="ex-content"><div class="ex-name">${ex.name}</div>
+    <div class="ex-tags"><span class="ex-sets">${ex.sets}</span>${badges(ex.badges)}</div>
+    ${makeRestTimer(rest,ex.name)}
+    ${ex.note?`<div class="ex-note">${ex.note}</div>`:''}
+    </div></div></div>`;
+}
+
+function renderSS(ex, wk){
+  const ida=`${wk}-ss-${ex.num}a`, idb=`${wk}-ss-${ex.num}b`;
+  const cka=checkState[ida]?'checked':'', ckb=checkState[idb]?'checked':'';
+  return `<div class="ss-card">
+    <div class="ss-header"><span class="ss-label">⚡ Superset #${ex.num}</span></div>
+    <div class="ss-ex ${cka}" data-id="${ida}" data-type="ssex">
+      <div class="ss-num">A</div><div class="ss-content">
+      <div class="ss-name">${ex.a.name}</div>
+      <div class="ex-tags"><span class="ex-sets">${ex.a.sets}</span>${badges(ex.a.badges)}</div>
+      ${makeRestTimer('120 sec',ex.a.name)}
+      ${ex.a.note?`<div class="ex-note">${ex.a.note}</div>`:''}
+      </div></div>
+    <div class="ss-divider"><span class="ss-x">× SUPERSET ×</span></div>
+    <div class="ss-ex ${ckb}" data-id="${idb}" data-type="ssex">
+      <div class="ss-num">B</div><div class="ss-content">
+      <div class="ss-name">${ex.b.name}</div>
+      <div class="ex-tags"><span class="ex-sets">${ex.b.sets}</span>${badges(ex.b.badges)}</div>
+      ${makeRestTimer('120 sec',ex.b.name)}
+      ${ex.b.note?`<div class="ex-note">${ex.b.note}</div>`:''}
+      </div></div></div>`;
+}
+
+function renderEx(ex, wk){
+  return ex.type==='superset' ? renderSS(ex,wk) : renderSingle(ex,wk);
+}
+
+function renderBlocks(blocks, wid){
+  return blocks.map((block, bi)=>{
+    const rounds = block.rounds || 5;
+    const exHtml = block.exercises.map((ex, ei)=>{
+      // support both legacy name-strings and {name, reps} objects (S7 shared source)
+      const name = (typeof ex === 'string') ? ex : ex.name;
+      const reps = (typeof ex === 'string') ? '' : (ex.reps || '');
+      const id=`${wid}-b${bi}-e${ei}`, ck=checkState[id]?'checked':'';
+      return `<div class="block-ex ${ck}" data-id="${id}" data-type="bex"><div class="block-ex-dot"></div><div class="block-ex-name">${name}</div>${reps?`<span class="block-ex-reps">${reps} reps</span>`:''}</div>`;
+    }).join('');
+    const roundBtns = Array.from({length:rounds},(_,i)=>{
+      const rid=`${wid}-b${bi}-r${i}`, ck=roundState[rid]?'done':'';
+      return `<button class="round-btn ${ck}" data-rid="${rid}" onclick="toggleRound(this,'${rid}')">${ck?'✓ ':''} Round ${i+1}</button>`;
+    }).join('');
+    return `<div class="block-card">
+      <div class="block-header"><span class="block-title">${block.title}</span><span class="block-rounds">${rounds} ROUNDS</span></div>
+      ${block.part?`<div class="block-giant-badge">⚡ Giant Set · ${block.part}</div>`:''}
+      ${block.replace?`<div class="block-note">🔄 Replace week — swap 2 exercises via the Exercise Library</div>`:''}
+      ${block.note?`<div class="block-note">${block.note}</div>`:''}
+      ${block.warmup?`<div class="block-warmup"><span class="block-warmup-label">WARMUP</span>${block.warmup}</div>`:''}
+      ${exHtml}
+      <div class="block-rounds-btns">${roundBtns}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleRound(btn, rid){
+  roundState[rid] = !roundState[rid];
+  btn.classList.toggle('done', roundState[rid]);
+  btn.textContent = roundState[rid] ? `✓ ${btn.textContent.replace('✓ ','')}` : btn.textContent.replace('✓ ','');
+  updateProgress();
+}
+
+// ── WEEK BANNER ───────────────────────────────────────────────────
+// Every week here is explicitly authored, so there is no confusion banner.
+function confusionBanner(wk){ return ''; }
+
+// ── GET EXERCISES FOR WEEK ─────────────────────────────────────────
+function getWeekData(workout, week){
+  const raw = workout.data || {};
+  if(workout.type === 'blocks') return null; // blocks handled separately
+
+  // Normalize: data is either {week:[...exercises]} or {week:{warmup, exercises:[...]}}
+  function getExercises(weekData){
+    if(!weekData) return [];
+    if(Array.isArray(weekData)) return weekData;
+    if(weekData.exercises) return weekData.exercises;
+    return [];
+  }
+  function hasWarmup(weekData){ return !!(weekData && weekData.warmup === true); }
+
+  const wd = raw[week] || raw[1];
+  return { exercises: getExercises(wd), warmup: hasWarmup(wd) };
+}
+
+// ── APPLY THEME ───────────────────────────────────────────────────
+function applyTheme(workout){
+  const c = workout.color || '#c084fc';
+  const bg = workout.bg || '#1a0040';
+  document.querySelector('.header').style.background = `linear-gradient(135deg,${bg},#0d0618)`;
+  document.querySelector('.header').style.borderBottomColor = c+'33';
+  document.querySelector('.eyebrow').style.color = c;
+  document.querySelector('.week-badge').style.color = c;
+  document.querySelector('.week-badge').style.background = c+'22';
+  document.querySelector('.week-badge').style.borderColor = c+'55';
+  document.querySelector('.week-tabs').style.borderBottomColor = c+'1a';
+  document.querySelectorAll('.wtab.active').forEach(t=>{t.style.color=c;t.style.borderBottomColor=c;});
+  document.querySelectorAll('.ex-num').forEach(n=>{n.style.background=c+'2e';n.style.color=c;n.style.borderColor=c+'44';});
+  document.querySelectorAll('.ex-sets').forEach(s=>{s.style.background=c+'1a';s.style.borderColor=c+'33';});
+  document.querySelectorAll('.ex-note').forEach(n=>{n.style.color=c+'cc';});
+  document.querySelector('.tap-hint').style.color = c;
+}
+
+// ── MAIN RENDER ───────────────────────────────────────────────────
+function render(){
+  // Update workout view header
+  const _w = PMC_SPLITS[currentWorkoutId];
+  if(_w){
+    const _split = SPLITS.find(s => s.workouts && s.workouts.some(wk => wk.id === currentWorkoutId));
+    const _color = _w.color || (_split ? _split.color : '#c084fc');
+    const _bg    = _w.bg    || (_split ? _split.bg    : '#1a0040');
+    document.getElementById('workoutEyebrow').textContent = `${_w.icon || '💪'} ${_w.split}`;
+    document.getElementById('workoutEyebrow').style.color = _color;
+    document.getElementById('workoutTitle').textContent   = _w.title;
+    document.getElementById('workoutWeekBadge').textContent = `Week ${activeWeek}`;
+    document.getElementById('workoutWeekBadge').style.background = _color+'22';
+    document.getElementById('workoutWeekBadge').style.color = _color;
+    document.getElementById('workoutWeekBadge').style.border = `1px solid ${_color}44`;
+    document.getElementById('workoutViewHeader').style.background = `linear-gradient(135deg,${_bg},#0d0618)`;
+    document.getElementById('workoutViewHeader').style.borderBottom = `1px solid ${_color}22`;
+    const _back = document.querySelector('#view-workout .workout-back-btn');
+    if(_back){
+      _back.textContent = '← All Workouts';
+      _back.style.color = _color;
+      _back.style.background = _color+'18';
+      _back.style.borderColor = _color+'44';
+    }
+  }
+  const workout = PMC_SPLITS[currentWorkoutId];
+  if(!workout){ renderNotFound(); return; }
+
+  const _wcolor = workout.color || '#e11d48';
+
+  // Coming-soon days have no authored weeks yet — show a friendly placeholder.
+  if(workout.comingSoon){
+    document.getElementById('weekTabs').innerHTML = '';
+    document.getElementById('workoutContent').innerHTML = `
+      <div class="content" style="text-align:center;padding:60px 24px;">
+        <div style="font-size:48px;margin-bottom:12px;">${workout.icon}</div>
+        <div style="font-size:18px;font-weight:900;color:#e2e8f0;margin-bottom:8px;">${workout.title} — Coming Soon</div>
+        <div style="font-size:13px;color:#94a3b8;line-height:1.6;max-width:340px;margin:0 auto;">This day is part of the 6-week cycle and will be programmed next. The Legs day is fully built — give it a run.</div>
+      </div>`;
+    return;
+  }
+
+  // Week tabs are derived from the authored weeks (Legs → Week 1–6).
+  const weekNums = Object.keys(workout.data||{}).map(Number).filter(n=>!isNaN(n)).sort((a,b)=>a-b);
+  const tabs = weekNums.map(w=>
+    `<button class="wtab${activeWeek===w?' active':''}" data-w="${w}" style="${activeWeek===w?`color:${_wcolor};border-bottom-color:${_wcolor}`:''}">WEEK ${w}</button>`
+  ).join('');
+  document.getElementById('weekTabs').innerHTML = tabs;
+
+  let contentHtml = '';
+
+  if(workout.type === 'blocks'){
+    // UGEE SETS / Core / Abs — block format
+    const wid = `${currentWorkoutId}-${activeWeek}`;
+    // Split 7 renders from the shared single source so reps/badges/weeks match
+    // pmc-s7-giant.html exactly; other block workouts use their inline data.
+    const blocks = (workout.s7 && window.PMC_S7) ? PMC_S7.blocksForWeek(activeWeek) : workout.data;
+    contentHtml = renderBlocks(blocks, wid);
+    // Split 7 cycles rep ranges across 4 weeks, so it needs the week tabs too.
+    const blockWeekTabs = workout.s7 ? `<div class="week-tabs" style="border-bottom:1px solid ${_wcolor}1a;"><div class="wtabs">${tabs}</div></div>` : '';
+    document.getElementById('workoutContent').innerHTML = `
+      <div class="header">
+        <a href="${workout.backUrl}" class="back-link">← ${workout.split}</a>
+        <div class="header-inner">
+          <div class="eyebrow">${workout.icon} ${workout.split}</div>
+          <div class="title">${workout.title}</div>
+          <span class="week-badge">Week ${activeWeek} · complete 5 rounds per lift</span>
+        </div>
+      </div>
+      ${blockWeekTabs}
+      <div class="content">
+        <div class="tap-hint">Tap exercises to check off · tap round buttons when complete</div>
+        ${contentHtml}
+      </div>`;
+  } else {
+    const weekData = getWeekData(workout, activeWeek);
+    const exercises = weekData ? weekData.exercises : [];
+    const showWarmup = weekData ? weekData.warmup : false;
+
+    const warmupHtml = showWarmup ? `
+      <div class="warmup-card" style="background:${workout.color}14;border:1px solid ${workout.color}4d;">
+        <div class="wu-icon">🔥</div>
+        <div><div class="wu-text" style="color:${workout.color}">WARMUP</div>
+        <div class="wu-sub" style="color:${workout.color}cc">5–8 min · ramp up to working weight</div></div>
+      </div>` : '';
+
+    contentHtml = warmupHtml + confusionBanner(activeWeek) + exercises.map(e=>renderEx(e,activeWeek)).join('');
+
+    document.getElementById('workoutContent').innerHTML = `
+      <div class="header">
+        <a href="${workout.backUrl}" class="back-link">← ${workout.split}</a>
+        <div class="header-inner">
+          <div class="eyebrow">${workout.icon} ${workout.split}</div>
+          <div class="title">${workout.title}</div>
+          <span class="week-badge">Week ${activeWeek}</span>
+        </div>
+      </div>
+      <div class="week-tabs" style="border-bottom:1px solid ${workout.color}1a;">
+        <div class="wtabs">${tabs}</div>
+      </div>
+      <div class="content">
+        <div class="tap-hint">Tap any exercise to check off</div>
+        ${contentHtml}
+      </div>`;
+  }
+
+  attachEvents();
+  applyTheme(workout);
+  setTimeout(initNotes, 200);
+  updateProgress();
+}
+
+function renderNotFound(){
+  // Fallback picker — list the cycle's day workouts.
+  const meta = PMC_SPLIT_META['cycle'];
+  const workoutLinks = meta.workouts.map(wid => {
+    const w = PMC_SPLITS[wid];
+    if(!w) return '';
+    const soon = !!w.comingSoon;
+    return `<div class="picker-workout"${soon?'':` onclick="showWorkout('${wid}')"`} style="border-color:${meta.color}33;background:${meta.color}08;${soon?'opacity:0.6;':''}">
+      <span class="picker-icon">${w.icon}</span>
+      <span class="picker-name">${w.title}${soon?' · soon':''}</span>
+      <span class="picker-arrow" style="color:${meta.color}">${soon?'⋯':'→'}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('workoutContent').innerHTML = `
+    <div class="picker-header">
+      <div class="picker-title">🏋️ Strength &amp; Supersets</div>
+      <div class="picker-sub">Select a workout</div>
+    </div>
+    <div class="picker-content"><div class="picker-split">${workoutLinks}</div></div>`;
+}
+
+// ── EVENTS ────────────────────────────────────────────────────────
+function attachEvents(){
+  document.querySelectorAll('[data-type="single"]').forEach(c=>{
+    c.addEventListener('click',()=>{const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');updateProgress();});
+  });
+  document.querySelectorAll('[data-type="ssex"]').forEach(c=>{
+    c.addEventListener('click',e=>{e.stopPropagation();const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');updateProgress();});
+  });
+  document.querySelectorAll('[data-type="bex"]').forEach(c=>{
+    c.addEventListener('click',()=>{const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');updateProgress();});
+  });
+  document.querySelectorAll('.wtab').forEach(b=>{
+    b.addEventListener('click',()=>{
+      activeWeek=parseInt(b.dataset.w);
+      render();
+      // scroll workout view to top
+      window.scrollTo(0,0);
+    });
+  });
+}
+
+// ── PROGRESS BAR ──────────────────────────────────────────────────
+function updateProgress(){
+  const all=document.querySelectorAll('.ex-card,.ss-ex,.block-ex');
+  const done=document.querySelectorAll('.ex-card.checked,.ss-ex.checked,.block-ex.checked');
+  const pct=all.length?Math.round((done.length/all.length)*100):0;
+  const fill=document.getElementById('progFill');
+  if(fill)fill.style.width=pct+'%';
+}
+
+// ── NOTES ─────────────────────────────────────────────────────────
+function initNotes(){
+  const NOTES_KEY='pmc_notes_'+currentWorkoutId;
+  let notes={};try{notes=JSON.parse(localStorage.getItem(NOTES_KEY)||'{}');}catch(e){}
+  document.querySelectorAll('.ex-card[data-id]').forEach(card=>{
+    const id=card.dataset.id;if(!id||card.querySelector('.ex-notes-wrap'))return;
+    const existing=notes[id]||'';
+    const toggle=document.createElement('div');toggle.className='ex-notes-toggle';
+    toggle.innerHTML=existing?`✏️ ${existing.substring(0,20)}${existing.length>20?'…':''}`:'✚ Add weight/notes';
+    const wrap=document.createElement('div');wrap.className=`ex-notes-wrap${existing?' open':''}`;
+    wrap.innerHTML=`<div class="ex-notes-label">Weight / Notes</div><textarea class="ex-notes-input" rows="1" placeholder="e.g. 135 lbs · felt strong">${existing}</textarea>`;
+    toggle.addEventListener('click',e=>{e.stopPropagation();wrap.classList.toggle('open');});
+    const ta=wrap.querySelector('textarea');
+    ta.addEventListener('input',function(){
+      notes[id]=this.value.trim();
+      if(!notes[id])delete notes[id];
+      localStorage.setItem(NOTES_KEY,JSON.stringify(notes));
+      toggle.innerHTML=this.value.trim()?`✏️ ${this.value.trim().substring(0,20)}${this.value.trim().length>20?'…':''}`:'✚ Add weight/notes';
+    });
+    const content=card.querySelector('.ex-content');
+    if(content){content.appendChild(toggle);content.appendChild(wrap);}
+  });
+}
+
+
+
+// ── INIT ──────────────────────────────────────────────────────────
+function renderWorkout(){
+  if(!currentWorkoutId) return;
+  render();
+}
+
+// Floating timer DOM
+(function(){
+  if(document.getElementById('timerFloat')) return;
+  const div=document.createElement('div');div.id='timerFloat';div.className='timer-float';
+  div.innerHTML=`<div id="timerFloatLabel" class="timer-float-label">REST</div><div id="timerFloatTime" class="timer-float-time">0s</div><div id="timerFloatEx" class="timer-float-ex"></div><div class="timer-float-bar"><div id="timerFloatProgress" class="timer-float-progress"></div></div><div class="timer-float-actions"><button class="timer-float-btn timer-float-skip" onclick="TMR.stop()">✓ Done</button><button class="timer-float-btn timer-float-reset" onclick="TMR.stop()">✕ Cancel</button></div><div class="timer-presets"></div>`;
+  document.body.appendChild(div);
+  ['45s','60s','90s','2min'].forEach(l=>{const s=l==='2min'?120:parseInt(l);const b=document.createElement('button');b.className='timer-preset';b.textContent=l;b.onclick=()=>TMR.setTime(s,l);div.querySelector('.timer-presets').appendChild(b);});
+})();
+
+// Dashboard init — main page shows only the split cards;
+// the breakout renders inside the split view when a card is tapped.
+initResumeBanner();
+buildStrip();
+
+// ══════════════════════════════════════════════════════════════
+//  FINISH WORKOUT BAR + SAVE HOOK (consumed by mc-summary.js)
+//  mc-summary.js builds the sticky summary/stat bar, patches
+//  _FW.open → recap sheet, and handles save + navigation on exit.
+// ══════════════════════════════════════════════════════════════
+(function(){
+  const bar=document.createElement('div');
+  bar.className='fw-bar'; bar.id='fwBar';
+  bar.innerHTML='<span class="fw-progress" id="fwProgress">Finish when done</span>'+
+                '<button class="fw-btn" onclick="_FW.open()">Finish Workout ✓</button>';
+  // Live inside the workout view so the fixed bar only shows during a session.
+  document.getElementById('view-workout').appendChild(bar);
+})();
+
+// Optional page save hook — session history is persisted by mc-summary's
+// daily store; this is a no-op placeholder so _FW._save resolves cleanly.
+window.saveWorkout=function(){};
+
+// Minimal finish controller; mc-summary.js replaces .open with the recap sheet.
+window._FW={
+  open:function(){ /* patched by mc-summary.js → showRecap() */ },
+  close:function(){},
+  confirm:function(){ if(window.saveWorkout) window.saveWorkout(); location.href='dashboard.html'; }
+};
+</script>
+<script>
+/* ── SMART BACK NAV ── */
+(function(){
+  var back = sessionStorage.getItem('mc_back_to');
+  if(!back) return;
+  // Find all back links pointing to index/home and redirect to dashboard
+  document.querySelectorAll('a').forEach(function(a){
+    var href = a.getAttribute('href')||'';
+    if(href === 'index.html' || href === '../' || href === '/' ||
+       href.includes('index') || a.textContent.trim().startsWith('←')){
+      a.href = back;
+      a.addEventListener('click', function(){
+        sessionStorage.removeItem('mc_back_to');
+      });
+    }
+  });
+})();
+</script>
+<script src="mc-card-actions.js"></script>
+<script src="mc-setlog.js"></script>
+<script src="mc-superset-hop.js?v=46"></script>
+<script src="mc-summary.js"></script>
+<script src="mc-sw-update.js?v=45"></script>
+<script src="mc-nav.js"></script>
+</body>
+</html>
