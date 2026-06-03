@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>STNDR · Exercise Card Concepts</title>
+<style>
+/* ════════════════════════════════════════════════════════════════
+   STNDR EXERCISE CARD — CONCEPT SHOWCASE
+   Three distinct redesign directions for the single exercise card.
+   Uses ONLY existing data fields: name, reps, rest, tempo, sets, tag, log-sets.
+   Self-contained prototype — no dependencies, no production wiring.
+   ════════════════════════════════════════════════════════════════ */
+
+:root{
+  --bg:#070708;
+  --panel:#0e0e10;
+  --text:#e8edf4;
+  --muted:#7c8aa0;
+  --muted2:#54607a;
+  --hairline:rgba(255,255,255,0.07);
+  /* Concept A is accent-driven so each program keeps its own hue.
+     In production these come from the page's :root (gold / orange / green …).
+     Defaults here keep the standalone lab looking neon-cyan. */
+  --accent:#22d3ee;
+  --accent-rgb:34,211,238;
+  --special:#fb7185;     /* fixed intensity color for Drop / AMRAP reps */
+  /* page-chrome neon (lab identity only) */
+  --neon:#22d3ee;        /* A — electric cyan */
+  --neon2:#a3e635;       /* A — tech lime      */
+  --hivis:#f97316;       /* B — high-vis orange*/
+  --grid:#10b981;        /* C — athletic green */
+  --violet:#a855f7;      /* shared superset    */
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(34,211,238,0.05), transparent 60%),
+    var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding:0 0 80px;
+  max-width:460px;margin:0 auto;
+}
+
+/* ── PAGE CHROME ─────────────────────────────────────────────────── */
+.page-head{padding:26px 18px 6px;}
+.page-eyebrow{font-size:11px;font-weight:900;letter-spacing:0.28em;color:var(--neon);text-transform:uppercase;}
+.page-title{font-size:30px;font-weight:900;letter-spacing:-0.02em;margin:6px 0 4px;line-height:1.05;}
+.page-sub{font-size:12.5px;color:var(--muted);line-height:1.5;max-width:38ch;}
+
+.concept-head{padding:30px 18px 14px;display:flex;align-items:center;gap:12px;}
+.concept-tag{
+  font-size:13px;font-weight:900;width:34px;height:34px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.concept-a .concept-tag{background:rgba(34,211,238,0.14);color:var(--neon);border:1px solid rgba(34,211,238,0.4);box-shadow:0 0 18px rgba(34,211,238,0.25);}
+.concept-b .concept-tag{background:var(--hivis);color:#1a0d02;}
+.concept-c .concept-tag{background:linear-gradient(135deg,var(--grid),#0e7c5a);color:#03150e;}
+.concept-meta .ct{font-size:16px;font-weight:900;letter-spacing:-0.01em;}
+.concept-meta .cs{font-size:11px;color:var(--muted2);font-weight:700;letter-spacing:0.04em;}
+.deck{padding:0 14px;}
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║ CONCEPT A — DARK MODE / NEON ACCENTS                          ║
+   ║ High-contrast black, glowing accent rail, oversized rep nums, ║
+   ║ the active (first) set lit up. Metrics packed into one strip. ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+.a-card{
+  position:relative;border-radius:16px;margin-bottom:14px;overflow:hidden;
+  background:linear-gradient(180deg,#0d0f12,#0a0b0d);
+  border:1px solid rgba(var(--accent-rgb),0.16);
+  box-shadow:0 10px 34px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.a-card::before{ /* accent rail — adopts the program's hue */
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:linear-gradient(180deg,rgba(var(--accent-rgb),1),rgba(var(--accent-rgb),0.45));
+  box-shadow:0 0 16px rgba(var(--accent-rgb),0.55);
+}
+.a-card.is-ss::before{background:linear-gradient(180deg,var(--violet),#6d28d9);box-shadow:0 0 16px rgba(168,85,247,0.5);}
+.a-top{display:flex;align-items:flex-start;gap:11px;padding:14px 16px 12px 18px;}
+.a-idx{
+  font-size:13px;font-weight:900;font-variant-numeric:tabular-nums;
+  min-width:30px;height:30px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;margin-top:1px;
+  background:rgba(var(--accent-rgb),0.12);color:var(--accent);border:1px solid rgba(var(--accent-rgb),0.3);
+}
+.a-card.is-ss .a-idx{background:rgba(168,85,247,0.14);color:#c084fc;border-color:rgba(168,85,247,0.35);}
+.a-head{flex:1;min-width:0;}
+.a-name{font-size:15px;font-weight:800;line-height:1.25;letter-spacing:-0.01em;}
+.a-badges{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;}
+.a-pill{font-size:10px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;padding:3px 8px;border-radius:6px;}
+.a-pill.ss{background:rgba(168,85,247,0.16);color:#c084fc;border:1px solid rgba(168,85,247,0.32);}
+.a-pill.tempo{background:rgba(var(--accent-rgb),0.1);color:var(--accent);border:1px solid rgba(var(--accent-rgb),0.28);font-family:"SF Mono",ui-monospace,monospace;letter-spacing:0.02em;}
+.a-check{
+  width:26px;height:26px;border-radius:8px;flex-shrink:0;margin-top:2px;
+  border:2px solid rgba(var(--accent-rgb),0.35);background:transparent;cursor:pointer;
+}
+/* hero reps */
+.a-reps{padding:2px 16px 14px 18px;}
+.a-leg{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
+.a-leg + .a-leg{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,0.07);}
+.a-rep{
+  font-size:26px;font-weight:900;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;
+  color:#3a4661;line-height:1;
+}
+.a-rep.live{
+  color:#fff;
+  text-shadow:0 0 18px rgba(var(--accent-rgb),0.7);
+}
+.a-rep.special{color:var(--special);font-size:19px;text-shadow:0 0 14px rgba(251,113,133,0.45);}
+.a-sep{font-size:13px;color:var(--muted2);font-weight:900;align-self:center;}
+.a-legtag{font-size:9px;font-weight:900;letter-spacing:0.14em;color:var(--muted2);text-transform:uppercase;align-self:center;margin-right:2px;}
+/* metric strip */
+.a-strip{display:flex;align-items:stretch;border-top:1px solid var(--hairline);background:rgba(0,0,0,0.25);}
+.a-cell{flex:1;padding:10px 14px;display:flex;flex-direction:column;gap:3px;}
+.a-cell + .a-cell{border-left:1px solid var(--hairline);}
+.a-cell .k{font-size:9.5px;font-weight:900;letter-spacing:0.16em;color:var(--muted2);text-transform:uppercase;}
+.a-cell .v{font-size:14px;font-weight:800;color:var(--text);}
+.a-timer{
+  display:inline-flex;align-items:center;gap:6px;align-self:flex-start;
+  padding:4px 10px;border-radius:8px;cursor:pointer;
+  background:rgba(var(--accent-rgb),0.1);border:1px solid rgba(var(--accent-rgb),0.28);
+  font-size:13px;font-weight:800;color:var(--accent);
+}
+.a-timer:active{transform:scale(0.96);}
+.a-log{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  padding:11px;border-top:1px solid var(--hairline);cursor:pointer;
+  font-size:11px;font-weight:900;letter-spacing:0.18em;color:var(--accent);text-transform:uppercase;
+  background:rgba(var(--accent-rgb),0.04);
+}
+.a-log:active{background:rgba(var(--accent-rgb),0.1);}
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║ CONCEPT B — CLEAN & BORDERED                                  ║
+   ║ Heavy geometric borders, solid badge for the tag, hard split  ║
+   ║ grid that kills dead space. Bold, blocky, zero glow.          ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+.b-card{
+  margin-bottom:14px;border-radius:14px;overflow:hidden;
+  background:#0c0d0e;border:2px solid #23262d;
+}
+.b-bar{ /* solid header band */
+  display:flex;align-items:center;gap:10px;padding:12px 14px;
+  background:#101216;border-bottom:2px solid #23262d;
+}
+.b-num{
+  font-size:14px;font-weight:900;width:30px;height:30px;flex-shrink:0;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--hivis);color:#1a0d02;
+}
+.b-card.is-ss .b-num{background:var(--violet);color:#fff;}
+.b-name{flex:1;min-width:0;font-size:14.5px;font-weight:800;line-height:1.2;letter-spacing:-0.01em;}
+.b-tag{
+  font-size:9.5px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;
+  padding:4px 9px;border-radius:6px;flex-shrink:0;
+  background:var(--hivis);color:#1a0d02;
+}
+.b-card.is-ss .b-tag{background:var(--violet);color:#fff;}
+/* split grid — row-based so layout adapts without duplicate cells */
+.b-row{display:grid;grid-template-columns:1fr 1fr;}
+.b-row.single{grid-template-columns:1fr;}
+.b-row + .b-row{border-top:2px solid #23262d;}
+.b-row .b-box + .b-box{border-left:2px solid #23262d;}
+.b-box{padding:11px 14px;}
+.b-k{font-size:9.5px;font-weight:900;letter-spacing:0.16em;color:var(--muted2);text-transform:uppercase;margin-bottom:6px;}
+.b-reps{display:flex;flex-wrap:wrap;gap:5px;}
+.b-chip{
+  font-size:14px;font-weight:900;font-variant-numeric:tabular-nums;
+  min-width:30px;padding:5px 8px;border-radius:7px;text-align:center;
+  background:#16181d;border:1.5px solid #2b2f38;color:var(--text);
+}
+.b-chip.first{border-color:var(--hivis);color:var(--hivis);}
+.b-chip.special{background:rgba(249,115,22,0.14);border-color:var(--hivis);color:#fdba74;min-width:auto;}
+.b-legtag{width:100%;font-size:9px;font-weight:900;letter-spacing:0.12em;color:var(--muted2);text-transform:uppercase;margin-top:8px;}
+.b-big{font-size:20px;font-weight:900;letter-spacing:-0.02em;color:var(--text);font-variant-numeric:tabular-nums;}
+.b-big .u{font-size:12px;color:var(--muted);font-weight:800;margin-left:3px;}
+.b-tempo{display:inline-block;font-family:"SF Mono",ui-monospace,monospace;font-size:14px;font-weight:800;color:var(--text);letter-spacing:0.02em;padding:4px 9px;border-radius:7px;background:#16181d;border:1.5px solid #2b2f38;}
+.b-log{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:12px;border-top:2px solid #23262d;cursor:pointer;
+  font-size:11px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;color:var(--hivis);
+}
+.b-card.is-ss .b-log{color:#c084fc;}
+.b-log:active{background:rgba(255,255,255,0.03);}
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║ CONCEPT C — ASYMMETRIC / CARD-IN-CARD                         ║
+   ║ Offset rail + a floating inner "console" of rounded metric    ║
+   ║ pills/micro-containers. Reps headline the inner card.         ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+.c-card{
+  position:relative;margin-bottom:16px;border-radius:18px;overflow:hidden;
+  background:radial-gradient(120% 80% at 0% 0%, rgba(16,185,129,0.10), transparent 55%), #0b0d0c;
+  border:1px solid rgba(16,185,129,0.16);
+  display:flex;
+}
+.c-card.is-ss{background:radial-gradient(120% 80% at 0% 0%, rgba(168,85,247,0.12), transparent 55%), #0c0a0d;border-color:rgba(168,85,247,0.18);}
+.c-rail{
+  width:52px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;
+  padding:14px 0;gap:10px;
+  background:linear-gradient(180deg,rgba(16,185,129,0.14),rgba(16,185,129,0.02));
+  border-right:1px solid rgba(16,185,129,0.18);
+}
+.c-card.is-ss .c-rail{background:linear-gradient(180deg,rgba(168,85,247,0.16),rgba(168,85,247,0.02));border-right-color:rgba(168,85,247,0.2);}
+.c-railnum{font-size:17px;font-weight:900;color:var(--grid);font-variant-numeric:tabular-nums;}
+.c-card.is-ss .c-railnum{color:#c084fc;}
+.c-railcheck{
+  width:24px;height:24px;border-radius:50%;border:2px solid rgba(16,185,129,0.4);
+  background:transparent;cursor:pointer;margin-top:auto;
+}
+.c-card.is-ss .c-railcheck{border-color:rgba(168,85,247,0.45);}
+.c-body{flex:1;min-width:0;padding:13px 14px 14px;}
+.c-name{font-size:15px;font-weight:800;line-height:1.25;letter-spacing:-0.01em;}
+.c-sstag{display:inline-block;margin-top:6px;font-size:9.5px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#c084fc;background:rgba(168,85,247,0.14);border:1px solid rgba(168,85,247,0.3);padding:3px 8px;border-radius:20px;}
+/* inner console */
+.c-inner{
+  margin-top:11px;border-radius:14px;padding:12px;
+  background:rgba(255,255,255,0.025);border:1px solid var(--hairline);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.c-reps-k{font-size:9.5px;font-weight:900;letter-spacing:0.16em;color:var(--muted2);text-transform:uppercase;margin-bottom:7px;}
+.c-leg{display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
+.c-leg + .c-leg{margin-top:9px;}
+.c-legtag{font-size:9px;font-weight:900;letter-spacing:0.12em;color:var(--muted2);text-transform:uppercase;width:100%;margin-bottom:-2px;}
+.c-pill{
+  font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;
+  padding:5px 11px;border-radius:20px;color:var(--text);
+  background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.22);
+}
+.c-pill.first{background:var(--grid);color:#03150e;border-color:transparent;}
+.c-pill.special{background:rgba(168,85,247,0.16);border-color:rgba(168,85,247,0.34);color:#d8b4fe;font-size:13px;}
+/* micro-container row */
+.c-micros{display:flex;gap:8px;margin-top:10px;}
+.c-micro{
+  flex:1;border-radius:11px;padding:9px 10px;
+  background:rgba(255,255,255,0.03);border:1px solid var(--hairline);
+}
+.c-micro .mk{font-size:9px;font-weight:900;letter-spacing:0.14em;color:var(--muted2);text-transform:uppercase;}
+.c-micro .mv{font-size:14px;font-weight:900;color:var(--text);margin-top:3px;}
+.c-micro.timer{cursor:pointer;background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.26);}
+.c-micro.timer .mv{color:var(--grid);}
+.c-micro.tempo .mv{font-family:"SF Mono",ui-monospace,monospace;font-size:13px;letter-spacing:0.01em;}
+.c-micro:active{transform:scale(0.98);}
+.c-log{
+  display:flex;align-items:center;justify-content:center;gap:7px;margin-top:11px;
+  padding:10px;border-radius:11px;cursor:pointer;
+  background:rgba(16,185,129,0.08);border:1px dashed rgba(16,185,129,0.3);
+  font-size:11px;font-weight:900;letter-spacing:0.16em;text-transform:uppercase;color:var(--grid);
+}
+.c-card.is-ss .c-log{background:rgba(168,85,247,0.08);border-color:rgba(168,85,247,0.3);color:#c084fc;}
+.c-log:active{transform:scale(0.99);}
+
+/* ── shared set-log drawer (revealed on LOG SETS) ───────────────── */
+.drawer{display:none;padding:0 14px 14px;}
+.drawer.open{display:block;}
+.drawer-grid{display:flex;flex-direction:column;gap:6px;margin-top:4px;}
+.dr-row{display:flex;align-items:center;gap:8px;}
+.dr-n{font-size:10px;font-weight:900;color:var(--muted2);width:18px;}
+.dr-inp{flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--hairline);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;font-weight:700;min-width:0;}
+.dr-inp::placeholder{color:var(--muted2);}
+.dr-x{font-size:11px;color:var(--muted2);font-weight:800;}
+.footer-note{padding:24px 20px 8px;text-align:center;font-size:11px;color:var(--muted2);line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <div class="page-eyebrow">STNDR · Card Lab</div>
+  <h1 class="page-title">Exercise Card<br>Concepts</h1>
+  <p class="page-sub">Three redesign directions for the single exercise card — built on the program's existing data (reps · rest · tempo · log sets). Tap any card's timer or <strong>LOG SETS</strong> to feel it.</p>
+</div>
+
+<div id="deck-a" class="deck concept-a"></div>
+<div id="deck-b" class="deck concept-b"></div>
+<div id="deck-c" class="deck concept-c"></div>
+
+<div class="footer-note">Prototype · STNDR “Lower — Quad Dominant” sample data<br>No production pages were modified.</div>
+
+<script>
+/* ── Sample data: real STNDR "Lower — Quad Dominant" exercises ────
+   Only fields that exist in the live data model are used. */
+const EXERCISES = [
+  {name:"Pendulum Squat or DB Goblet Squat", sets:"8, 8, 8, 8", rest:"180 sec", tempo:null, tag:null},
+  {name:"Smith Machine or Barbell Back Squat", sets:"10, 10, 10", rest:"180 sec", tempo:null, tag:null},
+  {name:"Hack Squat", sets:"15, 15, 15", rest:"180 sec", tempo:"3:0:1:0", tag:null},
+  {name:"Leg Extensions × Seated or Lying Leg Curl", sets:"10, 12, 15 / 12, 10, 8", rest:"75 sec", tempo:"3:1:1:0 / 4:0:1:0", tag:"SUPERSET"},
+];
+
+/* ── helpers ─────────────────────────────────────────────────────── */
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function isSpecial(r){const u=r.toUpperCase();return u.includes("AMRAP")||u.includes("DROP")||r.includes("×");}
+function legs(sets){ // -> [[rep,rep,...], ...]
+  return sets.split("/").map(p=>p.trim().split(",").map(r=>r.trim()));
+}
+function totalSets(sets){return legs(sets)[0].length;}
+function tempos(tempo){return tempo?tempo.split("/").map(t=>t.trim()):[];}
+
+/* ── CONCEPT A — Dark / Neon ──────────────────────────────────────── */
+function cardA(ex,i){
+  const ss=ex.tag==="SUPERSET";
+  const ls=legs(ex.sets);
+  const tp=tempos(ex.tempo);
+  const legHtml=ls.map((reps,li)=>{
+    const tag=ls.length>1?`<span class="a-legtag">${li===0?'A':'B'}</span>`:'';
+    const chips=reps.map((r,ri)=>{
+      const cls=isSpecial(r)?'a-rep special':(ri===0?'a-rep live':'a-rep');
+      const sep=ri<reps.length-1?'<span class="a-sep">·</span>':'';
+      return `<span class="${cls}">${esc(r)}</span>${sep}`;
+    }).join('');
+    return `<div class="a-leg">${tag}${chips}</div>`;
+  }).join('');
+  const badges=[];
+  if(ss) badges.push('<span class="a-pill ss">Superset</span>');
+  tp.forEach(t=>badges.push(`<span class="a-pill tempo">⏱ ${esc(t)}</span>`));
+  const badgeHtml=badges.length?`<div class="a-badges">${badges.join('')}</div>`:'';
+  return `<div class="a-card ${ss?'is-ss':''}">
+    <div class="a-top">
+      <div class="a-idx">${i+1}</div>
+      <div class="a-head"><div class="a-name">${esc(ex.name)}</div>${badgeHtml}</div>
+      <button class="a-check" aria-label="complete"></button>
+    </div>
+    <div class="a-reps">${legHtml}</div>
+    <div class="a-strip">
+      <div class="a-cell"><span class="k">Sets</span><span class="v">${totalSets(ex.sets)} working</span></div>
+      <div class="a-cell"><span class="k">Rest</span><span class="a-timer" data-rest="${esc(ex.rest)}">⏱ ${esc(ex.rest)}</span></div>
+    </div>
+    <div class="a-log" data-log>▾ Log Sets</div>
+    ${drawer(ex)}
+  </div>`;
+}
+
+/* ── CONCEPT B — Clean & Bordered ─────────────────────────────────── */
+function cardB(ex,i){
+  const ss=ex.tag==="SUPERSET";
+  const ls=legs(ex.sets);
+  const tp=tempos(ex.tempo);
+  const repHtml=ls.map((reps,li)=>{
+    const tag=ls.length>1?`<span class="b-legtag">Movement ${li===0?'A':'B'}</span>`:'';
+    const chips=reps.map((r,ri)=>{
+      const cls=isSpecial(r)?'b-chip special':(ri===0?'b-chip first':'b-chip');
+      return `<span class="${cls}">${esc(r)}</span>`;
+    }).join('');
+    return `${tag}${chips}`;
+  }).join('');
+  const tagHtml=ss?'<span class="b-tag">Superset</span>':'';
+  const repsBox=`<div class="b-box"><div class="b-k">Reps</div><div class="b-reps">${repHtml}</div></div>`;
+  const restBox=`<div class="b-box"><div class="b-k">Rest</div><div class="b-big">${esc(ex.rest)}</div></div>`;
+  const setsBox=`<div class="b-box"><div class="b-k">Sets</div><div class="b-big">${totalSets(ex.sets)}<span class="u">working</span></div></div>`;
+  const tempoBox=`<div class="b-box"><div class="b-k">Tempo</div>${tp.map(t=>`<span class="b-tempo">${esc(t)}</span>`).join(' ')}</div>`;
+  // Adaptive grid — no duplicate cells, no dead space.
+  // With tempo: [Reps | Rest] / [Tempo | Sets]. Without: [Reps (full)] / [Rest | Sets].
+  const grid=tp.length
+    ?`<div class="b-row">${repsBox}${restBox}</div><div class="b-row">${tempoBox}${setsBox}</div>`
+    :`<div class="b-row single">${repsBox}</div><div class="b-row">${restBox}${setsBox}</div>`;
+  return `<div class="b-card ${ss?'is-ss':''}">
+    <div class="b-bar">
+      <div class="b-num">${i+1}</div>
+      <div class="b-name">${esc(ex.name)}</div>
+      ${tagHtml}
+    </div>
+    ${grid}
+    <div class="b-log" data-log>▤ Log Sets</div>
+    ${drawer(ex)}
+  </div>`;
+}
+
+/* ── CONCEPT C — Asymmetric / Card-in-Card ────────────────────────── */
+function cardC(ex,i){
+  const ss=ex.tag==="SUPERSET";
+  const ls=legs(ex.sets);
+  const tp=tempos(ex.tempo);
+  const legHtml=ls.map((reps,li)=>{
+    const tag=ls.length>1?`<span class="c-legtag">${li===0?'First':'Then'}</span>`:'';
+    const pills=reps.map((r,ri)=>{
+      const cls=isSpecial(r)?'c-pill special':(ri===0?'c-pill first':'c-pill');
+      return `<span class="${cls}">${esc(r)}</span>`;
+    }).join('');
+    return `<div class="c-leg">${tag}${pills}</div>`;
+  }).join('');
+  const tempoMicro=tp.length
+    ?`<div class="c-micro tempo"><div class="mk">Tempo</div><div class="mv">${esc(tp[0])}</div></div>`:'';
+  const sstag=ss?'<span class="c-sstag">Superset</span>':'';
+  return `<div class="c-card ${ss?'is-ss':''}">
+    <div class="c-rail">
+      <div class="c-railnum">${i+1}</div>
+      <button class="c-railcheck" aria-label="complete"></button>
+    </div>
+    <div class="c-body">
+      <div class="c-name">${esc(ex.name)}</div>
+      ${sstag}
+      <div class="c-inner">
+        <div class="c-reps-k">Reps</div>
+        ${legHtml}
+        <div class="c-micros">
+          <div class="c-micro timer" data-rest="${esc(ex.rest)}"><div class="mk">Rest ⏱</div><div class="mv">${esc(ex.rest)}</div></div>
+          ${tempoMicro || `<div class="c-micro"><div class="mk">Sets</div><div class="mv">${totalSets(ex.sets)}×</div></div>`}
+        </div>
+        <div class="c-log" data-log>◷ Log Sets</div>
+      </div>
+      ${drawer(ex)}
+    </div>
+  </div>`;
+}
+
+/* ── shared LOG SETS drawer ───────────────────────────────────────── */
+function drawer(ex){
+  const n=totalSets(ex.sets);
+  let rows='';
+  for(let s=1;s<=n;s++){
+    rows+=`<div class="dr-row"><span class="dr-n">${s}</span>`
+      +`<input class="dr-inp" inputmode="decimal" placeholder="weight"/>`
+      +`<span class="dr-x">×</span>`
+      +`<input class="dr-inp" inputmode="numeric" placeholder="reps"/></div>`;
+  }
+  return `<div class="drawer"><div class="drawer-grid">${rows}</div></div>`;
+}
+
+/* ── render decks ─────────────────────────────────────────────────── */
+function deck(id,builder){
+  const labels={
+    'deck-a':['A','Dark / Neon Accents','High-contrast · glowing rail · hero reps'],
+    'deck-b':['B','Clean & Bordered','Heavy borders · solid badges · split grid'],
+    'deck-c':['C','Asymmetric · Card-in-Card','Offset rail · floating metric console']
+  }[id];
+  const head=`<div class="concept-head"><div class="concept-tag">${labels[0]}</div>
+    <div class="concept-meta"><div class="ct">${labels[1]}</div><div class="cs">${labels[2]}</div></div></div>`;
+  document.getElementById(id).innerHTML=head+EXERCISES.map(builder).join('');
+}
+deck('deck-a',cardA);
+deck('deck-b',cardB);
+deck('deck-c',cardC);
+
+/* ── interactions: LOG SETS toggle + faux rest timer ──────────────── */
+document.addEventListener('click',e=>{
+  const log=e.target.closest('[data-log]');
+  if(log){
+    const card=log.closest('.a-card,.b-card,.c-card');
+    const dr=card.querySelector('.drawer');
+    if(dr) dr.classList.toggle('open');
+    return;
+  }
+  const t=e.target.closest('[data-rest]');
+  if(t){
+    const secs=(t.dataset.rest.match(/(\d+)/)||[])[1]||60;
+    runTimer(t,parseInt(secs));
+  }
+});
+function runTimer(el,secs){
+  if(el._iv){clearInterval(el._iv);el._iv=null;el.innerHTML=el._orig;return;}
+  el._orig=el.innerHTML;
+  let left=secs;
+  const paint=()=>{
+    const m=Math.floor(left/60), s=left%60;
+    const t=m>0?`${m}:${String(s).padStart(2,'0')}`:`${s}s`;
+    if(el.classList.contains('c-micro')) el.querySelector('.mv').textContent='▶ '+t;
+    else el.textContent='▶ '+t;
+  };
+  paint();
+  el._iv=setInterval(()=>{
+    left--;
+    if(left<=0){clearInterval(el._iv);el._iv=null;el.innerHTML=el._orig;return;}
+    paint();
+  },1000);
+}
+</script>
+</body>
+</html>
