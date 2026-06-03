@@ -85,7 +85,12 @@
         'border:1px solid rgba(168,85,247,0.5);color:#e9d5ff;font-weight:800;' +
         'font-size:13px;letter-spacing:0.04em;padding:11px 18px;border-radius:10px;' +
         'cursor:pointer;-webkit-tap-highlight-color:transparent;}',
-      '.sshop-skip:active{transform:scale(0.96);}'
+      '.sshop-skip:active{transform:scale(0.96);}',
+      // round-break (long "after" rest) gets a stronger tint than a quick hop
+      '.sshop-buffer.sshop-rest{border-top-color:rgba(168,85,247,0.85);' +
+        'box-shadow:0 -6px 30px rgba(88,28,135,0.55);}',
+      '.sshop-rest .sshop-lead{color:#d8b4fe;}',
+      '.sshop-rest .sshop-ring-fg{stroke:#c084fc;}'
     ].join('');
     (document.head || document.documentElement).appendChild(s);
   }
@@ -167,7 +172,13 @@
   }
 
   // ---- buffer UI ----------------------------------------------------------
-  var buffer, ringFg, countEl, nextEl, timer = null, remaining = 0, pending = null;
+  var buffer, ringFg, countEl, nextEl, leadEl, timer = null, remaining = 0,
+      activeSecs = BUFFER_SECS, pending = null;
+
+  function fmtCount(s) {
+    if (s >= 60) { var m = Math.floor(s / 60), x = s % 60; return m + ':' + String(x < 10 ? '0' + x : x); }
+    return String(s);
+  }
 
   function ensureBuffer() {
     if (buffer) return;
@@ -192,6 +203,7 @@
     ringFg = buffer.querySelector('.sshop-ring-fg');
     countEl = buffer.querySelector('.sshop-count');
     nextEl = buffer.querySelector('.sshop-next');
+    leadEl = buffer.querySelector('.sshop-lead');
     buffer.querySelector('.sshop-skip').addEventListener('click', function (e) {
       e.stopPropagation();
       finishBuffer();
@@ -212,16 +224,24 @@
     return off;
   }
 
-  function startBuffer(target) {
+  function startBuffer(target, info) {
+    info = info || { secs: BUFFER_SECS, boundary: false, manageRest: false };
     pending = target;
     ensureBuffer();
+    // When the card manages its own rest (STNDR between/after), claim the rest
+    // UI: kill any float a logger just started on this set-check so the buffer
+    // is the single countdown. Cards without the data attrs are untouched.
+    if (info.manageRest) { try { if (typeof TMR !== 'undefined' && TMR.stop) TMR.stop(); } catch (e) {} }
     var off = bottomOffset();
     buffer.style.bottom = off + 'px';
     buffer.style.paddingBottom = off > 0 ? '14px' : 'calc(14px + env(safe-area-inset-bottom))';
     var setIdx = firstUndoneIdx(target);
+    if (leadEl) leadEl.textContent = info.boundary ? '⚡ Round rest · next round' : '⚡ Next up · get set';
+    buffer.classList.toggle('sshop-rest', !!info.boundary);
     nextEl.textContent = exName(target) + (setIdx >= 0 ? ' · Set ' + (setIdx + 1) : '');
-    remaining = BUFFER_SECS;
-    countEl.textContent = remaining;
+    activeSecs = info.secs || BUFFER_SECS;
+    remaining = activeSecs;
+    countEl.textContent = fmtCount(remaining);
     // reset ring to full without animating, then deplete over the countdown
     ringFg.style.transition = 'none';
     ringFg.style.strokeDashoffset = '0';
@@ -231,8 +251,8 @@
     clearInterval(timer);
     timer = setInterval(function () {
       remaining--;
-      countEl.textContent = Math.max(remaining, 0);
-      ringFg.style.strokeDashoffset = (C * ((BUFFER_SECS - remaining) / BUFFER_SECS)).toFixed(2);
+      countEl.textContent = fmtCount(Math.max(remaining, 0));
+      ringFg.style.strokeDashoffset = (C * ((activeSecs - remaining) / activeSecs)).toFixed(2);
       if (remaining <= 0) finishBuffer();
     }, 1000);
   }
@@ -257,6 +277,26 @@
   }
 
   // ---- hop dispatch (debounced so a single tap can't double-fire) ---------
+  // Decide how long the buffer should run. Cards that opt in via
+  // data-between / data-after (the STNDR superset/triset splitter) get a SHORT
+  // member→member pause inside a round and the LONG round-break rest when the
+  // hop wraps back to an earlier station. Cards without those attrs (PMC, MC, …)
+  // fall back to the original fixed BUFFER_SECS for every hop — unchanged.
+  function restInfoFor(fromEx, target) {
+    var card = fromEx.closest('.ss-card');
+    var members = card ? Array.prototype.slice.call(card.querySelectorAll('.ss-ex')) : [];
+    var fi = members.indexOf(fromEx), ti = members.indexOf(target);
+    var boundary = (ti >= 0 && fi >= 0 && ti <= fi);   // wrapped to an earlier station = round done
+    var betA = card && card.getAttribute('data-between');
+    var aftA = card && card.getAttribute('data-after');
+    if (betA == null && aftA == null) return { secs: BUFFER_SECS, boundary: false, manageRest: false };
+    var bet = parseInt(betA != null ? betA : BUFFER_SECS, 10);
+    var aft = parseInt(aftA != null ? aftA : betA, 10);
+    var secs = boundary ? aft : bet;
+    if (!secs || isNaN(secs)) secs = BUFFER_SECS;
+    return { secs: secs, boundary: boundary, manageRest: true };
+  }
+
   var lastFrom = null, lastT = 0;
   function triggerHop(fromEx) {
     var now = Date.now();
@@ -265,9 +305,10 @@
     if (!target || target === fromEx) return;
     lastFrom = fromEx;
     lastT = now;
+    var info = restInfoFor(fromEx, target);
     // In-between hops shouldn't sit under a freshly-started rest timer.
     try { if (typeof TMR !== 'undefined' && TMR.stop) TMR.stop(); } catch (e) {}
-    setTimeout(function () { startBuffer(target); }, 60);
+    setTimeout(function () { startBuffer(target, info); }, 60);
   }
 
   // ---- triggers (capture phase, before card/logger toggle their state) ----
