@@ -26,6 +26,23 @@
 
   var ORDER_KEY = 'mc_ex_order';   // { pageId: { containerKey: [name, name, ...] } }
   var NOTES_KEY = 'mc_ex_notes';   // { pageId: { name: "text" } }
+  var TEMPO_KEY = 'mc_ex_tempo';   // { pageId: { name: "3:0:1:0" } }
+
+  // Optional "Add Tempo" add-in — only surfaces when a page opts in via
+  // window.MC_TEMPO_ENABLED. Tempo notation + values are pulled from the STNDR
+  // program (Eccentric : Pause-bottom : Concentric : Pause-top). A page can
+  // override the menu with window.MC_TEMPO_OPTIONS = [{t:'3:0:1:0',d:'…'}, …].
+  var TEMPO_OPTIONS = (window.MC_TEMPO_OPTIONS && window.MC_TEMPO_OPTIONS.length) ? window.MC_TEMPO_OPTIONS : [
+    { t: '3:0:1:0', d: '3s lower · explosive lift up' },
+    { t: '4:0:1:0', d: '4s negative · controlled lift' },
+    { t: '5:0:1:0', d: '5s negative · heavy eccentric overload' },
+    { t: '3:1:1:0', d: '3s lower · 1s pause at bottom · 1s lift' },
+    { t: '2:0:1:2', d: '2s lower · 1s lift · 2s squeeze at top' },
+    { t: '3:3:1:0', d: '3s lower · 3s pause in the stretch' },
+    { t: '2:2:1:0', d: '2s lower · 2s pause · 1s lift' },
+    { t: '3:0:3:0', d: '3s lower · 3s lift — slow both ways' },
+  ];
+  function tempoEnabled() { return !!window.MC_TEMPO_ENABLED; }
 
   var mo = null;                   // the MutationObserver (assigned in init)
   var obsDepth = 0;                // re-entrancy guard for withoutObserver
@@ -59,6 +76,12 @@
     if (text && text.trim()) n[PAGE_ID][name] = text.trim(); else if (n[PAGE_ID]) delete n[PAGE_ID][name];
     writeJSON(NOTES_KEY, n);
   }
+  function getTempo(name) { var t = readJSON(TEMPO_KEY); return (t[PAGE_ID] && t[PAGE_ID][name]) || ''; }
+  function setTempo(name, val) {
+    var t = readJSON(TEMPO_KEY); if (!t[PAGE_ID]) t[PAGE_ID] = {};
+    if (val) t[PAGE_ID][name] = val; else if (t[PAGE_ID]) delete t[PAGE_ID][name];
+    writeJSON(TEMPO_KEY, t);
+  }
 
   // ---- DOM identity helpers ----------------------------------------------
   // Read the exercise name fresh from the DOM every time (no caching): pages may
@@ -90,11 +113,15 @@
   function buildChrome() {
     menuOverlay = document.createElement('div');
     menuOverlay.className = 'mc-menu-overlay';
+    var tempoItem = tempoEnabled()
+      ? '<button class="mc-item" data-act="tempo"><span class="mc-ico">⏱️</span>Add Tempo</button>'
+      : '';
     menuOverlay.innerHTML =
       '<div class="mc-sheet" role="menu">' +
         '<div class="mc-sheet-title" id="mcSheetTitle">Exercise</div>' +
         '<button class="mc-item" data-act="replace"><span class="mc-ico">🔁</span>Replace exercise</button>' +
         '<button class="mc-item" data-act="reorder"><span class="mc-ico">↕️</span>Reorder exercises</button>' +
+        tempoItem +
         '<button class="mc-item" data-act="notes"><span class="mc-ico">📝</span>Notes</button>' +
         '<button class="mc-item mc-item-cancel" data-act="cancel">Cancel</button>' +
       '</div>';
@@ -110,6 +137,7 @@
       if (act === 'replace') doReplace(card);
       else if (act === 'reorder') startReorder(card);
       else if (act === 'notes') openNote(card);
+      else if (act === 'tempo') openTempo(card);
     });
 
     reorderBar = document.createElement('div');
@@ -188,6 +216,63 @@
     } else if (existing) { existing.remove(); }
     var mb = card.querySelector('.mc-meatball');
     if (mb) mb.classList.toggle('mc-has-note', !!text);
+  }
+
+  // ====================================================================== //
+  //  TEMPO  (optional on-demand intensifier · STNDR notation)              //
+  // ====================================================================== //
+  var tempoOverlay, tempoCard = null;
+
+  function openTempo(card) {
+    tempoCard = card;
+    if (!tempoOverlay) {
+      tempoOverlay = document.createElement('div');
+      tempoOverlay.className = 'mc-menu-overlay';
+      var opts = TEMPO_OPTIONS.map(function (o) {
+        return '<button class="mc-tempo-opt" data-t="' + o.t + '">' +
+                 '<span class="mc-tempo-val">⏱ ' + o.t + '</span>' +
+                 '<span class="mc-tempo-desc">' + o.d + '</span>' +
+               '</button>';
+      }).join('');
+      tempoOverlay.innerHTML =
+        '<div class="mc-sheet mc-tempo-sheet" role="menu">' +
+          '<div class="mc-sheet-title" id="mcTempoTitle">Add Tempo</div>' +
+          '<div class="mc-tempo-legend">Eccentric : Pause&nbsp;bottom : Concentric : Pause&nbsp;top — slow a lift down to cut reps and raise output.</div>' +
+          '<div class="mc-tempo-list">' + opts + '</div>' +
+          '<button class="mc-item mc-tempo-remove" data-t="">Remove tempo</button>' +
+          '<button class="mc-item mc-item-cancel" data-act="cancel">Cancel</button>' +
+        '</div>';
+      document.body.appendChild(tempoOverlay);
+      tempoOverlay.addEventListener('click', function (e) {
+        if (e.target === tempoOverlay) { tempoOverlay.classList.remove('open'); return; }
+        if (e.target.closest('.mc-item-cancel')) { tempoOverlay.classList.remove('open'); return; }
+        var btn = e.target.closest('[data-t]'); if (!btn) return;
+        setTempo(cardName(tempoCard), btn.dataset.t);
+        withoutObserver(function () { renderTempo(tempoCard); });
+        tempoOverlay.classList.remove('open');
+      });
+    }
+    var current = getTempo(cardName(card));
+    tempoOverlay.querySelector('#mcTempoTitle').textContent = cardName(card) || 'Add Tempo';
+    Array.prototype.forEach.call(tempoOverlay.querySelectorAll('.mc-tempo-opt'), function (b) {
+      b.classList.toggle('mc-tempo-active', b.dataset.t === current);
+    });
+    tempoOverlay.classList.add('open');
+  }
+
+  // paint (or clear) the tempo pill + meatball indicator for a card
+  function renderTempo(card) {
+    var name = cardName(card);
+    var val = getTempo(name);
+    var host = card.querySelector('.ex-tags') || card.querySelector(BODY_SEL) || card;
+    var existing = card.querySelector('.mc-tempo-pill');
+    if (val) {
+      if (!existing) { existing = document.createElement('span'); existing.className = 'mc-tempo-pill'; host.appendChild(existing); }
+      var label = '⏱ ' + val;
+      if (existing.textContent !== label) existing.textContent = label;
+    } else if (existing) { existing.remove(); }
+    var mb = card.querySelector('.mc-meatball');
+    if (mb) mb.classList.toggle('mc-has-tempo', !!val);
   }
 
   // ====================================================================== //
@@ -315,6 +400,7 @@
       });
       containers.forEach(applyOrder);
       Array.prototype.forEach.call(document.querySelectorAll(CARD_SEL), renderNote);
+      if (tempoEnabled()) Array.prototype.forEach.call(document.querySelectorAll(CARD_SEL), renderTempo);
     });
   }
 
