@@ -59,6 +59,27 @@
     var n = s.match(/(\d+)/); return n ? n[1] : '';
   }
 
+  // ---- drop-set detection -------------------------------------------------
+  // A drop set is an EXTRA set tacked onto the working sets — it must not be
+  // folded into the working-set count. Two notations appear across programs:
+  //   • open-ended "drop set"  (Daily Gainz "3×8–12, drop set" / "(drop set)")
+  //       → an AMRAP drop (strip weight, reps to failure)
+  //   • numeric  "… drop N"    (PMC/MC/Pump "12,10,8,8 drop 15")
+  //       → a drop with a prescribed rep target (N)
+  // Returns {is, reps} where reps is the numeric target or 'AMRAP'.
+  // A bare "drop" with no number and no "set" (rare) is NOT treated as a drop.
+  function parseDrop(name, sets) {
+    var hay = (name || '') + ' ' + (sets || '');
+    if (!/drop/i.test(hay)) return { is: false, reps: '' };
+    var m = hay.match(/drop\s*(\d+)/i);                 // "drop 15", "drop 8"
+    if (m) return { is: true, reps: m[1] };
+    if (/drop\s*set/i.test(hay)) return { is: true, reps: 'AMRAP' };
+    return { is: false, reps: '' };
+  }
+  // Strip the trailing "drop …" clause so the WORKING sets parse cleanly
+  // ("12,10,8,8 drop 15" → "12,10,8,8"; no more garbled "815" rep target).
+  function stripDrop(s) { return (s || '').replace(/[, ]*\bdrop\b.*$/i, '').trim(); }
+
   // ---- rest seconds from the card's rest timer ---------------------------
   function restSecs(card) {
     var t = card.querySelector('.rest-timer');
@@ -110,20 +131,24 @@
     );
     if (host.querySelector('.mcl-wrap')) return;   // ours already present
 
-    var cid = cssId(exId), n = setCount(setsStr);
+    var cid = cssId(exId);
 
-    // A "drop set" is an EXTRA set appended after the working sets — e.g.
-    // "3×8–12, drop set" = 3 working sets + a 4th AMRAP drop. Detect the phrase
-    // in the exercise name OR the prescribed scheme; "drop 8" (a numeric drop
-    // target) is intentionally NOT matched, only an open-ended "drop set".
+    // Separate the WORKING sets from any appended drop set so the drop is never
+    // folded into (and garbling) the working-set rows. See parseDrop/stripDrop.
     var nmEl = card.querySelector('.ex-name, .ss-name, .lift-name, .var-name');
-    var isDrop = /drop\s*set/i.test((nmEl ? nmEl.textContent : '') + ' ' + (setsStr || ''));
-    var total = isDrop ? n + 1 : n;   // the appended row is the AMRAP drop
+    var drop = parseDrop(nmEl ? nmEl.textContent : '', setsStr);
+    var work = drop.is ? stripDrop(setsStr) : setsStr;
+    var n = setCount(work);
+    var total = drop.is ? n + 1 : n;   // the appended row is the drop set
+    var dropAmrap = drop.reps === 'AMRAP';
 
     var toggle = document.createElement('div');
     toggle.className = 'mcl-toggle';
     toggle.innerHTML = '<span class="mcl-chev">▾</span><span class="mcl-lbl">Log Sets</span>' +
-                       (isDrop ? '<span class="mcl-amrap" title="Extra drop set — AMRAP after your working sets">+ AMRAP</span>' : '') +
+                       (drop.is ? '<span class="mcl-amrap" title="' +
+                          (dropAmrap ? 'Drop set — extra set to failure after your working sets'
+                                     : 'Drop set — strip weight after the last set, rep out (~' + drop.reps + ')') +
+                          '">' + (dropAmrap ? '+ AMRAP' : '+ DROP') + '</span>' : '') +
                        '<span class="mcl-hist mcl-hist-' + cid + '">' + histText(exId) + '</span>';
 
     var wrap = document.createElement('div');
@@ -132,12 +157,12 @@
                '<div class="mcl-hl">Reps</div><div class="mcl-hl"></div></div>';
     for (var i = 0; i < total; i++) {
       var sn = i + 1, last = lset(exId, sn);
-      var isAmrap = isDrop && i === total - 1;      // the appended drop row
-      var pr = isAmrap ? '' : repFor(setsStr, i);
+      var isDropRow = drop.is && i === total - 1;   // the appended drop set row
+      var pr = isDropRow ? '' : repFor(work, i);
       var wPh = (last && last.w) ? (last.w + ' lb') : 'lb';
-      var rPh = isAmrap ? 'AMRAP' : (pr || (last && last.r ? last.r : 'reps'));
-      html += '<div class="mcl-row' + (isAmrap ? ' mcl-row-amrap' : '') + '" id="mclr-' + cid + '-' + sn + '">' +
-                '<div class="mcl-num">' + (isAmrap ? '↓' : sn) + '</div>' +
+      var rPh = isDropRow ? drop.reps : (pr || (last && last.r ? last.r : 'reps'));
+      html += '<div class="mcl-row' + (isDropRow ? ' mcl-row-amrap' : '') + '" id="mclr-' + cid + '-' + sn + '">' +
+                '<div class="mcl-num">' + (isDropRow ? '↓' : sn) + '</div>' +
                 '<input class="mcl-inp mcl-w" type="number" inputmode="decimal" placeholder="' + wPh + '">' +
                 '<input class="mcl-inp mcl-r" type="number" inputmode="numeric" placeholder="' + rPh + '">' +
                 '<div class="mcl-ck set-check" data-sn="' + sn + '">☐</div>' +
