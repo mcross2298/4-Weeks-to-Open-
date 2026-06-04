@@ -28,10 +28,11 @@
   var NOTES_KEY = 'mc_ex_notes';   // { pageId: { name: "text" } }
   var TEMPO_KEY = 'mc_ex_tempo';   // { pageId: { name: "3:0:1:0" } }
 
-  // Optional "Add Tempo" add-in — only surfaces when a page opts in via
-  // window.MC_TEMPO_ENABLED. Tempo notation + values are pulled from the STNDR
-  // program (Eccentric : Pause-bottom : Concentric : Pause-top). A page can
-  // override the menu with window.MC_TEMPO_OPTIONS = [{t:'3:0:1:0',d:'…'}, …].
+  // "Add Tempo" add-in — on by default for every program that loads this
+  // engine. A page can opt OUT with window.MC_TEMPO_ENABLED = false. Tempo
+  // notation + values are pulled from the STNDR program
+  // (Eccentric : Pause-bottom : Concentric : Pause-top). A page can override
+  // the menu with window.MC_TEMPO_OPTIONS = [{t:'3:0:1:0',d:'…'}, …].
   var TEMPO_OPTIONS = (window.MC_TEMPO_OPTIONS && window.MC_TEMPO_OPTIONS.length) ? window.MC_TEMPO_OPTIONS : [
     { t: '3:0:1:0', d: '3s lower · explosive lift up' },
     { t: '4:0:1:0', d: '4s negative · controlled lift' },
@@ -42,7 +43,7 @@
     { t: '2:2:1:0', d: '2s lower · 2s pause · 1s lift' },
     { t: '3:0:3:0', d: '3s lower · 3s lift — slow both ways' },
   ];
-  function tempoEnabled() { return !!window.MC_TEMPO_ENABLED; }
+  function tempoEnabled() { return window.MC_TEMPO_ENABLED !== false; }
 
   var mo = null;                   // the MutationObserver (assigned in init)
   var obsDepth = 0;                // re-entrancy guard for withoutObserver
