@@ -11,6 +11,14 @@
 <meta name="apple-mobile-web-app-title" content="MC Training"/>
 <meta name="theme-color" content="#0a0a0a"/>
 <link rel="apple-touch-icon" href="icon-192.png"/>
+<!-- Load the shared nav module on the hub too. It renders no second nav here
+     (build() bails when a native .tab-bar exists), but its PWA cold-launch
+     guard must run on the dashboard so the launch is "claimed" (mc_launched
+     session flag set) at the true entry point. Without this, the flag was only
+     set on the first sub-page that loaded mc-nav.js, so the first navigation
+     off the dashboard was mis-read as a stale cold-launch and bounced straight
+     back — the "click Programs, it reverts to dashboard, works on 2nd try" bug. -->
+<script src="mc-nav.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
 :root{
