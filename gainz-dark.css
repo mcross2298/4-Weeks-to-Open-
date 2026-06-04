@@ -1,50 +1,129 @@
 /* ==========================================================================
-   gainz-dark.css  —  Phase 3 design-system unification
+   gainz-dark.css  —  Daily Gainz design system  (premium refresh)
    --------------------------------------------------------------------------
    Daily Gainz workout pages shipped with a light/white card template
    (.day-card {background:#fff}, light-green .ex-item rows). This sheet reskins
-   them to the dark, premium look used by PMC / MC splits — single Gainz accent
-   (lime). Linked AFTER each page's inline <style>, so equal-specificity rules
-   win by source order; no per-page CSS rewrite needed (one source of truth for
-   all 8 Daily Gainz pages, which share this exact class structure).
+   them to a dark, premium look. Linked AFTER each page's inline <style>, so
+   equal-specificity rules win by source order — one source of truth for all 8
+   Daily Gainz pages, which share this exact class structure.
+
+   COLOR SYSTEM (premium & sleek · "green + warm accent")
+   ------------------------------------------------------
+   Earlier the whole page was a single lime — every card, badge, pill and
+   header the same green, so nothing stood out. Now:
+     • surfaces are NEUTRAL dark — they recede and stop competing
+     • LIME  (--gz)   = brand + primary/ACTIVE state (open day, checkbox, CTA)
+     • AMBER (--amber)= intensity cues (AMRAP / drop sets / running timer)
+     • GOLD  (--gold) = achievement (PRs, finish/summary) via --accent
+   The result reads as hierarchy + pop instead of a flat green wash.
    ========================================================================== */
 
-:root{ --gz: #84cc16; --gz-bright:#a3e635; --gz-soft: rgba(132,204,22,0.14); }
+:root{
+  --gz:#84cc16; --gz-bright:#a3e635; --gz-deep:#4d7c0f;
+  --gz-soft:rgba(132,204,22,0.14);
+  --amber:#fb923c;
+  --gold:#fbbf24;
+  /* Warm accent drives the shared summary / finish UI (--accent defaults to
+     gold) so achievements read distinct from the lime brand. */
+  --accent:#fbbf24; --accent-rgb:251,191,36;
+  /* neutral surface ramp */
+  --surf-0:#070b08;   /* page            */
+  --surf-1:#0d100e;   /* collapsed card  */
+  --hair:rgba(255,255,255,0.07);
+}
 
-/* page shell */
-body{ background:#06120a; }
-.app{ background:linear-gradient(135deg,#050a04 0%,#0b1f10 50%,#050a04 100%); }
-.header{ background:linear-gradient(90deg,#0b1f10,#050a04); border-bottom:1px solid rgba(132,204,22,0.16); }
+/* ── page shell ─────────────────────────────────────────────────────────── */
+body{ background:var(--surf-0); }
+.app{
+  background:
+    radial-gradient(120% 70% at 50% -10%, rgba(132,204,22,0.10), transparent 60%),
+    var(--surf-0);
+}
+.header{
+  background:linear-gradient(180deg, rgba(132,204,22,0.07), rgba(7,11,8,0) 90%), #0a0f0b;
+  border-bottom:1px solid var(--hair);
+}
+.eyebrow{ color:var(--gz-bright); }
+.title{ color:#fff; }
+.hint{ color:#64748b; }                 /* was lime — now a quiet caption     */
+.schedule{                              /* subtle lime outline, not a block   */
+  background:rgba(132,204,22,0.10);
+  border:1px solid rgba(132,204,22,0.28);
+  color:var(--gz-bright);
+}
+.back-link{
+  background:rgba(255,255,255,0.05);
+  border:1px solid var(--hair);
+  color:#cbd5e1;
+}
 
-/* day accordion cards */
+/* ── day accordion cards ────────────────────────────────────────────────── */
+/* Collapsed: NEUTRAL dark so the list reads calmly. */
 .day-card{
-  background:#0a1710;
-  border:1px solid rgba(132,204,22,0.22);
-  box-shadow:0 4px 20px rgba(0,0,0,0.15);
+  position:relative;
+  background:var(--surf-1);
+  border:1px solid var(--hair);
+  box-shadow:0 2px 14px rgba(0,0,0,0.35);
+  transition:border-color .2s, box-shadow .2s, transform .15s;
 }
-.day-card.open{ border-color:rgba(132,204,22,0.55); box-shadow:0 4px 20px rgba(132,204,22,0.15); }
-.day-card.open .day-header{ background:rgba(132,204,22,0.08); }
-.day-session{ color:#f0fdf4; }
-.day-meta{ color:#94a3b8; }
-.day-toggle{ background:rgba(132,204,22,0.12); color:var(--gz-bright); }
-.day-card.open .day-toggle{ background:var(--gz); color:#041006; }
-.exercises{ border-top:1px solid rgba(132,204,22,0.18); }
+/* Open: the active day clearly POPS — lime border, soft glow, accent edge. */
+.day-card.open{
+  border-color:rgba(163,230,53,0.5);
+  box-shadow:0 10px 34px rgba(0,0,0,0.45), 0 0 0 1px rgba(132,204,22,0.18),
+             0 0 26px rgba(132,204,22,0.10);
+}
+.day-card.open::before{
+  content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:linear-gradient(180deg, var(--gz-bright), var(--gz-deep));
+}
+.day-card.open .day-header{ background:rgba(132,204,22,0.07); }
 
-/* exercise rows */
-.ex-item{
-  background:rgba(132,204,22,0.06);
-  border:1px solid rgba(132,204,22,0.20);
+.day-header{ position:relative; }
+/* Bigger, brighter day identity (icon + title). */
+.day-icon{
+  background:linear-gradient(135deg, var(--gz-bright), var(--gz-deep));
+  color:#08130a;
+  box-shadow:0 4px 16px rgba(132,204,22,0.30);
 }
-.ex-item:active{ background:rgba(132,204,22,0.12); }
+.day-session{ color:#f0fdf4; font-size:15px; letter-spacing:-0.01em; }
+.day-meta{ color:#7c8a99; }
+.day-toggle{ background:rgba(255,255,255,0.06); color:#94a3b8; }
+.day-card.open .day-toggle{ background:var(--gz); color:#08130a; }
+.exercises{ border-top:1px solid var(--hair); }
+
+/* ── exercise rows ──────────────────────────────────────────────────────── */
+/* NEUTRAL row; lime is spent only on the checkbox + the checked state. */
+.ex-item{
+  background:rgba(255,255,255,0.025);
+  border:1px solid rgba(255,255,255,0.06);
+  transition:background .15s, border-color .15s, opacity .2s;
+}
+.ex-item:active{ background:rgba(132,204,22,0.10); }
 .ex-name{ color:#e2e8f0; }
-.ex-item.checked .ex-name{ color:var(--gz-bright); }
-.ex-item.checked .checkbox{ background:var(--gz); border-color:var(--gz); }
-.ex-item.checked .checkbox::after{ color:#041006; }
-.checkbox{ background:transparent; border:2px solid var(--gz); }
+.checkbox{ background:transparent; border:2px solid rgba(132,204,22,0.55); transition:all .15s; }
+
+/* Completed: satisfying, restrained — dim the row, fill + glow the check. */
+.ex-item.checked{ opacity:0.55; }
+.ex-item.checked .ex-name{ color:var(--gz-bright); text-decoration:line-through; }
+.ex-item.checked .checkbox{
+  background:var(--gz); border-color:var(--gz);
+  box-shadow:0 0 0 3px rgba(132,204,22,0.15);
+}
+.ex-item.checked .checkbox::after{ color:#08130a; }
+
+/* Sets pill: quiet lime-outline data chip (not another solid green block). */
 .ex-sets{
-  background:rgba(132,204,22,0.16);
-  color:#d9f99d;
-  border:1px solid rgba(132,204,22,0.30);
+  background:rgba(132,204,22,0.10);
+  color:var(--gz-bright);
+  border:1px solid rgba(132,204,22,0.26);
+}
+
+/* ── PRs / achievement — gold, the warm counterpart to the lime brand ────── */
+.fw-recap-badge{ filter:drop-shadow(0 2px 10px rgba(251,191,36,0.35)); }
+.mcs-progress-pct{ color:var(--gz-bright); }
+.mcs-progress-fill,
+.sum-section.mcs-complete .mcs-progress-fill{
+  background:linear-gradient(90deg, var(--gz), var(--gz-bright));
 }
 
 /* meatball (⋮) overlap fix --------------------------------------------------
