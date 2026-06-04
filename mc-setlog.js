@@ -112,30 +112,32 @@
 
     var cid = cssId(exId), n = setCount(setsStr);
 
-    // A "drop set" ends with a drop taken to failure → flag it AMRAP so the
-    // logger reads the intent. Detect the phrase in the exercise name OR the
-    // prescribed scheme; "drop 8" (a numeric drop target) is intentionally NOT
-    // matched, only an open-ended "drop set".
+    // A "drop set" is an EXTRA set appended after the working sets — e.g.
+    // "3×8–12, drop set" = 3 working sets + a 4th AMRAP drop. Detect the phrase
+    // in the exercise name OR the prescribed scheme; "drop 8" (a numeric drop
+    // target) is intentionally NOT matched, only an open-ended "drop set".
     var nmEl = card.querySelector('.ex-name, .ss-name, .lift-name, .var-name');
     var isDrop = /drop\s*set/i.test((nmEl ? nmEl.textContent : '') + ' ' + (setsStr || ''));
+    var total = isDrop ? n + 1 : n;   // the appended row is the AMRAP drop
 
     var toggle = document.createElement('div');
     toggle.className = 'mcl-toggle';
     toggle.innerHTML = '<span class="mcl-chev">▾</span><span class="mcl-lbl">Log Sets</span>' +
-                       (isDrop ? '<span class="mcl-amrap" title="Drop set — take the final drop to failure">AMRAP</span>' : '') +
+                       (isDrop ? '<span class="mcl-amrap" title="Extra drop set — AMRAP after your working sets">+ AMRAP</span>' : '') +
                        '<span class="mcl-hist mcl-hist-' + cid + '">' + histText(exId) + '</span>';
 
     var wrap = document.createElement('div');
     wrap.className = 'mcl-wrap';
     var html = '<div class="mcl-hdr"><div class="mcl-hl">Set</div><div class="mcl-hl">Weight</div>' +
                '<div class="mcl-hl">Reps</div><div class="mcl-hl"></div></div>';
-    for (var i = 0; i < n; i++) {
-      var sn = i + 1, last = lset(exId, sn), pr = repFor(setsStr, i);
+    for (var i = 0; i < total; i++) {
+      var sn = i + 1, last = lset(exId, sn);
+      var isAmrap = isDrop && i === total - 1;      // the appended drop row
+      var pr = isAmrap ? '' : repFor(setsStr, i);
       var wPh = (last && last.w) ? (last.w + ' lb') : 'lb';
-      var rPh = pr || (last && last.r ? last.r : 'reps');
-      if (isDrop && i === n - 1) rPh = 'AMRAP';   // final drop → reps to failure
-      html += '<div class="mcl-row' + (isDrop && i === n - 1 ? ' mcl-row-amrap' : '') + '" id="mclr-' + cid + '-' + sn + '">' +
-                '<div class="mcl-num">' + sn + '</div>' +
+      var rPh = isAmrap ? 'AMRAP' : (pr || (last && last.r ? last.r : 'reps'));
+      html += '<div class="mcl-row' + (isAmrap ? ' mcl-row-amrap' : '') + '" id="mclr-' + cid + '-' + sn + '">' +
+                '<div class="mcl-num">' + (isAmrap ? '↓' : sn) + '</div>' +
                 '<input class="mcl-inp mcl-w" type="number" inputmode="decimal" placeholder="' + wPh + '">' +
                 '<input class="mcl-inp mcl-r" type="number" inputmode="numeric" placeholder="' + rPh + '">' +
                 '<div class="mcl-ck set-check" data-sn="' + sn + '">☐</div>' +
