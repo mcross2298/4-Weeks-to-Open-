@@ -135,6 +135,9 @@
 .workout-back-btn:active{background:rgba(192,132,252,0.2);}
 /* ── WORKOUT CONTENT ── */
 .workout-content{max-width:680px;margin:20px auto 0;padding:0 16px;}
+/* ── PRESCRIBED TEMPO CHIP (shows the actual E:I:C:P ratio on a card) ── */
+.ex-tempo{display:inline-flex;align-items:center;font-size:11px;font-weight:800;letter-spacing:0.02em;padding:3px 8px;border-radius:6px;font-family:"SF Mono",ui-monospace,SFMono-Regular,Menlo,monospace;background:rgba(225,29,72,0.12);color:#fb7185;border:1px solid rgba(225,29,72,0.32);white-space:nowrap;}
+.ex-tags .ex-tempo{margin-left:2px;}
 /* ── COOKIES CONDITIONS CORNER (Calves & Cardio day) ── */
 .ccc-section{margin:22px 0 8px;}
 .ccc-head{font-size:11px;font-weight:900;letter-spacing:0.22em;text-transform:uppercase;color:#fb923c;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
@@ -603,39 +606,39 @@ const PMC_SPLITS = {
   // Cardio is run via the "Cookies Conditions Corner" dropdown injected below these cards.
   1:[
     {type:'superset',num:1,
-     a:{name:'Standing Calf Raise (Machine)',sets:'4×12',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 8–15 reps · ⏱ 3:2:1:0 · 3s lower · 2s pause at full stretch · 1s up'},
-     b:{name:'Seated Calf Raise — High Volume',sets:'4×25',badges:['tb-superset','tb-highrep20','tb-tempo'],note:'⚡ Superset B · High Volume 20–30 reps · ⏱ 2:0:1:1 · 1s squeeze at the top'}},
-    {type:'single',num:2,name:'Leg Press Calf Raise',sets:'4×12',badges:['tb-tempo'],note:'🦵 Solo · standard 8–15 reps · ⏱ 3:1:1:0 · 3s lower · 1s pause at stretch · drive up'},
+     a:{name:'Standing Calf Raise (Machine)',sets:'4×12',tempo:'3:2:1:0',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 8–15 reps · 3s lower · 2s pause at full stretch · 1s up'},
+     b:{name:'Seated Calf Raise — High Volume',sets:'4×25',tempo:'2:0:1:1',badges:['tb-superset','tb-highrep20','tb-tempo'],note:'⚡ Superset B · High Volume 20–30 reps · 1s squeeze at the top'}},
+    {type:'single',num:2,name:'Leg Press Calf Raise',sets:'4×12',tempo:'3:1:1:0',badges:['tb-tempo'],note:'🦵 Solo · standard 8–15 reps · 3s lower · 1s pause at stretch · drive up'},
   ],
   2:[
     {type:'superset',num:1,
-     a:{name:'Leg Press Calf Raise',sets:'4×15',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 8–15 reps · ⏱ 3:1:1:0 · controlled lower · pause at stretch'},
-     b:{name:'Standing Calf Raise — High Volume',sets:'3×30',badges:['tb-superset','tb-highrep20','tb-tempo'],note:'⚡ Superset B · High Volume 20–30 reps · ⏱ 2:0:1:0 · constant tension · no bouncing'}},
-    {type:'single',num:2,name:'Seated Calf Raise',sets:'15,12,10,8',badges:['tb-pyramid','tb-tempo'],note:'🦵 Solo · ⛰ pyramid (reps ↓ / weight ↑) · ⏱ 4:1:1:0 · 4s negative · 1s pause at stretch'},
+     a:{name:'Leg Press Calf Raise',sets:'4×15',tempo:'3:1:1:0',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 8–15 reps · controlled lower · pause at stretch'},
+     b:{name:'Standing Calf Raise — High Volume',sets:'3×30',tempo:'2:0:1:0',badges:['tb-superset','tb-highrep20','tb-tempo'],note:'⚡ Superset B · High Volume 20–30 reps · constant tension · no bouncing'}},
+    {type:'single',num:2,name:'Seated Calf Raise',sets:'15,12,10,8',tempo:'4:1:1:0',badges:['tb-pyramid','tb-tempo'],note:'🦵 Solo · ⛰ pyramid (reps ↓ / weight ↑) · 4s negative · 1s pause at stretch'},
   ],
   3:[
     {type:'superset',num:1,
-     a:{name:'Smith Machine Calf Raise (toes out)',sets:'5×10',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 8–15 reps · ⏱ 3:2:1:0 · toes out · deep stretch hold'},
-     b:{name:'Donkey Calf Raise — High Volume',sets:'4×20',badges:['tb-superset','tb-highrep20','tb-tempo'],note:'⚡ Superset B · High Volume 20–30 reps · ⏱ 2:0:1:1 · full ROM · squeeze at top'}},
-    {type:'single',num:2,name:'Standing Calf Raise (Machine)',sets:'8,10,12,15',badges:['tb-tempo'],note:'🦵 Solo · ⬇ reverse pyramid (reps ↑ / weight ↓) · ⏱ 3:1:1:1 · pause both ends'},
+     a:{name:'Smith Machine Calf Raise (toes out)',sets:'5×10',tempo:'3:2:1:0',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 8–15 reps · toes out · deep stretch hold'},
+     b:{name:'Donkey Calf Raise — High Volume',sets:'4×20',tempo:'2:0:1:1',badges:['tb-superset','tb-highrep20','tb-tempo'],note:'⚡ Superset B · High Volume 20–30 reps · full ROM · squeeze at top'}},
+    {type:'single',num:2,name:'Standing Calf Raise (Machine)',sets:'8,10,12,15',tempo:'3:1:1:1',badges:['tb-tempo'],note:'🦵 Solo · ⬇ reverse pyramid (reps ↑ / weight ↓) · pause both ends'},
   ],
   4:[
     {type:'superset',num:1,
-     a:{name:'Seated Calf Raise',sets:'4×12',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 8–15 reps · ⏱ 4:1:1:0 · slow negative · pause at stretch'},
-     b:{name:'Leg Press Calf Raise — High Volume',sets:'4×25',badges:['tb-superset','tb-highrep20','tb-tempo'],note:'⚡ Superset B · High Volume 20–30 reps · ⏱ 2:0:1:1 · high & wide · squeeze at top'}},
-    {type:'single',num:2,name:'Single-Leg DB Calf Raise',sets:'5×8',badges:['tb-tempo'],note:'🦵 Solo · standard 8–15 reps per leg · ⏱ 3:2:1:0 · 2s pause at full stretch'},
+     a:{name:'Seated Calf Raise',sets:'4×12',tempo:'4:1:1:0',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 8–15 reps · slow negative · pause at stretch'},
+     b:{name:'Leg Press Calf Raise — High Volume',sets:'4×25',tempo:'2:0:1:1',badges:['tb-superset','tb-highrep20','tb-tempo'],note:'⚡ Superset B · High Volume 20–30 reps · high & wide · squeeze at top'}},
+    {type:'single',num:2,name:'Single-Leg DB Calf Raise',sets:'5×8',tempo:'3:2:1:0',badges:['tb-tempo'],note:'🦵 Solo · standard 8–15 reps per leg · 2s pause at full stretch'},
   ],
   5:[
     {type:'superset',num:1,
-     a:{name:'Donkey Calf Raise',sets:'4×15',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 8–15 reps · ⏱ 3:1:1:0 · hips hinged · long stretch'},
-     b:{name:'Smith Machine Calf Raise (toes out) — High Volume',sets:'3×30',badges:['tb-superset','tb-highrep20','tb-tempo'],note:'⚡ Superset B · High Volume 20–30 reps · ⏱ 2:0:1:0 · constant tension'}},
-    {type:'single',num:2,name:'Standing Calf Raise (Machine)',sets:'15,12,10,8',badges:['tb-pyramid','tb-tempo'],note:'🦵 Solo · ⛰ pyramid (reps ↓ / weight ↑) · ⏱ 4:1:1:0 · 4s negative · pause at stretch'},
+     a:{name:'Donkey Calf Raise',sets:'4×15',tempo:'3:1:1:0',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 8–15 reps · hips hinged · long stretch'},
+     b:{name:'Smith Machine Calf Raise (toes out) — High Volume',sets:'3×30',tempo:'2:0:1:0',badges:['tb-superset','tb-highrep20','tb-tempo'],note:'⚡ Superset B · High Volume 20–30 reps · constant tension'}},
+    {type:'single',num:2,name:'Standing Calf Raise (Machine)',sets:'15,12,10,8',tempo:'4:1:1:0',badges:['tb-pyramid','tb-tempo'],note:'🦵 Solo · ⛰ pyramid (reps ↓ / weight ↑) · 4s negative · pause at stretch'},
   ],
   6:[
     {type:'superset',num:1,
-     a:{name:'Standing Calf Raise (Machine)',sets:'5×10',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 8–15 reps · ⏱ 3:2:1:0 · 2s pause at full stretch · 1s up'},
-     b:{name:'Seated Calf Raise — High Volume',sets:'4×25',badges:['tb-superset','tb-highrep20','tb-tempo'],note:'⚡ Superset B · High Volume 20–30 reps · ⏱ 2:0:1:1 · squeeze at the top'}},
-    {type:'single',num:2,name:'Leg Press Calf Raise',sets:'10,12,15,20',badges:['tb-tempo'],note:'🦵 Solo · ⬇ reverse pyramid (reps ↑ / weight ↓) · ⏱ 3:1:1:1 · pause both ends'},
+     a:{name:'Standing Calf Raise (Machine)',sets:'5×10',tempo:'3:2:1:0',badges:['tb-superset','tb-tempo'],note:'⚡ Superset A · 8–15 reps · 2s pause at full stretch · 1s up'},
+     b:{name:'Seated Calf Raise — High Volume',sets:'4×25',tempo:'2:0:1:1',badges:['tb-superset','tb-highrep20','tb-tempo'],note:'⚡ Superset B · High Volume 20–30 reps · squeeze at the top'}},
+    {type:'single',num:2,name:'Leg Press Calf Raise',sets:'10,12,15,20',tempo:'3:1:1:1',badges:['tb-tempo'],note:'🦵 Solo · ⬇ reverse pyramid (reps ↑ / weight ↓) · pause both ends'},
   ]
 }
   },
@@ -866,6 +869,10 @@ const BADGE_LABELS = {
 function badges(arr){
   return (arr||[]).map(b=>`<span class="type-badge ${b}">${BADGE_LABELS[b]||b}</span>`).join('');
 }
+// Prescribed tempo chip — shows the actual E:I:C:P ratio on the card. Uses its
+// own class (not .mc-tempo-pill) so the optional "Add Tempo" add-in in
+// mc-card-actions.js never strips it on render.
+function tempoChip(t){ return t ? `<span class="ex-tempo">⏱ ${t}</span>` : ''; }
 
 // ── RENDER HELPERS ────────────────────────────────────────────────
 function renderSingle(ex, wk){
@@ -874,7 +881,7 @@ function renderSingle(ex, wk){
   return `<div class="ex-card ${ck}" data-id="${id}" data-type="single">
     <div class="ex-row"><div class="ex-num">${ex.num}</div>
     <div class="ex-content"><div class="ex-name">${ex.name}</div>
-    <div class="ex-tags"><span class="ex-sets">${ex.sets}</span>${badges(ex.badges)}</div>
+    <div class="ex-tags"><span class="ex-sets">${ex.sets}</span>${tempoChip(ex.tempo)}${badges(ex.badges)}</div>
     ${makeRestTimer(rest,ex.name)}
     ${ex.note?`<div class="ex-note">${ex.note}</div>`:''}
     </div></div></div>`;
@@ -888,7 +895,7 @@ function renderSS(ex, wk){
     <div class="ss-ex ${cka}" data-id="${ida}" data-type="ssex">
       <div class="ss-num">A</div><div class="ss-content">
       <div class="ss-name">${ex.a.name}</div>
-      <div class="ex-tags"><span class="ex-sets">${ex.a.sets}</span>${badges(ex.a.badges)}</div>
+      <div class="ex-tags"><span class="ex-sets">${ex.a.sets}</span>${tempoChip(ex.a.tempo)}${badges(ex.a.badges)}</div>
       ${makeRestTimer('120 sec',ex.a.name)}
       ${ex.a.note?`<div class="ex-note">${ex.a.note}</div>`:''}
       </div></div>
@@ -896,7 +903,7 @@ function renderSS(ex, wk){
     <div class="ss-ex ${ckb}" data-id="${idb}" data-type="ssex">
       <div class="ss-num">B</div><div class="ss-content">
       <div class="ss-name">${ex.b.name}</div>
-      <div class="ex-tags"><span class="ex-sets">${ex.b.sets}</span>${badges(ex.b.badges)}</div>
+      <div class="ex-tags"><span class="ex-sets">${ex.b.sets}</span>${tempoChip(ex.b.tempo)}${badges(ex.b.badges)}</div>
       ${makeRestTimer('120 sec',ex.b.name)}
       ${ex.b.note?`<div class="ex-note">${ex.b.note}</div>`:''}
       </div></div></div>`;
