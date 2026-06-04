@@ -51,6 +51,18 @@
 .mcl-ck.done{background:rgba(52,211,153,0.16);border-color:rgba(52,211,153,0.45);color:#34d399;}
 .mcl-row.done-row .mcl-inp{opacity:0.5;text-decoration:line-through;}
 
+/* ── Drop-set AMRAP tag — the final drop is taken to failure (as-many-reps-as-
+   possible). Warm amber stands apart from the cool logger so it reads as an
+   intensity cue, not just another row. */
+.mcl-amrap{
+  font-size:9px;font-weight:900;letter-spacing:0.06em;line-height:1;
+  padding:3px 6px;border-radius:5px;flex-shrink:0;
+  background:rgba(251,146,60,0.16);color:#fb923c;
+  border:1px solid rgba(251,146,60,0.42);
+}
+.mcl-row-amrap{background:rgba(251,146,60,0.05);border-radius:6px;}
+.mcl-row-amrap .mcl-r::placeholder{color:#fb923c;opacity:0.8;}
+
 /* ── Superset rest timer (Phase 3) ──────────────────────────────────────────
    A single rest timer lives on the SECOND superset exercise, parked directly
    under its "Log Sets" dropdown. Give it room and a clear "rest after superset"

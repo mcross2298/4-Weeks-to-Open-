@@ -46,3 +46,19 @@ body{ background:#06120a; }
   color:#d9f99d;
   border:1px solid rgba(132,204,22,0.30);
 }
+
+/* meatball (⋮) overlap fix --------------------------------------------------
+   The shared actions button is positioned absolute top-right of the card. On
+   the single-line .ex-item flex row it landed on top of the sets pill / rest
+   timer (and cast its translucent panel over them — looked like a shadow over
+   the text). Reserve a right-hand gutter for it; the full-width Log-Sets table
+   reclaims that gutter with a matching negative margin so it stays edge-to-edge.
+   The doubled .ex-item.ex-item raises specificity above mc-setlog.css (which
+   loads after this sheet and pins the logger to flex-basis:100% / width:100%). */
+.ex-item{ padding-right:44px; }
+.ex-item.ex-item > .mcl-toggle,
+.ex-item.ex-item > .mcl-wrap{
+  flex-basis:calc(100% + 32px);
+  width:calc(100% + 32px);
+  margin-right:-32px;
+}

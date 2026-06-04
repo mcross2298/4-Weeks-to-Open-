@@ -112,9 +112,17 @@
 
     var cid = cssId(exId), n = setCount(setsStr);
 
+    // A "drop set" ends with a drop taken to failure → flag it AMRAP so the
+    // logger reads the intent. Detect the phrase in the exercise name OR the
+    // prescribed scheme; "drop 8" (a numeric drop target) is intentionally NOT
+    // matched, only an open-ended "drop set".
+    var nmEl = card.querySelector('.ex-name, .ss-name, .lift-name, .var-name');
+    var isDrop = /drop\s*set/i.test((nmEl ? nmEl.textContent : '') + ' ' + (setsStr || ''));
+
     var toggle = document.createElement('div');
     toggle.className = 'mcl-toggle';
     toggle.innerHTML = '<span class="mcl-chev">▾</span><span class="mcl-lbl">Log Sets</span>' +
+                       (isDrop ? '<span class="mcl-amrap" title="Drop set — take the final drop to failure">AMRAP</span>' : '') +
                        '<span class="mcl-hist mcl-hist-' + cid + '">' + histText(exId) + '</span>';
 
     var wrap = document.createElement('div');
@@ -125,7 +133,8 @@
       var sn = i + 1, last = lset(exId, sn), pr = repFor(setsStr, i);
       var wPh = (last && last.w) ? (last.w + ' lb') : 'lb';
       var rPh = pr || (last && last.r ? last.r : 'reps');
-      html += '<div class="mcl-row" id="mclr-' + cid + '-' + sn + '">' +
+      if (isDrop && i === n - 1) rPh = 'AMRAP';   // final drop → reps to failure
+      html += '<div class="mcl-row' + (isDrop && i === n - 1 ? ' mcl-row-amrap' : '') + '" id="mclr-' + cid + '-' + sn + '">' +
                 '<div class="mcl-num">' + sn + '</div>' +
                 '<input class="mcl-inp mcl-w" type="number" inputmode="decimal" placeholder="' + wPh + '">' +
                 '<input class="mcl-inp mcl-r" type="number" inputmode="numeric" placeholder="' + rPh + '">' +
