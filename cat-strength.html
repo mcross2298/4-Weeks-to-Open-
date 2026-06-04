@@ -138,21 +138,18 @@
 /* ── PRESCRIBED TEMPO CHIP (shows the actual E:I:C:P ratio on a card) ── */
 .ex-tempo{display:inline-flex;align-items:center;font-size:11px;font-weight:800;letter-spacing:0.02em;padding:3px 8px;border-radius:6px;font-family:"SF Mono",ui-monospace,SFMono-Regular,Menlo,monospace;background:rgba(225,29,72,0.12);color:#fb7185;border:1px solid rgba(225,29,72,0.32);white-space:nowrap;}
 .ex-tags .ex-tempo{margin-left:2px;}
-/* ── COOKIES CONDITIONS CORNER (Calves & Cardio day) ── */
+/* ── COOKIES CONDITIONING CORNER (Calves & Cardio day) ── */
 .ccc-section{margin:22px 0 8px;}
 .ccc-head{font-size:11px;font-weight:900;letter-spacing:0.22em;text-transform:uppercase;color:#fb923c;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
 .ccc-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(251,146,60,0.35),transparent);}
-.ccc-card{background:rgba(251,146,60,0.06);border:1.5px solid rgba(251,146,60,0.3);border-radius:14px;padding:16px;}
-.ccc-label{display:block;font-size:13px;font-weight:900;color:#fb923c;letter-spacing:-0.01em;margin-bottom:4px;}
-.ccc-sub{font-size:11px;color:#94a3b8;line-height:1.5;margin-bottom:12px;}
-.ccc-select-wrap{position:relative;}
-.ccc-select-wrap::after{content:'▾';position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#fb923c;font-size:14px;pointer-events:none;}
-.ccc-select{appearance:none;-webkit-appearance:none;width:100%;background:#0f0f0f;color:#e2e8f0;border:1.5px solid rgba(251,146,60,0.35);border-radius:12px;padding:13px 38px 13px 14px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;outline:none;transition:border-color 0.15s,box-shadow 0.15s;}
-.ccc-select:focus-visible{border-color:#fb923c;box-shadow:0 0 0 3px rgba(251,146,60,0.25);}
-.ccc-select option{background:#0f0f0f;color:#e2e8f0;}
-.ccc-select optgroup{background:#0f0f0f;color:#fb923c;font-weight:800;}
+.ccc-dropdown{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;background:#0f0f0f;color:#e2e8f0;border:1.5px solid rgba(251,146,60,0.35);border-radius:12px;padding:15px 16px;font-size:15px;font-weight:800;font-family:inherit;letter-spacing:-0.01em;cursor:pointer;outline:none;text-align:left;transition:border-color 0.15s,box-shadow 0.15s,background 0.15s;}
+.ccc-dropdown:hover{background:#141414;}
+.ccc-dropdown:active{transform:scale(0.99);}
+.ccc-dropdown:focus-visible{border-color:#fb923c;box-shadow:0 0 0 3px rgba(251,146,60,0.25);}
+.ccc-dropdown-text{flex:1;}
+.ccc-dropdown-chev{color:#fb923c;font-size:14px;flex-shrink:0;}
+.ccc-sub{font-size:11px;color:#94a3b8;line-height:1.5;margin-top:8px;}
 </style>
-<script src="conditioning-data.js"></script>
 </head>
 <body>
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
@@ -913,48 +910,25 @@ function renderEx(ex, wk){
   return ex.type==='superset' ? renderSS(ex,wk) : renderSingle(ex,wk);
 }
 
-// ── COOKIES CONDITIONS CORNER ─────────────────────────────────────
-// Cardio for the Calves & Cardio day is pulled from the existing Conditioning
-// tab. This dropdown lists those routines (sourced from conditioning-data.js)
-// and, on selection, redirects the user into the Conditioning corner where they
-// pull the chosen program into their session.
+// ── COOKIES CONDITIONING CORNER ───────────────────────────────────
+// Cardio for the Calves & Cardio day lives in the existing Conditioning tab.
+// This is a single dropdown-styled control: clicking it redirects the user to
+// the Conditioning corner, where they select and pull a program into their session.
 function conditioningCornerHtml(){
-  let optionsHtml = '';
-  try {
-    if (typeof CONDITIONING !== 'undefined' && CONDITIONING.subcategories) {
-      optionsHtml = CONDITIONING.subcategories.map(sc => {
-        const items = (sc.routines || sc.exercises || []);
-        if (!items.length) return '';
-        const opts = items.map(it =>
-          `<option value="${(it.name||'').replace(/"/g,'&quot;')}">${it.name}</option>`
-        ).join('');
-        return `<optgroup label="${sc.name}">${opts}</optgroup>`;
-      }).join('');
-    }
-  } catch(e){}
-  // Fallback if the conditioning data did not load — still redirects to the tab.
-  if (!optionsHtml) optionsHtml = '<option value="">Browse Conditioning</option>';
-
   return `<div class="ccc-section">
     <div class="ccc-head">🏃 Cardio</div>
-    <div class="ccc-card">
-      <label class="ccc-label" for="cccSelect">Cookies Conditions Corner</label>
-      <div class="ccc-sub">Pick your conditioning finisher — we'll drop you into the Conditioning corner to pull it into your session.</div>
-      <div class="ccc-select-wrap">
-        <select id="cccSelect" class="ccc-select" aria-label="Cookies Conditions Corner — choose a conditioning routine" onchange="goToConditioning(this.value)">
-          <option value="" disabled selected>Select a conditioning routine…</option>
-          ${optionsHtml}
-        </select>
-      </div>
-    </div>
+    <button type="button" class="ccc-dropdown" onclick="goToConditioning()"
+      aria-label="Cookies Conditioning Corner — open the Conditioning tab to select a program">
+      <span class="ccc-dropdown-text">Cookies Conditioning Corner</span>
+      <span class="ccc-dropdown-chev" aria-hidden="true">▾</span>
+    </button>
+    <div class="ccc-sub">Opens the Conditioning corner to pick and pull a program into your session.</div>
   </div>`;
 }
 
-// Clean redirect into the existing Conditioning tab (deep-link honored by
-// dashboard.html on load). The picked routine is stashed so the corner can
-// optionally pre-surface it.
-function goToConditioning(value){
-  try { if(value) sessionStorage.setItem('mc_pending_conditioning', value); } catch(e){}
+// Clean redirect into the existing Conditioning tab (the ?tab= deep-link is
+// honored by dashboard.html on load).
+function goToConditioning(){
   window.location.href = 'dashboard.html?tab=conditioning';
 }
 
