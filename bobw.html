@@ -392,6 +392,16 @@ function renderReps(sets){
   }).join("")+'</div>';
 }
 
+// Collapse a uniform set list ("v, v, v") into a compact "N× v" tag; varied
+// lists (pyramids) are left untouched. mc-setlog understands the "N×" form,
+// so per-set logging still produces the right number of rows.
+function compactSets(s){
+  return String(s||"").split("/").map(function(leg){
+    var parts=leg.split(",").map(function(r){return r.trim();}).filter(Boolean);
+    if(parts.length>1 && parts.every(function(p){return p===parts[0];})) return parts.length+"× "+parts[0];
+    return leg.trim();
+  }).join(" / ");
+}
 function renderExercise(ex,dIdx,eIdx){
   // Concept A — accent-driven exercise card. Preserves all behavioural hooks
   // (.ex-card/.ex-body/.ex-name/[data-field=sets|name|rest]/.rest-timer) that
@@ -402,12 +412,20 @@ function renderExercise(ex,dIdx,eIdx){
   const repsHtml=legsArr.map((part,pi)=>{
     const reps=part.split(",").map(r=>r.trim());
     const legTag=legsArr.length>1?`<span class="a-legtag">${pi===0?"A":"B"}</span>`:"";
-    const chips=reps.map((rep,ri)=>{
+    let chips;
+    if(reps.length>1 && reps.every(r=>r===reps[0])){
+      // uniform reps (e.g. "5–8, 5–8, …") → one compact "N× reps" tag
+      const rep=reps[0];
       const special=rep.toUpperCase().includes("AMRAP")||rep.includes("Drop")||rep.includes("×");
-      const cls=special?"a-rep special":(ri===0?"a-rep live":"a-rep");
-      const sep=ri<reps.length-1?'<span class="a-sep">·</span>':"";
-      return `<span class="${cls}">${escapeHtml(rep)}</span>${sep}`;
-    }).join("");
+      chips=`<span class="${special?"a-rep special":"a-rep live"}">${reps.length}× ${escapeHtml(rep)}</span>`;
+    }else{
+      chips=reps.map((rep,ri)=>{
+        const special=rep.toUpperCase().includes("AMRAP")||rep.includes("Drop")||rep.includes("×");
+        const cls=special?"a-rep special":(ri===0?"a-rep live":"a-rep");
+        const sep=ri<reps.length-1?'<span class="a-sep">·</span>':"";
+        return `<span class="${cls}">${escapeHtml(rep)}</span>${sep}`;
+      }).join("");
+    }
     return `<div class="a-leg">${legTag}${chips}</div>`;
   }).join("");
   const badges=[];
@@ -425,7 +443,7 @@ function renderExercise(ex,dIdx,eIdx){
     </div>
     <div class="a-reps">${repsHtml}</div>
     <div class="a-strip">
-      <div class="a-cell"><span class="k">Sets</span><span class="v"><span class="editable" data-field="sets" data-d="${dIdx}" data-e="${eIdx}">${escapeHtml(ex.sets)}</span></span></div>
+      <div class="a-cell"><span class="k">Sets</span><span class="v"><span class="editable" data-field="sets" data-d="${dIdx}" data-e="${eIdx}">${escapeHtml(compactSets(ex.sets))}</span></span></div>
       <div class="a-cell"><span class="k">Rest</span><span class="v"><span class="editable" data-field="rest" data-d="${dIdx}" data-e="${eIdx}">${escapeHtml(ex.rest)}</span></span></div>
     </div>
     <div class="a-timerbar">${makeRestTimer(ex.rest||'60 sec',ex.name)}</div>
