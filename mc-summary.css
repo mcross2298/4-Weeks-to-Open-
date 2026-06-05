@@ -68,7 +68,7 @@
   line-height:1;margin-bottom:5px;
 }
 .fw-recap-stat-label{
-  font-size:10px;font-weight:800;letter-spacing:0.12em;
+  font-size:11px;font-weight:800;letter-spacing:0.12em;
   text-transform:uppercase;color:#475569;
 }
 
@@ -135,7 +135,7 @@
   font-variant-numeric:tabular-nums;letter-spacing:0.02em;
 }
 .mcs-timer-label{
-  font-size:10px;font-weight:700;color:#475569;
+  font-size:11px;font-weight:700;color:#475569;
   letter-spacing:0.1em;text-transform:uppercase;
 }
 .mcs-sets-wrap{display:flex;align-items:baseline;gap:4px;text-align:right;}
@@ -144,7 +144,7 @@
   font-variant-numeric:tabular-nums;letter-spacing:-0.01em;
 }
 .mcs-sets-label{
-  font-size:10px;font-weight:700;color:#475569;
+  font-size:11px;font-weight:700;color:#475569;
   letter-spacing:0.1em;text-transform:uppercase;
 }
 /* Thin progress fill sits at the very bottom of the stat bar */
