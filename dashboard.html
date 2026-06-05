@@ -241,6 +241,37 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .lib-name{font-size:14px;font-weight:900;color:#fbbf24;}
 .lib-sub{font-size:11px;color:var(--muted2);font-weight:600;margin-top:2px;}
 
+/* ── PROGRAMS: featured card + compact 2-col grid (Phase 3 layout) ── */
+.prog-featured-label{font-size:11px;font-weight:900;letter-spacing:0.2em;color:var(--gold);text-transform:uppercase;margin:0 0 12px;display:flex;align-items:center;gap:7px;}
+.prog-grid-label{font-size:11px;font-weight:900;letter-spacing:0.2em;color:#475569;text-transform:uppercase;margin:24px 0 14px;display:flex;align-items:center;gap:8px;}
+.prog-grid-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.08),transparent);}
+.prog-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.prog-tile{position:relative;display:flex;flex-direction:column;text-decoration:none;color:inherit;border-radius:16px;padding:15px 14px 13px;overflow:hidden;min-height:160px;border:1px solid rgba(255,255,255,0.06);border-top:3px solid var(--accent,#d4af37);background:var(--grad,linear-gradient(135deg,#161616,#0d0d0d));transition:box-shadow 0.15s,transform 0.12s;}
+.prog-tile:active{box-shadow:0 0 0 2px var(--accent,#d4af37),0 0 16px rgba(212,175,55,0.22);transform:scale(0.98);opacity:0.95;}
+.pt-icon{position:absolute;right:12px;top:11px;font-size:26px;opacity:0.16;line-height:1;pointer-events:none;}
+.pt-tag{font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent,#d4af37);margin-bottom:7px;padding-right:30px;}
+.pt-name{font-size:15px;font-weight:900;color:#fff;line-height:1.18;letter-spacing:-0.01em;padding-right:22px;}
+.pt-count{margin-top:auto;padding-top:10px;font-size:10px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:#94a3b8;}
+.pt-designer{font-size:10px;color:#64748b;margin-top:4px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.prog-tile.soon{opacity:0.55;}
+.prog-tile.soon .pt-name{color:#cbd5e1;}
+/* per-program color identity (gradient + accent) */
+.prog-tile.ss{--grad:linear-gradient(135deg,#2a0710,#0d0205);--accent:#fb7185;}
+.prog-tile.stndr{--grad:linear-gradient(135deg,#1e3a5f,#0f172a);--accent:#93c5fd;}
+.prog-tile.gainz{--grad:linear-gradient(135deg,#365314,#0a0f04);--accent:#a3e635;}
+.prog-tile.pump{--grad:linear-gradient(135deg,#831843,#1a0511);--accent:#f9a8d4;}
+.prog-tile.psu{--grad:linear-gradient(135deg,#041e42,#000814);--accent:#cbd5e1;}
+.prog-tile.pmc{--grad:linear-gradient(135deg,#1e0a3c,#0d0618);--accent:#c084fc;}
+.prog-tile.mc{--grad:linear-gradient(135deg,#0a1628,#020b18);--accent:#d4af37;}
+.prog-tile.bobw{--grad:linear-gradient(135deg,#04201c,#020b09);--accent:#5eead4;}
+.prog-tile.ie{--grad:linear-gradient(135deg,#1a1206,#0a0a0a);--accent:#fdba74;}
+/* pinned badge — keeps Programs tab in sync with the Dashboard hero */
+.pt-pin{position:absolute;right:0;top:0;z-index:3;background:var(--accent,#d4af37);color:#000;font-size:9px;font-weight:900;letter-spacing:0.05em;text-transform:uppercase;padding:4px 9px;border-radius:0 16px 0 12px;box-shadow:0 2px 8px rgba(0,0,0,0.35);}
+.cat-card .pt-pin{padding:5px 12px;font-size:10px;border-radius:0 18px 0 12px;}
+/* Daily Gainz live strip, kept working inside the compact grid */
+.prog-tile .gz-live{margin-top:12px;padding-top:12px;}
+.prog-tile.span-full{grid-column:1 / -1;}
+
 /* ── BOTTOM TAB BAR ── */
 .tab-bar{
   position:fixed;bottom:0;left:0;right:0;
@@ -436,7 +467,9 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   </div>
   <div class="prog-screen-inner">
 
-    <a href="cat-strength.html" class="cat-card ss">
+    <!-- Featured program — full visual weight for hierarchy -->
+    <div class="prog-featured-label">⭐ Featured</div>
+    <a href="cat-strength.html" class="cat-card ss" data-prog-id="ss" style="--accent:#fb7185;">
       <span class="cat-icon">🏋️</span>
       <div class="cat-tag">Strength · Supersets · New</div>
       <div class="cat-name">Strength &amp; Supersets</div>
@@ -445,83 +478,80 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <div class="cat-designer">✍️ Designed by Mike Cross</div>
     </a>
 
-    <a href="cat-stndr.html" class="cat-card stndr">
-      <span class="cat-icon">🏋️</span>
-      <div class="cat-tag">Bodybuilding · Strength</div>
-      <div class="cat-name">STNDR</div>
-      <div class="cat-meta">Structured lifting programs with progressive overload, supersets, and periodization.</div>
-      <div class="cat-count">5 Programs →</div>
-      <div class="cat-designer">✍️ Designed by CBUM</div>
-    </a>
+    <!-- All programs — compact 2-col grid -->
+    <div class="prog-grid-label">All Programs</div>
+    <div class="prog-grid">
 
-    <a href="cat-gainz.html" class="cat-card gainz" id="gainzCard">
-      <span class="cat-icon">💪</span>
-      <span class="gz-sheen"></span>
-      <div class="cat-tag">Volume · Daily</div>
-      <div class="cat-name">Daily Gainz</div>
-      <div class="cat-meta">Daily volume-builders for consistent muscle growth.</div>
-      <div class="gz-live" id="gzLive" style="display:none;">
-        <div class="gz-streak" id="gzStreak"></div>
-        <div class="gz-resume" id="gzResume" style="display:none;"></div>
-      </div>
-      <div class="cat-count">8 Programs →</div>
-      <div class="cat-designer">✍️ Designed by Bradley Martyn</div>
-    </a>
+      <a href="cat-bobw.html" class="prog-tile bobw" data-prog-id="bobw">
+        <span class="pt-icon">🌗</span>
+        <div class="pt-tag">Lifting + Cardio · New</div>
+        <div class="pt-name">Best of Both Worlds</div>
+        <div class="pt-count">6 Parts · 4 Weeks →</div>
+        <div class="pt-designer">✍️ Mike Cross</div>
+      </a>
 
-    <a href="cat-pump-new4.html" class="cat-card pump">
-      <span class="cat-icon">⚡</span>
-      <div class="cat-tag">Pump · Isolation</div>
-      <div class="cat-name">Daily Pump</div>
-      <div class="cat-meta">High-rep isolation work for maximum pump and muscle fullness.</div>
-      <div class="cat-count">10 Workouts →</div>
-      <div class="cat-designer">✍️ Designed by Julian Smith</div>
-    </a>
+      <a href="cat-pmc.html" class="prog-tile pmc" data-prog-id="pmc">
+        <span class="pt-icon">⚡</span>
+        <div class="pt-tag">Muscle Confusion</div>
+        <div class="pt-name">Project Muscle Confusion</div>
+        <div class="pt-count">7 Splits →</div>
+        <div class="pt-designer">✍️ Mike Cross</div>
+      </a>
 
-    <a href="cat-psu.html" class="cat-card psu">
-      <span class="cat-icon">🏈</span>
-      <div class="cat-tag">Strength · Athletic</div>
-      <div class="cat-name">PSU Football</div>
-      <div class="cat-meta">Penn State strength and conditioning — built for athletic performance.</div>
-      <div class="cat-count">1 Program →</div>
-      <div class="cat-designer">✍️ Penn State Strength Staff</div>
-    </a>
+      <a href="cat-mc.html" class="prog-tile mc" data-prog-id="mc">
+        <span class="pt-icon">👑</span>
+        <div class="pt-tag">Personal · All Styles</div>
+        <div class="pt-name">Mike Cross' Favorite Splits</div>
+        <div class="pt-count">5 Splits · 18 Workouts →</div>
+        <div class="pt-designer">✍️ Mike Cross</div>
+      </a>
 
-    <a href="cat-pmc.html" class="cat-card pmc">
-      <span class="cat-icon">⚡</span>
-      <div class="cat-tag">Muscle Confusion · Advanced</div>
-      <div class="cat-name">Project Muscle Confusion</div>
-      <div class="cat-meta">Supersets, pyramids, drop sets, AMRAP, and tempo — 7 splits across 2 weeks each.</div>
-      <div class="cat-count">7 Splits →</div>
-      <div class="cat-designer">✍️ Designed by Mike Cross</div>
-    </a>
+      <a href="cat-stndr.html" class="prog-tile stndr" data-prog-id="stndr">
+        <span class="pt-icon">🏋️</span>
+        <div class="pt-tag">Bodybuilding · Strength</div>
+        <div class="pt-name">STNDR</div>
+        <div class="pt-count">5 Programs →</div>
+        <div class="pt-designer">✍️ CBUM</div>
+      </a>
 
-    <a href="cat-mc.html" class="cat-card mc">
-      <span class="cat-icon">👑</span>
-      <div class="cat-tag">Personal · All Styles</div>
-      <div class="cat-name">Mike Cross' Favorite Splits</div>
-      <div class="cat-meta">5 personal splits across every major training style — 18 workouts total.</div>
-      <div class="cat-count">5 Splits →</div>
-      <div class="cat-designer">✍️ Designed by Mike Cross</div>
-    </a>
+      <a href="cat-gainz.html" class="prog-tile gainz" id="gainzTile" data-prog-id="gainz">
+        <span class="pt-icon">💪</span>
+        <span class="gz-sheen"></span>
+        <div class="pt-tag">Volume · Daily</div>
+        <div class="pt-name">Daily Gainz</div>
+        <div class="gz-live" id="gzLive" style="display:none;">
+          <div class="gz-streak" id="gzStreak"></div>
+          <div class="gz-resume" id="gzResume" style="display:none;"></div>
+        </div>
+        <div class="pt-count">8 Programs →</div>
+        <div class="pt-designer">✍️ Bradley Martyn</div>
+      </a>
 
-    <a href="cat-bobw.html" class="cat-card bobw">
-      <span class="cat-icon">🌗</span>
-      <div class="cat-tag">Lifting + Cardio · New</div>
-      <div class="cat-name">Best of Both Worlds</div>
-      <div class="cat-meta">Heavy resistance balanced with conditioning — 3 on/1 off · 6 body parts · 4 lifts each (Pyramid/Heavy/Tempo/Volume) plus daily LISS &amp; HIIT cardio.</div>
-      <div class="cat-count">6 Body Parts · 4 Weeks →</div>
-      <div class="cat-designer">✍️ Designed by Mike Cross</div>
-    </a>
+      <a href="cat-pump-new4.html" class="prog-tile pump" data-prog-id="pump">
+        <span class="pt-icon">⚡</span>
+        <div class="pt-tag">Pump · Isolation</div>
+        <div class="pt-name">Daily Pump</div>
+        <div class="pt-count">10 Workouts →</div>
+        <div class="pt-designer">✍️ Julian Smith</div>
+      </a>
 
-    <a href="cat-ie.html" class="cat-card ie">
-      <span class="cat-icon">🔩</span>
-      <div class="cat-tag">PPL + Conditioning · Coming Soon</div>
-      <div class="cat-name">Iron &amp; Engine</div>
-      <div class="cat-meta">Push / Pull / Legs strength forged with a 3-day conditioning engine — 3 on/1 off · 4-week block.</div>
-      <div class="cat-count">Coming Soon →</div>
-      <div class="cat-designer">✍️ Designed by Mike Cross</div>
-    </a>
+      <a href="cat-psu.html" class="prog-tile psu" data-prog-id="psu">
+        <span class="pt-icon">🏈</span>
+        <div class="pt-tag">Strength · Athletic</div>
+        <div class="pt-name">PSU Football</div>
+        <div class="pt-count">1 Program →</div>
+        <div class="pt-designer">✍️ PSU Staff</div>
+      </a>
 
+      <a href="cat-ie.html" class="prog-tile ie soon" data-prog-id="ie">
+        <span class="pt-icon">🔩</span>
+        <div class="pt-tag">PPL + Conditioning</div>
+        <div class="pt-name">Iron &amp; Engine</div>
+        <div class="pt-count">Coming Soon →</div>
+        <div class="pt-designer">✍️ Mike Cross</div>
+      </a>
+
+    </div>
   </div>
 </div>
 
@@ -593,6 +623,9 @@ document.getElementById('todayDate').textContent=d.toLocaleDateString('en-US',{m
   var hasStreak=a.streak>0, hasResume=!!a.last;
   if(!hasStreak && !hasResume){ live.style.display='none'; return; }
   live.style.display='flex';
+  // The compact grid tile expands to full width when there's live data to show.
+  var tile=document.getElementById('gainzTile');
+  if(tile) tile.classList.add('span-full');
 
   if(hasStreak){
     streakEl.innerHTML='<span class="gz-flame">🔥</span>'+a.streak+'-day streak'+
@@ -767,6 +800,20 @@ function renderConditioning(){
       var b=document.getElementById('tourBadge');
       if(b) b.style.display='inline-block';
     }
+  }catch(e){}
+})();
+
+// ── PINNED BADGE — mark the active program on the Programs tab ──
+(function markPinned(){
+  try{
+    var s=localStorage.getItem(STORE); if(!s) return;
+    var id=(JSON.parse(s)||{}).id; if(!id) return;
+    var el=document.querySelector('.prog-screen-inner [data-prog-id="'+id+'"]');
+    if(!el || el.querySelector('.pt-pin')) return;
+    var pin=document.createElement('div');
+    pin.className='pt-pin';
+    pin.textContent='📌 Pinned';
+    el.appendChild(pin);
   }catch(e){}
 })();
 
