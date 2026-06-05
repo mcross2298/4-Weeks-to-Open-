@@ -911,7 +911,7 @@ const PMC_SPLITS = {
 const PMC_SPLIT_META = {
   'split1': { name: 'The Original', color: '#4ade80', workouts: ['split1_legs', 'split1_back', 'split1_chest', 'split1_bistris', 'split1_leghams'] },
   'split2': { name: 'The Rematch', color: '#22d3ee', workouts: ['split2_legs', 'split2_chest', 'split2_back', 'split2_cst', 'split2_legs2'] },
-  'split3': { name: 'The Inferno', color: '#f87171', workouts: ['split3_back', 'split3_legs', 'split3_chest', 'split3_shoulders', 'split3_back2'] },
+  'split3': { name: 'The Inferno', color: '#34d399', workouts: ['split3_back', 'split3_legs', 'split3_chest', 'split3_shoulders', 'split3_back2'] },
   'split4': { name: 'The Blueprint', color: '#c084fc', workouts: ['split4_legsback', 'split4_chesttris', 'split4_shoulders', 'split4_legs2', 'split4_bistris'] },
   'split5': { name: 'Push/Pull/Legs', color: '#fb923c', workouts: ['split5_push', 'split5_pull', 'split5_legs', 'split5_core'] },
   'split6': { name: 'Body Part Split', color: '#a78bfa', workouts: ['split6_chest', 'split6_deltsarms', 'split6_legs', 'split6_backtraps', 'split6_abs'] },
