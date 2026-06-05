@@ -343,11 +343,26 @@ const CYCLE4 = JSON.parse(JSON.stringify(CYCLE)).map(function(day){
   }
   return day;
 });
+// Week 3 = tempo week: same exercises, 2 lifts on 3-sec negatives + 2 on 2-sec
+// pauses. Every lift tagged Tempo.
+const W3_SCHEME = ["10, 10, 10", "12, 12, 12, 12", "8, 8, 8, 8, 8", "15, 15, 15"];
+const W3_NOTES  = ["Tempo · 3 sec negative", "Tempo · 3 sec negatives", "Tempo · 2 sec pause", "Tempo · 2 sec pause"];
+const CYCLE3 = JSON.parse(JSON.stringify(CYCLE)).map(function(day){
+  if(day.type==="training"){
+    day.exercises.forEach(function(ex,i){
+      ex.sets = W3_SCHEME[i] || ex.sets;
+      ex.tag = "TEMPO";
+      if(W3_NOTES[i]) ex.notes = W3_NOTES[i]; else delete ex.notes;
+    });
+  }
+  return day;
+});
 const DATA = {
   schedule: "3 On / 1 Off · 4-Week Block",
   weeks: [
     { id:"w1", label:"Week 1", days: CYCLE },
     { id:"w2", label:"Week 2 · Heavy", days: CYCLE2 },
+    { id:"w3", label:"Week 3 · Tempo", days: CYCLE3 },
     { id:"w4", label:"Week 4 · Pyramid", days: CYCLE4 }
   ]
 };
