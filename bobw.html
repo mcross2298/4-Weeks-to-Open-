@@ -330,11 +330,25 @@ const CYCLE2 = JSON.parse(JSON.stringify(CYCLE)).map(function(day){
   }
   return day;
 });
+// Week 4 = all-pyramid week: every lift pyramids on its own scheme (Ex4 runs an
+// ascending/reverse pyramid). Same exercises. Week 3 to follow (slots before w4).
+const W4_SCHEME = ["15, 12, 10, 10", "12, 10, 8, 8", "10, 8, 6, 6", "8, 12, 15, 20"];
+const CYCLE4 = JSON.parse(JSON.stringify(CYCLE)).map(function(day){
+  if(day.type==="training"){
+    day.exercises.forEach(function(ex,i){
+      ex.sets = W4_SCHEME[i] || ex.sets;
+      ex.tag = "PYRAMID";
+      delete ex.notes;
+    });
+  }
+  return day;
+});
 const DATA = {
-  schedule: "3 On / 1 Off · Weeks 1–2 of 4",
+  schedule: "3 On / 1 Off · 4-Week Block",
   weeks: [
     { id:"w1", label:"Week 1", days: CYCLE },
-    { id:"w2", label:"Week 2 · Heavy", days: CYCLE2 }
+    { id:"w2", label:"Week 2 · Heavy", days: CYCLE2 },
+    { id:"w4", label:"Week 4 · Pyramid", days: CYCLE4 }
   ]
 };
 const CARDIO_BANNER = `<a class="bobw-cardio" href="dashboard.html?tab=conditioning"><span class="bobw-cardio-icon">🏃</span><span class="bobw-cardio-txt"><b>Daily Cardio</b> · 1 LISS + 1 HIIT</span><span class="bobw-cardio-go">Conditioning Corner ▾</span></a>`;
