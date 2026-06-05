@@ -37,10 +37,12 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
   background:rgba(249,115,22,0.14);color:#fdba74;border:1px solid rgba(249,115,22,0.28);}
 .proto-desc{font-size:12px;color:#94a3b8;line-height:1.55;}
 
-.cardio-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
-.cardio-card{background:#160f07;border:1px solid rgba(249,115,22,0.14);border-radius:12px;padding:14px;text-align:center;}
-.cardio-kind{font-size:13px;font-weight:900;color:#fb923c;margin-bottom:4px;letter-spacing:0.04em;}
 .cardio-sub{font-size:11px;color:#94a3b8;line-height:1.5;}
+/* Conditioning Corner pick-'em (mirrors the Strength & Supersets pattern) */
+.ccc-pick{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;background:#0f0f0f;color:#e2e8f0;border:1.5px solid rgba(249,115,22,0.35);border-radius:12px;padding:15px 16px;font-size:15px;font-weight:800;text-decoration:none;letter-spacing:-0.01em;transition:background 0.15s;}
+.ccc-pick:hover{background:#141414;}
+.ccc-pick:active{transform:scale(0.99);}
+.ccc-pick-chev{color:#fb923c;font-size:14px;flex-shrink:0;}
 
 .note-box{background:rgba(249,115,22,0.06);border-left:3px solid #f97316;border-radius:0 8px 8px 0;
   padding:11px 14px;margin-top:18px;font-size:12px;color:#fdba74;line-height:1.6;}
@@ -96,20 +98,12 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
   </div>
 
   <div class="sec-head">The Engine · Conditioning 3×/Week</div>
-  <div class="cardio-grid">
-    <div class="cardio-card">
-      <div class="cardio-kind">🔥 Session 1</div>
-      <div class="cardio-sub">Conditioning piece</div>
-    </div>
-    <div class="cardio-card">
-      <div class="cardio-kind">🔥 Session 2</div>
-      <div class="cardio-sub">Conditioning piece</div>
-    </div>
-    <div class="cardio-card">
-      <div class="cardio-kind">🔥 Session 3</div>
-      <div class="cardio-sub">Conditioning piece</div>
-    </div>
-  </div>
+  <div class="soon-body" style="margin-bottom:12px;">Each conditioning day is a <strong>pick-'em</strong> — choose a session from the Conditioning Corner and pull it into your workout. More conditioning workouts will be added over time.</div>
+  <a class="ccc-pick" href="dashboard.html?tab=conditioning">
+    <span>🏃 Conditioning Corner</span>
+    <span class="ccc-pick-chev" aria-hidden="true">▾</span>
+  </a>
+  <div class="cardio-sub" style="margin-top:8px;">Opens the Conditioning corner to pick and pull a session into your day.</div>
 
   <div class="note-box"><strong>Heads up:</strong> This program is a placeholder while the lifting and conditioning workouts are finalized. Check back soon.</div>
 </div>
