@@ -317,11 +317,24 @@ const CYCLE = [
   ]},
   {type:"rest",label:"Day 8"},
 ];
-// Week 1 only for now — weeks 2–4 will be planned separately and added later.
+// Week 1 = mixed protocol (Pyramid/Heavy/Tempo/Volume). Week 2 = all-heavy
+// strength week: same exercises, lower reps, no tempo. Weeks 3–4 to follow.
+const W2_SCHEME = ["8, 6, 4, 4", "8, 8, 8, 8, 8, 8", "5, 5, 5, 5, 5", "5, 5, 5"];
+const CYCLE2 = JSON.parse(JSON.stringify(CYCLE)).map(function(day){
+  if(day.type==="training"){
+    day.exercises.forEach(function(ex,i){
+      ex.sets = W2_SCHEME[i] || ex.sets;
+      ex.tag = (i===0 ? "PYRAMID" : "HEAVY");
+      if(i!==0) delete ex.notes;        // heavy week — drop the tempo/volume cues
+    });
+  }
+  return day;
+});
 const DATA = {
-  schedule: "3 On / 1 Off · Week 1 of 4",
+  schedule: "3 On / 1 Off · Weeks 1–2 of 4",
   weeks: [
-    { id:"w1", label:"Week 1", days: CYCLE }
+    { id:"w1", label:"Week 1", days: CYCLE },
+    { id:"w2", label:"Week 2 · Heavy", days: CYCLE2 }
   ]
 };
 const CARDIO_BANNER = `<a class="bobw-cardio" href="dashboard.html?tab=conditioning"><span class="bobw-cardio-icon">🏃</span><span class="bobw-cardio-txt"><b>Daily Cardio</b> · 1 LISS + 1 HIIT</span><span class="bobw-cardio-go">Conditioning Corner ▾</span></a>`;
