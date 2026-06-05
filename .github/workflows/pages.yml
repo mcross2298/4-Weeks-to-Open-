@@ -1,0 +1,46 @@
+name: Deploy preview to GitHub Pages
+
+# Serves the static site (repo root) on GitHub Pages so the Programs-page
+# redesign can be previewed at a live URL. index.html redirects to
+# dashboard.html, so the site root opens straight into the app.
+
+on:
+  push:
+    branches:
+      - claude/programs-page-layout-QsQcT
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; let in-progress runs finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages (enable if needed)
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
