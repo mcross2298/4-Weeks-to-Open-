@@ -14,7 +14,7 @@
 
 ## 🎬 Module 0 — Welcome (Cover)
 
-**On screen / B-roll:** App icon → dashboard fades in. Glyph 💪. Caption: *"7 programs · 760+ exercises · full set & PR tracking."*
+**On screen / B-roll:** App icon → dashboard fades in. Glyph 💪. Caption: *"7 programs · 300+ exercises · full set & PR tracking."*
 
 **Coach VO:**
 > "Welcome in. Whether you came to lift heavy, chase a pump, or build your own session — everything lives one or two taps from your dashboard. This'll take about three minutes. Let's go."
@@ -148,7 +148,7 @@
 **On screen:** Build Your Own → name field → search/filter by muscle → tap exercises (they drop into tray) → set sets/reps → **✅ Create Workout** → saved card → **▶ Start Workout** → logs like any program.
 
 **Coach VO:**
-> "Want a custom session? Tap Build Your Own. Name your workout, then search or filter 760+ exercises by muscle group. Tap to add each one — they drop into a tray at the bottom where you set sets and reps. Hit Create Workout, and it's saved under My Custom Workouts. Press Start, and it logs sets exactly like every built-in program."
+> "Want a custom session? Tap Build Your Own. Name your workout, then search or filter 300+ exercises by muscle group. Tap to add each one — they drop into a tray at the bottom where you set sets and reps. Hit Create Workout, and it's saved under My Custom Workouts. Press Start, and it logs sets exactly like every built-in program."
 
 **Steps:**
 1. Dashboard → **🔧 Build Your Own** tile.
