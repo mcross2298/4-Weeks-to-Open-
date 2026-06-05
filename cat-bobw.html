@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Best of Both Worlds — Mike Cross</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
+.container{max-width:680px;margin:0 auto;}
+.back-link{display:inline-block;color:#5eead4;text-decoration:none;font-size:13px;font-weight:700;background:rgba(20,184,166,0.12);padding:6px 14px;border-radius:20px;border:1px solid rgba(20,184,166,0.3);margin-bottom:24px;letter-spacing:0.04em;}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.25em;color:#5eead4;text-transform:uppercase;margin-bottom:10px;}
+.title{font-size:30px;font-weight:900;color:#fff;letter-spacing:-0.02em;margin-bottom:6px;}
+.subtitle{font-size:13px;color:#475569;margin-bottom:6px;line-height:1.5;}
+.designer{font-size:12px;font-weight:700;color:#2dd4bf;opacity:0.85;margin-bottom:20px;}
+
+/* Coming-soon hero */
+.soon-card{position:relative;overflow:hidden;border-radius:18px;padding:26px 22px;margin-bottom:22px;
+  background:linear-gradient(135deg,#04201c,#0a0a0a);border:1px solid rgba(20,184,166,0.25);
+  box-shadow:0 4px 20px rgba(20,184,166,0.15);}
+.soon-badge{display:inline-block;font-size:11px;font-weight:900;letter-spacing:0.18em;padding:4px 12px;border-radius:6px;
+  text-transform:uppercase;margin-bottom:14px;background:rgba(20,184,166,0.16);color:#5eead4;border:1px solid rgba(20,184,166,0.35);}
+.soon-head{font-size:20px;font-weight:900;color:#fff;margin-bottom:8px;letter-spacing:-0.01em;}
+.soon-body{font-size:13px;color:#94a3b8;line-height:1.65;}
+.soon-body strong{color:#e2e8f0;}
+
+/* Section blocks that preview the agreed structure */
+.sec-head{font-size:11px;font-weight:900;letter-spacing:0.22em;color:#5eead4;text-transform:uppercase;margin:26px 0 12px;display:flex;align-items:center;gap:8px;}
+.sec-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(20,184,166,0.3),transparent);}
+.proto-row{display:flex;align-items:flex-start;gap:12px;background:#08211d;border:1px solid rgba(20,184,166,0.14);border-radius:12px;padding:14px 16px;margin-bottom:9px;}
+.proto-idx{flex-shrink:0;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:900;background:rgba(20,184,166,0.12);color:#2dd4bf;border:1px solid rgba(20,184,166,0.3);}
+.proto-text{flex:1;min-width:0;}
+.proto-name{font-size:14px;font-weight:800;color:#fff;margin-bottom:3px;}
+.proto-tag{display:inline-block;font-size:10px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;
+  padding:2px 8px;border-radius:5px;margin-left:8px;vertical-align:middle;
+  background:rgba(20,184,166,0.14);color:#5eead4;border:1px solid rgba(20,184,166,0.28);}
+.proto-desc{font-size:12px;color:#94a3b8;line-height:1.55;}
+
+.cardio-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.cardio-card{background:#08211d;border:1px solid rgba(20,184,166,0.14);border-radius:12px;padding:14px;}
+.cardio-kind{font-size:12px;font-weight:900;color:#2dd4bf;margin-bottom:4px;letter-spacing:0.04em;}
+.cardio-sub{font-size:11px;color:#94a3b8;line-height:1.5;}
+
+.note-box{background:rgba(20,184,166,0.06);border-left:3px solid #14b8a6;border-radius:0 8px 8px 0;
+  padding:11px 14px;margin-top:18px;font-size:12px;color:#7dd3fc;line-height:1.6;}
+.note-box strong{color:#fff;}
+</style>
+<link rel="stylesheet" href="base.css"/>
+<link rel="stylesheet" href="mc-nav.css"/>
+<!-- Back-link sits in normal flow here (no .header wrapper), so keep it static. -->
+<style>.back-link{position:static;}</style>
+</head>
+<body>
+<div class="container">
+  <a href="dashboard.html?tab=programs" class="back-link">← Programs</a>
+  <div class="eyebrow">🌗 Best of Both Worlds</div>
+  <h1 class="title">Best of Both Worlds</h1>
+  <p class="subtitle">A strict, high-performance regime balancing heavy resistance training with cardiovascular conditioning.</p>
+  <div class="designer">✍️ Designed by Mike Cross</div>
+
+  <div class="soon-card">
+    <span class="soon-badge">⏳ Coming Soon</span>
+    <div class="soon-head">The workouts are being programmed</div>
+    <div class="soon-body">The framework is locked in — <strong>1 body part per day</strong>, <strong>exactly 4 lifts</strong> per session, each following its own rep-scheme style, plus <strong>two daily cardio pieces</strong> (one LISS, one HIIT). The exact exercises, body-part split, and block length are on the way.</div>
+  </div>
+
+  <div class="sec-head">Daily Lifting Protocol · 4 Exercises</div>
+  <div class="proto-row">
+    <div class="proto-idx">1</div>
+    <div class="proto-text">
+      <div class="proto-name">Pyramid Set<span class="proto-tag">Pyramid</span></div>
+      <div class="proto-desc">Progressive weight increase / rep decrease across sets.</div>
+    </div>
+  </div>
+  <div class="proto-row">
+    <div class="proto-idx">2</div>
+    <div class="proto-text">
+      <div class="proto-name">Heavy Lift<span class="proto-tag">Heavy · 5–8</span></div>
+      <div class="proto-desc">Strength focus in the 5–8 rep range.</div>
+    </div>
+  </div>
+  <div class="proto-row">
+    <div class="proto-idx">3</div>
+    <div class="proto-text">
+      <div class="proto-name">Tempo Set<span class="proto-tag">Tempo · 12–15</span></div>
+      <div class="proto-desc">Hypertrophy focus — controlled eccentric/concentric, 12–15 reps.</div>
+    </div>
+  </div>
+  <div class="proto-row">
+    <div class="proto-idx">4</div>
+    <div class="proto-text">
+      <div class="proto-name">High Volume<span class="proto-tag">Volume · 15–30</span></div>
+      <div class="proto-desc">Endurance / pump focus in the 15–30 rep range.</div>
+    </div>
+  </div>
+
+  <div class="sec-head">Daily Cardio · Two Forms Required</div>
+  <div class="cardio-grid">
+    <div class="cardio-card">
+      <div class="cardio-kind">🚶 LISS</div>
+      <div class="cardio-sub">Low-Intensity Steady State — one session every day.</div>
+    </div>
+    <div class="cardio-card">
+      <div class="cardio-kind">⚡ HIIT</div>
+      <div class="cardio-sub">High-Intensity Interval Training — one session every day.</div>
+    </div>
+  </div>
+
+  <div class="note-box"><strong>Heads up:</strong> This program is a placeholder while the exercises and cardio details are finalized. Check back soon.</div>
+</div>
+<script>
+/* ── SMART BACK NAV ── */
+(function(){
+  var back = sessionStorage.getItem('mc_back_to');
+  if(!back) return;
+  document.querySelectorAll('a').forEach(function(a){
+    var href = a.getAttribute('href')||'';
+    if(href === 'index.html' || href === '../' || href === '/' ||
+       href.includes('index') || a.textContent.trim().startsWith('←')){
+      a.href = back;
+      a.addEventListener('click', function(){
+        sessionStorage.removeItem('mc_back_to');
+      });
+    }
+  });
+})();
+</script>
+<script src="mc-nav.js"></script>
+</body>
+</html>
