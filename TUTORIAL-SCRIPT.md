@@ -1,10 +1,10 @@
 # MC Training — Quick Tour: Video & Slide Production Script
 
-**Format:** 11 modules. Each = a high-level visual slide **+** step-by-step on-screen actions.
+**Format:** 12 modules. Each = a high-level visual slide **+** step-by-step on-screen actions.
 **Tone:** Motivating + practical (gym-coach energy, clear and actionable).
 **Audience:** Mobile-first lifters of mixed comfort levels — beginner-safe, never condescending.
 **Hosted at:** `quick-tour.html`, launched from the gold **🎬 Quick Tour** tile on the dashboard.
-**Runtime target:** ~3 minutes (≈15–20s narration per module).
+**Runtime target:** ~3–3½ minutes (≈15–20s narration per module).
 
 > **How to use this doc:** The left column is what shows on screen / the screen-capture clip to record.
 > The right column ("Coach VO") is the narration, written to match the in-app `quick-tour.html` copy.
@@ -91,7 +91,27 @@
 
 ---
 
-## 🏆 Module 5 — Finish Workout, PRs & Live Summary ⭐ *(core skill)*
+## ⋮ Module 5 — The Meatball (⋮) Menu: Customize Any Exercise
+
+**On screen:** Tap the **⋮** in an exercise card's top-right → bottom sheet opens with **Replace / Reorder / Add Tempo / Notes**. Demo each: Replace → Library opens; Reorder → ▲/▼ shuffle a card; Add Tempo → pick `3:1:1:0`, a tempo pill appears; Notes → type a note, it saves on the card with a dot on the ⋮.
+
+**Coach VO:**
+> "See the three dots in the corner of every exercise? That's your control panel. Tap it and you can swap an exercise you can't or don't want to do, reorder your lineup, dial in a lifting tempo, or jot a note to your future self. Every change saves to that workout automatically."
+
+**Steps:**
+1. On any exercise card, tap the **⋮** (top-right).
+2. **🔁 Replace exercise** — opens the Library to swap in a different movement.
+3. **↕️ Reorder exercises** — use the **▲ ▼** arrows; your order sticks.
+4. **⏱️ Add Tempo** — pick an *eccentric : pause-bottom : concentric : pause-top* cadence; it shows as a pill.
+5. **📝 Notes** — leave a per-exercise note saved right onto the card.
+
+**💡 Tip:** A small dot on the **⋮** flags an exercise with a saved **note or tempo** — everything persists per workout, on your device.
+
+*(Tempo can be disabled per page via `window.MC_TEMPO_ENABLED = false`; default options come from the STNDR notation.)*
+
+---
+
+## 🏆 Module 6 — Finish Workout, PRs & Live Summary ⭐ *(core skill)*
 
 **On screen:** First set check-off → sticky stat strip animates in (timer + sets-done). Tap **Summary** → live session card expands. Tap **Finish Workout** → confirmation, PR flagged with gold 🏆.
 
@@ -107,7 +127,7 @@
 
 ---
 
-## 📊 Module 6 — Workout Logs & Progress
+## 📊 Module 7 — Workout Logs & Progress
 
 **On screen:** Dashboard → 📊 Workout Logs tile → three-stat bar (Workouts · Sets Logged · PRs Set) → scroll dated history cards with weights and PR tags.
 
@@ -123,7 +143,7 @@
 
 ---
 
-## 🔧 Module 7 — Build Your Own Workout ⭐ *(make it yours)*
+## 🔧 Module 8 — Build Your Own Workout ⭐ *(make it yours)*
 
 **On screen:** Build Your Own → name field → search/filter by muscle → tap exercises (they drop into tray) → set sets/reps → **✅ Create Workout** → saved card → **▶ Start Workout** → logs like any program.
 
@@ -140,7 +160,7 @@
 
 ---
 
-## 📚 Module 8 — Library, Guide & Conditioning
+## 📚 Module 9 — Library, Guide & Conditioning
 
 **On screen:** Quick cuts — Exercise Library search/filter & expand a master group → Program Guide list → Conditioning tab (🔥) with cardio/core cards.
 
@@ -156,7 +176,7 @@
 
 ---
 
-## 📲 Module 9 — Install & Train Offline (PWA)
+## 📲 Module 10 — Install & Train Offline (PWA)
 
 **On screen:** Browser Share menu → **Add to Home Screen** → app icon on home screen → full-screen launch → airplane-mode demo still working → green **🔄 Update available** banner.
 
@@ -172,7 +192,7 @@
 
 ---
 
-## 🔥 Module 10 — You're Ready (Wrap-up)
+## 🔥 Module 11 — You're Ready (Wrap-up)
 
 **On screen:** Montage of the 5 core actions, glyph 🔥. Caption: *"Pin · Log · Finish · Review · Build."* End card with **Go to my Dashboard** button.
 
@@ -194,5 +214,5 @@
 
 - **Capturing clips:** Each in-app slide has a `.scene` frame with a "Tour clip" marker — record a short screen-capture per module (portrait, ~720×1280) and it can drop straight into that frame later. Until then the branded still reads as a slide.
 - **Sync rule:** If you reword a slide in `quick-tour.html`, mirror it here (and vice versa) so the video VO and the in-app tour never drift.
-- **Length control:** To hit ~3 min, keep each VO to 2–3 sentences. The ⭐ core modules (4, 5, 7) can run slightly longer; trim the bonus modules (8, 9) if needed.
+- **Length control:** To hit ~3–3½ min, keep each VO to 2–3 sentences. The ⭐ core modules (4 Log Sets, 6 Finish/PRs, 8 Build) plus the ⋮ menu (5) can run slightly longer; trim the bonus modules (9, 10) if needed.
 - **Accessibility:** Captions = the Coach VO text verbatim. Steps double as on-screen lower-thirds.
