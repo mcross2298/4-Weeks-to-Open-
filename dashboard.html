@@ -408,6 +408,11 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
         <div class="tool-name">Program Guide</div>
         <div class="tool-sub">Instructions for every program</div>
       </a>
+      <a href="quick-tour.html" class="tool-card gold" id="quickTourCard" style="grid-column:1 / -1;">
+        <div class="tool-icon-wrap">🎬</div>
+        <div class="tool-name">Quick Tour <span id="tourBadge" style="display:none;font-size:10px;font-weight:900;letter-spacing:0.08em;color:#000;background:var(--gold);border-radius:5px;padding:1px 6px;margin-left:4px;vertical-align:middle;">NEW</span></div>
+        <div class="tool-sub">3-min guided walkthrough of the whole app</div>
+      </a>
     </div>
   </div>
 
@@ -743,6 +748,16 @@ function renderConditioning(){
   });
   body.innerHTML=html;
 }
+
+// ── QUICK TOUR — show a "NEW" badge until the tour has been completed ──
+(function(){
+  try{
+    if(!localStorage.getItem('mc_tour_done_v1')){
+      var b=document.getElementById('tourBadge');
+      if(b) b.style.display='inline-block';
+    }
+  }catch(e){}
+})();
 
 // ── INIT ──
 loadState();
