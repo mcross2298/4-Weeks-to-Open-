@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Iron &amp; Engine — Mike Cross</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
+.container{max-width:680px;margin:0 auto;}
+.back-link{display:inline-block;color:#fdba74;text-decoration:none;font-size:13px;font-weight:700;background:rgba(249,115,22,0.12);padding:6px 14px;border-radius:20px;border:1px solid rgba(249,115,22,0.3);margin-bottom:24px;letter-spacing:0.04em;}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.25em;color:#fdba74;text-transform:uppercase;margin-bottom:10px;}
+.title{font-size:30px;font-weight:900;color:#fff;letter-spacing:-0.02em;margin-bottom:6px;}
+.subtitle{font-size:13px;color:#475569;margin-bottom:6px;line-height:1.5;}
+.designer{font-size:12px;font-weight:700;color:#fb923c;opacity:0.85;margin-bottom:20px;}
+
+/* Coming-soon hero */
+.soon-card{position:relative;overflow:hidden;border-radius:18px;padding:26px 22px;margin-bottom:22px;
+  background:linear-gradient(135deg,#1a1206,#0a0a0a);border:1px solid rgba(249,115,22,0.25);
+  box-shadow:0 4px 20px rgba(249,115,22,0.15);}
+.soon-badge{display:inline-block;font-size:11px;font-weight:900;letter-spacing:0.18em;padding:4px 12px;border-radius:6px;
+  text-transform:uppercase;margin-bottom:14px;background:rgba(249,115,22,0.16);color:#fdba74;border:1px solid rgba(249,115,22,0.35);}
+.soon-head{font-size:20px;font-weight:900;color:#fff;margin-bottom:8px;letter-spacing:-0.01em;}
+.soon-body{font-size:13px;color:#94a3b8;line-height:1.65;}
+.soon-body strong{color:#e2e8f0;}
+
+/* Section blocks that preview the agreed structure */
+.sec-head{font-size:11px;font-weight:900;letter-spacing:0.22em;color:#fdba74;text-transform:uppercase;margin:26px 0 12px;display:flex;align-items:center;gap:8px;}
+.sec-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(249,115,22,0.3),transparent);}
+.proto-row{display:flex;align-items:flex-start;gap:12px;background:#160f07;border:1px solid rgba(249,115,22,0.14);border-radius:12px;padding:14px 16px;margin-bottom:9px;}
+.proto-idx{flex-shrink:0;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:900;background:rgba(249,115,22,0.12);color:#fb923c;border:1px solid rgba(249,115,22,0.3);}
+.proto-text{flex:1;min-width:0;}
+.proto-name{font-size:14px;font-weight:800;color:#fff;margin-bottom:3px;}
+.proto-tag{display:inline-block;font-size:10px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;
+  padding:2px 8px;border-radius:5px;margin-left:8px;vertical-align:middle;
+  background:rgba(249,115,22,0.14);color:#fdba74;border:1px solid rgba(249,115,22,0.28);}
+.proto-desc{font-size:12px;color:#94a3b8;line-height:1.55;}
+
+.cardio-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+.cardio-card{background:#160f07;border:1px solid rgba(249,115,22,0.14);border-radius:12px;padding:14px;text-align:center;}
+.cardio-kind{font-size:13px;font-weight:900;color:#fb923c;margin-bottom:4px;letter-spacing:0.04em;}
+.cardio-sub{font-size:11px;color:#94a3b8;line-height:1.5;}
+
+.note-box{background:rgba(249,115,22,0.06);border-left:3px solid #f97316;border-radius:0 8px 8px 0;
+  padding:11px 14px;margin-top:18px;font-size:12px;color:#fdba74;line-height:1.6;}
+.note-box strong{color:#fff;}
+</style>
+<link rel="stylesheet" href="base.css"/>
+<link rel="stylesheet" href="mc-nav.css"/>
+<!-- Back-link sits in normal flow here (no .header wrapper), so keep it static. -->
+<style>.back-link{position:static;}</style>
+</head>
+<body>
+<div class="container">
+  <a href="dashboard.html?tab=programs" class="back-link">← Programs</a>
+  <div class="eyebrow">🔩 Iron &amp; Engine</div>
+  <h1 class="title">Iron &amp; Engine</h1>
+  <p class="subtitle">Push / Pull / Legs strength forged together with a 3-day conditioning engine. 3 on / 1 off · 4-week block.</p>
+  <div class="designer">✍️ Designed by Mike Cross</div>
+
+  <div class="soon-card">
+    <span class="soon-badge">⏳ Coming Soon</span>
+    <div class="soon-head">The workouts are being programmed</div>
+    <div class="soon-body">The framework is locked in — a <strong>3-on / 1-off rolling split</strong> across a <strong>4-week block</strong>. The three lifting days run <strong>Push · Pull · Legs</strong>, backed by <strong>conditioning 3 days a week</strong> to build the engine. The exact exercises and conditioning pieces are on the way.</div>
+  </div>
+
+  <div class="sec-head">The Iron · Push / Pull / Legs</div>
+  <div class="proto-row">
+    <div class="proto-idx">1</div>
+    <div class="proto-text">
+      <div class="proto-name">Push<span class="proto-tag">Day 1</span></div>
+      <div class="proto-desc">Chest, shoulders &amp; triceps — the pressing day.</div>
+    </div>
+  </div>
+  <div class="proto-row">
+    <div class="proto-idx">2</div>
+    <div class="proto-text">
+      <div class="proto-name">Pull<span class="proto-tag">Day 2</span></div>
+      <div class="proto-desc">Back, rear delts &amp; biceps — the pulling day.</div>
+    </div>
+  </div>
+  <div class="proto-row">
+    <div class="proto-idx">3</div>
+    <div class="proto-text">
+      <div class="proto-name">Legs<span class="proto-tag">Day 3</span></div>
+      <div class="proto-desc">Quads, hams, glutes &amp; calves — the lower day.</div>
+    </div>
+  </div>
+  <div class="proto-row">
+    <div class="proto-idx">😴</div>
+    <div class="proto-text">
+      <div class="proto-name">Rest<span class="proto-tag">Day 4</span></div>
+      <div class="proto-desc">Recovery, then the cycle rolls over.</div>
+    </div>
+  </div>
+
+  <div class="sec-head">The Engine · Conditioning 3×/Week</div>
+  <div class="cardio-grid">
+    <div class="cardio-card">
+      <div class="cardio-kind">🔥 Session 1</div>
+      <div class="cardio-sub">Conditioning piece</div>
+    </div>
+    <div class="cardio-card">
+      <div class="cardio-kind">🔥 Session 2</div>
+      <div class="cardio-sub">Conditioning piece</div>
+    </div>
+    <div class="cardio-card">
+      <div class="cardio-kind">🔥 Session 3</div>
+      <div class="cardio-sub">Conditioning piece</div>
+    </div>
+  </div>
+
+  <div class="note-box"><strong>Heads up:</strong> This program is a placeholder while the lifting and conditioning workouts are finalized. Check back soon.</div>
+</div>
+<script>
+/* ── SMART BACK NAV ── */
+(function(){
+  var back = sessionStorage.getItem('mc_back_to');
+  if(!back) return;
+  document.querySelectorAll('a').forEach(function(a){
+    var href = a.getAttribute('href')||'';
+    if(href === 'index.html' || href === '../' || href === '/' ||
+       href.includes('index') || a.textContent.trim().startsWith('←')){
+      a.href = back;
+      a.addEventListener('click', function(){
+        sessionStorage.removeItem('mc_back_to');
+      });
+    }
+  });
+})();
+</script>
+<script src="mc-nav.js"></script>
+</body>
+</html>
