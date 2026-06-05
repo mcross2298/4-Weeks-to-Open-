@@ -1,0 +1,59 @@
+name: Programs page screenshot
+
+# Renders the redesigned Programs tab on the runner and commits the PNGs
+# back to this branch (under screenshots/) so they can be reviewed without
+# needing GitHub Pages. Triggered on push to the branch, but ignores its own
+# screenshot commits to avoid a re-trigger loop.
+
+on:
+  push:
+    branches:
+      - claude/programs-page-layout-QsQcT
+    paths-ignore:
+      - 'screenshots/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  screenshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright + Chromium
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm i -D playwright@^1.48 >/dev/null 2>&1
+          npx playwright install --with-deps chromium
+
+      - name: Render screenshots
+        run: |
+          python3 -m http.server 8000 >/dev/null 2>&1 &
+          sleep 3
+          node .github/scripts/screenshot.mjs
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: programs-screenshots
+          path: screenshots/
+
+      - name: Commit screenshots back to the branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f screenshots/*.png
+          if git diff --cached --quiet; then
+            echo "No screenshot changes to commit."
+          else
+            git commit -m "Add rendered Programs page screenshots"
+            git push origin HEAD:claude/programs-page-layout-QsQcT
+          fi
