@@ -290,7 +290,47 @@ ALL_WORKOUTS = [
         {"name": "Fingertip Plank", "sets": "5x30-60 sec", "rest": "30-60 sec", "note": "Plank from a push-up position on your fingertips"},
         {"name": "Plate Pinch", "sets": "5x20-30 sec", "rest": "30 sec", "note": "Holds"},
     ]},
-    # ── Batch 7+ goes here as screenshots arrive ──
+    # ── Batch 7 (IMG_9723–9727) ──
+    {"group": "pull", "title": "Back — Pulldowns & Rows", "note": "Title was not captured in the source screenshot.", "exercises": [
+        {"name": "Pull Ups / Chin Ups", "sets": "6xfailure", "rest": "1 min", "note": "3 sets pull ups + 3 sets chin ups — bodyweight to failure"},
+        {"name": "Lat Pull Down", "sets": "4x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Single Arm Hammer Strength Row", "sets": "4x8-12", "rest": "30-60 sec"},
+        {"name": "Close Grip Cable Row", "sets": "4x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Wide Grip Cable Row", "sets": "4x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "DB Pullover", "sets": "4x12-15", "rest": "1 min", "note": "Focus on the stretch of the negative over heavy weight"},
+    ]},
+    {"group": "core", "title": "Calves / Abs / Cardio", "exercises": [
+        {"name": "Seated Calf Raise", "sets": "4x12-15", "rest": "1 min"},
+        {"name": "Calf Press on Leg Press", "sets": "4x12-15", "rest": "1 min"},
+        {"name": "Standing Calf Raise", "sets": "4x12-15", "rest": "1 min"},
+        {"name": "Incline Sit Up", "sets": "5x10", "rest": "1 min"},
+        {"name": "Hanging Leg Raise", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "Ab Wheel", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "Stairmaster", "sets": "20 min", "note": "Low intensity cardio"},
+    ]},
+    {"group": "pull", "title": "All Barbell Back Workout", "exercises": [
+        {"name": "Barbell Shrug", "sets": "4x15-20", "rest": "1 min", "note": "Slight pelvic tilt forward; shrug up-and-back in one motion"},
+        {"name": "Barbell Row", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "T-Bar Row", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Meadows Row", "sets": "4x12-15", "rest": "30 sec", "note": "Per arm · take extra rest if needed, finish strong"},
+        {"name": "Barbell Pullover", "sets": "4x12-15", "rest": "1 min"},
+    ]},
+    {"group": "push", "title": "All Dumbbell Chest Workout", "exercises": [
+        {"name": "Flat DB Flye Press", "sets": "4x8-12", "rest": "1 min", "note": "Eccentric as a flye, concentric as a press"},
+        {"name": "Decline DB Press", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Flat DB Press", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Incline DB Press", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Decline DB Flye", "sets": "4x8-12", "rest": "1 min", "note": "5 sec negative; focus on the stretch, keep weight moderate"},
+    ]},
+    {"group": "fullbody", "title": "Upper Body Strength", "exercises": [
+        {"name": "Push Ups", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
+        {"name": "Barbell Bench Press", "sets": "5x3-5", "rest": "2-3 min"},
+        {"name": "Standing Overhead Press", "sets": "5x5-8", "rest": "2-3 min"},
+        {"name": "Pull Ups", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
+        {"name": "Barbell Row", "sets": "5x8-12", "rest": "1-2 min"},
+        {"name": "Cardio", "sets": "1 round", "note": "2000m on the rower OR 10 min HIIT on the stationary bike"},
+    ]},
+    # ── Batch 8+ goes here as screenshots arrive ──
     # ⚠ MISSING: a home/circuit-style workout (intro seen between "Be Strong
     #   Overhead" and "Grip & Core"); only its intro + last line were captured.
     #   Needs a clean screenshot before it can be transcribed.
