@@ -4,31 +4,31 @@ bonus-deploy.py — generator for the "Bonus Workouts" section.
 
 Bonus Workouts are ad-hoc daily-variation workouts (no progression, no two alike).
 They live behind one top-level "Bonus Workouts" category card -> a hub
-(cat-bonus.html) -> 5 body-part category pages, each holding a handful of
-workouts the user can browse by tab or jump to via a "Surprise Me" pick.
+(cat-bonus.html) -> a handful of category pages, each holding a few workouts the
+user can browse by tab or jump to via a "Surprise Me" pick.
 
-This script regenerates:
-  - cat-bonus.html        (the hub with 5 category tiles)
-  - bonus-push.html
-  - bonus-pull.html
-  - bonus-legs.html
-  - bonus-core.html
-  - bonus-fullbody.html
+──────────────────────────────────────────────────────────────────────────────
+DATA-FIRST WORKFLOW (collect everything, categorize last)
+We deliberately do NOT force workouts into predetermined buckets as they arrive.
+Every transcribed workout goes into the flat ALL_WORKOUTS list below, in the
+order received. Each carries only a *tentative* `group` tag — a memory aid, not a
+commitment. Once all ~30 workouts are in, we run an affinity sort, decide the
+final set of categories (count + names), re-tag, and regenerate ONCE.
 
+To add a workout: append to ALL_WORKOUTS and re-run:  python3 bonus-deploy.py
+Workout schema:
+  {"group": "push", "title": "...", "note": "...optional intro...",
+   "exercises": [
+      {"name": "...", "sets": "4x10", "tempo": "1:2:1:0"(opt),
+       "note": "..."(opt), "rest": "90 sec"(opt)},
+   ]}
+──────────────────────────────────────────────────────────────────────────────
+
+This script regenerates cat-bonus.html plus one page per category in CATEGORIES.
 Each category page is produced by cloning the proven workout-page engine in
 bonus-pump-cst.html (tabs, set-logging via mc_setlog_v1, TMR rest timers,
-finish-workout, progress bar) and swapping in this category's header + workouts.
-
-────────────────────────────────────────────────────────────────────────────
-HOW TO ADD THE REAL WORKOUTS
-The WORKOUTS below are PLACEHOLDER samples so the flow is reviewable. To load
-the real content: transcribe each screenshot into a workout dict and append it
-to the matching category list in WORKOUTS, then re-run:  python3 bonus-deploy.py
-Workout schema:
-  {"title": "...", "note": "...optional intro...", "exercises": [
-      {"name": "...", "sets": "4x10", "tempo": "1:2:1:0"(opt), "note": "..."(opt), "rest": "90 sec"(opt)},
-  ]}
-────────────────────────────────────────────────────────────────────────────
+finish-workout, progress bar) and swapping in that category's header + workouts.
+After running, register any NEW page files in sw.js and bump CACHE_NAME.
 """
 
 import json
@@ -41,87 +41,86 @@ TEMPLATE = os.path.join(HERE, "bonus-pump-cst.html")
 ACCENT_TEXT = "#7dd3fc"
 ACCENT_RGB = "56,189,248"
 
-# ── Category definitions (the 5 tiles on the hub) ──────────────────────────
+# ── PROVISIONAL category definitions ───────────────────────────────────────
+# These buckets are NOT final — they exist so the flow is reviewable while we
+# collect all ~30 workouts. After every workout is in ALL_WORKOUTS, revisit this
+# list (rename / merge / split / reorder) to match the real distribution.
+# `key` matches the `group` tag on workouts; `slug` is the output filename.
 CATEGORIES = [
-    {"slug": "bonus-push",     "icon": "💥", "name": "Push",
+    {"key": "push",     "slug": "bonus-push",     "icon": "💥", "name": "Push",
      "tag": "Chest · Shoulders · Triceps",
      "meta": "Pressing-focused sessions for chest, shoulders, and triceps."},
-    {"slug": "bonus-pull",     "icon": "🔙", "name": "Pull",
+    {"key": "pull",     "slug": "bonus-pull",     "icon": "🔙", "name": "Pull",
      "tag": "Back · Biceps",
      "meta": "Pulling-focused sessions for back width, thickness, and biceps."},
-    {"slug": "bonus-legs",     "icon": "🦵", "name": "Legs",
+    {"key": "legs",     "slug": "bonus-legs",     "icon": "🦵", "name": "Legs",
      "tag": "Quads · Hams · Glutes",
      "meta": "Lower-body builders for quads, hamstrings, glutes, and calves."},
-    {"slug": "bonus-core",     "icon": "🔥", "name": "Core & Conditioning",
+    {"key": "core",     "slug": "bonus-core",     "icon": "🔥", "name": "Core & Conditioning",
      "tag": "Abs · Cardio",
      "meta": "Ab circuits and conditioning finishers to cap off any day."},
-    {"slug": "bonus-fullbody", "icon": "⚡", "name": "Full Body",
+    {"key": "fullbody", "slug": "bonus-fullbody", "icon": "⚡", "name": "Full Body",
      "tag": "Total Body",
      "meta": "Full-body circuits and anything-goes total-body sessions."},
 ]
 
-# ── PLACEHOLDER workouts (replace with transcribed screenshots) ────────────
-WORKOUTS = {
-    "bonus-push": [
-        {"title": "Upper Chest & Anterior Delts", "exercises": [
-            {"name": "Low Pulley Cable Cross Over", "sets": "4x12-15", "rest": "1 min"},
-            {"name": "Smith Machine Incline Press", "sets": "4x8-12", "rest": "1 min"},
-            {"name": "Hammer Strength Incline Press", "sets": "4x8-12", "rest": "1 min"},
-            {"name": "Hammer Strength Military Press", "sets": "4x8-12", "rest": "1 min"},
-            {"name": "Barbell Front Raise", "sets": "4x12-15", "rest": "1 min"},
-            {"name": "Push Ups", "sets": "4xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
-        ]},
-        {"title": "Traps & Shoulders", "exercises": [
-            {"name": "Upright Row", "sets": "4x12-15", "rest": "1 min"},
-            {"name": "Barbell Shrug", "sets": "4x12-15", "rest": "1 min"},
-            {"name": "Chest Supported T-Bar Row (wide grip)", "sets": "4x8-12", "rest": "1 min"},
-            {"name": "Seated DB Shoulder Tri-Set", "sets": "4x8-12", "rest": "1 min", "note": "Per exercise: DB Lateral Raise → DB Overhead Press → DB Front Raise → Bent-Over Lateral Raise"},
-            {"name": "Machine Overhead Press", "sets": "4x8-12", "rest": "1 min", "note": "Last set: drop set to failure"},
-        ]},
-    ],
-    "bonus-pull": [
-        {"title": "Back — Hammer Rows", "exercises": [
-            {"name": "Hammer Strength High Row", "sets": "4x12-15", "rest": "1 min", "note": "Last set: rest-pause to failure"},
-            {"name": "Hammer Strength Low Row", "sets": "4x12-15", "rest": "1 min", "note": "Last set: rest-pause to failure"},
-            {"name": "Single Arm DB Row", "sets": "3x12-15", "rest": "30-60 sec", "note": "Per arm"},
-            {"name": "Close Grip Cable Row", "sets": "4x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
-            {"name": "Wide Grip Cable Row", "sets": "4x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
-            {"name": "Face Pull", "sets": "4x12-15", "rest": "1 min"},
-            {"name": "Rower Machine", "sets": "1 round", "note": "2000m on the rower machine — finisher"},
-        ]},
-        {"title": "Arms & Forearms", "exercises": [
-            {"name": "Alternating Pinwheel Curl", "sets": "2x8-12", "rest": "1 min", "note": "Go heavier than a hammer curl — same muscles"},
-            {"name": "Reverse Grip Barbell Curl", "sets": "3x12-15", "rest": "1 min"},
-            {"name": "Single Arm DB Preacher Curl", "sets": "3x8-12", "rest": "30 sec", "note": "Per arm"},
-            {"name": "DB Wrist Curl", "sets": "3x12-15", "rest": "0 sec", "note": "Per arm · no rest between arms"},
-            {"name": "Plate Pinch", "sets": "3xfailure", "rest": "30-60 sec", "note": "Holds to failure — pinch a plate with thumb & fingers"},
-            {"name": "Towel Hangs", "sets": "3xfailure", "rest": "30 sec", "note": "Holds to failure"},
-        ]},
-    ],
-    # TODO: awaiting screenshots — add transcribed Legs workouts here.
-    "bonus-legs": [
-        {"title": "More workouts coming soon", "note": "Leg workouts are being added from the screenshot library.", "exercises": [
-            {"name": "Workouts pending import", "sets": "—"},
-        ]},
-    ],
-    # TODO: awaiting screenshots — add transcribed Core & Conditioning workouts here.
-    "bonus-core": [
-        {"title": "More workouts coming soon", "note": "Core & conditioning workouts are being added from the screenshot library.", "exercises": [
-            {"name": "Workouts pending import", "sets": "—"},
-        ]},
-    ],
-    "bonus-fullbody": [
-        {"title": "Athletic Bodyweight Circuit", "exercises": [
-            {"name": "Spider Crawl", "sets": "3x8-12", "rest": "30-60 sec", "note": "Per side"},
-            {"name": "Step Up with Knee Raise", "sets": "3x12-15", "rest": "30 sec", "note": "Per side"},
-            {"name": "Single Leg Glute Bridge", "sets": "3x8-12", "rest": "30 sec", "note": "Per side"},
-            {"name": "Pistol Squat", "sets": "3x8-12", "rest": "30 sec", "note": "Per side"},
-            {"name": "V-Sit", "sets": "5x10-15", "rest": "30 sec"},
-            {"name": "Plank", "sets": "3x1 min", "rest": "30 sec", "note": "1-minute holds"},
-            {"name": "Jump Rope", "sets": "10 min", "note": "Don't count rest toward the 10 minutes of jumping"},
-        ]},
-    ],
-}
+# ── FLAT STAGING LIST — every workout, in the order received ────────────────
+# `group` is a TENTATIVE tag only. Finalize categories after all ~30 are in.
+ALL_WORKOUTS = [
+    # ── Batch 1 (IMG_9753–9757) ──
+    {"group": "push", "title": "Upper Chest & Anterior Delts", "exercises": [
+        {"name": "Low Pulley Cable Cross Over", "sets": "4x12-15", "rest": "1 min"},
+        {"name": "Smith Machine Incline Press", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Hammer Strength Incline Press", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Hammer Strength Military Press", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Barbell Front Raise", "sets": "4x12-15", "rest": "1 min"},
+        {"name": "Push Ups", "sets": "4xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
+    ]},
+    {"group": "push", "title": "Traps & Shoulders", "exercises": [
+        {"name": "Upright Row", "sets": "4x12-15", "rest": "1 min"},
+        {"name": "Barbell Shrug", "sets": "4x12-15", "rest": "1 min"},
+        {"name": "Chest Supported T-Bar Row (wide grip)", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Seated DB Shoulder Tri-Set", "sets": "4x8-12", "rest": "1 min", "note": "Per exercise: DB Lateral Raise → DB Overhead Press → DB Front Raise → Bent-Over Lateral Raise"},
+        {"name": "Machine Overhead Press", "sets": "4x8-12", "rest": "1 min", "note": "Last set: drop set to failure"},
+    ]},
+    {"group": "pull", "title": "Back — Hammer Rows", "exercises": [
+        {"name": "Hammer Strength High Row", "sets": "4x12-15", "rest": "1 min", "note": "Last set: rest-pause to failure"},
+        {"name": "Hammer Strength Low Row", "sets": "4x12-15", "rest": "1 min", "note": "Last set: rest-pause to failure"},
+        {"name": "Single Arm DB Row", "sets": "3x12-15", "rest": "30-60 sec", "note": "Per arm"},
+        {"name": "Close Grip Cable Row", "sets": "4x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Wide Grip Cable Row", "sets": "4x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Face Pull", "sets": "4x12-15", "rest": "1 min"},
+        {"name": "Rower Machine", "sets": "1 round", "note": "2000m on the rower machine — finisher"},
+    ]},
+    {"group": "pull", "title": "Arms & Forearms", "exercises": [
+        {"name": "Alternating Pinwheel Curl", "sets": "2x8-12", "rest": "1 min", "note": "Go heavier than a hammer curl — same muscles"},
+        {"name": "Reverse Grip Barbell Curl", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "Single Arm DB Preacher Curl", "sets": "3x8-12", "rest": "30 sec", "note": "Per arm"},
+        {"name": "DB Wrist Curl", "sets": "3x12-15", "rest": "0 sec", "note": "Per arm · no rest between arms"},
+        {"name": "Plate Pinch", "sets": "3xfailure", "rest": "30-60 sec", "note": "Holds to failure — pinch a plate with thumb & fingers"},
+        {"name": "Towel Hangs", "sets": "3xfailure", "rest": "30 sec", "note": "Holds to failure"},
+    ]},
+    {"group": "fullbody", "title": "Athletic Bodyweight Circuit", "exercises": [
+        {"name": "Spider Crawl", "sets": "3x8-12", "rest": "30-60 sec", "note": "Per side"},
+        {"name": "Step Up with Knee Raise", "sets": "3x12-15", "rest": "30 sec", "note": "Per side"},
+        {"name": "Single Leg Glute Bridge", "sets": "3x8-12", "rest": "30 sec", "note": "Per side"},
+        {"name": "Pistol Squat", "sets": "3x8-12", "rest": "30 sec", "note": "Per side"},
+        {"name": "V-Sit", "sets": "5x10-15", "rest": "30 sec"},
+        {"name": "Plank", "sets": "3x1 min", "rest": "30 sec", "note": "1-minute holds"},
+        {"name": "Jump Rope", "sets": "10 min", "note": "Don't count rest toward the 10 minutes of jumping"},
+    ]},
+    # ── Batch 2+ goes here as screenshots arrive ──
+]
+
+# Shown on a category page that has no real workouts yet.
+COMING_SOON = {"title": "More workouts coming soon",
+               "note": "Workouts for this category are being added from the screenshot library.",
+               "exercises": [{"name": "Workouts pending import", "sets": "—"}]}
+
+
+def workouts_for(key):
+    """All staged workouts tentatively tagged for this category, in order."""
+    return [w for w in ALL_WORKOUTS if w.get("group") == key]
 
 
 def _label(i):
@@ -270,16 +269,20 @@ HUB_CARD = """  <a href="{slug}.html" class="plan-card">
     <div class="plan-tag">{tag}</div>
     <div class="plan-name">{name}</div>
     <div class="plan-meta">{meta}</div>
-    <div class="plan-count">{count} Workouts →</div>
+    <div class="plan-count">{count}</div>
   </a>
 """
+
+
+def _count_label(n):
+    return "{} Workouts →".format(n) if n else "Coming soon"
 
 
 def build_hub():
     cards = "\n".join(
         HUB_CARD.format(
             slug=c["slug"], icon=c["icon"], tag=c["tag"], name=c["name"],
-            meta=c["meta"], count=len(WORKOUTS.get(c["slug"], [])))
+            meta=c["meta"], count=_count_label(len(workouts_for(c["key"]))))
         for c in CATEGORIES)
     return HUB_TEMPLATE.format(cards=cards)
 
@@ -291,15 +294,12 @@ def write(path, content):
 
 
 def main():
-    print("Generating Bonus Workouts pages…")
+    print("Generating Bonus Workouts pages… ({} workouts staged)".format(len(ALL_WORKOUTS)))
     write("cat-bonus.html", build_hub())
     for c in CATEGORIES:
-        items = WORKOUTS.get(c["slug"], [])
-        if not items:
-            print("  !! no workouts for", c["slug"], "— skipping")
-            continue
+        items = workouts_for(c["key"]) or [COMING_SOON]
         write(c["slug"] + ".html", build_category_page(c, items))
-    print("Done. Remember to register new pages in sw.js and bump CACHE_NAME.")
+    print("Done. Register any new page files in sw.js and bump CACHE_NAME.")
 
 
 if __name__ == "__main__":
