@@ -454,7 +454,38 @@ ALL_WORKOUTS = [
         {"name": "Walking Lunges", "sets": "10 per leg", "note": "Slow, perfect form"},
         {"name": "Jump Rope", "sets": "100 jumps"},
     ]},
-    # ── Batch 12+ goes here as screenshots arrive ──
+    # ── Batch 12 (IMG_9698–9701) ──
+    {"group": "push", "title": "Machine Based Chest Workout", "exercises": [
+        {"name": "Cable Machine Press", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "Hammer Strength Incline Press", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Hammer Strength Decline Press", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Cable Cross-Over", "sets": "4x12-15", "rest": "1 min", "note": "2 sets from the high pulley, 2 sets from the low pulley"},
+        {"name": "Pec Deck", "sets": "3x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+    ]},
+    {"group": "fullbody", "title": "Full Body Barbell", "exercises": [
+        {"name": "Back Squat", "sets": "5x8-10", "rest": "2-3 min"},
+        {"name": "Standing Overhead Press", "sets": "4x8-10", "rest": "1-2 min"},
+        {"name": "Barbell Row", "sets": "4x8-10", "rest": "1-2 min"},
+        {"name": "Stiff Leg Deadlift", "sets": "4x8-10", "rest": "1-2 min"},
+        {"name": "Barbell Bench Press", "sets": "4x8-10", "rest": "1-2 min"},
+    ]},
+    {"group": "legs", "title": "Squat Variety Leg Day", "note": "Title was not captured in the source screenshot.", "exercises": [
+        {"name": "Stationary Lunges", "sets": "4x8-12", "rest": "30 sec", "note": "Per leg"},
+        {"name": "Stiff Leg Deadlift", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Overhead Squat", "sets": "4x8-12", "rest": "1-2 min"},
+        {"name": "Goblet Squat", "sets": "4x15-20", "rest": "1 min"},
+        {"name": "Jefferson Squat", "sets": "4x15-20", "rest": "1 min"},
+    ]},
+    {"group": "fullbody", "title": "All Dumbbell Upper Body", "note": "Title was not captured in the source screenshot.", "exercises": [
+        {"name": "Seated Alternating DB Curl", "sets": "3x8-12", "rest": "1 min", "note": "Per arm"},
+        {"name": "Flat DB Press", "sets": "4x8-12", "rest": "1-2 min"},
+        {"name": "2 Arm DB Row", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "High Incline DB Press", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "DB Shrug", "sets": "4x12-15", "rest": "1 min"},
+        {"name": "2 Arm DB Kick Back", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "2 Arm Lateral Raise", "sets": "3x12-15", "rest": "1 min"},
+    ]},
+    # ── Batch 13+ goes here as screenshots arrive ──
     # ⚠ MISSING: a home/circuit-style workout (intro seen between "Be Strong
     #   Overhead" and "Grip & Core"); only its intro + last line were captured.
     #   Needs a clean screenshot before it can be transcribed.
