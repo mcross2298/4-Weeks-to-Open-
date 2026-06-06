@@ -177,7 +177,44 @@ ALL_WORKOUTS = [
         {"name": "Jefferson Squat", "sets": "4x12-15", "rest": "1-2 min"},
         {"name": "Bulgarian Split Squat", "sets": "2x12-15", "rest": "30-60 sec", "note": "Per leg"},
     ]},
-    # ── Batch 4+ goes here as screenshots arrive ──
+    # ── Batch 4 (IMG_9738–9742) ──
+    {"group": "legs", "title": "Legs and Shoulders", "exercises": [
+        {"name": "DB Lateral Raise", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "Barbell Front Raise", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "Machine Overhead Press", "sets": "4x8-12", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Back Squat", "sets": "4x8-12", "rest": "1-2 min"},
+        {"name": "Overhead Squat", "sets": "3x8-12", "rest": "1 min", "note": "Try a broomstick/PVC pipe or preloaded barbell overhead"},
+        {"name": "Overhead Lunge", "sets": "3 sets", "rest": "1 min", "note": "Reps per leg · hold a broomstick/PVC, barbell, DBs, or KBs overhead"},
+    ]},
+    {"group": "pull", "title": "Back and Shoulders", "exercises": [
+        {"name": "Pull Ups", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
+        {"name": "Underhand Grip Lat Pulldown", "sets": "4x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Wide Grip Cable Row", "sets": "4x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Deadlift", "sets": "5x5", "rest": "1-3 min"},
+        {"name": "Single Arm Cable Lateral Raise", "sets": "3x8-12", "rest": "30 sec", "note": "Per arm"},
+        {"name": "Standing Single Arm Overhead Press", "sets": "4x8-12", "rest": "1 min", "note": "Per arm"},
+        {"name": "Rope Upright Row", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "Facepull", "sets": "3x12-15", "rest": "1 min"},
+    ]},
+    {"group": "pull", "title": "Arm Day — Cables & Tempo", "note": "Title was not captured in the source screenshot.", "exercises": [
+        {"name": "Cable Barbell Curl", "sets": "4x8-12", "rest": "1 min", "note": "5 sec concentric / 5 sec eccentric each rep"},
+        {"name": "Pinwheel Curl", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "DB Hammer Preacher Curl", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "2 Arm DB Kickback", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Seated EZ Bar Overhead Extension", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Tate Press", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Rope Pressdown", "sets": "4x8-12", "rest": "1 min", "note": "Last set: drop set to failure"},
+    ]},
+    {"group": "push", "title": "Chest, Traps & Rower", "note": "Title was not captured in the source screenshot.", "exercises": [
+        {"name": "Push Ups", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
+        {"name": "Decline Smith Machine Press", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Dips", "sets": "4x8-12", "rest": "1 min", "note": "Add weight with a dip belt for difficulty"},
+        {"name": "DB Incline Press", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Barbell Shrugs", "sets": "5x12-15", "rest": "1 min"},
+        {"name": "Cable Upright Row", "sets": "4x8-12", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Rower Machine", "sets": "1 round", "note": "2000m on the rower machine — finisher"},
+    ]},
+    # ── Batch 5+ goes here as screenshots arrive ──
 ]
 
 # Shown on a category page that has no real workouts yet.
