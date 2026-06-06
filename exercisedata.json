@@ -5897,5 +5897,400 @@
 "programs": [
 "PMC"
 ]
+},
+{
+"name": "Ballistic Row",
+"muscle": "Back",
+"programs": []
+},
+{
+"name": "Barbell Pullover",
+"muscle": "Back",
+"programs": []
+},
+{
+"name": "Chin Ups",
+"muscle": "Back",
+"programs": []
+},
+{
+"name": "Meadows Row",
+"muscle": "Back",
+"programs": []
+},
+{
+"name": "Rope Pullover",
+"muscle": "Back",
+"programs": []
+},
+{
+"name": "Hammer Strength Low Row",
+"muscle": "Back",
+"programs": []
+},
+{
+"name": "Rack Chins on Smith Machine",
+"muscle": "Back",
+"programs": []
+},
+{
+"name": "Barbell Bench Press",
+"muscle": "Chest",
+"programs": []
+},
+{
+"name": "DB Fly to Press",
+"muscle": "Chest",
+"programs": []
+},
+{
+"name": "Cable Machine Press",
+"muscle": "Chest",
+"programs": []
+},
+{
+"name": "Flat Chest Press Machine",
+"muscle": "Chest",
+"programs": []
+},
+{
+"name": "Smith Machine Incline Press",
+"muscle": "Chest",
+"programs": []
+},
+{
+"name": "Flat Smith Machine Press",
+"muscle": "Chest",
+"programs": []
+},
+{
+"name": "High Incline Smith Machine Press",
+"muscle": "Chest",
+"programs": []
+},
+{
+"name": "Single Arm Hammer Strength Incline",
+"muscle": "Chest",
+"programs": []
+},
+{
+"name": "Low Pulley Cable Cross Over",
+"muscle": "Chest",
+"programs": []
+},
+{
+"name": "2 Arm Standing Overhead Press",
+"muscle": "Shoulders",
+"programs": []
+},
+{
+"name": "Machine Overhead Press",
+"muscle": "Shoulders",
+"programs": []
+},
+{
+"name": "Standing Push Press",
+"muscle": "Shoulders",
+"programs": []
+},
+{
+"name": "Standing Single Arm Overhead Press",
+"muscle": "Shoulders",
+"programs": []
+},
+{
+"name": "Sots Press",
+"muscle": "Shoulders",
+"programs": []
+},
+{
+"name": "Chest-Supported Side Lateral Raises",
+"muscle": "Shoulders",
+"programs": []
+},
+{
+"name": "Rope Upright Row",
+"muscle": "Shoulders",
+"programs": []
+},
+{
+"name": "Hammer Strength Military Press",
+"muscle": "Shoulders",
+"programs": []
+},
+{
+"name": "2 Arm DB Hammer Curl",
+"muscle": "Biceps",
+"programs": []
+},
+{
+"name": "Cable Barbell Curl",
+"muscle": "Biceps",
+"programs": []
+},
+{
+"name": "Close Grip Cable EZ Bar Curl",
+"muscle": "Biceps",
+"programs": []
+},
+{
+"name": "Wide Grip Cable EZ Bar Curl",
+"muscle": "Biceps",
+"programs": []
+},
+{
+"name": "Reverse Grip Cable EZ Bar Curl",
+"muscle": "Biceps",
+"programs": []
+},
+{
+"name": "EZ Bar Preacher Curls",
+"muscle": "Biceps",
+"programs": []
+},
+{
+"name": "Close Grip EZ Bar Preacher Curl",
+"muscle": "Biceps",
+"programs": []
+},
+{
+"name": "Reverse Grip EZ Bar Preacher Curl",
+"muscle": "Biceps",
+"programs": []
+},
+{
+"name": "Front Double Bicep Curl",
+"muscle": "Biceps",
+"programs": []
+},
+{
+"name": "Single Arm Rope Hammer Curl",
+"muscle": "Biceps",
+"programs": []
+},
+{
+"name": "2 Arm DB Kickback",
+"muscle": "Triceps",
+"programs": []
+},
+{
+"name": "DB Kickback",
+"muscle": "Triceps",
+"programs": []
+},
+{
+"name": "Dead Skulls",
+"muscle": "Triceps",
+"programs": []
+},
+{
+"name": "Rope Extension",
+"muscle": "Triceps",
+"programs": []
+},
+{
+"name": "Seated EZ Bar Overhead Extension",
+"muscle": "Triceps",
+"programs": []
+},
+{
+"name": "Tate Press",
+"muscle": "Triceps",
+"programs": []
+},
+{
+"name": "Barbell Skullcrushers",
+"muscle": "Triceps",
+"programs": []
+},
+{
+"name": "Barbell Hack Squat",
+"muscle": "Legs - Quads",
+"programs": []
+},
+{
+"name": "Narrow Stance Hack Squat",
+"muscle": "Legs - Quads",
+"programs": []
+},
+{
+"name": "Bodyweight Squats",
+"muscle": "Legs - Quads",
+"programs": []
+},
+{
+"name": "Bodyweight Lunges",
+"muscle": "Legs - Quads",
+"programs": []
+},
+{
+"name": "Stationary Lunges",
+"muscle": "Legs - Quads",
+"programs": []
+},
+{
+"name": "Reverse Lunge",
+"muscle": "Legs - Quads",
+"programs": []
+},
+{
+"name": "Overhead Lunge",
+"muscle": "Legs - Quads",
+"programs": []
+},
+{
+"name": "Close Stance Leg Press",
+"muscle": "Legs - Quads",
+"programs": []
+},
+{
+"name": "High & Wide Stance Leg Press",
+"muscle": "Legs - Quads",
+"programs": []
+},
+{
+"name": "Front Squat",
+"muscle": "Legs - Quads",
+"programs": []
+},
+{
+"name": "Overhead Squat",
+"muscle": "Legs - Quads",
+"programs": []
+},
+{
+"name": "Jefferson Squat",
+"muscle": "Legs - Quads",
+"programs": []
+},
+{
+"name": "Zercher Squat",
+"muscle": "Legs - Quads",
+"programs": []
+},
+{
+"name": "Pistol Squat",
+"muscle": "Legs - Quads",
+"programs": []
+},
+{
+"name": "Step Up",
+"muscle": "Legs - Quads",
+"programs": []
+},
+{
+"name": "Step Up with Knee Raise",
+"muscle": "Legs - Quads",
+"programs": []
+},
+{
+"name": "Jump Squat",
+"muscle": "Legs - Quads",
+"programs": []
+},
+{
+"name": "Donkey Kicks",
+"muscle": "Legs - Glutes",
+"programs": []
+},
+{
+"name": "Glute Bridge",
+"muscle": "Legs - Glutes",
+"programs": []
+},
+{
+"name": "Single Leg Glute Bridge",
+"muscle": "Legs - Glutes",
+"programs": []
+},
+{
+"name": "Calf Press on Leg Press",
+"muscle": "Calves",
+"programs": []
+},
+{
+"name": "Ab Wheel",
+"muscle": "Core",
+"programs": []
+},
+{
+"name": "Fingertip Plank",
+"muscle": "Core",
+"programs": []
+},
+{
+"name": "Incline Sit Up",
+"muscle": "Core",
+"programs": []
+},
+{
+"name": "V-Sit",
+"muscle": "Core",
+"programs": []
+},
+{
+"name": "Towel Hang Leg Raise",
+"muscle": "Core",
+"programs": []
+},
+{
+"name": "DB Wrist Curl",
+"muscle": "Forearms",
+"programs": []
+},
+{
+"name": "Plate Pinch",
+"muscle": "Forearms",
+"programs": []
+},
+{
+"name": "Towel Hangs",
+"muscle": "Forearms",
+"programs": []
+},
+{
+"name": "Elliptical",
+"muscle": "Cardio",
+"programs": []
+},
+{
+"name": "Stairmaster",
+"muscle": "Cardio",
+"programs": []
+},
+{
+"name": "Stationary Bike",
+"muscle": "Cardio",
+"programs": []
+},
+{
+"name": "Incline Treadmill",
+"muscle": "Cardio",
+"programs": []
+},
+{
+"name": "Rower Machine",
+"muscle": "Cardio",
+"programs": []
+},
+{
+"name": "Standing Long Jump",
+"muscle": "Cardio",
+"programs": []
+},
+{
+"name": "Sprints",
+"muscle": "Cardio",
+"programs": []
+},
+{
+"name": "Turkish Get Up",
+"muscle": "Full Body",
+"programs": []
+},
+{
+"name": "Spider Crawl",
+"muscle": "Full Body",
+"programs": []
 }
 ]
