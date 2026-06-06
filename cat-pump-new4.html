@@ -181,6 +181,10 @@
     <a href="pump-instructions.html" class="inst-link">📋 Program Guide & Instructions</a>
   </div>
 
+  <div style="max-width:680px;margin:12px auto 0;padding:0 4px;">
+    <button id="pumpSurprise" type="button" style="display:block;width:100%;padding:13px 16px;border:1px solid rgba(236,72,153,0.4);border-radius:12px;cursor:pointer;font-family:inherit;font-weight:900;font-size:14px;letter-spacing:0.04em;color:#f9a8d4;background:rgba(236,72,153,0.14);-webkit-tap-highlight-color:transparent;">🎲 Surprise Me — Random Workout</button>
+  </div>
+
   <div class="modules">
 
     <!-- SPLIT #1 -->
@@ -379,5 +383,17 @@
 })();
 </script>
 <script src="mc-nav.js"></script>
+<script>
+/* Surprise Me — open a random pump workout from the drill lists. */
+(function(){
+  var b=document.getElementById('pumpSurprise'); if(!b) return;
+  b.addEventListener('click',function(){
+    var links=Array.prototype.slice.call(document.querySelectorAll('a.workout-row[href$=".html"]'));
+    if(!links.length) return;
+    var h=links[Math.floor(Math.random()*links.length)].getAttribute('href');
+    if(h) location.href=h;
+  });
+})();
+</script>
 </body>
 </html>

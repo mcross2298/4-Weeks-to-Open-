@@ -746,7 +746,9 @@ function render(){
       const weight = match ? (match[2].trim() || "—") : "";
       const id = `${activePhase}-${activeDay}-l${li}-s${si}-w${activeWeek}`;
       const checked = checkState[id] ? "checked" : "";
-      const weightHtml = weight === "—" || weight === "" ? '<span class="set-weight pick">—</span>' : `<span class="set-weight">${escapeHtml(weight)}</span>`;
+      // Prescribed weights are intentionally NOT shown — users log their own so
+      // the hardcoded numbers don't cause confusion. (weight var left unused.)
+      const weightHtml = '<span class="set-weight pick">—</span>';
       return `<div class="set-row ${checked}" data-id="${id}">
         <div class="set-left">
           <div class="checkbox"></div>
@@ -787,9 +789,10 @@ function render(){
     </div></div>
     <div class="day-tabs"><div class="day-tabs-inner">${dayTabs}</div></div>
     <div class="day-tabs" style="background:#01102a"><div class="day-tabs-inner">${weekBtns}</div></div>
+    <div style="max-width:680px;margin:0 auto;padding:12px 16px 0;"><button onclick="psuSurprise()" style="display:block;width:100%;padding:13px 16px;border:1px solid rgba(255,255,255,0.3);border-radius:12px;cursor:pointer;font-family:inherit;font-weight:900;font-size:14px;letter-spacing:0.04em;color:#fff;background:rgba(255,255,255,0.1);-webkit-tap-highlight-color:transparent;">🎲 Surprise Me — Random Day</button></div>
     <div class="content">
       <div class="week-banner"><strong>${phase.label} · ${escapeHtml(day.label)}</strong><br/>${phase.note}</div>
-      <div class="legend"><strong>Reading the chart:</strong> (5X) = 5 reps · Weight in pounds · Tap any set to mark complete</div>
+      <div class="legend"><strong>Reading the chart:</strong> (5X) = 5 reps · Log your own weight · Tap any set to mark complete</div>
       ${liftsHtml}
     </div>`;
 
@@ -811,6 +814,15 @@ function render(){
 
 render();
 if(typeof updateProgress!=="undefined")updateProgress();
+
+// Surprise Me — jump to a random training day within the active phase.
+function psuSurprise(){
+  var keys=Object.keys(PROGRAM[activePhase].days);
+  if(keys.length<2)return;
+  var k; do{ k=keys[Math.floor(Math.random()*keys.length)]; }while(k===activeDay && keys.length>1);
+  activeDay=k; activeWeek=0; render(); window.scrollTo(0,0);
+}
+window.psuSurprise=psuSurprise;
 
 const _T={iv:null,st:null,dur:0,el:null,nm:'',
   fmt(s){const n=s<0,a=Math.abs(s),m=Math.floor(a/60),sc=a%60;return(n?'+':'')+(m>0?m+':'+String(sc).padStart(2,'0'):sc+'s');},

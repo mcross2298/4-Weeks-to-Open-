@@ -184,6 +184,7 @@
 
   <div class="split-strip-wrap">
     <div class="split-strip-label">Select a Workout</div>
+    <button id="strengthSurprise" type="button" onclick="strengthSurprise()" style="display:block;width:100%;margin-bottom:10px;padding:13px 16px;border:1px solid rgba(225,29,72,0.4);border-radius:12px;cursor:pointer;font-family:inherit;font-weight:900;font-size:14px;letter-spacing:0.04em;color:#fb7185;background:rgba(225,29,72,0.14);-webkit-tap-highlight-color:transparent;">🎲 Surprise Me — Random Workout</button>
     <div class="split-strip" id="splitStrip"></div>
   </div>
 
@@ -781,6 +782,14 @@ function buildStrip(){
     </div>`;
   }).join('');
 }
+
+// Surprise Me — open a random (available) workout from the cycle.
+function strengthSurprise(){
+  var ws = ((SPLITS[0] && SPLITS[0].workouts) || []).filter(function(w){ return !w.comingSoon; });
+  if(!ws.length) return;
+  showWorkout(ws[Math.floor(Math.random()*ws.length)].id);
+}
+window.strengthSurprise = strengthSurprise;
 
 // Renders the tapped split's workout breakout inside the split view.
 function renderSplitDetail(){
