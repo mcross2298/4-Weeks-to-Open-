@@ -214,7 +214,42 @@ ALL_WORKOUTS = [
         {"name": "Cable Upright Row", "sets": "4x8-12", "rest": "1 min", "note": "Last set: drop set to failure"},
         {"name": "Rower Machine", "sets": "1 round", "note": "2000m on the rower machine — finisher"},
     ]},
-    # ── Batch 5+ goes here as screenshots arrive ──
+    # ── Batch 5 (IMG_9733–9737) ──
+    {"group": "legs", "title": "Quads and Triceps", "exercises": [
+        {"name": "V-Grip Pressdown", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Rope Overhead Extension", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Leg Extension", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Step Up", "sets": "4x8-12", "rest": "1 min", "note": "Optional: hold DBs to add resistance"},
+        {"name": "Narrow Stance Hack Squat", "sets": "4x8-12", "rest": "1 min", "note": "Feet almost touching"},
+        {"name": "Sissy Squat", "sets": "4x8-12", "rest": "1 min", "note": "Optional: slow the eccentric on each rep"},
+    ]},
+    {"group": "legs", "title": "Glutes & Posterior", "note": "Title was not captured in the source screenshot.", "exercises": [
+        {"name": "Donkey Kicks", "sets": "4x8-12", "rest": "0 sec", "note": "Per leg · focus on the glute contraction"},
+        {"name": "Hip Thrusts", "sets": "4x15-20", "rest": "1 min"},
+        {"name": "Glute Bridge", "sets": "4x12-15", "rest": "1 min"},
+        {"name": "Good Morning", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Goblet Squat", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Incline Treadmill", "sets": "10 min", "note": "Low intensity cardio"},
+        {"name": "Stairmaster", "sets": "10 min", "note": "Low intensity · add a kickback + glute contraction each step"},
+    ]},
+    {"group": "pull", "title": "Back and Biceps", "exercises": [
+        {"name": "Close Grip Lat Pulldown", "sets": "4x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Single Arm Cable Row", "sets": "4x12-15", "rest": "30 sec", "note": "Per arm · last set: drop set to failure"},
+        {"name": "DB Pullover", "sets": "4x12-15", "rest": "1 min", "note": "Focus on the stretch over total weight"},
+        {"name": "Chin Ups", "sets": "5xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
+        {"name": "Close Grip EZ Bar Preacher Curl", "sets": "3x8-12", "rest": "1 min"},
+        {"name": "Reverse Grip EZ Bar Preacher Curl", "sets": "3x8-12", "rest": "1 min"},
+    ]},
+    {"group": "push", "title": "Chest and Triceps", "exercises": [
+        {"name": "Pec Deck", "sets": "4x12-15", "rest": "1 min", "note": "Hold the contraction 3-5 sec each rep"},
+        {"name": "Single Arm Hammer Strength Incline", "sets": "4x8-12", "rest": "30-60 sec", "note": "Per side · one side at a time"},
+        {"name": "Hammer Strength Decline", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Cable Crossover", "sets": "3x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Dip Machine", "sets": "4x8-12", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Rope Overhead Extension", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "DB Kickback", "sets": "4x8-12", "rest": "1 min"},
+    ]},
+    # ── Batch 6+ goes here as screenshots arrive ──
 ]
 
 # Shown on a category page that has no real workouts yet.
