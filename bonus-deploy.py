@@ -246,7 +246,7 @@ ALL_WORKOUTS = [
     {"group": "chest-shoulders", "title": "Chest and Triceps", "exercises": [
         {"name": "Pec Deck", "sets": "4x12-15", "rest": "1 min", "note": "Hold the contraction 3-5 sec each rep"},
         {"name": "Single Arm Hammer Strength Incline", "sets": "4x8-12", "rest": "30-60 sec", "note": "Per side · one side at a time"},
-        {"name": "Hammer Strength Decline", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Hammer Strength Decline Press", "sets": "4x8-12", "rest": "1 min"},
         {"name": "Cable Crossover", "sets": "3x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
         {"name": "Dip Machine", "sets": "4x8-12", "rest": "1 min", "note": "Last set: drop set to failure"},
         {"name": "Rope Overhead Extension", "sets": "4x8-12", "rest": "1 min"},
@@ -485,7 +485,7 @@ ALL_WORKOUTS = [
         {"name": "2 Arm DB Row", "sets": "4x8-12", "rest": "1 min"},
         {"name": "High Incline DB Press", "sets": "4x8-12", "rest": "1 min"},
         {"name": "DB Shrug", "sets": "4x12-15", "rest": "1 min"},
-        {"name": "2 Arm DB Kick Back", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "2 Arm DB Kickback", "sets": "3x12-15", "rest": "1 min"},
         {"name": "2 Arm Lateral Raise", "sets": "3x12-15", "rest": "1 min"},
     ]},
     # ── Batch 13+ goes here as screenshots arrive ──
