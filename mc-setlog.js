@@ -59,26 +59,66 @@
     var n = s.match(/(\d+)/); return n ? n[1] : '';
   }
 
-  // ---- drop-set detection -------------------------------------------------
-  // A drop set is an EXTRA set tacked onto the working sets — it must not be
-  // folded into the working-set count. Two notations appear across programs:
-  //   • open-ended "drop set"  (Daily Gainz "3×8–12, drop set" / "(drop set)")
-  //       → an AMRAP drop (strip weight, reps to failure)
-  //   • numeric  "… drop N"    (PMC/MC/Pump "12,10,8,8 drop 15")
-  //       → a drop with a prescribed rep target (N)
-  // Returns {is, reps} where reps is the numeric target or 'AMRAP'.
-  // A bare "drop" with no number and no "set" (rare) is NOT treated as a drop.
-  function parseDrop(name, sets) {
+  // ---- extra-set detection (drop / cluster) -------------------------------
+  // Drop and cluster sets are EXTRA sets tacked onto the working sets — they
+  // must not be folded into the working-set count, and they drive the strict
+  // rest rule below. Notations seen across programs:
+  //   DROP:    "12,10,8,8 drop 15"  /  "… drop 4 drop 6 drop 8"  (chained)
+  //            "10,10,10 + 2× Drop AMRAP"  /  "(drop set)" / "drop set" (AMRAP)
+  //   CLUSTER: "20,15,15,12, 2× Cluster"  /  "12 + 6× Cluster at 12 reps"
+  //            "12,10,8, 3× Cluster at 6 reps"  / name "… (Cluster)"
+  // Returns {type:'drop'|'cluster'|null, count:int, reps:'AMRAP'|number|''}.
+  function parseExtra(name, sets) {
     var hay = (name || '') + ' ' + (sets || '');
-    if (!/drop/i.test(hay)) return { is: false, reps: '' };
-    var m = hay.match(/drop\s*(\d+)/i);                 // "drop 15", "drop 8"
-    if (m) return { is: true, reps: m[1] };
-    if (/drop\s*set/i.test(hay)) return { is: true, reps: 'AMRAP' };
-    return { is: false, reps: '' };
+    if (/cluster/i.test(hay)) {
+      var cm = hay.match(/(\d+)\s*[x×]\s*cluster/i);
+      var cr = (hay.match(/cluster\s*(?:at\s*)?(\d+)\s*rep/i) || hay.match(/at\s*(\d+)\s*rep/i) || [])[1] || '';
+      return { type: 'cluster', count: cm ? parseInt(cm[1], 10) : 1, reps: cr };
+    }
+    if (/drop/i.test(hay)) {
+      var dm = hay.match(/(\d+)\s*[x×]\s*drop/i);                 // "2× Drop"
+      if (dm) return { type: 'drop', count: parseInt(dm[1], 10),
+        reps: /amrap/i.test(hay) ? 'AMRAP' : ((hay.match(/drop\s*(\d+)/i) || [])[1] || 'AMRAP') };
+      var chained = hay.match(/drop\s*\d+/ig) || [];             // "drop 4 drop 6 …"
+      if (chained.length) return { type: 'drop', count: chained.length,
+        reps: (String(chained[0]).match(/\d+/) || [])[0] };
+      if (/drop\s*set|drop\s*amrap/i.test(hay)) return { type: 'drop', count: 1, reps: 'AMRAP' };
+    }
+    return { type: null, count: 0, reps: '' };
   }
-  // Strip the trailing "drop …" clause so the WORKING sets parse cleanly
-  // ("12,10,8,8 drop 15" → "12,10,8,8"; no more garbled "815" rep target).
-  function stripDrop(s) { return (s || '').replace(/[, ]*\bdrop\b.*$/i, '').trim(); }
+  // Strip any trailing drop/cluster clause so the WORKING sets parse cleanly
+  // ("12,10,8,8 drop 15" → "12,10,8,8"; "20,15,15,12, 2× Cluster" → "20,15,15,12").
+  function stripExtra(s) {
+    return (s || '')
+      .replace(/[,+ ]*\b\d+\s*[x×]\s*(?:drop|cluster)\b.*$/i, '')
+      .replace(/[,+ ]*\bdrop\b.*$/i, '')
+      .replace(/[,+ ]*\bcluster\b.*$/i, '')
+      .replace(/[,+ ]*$/, '').trim();
+  }
+
+  // ---- rest parsing (Phase 2 state machine) ------------------------------
+  // Seconds for a single token ("60 sec", "2 min", "10").
+  function secOf(tok) {
+    if (typeof TMR !== 'undefined' && TMR.parseSeconds) { var v = TMR.parseSeconds(tok); if (v) return v; }
+    var m = String(tok).match(/(\d+)/); return m ? parseInt(m[1], 10) : 0;
+  }
+  // Parse an authored rest string into either an explicit per-set list, or a
+  // standard value + an optional "between extras" override:
+  //   "60, 60, 60, 10, 10, 60 sec" → {list:[60,60,60,10,10,60]}
+  //   "60 sec / 10 b/t cluster"    → {standard:60, betweenOverride:10}
+  //   "90 sec"                     → {standard:90}
+  function parseRest(restStr) {
+    var out = { list: null, standard: null, betweenOverride: null };
+    if (!restStr) return out;
+    var slash = restStr.match(/(\d+)\s*(?:sec|min)?\s*\/\s*(\d+)/i);
+    if (slash) { out.standard = secOf(slash[1]); out.betweenOverride = parseInt(slash[2], 10); return out; }
+    if (restStr.indexOf(',') >= 0) {
+      var parts = restStr.split(',').map(function (p) { return secOf(p); }).filter(function (v) { return v > 0; });
+      if (parts.length > 1) { out.list = parts; return out; }
+    }
+    out.standard = secOf(restStr);
+    return out;
+  }
 
   // ---- rest seconds from the card's rest timer ---------------------------
   function restSecs(card) {
@@ -104,11 +144,11 @@
     if (rs > 0 && typeof TMR !== 'undefined' && TMR.start) {
       var t = card.querySelector('.rest-timer');
       if (t) {
-        // Use the rest value carried on the timer (from the program's data),
-        // so the auto-countdown matches the prescribed rest exactly.
-        var secs = (TMR.parseSeconds && TMR.parseSeconds(t.dataset.rest)) || rs;
+        // rs is the per-row rest computed by the state machine in build() —
+        // standard rest between working sets, strict 10s (drop) / 15s (cluster)
+        // after the final working set and between extra sets.
         try { (typeof buildTimerFloat === 'function') && buildTimerFloat(); } catch (e) {}
-        TMR.start(t, secs, 'Rest');
+        TMR.start(t, rs, 'Rest');
       }
     }
   }
@@ -133,22 +173,49 @@
 
     var cid = cssId(exId);
 
-    // Separate the WORKING sets from any appended drop set so the drop is never
-    // folded into (and garbling) the working-set rows. See parseDrop/stripDrop.
+    // Separate WORKING sets from any appended drop/cluster sets so the extras
+    // are never folded into the working-set rows. Detection reads the exercise
+    // name, the prescribed sets string, AND the note (e.g. "Last set: drop set
+    // to failure"). See parseExtra/stripExtra.
     var nmEl = card.querySelector('.ex-name, .ss-name, .lift-name, .var-name');
-    var drop = parseDrop(nmEl ? nmEl.textContent : '', setsStr);
-    var work = drop.is ? stripDrop(setsStr) : setsStr;
+    var noteEl = card.querySelector('.ex-note, .ss-note, .var-note, .lift-note');
+    var hayName = (nmEl ? nmEl.textContent : '') + ' ' + (noteEl ? noteEl.textContent : '');
+    var extra = parseExtra(hayName, setsStr);
+    var work = extra.count ? stripExtra(setsStr) : setsStr;
     var n = setCount(work);
-    var total = drop.is ? n + 1 : n;   // the appended row is the drop set
-    var dropAmrap = drop.reps === 'AMRAP';
+    var total = n + extra.count;            // appended rows are the drop/cluster sets
+
+    // ── Per-row rest state machine ──
+    // standard rest between working sets; strict 10s (drop) / 15s (cluster)
+    // after the final working set and between extra sets; the final extra row
+    // returns to standard rest (transition to the next exercise). An explicit
+    // authored per-set rest list, or a "X / Y b/t" override, always wins.
+    var tEl = card.querySelector('.rest-timer');
+    var prest = parseRest((tEl && tEl.dataset && tEl.dataset.rest) || '');
+    var standard = prest.standard || rs || 60;
+    var strict = (extra.type === 'cluster') ? 15 : 10;
+    if (prest.betweenOverride) strict = prest.betweenOverride;
+    function rowRest(i) {
+      if (prest.list) return prest.list[Math.min(i, prest.list.length - 1)];
+      if (!extra.count) return standard;
+      if (i === total - 1) return standard;   // final extra → rest before next exercise
+      if (i >= n - 1) return strict;          // last working set + between extras → strict
+      return standard;
+    }
+
+    var badge = extra.count
+      ? (extra.type === 'cluster' ? '+ ' + extra.count + '× CLUSTER'
+         : (extra.reps === 'AMRAP' ? '+ AMRAP' : '+ ' + extra.count + '× DROP'))
+      : '';
+    var badgeTitle = !extra.count ? '' :
+      (extra.type === 'cluster'
+        ? 'Cluster sets — ' + strict + 's rest after your last working set and between clusters'
+        : 'Drop sets — ' + strict + 's rest after your last working set and between drops');
 
     var toggle = document.createElement('div');
     toggle.className = 'mcl-toggle';
     toggle.innerHTML = '<span class="mcl-chev">▾</span><span class="mcl-lbl">Log Sets</span>' +
-                       (drop.is ? '<span class="mcl-amrap" title="' +
-                          (dropAmrap ? 'Drop set — extra set to failure after your working sets'
-                                     : 'Drop set — strip weight after the last set, rep out (~' + drop.reps + ')') +
-                          '">' + (dropAmrap ? '+ AMRAP' : '+ DROP') + '</span>' : '') +
+                       (badge ? '<span class="mcl-amrap" title="' + badgeTitle + '">' + badge + '</span>' : '') +
                        '<span class="mcl-hist mcl-hist-' + cid + '">' + histText(exId) + '</span>';
 
     var wrap = document.createElement('div');
@@ -157,12 +224,13 @@
                '<div class="mcl-hl">Reps</div><div class="mcl-hl"></div></div>';
     for (var i = 0; i < total; i++) {
       var sn = i + 1, last = lset(exId, sn);
-      var isDropRow = drop.is && i === total - 1;   // the appended drop set row
-      var pr = isDropRow ? '' : repFor(work, i);
+      var isExtra = extra.count > 0 && i >= n;   // appended drop/cluster row
+      var pr = isExtra ? '' : repFor(work, i);
       var wPh = (last && last.w) ? (last.w + ' lb') : 'lb';
-      var rPh = isDropRow ? drop.reps : (pr || (last && last.r ? last.r : 'reps'));
-      html += '<div class="mcl-row' + (isDropRow ? ' mcl-row-amrap' : '') + '" id="mclr-' + cid + '-' + sn + '">' +
-                '<div class="mcl-num">' + (isDropRow ? '↓' : sn) + '</div>' +
+      var rPh = isExtra ? (extra.reps || 'AMRAP') : (pr || (last && last.r ? last.r : 'reps'));
+      var numLbl = isExtra ? (extra.type === 'cluster' ? '⊕' : '↓') : sn;
+      html += '<div class="mcl-row' + (isExtra ? ' mcl-row-amrap' : '') + '" id="mclr-' + cid + '-' + sn + '">' +
+                '<div class="mcl-num">' + numLbl + '</div>' +
                 '<input class="mcl-inp mcl-w" type="number" inputmode="decimal" placeholder="' + wPh + '">' +
                 '<input class="mcl-inp mcl-r" type="number" inputmode="numeric" placeholder="' + rPh + '">' +
                 '<div class="mcl-ck set-check" data-sn="' + sn + '">☐</div>' +
@@ -181,7 +249,8 @@
     Array.prototype.forEach.call(wrap.querySelectorAll('.mcl-ck'), function (ck) {
       ck.addEventListener('click', function (e) {
         e.stopPropagation(); e.preventDefault();
-        onCheck(card, exId, parseInt(ck.dataset.sn, 10), rs);
+        var sn = parseInt(ck.dataset.sn, 10);
+        onCheck(card, exId, sn, rowRest(sn - 1));
       });
     });
 
