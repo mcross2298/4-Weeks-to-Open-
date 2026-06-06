@@ -91,6 +91,16 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
   </div>
 </div>
 <script>
+/* When a guide is opened from here (reached via the dashboard's Program
+   Guide card), tell the per-program instruction page to send its back
+   button to the dashboard — not deeper into the program's own home page. */
+document.querySelectorAll('.prog-card').forEach(function(a){
+  a.addEventListener('click', function(){
+    try{ sessionStorage.setItem('mc_back_to','dashboard.html'); }catch(e){}
+  });
+});
+</script>
+<script>
 /* ── SMART BACK NAV ── */
 (function(){
   var back = sessionStorage.getItem('mc_back_to');

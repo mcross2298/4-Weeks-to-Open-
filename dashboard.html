@@ -774,6 +774,9 @@ function renderConditioning(){
 })();
 
 // ── INIT ──
+// Clear any stale "smart back" target when landing on the hub, so a guide
+// page opened later never inherits a back destination from a prior visit.
+try{ sessionStorage.removeItem('mc_back_to'); }catch(e){}
 loadState();
 renderConditioning();
 // honor ?tab= deep-link from the global bottom nav (mc-nav.js)
