@@ -400,7 +400,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <a href="exercise-library.html" class="tool-card gold">
         <div class="tool-icon-wrap">📚</div>
         <div class="tool-name">Exercise Library</div>
-        <div class="tool-sub">450+ exercises by muscle group</div>
+        <div class="tool-sub" id="libCountDash">539 exercises by muscle group</div>
       </a>
       <a href="workout-logs.html" class="tool-card">
         <div class="tool-icon-wrap">📊</div>
@@ -792,11 +792,13 @@ renderConditioning();
 <script src="exercise-catalog.js"></script>
 <script>
 (function(){
-  var el=document.getElementById('libCount');
-  if(!el||!window.EXERCISES)return;
+  if(!window.EXERCISES)return;
   var skip={Cardio:1,Core:1}; // cardio/core live under the Conditioning tab
   var n=EXERCISES.filter(function(e){return !skip[e.muscle];}).length;
-  el.textContent=n+' exercises · search by muscle group · save replacements';
+  var dash=document.getElementById('libCountDash');
+  if(dash)dash.textContent=n+' exercises by muscle group';
+  var el=document.getElementById('libCount');
+  if(el)el.textContent=n+' exercises · search by muscle group · save replacements';
 })();
 </script>
 </body>
