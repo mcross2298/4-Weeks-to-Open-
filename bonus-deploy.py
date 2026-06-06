@@ -353,7 +353,40 @@ ALL_WORKOUTS = [
         {"name": "High & Narrow", "sets": "2x12-15", "rest": "1-2 min"},
         {"name": "Close & Wide", "sets": "2x12-15", "rest": "1-2 min"},
     ]},
-    # ── Batch 9+ goes here as screenshots arrive ──
+    # ── Batch 9 (IMG_9712–9716) ──
+    {"group": "push", "title": "Shoulders/Traps Volume Work", "note": "Add volume by using a rest-pause technique or a drop set on your last set of each exercise.", "exercises": [
+        {"name": "Cable Upright Row", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "DB Lateral Raise", "sets": "4x12-15", "rest": "1 min"},
+        {"name": "DB Military Press", "sets": "5x12-15", "rest": "1 min"},
+        {"name": "Reverse Pec Deck", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "Barbell Front Raise", "sets": "4x12-15", "rest": "1 min"},
+        {"name": "Barbell Shrug", "sets": "5x12-15", "rest": "1 min"},
+    ]},
+    {"group": "legs", "title": "Cardio Leg Day Challenge", "note": "Cardio + bodyweight lower-body challenge. Perform the mini-circuit back-to-back for 10 total rounds (= 1000 jumps, 200 lunges). Calf stretch gives a short rest between rounds. Optional: hold DBs during lunges.", "exercises": [
+        {"name": "Jump Rope", "sets": "100 jumps", "note": "Per round"},
+        {"name": "Walking Lunges", "sets": "10 per leg", "note": "Per round"},
+        {"name": "Calf Stretch", "sets": "15 sec", "note": "Per leg, between rounds"},
+    ]},
+    {"group": "push", "title": "Chest/Shoulders/Back", "exercises": [
+        {"name": "Pec Deck", "sets": "3x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Reverse Pec Deck", "sets": "3x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Incline Hammer Strength Press", "sets": "4x8-12", "rest": "1 min", "note": "Last set: rest-pause to failure"},
+        {"name": "Hammer Strength Decline Press", "sets": "4x8-12", "rest": "1 min", "note": "Last set: rest-pause to failure"},
+        {"name": "Hammer Strength High Row", "sets": "4x8-12", "rest": "1 min", "note": "Last set: rest-pause to failure"},
+        {"name": "Close Grip Lat Pulldown", "sets": "3x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Rower Machine", "sets": "1 round", "note": "2000m on the rower machine"},
+    ]},
+    {"group": "fullbody", "title": "Arms & Legs", "note": "Title was not captured in the source screenshot.", "exercises": [
+        {"name": "Barbell Curl", "sets": "3x8-12", "rest": "1 min"},
+        {"name": "Reverse Grip Barbell Curl", "sets": "3x8-12", "rest": "1 min"},
+        {"name": "Dead Skulls", "sets": "3x8-12", "rest": "1 min"},
+        {"name": "Rope Extension", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "Leg Extension", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "Leg Curls", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "Squats", "sets": "5x8-10", "rest": "1-2 min"},
+        {"name": "Standing Calf Raise", "sets": "4x12-15", "rest": "1 min"},
+    ]},
+    # ── Batch 10+ goes here as screenshots arrive ──
     # ⚠ MISSING: a home/circuit-style workout (intro seen between "Be Strong
     #   Overhead" and "Grip & Core"); only its intro + last line were captured.
     #   Needs a clean screenshot before it can be transcribed.
