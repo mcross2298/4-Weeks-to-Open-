@@ -100,7 +100,11 @@ ALL_WORKOUTS = [
         {"name": "Plate Pinch", "sets": "3xfailure", "rest": "30-60 sec", "note": "Holds to failure — pinch a plate with thumb & fingers"},
         {"name": "Towel Hangs", "sets": "3xfailure", "rest": "30 sec", "note": "Holds to failure"},
     ]},
-    {"group": "fullbody", "title": "Athletic Bodyweight Circuit", "exercises": [
+    {"group": "fullbody", "title": "Full Body Bodyweight Workout", "exercises": [
+        {"name": "Push Ups", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
+        {"name": "Dips", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
+        {"name": "Pull Ups", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
+        {"name": "Chin Ups", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
         {"name": "Spider Crawl", "sets": "3x8-12", "rest": "30-60 sec", "note": "Per side"},
         {"name": "Step Up with Knee Raise", "sets": "3x12-15", "rest": "30 sec", "note": "Per side"},
         {"name": "Single Leg Glute Bridge", "sets": "3x8-12", "rest": "30 sec", "note": "Per side"},
@@ -109,7 +113,33 @@ ALL_WORKOUTS = [
         {"name": "Plank", "sets": "3x1 min", "rest": "30 sec", "note": "1-minute holds"},
         {"name": "Jump Rope", "sets": "10 min", "note": "Don't count rest toward the 10 minutes of jumping"},
     ]},
-    # ── Batch 2+ goes here as screenshots arrive ──
+    # ── Batch 2 (IMG_9748–9752) ──
+    {"group": "legs", "title": "Squat Power & Calves", "exercises": [
+        {"name": "Squat Jumps", "sets": "3x10", "rest": "30 sec", "note": "Warm-up — explosive"},
+        {"name": "Barbell Squat", "sets": "5x6-8", "rest": "2-3 min"},
+        {"name": "Standing Long Jump", "sets": "5x8", "rest": "1 min", "note": "Be explosive — challenging after the squats"},
+        {"name": "Standing Calf Raise", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "Seated Calf Raise", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "Jump Rope / Burpees", "sets": "5-10 rounds", "note": "30-60 sec jump rope + 5-10 burpees per round; total rounds depend on conditioning"},
+    ]},
+    {"group": "legs", "title": "Hanging Hamstrings", "exercises": [
+        {"name": "Bodyweight Walking Lunges", "sets": "3x10", "rest": "30 sec", "note": "Per leg"},
+        {"name": "High & Wide Stance Leg Press", "sets": "5x8-12", "rest": "1-2 min"},
+        {"name": "DB Stiff Leg Deadlift", "sets": "5x8-12", "rest": "1-2 min"},
+        {"name": "Lying Leg Curl", "sets": "3x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Seated Leg Curl", "sets": "3x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+    ]},
+    {"group": "pull", "title": "Pump Arm Day", "exercises": [
+        {"name": "Close Grip Cable EZ Bar Curl", "sets": "3x12-15", "rest": "30-60 sec", "note": "Last set: drop set to failure"},
+        {"name": "Wide Grip Cable EZ Bar Curl", "sets": "3x12-15", "rest": "30-60 sec", "note": "Last set: drop set to failure"},
+        {"name": "Reverse Grip Cable EZ Bar Curl", "sets": "3x12-15", "rest": "30-60 sec", "note": "Last set: drop set to failure"},
+        {"name": "Alternating Pinwheel Curls", "sets": "3x8-12", "rest": "30-60 sec", "note": "Per arm"},
+        {"name": "V-Grip Pressdown", "sets": "3x12-15", "rest": "30-60 sec", "note": "Last set: drop set to failure"},
+        {"name": "Skull Crushers", "sets": "3x8-12", "rest": "30-60 sec"},
+        {"name": "Rope Overhead Extension", "sets": "3x12-15", "rest": "30-60 sec"},
+        {"name": "Rope Pressdown", "sets": "3x12-15", "rest": "30-60 sec", "note": "Last set: drop set to failure"},
+    ]},
+    # ── Batch 3+ goes here as screenshots arrive ──
 ]
 
 # Shown on a category page that has no real workouts yet.
