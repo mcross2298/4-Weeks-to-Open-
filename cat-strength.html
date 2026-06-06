@@ -1065,17 +1065,10 @@ function render(){
     const blocks = (workout.s7 && window.PMC_S7) ? PMC_S7.blocksForWeek(activeWeek) : workout.data;
     contentHtml = renderBlocks(blocks, wid);
     // Split 7 cycles rep ranges across 4 weeks, so it needs the week tabs too.
-    const blockWeekTabs = workout.s7 ? `<div class="week-tabs" style="border-bottom:1px solid ${_wcolor}1a;"><div class="wtabs">${tabs}</div></div>` : '';
+    // Header + week tabs are rendered ONCE by the static #workoutViewHeader and
+    // #weekTabs (populated above). Do NOT re-inject them here — that caused the
+    // header/week-slider to double-render. Only the content goes in #workoutContent.
     document.getElementById('workoutContent').innerHTML = `
-      <div class="header">
-        <a href="${workout.backUrl}" class="back-link">← ${workout.split}</a>
-        <div class="header-inner">
-          <div class="eyebrow">${workout.icon} ${workout.split}</div>
-          <div class="title">${workout.title}</div>
-          <span class="week-badge">Week ${activeWeek} · complete 5 rounds per lift</span>
-        </div>
-      </div>
-      ${blockWeekTabs}
       <div class="content">
         <div class="tap-hint">Tap exercises to check off · tap round buttons when complete</div>
         ${contentHtml}
@@ -1095,18 +1088,9 @@ function render(){
     contentHtml = warmupHtml + confusionBanner(activeWeek) + exercises.map(e=>renderEx(e,activeWeek)).join('')
       + (currentWorkoutId==='cardio_calves' ? conditioningCornerHtml() : '');
 
+    // Header + week tabs come from the static #workoutViewHeader / #weekTabs
+    // (populated above) — only inject the content to avoid double-rendering.
     document.getElementById('workoutContent').innerHTML = `
-      <div class="header">
-        <a href="${workout.backUrl}" class="back-link">← ${workout.split}</a>
-        <div class="header-inner">
-          <div class="eyebrow">${workout.icon} ${workout.split}</div>
-          <div class="title">${workout.title}</div>
-          <span class="week-badge">Week ${activeWeek}</span>
-        </div>
-      </div>
-      <div class="week-tabs" style="border-bottom:1px solid ${workout.color}1a;">
-        <div class="wtabs">${tabs}</div>
-      </div>
       <div class="content">
         <div class="tap-hint">Tap any exercise to check off</div>
         ${contentHtml}
