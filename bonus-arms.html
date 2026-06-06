@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Bonus Workouts – Full Body</title>
+<title>Bonus Workouts – Arms</title>
 <style>
 :root{--accent:#7dd3fc;--accent-rgb:56,189,248;}
 .header{background:linear-gradient(90deg,#080f1c,#050d1a);}
@@ -233,372 +233,178 @@ function makeRestTimer(r, n) {
 const WORKOUTS = [
   {
     "id": "a",
-    "label": "W1",
-    "title": "Full Body Bodyweight Workout",
+    "label": "Arms & Forearms",
+    "title": "Arms & Forearms",
     "exercises": [
       {
-        "name": "Push Ups",
-        "sets": "3xfailure",
+        "name": "Alternating Pinwheel Curl",
+        "sets": "2x8-12",
         "rest": "1 min",
-        "note": "Bodyweight to failure"
+        "note": "Go heavier than a hammer curl — same muscles"
       },
       {
-        "name": "Dips",
-        "sets": "3xfailure",
-        "rest": "1 min",
-        "note": "Bodyweight to failure"
-      },
-      {
-        "name": "Pull Ups",
-        "sets": "3xfailure",
-        "rest": "1 min",
-        "note": "Bodyweight to failure"
-      },
-      {
-        "name": "Chin Ups",
-        "sets": "3xfailure",
-        "rest": "1 min",
-        "note": "Bodyweight to failure"
-      },
-      {
-        "name": "Spider Crawl",
-        "sets": "3x8-12",
-        "rest": "30-60 sec",
-        "note": "Per side"
-      },
-      {
-        "name": "Step Up with Knee Raise",
+        "name": "Reverse Grip Barbell Curl",
         "sets": "3x12-15",
-        "rest": "30 sec",
-        "note": "Per side"
+        "rest": "1 min"
       },
       {
-        "name": "Single Leg Glute Bridge",
+        "name": "Single Arm DB Preacher Curl",
         "sets": "3x8-12",
         "rest": "30 sec",
-        "note": "Per side"
+        "note": "Per arm"
       },
       {
-        "name": "Pistol Squat",
-        "sets": "3x8-12",
+        "name": "DB Wrist Curl",
+        "sets": "3x12-15",
+        "rest": "0 sec",
+        "note": "Per arm · no rest between arms"
+      },
+      {
+        "name": "Plate Pinch",
+        "sets": "3xfailure",
+        "rest": "30-60 sec",
+        "note": "Holds to failure — pinch a plate with thumb & fingers"
+      },
+      {
+        "name": "Towel Hangs",
+        "sets": "3xfailure",
         "rest": "30 sec",
-        "note": "Per side"
-      },
-      {
-        "name": "V-Sit",
-        "sets": "5x10-15",
-        "rest": "30 sec"
-      },
-      {
-        "name": "Plank",
-        "sets": "3x1 min",
-        "rest": "30 sec",
-        "note": "1-minute holds"
-      },
-      {
-        "name": "Jump Rope",
-        "sets": "10 min",
-        "note": "Don't count rest toward the 10 minutes of jumping"
+        "note": "Holds to failure"
       }
     ]
   },
   {
     "id": "b",
-    "label": "W2",
-    "title": "This Isn't Crossfit",
-    "note": "Circuit style — 1-2 min rest between sets. Repeat for 5-10 rounds.",
+    "label": "Pump Arm Day",
+    "title": "Pump Arm Day",
     "exercises": [
       {
-        "name": "Bodyweight Squats",
-        "sets": "30 sec",
-        "note": "As many reps as possible in 30 sec"
+        "name": "Close Grip Cable EZ Bar Curl",
+        "sets": "3x12-15",
+        "rest": "30-60 sec",
+        "note": "Last set: drop set to failure"
       },
       {
-        "name": "Push Ups",
-        "sets": "30 sec",
-        "note": "As many reps as possible in 30 sec"
+        "name": "Wide Grip Cable EZ Bar Curl",
+        "sets": "3x12-15",
+        "rest": "30-60 sec",
+        "note": "Last set: drop set to failure"
       },
       {
-        "name": "Pull Ups",
-        "sets": "30 sec",
-        "note": "As many reps as possible in 30 sec"
+        "name": "Reverse Grip Cable EZ Bar Curl",
+        "sets": "3x12-15",
+        "rest": "30-60 sec",
+        "note": "Last set: drop set to failure"
       },
       {
-        "name": "Smith Machine Squat",
-        "sets": "10 reps"
+        "name": "Alternating Pinwheel Curls",
+        "sets": "3x8-12",
+        "rest": "30-60 sec",
+        "note": "Per arm"
       },
       {
-        "name": "Flat Smith Machine Press",
-        "sets": "10 reps"
+        "name": "V-Grip Pressdown",
+        "sets": "3x12-15",
+        "rest": "30-60 sec",
+        "note": "Last set: drop set to failure"
       },
       {
-        "name": "Rack Chins on Smith Machine",
-        "sets": "15 reps"
+        "name": "Skull Crushers",
+        "sets": "3x8-12",
+        "rest": "30-60 sec"
+      },
+      {
+        "name": "Rope Overhead Extension",
+        "sets": "3x12-15",
+        "rest": "30-60 sec"
+      },
+      {
+        "name": "Rope Pressdown",
+        "sets": "3x12-15",
+        "rest": "30-60 sec",
+        "note": "Last set: drop set to failure"
       }
     ]
   },
   {
     "id": "c",
-    "label": "W3",
-    "title": "Upper Body Strength",
+    "label": "Arm Day — Cables & Te…",
+    "title": "Arm Day — Cables & Tempo",
+    "note": "Title was not captured in the source screenshot.",
     "exercises": [
       {
-        "name": "Push Ups",
-        "sets": "3xfailure",
+        "name": "Cable Barbell Curl",
+        "sets": "4x8-12",
         "rest": "1 min",
-        "note": "Bodyweight to failure"
+        "note": "5 sec concentric / 5 sec eccentric each rep"
       },
       {
-        "name": "Barbell Bench Press",
-        "sets": "5x3-5",
-        "rest": "2-3 min"
+        "name": "Pinwheel Curl",
+        "sets": "4x8-12",
+        "rest": "1 min"
       },
       {
-        "name": "Standing Overhead Press",
-        "sets": "5x5-8",
-        "rest": "2-3 min"
+        "name": "DB Hammer Preacher Curl",
+        "sets": "4x8-12",
+        "rest": "1 min"
       },
       {
-        "name": "Pull Ups",
-        "sets": "3xfailure",
+        "name": "2 Arm DB Kickback",
+        "sets": "4x8-12",
+        "rest": "1 min"
+      },
+      {
+        "name": "Seated EZ Bar Overhead Extension",
+        "sets": "4x8-12",
+        "rest": "1 min"
+      },
+      {
+        "name": "Tate Press",
+        "sets": "4x8-12",
+        "rest": "1 min"
+      },
+      {
+        "name": "Rope Pressdown",
+        "sets": "4x8-12",
         "rest": "1 min",
-        "note": "Bodyweight to failure"
-      },
-      {
-        "name": "Barbell Row",
-        "sets": "5x8-12",
-        "rest": "1-2 min"
-      },
-      {
-        "name": "Cardio",
-        "sets": "1 round",
-        "note": "2000m on the rower OR 10 min HIIT on the stationary bike"
+        "note": "Last set: drop set to failure"
       }
     ]
   },
   {
     "id": "d",
-    "label": "W4",
-    "title": "Arms & Legs",
-    "note": "Title was not captured in the source screenshot.",
+    "label": "Compound Arm Day",
+    "title": "Compound Arm Day",
     "exercises": [
       {
-        "name": "Barbell Curl",
-        "sets": "3x8-12",
+        "name": "Reverse Grip Barbell Curls",
+        "sets": "4x8-12",
+        "rest": "1 min",
+        "note": "Thumbless grip for added challenge"
+      },
+      {
+        "name": "Barbell Curls",
+        "sets": "4x8-12",
         "rest": "1 min"
       },
       {
-        "name": "Reverse Grip Barbell Curl",
-        "sets": "3x8-12",
-        "rest": "1 min"
+        "name": "EZ Bar Preacher Curls",
+        "sets": "3x12-15",
+        "rest": "1 min",
+        "note": "Wide or close grip — whichever feels best"
+      },
+      {
+        "name": "Close Grip Bench Press",
+        "sets": "4x8-12",
+        "rest": "1-2 min"
       },
       {
         "name": "Dead Skulls",
-        "sets": "3x8-12",
-        "rest": "1 min"
-      },
-      {
-        "name": "Rope Extension",
-        "sets": "3x12-15",
-        "rest": "1 min"
-      },
-      {
-        "name": "Leg Extension",
-        "sets": "3x12-15",
-        "rest": "1 min"
-      },
-      {
-        "name": "Leg Curls",
-        "sets": "3x12-15",
-        "rest": "1 min"
-      },
-      {
-        "name": "Squats",
-        "sets": "5x8-10",
-        "rest": "1-2 min"
-      },
-      {
-        "name": "Standing Calf Raise",
-        "sets": "4x12-15",
-        "rest": "1 min"
-      }
-    ]
-  },
-  {
-    "id": "e",
-    "label": "W5",
-    "title": "Full Body Kettlebell/DBell Workout",
-    "note": "Can be performed with kettlebells or dumbbells.",
-    "exercises": [
-      {
-        "name": "Ballistic Row",
-        "sets": "4x10-15",
-        "rest": "1 min",
-        "note": "Per arm"
-      },
-      {
-        "name": "2 Arm Standing Overhead Press",
         "sets": "4x8-12",
         "rest": "1 min"
       },
       {
-        "name": "Sots Press",
-        "sets": "5x10",
-        "rest": "1 min"
-      },
-      {
-        "name": "Jump Squat",
-        "sets": "10x5",
-        "rest": "30 sec"
-      },
-      {
-        "name": "Reverse Lunge",
-        "sets": "4x8-12",
-        "rest": "30 sec",
-        "note": "Per leg"
-      }
-    ]
-  },
-  {
-    "id": "f",
-    "label": "W6",
-    "title": "Rower & Battle Ropes Conditioning",
-    "note": "Title was not captured in the source screenshot.",
-    "exercises": [
-      {
-        "name": "Rower",
-        "sets": "1500 m"
-      },
-      {
-        "name": "Battle Ropes",
-        "sets": "10x30 sec",
-        "rest": "30 sec",
-        "note": "30s on / 30s off. No ropes? Do burpees for the same periods."
-      },
-      {
-        "name": "Pull Ups",
-        "sets": "3xfailure",
-        "rest": "1 min",
-        "note": "Bodyweight to failure"
-      },
-      {
-        "name": "Push Ups",
-        "sets": "5xfailure",
-        "rest": "1 min",
-        "note": "Bodyweight to failure"
-      },
-      {
-        "name": "Chin Ups",
-        "sets": "3xfailure",
-        "rest": "1 min",
-        "note": "Bodyweight to failure"
-      },
-      {
-        "name": "Plank",
-        "sets": "3-5x1 min",
-        "rest": "1 min",
-        "note": "Optional: partner adds weight on your back"
-      }
-    ]
-  },
-  {
-    "id": "g",
-    "label": "W7",
-    "title": "Park Athletic Circuit",
-    "note": "Title not captured. Can be done at any park — perform all 4 exercises in a circuit, rest 1 min, then repeat.",
-    "exercises": [
-      {
-        "name": "Standing Long Jump",
-        "sets": "10 jumps",
-        "note": "Stop, plant feet, perfect form each rep"
-      },
-      {
-        "name": "40 Yard Sprints",
-        "sets": "5 sprints",
-        "note": "Walk back to start = rest. Hill sprints for a challenge."
-      },
-      {
-        "name": "Walking Lunges",
-        "sets": "10 per leg",
-        "note": "Slow, perfect form"
-      },
-      {
-        "name": "Jump Rope",
-        "sets": "100 jumps"
-      }
-    ]
-  },
-  {
-    "id": "h",
-    "label": "W8",
-    "title": "Full Body Barbell",
-    "exercises": [
-      {
-        "name": "Back Squat",
-        "sets": "5x8-10",
-        "rest": "2-3 min"
-      },
-      {
-        "name": "Standing Overhead Press",
-        "sets": "4x8-10",
-        "rest": "1-2 min"
-      },
-      {
-        "name": "Barbell Row",
-        "sets": "4x8-10",
-        "rest": "1-2 min"
-      },
-      {
-        "name": "Stiff Leg Deadlift",
-        "sets": "4x8-10",
-        "rest": "1-2 min"
-      },
-      {
-        "name": "Barbell Bench Press",
-        "sets": "4x8-10",
-        "rest": "1-2 min"
-      }
-    ]
-  },
-  {
-    "id": "i",
-    "label": "W9",
-    "title": "All Dumbbell Upper Body",
-    "note": "Title was not captured in the source screenshot.",
-    "exercises": [
-      {
-        "name": "Seated Alternating DB Curl",
-        "sets": "3x8-12",
-        "rest": "1 min",
-        "note": "Per arm"
-      },
-      {
-        "name": "Flat DB Press",
-        "sets": "4x8-12",
-        "rest": "1-2 min"
-      },
-      {
-        "name": "2 Arm DB Row",
-        "sets": "4x8-12",
-        "rest": "1 min"
-      },
-      {
-        "name": "High Incline DB Press",
-        "sets": "4x8-12",
-        "rest": "1 min"
-      },
-      {
-        "name": "DB Shrug",
-        "sets": "4x12-15",
-        "rest": "1 min"
-      },
-      {
-        "name": "2 Arm DB Kick Back",
-        "sets": "3x12-15",
-        "rest": "1 min"
-      },
-      {
-        "name": "2 Arm Lateral Raise",
+        "name": "Seated EZ Bar Overhead Extension",
         "sets": "3x12-15",
         "rest": "1 min"
       }
@@ -653,17 +459,17 @@ function render() {
     <div class="header">
       <a href="cat-bonus.html" class="back-link">← Back</a>
       <div class="header-inner">
-        <div class="eyebrow">⚡ Bonus Workouts</div>
-        <div class="title">Full Body</div>
-        <div class="subtitle">Total Body</div>
-        <div><span class="schedule">9 Workouts</span></div>
+        <div class="eyebrow">💪 Bonus Workouts</div>
+        <div class="title">Arms</div>
+        <div class="subtitle">Biceps · Triceps · Forearms</div>
+        <div><span class="schedule">4 Workouts</span></div>
       </div>
     </div>
     <div class="tabs-bar"><div class="tabs">${tabsHtml}</div></div>
     <div class="surprise-wrap"><button class="surprise-btn" onclick="surpriseMe()">🎲 Surprise Me</button></div>
     <div class="content">
       <div class="workout-title">${escapeHtml(w.title)}</div>
-      <div class="bonus-badge">⚡ Bonus Workouts</div>
+      <div class="bonus-badge">💪 Bonus Workouts</div>
       <div class="tap-hint">Tap any exercise to check off</div>
       ${exHtml}
     </div>`;

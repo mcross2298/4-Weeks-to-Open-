@@ -1,7 +1,7 @@
 // MC Training — Service Worker v2
 // Absolute URL cache for GitHub Pages
 
-const CACHE_NAME = 'mc-training-v61';
+const CACHE_NAME = 'mc-training-v62';
 const BASE = 'https://mcross2298.github.io/4-Weeks-to-Open-/';
 const CACHE_URLS = [
     'https://mcross2298.github.io/4-Weeks-to-Open-/',
@@ -15,11 +15,12 @@ const CACHE_URLS = [
     'https://mcross2298.github.io/4-Weeks-to-Open-/bonus-pump-cst.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/bonus-pump-lats.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/cat-bonus.html',
-    'https://mcross2298.github.io/4-Weeks-to-Open-/bonus-push.html',
-    'https://mcross2298.github.io/4-Weeks-to-Open-/bonus-pull.html',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/bonus-chest-shoulders.html',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/bonus-back.html',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/bonus-arms.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/bonus-legs.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/bonus-core.html',
-    'https://mcross2298.github.io/4-Weeks-to-Open-/bonus-fullbody.html',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/bonus-conditioning.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/boxing-routine.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/bro-split.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/cat-faint.html',

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Bonus Workouts – Pull</title>
+<title>Bonus Workouts – Chest & Shoulders</title>
 <style>
 :root{--accent:#7dd3fc;--accent-rgb:56,189,248;}
 .header{background:linear-gradient(90deg,#080f1c,#050d1a);}
@@ -233,43 +233,114 @@ function makeRestTimer(r, n) {
 const WORKOUTS = [
   {
     "id": "a",
-    "label": "W1",
-    "title": "Back — Hammer Rows",
+    "label": "Upper Chest & Anterio…",
+    "title": "Upper Chest & Anterior Delts",
     "exercises": [
       {
-        "name": "Hammer Strength High Row",
-        "sets": "4x12-15",
-        "rest": "1 min",
-        "note": "Last set: rest-pause to failure"
-      },
-      {
-        "name": "Hammer Strength Low Row",
-        "sets": "4x12-15",
-        "rest": "1 min",
-        "note": "Last set: rest-pause to failure"
-      },
-      {
-        "name": "Single Arm DB Row",
-        "sets": "3x12-15",
-        "rest": "30-60 sec",
-        "note": "Per arm"
-      },
-      {
-        "name": "Close Grip Cable Row",
-        "sets": "4x12-15",
-        "rest": "1 min",
-        "note": "Last set: drop set to failure"
-      },
-      {
-        "name": "Wide Grip Cable Row",
-        "sets": "4x12-15",
-        "rest": "1 min",
-        "note": "Last set: drop set to failure"
-      },
-      {
-        "name": "Face Pull",
+        "name": "Low Pulley Cable Cross Over",
         "sets": "4x12-15",
         "rest": "1 min"
+      },
+      {
+        "name": "Smith Machine Incline Press",
+        "sets": "4x8-12",
+        "rest": "1 min"
+      },
+      {
+        "name": "Hammer Strength Incline Press",
+        "sets": "4x8-12",
+        "rest": "1 min"
+      },
+      {
+        "name": "Hammer Strength Military Press",
+        "sets": "4x8-12",
+        "rest": "1 min"
+      },
+      {
+        "name": "Barbell Front Raise",
+        "sets": "4x12-15",
+        "rest": "1 min"
+      },
+      {
+        "name": "Push Ups",
+        "sets": "4xfailure",
+        "rest": "1 min",
+        "note": "Bodyweight to failure"
+      }
+    ]
+  },
+  {
+    "id": "b",
+    "label": "Traps & Shoulders",
+    "title": "Traps & Shoulders",
+    "exercises": [
+      {
+        "name": "Upright Row",
+        "sets": "4x12-15",
+        "rest": "1 min"
+      },
+      {
+        "name": "Barbell Shrug",
+        "sets": "4x12-15",
+        "rest": "1 min"
+      },
+      {
+        "name": "Chest Supported T-Bar Row (wide grip)",
+        "sets": "4x8-12",
+        "rest": "1 min"
+      },
+      {
+        "name": "Seated DB Shoulder Tri-Set",
+        "sets": "4x8-12",
+        "rest": "1 min",
+        "note": "Per exercise: DB Lateral Raise → DB Overhead Press → DB Front Raise → Bent-Over Lateral Raise"
+      },
+      {
+        "name": "Machine Overhead Press",
+        "sets": "4x8-12",
+        "rest": "1 min",
+        "note": "Last set: drop set to failure"
+      }
+    ]
+  },
+  {
+    "id": "c",
+    "label": "Chest, Traps & Rower",
+    "title": "Chest, Traps & Rower",
+    "note": "Title was not captured in the source screenshot.",
+    "exercises": [
+      {
+        "name": "Push Ups",
+        "sets": "3xfailure",
+        "rest": "1 min",
+        "note": "Bodyweight to failure"
+      },
+      {
+        "name": "Decline Smith Machine Press",
+        "sets": "4x8-12",
+        "rest": "1 min"
+      },
+      {
+        "name": "Dips",
+        "sets": "4x8-12",
+        "rest": "1 min",
+        "note": "Add weight with a dip belt for difficulty"
+      },
+      {
+        "name": "DB Incline Press",
+        "sets": "4x8-12",
+        "rest": "1 min"
+      },
+      {
+        "name": "Barbell Shrugs",
+        "sets": "5x12-15",
+        "rest": "1 min"
+      },
+      {
+        "name": "Cable Upright Row",
+        "sets": "4x8-12",
+        "rest": "1 min",
+        "note": "Last set: drop set to failure"
       },
       {
         "name": "Rower Machine",
@@ -279,339 +350,166 @@ const WORKOUTS = [
     ]
   },
   {
-    "id": "b",
-    "label": "W2",
-    "title": "Arms & Forearms",
+    "id": "d",
+    "label": "Chest and Triceps",
+    "title": "Chest and Triceps",
     "exercises": [
       {
-        "name": "Alternating Pinwheel Curl",
-        "sets": "2x8-12",
+        "name": "Pec Deck",
+        "sets": "4x12-15",
         "rest": "1 min",
-        "note": "Go heavier than a hammer curl — same muscles"
+        "note": "Hold the contraction 3-5 sec each rep"
       },
       {
-        "name": "Reverse Grip Barbell Curl",
-        "sets": "3x12-15",
+        "name": "Single Arm Hammer Strength Incline",
+        "sets": "4x8-12",
+        "rest": "30-60 sec",
+        "note": "Per side · one side at a time"
+      },
+      {
+        "name": "Hammer Strength Decline",
+        "sets": "4x8-12",
         "rest": "1 min"
       },
       {
-        "name": "Single Arm DB Preacher Curl",
-        "sets": "3x8-12",
-        "rest": "30 sec",
-        "note": "Per arm"
-      },
-      {
-        "name": "DB Wrist Curl",
+        "name": "Cable Crossover",
         "sets": "3x12-15",
-        "rest": "0 sec",
-        "note": "Per arm · no rest between arms"
-      },
-      {
-        "name": "Plate Pinch",
-        "sets": "3xfailure",
-        "rest": "30-60 sec",
-        "note": "Holds to failure — pinch a plate with thumb & fingers"
-      },
-      {
-        "name": "Towel Hangs",
-        "sets": "3xfailure",
-        "rest": "30 sec",
-        "note": "Holds to failure"
-      }
-    ]
-  },
-  {
-    "id": "c",
-    "label": "W3",
-    "title": "Pump Arm Day",
-    "exercises": [
-      {
-        "name": "Close Grip Cable EZ Bar Curl",
-        "sets": "3x12-15",
-        "rest": "30-60 sec",
+        "rest": "1 min",
         "note": "Last set: drop set to failure"
       },
       {
-        "name": "Wide Grip Cable EZ Bar Curl",
-        "sets": "3x12-15",
-        "rest": "30-60 sec",
+        "name": "Dip Machine",
+        "sets": "4x8-12",
+        "rest": "1 min",
         "note": "Last set: drop set to failure"
-      },
-      {
-        "name": "Reverse Grip Cable EZ Bar Curl",
-        "sets": "3x12-15",
-        "rest": "30-60 sec",
-        "note": "Last set: drop set to failure"
-      },
-      {
-        "name": "Alternating Pinwheel Curls",
-        "sets": "3x8-12",
-        "rest": "30-60 sec",
-        "note": "Per arm"
-      },
-      {
-        "name": "V-Grip Pressdown",
-        "sets": "3x12-15",
-        "rest": "30-60 sec",
-        "note": "Last set: drop set to failure"
-      },
-      {
-        "name": "Skull Crushers",
-        "sets": "3x8-12",
-        "rest": "30-60 sec"
       },
       {
         "name": "Rope Overhead Extension",
-        "sets": "3x12-15",
-        "rest": "30-60 sec"
+        "sets": "4x8-12",
+        "rest": "1 min"
       },
       {
-        "name": "Rope Pressdown",
-        "sets": "3x12-15",
-        "rest": "30-60 sec",
-        "note": "Last set: drop set to failure"
-      }
-    ]
-  },
-  {
-    "id": "d",
-    "label": "W4",
-    "title": "Strong Deadlifts",
-    "exercises": [
-      {
-        "name": "Deadlift",
-        "sets": "5x5",
-        "rest": "2-3 min"
-      },
-      {
-        "name": "Barbell Shrug",
-        "sets": "5x12-15",
-        "rest": "1-2 min"
-      },
-      {
-        "name": "Close Stance Leg Press",
-        "sets": "5x8-12",
-        "rest": "1-2 min"
-      },
-      {
-        "name": "Close Grip Cable Row",
-        "sets": "3x12-15",
-        "rest": "1 min",
-        "note": "Last set: drop set to failure"
-      },
-      {
-        "name": "Wide Grip Cable Row",
-        "sets": "3x12-15",
-        "rest": "1 min",
-        "note": "Last set: drop set to failure"
+        "name": "DB Kickback",
+        "sets": "4x8-12",
+        "rest": "1 min"
       }
     ]
   },
   {
     "id": "e",
-    "label": "W5",
-    "title": "Back and Shoulders",
+    "label": "Be Strong Overhead",
+    "title": "Be Strong Overhead",
     "exercises": [
       {
-        "name": "Pull Ups",
-        "sets": "3xfailure",
-        "rest": "1 min",
-        "note": "Bodyweight to failure"
-      },
-      {
-        "name": "Underhand Grip Lat Pulldown",
-        "sets": "4x12-15",
-        "rest": "1 min",
-        "note": "Last set: drop set to failure"
-      },
-      {
-        "name": "Wide Grip Cable Row",
-        "sets": "4x12-15",
-        "rest": "1 min",
-        "note": "Last set: drop set to failure"
-      },
-      {
-        "name": "Deadlift",
-        "sets": "5x5",
-        "rest": "1-3 min"
-      },
-      {
-        "name": "Single Arm Cable Lateral Raise",
-        "sets": "3x8-12",
-        "rest": "30 sec",
-        "note": "Per arm"
-      },
-      {
-        "name": "Standing Single Arm Overhead Press",
+        "name": "High Incline Smith Machine Press",
         "sets": "4x8-12",
-        "rest": "1 min",
-        "note": "Per arm"
-      },
-      {
-        "name": "Rope Upright Row",
-        "sets": "3x12-15",
         "rest": "1 min"
       },
       {
-        "name": "Facepull",
-        "sets": "3x12-15",
+        "name": "Seated DB Military Press",
+        "sets": "4x8-12",
         "rest": "1 min"
+      },
+      {
+        "name": "Standing Push Press",
+        "sets": "5x6-8",
+        "rest": "1-2 min"
+      },
+      {
+        "name": "Overhead Squat",
+        "sets": "3x8-12",
+        "rest": "1-2 min"
+      },
+      {
+        "name": "Turkish Get Up",
+        "sets": "3x5",
+        "rest": "30-60 sec",
+        "note": "Per side"
       }
     ]
   },
   {
     "id": "f",
-    "label": "W6",
-    "title": "Arm Day — Cables & Tempo",
-    "note": "Title was not captured in the source screenshot.",
+    "label": "All Dumbbell Chest Wo…",
+    "title": "All Dumbbell Chest Workout",
     "exercises": [
       {
-        "name": "Cable Barbell Curl",
+        "name": "Flat DB Flye Press",
         "sets": "4x8-12",
         "rest": "1 min",
-        "note": "5 sec concentric / 5 sec eccentric each rep"
+        "note": "Eccentric as a flye, concentric as a press"
       },
       {
-        "name": "Pinwheel Curl",
+        "name": "Decline DB Press",
         "sets": "4x8-12",
         "rest": "1 min"
       },
       {
-        "name": "DB Hammer Preacher Curl",
+        "name": "Flat DB Press",
         "sets": "4x8-12",
         "rest": "1 min"
       },
       {
-        "name": "2 Arm DB Kickback",
+        "name": "Incline DB Press",
         "sets": "4x8-12",
         "rest": "1 min"
       },
       {
-        "name": "Seated EZ Bar Overhead Extension",
-        "sets": "4x8-12",
-        "rest": "1 min"
-      },
-      {
-        "name": "Tate Press",
-        "sets": "4x8-12",
-        "rest": "1 min"
-      },
-      {
-        "name": "Rope Pressdown",
+        "name": "Decline DB Flye",
         "sets": "4x8-12",
         "rest": "1 min",
-        "note": "Last set: drop set to failure"
+        "note": "5 sec negative; focus on the stretch, keep weight moderate"
       }
     ]
   },
   {
     "id": "g",
-    "label": "W7",
-    "title": "Back and Biceps",
+    "label": "Chest/Biceps Supersets",
+    "title": "Chest/Biceps Supersets",
+    "note": "Pair one chest (push) move with one biceps (pull) move as a superset. 5 sets of 12-15 reps, 1 min rest after each superset.",
     "exercises": [
       {
-        "name": "Close Grip Lat Pulldown",
-        "sets": "4x12-15",
+        "name": "Cable Crossover / Front Double Bicep Curl",
+        "sets": "5x12-15",
         "rest": "1 min",
-        "note": "Last set: drop set to failure"
+        "note": "Superset · curl with cables set on the high pulley"
       },
       {
-        "name": "Single Arm Cable Row",
-        "sets": "4x12-15",
-        "rest": "30 sec",
-        "note": "Per arm · last set: drop set to failure"
-      },
-      {
-        "name": "DB Pullover",
-        "sets": "4x12-15",
+        "name": "Barbell Bench Press / Seated Alternating DB Curl",
+        "sets": "5x12-15",
         "rest": "1 min",
-        "note": "Focus on the stretch over total weight"
+        "note": "Superset · do the curl at the foot of the bench"
       },
       {
-        "name": "Chin Ups",
-        "sets": "5xfailure",
+        "name": "Hammer Strength Decline Press / Single Arm Concentration Curl",
+        "sets": "5x12-15",
         "rest": "1 min",
-        "note": "Bodyweight to failure"
+        "note": "Superset"
       },
       {
-        "name": "Close Grip EZ Bar Preacher Curl",
-        "sets": "3x8-12",
-        "rest": "1 min"
+        "name": "Push Ups / EZ Bar Preacher Curl",
+        "sets": "5x12-15",
+        "rest": "1 min",
+        "note": "Superset"
       },
       {
-        "name": "Reverse Grip EZ Bar Preacher Curl",
-        "sets": "3x8-12",
-        "rest": "1 min"
+        "name": "DB Fly / 2 Arm DB Hammer Curl",
+        "sets": "5x12-15",
+        "rest": "1 min",
+        "note": "Superset · same dbells for both"
       }
     ]
   },
   {
     "id": "h",
-    "label": "W8",
-    "title": "Compound Arm Day",
+    "label": "Shoulders/Traps Volum…",
+    "title": "Shoulders/Traps Volume Work",
+    "note": "Add volume by using a rest-pause technique or a drop set on your last set of each exercise.",
     "exercises": [
       {
-        "name": "Reverse Grip Barbell Curls",
-        "sets": "4x8-12",
-        "rest": "1 min",
-        "note": "Thumbless grip for added challenge"
-      },
-      {
-        "name": "Barbell Curls",
-        "sets": "4x8-12",
-        "rest": "1 min"
-      },
-      {
-        "name": "EZ Bar Preacher Curls",
-        "sets": "3x12-15",
-        "rest": "1 min",
-        "note": "Wide or close grip — whichever feels best"
-      },
-      {
-        "name": "Close Grip Bench Press",
-        "sets": "4x8-12",
-        "rest": "1-2 min"
-      },
-      {
-        "name": "Dead Skulls",
-        "sets": "4x8-12",
-        "rest": "1 min"
-      },
-      {
-        "name": "Seated EZ Bar Overhead Extension",
+        "name": "Cable Upright Row",
         "sets": "3x12-15",
         "rest": "1 min"
-      }
-    ]
-  },
-  {
-    "id": "i",
-    "label": "W9",
-    "title": "Back, Delts & Rower",
-    "note": "Title was not captured in the source screenshot.",
-    "exercises": [
-      {
-        "name": "Pull Ups / Chin Ups",
-        "sets": "2xfailure",
-        "rest": "1 min",
-        "note": "2 sets of each — bodyweight to failure"
-      },
-      {
-        "name": "Lat Pulldown",
-        "sets": "4x8-12",
-        "rest": "1 min"
-      },
-      {
-        "name": "Close Grip Lat Pulldown",
-        "sets": "4x12-15",
-        "rest": "1 min",
-        "note": "Last set: drop set to failure"
-      },
-      {
-        "name": "Wide Grip Cable Row",
-        "sets": "4x8-12",
-        "rest": "1 min",
-        "note": "Last set: drop set to failure"
       },
       {
         "name": "DB Lateral Raise",
@@ -619,195 +517,174 @@ const WORKOUTS = [
         "rest": "1 min"
       },
       {
-        "name": "Upright Row",
+        "name": "DB Military Press",
+        "sets": "5x12-15",
+        "rest": "1 min"
+      },
+      {
+        "name": "Reverse Pec Deck",
         "sets": "3x12-15",
         "rest": "1 min"
       },
       {
+        "name": "Barbell Front Raise",
+        "sets": "4x12-15",
+        "rest": "1 min"
+      },
+      {
+        "name": "Barbell Shrug",
+        "sets": "5x12-15",
+        "rest": "1 min"
+      }
+    ]
+  },
+  {
+    "id": "i",
+    "label": "Chest/Shoulders/Back",
+    "title": "Chest/Shoulders/Back",
+    "exercises": [
+      {
+        "name": "Pec Deck",
+        "sets": "3x12-15",
+        "rest": "1 min",
+        "note": "Last set: drop set to failure"
+      },
+      {
+        "name": "Reverse Pec Deck",
+        "sets": "3x12-15",
+        "rest": "1 min",
+        "note": "Last set: drop set to failure"
+      },
+      {
+        "name": "Incline Hammer Strength Press",
+        "sets": "4x8-12",
+        "rest": "1 min",
+        "note": "Last set: rest-pause to failure"
+      },
+      {
+        "name": "Hammer Strength Decline Press",
+        "sets": "4x8-12",
+        "rest": "1 min",
+        "note": "Last set: rest-pause to failure"
+      },
+      {
+        "name": "Hammer Strength High Row",
+        "sets": "4x8-12",
+        "rest": "1 min",
+        "note": "Last set: rest-pause to failure"
+      },
+      {
+        "name": "Close Grip Lat Pulldown",
+        "sets": "3x12-15",
+        "rest": "1 min",
+        "note": "Last set: drop set to failure"
+      },
+      {
         "name": "Rower Machine",
         "sets": "1 round",
-        "note": "2000m total"
+        "note": "2000m on the rower machine"
       }
     ]
   },
   {
     "id": "j",
-    "label": "W10",
-    "title": "Back — Pulldowns & Rows",
-    "note": "Title was not captured in the source screenshot.",
+    "label": "Machine Only Push Wor…",
+    "title": "Machine Only Push Workout",
+    "note": "Optional: make your last set of every exercise a drop set to failure.",
     "exercises": [
       {
-        "name": "Pull Ups / Chin Ups",
-        "sets": "6xfailure",
-        "rest": "1 min",
-        "note": "3 sets pull ups + 3 sets chin ups — bodyweight to failure"
-      },
-      {
-        "name": "Lat Pull Down",
+        "name": "Dip Machine",
         "sets": "4x12-15",
-        "rest": "1 min",
-        "note": "Last set: drop set to failure"
+        "rest": "1 min"
       },
       {
-        "name": "Single Arm Hammer Strength Row",
+        "name": "Flat Chest Press Machine",
         "sets": "4x8-12",
-        "rest": "30-60 sec"
+        "rest": "1-2 min"
       },
       {
-        "name": "Close Grip Cable Row",
-        "sets": "4x12-15",
-        "rest": "1 min",
-        "note": "Last set: drop set to failure"
+        "name": "Machine Overhead Press",
+        "sets": "4x8-12",
+        "rest": "1-2 min"
       },
       {
-        "name": "Wide Grip Cable Row",
-        "sets": "4x12-15",
-        "rest": "1 min",
-        "note": "Last set: drop set to failure"
+        "name": "Leg Extension",
+        "sets": "4x20-25",
+        "rest": "1 min"
       },
       {
-        "name": "DB Pullover",
-        "sets": "4x12-15",
-        "rest": "1 min",
-        "note": "Focus on the stretch of the negative over heavy weight"
+        "name": "Standing Calf Raise",
+        "sets": "4x20-25",
+        "rest": "1 min"
       }
     ]
   },
   {
     "id": "k",
-    "label": "W11",
-    "title": "All Barbell Back Workout",
+    "label": "Chest & Triceps Stren…",
+    "title": "Chest & Triceps Strength",
+    "note": "Title was not captured in the source screenshot.",
     "exercises": [
       {
-        "name": "Barbell Shrug",
-        "sets": "4x15-20",
+        "name": "Barbell Bench Press",
+        "sets": "5x3-5",
+        "rest": "1-3 min"
+      },
+      {
+        "name": "Close Grip Bench Press",
+        "sets": "3x5-8",
+        "rest": "1-3 min"
+      },
+      {
+        "name": "DB Press/Flye",
+        "sets": "3x8-12",
+        "rest": "1-2 min",
+        "note": "Press up, lower like a flye"
+      },
+      {
+        "name": "Tate Press",
+        "sets": "4x8-12",
+        "rest": "1-2 min"
+      },
+      {
+        "name": "V-Grip Pressdown",
+        "sets": "3x12-15",
         "rest": "1 min",
-        "note": "Slight pelvic tilt forward; shrug up-and-back in one motion"
-      },
-      {
-        "name": "Barbell Row",
-        "sets": "4x8-12",
-        "rest": "1 min"
-      },
-      {
-        "name": "T-Bar Row",
-        "sets": "4x8-12",
-        "rest": "1 min"
-      },
-      {
-        "name": "Meadows Row",
-        "sets": "4x12-15",
-        "rest": "30 sec",
-        "note": "Per arm · take extra rest if needed, finish strong"
-      },
-      {
-        "name": "Barbell Pullover",
-        "sets": "4x12-15",
-        "rest": "1 min"
+        "note": "Optional: last set drop to failure"
       }
     ]
   },
   {
     "id": "l",
-    "label": "W12",
-    "title": "Back/Triceps Supersets",
-    "note": "Pair one back (pull) move with one triceps (push) move as a superset. 5 sets of 12-15 reps, 1 min rest after each superset.",
+    "label": "Machine Based Chest W…",
+    "title": "Machine Based Chest Workout",
     "exercises": [
       {
-        "name": "Chin Ups / Push Ups",
-        "sets": "5x12-15",
-        "rest": "1 min",
-        "note": "Superset"
-      },
-      {
-        "name": "Pull Ups / Dips",
-        "sets": "5x12-15",
-        "rest": "1 min",
-        "note": "Superset"
-      },
-      {
-        "name": "Smith Machine Barbell Row / Close Grip Bench Press (Smith)",
-        "sets": "5x12-15",
-        "rest": "1 min",
-        "note": "Superset"
-      },
-      {
-        "name": "2 Arm DB Row / 2 Arm DB Kickback",
-        "sets": "5x12-15",
-        "rest": "1 min",
-        "note": "Superset"
-      },
-      {
-        "name": "Rope Pullover / Rope Pressdown",
-        "sets": "5x12-15",
-        "rest": "1 min",
-        "note": "Superset"
-      }
-    ]
-  },
-  {
-    "id": "m",
-    "label": "W13",
-    "title": "Machine Only Pull Workout",
-    "note": "Optional: make your last set of every exercise a drop set to failure. Add weight to the hyperextension if needed.",
-    "exercises": [
-      {
-        "name": "Lat Pull Down",
-        "sets": "4x12-15",
+        "name": "Cable Machine Press",
+        "sets": "3x12-15",
         "rest": "1 min"
       },
       {
-        "name": "Close Grip Cable Row",
-        "sets": "4x12-15",
-        "rest": "1 min"
-      },
-      {
-        "name": "Lying Hamstring Curl",
-        "sets": "4x20-25",
-        "rest": "1 min"
-      },
-      {
-        "name": "Cable Barbell Curl",
+        "name": "Hammer Strength Incline Press",
         "sets": "4x8-12",
         "rest": "1 min"
       },
       {
-        "name": "Hyperextension",
-        "sets": "4x12-15",
+        "name": "Hammer Strength Decline Press",
+        "sets": "4x8-12",
         "rest": "1 min"
-      }
-    ]
-  },
-  {
-    "id": "n",
-    "label": "W14",
-    "title": "Barbell Back Day",
-    "exercises": [
-      {
-        "name": "Deadlift",
-        "sets": "5x5-8",
-        "rest": "2-3 min"
       },
       {
-        "name": "Pendlay Row",
-        "sets": "3x8-12",
-        "rest": "1-2 min"
-      },
-      {
-        "name": "Shrugs",
-        "sets": "3x12-15",
-        "rest": "1-2 min"
-      },
-      {
-        "name": "T-Bar Row",
-        "sets": "3x8-12",
-        "rest": "1-2 min"
-      },
-      {
-        "name": "Meadows Row",
-        "sets": "3x8-12",
+        "name": "Cable Cross-Over",
+        "sets": "4x12-15",
         "rest": "1 min",
-        "note": "Per arm"
+        "note": "2 sets from the high pulley, 2 sets from the low pulley"
+      },
+      {
+        "name": "Pec Deck",
+        "sets": "3x12-15",
+        "rest": "1 min",
+        "note": "Last set: drop set to failure"
       }
     ]
   }
@@ -860,17 +737,17 @@ function render() {
     <div class="header">
       <a href="cat-bonus.html" class="back-link">← Back</a>
       <div class="header-inner">
-        <div class="eyebrow">🔙 Bonus Workouts</div>
-        <div class="title">Pull</div>
-        <div class="subtitle">Back · Biceps</div>
-        <div><span class="schedule">14 Workouts</span></div>
+        <div class="eyebrow">💥 Bonus Workouts</div>
+        <div class="title">Chest & Shoulders</div>
+        <div class="subtitle">Chest · Delts · Press</div>
+        <div><span class="schedule">12 Workouts</span></div>
       </div>
     </div>
     <div class="tabs-bar"><div class="tabs">${tabsHtml}</div></div>
     <div class="surprise-wrap"><button class="surprise-btn" onclick="surpriseMe()">🎲 Surprise Me</button></div>
     <div class="content">
       <div class="workout-title">${escapeHtml(w.title)}</div>
-      <div class="bonus-badge">🔙 Bonus Workouts</div>
+      <div class="bonus-badge">💥 Bonus Workouts</div>
       <div class="tap-hint">Tap any exercise to check off</div>
       ${exHtml}
     </div>`;

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Bonus Workouts – Core & Abs</title>
+<title>Bonus Workouts – Full Body & Conditioning</title>
 <style>
 :root{--accent:#7dd3fc;--accent-rgb:56,189,248;}
 .header{background:linear-gradient(90deg,#080f1c,#050d1a);}
@@ -233,153 +233,374 @@ function makeRestTimer(r, n) {
 const WORKOUTS = [
   {
     "id": "a",
-    "label": "Strong Core",
-    "title": "Strong Core",
-    "note": "Circuit style — 1-2 min rest between exercises. Repeat for 5-10 rounds. Can be done on its own or added onto any workout.",
+    "label": "Full Body Bodyweight…",
+    "title": "Full Body Bodyweight Workout",
     "exercises": [
       {
-        "name": "Incline Sit Up",
-        "sets": "10 reps"
+        "name": "Push Ups",
+        "sets": "3xfailure",
+        "rest": "1 min",
+        "note": "Bodyweight to failure"
+      },
+      {
+        "name": "Dips",
+        "sets": "3xfailure",
+        "rest": "1 min",
+        "note": "Bodyweight to failure"
+      },
+      {
+        "name": "Pull Ups",
+        "sets": "3xfailure",
+        "rest": "1 min",
+        "note": "Bodyweight to failure"
+      },
+      {
+        "name": "Chin Ups",
+        "sets": "3xfailure",
+        "rest": "1 min",
+        "note": "Bodyweight to failure"
+      },
+      {
+        "name": "Spider Crawl",
+        "sets": "3x8-12",
+        "rest": "30-60 sec",
+        "note": "Per side"
+      },
+      {
+        "name": "Step Up with Knee Raise",
+        "sets": "3x12-15",
+        "rest": "30 sec",
+        "note": "Per side"
+      },
+      {
+        "name": "Single Leg Glute Bridge",
+        "sets": "3x8-12",
+        "rest": "30 sec",
+        "note": "Per side"
+      },
+      {
+        "name": "Pistol Squat",
+        "sets": "3x8-12",
+        "rest": "30 sec",
+        "note": "Per side"
+      },
+      {
+        "name": "V-Sit",
+        "sets": "5x10-15",
+        "rest": "30 sec"
       },
       {
         "name": "Plank",
-        "sets": "1 min"
+        "sets": "3x1 min",
+        "rest": "30 sec",
+        "note": "1-minute holds"
       },
       {
-        "name": "Hanging Leg Raise",
-        "sets": "10 reps"
-      },
-      {
-        "name": "Plank",
-        "sets": "1 min"
-      },
-      {
-        "name": "Back Hyperextension",
-        "sets": "10 reps"
+        "name": "Jump Rope",
+        "sets": "10 min",
+        "note": "Don't count rest toward the 10 minutes of jumping"
       }
     ]
   },
   {
     "id": "b",
-    "label": "Grip & Core",
-    "title": "Grip & Core",
-    "note": "Title was not captured in the source screenshot.",
+    "label": "This Isn't Crossfit",
+    "title": "This Isn't Crossfit",
+    "note": "Circuit style — 1-2 min rest between sets. Repeat for 5-10 rounds.",
     "exercises": [
       {
-        "name": "DB Wrist Curl",
-        "sets": "4x12-15",
-        "rest": "0 sec",
-        "note": "Per arm · no rest between arms"
+        "name": "Bodyweight Squats",
+        "sets": "30 sec",
+        "note": "As many reps as possible in 30 sec"
       },
       {
-        "name": "Towel Hang Leg Raise",
-        "sets": "5x10",
-        "rest": "30 sec",
-        "note": "Drape two towels over a pull-up bar and grip them"
+        "name": "Push Ups",
+        "sets": "30 sec",
+        "note": "As many reps as possible in 30 sec"
       },
       {
-        "name": "Single Arm Rope Hammer Curl",
-        "sets": "3x12-15",
-        "rest": "30 sec",
-        "note": "Per arm"
+        "name": "Pull Ups",
+        "sets": "30 sec",
+        "note": "As many reps as possible in 30 sec"
       },
       {
-        "name": "Incline Sit Up",
-        "sets": "5x10",
-        "rest": "30 sec",
-        "note": "Optional: hold a plate"
+        "name": "Smith Machine Squat",
+        "sets": "10 reps"
       },
       {
-        "name": "Fingertip Plank",
-        "sets": "5x30-60 sec",
-        "rest": "30-60 sec",
-        "note": "Plank from a push-up position on your fingertips"
+        "name": "Flat Smith Machine Press",
+        "sets": "10 reps"
       },
       {
-        "name": "Plate Pinch",
-        "sets": "5x20-30 sec",
-        "rest": "30 sec",
-        "note": "Holds"
+        "name": "Rack Chins on Smith Machine",
+        "sets": "15 reps"
       }
     ]
   },
   {
     "id": "c",
-    "label": "Calves / Abs / Cardio",
-    "title": "Calves / Abs / Cardio",
+    "label": "Upper Body Strength",
+    "title": "Upper Body Strength",
     "exercises": [
       {
-        "name": "Seated Calf Raise",
-        "sets": "4x12-15",
-        "rest": "1 min"
+        "name": "Push Ups",
+        "sets": "3xfailure",
+        "rest": "1 min",
+        "note": "Bodyweight to failure"
       },
       {
-        "name": "Calf Press on Leg Press",
-        "sets": "4x12-15",
-        "rest": "1 min"
+        "name": "Barbell Bench Press",
+        "sets": "5x3-5",
+        "rest": "2-3 min"
       },
       {
-        "name": "Standing Calf Raise",
-        "sets": "4x12-15",
-        "rest": "1 min"
+        "name": "Standing Overhead Press",
+        "sets": "5x5-8",
+        "rest": "2-3 min"
       },
       {
-        "name": "Incline Sit Up",
-        "sets": "5x10",
-        "rest": "1 min"
+        "name": "Pull Ups",
+        "sets": "3xfailure",
+        "rest": "1 min",
+        "note": "Bodyweight to failure"
       },
       {
-        "name": "Hanging Leg Raise",
-        "sets": "3x12-15",
-        "rest": "1 min"
+        "name": "Barbell Row",
+        "sets": "5x8-12",
+        "rest": "1-2 min"
       },
       {
-        "name": "Ab Wheel",
-        "sets": "3x12-15",
-        "rest": "1 min"
-      },
-      {
-        "name": "Stairmaster",
-        "sets": "20 min",
-        "note": "Low intensity cardio"
+        "name": "Cardio",
+        "sets": "1 round",
+        "note": "2000m on the rower OR 10 min HIIT on the stationary bike"
       }
     ]
   },
   {
     "id": "d",
-    "label": "Core Work and Cardio",
-    "title": "Core Work and Cardio",
+    "label": "Arms & Legs",
+    "title": "Arms & Legs",
+    "note": "Title was not captured in the source screenshot.",
     "exercises": [
       {
-        "name": "Elliptical",
-        "sets": "10 min",
-        "note": "Low intensity cardio"
+        "name": "Barbell Curl",
+        "sets": "3x8-12",
+        "rest": "1 min"
       },
       {
-        "name": "Hanging Leg Raise",
-        "sets": "5x10-15",
-        "rest": "30-60 sec"
+        "name": "Reverse Grip Barbell Curl",
+        "sets": "3x8-12",
+        "rest": "1 min"
       },
       {
-        "name": "Jump Rope",
-        "sets": "10 min",
-        "note": "Total jumping time — don't count rest"
+        "name": "Dead Skulls",
+        "sets": "3x8-12",
+        "rest": "1 min"
       },
       {
-        "name": "Incline Sit Up",
-        "sets": "5x5-10",
-        "rest": "30-60 sec",
-        "note": "Optional: hold a plate"
+        "name": "Rope Extension",
+        "sets": "3x12-15",
+        "rest": "1 min"
       },
       {
-        "name": "Stationary Bike",
-        "sets": "10 min",
-        "note": "HIIT cardio"
+        "name": "Leg Extension",
+        "sets": "3x12-15",
+        "rest": "1 min"
+      },
+      {
+        "name": "Leg Curls",
+        "sets": "3x12-15",
+        "rest": "1 min"
+      },
+      {
+        "name": "Squats",
+        "sets": "5x8-10",
+        "rest": "1-2 min"
+      },
+      {
+        "name": "Standing Calf Raise",
+        "sets": "4x12-15",
+        "rest": "1 min"
+      }
+    ]
+  },
+  {
+    "id": "e",
+    "label": "Full Body Kettlebell/…",
+    "title": "Full Body Kettlebell/DBell Workout",
+    "note": "Can be performed with kettlebells or dumbbells.",
+    "exercises": [
+      {
+        "name": "Ballistic Row",
+        "sets": "4x10-15",
+        "rest": "1 min",
+        "note": "Per arm"
+      },
+      {
+        "name": "2 Arm Standing Overhead Press",
+        "sets": "4x8-12",
+        "rest": "1 min"
+      },
+      {
+        "name": "Sots Press",
+        "sets": "5x10",
+        "rest": "1 min"
+      },
+      {
+        "name": "Jump Squat",
+        "sets": "10x5",
+        "rest": "30 sec"
+      },
+      {
+        "name": "Reverse Lunge",
+        "sets": "4x8-12",
+        "rest": "30 sec",
+        "note": "Per leg"
+      }
+    ]
+  },
+  {
+    "id": "f",
+    "label": "Rower & Battle Ropes…",
+    "title": "Rower & Battle Ropes Conditioning",
+    "note": "Title was not captured in the source screenshot.",
+    "exercises": [
+      {
+        "name": "Rower",
+        "sets": "1500 m"
+      },
+      {
+        "name": "Battle Ropes",
+        "sets": "10x30 sec",
+        "rest": "30 sec",
+        "note": "30s on / 30s off. No ropes? Do burpees for the same periods."
+      },
+      {
+        "name": "Pull Ups",
+        "sets": "3xfailure",
+        "rest": "1 min",
+        "note": "Bodyweight to failure"
+      },
+      {
+        "name": "Push Ups",
+        "sets": "5xfailure",
+        "rest": "1 min",
+        "note": "Bodyweight to failure"
+      },
+      {
+        "name": "Chin Ups",
+        "sets": "3xfailure",
+        "rest": "1 min",
+        "note": "Bodyweight to failure"
       },
       {
         "name": "Plank",
         "sets": "3-5x1 min",
-        "rest": "30-60 sec"
+        "rest": "1 min",
+        "note": "Optional: partner adds weight on your back"
+      }
+    ]
+  },
+  {
+    "id": "g",
+    "label": "Park Athletic Circuit",
+    "title": "Park Athletic Circuit",
+    "note": "Title not captured. Can be done at any park — perform all 4 exercises in a circuit, rest 1 min, then repeat.",
+    "exercises": [
+      {
+        "name": "Standing Long Jump",
+        "sets": "10 jumps",
+        "note": "Stop, plant feet, perfect form each rep"
+      },
+      {
+        "name": "40 Yard Sprints",
+        "sets": "5 sprints",
+        "note": "Walk back to start = rest. Hill sprints for a challenge."
+      },
+      {
+        "name": "Walking Lunges",
+        "sets": "10 per leg",
+        "note": "Slow, perfect form"
+      },
+      {
+        "name": "Jump Rope",
+        "sets": "100 jumps"
+      }
+    ]
+  },
+  {
+    "id": "h",
+    "label": "Full Body Barbell",
+    "title": "Full Body Barbell",
+    "exercises": [
+      {
+        "name": "Back Squat",
+        "sets": "5x8-10",
+        "rest": "2-3 min"
+      },
+      {
+        "name": "Standing Overhead Press",
+        "sets": "4x8-10",
+        "rest": "1-2 min"
+      },
+      {
+        "name": "Barbell Row",
+        "sets": "4x8-10",
+        "rest": "1-2 min"
+      },
+      {
+        "name": "Stiff Leg Deadlift",
+        "sets": "4x8-10",
+        "rest": "1-2 min"
+      },
+      {
+        "name": "Barbell Bench Press",
+        "sets": "4x8-10",
+        "rest": "1-2 min"
+      }
+    ]
+  },
+  {
+    "id": "i",
+    "label": "All Dumbbell Upper Bo…",
+    "title": "All Dumbbell Upper Body",
+    "note": "Title was not captured in the source screenshot.",
+    "exercises": [
+      {
+        "name": "Seated Alternating DB Curl",
+        "sets": "3x8-12",
+        "rest": "1 min",
+        "note": "Per arm"
+      },
+      {
+        "name": "Flat DB Press",
+        "sets": "4x8-12",
+        "rest": "1-2 min"
+      },
+      {
+        "name": "2 Arm DB Row",
+        "sets": "4x8-12",
+        "rest": "1 min"
+      },
+      {
+        "name": "High Incline DB Press",
+        "sets": "4x8-12",
+        "rest": "1 min"
+      },
+      {
+        "name": "DB Shrug",
+        "sets": "4x12-15",
+        "rest": "1 min"
+      },
+      {
+        "name": "2 Arm DB Kick Back",
+        "sets": "3x12-15",
+        "rest": "1 min"
+      },
+      {
+        "name": "2 Arm Lateral Raise",
+        "sets": "3x12-15",
+        "rest": "1 min"
       }
     ]
   }
@@ -432,17 +653,17 @@ function render() {
     <div class="header">
       <a href="cat-bonus.html" class="back-link">← Back</a>
       <div class="header-inner">
-        <div class="eyebrow">🔥 Bonus Workouts</div>
-        <div class="title">Core & Abs</div>
-        <div class="subtitle">Abs · Core · Cardio</div>
-        <div><span class="schedule">4 Workouts</span></div>
+        <div class="eyebrow">⚡ Bonus Workouts</div>
+        <div class="title">Full Body & Conditioning</div>
+        <div class="subtitle">Full Body · Circuits</div>
+        <div><span class="schedule">9 Workouts</span></div>
       </div>
     </div>
     <div class="tabs-bar"><div class="tabs">${tabsHtml}</div></div>
     <div class="surprise-wrap"><button class="surprise-btn" onclick="surpriseMe()">🎲 Surprise Me</button></div>
     <div class="content">
       <div class="workout-title">${escapeHtml(w.title)}</div>
-      <div class="bonus-badge">🔥 Bonus Workouts</div>
+      <div class="bonus-badge">⚡ Bonus Workouts</div>
       <div class="tap-hint">Tap any exercise to check off</div>
       ${exHtml}
     </div>`;

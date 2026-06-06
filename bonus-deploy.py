@@ -47,28 +47,31 @@ ACCENT_RGB = "56,189,248"
 # list (rename / merge / split / reorder) to match the real distribution.
 # `key` matches the `group` tag on workouts; `slug` is the output filename.
 CATEGORIES = [
-    {"key": "push",     "slug": "bonus-push",     "icon": "💥", "name": "Push",
-     "tag": "Chest · Shoulders · Triceps",
-     "meta": "Pressing-focused sessions for chest, shoulders, and triceps."},
-    {"key": "pull",     "slug": "bonus-pull",     "icon": "🔙", "name": "Pull",
-     "tag": "Back · Biceps",
-     "meta": "Pulling-focused sessions for back width, thickness, and biceps."},
-    {"key": "legs",     "slug": "bonus-legs",     "icon": "🦵", "name": "Legs",
+    {"key": "chest-shoulders", "slug": "bonus-chest-shoulders", "icon": "💥", "name": "Chest & Shoulders",
+     "tag": "Chest · Delts · Press",
+     "meta": "Pressing days for chest, shoulders, and triceps."},
+    {"key": "back",            "slug": "bonus-back",            "icon": "🔙", "name": "Back",
+     "tag": "Lats · Traps · Rows",
+     "meta": "Width, thickness, and deadlift-driven pulling days."},
+    {"key": "arms",            "slug": "bonus-arms",            "icon": "💪", "name": "Arms",
+     "tag": "Biceps · Triceps · Forearms",
+     "meta": "Dedicated arm days — curls, extensions, and grip work."},
+    {"key": "legs",            "slug": "bonus-legs",            "icon": "🦵", "name": "Legs",
      "tag": "Quads · Hams · Glutes",
-     "meta": "Lower-body builders for quads, hamstrings, glutes, and calves."},
-    {"key": "core",     "slug": "bonus-core",     "icon": "🔥", "name": "Core & Conditioning",
-     "tag": "Abs · Cardio",
-     "meta": "Ab circuits and conditioning finishers to cap off any day."},
-    {"key": "fullbody", "slug": "bonus-fullbody", "icon": "⚡", "name": "Full Body",
-     "tag": "Total Body",
-     "meta": "Full-body circuits and anything-goes total-body sessions."},
+     "meta": "Squats, hinges, lunges, and lower-body conditioning."},
+    {"key": "core",            "slug": "bonus-core",            "icon": "🔥", "name": "Core & Abs",
+     "tag": "Abs · Core · Cardio",
+     "meta": "Ab circuits, core work, and cardio finishers."},
+    {"key": "conditioning",    "slug": "bonus-conditioning",    "icon": "⚡", "name": "Full Body & Conditioning",
+     "tag": "Full Body · Circuits",
+     "meta": "Full-body lifts, circuits, and athletic conditioning."},
 ]
 
 # ── FLAT STAGING LIST — every workout, in the order received ────────────────
 # `group` is a TENTATIVE tag only. Finalize categories after all ~30 are in.
 ALL_WORKOUTS = [
     # ── Batch 1 (IMG_9753–9757) ──
-    {"group": "push", "title": "Upper Chest & Anterior Delts", "exercises": [
+    {"group": "chest-shoulders", "title": "Upper Chest & Anterior Delts", "exercises": [
         {"name": "Low Pulley Cable Cross Over", "sets": "4x12-15", "rest": "1 min"},
         {"name": "Smith Machine Incline Press", "sets": "4x8-12", "rest": "1 min"},
         {"name": "Hammer Strength Incline Press", "sets": "4x8-12", "rest": "1 min"},
@@ -76,14 +79,14 @@ ALL_WORKOUTS = [
         {"name": "Barbell Front Raise", "sets": "4x12-15", "rest": "1 min"},
         {"name": "Push Ups", "sets": "4xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
     ]},
-    {"group": "push", "title": "Traps & Shoulders", "exercises": [
+    {"group": "chest-shoulders", "title": "Traps & Shoulders", "exercises": [
         {"name": "Upright Row", "sets": "4x12-15", "rest": "1 min"},
         {"name": "Barbell Shrug", "sets": "4x12-15", "rest": "1 min"},
         {"name": "Chest Supported T-Bar Row (wide grip)", "sets": "4x8-12", "rest": "1 min"},
         {"name": "Seated DB Shoulder Tri-Set", "sets": "4x8-12", "rest": "1 min", "note": "Per exercise: DB Lateral Raise → DB Overhead Press → DB Front Raise → Bent-Over Lateral Raise"},
         {"name": "Machine Overhead Press", "sets": "4x8-12", "rest": "1 min", "note": "Last set: drop set to failure"},
     ]},
-    {"group": "pull", "title": "Back — Hammer Rows", "exercises": [
+    {"group": "back", "title": "Back — Hammer Rows", "exercises": [
         {"name": "Hammer Strength High Row", "sets": "4x12-15", "rest": "1 min", "note": "Last set: rest-pause to failure"},
         {"name": "Hammer Strength Low Row", "sets": "4x12-15", "rest": "1 min", "note": "Last set: rest-pause to failure"},
         {"name": "Single Arm DB Row", "sets": "3x12-15", "rest": "30-60 sec", "note": "Per arm"},
@@ -92,7 +95,7 @@ ALL_WORKOUTS = [
         {"name": "Face Pull", "sets": "4x12-15", "rest": "1 min"},
         {"name": "Rower Machine", "sets": "1 round", "note": "2000m on the rower machine — finisher"},
     ]},
-    {"group": "pull", "title": "Arms & Forearms", "exercises": [
+    {"group": "arms", "title": "Arms & Forearms", "exercises": [
         {"name": "Alternating Pinwheel Curl", "sets": "2x8-12", "rest": "1 min", "note": "Go heavier than a hammer curl — same muscles"},
         {"name": "Reverse Grip Barbell Curl", "sets": "3x12-15", "rest": "1 min"},
         {"name": "Single Arm DB Preacher Curl", "sets": "3x8-12", "rest": "30 sec", "note": "Per arm"},
@@ -100,7 +103,7 @@ ALL_WORKOUTS = [
         {"name": "Plate Pinch", "sets": "3xfailure", "rest": "30-60 sec", "note": "Holds to failure — pinch a plate with thumb & fingers"},
         {"name": "Towel Hangs", "sets": "3xfailure", "rest": "30 sec", "note": "Holds to failure"},
     ]},
-    {"group": "fullbody", "title": "Full Body Bodyweight Workout", "exercises": [
+    {"group": "conditioning", "title": "Full Body Bodyweight Workout", "exercises": [
         {"name": "Push Ups", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
         {"name": "Dips", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
         {"name": "Pull Ups", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
@@ -129,7 +132,7 @@ ALL_WORKOUTS = [
         {"name": "Lying Leg Curl", "sets": "3x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
         {"name": "Seated Leg Curl", "sets": "3x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
     ]},
-    {"group": "pull", "title": "Pump Arm Day", "exercises": [
+    {"group": "arms", "title": "Pump Arm Day", "exercises": [
         {"name": "Close Grip Cable EZ Bar Curl", "sets": "3x12-15", "rest": "30-60 sec", "note": "Last set: drop set to failure"},
         {"name": "Wide Grip Cable EZ Bar Curl", "sets": "3x12-15", "rest": "30-60 sec", "note": "Last set: drop set to failure"},
         {"name": "Reverse Grip Cable EZ Bar Curl", "sets": "3x12-15", "rest": "30-60 sec", "note": "Last set: drop set to failure"},
@@ -155,7 +158,7 @@ ALL_WORKOUTS = [
         {"name": "Plank", "sets": "1 min"},
         {"name": "Back Hyperextension", "sets": "10 reps"},
     ]},
-    {"group": "fullbody", "title": "This Isn't Crossfit", "note": "Circuit style — 1-2 min rest between sets. Repeat for 5-10 rounds.", "exercises": [
+    {"group": "conditioning", "title": "This Isn't Crossfit", "note": "Circuit style — 1-2 min rest between sets. Repeat for 5-10 rounds.", "exercises": [
         {"name": "Bodyweight Squats", "sets": "30 sec", "note": "As many reps as possible in 30 sec"},
         {"name": "Push Ups", "sets": "30 sec", "note": "As many reps as possible in 30 sec"},
         {"name": "Pull Ups", "sets": "30 sec", "note": "As many reps as possible in 30 sec"},
@@ -163,7 +166,7 @@ ALL_WORKOUTS = [
         {"name": "Flat Smith Machine Press", "sets": "10 reps"},
         {"name": "Rack Chins on Smith Machine", "sets": "15 reps"},
     ]},
-    {"group": "pull", "title": "Strong Deadlifts", "exercises": [
+    {"group": "back", "title": "Strong Deadlifts", "exercises": [
         {"name": "Deadlift", "sets": "5x5", "rest": "2-3 min"},
         {"name": "Barbell Shrug", "sets": "5x12-15", "rest": "1-2 min"},
         {"name": "Close Stance Leg Press", "sets": "5x8-12", "rest": "1-2 min"},
@@ -186,7 +189,7 @@ ALL_WORKOUTS = [
         {"name": "Overhead Squat", "sets": "3x8-12", "rest": "1 min", "note": "Try a broomstick/PVC pipe or preloaded barbell overhead"},
         {"name": "Overhead Lunge", "sets": "3 sets", "rest": "1 min", "note": "Reps per leg · hold a broomstick/PVC, barbell, DBs, or KBs overhead"},
     ]},
-    {"group": "pull", "title": "Back and Shoulders", "exercises": [
+    {"group": "back", "title": "Back and Shoulders", "exercises": [
         {"name": "Pull Ups", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
         {"name": "Underhand Grip Lat Pulldown", "sets": "4x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
         {"name": "Wide Grip Cable Row", "sets": "4x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
@@ -196,7 +199,7 @@ ALL_WORKOUTS = [
         {"name": "Rope Upright Row", "sets": "3x12-15", "rest": "1 min"},
         {"name": "Facepull", "sets": "3x12-15", "rest": "1 min"},
     ]},
-    {"group": "pull", "title": "Arm Day — Cables & Tempo", "note": "Title was not captured in the source screenshot.", "exercises": [
+    {"group": "arms", "title": "Arm Day — Cables & Tempo", "note": "Title was not captured in the source screenshot.", "exercises": [
         {"name": "Cable Barbell Curl", "sets": "4x8-12", "rest": "1 min", "note": "5 sec concentric / 5 sec eccentric each rep"},
         {"name": "Pinwheel Curl", "sets": "4x8-12", "rest": "1 min"},
         {"name": "DB Hammer Preacher Curl", "sets": "4x8-12", "rest": "1 min"},
@@ -205,7 +208,7 @@ ALL_WORKOUTS = [
         {"name": "Tate Press", "sets": "4x8-12", "rest": "1 min"},
         {"name": "Rope Pressdown", "sets": "4x8-12", "rest": "1 min", "note": "Last set: drop set to failure"},
     ]},
-    {"group": "push", "title": "Chest, Traps & Rower", "note": "Title was not captured in the source screenshot.", "exercises": [
+    {"group": "chest-shoulders", "title": "Chest, Traps & Rower", "note": "Title was not captured in the source screenshot.", "exercises": [
         {"name": "Push Ups", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
         {"name": "Decline Smith Machine Press", "sets": "4x8-12", "rest": "1 min"},
         {"name": "Dips", "sets": "4x8-12", "rest": "1 min", "note": "Add weight with a dip belt for difficulty"},
@@ -232,7 +235,7 @@ ALL_WORKOUTS = [
         {"name": "Incline Treadmill", "sets": "10 min", "note": "Low intensity cardio"},
         {"name": "Stairmaster", "sets": "10 min", "note": "Low intensity · add a kickback + glute contraction each step"},
     ]},
-    {"group": "pull", "title": "Back and Biceps", "exercises": [
+    {"group": "back", "title": "Back and Biceps", "exercises": [
         {"name": "Close Grip Lat Pulldown", "sets": "4x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
         {"name": "Single Arm Cable Row", "sets": "4x12-15", "rest": "30 sec", "note": "Per arm · last set: drop set to failure"},
         {"name": "DB Pullover", "sets": "4x12-15", "rest": "1 min", "note": "Focus on the stretch over total weight"},
@@ -240,7 +243,7 @@ ALL_WORKOUTS = [
         {"name": "Close Grip EZ Bar Preacher Curl", "sets": "3x8-12", "rest": "1 min"},
         {"name": "Reverse Grip EZ Bar Preacher Curl", "sets": "3x8-12", "rest": "1 min"},
     ]},
-    {"group": "push", "title": "Chest and Triceps", "exercises": [
+    {"group": "chest-shoulders", "title": "Chest and Triceps", "exercises": [
         {"name": "Pec Deck", "sets": "4x12-15", "rest": "1 min", "note": "Hold the contraction 3-5 sec each rep"},
         {"name": "Single Arm Hammer Strength Incline", "sets": "4x8-12", "rest": "30-60 sec", "note": "Per side · one side at a time"},
         {"name": "Hammer Strength Decline", "sets": "4x8-12", "rest": "1 min"},
@@ -258,7 +261,7 @@ ALL_WORKOUTS = [
         {"name": "Walking Lunges", "sets": "200 total", "note": "200 total bodyweight lunges — rest as needed"},
         {"name": "Stairmaster", "sets": "5 min", "note": "Low intensity, performed in reverse on the machine"},
     ]},
-    {"group": "pull", "title": "Compound Arm Day", "exercises": [
+    {"group": "arms", "title": "Compound Arm Day", "exercises": [
         {"name": "Reverse Grip Barbell Curls", "sets": "4x8-12", "rest": "1 min", "note": "Thumbless grip for added challenge"},
         {"name": "Barbell Curls", "sets": "4x8-12", "rest": "1 min"},
         {"name": "EZ Bar Preacher Curls", "sets": "3x12-15", "rest": "1 min", "note": "Wide or close grip — whichever feels best"},
@@ -266,7 +269,7 @@ ALL_WORKOUTS = [
         {"name": "Dead Skulls", "sets": "4x8-12", "rest": "1 min"},
         {"name": "Seated EZ Bar Overhead Extension", "sets": "3x12-15", "rest": "1 min"},
     ]},
-    {"group": "pull", "title": "Back, Delts & Rower", "note": "Title was not captured in the source screenshot.", "exercises": [
+    {"group": "back", "title": "Back, Delts & Rower", "note": "Title was not captured in the source screenshot.", "exercises": [
         {"name": "Pull Ups / Chin Ups", "sets": "2xfailure", "rest": "1 min", "note": "2 sets of each — bodyweight to failure"},
         {"name": "Lat Pulldown", "sets": "4x8-12", "rest": "1 min"},
         {"name": "Close Grip Lat Pulldown", "sets": "4x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
@@ -275,7 +278,7 @@ ALL_WORKOUTS = [
         {"name": "Upright Row", "sets": "3x12-15", "rest": "1 min"},
         {"name": "Rower Machine", "sets": "1 round", "note": "2000m total"},
     ]},
-    {"group": "push", "title": "Be Strong Overhead", "exercises": [
+    {"group": "chest-shoulders", "title": "Be Strong Overhead", "exercises": [
         {"name": "High Incline Smith Machine Press", "sets": "4x8-12", "rest": "1 min"},
         {"name": "Seated DB Military Press", "sets": "4x8-12", "rest": "1 min"},
         {"name": "Standing Push Press", "sets": "5x6-8", "rest": "1-2 min"},
@@ -291,7 +294,7 @@ ALL_WORKOUTS = [
         {"name": "Plate Pinch", "sets": "5x20-30 sec", "rest": "30 sec", "note": "Holds"},
     ]},
     # ── Batch 7 (IMG_9723–9727) ──
-    {"group": "pull", "title": "Back — Pulldowns & Rows", "note": "Title was not captured in the source screenshot.", "exercises": [
+    {"group": "back", "title": "Back — Pulldowns & Rows", "note": "Title was not captured in the source screenshot.", "exercises": [
         {"name": "Pull Ups / Chin Ups", "sets": "6xfailure", "rest": "1 min", "note": "3 sets pull ups + 3 sets chin ups — bodyweight to failure"},
         {"name": "Lat Pull Down", "sets": "4x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
         {"name": "Single Arm Hammer Strength Row", "sets": "4x8-12", "rest": "30-60 sec"},
@@ -308,21 +311,21 @@ ALL_WORKOUTS = [
         {"name": "Ab Wheel", "sets": "3x12-15", "rest": "1 min"},
         {"name": "Stairmaster", "sets": "20 min", "note": "Low intensity cardio"},
     ]},
-    {"group": "pull", "title": "All Barbell Back Workout", "exercises": [
+    {"group": "back", "title": "All Barbell Back Workout", "exercises": [
         {"name": "Barbell Shrug", "sets": "4x15-20", "rest": "1 min", "note": "Slight pelvic tilt forward; shrug up-and-back in one motion"},
         {"name": "Barbell Row", "sets": "4x8-12", "rest": "1 min"},
         {"name": "T-Bar Row", "sets": "4x8-12", "rest": "1 min"},
         {"name": "Meadows Row", "sets": "4x12-15", "rest": "30 sec", "note": "Per arm · take extra rest if needed, finish strong"},
         {"name": "Barbell Pullover", "sets": "4x12-15", "rest": "1 min"},
     ]},
-    {"group": "push", "title": "All Dumbbell Chest Workout", "exercises": [
+    {"group": "chest-shoulders", "title": "All Dumbbell Chest Workout", "exercises": [
         {"name": "Flat DB Flye Press", "sets": "4x8-12", "rest": "1 min", "note": "Eccentric as a flye, concentric as a press"},
         {"name": "Decline DB Press", "sets": "4x8-12", "rest": "1 min"},
         {"name": "Flat DB Press", "sets": "4x8-12", "rest": "1 min"},
         {"name": "Incline DB Press", "sets": "4x8-12", "rest": "1 min"},
         {"name": "Decline DB Flye", "sets": "4x8-12", "rest": "1 min", "note": "5 sec negative; focus on the stretch, keep weight moderate"},
     ]},
-    {"group": "fullbody", "title": "Upper Body Strength", "exercises": [
+    {"group": "conditioning", "title": "Upper Body Strength", "exercises": [
         {"name": "Push Ups", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
         {"name": "Barbell Bench Press", "sets": "5x3-5", "rest": "2-3 min"},
         {"name": "Standing Overhead Press", "sets": "5x5-8", "rest": "2-3 min"},
@@ -331,14 +334,14 @@ ALL_WORKOUTS = [
         {"name": "Cardio", "sets": "1 round", "note": "2000m on the rower OR 10 min HIIT on the stationary bike"},
     ]},
     # ── Batch 8 (IMG_9717–9722) ──
-    {"group": "pull", "title": "Back/Triceps Supersets", "note": "Pair one back (pull) move with one triceps (push) move as a superset. 5 sets of 12-15 reps, 1 min rest after each superset.", "exercises": [
+    {"group": "back", "title": "Back/Triceps Supersets", "note": "Pair one back (pull) move with one triceps (push) move as a superset. 5 sets of 12-15 reps, 1 min rest after each superset.", "exercises": [
         {"name": "Chin Ups / Push Ups", "sets": "5x12-15", "rest": "1 min", "note": "Superset"},
         {"name": "Pull Ups / Dips", "sets": "5x12-15", "rest": "1 min", "note": "Superset"},
         {"name": "Smith Machine Barbell Row / Close Grip Bench Press (Smith)", "sets": "5x12-15", "rest": "1 min", "note": "Superset"},
         {"name": "2 Arm DB Row / 2 Arm DB Kickback", "sets": "5x12-15", "rest": "1 min", "note": "Superset"},
         {"name": "Rope Pullover / Rope Pressdown", "sets": "5x12-15", "rest": "1 min", "note": "Superset"},
     ]},
-    {"group": "push", "title": "Chest/Biceps Supersets", "note": "Pair one chest (push) move with one biceps (pull) move as a superset. 5 sets of 12-15 reps, 1 min rest after each superset.", "exercises": [
+    {"group": "chest-shoulders", "title": "Chest/Biceps Supersets", "note": "Pair one chest (push) move with one biceps (pull) move as a superset. 5 sets of 12-15 reps, 1 min rest after each superset.", "exercises": [
         {"name": "Cable Crossover / Front Double Bicep Curl", "sets": "5x12-15", "rest": "1 min", "note": "Superset · curl with cables set on the high pulley"},
         {"name": "Barbell Bench Press / Seated Alternating DB Curl", "sets": "5x12-15", "rest": "1 min", "note": "Superset · do the curl at the foot of the bench"},
         {"name": "Hammer Strength Decline Press / Single Arm Concentration Curl", "sets": "5x12-15", "rest": "1 min", "note": "Superset"},
@@ -354,7 +357,7 @@ ALL_WORKOUTS = [
         {"name": "Close & Wide", "sets": "2x12-15", "rest": "1-2 min"},
     ]},
     # ── Batch 9 (IMG_9712–9716) ──
-    {"group": "push", "title": "Shoulders/Traps Volume Work", "note": "Add volume by using a rest-pause technique or a drop set on your last set of each exercise.", "exercises": [
+    {"group": "chest-shoulders", "title": "Shoulders/Traps Volume Work", "note": "Add volume by using a rest-pause technique or a drop set on your last set of each exercise.", "exercises": [
         {"name": "Cable Upright Row", "sets": "3x12-15", "rest": "1 min"},
         {"name": "DB Lateral Raise", "sets": "4x12-15", "rest": "1 min"},
         {"name": "DB Military Press", "sets": "5x12-15", "rest": "1 min"},
@@ -367,7 +370,7 @@ ALL_WORKOUTS = [
         {"name": "Walking Lunges", "sets": "10 per leg", "note": "Per round"},
         {"name": "Calf Stretch", "sets": "15 sec", "note": "Per leg, between rounds"},
     ]},
-    {"group": "push", "title": "Chest/Shoulders/Back", "exercises": [
+    {"group": "chest-shoulders", "title": "Chest/Shoulders/Back", "exercises": [
         {"name": "Pec Deck", "sets": "3x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
         {"name": "Reverse Pec Deck", "sets": "3x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
         {"name": "Incline Hammer Strength Press", "sets": "4x8-12", "rest": "1 min", "note": "Last set: rest-pause to failure"},
@@ -376,7 +379,7 @@ ALL_WORKOUTS = [
         {"name": "Close Grip Lat Pulldown", "sets": "3x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
         {"name": "Rower Machine", "sets": "1 round", "note": "2000m on the rower machine"},
     ]},
-    {"group": "fullbody", "title": "Arms & Legs", "note": "Title was not captured in the source screenshot.", "exercises": [
+    {"group": "conditioning", "title": "Arms & Legs", "note": "Title was not captured in the source screenshot.", "exercises": [
         {"name": "Barbell Curl", "sets": "3x8-12", "rest": "1 min"},
         {"name": "Reverse Grip Barbell Curl", "sets": "3x8-12", "rest": "1 min"},
         {"name": "Dead Skulls", "sets": "3x8-12", "rest": "1 min"},
@@ -387,21 +390,21 @@ ALL_WORKOUTS = [
         {"name": "Standing Calf Raise", "sets": "4x12-15", "rest": "1 min"},
     ]},
     # ── Batch 10 (IMG_9707–9711) ──
-    {"group": "push", "title": "Machine Only Push Workout", "note": "Optional: make your last set of every exercise a drop set to failure.", "exercises": [
+    {"group": "chest-shoulders", "title": "Machine Only Push Workout", "note": "Optional: make your last set of every exercise a drop set to failure.", "exercises": [
         {"name": "Dip Machine", "sets": "4x12-15", "rest": "1 min"},
         {"name": "Flat Chest Press Machine", "sets": "4x8-12", "rest": "1-2 min"},
         {"name": "Machine Overhead Press", "sets": "4x8-12", "rest": "1-2 min"},
         {"name": "Leg Extension", "sets": "4x20-25", "rest": "1 min"},
         {"name": "Standing Calf Raise", "sets": "4x20-25", "rest": "1 min"},
     ]},
-    {"group": "pull", "title": "Machine Only Pull Workout", "note": "Optional: make your last set of every exercise a drop set to failure. Add weight to the hyperextension if needed.", "exercises": [
+    {"group": "back", "title": "Machine Only Pull Workout", "note": "Optional: make your last set of every exercise a drop set to failure. Add weight to the hyperextension if needed.", "exercises": [
         {"name": "Lat Pull Down", "sets": "4x12-15", "rest": "1 min"},
         {"name": "Close Grip Cable Row", "sets": "4x12-15", "rest": "1 min"},
         {"name": "Lying Hamstring Curl", "sets": "4x20-25", "rest": "1 min"},
         {"name": "Cable Barbell Curl", "sets": "4x8-12", "rest": "1 min"},
         {"name": "Hyperextension", "sets": "4x12-15", "rest": "1 min"},
     ]},
-    {"group": "fullbody", "title": "Full Body Kettlebell/DBell Workout", "note": "Can be performed with kettlebells or dumbbells.", "exercises": [
+    {"group": "conditioning", "title": "Full Body Kettlebell/DBell Workout", "note": "Can be performed with kettlebells or dumbbells.", "exercises": [
         {"name": "Ballistic Row", "sets": "4x10-15", "rest": "1 min", "note": "Per arm"},
         {"name": "2 Arm Standing Overhead Press", "sets": "4x8-12", "rest": "1 min"},
         {"name": "Sots Press", "sets": "5x10", "rest": "1 min"},
@@ -426,21 +429,21 @@ ALL_WORKOUTS = [
         {"name": "Stationary Bike", "sets": "10 min", "note": "HIIT cardio"},
         {"name": "Plank", "sets": "3-5x1 min", "rest": "30-60 sec"},
     ]},
-    {"group": "pull", "title": "Barbell Back Day", "exercises": [
+    {"group": "back", "title": "Barbell Back Day", "exercises": [
         {"name": "Deadlift", "sets": "5x5-8", "rest": "2-3 min"},
         {"name": "Pendlay Row", "sets": "3x8-12", "rest": "1-2 min"},
         {"name": "Shrugs", "sets": "3x12-15", "rest": "1-2 min"},
         {"name": "T-Bar Row", "sets": "3x8-12", "rest": "1-2 min"},
         {"name": "Meadows Row", "sets": "3x8-12", "rest": "1 min", "note": "Per arm"},
     ]},
-    {"group": "push", "title": "Chest & Triceps Strength", "note": "Title was not captured in the source screenshot.", "exercises": [
+    {"group": "chest-shoulders", "title": "Chest & Triceps Strength", "note": "Title was not captured in the source screenshot.", "exercises": [
         {"name": "Barbell Bench Press", "sets": "5x3-5", "rest": "1-3 min"},
         {"name": "Close Grip Bench Press", "sets": "3x5-8", "rest": "1-3 min"},
         {"name": "DB Press/Flye", "sets": "3x8-12", "rest": "1-2 min", "note": "Press up, lower like a flye"},
         {"name": "Tate Press", "sets": "4x8-12", "rest": "1-2 min"},
         {"name": "V-Grip Pressdown", "sets": "3x12-15", "rest": "1 min", "note": "Optional: last set drop to failure"},
     ]},
-    {"group": "fullbody", "title": "Rower & Battle Ropes Conditioning", "note": "Title was not captured in the source screenshot.", "exercises": [
+    {"group": "conditioning", "title": "Rower & Battle Ropes Conditioning", "note": "Title was not captured in the source screenshot.", "exercises": [
         {"name": "Rower", "sets": "1500 m"},
         {"name": "Battle Ropes", "sets": "10x30 sec", "rest": "30 sec", "note": "30s on / 30s off. No ropes? Do burpees for the same periods."},
         {"name": "Pull Ups", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
@@ -448,21 +451,21 @@ ALL_WORKOUTS = [
         {"name": "Chin Ups", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
         {"name": "Plank", "sets": "3-5x1 min", "rest": "1 min", "note": "Optional: partner adds weight on your back"},
     ]},
-    {"group": "fullbody", "title": "Park Athletic Circuit", "note": "Title not captured. Can be done at any park — perform all 4 exercises in a circuit, rest 1 min, then repeat.", "exercises": [
+    {"group": "conditioning", "title": "Park Athletic Circuit", "note": "Title not captured. Can be done at any park — perform all 4 exercises in a circuit, rest 1 min, then repeat.", "exercises": [
         {"name": "Standing Long Jump", "sets": "10 jumps", "note": "Stop, plant feet, perfect form each rep"},
         {"name": "40 Yard Sprints", "sets": "5 sprints", "note": "Walk back to start = rest. Hill sprints for a challenge."},
         {"name": "Walking Lunges", "sets": "10 per leg", "note": "Slow, perfect form"},
         {"name": "Jump Rope", "sets": "100 jumps"},
     ]},
     # ── Batch 12 (IMG_9698–9701) ──
-    {"group": "push", "title": "Machine Based Chest Workout", "exercises": [
+    {"group": "chest-shoulders", "title": "Machine Based Chest Workout", "exercises": [
         {"name": "Cable Machine Press", "sets": "3x12-15", "rest": "1 min"},
         {"name": "Hammer Strength Incline Press", "sets": "4x8-12", "rest": "1 min"},
         {"name": "Hammer Strength Decline Press", "sets": "4x8-12", "rest": "1 min"},
         {"name": "Cable Cross-Over", "sets": "4x12-15", "rest": "1 min", "note": "2 sets from the high pulley, 2 sets from the low pulley"},
         {"name": "Pec Deck", "sets": "3x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
     ]},
-    {"group": "fullbody", "title": "Full Body Barbell", "exercises": [
+    {"group": "conditioning", "title": "Full Body Barbell", "exercises": [
         {"name": "Back Squat", "sets": "5x8-10", "rest": "2-3 min"},
         {"name": "Standing Overhead Press", "sets": "4x8-10", "rest": "1-2 min"},
         {"name": "Barbell Row", "sets": "4x8-10", "rest": "1-2 min"},
@@ -476,7 +479,7 @@ ALL_WORKOUTS = [
         {"name": "Goblet Squat", "sets": "4x15-20", "rest": "1 min"},
         {"name": "Jefferson Squat", "sets": "4x15-20", "rest": "1 min"},
     ]},
-    {"group": "fullbody", "title": "All Dumbbell Upper Body", "note": "Title was not captured in the source screenshot.", "exercises": [
+    {"group": "conditioning", "title": "All Dumbbell Upper Body", "note": "Title was not captured in the source screenshot.", "exercises": [
         {"name": "Seated Alternating DB Curl", "sets": "3x8-12", "rest": "1 min", "note": "Per arm"},
         {"name": "Flat DB Press", "sets": "4x8-12", "rest": "1-2 min"},
         {"name": "2 Arm DB Row", "sets": "4x8-12", "rest": "1 min"},
@@ -502,15 +505,16 @@ def workouts_for(key):
     return [w for w in ALL_WORKOUTS if w.get("group") == key]
 
 
-def _label(i):
-    return "W" + str(i + 1)
+def _tab_label(title):
+    """Short, scannable tab label derived from the workout title."""
+    return title if len(title) <= 22 else title[:21].rstrip() + "…"
 
 
 def build_workouts_js(items):
     """Convert workout dicts into the WORKOUTS array the page engine expects."""
     out = []
     for i, w in enumerate(items):
-        wo = {"id": chr(ord("a") + i), "label": _label(i), "title": w["title"]}
+        wo = {"id": chr(ord("a") + i), "label": _tab_label(w["title"]), "title": w["title"]}
         if w.get("note"):
             wo["note"] = w["note"]
         wo["exercises"] = w["exercises"]
