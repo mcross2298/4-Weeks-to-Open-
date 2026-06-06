@@ -417,7 +417,44 @@ ALL_WORKOUTS = [
         {"name": "Burpees", "sets": "3x10", "rest": "1 min"},
         {"name": "Jump Rope", "sets": "5-10 min", "note": "Don't count rest toward the time"},
     ]},
-    # ── Batch 11+ goes here as screenshots arrive ──
+    # ── Batch 11 (IMG_9702–9706) ──
+    {"group": "core", "title": "Core Work and Cardio", "exercises": [
+        {"name": "Elliptical", "sets": "10 min", "note": "Low intensity cardio"},
+        {"name": "Hanging Leg Raise", "sets": "5x10-15", "rest": "30-60 sec"},
+        {"name": "Jump Rope", "sets": "10 min", "note": "Total jumping time — don't count rest"},
+        {"name": "Incline Sit Up", "sets": "5x5-10", "rest": "30-60 sec", "note": "Optional: hold a plate"},
+        {"name": "Stationary Bike", "sets": "10 min", "note": "HIIT cardio"},
+        {"name": "Plank", "sets": "3-5x1 min", "rest": "30-60 sec"},
+    ]},
+    {"group": "pull", "title": "Barbell Back Day", "exercises": [
+        {"name": "Deadlift", "sets": "5x5-8", "rest": "2-3 min"},
+        {"name": "Pendlay Row", "sets": "3x8-12", "rest": "1-2 min"},
+        {"name": "Shrugs", "sets": "3x12-15", "rest": "1-2 min"},
+        {"name": "T-Bar Row", "sets": "3x8-12", "rest": "1-2 min"},
+        {"name": "Meadows Row", "sets": "3x8-12", "rest": "1 min", "note": "Per arm"},
+    ]},
+    {"group": "push", "title": "Chest & Triceps Strength", "note": "Title was not captured in the source screenshot.", "exercises": [
+        {"name": "Barbell Bench Press", "sets": "5x3-5", "rest": "1-3 min"},
+        {"name": "Close Grip Bench Press", "sets": "3x5-8", "rest": "1-3 min"},
+        {"name": "DB Press/Flye", "sets": "3x8-12", "rest": "1-2 min", "note": "Press up, lower like a flye"},
+        {"name": "Tate Press", "sets": "4x8-12", "rest": "1-2 min"},
+        {"name": "V-Grip Pressdown", "sets": "3x12-15", "rest": "1 min", "note": "Optional: last set drop to failure"},
+    ]},
+    {"group": "fullbody", "title": "Rower & Battle Ropes Conditioning", "note": "Title was not captured in the source screenshot.", "exercises": [
+        {"name": "Rower", "sets": "1500 m"},
+        {"name": "Battle Ropes", "sets": "10x30 sec", "rest": "30 sec", "note": "30s on / 30s off. No ropes? Do burpees for the same periods."},
+        {"name": "Pull Ups", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
+        {"name": "Push Ups", "sets": "5xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
+        {"name": "Chin Ups", "sets": "3xfailure", "rest": "1 min", "note": "Bodyweight to failure"},
+        {"name": "Plank", "sets": "3-5x1 min", "rest": "1 min", "note": "Optional: partner adds weight on your back"},
+    ]},
+    {"group": "fullbody", "title": "Park Athletic Circuit", "note": "Title not captured. Can be done at any park — perform all 4 exercises in a circuit, rest 1 min, then repeat.", "exercises": [
+        {"name": "Standing Long Jump", "sets": "10 jumps", "note": "Stop, plant feet, perfect form each rep"},
+        {"name": "40 Yard Sprints", "sets": "5 sprints", "note": "Walk back to start = rest. Hill sprints for a challenge."},
+        {"name": "Walking Lunges", "sets": "10 per leg", "note": "Slow, perfect form"},
+        {"name": "Jump Rope", "sets": "100 jumps"},
+    ]},
+    # ── Batch 12+ goes here as screenshots arrive ──
     # ⚠ MISSING: a home/circuit-style workout (intro seen between "Be Strong
     #   Overhead" and "Grip & Core"); only its intro + last line were captured.
     #   Needs a clean screenshot before it can be transcribed.
