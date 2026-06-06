@@ -139,7 +139,45 @@ ALL_WORKOUTS = [
         {"name": "Rope Overhead Extension", "sets": "3x12-15", "rest": "30-60 sec"},
         {"name": "Rope Pressdown", "sets": "3x12-15", "rest": "30-60 sec", "note": "Last set: drop set to failure"},
     ]},
-    # ── Batch 3+ goes here as screenshots arrive ──
+    # ── Batch 3 (IMG_9743–9747) ──
+    {"group": "legs", "title": "Strong Leg Day", "exercises": [
+        {"name": "Bodyweight Squats", "sets": "3x10", "rest": "1 min"},
+        {"name": "Bodyweight Lunges", "sets": "3x10", "rest": "30 sec", "note": "Per leg"},
+        {"name": "Squats", "sets": "10x5", "rest": "1-3 min", "note": "Take your time — this is the main work of the day"},
+        {"name": "Leg Press", "sets": "3x12-15", "rest": "1 min", "note": "Slightly lighter than normal — chase the pump"},
+        {"name": "Calf Press on Leg Press", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "Stairmaster", "sets": "15 min", "note": "Low intensity cardio"},
+    ]},
+    {"group": "core", "title": "Strong Core", "note": "Circuit style — 1-2 min rest between exercises. Repeat for 5-10 rounds. Can be done on its own or added onto any workout.", "exercises": [
+        {"name": "Incline Sit Up", "sets": "10 reps"},
+        {"name": "Plank", "sets": "1 min"},
+        {"name": "Hanging Leg Raise", "sets": "10 reps"},
+        {"name": "Plank", "sets": "1 min"},
+        {"name": "Back Hyperextension", "sets": "10 reps"},
+    ]},
+    {"group": "fullbody", "title": "This Isn't Crossfit", "note": "Circuit style — 1-2 min rest between sets. Repeat for 5-10 rounds.", "exercises": [
+        {"name": "Bodyweight Squats", "sets": "30 sec", "note": "As many reps as possible in 30 sec"},
+        {"name": "Push Ups", "sets": "30 sec", "note": "As many reps as possible in 30 sec"},
+        {"name": "Pull Ups", "sets": "30 sec", "note": "As many reps as possible in 30 sec"},
+        {"name": "Smith Machine Squat", "sets": "10 reps"},
+        {"name": "Flat Smith Machine Press", "sets": "10 reps"},
+        {"name": "Rack Chins on Smith Machine", "sets": "15 reps"},
+    ]},
+    {"group": "pull", "title": "Strong Deadlifts", "exercises": [
+        {"name": "Deadlift", "sets": "5x5", "rest": "2-3 min"},
+        {"name": "Barbell Shrug", "sets": "5x12-15", "rest": "1-2 min"},
+        {"name": "Close Stance Leg Press", "sets": "5x8-12", "rest": "1-2 min"},
+        {"name": "Close Grip Cable Row", "sets": "3x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Wide Grip Cable Row", "sets": "3x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+    ]},
+    {"group": "legs", "title": "Weird Squat Workout", "exercises": [
+        {"name": "Overhead Squat", "sets": "3x12-15", "rest": "1-2 min", "note": "Warm-up"},
+        {"name": "Zercher Squat", "sets": "5x5", "rest": "2-3 min"},
+        {"name": "Barbell Hack Squat", "sets": "4x8-12", "rest": "1-2 min"},
+        {"name": "Jefferson Squat", "sets": "4x12-15", "rest": "1-2 min"},
+        {"name": "Bulgarian Split Squat", "sets": "2x12-15", "rest": "30-60 sec", "note": "Per leg"},
+    ]},
+    # ── Batch 4+ goes here as screenshots arrive ──
 ]
 
 # Shown on a category page that has no real workouts yet.
