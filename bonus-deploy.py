@@ -330,7 +330,30 @@ ALL_WORKOUTS = [
         {"name": "Barbell Row", "sets": "5x8-12", "rest": "1-2 min"},
         {"name": "Cardio", "sets": "1 round", "note": "2000m on the rower OR 10 min HIIT on the stationary bike"},
     ]},
-    # ── Batch 8+ goes here as screenshots arrive ──
+    # ── Batch 8 (IMG_9717–9722) ──
+    {"group": "pull", "title": "Back/Triceps Supersets", "note": "Pair one back (pull) move with one triceps (push) move as a superset. 5 sets of 12-15 reps, 1 min rest after each superset.", "exercises": [
+        {"name": "Chin Ups / Push Ups", "sets": "5x12-15", "rest": "1 min", "note": "Superset"},
+        {"name": "Pull Ups / Dips", "sets": "5x12-15", "rest": "1 min", "note": "Superset"},
+        {"name": "Smith Machine Barbell Row / Close Grip Bench Press (Smith)", "sets": "5x12-15", "rest": "1 min", "note": "Superset"},
+        {"name": "2 Arm DB Row / 2 Arm DB Kickback", "sets": "5x12-15", "rest": "1 min", "note": "Superset"},
+        {"name": "Rope Pullover / Rope Pressdown", "sets": "5x12-15", "rest": "1 min", "note": "Superset"},
+    ]},
+    {"group": "push", "title": "Chest/Biceps Supersets", "note": "Pair one chest (push) move with one biceps (pull) move as a superset. 5 sets of 12-15 reps, 1 min rest after each superset.", "exercises": [
+        {"name": "Cable Crossover / Front Double Bicep Curl", "sets": "5x12-15", "rest": "1 min", "note": "Superset · curl with cables set on the high pulley"},
+        {"name": "Barbell Bench Press / Seated Alternating DB Curl", "sets": "5x12-15", "rest": "1 min", "note": "Superset · do the curl at the foot of the bench"},
+        {"name": "Hammer Strength Decline Press / Single Arm Concentration Curl", "sets": "5x12-15", "rest": "1 min", "note": "Superset"},
+        {"name": "Push Ups / EZ Bar Preacher Curl", "sets": "5x12-15", "rest": "1 min", "note": "Superset"},
+        {"name": "DB Fly / 2 Arm DB Hammer Curl", "sets": "5x12-15", "rest": "1 min", "note": "Superset · same dbells for both"},
+    ]},
+    {"group": "legs", "title": "Leg Press Foot-Placement Circuit", "note": "Title not captured. A full-leg circuit on the leg press varying foot placement — slightly heavier on standard placements, lighter on the others.", "exercises": [
+        {"name": "Standard Foot Placement", "sets": "2x8-12", "rest": "1-2 min"},
+        {"name": "High & Wide", "sets": "2x12-15", "rest": "1-2 min"},
+        {"name": "Close & Narrow", "sets": "2x12-15", "rest": "1-2 min"},
+        {"name": "Standard Wide", "sets": "2x8-12", "rest": "1-2 min"},
+        {"name": "High & Narrow", "sets": "2x12-15", "rest": "1-2 min"},
+        {"name": "Close & Wide", "sets": "2x12-15", "rest": "1-2 min"},
+    ]},
+    # ── Batch 9+ goes here as screenshots arrive ──
     # ⚠ MISSING: a home/circuit-style workout (intro seen between "Be Strong
     #   Overhead" and "Grip & Core"); only its intro + last line were captured.
     #   Needs a clean screenshot before it can be transcribed.
