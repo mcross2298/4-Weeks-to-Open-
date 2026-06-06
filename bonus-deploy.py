@@ -249,7 +249,51 @@ ALL_WORKOUTS = [
         {"name": "Rope Overhead Extension", "sets": "4x8-12", "rest": "1 min"},
         {"name": "DB Kickback", "sets": "4x8-12", "rest": "1 min"},
     ]},
-    # ── Batch 6+ goes here as screenshots arrive ──
+    # ── Batch 6 (IMG_9728–9732) ──
+    {"group": "legs", "title": "Quad Focused Leg Day", "exercises": [
+        {"name": "Leg Extension", "sets": "4x20-25", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Bulgarian Split Squat", "sets": "3x8-12", "rest": "30 sec", "note": "Per leg"},
+        {"name": "Front Squat", "sets": "4x8-12", "rest": "1-2 min"},
+        {"name": "Hack Squat", "sets": "3x12-15", "rest": "1-2 min"},
+        {"name": "Walking Lunges", "sets": "200 total", "note": "200 total bodyweight lunges — rest as needed"},
+        {"name": "Stairmaster", "sets": "5 min", "note": "Low intensity, performed in reverse on the machine"},
+    ]},
+    {"group": "pull", "title": "Compound Arm Day", "exercises": [
+        {"name": "Reverse Grip Barbell Curls", "sets": "4x8-12", "rest": "1 min", "note": "Thumbless grip for added challenge"},
+        {"name": "Barbell Curls", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "EZ Bar Preacher Curls", "sets": "3x12-15", "rest": "1 min", "note": "Wide or close grip — whichever feels best"},
+        {"name": "Close Grip Bench Press", "sets": "4x8-12", "rest": "1-2 min"},
+        {"name": "Dead Skulls", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Seated EZ Bar Overhead Extension", "sets": "3x12-15", "rest": "1 min"},
+    ]},
+    {"group": "pull", "title": "Back, Delts & Rower", "note": "Title was not captured in the source screenshot.", "exercises": [
+        {"name": "Pull Ups / Chin Ups", "sets": "2xfailure", "rest": "1 min", "note": "2 sets of each — bodyweight to failure"},
+        {"name": "Lat Pulldown", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Close Grip Lat Pulldown", "sets": "4x12-15", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "Wide Grip Cable Row", "sets": "4x8-12", "rest": "1 min", "note": "Last set: drop set to failure"},
+        {"name": "DB Lateral Raise", "sets": "4x12-15", "rest": "1 min"},
+        {"name": "Upright Row", "sets": "3x12-15", "rest": "1 min"},
+        {"name": "Rower Machine", "sets": "1 round", "note": "2000m total"},
+    ]},
+    {"group": "push", "title": "Be Strong Overhead", "exercises": [
+        {"name": "High Incline Smith Machine Press", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Seated DB Military Press", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Standing Push Press", "sets": "5x6-8", "rest": "1-2 min"},
+        {"name": "Overhead Squat", "sets": "3x8-12", "rest": "1-2 min"},
+        {"name": "Turkish Get Up", "sets": "3x5", "rest": "30-60 sec", "note": "Per side"},
+    ]},
+    {"group": "core", "title": "Grip & Core", "note": "Title was not captured in the source screenshot.", "exercises": [
+        {"name": "DB Wrist Curl", "sets": "4x12-15", "rest": "0 sec", "note": "Per arm · no rest between arms"},
+        {"name": "Towel Hang Leg Raise", "sets": "5x10", "rest": "30 sec", "note": "Drape two towels over a pull-up bar and grip them"},
+        {"name": "Single Arm Rope Hammer Curl", "sets": "3x12-15", "rest": "30 sec", "note": "Per arm"},
+        {"name": "Incline Sit Up", "sets": "5x10", "rest": "30 sec", "note": "Optional: hold a plate"},
+        {"name": "Fingertip Plank", "sets": "5x30-60 sec", "rest": "30-60 sec", "note": "Plank from a push-up position on your fingertips"},
+        {"name": "Plate Pinch", "sets": "5x20-30 sec", "rest": "30 sec", "note": "Holds"},
+    ]},
+    # ── Batch 7+ goes here as screenshots arrive ──
+    # ⚠ MISSING: a home/circuit-style workout (intro seen between "Be Strong
+    #   Overhead" and "Grip & Core"); only its intro + last line were captured.
+    #   Needs a clean screenshot before it can be transcribed.
 ]
 
 # Shown on a category page that has no real workouts yet.
