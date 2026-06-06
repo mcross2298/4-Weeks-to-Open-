@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bonus Workouts</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
+.container{max-width:680px;margin:0 auto;}
+.back-link{display:inline-block;color:#7dd3fc;text-decoration:none;font-size:13px;font-weight:700;background:rgba(56,189,248,0.12);padding:6px 14px;border-radius:20px;border:1px solid rgba(56,189,248,0.3);margin-bottom:24px;letter-spacing:0.04em;}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.25em;color:#7dd3fc;text-transform:uppercase;margin-bottom:10px;}
+.title{font-size:30px;font-weight:900;color:#fff;letter-spacing:-0.02em;margin-bottom:6px;}
+.subtitle{font-size:13px;color:#0e7490;margin-bottom:20px;}
+.intro{font-size:13px;color:#94a3b8;line-height:1.6;margin-bottom:24px;background:rgba(56,189,248,0.06);border-left:3px solid rgba(56,189,248,0.4);padding:12px 14px;border-radius:0 8px 8px 0;}
+.plan-card{display:block;text-decoration:none;color:inherit;border-radius:16px;padding:18px 20px;margin-bottom:11px;position:relative;overflow:hidden;transition:transform 0.15s;background:linear-gradient(135deg,rgba(56,189,248,0.08),#04141f);border:1px solid rgba(56,189,248,0.2);}
+.plan-card:active{transform:scale(0.98);}
+.plan-icon{position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:30px;opacity:0.35;}
+.plan-tag{font-size:11px;font-weight:900;letter-spacing:0.16em;padding:3px 9px;border-radius:5px;text-transform:uppercase;margin-bottom:9px;display:inline-block;background:rgba(56,189,248,0.14);color:#7dd3fc;border:1px solid rgba(56,189,248,0.25);}
+.plan-name{font-size:19px;font-weight:900;color:#fff;margin-bottom:4px;padding-right:46px;}
+.plan-meta{font-size:12px;color:#7dd3fc;opacity:0.75;line-height:1.5;padding-right:46px;}
+.plan-count{margin-top:8px;font-size:11px;color:#64748b;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
+</style>
+<link rel="stylesheet" href="base.css"/>
+<link rel="stylesheet" href="mc-nav.css"/>
+<style>.back-link{position:static;}</style>
+</head>
+<body>
+<div class="container">
+  <a href="index.html" class="back-link">← Categories</a>
+  <div class="eyebrow">⭐ Bonus Workouts</div>
+  <h1 class="title">Bonus Workouts</h1>
+  <p class="subtitle">Daily-variation extras · Pick a focus to get started</p>
+  <div class="intro">A grab-bag of standalone workouts with no set progression — perfect for mixing things up. Choose a category, then browse the variations or tap <b>🎲 Surprise Me</b> to get one at random.</div>
+  <a href="bonus-push.html" class="plan-card">
+    <span class="plan-icon">💥</span>
+    <div class="plan-tag">Chest · Shoulders · Triceps</div>
+    <div class="plan-name">Push</div>
+    <div class="plan-meta">Pressing-focused sessions for chest, shoulders, and triceps.</div>
+    <div class="plan-count">2 Workouts →</div>
+  </a>
+
+  <a href="bonus-pull.html" class="plan-card">
+    <span class="plan-icon">🔙</span>
+    <div class="plan-tag">Back · Biceps</div>
+    <div class="plan-name">Pull</div>
+    <div class="plan-meta">Pulling-focused sessions for back width, thickness, and biceps.</div>
+    <div class="plan-count">2 Workouts →</div>
+  </a>
+
+  <a href="bonus-legs.html" class="plan-card">
+    <span class="plan-icon">🦵</span>
+    <div class="plan-tag">Quads · Hams · Glutes</div>
+    <div class="plan-name">Legs</div>
+    <div class="plan-meta">Lower-body builders for quads, hamstrings, glutes, and calves.</div>
+    <div class="plan-count">1 Workouts →</div>
+  </a>
+
+  <a href="bonus-core.html" class="plan-card">
+    <span class="plan-icon">🔥</span>
+    <div class="plan-tag">Abs · Cardio</div>
+    <div class="plan-name">Core & Conditioning</div>
+    <div class="plan-meta">Ab circuits and conditioning finishers to cap off any day.</div>
+    <div class="plan-count">1 Workouts →</div>
+  </a>
+
+  <a href="bonus-fullbody.html" class="plan-card">
+    <span class="plan-icon">⚡</span>
+    <div class="plan-tag">Total Body</div>
+    <div class="plan-name">Full Body</div>
+    <div class="plan-meta">Full-body circuits and anything-goes total-body sessions.</div>
+    <div class="plan-count">1 Workouts →</div>
+  </a>
+
+</div>
+
+<script>
+/* ── SMART BACK NAV ── */
+(function(){
+  var back = sessionStorage.getItem('mc_back_to');
+  if(!back) return;
+  document.querySelectorAll('a').forEach(function(a){
+    var href = a.getAttribute('href')||'';
+    if(href === 'index.html' || href === '../' || href === '/' ||
+       href.includes('index') || a.textContent.trim().startsWith('←')){
+      a.href = back;
+      a.addEventListener('click', function(){ sessionStorage.removeItem('mc_back_to'); });
+    }
+  });
+})();
+</script>
+<script src="mc-nav.js"></script>
+<script src="mc-sw-update.js?v=45"></script>
+</body>
+</html>
