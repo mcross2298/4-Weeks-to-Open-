@@ -618,7 +618,7 @@ body{{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}}
 </head>
 <body>
 <div class="container">
-  <a href="index.html" class="back-link">← Categories</a>
+  <a href="cat-gainz.html" class="back-link">← Daily Gainz</a>
   <div class="eyebrow">⭐ Bonus Workouts</div>
   <h1 class="title">Bonus Workouts</h1>
   <p class="subtitle">Daily-variation extras · Pick a focus to get started</p>
