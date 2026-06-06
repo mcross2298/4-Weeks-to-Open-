@@ -386,7 +386,38 @@ ALL_WORKOUTS = [
         {"name": "Squats", "sets": "5x8-10", "rest": "1-2 min"},
         {"name": "Standing Calf Raise", "sets": "4x12-15", "rest": "1 min"},
     ]},
-    # ── Batch 10+ goes here as screenshots arrive ──
+    # ── Batch 10 (IMG_9707–9711) ──
+    {"group": "push", "title": "Machine Only Push Workout", "note": "Optional: make your last set of every exercise a drop set to failure.", "exercises": [
+        {"name": "Dip Machine", "sets": "4x12-15", "rest": "1 min"},
+        {"name": "Flat Chest Press Machine", "sets": "4x8-12", "rest": "1-2 min"},
+        {"name": "Machine Overhead Press", "sets": "4x8-12", "rest": "1-2 min"},
+        {"name": "Leg Extension", "sets": "4x20-25", "rest": "1 min"},
+        {"name": "Standing Calf Raise", "sets": "4x20-25", "rest": "1 min"},
+    ]},
+    {"group": "pull", "title": "Machine Only Pull Workout", "note": "Optional: make your last set of every exercise a drop set to failure. Add weight to the hyperextension if needed.", "exercises": [
+        {"name": "Lat Pull Down", "sets": "4x12-15", "rest": "1 min"},
+        {"name": "Close Grip Cable Row", "sets": "4x12-15", "rest": "1 min"},
+        {"name": "Lying Hamstring Curl", "sets": "4x20-25", "rest": "1 min"},
+        {"name": "Cable Barbell Curl", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Hyperextension", "sets": "4x12-15", "rest": "1 min"},
+    ]},
+    {"group": "fullbody", "title": "Full Body Kettlebell/DBell Workout", "note": "Can be performed with kettlebells or dumbbells.", "exercises": [
+        {"name": "Ballistic Row", "sets": "4x10-15", "rest": "1 min", "note": "Per arm"},
+        {"name": "2 Arm Standing Overhead Press", "sets": "4x8-12", "rest": "1 min"},
+        {"name": "Sots Press", "sets": "5x10", "rest": "1 min"},
+        {"name": "Jump Squat", "sets": "10x5", "rest": "30 sec"},
+        {"name": "Reverse Lunge", "sets": "4x8-12", "rest": "30 sec", "note": "Per leg"},
+    ]},
+    {"group": "legs", "title": "Lower Body Explosiveness", "exercises": [
+        {"name": "HIIT Cardio (Stationary Bike)", "sets": "10 min", "note": "Start the session with this"},
+        {"name": "Standing Long Jump", "sets": "5x5", "rest": "30 sec", "note": "Set feet, perfect form — try to jump farther each time"},
+        {"name": "Back Squat", "sets": "5x5", "rest": "2-3 min"},
+        {"name": "Leg Press", "sets": "5x5", "rest": "2-3 min", "note": "Lower halfway + pause 2-3s, lower fully + pause 2-3s, explode up without locking the knees"},
+        {"name": "Jump Squat w/ Kettlebell or DB", "sets": "5x8-10", "rest": "1 min"},
+        {"name": "Burpees", "sets": "3x10", "rest": "1 min"},
+        {"name": "Jump Rope", "sets": "5-10 min", "note": "Don't count rest toward the time"},
+    ]},
+    # ── Batch 11+ goes here as screenshots arrive ──
     # ⚠ MISSING: a home/circuit-style workout (intro seen between "Be Strong
     #   Overhead" and "Grip & Core"); only its intro + last line were captured.
     #   Needs a clean screenshot before it can be transcribed.
