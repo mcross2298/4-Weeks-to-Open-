@@ -271,6 +271,54 @@ const WORKOUTS = [
       {name:"Tricep Cable Press Down (rope attachment)", sets:"4×15", tempo:"1:2:1:2"},
     ]
   },
+  {
+    id:"w4", label:"W4",
+    title:"Upper Body — Heavy & High-Rep Alternating",
+    exercises:[
+      {name:"Flat Barbell Bench Press", sets:"6×8", tempo:"1:4:1:0"},
+      {name:"Incline Bench Cable Fly", sets:"4×15", tempo:"1:0:1:2"},
+      {name:"Standing Barbell Shoulder Press", sets:"5×8", tempo:"1:4:1:0"},
+      {name:"Standing DB Side Lateral", sets:"4×15", tempo:"1:0:1:2"},
+      {name:"Straight Arm Lat Pull Down", sets:"4×8", tempo:"1:4:1:0"},
+      {name:"Seated Cable Row (close V grip)", sets:"4×15", tempo:"1:0:1:2"},
+      {name:"Machine Preacher Curl", sets:"4×8", tempo:"1:4:1:0"},
+      {name:"Standing Double Arm DB Hammer Curl", sets:"4×15", tempo:"1:0:1:2"},
+      {name:"Seated Double Arm DB Overhead Extension", sets:"4×8", tempo:"1:4:1:0"},
+      {name:"Tricep Cable Press Down (rope attachment)", sets:"4×15", tempo:"1:0:1:2"},
+    ]
+  },
+  {
+    id:"w5", label:"W5",
+    title:"Upper Body — High Volume Pump",
+    exercises:[
+      {name:"Pec Deck Fly", sets:"5×20"},
+      {name:"Incline Barbell Press", sets:"5×12", tempo:"4:2:1:0"},
+      {name:"Standing DB Side Lateral", sets:"4×20"},
+      {name:"Cable Upright Row", sets:"4×12", tempo:"4:0:1:2"},
+      {name:"Lat Pull Down (wide grip)", sets:"6×20"},
+      {name:"Bent Over Double Arm DB Row", sets:"6×12", tempo:"4:0:1:2"},
+      {name:"Machine Preacher Curl", sets:"4×20"},
+      {name:"Incline Bench Alternating DB Curl", sets:"3×12", tempo:"4:0:1:2"},
+      {name:"Tricep Cable Press Down (rope attachment)", sets:"4×20"},
+      {name:"Incline Bench Skull Crusher (outside shoulder width grip)", sets:"3×12", tempo:"4:0:1:2"},
+    ]
+  },
+  {
+    id:"w6", label:"W6",
+    title:"Upper Body — Tempo Strength + Pump",
+    exercises:[
+      {name:"Slight Incline DB Press", sets:"5×8", tempo:"4:2:1:2"},
+      {name:"Pec Deck Fly", sets:"5×15", tempo:"1:0:1:2"},
+      {name:"Two Handle Cable Shoulder Press", sets:"4×8", tempo:"4:2:1:2"},
+      {name:"Barbell Upright Row", sets:"4×15", tempo:"1:0:1:2"},
+      {name:"Straight Arm Lat Pull Down", sets:"4×8", tempo:"4:2:1:2"},
+      {name:"Seated Cable Row (rope attachment)", sets:"4×15", tempo:"1:0:1:2"},
+      {name:"Bicep Cable Curl (outside shoulder width grip)", sets:"3×8", tempo:"4:2:1:2"},
+      {name:"DB Preacher Hammer Curl", sets:"3×15", tempo:"1:2:1:0"},
+      {name:"Tricep Cable Press Down (outside shoulder width grip)", sets:"3×8", tempo:"4:2:1:2"},
+      {name:"Single Arm DB Overhead Extension", sets:"3×15", tempo:"1:2:1:0"},
+    ]
+  },
 ];
 let activeIdx = 0;
 
@@ -322,7 +370,7 @@ function render() {
       <div class="header-inner">
         <div class="eyebrow">🔶 Split #3 · Full Body</div>
         <div class="title">Upper Body</div>
-        <div><span class="schedule">3 Workout Variations</span></div>
+        <div><span class="schedule">6 Workout Variations</span></div>
       </div>
     </div>
     <div class="tabs-bar"><div class="tabs">${tabsHtml}</div></div>
