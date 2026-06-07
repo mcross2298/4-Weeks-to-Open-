@@ -163,6 +163,32 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:120px;}
 .fw-confirm{flex:2;padding:12px;background:#d4af37;border:none;border-radius:12px;color:#000;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.02em;}
 .fw-auto-banner{position:fixed;top:0;left:0;right:0;background:rgba(52,211,153,0.12);border-bottom:1px solid rgba(52,211,153,0.3);padding:12px 16px;text-align:center;font-size:13px;font-weight:800;color:#34d399;z-index:50;display:none;letter-spacing:0.02em;cursor:pointer;}
 .fw-auto-banner.show{display:block;}
+
+/* ── INTERACTIVE PUSHUP LADDER (crimson) ── */
+.ladder-active{text-align:center;}
+.set-indicator{font-size:13px;font-weight:900;letter-spacing:0.16em;color:#991b1b;text-transform:uppercase;margin-bottom:6px;}
+.set-indicator b{color:#dc2626;font-size:16px;}
+.target-big{font-size:40px;font-weight:900;color:#7f1d1d;letter-spacing:-0.02em;line-height:1.1;margin-bottom:4px;}
+.target-big b{color:#dc2626;}
+.target-sub{font-size:12px;font-weight:700;color:#991b1b;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:16px;}
+.ladder-prog{height:8px;background:#fee2e2;border-radius:4px;overflow:hidden;margin:14px 0 4px;}
+.ladder-prog-fill{height:100%;background:linear-gradient(90deg,#f87171,#dc2626);border-radius:4px;transition:width .35s ease;}
+.ladder-prog-cap{font-size:11px;font-weight:800;color:#991b1b;letter-spacing:0.04em;}
+.complete-set-btn{width:100%;padding:18px;border-radius:14px;border:none;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;font-size:17px;font-weight:900;letter-spacing:0.03em;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;box-shadow:0 4px 16px rgba(22,163,74,0.3);}
+.complete-set-btn:active{transform:scale(0.99);}
+.fail-toggle{width:100%;margin-top:10px;padding:12px;border-radius:11px;border:1.5px solid #fecaca;background:#fff;color:#dc2626;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.03em;-webkit-tap-highlight-color:transparent;}
+.fail-toggle.on{background:#fee2e2;border-color:#dc2626;color:#991b1b;}
+.rest-morph{width:100%;border-radius:14px;overflow:hidden;position:relative;height:64px;background:#fee2e2;border:1px solid #fca5a5;display:flex;align-items:center;justify-content:center;}
+.rest-morph-fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(135deg,#f87171,#dc2626);transition:width 1s linear;z-index:1;}
+.rest-morph-txt{position:relative;z-index:2;font-size:15px;font-weight:900;color:#7f1d1d;letter-spacing:0.04em;text-shadow:0 1px 2px rgba(255,255,255,0.4);}
+.rest-morph-txt b{font-size:20px;}
+.next-up{font-size:13px;font-weight:800;color:#991b1b;margin-top:12px;letter-spacing:0.02em;}
+.next-up b{color:#dc2626;}
+.knee-note{background:#fef2f2;border-left:3px solid #dc2626;padding:11px 13px;border-radius:8px;margin-top:14px;font-size:12px;color:#991b1b;line-height:1.5;font-weight:600;text-align:left;}
+.knee-note strong{color:#7f1d1d;}
+.ladder-done-banner{text-align:center;background:linear-gradient(135deg,#dcfce7,#bbf7d0);border:1px solid #86efac;border-radius:12px;padding:16px;margin-bottom:14px;}
+.ladder-done-banner .ld-title{font-size:17px;font-weight:900;color:#15803d;letter-spacing:-0.01em;}
+.ladder-done-banner .ld-sub{font-size:12px;font-weight:700;color:#166534;margin-top:3px;}
 </style>
 <link rel="stylesheet" href="base.css"/>
 <link rel="stylesheet" href="mc-nav.css"/>
@@ -215,15 +241,16 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:120px;}
    Flow: Rope · Lunges · Rope · Lunges · Rope · Lunges · Pushups
    ──────────────────────────────────────────────────────────── */
 var PID = location.pathname.split('/').pop().replace('.html','') || 'the-500';
-var SKEY = 'the500_state_v1';
+var SKEY = 'the500_state_v2';
 
 var DEFAULT_STATE = {
   rope:  [{min:5,logged:true,done:false},{min:5,logged:true,done:false},{min:5,logged:true,done:false}],
   lunge: [{reps:100,done:false},{reps:100,done:false},{reps:100,done:false}],
-  pushup:{ladder:171,finisher:true,done:false},
+  pushup:{started:false, set:1, failedAt:null, finisher:false},
   restCount:0
 };
 var S = loadState();
+var ladderResting = false; // transient UI flag (not persisted)
 
 function loadState(){
   try{
@@ -249,6 +276,7 @@ function fmt(secs){
   var m=Math.floor(secs/60), s=secs%60;
   return m+':'+String(s).padStart(2,'0');
 }
+function sumTo(k){ return k>0 ? k*(k+1)/2 : 0; }
 
 /* ── render all step cards ── */
 function render(){
@@ -331,36 +359,70 @@ function lungeCard(st){
 }
 
 function pushupCard(st){
-  var p=S.pushup, done=p.done;
+  var m=metrics();
   return ''+
-  '<div class="step-card'+(done?' is-done':'')+'" id="card-pushup-0">'+
+  '<div class="step-card'+(m.pushupComplete?' is-done':'')+'" id="card-pushup-0">'+
     '<div class="step-number">'+st.n+'</div>'+
     '<div class="step-head" onclick="toggleCard(this)">'+
       '<span class="step-icon">💪</span>'+
       '<div class="step-head-main"><div class="step-icon-row"><span class="step-name">1–18 Pushup Ladder</span></div>'+
         '<div class="step-target">+ 29 finisher pushups · 200 total</div></div>'+
-      '<span class="mini-badge'+(done?' green':'')+'" id="pushBadge">200<span class="unit">TOTAL</span></span>'+
+      '<span class="mini-badge'+(m.pushupComplete?' green':'')+'" id="pushBadge">'+m.pushups+'<span class="unit">/200</span></span>'+
       '<span class="chev">▾</span>'+
     '</div>'+
-    '<div class="step-body"><div class="step-body-inner">'+
-      '<div class="math-line">1 + 2 + 3 + … + 18 = <b>171 pushups</b></div>'+
-      '<div class="entry-row">'+
-        '<span class="entry-label">Ladder pushups done</span>'+
-        '<div class="stepper">'+
-          '<button class="step-btn" onclick="pushAdjust(-1)">−</button>'+
-          '<input class="num-input" id="pushLadder" type="number" inputmode="numeric" min="0" max="171" value="'+p.ladder+'" onfocus="this.select()" oninput="pushLadderInput()">'+
-          '<button class="step-btn" onclick="pushAdjust(1)">+</button>'+
-        '</div>'+
+    '<div class="step-body"><div class="step-body-inner" id="pushBodyInner">'+pushupBodyHTML()+'</div></div>'+
+  '</div>';
+}
+
+function pushupBodyHTML(){
+  var m=metrics(), p=S.pushup;
+
+  // — intro —
+  if(!p.started){
+    return '<span class="big-number">171<span class="unit">TOTAL REPS</span></span>'+
+      '<div class="note-box" style="margin-top:14px"><strong>How it works:</strong> Set 1 = 1 pushup, Set 2 = 2 pushups … Set 18 = 18 pushups (15 sec rest between sets). The full ladder is <strong>171 pushups</strong>. When you hit failure, finish the remaining sets on your knees. Then add <strong>+29 finisher</strong> to reach <strong>200</strong>.</div>'+
+      '<button class="complete-btn" onclick="startLadder()">▶ Start Ladder</button>';
+  }
+
+  // — complete (all 18 or failure) — show finisher to reach 200 —
+  if(m.pushupComplete){
+    return '<div class="ladder-done-banner">'+
+        '<div class="ld-title">🏆 Ladder Complete — '+m.ladderReps+' pushups</div>'+
+        '<div class="ld-sub">'+(m.pushupFailed?'Sets '+p.failedAt+'–18 finished on knees (auto-credited).':'All 18 sets cleared.')+'</div>'+
       '</div>'+
-      '<div class="note-box"><strong>How it works:</strong> Set 1 = 1 pushup, Set 2 = 2 pushups … Set 18 = 18 pushups (15 sec rest between sets). The full ladder is <strong>171 pushups</strong>.</div>'+
-      '<div class="fin-row'+(p.finisher?' on':'')+'" id="finRow" onclick="toggleFinisher()" style="margin-top:12px;">'+
+      '<div class="fin-row'+(p.finisher?' on':'')+'" onclick="toggleFinisher()">'+
         '<div class="fin-check">'+(p.finisher?'✓':'')+'</div>'+
         '<div class="fin-text"><div class="fin-title">Additional 29 Finisher Pushups</div>'+
           '<div class="fin-sub">171 + 29 = 200 · hits The 500 pushup milestone</div></div>'+
-        '<span class="fin-badge">+29</span>'+
+        '<span class="fin-badge">'+m.pushups+'/200</span>'+
       '</div>'+
-      '<button class="complete-btn'+(done?' done':'')+'" id="pushDone" onclick="pushupComplete()">'+(done?'✓ Completed':'Mark Complete')+'</button>'+
-    '</div></div>'+
+      '<button class="complete-btn" style="background:#fee2e2;color:#b91c1c;margin-top:12px" onclick="resetLadder()">↺ Restart Ladder</button>';
+  }
+
+  // — active —
+  var setN=p.set, prog=Math.round((m.pSetsDone/18)*100);
+  if(ladderResting && setN<=18){
+    return '<div class="ladder-active">'+
+      '<div class="set-indicator">RESTING · 15 SEC</div>'+
+      '<div class="ladder-prog"><div class="ladder-prog-fill" style="width:'+prog+'%"></div></div>'+
+      '<div class="ladder-prog-cap">'+m.pSetsDone+' / 18 sets · '+m.ladderReps+' reps</div>'+
+      '<div class="rest-morph" style="margin-top:14px">'+
+        '<div class="rest-morph-fill" id="ladRestBar" style="width:100%"></div>'+
+        '<div class="rest-morph-txt">REST <b id="ladRestTime">15</b>s</div>'+
+      '</div>'+
+      '<div class="next-up">Next up: Set <b>'+setN+'</b> ('+setN+' Reps)</div>'+
+      '<button class="fail-toggle" style="margin-top:12px" onclick="skipRest()">⏭ Skip Rest</button>'+
+    '</div>';
+  }
+  return '<div class="ladder-active">'+
+    '<div class="set-indicator">SET <b>'+setN+'</b> OF 18</div>'+
+    '<div class="target-big">Target: <b>'+setN+'</b></div>'+
+    '<div class="target-sub">'+setN+' '+(setN===1?'Rep':'Reps')+'</div>'+
+    '<div class="ladder-prog"><div class="ladder-prog-fill" style="width:'+prog+'%"></div></div>'+
+    '<div class="ladder-prog-cap">'+m.pSetsDone+' / 18 sets · '+m.ladderReps+' reps so far</div>'+
+    '<button class="complete-set-btn" style="margin-top:16px" onclick="completeLadderSet()">✓ Complete Set '+setN+'</button>'+
+    '<button class="fail-toggle'+(m.pushupFailed?' on':'')+'" onclick="toggleFailure()">⚠ Hit Failure — switch to knee pushups</button>'+
+    (m.pushupFailed?'<div class="knee-note"><strong>Failure logged.</strong> Remaining sets count as knee pushups until collapse — full ladder reps auto-credited.</div>':'')+
   '</div>';
 }
 
@@ -461,27 +523,55 @@ function lungeComplete(i){
   persist(); recompute();
 }
 
-/* ════════ PUSHUP ════════ */
-function pushAdjust(delta){
-  var inp=document.getElementById('pushLadder');
-  var v=Math.min(171,Math.max(0,(parseInt(inp.value)||0)+delta));
-  inp.value=v; S.pushup.ladder=v; persist(); recompute();
+/* ════════ PUSHUP LADDER (interactive — mirrors Driveway Demolition) ════════ */
+function renderPushup(){
+  var inner=document.getElementById('pushBodyInner');
+  if(inner) inner.innerHTML=pushupBodyHTML();
+  var m=metrics();
+  var card=document.getElementById('card-pushup-0');
+  if(card) card.classList.toggle('is-done',m.pushupComplete);
+  var badge=document.getElementById('pushBadge');
+  if(badge){ badge.classList.toggle('green',m.pushupComplete); badge.innerHTML=m.pushups+'<span class="unit">/200</span>'; }
 }
-function pushLadderInput(){
-  var v=Math.min(171,Math.max(0,parseInt(document.getElementById('pushLadder').value)||0));
-  S.pushup.ladder=v; persist(); recompute();
+function startLadder(){ S.pushup.started=true; persist(); renderPushup(); recompute(); }
+function resetLadder(){ S.pushup.set=1; S.pushup.failedAt=null; S.pushup.finisher=false; ladderResting=false; LADDER.stopRest(); persist(); renderPushup(); recompute(); }
+function completeLadderSet(){
+  var setN=S.pushup.set;
+  if(setN<18){
+    S.pushup.set=setN+1;        // advance immediately (reload-safe credit)
+    ladderResting=true;
+    persist(); renderPushup(); recompute();
+    LADDER.startRest();
+  } else {                      // completed set 18
+    S.pushup.set=19;
+    ladderResting=false;
+    persist(); renderPushup(); recompute(); TMR.buzz();
+  }
 }
-function toggleFinisher(){
-  S.pushup.finisher=!S.pushup.finisher;
-  var row=document.getElementById('finRow');
-  if(row){ row.classList.toggle('on',S.pushup.finisher); row.querySelector('.fin-check').textContent=S.pushup.finisher?'✓':''; }
-  persist(); recompute();
+function skipRest(){ LADDER.stopRest(); ladderResting=false; renderPushup(); recompute(); }
+function toggleFailure(){
+  if(S.pushup.failedAt!==null){ S.pushup.failedAt=null; }
+  else { S.pushup.failedAt=S.pushup.set; ladderResting=false; LADDER.stopRest(); TMR.buzz(); }
+  persist(); renderPushup(); recompute();
 }
-function pushupComplete(){
-  S.pushup.done=!S.pushup.done;
-  syncCard({type:'pushup',idx:0});
-  persist(); recompute();
-}
+function toggleFinisher(){ S.pushup.finisher=!S.pushup.finisher; persist(); renderPushup(); recompute(); }
+
+/* 15-second inline ladder rest (drains the morph bar) */
+var LADDER = {
+  iv:null, endAt:0,
+  startRest:function(){
+    this.stopRest();
+    this.endAt=Date.now()+15000;
+    var self=this;
+    this.iv=setInterval(function(){
+      var rem=Math.ceil((self.endAt-Date.now())/1000);
+      var t=document.getElementById('ladRestTime'), b=document.getElementById('ladRestBar');
+      if(rem>0){ if(t)t.textContent=rem; if(b)b.style.width=(rem/15*100)+'%'; }
+      else { self.stopRest(); TMR.buzz(); ladderResting=false; renderPushup(); recompute(); }
+    },250);
+  },
+  stopRest:function(){ if(this.iv){ clearInterval(this.iv); this.iv=null; } }
+};
 
 /* ── reflect a single card's done state into DOM ── */
 function syncCard(st){
@@ -504,27 +594,28 @@ function syncCard(st){
     if(btn){btn.classList.toggle('done',dl);btn.textContent=dl?'✓ Completed':'Complete → start 90s rest';}
     if(badge)badge.classList.toggle('green',dl);
   } else {
-    card=document.getElementById('card-pushup-0');
-    btn=document.getElementById('pushDone');
-    badge=document.getElementById('pushBadge');
-    var dp=S.pushup.done;
-    if(card)card.classList.toggle('is-done',dp);
-    if(btn){btn.classList.toggle('done',dp);btn.textContent=dp?'✓ Completed':'Mark Complete';}
-    if(badge)badge.classList.toggle('green',dp);
+    renderPushup(); // pushup ladder manages its own DOM
   }
 }
 
 /* ════════ LIVE TOTALS ════════ */
 function metrics(){
   var lungeReps = S.lunge.reduce(function(a,l){return a+(l.reps||0);},0);
-  var pushups   = Math.min(200, (S.pushup.ladder||0)+(S.pushup.finisher?29:0));
+  // pushup ladder (interactive): reps accrue per completed set; failure credits full 171
+  var pf = S.pushup.failedAt!==null;
+  var pSetsDone = pf ? 18 : Math.min(Math.max(S.pushup.set-1,0),18);
+  var ladderReps = pf ? 171 : sumTo(pSetsDone);
+  var pushupComplete = pf || S.pushup.set>18;
+  var pushups = Math.min(200, ladderReps + (S.pushup.finisher?29:0));
   var ropeMin   = S.rope.reduce(function(a,r){return a+(r.logged?(r.min||0):0);},0);
   var restCount = S.lunge.filter(function(l){return l.done;}).length; // each completed set = one 90s rest
   var restMin   = restCount*1.5;
   var stepsDone = S.rope.filter(function(r){return r.done;}).length +
                   S.lunge.filter(function(l){return l.done;}).length +
-                  (S.pushup.done?1:0);
-  return {lungeReps:lungeReps,pushups:pushups,ropeMin:ropeMin,restMin:restMin,
+                  (pushupComplete?1:0);
+  return {lungeReps:lungeReps,pushups:pushups,ladderReps:ladderReps,pSetsDone:pSetsDone,
+          pushupFailed:pf,pushupComplete:pushupComplete,
+          ropeMin:ropeMin,restMin:restMin,
           totalReps:lungeReps+pushups, totalMin:ropeMin+restMin, stepsDone:stepsDone};
 }
 
@@ -545,8 +636,8 @@ function recompute(){
   document.getElementById('sumRopeRp').textContent = nice(m.ropeMin)+' min logged';
   document.getElementById('sumLungeSt').textContent= lungeDone+' / 3 sets';
   document.getElementById('sumLungeRp').textContent= m.lungeReps+' reps · '+nice(m.restMin)+' min rest';
-  document.getElementById('sumPushSt').textContent = '1–18'+(S.pushup.finisher?' + 29':'');
-  document.getElementById('sumPushRp').textContent = m.pushups+' pushups';
+  document.getElementById('sumPushSt').textContent = m.pSetsDone+' / 18 sets'+(S.pushup.finisher?' + 29':'');
+  document.getElementById('sumPushRp').textContent = m.pushups+' pushups'+(m.pushupFailed?' · knees':'');
 
   if(window._FW && _FW.updateProgress) _FW.updateProgress(m.stepsDone);
 }
