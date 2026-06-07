@@ -263,6 +263,88 @@ const WORKOUTS = [
       {name:"Single Arm Pushdowns", sets:"3×8"},
     ]
   },
+  {
+    id:"w3", label:"W3",
+    title:"Shoulders & Triceps — Drop Set Strength II",
+    shoulders:[
+      {name:"Standing Barbell Military Press", sets:"8, 6, 4, 4 drop 10"},
+      {name:"Machine Side Lateral", sets:"10, 8, 6, 6 drop 12"},
+      {name:"Seated Arnold DB Press", sets:"12, 10, 8, 8"},
+      {name:"Standing DB Side Lateral", sets:"4×8", tempo:"4:0:1:0"},
+      {name:"Incline Bench Support DB Rear Delt Fly", sets:"12, 10, 8, 8"},
+    ],
+    triceps:[
+      {name:"Incline Bench Barbell Skull Crusher (hands touching)", sets:"8, 6, 4, 4 drop 10"},
+      {name:"Tricep Cable Press Down (shoulder width grip)", sets:"10, 8, 6, 6 drop 12"},
+      {name:"Single Arm DB Overhead Extension", sets:"12, 10, 8, 8"},
+      {name:"Tricep Machine Dip", sets:"4×8", tempo:"4:0:1:0"},
+    ]
+  },
+  {
+    id:"w4", label:"W4",
+    title:"Shoulders & Triceps — Pyramid & Supersets",
+    shoulders:[
+      {name:"Standing Barbell Shoulder Press", sets:"12, 10, 8, 6, 6, 8, 10, 12"},
+      {name:"DB Front Raise / DB Side Lateral", sets:"3×6/10", tempo:"4:0:1:0 / 1:0:1:2"},
+      {name:"Seated DB Side Lateral", sets:"3×15", tempo:"1:0:1:2"},
+      {name:"Bent Over Rear Delt DB Fly", sets:"3×15", tempo:"1:0:1:2"},
+    ],
+    triceps:[
+      {name:"Incline Bench Barbell Skull Crusher", sets:"12, 10, 8, 6, 6, 8, 10, 12"},
+      {name:"Machine Tricep Press Down / Tricep Cable Press Down (V grip)", sets:"4×6/10", tempo:"4:0:1:0 / 1:0:1:2"},
+      {name:"Reverse Grip Single Arm Tricep Cable Press Down", sets:"4×15", tempo:"1:0:1:2"},
+    ]
+  },
+  {
+    id:"w5", label:"W5",
+    title:"Shoulders & Triceps — Tempo Strength + Drop Sets",
+    shoulders:[
+      {name:"Seated Cable Shoulder Press", sets:"5×5", tempo:"1:5:1:0"},
+      {name:"Standing DB Side Lateral", sets:"12, 10, 8, 6, 4 drop 12"},
+      {name:"DB Up and Out", sets:"3×8", tempo:"4:0:1:0"},
+      {name:"Preacher Bench Barbell Front Raise (hands touching)", sets:"12, 10, 8"},
+      {name:"Reverse Incline Bench Rear Delt DB Fly", sets:"30, 30, 20, 20, 10, 10"},
+    ],
+    triceps:[
+      {name:"Seated Double Arm Overhead DB Extension", sets:"5×5", tempo:"1:5:1:0"},
+      {name:"Tricep Cable Press Down (outside shoulder width grip)", sets:"12, 10, 8, 6, 4 drop 12"},
+      {name:"Seated Double Arm DB Kickback", sets:"4×8", tempo:"4:0:1:0"},
+      {name:"Tricep Cable Press Down (rope attachment)", sets:"30, 30, 20, 20, 10, 10"},
+    ]
+  },
+  {
+    id:"w6", label:"W6",
+    title:"Shoulders & Triceps — Drop Sets & Supersets",
+    shoulders:[
+      {name:"Standing Cable Shoulder Press", sets:"12, 10, 8, 6, 4 drop 20"},
+      {name:"Seated Barbell Shoulder Press", sets:"12, 10, 8, 8"},
+      {name:"Standing DB Side Lateral (pronated grip) / Machine Side Lateral", sets:"3×12/12", tempo:"1:0:1:2"},
+      {name:"Bent Over Rear Delt DB Fly", sets:"12, 10, 8"},
+      {name:"Barbell Upright Row", sets:"12, 10, 8", tempo:"1:0:1:2"},
+    ],
+    triceps:[
+      {name:"Flat Bench Barbell Skull Crusher", sets:"12, 10, 8, 6, 4 drop 20"},
+      {name:"Machine Tricep Dip", sets:"12, 10, 8, 8"},
+      {name:"Tricep Cable Press Down (V grip) / Tricep Cable Press Down (W bar, shoulder width grip)", sets:"4×12/12", tempo:"1:0:1:2"},
+      {name:"Single Arm Tricep Cable Press Down (rope attachment)", sets:"12, 10, 8, 8", tempo:"1:0:1:2"},
+    ]
+  },
+  {
+    id:"w7", label:"W7",
+    title:"Shoulders & Triceps — Strength & Volume",
+    shoulders:[
+      {name:"Single Arm Hanging DB Side Lateral Raise", sets:"12, 10, 8, 8"},
+      {name:"Barbell Pin Press", sets:"4×4"},
+      {name:"Seated DB Side Lateral (pronated grip)", sets:"4×12"},
+      {name:"Reverse Pec Deck Rear Delt Fly / Incline Bench Support Barbell Face Pull", sets:"6×8/8", tempo:"1:2:1:2"},
+    ],
+    triceps:[
+      {name:"Tricep Cable Press Down (shoulder width grip)", sets:"12, 10, 8 drop 8 drop 10 drop 12"},
+      {name:"Seated Double Arm DB Overhead Extension", sets:"6×4"},
+      {name:"Barbell Skull Crusher (outside shoulder width grip)", sets:"4×12"},
+      {name:"Single Arm Tricep Cable Press Down (reverse grip)", sets:"3×8", tempo:"1:2:1:2"},
+    ]
+  },
 ];
 
 let activeIdx = 0;
@@ -314,7 +396,7 @@ function render() {
       <div class="header-inner">
         <div class="eyebrow">🔶 Split #3 · Push</div>
         <div class="title">Shoulders & Triceps</div>
-        <div><span class="schedule">2 Workout Variations</span></div>
+        <div><span class="schedule">7 Workout Variations</span></div>
       </div>
     </div>
     <div class="tabs-bar"><div class="tabs">${tabsHtml}</div></div>
