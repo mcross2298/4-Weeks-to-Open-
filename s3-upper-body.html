@@ -227,16 +227,52 @@ function makeRestTimer(r, n) {
 }
 
 
-const EXERCISES = [
-  {name:"Slight Incline DB Press", sets:"5×8", tempo:"4:0:1:0"},
-  {name:"Decline Cable Flies", sets:"5×20"},
-  {name:"Incline DB Row", sets:"4×8", tempo:"4:0:1:0"},
-  {name:"Straight Arm Lat Pulldowns", sets:"4×20"},
-  {name:"Machine Shoulder Press", sets:"4×8", tempo:"4:0:1:0"},
-  {name:"Machine Side Laterals", sets:"4×20"},
-  {name:"Barbell Preacher Curl / Tricep Extension", sets:"4×8/8", tempo:"4:0:1:0"},
-  {name:"Cable Curl (shoulder width) / Tricep Pushdowns (rope)", sets:"4×20/20"},
+const WORKOUTS = [
+  {
+    id:"w1", label:"W1",
+    title:"Upper Body — Strength + High Rep Pairs",
+    exercises:[
+      {name:"Slight Incline DB Press", sets:"5×8", tempo:"4:0:1:0"},
+      {name:"Decline Cable Flies", sets:"5×20"},
+      {name:"Incline DB Row", sets:"4×8", tempo:"4:0:1:0"},
+      {name:"Straight Arm Lat Pulldowns", sets:"4×20"},
+      {name:"Machine Shoulder Press", sets:"4×8", tempo:"4:0:1:0"},
+      {name:"Machine Side Laterals", sets:"4×20"},
+      {name:"Barbell Preacher Curl / Tricep Extension", sets:"4×8/8", tempo:"4:0:1:0"},
+      {name:"Cable Curl (shoulder width) / Tricep Pushdowns (rope)", sets:"4×20/20"},
+    ]
+  },
+  {
+    id:"w2", label:"W2",
+    title:"Upper Body — Tempo Volume",
+    exercises:[
+      {name:"Pec Deck Fly (pronated grip)", sets:"5×12", tempo:"4:2:1:0"},
+      {name:"Incline DB Press (hammer grip)", sets:"5×15", tempo:"1:0:1:2"},
+      {name:"Standing DB Side Laterals", sets:"4×12", tempo:"4:0:1:0"},
+      {name:"Alternating DB Upright Row", sets:"4×15", tempo:"1:0:1:2"},
+      {name:"Straight Arm Lat Pull Down", sets:"4×12", tempo:"4:0:1:0"},
+      {name:"Smith Machine Bent Over Row", sets:"4×15", tempo:"1:0:1:2"},
+      {name:"Tricep Cable Press Down (shoulder width grip)", sets:"3×12", tempo:"4:0:1:0"},
+      {name:"Double Arm DB Kickback", sets:"3×15", tempo:"1:0:1:2"},
+      {name:"Bicep Cable Curl (shoulder width grip)", sets:"3×12", tempo:"4:0:1:0"},
+      {name:"Reverse Incline Bench DB Spider Curl", sets:"3×15", tempo:"1:0:1:2"},
+    ]
+  },
+  {
+    id:"w3", label:"W3",
+    title:"Upper Body — Superset Circuit",
+    exercises:[
+      {name:"Machine Chest Press (hammer grip) / Machine Lat Pull Down (hammer grip)", sets:"4×10/10", tempo:"4:2:1:0"},
+      {name:"Incline DB Press / Seated Cable Row (rope attachment)", sets:"4×15/15", tempo:"4:2:1:0"},
+      {name:"Body Weight Chest Dip", sets:"3×failure", tempo:"4:2:1:0"},
+      {name:"Seated Arnold DB Shoulder Press / Standing Double Arm DB Curl", sets:"4×10/10", tempo:"4:2:1:0"},
+      {name:"Standing DB Side Lateral / Bicep Cable Curl (inside shoulder width grip)", sets:"4×15/15", tempo:"4:2:1:0"},
+      {name:"Flat Bench Double Arm DB Tricep Extension", sets:"4×10", tempo:"4:2:1:0"},
+      {name:"Tricep Cable Press Down (rope attachment)", sets:"4×15", tempo:"1:2:1:2"},
+    ]
+  },
 ];
+let activeIdx = 0;
 
 const checkState = {};
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -252,7 +288,7 @@ function _restFor(name, tag){
   return {secs:60,lbl:'60 sec'};
 }
 function renderEx(ex, idx) {
-  const id = `ex-${idx}`;
+  const id = `${activeIdx}-ex-${idx}`;
   const checked = checkState[id] ? "checked" : "";
   const tempoHtml = ex.tempo ? `<span class="ex-tempo">${escapeHtml(ex.tempo)}</span>` : "";
   return `<div class="ex-card ${checked}" data-id="${id}">
@@ -278,20 +314,24 @@ function _restFor(name, tag){
   return {secs:60,lbl:'60 sec'};
 }
 function render() {
+  const w = WORKOUTS[activeIdx];
+  const tabsHtml = WORKOUTS.map((wo,i) => `<button class="tab ${i===activeIdx?'active':''}" data-i="${i}">${wo.label}</button>`).join("");
   document.getElementById("app").innerHTML = `
     <div class="header">
       <a href="cat-pump.html" class="back-link">← Back</a>
       <div class="header-inner">
         <div class="eyebrow">🔶 Split #3 · Full Body</div>
         <div class="title">Upper Body</div>
-        <div><span class="schedule">Full Upper Body Circuit</span></div>
+        <div><span class="schedule">3 Workout Variations</span></div>
       </div>
     </div>
-    <div class="content" style="margin-top:24px;">
-      <div class="workout-title">Upper Body — Strength + High Rep Pairs</div>
+    <div class="tabs-bar"><div class="tabs">${tabsHtml}</div></div>
+    <div class="content">
+      <div class="workout-title">${escapeHtml(w.title)}</div>
       <div class="tap-hint">Tap any exercise to check off</div>
-      ${EXERCISES.map((e,i) => renderEx(e,i)).join("")}
+      ${w.exercises.map((e,i) => renderEx(e,i)).join("")}
     </div>`;
+  document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => { activeIdx=parseInt(b.dataset.i); render(); }));
   document.querySelectorAll(".ex-card").forEach(c => c.addEventListener("click", () => {
     const id = c.dataset.id; checkState[id]=!checkState[id]; c.classList.toggle("checked");
   }));
