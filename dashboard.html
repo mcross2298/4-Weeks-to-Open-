@@ -580,6 +580,8 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 </div>
 
 <script src="conditioning-data.js"></script>
+<script>window.MC_SUBS_NO_BUTTON=true;</script>
+<script src="mc-subs.js"></script>
 <script src="mc-live-tracker.js"></script>
 <script>
 // ── DATE ──
@@ -760,6 +762,16 @@ function renderConditioning(){
     }
     html+='</div>';
   });
+  // ── Global Substitutions directory (single source: mc-subs.js) ──
+  if(window.MC_SUBS && window.MCSubs){
+    html+='<div class="cond-sub">'
+        +'<div class="cond-sub-head">'
+        +'<div class="cond-sub-icon" style="background:'+hexA('#f97316',0.14)+';border-color:'+hexA('#f97316',0.4)+'">🔁</div>'
+        +'<div><div class="cond-sub-name">Substitutions</div>'
+        +'<div class="cond-sub-blurb">Master swap directory — sub any movement in The 500, Driveway Demolition, or Hell Week.</div></div></div>'
+        +window.MCSubs.listHTML()
+        +'</div>';
+  }
   body.innerHTML=html;
 }
 
