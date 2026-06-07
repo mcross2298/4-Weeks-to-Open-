@@ -262,6 +262,73 @@ const WORKOUTS = [
       {name:"DB Hammer Curl / Reverse Barbell Curl", sets:"4×15/12", tempo:"1:2:1:2 / 1:4:1:2"},
     ]
   },
+  {
+    id:"w3", label:"W3",
+    title:"Chest & Biceps — Tempo Strength + Drop Sets",
+    chest:[
+      {name:"Flat Bench Barbell Press", sets:"5×5", tempo:"1:5:1:0"},
+      {name:"Slight Incline DB Press", sets:"12, 10, 8, 6, 4 drop 12"},
+      {name:"Alternating Single Arm Decline Bench DB Press", sets:"3×15"},
+      {name:"Incline Bench DB Fly (Pronated grip)", sets:"3×8", tempo:"4:0:1:0"},
+      {name:"Pec Deck Fly", sets:"30, 30, 20, 20, 10, 10"},
+    ],
+    biceps:[
+      {name:"Barbell Preacher Curl", sets:"4×5", tempo:"1:5:1:0"},
+      {name:"Alternating DB Curl", sets:"12, 10, 8, 6, 4 drop 12"},
+      {name:"Double Arm DB Preacher Hammer Curl", sets:"4×8", tempo:"4:0:1:0"},
+      {name:"Bicep Cable Curl (inside shoulder grip)", sets:"30, 30, 20, 20"},
+    ]
+  },
+  {
+    id:"w4", label:"W4",
+    title:"Chest & Biceps — Pyramid & Supersets",
+    chest:[
+      {name:"Barbell Bench Press", sets:"12, 10, 8, 6, 6, 8, 10, 12"},
+      {name:"Slight Incline DB Press / DB Floor Press", sets:"4×6/10", tempo:"4:0:1:0 / 1:2:1:0"},
+      {name:"Flat Bench Cable Fly", sets:"3×15", tempo:"1:2:1:0"},
+      {name:"Pec Deck Fly", sets:"3×15", tempo:"1:0:1:2"},
+      {name:"Body Weight Chest Dips", sets:"2×failure", tempo:"1:2:1:2"},
+    ],
+    biceps:[
+      {name:"Barbell Curl (outside shoulder grip)", sets:"12, 10, 8, 6, 6, 8, 10, 12"},
+      {name:"Incline Bench Double Arm DB Curl / Reverse Incline Bench Barbell Spider Curl (inside shoulder grip)", sets:"4×6/10", tempo:"4:0:1:0 / 1:2:1:0"},
+      {name:"Barbell Reverse Curl", sets:"4×15"},
+    ]
+  },
+  {
+    id:"w5", label:"W5",
+    title:"Chest & Biceps — Decline Drop Sets",
+    chest:[
+      {name:"Decline DB Press", sets:"12, 10, 8, 6, 4 drop 20"},
+      {name:"High Incline DB Press", sets:"12, 10, 8, 8"},
+      {name:"Floor DB Fly (Pronated grip) / Decline Cable Fly", sets:"4×12/12", tempo:"1:2:1:0 / 1:0:1:2"},
+      {name:"Flat Barbell Bench Press", sets:"4, 6, 8, 8", tempo:"1:4:1:0"},
+      {name:"Body Weight Chest Dip", sets:"3×failure", tempo:"4:2:1:0"},
+    ],
+    biceps:[
+      {name:"Machine Preacher Curl", sets:"12, 10, 8, 6, 4 drop 20"},
+      {name:"Barbell Preacher Curl (inside shoulder grip)", sets:"12, 10, 8, 8"},
+      {name:"Seated DB Hammer Curl / Reverse Incline Bench Support Double Arm DB Spider Curl", sets:"3×12/12", tempo:"1:2:1:0 / 1:0:1:2"},
+      {name:"Bicep Cable Curl (outside shoulder grip)", sets:"4, 6, 8, 8", tempo:"1:4:1:0"},
+    ]
+  },
+  {
+    id:"w6", label:"W6",
+    title:"Chest & Biceps — Strength & Cable",
+    chest:[
+      {name:"Flat Bench Cable Fly", sets:"12, 10, 8, 8"},
+      {name:"Barbell Floor Press", sets:"6×4"},
+      {name:"Incline Barbell Bench Press", sets:"4×12"},
+      {name:"Pec Deck Fly", sets:"8, 6, 4, 4", tempo:"1:2:1:0"},
+      {name:"Body Weight Chest Dip", sets:"3×failure", tempo:"4:0:1:2"},
+    ],
+    biceps:[
+      {name:"Machine Preacher Curl", sets:"12, 10, 8, 8"},
+      {name:"Barbell Curl (outside shoulder width)", sets:"4×4"},
+      {name:"Cable Hammer Curl (close V grip)", sets:"4×12"},
+      {name:"Incline Bench Alternating DB Curl", sets:"8, 6, 4, 4"},
+    ]
+  },
 ];
 
 let activeIdx = 0;
@@ -315,7 +382,7 @@ function render() {
       <div class="header-inner">
         <div class="eyebrow">🔶 Split #3 · Push</div>
         <div class="title">Chest & Biceps</div>
-        <div><span class="schedule">2 Workout Variations</span></div>
+        <div><span class="schedule">6 Workout Variations</span></div>
       </div>
     </div>
     <div class="tabs-bar"><div class="tabs">${tabsHtml}</div></div>
