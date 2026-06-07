@@ -157,6 +157,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:40px;}
 .fw-confirm{flex:2;padding:12px;background:#d4af37;border:none;border-radius:12px;color:#000;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.02em;}
 .fw-auto-banner{position:fixed;top:0;left:0;right:0;background:rgba(52,211,153,0.12);border-bottom:1px solid rgba(52,211,153,0.3);padding:12px 16px;text-align:center;font-size:13px;font-weight:800;color:#34d399;z-index:50;display:none;letter-spacing:0.02em;cursor:pointer;}
 .fw-auto-banner.show{display:block;}
+.swap-badge{font-size:10px;font-weight:900;color:#fff;background:#ea580c;border-radius:8px;padding:1px 6px;vertical-align:middle;}
 </style>
 <link rel="stylesheet" href="base.css"/>
 <link rel="stylesheet" href="mc-nav.css"/>
@@ -235,6 +236,13 @@ function persist(){ try{ localStorage.setItem(SKEY, JSON.stringify(S)); }catch(e
 function sumTo(k){ return k>0 ? k*(k+1)/2 : 0; }
 function pad(n){ return String(n).padStart(2,'0'); }
 function fmtClock(secs){ secs=Math.max(0,secs); return Math.floor(secs/60)+':'+pad(secs%60); }
+function swapKey(g,i){ return 'core-'+g+'-'+i; }
+function exName(g,i){ var def=DAYS[g].ex[i]; return window.MCSwap?MCSwap.name(swapKey(g,i),def):def; }
+function exBadge(g,i){ return (window.MCSwap&&MCSwap.isSwapped(swapKey(g,i)))?' <span class="swap-badge">⇄</span>':''; }
+function refreshSwapMovements(){
+  var g=S.activeTab;
+  window.MC_SWAP_MOVEMENTS=DAYS[g].ex.map(function(nm,i){ return {key:swapKey(g,i),base:nm,def:nm}; });
+}
 
 function buzz(){
   if(navigator.vibrate) navigator.vibrate([200,100,200,100,400]);
@@ -290,6 +298,7 @@ function switchTab(g){
   if(S.activeTab===g) return;
   CORE.stop(true);          // pause any running circuit (step is preserved)
   S.activeTab=g; persist();
+  refreshSwapMovements();
   renderTabs(); renderCore(); renderSummary();
 }
 
@@ -483,16 +492,16 @@ function renderCore(){
   } else {
     // idle / continue / start round 2
     var label, sub;
-    if(step===0){ label='▶ Start Circuit'; sub='Round 1 · '+day.ex[0]; }
-    else if(step===3 || roundReady){ label='▶ Start Round 2'; sub='Round 2 · '+day.ex[0]; }
-    else { var ei=step%3; label='▶ Continue Circuit'; sub='Round '+(step<3?1:2)+' · Next: '+day.ex[ei]; }
+    if(step===0){ label='▶ Start Circuit'; sub='Round 1 · '+exName(g,0); }
+    else if(step===3 || roundReady){ label='▶ Start Round 2'; sub='Round 2 · '+exName(g,0); }
+    else { var ei=step%3; label='▶ Continue Circuit'; sub='Round '+(step<3?1:2)+' · Next: '+exName(g,ei); }
     inner =
       '<div class="day-block">'+
         '<div class="day-block-head"><span class="day-pill">'+day.label.toUpperCase()+'</span>'+
           '<span style="font-size:11px;font-weight:800;color:#9a3412;">2 rounds · 1 min each · 15s rest</span></div>'+
         '<ul class="ex-list">'+ day.ex.map(function(name,i){
             var cls = (step%3===i && step<6) ? 'cur' : '';
-            return '<li class="'+cls+'"><span class="ex-num">'+(i+1)+'</span><span class="ex-text">'+name+'</span></li>';
+            return '<li class="'+cls+'"><span class="ex-num">'+(i+1)+'</span><span class="ex-text">'+exName(g,i)+exBadge(g,i)+'</span></li>';
           }).join('') +'</ul>'+
       '</div>'+
       '<div style="text-align:center;font-size:12px;font-weight:800;color:#9a3412;letter-spacing:0.02em;margin-bottom:2px;">'+sub+'</div>'+
@@ -511,7 +520,7 @@ function coreLiveHTML(g, day){
     var round=step<3?1:2, ei=step%3;
     return '<div class="circuit-live">'+
       '<div class="circuit-tag work">ROUND '+round+' · EXERCISE '+(ei+1)+' / 3</div>'+
-      '<div class="ex-name-big">'+day.ex[ei]+'</div>'+
+      '<div class="ex-name-big">'+exName(g,ei)+exBadge(g,ei)+'</div>'+
       '<div class="timer-big" id="coreTime">1:00</div>'+
       '<div class="timer-bar"><div class="timer-bar-fill" id="coreBar" style="width:100%"></div></div>'+
       coreDotsHTML(step)+
@@ -523,7 +532,7 @@ function coreLiveHTML(g, day){
     var ns=step%3; // step already incremented; next exercise index
     return '<div class="circuit-live">'+
       '<div class="circuit-tag rest">REST · NEXT EXERCISE</div>'+
-      '<div class="ex-name-big" style="color:#d97706">Up next: '+day.ex[ns]+'</div>'+
+      '<div class="ex-name-big" style="color:#d97706">Up next: '+exName(g,ns)+'</div>'+
       '<div class="timer-big rest" id="coreTime">0:15</div>'+
       '<div class="timer-bar"><div class="timer-bar-fill rest" id="coreBar" style="width:100%"></div></div>'+
       coreDotsHTML(step)+
@@ -572,7 +581,9 @@ function renderSummary(){
 }
 
 /* ════════ BOOT ════════ */
+window.MC_SWAP_ONCHANGE=function(){ refreshSwapMovements(); renderCore(); renderSummary(); };
 function boot(){
+  refreshSwapMovements();
   renderTabs(); renderLadder(); renderCore(); renderSummary();
   if(S.timeStarted) GT.resume();
   window.addEventListener('beforeunload', persist);

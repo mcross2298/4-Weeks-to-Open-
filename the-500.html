@@ -189,6 +189,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:120px;}
 .ladder-done-banner{text-align:center;background:linear-gradient(135deg,#dcfce7,#bbf7d0);border:1px solid #86efac;border-radius:12px;padding:16px;margin-bottom:14px;}
 .ladder-done-banner .ld-title{font-size:17px;font-weight:900;color:#15803d;letter-spacing:-0.01em;}
 .ladder-done-banner .ld-sub{font-size:12px;font-weight:700;color:#166534;margin-top:3px;}
+.swap-badge{font-size:10px;font-weight:900;color:#fff;background:#ea580c;border-radius:8px;padding:1px 6px;vertical-align:middle;}
 </style>
 <link rel="stylesheet" href="base.css"/>
 <link rel="stylesheet" href="mc-nav.css"/>
@@ -277,6 +278,8 @@ function fmt(secs){
   return m+':'+String(s).padStart(2,'0');
 }
 function sumTo(k){ return k>0 ? k*(k+1)/2 : 0; }
+function swapName(key,def){ return (window.MCSwap?MCSwap.name(key,def):def); }
+function swapBadge(key){ return (window.MCSwap&&MCSwap.isSwapped(key))?' <span class="swap-badge">⇄</span>':''; }
 
 /* ── render all step cards ── */
 function render(){
@@ -302,7 +305,7 @@ function ropeCard(st){
     '<div class="step-number">'+st.n+'</div>'+
     '<div class="step-head" onclick="toggleCard(this)">'+
       '<span class="step-icon">🪢</span>'+
-      '<div class="step-head-main"><div class="step-icon-row"><span class="step-name">Jump Rope</span></div>'+
+      '<div class="step-head-main"><div class="step-icon-row"><span class="step-name">'+swapName('jumprope','Jump Rope')+'</span>'+swapBadge('jumprope')+'</div>'+
         '<div class="step-target">Set '+(st.idx+1)+' of 3 · 5 minute target</div></div>'+
       '<span class="mini-badge'+(done?' green':'')+'" id="ropeBadge-'+st.idx+'">5<span class="unit">MIN</span></span>'+
       '<span class="chev">▾</span>'+
@@ -341,7 +344,7 @@ function lungeCard(st){
     '<div class="step-number">'+st.n+'</div>'+
     '<div class="step-head" onclick="toggleCard(this)">'+
       '<span class="step-icon">🚶</span>'+
-      '<div class="step-head-main"><div class="step-icon-row"><span class="step-name">Walking Lunges</span></div>'+
+      '<div class="step-head-main"><div class="step-icon-row"><span class="step-name">'+swapName('lunges','Walking Lunges')+'</span>'+swapBadge('lunges')+'</div>'+
         '<div class="step-target">Set '+(st.idx+1)+' of 3 · tap to count reps</div></div>'+
       '<span class="mini-badge'+(done?' green':'')+'" id="lungeBadge-'+st.idx+'">'+l.reps+'<span class="unit">REPS</span></span>'+
       '<span class="chev">▾</span>'+
@@ -641,6 +644,13 @@ function recompute(){
 
   if(window._FW && _FW.updateProgress) _FW.updateProgress(m.stepsDone);
 }
+
+/* live exercise swaps (mc-subs.js) */
+window.MC_SWAP_MOVEMENTS=[
+  {key:'jumprope',base:'Jump Rope',def:'Jump Rope'},
+  {key:'lunges',base:'Walking Lunges',def:'Walking Lunges'}
+];
+window.MC_SWAP_ONCHANGE=function(){ render(); };
 
 render();
 </script>
