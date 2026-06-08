@@ -6,7 +6,7 @@
 <title>30 Minute Turn & Burn</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
-body{background:#070a12;min-height:100vh;padding-bottom:150px;color:#e2e8f0;}
+body{background:#070a12;min-height:100vh;padding-bottom:240px;color:#e2e8f0;}
 
 /* ── DEEP CRIMSON + DARK SLATE SHELL ───────────────────────────────── */
 .app{background:linear-gradient(160deg,#3f0a0a 0%,#1a0f1a 38%,#0f172a 100%);min-height:100vh;}
@@ -23,12 +23,12 @@ body{background:#070a12;min-height:100vh;padding-bottom:150px;color:#e2e8f0;}
 .intro-warn strong{color:#fff;}
 
 /* ── SECTION HEADINGS ── */
-.sec-head{font-size:11px;font-weight:900;letter-spacing:0.2em;color:#fdba74;text-transform:uppercase;margin:26px 0 12px;display:flex;align-items:center;gap:10px;}
+.sec-head{font-size:11px;font-weight:900;letter-spacing:0.2em;color:#fdba74;text-transform:uppercase;margin:20px 0 10px;display:flex;align-items:center;gap:10px;}
 .sec-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(249,115,22,0.4),transparent);}
 .sec-head .sh-num{background:linear-gradient(135deg,#f97316,#dc2626);color:#fff;width:22px;height:22px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 2px 10px rgba(220,38,38,0.35);}
 
 /* ── DARK SLATE CARDS · HIGH-CONTRAST WHITE BORDERS ── */
-.card{background:linear-gradient(155deg,#111a2b,#0c1320);border-radius:16px;border:1.5px solid rgba(248,250,252,0.5);padding:18px;margin-bottom:14px;box-shadow:0 8px 28px rgba(0,0,0,0.4);position:relative;overflow:hidden;}
+.card{background:linear-gradient(155deg,#111a2b,#0c1320);border-radius:16px;border:1.5px solid rgba(248,250,252,0.5);padding:14px;margin-bottom:10px;box-shadow:0 8px 28px rgba(0,0,0,0.4);position:relative;overflow:hidden;}
 .card.dim{border-color:rgba(248,250,252,0.14);opacity:0.72;}
 .card.active{border-color:rgba(251,146,60,0.9);box-shadow:0 8px 32px rgba(220,38,38,0.28);}
 .card.done{border-color:rgba(52,211,153,0.85);box-shadow:0 8px 28px rgba(16,185,129,0.2);}
@@ -48,9 +48,9 @@ body{background:#070a12;min-height:100vh;padding-bottom:150px;color:#e2e8f0;}
 @keyframes badgePulse{0%,100%{opacity:1;}50%{opacity:0.78;}}
 
 /* ── EMBEDDED COUNTDOWN (matches the main app stopwatch styling) ── */
-.cd-box{background:rgba(0,0,0,0.28);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:18px;margin-top:14px;text-align:center;}
+.cd-box{background:rgba(0,0,0,0.28);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:13px;margin-top:11px;text-align:center;}
 .cd-mini-label{font-size:11px;font-weight:900;letter-spacing:0.2em;color:#64748b;text-transform:uppercase;margin-bottom:8px;}
-.cd-disp{font-size:54px;font-weight:900;color:#e2e8f0;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;line-height:1;margin-bottom:6px;}
+.cd-disp{font-size:42px;font-weight:900;color:#e2e8f0;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;line-height:1;margin-bottom:6px;}
 .cd-disp.running{color:#fb923c;}
 .cd-disp.done{color:#34d399;}
 .cd-prog{height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;margin:12px 0 14px;}
@@ -64,7 +64,7 @@ body{background:#070a12;min-height:100vh;padding-bottom:150px;color:#e2e8f0;}
 
 /* ── SPLIT PICKER ── */
 .split-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
-.split-opt{background:rgba(0,0,0,0.25);border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 12px;cursor:pointer;text-align:left;transition:all 0.15s;font-family:inherit;color:inherit;}
+.split-opt{background:rgba(0,0,0,0.25);border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;padding:11px 11px;cursor:pointer;text-align:left;transition:all 0.15s;font-family:inherit;color:inherit;}
 .split-opt:active{transform:scale(0.98);}
 .split-opt.sel{border-color:#f97316;background:rgba(249,115,22,0.12);box-shadow:0 4px 18px rgba(220,38,38,0.25);}
 .split-opt .so-tag{font-size:10px;font-weight:900;letter-spacing:0.12em;color:#fdba74;text-transform:uppercase;}
@@ -87,7 +87,7 @@ body{background:#070a12;min-height:100vh;padding-bottom:150px;color:#e2e8f0;}
 .uo-input:focus{border-color:rgba(249,115,22,0.6);}
 
 /* ── BURPEE INTERVAL RUNNER ── */
-.bp-card{background:linear-gradient(155deg,#160a0a,#0c1320);border:1.5px solid rgba(248,250,252,0.5);border-radius:18px;padding:20px 18px;margin-bottom:14px;box-shadow:0 10px 34px rgba(0,0,0,0.45);}
+.bp-card{background:linear-gradient(155deg,#160a0a,#0c1320);border:1.5px solid rgba(248,250,252,0.5);border-radius:18px;padding:15px 14px;margin-bottom:10px;box-shadow:0 10px 34px rgba(0,0,0,0.45);}
 .bp-card.work{border-color:rgba(220,38,38,0.9);box-shadow:0 10px 40px rgba(220,38,38,0.35);}
 .bp-card.rest{border-color:rgba(14,165,233,0.7);box-shadow:0 10px 34px rgba(14,165,233,0.22);}
 .bp-card.done{border-color:rgba(52,211,153,0.85);}
@@ -98,7 +98,7 @@ body{background:#070a12;min-height:100vh;padding-bottom:150px;color:#e2e8f0;}
 .bp-meta{font-size:12px;color:#94a3b8;font-weight:700;margin-bottom:14px;}
 .bp-roundline{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .bp-round{font-size:13px;font-weight:900;color:#fdba74;letter-spacing:0.08em;text-transform:uppercase;}
-.bp-disp{font-size:78px;font-weight:900;color:#e2e8f0;font-variant-numeric:tabular-nums;letter-spacing:-0.03em;line-height:0.95;text-align:center;margin:6px 0 4px;}
+.bp-disp{font-size:58px;font-weight:900;color:#e2e8f0;font-variant-numeric:tabular-nums;letter-spacing:-0.03em;line-height:0.95;text-align:center;margin:4px 0 2px;}
 .bp-disp.work{color:#f87171;}
 .bp-disp.rest{color:#38bdf8;}
 .bp-disp.done{color:#34d399;}
@@ -109,9 +109,9 @@ body{background:#070a12;min-height:100vh;padding-bottom:150px;color:#e2e8f0;}
 .bp-card.work .bp-counter{display:block;}
 .bp-counter-lbl{text-align:center;font-size:11px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;color:#94a3b8;margin-bottom:8px;}
 .bp-count-row{display:flex;align-items:center;justify-content:center;gap:14px;}
-.bp-count-btn{width:54px;height:54px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.18);background:rgba(0,0,0,0.3);color:#fff;font-size:26px;font-weight:900;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;}
+.bp-count-btn{width:46px;height:46px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.18);background:rgba(0,0,0,0.3);color:#fff;font-size:23px;font-weight:900;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;}
 .bp-count-btn:active{transform:scale(0.92);}
-.bp-count-num{font-size:64px;font-weight:900;color:#fb923c;font-variant-numeric:tabular-nums;line-height:1;min-width:96px;text-align:center;cursor:pointer;user-select:none;border-radius:14px;padding:4px 8px;}
+.bp-count-num{font-size:48px;font-weight:900;color:#fb923c;font-variant-numeric:tabular-nums;line-height:1;min-width:84px;text-align:center;cursor:pointer;user-select:none;border-radius:14px;padding:4px 8px;}
 .bp-count-num:active{background:rgba(249,115,22,0.12);}
 .bp-tap-hint{text-align:center;font-size:11px;color:#475569;margin-top:8px;font-style:italic;}
 .bp-count-edit{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;}
@@ -239,20 +239,24 @@ body{background:#070a12;min-height:100vh;padding-bottom:150px;color:#e2e8f0;}
         <button class="split-opt" id="ropeOptB" onclick="ROPE.pick('B')">
           <div class="so-tag">Option B</div>
           <div class="so-title">10 + 5 Split</div>
-          <div class="so-desc">10-min warm-up now, 5-min finisher unlocks after.</div>
+          <div class="so-desc">10-min warm-up now, 5-min finisher after the burpees.</div>
         </button>
       </div>
     </div>
 
-    <!-- rope timer cards injected here -->
+    <!-- rope warm-up card injected here -->
     <div id="ropeCards"></div>
 
     <!-- ── 2 · BURPEE INTERVALS ──────────────────────── -->
     <div class="sec-head"><span class="sh-num">2</span> Live Burpee Intervals</div>
     <div id="burpeeMount"></div>
 
-    <!-- ── 3 · OPTIONAL BURNOUT ──────────────────────── -->
-    <div class="sec-head"><span class="sh-num">3</span> Optional Burnout</div>
+    <!-- ── 3 · JUMP ROPE FINISHER (Option B only, after burpees) ── -->
+    <div class="sec-head" id="ropeFinSec" style="display:none;"><span class="sh-num">3</span> Jump Rope · Finisher</div>
+    <div id="ropeFinisherMount"></div>
+
+    <!-- ── OPTIONAL BURNOUT ──────────────────────────── -->
+    <div class="sec-head"><span class="sh-num" id="burnoutNum">3</span> Optional Burnout</div>
     <div id="burnoutMount"></div>
 
   </div>
@@ -357,17 +361,25 @@ var ROPE = {
 
   render:function(){
     var host=document.getElementById('ropeCards');
+    var finHost=document.getElementById('ropeFinisherMount');
+    var finSec=document.getElementById('ropeFinSec');
+    var burnoutNum=document.getElementById('burnoutNum');
     this.timers={};
+    finHost.innerHTML='';
     if(this.split==='A'){
       host.innerHTML=this._cardHTML('all','Continuous Warm-Up','15:00 straight through',15*60);
       this._wire('all',15*60);
+      finSec.style.display='none';
+      burnoutNum.textContent='3';
     } else if(this.split==='B'){
-      host.innerHTML =
-        this._cardHTML('warm','Warm-Up','First 10 minutes',10*60) +
-        this._cardHTML('fin','Finisher','Final 5 minutes — unlocks after the warm-up',5*60,true);
+      host.innerHTML=this._cardHTML('warm','Warm-Up','First 10 minutes',10*60);
+      // the 5-min finisher lives below the burpee block and unlocks once burpees are done
+      finHost.innerHTML=this._cardHTML('fin','Finisher','Final 5 minutes — unlocks after your burpees',5*60,true);
       this._wire('warm',10*60);
       this._wire('fin',5*60);
       this._lock('fin',true);
+      finSec.style.display='';
+      burnoutNum.textContent='4';
     }
   },
 
@@ -427,8 +439,6 @@ var ROPE = {
         if(card){ card.classList.remove('active'); card.classList.add('done'); }
         var go=document.getElementById('rope-go-'+id);
         if(go){ go.textContent='✓ Done'; go.className='cd-btn ghost'; }
-        // Option B: completing the warm-up unlocks the finisher
-        if(id==='warm') self._lock('fin',false);
         updateSummary();
       }
     });
@@ -663,6 +673,8 @@ var BURPEE = {
     go.textContent='↺ Run Again'; go.className='bp-ctrl go';
     this.renderChips();
     buzz([200,100,200,100,200,100,500]);
+    // Option B: finishing the burpees unlocks the jump-rope finisher below
+    if(ROPE.split==='B') ROPE._lock('fin',false);
     updateSummary();
   },
 
@@ -875,6 +887,9 @@ function resetSession(){
   document.getElementById('ropeOptA').classList.remove('sel');
   document.getElementById('ropeOptB').classList.remove('sel');
   document.getElementById('ropeCards').innerHTML='';
+  document.getElementById('ropeFinisherMount').innerHTML='';
+  document.getElementById('ropeFinSec').style.display='none';
+  document.getElementById('burnoutNum').textContent='3';
   // burpees
   BURPEE.reset();
   // burnout
