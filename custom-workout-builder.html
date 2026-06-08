@@ -756,7 +756,16 @@ function saveWorkout() {
     saved = CustomWorkouts.save(workout);
   }
 
-  // Navigate to runner
+  // If launched from a Best of Both Worlds session, return there and bind
+  // the new workout to its session day instead of jumping into the runner.
+  var params = new URLSearchParams(location.search);
+  if (params.get('return') === 'bobw') {
+    var slot = params.get('slot') || '';
+    window.location.href = 'bobw.html?cbind=' + encodeURIComponent(slot) + '&cid=' + encodeURIComponent(saved.id);
+    return;
+  }
+
+  // Default: navigate to runner
   window.location.href = 'custom-workout-runner.html?id=' + saved.id;
 }
 
