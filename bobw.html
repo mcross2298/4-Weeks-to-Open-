@@ -414,6 +414,12 @@ var COND_TYPES=[
   {key:"liss",label:"LISS",icon:"🚶",desc:"Low-intensity steady state"},
   {key:"hiit",label:"HIIT",icon:"⚡",desc:"High-intensity intervals"}
 ];
+// LISS is low-intensity steady-state only — the "Not for the Faint of Heart"
+// HIIT routines must never appear here. These are the allowed LISS choices.
+var LISS_OPTIONS=[
+  "Jump Rope","Incline Treadmill","Rower Machine","Elliptical",
+  "Stair Master","Bicycle","Walking Lunges"
+];
 function condTypeMeta(type){ return COND_TYPES.find(function(t){return t.key===type;})||COND_TYPES[0]; }
 function condSlotKey(weekId,dIdx,type){ return weekId+":"+dIdx+":"+type; }
 function readCondBindings(){ try{return JSON.parse(localStorage.getItem("mc_bobw_cond")||"{}")||{};}catch(e){return {};} }
@@ -441,6 +447,8 @@ function condRunTarget(b){
   if(!b) return null;
   if(b.kind==="custom") return {href:"custom-workout-runner.html?id="+encodeURIComponent(b.id),label:b.name};
   if(b.kind==="routine") return {href:b.href,label:b.name};
+  // LISS options are simple steady-state movements — no runnable page, just the
+  // logged choice surfaced on the banner.
   return null;
 }
 
@@ -452,12 +460,12 @@ function condSlotRow(weekId,dIdx,type){
   var head;
   if(b){
     var t=condRunTarget(b);
-    var kindLbl=b.kind==="custom"?"Custom workout":"Pre-built routine";
+    var kindLbl=b.kind==="custom"?"Custom workout":(b.kind==="liss"?"LISS option":"Pre-built routine");
     head='<div class="bobw-cond-head" data-cond-toggle>'
       +'<span class="bobw-cond-icon">'+meta.icon+'</span>'
       +'<span class="bobw-cond-txt"><div class="bobw-cond-name"><span class="bobw-cond-type">'+meta.label+'</span>'+escapeHtml(b.name)+'</div>'
       +'<div class="bobw-cond-sub">'+kindLbl+' · tap to change</div></span>'
-      +'<a class="bobw-cond-run" href="'+(t?t.href:"#")+'" data-cond-run>▶ Run</a>'
+      +(t?'<a class="bobw-cond-run" href="'+t.href+'" data-cond-run>▶ Run</a>':'')
       +'</div>';
   }else{
     head='<div class="bobw-cond-head" data-cond-toggle>'
@@ -503,15 +511,31 @@ function buildCondPanel(weekId,dIdx,type){
     html+='<div class="bcp-empty">None yet — tap “Build Your Own” to create one.</div>';
   }
 
-  html+='<div class="bcp-sec">Pre-Built Conditioning</div>';
-  routines.forEach(function(r){
-    var sel=(b&&b.kind==="routine"&&b.href===r.href);
-    html+='<div class="bcp-item'+(sel?" sel":"")+'" data-cond-pick="routine:'+escapeHtml(r.href)+'" data-cond-name="'+escapeHtml(r.name)+'">'
-      +'<span class="bcp-item-ico">🔥</span>'
-      +'<span class="bcp-item-body"><span class="bcp-item-name">'+escapeHtml(r.name)+'</span>'
-      +(r.tag?'<span class="bcp-item-meta">'+escapeHtml(r.tag)+'</span>':'')+'</span>'
-      +'<span class="bcp-item-check">'+(sel?"✓":"")+'</span></div>';
-  });
+  if(type==="liss"){
+    // LISS slot — only low-intensity steady-state options. The intense
+    // "Not for the Faint of Heart" HIIT routines are deliberately excluded.
+    html+='<div class="bcp-sec">LISS Options</div>';
+    LISS_OPTIONS.forEach(function(opt){
+      var sel=(b&&b.kind==="liss"&&b.name===opt);
+      html+='<div class="bcp-item'+(sel?" sel":"")+'" data-cond-pick="liss:'+escapeHtml(opt)+'">'
+        +'<span class="bcp-item-ico">🚶</span>'
+        +'<span class="bcp-item-body"><span class="bcp-item-name">'+escapeHtml(opt)+'</span>'
+        +'<span class="bcp-item-meta">Steady state</span></span>'
+        +'<span class="bcp-item-check">'+(sel?"✓":"")+'</span></div>';
+    });
+  }else{
+    // HIIT slot — high-intensity intervals, including the "Not for the Faint of
+    // Heart" pre-built routines.
+    html+='<div class="bcp-sec">Pre-Built Conditioning</div>';
+    routines.forEach(function(r){
+      var sel=(b&&b.kind==="routine"&&b.href===r.href);
+      html+='<div class="bcp-item'+(sel?" sel":"")+'" data-cond-pick="routine:'+escapeHtml(r.href)+'" data-cond-name="'+escapeHtml(r.name)+'">'
+        +'<span class="bcp-item-ico">🔥</span>'
+        +'<span class="bcp-item-body"><span class="bcp-item-name">'+escapeHtml(r.name)+'</span>'
+        +(r.tag?'<span class="bcp-item-meta">'+escapeHtml(r.tag)+'</span>':'')+'</span>'
+        +'<span class="bcp-item-check">'+(sel?"✓":"")+'</span></div>';
+    });
+  }
 
   if(b){ html+='<span class="bcp-clear" data-cond-clear="'+escapeHtml(slot)+'">✕ Remove binding</span>'; }
   return html;
@@ -738,6 +762,8 @@ function refreshCondSlot(weekId,dIdx,type){
         var w=CustomWorkouts.findById(ref);
         if(!w) return;
         binding={kind:"custom",id:ref,name:w.name};
+      }else if(kind==="liss"){
+        binding={kind:"liss",name:ref};
       }else{
         binding={kind:"routine",href:ref,name:pick.getAttribute("data-cond-name")||ref};
       }

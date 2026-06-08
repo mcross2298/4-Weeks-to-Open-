@@ -385,6 +385,7 @@ body{padding-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom));}
 
 <div class="toast" id="toast"></div>
 
+<script src="exercise-catalog.js"></script>
 <script src="conditioning-data.js"></script>
 <script src="custom-workouts-store.js"></script>
 <script>
@@ -452,24 +453,36 @@ function buildCatalog() {
   body.dataset.built = '1';
 
   var html = '';
-  var cardioCore = null;
-  if (typeof CONDITIONING !== 'undefined') {
-    CONDITIONING.subcategories.forEach(function (sub) {
-      if (sub.type === 'exercises') cardioCore = sub;
-    });
-  }
 
-  // Group exercises by muscle tag
+  // Mirror the main Exercise Tab — group the full shared catalog by category
+  // (Core, Cardio, Back, Chest, Legs, …) so every exercise is available here,
+  // not just a Cardio/Core subset.
   var groups = {};
   var groupOrder = [];
-  if (cardioCore) {
-    cardioCore.exercises.forEach(function (ex) {
+  var seen = {};
+  if (typeof EXERCISES !== 'undefined') {
+    EXERCISES.forEach(function (ex) {
+      var slug = slugify(ex.name);
+      if (seen[slug]) return;            // de-dupe by name so DOM keys stay unique
+      seen[slug] = true;
       if (!groups[ex.muscle]) { groups[ex.muscle] = []; groupOrder.push(ex.muscle); }
       groups[ex.muscle].push(ex.name);
     });
   }
+  // Conditioning-first ordering: surface Core & Cardio at the top, then the
+  // remaining lifting categories in their catalog order.
+  groupOrder.sort(function (a, b) {
+    var pri = { Core: 0, Cardio: 1 };
+    var pa = (a in pri) ? pri[a] : 2, pb = (b in pri) ? pri[b] : 2;
+    if (pa !== pb) return pa - pb;
+    return 0;
+  });
 
-  var icons = { Cardio: '🏃', Core: '💪', Pushups: '⬆️' };
+  var icons = {
+    Cardio: '🏃', Core: '🔥', Back: '🔙', Chest: '🦾', Shoulders: '🏔️',
+    Biceps: '💪', Triceps: '💥', Forearms: '🔧', Calves: '🦵', 'Full Body': '⚡',
+    Adductors: '↔️', 'Legs - Quads': '🦵', 'Legs - Hamstrings': '🍖', 'Legs - Glutes': '🍑'
+  };
 
   groupOrder.forEach(function (muscle) {
     html += '<div class="cat-section">'

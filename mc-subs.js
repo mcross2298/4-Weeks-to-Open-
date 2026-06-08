@@ -33,16 +33,16 @@
     'Mountain Climbers + KB Thrusts': ['Burpees', 'Squat thrusts', 'Thruster + knee drive']
   };
 
-  /* the conditioning exercise library (browse + picker) */
+  /* the conditioning exercise library (browse + picker)
+     Conditioning only — Cardio & Core. Weightlifting/strength movements are
+     intentionally excluded here so the "Conditioning ▸ Exercises" tab and the
+     swap picker surface only relevant conditioning work. */
   window.MC_SUBS_LIB = {
     Cardio: ['Jump Rope', 'High Knees', 'Jumping Jacks', 'Burpees', 'Mountain Climbers', 'Speed Skaters',
              'Box Jumps', 'Squat Jumps', 'Tuck Jumps', 'Battle Ropes', 'Row', 'Run', 'Bike Sprints', 'Walk the Line'],
     Core:   ['Heels to Heaven', 'Reverse Crunches', 'Flutter Kicks', 'Scissor Kicks', 'Hanging Leg Raises',
              'Lying Leg Raises', 'V-Ups', 'Toes-to-Bar', 'Plank', 'Side Plank', 'Hollow Hold', 'Bicycle Kicks',
-             'Russian Twists', 'USA Twists', 'In & Outs', 'Sit-Ups (AMRAP)', 'Ab Wheel Rollout', 'Supermans', 'Around the Worlds'],
-    Strength: ['Pull-ups', 'Inverted Rows', 'Lat Pulldown', 'Pushups', 'Knee Pushups', 'Incline Pushups', 'Dips',
-               'Bench Press', 'Walking Lunges', 'Reverse Lunges', 'Split Squats', 'Step-ups', 'Bulgarian Split Squats',
-               'Kettlebell Thrusts', 'Dumbbell Thrusters', 'Goblet Squat + Press', 'Wall Balls', 'Kettlebell Swings']
+             'Russian Twists', 'USA Twists', 'In & Outs', 'Sit-Ups (AMRAP)', 'Ab Wheel Rollout', 'Supermans', 'Around the Worlds']
   };
 
   function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
