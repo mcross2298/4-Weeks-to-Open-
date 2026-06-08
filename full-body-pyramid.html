@@ -33,6 +33,13 @@ body{background:#070a12;min-height:100vh;padding-bottom:150px;color:#e2e8f0;}
 .pround-title{font-size:16px;font-weight:900;color:#fff;letter-spacing:-0.01em;}
 .pround-dir{font-size:11px;font-weight:800;color:#fdba74;text-transform:uppercase;letter-spacing:0.12em;margin-top:2px;}
 
+/* ── PYRAMID / REVERSE-PYRAMID SHAPE DIAGRAM ── */
+.pyr-diagram{margin:2px 0 14px;padding:14px 12px;background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.08);border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.pyr-dir{font-size:10.5px;font-weight:900;letter-spacing:0.16em;text-transform:uppercase;color:#fdba74;text-align:center;margin-bottom:4px;}
+.pyr-row{width:100%;display:flex;justify-content:center;}
+.pyr-bar{min-width:132px;height:30px;background:linear-gradient(90deg,#dc2626,#f97316);border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 10px;box-shadow:0 2px 10px rgba(220,38,38,0.3);overflow:hidden;transition:width .3s;}
+.pyr-bar span{font-size:11.5px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
 /* ── STEP CARDS · dark slate · high-contrast white borders ── */
 .pstep{background:linear-gradient(155deg,#111a2b,#0c1320);border-radius:16px;border:1.5px solid rgba(248,250,252,0.5);padding:16px 16px 14px;margin-bottom:12px;box-shadow:0 8px 26px rgba(0,0,0,0.4);transition:border-color .2s,opacity .2s;}
 .pstep.locked{border-color:rgba(248,250,252,0.12);opacity:0.55;}
@@ -144,7 +151,7 @@ body{background:#070a12;min-height:100vh;padding-bottom:150px;color:#e2e8f0;}
     <button class="tab" id="tabReps" onclick="switchMode('reps')">REPS</button>
   </div></div>
   <div class="content">
-    <div class="intro-warn"><strong>Work the pyramid top-to-bottom, then back up.</strong> Complete each card in order. Every round ends with an alternating <strong>Burpee / Walking-Lunge finisher</strong> that locks in a 2-minute rest before the next round.</div>
+    <div class="intro-warn"><strong>Climb the pyramid, then reverse it.</strong> Odd rounds run the pyramid top-to-bottom, even rounds run it bottom-to-top. Complete each card in order — the <strong>last exercise of every round is the finisher</strong> and locks in a 2-minute rest before the next round.</div>
     <div class="done-banner" id="doneBanner">
       <div class="db-t">🏆 Pyramid Complete</div>
       <div class="db-s">Every round and finisher logged. Check your totals below.</div>
@@ -236,24 +243,24 @@ Countdown.prototype.elapsed=function(){return this.total-this.remaining;};
 /* ── mode data builder ── */
 function buildMode(mode){
   var base,dirs,nRounds;
+  // `w` = pyramid bar width (by descending position) for the shape diagram.
   if(mode==='timed'){
     base=[
-      {icon:'🦵',name:'Walking Lunges',type:'rep',reps:75},
-      {icon:'🪢',name:'Jump Rope',type:'timed',sec:300},
-      {icon:'⭐',name:'Jumping Jacks',type:'timed',sec:180},
-      {icon:'🏔️',name:'Mountain Climbers',type:'timed',sec:120},
-      {icon:'💀',name:'Burpees',type:'timed',sec:60}
+      {icon:'🦵',name:'Walking Lunges',type:'rep',reps:75,w:100},
+      {icon:'🪢',name:'Jump Rope',type:'timed',sec:300,w:80},
+      {icon:'⭐',name:'Jumping Jacks',type:'timed',sec:180,w:60},
+      {icon:'🏔️',name:'Mountain Climbers',type:'timed',sec:120,w:40},
+      {icon:'💀',name:'Burpees',type:'timed',sec:60,w:22}
     ];
     dirs=['▼ Descending','▲ Ascending','▼ Descending'];nRounds=3;
   } else {
-    // Walking Lunges / Burpees sit on the pyramid endpoints so the tail of
-    // each round naturally lands on the alternating finisher movement.
+    // Original pyramid order (Jump Rope widest base → Burpees narrowest peak).
     base=[
-      {icon:'🦵',name:'Walking Lunges',type:'rep',reps:75},
-      {icon:'🪢',name:'Jump Rope',type:'timed',sec:180},
-      {icon:'⭐',name:'Jumping Jacks',type:'rep',reps:100},
-      {icon:'💪',name:'Push-ups',type:'rep',reps:50},
-      {icon:'💀',name:'Burpees',type:'rep',reps:25}
+      {icon:'🪢',name:'Jump Rope',type:'timed',sec:180,w:100},
+      {icon:'⭐',name:'Jumping Jacks',type:'rep',reps:100,w:80},
+      {icon:'🦵',name:'Walking Lunges',type:'rep',reps:75,w:60},
+      {icon:'💪',name:'Push-ups',type:'rep',reps:50,w:40},
+      {icon:'💀',name:'Burpees',type:'rep',reps:25,w:22}
     ];
     dirs=['▼ Descending','▲ Ascending','▼ Descending','▲ Ascending'];nRounds=4;
   }
@@ -261,13 +268,26 @@ function buildMode(mode){
   for(var r=0;r<nRounds;r++){
     var seq=(r%2===0)?base.slice():base.slice().reverse();
     var steps=seq.map(function(s){return Object.assign({},s);});
-    // The round's existing LAST exercise IS the finisher — descending rounds
-    // end on Burpees, ascending rounds end on Walking Lunges. Nothing added;
-    // completing it locks in the 2-minute rest.
+    // The round's existing LAST exercise IS the finisher — completing it locks
+    // in the 2-minute rest before the next round.
     steps[steps.length-1].finisher=true;
     rounds.push({dir:dirs[r],steps:steps});
   }
   return rounds;
+}
+
+/* render the pyramid / reverse-pyramid shape diagram for a round */
+function pyrDiagram(rd){
+  var ascending = rd.dir.indexOf('Ascending')>-1;
+  var dirLabel = ascending ? '▲ Reverse Pyramid · Bottom → Top' : '▼ Pyramid · Top → Bottom';
+  var rows=rd.steps.map(function(st){
+    var val = st.type==='timed'
+      ? (st.sec%60===0 ? (st.sec/60)+' min' : fmt(st.sec))
+      : st.reps+' reps';
+    return '<div class="pyr-row"><div class="pyr-bar" style="width:'+st.w+'%">'+
+      '<span>'+st.icon+' '+st.name+' · '+val+'</span></div></div>';
+  }).join('');
+  return '<div class="pyr-diagram"><div class="pyr-dir">'+dirLabel+'</div>'+rows+'</div>';
 }
 
 
@@ -298,6 +318,7 @@ var PY = {
       html+='<div class="pround-head"><div class="pround-num">'+(ri+1)+'</div>'+
         '<div><div class="pround-title">Round '+(ri+1)+'</div>'+
         '<div class="pround-dir">'+rd.dir+'</div></div></div>';
+      html+=pyrDiagram(rd);
       rd.steps.forEach(function(st){ html+=PY.stepHTML(st); });
     });
     document.getElementById('pyMount').innerHTML=html;
