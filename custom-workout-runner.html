@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Workout — MC Training</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="theme-color" content="#0a0a0a"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0a0a0a;--surface:#111;--surface2:#161616;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.1);
+  --gold:#d4af37;--gold-dim:rgba(212,175,55,0.12);--gold-glow:rgba(212,175,55,0.25);
+  --accent:#E24B4A;--blue:#63b3ed;--green:#34d399;
+  --text:#fff;--muted:#9ca3af;--muted2:#64748b;
+}
+html,body{background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;}
+
+/* ── VIEWS ── */
+.view{display:none;min-height:100vh;flex-direction:column;}
+.view.active{display:flex;}
+
+/* ── WORKOUT HEADER ── */
+.wk-header{
+  padding:env(safe-area-inset-top,16px) 18px 0;
+  padding-top:max(env(safe-area-inset-top),16px);
+  background:var(--bg);position:sticky;top:0;z-index:10;
+}
+.wk-header-top{
+  display:flex;align-items:center;gap:10px;
+  padding-bottom:14px;
+}
+.wk-close{
+  width:36px;height:36px;border-radius:10px;border:1px solid var(--border2);
+  background:var(--surface);display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;flex-shrink:0;color:var(--muted);
+}
+.wk-info{flex:1;min-width:0;}
+.wk-name{font-size:17px;font-weight:900;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wk-prog{font-size:12px;color:var(--muted2);margin-top:2px;}
+
+/* Overall progress bar */
+.overall-bar{height:3px;background:var(--border);margin:0 18px 0;}
+.overall-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 0.4s ease;}
+
+/* ══════════════════════════════════════
+   EXERCISE CARD — shared wrapper
+══════════════════════════════════════ */
+.ex-card-wrap{
+  flex:1;display:flex;flex-direction:column;
+  padding:24px 18px;gap:20px;
+}
+.ex-meta{text-align:center;}
+.ex-ordinal{font-size:12px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted2);margin-bottom:8px;}
+.ex-name{font-size:26px;font-weight:900;letter-spacing:-0.02em;color:var(--text);line-height:1.2;margin-bottom:10px;}
+.ex-mode-badge{
+  display:inline-block;font-size:11px;font-weight:800;letter-spacing:0.1em;
+  padding:4px 14px;border-radius:20px;border:1px solid;text-transform:uppercase;
+}
+.ex-mode-badge.reps{background:rgba(212,175,55,0.12);color:var(--gold);border-color:rgba(212,175,55,0.3);}
+.ex-mode-badge.duration{background:rgba(99,179,237,0.12);color:var(--blue);border-color:rgba(99,179,237,0.3);}
+
+/* ── REP CARD ── */
+.rep-card{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:24px;padding:32px 24px;text-align:center;
+}
+.rep-target{font-size:13px;color:var(--muted2);font-weight:700;margin-bottom:20px;}
+.rep-counter-row{display:flex;align-items:center;justify-content:center;gap:28px;margin-bottom:24px;}
+.rep-btn{
+  width:60px;height:60px;border-radius:50%;border:2px solid var(--border2);
+  background:var(--surface2);color:var(--text);font-size:26px;font-weight:900;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-family:inherit;transition:all 0.1s;user-select:none;
+}
+.rep-btn:active{transform:scale(0.92);background:rgba(212,175,55,0.12);border-color:var(--gold);}
+.rep-count-display{
+  font-size:72px;font-weight:900;line-height:1;letter-spacing:-0.04em;
+  color:var(--gold);min-width:100px;text-align:center;
+  transition:transform 0.08s;
+}
+.rep-count-display.bump{transform:scale(1.12);}
+.rep-progress-wrap{margin-bottom:8px;}
+.rep-progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.rep-progress-fill{height:100%;background:var(--gold);border-radius:3px;transition:width 0.2s;}
+.rep-progress-label{font-size:11px;color:var(--muted2);margin-top:6px;font-weight:700;}
+.rep-done-btn{
+  width:100%;padding:16px;border-radius:16px;
+  background:var(--green);border:none;color:#000;
+  font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;
+  letter-spacing:0.02em;margin-top:8px;transition:opacity 0.15s;
+}
+.rep-done-btn:active{opacity:0.85;}
+
+/* ── TIMER CARD ── */
+.timer-card{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:24px;padding:32px 24px;text-align:center;
+  position:relative;overflow:hidden;
+}
+.timer-ring-wrap{position:relative;width:200px;height:200px;margin:0 auto 28px;}
+.timer-ring-svg{position:absolute;inset:0;transform:rotate(-90deg);}
+.timer-ring-bg{fill:none;stroke:var(--border);stroke-width:8;}
+.timer-ring-fill{fill:none;stroke:var(--blue);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1s linear;}
+.timer-inner{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:4px;
+}
+.timer-display{font-size:52px;font-weight:900;letter-spacing:-0.04em;color:var(--blue);line-height:1;}
+.timer-display.urgent{color:var(--accent);animation:urgentPulse 0.6s ease-in-out infinite;}
+@keyframes urgentPulse{0%,100%{opacity:1;}50%{opacity:0.6;}}
+.timer-target-lbl{font-size:12px;color:var(--muted2);font-weight:700;}
+.timer-btns{display:flex;gap:10px;justify-content:center;}
+.timer-pause-btn{
+  flex:1;padding:14px;border-radius:14px;
+  border:1.5px solid var(--border2);background:var(--surface2);
+  color:var(--text);font-size:14px;font-weight:800;cursor:pointer;
+  font-family:inherit;transition:border-color 0.15s;
+}
+.timer-pause-btn:active{border-color:var(--gold);}
+.timer-done-btn{
+  flex:1;padding:14px;border-radius:14px;
+  background:var(--green);border:none;color:#000;
+  font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;
+}
+.timer-done-btn:active{opacity:0.85;}
+
+/* ── REST VIEW ── */
+#viewRest{
+  background:radial-gradient(ellipse at 50% 30%,rgba(212,175,55,0.06) 0%,transparent 70%);
+}
+.rest-wrap{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:32px 24px;gap:16px;text-align:center;
+}
+.rest-label{font-size:13px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted2);}
+.rest-count{font-size:80px;font-weight:900;letter-spacing:-0.04em;color:var(--gold);line-height:1;}
+.rest-up-next{font-size:14px;color:var(--muted);margin-top:8px;}
+.rest-up-next strong{color:var(--text);font-weight:900;}
+.rest-skip{
+  padding:13px 32px;border-radius:14px;
+  border:1.5px solid var(--border2);background:var(--surface);
+  color:var(--muted);font-size:14px;font-weight:800;cursor:pointer;
+  font-family:inherit;transition:border-color 0.15s,color 0.15s;
+}
+.rest-skip:active{border-color:var(--gold);color:var(--gold);}
+
+/* ── COMPLETE VIEW ── */
+#viewComplete{
+  background:radial-gradient(ellipse at 50% 20%,rgba(52,211,153,0.08) 0%,transparent 65%);
+}
+.complete-wrap{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:32px 24px;gap:20px;text-align:center;
+}
+.complete-icon{font-size:64px;animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes popIn{from{transform:scale(0.5);opacity:0;}to{transform:scale(1);opacity:1;}}
+.complete-title{font-size:30px;font-weight:900;letter-spacing:-0.02em;color:var(--text);}
+.complete-sub{font-size:15px;color:var(--muted);line-height:1.5;}
+.complete-stats{
+  display:flex;gap:12px;flex-wrap:wrap;justify-content:center;
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:18px;padding:20px;width:100%;max-width:340px;
+}
+.stat-item{flex:1;min-width:80px;text-align:center;}
+.stat-val{font-size:26px;font-weight:900;color:var(--gold);letter-spacing:-0.02em;}
+.stat-lbl{font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:0.08em;margin-top:3px;}
+.complete-btns{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;}
+.complete-home-btn{
+  padding:16px;border-radius:16px;background:var(--gold);
+  border:none;color:#000;font-size:16px;font-weight:900;
+  cursor:pointer;font-family:inherit;letter-spacing:0.02em;
+}
+.complete-home-btn:active{opacity:0.85;}
+.complete-again-btn{
+  padding:14px;border-radius:14px;
+  border:1.5px solid var(--border2);background:var(--surface);
+  color:var(--text);font-size:15px;font-weight:800;cursor:pointer;
+  font-family:inherit;
+}
+.complete-again-btn:active{border-color:var(--gold);}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     EXERCISE VIEW
+══════════════════════════════════════ -->
+<div class="view active" id="viewExercise">
+  <div class="wk-header">
+    <div class="wk-header-top">
+      <div class="wk-close" onclick="confirmQuit()">✕</div>
+      <div class="wk-info">
+        <div class="wk-name" id="wkName"></div>
+        <div class="wk-prog" id="wkProg"></div>
+      </div>
+    </div>
+    <div class="overall-bar"><div class="overall-fill" id="overallFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="ex-card-wrap">
+    <div class="ex-meta">
+      <div class="ex-ordinal" id="exOrdinal"></div>
+      <div class="ex-name"    id="exName"></div>
+      <div class="ex-mode-badge" id="exBadge"></div>
+    </div>
+
+    <!-- Rep card -->
+    <div id="repCard" class="rep-card" style="display:none;">
+      <div class="rep-target" id="repTarget"></div>
+      <div class="rep-counter-row">
+        <button class="rep-btn" onclick="adjustReps(-1)">−</button>
+        <div class="rep-count-display" id="repDisplay">0</div>
+        <button class="rep-btn" onclick="adjustReps(1)">+</button>
+      </div>
+      <div class="rep-progress-wrap">
+        <div class="rep-progress-bar"><div class="rep-progress-fill" id="repFill" style="width:0%"></div></div>
+        <div class="rep-progress-label" id="repProgLabel"></div>
+      </div>
+      <button class="rep-done-btn" onclick="markExerciseDone()">✓ Done</button>
+    </div>
+
+    <!-- Timer card -->
+    <div id="timerCard" class="timer-card" style="display:none;">
+      <div class="timer-ring-wrap">
+        <svg class="timer-ring-svg" viewBox="0 0 200 200" id="timerSvg">
+          <circle class="timer-ring-bg"   cx="100" cy="100" r="88"/>
+          <circle class="timer-ring-fill" cx="100" cy="100" r="88" id="timerRing"
+            stroke-dasharray="553" stroke-dashoffset="0"/>
+        </svg>
+        <div class="timer-inner">
+          <div class="timer-display" id="timerDisplay">0:00</div>
+          <div class="timer-target-lbl" id="timerTargetLbl"></div>
+        </div>
+      </div>
+      <div class="timer-btns">
+        <button class="timer-pause-btn" id="pauseBtn" onclick="togglePause()">⏸ Pause</button>
+        <button class="timer-done-btn"  onclick="markExerciseDone()">✓ Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     REST VIEW
+══════════════════════════════════════ -->
+<div class="view" id="viewRest">
+  <div class="wk-header">
+    <div class="wk-header-top">
+      <div class="wk-close" onclick="confirmQuit()">✕</div>
+      <div class="wk-info">
+        <div class="wk-name" id="restWkName"></div>
+        <div class="wk-prog" id="restWkProg"></div>
+      </div>
+    </div>
+    <div class="overall-bar"><div class="overall-fill" id="restOverallFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="rest-wrap">
+    <div class="rest-label">Rest</div>
+    <div class="rest-count" id="restCount"></div>
+    <div class="rest-up-next" id="restUpNext"></div>
+    <button class="rest-skip" onclick="skipRest()">Skip Rest →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     COMPLETE VIEW
+══════════════════════════════════════ -->
+<div class="view" id="viewComplete">
+  <div class="complete-wrap">
+    <div class="complete-icon">🏆</div>
+    <div class="complete-title">Workout Complete!</div>
+    <div class="complete-sub" id="completeSub"></div>
+    <div class="complete-stats" id="completeStats"></div>
+    <div class="complete-btns">
+      <button class="complete-home-btn" onclick="goHome()">Back to Conditioning</button>
+      <button class="complete-again-btn" onclick="restartWorkout()">Run It Again →</button>
+    </div>
+  </div>
+</div>
+
+<script src="custom-workouts-store.js"></script>
+<script>
+
+/* ══════════════════════════════════════
+   LOAD WORKOUT
+══════════════════════════════════════ */
+var workout   = null;
+var workoutId = null;
+
+(function load() {
+  var params = new URLSearchParams(location.search);
+  workoutId  = params.get('id');
+  if (workoutId) workout = CustomWorkouts.findById(workoutId);
+  if (!workout) { document.body.innerHTML = '<div style="padding:40px 24px;text-align:center;color:#9ca3af;font-size:15px;">Workout not found. <a href="dashboard.html?tab=conditioning" style="color:#d4af37;">Go back</a></div>'; return; }
+  CustomWorkouts.markRun(workoutId);
+  initRunner();
+})();
+
+/* ══════════════════════════════════════
+   RUNNER STATE
+══════════════════════════════════════ */
+var state = {
+  idx:          0,
+  phase:        'exercise',   // 'exercise' | 'rest' | 'complete'
+  repCount:     0,
+  timerSecs:    0,
+  timerPaused:  false,
+  timerInterval:null,
+  restSecs:     0,
+  restInterval: null,
+  startTime:    Date.now(),
+  wakeLock:     null,
+};
+
+function initRunner() {
+  document.getElementById('wkName').textContent     = workout.name;
+  document.getElementById('restWkName').textContent = workout.name;
+  state.startTime = Date.now();
+  showExercise(0);
+}
+
+/* ══════════════════════════════════════
+   VIEW SWITCHING
+══════════════════════════════════════ */
+function showView(id) {
+  document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+/* ══════════════════════════════════════
+   EXERCISE DISPLAY
+══════════════════════════════════════ */
+function showExercise(idx) {
+  clearTimers();
+  state.idx   = idx;
+  state.phase = 'exercise';
+  showView('viewExercise');
+
+  var ex      = workout.exercises[idx];
+  var total   = workout.exercises.length;
+  var ordinal = 'Exercise ' + (idx + 1) + ' of ' + total;
+  var pct     = Math.round((idx / total) * 100);
+
+  document.getElementById('exOrdinal').textContent = ordinal;
+  document.getElementById('exName').textContent    = ex.name;
+  document.getElementById('wkProg').textContent    = ordinal;
+  document.getElementById('overallFill').style.width = pct + '%';
+
+  var badge = document.getElementById('exBadge');
+  badge.textContent = ex.mode === 'reps' ? 'REPS' : 'TIME';
+  badge.className   = 'ex-mode-badge ' + ex.mode;
+
+  if (ex.mode === 'reps') {
+    showRepCard(ex);
+  } else {
+    showTimerCard(ex);
+  }
+
+  requestWakeLock();
+}
+
+/* ── REP CARD ── */
+function showRepCard(ex) {
+  document.getElementById('repCard').style.display   = 'block';
+  document.getElementById('timerCard').style.display = 'none';
+  state.repCount = 0;
+  document.getElementById('repTarget').textContent = 'Target: ' + ex.target + ' reps';
+  updateRepDisplay(ex.target);
+}
+
+function adjustReps(delta) {
+  var ex = workout.exercises[state.idx];
+  state.repCount = Math.max(0, state.repCount + delta);
+  updateRepDisplay(ex.target);
+
+  // Bump animation
+  var disp = document.getElementById('repDisplay');
+  disp.classList.remove('bump');
+  void disp.offsetWidth;
+  disp.classList.add('bump');
+  setTimeout(function () { disp.classList.remove('bump'); }, 150);
+}
+
+function updateRepDisplay(target) {
+  var count = state.repCount;
+  document.getElementById('repDisplay').textContent = count;
+  var pct = target > 0 ? Math.min(100, Math.round((count / target) * 100)) : 0;
+  document.getElementById('repFill').style.width        = pct + '%';
+  document.getElementById('repProgLabel').textContent   = count + ' / ' + target + ' reps';
+}
+
+/* ── TIMER CARD ── */
+var CIRC = 2 * Math.PI * 88; // circumference for r=88
+
+function showTimerCard(ex) {
+  document.getElementById('repCard').style.display   = 'none';
+  document.getElementById('timerCard').style.display = 'block';
+  document.getElementById('timerTargetLbl').textContent = 'of ' + fmtTime(ex.target);
+
+  state.timerSecs   = ex.target;
+  state.timerPaused = false;
+  document.getElementById('pauseBtn').textContent = '⏸ Pause';
+
+  updateTimerDisplay(ex.target, ex.target);
+  startTimerCountdown(ex);
+}
+
+function startTimerCountdown(ex) {
+  clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(function () {
+    if (state.timerPaused) return;
+    state.timerSecs--;
+    updateTimerDisplay(state.timerSecs, ex.target);
+
+    if (state.timerSecs <= 10 && state.timerSecs > 0) {
+      document.getElementById('timerDisplay').classList.add('urgent');
+      buzz(state.timerSecs);
+    } else if (state.timerSecs > 10) {
+      document.getElementById('timerDisplay').classList.remove('urgent');
+    }
+
+    if (state.timerSecs <= 0) {
+      clearInterval(state.timerInterval);
+      beepComplete();
+      markExerciseDone();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay(secs, total) {
+  secs  = Math.max(0, secs);
+  var elapsed = total - secs;
+  document.getElementById('timerDisplay').textContent = fmtTime(secs);
+  var offset = CIRC * (1 - (elapsed / total));
+  document.getElementById('timerRing').style.strokeDashoffset = offset;
+}
+
+function togglePause() {
+  state.timerPaused = !state.timerPaused;
+  document.getElementById('pauseBtn').textContent = state.timerPaused ? '▶ Resume' : '⏸ Pause';
+  if (!state.timerPaused) releaseWakeLock(), requestWakeLock();
+}
+
+/* ══════════════════════════════════════
+   EXERCISE COMPLETION → REST → NEXT
+══════════════════════════════════════ */
+function markExerciseDone() {
+  clearTimers();
+  releaseWakeLock();
+
+  var nextIdx  = state.idx + 1;
+  var hasNext  = nextIdx < workout.exercises.length;
+  var restSecs = workout.restSecs || 0;
+
+  if (hasNext && restSecs > 0) {
+    startRest(restSecs, nextIdx);
+  } else if (hasNext) {
+    showExercise(nextIdx);
+  } else {
+    showComplete();
+  }
+}
+
+function startRest(secs, nextIdx) {
+  state.phase       = 'rest';
+  state.restSecs    = secs;
+  state.idx         = nextIdx - 1; // will advance on rest end
+
+  var pct = Math.round((nextIdx / workout.exercises.length) * 100);
+  document.getElementById('restOverallFill').style.width = pct + '%';
+  document.getElementById('restWkProg').textContent =
+    'Up next: Exercise ' + (nextIdx + 1) + ' of ' + workout.exercises.length;
+
+  var nextEx = workout.exercises[nextIdx];
+  document.getElementById('restUpNext').innerHTML =
+    'Up next: <strong>' + escHtml(nextEx.name) + '</strong>';
+
+  updateRestDisplay(secs);
+  showView('viewRest');
+
+  state.restInterval = setInterval(function () {
+    secs--;
+    updateRestDisplay(secs);
+    if (secs <= 0) {
+      clearInterval(state.restInterval);
+      showExercise(nextIdx);
+    }
+  }, 1000);
+}
+
+function updateRestDisplay(secs) {
+  document.getElementById('restCount').textContent = Math.max(0, secs);
+}
+
+function skipRest() {
+  clearInterval(state.restInterval);
+  showExercise(state.idx + 1);
+}
+
+/* ══════════════════════════════════════
+   COMPLETE
+══════════════════════════════════════ */
+function showComplete() {
+  state.phase = 'complete';
+  showView('viewComplete');
+
+  var elapsed    = Math.round((Date.now() - state.startTime) / 1000);
+  var totalEx    = workout.exercises.length;
+  var repExs     = workout.exercises.filter(function (e) { return e.mode === 'reps'; }).length;
+  var timerExs   = totalEx - repExs;
+
+  document.getElementById('completeSub').textContent =
+    '"' + workout.name + '" — well done.';
+
+  var mins = Math.floor(elapsed / 60);
+  var secs = elapsed % 60;
+  document.getElementById('completeStats').innerHTML =
+    '<div class="stat-item"><div class="stat-val">' + totalEx + '</div><div class="stat-lbl">Exercises</div></div>'
+    + '<div class="stat-item"><div class="stat-val">' + mins + ':' + String(secs).padStart(2,'0') + '</div><div class="stat-lbl">Time</div></div>'
+    + '<div class="stat-item"><div class="stat-val">' + repExs + '</div><div class="stat-lbl">Rep Sets</div></div>';
+}
+
+function goHome() {
+  window.location.href = 'dashboard.html?tab=conditioning';
+}
+
+function restartWorkout() {
+  CustomWorkouts.markRun(workoutId);
+  state.startTime = Date.now();
+  showExercise(0);
+}
+
+/* ══════════════════════════════════════
+   QUIT CONFIRM
+══════════════════════════════════════ */
+function confirmQuit() {
+  if (confirm('End workout and return to Conditioning?')) {
+    clearTimers();
+    releaseWakeLock();
+    window.location.href = 'dashboard.html?tab=conditioning';
+  }
+}
+
+/* ══════════════════════════════════════
+   WAKE LOCK
+══════════════════════════════════════ */
+function requestWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  navigator.wakeLock.request('screen')
+    .then(function (wl) { state.wakeLock = wl; })
+    .catch(function () {});
+}
+
+function releaseWakeLock() {
+  if (state.wakeLock) { state.wakeLock.release().catch(function(){}); state.wakeLock = null; }
+}
+
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'visible' && state.phase === 'exercise') requestWakeLock();
+});
+
+/* ══════════════════════════════════════
+   AUDIO
+══════════════════════════════════════ */
+var audioCtx = null;
+document.addEventListener('touchstart', primeAudio, { once: true });
+document.addEventListener('click',      primeAudio, { once: true });
+
+function primeAudio() {
+  if (audioCtx) return;
+  try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+}
+
+function tone(freq, dur, vol) {
+  if (!audioCtx) return;
+  try {
+    var g   = audioCtx.createGain();
+    var osc = audioCtx.createOscillator();
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(vol || 0.3, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    osc.connect(g);
+    g.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + dur);
+  } catch (e) {}
+}
+
+function buzz(secsLeft) {
+  if (secsLeft <= 3) tone(880, 0.12, 0.4);
+}
+
+function beepComplete() {
+  tone(660, 0.12); setTimeout(function(){ tone(880, 0.18); }, 140);
+}
+
+/* ══════════════════════════════════════
+   UTILITIES
+══════════════════════════════════════ */
+function clearTimers() {
+  clearInterval(state.timerInterval);
+  clearInterval(state.restInterval);
+  state.timerInterval = null;
+  state.restInterval  = null;
+}
+
+function fmtTime(secs) {
+  secs = Math.max(0, secs);
+  var m = Math.floor(secs / 60);
+  var s = secs % 60;
+  return m + ':' + String(s).padStart(2, '0');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>

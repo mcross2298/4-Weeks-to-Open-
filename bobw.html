@@ -76,11 +76,49 @@
 .bobw-cardio-txt{flex:1;font-size:12px;color:#cbd5e1;}
 .bobw-cardio-txt b{color:#5eead4;font-weight:800;}
 .bobw-cardio-go{font-size:11px;font-weight:800;color:#5eead4;white-space:nowrap;}
+
+/* ── Conditioning Corner inline picker ── */
+.bobw-cond-wrap{margin:4px 4px 12px;}
+.bobw-cond-wrap-hd{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#5eead4;padding:2px 4px 8px;}
+.bobw-cond-type{display:inline-block;font-size:9px;font-weight:900;letter-spacing:0.1em;padding:2px 7px;border-radius:6px;background:rgba(20,184,166,0.2);color:#5eead4;margin-right:7px;vertical-align:middle;}
+.bcp-hd{font-size:12px;color:#94a3b8;margin:2px 2px 10px;}
+.bcp-hd b{color:#5eead4;font-weight:800;}
+.bobw-cond{margin:0 0 8px;border:1px solid rgba(20,184,166,0.25);border-radius:12px;background:rgba(20,184,166,0.07);overflow:hidden;}
+.bobw-cond.bound{border-color:rgba(20,184,166,0.45);background:rgba(20,184,166,0.1);}
+.bobw-cond-head{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;}
+.bobw-cond-icon{font-size:18px;flex-shrink:0;}
+.bobw-cond-txt{flex:1;min-width:0;font-size:12px;color:#cbd5e1;}
+.bobw-cond-txt b{color:#5eead4;font-weight:800;}
+.bobw-cond-name{font-size:13px;font-weight:800;color:#5eead4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bobw-cond-sub{font-size:11px;color:#94a3b8;margin-top:2px;}
+.bobw-cond-go{font-size:11px;font-weight:800;color:#5eead4;white-space:nowrap;flex-shrink:0;transition:transform 0.2s;}
+.bobw-cond.open .bobw-cond-go{transform:rotate(180deg);}
+.bobw-cond-run{flex-shrink:0;padding:8px 14px;border-radius:9px;background:#14b8a6;color:#04201c;font-size:12px;font-weight:900;border:none;cursor:pointer;font-family:inherit;text-decoration:none;white-space:nowrap;}
+.bobw-cond-run:active{opacity:0.85;}
+
+.bobw-cond-panel{display:none;border-top:1px solid rgba(20,184,166,0.2);padding:10px 12px 12px;}
+.bobw-cond.open .bobw-cond-panel{display:block;}
+.bcp-build{display:flex;align-items:center;gap:8px;padding:11px 12px;border-radius:10px;background:rgba(20,184,166,0.12);border:1px dashed rgba(20,184,166,0.4);color:#5eead4;font-size:13px;font-weight:800;cursor:pointer;margin-bottom:12px;}
+.bcp-build:active{background:rgba(20,184,166,0.2);}
+.bcp-sec{font-size:10px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;margin:10px 2px 7px;}
+.bcp-item{display:flex;align-items:center;gap:9px;padding:10px 11px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);margin-bottom:6px;cursor:pointer;transition:border-color 0.15s;}
+.bcp-item:active{border-color:#14b8a6;}
+.bcp-item.sel{border-color:#14b8a6;background:rgba(20,184,166,0.1);}
+.bcp-item-ico{font-size:15px;flex-shrink:0;}
+.bcp-item-body{flex:1;min-width:0;}
+.bcp-item-name{font-size:13px;font-weight:800;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bcp-item-meta{font-size:11px;color:#94a3b8;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bcp-item-check{width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,0.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#04201c;}
+.bcp-item.sel .bcp-item-check{background:#14b8a6;border-color:#14b8a6;}
+.bcp-empty{font-size:11px;color:#64748b;padding:6px 4px 10px;font-style:italic;}
+.bcp-clear{font-size:11px;font-weight:800;color:#f87171;cursor:pointer;padding:8px 2px 2px;display:inline-block;}
 </style>
 </head>
 <body>
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
 <div class="app" id="app"></div>
+<script src="conditioning-data.js"></script>
+<script src="custom-workouts-store.js"></script>
 <script>
 // ── TIMER ENGINE (hoisted) ──
 const TMR = {
@@ -366,7 +404,118 @@ const DATA = {
     { id:"w4", label:"Week 4 · Pyramid", days: CYCLE4 }
   ]
 };
-const CARDIO_BANNER = `<a class="bobw-cardio" href="dashboard.html?tab=conditioning"><span class="bobw-cardio-icon">🏃</span><span class="bobw-cardio-txt"><b>Daily Cardio</b> · 1 LISS + 1 HIIT</span><span class="bobw-cardio-go">Conditioning Corner ▾</span></a>`;
+// ── CONDITIONING CORNER — per-session-day binding store ──
+// A user can bind a conditioning workout (a pre-built routine or one of their
+// own custom-built workouts) to a specific BoBW session day. Each day carries
+// TWO independent slots — one LISS, one HIIT — so the choice is remembered per
+// week + day + slot-type and surfaced on that day's cardio banner.
+// Slot key format: "<weekId>:<dayIdx>:<type>"  e.g. "w1:0:liss"
+var COND_TYPES=[
+  {key:"liss",label:"LISS",icon:"🚶",desc:"Low-intensity steady state"},
+  {key:"hiit",label:"HIIT",icon:"⚡",desc:"High-intensity intervals"}
+];
+function condTypeMeta(type){ return COND_TYPES.find(function(t){return t.key===type;})||COND_TYPES[0]; }
+function condSlotKey(weekId,dIdx,type){ return weekId+":"+dIdx+":"+type; }
+function readCondBindings(){ try{return JSON.parse(localStorage.getItem("mc_bobw_cond")||"{}")||{};}catch(e){return {};} }
+function writeCondBindings(o){ try{localStorage.setItem("mc_bobw_cond",JSON.stringify(o));}catch(e){} }
+function getCondBinding(weekId,dIdx,type){ return readCondBindings()[condSlotKey(weekId,dIdx,type)]||null; }
+function setCondBinding(weekId,dIdx,type,binding){
+  var o=readCondBindings();
+  if(binding) o[condSlotKey(weekId,dIdx,type)]=binding; else delete o[condSlotKey(weekId,dIdx,type)];
+  writeCondBindings(o);
+}
+
+// Flatten all pre-built conditioning routines from CONDITIONING data.
+function prebuiltRoutines(){
+  var out=[];
+  if(typeof CONDITIONING==="undefined") return out;
+  (CONDITIONING.subcategories||[]).forEach(function(sub){
+    if(sub.type!=="routines") return;
+    (sub.routines||[]).forEach(function(r){ out.push({name:r.name,href:r.href,tag:r.tag}); });
+  });
+  return out;
+}
+
+// Resolve a binding to a runnable target { href, label }.
+function condRunTarget(b){
+  if(!b) return null;
+  if(b.kind==="custom") return {href:"custom-workout-runner.html?id="+encodeURIComponent(b.id),label:b.name};
+  if(b.kind==="routine") return {href:b.href,label:b.name};
+  return null;
+}
+
+// One slot row (LISS or HIIT) for a session day — reflects any binding.
+function condSlotRow(weekId,dIdx,type){
+  var meta=condTypeMeta(type);
+  var b=getCondBinding(weekId,dIdx,type);
+  var slot=escapeHtml(condSlotKey(weekId,dIdx,type));
+  var head;
+  if(b){
+    var t=condRunTarget(b);
+    var kindLbl=b.kind==="custom"?"Custom workout":"Pre-built routine";
+    head='<div class="bobw-cond-head" data-cond-toggle>'
+      +'<span class="bobw-cond-icon">'+meta.icon+'</span>'
+      +'<span class="bobw-cond-txt"><div class="bobw-cond-name"><span class="bobw-cond-type">'+meta.label+'</span>'+escapeHtml(b.name)+'</div>'
+      +'<div class="bobw-cond-sub">'+kindLbl+' · tap to change</div></span>'
+      +'<a class="bobw-cond-run" href="'+(t?t.href:"#")+'" data-cond-run>▶ Run</a>'
+      +'</div>';
+  }else{
+    head='<div class="bobw-cond-head" data-cond-toggle>'
+      +'<span class="bobw-cond-icon">'+meta.icon+'</span>'
+      +'<span class="bobw-cond-txt"><b>'+meta.label+'</b> · '+meta.desc+'</span>'
+      +'<span class="bobw-cond-go">Choose ▾</span>'
+      +'</div>';
+  }
+  return '<div class="bobw-cond'+(b?" bound":"")+'" data-slot="'+slot+'">'+head
+    +'<div class="bobw-cond-panel" data-cond-panel></div></div>';
+}
+
+// Build the full cardio block for a session day — a LISS slot + a HIIT slot.
+function cardioBanner(weekId,dIdx){
+  var rows=COND_TYPES.map(function(t){return condSlotRow(weekId,dIdx,t.key);}).join("");
+  return '<div class="bobw-cond-wrap">'
+    +'<div class="bobw-cond-wrap-hd">🏃 Daily Cardio · 1 LISS + 1 HIIT</div>'
+    +rows+'</div>';
+}
+
+// Populate a slot panel's inner HTML lazily when first opened.
+function buildCondPanel(weekId,dIdx,type){
+  var meta=condTypeMeta(type);
+  var b=getCondBinding(weekId,dIdx,type);
+  var slot=condSlotKey(weekId,dIdx,type);
+  var customs=(typeof CustomWorkouts!=="undefined")?CustomWorkouts.getAll():[];
+  var routines=prebuiltRoutines();
+  var html='<div class="bcp-hd">Pick your <b>'+meta.label+'</b> workout</div>';
+  html+='<div class="bcp-build" data-cond-build="'+escapeHtml(slot)+'">＋ Build Your Own Workout</div>';
+
+  html+='<div class="bcp-sec">Your Custom Workouts</div>';
+  if(customs.length){
+    customs.forEach(function(w){
+      var sel=(b&&b.kind==="custom"&&b.id===w.id);
+      var n=w.exercises?w.exercises.length:0;
+      html+='<div class="bcp-item'+(sel?" sel":"")+'" data-cond-pick="custom:'+escapeHtml(w.id)+'">'
+        +'<span class="bcp-item-ico">⚡</span>'
+        +'<span class="bcp-item-body"><span class="bcp-item-name">'+escapeHtml(w.name)+'</span>'
+        +'<span class="bcp-item-meta">'+n+' exercise'+(n===1?"":"s")+'</span></span>'
+        +'<span class="bcp-item-check">'+(sel?"✓":"")+'</span></div>';
+    });
+  }else{
+    html+='<div class="bcp-empty">None yet — tap “Build Your Own” to create one.</div>';
+  }
+
+  html+='<div class="bcp-sec">Pre-Built Conditioning</div>';
+  routines.forEach(function(r){
+    var sel=(b&&b.kind==="routine"&&b.href===r.href);
+    html+='<div class="bcp-item'+(sel?" sel":"")+'" data-cond-pick="routine:'+escapeHtml(r.href)+'" data-cond-name="'+escapeHtml(r.name)+'">'
+      +'<span class="bcp-item-ico">🔥</span>'
+      +'<span class="bcp-item-body"><span class="bcp-item-name">'+escapeHtml(r.name)+'</span>'
+      +(r.tag?'<span class="bcp-item-meta">'+escapeHtml(r.tag)+'</span>':'')+'</span>'
+      +'<span class="bcp-item-check">'+(sel?"✓":"")+'</span></div>';
+  });
+
+  if(b){ html+='<span class="bcp-clear" data-cond-clear="'+escapeHtml(slot)+'">✕ Remove binding</span>'; }
+  return html;
+}
 
 function hexToRgb(hex){
   const r=parseInt(hex.slice(1,3),16);
@@ -465,7 +614,7 @@ function renderDay(day,dIdx){
       </div>
       <div class="day-toggle">▼</div>
     </div>
-    <div class="exercises" style="border-top-color:${day.color}33">${CARDIO_BANNER}${exHtml}</div>
+    <div class="exercises" style="border-top-color:${day.color}33">${cardioBanner(activeWeek,dIdx)}${exHtml}</div>
   </div>`;
 }
 
@@ -538,8 +687,104 @@ function bindEvents(){
   });
 }
 
+// ── CONDITIONING CORNER — interaction wiring ──
+function parseSlot(s){ var p=String(s).split(":"); return {w:p[0],d:parseInt(p[1],10),type:p[2]||"liss"}; }
+
+// Rebuild a single slot row in place (after a pick / clear).
+function refreshCondSlot(weekId,dIdx,type){
+  var el=document.querySelector('.bobw-cond[data-slot="'+condSlotKey(weekId,dIdx,type)+'"]');
+  if(!el) return;
+  var tmp=document.createElement("div");
+  tmp.innerHTML=condSlotRow(weekId,dIdx,type);
+  el.replaceWith(tmp.firstChild);
+}
+
+// Delegated click handling on #app (survives full re-renders — innerHTML is
+// replaced but the #app node persists, so we bind exactly once).
+(function setupCondCorner(){
+  var app=document.getElementById("app");
+  if(!app||app.__condBound) return;
+  app.__condBound=true;
+  app.addEventListener("click",function(e){
+    // ▶ Run — let the anchor navigate normally
+    if(e.target.closest("[data-cond-run]")) return;
+
+    var build=e.target.closest("[data-cond-build]");
+    if(build){
+      e.preventDefault();
+      var slot=build.getAttribute("data-cond-build");
+      window.location.href="custom-workout-builder.html?return=bobw&slot="+encodeURIComponent(slot);
+      return;
+    }
+
+    var clear=e.target.closest("[data-cond-clear]");
+    if(clear){
+      e.preventDefault();
+      var ck=parseSlot(clear.getAttribute("data-cond-clear"));
+      setCondBinding(ck.w,ck.d,ck.type,null);
+      refreshCondSlot(ck.w,ck.d,ck.type);
+      return;
+    }
+
+    var pick=e.target.closest("[data-cond-pick]");
+    if(pick){
+      e.preventDefault();
+      var sk=parseSlot(pick.closest(".bobw-cond").getAttribute("data-slot"));
+      var val=pick.getAttribute("data-cond-pick");
+      var ci=val.indexOf(":");
+      var kind=val.slice(0,ci), ref=val.slice(ci+1);
+      var binding;
+      if(kind==="custom"){
+        var w=CustomWorkouts.findById(ref);
+        if(!w) return;
+        binding={kind:"custom",id:ref,name:w.name};
+      }else{
+        binding={kind:"routine",href:ref,name:pick.getAttribute("data-cond-name")||ref};
+      }
+      setCondBinding(sk.w,sk.d,sk.type,binding);
+      refreshCondSlot(sk.w,sk.d,sk.type);
+      return;
+    }
+
+    var toggle=e.target.closest("[data-cond-toggle]");
+    if(toggle){
+      var wrap=toggle.closest(".bobw-cond");
+      var open=wrap.classList.toggle("open");
+      if(open){
+        var ts=parseSlot(wrap.getAttribute("data-slot"));
+        wrap.querySelector("[data-cond-panel]").innerHTML=buildCondPanel(ts.w,ts.d,ts.type);
+      }
+      return;
+    }
+  });
+})();
+
+// On return from the builder (?cbind=<slot>&cid=<id>), bind the freshly-saved
+// custom workout to its session day, jump to that week, and open the day.
+var _pendingOpenDay=null;
+(function applyReturnBinding(){
+  var p=new URLSearchParams(location.search);
+  var cb=p.get("cbind"), cid=p.get("cid");
+  if(!cb||!cid) return;
+  var sk=parseSlot(cb);
+  if(typeof CustomWorkouts!=="undefined"){
+    var w=CustomWorkouts.findById(cid);
+    if(w) setCondBinding(sk.w,sk.d,sk.type,{kind:"custom",id:cid,name:w.name});
+  }
+  if(DATA.weeks.some(function(x){return x.id===sk.w;})) activeWeek=sk.w;
+  _pendingOpenDay=sk.d;
+  try{history.replaceState(null,"",location.pathname);}catch(e){}
+})();
+
 render();
 if(typeof updateProgress!=="undefined")updateProgress();
+
+// Auto-open the bound session day after returning from the builder.
+if(_pendingOpenDay!=null){
+  var _dc=document.querySelector('.day-card[data-d="'+_pendingOpenDay+'"]');
+  if(_dc){ _dc.querySelector(".day-header").click(); try{_dc.scrollIntoView({behavior:"smooth",block:"start"});}catch(e){} }
+  _pendingOpenDay=null;
+}
 
 // ── TIMER ENGINE ──────────────────────────────────────────────────
 
