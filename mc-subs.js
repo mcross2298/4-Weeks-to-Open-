@@ -45,6 +45,19 @@
                'Kettlebell Thrusts', 'Dumbbell Thrusters', 'Goblet Squat + Press', 'Wall Balls', 'Kettlebell Swings']
   };
 
+  /* movement modality — 'timed' movements drive a countdown/duration card, 'reps'
+     movements drive a counter card. Anything not listed here defaults to 'reps'.
+     Used to keep swaps same-modality so a timed slot never gets a rep movement
+     dropped into it (which would leave the wrong card on screen) and vice-versa. */
+  window.MC_SUBS_TIMED = {
+    'Jump Rope':1, 'High Knees':1, 'Jumping Jacks':1, 'Mountain Climbers':1, 'Speed Skaters':1,
+    'Battle Ropes':1, 'Row':1, 'Run':1, 'Bike Sprints':1, 'Walk the Line':1,
+    'Plank':1, 'Side Plank':1, 'Hollow Hold':1, 'Shadow Boxing':1, 'Heavy Bag':1,
+    'Battle Ropes Phase 1 — Basic':1, 'Battle Ropes — Intermediate':1,
+    'Battle Ropes — Advanced Level 1':1, 'Battle Ropes — Advanced Level 2':1, 'Battle Ropes — Advanced Level 3':1
+  };
+  function modeOf(name){ return window.MC_SUBS_TIMED[name] ? 'timed' : 'reps'; }
+
   function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   /* ── per-page override store ── */
@@ -63,9 +76,9 @@
   };
 
   window.MCSubs = {
-    _view: 'list', _key: null, _base: null, _def: null, _q: '',
+    _view: 'list', _key: null, _base: null, _def: null, _q: '', _mode: null,
 
-    libGroupsHTML: function (query, pickable) {
+    libGroupsHTML: function (query, pickable, modeFilter) {
       injectStyles();
       query = (query || '').toLowerCase();
       var L = window.MC_SUBS_LIB, out = '';
@@ -74,8 +87,11 @@
         if (!items.length) return;
         out += '<div class="mcsubs-group"><div class="mcsubs-group-hd">' + g + '</div><div class="mcsubs-swaps">' +
           items.map(function (n) {
-            var click = pickable ? (' onclick="MCSubs.pick(\'' + n.replace(/'/g, "\\'") + '\')"') : '';
-            return '<span class="mcsubs-chip' + (pickable ? ' pickable' : '') + '"' + click + '>' + esc(n) + '</span>';
+            var m = modeOf(n), mismatch = !!modeFilter && m !== modeFilter, canPick = pickable && !mismatch;
+            var click = canPick ? (' onclick="MCSubs.pick(\'' + n.replace(/'/g, "\\'") + '\')"') : '';
+            var tip = mismatch ? ' title="' + esc(m) + ' movement — won\'t fit a ' + esc(modeFilter) + ' slot"' : '';
+            var badge = modeFilter ? '<span class="mcsubs-mode ' + m + '">' + (m === 'timed' ? '⏱' : '↻') + '</span>' : '';
+            return '<span class="mcsubs-chip' + (canPick ? ' pickable' : '') + (mismatch ? ' mismatch' : '') + '"' + click + tip + '>' + esc(n) + badge + '</span>';
           }).join('') + '</div></div>';
       });
       return out || '<div class="mcsubs-sub">No matches.</div>';
@@ -84,9 +100,9 @@
     open: function () { this._view = 'list'; this._q = ''; this.render(); var o = document.getElementById('mcsubsSheet'); if (o) o.classList.add('open'); },
     close: function () { var o = document.getElementById('mcsubsSheet'); if (o) o.classList.remove('open'); },
 
-    openMovement: function (key, base, def) { this._view = 'pick'; this._key = key; this._base = base; this._def = def; this._q = ''; this.render(); },
+    openMovement: function (key, base, def) { this._view = 'pick'; this._key = key; this._base = base; this._def = def; this._mode = modeOf(def); this._q = ''; this.render(); },
     back: function () { this._view = 'list'; this.render(); },
-    filter: function (q) { this._q = q; var el = document.getElementById('mcsubsLib'); if (el) el.innerHTML = this.libGroupsHTML(q, true); },
+    filter: function (q) { this._q = q; var el = document.getElementById('mcsubsLib'); if (el) el.innerHTML = this.libGroupsHTML(q, true, this._mode); },
     pick: function (name) { MCSwap.set(this._key, name); this._view = 'list'; this.render(); },
     reset: function (key) { MCSwap.set(key, null); this.render(); },
 
@@ -103,8 +119,9 @@
             (MCSwap.isSwapped(this._key) ? ' · <a href="#" onclick="MCSubs.reset(\'' + this._key + '\');return false" style="color:#fb7185;font-weight:800;text-decoration:none">reset</a>' : '') + '</div>' +
           (sugg.length ? '<div class="mcsubs-group"><div class="mcsubs-group-hd">Suggested</div><div class="mcsubs-swaps">' +
             sugg.map(function (n) { return '<span class="mcsubs-chip pickable" onclick="MCSubs.pick(\'' + n.replace(/'/g, "\\'") + '\')">' + esc(n) + '</span>'; }).join('') + '</div></div>' : '') +
+          '<div class="mcsubs-modenote">Showing <b>' + (this._mode === 'timed' ? '⏱ timed' : '↻ rep-based') + '</b> movements to match <b>' + esc(def) + '</b>. Others are dimmed — they\'d need a different card.</div>' +
           '<input class="mcsubs-search" placeholder="Search the conditioning library…" oninput="MCSubs.filter(this.value)">' +
-          '<div id="mcsubsLib">' + this.libGroupsHTML('', true) + '</div>';
+          '<div id="mcsubsLib">' + this.libGroupsHTML('', true, this._mode) + '</div>';
       } else {
         var movs = window.MC_SWAP_MOVEMENTS || [];
         inner.innerHTML =
@@ -150,12 +167,17 @@
       '.mcsubs-swaps{display:flex;flex-wrap:wrap;gap:6px;}' +
       '.mcsubs-chip{font-size:12px;font-weight:700;color:#fed7aa;background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.3);border-radius:14px;padding:6px 12px;}' +
       '.mcsubs-chip.pickable{cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
-      '.mcsubs-chip.pickable:active{background:rgba(249,115,22,0.28);}';
+      '.mcsubs-chip.pickable:active{background:rgba(249,115,22,0.28);}' +
+      '.mcsubs-chip.mismatch{opacity:0.32;color:#94a3b8;background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);cursor:not-allowed;}' +
+      '.mcsubs-mode{font-size:10px;font-weight:900;margin-left:5px;opacity:0.85;}' +
+      '.mcsubs-modenote{font-size:11px;color:#94a3b8;line-height:1.45;margin:6px 0 2px;}' +
+      '.mcsubs-modenote b{color:#fed7aa;}';
     var st = document.createElement('style');
     st.id = 'mcsubs-style'; st.textContent = css;
     document.head.appendChild(st);
   }
   window.MCSubs.ensureStyles = injectStyles;
+  window.MCSubs.modeOf = modeOf;
 
   function injectButton() {
     if (document.getElementById('mcsubsFab')) return;
