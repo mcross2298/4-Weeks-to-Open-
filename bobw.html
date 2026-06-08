@@ -112,6 +112,21 @@
 .bcp-item.sel .bcp-item-check{background:#14b8a6;border-color:#14b8a6;}
 .bcp-empty{font-size:11px;color:#64748b;padding:6px 4px 10px;font-style:italic;}
 .bcp-clear{font-size:11px;font-weight:800;color:#f87171;cursor:pointer;padding:8px 2px 2px;display:inline-block;}
+/* LISS duration adjuster — set & track steady-state cardio time */
+.bcp-dur{padding:4px 2px;}
+.bcp-dur-hd{font-size:13px;font-weight:800;color:#e2e8f0;margin-bottom:4px;}
+.bcp-dur-hd b{color:#5eead4;}
+.bcp-dur-sub{font-size:11px;color:#94a3b8;margin-bottom:14px;}
+.bcp-dur-stepper{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:16px;}
+.bcp-dur-btn{width:46px;height:46px;border-radius:50%;border:1px solid rgba(20,184,166,0.4);background:rgba(20,184,166,0.12);color:#5eead4;font-size:24px;font-weight:900;cursor:pointer;font-family:inherit;line-height:1;display:flex;align-items:center;justify-content:center;}
+.bcp-dur-btn:active{background:rgba(20,184,166,0.25);}
+.bcp-dur-val{min-width:96px;text-align:center;}
+.bcp-dur-num{font-size:30px;font-weight:900;color:#fff;line-height:1;}
+.bcp-dur-unit{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;margin-top:3px;}
+.bcp-dur-actions{display:flex;gap:8px;}
+.bcp-dur-set{flex:1;padding:12px;border-radius:10px;background:#14b8a6;color:#04201c;font-size:13px;font-weight:900;border:none;cursor:pointer;font-family:inherit;}
+.bcp-dur-set:active{opacity:0.85;}
+.bcp-dur-back{padding:12px 16px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#94a3b8;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;}
 </style>
 </head>
 <body>
@@ -420,6 +435,27 @@ var LISS_OPTIONS=[
   "Jump Rope","Incline Treadmill","Rower Machine","Elliptical",
   "Stair Master","Bicycle","Walking Lunges"
 ];
+// LISS steady-state duration (minutes) — adjustable per pick, tagged to the
+// binding so the chosen cardio time is tracked on the session day.
+var LISS_DUR_DEFAULT=20, LISS_DUR_MIN=5, LISS_DUR_MAX=90, LISS_DUR_STEP=5;
+
+// The duration adjuster shown when a LISS option is tapped. Confirming "Set"
+// stores the chosen movement + duration as the slot binding.
+function lissDurationPanelHTML(slot,name,mins){
+  mins=Math.max(LISS_DUR_MIN,Math.min(LISS_DUR_MAX,mins||LISS_DUR_DEFAULT));
+  return '<div class="bcp-dur" data-liss-dur="'+escapeHtml(slot)+'" data-liss-name="'+escapeHtml(name)+'" data-liss-mins="'+mins+'">'
+    +'<div class="bcp-dur-hd">🚶 <b>'+escapeHtml(name)+'</b></div>'
+    +'<div class="bcp-dur-sub">How long will you go? Set your steady-state duration.</div>'
+    +'<div class="bcp-dur-stepper">'
+    +'<button class="bcp-dur-btn" data-liss-step="-1" aria-label="Less time">−</button>'
+    +'<div class="bcp-dur-val"><div class="bcp-dur-num" data-liss-display>'+mins+'</div><div class="bcp-dur-unit">minutes</div></div>'
+    +'<button class="bcp-dur-btn" data-liss-step="1" aria-label="More time">+</button>'
+    +'</div>'
+    +'<div class="bcp-dur-actions">'
+    +'<button class="bcp-dur-back" data-liss-back="'+escapeHtml(slot)+'">‹ Back</button>'
+    +'<button class="bcp-dur-set" data-liss-set>✓ Set &amp; Track</button>'
+    +'</div></div>';
+}
 function condTypeMeta(type){ return COND_TYPES.find(function(t){return t.key===type;})||COND_TYPES[0]; }
 function condSlotKey(weekId,dIdx,type){ return weekId+":"+dIdx+":"+type; }
 function readCondBindings(){ try{return JSON.parse(localStorage.getItem("mc_bobw_cond")||"{}")||{};}catch(e){return {};} }
@@ -460,12 +496,21 @@ function condSlotRow(weekId,dIdx,type){
   var head;
   if(b){
     var t=condRunTarget(b);
-    var kindLbl=b.kind==="custom"?"Custom workout":(b.kind==="liss"?"LISS option":"Pre-built routine");
+    var isLiss=b.kind==="liss";
+    var kindLbl=b.kind==="custom"?"Custom workout":(isLiss?"LISS option":"Pre-built routine");
+    var durTxt=(isLiss&&b.duration)?' · '+b.duration+' min':'';
+    var action;
+    if(isLiss&&b.duration){
+      // Start an in-page countdown for the tracked steady-state duration.
+      action='<button class="bobw-cond-run" data-liss-start="'+b.duration+'" data-liss-label="'+escapeHtml(b.name)+'">▶ Start</button>';
+    }else{
+      action=(t?'<a class="bobw-cond-run" href="'+t.href+'" data-cond-run>▶ Run</a>':'');
+    }
     head='<div class="bobw-cond-head" data-cond-toggle>'
       +'<span class="bobw-cond-icon">'+meta.icon+'</span>'
-      +'<span class="bobw-cond-txt"><div class="bobw-cond-name"><span class="bobw-cond-type">'+meta.label+'</span>'+escapeHtml(b.name)+'</div>'
+      +'<span class="bobw-cond-txt"><div class="bobw-cond-name"><span class="bobw-cond-type">'+meta.label+'</span>'+escapeHtml(b.name)+durTxt+'</div>'
       +'<div class="bobw-cond-sub">'+kindLbl+' · tap to change</div></span>'
-      +(t?'<a class="bobw-cond-run" href="'+t.href+'" data-cond-run>▶ Run</a>':'')
+      +action
       +'</div>';
   }else{
     head='<div class="bobw-cond-head" data-cond-toggle>'
@@ -753,22 +798,84 @@ function refreshCondSlot(weekId,dIdx,type){
     var pick=e.target.closest("[data-cond-pick]");
     if(pick){
       e.preventDefault();
-      var sk=parseSlot(pick.closest(".bobw-cond").getAttribute("data-slot"));
+      var condEl=pick.closest(".bobw-cond");
+      var sk=parseSlot(condEl.getAttribute("data-slot"));
       var val=pick.getAttribute("data-cond-pick");
       var ci=val.indexOf(":");
       var kind=val.slice(0,ci), ref=val.slice(ci+1);
+      if(kind==="liss"){
+        // Tapping a LISS option opens the duration adjuster — bind only after
+        // the user sets their steady-state time.
+        var cur=getCondBinding(sk.w,sk.d,sk.type);
+        var mins=(cur&&cur.kind==="liss"&&cur.name===ref&&cur.duration)?cur.duration:LISS_DUR_DEFAULT;
+        var dpanel=condEl.querySelector("[data-cond-panel]");
+        if(dpanel) dpanel.innerHTML=lissDurationPanelHTML(condSlotKey(sk.w,sk.d,sk.type),ref,mins);
+        return;
+      }
       var binding;
       if(kind==="custom"){
         var w=CustomWorkouts.findById(ref);
         if(!w) return;
         binding={kind:"custom",id:ref,name:w.name};
-      }else if(kind==="liss"){
-        binding={kind:"liss",name:ref};
       }else{
         binding={kind:"routine",href:ref,name:pick.getAttribute("data-cond-name")||ref};
       }
       setCondBinding(sk.w,sk.d,sk.type,binding);
       refreshCondSlot(sk.w,sk.d,sk.type);
+      return;
+    }
+
+    // LISS duration stepper (− / +)
+    var lstep=e.target.closest("[data-liss-step]");
+    if(lstep){
+      e.preventDefault();
+      var durEl=lstep.closest("[data-liss-dur]");
+      if(!durEl) return;
+      var m=(parseInt(durEl.getAttribute("data-liss-mins"),10)||LISS_DUR_DEFAULT)
+        +(parseInt(lstep.getAttribute("data-liss-step"),10)||0)*LISS_DUR_STEP;
+      m=Math.max(LISS_DUR_MIN,Math.min(LISS_DUR_MAX,m));
+      durEl.setAttribute("data-liss-mins",m);
+      var disp=durEl.querySelector("[data-liss-display]");
+      if(disp) disp.textContent=m;
+      return;
+    }
+
+    // LISS "Set & Track" — store the movement + chosen duration as the binding
+    var lset=e.target.closest("[data-liss-set]");
+    if(lset){
+      e.preventDefault();
+      var sEl=lset.closest("[data-liss-dur]");
+      if(!sEl) return;
+      var ssk=parseSlot(sEl.getAttribute("data-liss-dur"));
+      var sName=sEl.getAttribute("data-liss-name");
+      var sMins=parseInt(sEl.getAttribute("data-liss-mins"),10)||LISS_DUR_DEFAULT;
+      setCondBinding(ssk.w,ssk.d,ssk.type,{kind:"liss",name:sName,duration:sMins});
+      refreshCondSlot(ssk.w,ssk.d,ssk.type);
+      return;
+    }
+
+    // LISS "Back" — return from the duration adjuster to the options list
+    var lback=e.target.closest("[data-liss-back]");
+    if(lback){
+      e.preventDefault();
+      var bk=parseSlot(lback.getAttribute("data-liss-back"));
+      var bEl=lback.closest(".bobw-cond");
+      var bpanel=bEl&&bEl.querySelector("[data-cond-panel]");
+      if(bpanel) bpanel.innerHTML=buildCondPanel(bk.w,bk.d,bk.type);
+      return;
+    }
+
+    // LISS "Start" — launch the in-page countdown for the tracked duration
+    var lstart=e.target.closest("[data-liss-start]");
+    if(lstart){
+      e.preventDefault();
+      e.stopPropagation();
+      var startMins=parseInt(lstart.getAttribute("data-liss-start"),10)||0;
+      var startLbl=lstart.getAttribute("data-liss-label")||"LISS";
+      if(startMins>0 && typeof TMR!=="undefined"){
+        buildTimerFloat();
+        TMR.setTime(startMins*60,"LISS · "+startLbl);
+      }
       return;
     }
 
