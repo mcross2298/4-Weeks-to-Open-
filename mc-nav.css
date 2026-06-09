@@ -16,6 +16,7 @@
 }
 .mc-nav-tab .mc-nav-ico{font-size:19px;line-height:1;}
 .mc-nav-tab:active{color:#fff;transform:scale(0.94);}
+.mc-nav-tab.mc-nav-active{color:#d4af37;}
 
 /* keep page content and the floating rest timer clear of the fixed bar */
 body.mc-has-nav{padding-bottom:76px !important;}

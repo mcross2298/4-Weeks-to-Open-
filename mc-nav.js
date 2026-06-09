@@ -33,10 +33,27 @@
 
   var HUB = 'dashboard.html';
   var TABS = [
-    { label: 'Dashboard',    ico: '⚡',  href: HUB },
-    { label: 'Programs',     ico: '🏋️', href: HUB + '?tab=programs' },
-    { label: 'Conditioning', ico: '🔥', href: HUB + '?tab=conditioning' }
+    { label: 'Dashboard',    ico: '⚡',  href: HUB,                        match: 'dashboard' },
+    { label: 'Programs',     ico: '🏋️', href: HUB + '?tab=programs',     match: 'programs'  },
+    { label: 'Conditioning', ico: '🔥', href: HUB + '?tab=conditioning',  match: 'conditioning' }
   ];
+
+  // Determine which tab should be active based on current page filename
+  var CONDITIONING_PAGES = [
+    'battle-ropes','boxing-routine','driveway-demolition','full-body-pyramid',
+    'hell-week','popeye','turn-and-burn','45-minute-burner','the-500',
+    '2on-1off','3on-1off-high-freq','5on-2off','every-arms-day','every-chest-day',
+    'run-workout','bobw'
+  ];
+  function activeTab() {
+    var page = (location.pathname.split('/').pop() || '').replace('.html','').toLowerCase();
+    if (!page || page === 'dashboard') return 'dashboard';
+    if (page.startsWith('cat-')) return 'programs';
+    for (var i = 0; i < CONDITIONING_PAGES.length; i++) {
+      if (page === CONDITIONING_PAGES[i] || page.startsWith(CONDITIONING_PAGES[i])) return 'conditioning';
+    }
+    return 'programs';
+  }
 
   function build() {
     // dashboard already ships its own tab bar — don't double up
@@ -45,10 +62,12 @@
     var nav = document.createElement('nav');
     nav.className = 'mc-nav';
     nav.setAttribute('aria-label', 'Primary');
+    var active = activeTab();
     TABS.forEach(function (t) {
       var a = document.createElement('a');
-      a.className = 'mc-nav-tab';
+      a.className = 'mc-nav-tab' + (t.match === active ? ' mc-nav-active' : '');
       a.href = t.href;
+      a.setAttribute('aria-current', t.match === active ? 'page' : false);
       a.innerHTML = '<span class="mc-nav-ico">' + t.ico + '</span><span>' + t.label + '</span>';
       nav.appendChild(a);
     });
