@@ -124,12 +124,12 @@
           btn.textContent = '✓ Done';
           // Vibrate on mobile if supported
           if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-          // Auto-reset after 2.5s
+          // Auto-dismiss after 4s
           setTimeout(function () {
             btn.classList.remove('timer-done');
             btn.textContent = originalText;
             activeTimer = null;
-          }, 2500);
+          }, 4000);
         } else {
           btn.textContent = `⏱ ${remaining}s`;
         }

@@ -4,8 +4,9 @@
    workout page regardless of that page's own CSS state. Matches the app's
    dark logger look: SET · WEIGHT · REPS rows + a done checkbox.
    ========================================================================== */
-.mcl-toggle{
+.mcl-toggle,.setlog-toggle{
   display:flex;align-items:center;gap:6px;margin-top:8px;
+  min-height:44px;
   cursor:pointer;user-select:none;
   font-size:11px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;
   color:#94a3b8;-webkit-tap-highlight-color:transparent;

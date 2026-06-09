@@ -112,7 +112,15 @@ var activeFilter = 'All';
 var selected = [];   // [{name,muscle,sets,reps}]
 
 function getSaved(){ try{ return JSON.parse(localStorage.getItem(CW_KEY)||'[]'); }catch(e){ return []; } }
-function setSaved(a){ try{ localStorage.setItem(CW_KEY, JSON.stringify(a)); }catch(e){} }
+function setSaved(a){
+  try{
+    localStorage.setItem(CW_KEY, JSON.stringify(a));
+  }catch(e){
+    if(e && (e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'||e.code===22)){
+      alert('Storage full — delete some custom workouts to free space before saving a new one.');
+    }
+  }
+}
 function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 
 var CONDITIONING = ['Cardio','Core'];
