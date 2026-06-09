@@ -1,0 +1,162 @@
+/* ==========================================================================
+   conditioning-elite.css — Elite Conditioning Corner
+   --------------------------------------------------------------------------
+   Layers the premier card language (depth, glowing numbers, accent purpose-
+   rail) with a crimson "challenge" identity onto the bespoke conditioning
+   pages. Hooked via body.cond-elite so it overrides each page's inline styles
+   by specificity (no source-order dependence). The two light-card pages
+   (the-500, driveway-demolition) additionally carry body.cond-light-fix for
+   their dark text / background flips.
+
+   Crimson #ef4444 is the corner's own brand color (conditioning-data.js).
+   Purely a visual layer — no logic, timers, or counters are touched.
+   ========================================================================== */
+body.cond-elite{
+  --ce:#ef4444; --ce-rgb:239,68,68; --ce-deep:#991b1b;
+  --ce-ink:#e2e8f0; --ce-dim:#94a3b8;
+}
+
+/* ── ELITE HERO — animated crimson, glowing base line ─────────────────── */
+body.cond-elite .header{
+  background:linear-gradient(110deg,#2a0a0a,#7f1d1d 45%,#3f0a0a);
+  background-size:220% 220%;
+  animation:ceHero 16s ease infinite;
+  border-bottom:1px solid rgba(var(--ce-rgb),0.45);
+  box-shadow:inset 0 -1px 0 rgba(var(--ce-rgb),0.4),0 8px 30px rgba(0,0,0,0.5);
+}
+body.cond-elite .header::after{
+  content:'';position:absolute;left:0;right:0;bottom:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(var(--ce-rgb),0.9),transparent);
+  box-shadow:0 0 14px rgba(var(--ce-rgb),0.7);pointer-events:none;
+}
+@keyframes ceHero{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
+@media(prefers-reduced-motion:reduce){body.cond-elite .header{animation:none;}}
+
+/* ── CARDS — premier dark depth + crimson purpose-rail ────────────────── */
+body.cond-elite .step-card,
+body.cond-elite .burn-card,
+body.cond-elite .bp-card,
+body.cond-elite .fin-card,
+body.cond-elite .section-card,
+body.cond-elite .total-card,
+body.cond-elite .sum-card,
+body.cond-elite .cfg-card{
+  background:linear-gradient(180deg,#140e0f,#0b0809);
+  border:1px solid rgba(var(--ce-rgb),0.22);
+  box-shadow:0 10px 30px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.05);
+  border-radius:16px;position:relative;overflow:hidden;
+}
+body.cond-elite .step-card::before,
+body.cond-elite .burn-card::before,
+body.cond-elite .bp-card::before,
+body.cond-elite .fin-card::before,
+body.cond-elite .section-card::before,
+body.cond-elite .total-card::before,
+body.cond-elite .cfg-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;z-index:2;pointer-events:none;
+  background:linear-gradient(180deg,#ef4444,#991b1b);
+  box-shadow:0 0 16px rgba(var(--ce-rgb),0.55);
+}
+/* completed cards flip the rail green */
+body.cond-elite .step-card.is-done::before,
+body.cond-elite .burn-card.is-done::before,
+body.cond-elite .bp-card.is-done::before,
+body.cond-elite .fin-card.is-done::before{
+  background:linear-gradient(180deg,#34d399,#059669);box-shadow:0 0 16px rgba(52,211,153,0.5);
+}
+
+/* ── GIANT GLOWING NUMBERS / TIMERS ──────────────────────────────────── */
+body.cond-elite .cd-disp,
+body.cond-elite .rn-disp,
+body.cond-elite .bp-disp,
+body.cond-elite .rn-count-num,
+body.cond-elite .bp-count-num,
+body.cond-elite .counter-num,
+body.cond-elite .big-number,
+body.cond-elite .target-big,
+body.cond-elite .rope-timer-disp{
+  color:#fff !important;
+  text-shadow:0 0 12px rgba(var(--ce-rgb),0.55),0 0 26px rgba(var(--ce-rgb),0.32);
+  letter-spacing:-0.02em;
+}
+
+/* mini-badge counters (the-500) */
+body.cond-elite .mini-badge{
+  background:rgba(var(--ce-rgb),0.16);color:#fff;border:1px solid rgba(var(--ce-rgb),0.4);
+  box-shadow:0 0 14px rgba(var(--ce-rgb),0.3);
+}
+body.cond-elite .mini-badge.green{
+  background:rgba(52,211,153,0.16);border-color:rgba(52,211,153,0.5);
+  box-shadow:0 0 14px rgba(52,211,153,0.35);
+}
+
+/* ── CHALLENGE DIVIDERS (THEN / FINISHER) ────────────────────────────── */
+body.cond-elite .divider{
+  color:#fca5a5;font-weight:900;letter-spacing:0.24em;text-transform:uppercase;
+}
+
+/* ── COMPLETION — premier dark glow + celebration burst ──────────────── */
+body.cond-elite .done-banner,
+body.cond-elite .ladder-done-banner{
+  background:linear-gradient(135deg,rgba(16,185,129,0.18),rgba(5,150,105,0.08)) !important;
+  border:1px solid rgba(52,211,153,0.45) !important;color:#86efac !important;
+  box-shadow:0 0 28px rgba(16,185,129,0.22);
+}
+body.cond-elite .complete-btn,
+body.cond-elite .pstep-complete,
+body.cond-elite .burn-complete,
+body.cond-elite .complete-set-btn{
+  box-shadow:0 6px 20px rgba(52,211,153,0.28);
+}
+body.cond-elite .ce-celebrate{animation:ceBurst 0.8s ease;}
+@keyframes ceBurst{
+  0%{box-shadow:0 10px 30px rgba(0,0,0,0.5),0 0 0 rgba(52,211,153,0);}
+  30%{box-shadow:0 10px 30px rgba(0,0,0,0.5),0 0 44px rgba(52,211,153,0.7);}
+  100%{box-shadow:0 10px 30px rgba(0,0,0,0.5),0 0 0 rgba(52,211,153,0);}
+}
+
+/* ── CARD ENTRANCE (JS adds .ce-reveal → .ce-in) ─────────────────────── */
+body.cond-elite .ce-reveal{opacity:0;transform:translateY(10px);}
+body.cond-elite .ce-reveal.ce-in{opacity:1;transform:none;transition:opacity .5s ease,transform .5s ease;}
+@media(prefers-reduced-motion:reduce){body.cond-elite .ce-reveal{opacity:1;transform:none;}}
+
+/* ======================================================================
+   LIGHT-CARD PAGES (the-500, driveway-demolition) — flip dark-on-white
+   content to read on the new dark cards. Scoped to body.cond-light-fix.
+   ====================================================================== */
+body.cond-light-fix .section-card,
+body.cond-light-fix .step-card,
+body.cond-light-fix .total-card,
+body.cond-light-fix .sum-card{color:var(--ce-ink);}
+/* dark-crimson labels → light slate */
+body.cond-light-fix .step-name,
+body.cond-light-fix .fin-title,
+body.cond-light-fix .target-value,
+body.cond-light-fix .rest-morph-txt,
+body.cond-light-fix .entry-label,
+body.cond-light-fix .math-line,
+body.cond-light-fix .knee-note{color:#e2e8f0 !important;}
+/* big numbers/inputs → white */
+body.cond-light-fix .counter-num,
+body.cond-light-fix .num-input,
+body.cond-light-fix .ex-name-big,
+body.cond-light-fix .target-big,
+body.cond-light-fix .rope-timer-disp{color:#fff !important;}
+/* inner white chips/boxes → dark translucent */
+body.cond-light-fix .note-box,
+body.cond-light-fix .entry-row,
+body.cond-light-fix .knee-note,
+body.cond-light-fix .target-row,
+body.cond-light-fix .day-block,
+body.cond-light-fix .math-line,
+body.cond-light-fix .fin-row{
+  background:rgba(255,255,255,0.04) !important;
+  border-color:rgba(255,255,255,0.1) !important;
+}
+/* steppers / number inputs sit on dark now */
+body.cond-light-fix .num-input,
+body.cond-light-fix .step-btn,
+body.cond-light-fix .big-step{
+  background:rgba(255,255,255,0.06) !important;color:#fff !important;
+  border-color:rgba(255,255,255,0.12) !important;
+}

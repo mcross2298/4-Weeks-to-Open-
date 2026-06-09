@@ -109,9 +109,10 @@ body{background:#070a12;min-height:100vh;padding-bottom:210px;color:#e2e8f0;}
 .prog-bar-fill{height:3px;width:0%;background:linear-gradient(90deg,#f97316,#dc2626);transition:width 0.4s ease;border-radius:0 2px 2px 0;}
 </style>
 <link rel="stylesheet" href="base.css"/>
+<link rel="stylesheet" href="conditioning-elite.css"/>
 <link rel="stylesheet" href="mc-nav.css"/>
 </head>
-<body>
+<body class="cond-elite">
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
 <div class="app">
   <div class="header">
@@ -361,5 +362,6 @@ setInterval(updateSummary,1000);
 BOX.build(); BOX.render(); updateSummary();
 </script>
 <script src="mc-nav.js"></script>
+<script src="conditioning-elite.js"></script>
 </body>
 </html>
