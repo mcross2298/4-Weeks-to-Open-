@@ -6,7 +6,21 @@
 <title>Strength &amp; Supersets</title>
 <style>
 :root{--accent:#e11d48;--accent-rgb:225,29,72;}
-.header{background:linear-gradient(135deg,#2a0710,#0d0618);}
+/* ── Flagship hero header (crimson, animated) ── */
+.header{position:relative;overflow:hidden;background:linear-gradient(135deg,#2a0710,#0d0205);}
+.header > *{position:relative;z-index:1;}
+.header::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at 15% 0%,rgba(225,29,72,0.28) 0%,transparent 60%);
+  animation:hdrGlow 4.6s ease-in-out infinite;}
+.header::after{content:'';position:absolute;top:0;left:-70%;width:45%;height:100%;z-index:0;pointer-events:none;
+  background:linear-gradient(105deg,transparent,rgba(251,113,133,0.14),transparent);
+  transform:skewX(-18deg);animation:hdrSheen 1.1s ease-out 0.15s both;}
+@keyframes hdrGlow{0%,100%{opacity:0.55;}50%{opacity:1;}}
+@keyframes hdrSheen{0%{left:-70%;}100%{left:150%;}}
+@media (prefers-reduced-motion: reduce){
+  .header::before{animation:none;opacity:0.7;}
+  .header::after{display:none;}
+}
 .week-tabs{border-bottom:1px solid rgba(255,255,255,0.05);}
 /* ── VIEWS — only one visible at a time (restored: dropped in Phase 2) ── */
 #view-split{display:none;}
@@ -25,34 +39,35 @@
    These rules are unique to this page and are NOT part of base.css.
    They were inadvertently dropped during the Phase 2 CSS extraction. */
 .dash-title{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.02em;line-height:1.1;margin-bottom:4px;}
-.dash-title span{color:#a855f7;}
-.subtitle{font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:12px;}
+.dash-title span{color:#fb7185;}
+.subtitle{font-size:12px;color:#94a3b8;line-height:1.5;margin-bottom:12px;}
 .header-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0;}
-.header-pill{background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.25);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:800;color:#c084fc;letter-spacing:0.08em;text-transform:uppercase;}
-.inst-header-link{display:inline-flex;align-items:center;gap:8px;margin-top:14px;text-decoration:none;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);color:#c084fc;font-size:11px;font-weight:800;padding:8px 16px;border-radius:20px;letter-spacing:0.06em;transition:all 0.15s;}
-.inst-header-link:active{background:rgba(139,92,246,0.22);}
+.header-pill{background:rgba(225,29,72,0.14);border:1px solid rgba(225,29,72,0.3);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:800;color:#fda4af;letter-spacing:0.08em;text-transform:uppercase;}
+.inst-header-link{display:inline-flex;align-items:center;gap:8px;margin-top:14px;text-decoration:none;background:rgba(225,29,72,0.14);border:1px solid rgba(225,29,72,0.35);color:#fda4af;font-size:11px;font-weight:800;padding:8px 16px;border-radius:20px;letter-spacing:0.06em;transition:all 0.15s;}
+.inst-header-link:active{background:rgba(225,29,72,0.24);}
+.flag-chip{display:inline-block;margin-right:6px;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:900;letter-spacing:0.1em;color:#fff;background:linear-gradient(135deg,#e11d48,#9f1239);border:1px solid rgba(251,113,133,0.5);box-shadow:0 0 14px rgba(225,29,72,0.4);vertical-align:middle;}
 /* Resume banner */
-.resume-banner{display:none;margin:16px 16px 0;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);border-radius:14px;padding:12px 16px;cursor:pointer;transition:all 0.15s;}
+.resume-banner{display:none;margin:16px 16px 0;background:rgba(225,29,72,0.1);border:1px solid rgba(225,29,72,0.32);border-radius:14px;padding:12px 16px;cursor:pointer;transition:all 0.15s;}
 .resume-banner.visible{display:flex;align-items:center;gap:12px;}
 .resume-banner:active{transform:scale(0.98);}
 .resume-icon{font-size:20px;flex-shrink:0;}
 .resume-text{flex:1;}
-.resume-label{font-size:11px;font-weight:900;letter-spacing:0.15em;text-transform:uppercase;color:#a855f7;margin-bottom:2px;}
+.resume-label{font-size:11px;font-weight:900;letter-spacing:0.15em;text-transform:uppercase;color:#fb7185;margin-bottom:2px;}
 .resume-name{font-size:14px;font-weight:800;color:#fff;}
 .resume-sub{font-size:11px;color:#6b7280;margin-top:1px;}
-.resume-arrow{font-size:18px;color:#a855f7;font-weight:900;}
+.resume-arrow{font-size:18px;color:#fb7185;font-weight:900;}
 /* Split selector cards (vertical, MC-style) */
-.split-strip-wrap{padding:18px 0 4px;background:#0d0618;}
+.split-strip-wrap{padding:18px 0 4px;background:#0d0205;}
 .split-strip-label{font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;color:#475569;padding:0 16px;margin-bottom:12px;}
 .split-strip{display:flex;flex-direction:column;gap:10px;max-width:680px;margin:0 auto;padding:0 16px 8px;}
 .split-card-sel{display:block;width:100%;text-align:left;background:#0f0f0f;border:1.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 16px 14px 18px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;font-family:inherit;}
-.split-card-sel::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--sp-color,#a855f7);opacity:0.45;transition:opacity 0.15s;}
+.split-card-sel::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--sp-color,#e11d48);opacity:0.45;transition:opacity 0.15s;}
 .split-card-sel:active{transform:scale(0.99);}
-.split-card-sel.active{border-color:var(--sp-color,#a855f7);background:#150a26;}
+.split-card-sel.active{border-color:var(--sp-color,#e11d48);background:#1a0509;}
 .split-card-sel.active::before{opacity:1;}
 .split-card-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px;}
-.split-card-eyebrow{font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:var(--sp-color,#a855f7);}
-.split-card-chev{font-size:18px;font-weight:900;color:var(--sp-color,#a855f7);flex-shrink:0;line-height:1;}
+.split-card-eyebrow{font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:var(--sp-color,#fb7185);}
+.split-card-chev{font-size:18px;font-weight:900;color:var(--sp-color,#fb7185);flex-shrink:0;line-height:1;}
 .split-card-name{font-size:17px;font-weight:900;color:#fff;letter-spacing:-0.01em;margin-bottom:5px;}
 .split-card-desc{font-size:12px;color:#94a3b8;line-height:1.45;margin-bottom:8px;}
 .split-card-meta{font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#475569;}
@@ -73,10 +88,10 @@
 .workout-arrow{font-size:16px;color:#475569;flex-shrink:0;}
 /* Badge key */
 .badge-section{max-width:680px;margin:28px auto 0;padding:0 16px 40px;}
-.badge-section-head{font-size:11px;font-weight:900;letter-spacing:0.22em;color:#a855f7;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-.badge-section-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(168,85,247,0.3),transparent);}
-.badge-card{background:#0f0f0f;border:1px solid rgba(139,92,246,0.15);border-radius:14px;padding:16px;}
-.badge-card-title{font-size:11px;font-weight:900;letter-spacing:0.16em;color:#a855f7;text-transform:uppercase;margin-bottom:12px;}
+.badge-section-head{font-size:11px;font-weight:900;letter-spacing:0.22em;color:#fb7185;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.badge-section-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(225,29,72,0.32),transparent);}
+.badge-card{background:#0f0f0f;border:1px solid rgba(225,29,72,0.16);border-radius:14px;padding:16px;}
+.badge-card-title{font-size:11px;font-weight:900;letter-spacing:0.16em;color:#fb7185;text-transform:uppercase;margin-bottom:12px;}
 .badge-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
 .badge-row:last-child{margin-bottom:0;}
 .badge-demo{font-size:11px;font-weight:800;padding:3px 9px;border-radius:5px;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;flex-shrink:0;min-width:100px;text-align:center;}
@@ -106,7 +121,7 @@
 .block-ex-dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(251,146,60,0.5);flex-shrink:0;transition:all 0.15s;}
 .block-ex.checked .block-ex-dot{background:#34d399;border-color:#34d399;}
 .block-ex-name{font-size:13px;font-weight:600;color:#e2e8f0;flex:1;}
-.block-ex-reps{font-size:11px;font-weight:800;letter-spacing:0.03em;color:#a78bfa;background:rgba(139,92,246,0.15);border-radius:5px;padding:3px 8px;white-space:nowrap;flex-shrink:0;}
+.block-ex-reps{font-size:11px;font-weight:800;letter-spacing:0.03em;color:#fb7185;background:rgba(225,29,72,0.15);border-radius:5px;padding:3px 8px;white-space:nowrap;flex-shrink:0;}
 .block-giant-badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:#fb923c;background:rgba(251,146,60,0.12);border:1px solid rgba(251,146,60,0.3);border-radius:6px;padding:4px 10px;margin:0 16px 10px;}
 .block-rounds-btns{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px 14px;}
 .round-btn{padding:7px 16px;border-radius:8px;border:1px solid rgba(251,146,60,0.35);background:rgba(251,146,60,0.08);color:#fb923c;font-size:11px;font-weight:800;cursor:pointer;transition:all 0.15s;letter-spacing:0.05em;}
@@ -116,7 +131,7 @@
 .ex-notes-input::placeholder{color:#334155;}
 .ex-notes-label{font-size:11px;font-weight:800;letter-spacing:0.15em;color:#475569;text-transform:uppercase;margin-bottom:4px;}
 /* ── PICKER ── */
-.picker-header{padding:60px 20px 24px;background:linear-gradient(135deg,#1a0040,#0d0618);text-align:center;border-bottom:1px solid rgba(192,132,252,0.15);}
+.picker-header{padding:60px 20px 24px;background:linear-gradient(135deg,#2a0710,#0d0205);text-align:center;border-bottom:1px solid rgba(225,29,72,0.18);}
 .picker-title{font-size:24px;font-weight:900;color:#fff;margin-bottom:6px;}
 .picker-sub{font-size:12px;color:#475569;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;}
 .picker-content{max-width:680px;margin:0 auto;padding:20px 16px 48px;}
@@ -131,8 +146,8 @@
 .picker-arrow{font-size:16px;font-weight:900;}
 /* ── WORKOUT VIEW HEADER ── */
 .workout-view-header{padding:52px 20px 20px;position:relative;}
-.workout-back-btn{display:inline-flex;align-items:center;gap:6px;color:#c084fc;font-size:13px;font-weight:700;background:rgba(192,132,252,0.1);padding:6px 14px;border-radius:20px;border:1px solid rgba(192,132,252,0.3);cursor:pointer;margin-bottom:20px;transition:all 0.15s;}
-.workout-back-btn:active{background:rgba(192,132,252,0.2);}
+.workout-back-btn{display:inline-flex;align-items:center;gap:6px;color:#fb7185;font-size:13px;font-weight:700;background:rgba(225,29,72,0.1);padding:6px 14px;border-radius:20px;border:1px solid rgba(225,29,72,0.32);cursor:pointer;margin-bottom:20px;transition:all 0.15s;}
+.workout-back-btn:active{background:rgba(225,29,72,0.2);}
 /* ── WORKOUT CONTENT ── */
 .workout-content{max-width:680px;margin:20px auto 0;padding:0 16px;}
 /* ── PRESCRIBED TEMPO CHIP (shows the actual E:I:C:P ratio on a card) ── */
@@ -161,7 +176,7 @@
 
   <div class="header">
     <a href="dashboard.html?tab=programs" class="back-link">← Programs</a>
-    <div class="eyebrow">🏋️ Program · 6-Week Cycle</div>
+    <div class="eyebrow"><span class="flag-chip">★ Flagship</span> 🏋️ Program · 6-Week Cycle</div>
     <h1 class="dash-title">Strength <span>&amp;</span> Supersets</h1>
     <p class="subtitle">6-week program · 5 training days · heavy compounds + high-volume supersets</p>
     <div class="header-pills">
@@ -694,7 +709,7 @@ function openSplit(id){
   // Theme the split-view header with the split's colour
   const c = split.color;
   const hdr = document.getElementById('splitViewHeader');
-  hdr.style.background = `linear-gradient(135deg,${split.bg || '#1a0040'},#0d0618)`;
+  hdr.style.background = `linear-gradient(135deg,${split.bg || '#2a0710'},#0d0205)`;
   hdr.style.borderBottom = `1px solid ${c}22`;
   const eb = document.getElementById('splitViewEyebrow');
   eb.textContent = `⚡ Split #${split.num} · 4-Week Rotation`; eb.style.color = c;
@@ -999,9 +1014,9 @@ function getWeekData(workout, week){
 
 // ── APPLY THEME ───────────────────────────────────────────────────
 function applyTheme(workout){
-  const c = workout.color || '#c084fc';
-  const bg = workout.bg || '#1a0040';
-  document.querySelector('.header').style.background = `linear-gradient(135deg,${bg},#0d0618)`;
+  const c = workout.color || '#fb7185';
+  const bg = workout.bg || '#2a0710';
+  document.querySelector('.header').style.background = `linear-gradient(135deg,${bg},#0d0205)`;
   document.querySelector('.header').style.borderBottomColor = c+'33';
   document.querySelector('.eyebrow').style.color = c;
   document.querySelector('.week-badge').style.color = c;
@@ -1021,8 +1036,8 @@ function render(){
   const _w = PMC_SPLITS[currentWorkoutId];
   if(_w){
     const _split = SPLITS.find(s => s.workouts && s.workouts.some(wk => wk.id === currentWorkoutId));
-    const _color = _w.color || (_split ? _split.color : '#c084fc');
-    const _bg    = _w.bg    || (_split ? _split.bg    : '#1a0040');
+    const _color = _w.color || (_split ? _split.color : '#fb7185');
+    const _bg    = _w.bg    || (_split ? _split.bg    : '#2a0710');
     document.getElementById('workoutEyebrow').textContent = `${_w.icon || '💪'} ${_w.split}`;
     document.getElementById('workoutEyebrow').style.color = _color;
     document.getElementById('workoutTitle').textContent   = _w.title;
@@ -1030,7 +1045,7 @@ function render(){
     document.getElementById('workoutWeekBadge').style.background = _color+'22';
     document.getElementById('workoutWeekBadge').style.color = _color;
     document.getElementById('workoutWeekBadge').style.border = `1px solid ${_color}44`;
-    document.getElementById('workoutViewHeader').style.background = `linear-gradient(135deg,${_bg},#0d0618)`;
+    document.getElementById('workoutViewHeader').style.background = `linear-gradient(135deg,${_bg},#0d0205)`;
     document.getElementById('workoutViewHeader').style.borderBottom = `1px solid ${_color}22`;
     const _back = document.querySelector('#view-workout .workout-back-btn');
     if(_back){

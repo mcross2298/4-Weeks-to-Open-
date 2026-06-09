@@ -238,6 +238,34 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .gz-resume-prog{font-size:11px;font-weight:700;color:#a3e635;margin-left:auto;flex-shrink:0;}
 .gz-resume-arrow{color:#d9f99d;font-size:15px;flex-shrink:0;}
 
+/* ── Strength & Supersets — flagship elite card ── */
+.cat-card.ss{border-top-width:3px;animation:ssEdge 4.2s ease-in-out infinite;}
+@keyframes ssEdge{
+  0%,100%{box-shadow:0 4px 20px rgba(225,29,72,0.15);}
+  50%{box-shadow:0 6px 30px rgba(225,29,72,0.34),0 0 0 1px rgba(225,29,72,0.18);}
+}
+/* breathing ambient glow behind the content */
+.ss-glow{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 18% 0%,rgba(225,29,72,0.22) 0%,transparent 58%);
+  animation:ssGlow 4.6s ease-in-out infinite;}
+@keyframes ssGlow{0%,100%{opacity:0.55;}50%{opacity:1;}}
+/* diagonal crimson sheen sweep (slower & wider than Gainz for a luxe feel) */
+.ss-sheen{position:absolute;top:0;left:-65%;width:48%;height:100%;pointer-events:none;
+  background:linear-gradient(105deg,transparent,rgba(251,113,133,0.16),transparent);
+  transform:skewX(-18deg);animation:ssSheen 6.2s ease-in-out infinite;}
+@keyframes ssSheen{0%{left:-65%;}58%,100%{left:150%;}}
+/* the 🏋️ icon gently breathes — distinct timing from Gainz */
+.cat-card.ss .cat-icon{animation:ssPulse 3.6s ease-in-out infinite;}
+@keyframes ssPulse{0%,100%{opacity:0.18;transform:scale(1);}50%{opacity:0.4;transform:scale(1.08) translateY(-1px);}}
+/* flagship tag — headline framing */
+.cat-card.ss .cat-tag.ss-flag{background:rgba(225,29,72,0.22);color:#fda4af;
+  border:1px solid rgba(225,29,72,0.45);box-shadow:0 0 14px rgba(225,29,72,0.2);}
+@media (prefers-reduced-motion: reduce){
+  .cat-card.ss,.ss-glow,.ss-sheen,.cat-card.ss .cat-icon{animation:none;}
+  .ss-sheen{display:none;}
+  .ss-glow{opacity:0.7;}
+}
+
 /* Exercise library link */
 .lib-link{display:flex;align-items:center;gap:12px;background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.22);border-radius:14px;padding:14px 16px;text-decoration:none;color:#e2e8f0;margin-bottom:20px;}
 .lib-link:active{background:rgba(212,175,55,0.12);}
@@ -478,8 +506,10 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   <div class="prog-screen-inner">
 
     <a href="cat-strength.html" class="cat-card ss">
+      <span class="ss-glow"></span>
+      <span class="ss-sheen"></span>
       <span class="cat-icon">🏋️</span>
-      <div class="cat-tag">Strength · Supersets · New</div>
+      <div class="cat-tag ss-flag">★ Flagship · Strength · Supersets</div>
       <div class="cat-name">Strength &amp; Supersets</div>
       <div class="cat-meta">Heavy low-rep compounds paired with high-volume supersets and AMRAP finishers — 6-week cycle across 5 training days.</div>
       <div class="cat-count">6-Week Cycle · 5 Days →</div>
