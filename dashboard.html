@@ -171,7 +171,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .prog-sub{font-size:13px;color:var(--muted);margin-top:6px;}
 
 /* Reuse exact cat-card styles from index.html */
-.cat-card{display:block;text-decoration:none;color:inherit;border-radius:18px;padding:24px 22px;margin-bottom:14px;position:relative;overflow:hidden;transition:box-shadow 0.15s;border:1px solid rgba(255,255,255,0.06);}
+.cat-card{display:block;text-decoration:none;color:inherit;border-radius:18px;padding:18px 22px;margin-bottom:12px;position:relative;overflow:hidden;transition:box-shadow 0.15s;border:1px solid rgba(255,255,255,0.06);}
 .cat-card:active{box-shadow:0 0 0 2px var(--gold),0 0 18px var(--gold-glow);opacity:0.9;}
 .cat-card.stndr{background:linear-gradient(135deg,#1e3a5f,#0f172a);box-shadow:0 4px 20px rgba(59,130,246,0.15);border-top:3px solid #1D9E75;}
 .cat-card.pump{background:linear-gradient(135deg,#831843,#1a0511);box-shadow:0 4px 20px rgba(236,72,153,0.15);border-top:3px solid #D85A30;}
@@ -265,6 +265,26 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   .ss-sheen{display:none;}
   .ss-glow{opacity:0.7;}
 }
+
+/* ── Tier labels — frame Flagship as the headline, Influencer as secondary ── */
+.tier-label{display:flex;align-items:center;gap:10px;margin:0 0 12px;
+  font-size:11px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted2);}
+.tier-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.07);}
+.tier-label.flag{color:var(--gold);}
+.tier-label.influencer{margin-top:24px;}
+
+/* ── Influencer tier — compact cards. 1-col on phones (keeps a readable
+      one-line description), 2-col grid on wider screens to cut vertical space ── */
+.influencer-grid{display:grid;grid-template-columns:1fr;gap:10px;}
+@media (min-width:560px){.influencer-grid{grid-template-columns:1fr 1fr;}}
+.influencer-grid .cat-card{margin-bottom:0;padding:13px 16px;border-radius:14px;}
+.influencer-grid .cat-icon{font-size:26px;right:14px;top:13px;}
+.influencer-grid .cat-tag{font-size:10px;padding:2px 7px;margin-bottom:6px;letter-spacing:0.1em;}
+.influencer-grid .cat-name{font-size:17px;margin-bottom:3px;padding-right:34px;}
+.influencer-grid .cat-meta{font-size:12px;line-height:1.45;padding-right:8px;
+  display:-webkit-box;-webkit-line-clamp:1;line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;}
+.influencer-grid .cat-count{margin-top:6px;}
+.influencer-grid .cat-designer{margin-top:5px;}
 
 /* Exercise library link */
 .lib-link{display:flex;align-items:center;gap:12px;background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.22);border-radius:14px;padding:14px 16px;text-decoration:none;color:#e2e8f0;margin-bottom:20px;}
@@ -505,6 +525,8 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   </div>
   <div class="prog-screen-inner">
 
+    <div class="tier-label flag">★ Flagship Programs</div>
+
     <a href="cat-strength.html" class="cat-card ss">
       <span class="ss-glow"></span>
       <span class="ss-sheen"></span>
@@ -560,7 +582,9 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <div class="cat-designer">✍️ Designed by Mike Cross</div>
     </a>
 
-    <hr class="tier-divider">
+    <div class="tier-label influencer">Influencer Programs</div>
+
+    <div class="influencer-grid">
 
     <a href="cat-stndr.html" class="cat-card stndr">
       <span class="cat-icon">🏋️</span>
@@ -602,6 +626,8 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <div class="cat-count">1 Program →</div>
       <div class="cat-designer">✍️ Penn State Strength Staff</div>
     </a>
+
+    </div>
 
   </div>
 </div>
