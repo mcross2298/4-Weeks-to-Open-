@@ -258,13 +258,81 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 /* the 🏋️ icon gently breathes — distinct timing from Gainz */
 .cat-card.ss .cat-icon{animation:ssPulse 3.6s ease-in-out infinite;}
 @keyframes ssPulse{0%,100%{opacity:0.18;transform:scale(1);}50%{opacity:0.4;transform:scale(1.08) translateY(-1px);}}
-/* flagship tag — headline framing */
+/* flagship tags — headline framing */
 .cat-card.ss .cat-tag.ss-flag{background:rgba(225,29,72,0.22);color:#fda4af;
   border:1px solid rgba(225,29,72,0.45);box-shadow:0 0 14px rgba(225,29,72,0.2);}
+.cat-card.pmc .cat-tag.pmc-flag{background:rgba(139,92,246,0.22);color:#d8b4fe;
+  border:1px solid rgba(139,92,246,0.45);box-shadow:0 0 14px rgba(139,92,246,0.2);}
+.cat-card.mc .cat-tag.mc-flag{background:rgba(212,175,55,0.22);color:#fde68a;
+  border:1px solid rgba(212,175,55,0.45);box-shadow:0 0 14px rgba(212,175,55,0.2);}
+.cat-card.bobw .cat-tag.bobw-flag{background:rgba(20,184,166,0.22);color:#99f6e4;
+  border:1px solid rgba(20,184,166,0.45);box-shadow:0 0 14px rgba(20,184,166,0.2);}
+.cat-card.ie .cat-tag.ie-flag{background:rgba(249,115,22,0.22);color:#fed7aa;
+  border:1px solid rgba(249,115,22,0.45);box-shadow:0 0 14px rgba(249,115,22,0.2);}
 @media (prefers-reduced-motion: reduce){
   .cat-card.ss,.ss-glow,.ss-sheen,.cat-card.ss .cat-icon{animation:none;}
   .ss-sheen{display:none;}
   .ss-glow{opacity:0.7;}
+}
+
+/* ── PMC — flagship elite card (purple) ── */
+.cat-card.pmc{border-top-width:3px;animation:pmcEdge 4.2s ease-in-out infinite;}
+@keyframes pmcEdge{0%,100%{box-shadow:0 4px 20px rgba(139,92,246,0.15);}50%{box-shadow:0 6px 30px rgba(139,92,246,0.34),0 0 0 1px rgba(139,92,246,0.18);}}
+.pmc-glow{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 18% 0%,rgba(139,92,246,0.22) 0%,transparent 58%);
+  animation:ssGlow 4.6s ease-in-out infinite;}
+.pmc-sheen{position:absolute;top:0;left:-65%;width:48%;height:100%;pointer-events:none;
+  background:linear-gradient(105deg,transparent,rgba(192,132,252,0.16),transparent);
+  transform:skewX(-18deg);animation:ssSheen 6.2s ease-in-out infinite;}
+.cat-card.pmc .cat-icon{animation:ssPulse 3.6s ease-in-out infinite;}
+@media (prefers-reduced-motion: reduce){
+  .cat-card.pmc,.pmc-glow,.pmc-sheen,.cat-card.pmc .cat-icon{animation:none;}
+  .pmc-sheen{display:none;}.pmc-glow{opacity:0.7;}
+}
+
+/* ── MC — flagship elite card (gold) ── */
+.cat-card.mc{border-top-width:3px;animation:mcEdge 4.2s ease-in-out infinite;}
+@keyframes mcEdge{0%,100%{box-shadow:0 4px 20px rgba(212,175,55,0.15);}50%{box-shadow:0 6px 30px rgba(212,175,55,0.34),0 0 0 1px rgba(212,175,55,0.18);}}
+.mc-glow{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 18% 0%,rgba(212,175,55,0.22) 0%,transparent 58%);
+  animation:ssGlow 4.6s ease-in-out infinite;}
+.mc-sheen{position:absolute;top:0;left:-65%;width:48%;height:100%;pointer-events:none;
+  background:linear-gradient(105deg,transparent,rgba(253,240,138,0.16),transparent);
+  transform:skewX(-18deg);animation:ssSheen 6.2s ease-in-out infinite;}
+.cat-card.mc .cat-icon{animation:ssPulse 3.6s ease-in-out infinite;}
+@media (prefers-reduced-motion: reduce){
+  .cat-card.mc,.mc-glow,.mc-sheen,.cat-card.mc .cat-icon{animation:none;}
+  .mc-sheen{display:none;}.mc-glow{opacity:0.7;}
+}
+
+/* ── BOBW — flagship elite card (teal) ── */
+.cat-card.bobw{border-top-width:3px;animation:bobwEdge 4.2s ease-in-out infinite;}
+@keyframes bobwEdge{0%,100%{box-shadow:0 4px 20px rgba(20,184,166,0.15);}50%{box-shadow:0 6px 30px rgba(20,184,166,0.34),0 0 0 1px rgba(20,184,166,0.18);}}
+.bobw-glow{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 18% 0%,rgba(20,184,166,0.22) 0%,transparent 58%);
+  animation:ssGlow 4.6s ease-in-out infinite;}
+.bobw-sheen{position:absolute;top:0;left:-65%;width:48%;height:100%;pointer-events:none;
+  background:linear-gradient(105deg,transparent,rgba(94,234,212,0.16),transparent);
+  transform:skewX(-18deg);animation:ssSheen 6.2s ease-in-out infinite;}
+.cat-card.bobw .cat-icon{animation:ssPulse 3.6s ease-in-out infinite;}
+@media (prefers-reduced-motion: reduce){
+  .cat-card.bobw,.bobw-glow,.bobw-sheen,.cat-card.bobw .cat-icon{animation:none;}
+  .bobw-sheen{display:none;}.bobw-glow{opacity:0.7;}
+}
+
+/* ── IE — flagship elite card (orange) ── */
+.cat-card.ie{border-top-width:3px;animation:ieEdge 4.2s ease-in-out infinite;}
+@keyframes ieEdge{0%,100%{box-shadow:0 4px 20px rgba(249,115,22,0.15);}50%{box-shadow:0 6px 30px rgba(249,115,22,0.34),0 0 0 1px rgba(249,115,22,0.18);}}
+.ie-glow{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 18% 0%,rgba(249,115,22,0.22) 0%,transparent 58%);
+  animation:ssGlow 4.6s ease-in-out infinite;}
+.ie-sheen{position:absolute;top:0;left:-65%;width:48%;height:100%;pointer-events:none;
+  background:linear-gradient(105deg,transparent,rgba(253,186,116,0.16),transparent);
+  transform:skewX(-18deg);animation:ssSheen 6.2s ease-in-out infinite;}
+.cat-card.ie .cat-icon{animation:ssPulse 3.6s ease-in-out infinite;}
+@media (prefers-reduced-motion: reduce){
+  .cat-card.ie,.ie-glow,.ie-sheen,.cat-card.ie .cat-icon{animation:none;}
+  .ie-sheen{display:none;}.ie-glow{opacity:0.7;}
 }
 
 /* Exercise library link */
@@ -518,8 +586,10 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
     </a>
 
     <a href="cat-pmc.html" class="cat-card pmc">
+      <span class="pmc-glow"></span>
+      <span class="pmc-sheen"></span>
       <span class="cat-icon">⚡</span>
-      <div class="cat-tag">Muscle Confusion · Advanced</div>
+      <div class="cat-tag pmc-flag">★ Flagship · Muscle Confusion · Advanced</div>
       <div class="cat-name">Project Muscle Confusion</div>
       <div class="cat-meta">Supersets, pyramids, drop sets, AMRAP, and tempo — 7 splits across 2 weeks each.</div>
       <div class="cat-count">7 Splits →</div>
@@ -527,8 +597,10 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
     </a>
 
     <a href="cat-mc.html" class="cat-card mc">
+      <span class="mc-glow"></span>
+      <span class="mc-sheen"></span>
       <span class="cat-icon">👑</span>
-      <div class="cat-tag">Personal · All Styles</div>
+      <div class="cat-tag mc-flag">★ Flagship · Personal · All Styles</div>
       <div class="cat-name">Mike Cross' Favorite Splits</div>
       <div class="cat-meta">5 personal splits across every major training style — 18 workouts total.</div>
       <div class="cat-count">5 Splits →</div>
@@ -536,8 +608,10 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
     </a>
 
     <a href="cat-bobw.html" class="cat-card bobw">
+      <span class="bobw-glow"></span>
+      <span class="bobw-sheen"></span>
       <span class="cat-icon">🌗</span>
-      <div class="cat-tag">Lifting + Cardio · New</div>
+      <div class="cat-tag bobw-flag">★ Flagship · Lifting + Cardio</div>
       <div class="cat-name">Best of Both Worlds</div>
       <div class="cat-meta">Heavy resistance balanced with conditioning — 3 on/1 off · 6 body parts · 4 lifts each (Pyramid/Heavy/Tempo/Volume) plus daily LISS &amp; HIIT cardio.</div>
       <div class="cat-count">6 Body Parts · 4 Weeks →</div>
@@ -545,8 +619,10 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
     </a>
 
     <a href="cat-ie.html" class="cat-card ie">
+      <span class="ie-glow"></span>
+      <span class="ie-sheen"></span>
       <span class="cat-icon">🔩</span>
-      <div class="cat-tag">PPL + Conditioning · Coming Soon</div>
+      <div class="cat-tag ie-flag">★ Flagship · PPL + Conditioning · Coming Soon</div>
       <div class="cat-name">Iron &amp; Engine</div>
       <div class="cat-meta">Push / Pull / Legs strength forged with a 3-day conditioning engine — 3 on/1 off · 4-week block.</div>
       <div class="cat-count">Coming Soon →</div>

@@ -52,10 +52,36 @@
   .program-header {
     margin-top: 20px;
     padding: 24px 20px;
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: linear-gradient(135deg,#1c1405,#0a0a0a);
+    border: 1px solid rgba(212,175,55,0.14);
     border-top: 3px solid var(--accent);
     border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .program-header > * { position: relative; z-index: 1; }
+  .program-header::before {
+    content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 15% 0%,rgba(212,175,55,0.22) 0%,transparent 60%);
+    animation: hdrGlow 4.6s ease-in-out infinite;
+  }
+  .program-header::after {
+    content: ''; position: absolute; top: 0; left: -70%; width: 45%; height: 100%; z-index: 0; pointer-events: none;
+    background: linear-gradient(105deg,transparent,rgba(253,240,138,0.12),transparent);
+    transform: skewX(-18deg); animation: hdrSheen 1.1s ease-out 0.15s both;
+  }
+  @keyframes hdrGlow { 0%,100%{opacity:0.55;} 50%{opacity:1;} }
+  @keyframes hdrSheen { 0%{left:-70%;} 100%{left:150%;} }
+  @media (prefers-reduced-motion: reduce) {
+    .program-header::before { animation: none; opacity: 0.7; }
+    .program-header::after { display: none; }
+  }
+  .flag-chip {
+    display: inline-block; margin-right: 6px; padding: 2px 9px; border-radius: 20px;
+    font-size: 10px; font-weight: 900; letter-spacing: 0.1em; color: #000;
+    background: linear-gradient(135deg,#d4af37,#a07c10);
+    border: 1px solid rgba(253,240,138,0.5); box-shadow: 0 0 14px rgba(212,175,55,0.4);
+    vertical-align: middle;
   }
 
   .program-eyebrow {
@@ -418,7 +444,7 @@
 
   <!-- ① Program Overview -->
   <div class="program-header">
-    <div class="program-eyebrow">⚡ Program · Personal Collection</div>
+    <div class="program-eyebrow"><span class="flag-chip">★ Flagship</span> 👑 Program · Personal Collection</div>
     <h1>Mike Cross'<br>5 Favorite Splits</h1>
     <p class="program-tagline">
       5 personal splits across every major training style — 7-day weeks, push/pull/legs, body part splits, and more. Each split has its own color, workout cards, and drill-ins.
