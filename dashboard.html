@@ -165,10 +165,11 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 
 /* ── PROGRAMS SCREEN (mirrors index.html) ── */
 .prog-screen-inner{max-width:680px;margin:0 auto;padding:0 18px;}
-.prog-header{text-align:center;margin-bottom:28px;padding-top:8px;}
-.prog-eyebrow{font-size:11px;font-weight:800;letter-spacing:0.25em;color:#a78bfa;text-transform:uppercase;margin-bottom:8px;}
+.prog-header{text-align:center;margin-bottom:24px;padding:16px 0 8px;position:relative;}
+.prog-header::after{content:'';display:block;width:36px;height:2px;background:linear-gradient(90deg,transparent,#f97316,transparent);margin:10px auto 0;border-radius:2px;opacity:0.7;}
+.prog-eyebrow{font-size:11px;font-weight:900;letter-spacing:0.3em;color:#f97316;text-transform:uppercase;margin-bottom:8px;}
 .prog-title{font-size:30px;font-weight:900;color:var(--text);letter-spacing:-0.02em;line-height:1.1;}
-.prog-sub{font-size:13px;color:var(--muted);margin-top:6px;}
+.prog-sub{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.55;}
 
 /* Reuse exact cat-card styles from index.html */
 .tier-divider{border:none;border-top:1px solid rgba(255,255,255,0.08);margin:6px 0 20px;}
@@ -407,29 +408,36 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 }
 .ps-confirm:active{opacity:0.85;}
 
-/* ── Conditioning tab (Phase 1) — accent colors applied inline by JS ── */
-.cond-sub{margin-bottom:26px;}
-.cond-sub-head{display:flex;align-items:center;gap:10px;margin:18px 0 12px;}
+/* ── Conditioning Corner — refined tactical aesthetic ── */
+.cond-sub{margin-bottom:28px;}
+.cond-sub-head{display:flex;align-items:center;gap:10px;margin:20px 0 14px;}
+.cond-sub-head-text{flex:1;min-width:0;}
+.cond-sub-head-rule{flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.08),transparent);margin-left:4px;}
 .cond-sub-icon{
-  width:34px;height:34px;border-radius:10px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;font-size:18px;
-  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+  width:36px;height:36px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:19px;
 }
-.cond-sub-name{font-size:16px;font-weight:900;color:var(--text);letter-spacing:-0.01em;}
-.cond-sub-blurb{font-size:12px;color:var(--muted);margin-top:2px;}
+.cond-sub-name{font-size:14px;font-weight:900;color:var(--text);letter-spacing:0.01em;text-transform:uppercase;letter-spacing:0.1em;}
+.cond-sub-blurb{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5;}
 .cond-card{
   display:block;text-decoration:none;color:inherit;position:relative;
-  border-radius:16px;padding:16px 18px;margin-bottom:11px;overflow:hidden;
+  border-radius:14px;padding:16px 18px 16px 20px;margin-bottom:10px;overflow:hidden;
   background:var(--surface);border:1px solid rgba(255,255,255,0.08);
-  transition:transform 0.15s;
+  border-left-width:3px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.25);
+  transition:transform 0.15s,box-shadow 0.15s;
 }
-.cond-card:active{transform:scale(0.985);}
-.cond-tag{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#E24B4A;margin-bottom:6px;}
-.cond-name{font-size:17px;font-weight:900;color:var(--text);margin-bottom:5px;padding-right:28px;}
-.cond-meta{font-size:12px;color:var(--muted);line-height:1.5;}
-.cond-stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
-.cond-stat{font-size:11px;font-weight:700;color:#cbd5e1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:4px 10px;}
-.cond-arrow{position:absolute;right:16px;top:16px;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);}
+.cond-card:active{transform:scale(0.985);box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+/* ── Conditioning toggle ── */
+.cond-toggle-wrap{display:flex;gap:4px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:13px;padding:4px;margin-bottom:20px;}
+.cond-toggle-btn{flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;letter-spacing:0.04em;transition:all 0.15s;background:transparent;color:#94a3b8;}
+.cond-toggle-btn.active{background:linear-gradient(135deg,#c2410c,#E24B4A);color:#fff;box-shadow:0 2px 10px rgba(226,75,74,0.35);}
+.cond-tag{font-size:10px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:7px;}
+.cond-name{font-size:18px;font-weight:900;color:var(--text);margin-bottom:5px;padding-right:36px;letter-spacing:-0.01em;line-height:1.2;}
+.cond-meta{font-size:12px;color:var(--muted);line-height:1.55;}
+.cond-stats{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;}
+.cond-stat{font-size:11px;font-weight:800;color:#e2e8f0;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);border-radius:20px;padding:4px 11px;letter-spacing:0.02em;}
+.cond-arrow{position:absolute;right:14px;top:14px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;}
 .cond-ex-grid{display:flex;flex-wrap:wrap;gap:7px;}
 .cond-ex-item{font-size:12px;font-weight:700;color:#cbd5e1;background:var(--surface);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:8px 12px;}
 
@@ -950,8 +958,8 @@ function renderCondLib(q){ var el=document.getElementById('condLib'); if(el&&win
 function renderConditioning(){
   var body=document.getElementById('condBody');
   if(!body||typeof CONDITIONING==='undefined'){return;}
-  var tgBtn=function(id,label){return '<button onclick="setCondSubTab(\''+id+'\')" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;letter-spacing:0.02em;'+(condSubTab===id?'background:#E24B4A;color:#fff;':'background:transparent;color:#94a3b8;')+'">'+label+'</button>';};
-  var toggle='<div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:13px;padding:4px;margin-bottom:18px;">'+tgBtn('workouts','🔥 Workouts')+tgBtn('exercises','🏃 Exercises')+'</div>';
+  var tgBtn=function(id,label){return '<button onclick="setCondSubTab(\''+id+'\')" class="cond-toggle-btn'+(condSubTab===id?' active':'')+'">'  +label+'</button>';};
+  var toggle='<div class="cond-toggle-wrap">'+tgBtn('workouts','🔥 Workouts')+tgBtn('exercises','🏃 Exercises')+'</div>';
 
   var html='';
   if(condSubTab==='workouts'){
@@ -960,12 +968,14 @@ function renderConditioning(){
       if(sub.type!=='routines') return;
       var col=sub.color||'#E24B4A';
       html+='<div class="cond-sub"><div class="cond-sub-head">'
-        +'<div class="cond-sub-icon" style="background:'+hexA(col,0.14)+';border-color:'+hexA(col,0.4)+'">'+(sub.icon||'🔥')+'</div>'
-        +'<div><div class="cond-sub-name">'+esc(sub.name)+'</div>'
-        +(sub.blurb?'<div class="cond-sub-blurb">'+esc(sub.blurb)+'</div>':'')+'</div></div>';
+        +'<div class="cond-sub-icon" style="background:'+hexA(col,0.16)+';border:1px solid '+hexA(col,0.45)+';box-shadow:0 0 14px '+hexA(col,0.18)+';">'+(sub.icon||'🔥')+'</div>'
+        +'<div class="cond-sub-head-text"><div class="cond-sub-name" style="color:'+col+'">'+esc(sub.name)+'</div>'
+        +(sub.blurb?'<div class="cond-sub-blurb">'+esc(sub.blurb)+'</div>':'')+'</div>'
+        +'<div class="cond-sub-head-rule"></div>'
+        +'</div>';
       (sub.routines||[]).forEach(function(r){
-        html+='<a href="'+r.href+'" class="cond-card" style="background:linear-gradient(135deg,'+hexA(col,0.12)+','+'var(--surface));border-color:'+hexA(col,0.33)+'">'
-            +'<div class="cond-arrow" style="background:'+hexA(col,0.2)+';border-color:'+hexA(col,0.33)+'">→</div>'
+        html+='<a href="'+r.href+'" class="cond-card" style="background:linear-gradient(135deg,'+hexA(col,0.10)+',var(--surface));border-color:'+hexA(col,0.28)+';border-left-color:'+col+';">'
+            +'<div class="cond-arrow" style="background:'+hexA(col,0.22)+';border:1px solid '+hexA(col,0.38)+';">→</div>'
             +(r.tag?'<div class="cond-tag" style="color:'+col+'">'+esc(r.tag)+'</div>':'')
             +'<div class="cond-name">'+esc(r.name)+'</div>'
             +(r.meta?'<div class="cond-meta">'+esc(r.meta)+'</div>':'')
