@@ -163,14 +163,13 @@ function render(){
 
   // Stats
   let totalSets = 0;
-  let totalPRs = 0;
-  logs.forEach(log=>{
-    if(log.sets) totalSets += log.sets.length;
-    if(log.prs) totalPRs += log.prs;
-  });
+  logs.forEach(log=>{ if(log.sets) totalSets += log.sets.length; });
+  // PR count — read from isolated O(1) index written by mc-summary.js at save time
+  let prIndex = {};
+  try{ prIndex = JSON.parse(localStorage.getItem('mc_prs')||'{}'); }catch(e){}
   document.getElementById('statTotal').textContent = logs.length;
   document.getElementById('statSets').textContent = totalSets;
-  document.getElementById('statPRs').textContent = totalPRs;
+  document.getElementById('statPRs').textContent = Object.keys(prIndex).length;
 
   const daily = dailyHtml();
 
@@ -180,7 +179,7 @@ function render(){
         <div class="empty-icon">📋</div>
         <div class="empty-title">No workouts logged yet</div>
         <div class="empty-sub">Complete a workout and tap "Finish Workout" to log it here. Your sets, weights, and PRs will be stored automatically.</div>
-        <a href="dashboard.html" class="empty-btn">← Back to Dashboard</a>
+        <a href="dashboard.html?tab=programs" class="empty-btn">→ Start a Workout</a>
       </div>`;
     return;
   }

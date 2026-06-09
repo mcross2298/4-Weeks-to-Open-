@@ -459,6 +459,25 @@
       else if(window.saveWorkout) window.saveWorkout();
       // Also persist via daily session store
       saveDaily(t, t.exTotal?Math.round((t.exDone/t.exTotal)*100):0);
+      // Update isolated PR index for O(1) lookups in workout-logs.html
+      (function(){
+        try{
+          var logs=JSON.parse(localStorage.getItem('mc_workout_log_v1')||'[]');
+          if(!logs.length)return;
+          var latest=logs[logs.length-1];
+          if(!latest.sets)return;
+          var prs=JSON.parse(localStorage.getItem('mc_prs')||'{}');
+          var today=new Date().toISOString().slice(0,10);
+          latest.sets.forEach(function(s){
+            if(!s.pr||!s.name)return;
+            var w=parseFloat(s.weight)||0;
+            var r=parseInt(s.reps)||0;
+            var ex=prs[s.name];
+            if(!ex||w>(ex.weight||0)){prs[s.name]={weight:w,reps:r,date:today};}
+          });
+          localStorage.setItem('mc_prs',JSON.stringify(prs));
+        }catch(e){}
+      })();
       // Stop the session timer
       if(_timerInterval){clearInterval(_timerInterval);_timerInterval=null;}
       // Navigate to dashboard
