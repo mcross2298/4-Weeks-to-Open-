@@ -533,7 +533,7 @@ function renderExercise(ex,dIdx,eIdx){
   // (.ex-card/.ex-body/.ex-name/[data-field=sets|name|rest]/.rest-timer) that
   // mc-setlog.js, mc-card-actions.js, mc-summary.js and stndr-checkoff.js use.
   const grouped=ex.tag==="SUPERSET"||ex.tag==="TRI-SET";
-  const ssCls=grouped?" is-ss":(ex.tag==="CLUSTER"?" is-cluster":"");
+  const ssCls=ex.tag==="TRI-SET"?" is-tri":(ex.tag==="SUPERSET"?" is-ss":(ex.tag==="CLUSTER"?" is-cluster":""));
   const legsArr=String(ex.sets||"—").split("/").map(s=>s.trim());
   const repsHtml=legsArr.map((part,pi)=>{
     const reps=part.split(",").map(r=>r.trim());
