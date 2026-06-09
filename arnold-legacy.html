@@ -286,14 +286,24 @@ const DATA = {
         {name:"Barbell Concentration Curl × Seated Double-Arm DB Curls",sets:"12, 12, 10 / 10, 10, 8",rest:"60 sec after superset",tempo:null,tag:"SUPERSET"},
       ]},
       {type:"training",label:"Day 3",session:"Legs",color:"#10b981",icon:"🦵",exercises:[
-        {name:"Leg Extensions × Lying Leg Curl (Neutral / Plantarflexed)",sets:"12, 12, 10 / 10, 10, 8",rest:"10 sec between · 60 sec after",tempo:null,tag:"SUPERSET"},
-        {name:"Barbell Back Squat",sets:"8, 8, 5, 3",rest:"90 sec",tempo:null,tag:null},
-        {name:"Leg Press Wide Stance",sets:"15, 12, 10, 6, 4",rest:"90, 90, 15, 15, 90 sec",tempo:null,tag:null},
-        {name:"DB Bulgarian Split Squat",sets:"12, 12, 10, AMRAP",rest:"60, 60, 0, 60 sec",tempo:null,tag:null},
+        {name:"Quad Extension × Lying Leg Curl",sets:"12, 12, 10 / 10, 10, 8",rest:"10 sec between · 60 sec after",tempo:null,tag:"SUPERSET"},
+        {name:"Barbell Squat",sets:"8, 8, 5, 3",rest:"90 sec",tempo:null,tag:null},
+        {name:"Leg Press (High & Wide)",sets:"15, 12, 10, 3× Cluster 8-6-4 reps",rest:"90 sec / 15 b/t clusters",tempo:null,tag:"CLUSTER"},
+        {name:"DB Bulgarian Split Squat",sets:"12, 12, 12, 10, Drop AMRAP",rest:"60 sec",tempo:null,tag:null},
         {name:"Hyperextensions",sets:"15, 15, 12",rest:"60 sec",tempo:null,tag:null},
         {name:"Barbell Walking Lunges",sets:"10, 10, 8",rest:"60 sec",tempo:null,tag:null},
       ]},
       {type:"rest",label:"Day 4"},
+    ]},
+    { id:"w2", label:"Week 2", days:[
+      {type:"training",label:"Day 1",session:"Chest & Back",color:"#ef4444",icon:"🏋️",exercises:[
+        {name:"T-Bar Rows",sets:"12, 12, 10, 8, 2× Drop AMRAP",rest:"90 sec / 10 b/t drops",tempo:null,tag:null},
+        {name:"Flat DB Bench",sets:"10, 10, 8, 2× Cluster 8 reps",rest:"90 sec / 15 b/t clusters",tempo:null,tag:"CLUSTER"},
+        {name:"DB Floor Press",sets:"12, 12, 10, 8",rest:"90 sec",tempo:null,tag:null},
+        {name:"Incline × Decline Cable Fly × Pushups",sets:"15, 12, 10 / 12, 12, 10 / AMRAP",rest:"60 sec after tri-set",tempo:null,tag:"TRI-SET"},
+        {name:"Incline DB Rows",sets:"10, 10, 3× Cluster 8-6-6 reps",rest:"60 sec / 15 b/t clusters",tempo:null,tag:"CLUSTER"},
+        {name:"Underhand Lat Pulldown",sets:"12, 12, 10, 2× Drop AMRAP",rest:"60 sec / 10 b/t drops",tempo:null,tag:null},
+      ]},
     ]},
   ]
 };
@@ -331,7 +341,7 @@ function renderExercise(ex,dIdx,eIdx){
   const legsArr=String(ex.sets||"—").split("/").map(s=>s.trim());
   const repsHtml=legsArr.map((part,pi)=>{
     const reps=part.split(",").map(r=>r.trim());
-    const legTag=legsArr.length>1?`<span class="a-legtag">${pi===0?"A":"B"}</span>`:"";
+    const legTag=legsArr.length>1?`<span class="a-legtag">${["A","B","C","D"][pi]||"B"}</span>`:"";
     const chips=reps.map((rep,ri)=>{
       const special=rep.toUpperCase().includes("AMRAP")||rep.includes("Drop")||rep.includes("×");
       const cls=special?"a-rep special":(ri===0?"a-rep live":"a-rep");
