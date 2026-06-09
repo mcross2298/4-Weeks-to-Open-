@@ -164,6 +164,61 @@
 .ccc-dropdown-text{flex:1;}
 .ccc-dropdown-chev{color:#fb923c;font-size:14px;flex-shrink:0;}
 .ccc-sub{font-size:11px;color:#94a3b8;line-height:1.5;margin-top:8px;}
+
+/* ════════════════════════════════════════════════════════════════════
+   ELITE WORKOUT VIEW — crimson identity + premium gold accents
+   Scoped to #view-workout so global base.css and other programs stay
+   untouched (mirrors the .ex-card.a-card / .ss-card.a-ss STNDR precedent).
+   ════════════════════════════════════════════════════════════════════ */
+/* Animated flagship header — continuity with the dashboard card/hero */
+#view-workout .workout-view-header{position:relative;overflow:hidden;}
+#view-workout .workout-view-header > *{position:relative;z-index:1;}
+#view-workout .workout-view-header::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at 15% 0%,rgba(225,29,72,0.22) 0%,transparent 60%);
+  animation:hdrGlow 4.6s ease-in-out infinite;}
+/* gold premium hairline along the header base */
+#view-workout .workout-view-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;z-index:1;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(212,175,55,0.6),transparent);}
+
+/* Single exercise cards — premium gradient + gold→crimson edge bar */
+#view-workout .ex-card{
+  background:linear-gradient(180deg,#140609,#0c0406);
+  border-color:rgba(225,29,72,0.22);
+  box-shadow:0 8px 26px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05);}
+#view-workout .ex-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;z-index:1;pointer-events:none;
+  background:linear-gradient(180deg,#d4af37,#e11d48 55%,rgba(225,29,72,0.4));
+  box-shadow:0 0 14px rgba(212,175,55,0.25);}
+#view-workout .ex-card.checked::before{opacity:0.3;}
+#view-workout .ex-row{padding-left:16px;}
+
+/* Superset cards — retheme purple → crimson, premium gold edge + star */
+#view-workout .ss-card{position:relative;border-color:rgba(225,29,72,0.3);
+  background:linear-gradient(180deg,#150609,#0c0406);box-shadow:0 8px 26px rgba(0,0,0,0.4);}
+#view-workout .ss-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;z-index:2;pointer-events:none;
+  background:linear-gradient(180deg,#d4af37,#e11d48 55%,rgba(225,29,72,0.4));
+  box-shadow:0 0 14px rgba(212,175,55,0.3);}
+#view-workout .ss-header{background:linear-gradient(135deg,rgba(225,29,72,0.18),rgba(225,29,72,0.05));
+  border-bottom:1px solid rgba(225,29,72,0.18);padding-left:18px;}
+#view-workout .ss-label{color:#fda4af;}
+#view-workout .ss-label::before{content:'★ ';color:#d4af37;}
+#view-workout .ss-ex{padding-left:18px;}
+#view-workout .ss-ex:not(:last-child){border-bottom-color:rgba(225,29,72,0.12);}
+#view-workout .ss-num{background:rgba(225,29,72,0.18);color:#fb7185;border-color:rgba(225,29,72,0.3);}
+#view-workout .ss-divider{background:rgba(225,29,72,0.07);}
+#view-workout .ss-x{color:#fb7185;letter-spacing:0.16em;}
+
+/* Finisher / AMRAP cards — epic premium gold burnout glow */
+#view-workout .ex-card.is-finisher{border-color:rgba(212,175,55,0.4);
+  background:linear-gradient(180deg,#1a1206,#0c0406);animation:finisherGlow 3.4s ease-in-out infinite;}
+#view-workout .ex-card.is-finisher::before{
+  background:linear-gradient(180deg,#f6d365,#d4af37 50%,#e11d48);box-shadow:0 0 18px rgba(212,175,55,0.5);}
+@keyframes finisherGlow{
+  0%,100%{box-shadow:0 8px 26px rgba(0,0,0,0.4),0 0 0 1px rgba(212,175,55,0.18);}
+  50%{box-shadow:0 10px 32px rgba(0,0,0,0.45),0 0 22px rgba(212,175,55,0.3),0 0 0 1px rgba(212,175,55,0.35);}}
+
+@media (prefers-reduced-motion: reduce){
+  #view-workout .workout-view-header::before{animation:none;opacity:0.7;}
+  #view-workout .ex-card.is-finisher{animation:none;}}
 </style>
 </head>
 <body>
@@ -900,7 +955,9 @@ function tempoChip(t){ return t ? `<span class="ex-tempo">⏱ ${t}</span>` : '';
 function renderSingle(ex, wk){
   const id=`${wk}-s-${ex.num}`, ck=checkState[id]?'checked':'';
   const rest=ex.rest||'90 sec';
-  return `<div class="ex-card ${ck}" data-id="${id}" data-type="single">
+  // Finisher/AMRAP cards earn the premium gold burnout treatment
+  const fin=(ex.badges||[]).includes('tb-finisher')?' is-finisher':'';
+  return `<div class="ex-card ${ck}${fin}" data-id="${id}" data-type="single">
     <div class="ex-row"><div class="ex-num">${ex.num}</div>
     <div class="ex-content"><div class="ex-name">${ex.name}</div>
     <div class="ex-tags"><span class="ex-sets">${ex.sets}</span>${tempoChip(ex.tempo)}${badges(ex.badges)}</div>
