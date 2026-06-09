@@ -225,32 +225,64 @@ function badges(arr){
     'tb-finisher':'🏁 Finisher','tb-superset':'⚡ Superset'};
   return arr.map(function(b){return '<span class="type-badge '+b+'">'+LBL[b]+'</span>';}).join('');
 }
+function aReps(setsStr){
+  var legs=String(setsStr==null?'—':setsStr).split('/').map(function(s){return s.trim();});
+  return legs.map(function(part,pi){
+    var reps=part.split(',').map(function(r){return r.trim();});
+    var chips;
+    if(reps.length>1 && reps.every(function(r){return r===reps[0];})){
+      var rep=reps[0], sp=/amrap/i.test(rep)||/drop/i.test(rep)||rep.indexOf('×')>=0;
+      chips='<span class="'+(sp?'a-rep special':'a-rep live')+'">'+reps.length+'× '+rep+'</span>';
+    } else {
+      chips=reps.map(function(rep,ri){
+        var sp=/amrap/i.test(rep)||/drop/i.test(rep);
+        var cls=sp?'a-rep special':(ri===0?'a-rep live':'a-rep');
+        var sep=ri<reps.length-1?'<span class="a-sep">·</span>':'';
+        return '<span class="'+cls+'">'+rep+'</span>'+sep;
+      }).join('');
+    }
+    var lt=legs.length>1?'<span class="a-legtag">'+(pi===0?'A':'B')+'</span>':'';
+    return '<div class="a-leg">'+lt+chips+'</div>';
+  }).join('');
+}
 function renderSingle(ex,wk){
-  var id=wk+'-s-'+ex.num;var ck=checkState[id]?'checked':'';
-  return '<div class="ex-card '+ck+'" data-id="'+id+'" data-type="single">'+
-    '<div class="ex-row"><div class="ex-num">'+ex.num+'</div>'+
-    '<div class="ex-content"><div class="ex-name">'+ex.name+'</div>'+
-    '<div class="ex-tags"><span class="ex-sets">'+ex.sets+'</span>'+badges(ex.badges)+'</div>'+
-    '<div class="ex-rest">'+makeRestTimer(ex.rest||'60 sec',ex.name)+'</div>'+
-    (ex.note?'<div class="ex-note">'+ex.note+'</div>':'')+
-    '</div></div></div>';
+  var id=wk+'-s-'+ex.num; var ck=checkState[id]?'checked':'';
+  var rest=ex.rest||'60 sec';
+  var bh=badges(ex.badges)+(ex.tempo?'<span class="a-pill tempo">⏱ '+ex.tempo+'</span>':'');
+  return '<div class="ex-card a-card '+ck+'" data-id="'+id+'" data-type="single">'+
+    '<div class="ex-body">'+
+    '<div class="a-top"><div class="a-idx">'+ex.num+'</div>'+
+    '<div class="a-head"><div class="ex-name a-name">'+ex.name+'</div>'+
+    (bh?'<div class="a-badges">'+bh+'</div>':'')+'</div></div>'+
+    '<div class="a-reps">'+aReps(ex.sets)+'</div>'+
+    '<div class="a-strip"><div class="a-cell"><span class="k">Sets</span><span class="v"><span data-field="sets">'+ex.sets+'</span></span></div>'+
+    '<div class="a-cell"><span class="k">Rest</span><span class="v">'+rest+'</span></div></div>'+
+    '<div class="a-timerbar">'+makeRestTimer(rest,ex.name)+'</div>'+
+    (ex.note?'<div class="a-notes">📝 '+ex.note+'</div>':'')+
+    '</div></div>';
 }
 function renderSS(ex,wk){
-  var ida=wk+'-ss-'+ex.num+'a',idb=wk+'-ss-'+ex.num+'b';
-  var cka=checkState[ida]?'checked':'',ckb=checkState[idb]?'checked':'';
-  return '<div class="ss-card">'+
+  var ida=wk+'-ss-'+ex.num+'a', idb=wk+'-ss-'+ex.num+'b';
+  var cka=checkState[ida]?'checked':'', ckb=checkState[idb]?'checked':'';
+  function leg(side,who,idv,ckv){
+    var tempo=who.tempo?'<div class="ex-note a-ss-tempo">⏱ '+who.tempo+'</div>':'';
+    var note=who.note?'<div class="ex-note">'+who.note+'</div>':'';
+    var rest=side==='B'?'<div class="ex-rest">'+makeRestTimer('120 sec',who.name)+'</div>':'';
+    var bh=badges(who.badges);
+    return '<div class="ss-ex '+ckv+'" data-id="'+idv+'" data-type="ssex">'+
+      '<div class="ss-num">'+side+'</div><div class="ss-content">'+
+      '<div class="ss-name">'+who.name+'</div>'+
+      '<div class="a-ss-reps">'+aReps(who.sets)+'</div>'+
+      '<span class="ex-sets a-ss-sets-hidden">'+who.sets+'</span>'+
+      (bh?'<div class="a-badges">'+bh+'</div>':'')+
+      tempo+note+rest+'</div></div>';
+  }
+  return '<div class="ss-card a-ss">'+
     '<div class="ss-header"><span class="ss-label">⚡ Superset #'+ex.num+'</span></div>'+
-    '<div class="ss-ex '+cka+'" data-id="'+ida+'" data-type="ssex">'+
-    '<div class="ss-num">A</div><div class="ss-content"><div class="ss-name">'+ex.a.name+'</div>'+
-    '<div class="ex-tags"><span class="ex-sets">'+ex.a.sets+'</span>'+badges(ex.a.badges)+'</div>'+
-    '<div class="ex-rest">'+makeRestTimer('120 sec',ex.a.name)+'</div>'+
-    (ex.a.note?'<div class="ex-note">'+ex.a.note+'</div>':'')+
-    '</div></div><div class="ss-divider"><span class="ss-x">× SUPERSET ×</span></div>'+
-    '<div class="ss-ex '+ckb+'" data-id="'+idb+'" data-type="ssex">'+
-    '<div class="ss-num">B</div><div class="ss-content"><div class="ss-name">'+ex.b.name+'</div>'+
-    '<div class="ex-tags"><span class="ex-sets">'+ex.b.sets+'</span>'+badges(ex.b.badges)+'</div>'+
-    (ex.b.note?'<div class="ex-note">'+ex.b.note+'</div>':'')+
-    '</div></div></div>';
+    leg('A',ex.a,ida,cka)+
+    '<div class="ss-divider"><span class="ss-x">× SUPERSET ×</span></div>'+
+    leg('B',ex.b,idb,ckb)+
+    '</div>';
 }
 function renderEx(ex,wk){return ex.type==='superset'?renderSS(ex,wk):renderSingle(ex,wk);}
 function attachEvents(){
@@ -735,6 +767,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="mc-nav.js"></script>
 <script src="mc-summary.js"></script>
 <script src="mc-setlog.js"></script>
+<script src="mc-rep-progress.js"></script>
 <script src="mc-superset-hop.js?v=46"></script>
 <script src="mc-sw-update.js?v=45"></script>
 </body>
