@@ -11,6 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="MC Training"/>
 <meta name="theme-color" content="#0a0a0a"/>
 <link rel="apple-touch-icon" href="icon-192.png"/>
+<noscript><meta http-equiv="refresh" content="0;url=dashboard.html"/></noscript>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
 :root{
@@ -182,7 +183,28 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   </div>
 </div>
 
-<div class="deck" id="deck"><!-- slides injected here --></div>
+<div class="deck" id="deck">
+<!-- Slide 1 pre-rendered for instant visibility without JS -->
+<div class="slide active" id="slide-0">
+  <div class="eyebrow">Welcome</div>
+  <h1 class="slide-title">Welcome to MC Training</h1>
+  <p class="slide-tagline">Your pocket gym — programs, set logging, PRs, and custom workouts, all offline-ready. This 3-minute tour gets you moving with zero guesswork.</p>
+  <div class="scene" style="--scene-c:rgba(212,175,55,0.3);--scene-glow:rgba(212,175,55,0.14)">
+    <div class="scene-glow"></div>
+    <div class="scene-glyph">💪</div>
+    <div class="scene-caption">7 programs · 550+ exercises · full set &amp; PR tracking</div>
+    <div class="scene-clip"><span class="dot"></span>Tour clip</div>
+    <div class="scene-play">▶</div>
+  </div>
+  <div class="narration"><p>Welcome in. Whether you came to lift heavy, chase a pump, or build your own session — everything lives one or two taps from your dashboard. Swipe or hit Next, and I'll walk you through it.</p></div>
+  <div class="steps-label">Step by step</div>
+  <ol class="steps">
+    <li class="step"><div class="step-n">1</div><div class="step-tx">Use <span class="tap">Next →</span> / <b>← Back</b> below, the dots, or swipe left/right.</div></li>
+    <li class="step"><div class="step-n">2</div><div class="step-tx">Tap any gold <span class="tap">Open it</span> card to jump straight into the real screen and try it live.</div></li>
+    <li class="step"><div class="step-n">3</div><div class="step-tx">Hit <b>Skip</b> anytime — you can relaunch this tour from the dashboard's <b>Quick Tour</b> tile whenever you want.</div></li>
+  </ol>
+</div>
+</div>
 
 <div class="dots" id="dots"></div>
 
@@ -435,7 +457,10 @@ function buildDots(){
 }
 
 function render(){
-  SLIDES.forEach(function(s,i){ deck.appendChild(buildSlide(s,i)); });
+  SLIDES.forEach(function(s,i){
+    if(i===0 && document.getElementById('slide-0')) return; // skip pre-rendered static slide
+    deck.appendChild(buildSlide(s,i));
+  });
   buildDots();
   update();
 }
