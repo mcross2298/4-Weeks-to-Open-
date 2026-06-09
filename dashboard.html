@@ -171,7 +171,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .prog-sub{font-size:13px;color:var(--muted);margin-top:6px;}
 
 /* Reuse exact cat-card styles from index.html */
-.cat-card{display:block;text-decoration:none;color:inherit;border-radius:18px;padding:18px 22px;margin-bottom:12px;position:relative;overflow:hidden;transition:box-shadow 0.15s;border:1px solid rgba(255,255,255,0.06);}
+.cat-card{display:block;text-decoration:none;color:inherit;border-radius:18px;padding:15px 18px;margin-bottom:11px;position:relative;overflow:hidden;transition:box-shadow 0.15s;border:1px solid rgba(255,255,255,0.06);}
 .cat-card:active{box-shadow:0 0 0 2px var(--gold),0 0 18px var(--gold-glow);opacity:0.9;}
 .cat-card.stndr{background:linear-gradient(135deg,#1e3a5f,#0f172a);box-shadow:0 4px 20px rgba(59,130,246,0.15);border-top:3px solid #1D9E75;}
 .cat-card.pump{background:linear-gradient(135deg,#831843,#1a0511);box-shadow:0 4px 20px rgba(236,72,153,0.15);border-top:3px solid #D85A30;}
@@ -192,7 +192,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .cat-card.bonus{background:linear-gradient(135deg,#0c4a6e,#04141f);box-shadow:0 4px 20px rgba(56,189,248,0.15);border-color:rgba(56,189,248,0.3);border-top:3px solid #38bdf8;}
 .cat-card.bonus .cat-tag{background:rgba(56,189,248,0.18);color:#7dd3fc;border:1px solid rgba(56,189,248,0.35);}
 .cat-card.bonus .cat-designer{color:#7dd3fc;}
-.cat-icon{position:absolute;right:22px;top:22px;font-size:36px;opacity:0.18;}
+.cat-icon{position:absolute;right:18px;top:15px;font-size:30px;opacity:0.18;}
 .cat-tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:0.14em;padding:3px 9px;border-radius:5px;text-transform:uppercase;margin-bottom:8px;}
 .cat-card.stndr .cat-tag{background:rgba(59,130,246,0.2);color:#93c5fd;border:1px solid rgba(59,130,246,0.35);}
 .cat-card.pump .cat-tag{background:rgba(236,72,153,0.2);color:#fbcfe8;border:1px solid rgba(236,72,153,0.35);}
@@ -201,9 +201,10 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .cat-card.psu .cat-tag{background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.3);}
 .cat-card.pmc .cat-tag{background:rgba(139,92,246,0.2);color:#c084fc;border:1px solid rgba(139,92,246,0.35);}
 .cat-card.mc .cat-tag{background:rgba(212,175,55,0.12);color:#d4af37;border:1px solid rgba(212,175,55,0.3);}
-.cat-name{font-size:24px;font-weight:900;color:#fff;margin-bottom:5px;letter-spacing:-0.01em;padding-right:48px;}
-.cat-meta{font-size:13px;color:#cbd5e1;line-height:1.5;padding-right:48px;}
-.cat-count{margin-top:8px;display:inline-block;font-size:11px;color:#94a3b8;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
+.cat-name{font-size:20px;font-weight:900;color:#fff;margin-bottom:4px;letter-spacing:-0.01em;padding-right:44px;}
+.cat-meta{font-size:13px;color:#cbd5e1;line-height:1.5;padding-right:44px;
+  display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.cat-count{margin-top:7px;display:inline-block;font-size:11px;color:#94a3b8;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
 .cat-designer{margin-top:7px;font-size:11px;font-weight:700;letter-spacing:0.03em;opacity:0.8;display:flex;align-items:center;gap:5px;}
 .cat-card.stndr .cat-designer{color:#93c5fd;}
 .cat-card.pump .cat-designer{color:#f9a8d4;}
@@ -282,7 +283,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .influencer-grid .cat-tag{font-size:10px;padding:2px 7px;margin-bottom:6px;letter-spacing:0.1em;}
 .influencer-grid .cat-name{font-size:17px;margin-bottom:3px;padding-right:34px;}
 .influencer-grid .cat-meta{font-size:12px;line-height:1.45;padding-right:8px;
-  display:-webkit-box;-webkit-line-clamp:1;line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;}
+  display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .influencer-grid .cat-count{margin-top:6px;}
 .influencer-grid .cat-designer{margin-top:5px;}
 
@@ -533,7 +534,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <span class="cat-icon">🏋️</span>
       <div class="cat-tag ss-flag">★ Flagship · Strength · Supersets</div>
       <div class="cat-name">Strength &amp; Supersets</div>
-      <div class="cat-meta">Heavy low-rep compounds paired with high-volume supersets and AMRAP finishers — 6-week cycle across 5 training days.</div>
+      <div class="cat-meta">Heavy low-rep compounds paired with high-volume supersets and AMRAP finishers for raw strength and size.</div>
       <div class="cat-count">6-Week Cycle · 5 Days →</div>
       <div class="cat-designer">✍️ Designed by Mike Cross</div>
     </a>
@@ -544,7 +545,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <span class="cat-icon">⚡</span>
       <div class="cat-tag pmc-flag">★ Flagship · Muscle Confusion · Advanced</div>
       <div class="cat-name">Project Muscle Confusion</div>
-      <div class="cat-meta">Supersets, pyramids, drop sets, AMRAP, and tempo — 7 splits across 2 weeks each.</div>
+      <div class="cat-meta">Constantly varied supersets, pyramids, drop sets, AMRAP and tempo work that never lets your muscles adapt.</div>
       <div class="cat-count">7 Splits →</div>
       <div class="cat-designer">✍️ Designed by Mike Cross</div>
     </a>
@@ -555,7 +556,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <span class="cat-icon">👑</span>
       <div class="cat-tag mc-flag">★ Flagship · Personal · All Styles</div>
       <div class="cat-name">Mike Cross' Favorite Splits</div>
-      <div class="cat-meta">5 personal splits across every major training style — 18 workouts total.</div>
+      <div class="cat-meta">Mike's five personal splits spanning every major training style — the way he actually trains.</div>
       <div class="cat-count">5 Splits →</div>
       <div class="cat-designer">✍️ Designed by Mike Cross</div>
     </a>
@@ -566,7 +567,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <span class="cat-icon">🌗</span>
       <div class="cat-tag bobw-flag">★ Flagship · Lifting + Cardio</div>
       <div class="cat-name">Best of Both Worlds</div>
-      <div class="cat-meta">Heavy resistance balanced with conditioning — 3 on/1 off · 6 body parts · 4 lifts each (Pyramid/Heavy/Tempo/Volume) plus daily LISS &amp; HIIT cardio.</div>
+      <div class="cat-meta">Heavy resistance balanced with daily LISS and HIIT cardio, so you build muscle without losing your engine.</div>
       <div class="cat-count">6 Body Parts · 4 Weeks →</div>
       <div class="cat-designer">✍️ Designed by Mike Cross</div>
     </a>
@@ -577,7 +578,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <span class="cat-icon">🔩</span>
       <div class="cat-tag ie-flag">★ Flagship · PPL + Conditioning · Coming Soon</div>
       <div class="cat-name">Iron &amp; Engine</div>
-      <div class="cat-meta">Push / Pull / Legs strength forged with a 3-day conditioning engine — 3 on/1 off · 4-week block.</div>
+      <div class="cat-meta">Push / Pull / Legs strength welded to a 3-day conditioning engine — built to make you strong and hard to kill.</div>
       <div class="cat-count">Coming Soon →</div>
       <div class="cat-designer">✍️ Designed by Mike Cross</div>
     </a>
@@ -590,7 +591,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <span class="cat-icon">🏋️</span>
       <div class="cat-tag">Bodybuilding · Strength</div>
       <div class="cat-name">STNDR</div>
-      <div class="cat-meta">Structured lifting programs with progressive overload, supersets, and periodization.</div>
+      <div class="cat-meta">CBUM-style structured lifting built on progressive overload, supersets and smart periodization.</div>
       <div class="cat-count">5 Programs →</div>
       <div class="cat-designer">✍️ Designed by CBUM</div>
     </a>
@@ -599,7 +600,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <span class="cat-icon">⚡</span>
       <div class="cat-tag">Pump · Isolation</div>
       <div class="cat-name">Daily Pump</div>
-      <div class="cat-meta">High-rep isolation work for maximum pump and muscle fullness.</div>
+      <div class="cat-meta">Fast, high-rep isolation work that chases maximum pump and muscle fullness.</div>
       <div class="cat-count">10 Workouts →</div>
       <div class="cat-designer">✍️ Designed by Julian Smith</div>
     </a>
@@ -609,7 +610,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <span class="gz-sheen"></span>
       <div class="cat-tag">Volume · Daily</div>
       <div class="cat-name">Daily Gainz</div>
-      <div class="cat-meta">Daily volume-builders for consistent muscle growth.</div>
+      <div class="cat-meta">Bradley Martyn volume training — daily builders engineered for steady, consistent size.</div>
       <div class="gz-live" id="gzLive" style="display:none;">
         <div class="gz-streak" id="gzStreak"></div>
         <div class="gz-resume" id="gzResume" style="display:none;"></div>
@@ -622,7 +623,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <span class="cat-icon">🏈</span>
       <div class="cat-tag">Strength · Athletic</div>
       <div class="cat-name">PSU Football</div>
-      <div class="cat-meta">Penn State strength and conditioning — built for athletic performance.</div>
+      <div class="cat-meta">Penn State's strength and conditioning system, built for real athletic performance.</div>
       <div class="cat-count">1 Program →</div>
       <div class="cat-designer">✍️ Penn State Strength Staff</div>
     </a>
