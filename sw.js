@@ -1,7 +1,7 @@
 // MC Training — Service Worker v2
 // Absolute URL cache for GitHub Pages
 
-const CACHE_NAME = 'mc-training-v62';
+const CACHE_NAME = 'mc-training-v63';
 const BASE = 'https://mcross2298.github.io/4-Weeks-to-Open-/';
 const CACHE_URLS = [
     'https://mcross2298.github.io/4-Weeks-to-Open-/',
@@ -142,6 +142,7 @@ const CACHE_URLS = [
     'https://mcross2298.github.io/4-Weeks-to-Open-/mc-summary.css',
     'https://mcross2298.github.io/4-Weeks-to-Open-/stndr-checkoff.js',
     'https://mcross2298.github.io/4-Weeks-to-Open-/gainz-dark.css',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/mc-rep-progress.js',
     'https://mcross2298.github.io/4-Weeks-to-Open-/mc-setlog.js',
     'https://mcross2298.github.io/4-Weeks-to-Open-/mc-setlog.css',
     'https://mcross2298.github.io/4-Weeks-to-Open-/mc-superset-hop.js?v=46',
