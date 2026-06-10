@@ -1,0 +1,245 @@
+/* ═══════════════════════════════════════════════════════════════════
+   conditioning-elite.css — Conditioning Corner · Premium dark override
+   --------------------------------------------------------------------
+   The conditioning pages ship their own inline <style> (a legacy light
+   theme: white cards, crimson ink). This stylesheet loads AFTER that
+   inline block + base.css and, scoped under `body.cond-elite`, restyles
+   the SAME markup into the premium dark grammar used by MC / PMC / S&S:
+     · deep gradient cards with a themed left glow-rail
+     · big tabular numbers with a live crimson glow
+     · dark inputs with visible placeholder text
+     · generous card padding and chip styling
+   Every selector is `.cond-elite`-scoped so it only touches these pages
+   and out-specifies the inline single-class rules it overrides.
+   Phase 1 covers the shared vocabulary + the-500 (rope / lunge / pushup).
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── THEME TOKENS (crimson-ember keeps the “challenge” identity) ───── */
+body.cond-elite{
+  --c-accent:      #f43f5e;
+  --c-accent-rgb:  244,63,94;
+  --c-ember:       #fb7185;
+  --c-card-top:    #140d10;
+  --c-card-bot:    #0b0709;
+  --c-surface:     #0f0f0f;
+  --c-text:        #e7e2e5;
+  --c-muted:       #9b8b90;
+  --c-line:        rgba(255,255,255,0.07);
+  background:#070506;
+}
+
+/* ── SHELL / HEADER ────────────────────────────────────────────────── */
+body.cond-elite .app{
+  background:radial-gradient(120% 60% at 50% 0%,rgba(var(--c-accent-rgb),0.10),transparent 60%),#070506;
+  min-height:100vh;
+}
+body.cond-elite .header{
+  background:linear-gradient(135deg,#2a0b12,#140607);
+  border-bottom:1px solid rgba(var(--c-accent-rgb),0.18);
+  padding:60px 20px 22px;
+}
+body.cond-elite .eyebrow{color:var(--c-ember);letter-spacing:0.24em;}
+body.cond-elite .title{color:#fff;}
+body.cond-elite .hint,
+body.cond-elite .counter-cap,
+body.cond-elite .step-target{color:var(--c-muted);}
+body.cond-elite .back-link{
+  color:var(--c-ember);
+  background:rgba(var(--c-accent-rgb),0.12);
+  border:1px solid rgba(var(--c-accent-rgb),0.4);
+}
+body.cond-elite .schedule{
+  background:rgba(var(--c-accent-rgb),0.16);
+  border:1px solid rgba(var(--c-accent-rgb),0.4);
+  color:var(--c-ember);
+}
+
+/* ── STEP CARD — premium dark surface + left glow-rail ─────────────── */
+body.cond-elite .step-card{
+  background:linear-gradient(180deg,var(--c-card-top),var(--c-card-bot));
+  border:1px solid rgba(var(--c-accent-rgb),0.18);
+  border-radius:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.04);
+  overflow:hidden;position:relative;margin-bottom:14px;
+}
+body.cond-elite .step-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;z-index:2;
+  background:linear-gradient(180deg,rgba(var(--c-accent-rgb),1),rgba(var(--c-accent-rgb),0.45));
+  box-shadow:0 0 16px rgba(var(--c-accent-rgb),0.5);
+}
+body.cond-elite .step-card.is-done{
+  border-color:rgba(52,211,153,0.3);
+  box-shadow:0 10px 30px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.04);
+}
+body.cond-elite .step-card.is-done::before{
+  background:linear-gradient(180deg,#34d399,#059669);
+  box-shadow:0 0 16px rgba(52,211,153,0.4);
+}
+body.cond-elite .step-number{
+  background:rgba(var(--c-accent-rgb),0.14);
+  color:var(--c-ember);
+  border:1px solid rgba(var(--c-accent-rgb),0.35);
+  box-shadow:none;
+}
+body.cond-elite .step-card.is-done .step-number{
+  background:#16a34a;color:#fff;border-color:transparent;
+}
+body.cond-elite .step-head{padding:16px 60px 16px 20px;}
+body.cond-elite .step-name{color:var(--c-text);}
+body.cond-elite .mini-badge{
+  background:rgba(var(--c-accent-rgb),0.14);
+  color:var(--c-ember);
+  border:1px solid rgba(var(--c-accent-rgb),0.32);
+  box-shadow:none;
+}
+body.cond-elite .mini-badge.green{
+  background:rgba(52,211,153,0.16);color:#34d399;
+  border-color:rgba(52,211,153,0.32);
+}
+body.cond-elite .chev{color:var(--c-muted);}
+body.cond-elite .step-body-inner{
+  border-top:1px solid var(--c-line);
+  padding:14px 20px 18px;
+}
+body.cond-elite .divider{color:var(--c-muted);}
+body.cond-elite .divider::before,
+body.cond-elite .divider::after{background:rgba(var(--c-accent-rgb),0.18);}
+
+/* ── BIG NUMBERS — live crimson glow (mirrors .a-rep.live) ─────────── */
+body.cond-elite .big-number{
+  background:rgba(var(--c-accent-rgb),0.12);
+  color:#fff;border:1px solid rgba(var(--c-accent-rgb),0.3);
+  box-shadow:none;
+}
+body.cond-elite .counter-num,
+body.cond-elite .target-big{
+  color:#fff;
+  text-shadow:0 0 12px rgba(var(--c-accent-rgb),0.55),0 0 24px rgba(var(--c-accent-rgb),0.4);
+}
+body.cond-elite .target-big b,
+body.cond-elite .math-line b,
+body.cond-elite .set-indicator b,
+body.cond-elite .next-up b{color:var(--c-ember);}
+body.cond-elite .counter-num:focus{color:#fff;}
+
+/* ── EMBEDDED ROPE TIMER ───────────────────────────────────────────── */
+body.cond-elite .rope-timer{
+  background:rgba(var(--c-accent-rgb),0.06);
+  border:1px solid rgba(var(--c-accent-rgb),0.22);
+  border-radius:14px;
+}
+body.cond-elite .rope-timer-label{color:var(--c-ember);}
+body.cond-elite .rope-timer-disp{
+  color:#fff;
+  text-shadow:0 0 14px rgba(var(--c-accent-rgb),0.5),0 0 28px rgba(var(--c-accent-rgb),0.35);
+}
+body.cond-elite .rope-timer-disp.running{color:var(--c-ember);}
+body.cond-elite .rope-timer-disp.done{color:#34d399;}
+body.cond-elite .rope-btn.reset{
+  background:rgba(var(--c-accent-rgb),0.14);color:var(--c-ember);
+}
+
+/* ── DARK INPUTS + VISIBLE PLACEHOLDER TEXT ────────────────────────── */
+body.cond-elite .entry-row,
+body.cond-elite .fin-row{
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--c-line);
+}
+body.cond-elite .entry-label,
+body.cond-elite .fin-title{color:var(--c-text);}
+body.cond-elite .fin-sub{color:var(--c-muted);}
+body.cond-elite .num-input,
+body.cond-elite .step-btn,
+body.cond-elite .big-step{
+  background:rgba(255,255,255,0.04);
+  border:1.5px solid rgba(var(--c-accent-rgb),0.28);
+  color:#fff;
+}
+body.cond-elite .num-input:focus{
+  border-color:var(--c-accent);background:rgba(var(--c-accent-rgb),0.08);
+}
+body.cond-elite .num-input::placeholder,
+body.cond-elite .counter-num::placeholder{color:var(--c-muted);opacity:1;}
+body.cond-elite .step-btn:active,
+body.cond-elite .big-step:active{background:rgba(var(--c-accent-rgb),0.16);}
+
+/* ── PACE CHIPS ────────────────────────────────────────────────────── */
+body.cond-elite .pace-chip{
+  background:rgba(255,255,255,0.04);
+  border:1.5px solid transparent;color:var(--c-muted);
+}
+body.cond-elite .pace-chip.active.under{background:rgba(245,158,11,0.16);border-color:rgba(245,158,11,0.5);color:#fbbf24;}
+body.cond-elite .pace-chip.active.on{background:rgba(52,211,153,0.16);border-color:rgba(52,211,153,0.5);color:#34d399;}
+body.cond-elite .pace-chip.active.over{background:rgba(var(--c-accent-rgb),0.16);border-color:rgba(var(--c-accent-rgb),0.5);color:var(--c-ember);}
+
+/* ── NOTES / MATH LINES ────────────────────────────────────────────── */
+body.cond-elite .note-box,
+body.cond-elite .knee-note{
+  background:rgba(var(--c-accent-rgb),0.07);
+  border-left:3px solid rgba(var(--c-accent-rgb),0.5);
+  color:var(--c-text);
+}
+body.cond-elite .note-box strong,
+body.cond-elite .knee-note strong{color:var(--c-ember);}
+body.cond-elite .math-line{
+  background:rgba(255,255,255,0.03);
+  border:1px dashed rgba(var(--c-accent-rgb),0.4);
+  color:var(--c-text);
+}
+
+/* ── BUTTONS ───────────────────────────────────────────────────────── */
+body.cond-elite .complete-btn{
+  background:linear-gradient(135deg,var(--c-accent),#9f1239);color:#fff;
+}
+body.cond-elite .complete-btn.done{background:linear-gradient(135deg,#16a34a,#15803d);}
+body.cond-elite .fail-toggle{
+  background:rgba(255,255,255,0.04);
+  border:1.5px solid rgba(var(--c-accent-rgb),0.3);color:var(--c-ember);
+}
+body.cond-elite .fail-toggle.on{background:rgba(var(--c-accent-rgb),0.16);border-color:var(--c-accent);}
+
+/* ── PUSHUP LADDER ─────────────────────────────────────────────────── */
+body.cond-elite .set-indicator,
+body.cond-elite .target-sub,
+body.cond-elite .ladder-prog-cap,
+body.cond-elite .next-up{color:var(--c-muted);}
+body.cond-elite .ladder-prog{background:rgba(255,255,255,0.06);}
+body.cond-elite .ladder-prog-fill{background:linear-gradient(90deg,var(--c-ember),var(--c-accent));}
+body.cond-elite .rest-morph{
+  background:rgba(var(--c-accent-rgb),0.1);
+  border:1px solid rgba(var(--c-accent-rgb),0.3);
+}
+body.cond-elite .rest-morph-fill{background:linear-gradient(135deg,var(--c-ember),var(--c-accent));}
+body.cond-elite .rest-morph-txt{color:#fff;text-shadow:0 0 10px rgba(var(--c-accent-rgb),0.5);}
+body.cond-elite .ladder-done-banner{
+  background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.35);
+}
+body.cond-elite .ladder-done-banner .ld-title{color:#34d399;}
+body.cond-elite .ladder-done-banner .ld-sub{color:#6ee7b7;}
+
+/* ── TOTAL CARD ────────────────────────────────────────────────────── */
+body.cond-elite .total-card{
+  background:linear-gradient(135deg,rgba(var(--c-accent-rgb),0.18),rgba(159,18,57,0.22));
+  border:1px solid rgba(var(--c-accent-rgb),0.3);
+  box-shadow:0 10px 30px rgba(0,0,0,0.45);
+}
+body.cond-elite .total-label{color:var(--c-ember);}
+body.cond-elite .total-value{color:#fff;}
+
+/* ── SUMMARY (already dark — refine accent only) ───────────────────── */
+body.cond-elite .sum-hd,
+body.cond-elite .sum-sub,
+body.cond-elite .sum-st,
+body.cond-elite .sum-tl{color:var(--c-ember);}
+body.cond-elite .sum-card{border-color:rgba(var(--c-accent-rgb),0.2);}
+
+/* ── LIGHT-FIX pages: neutralise the bright crimson app wash ────────── */
+body.cond-elite.cond-light-fix .app{
+  background:radial-gradient(120% 60% at 50% 0%,rgba(var(--c-accent-rgb),0.10),transparent 60%),#070506;
+}
+
+@media(prefers-reduced-motion:reduce){
+  body.cond-elite .counter-num,
+  body.cond-elite .rope-timer-disp,
+  body.cond-elite .target-big{text-shadow:none;}
+}
