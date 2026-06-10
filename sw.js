@@ -1,7 +1,7 @@
 // MC Training — Service Worker v2
 // Absolute URL cache for GitHub Pages
 
-const CACHE_NAME = 'mc-training-v64';
+const CACHE_NAME = 'mc-training-v65';
 const BASE = 'https://mcross2298.github.io/4-Weeks-to-Open-/';
 const CACHE_URLS = [
     'https://mcross2298.github.io/4-Weeks-to-Open-/',
@@ -153,9 +153,6 @@ const CACHE_URLS = [
     'https://mcross2298.github.io/4-Weeks-to-Open-/run-workout.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/exercise-catalog.js',
     'https://mcross2298.github.io/4-Weeks-to-Open-/pmc-s7-data.js',
-<<<<<<< HEAD
-    'https://mcross2298.github.io/4-Weeks-to-Open-/sw.js'
-=======
     'https://mcross2298.github.io/4-Weeks-to-Open-/sw.js',
     'https://mcross2298.github.io/4-Weeks-to-Open-/mc-session.js',
     'https://mcross2298.github.io/4-Weeks-to-Open-/program-overrides.js',
@@ -172,7 +169,6 @@ const CACHE_URLS = [
     'https://mcross2298.github.io/4-Weeks-to-Open-/arnold-legacy.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/legs-s3-pump.html',
     'https://mcross2298.github.io/4-Weeks-to-Open-/pmc-workout.html'
->>>>>>> dc19d55 (Program Manager: owner-only permanent exercise edits with publish-by-export)
 ];
 
 // Install — cache everything
