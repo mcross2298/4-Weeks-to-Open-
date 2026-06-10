@@ -470,7 +470,6 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <div class="cat-meta">Daily volume-builders for consistent muscle growth.</div>
       <div class="gz-live" id="gzLive" style="display:none;">
         <div class="gz-streak" id="gzStreak"></div>
-        <div class="gz-resume" id="gzResume" style="display:none;"></div>
       </div>
       <div class="cat-count">8 Programs →</div>
       <div class="cat-designer">✍️ Designed by Bradley Martyn</div>
@@ -574,37 +573,21 @@ const d=new Date();
 document.getElementById('todayDate').textContent=d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
 
 // ── DAILY GAINZ — dynamic live strip (Phase 2) ──
+// Resume now lives inside the program category pages (mc-resume.js); this strip
+// only shows the streak.
 (function populateGainz(){
   if(!window.MCActivity) return;
   var a=window.MCActivity.get();
-  var live=document.getElementById('gzLive'), streakEl=document.getElementById('gzStreak'), resumeEl=document.getElementById('gzResume');
-  if(!live||!streakEl||!resumeEl) return;
+  var live=document.getElementById('gzLive'), streakEl=document.getElementById('gzStreak');
+  if(!live||!streakEl) return;
 
-  var hasStreak=a.streak>0, hasResume=!!a.last;
-  if(!hasStreak && !hasResume){ live.style.display='none'; return; }
-  live.style.display='flex';
-
-  if(hasStreak){
+  if(a.streak>0){
+    live.style.display='flex';
     streakEl.innerHTML='<span class="gz-flame">🔥</span>'+a.streak+'-day streak'+
       (a.trainedToday?' <span class="gz-streak-sub">· trained today</span>':' <span class="gz-streak-sub">· keep it alive</span>');
   } else {
-    streakEl.innerHTML='<span class="gz-flame">✨</span><span class="gz-streak-sub">Start your streak — log a session</span>';
+    live.style.display='none';
   }
-
-  if(hasResume){
-    var L=a.last, prog=(L.total?Math.round((L.done/L.total)*100):0);
-    resumeEl.style.display='flex';
-    resumeEl.innerHTML='<span class="gz-resume-ico">↩️</span>'+
-      '<div class="gz-resume-body"><div class="gz-resume-lbl">Resume last workout</div>'+
-      '<div class="gz-resume-name"></div></div>'+
-      '<span class="gz-resume-prog">'+L.done+'/'+L.total+'</span>'+
-      '<span class="gz-resume-arrow">→</span>';
-    resumeEl.querySelector('.gz-resume-name').textContent=L.title; // textContent = no HTML injection
-    resumeEl.addEventListener('click',function(ev){
-      ev.preventDefault(); ev.stopPropagation();
-      location.href=L.pageId;
-    });
-  } else { resumeEl.style.display='none'; }
 })();
 
 // ── PROGRAMS DATA ──

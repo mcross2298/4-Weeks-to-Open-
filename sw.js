@@ -135,6 +135,7 @@ const CACHE_URLS = [
     'https://mcross2298.github.io/4-Weeks-to-Open-/mc-card-actions.css',
     'https://mcross2298.github.io/4-Weeks-to-Open-/conditioning-data.js',
     'https://mcross2298.github.io/4-Weeks-to-Open-/mc-live-tracker.js',
+    'https://mcross2298.github.io/4-Weeks-to-Open-/mc-resume.js',
     'https://mcross2298.github.io/4-Weeks-to-Open-/mc-nav.js',
     'https://mcross2298.github.io/4-Weeks-to-Open-/mc-nav.css',
     'https://mcross2298.github.io/4-Weeks-to-Open-/mc-summary.js',
