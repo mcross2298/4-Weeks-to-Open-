@@ -430,6 +430,19 @@
     injectStyles();
     attachLongPress();
     renderBar();
+    // Force the PM button visible in any already-built meatball menu
+    if (isActive()) {
+      var btn = document.querySelector('[data-act="pm"]');
+      if (btn) btn.style.display = '';
+    }
+  }
+
+  // Also hook setActive so the PM button appears the moment PM unlocks
+  var _origSetActive = setActive;
+  function setActive(on) {
+    _origSetActive(on);
+    var btn = document.querySelector('[data-act="pm"]');
+    if (btn) btn.style.display = on ? '' : 'none';
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
