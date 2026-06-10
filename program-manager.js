@@ -80,21 +80,20 @@
 
   // ---- long-press entry point ---------------------------------------------
   function attachLongPress() {
-    var target = document.querySelector('.topbar-title') || document.querySelector('h1');
-    if (!target) return;
-    // Triple-tap to activate (avoids all native long-press conflicts)
+    // 5 rapid taps anywhere in the top 80px of the screen triggers unlock.
+    // Using document avoids all element-targeting and competing-handler issues.
     var taps = 0, tapTimer = null;
-    function onTap() {
+    document.addEventListener('click', function (e) {
+      if (e.clientY > 80) return;
       taps++;
       clearTimeout(tapTimer);
-      if (taps >= 3) {
+      if (taps >= 5) {
         taps = 0;
         if (!isActive()) unlockFlow();
         return;
       }
-      tapTimer = setTimeout(function () { taps = 0; }, 600);
-    }
-    target.addEventListener('click', onTap);
+      tapTimer = setTimeout(function () { taps = 0; }, 800);
+    });
   }
 
   // ---- PM bar (visible only while unlocked) --------------------------------
