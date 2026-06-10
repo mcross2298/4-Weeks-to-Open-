@@ -119,7 +119,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   transition:border-top-color 0.3s,border-right-color 0.3s;
 }
 .hero-ring-num{font-size:17px;font-weight:900;color:var(--gold);line-height:1;}
-.hero-ring-lbl{font-size:8px;color:var(--muted2);font-weight:700;letter-spacing:0.08em;}
+.hero-ring-lbl{font-size:11px;color:var(--muted2);font-weight:700;letter-spacing:0.08em;}
 .hero-name{font-size:22px;font-weight:900;letter-spacing:-0.02em;color:var(--text);line-height:1.2;margin-bottom:6px;}
 .hero-desc{font-size:13px;color:var(--muted2);line-height:1.5;margin-bottom:14px;}
 .hero-phases{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:6px;}
@@ -171,7 +171,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .prog-sub{font-size:13px;color:var(--muted);margin-top:6px;}
 
 /* Reuse exact cat-card styles from index.html */
-.cat-card{display:block;text-decoration:none;color:inherit;border-radius:18px;padding:24px 22px;margin-bottom:14px;position:relative;overflow:hidden;transition:box-shadow 0.15s;border:1px solid rgba(255,255,255,0.06);}
+.cat-card{display:block;text-decoration:none;color:inherit;border-radius:18px;padding:15px 18px;margin-bottom:11px;position:relative;overflow:hidden;transition:box-shadow 0.15s;border:1px solid rgba(255,255,255,0.06);}
 .cat-card:active{box-shadow:0 0 0 2px var(--gold),0 0 18px var(--gold-glow);opacity:0.9;}
 .cat-card.stndr{background:linear-gradient(135deg,#1e3a5f,#0f172a);box-shadow:0 4px 20px rgba(59,130,246,0.15);border-top:3px solid #1D9E75;}
 .cat-card.pump{background:linear-gradient(135deg,#831843,#1a0511);box-shadow:0 4px 20px rgba(236,72,153,0.15);border-top:3px solid #D85A30;}
@@ -183,7 +183,16 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .cat-card.ss{background:linear-gradient(135deg,#2a0710,#0d0205);box-shadow:0 4px 20px rgba(225,29,72,0.15);border-color:rgba(225,29,72,0.3);border-top:3px solid #e11d48;}
 .cat-card.ss .cat-tag{background:rgba(225,29,72,0.2);color:#fb7185;border:1px solid rgba(225,29,72,0.35);}
 .cat-card.ss .cat-designer{color:#fb7185;}
-.cat-icon{position:absolute;right:22px;top:22px;font-size:36px;opacity:0.18;}
+.cat-card.bobw{background:linear-gradient(135deg,#04201c,#020b09);box-shadow:0 4px 20px rgba(20,184,166,0.15);border-color:rgba(20,184,166,0.3);border-top:3px solid #14b8a6;}
+.cat-card.bobw .cat-tag{background:rgba(20,184,166,0.18);color:#5eead4;border:1px solid rgba(20,184,166,0.35);}
+.cat-card.bobw .cat-designer{color:#5eead4;}
+.cat-card.ie{background:linear-gradient(135deg,#1a1206,#0a0a0a);box-shadow:0 4px 20px rgba(249,115,22,0.15);border-color:rgba(249,115,22,0.3);border-top:3px solid #f97316;}
+.cat-card.ie .cat-tag{background:rgba(249,115,22,0.18);color:#fdba74;border:1px solid rgba(249,115,22,0.35);}
+.cat-card.ie .cat-designer{color:#fdba74;}
+.cat-card.bonus{background:linear-gradient(135deg,#0c4a6e,#04141f);box-shadow:0 4px 20px rgba(56,189,248,0.15);border-color:rgba(56,189,248,0.3);border-top:3px solid #38bdf8;}
+.cat-card.bonus .cat-tag{background:rgba(56,189,248,0.18);color:#7dd3fc;border:1px solid rgba(56,189,248,0.35);}
+.cat-card.bonus .cat-designer{color:#7dd3fc;}
+.cat-icon{position:absolute;right:18px;top:15px;font-size:30px;opacity:0.18;}
 .cat-tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:0.14em;padding:3px 9px;border-radius:5px;text-transform:uppercase;margin-bottom:8px;}
 .cat-card.stndr .cat-tag{background:rgba(59,130,246,0.2);color:#93c5fd;border:1px solid rgba(59,130,246,0.35);}
 .cat-card.pump .cat-tag{background:rgba(236,72,153,0.2);color:#fbcfe8;border:1px solid rgba(236,72,153,0.35);}
@@ -192,9 +201,10 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .cat-card.psu .cat-tag{background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.3);}
 .cat-card.pmc .cat-tag{background:rgba(139,92,246,0.2);color:#c084fc;border:1px solid rgba(139,92,246,0.35);}
 .cat-card.mc .cat-tag{background:rgba(212,175,55,0.12);color:#d4af37;border:1px solid rgba(212,175,55,0.3);}
-.cat-name{font-size:24px;font-weight:900;color:#fff;margin-bottom:5px;letter-spacing:-0.01em;padding-right:48px;}
-.cat-meta{font-size:13px;color:#cbd5e1;line-height:1.5;padding-right:48px;}
-.cat-count{margin-top:8px;display:inline-block;font-size:11px;color:#94a3b8;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
+.cat-name{font-size:20px;font-weight:900;color:#fff;margin-bottom:4px;letter-spacing:-0.01em;padding-right:44px;}
+.cat-meta{font-size:13px;color:#cbd5e1;line-height:1.5;padding-right:44px;
+  display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.cat-count{margin-top:7px;display:inline-block;font-size:11px;color:#94a3b8;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
 .cat-designer{margin-top:7px;font-size:11px;font-weight:700;letter-spacing:0.03em;opacity:0.8;display:flex;align-items:center;gap:5px;}
 .cat-card.stndr .cat-designer{color:#93c5fd;}
 .cat-card.pump .cat-designer{color:#f9a8d4;}
@@ -228,6 +238,54 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .gz-resume-name{font-size:13px;font-weight:800;color:#f0fdf4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .gz-resume-prog{font-size:11px;font-weight:700;color:#a3e635;margin-left:auto;flex-shrink:0;}
 .gz-resume-arrow{color:#d9f99d;font-size:15px;flex-shrink:0;}
+
+/* ── Strength & Supersets — flagship elite card ── */
+.cat-card.ss{border-top-width:3px;animation:ssEdge 4.2s ease-in-out infinite;}
+@keyframes ssEdge{
+  0%,100%{box-shadow:0 4px 20px rgba(225,29,72,0.15);}
+  50%{box-shadow:0 6px 30px rgba(225,29,72,0.34),0 0 0 1px rgba(225,29,72,0.18);}
+}
+/* breathing ambient glow behind the content */
+.ss-glow{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 18% 0%,rgba(225,29,72,0.22) 0%,transparent 58%);
+  animation:ssGlow 4.6s ease-in-out infinite;}
+@keyframes ssGlow{0%,100%{opacity:0.55;}50%{opacity:1;}}
+/* diagonal crimson sheen sweep (slower & wider than Gainz for a luxe feel) */
+.ss-sheen{position:absolute;top:0;left:-65%;width:48%;height:100%;pointer-events:none;
+  background:linear-gradient(105deg,transparent,rgba(251,113,133,0.16),transparent);
+  transform:skewX(-18deg);animation:ssSheen 6.2s ease-in-out infinite;}
+@keyframes ssSheen{0%{left:-65%;}58%,100%{left:150%;}}
+/* the 🏋️ icon gently breathes — distinct timing from Gainz */
+.cat-card.ss .cat-icon{animation:ssPulse 3.6s ease-in-out infinite;}
+@keyframes ssPulse{0%,100%{opacity:0.18;transform:scale(1);}50%{opacity:0.4;transform:scale(1.08) translateY(-1px);}}
+/* flagship tag — headline framing */
+.cat-card.ss .cat-tag.ss-flag{background:rgba(225,29,72,0.22);color:#fda4af;
+  border:1px solid rgba(225,29,72,0.45);box-shadow:0 0 14px rgba(225,29,72,0.2);}
+@media (prefers-reduced-motion: reduce){
+  .cat-card.ss,.ss-glow,.ss-sheen,.cat-card.ss .cat-icon{animation:none;}
+  .ss-sheen{display:none;}
+  .ss-glow{opacity:0.7;}
+}
+
+/* ── Tier labels — frame Flagship as the headline, Influencer as secondary ── */
+.tier-label{display:flex;align-items:center;gap:10px;margin:0 0 12px;
+  font-size:11px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted2);}
+.tier-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.07);}
+.tier-label.flag{color:var(--gold);}
+.tier-label.influencer{margin-top:24px;}
+
+/* ── Influencer tier — compact cards. 1-col on phones (keeps a readable
+      one-line description), 2-col grid on wider screens to cut vertical space ── */
+.influencer-grid{display:grid;grid-template-columns:1fr;gap:10px;}
+@media (min-width:560px){.influencer-grid{grid-template-columns:1fr 1fr;}}
+.influencer-grid .cat-card{margin-bottom:0;padding:13px 16px;border-radius:14px;}
+.influencer-grid .cat-icon{font-size:26px;right:14px;top:13px;}
+.influencer-grid .cat-tag{font-size:10px;padding:2px 7px;margin-bottom:6px;letter-spacing:0.1em;}
+.influencer-grid .cat-name{font-size:17px;margin-bottom:3px;padding-right:34px;}
+.influencer-grid .cat-meta{font-size:12px;line-height:1.45;padding-right:8px;
+  display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.influencer-grid .cat-count{margin-top:6px;}
+.influencer-grid .cat-designer{margin-top:5px;}
 
 /* Exercise library link */
 .lib-link{display:flex;align-items:center;gap:12px;background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.22);border-radius:14px;padding:14px 16px;text-decoration:none;color:#e2e8f0;margin-bottom:20px;}
@@ -326,6 +384,44 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .cond-arrow{position:absolute;right:16px;top:16px;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);}
 .cond-ex-grid{display:flex;flex-wrap:wrap;gap:7px;}
 .cond-ex-item{font-size:12px;font-weight:700;color:#cbd5e1;background:var(--surface);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:8px 12px;}
+
+/* ── Custom Workouts section (Build Your Own) ── */
+.custom-section{margin-bottom:28px;}
+.custom-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.custom-section-title{display:flex;align-items:center;gap:10px;}
+.custom-section-icon{width:34px;height:34px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.25);}
+.custom-section-name{font-size:16px;font-weight:900;color:var(--text);letter-spacing:-0.01em;}
+.custom-section-sub{font-size:12px;color:var(--muted);margin-top:1px;}
+.custom-build-btn-sm{font-size:12px;font-weight:800;color:var(--gold);letter-spacing:0.02em;cursor:pointer;background:none;border:none;font-family:inherit;padding:0;}
+
+/* Empty state */
+.custom-empty{border-radius:16px;border:1.5px dashed rgba(212,175,55,0.2);padding:32px 20px;text-align:center;background:rgba(212,175,55,0.03);}
+.custom-empty-icon{font-size:28px;margin-bottom:10px;}
+.custom-empty-title{font-size:15px;font-weight:900;color:var(--text);margin-bottom:5px;}
+.custom-empty-sub{font-size:12px;color:var(--muted2);margin-bottom:18px;line-height:1.5;}
+.custom-build-btn{display:inline-block;padding:12px 24px;background:var(--gold);color:#000;border-radius:12px;font-size:13px;font-weight:900;letter-spacing:0.03em;cursor:pointer;text-decoration:none;}
+
+/* Saved workout cards */
+.custom-wk-card{
+  border-radius:16px;padding:16px;margin-bottom:10px;
+  background:linear-gradient(135deg,rgba(212,175,55,0.08),var(--surface));
+  border:1px solid rgba(212,175,55,0.2);
+  transition:transform 0.15s;
+}
+.custom-wk-card:active{transform:scale(0.985);}
+.custom-wk-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
+.custom-wk-name{font-size:17px;font-weight:900;color:var(--text);letter-spacing:-0.01em;}
+.custom-wk-badge{font-size:10px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:rgba(212,175,55,0.12);color:var(--gold);border:1px solid rgba(212,175,55,0.3);}
+.custom-wk-meta{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5;}
+.custom-wk-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.custom-wk-pill{font-size:11px;font-weight:700;color:#cbd5e1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:3px 9px;}
+.custom-wk-actions{display:flex;gap:8px;}
+.custom-wk-run{flex:1;padding:11px;border-radius:11px;background:var(--gold);border:none;color:#000;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.02em;}
+.custom-wk-run:active{opacity:0.85;}
+.custom-wk-edit{padding:11px 16px;border-radius:11px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;}
+.custom-wk-edit:active{border-color:var(--gold);color:var(--gold);}
+.custom-wk-del{padding:11px 14px;border-radius:11px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.05);color:#f87171;font-size:13px;cursor:pointer;font-family:inherit;}
+.custom-wk-del:active{background:rgba(239,68,68,0.15);}
 </style>
 </head>
 <body>
@@ -360,7 +456,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
     <div class="hero-empty" id="heroEmpty" onclick="openProgSelect()">
       <div class="hero-empty-icon">⚡</div>
       <div class="hero-empty-title">No active program set</div>
-      <div class="hero-empty-sub">Pin a program to track your training</div>
+      <div class="hero-empty-sub">Open any program below and tap 'Set as Active' to pin it here.</div>
       <div class="hero-empty-btn">Choose Program</div>
     </div>
 
@@ -392,7 +488,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <a href="exercise-library.html" class="tool-card gold">
         <div class="tool-icon-wrap">📚</div>
         <div class="tool-name">Exercise Library</div>
-        <div class="tool-sub">450+ exercises by muscle group</div>
+        <div class="tool-sub" id="libCountDash">539 exercises by muscle group</div>
       </a>
       <a href="workout-logs.html" class="tool-card">
         <div class="tool-icon-wrap">📊</div>
@@ -411,7 +507,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       </a>
       <a href="quick-tour.html" class="tool-card gold" id="quickTourCard" style="grid-column:1 / -1;">
         <div class="tool-icon-wrap">🎬</div>
-        <div class="tool-name">Quick Tour <span id="tourBadge" style="display:none;font-size:10px;font-weight:900;letter-spacing:0.08em;color:#000;background:var(--gold);border-radius:5px;padding:1px 6px;margin-left:4px;vertical-align:middle;">NEW</span></div>
+        <div class="tool-name">Quick Tour <span id="tourBadge" style="display:none;font-size:11px;font-weight:900;letter-spacing:0.08em;color:#000;background:var(--gold);border-radius:5px;padding:1px 6px;margin-left:4px;vertical-align:middle;">NEW</span></div>
         <div class="tool-sub">3-min guided walkthrough of the whole app</div>
       </a>
     </div>
@@ -426,41 +522,88 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   <div class="topbar">
     <div>
       <div class="topbar-title">Programs</div>
-      <div class="topbar-sub">7 training programs</div>
+      <div class="topbar-sub">9 training programs</div>
     </div>
   </div>
   <div class="prog-screen-inner">
-    <div class="prog-header">
-      <div class="prog-eyebrow">Training Categories</div>
-      <h1 class="prog-title">Choose Your Path</h1>
-      <div class="prog-sub">Pick a category to see all programs</div>
-    </div>
 
-    <a href="exercise-library.html" class="lib-link">
-      <div style="font-size:22px;">📚</div>
-      <div>
-        <div class="lib-name">Exercise Library</div>
-        <div class="lib-sub" id="libCount">317 exercises · search by muscle group · save replacements</div>
-      </div>
-      <div style="color:#475569;font-size:16px;margin-left:auto;">→</div>
-    </a>
+    <div class="tier-label flag">★ Flagship Programs</div>
 
     <a href="cat-strength.html" class="cat-card ss">
+      <span class="ss-glow"></span>
+      <span class="ss-sheen"></span>
       <span class="cat-icon">🏋️</span>
-      <div class="cat-tag">Strength · Supersets · New</div>
+      <div class="cat-tag ss-flag">★ Flagship · Strength · Supersets</div>
       <div class="cat-name">Strength &amp; Supersets</div>
-      <div class="cat-meta">Heavy low-rep compounds paired with high-volume supersets and AMRAP finishers — 6-week cycle across 5 training days.</div>
+      <div class="cat-meta">Heavy low-rep compounds paired with high-volume supersets and AMRAP finishers for raw strength and size.</div>
       <div class="cat-count">6-Week Cycle · 5 Days →</div>
       <div class="cat-designer">✍️ Designed by Mike Cross</div>
     </a>
+
+    <a href="cat-pmc.html" class="cat-card pmc">
+      <span class="pmc-glow"></span>
+      <span class="pmc-sheen"></span>
+      <span class="cat-icon">⚡</span>
+      <div class="cat-tag pmc-flag">★ Flagship · Muscle Confusion · Advanced</div>
+      <div class="cat-name">Project Muscle Confusion</div>
+      <div class="cat-meta">Constantly varied supersets, pyramids, drop sets, AMRAP and tempo work that never lets your muscles adapt.</div>
+      <div class="cat-count">7 Splits →</div>
+      <div class="cat-designer">✍️ Designed by Mike Cross</div>
+    </a>
+
+    <a href="cat-mc.html" class="cat-card mc">
+      <span class="mc-glow"></span>
+      <span class="mc-sheen"></span>
+      <span class="cat-icon">👑</span>
+      <div class="cat-tag mc-flag">★ Flagship · Personal · All Styles</div>
+      <div class="cat-name">Mike Cross' Favorite Splits</div>
+      <div class="cat-meta">Mike's five personal splits spanning every major training style — the way he actually trains.</div>
+      <div class="cat-count">5 Splits →</div>
+      <div class="cat-designer">✍️ Designed by Mike Cross</div>
+    </a>
+
+    <a href="cat-bobw.html" class="cat-card bobw">
+      <span class="bobw-glow"></span>
+      <span class="bobw-sheen"></span>
+      <span class="cat-icon">🌗</span>
+      <div class="cat-tag bobw-flag">★ Flagship · Lifting + Cardio</div>
+      <div class="cat-name">Best of Both Worlds</div>
+      <div class="cat-meta">Heavy resistance balanced with daily LISS and HIIT cardio, so you build muscle without losing your engine.</div>
+      <div class="cat-count">6 Body Parts · 4 Weeks →</div>
+      <div class="cat-designer">✍️ Designed by Mike Cross</div>
+    </a>
+
+    <a href="cat-ie.html" class="cat-card ie">
+      <span class="ie-glow"></span>
+      <span class="ie-sheen"></span>
+      <span class="cat-icon">🔩</span>
+      <div class="cat-tag ie-flag">★ Flagship · PPL + Conditioning · Coming Soon</div>
+      <div class="cat-name">Iron &amp; Engine</div>
+      <div class="cat-meta">Push / Pull / Legs strength welded to a 3-day conditioning engine — built to make you strong and hard to kill.</div>
+      <div class="cat-count">Coming Soon →</div>
+      <div class="cat-designer">✍️ Designed by Mike Cross</div>
+    </a>
+
+    <div class="tier-label influencer">Influencer Programs</div>
+
+    <div class="influencer-grid">
 
     <a href="cat-stndr.html" class="cat-card stndr">
       <span class="cat-icon">🏋️</span>
       <div class="cat-tag">Bodybuilding · Strength</div>
       <div class="cat-name">STNDR</div>
-      <div class="cat-meta">Structured lifting programs with progressive overload, supersets, and periodization.</div>
-      <div class="cat-count">4 Programs →</div>
+      <div class="cat-meta">CBUM-style structured lifting built on progressive overload, supersets and smart periodization.</div>
+      <div class="cat-count">5 Programs →</div>
       <div class="cat-designer">✍️ Designed by CBUM</div>
+    </a>
+
+    <a href="cat-pump-new4.html" class="cat-card pump">
+      <span class="cat-icon">⚡</span>
+      <div class="cat-tag">Pump · Isolation</div>
+      <div class="cat-name">Daily Pump</div>
+      <div class="cat-meta">Fast, high-rep isolation work that chases maximum pump and muscle fullness.</div>
+      <div class="cat-count">10 Workouts →</div>
+      <div class="cat-designer">✍️ Designed by Julian Smith</div>
     </a>
 
     <a href="cat-gainz.html" class="cat-card gainz" id="gainzCard">
@@ -468,7 +611,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <span class="gz-sheen"></span>
       <div class="cat-tag">Volume · Daily</div>
       <div class="cat-name">Daily Gainz</div>
-      <div class="cat-meta">Daily volume-builders for consistent muscle growth.</div>
+      <div class="cat-meta">Bradley Martyn volume training — daily builders engineered for steady, consistent size.</div>
       <div class="gz-live" id="gzLive" style="display:none;">
         <div class="gz-streak" id="gzStreak"></div>
       </div>
@@ -476,41 +619,16 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <div class="cat-designer">✍️ Designed by Bradley Martyn</div>
     </a>
 
-    <a href="cat-pump-new4.html" class="cat-card pump">
-      <span class="cat-icon">⚡</span>
-      <div class="cat-tag">Pump · Isolation</div>
-      <div class="cat-name">Daily Pump</div>
-      <div class="cat-meta">High-rep isolation work for maximum pump and muscle fullness.</div>
-      <div class="cat-count">10 Workouts →</div>
-      <div class="cat-designer">✍️ Designed by Julian Smith</div>
-    </a>
-
     <a href="cat-psu.html" class="cat-card psu">
       <span class="cat-icon">🏈</span>
       <div class="cat-tag">Strength · Athletic</div>
       <div class="cat-name">PSU Football</div>
-      <div class="cat-meta">Penn State strength and conditioning — built for athletic performance.</div>
+      <div class="cat-meta">Penn State's strength and conditioning system, built for real athletic performance.</div>
       <div class="cat-count">1 Program →</div>
       <div class="cat-designer">✍️ Penn State Strength Staff</div>
     </a>
 
-    <a href="cat-pmc.html" class="cat-card pmc">
-      <span class="cat-icon">⚡</span>
-      <div class="cat-tag">Muscle Confusion · Advanced</div>
-      <div class="cat-name">Project Muscle Confusion</div>
-      <div class="cat-meta">Supersets, pyramids, drop sets, AMRAP, and tempo — 7 splits across 2 weeks each.</div>
-      <div class="cat-count">7 Splits →</div>
-      <div class="cat-designer">✍️ Designed by Mike Cross</div>
-    </a>
-
-    <a href="cat-mc.html" class="cat-card mc">
-      <span class="cat-icon">⚡</span>
-      <div class="cat-tag">Personal · All Styles</div>
-      <div class="cat-name">Mike Cross' Favorite Splits</div>
-      <div class="cat-meta">5 personal splits across every major training style — 18 workouts total.</div>
-      <div class="cat-count">5 Splits →</div>
-      <div class="cat-designer">✍️ Designed by Mike Cross</div>
-    </a>
+    </div>
 
   </div>
 </div>
@@ -566,7 +684,10 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   </div>
 </div>
 
+<script src="custom-workouts-store.js"></script>
 <script src="conditioning-data.js"></script>
+<script>window.MC_SUBS_NO_BUTTON=true;</script>
+<script src="mc-subs.js"></script>
 <script src="mc-live-tracker.js"></script>
 <script>
 // ── DATE ──
@@ -593,9 +714,12 @@ document.getElementById('todayDate').textContent=d.toLocaleDateString('en-US',{m
 
 // ── PROGRAMS DATA ──
 const PROGS=[
-  {id:'mc',icon:'⚡',name:"Mike Cross' Favorite Splits",meta:'5 Splits · 18 Workouts',color:'#d4af37',desc:'5 personal splits across every major training style',href:'cat-mc.html',splits:['Split 1','Split 2','Split 3','Split 4','Split 5']},
-  {id:'pmc',icon:'⚡',name:'Project Muscle Confusion',meta:'7 Splits · 2 Weeks Each',color:'#7F77DD',desc:'Supersets, pyramids, drop sets, AMRAP, and tempo',href:'cat-pmc.html',splits:['Split 1','Split 2','Split 3','Split 4','Split 5','Split 6','Split 7']},
+  // ── Tier 1: Flagship ──
   {id:'ss',icon:'🏋️',name:'Strength & Supersets',meta:'6-Week Cycle · 5 Days',color:'#e11d48',desc:'Heavy compounds paired with high-volume supersets + AMRAP finishers',href:'cat-strength.html',splits:['Legs','Chest','Back & Shoulders','Arms & Forearms','Cardio & Calves']},
+  {id:'pmc',icon:'⚡',name:'Project Muscle Confusion',meta:'7 Splits · 2 Weeks Each',color:'#7F77DD',desc:'Supersets, pyramids, drop sets, AMRAP, and tempo',href:'cat-pmc.html',splits:['Split 1','Split 2','Split 3','Split 4','Split 5','Split 6','Split 7']},
+  {id:'mc',icon:'👑',name:"Mike Cross' Favorite Splits",meta:'5 Splits · 18 Workouts',color:'#d4af37',desc:'5 personal splits across every major training style',href:'cat-mc.html',splits:['Split 1','Split 2','Split 3','Split 4','Split 5']},
+  {id:'bobw',icon:'🌗',name:'Best of Both Worlds',meta:'6 Body Parts · 4 Weeks',color:'#14b8a6',desc:'Heavy resistance balanced with daily LISS + HIIT conditioning',href:'cat-bobw.html',splits:['Legs','Chest','Back','Biceps','Triceps','Shoulders']},
+  // ── Tier 2: Influencer ──
   {id:'stndr',icon:'🏋️',name:'STNDR',meta:'4 Programs',color:'#1D9E75',desc:'Structured progressive overload — CBUM method',href:'cat-stndr.html',splits:['Phase 1','Phase 2','Phase 3','Phase 4']},
   {id:'pump',icon:'⚡',name:'Daily Pump',meta:'10 Workouts',color:'#D85A30',desc:'Julian Smith pump protocols — in and out fast',href:'cat-pump-new4.html',splits:['Back','Chest','Shoulders','Arms','Legs']},
   {id:'gainz',icon:'💪',name:'Daily Gainz',meta:'8 Programs',color:'#378ADD',desc:'Bradley Martyn volume — built for size',href:'cat-gainz.html',splits:['Bro Split','Push/Pull','5 On 2 Off','3 On 1 Off']},
@@ -694,6 +818,66 @@ if(!navigator.onLine)document.getElementById('offlineBar').classList.add('show')
 // ── SW ── registration + reliable auto-update handled by mc-sw-update.js
 // (loaded near the end of body). It defines window.doSwUpdate for the banner.
 
+// ── CUSTOM WORKOUTS ──
+function renderCustomSection() {
+  var workouts = (typeof CustomWorkouts !== 'undefined') ? CustomWorkouts.getAll() : [];
+  var html = '<div class="custom-section">'
+    + '<div class="custom-section-head">'
+    + '<div class="custom-section-title">'
+    + '<div class="custom-section-icon">⚡</div>'
+    + '<div><div class="custom-section-name">My Custom Workouts</div>'
+    + '<div class="custom-section-sub">Your saved conditioning circuits</div></div>'
+    + '</div>'
+    + (workouts.length ? '<button class="custom-build-btn-sm" onclick="location.href=\'custom-workout-builder.html\'">+ Build New</button>' : '')
+    + '</div>';
+
+  if (!workouts.length) {
+    html += '<div class="custom-empty">'
+      + '<div class="custom-empty-icon">🏗️</div>'
+      + '<div class="custom-empty-title">No custom workouts yet</div>'
+      + '<div class="custom-empty-sub">Build a workout from the exercise library — pick movements, set reps or time targets, then run it anytime.</div>'
+      + '<a href="custom-workout-builder.html" class="custom-build-btn">+ Build Your Own Conditioning Workout</a>'
+      + '</div>';
+  } else {
+    workouts.forEach(function (w) {
+      var exCount = w.exercises ? w.exercises.length : 0;
+      var repCount = w.exercises ? w.exercises.filter(function(e){return e.mode==='reps';}).length : 0;
+      var timeCount = exCount - repCount;
+      var metaParts = [exCount + ' exercise' + (exCount===1?'':'s')];
+      if (repCount)  metaParts.push(repCount  + ' rep-based');
+      if (timeCount) metaParts.push(timeCount + ' timed');
+      if (w.restSecs > 0) metaParts.push(w.restSecs + 's rest');
+
+      var pills = (w.exercises||[]).slice(0,4).map(function(e){
+        return '<span class="custom-wk-pill">' + esc(e.name.split('—')[0].trim()) + '</span>';
+      }).join('') + (exCount > 4 ? '<span class="custom-wk-pill">+' + (exCount-4) + ' more</span>' : '');
+
+      html += '<div class="custom-wk-card">'
+        + '<div class="custom-wk-card-top">'
+        + '<div class="custom-wk-name">' + esc(w.name) + '</div>'
+        + '<div class="custom-wk-badge">Custom</div>'
+        + '</div>'
+        + '<div class="custom-wk-meta">' + esc(metaParts.join(' · ')) + (w.lastRun ? ' · Last run ' + w.lastRun : '') + '</div>'
+        + '<div class="custom-wk-pills">' + pills + '</div>'
+        + '<div class="custom-wk-actions">'
+        + '<button class="custom-wk-run" onclick="location.href=\'custom-workout-runner.html?id=' + esc(w.id) + '\'">▶ Run Workout</button>'
+        + '<button class="custom-wk-edit" onclick="location.href=\'custom-workout-builder.html?edit=' + esc(w.id) + '\'">Edit</button>'
+        + '<button class="custom-wk-del" onclick="deleteCustomWorkout(\'' + esc(w.id) + '\')">🗑</button>'
+        + '</div>'
+        + '</div>';
+    });
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function deleteCustomWorkout(id) {
+  if (!confirm('Delete this workout? This cannot be undone.')) return;
+  if (typeof CustomWorkouts !== 'undefined') CustomWorkouts.remove(id);
+  renderConditioning();
+}
+
 // ── CONDITIONING TAB ──
 function hexA(hex,a){
   var h=hex.replace('#','');
@@ -702,18 +886,25 @@ function hexA(hex,a){
   return 'rgba('+r+','+g+','+b+','+a+')';
 }
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+var condSubTab='workouts';
+function setCondSubTab(t){ condSubTab=t; renderConditioning(); }
+function renderCondLib(q){ var el=document.getElementById('condLib'); if(el&&window.MCSubs) el.innerHTML=MCSubs.libGroupsHTML(q,false); }
 function renderConditioning(){
   var body=document.getElementById('condBody');
   if(!body||typeof CONDITIONING==='undefined'){return;}
+  var tgBtn=function(id,label){return '<button onclick="setCondSubTab(\''+id+'\')" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;letter-spacing:0.02em;'+(condSubTab===id?'background:#E24B4A;color:#fff;':'background:transparent;color:#94a3b8;')+'">'+label+'</button>';};
+  var toggle='<div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:13px;padding:4px;margin-bottom:18px;">'+tgBtn('workouts','🔥 Workouts')+tgBtn('exercises','🏃 Exercises')+'</div>';
+
   var html='';
-  CONDITIONING.subcategories.forEach(function(sub){
-    var col=sub.color||'#E24B4A';
-    html+='<div class="cond-sub">';
-    html+='<div class="cond-sub-head">'
+  if(condSubTab==='workouts'){
+    html += renderCustomSection();
+    CONDITIONING.subcategories.forEach(function(sub){
+      if(sub.type!=='routines') return;
+      var col=sub.color||'#E24B4A';
+      html+='<div class="cond-sub"><div class="cond-sub-head">'
         +'<div class="cond-sub-icon" style="background:'+hexA(col,0.14)+';border-color:'+hexA(col,0.4)+'">'+(sub.icon||'🔥')+'</div>'
         +'<div><div class="cond-sub-name">'+esc(sub.name)+'</div>'
         +(sub.blurb?'<div class="cond-sub-blurb">'+esc(sub.blurb)+'</div>':'')+'</div></div>';
-    if(sub.type==='routines'){
       (sub.routines||[]).forEach(function(r){
         html+='<a href="'+r.href+'" class="cond-card" style="background:linear-gradient(135deg,'+hexA(col,0.12)+','+'var(--surface));border-color:'+hexA(col,0.33)+'">'
             +'<div class="cond-arrow" style="background:'+hexA(col,0.2)+';border-color:'+hexA(col,0.33)+'">→</div>'
@@ -723,14 +914,14 @@ function renderConditioning(){
             +((r.stats&&r.stats.length)?'<div class="cond-stats">'+r.stats.map(function(s){return '<span class="cond-stat">'+esc(s)+'</span>';}).join('')+'</div>':'')
             +'</a>';
       });
-    } else if(sub.type==='exercises'){
-      html+='<div class="cond-ex-grid">';
-      (sub.exercises||[]).forEach(function(e){html+='<span class="cond-ex-item">'+esc(e.name)+'</span>';});
       html+='</div>';
-    }
-    html+='</div>';
-  });
-  body.innerHTML=html;
+    });
+  } else {
+    html='<div style="font-size:12px;color:#94a3b8;line-height:1.5;margin-bottom:12px;">Cardio &amp; conditioning exercise library. On any conditioning workout, tap <b style="color:#fed7aa;">🔁 Swap</b> to live-replace a movement with one of these.</div>'
+      +'<input placeholder="Search exercises…" oninput="renderCondLib(this.value)" style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#f1f5f9;font-size:14px;font-family:inherit;outline:none;margin-bottom:14px;">'
+      +'<div id="condLib">'+(window.MCSubs?MCSubs.libGroupsHTML('',false):'')+'</div>';
+  }
+  body.innerHTML=toggle+html;
 }
 
 // ── QUICK TOUR — show a "NEW" badge until the tour has been completed ──
@@ -744,6 +935,9 @@ function renderConditioning(){
 })();
 
 // ── INIT ──
+// Clear any stale "smart back" target when landing on the hub, so a guide
+// page opened later never inherits a back destination from a prior visit.
+try{ sessionStorage.removeItem('mc_back_to'); }catch(e){}
 loadState();
 renderConditioning();
 // honor ?tab= deep-link from the global bottom nav (mc-nav.js)
@@ -765,11 +959,13 @@ renderConditioning();
 <script src="exercise-catalog.js"></script>
 <script>
 (function(){
-  var el=document.getElementById('libCount');
-  if(!el||!window.EXERCISES)return;
+  if(!window.EXERCISES)return;
   var skip={Cardio:1,Core:1}; // cardio/core live under the Conditioning tab
   var n=EXERCISES.filter(function(e){return !skip[e.muscle];}).length;
-  el.textContent=n+' exercises · search by muscle group · save replacements';
+  var dash=document.getElementById('libCountDash');
+  if(dash)dash.textContent=n+' exercises by muscle group';
+  var el=document.getElementById('libCount');
+  if(el)el.textContent=n+' exercises · search by muscle group · save replacements';
 })();
 </script>
 </body>
