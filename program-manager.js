@@ -55,26 +55,80 @@
     renderBar();
   }
 
+  // ---- custom modal (replaces prompt/alert which are suppressed in iOS PWA) --
+  function showModal(cfg) {
+    // cfg: { title, body, fields:[{id,label,type}], buttons:[{label,primary,cb}] }
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+    var card = document.createElement('div');
+    card.style.cssText = 'background:#1a1a1a;border:1px solid #333;border-radius:16px;padding:24px;width:100%;max-width:320px;font-family:sans-serif;';
+    var html = '<div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:8px;">' + cfg.title + '</div>';
+    if (cfg.body) html += '<div style="font-size:13px;color:#aaa;margin-bottom:16px;">' + cfg.body + '</div>';
+    (cfg.fields || []).forEach(function(f) {
+      html += '<div style="margin-bottom:12px;"><label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">' + f.label + '</label>'
+            + '<input id="pm-modal-' + f.id + '" type="' + (f.type||'text') + '" style="width:100%;box-sizing:border-box;background:#0d0d0d;border:1px solid #444;border-radius:8px;padding:10px 12px;color:#fff;font-size:15px;outline:none;" /></div>';
+    });
+    html += '<div style="display:flex;gap:8px;margin-top:4px;">';
+    (cfg.buttons || []).forEach(function(b, i) {
+      html += '<button id="pm-modal-btn-' + i + '" style="flex:1;padding:11px;border-radius:10px;border:none;font-size:14px;font-weight:600;cursor:pointer;background:' + (b.primary ? '#d4af37' : '#2a2a2a') + ';color:' + (b.primary ? '#000' : '#fff') + ';">' + b.label + '</button>';
+    });
+    html += '</div>';
+    card.innerHTML = html;
+    ov.appendChild(card);
+    document.body.appendChild(ov);
+    var inputs = {};
+    (cfg.fields || []).forEach(function(f) {
+      inputs[f.id] = card.querySelector('#pm-modal-' + f.id);
+    });
+    if (cfg.fields && cfg.fields.length) card.querySelector('#pm-modal-' + cfg.fields[0].id).focus();
+    (cfg.buttons || []).forEach(function(b, i) {
+      card.querySelector('#pm-modal-btn-' + i).addEventListener('click', function() {
+        var vals = {};
+        (cfg.fields || []).forEach(function(f) { vals[f.id] = inputs[f.id] ? inputs[f.id].value : ''; });
+        document.body.removeChild(ov);
+        b.cb(vals);
+      });
+    });
+  }
+
   function unlockFlow() {
     var stored = null;
     try { stored = localStorage.getItem(PASS_KEY); } catch (e) {}
     if (!stored) {
-      var p1 = prompt('Program Manager — create an owner passcode:');
-      if (!p1) return;
-      var p2 = prompt('Confirm passcode:');
-      if (p1 !== p2) { alert('Passcodes did not match.'); return; }
-      digest(p1).then(function (h) {
-        try { localStorage.setItem(PASS_KEY, h); } catch (e) {}
-        setActive(true);
-        alert('Program Manager unlocked. Use the ⋮ menu on any exercise to make a permanent edit.');
+      showModal({
+        title: 'Create Passcode',
+        body: 'First-time setup — choose an owner passcode.',
+        fields: [
+          { id: 'p1', label: 'Passcode', type: 'password' },
+          { id: 'p2', label: 'Confirm passcode', type: 'password' }
+        ],
+        buttons: [
+          { label: 'Cancel', cb: function() {} },
+          { label: 'Create', primary: true, cb: function(v) {
+            if (!v.p1) return;
+            if (v.p1 !== v.p2) { showModal({ title: 'Mismatch', body: 'Passcodes did not match.', buttons: [{ label: 'OK', cb: function(){} }] }); return; }
+            digest(v.p1).then(function(h) {
+              try { localStorage.setItem(PASS_KEY, h); } catch(e) {}
+              setActive(true);
+            });
+          }}
+        ]
       });
       return;
     }
-    var p = prompt('Program Manager passcode:');
-    if (p === null) return;
-    digest(p).then(function (h) {
-      if (h === stored) setActive(true);
-      else alert('Wrong passcode.');
+    showModal({
+      title: 'Program Manager',
+      fields: [{ id: 'p', label: 'Passcode', type: 'password' }],
+      buttons: [
+        { label: 'Cancel', cb: function() {} },
+        { label: 'Unlock', primary: true, cb: function(v) {
+          if (v.p === null) return;
+          digest(v.p).then(function(h) {
+            if (h === stored) setActive(true);
+            else showModal({ title: 'Wrong passcode', buttons: [{ label: 'OK', cb: function(){} }] });
+          });
+        }}
+      ]
     });
   }
 
