@@ -82,9 +82,12 @@
   function attachLongPress() {
     var target = document.querySelector('.topbar-title') || document.querySelector('h1');
     if (!target) return;
-    // Prevent native text-selection on long-press so the gesture reaches our handler
     target.style.userSelect = 'none';
     target.style.webkitUserSelect = 'none';
+    target.style.webkitTouchCallout = 'none';
+    // Kill selection and context-menu events so the browser never highlights text
+    target.addEventListener('selectstart', function(e) { e.preventDefault(); }, false);
+    target.addEventListener('contextmenu', function(e) { e.preventDefault(); }, false);
     var timer = null;
     function start(e) {
       if (e && e.cancelable) e.preventDefault();
@@ -92,7 +95,6 @@
       timer = setTimeout(function () { if (!isActive()) unlockFlow(); }, 700);
     }
     function cancel() { clearTimeout(timer); }
-    // non-passive so preventDefault() takes effect
     target.addEventListener('touchstart', start, { passive: false });
     target.addEventListener('mousedown', start);
     ['touchend', 'touchmove', 'touchcancel', 'mouseup', 'mouseleave'].forEach(function (ev) {
