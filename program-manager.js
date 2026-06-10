@@ -82,10 +82,18 @@
   function attachLongPress() {
     var target = document.querySelector('.topbar-title') || document.querySelector('h1');
     if (!target) return;
+    // Prevent native text-selection on long-press so the gesture reaches our handler
+    target.style.userSelect = 'none';
+    target.style.webkitUserSelect = 'none';
     var timer = null;
-    function start() { clearTimeout(timer); timer = setTimeout(function () { if (!isActive()) unlockFlow(); }, 700); }
+    function start(e) {
+      if (e && e.cancelable) e.preventDefault();
+      clearTimeout(timer);
+      timer = setTimeout(function () { if (!isActive()) unlockFlow(); }, 700);
+    }
     function cancel() { clearTimeout(timer); }
-    target.addEventListener('touchstart', start, { passive: true });
+    // non-passive so preventDefault() takes effect
+    target.addEventListener('touchstart', start, { passive: false });
     target.addEventListener('mousedown', start);
     ['touchend', 'touchmove', 'touchcancel', 'mouseup', 'mouseleave'].forEach(function (ev) {
       target.addEventListener(ev, cancel, { passive: true });
