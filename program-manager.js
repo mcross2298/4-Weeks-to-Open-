@@ -80,20 +80,13 @@
 
   // ---- long-press entry point ---------------------------------------------
   function attachLongPress() {
-    // 5 rapid taps anywhere in the top 80px of the screen triggers unlock.
-    // Using document avoids all element-targeting and competing-handler issues.
-    var taps = 0, tapTimer = null;
-    document.addEventListener('click', function (e) {
-      if (e.clientY > 80) return;
-      taps++;
-      clearTimeout(tapTimer);
-      if (taps >= 5) {
-        taps = 0;
-        if (!isActive()) unlockFlow();
-        return;
-      }
-      tapTimer = setTimeout(function () { taps = 0; }, 800);
-    });
+    // URL param activation: navigate to dashboard.html?pm=1 to trigger unlock
+    if (/[?&]pm=1/.test(location.search)) {
+      // Clean the param from the URL without reloading
+      var clean = location.pathname + location.hash;
+      history.replaceState(null, '', clean);
+      if (!isActive()) unlockFlow();
+    }
   }
 
   // ---- PM bar (visible only while unlocked) --------------------------------
