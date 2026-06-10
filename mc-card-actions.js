@@ -124,6 +124,7 @@
         '<button class="mc-item" data-act="reorder"><span class="mc-ico">↕️</span>Reorder exercises</button>' +
         tempoItem +
         '<button class="mc-item" data-act="notes"><span class="mc-ico">📝</span>Notes</button>' +
+        '<button class="mc-item" data-act="pm" style="display:none"><span class="mc-ico">🛠️</span>Program Manager edit</button>' +
         '<button class="mc-item mc-item-cancel" data-act="cancel">Cancel</button>' +
       '</div>';
     document.body.appendChild(menuOverlay);
@@ -139,6 +140,7 @@
       else if (act === 'reorder') startReorder(card);
       else if (act === 'notes') openNote(card);
       else if (act === 'tempo') openTempo(card);
+      else if (act === 'pm' && window.MC_PM) window.MC_PM.openEditor(card);
     });
 
     reorderBar = document.createElement('div');
@@ -153,6 +155,9 @@
   function openMenu(card) {
     activeCard = card;
     sheetTitle.textContent = cardName(card) || 'Exercise';
+    // owner-only item: visible only while Program Manager mode is unlocked
+    var pmBtn = menuOverlay.querySelector('[data-act="pm"]');
+    if (pmBtn) pmBtn.style.display = (window.MC_PM && window.MC_PM.active()) ? '' : 'none';
     menuOverlay.classList.add('open');
   }
   function closeMenu() { menuOverlay.classList.remove('open'); activeCard = null; }
