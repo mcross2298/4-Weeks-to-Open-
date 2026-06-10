@@ -27,6 +27,7 @@
   window.__mcLiveTracker = true;
 
   var ACT_KEY  = 'mc_activity';
+  var EXPIRE_MS = 36 * 3600 * 1000;          // resume window — keep identical to mc-resume.js
   var CARD_SEL = '.ex-card, .ss-ex, .lift-card';
   var DONE_SEL = '.ex-card.checked, .ss-ex.checked, .lift-card.checked';
   var PAGE_ID  = (location.pathname.split('/').pop() || 'index.html');
@@ -162,9 +163,10 @@
     if (!isWorkoutPage()) return;
     var p = progress();
     if (!p.total) return;
+    if (p.done <= 0) return;                  // only record sessions with real progress
     var a = readAct();
     a.last = { pageId: PAGE_ID, title: sessionTitle(), done: p.done, total: p.total, ts: Date.now() };
-    if (p.done > 0) { a.days = a.days || {}; a.days[dayKey()] = true; }
+    a.days = a.days || {}; a.days[dayKey()] = true;
     writeAct(a);
   }
 
@@ -176,10 +178,16 @@
     while (days[dayKey(cur)]) { n++; cur.setDate(cur.getDate() - 1); }
     return n;
   }
+  // resume gate — keep byte-identical to mc-resume.js's isResumable()
+  function isResumable(L) {
+    return !!(L && L.done > 0 && L.done < L.total && !L.dismissed &&
+              (Date.now() - L.ts) <= EXPIRE_MS);
+  }
   window.MCActivity = {
     get: function () {
       var a = readAct();
-      return { last: a.last || null, streak: computeStreak(a.days), trainedToday: !!(a.days && a.days[dayKey()]) };
+      return { last: isResumable(a.last) ? a.last : null,
+               streak: computeStreak(a.days), trainedToday: !!(a.days && a.days[dayKey()]) };
     }
   };
 
