@@ -1,7 +1,7 @@
 // MC Training — Service Worker v2
 // Absolute URL cache for GitHub Pages
 
-const CACHE_NAME = 'mc-training-v63';
+const CACHE_NAME = 'mc-training-v64';
 const BASE = 'https://mcross2298.github.io/4-Weeks-to-Open-/';
 const CACHE_URLS = [
     'https://mcross2298.github.io/4-Weeks-to-Open-/',
@@ -211,26 +211,38 @@ self.addEventListener('activate', event => {
     );
 });
 
-// Fetch — NETWORK FIRST, fall back to cache
+// Fetch — HTML: network-only (always fresh). CSS/JS/assets: network-first with cache fallback.
 self.addEventListener('fetch', event => {
     const url = event.request.url;
 
     // Only handle requests to our domain
     if (!url.startsWith('https://mcross2298.github.io')) return;
 
+    // HTML files must always be fresh — never serve from cache
+    const isHTML = url.endsWith('.html') || url.endsWith('/') || !url.split('/').pop().includes('.');
+    if (isHTML) {
+        event.respondWith(
+            fetch(event.request).catch(() => {
+                return caches.match(event.request).then(cached => cached || new Response(
+                    '<html><body style="background:#0a0a0a;color:#fff;font-family:sans-serif;text-align:center;padding:60px 20px"><h2 style="color:#d4af37">MC Training</h2><p style="color:#9ca3af;margin-top:12px">You are offline.</p><a href="/" style="display:inline-block;margin-top:20px;color:#d4af37">← Home</a></body></html>',
+                    {headers: {'Content-Type': 'text/html'}}
+                ));
+            })
+        );
+        return;
+    }
+
+    // CSS/JS/assets: network-first, cache fallback
     event.respondWith(
         fetch(event.request).then(resp => {
-            // Got a good response — update cache and return
             if (resp && resp.status === 200) {
                 const clone = resp.clone();
                 caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
             }
             return resp;
         }).catch(() => {
-            // Network failed — fall back to cache
             return caches.match(event.request).then(cached => {
                 if (cached) return cached;
-                // Nothing in cache either — show offline page
                 return new Response(
                     '<html><body style="background:#0a0a0a;color:#fff;font-family:sans-serif;text-align:center;padding:60px 20px"><h2 style="color:#d4af37">MC Training</h2><p style="color:#9ca3af;margin-top:12px">You are offline. Open this page while online to cache it.</p><a href="/" style="display:inline-block;margin-top:20px;color:#d4af37">← Home</a></body></html>',
                     {headers: {'Content-Type': 'text/html'}}
