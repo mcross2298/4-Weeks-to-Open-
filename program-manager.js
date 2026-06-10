@@ -82,24 +82,19 @@
   function attachLongPress() {
     var target = document.querySelector('.topbar-title') || document.querySelector('h1');
     if (!target) return;
-    target.style.userSelect = 'none';
-    target.style.webkitUserSelect = 'none';
-    target.style.webkitTouchCallout = 'none';
-    // Kill selection and context-menu events so the browser never highlights text
-    target.addEventListener('selectstart', function(e) { e.preventDefault(); }, false);
-    target.addEventListener('contextmenu', function(e) { e.preventDefault(); }, false);
-    var timer = null;
-    function start(e) {
-      if (e && e.cancelable) e.preventDefault();
-      clearTimeout(timer);
-      timer = setTimeout(function () { if (!isActive()) unlockFlow(); }, 700);
+    // Triple-tap to activate (avoids all native long-press conflicts)
+    var taps = 0, tapTimer = null;
+    function onTap() {
+      taps++;
+      clearTimeout(tapTimer);
+      if (taps >= 3) {
+        taps = 0;
+        if (!isActive()) unlockFlow();
+        return;
+      }
+      tapTimer = setTimeout(function () { taps = 0; }, 600);
     }
-    function cancel() { clearTimeout(timer); }
-    target.addEventListener('touchstart', start, { passive: false });
-    target.addEventListener('mousedown', start);
-    ['touchend', 'touchmove', 'touchcancel', 'mouseup', 'mouseleave'].forEach(function (ev) {
-      target.addEventListener(ev, cancel, { passive: true });
-    });
+    target.addEventListener('click', onTap);
   }
 
   // ---- PM bar (visible only while unlocked) --------------------------------
