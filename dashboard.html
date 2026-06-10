@@ -344,6 +344,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       </div>
     </div>
     <div class="topbar-icon">📅</div>
+    <div id="pmUnlockBtn" onclick="if(window.MC_PM)MC_PM.unlock();" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0.15;font-size:18px;-webkit-tap-highlight-color:transparent;">🔐</div>
   </div>
 
   <div id="offlineBar" class="offline-bar">📵 Offline — showing cached content</div>
@@ -750,6 +751,15 @@ renderConditioning();
 </script>
 <script src="program-overrides.js"></script>
 <script src="program-manager.js"></script>
+<script>
+// Trigger PM unlock immediately after scripts load if ?pm=1 is in URL
+(function(){
+  if(/[?&]pm=1/.test(location.search)){
+    history.replaceState(null,'',location.pathname+location.hash);
+    if(window.MC_PM) MC_PM.unlock();
+  }
+})();
+</script>
 <script src="mc-sw-update.js?v=45"></script>
 <!-- Live exercise-library count: sourced from the shared catalog so it never drifts -->
 <script src="exercise-catalog.js"></script>
