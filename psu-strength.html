@@ -189,6 +189,17 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:40px;}
 }
 .fw-auto-banner.show{display:block;}
 
+/* ── PREMIUM POLISH ── */
+.lift-card{position:relative;overflow:hidden;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05);}
+.lift-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;z-index:1;background:linear-gradient(180deg,rgba(212,175,55,1),rgba(212,175,55,0.45));box-shadow:0 0 16px rgba(212,175,55,0.5);}
+.lift-card.checked::before,.lift-card.done::before{background:linear-gradient(180deg,#34d399,#059669);box-shadow:0 0 16px rgba(52,211,153,0.4);}
+.lift-header{padding:16px 18px;}
+.lift-name{font-weight:800;letter-spacing:-0.01em;color:#fff;}
+.set-row{padding:11px 18px;}
+.set-reps,.set-weight{text-shadow:0 0 10px rgba(212,175,55,0.45);}
+.sl-inp::placeholder,input::placeholder{color:#64748b;opacity:1;}
+@media(prefers-reduced-motion:reduce){.set-reps,.set-weight{text-shadow:none;}}
+
 </style>
 <link rel="stylesheet" href="base.css?v=65"/>
 <link rel="stylesheet" href="mc-card-actions.css"/>
