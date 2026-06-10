@@ -357,23 +357,34 @@ const checkState = {};
 
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
+function aReps(setsStr){
+  var legs=String(setsStr==null?'—':setsStr).split('/').map(s=>s.trim());
+  return legs.map((part,pi)=>{
+    var reps=part.split(',').map(r=>r.trim());
+    var chips;
+    if(reps.length>1&&reps.every(r=>r===reps[0])){
+      var rep=reps[0],sp=/amrap/i.test(rep)||/drop/i.test(rep)||rep.indexOf('×')>=0;
+      chips=`<span class="${sp?'a-rep special':'a-rep live'}">${reps.length}× ${rep}</span>`;
+    }else{
+      chips=reps.map((rep,ri)=>{var sp=/amrap/i.test(rep)||/drop/i.test(rep);var cls=sp?'a-rep special':(ri===0?'a-rep live':'a-rep');var sep=ri<reps.length-1?'<span class="a-sep">·</span>':'';return `<span class="${cls}">${rep}</span>${sep}`;}).join('');
+    }
+    var lt=legs.length>1?`<span class="a-legtag">${pi===0?'A':'B'}</span>`:'';
+    return `<div class="a-leg">${lt}${chips}</div>`;
+  }).join('');
+}
 function renderEx(ex, prefix, idx) {
   const id = `${activeIdx}-${prefix}-${idx}`;
   const checked = checkState[id] ? "checked" : "";
-  const tempoHtml = ex.tempo ? `<span class="ex-tempo">${esc(ex.tempo)}</span>` : "";
-  const noteHtml = ex.note ? `<div class="ex-note">${esc(ex.note)}</div>` : "";
-  return `<div class="ex-card ${checked}" data-id="${id}">
-    <div class="ex-row">
-      <div class="ex-num">${idx+1}</div>
-      <div class="ex-content">
-        <div class="ex-name">${esc(ex.name)}</div>
-        <div class="ex-sets-row">
-          <span class="ex-sets">${esc(ex.sets)}</span>
-          ${tempoHtml}
-        </div>
-        <div style="margin-top:6px;">${makeRestTimer(ex.rest||"60 sec",ex.name)}</div>
-        ${noteHtml}
-      </div>
+  const rest = ex.rest || "60 sec";
+  const badgeHtml = ex.tempo ? `<div class="a-badges"><span class="ex-tempo">${esc(ex.tempo)}</span></div>` : "";
+  const noteHtml = ex.note ? `<div class="a-notes">📝 ${esc(ex.note)}</div>` : "";
+  return `<div class="ex-card a-card ${checked}" data-id="${id}" data-type="single">
+    <div class="ex-body">
+      <div class="a-top"><div class="a-idx">${idx+1}</div><div class="a-head"><div class="ex-name a-name">${esc(ex.name)}</div>${badgeHtml}</div></div>
+      <div class="a-reps">${aReps(ex.sets)}</div>
+      <div class="a-strip"><div class="a-cell"><span class="k">Sets</span><span class="v"><span data-field="sets">${esc(ex.sets)}</span></span></div><div class="a-cell"><span class="k">Rest</span><span class="v">${esc(rest)}</span></div></div>
+      <div class="a-timerbar">${makeRestTimer(rest, ex.name)}</div>
+      ${noteHtml}
     </div>
   </div>`;
 }
@@ -856,6 +867,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="program-manager.js"></script>
 <script src="mc-live-tracker.js"></script>
 <script src="mc-nav.js"></script>
+<script src="mc-rep-progress.js"></script>
 <script src="mc-setlog.js"></script>
 <script src="mc-superset-hop.js?v=46"></script>
 <script src="mc-sw-update.js?v=45"></script>
