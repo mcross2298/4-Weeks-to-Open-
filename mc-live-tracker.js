@@ -198,10 +198,27 @@
     if (isWorkoutPage()) {
       // any tap primes/unlocks audio so the catch-up beep can play (the rest-timer tap counts)
       document.addEventListener('pointerdown', primeAudio, { passive: true });
-      // Poll the page's own #timerFloat.visible state (toggled by its TMR object).
-      // 1s latency to engage the wake lock is immaterial for a 60-120s rest timer,
-      // and polling avoids reacting to the float's twice-a-second class churn.
-      setInterval(syncLock, 1000);
+      // Watch #timerFloat.visible via MutationObserver (event-driven, replaces
+      // the former 1s setInterval poll). A 250ms debounce absorbs any rapid
+      // class mutations during the countdown without missing the visible toggle.
+      var _syncDbt = null;
+      function debounceSync() { clearTimeout(_syncDbt); _syncDbt = setTimeout(syncLock, 250); }
+      function watchFloat() {
+        var f = document.getElementById('timerFloat');
+        if (f) {
+          new MutationObserver(debounceSync).observe(f, { attributes: true, attributeFilter: ['class'] });
+        } else {
+          var ins = new MutationObserver(function () {
+            var el = document.getElementById('timerFloat');
+            if (!el) return;
+            ins.disconnect();
+            new MutationObserver(debounceSync).observe(el, { attributes: true, attributeFilter: ['class'] });
+            syncLock();
+          });
+          ins.observe(document.body, { childList: true, subtree: true });
+        }
+      }
+      watchFloat();
       syncLock();
       window.addEventListener('pagehide', logSession);
       document.addEventListener('visibilitychange', function () { document.hidden ? onHide() : onShow(); });
