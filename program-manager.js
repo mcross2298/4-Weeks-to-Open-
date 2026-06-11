@@ -1,80 +1,89 @@
 /* ==========================================================================
    program-manager.js  —  owner-only Program Manager (permanent edits)
    --------------------------------------------------------------------------
-   Passcode-gated editor for PERMANENT program changes, layered on
+   Owner-authenticated editor for PERMANENT program changes, layered on
    program-overrides.js (window.MC_PO). Normal users never see any of this UI.
 
    Entry: long-press (~0.7s) the page title (.topbar-title on the dashboard,
-   or the first <h1> on a workout page). First use creates the passcode
-   (SHA-256 hash in localStorage); later uses unlock with it. Unlock lasts
-   for the browser session (sessionStorage).
+   or the first <h1> on a workout page). Unlock is two layers:
+     1. Supabase magic-link login (MC_SB) — establishes the owner identity and
+        persists across visits. Writes are owner-only, enforced server-side by
+        Row-Level Security (the real security boundary).
+     2. Face ID / Touch ID (MC_BIO, WebAuthn) — a per-session local biometric
+        gate. Unlock lasts the browser session (sessionStorage).
 
    While unlocked:
      • every exercise meatball (⋮) menu gains "Program Manager edit", which
        opens an editor to permanently replace the exercise (picker backed by
        exercise-catalog.js) or edit sets / rest / note / tempo, or reset
        the card back to the original program.
-     • a fixed PM bar offers Export (downloads the merged
-       program-overrides.json to commit to the repo), Import, Discard local
-       edits, and Lock.
+     • a fixed PM bar offers Publish (one-tap upsert to Supabase — live for all
+       users), Export (download the merged program-overrides.json fallback),
+       Import, Discard local edits, and Lock.
 
    Edits write to the localStorage working copy and preview instantly via
-   MC_PO.refresh(); they reach other users only after the exported JSON is
-   committed and GitHub Pages redeploys.
-
-   The passcode is an accidental-edit gate on a client-side static app,
-   not a security boundary.
+   MC_PO.refresh(); Publish pushes them to Supabase so every user sees them
+   within ~1 minute (no redeploy).
    ========================================================================== */
 (function () {
   if (window.__mcProgramManager) return;   // guard against double-include
   window.__mcProgramManager = true;
 
-  var PASS_KEY   = 'mc_pm_pass';      // hex SHA-256 of the owner passcode
-  var ACTIVE_KEY = 'mc_pm_active';    // sessionStorage: '1' while unlocked
+  var ACTIVE_KEY = 'mc_pm_active';    // sessionStorage: '1' while unlocked this session
   var NAME_SEL   = '.ex-name, .lift-name, .var-name, .ss-name';
 
   var bar = null, editorOverlay = null, editorCard = null;
 
-  // ---- passcode -----------------------------------------------------------
-  function hashStr(s) { var h = 5381, i = s.length; while (i) h = (h * 33) ^ s.charCodeAt(--i); return 'h' + (h >>> 0).toString(36); }
-
-  function digest(text) {
-    if (window.crypto && crypto.subtle && window.TextEncoder) {
-      return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)).then(function (buf) {
-        return Array.prototype.map.call(new Uint8Array(buf), function (b) {
-          return ('0' + b.toString(16)).slice(-2);
-        }).join('');
-      });
-    }
-    return Promise.resolve(hashStr(text));   // non-secure-context fallback
-  }
-
+  // ---- unlock state -------------------------------------------------------
+  // Two layers: (1) Supabase magic-link login establishes WHO you are and
+  // persists across visits; (2) a Face ID / Touch ID check guards each edit
+  // session locally. isActive() is the in-session unlocked flag.
   function isActive() { try { return sessionStorage.getItem(ACTIVE_KEY) === '1'; } catch (e) { return false; } }
   function setActive(on) {
     try { on ? sessionStorage.setItem(ACTIVE_KEY, '1') : sessionStorage.removeItem(ACTIVE_KEY); } catch (e) {}
     renderBar();
   }
 
+  // Face ID gate: enroll on first use, then require a live biometric to unlock.
+  // Skipped only when the device has no platform authenticator (the real write
+  // boundary is still Supabase RLS on the owner account).
+  function biometricGate() {
+    if (!window.MC_BIO || !MC_BIO.supported()) return Promise.resolve(true);
+    return MC_BIO.platformAvailable().then(function (has) {
+      if (!has) return true;                       // no sensor → rely on login alone
+      if (!MC_BIO.isRegistered()) {
+        if (!confirm('Set up Face ID / Touch ID to protect Program Manager on this device?')) return true;
+        return MC_BIO.register('owner').then(function () { return MC_BIO.verify(); }).catch(function () { return false; });
+      }
+      return MC_BIO.verify();
+    });
+  }
+
   function unlockFlow() {
-    var stored = null;
-    try { stored = localStorage.getItem(PASS_KEY); } catch (e) {}
-    if (!stored) {
-      var p1 = prompt('Program Manager — create an owner passcode:');
-      if (!p1) return;
-      var p2 = prompt('Confirm passcode:');
-      if (p1 !== p2) { alert('Passcodes did not match.'); return; }
-      digest(p1).then(function (h) {
-        try { localStorage.setItem(PASS_KEY, h); } catch (e) {}
-        setActive(true);
-        alert('Program Manager unlocked. Use the ⋮ menu on any exercise to make a permanent edit.');
-      });
+    if (!window.MC_SB || !MC_SB.configured) {
+      alert('Owner login is not configured yet. Add your Supabase keys to mc-supabase.js.');
       return;
     }
-    var p = prompt('Program Manager passcode:');
-    if (p === null) return;
-    digest(p).then(function (h) {
-      if (h === stored) setActive(true);
-      else alert('Wrong passcode.');
+    MC_SB.isOwner().then(function (owner) {
+      if (owner) {
+        // logged in as the owner — just require the local biometric
+        biometricGate().then(function (ok) {
+          if (ok) setActive(true);
+          else alert('Face ID check failed.');
+        });
+        return;
+      }
+      // not the owner — either not signed in, or signed in as someone else
+      MC_SB.currentUser().then(function (u) {
+        if (u) { alert('Signed in as ' + (u.email || 'a non-owner account') + ', which is not an admin.'); return; }
+        var email = prompt('Program Manager — owner email for a magic-link sign-in:');
+        if (!email) return;
+        MC_SB.signIn(email.trim()).then(function () {
+          alert('Check ' + email.trim() + ' for a login link. Open it on this device, then long-press the title again to unlock.');
+        }).catch(function (e) {
+          alert('Could not send the login link: ' + (e && e.message ? e.message : 'unknown error'));
+        });
+      });
     });
   }
 
@@ -108,6 +117,7 @@
       bar.innerHTML =
         '<span class="mc-pm-tag">🛠️ PM</span>' +
         '<span class="mc-pm-count"></span>' +
+        '<button class="mc-pm-publish" data-act="publish">Publish</button>' +
         '<button data-act="export">Export</button>' +
         '<button data-act="import">Import</button>' +
         '<button data-act="discard">Discard</button>' +
@@ -116,7 +126,8 @@
       bar.addEventListener('click', function (e) {
         var b = e.target.closest('button'); if (!b) return;
         var act = b.dataset.act;
-        if (act === 'export') doExport();
+        if (act === 'publish') doPublish();
+        else if (act === 'export') doExport();
         else if (act === 'import') doImport();
         else if (act === 'discard') doDiscard();
         else if (act === 'lock') setActive(false);
@@ -124,6 +135,37 @@
     }
     var n = localEditCount();
     bar.querySelector('.mc-pm-count').textContent = n ? n + ' unpublished edit' + (n === 1 ? '' : 's') : 'no local edits';
+    var pub = bar.querySelector('.mc-pm-publish');
+    if (pub) pub.disabled = !n || !(window.MC_SB && MC_SB.configured);
+  }
+
+  // one-tap publish: push the local working copy to Supabase (upsert edits,
+  // delete resets), then clear local so it folds into the live published set.
+  // Writes are owner-only — RLS rejects anything else server-side.
+  function doPublish() {
+    if (!window.MC_PO) { alert('Override layer not loaded on this page.'); return; }
+    if (!window.MC_SB || !MC_SB.configured) { alert('Supabase not configured — use Export instead.'); return; }
+    var pages = (MC_PO.local() || {}).pages || {};
+    var ops = [], pid, nm;
+    for (pid in pages) for (nm in pages[pid]) {
+      var patch = pages[pid][nm];
+      ops.push((patch && patch.reset) ? MC_SB.remove(pid, nm) : MC_SB.upsert(pid, nm, patch));
+    }
+    if (!ops.length) { alert('No local edits to publish.'); return; }
+    var btn = bar && bar.querySelector('.mc-pm-publish');
+    if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
+    Promise.all(ops).then(function () {
+      MC_PO.setLocal({ pages: {} });        // local edits are now published
+      if (window.MC_SB) MC_SB.getOverrides().then(function (d) { /* refresh handled by loader */ }).catch(function () {});
+      if (btn) btn.textContent = 'Publish';
+      renderBar();
+      MC_PO.refresh();
+      alert('Published to all users. Changes go live within ~1 minute.');
+    }).catch(function (e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Publish'; }
+      var msg = (e && e.message) ? e.message : 'unknown error';
+      alert('Publish failed: ' + msg + '\n(If this says permission denied, your account is not in the admins table yet.)');
+    });
   }
 
   function doExport() {
@@ -330,6 +372,8 @@
       '.mc-pm-bar .mc-pm-count{flex:1;font-weight:600;}' +
       '.mc-pm-bar button{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);' +
         'color:#cbd5e1;font-size:11px;font-weight:800;border-radius:8px;padding:6px 9px;cursor:pointer;}' +
+      '.mc-pm-bar .mc-pm-publish{background:#22d3ee;border-color:#22d3ee;color:#03222b;}' +
+      '.mc-pm-bar .mc-pm-publish:disabled{background:rgba(34,211,238,0.25);border-color:transparent;color:#7dd3e8;cursor:default;}' +
       '.mc-pm-overlay{position:fixed;inset:0;z-index:1400;display:none;align-items:center;' +
         'justify-content:center;padding:16px;background:rgba(0,0,0,0.65);' +
         'backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}' +

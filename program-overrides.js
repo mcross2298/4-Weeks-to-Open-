@@ -217,6 +217,37 @@
     }
   };
 
+  // committed JSON fallback: used offline, or when Supabase isn't configured/
+  // reachable. cache:'no-store' + the network-first SW means a freshly
+  // committed file is still picked up on the next load.
+  function loadFromJSON() {
+    return fetch(JSON_URL, { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (data && data.pages) { published = data; scan(); }
+      })
+      .catch(function () {});
+  }
+
+  // Published overrides come from Supabase (live, one-tap publish reaches all
+  // users); the committed JSON is the offline/fallback source. program-
+  // overrides.js stays agnostic — it just paints whatever `published` holds.
+  function loadPublished() {
+    if (window.MC_SB && MC_SB.configured) {
+      return MC_SB.getOverrides()
+        .then(function (data) {
+          if (data && data.pages) { published = data; scan(); }
+          else return loadFromJSON();
+          // live updates: re-paint when the owner publishes from another device
+          MC_SB.onChange(function () {
+            MC_SB.getOverrides().then(function (d) { if (d && d.pages) { published = d; scan(); } }).catch(function () {});
+          });
+        })
+        .catch(function () { return loadFromJSON(); });
+    }
+    return loadFromJSON();
+  }
+
   function init() {
     injectStyles();
     mo = new MutationObserver(scheduleScan);
@@ -224,14 +255,7 @@
     scan();
     setTimeout(scan, 300);
     setTimeout(scan, 800);
-    // cache:'no-store' + the network-first service worker means a freshly
-    // committed file is picked up on the next page load
-    fetch(JSON_URL, { cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (data) {
-        if (data && data.pages) { published = data; scan(); }
-      })
-      .catch(function () {});
+    loadPublished();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
