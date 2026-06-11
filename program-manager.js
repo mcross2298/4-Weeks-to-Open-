@@ -36,6 +36,10 @@
 
   var bar = null, editorOverlay = null, editorCard = null;
 
+  // True when this page load is the return hop from a magic-link email —
+  // Supabase puts auth tokens / a code in the URL before cleaning them.
+  var AUTH_RETURN = /(?:access_token|refresh_token|[?&#]code=|type=magiclink|type=recovery)/.test(location.hash + '&' + location.search);
+
   // ---- unlock state -------------------------------------------------------
   function isActive() { try { return sessionStorage.getItem(ACTIVE_KEY) === '1'; } catch (e) { return false; } }
   function setActive(on) {
@@ -132,7 +136,7 @@
             { label: 'Send link', primary: true, cb: function (v) {
               if (!v.email) return;
               MC_SB.signIn(v.email.trim())
-                .then(function () { msg('Check your email', 'Open the login link on this device, then reload with ?pm=1 to finish unlocking.'); })
+                .then(function () { msg('Check your email', 'Open the login link on this device — Program Manager unlocks automatically when you land back here.'); })
                 .catch(function (e) { msg('Sign-in failed', (e && e.message) ? e.message : 'unknown error'); });
             } }
           ]
@@ -141,7 +145,7 @@
     });
   }
 
-  // ---- long-press entry point ---------------------------------------------
+  // ---- entry points -------------------------------------------------------
   function attachLongPress() {
     // URL param activation: navigate to dashboard.html?pm=1 to trigger unlock
     if (/[?&]pm=1/.test(location.search)) {
@@ -150,6 +154,18 @@
       history.replaceState(null, '', clean);
       if (!isActive()) unlockFlow();
     }
+  }
+
+  // After the magic-link redirect, finish unlocking automatically — no need to
+  // re-add ?pm=1. Once Supabase restores the session, prompt Face ID if owner.
+  function autoUnlockAfterLogin() {
+    if (!AUTH_RETURN || !(window.MC_SB && MC_SB.configured)) return;
+    MC_SB.ready
+      .then(function () { return MC_SB.isOwner(); })
+      .then(function (owner) {
+        if (owner && !isActive()) biometricGate().then(function (ok) { if (ok) setActive(true); });
+      })
+      .catch(function () {});
   }
 
   // ---- PM bar (visible only while unlocked) --------------------------------
@@ -471,7 +487,8 @@
 
   function init() {
     injectStyles();
-    attachLongPress();   // ?pm=1 trigger
+    attachLongPress();        // ?pm=1 trigger
+    autoUnlockAfterLogin();   // finish unlock after a magic-link return
     renderBar();
     // reveal the PM menu item if we're already unlocked this session
     if (isActive()) {
