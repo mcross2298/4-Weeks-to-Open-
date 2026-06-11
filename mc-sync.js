@@ -182,8 +182,16 @@
     setInterval(flush, PUSH_MS);
   }
 
-  // public hook for manual triggering / tests
-  window.MC_SYNC = { pull: function () { return pull(); }, push: function () { return push(); } };
+  // public hook for manual triggering / tests. kick() starts syncing after a
+  // mid-session sign-in (e.g. from the account sheet) without a page reload.
+  window.MC_SYNC = {
+    pull: function () { return pull(); },
+    push: function () { return push(); },
+    kick: function () {
+      if (user || !client) return;
+      MC_SB.currentUser().then(function (u) { if (u) { user = u; start(); } }).catch(function () {});
+    }
+  };
 
   MC_SB.ready
     .then(function (c) { if (!c) return null; client = c; return MC_SB.currentUser(); })
