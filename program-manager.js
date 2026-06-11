@@ -6,9 +6,9 @@
 
    Entry: navigate to any page with ?pm=1 (reliable across PWA shells). Unlock
    is two layers:
-     1. Supabase magic-link login (MC_SB) — establishes the owner identity and
-        persists across visits. Writes are owner-only, enforced server-side by
-        Row-Level Security (the real security boundary).
+     1. Supabase email + password login (MC_SB) — establishes the owner
+        identity and persists across visits. Writes are owner-only, enforced
+        server-side by Row-Level Security (the real security boundary).
      2. Face ID / Touch ID (MC_BIO, WebAuthn) — a per-session local biometric
         gate. Unlock lasts the browser session (sessionStorage).
    All dialogs use the custom showModal (native prompt/alert are suppressed in
@@ -35,10 +35,6 @@
   var NAME_SEL   = '.ex-name, .lift-name, .var-name, .ss-name';
 
   var bar = null, editorOverlay = null, editorCard = null;
-
-  // True when this page load is the return hop from a magic-link email —
-  // Supabase puts auth tokens / a code in the URL before cleaning them.
-  var AUTH_RETURN = /(?:access_token|refresh_token|[?&#]code=|type=magiclink|type=recovery)/.test(location.hash + '&' + location.search);
 
   // ---- unlock state -------------------------------------------------------
   function isActive() { try { return sessionStorage.getItem(ACTIVE_KEY) === '1'; } catch (e) { return false; } }
@@ -112,35 +108,46 @@
     });
   }
 
+  // owner unlock: already-an-admin → Face ID; otherwise email + password →
+  // verify admin → Face ID. Then setActive. All via the iOS-safe modal.
+  function gateThenActivate() {
+    biometricGate().then(function (ok) {
+      if (ok) setActive(true);
+      else msg('Locked', 'Face ID check failed or was cancelled.');
+    });
+  }
+
   function unlockFlow() {
     if (!window.MC_SB || !MC_SB.configured) {
       msg('Not configured', 'Owner login is not set up yet (missing Supabase keys).');
       return;
     }
     MC_SB.isOwner().then(function (owner) {
-      if (owner) {
-        biometricGate().then(function (ok) {
-          if (ok) setActive(true);
-          else msg('Locked', 'Face ID check failed or was cancelled.');
-        });
-        return;
-      }
-      MC_SB.currentUser().then(function (u) {
-        if (u) { msg('Not an admin', 'Signed in as ' + (u.email || 'this account') + ', which is not an admin.'); return; }
-        showModal({
-          title: 'Owner sign-in',
-          body: 'Enter your owner email — we will send a magic login link.',
-          fields: [{ id: 'email', label: 'Email', type: 'email' }],
-          buttons: [
-            { label: 'Cancel', cb: function () {} },
-            { label: 'Send link', primary: true, cb: function (v) {
-              if (!v.email) return;
-              MC_SB.signIn(v.email.trim())
-                .then(function () { msg('Check your email', 'Open the login link on this device — Program Manager unlocks automatically when you land back here.'); })
-                .catch(function (e) { msg('Sign-in failed', (e && e.message) ? e.message : 'unknown error'); });
-            } }
-          ]
-        });
+      if (owner) { gateThenActivate(); return; }
+      showModal({
+        title: 'Owner sign-in',
+        body: 'Sign in with your owner email and password.',
+        fields: [
+          { id: 'email', label: 'Email', type: 'email' },
+          { id: 'pw', label: 'Password', type: 'password' }
+        ],
+        buttons: [
+          { label: 'Cancel', cb: function () {} },
+          { label: 'Sign in', primary: true, cb: function (v) {
+            if (!v.email || !v.pw) return;
+            MC_SB.signInPassword(v.email.trim(), v.pw)
+              .then(function () {
+                return MC_SB.isOwner().then(function (owner2) {
+                  if (owner2) gateThenActivate();
+                  else msg('Not an admin', 'That account is signed in but is not an admin.');
+                });
+              })
+              .catch(function (e) {
+                var m = (e && e.message) ? e.message : 'unknown error';
+                msg('Sign-in failed', /invalid login/i.test(m) ? 'Wrong email or password.' : m);
+              });
+          } }
+        ]
       });
     });
   }
@@ -156,17 +163,6 @@
     }
   }
 
-  // After the magic-link redirect, finish unlocking automatically — no need to
-  // re-add ?pm=1. Once Supabase restores the session, prompt Face ID if owner.
-  function autoUnlockAfterLogin() {
-    if (!AUTH_RETURN || !(window.MC_SB && MC_SB.configured)) return;
-    MC_SB.ready
-      .then(function () { return MC_SB.isOwner(); })
-      .then(function (owner) {
-        if (owner && !isActive()) biometricGate().then(function (ok) { if (ok) setActive(true); });
-      })
-      .catch(function () {});
-  }
 
   // ---- PM bar (visible only while unlocked) --------------------------------
   function localEditCount() {
@@ -488,7 +484,6 @@
   function init() {
     injectStyles();
     attachLongPress();        // ?pm=1 trigger
-    autoUnlockAfterLogin();   // finish unlock after a magic-link return
     renderBar();
     // reveal the PM menu item if we're already unlocked this session
     if (isActive()) {

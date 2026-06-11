@@ -70,15 +70,23 @@
     });
   }
 
+  // email + password sign-in (reliable on mobile — no email round-trip).
+  // Resolves with the session data, or throws on bad credentials.
+  function signInPassword(email, password) {
+    return ready.then(function (c) {
+      if (!c) throw new Error('Supabase not configured');
+      return c.auth.signInWithPassword({ email: email, password: password }).then(function (r) {
+        if (r.error) throw r.error;
+        return r.data;
+      });
+    });
+  }
+
+  // magic-link sign-in (kept as an alternative; not used by the default flow)
   function signIn(email) {
     return ready.then(function (c) {
       if (!c) throw new Error('Supabase not configured');
-      return c.auth.signInWithOtp({
-        email: email,
-        // land back where the owner started; ensure this URL pattern is in the
-        // Supabase redirect allowlist (origin + /** wildcard)
-        options: { emailRedirectTo: location.href }
-      });
+      return c.auth.signInWithOtp({ email: email, options: { emailRedirectTo: location.href } });
     });
   }
 
@@ -136,6 +144,7 @@
     currentUser: currentUser,
     isOwner: isOwner,
     signIn: signIn,
+    signInPassword: signInPassword,
     signOut: signOut,
     getOverrides: getOverrides,
     upsert: upsert,
