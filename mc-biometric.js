@@ -61,7 +61,10 @@
         rp: { name: 'MC Training', id: location.hostname },
         user: { id: rand(16), name: label || 'owner', displayName: 'Program Manager' },
         pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
-        authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' },
+        // Non-discoverable, device-bound credential: triggers the platform
+        // biometric (Face ID / Touch ID) WITHOUT creating a saved/synced passkey,
+        // so it never routes to an external passkey provider (iCloud/Microsoft).
+        authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged', requireResidentKey: false },
         timeout: 60000,
         attestation: 'none'
       }

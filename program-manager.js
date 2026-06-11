@@ -86,21 +86,32 @@
   }
 
   // Face ID gate: enroll on first use, then require a live biometric to unlock.
-  // Skipped only when the device has no platform authenticator (the real write
-  // boundary is still Supabase RLS on the owner account).
+  // Optional by design — if the device can't set it up (no sensor, or the
+  // passkey provider rejects it), we don't lock the owner out: the password
+  // login is the real boundary. A successful skip/failure is remembered so we
+  // stop nagging on this device.
   function biometricGate() {
     if (!window.MC_BIO || !MC_BIO.supported()) return Promise.resolve(true);
+    try { if (localStorage.getItem('mc_bio_optout') === '1') return Promise.resolve(true); } catch (e) {}
     return MC_BIO.platformAvailable().then(function (has) {
       if (!has) return true;                       // no sensor → rely on login alone
       if (MC_BIO.isRegistered()) return MC_BIO.verify();
       return new Promise(function (resolve) {
         showModal({
           title: 'Enable Face ID',
-          body: 'Protect Program Manager on this device with Face ID / Touch ID?',
+          body: 'Use Face ID / Touch ID to protect Program Manager on this device? Optional — you can skip and just use your password.',
           buttons: [
-            { label: 'Skip', cb: function () { resolve(true); } },
+            { label: 'Skip', cb: function () { try { localStorage.setItem('mc_bio_optout', '1'); } catch (e) {} resolve(true); } },
             { label: 'Enable', primary: true, cb: function () {
-              MC_BIO.register('owner').then(function () { return MC_BIO.verify(); }).then(resolve).catch(function () { resolve(false); });
+              MC_BIO.register('owner')
+                .then(function () { return MC_BIO.verify(); })
+                .then(function (ok) { resolve(ok); })
+                .catch(function () {
+                  // device can't enroll a platform biometric — don't lock out
+                  try { localStorage.setItem('mc_bio_optout', '1'); } catch (e) {}
+                  msg('Face ID unavailable', 'This device could not set up Face ID for the app, so Program Manager will rely on your password login. You are unlocked.');
+                  resolve(true);
+                });
             } }
           ]
         });
