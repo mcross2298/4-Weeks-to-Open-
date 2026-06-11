@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Executive Summary — MC Training</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="MC Training"/>
+<meta name="theme-color" content="#0a0a0a"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0a0a0a;--surface:#111;--surface2:#161616;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.1);
+  --gold:#d4af37;--gold-dim:rgba(212,175,55,0.15);--gold-glow:rgba(212,175,55,0.25);
+  --text:#fff;--muted:#9ca3af;--muted2:#64748b;
+}
+body{background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;padding-bottom:40px;}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px;}
+
+/* ── TOP BAR ── */
+.topbar{
+  display:flex;align-items:center;gap:12px;padding:18px 16px 12px;
+  position:sticky;top:0;z-index:20;
+  background:linear-gradient(to bottom,var(--bg) 78%,transparent);
+}
+.back{
+  display:flex;align-items:center;justify-content:center;
+  width:36px;height:36px;border-radius:10px;flex-shrink:0;
+  background:var(--surface);border:1px solid var(--border2);
+  color:var(--gold);font-size:16px;text-decoration:none;
+}
+.topbar-info{flex:1;min-width:0;}
+.topbar-title{font-size:17px;font-weight:900;letter-spacing:-0.02em;}
+.topbar-sub{font-size:12px;color:var(--muted2);margin-top:1px;}
+
+/* ── HERO ── */
+.hero{
+  position:relative;border-radius:18px;overflow:hidden;margin-bottom:14px;
+  background:linear-gradient(135deg,#0a1628,#020b18);
+  border:1px solid rgba(212,175,55,0.28);
+  box-shadow:0 8px 30px rgba(0,0,0,0.45);
+  padding:24px 20px 20px;
+}
+.hero-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 25% 25%,rgba(212,175,55,0.14) 0%,transparent 62%);}
+.eyebrow{font-size:11px;font-weight:900;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.hero h1{font-size:26px;font-weight:900;letter-spacing:-0.02em;line-height:1.15;margin-bottom:10px;position:relative;}
+.hero p{font-size:14px;line-height:1.6;color:#cbd5e1;position:relative;}
+.stat-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;position:relative;}
+.stat-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;
+  color:var(--gold);background:rgba(212,175,55,0.1);
+  border:1px solid rgba(212,175,55,0.3);border-radius:20px;padding:5px 11px;
+}
+
+/* ── JUMP CHIPS ── */
+.jump-row{display:flex;gap:8px;overflow-x:auto;padding:2px 0 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.jump-row::-webkit-scrollbar{display:none;}
+.jump{
+  flex-shrink:0;font-size:12px;font-weight:800;color:#cbd5e1;text-decoration:none;
+  background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:7px 13px;
+}
+.jump:active{border-color:var(--gold);color:var(--gold);}
+
+/* ── SECTIONS ── */
+.sec{margin-bottom:26px;scroll-margin-top:74px;}
+.sec-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.sec-num{
+  flex-shrink:0;width:26px;height:26px;border-radius:8px;
+  background:var(--gold-dim);border:1px solid rgba(212,175,55,0.3);
+  color:var(--gold);font-size:13px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;
+}
+.sec-title{font-size:19px;font-weight:900;letter-spacing:-0.02em;}
+.sec-lede{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:14px;}
+.sec p.body{font-size:13.5px;line-height:1.6;color:#cbd5e1;margin-bottom:12px;}
+.sec b{color:#fff;font-weight:800;}
+.sec .gold{color:var(--gold);font-weight:800;}
+
+/* ── FEATURE CARDS ── */
+.cards{display:flex;flex-direction:column;gap:9px;}
+.card{
+  position:relative;background:var(--surface);border:1px solid var(--border);
+  border-radius:13px;padding:13px 15px 13px 18px;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:linear-gradient(to bottom,var(--rail,var(--gold)),transparent 130%);
+  box-shadow:0 0 12px var(--rail,var(--gold));
+}
+.card-top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:4px;}
+.card-name{font-size:14.5px;font-weight:900;letter-spacing:-0.01em;}
+.card-tag{
+  font-size:10px;font-weight:800;letter-spacing:0.09em;text-transform:uppercase;
+  color:var(--rail,var(--gold));background:rgba(255,255,255,0.04);
+  border:1px solid var(--border2);border-radius:14px;padding:2px 8px;
+}
+.card-tx{font-size:12.5px;line-height:1.55;color:#9ca3af;}
+.card-tx b{color:#e2e8f0;font-weight:800;}
+
+/* ── CHECK LIST ── */
+.ticks{list-style:none;display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.ticks li{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.55;color:#cbd5e1;}
+.ticks .chk{color:var(--gold);font-weight:900;flex-shrink:0;}
+.ticks b{color:#fff;font-weight:800;}
+
+/* ── COACH NOTE ── */
+.coach{
+  background:var(--surface);border:1px solid var(--border2);border-radius:14px;
+  padding:14px 16px;margin-top:14px;position:relative;
+}
+.coach::before{content:'🎙️ COACH';position:absolute;top:-9px;left:14px;font-size:10px;font-weight:900;letter-spacing:0.12em;color:var(--gold);background:var(--bg);padding:0 7px;}
+.coach p{font-size:13.5px;line-height:1.6;color:#e2e8f0;margin-top:4px;}
+
+/* ── DIVIDER LABEL ── */
+.tier{font-size:11px;font-weight:900;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted2);margin:16px 0 10px;display:flex;align-items:center;gap:8px;}
+.tier.flag{color:var(--gold);}
+.tier::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.1),transparent);}
+
+/* ── PALETTE SWATCHES ── */
+.swatches{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.swatch{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--surface);border:1px solid var(--border2);border-radius:20px;
+  padding:5px 12px 5px 7px;font-size:11.5px;font-weight:800;color:#cbd5e1;
+}
+.swatch .sw{width:14px;height:14px;border-radius:50%;box-shadow:0 0 8px currentColor;}
+
+/* ── FOOT CTAs ── */
+.foot{margin-top:30px;}
+.cta{
+  display:flex;align-items:center;gap:10px;text-decoration:none;
+  background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.3);
+  border-radius:14px;padding:13px 15px;margin-bottom:10px;
+}
+.cta:active{background:rgba(212,175,55,0.14);}
+.cta-ico{font-size:19px;}
+.cta-body{flex:1;min-width:0;}
+.cta-lbl{font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);}
+.cta-nm{font-size:13.5px;font-weight:800;color:#fff;margin-top:1px;}
+.cta-arrow{color:var(--gold);font-size:16px;flex-shrink:0;}
+.cta.solid{background:var(--gold);border-color:var(--gold);justify-content:center;}
+.cta.solid .cta-nm{color:#000;font-size:15px;font-weight:900;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="quick-tour.html" class="back" aria-label="Back to Quick Tour">←</a>
+  <div class="topbar-info">
+    <div class="topbar-title">Executive Summary</div>
+    <div class="topbar-sub">The full app, end to end — one read</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ── HERO ── -->
+  <div class="hero">
+    <div class="hero-glow"></div>
+    <div class="eyebrow">MC Training · The Big Picture</div>
+    <h1>Everything in your pocket gym, on one page</h1>
+    <p>MC Training is a complete training system that installs on your phone and works with zero signal. Nine programs from five designers, a deep exercise library, set-by-set logging with automatic rest timers, PRs detected the moment you earn them, and a builder for rolling your own workouts. This page is the full end-to-end — read it once and you'll know exactly what this app can do.</p>
+    <div class="stat-row">
+      <span class="stat-chip">🏋️ 9 programs</span>
+      <span class="stat-chip">📚 500+ exercises</span>
+      <span class="stat-chip">🏆 Auto PR tracking</span>
+      <span class="stat-chip">📲 Offline-ready PWA</span>
+    </div>
+  </div>
+
+  <!-- ── JUMP NAV ── -->
+  <div class="jump-row">
+    <a class="jump" href="#hub">⚡ The Hub</a>
+    <a class="jump" href="#programs">🏋️ Programs</a>
+    <a class="jump" href="#conditioning">🔥 Conditioning</a>
+    <a class="jump" href="#engine">✅ Logging Engine</a>
+    <a class="jump" href="#yours">🔧 Make It Yours</a>
+    <a class="jump" href="#data">☁️ Your Data</a>
+    <a class="jump" href="#look">🎨 The Look</a>
+  </div>
+
+  <!-- ── 1 · THE HUB ── -->
+  <div class="sec" id="hub">
+    <div class="sec-head"><div class="sec-num">1</div><div class="sec-title">The Dashboard — your home base</div></div>
+    <p class="sec-lede">Three zones, one bottom tab bar. Learn these and you can reach anything in the app in one or two taps.</p>
+    <ul class="ticks">
+      <li><span class="chk">✓</span><span><b>Current Program hero card</b> — pin the program you're running and it sits front-and-center with its splits, phase pills, and a ring showing where you are. Tap “See all” to swap it anytime; it remembers your pick.</span></li>
+      <li><span class="chk">✓</span><span><b>Training Tools grid</b> — Exercise Library, Workout Logs, Build Your Own, Program Guide, and the Quick Tour. Your power tools, all in one block.</span></li>
+      <li><span class="chk">✓</span><span><b>Bottom tabs</b> — <span class="gold">⚡ Dashboard · 🏋️ Programs · 🔥 Conditioning</span>. That bar follows you everywhere, so you can't get lost.</span></li>
+      <li><span class="chk">✓</span><span><b>Smart resume</b> — leave mid-session and a resume banner brings you right back where you left off, every set intact.</span></li>
+    </ul>
+  </div>
+
+  <!-- ── 2 · PROGRAMS ── -->
+  <div class="sec" id="programs">
+    <div class="sec-head"><div class="sec-num">2</div><div class="sec-title">Nine programs, five designers</div></div>
+    <p class="sec-lede">Every program is color-coded, fully built out split by split, and wired into the same logging engine. Pick your style — heavy, varied, pumped, or athletic.</p>
+
+    <div class="tier flag">★ Flagship Programs</div>
+    <div class="cards">
+      <div class="card" style="--rail:#e11d48;">
+        <div class="card-top"><span class="card-name">Strength &amp; Supersets</span><span class="card-tag">Mike Cross</span></div>
+        <div class="card-tx">The headliner. A 6-week cycle built on <b>heavy compounds (4–8 reps)</b> that roll straight into high-volume supersets, tri-sets, tempo work, and AMRAP finishers. Lift heavy, then chase the burn.</div>
+      </div>
+      <div class="card" style="--rail:#7F77DD;">
+        <div class="card-top"><span class="card-name">Project Muscle Confusion</span><span class="card-tag">Mike Cross</span></div>
+        <div class="card-tx"><b>7 rotating splits, two weeks each</b> — supersets, pyramids, drop sets, and tempo combos that never let your body settle in. Adaptation is the enemy; PMC keeps it guessing.</div>
+      </div>
+      <div class="card" style="--rail:#d4af37;">
+        <div class="card-top"><span class="card-name">Mike Cross' Favorite Splits</span><span class="card-tag">Mike Cross</span></div>
+        <div class="card-tx"><b>5 personal splits, 18 workouts</b> — how Mike actually trains, spanning every major style from 7-day weeks to classic Push/Pull/Legs.</div>
+      </div>
+      <div class="card" style="--rail:#14b8a6;">
+        <div class="card-top"><span class="card-name">Best of Both Worlds</span><span class="card-tag">Mike Cross</span></div>
+        <div class="card-tx"><b>6 body parts on a 4-week cycle</b>, welded to daily LISS and HIIT conditioning. Build muscle without giving up your cardio engine.</div>
+      </div>
+      <div class="card" style="--rail:#f97316;">
+        <div class="card-top"><span class="card-name">Iron &amp; Engine</span><span class="card-tag">Coming Soon</span></div>
+        <div class="card-tx">Push/Pull/Legs strength plus a <b>3-day conditioning engine</b>. Built for lifters who want to be strong <b>and</b> durable.</div>
+      </div>
+    </div>
+
+    <div class="tier">Influencer Programs</div>
+    <div class="cards">
+      <div class="card" style="--rail:#1D9E75;">
+        <div class="card-top"><span class="card-name">STNDR</span><span class="card-tag">CBUM</span></div>
+        <div class="card-tx"><b>4 programs</b> — 4 Weeks to Open, PPL, Legacy Prep, and a Bro Split. German Volume 10×10s, strict tempo ratios, and longer rests. Quality reps over speed.</div>
+      </div>
+      <div class="card" style="--rail:#D85A30;">
+        <div class="card-top"><span class="card-name">Daily Pump</span><span class="card-tag">Julian Smith</span></div>
+        <div class="card-tx"><b>10 workouts</b> of fast, high-rep isolation chasing maximum pump — with 5 variation modes: Standard, Pyramid, Reverse Pyramid, Drop Sets, and Tempo.</div>
+      </div>
+      <div class="card" style="--rail:#378ADD;">
+        <div class="card-top"><span class="card-name">Daily Gainz</span><span class="card-tag">Bradley Martyn</span></div>
+        <div class="card-tx"><b>8 programs</b> — Lean Bulk, Shred, Every Chest Day, Every Arms Day, and frequency variants. 5×5 strength anchors, drop-set finishers, 300-rep ab circuits, and a 🔥 streak counter you keep alive by showing up.</div>
+      </div>
+      <div class="card" style="--rail:#639922;">
+        <div class="card-top"><span class="card-name">PSU Football</span><span class="card-tag">Penn State</span></div>
+        <div class="card-tx">A real college <b>strength &amp; conditioning system</b> in 3 phases — athletic performance training straight from the source.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 3 · CONDITIONING ── -->
+  <div class="sec" id="conditioning">
+    <div class="sec-head"><div class="sec-num">3</div><div class="sec-title">Conditioning Corner</div></div>
+    <p class="sec-lede">The 🔥 tab on your bottom bar. Cardio, core, and the gauntlets — run them standalone or bolt one onto the end of a lift.</p>
+    <ul class="ticks">
+      <li><span class="chk">✓</span><span><b>Not for the Faint of Heart</b> — 9 challenge workouts built for conditioning and mental toughness: <b>The 500</b> (a 300-lunge, pushup-ladder monster), <b>Hell Week</b> (a 90–120 minute multi-phase gauntlet), <b>Driveway Demolition</b>, <b>Turn &amp; Burn</b>, the <b>45-Minute Burner</b>, <b>Popeye</b> forearm isolators, a 3-phase <b>Boxing Routine</b>, <b>Battle Ropes</b> across 5 difficulty levels, and the <b>Full Body Pyramid</b>. Push until you can't.</span></li>
+      <li><span class="chk">✓</span><span><b>Cardio &amp; Core</b> — a full reference list of conditioning movements to finish any session strong.</span></li>
+    </ul>
+  </div>
+
+  <!-- ── 4 · THE ENGINE ── -->
+  <div class="sec" id="engine">
+    <div class="sec-head"><div class="sec-num">4</div><div class="sec-title">The logging engine — the heartbeat</div></div>
+    <p class="sec-lede">Every workout in every program runs on the same core loop: log the set, rest on the clock, beat last time, bank the PR.</p>
+    <ul class="ticks">
+      <li><span class="chk">✓</span><span><b>Log Sets</b> — tap it under any exercise, punch in weight and reps, tap the ✓. The set locks in and your <b>prescribed rest timer auto-starts</b>. Drop-set and AMRAP rows appear automatically when the program calls for them.</span></li>
+      <li><span class="chk">✓</span><span><b>“Last: X lb · date” on every card</b> — your built-in cue to progressively overload. You always know what to beat.</span></li>
+      <li><span class="chk">✓</span><span><b>Superset timers</b> — paired exercises get their own rhythm: quick hop between movements, full rest after the pair.</span></li>
+      <li><span class="chk">✓</span><span><b>Live stat strip</b> — check your first set and a sticky strip wakes up with session duration and sets logged. Tap Summary anytime to watch the session take shape.</span></li>
+      <li><span class="chk">✓</span><span><b>Finish Workout</b> — saves the session and <b>auto-detects personal records</b>. Beat a previous best and it's tagged with a gold 🏆 PR. No manual tracking, ever.</span></li>
+      <li><span class="chk">✓</span><span><b>Workout Logs</b> — three running totals up top (Workouts · Sets Logged · PRs Set) over your full dated history of every weight you actually moved. Proof of work, and your roadmap for next time.</span></li>
+      <li><span class="chk">✓</span><span><b>Rep progression</b> — per-exercise history across sessions, so you can see the line going up.</span></li>
+    </ul>
+    <div class="coach"><p>This is where the app earns its keep. Punch in the work, let the timers run the rests, and watch the PRs stack up — the record keeps itself.</p></div>
+  </div>
+
+  <!-- ── 5 · MAKE IT YOURS ── -->
+  <div class="sec" id="yours">
+    <div class="sec-head"><div class="sec-num">5</div><div class="sec-title">Make it yours</div></div>
+    <p class="sec-lede">No program survives contact with a crowded gym — so every exercise bends to you, and you can build sessions from scratch.</p>
+    <ul class="ticks">
+      <li><span class="chk">✓</span><span><b>The ⋮ menu</b> — every exercise card carries a control panel: <b>🔁 Replace</b> any movement from the Library, <b>↕️ Reorder</b> the lineup, <b>⏱️ Add Tempo</b> (eccentric:pause:concentric:pause, shown as a pill), and <b>📝 Notes</b> to your future self. A dot on the ⋮ flags cards with saved notes or tempo. Everything sticks per workout.</span></li>
+      <li><span class="chk">✓</span><span><b>Build Your Own</b> — name a workout, search or filter the library by muscle group, tap exercises into your tray, set sets &amp; reps, and hit Create. It lands under My Custom Workouts and logs sets and PRs exactly like the built-ins.</span></li>
+      <li><span class="chk">✓</span><span><b>Exercise Library</b> — 500+ movements grouped by muscle, with real-time search and tap-to-expand variations.</span></li>
+      <li><span class="chk">✓</span><span><b>Program Guide</b> — the methodology, set styles, and rep ranges behind every program, so you always know the why.</span></li>
+    </ul>
+  </div>
+
+  <!-- ── 6 · YOUR DATA ── -->
+  <div class="sec" id="data">
+    <div class="sec-head"><div class="sec-num">6</div><div class="sec-title">Your data, everywhere you train</div></div>
+    <p class="sec-lede">Offline-first by design, cloud-synced when you want it, locked down where it counts.</p>
+    <ul class="ticks">
+      <li><span class="chk">✓</span><span><b>Installs like a native app</b> — Add to Home Screen and it launches full-screen, no browser bar. Dead gym signal? Programs, logging, and PRs keep working. A green <b>🔄 Update available</b> banner lets you refresh on your terms.</span></li>
+      <li><span class="chk">✓</span><span><b>On-device first</b> — logs, PRs, custom workouts, notes, and tempo all save locally. Private and instant.</span></li>
+      <li><span class="chk">✓</span><span><b>Invite-only accounts + cross-device sync</b> — sign in from the dashboard avatar and your training data follows you across devices. No public signup, no sign-in nag.</span></li>
+      <li><span class="chk">✓</span><span><b>Face ID / Touch ID</b> — biometric, device-bound unlock gates the Program Manager, where the owner can edit and customize programs directly.</span></li>
+    </ul>
+  </div>
+
+  <!-- ── 7 · THE LOOK ── -->
+  <div class="sec" id="look">
+    <div class="sec-head"><div class="sec-num">7</div><div class="sec-title">The look — black, gold &amp; color-coded</div></div>
+    <p class="sec-lede">A dark, premium aesthetic built for a phone held in chalky hands.</p>
+    <p class="body">Pure-black surfaces with <span class="gold">gold</span> as the signature accent — PRs, active states, and finish buttons all wear it. Every program owns a color, carried from its dashboard card down to the accent rail on every exercise card. Flagship cards breathe: ambient glows, sweeping sheens, and pulsing icons. Checked sets flip lime green with a satisfying strikethrough; supersets get violet rails, tri-sets amber. A full badge system tags every set style at a glance — pyramid, tempo, drop, AMRAP, finisher and more.</p>
+    <div class="swatches">
+      <span class="swatch"><span class="sw" style="background:#d4af37;color:#d4af37;"></span>Gold · brand &amp; PRs</span>
+      <span class="swatch"><span class="sw" style="background:#e11d48;color:#e11d48;"></span>Crimson · Strength</span>
+      <span class="swatch"><span class="sw" style="background:#7F77DD;color:#7F77DD;"></span>Violet · PMC</span>
+      <span class="swatch"><span class="sw" style="background:#14b8a6;color:#14b8a6;"></span>Teal · BOBW</span>
+      <span class="swatch"><span class="sw" style="background:#378ADD;color:#378ADD;"></span>Blue · Gainz</span>
+      <span class="swatch"><span class="sw" style="background:#D85A30;color:#D85A30;"></span>Orange · Pump</span>
+      <span class="swatch"><span class="sw" style="background:#E24B4A;color:#E24B4A;"></span>Red · FAINT</span>
+      <span class="swatch"><span class="sw" style="background:#34d399;color:#34d399;"></span>Lime · set done</span>
+    </div>
+  </div>
+
+  <!-- ── FOOT ── -->
+  <div class="foot">
+    <div class="coach" style="margin-bottom:18px;"><p>That's the whole machine — programs to pick from, an engine that logs every rep, tools to make it yours, and a record that follows you anywhere. Take the guided tour for the hands-on version, or skip the line and go train.</p></div>
+    <a class="cta" href="quick-tour.html">
+      <div class="cta-ico">🎬</div>
+      <div class="cta-body"><div class="cta-lbl">Hands-on version</div><div class="cta-nm">Take the 3-minute guided tour</div></div>
+      <div class="cta-arrow">→</div>
+    </a>
+    <a class="cta solid" href="dashboard.html"><div class="cta-nm">⚡ Go to my Dashboard</div></a>
+  </div>
+
+</div>
+</body>
+</html>
