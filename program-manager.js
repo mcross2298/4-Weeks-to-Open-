@@ -1,59 +1,53 @@
 /* ==========================================================================
    program-manager.js  —  owner-only Program Manager (permanent edits)
    --------------------------------------------------------------------------
-   Passcode-gated editor for PERMANENT program changes, layered on
+   Owner-authenticated editor for PERMANENT program changes, layered on
    program-overrides.js (window.MC_PO). Normal users never see any of this UI.
 
-   Entry: long-press (~0.7s) the page title (.topbar-title on the dashboard,
-   or the first <h1> on a workout page). First use creates the passcode
-   (SHA-256 hash in localStorage); later uses unlock with it. Unlock lasts
-   for the browser session (sessionStorage).
+   Entry: navigate to any page with ?pm=1 (reliable across PWA shells). Unlock
+   is two layers:
+     1. Supabase magic-link login (MC_SB) — establishes the owner identity and
+        persists across visits. Writes are owner-only, enforced server-side by
+        Row-Level Security (the real security boundary).
+     2. Face ID / Touch ID (MC_BIO, WebAuthn) — a per-session local biometric
+        gate. Unlock lasts the browser session (sessionStorage).
+   All dialogs use the custom showModal (native prompt/alert are suppressed in
+   iOS PWAs).
 
    While unlocked:
      • every exercise meatball (⋮) menu gains "Program Manager edit", which
        opens an editor to permanently replace the exercise (picker backed by
        exercise-catalog.js) or edit sets / rest / note / tempo, or reset
        the card back to the original program.
-     • a fixed PM bar offers Export (downloads the merged
-       program-overrides.json to commit to the repo), Import, Discard local
-       edits, and Lock.
+     • a fixed PM bar offers Publish (one-tap upsert to Supabase — live for all
+       users), Export (download the program-overrides.json fallback), Import,
+       Discard local edits, and Lock.
 
    Edits write to the localStorage working copy and preview instantly via
-   MC_PO.refresh(); they reach other users only after the exported JSON is
-   committed and GitHub Pages redeploys.
-
-   The passcode is an accidental-edit gate on a client-side static app,
-   not a security boundary.
+   MC_PO.refresh(); Publish pushes them to Supabase so every user sees them
+   within ~1 minute (no redeploy).
    ========================================================================== */
 (function () {
   if (window.__mcProgramManager) return;   // guard against double-include
   window.__mcProgramManager = true;
 
-  var PASS_KEY   = 'mc_pm_pass';      // hex SHA-256 of the owner passcode
-  var ACTIVE_KEY = 'mc_pm_active';    // sessionStorage: '1' while unlocked
+  var ACTIVE_KEY = 'mc_pm_active';    // sessionStorage: '1' while unlocked this session
   var NAME_SEL   = '.ex-name, .lift-name, .var-name, .ss-name';
 
   var bar = null, editorOverlay = null, editorCard = null;
 
-  // ---- passcode -----------------------------------------------------------
-  function hashStr(s) { var h = 5381, i = s.length; while (i) h = (h * 33) ^ s.charCodeAt(--i); return 'h' + (h >>> 0).toString(36); }
-
-  function digest(text) {
-    if (window.crypto && crypto.subtle && window.TextEncoder) {
-      return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)).then(function (buf) {
-        return Array.prototype.map.call(new Uint8Array(buf), function (b) {
-          return ('0' + b.toString(16)).slice(-2);
-        }).join('');
-      });
-    }
-    return Promise.resolve(hashStr(text));   // non-secure-context fallback
-  }
-
+  // ---- unlock state -------------------------------------------------------
   function isActive() { try { return sessionStorage.getItem(ACTIVE_KEY) === '1'; } catch (e) { return false; } }
   function setActive(on) {
     try { on ? sessionStorage.setItem(ACTIVE_KEY, '1') : sessionStorage.removeItem(ACTIVE_KEY); } catch (e) {}
     renderBar();
+    // reveal/hide the owner-only item in any already-built meatball menu
+    var pmBtn = document.querySelector('[data-act="pm"]');
+    if (pmBtn) pmBtn.style.display = on ? '' : 'none';
   }
+
+  // one-button info dialog (iOS-safe custom modal, not native alert)
+  function msg(title, body) { showModal({ title: title, body: body || '', buttons: [{ label: 'OK', cb: function () {} }] }); }
 
   // ---- custom modal (replaces prompt/alert which are suppressed in iOS PWA) --
   function showModal(cfg) {
@@ -91,44 +85,59 @@
     });
   }
 
-  function unlockFlow() {
-    var stored = null;
-    try { stored = localStorage.getItem(PASS_KEY); } catch (e) {}
-    if (!stored) {
-      showModal({
-        title: 'Create Passcode',
-        body: 'First-time setup — choose an owner passcode.',
-        fields: [
-          { id: 'p1', label: 'Passcode', type: 'password' },
-          { id: 'p2', label: 'Confirm passcode', type: 'password' }
-        ],
-        buttons: [
-          { label: 'Cancel', cb: function() {} },
-          { label: 'Create', primary: true, cb: function(v) {
-            if (!v.p1) return;
-            if (v.p1 !== v.p2) { showModal({ title: 'Mismatch', body: 'Passcodes did not match.', buttons: [{ label: 'OK', cb: function(){} }] }); return; }
-            digest(v.p1).then(function(h) {
-              try { localStorage.setItem(PASS_KEY, h); } catch(e) {}
-              setActive(true);
-            });
-          }}
-        ]
+  // Face ID gate: enroll on first use, then require a live biometric to unlock.
+  // Skipped only when the device has no platform authenticator (the real write
+  // boundary is still Supabase RLS on the owner account).
+  function biometricGate() {
+    if (!window.MC_BIO || !MC_BIO.supported()) return Promise.resolve(true);
+    return MC_BIO.platformAvailable().then(function (has) {
+      if (!has) return true;                       // no sensor → rely on login alone
+      if (MC_BIO.isRegistered()) return MC_BIO.verify();
+      return new Promise(function (resolve) {
+        showModal({
+          title: 'Enable Face ID',
+          body: 'Protect Program Manager on this device with Face ID / Touch ID?',
+          buttons: [
+            { label: 'Skip', cb: function () { resolve(true); } },
+            { label: 'Enable', primary: true, cb: function () {
+              MC_BIO.register('owner').then(function () { return MC_BIO.verify(); }).then(resolve).catch(function () { resolve(false); });
+            } }
+          ]
+        });
       });
+    });
+  }
+
+  function unlockFlow() {
+    if (!window.MC_SB || !MC_SB.configured) {
+      msg('Not configured', 'Owner login is not set up yet (missing Supabase keys).');
       return;
     }
-    showModal({
-      title: 'Program Manager',
-      fields: [{ id: 'p', label: 'Passcode', type: 'password' }],
-      buttons: [
-        { label: 'Cancel', cb: function() {} },
-        { label: 'Unlock', primary: true, cb: function(v) {
-          if (v.p === null) return;
-          digest(v.p).then(function(h) {
-            if (h === stored) setActive(true);
-            else showModal({ title: 'Wrong passcode', buttons: [{ label: 'OK', cb: function(){} }] });
-          });
-        }}
-      ]
+    MC_SB.isOwner().then(function (owner) {
+      if (owner) {
+        biometricGate().then(function (ok) {
+          if (ok) setActive(true);
+          else msg('Locked', 'Face ID check failed or was cancelled.');
+        });
+        return;
+      }
+      MC_SB.currentUser().then(function (u) {
+        if (u) { msg('Not an admin', 'Signed in as ' + (u.email || 'this account') + ', which is not an admin.'); return; }
+        showModal({
+          title: 'Owner sign-in',
+          body: 'Enter your owner email — we will send a magic login link.',
+          fields: [{ id: 'email', label: 'Email', type: 'email' }],
+          buttons: [
+            { label: 'Cancel', cb: function () {} },
+            { label: 'Send link', primary: true, cb: function (v) {
+              if (!v.email) return;
+              MC_SB.signIn(v.email.trim())
+                .then(function () { msg('Check your email', 'Open the login link on this device, then reload with ?pm=1 to finish unlocking.'); })
+                .catch(function (e) { msg('Sign-in failed', (e && e.message) ? e.message : 'unknown error'); });
+            } }
+          ]
+        });
+      });
     });
   }
 
@@ -159,6 +168,7 @@
       bar.innerHTML =
         '<span class="mc-pm-tag">🛠️ PM</span>' +
         '<span class="mc-pm-count"></span>' +
+        '<button class="mc-pm-publish" data-act="publish">Publish</button>' +
         '<button data-act="export">Export</button>' +
         '<button data-act="import">Import</button>' +
         '<button data-act="discard">Discard</button>' +
@@ -167,7 +177,8 @@
       bar.addEventListener('click', function (e) {
         var b = e.target.closest('button'); if (!b) return;
         var act = b.dataset.act;
-        if (act === 'export') doExport();
+        if (act === 'publish') doPublish();
+        else if (act === 'export') doExport();
         else if (act === 'import') doImport();
         else if (act === 'discard') doDiscard();
         else if (act === 'lock') setActive(false);
@@ -175,6 +186,36 @@
     }
     var n = localEditCount();
     bar.querySelector('.mc-pm-count').textContent = n ? n + ' unpublished edit' + (n === 1 ? '' : 's') : 'no local edits';
+    var pub = bar.querySelector('.mc-pm-publish');
+    if (pub) pub.disabled = !n || !(window.MC_SB && MC_SB.configured);
+  }
+
+  // one-tap publish: push the local working copy to Supabase (upsert edits,
+  // delete resets), then clear local so it folds into the live published set.
+  // Writes are owner-only — RLS rejects anything else server-side.
+  function doPublish() {
+    if (!window.MC_PO) { msg('Not loaded', 'Override layer not loaded on this page.'); return; }
+    if (!window.MC_SB || !MC_SB.configured) { msg('No backend', 'Supabase is not configured — use Export instead.'); return; }
+    var pages = (MC_PO.local() || {}).pages || {};
+    var ops = [], pid, nm;
+    for (pid in pages) for (nm in pages[pid]) {
+      var patch = pages[pid][nm];
+      ops.push((patch && patch.reset) ? MC_SB.remove(pid, nm) : MC_SB.upsert(pid, nm, patch));
+    }
+    if (!ops.length) { msg('Nothing to publish', 'No local edits to publish.'); return; }
+    var btn = bar && bar.querySelector('.mc-pm-publish');
+    if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
+    Promise.all(ops).then(function () {
+      MC_PO.setLocal({ pages: {} });        // local edits are now published
+      if (btn) btn.textContent = 'Publish';
+      renderBar();
+      MC_PO.refresh();
+      msg('Published', 'Live for all users within ~1 minute.');
+    }).catch(function (e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Publish'; }
+      var detail = (e && e.message) ? e.message : 'unknown error';
+      msg('Publish failed', detail + ' — if this is a permission error, your account is not in the admins table yet.');
+    });
   }
 
   function doExport() {
@@ -381,6 +422,8 @@
       '.mc-pm-bar .mc-pm-count{flex:1;font-weight:600;}' +
       '.mc-pm-bar button{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);' +
         'color:#cbd5e1;font-size:11px;font-weight:800;border-radius:8px;padding:6px 9px;cursor:pointer;}' +
+      '.mc-pm-bar .mc-pm-publish{background:#22d3ee;border-color:#22d3ee;color:#03222b;}' +
+      '.mc-pm-bar .mc-pm-publish:disabled{background:rgba(34,211,238,0.25);border-color:transparent;color:#7dd3e8;cursor:default;}' +
       '.mc-pm-overlay{position:fixed;inset:0;z-index:1400;display:none;align-items:center;' +
         'justify-content:center;padding:16px;background:rgba(0,0,0,0.65);' +
         'backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}' +
@@ -428,21 +471,13 @@
 
   function init() {
     injectStyles();
-    attachLongPress();
+    attachLongPress();   // ?pm=1 trigger
     renderBar();
-    // Force the PM button visible in any already-built meatball menu
+    // reveal the PM menu item if we're already unlocked this session
     if (isActive()) {
       var btn = document.querySelector('[data-act="pm"]');
       if (btn) btn.style.display = '';
     }
-  }
-
-  // Also hook setActive so the PM button appears the moment PM unlocks
-  var _origSetActive = setActive;
-  function setActive(on) {
-    _origSetActive(on);
-    var btn = document.querySelector('[data-act="pm"]');
-    if (btn) btn.style.display = on ? '' : 'none';
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
