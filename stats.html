@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Stats — MC Training</title>
+<link rel="stylesheet" href="base.css?v=65"/>
+<link rel="stylesheet" href="mc-nav.css"/>
+<style>
+:root{--accent:#d4af37;--accent-rgb:212,175,55;}
+body{background:var(--body-bg,#0a0a0a);}
+.topbar{display:flex;align-items:center;gap:12px;padding:14px 18px;}
+.back{font-size:20px;color:var(--accent);text-decoration:none;-webkit-tap-highlight-color:transparent;}
+.topbar-title{font-size:15px;font-weight:900;color:#e2e8f0;}
+.topbar-sub{font-size:11px;color:#64748b;font-weight:600;}
+.hero{padding:10px 18px 18px;}
+.hero-eyebrow{font-size:11px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
+.hero-title{font-size:26px;font-weight:900;color:#fff;letter-spacing:-0.02em;margin:0 0 6px;}
+.hero-sub{font-size:13px;color:#64748b;line-height:1.5;margin:0;}
+.content{max-width:680px;margin:0 auto;padding:0 18px 90px;}
+.sec{margin-bottom:26px;}
+.sec-title{font-size:13px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#94a3b8;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.sec-title:after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(212,175,55,0.3),transparent);}
+.card{background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:16px;}
+.muted{color:#64748b;font-size:12px;font-weight:600;}
+.empty{padding:22px 0;text-align:center;color:#64748b;font-size:13px;font-weight:700;}
+.mg-row{display:flex;align-items:center;gap:10px;padding:7px 0;}
+.mg-ico{width:22px;text-align:center;font-size:15px;flex-shrink:0;}
+.mg-name{width:84px;font-size:12px;font-weight:800;color:#cbd5e1;flex-shrink:0;}
+.mg-bar-wrap{flex:1;height:10px;border-radius:5px;background:rgba(255,255,255,0.05);overflow:hidden;}
+.mg-bar{height:100%;border-radius:5px;background:var(--accent);opacity:0.8;}
+.mg-val{width:60px;text-align:right;font-size:11px;font-weight:800;color:#94a3b8;flex-shrink:0;}
+.pr-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.pr-row:last-child{border-bottom:none;}
+.pr-ico{font-size:15px;}
+.pr-name{flex:1;font-size:13px;font-weight:800;color:#e2e8f0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pr-wt{font-size:13px;font-weight:900;color:var(--accent);flex-shrink:0;}
+.pr-date{font-size:11px;font-weight:700;color:#64748b;flex-shrink:0;width:56px;text-align:right;}
+.streak-line{margin-top:10px;text-align:center;font-size:12px;font-weight:800;color:#a3e635;}
+.stats-top{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:26px;}
+.stat-cell{background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 8px;text-align:center;}
+.stat-num{font-size:20px;font-weight:900;color:var(--accent);}
+.stat-lbl{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;margin-top:4px;}
+</style>
+</head><body>
+
+<div class="topbar">
+  <a href="dashboard.html" class="back">←</a>
+  <div>
+    <div class="topbar-title">Stats</div>
+    <div class="topbar-sub">Your training, charted</div>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-eyebrow">📈 Stats Hub</div>
+  <h1 class="hero-title">Numbers Don't Lie</h1>
+  <p class="hero-sub">Volume, PRs, tonnage and consistency — built from every set you've logged.</p>
+</div>
+
+<div class="content">
+  <div class="stats-top" id="statsTop"></div>
+
+  <div class="sec">
+    <div class="sec-title">🗓️ Consistency</div>
+    <div class="card" id="heatmapCard"><div class="empty">Loading…</div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">💪 Volume by Muscle Group <span class="muted" style="margin-left:auto;">last 30 days</span></div>
+    <div class="card" id="muscleCard"><div class="empty">Loading…</div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">🏗️ Monthly Tonnage</div>
+    <div class="card" id="tonnageCard"><div class="empty">Loading…</div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">🏆 PR Timeline</div>
+    <div class="card" id="prCard"><div class="empty">Loading…</div></div>
+  </div>
+
+  <div id="backupStatus" style="display:none;"></div>
+</div>
+
+<script src="mc-nav.js"></script>
+<script src="mc-chart.js"></script>
+<script src="mc-muscle-map.js"></script>
+<script src="mc-stats.js"></script>
+<script src="mc-live-tracker.js"></script>
+<script src="mc-supabase.js"></script>
+<script src="mc-sync.js"></script>
+<script src="mc-backup-status.js"></script>
+<script src="mc-sw-update.js?v=45"></script>
+</body></html>

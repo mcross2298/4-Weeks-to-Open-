@@ -35,7 +35,8 @@
   var TABS = [
     { label: 'Dashboard',    ico: '⚡',  href: HUB },
     { label: 'Programs',     ico: '🏋️', href: HUB + '?tab=programs' },
-    { label: 'Conditioning', ico: '🔥', href: HUB + '?tab=conditioning' }
+    { label: 'Conditioning', ico: '🔥', href: HUB + '?tab=conditioning' },
+    { label: 'Stats',        ico: '📈', href: 'stats.html' }
   ];
 
   function build() {
