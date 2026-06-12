@@ -213,6 +213,11 @@ function delWorkout(id){
   renderSaved();
 }
 
+function shareWorkout(id){
+  var w = getSaved().filter(function(x){ return x.id===id; })[0];
+  if(w && window.MCShare) MCShare.shareWorkout(w);
+}
+
 function renderSaved(){
   var el = document.getElementById('savedList');
   var saved = getSaved();
@@ -225,6 +230,7 @@ function renderSaved(){
       + '<div class="saved-meta">'+w.exercises.length+' exercise'+(w.exercises.length!==1?'s':'')+' · created '+when+'</div>'
       + '<div class="saved-actions">'
       +   '<a class="run-btn" href="run-workout.html?id='+encodeURIComponent(w.id)+'">▶ Start Workout</a>'
+      +   '<button class="del-btn" onclick="shareWorkout(\''+w.id+'\')">📤 Share</button>'
       +   '<button class="del-btn" onclick="delWorkout(\''+w.id+'\')">Delete</button>'
       + '</div></div>';
   }).join('');
@@ -234,6 +240,7 @@ buildFilters();
 renderList();
 renderSaved();
 </script>
+<script src="mc-share.js"></script>
 <script src="mc-nav.js"></script>
 </body>
 </html>

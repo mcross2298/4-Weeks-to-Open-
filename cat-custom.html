@@ -56,6 +56,7 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
   <div class="hd-actions" id="hdActions" style="display:none;">
     <button class="hd-btn pin" id="pinBtn">📌 Set as Active</button>
     <a class="hd-btn" id="editBtn" href="#">✏️ Edit</a>
+    <button class="hd-btn" id="shareBtn">📤 Share</button>
     <button class="hd-btn danger" id="delBtn" title="Delete program">🗑</button>
   </div>
 </div>
@@ -67,6 +68,7 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
 </div>
 
 <script src="mc-program-store.js"></script>
+<script src="mc-share.js"></script>
 <script>
 (function () {
   var qs = new URLSearchParams(location.search);
@@ -107,6 +109,9 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
       document.dispatchEvent(new CustomEvent('mc:program-changed'));
     } catch (e) {}
     $('pinBtn').textContent = '✓ Active Program';
+  });
+  $('shareBtn').addEventListener('click', function () {
+    if (window.MCShare) MCShare.shareProgram(p);
   });
   $('delBtn').addEventListener('click', function () {
     if (!confirm('Delete "' + p.name + '"? Logged history is kept; the program itself is removed.')) return;
