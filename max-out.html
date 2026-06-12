@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Max-Out Mode — MC Training</title>
+<link rel="stylesheet" href="base.css?v=65"/>
+<link rel="stylesheet" href="mc-nav.css"/>
+<script src="mc-theme.js"></script>
+<style>
+body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
+.topbar{display:flex;align-items:center;gap:12px;padding:16px 18px 8px;}
+.back{font-size:20px;color:var(--accent,#d4af37);text-decoration:none;-webkit-tap-highlight-color:transparent;}
+.topbar-title{font-size:16px;font-weight:900;color:#fff;}
+.topbar-sub{font-size:11px;color:#64748b;font-weight:600;}
+.content{max-width:560px;margin:0 auto;padding:10px 18px 110px;}
+.sec-lbl{font-size:11px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#94a3b8;margin:18px 0 8px;}
+.mx-search{width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.05);color:#f1f5f9;font-size:15px;font-weight:700;font-family:inherit;outline:none;}
+.mx-row{display:flex;align-items:center;gap:10px;padding:12px 4px;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.mx-row:active{background:rgba(255,255,255,0.03);}
+.mx-nm{flex:1;font-size:14px;font-weight:800;color:#e2e8f0;}
+.mx-e1{font-size:12px;font-weight:800;color:var(--accent,#d4af37);}
+.mx-arrow{color:#64748b;}
+#mxRun,#mxDone{display:none;}
+.mx-stage{background:#101010;border:1px solid rgba(var(--accent-rgb,212,175,55),0.3);border-radius:20px;
+  padding:26px 18px;text-align:center;margin-top:8px;}
+.mx-step-lbl{font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;}
+.mx-ex{font-size:18px;font-weight:900;color:#fff;margin:8px 0 2px;}
+.mx-weight{font-size:56px;font-weight:900;color:var(--accent,#d4af37);font-variant-numeric:tabular-nums;line-height:1.1;}
+.mx-reps{font-size:14px;font-weight:800;color:#94a3b8;margin-top:4px;}
+.mx-note{font-size:12px;font-weight:700;color:#64748b;margin-top:12px;line-height:1.5;}
+.mx-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;}
+.mx-btn{padding:15px 0;border-radius:13px;border:none;font-size:15px;font-weight:900;cursor:pointer;
+  font-family:inherit;-webkit-tap-highlight-color:transparent;}
+.mx-made{background:#34d399;color:#000;}
+.mx-miss{background:rgba(239,68,68,0.14);border:1px solid rgba(239,68,68,0.35);color:#f87171;}
+.mx-single{grid-column:1 / -1;background:var(--accent,#d4af37);color:#000;}
+.mx-end{display:block;width:100%;margin-top:10px;padding:12px 0;border-radius:12px;border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.04);color:#94a3b8;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;
+  -webkit-tap-highlight-color:transparent;}
+.mx-ladder{margin-top:16px;}
+.mx-lrow{display:flex;justify-content:space-between;padding:7px 10px;border-radius:9px;font-size:12px;font-weight:800;
+  color:#64748b;}
+.mx-lrow.done{color:#34d399;}
+.mx-lrow.cur{background:rgba(var(--accent-rgb,212,175,55),0.1);color:var(--accent,#d4af37);}
+.mx-done-ico{font-size:48px;text-align:center;margin:26px 0 10px;}
+.mx-done-title{font-size:20px;font-weight:900;color:#fff;text-align:center;}
+.mx-done-max{font-size:52px;font-weight:900;color:var(--accent,#d4af37);text-align:center;margin:8px 0;}
+.mx-done-sub{font-size:13px;font-weight:800;color:#fbbf24;text-align:center;min-height:18px;}
+.mx-links{display:flex;flex-direction:column;gap:10px;margin-top:24px;}
+.mx-links a{display:block;padding:14px;border-radius:12px;text-decoration:none;font-size:14px;font-weight:900;text-align:center;}
+.mx-l1{background:var(--accent,#d4af37);color:#000;}
+.mx-l2{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:#e2e8f0;}
+</style>
+</head><body>
+
+<div class="topbar">
+  <a href="stats.html" class="back">←</a>
+  <div>
+    <div class="topbar-title">🥇 Max-Out Mode</div>
+    <div class="topbar-sub">Guided 1RM test day — warm up smart, attempt smart</div>
+  </div>
+</div>
+
+<div class="content">
+  <div id="mxPick">
+    <div class="sec-lbl">Pick the lift</div>
+    <input class="mx-search" id="mxSearch" placeholder="Search your logged lifts…">
+    <div id="mxList"></div>
+  </div>
+
+  <div id="mxRun">
+    <div class="mx-stage">
+      <div class="mx-step-lbl" id="mxStepLbl"></div>
+      <div class="mx-ex" id="mxEx"></div>
+      <div class="mx-weight" id="mxW"></div>
+      <div class="mx-reps" id="mxR"></div>
+      <div class="mx-note" id="mxNote"></div>
+      <div class="mx-btns" id="mxBtns"></div>
+    </div>
+    <button class="mx-end" id="mxEnd">End test</button>
+    <div class="mx-ladder" id="mxLadder"></div>
+  </div>
+
+  <div id="mxDone">
+    <div class="mx-done-ico">🥇</div>
+    <div class="mx-done-title" id="mxDoneTitle"></div>
+    <div class="mx-done-max" id="mxDoneMax"></div>
+    <div class="mx-done-sub" id="mxDoneSub"></div>
+    <div class="mx-links">
+      <a class="mx-l1" href="stats.html">View on Stats →</a>
+      <a class="mx-l2" href="javascript:location.reload()">Test another lift</a>
+    </div>
+  </div>
+</div>
+
+<script src="mc-timer.js"></script>
+<script src="mc-maxout.js"></script>
+<script src="mc-supabase.js"></script>
+<script src="mc-sync.js"></script>
+<script src="mc-nav.js"></script>
+<script src="mc-sw-update.js?v=45"></script>
+</body></html>

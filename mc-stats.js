@@ -139,6 +139,32 @@
     }).join('');
   }
 
+  // verified 1RMs from max-out mode (mc_max_v1) — best per lift
+  function renderMaxes() {
+    var host = document.getElementById('maxCard');
+    if (!host) return;
+    var best = {};
+    try {
+      (JSON.parse(localStorage.getItem('mc_max_v1') || '[]') || []).forEach(function (m) {
+        if (!best[m.exercise] || m.weight > best[m.exercise].weight) best[m.exercise] = m;
+      });
+    } catch (e) {}
+    var rows = Object.keys(best).map(function (k) { return best[k]; })
+      .sort(function (a, b) { return b.weight - a.weight; });
+    if (!rows.length) {
+      host.innerHTML = '<div class="empty">No verified maxes yet — Max-Out Mode walks you ' +
+        'through a proper 1RM test day, warm-ups to attempts.</div>';
+      return;
+    }
+    host.innerHTML = rows.slice(0, 12).map(function (m) {
+      var d = new Date(m.date || 0).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return '<div class="pr-row"><span class="pr-ico">🥇</span>' +
+        '<span class="pr-name">' + String(m.exercise).replace(/</g, '&lt;') + '</span>' +
+        '<span class="pr-wt">' + m.weight + ' lb</span>' +
+        '<span class="pr-date">' + d + '</span></div>';
+    }).join('');
+  }
+
   function init() {
     var all = logs();
     renderTop(all);
@@ -146,6 +172,7 @@
     renderMuscles(all);
     renderTonnage(all);
     renderPRs(all);
+    renderMaxes();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();

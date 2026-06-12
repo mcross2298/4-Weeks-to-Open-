@@ -121,6 +121,7 @@
       '<div class="mc-sheet" role="menu">' +
         '<div class="mc-sheet-title" id="mcSheetTitle">Exercise</div>' +
         '<button class="mc-item" data-act="trends"><span class="mc-ico">📈</span>Exercise progress</button>' +
+        '<button class="mc-item" data-act="cues"><span class="mc-ico">📖</span>Form cues</button>' +
         '<button class="mc-item" data-act="replace"><span class="mc-ico">🔁</span>Replace exercise</button>' +
         '<button class="mc-item" data-act="reorder"><span class="mc-ico">↕️</span>Reorder exercises</button>' +
         tempoItem +
@@ -139,6 +140,7 @@
       if (!card && act !== 'cancel') return;
       if (act === 'replace') doReplace(card);
       else if (act === 'trends' && window.MCTrends) MCTrends.open(cardName(card));
+      else if (act === 'cues' && window.MCCues) MCCues.open(cardName(card));
       else if (act === 'reorder') startReorder(card);
       else if (act === 'notes') openNote(card);
       else if (act === 'tempo') openTempo(card);
