@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Guided Timer — MC Training</title>
+<link rel="stylesheet" href="base.css?v=65"/>
+<style>
+:root{--accent:#E24B4A;--accent-rgb:226,75,74;}
+body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;display:flex;flex-direction:column;}
+.iv-top{display:flex;align-items:center;gap:12px;padding:16px 18px 8px;}
+.iv-back{font-size:20px;color:var(--accent);text-decoration:none;background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.iv-name{font-size:16px;font-weight:900;color:#fff;}
+.iv-tag{font-size:11px;font-weight:700;color:var(--accent);letter-spacing:0.08em;text-transform:uppercase;}
+#ivBody{flex:1;display:flex;flex-direction:column;max-width:560px;width:100%;margin:0 auto;padding:0 18px calc(20px + env(safe-area-inset-bottom));}
+.iv-missing{padding:60px 20px;text-align:center;color:#94a3b8;font-size:14px;font-weight:700;}
+.iv-missing a{color:var(--accent);}
+
+/* intro */
+#ivIntro{padding-top:10px;}
+.iv-intro-meta{font-size:13px;color:#94a3b8;line-height:1.6;margin-bottom:18px;}
+.iv-plan-row{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;background:#101010;
+  border:1px solid rgba(255,255,255,0.07);border-radius:10px;margin-bottom:6px;font-size:13px;font-weight:700;}
+.iv-plan-row span:last-child{color:var(--accent);font-weight:900;}
+.iv-plan-rounds{text-align:center;font-size:12px;font-weight:900;color:var(--accent);padding:8px 0;letter-spacing:0.1em;}
+.iv-start{display:block;width:100%;margin-top:18px;padding:16px;border:none;border-radius:14px;cursor:pointer;
+  background:var(--accent);color:#fff;font-size:16px;font-weight:900;letter-spacing:0.04em;font-family:inherit;
+  box-shadow:0 4px 24px rgba(var(--accent-rgb),0.35);-webkit-tap-highlight-color:transparent;}
+.iv-start:active{transform:scale(0.98);}
+
+/* run */
+#ivRun{display:none;flex:1;}
+#ivStage{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  background:#101010;border:1px solid rgba(var(--accent-rgb),0.3);border-radius:20px;
+  padding:34px 18px 26px;margin-top:8px;transition:border-color .3s,background .3s;}
+#ivStage.rest{border-color:rgba(52,211,153,0.4);background:#0c120f;}
+#ivStage.rest #ivTime{color:#34d399;}
+.iv-dots{display:flex;align-items:center;gap:6px;justify-content:center;margin:14px 0 4px;min-height:14px;}
+.iv-dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,0.12);}
+.iv-dot.done{background:rgba(var(--accent-rgb),0.45);}
+.iv-dot.cur{background:var(--accent);box-shadow:0 0 8px rgba(var(--accent-rgb),0.6);}
+.iv-dot-lbl{font-size:11px;font-weight:800;color:#64748b;margin-left:6px;letter-spacing:0.06em;}
+#ivStepN{font-size:11px;font-weight:800;color:#64748b;letter-spacing:0.1em;}
+#ivStep{font-size:21px;font-weight:900;color:#fff;line-height:1.25;margin:10px 0 4px;}
+#ivNext{font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:16px;}
+#ivTime{font-size:64px;font-weight:900;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1;}
+.iv-bar-wrap{width:100%;height:8px;border-radius:4px;background:rgba(255,255,255,0.07);overflow:hidden;margin-top:20px;}
+#ivBar{height:100%;border-radius:4px;background:var(--accent);transition:width .25s linear;}
+.iv-total{margin-top:14px;font-size:12px;font-weight:800;color:#64748b;}
+.iv-total b{color:#e2e8f0;font-variant-numeric:tabular-nums;}
+.iv-controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:16px;}
+.iv-btn{padding:13px 0;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);
+  color:#e2e8f0;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
+.iv-btn:active{background:rgba(255,255,255,0.1);}
+#ivQuit{color:#f87171;border-color:rgba(239,68,68,0.25);}
+
+/* done */
+#ivDone{display:none;text-align:center;padding-top:40px;}
+.iv-done-ico{font-size:48px;margin-bottom:14px;}
+.iv-done-title{font-size:22px;font-weight:900;color:#fff;margin-bottom:8px;}
+#ivDoneTime{font-size:52px;font-weight:900;color:var(--accent);font-variant-numeric:tabular-nums;margin:8px 0;}
+#ivDonePb{font-size:13px;font-weight:800;color:#fbbf24;margin:10px 0 26px;min-height:18px;}
+.iv-done-links{display:flex;flex-direction:column;gap:10px;}
+.iv-done-links a{display:block;padding:14px;border-radius:12px;text-decoration:none;font-size:14px;font-weight:900;}
+.iv-again{background:var(--accent);color:#fff;}
+.iv-home{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:#e2e8f0;}
+</style>
+</head><body>
+
+<div class="iv-top">
+  <button class="iv-back" id="ivBack">←</button>
+  <div>
+    <div class="iv-name" id="ivName">Guided Timer</div>
+    <div class="iv-tag" id="ivTag"></div>
+  </div>
+</div>
+
+<div id="ivBody">
+  <div id="ivIntro">
+    <div class="iv-intro-meta" id="ivIntroMeta"></div>
+    <div id="ivIntroPlan"></div>
+    <button class="iv-start" id="ivStart">▶ Start</button>
+  </div>
+
+  <div id="ivRun">
+    <div class="iv-dots" id="ivDots"></div>
+    <div id="ivStage">
+      <div id="ivStepN"></div>
+      <div id="ivStep"></div>
+      <div id="ivNext"></div>
+      <div id="ivTime">0:00</div>
+      <div class="iv-bar-wrap"><div id="ivBar"></div></div>
+      <div class="iv-total">Total <b id="ivTotal">0:00</b></div>
+    </div>
+    <div class="iv-controls">
+      <button class="iv-btn" id="ivPause">⏸ Pause</button>
+      <button class="iv-btn" id="ivSkip">Skip ▸</button>
+      <button class="iv-btn" id="ivQuit">✕ End</button>
+    </div>
+  </div>
+
+  <div id="ivDone">
+    <div class="iv-done-ico">🏁</div>
+    <div class="iv-done-title">Done. Logged.</div>
+    <div id="ivDoneTime"></div>
+    <div id="ivDonePb"></div>
+    <div class="iv-done-links">
+      <a class="iv-again" href="javascript:location.reload()">↻ Run it again</a>
+      <a class="iv-home" href="dashboard.html?tab=conditioning">← Conditioning Corner</a>
+    </div>
+  </div>
+</div>
+
+<script src="conditioning-data.js"></script>
+<script src="mc-timer.js"></script>
+<script src="mc-cond.js"></script>
+<script src="mc-interval.js"></script>
+<script src="mc-supabase.js"></script>
+<script src="mc-sync.js"></script>
+</body></html>
