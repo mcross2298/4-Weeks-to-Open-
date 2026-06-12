@@ -29,6 +29,8 @@
     'mc_history':            'arrayById',
     'mc_replace_log':        'arrayById',
     'mc_custom_workouts_v1': 'arrayById',
+    'mc_workout_log_v1':     'workoutLog',
+    'mc_cond_log_v1':        'arrayById',
     'mc_activity':           'activity',
     'mc_daily_v1':           'dictByTs'
   };
@@ -37,6 +39,16 @@
   var client = null, user = null;
   var snapshot = {};            // store_key -> JSON string last in sync with server
   var pulledChange = false;
+  var status = { lastPush: 0, lastPull: 0, signedIn: false };
+
+  function pendingCount() {
+    var n = 0;
+    Object.keys(STORES).forEach(function (key) {
+      var cur = readRaw(key);
+      if (cur != null && cur !== snapshot[key]) n++;
+    });
+    return n;
+  }
 
   function readRaw(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function parse(s) { try { return JSON.parse(s); } catch (e) { return null; } }
@@ -63,6 +75,23 @@
       if (!seen[id]) { seen[id] = 1; out.push(e); }
     });
     return out;
+  }
+
+  // workout log: append-only [{pageId, date, sets, ...}], newest-first, 200 max.
+  // Older entries predate the id field, so dedupe on id || pageId|date — two
+  // devices that both hold the same finished session converge on one copy.
+  function workoutKey(e) { return e && (e.id || ((e.pageId || '') + '|' + (e.date || ''))); }
+  function mergeWorkoutLog(local, remote) {
+    local = Array.isArray(local) ? local : [];
+    remote = Array.isArray(remote) ? remote : [];
+    var seen = {}, out = [];
+    local.concat(remote).forEach(function (e) {
+      var k = workoutKey(e);
+      if (!k) { out.push(e); return; }
+      if (!seen[k]) { seen[k] = 1; out.push(e); }
+    });
+    out.sort(function (a, b) { return new Date(b.date || 0) - new Date(a.date || 0); });
+    return out.slice(0, 200);
   }
 
   // setlog: { "page|exId": [ {d, sets:{sn:{w,r}}}, ... ] }  (newest-first, 5 max)
@@ -112,6 +141,7 @@
 
   function mergeStore(strategy, local, remote) {
     if (strategy === 'arrayById') return mergeArrayById(local, remote);
+    if (strategy === 'workoutLog') return mergeWorkoutLog(local, remote);
     if (strategy === 'setlog')    return mergeSetlog(local, remote);
     if (strategy === 'activity')  return mergeActivity(local, remote);
     if (strategy === 'dictByTs')  return mergeDictByTs(local, remote);
@@ -140,6 +170,7 @@
           // will upload the merged result instead of treating it as in-sync.
           snapshot[key] = remote != null ? JSON.stringify(remote) : null;
         });
+        status.lastPull = Date.now();
       });
   }
 
@@ -155,7 +186,7 @@
         user_id: user.id, store_key: key, data: data,
         updated_at: new Date().toISOString(), device_id: DEVICE
       }, { onConflict: 'user_id,store_key' }).then(function (r) {
-        if (!r.error) snapshot[key] = cur;
+        if (!r.error) { snapshot[key] = cur; status.lastPush = Date.now(); }
       }));
     });
     return ops.length ? Promise.all(ops) : Promise.resolve();
@@ -187,6 +218,10 @@
   window.MC_SYNC = {
     pull: function () { return pull(); },
     push: function () { return push(); },
+    status: function () {
+      return { lastPush: status.lastPush, lastPull: status.lastPull,
+               pending: pendingCount(), signedIn: !!user };
+    },
     kick: function () {
       if (user || !client) return;
       MC_SB.currentUser().then(function (u) { if (u) { user = u; start(); } }).catch(function () {});

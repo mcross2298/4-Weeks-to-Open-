@@ -159,13 +159,19 @@
              total: document.querySelectorAll(CARD_SEL).length };
   }
 
+  // same id mc-sync.js mints — lets mc-resume.js tell "this device" from
+  // "your other device" when mc_activity arrives via cloud sync
+  function deviceId() {
+    try { return localStorage.getItem('mc_device_id') || ''; } catch (e) { return ''; }
+  }
+
   function logSession() {
     if (!isWorkoutPage()) return;
     var p = progress();
     if (!p.total) return;
     if (p.done <= 0) return;                  // only record sessions with real progress
     var a = readAct();
-    a.last = { pageId: PAGE_ID, title: sessionTitle(), done: p.done, total: p.total, ts: Date.now() };
+    a.last = { pageId: PAGE_ID, title: sessionTitle(), done: p.done, total: p.total, ts: Date.now(), deviceId: deviceId() };
     a.days = a.days || {}; a.days[dayKey()] = true;
     writeAct(a);
   }

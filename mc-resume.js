@@ -28,7 +28,8 @@
 
   // ---- page detection -----------------------------------------------------
   var page = (location.pathname.split('/').pop() || '').toLowerCase();
-  if (page.indexOf('cat-') !== 0) return;    // category pages only (cat-*.html)
+  var onDashboard = (page === 'dashboard.html' || page === '' || page === 'index.html');
+  if (page.indexOf('cat-') !== 0 && !onDashboard) return;  // category pages + dashboard
 
   // ---- storage ------------------------------------------------------------
   function readAct() {
@@ -79,6 +80,17 @@
 
   // ---- find where to drop the banner --------------------------------------
   function insertBanner(node) {
+    // dashboard: slot the banner right above the Current Program section
+    var dash = document.getElementById('scr-dashboard');
+    if (dash) {
+      var sec = dash.querySelector('.sec-header');
+      if (sec) {
+        node.style.margin = '0 18px 18px';
+        sec.parentNode.insertBefore(node, sec);
+        return;
+      }
+    }
+
     var back = document.querySelector('.back-link');
     if (back && back.parentNode) { back.parentNode.insertBefore(node, back.nextSibling); return; }
 
@@ -107,6 +119,13 @@
 
     injectCSS();
 
+    // a session synced in from another device gets called out as such
+    var otherDevice = false;
+    try {
+      var myDev = localStorage.getItem('mc_device_id');
+      otherDevice = !!(L.deviceId && myDev && L.deviceId !== myDev);
+    } catch (e) {}
+
     var el = document.createElement('div');
     el.className = 'mcr-banner';
     el.setAttribute('role', 'button');
@@ -114,7 +133,7 @@
     el.innerHTML =
       '<span class="mcr-ico">↩️</span>' +
       '<div class="mcr-body">' +
-        '<div class="mcr-lbl">Resume last workout</div>' +
+        '<div class="mcr-lbl">' + (otherDevice ? 'Resume — from your other device' : 'Resume last workout') + '</div>' +
         '<div class="mcr-name"></div>' +
         '<div class="mcr-ago"></div>' +
       '</div>' +

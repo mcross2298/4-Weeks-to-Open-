@@ -66,6 +66,7 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 <link rel="stylesheet" href="mc-nav.css"/>
 <link rel="stylesheet" href="mc-setlog.css"/>
 <link rel="stylesheet" href="mc-summary.css"/>
+<script src="mc-theme.js"></script>
 </head>
 <body>
 
@@ -88,6 +89,7 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
   <div class="stat"><div class="stat-num" id="statSets">0</div><div class="stat-label">Sets Logged</div></div>
   <div class="stat"><div class="stat-num" id="statPRs">0</div><div class="stat-label">PRs Set</div></div>
 </div>
+<div id="backupStatus" style="display:none;"></div>
 
 <div class="content">
   <div id="logContent"></div>
@@ -256,5 +258,8 @@ render();
 <script src="mc-nav.js"></script>
 <script src="mc-setlog.js"></script>
 <script src="mc-summary.js"></script>
+<script src="mc-supabase.js"></script>
+<script src="mc-sync.js"></script>
+<script src="mc-backup-status.js"></script>
 </body>
 </html>
