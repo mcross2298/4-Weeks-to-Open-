@@ -41,7 +41,9 @@
         if(sess&&sess.d===today){
           Object.keys(sess.sets).forEach(function(sn){
             var s=sess.sets[sn];
-            sets.push({name:exName,setNum:parseInt(sn),weight:s.w,reps:s.r,pr:false});
+            var e={name:exName,setNum:parseInt(sn),weight:s.w,reps:s.r,pr:false};
+            if(s.rpe)e.rpe=s.rpe;
+            sets.push(e);
           });
         }
       });

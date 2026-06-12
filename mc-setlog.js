@@ -29,21 +29,31 @@
   // ---- storage (shape-compatible with the Finish-Workout module) ---------
   function st() { try { return JSON.parse(localStorage.getItem(SK) || '{}'); } catch (e) { return {}; } }
   function ek(id) { return PID + '|' + id; }
-  function save(exId, sn, w, r) {
+  function save(exId, sn, w, r, rpe) {
     var s = st(), k = ek(exId); if (!s[k]) s[k] = [];
     var d = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     var sess = s[k][0];
     if (!sess || sess.d !== d) { sess = { d: d, sets: {} }; s[k].unshift(sess); s[k] = s[k].slice(0, 5); }
-    sess.sets[sn] = { w: w, r: r };
+    var entry = { w: w, r: r };
+    if (rpe) entry.rpe = rpe;          // optional — older readers ignore it
+    sess.sets[sn] = entry;
     try { localStorage.setItem(SK, JSON.stringify(s)); } catch (e) {}
   }
   function lsess(exId) { var s = st(); return (s[ek(exId)] || [])[0] || null; }
   function lset(exId, sn) { var sess = lsess(exId); return sess ? sess.sets[sn] || null : null; }
   function histText(exId) {
     var sess = lsess(exId); if (!sess) return '';
-    var ws = Object.keys(sess.sets).map(function (k) { return parseFloat(sess.sets[k].w) || 0; }).filter(Boolean);
-    return ws.length ? 'Last: ' + Math.max.apply(null, ws) + ' lb · ' + sess.d : sess.d;
+    var top = null;
+    Object.keys(sess.sets).forEach(function (k) {
+      var w = parseFloat(sess.sets[k].w) || 0;
+      if (w && (!top || w > top.w)) top = { w: w, rpe: sess.sets[k].rpe };
+    });
+    if (!top) return sess.d;
+    return 'Last: ' + top.w + ' lb' + (top.rpe ? ' @' + top.rpe : '') + ' · ' + sess.d;
   }
+
+  // RPE chip cycle: – → 8 → 8.5 → 9 → 9.5 → 10 → F (to failure) → –
+  var RPE_STEPS = ['', '8', '8.5', '9', '9.5', '10', 'F'];
 
   // ---- parse the prescribed "sets" string --------------------------------
   function setCount(s) {
@@ -98,7 +108,9 @@
       ck.classList.remove('done'); ck.textContent = '☐'; row.classList.remove('done-row');
       return;
     }
-    save(exId, sn, w ? w.value.trim() : '', r ? r.value.trim() : '');
+    var rpeEl = row.querySelector('.mcl-rpe');
+    save(exId, sn, w ? w.value.trim() : '', r ? r.value.trim() : '',
+         rpeEl ? (rpeEl.dataset.rpe || '') : '');
     ck.classList.add('done'); ck.textContent = '✓'; row.classList.add('done-row');
     updateHist(card, exId);
     if (rs > 0 && typeof TMR !== 'undefined' && TMR.start) {
@@ -154,17 +166,20 @@
     var wrap = document.createElement('div');
     wrap.className = 'mcl-wrap';
     var html = '<div class="mcl-hdr"><div class="mcl-hl">Set</div><div class="mcl-hl">Weight</div>' +
-               '<div class="mcl-hl">Reps</div><div class="mcl-hl"></div></div>';
+               '<div class="mcl-hl">Reps</div><div class="mcl-hl">RPE</div><div class="mcl-hl"></div></div>';
     for (var i = 0; i < total; i++) {
       var sn = i + 1, last = lset(exId, sn);
       var isDropRow = drop.is && i === total - 1;   // the appended drop set row
       var pr = isDropRow ? '' : repFor(work, i);
       var wPh = (last && last.w) ? (last.w + ' lb') : 'lb';
       var rPh = isDropRow ? drop.reps : (pr || (last && last.r ? last.r : 'reps'));
+      var rpe = (last && last.rpe) || '';
       html += '<div class="mcl-row' + (isDropRow ? ' mcl-row-amrap' : '') + '" id="mclr-' + cid + '-' + sn + '">' +
                 '<div class="mcl-num">' + (isDropRow ? '↓' : sn) + '</div>' +
                 '<input class="mcl-inp mcl-w" type="number" inputmode="decimal" placeholder="' + wPh + '">' +
                 '<input class="mcl-inp mcl-r" type="number" inputmode="numeric" placeholder="' + rPh + '">' +
+                '<div class="mcl-rpe' + (rpe ? ' set' : '') + '" data-rpe="' + rpe + '" ' +
+                  'title="Rate of Perceived Exertion — tap to cycle, F = to failure">' + (rpe || '–') + '</div>' +
                 '<div class="mcl-ck set-check" data-sn="' + sn + '">☐</div>' +
               '</div>';
     }
@@ -182,6 +197,24 @@
       ck.addEventListener('click', function (e) {
         e.stopPropagation(); e.preventDefault();
         onCheck(card, exId, parseInt(ck.dataset.sn, 10), rs);
+      });
+    });
+    Array.prototype.forEach.call(wrap.querySelectorAll('.mcl-rpe'), function (chip) {
+      chip.addEventListener('click', function (e) {
+        e.stopPropagation(); e.preventDefault();
+        var i = RPE_STEPS.indexOf(chip.dataset.rpe || '');
+        var next = RPE_STEPS[(i + 1) % RPE_STEPS.length];
+        chip.dataset.rpe = next;
+        chip.textContent = next || '–';
+        chip.classList.toggle('set', !!next);
+        // already-checked set: persist the tweak immediately
+        var row = chip.closest('.mcl-row');
+        var ck = row && row.querySelector('.mcl-ck');
+        if (ck && ck.classList.contains('done')) {
+          var w = row.querySelector('.mcl-w'), r = row.querySelector('.mcl-r');
+          save(exId, parseInt(ck.dataset.sn, 10), w ? w.value.trim() : '', r ? r.value.trim() : '', next);
+          updateHist(card, exId);
+        }
       });
     });
 
@@ -272,6 +305,10 @@
       });
     });
   }
+
+  // shared parsing helpers for mc-suggest.js (and future analytics) — avoids
+  // re-implementing the prescribed-scheme parser anywhere else
+  window.MCSetlogUtil = { setCount: setCount, repFor: repFor, pid: PID, histKey: ek };
 
   // ---- init: run now + retry passes to win any race with native render ---
   function init() {

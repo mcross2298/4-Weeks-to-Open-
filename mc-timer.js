@@ -4,6 +4,32 @@
    updateProgress, addTimerPresets — mc-setlog.js / superset-timers.js /
    inline onclick handlers all keep working unmodified.
    ========================================================================== */
+// ── cue preferences (mc_prefs_v1) ──
+const MC_PREFS = {
+  KEY: 'mc_prefs_v1',
+  get() {
+    let p = {};
+    try { p = JSON.parse(localStorage.getItem(this.KEY) || '{}') || {}; } catch (e) {}
+    return { sound: p.sound !== false, haptics: p.haptics !== false, cue10s: p.cue10s !== false };
+  },
+  set(k, v) {
+    const p = this.get(); p[k] = v;
+    try { localStorage.setItem(this.KEY, JSON.stringify(p)); } catch (e) {}
+  }
+};
+
+// Web Audio contexts start suspended on iOS until a user gesture; keep one
+// primed singleton so cues can actually play (a fresh context mid-countdown
+// stays silent on iPhone).
+let _tmrCtx = null;
+function _tmrPrime() {
+  try {
+    if (!_tmrCtx) _tmrCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (_tmrCtx.state === 'suspended') _tmrCtx.resume();
+  } catch (e) { _tmrCtx = null; }
+}
+document.addEventListener('pointerdown', _tmrPrime, { passive: true });
+
 const TMR = {
   interval: null,
   startTime: null,
@@ -11,6 +37,7 @@ const TMR = {
   activeEl: null,
   activeName: '',
   _autoDismiss: null,
+  _cued10: false,
 
   parseSeconds(str) {
     if (!str || str === '—') return 0;
@@ -37,26 +64,46 @@ const TMR = {
     return (neg ? '+' : '') + (m > 0 ? m + ':' + String(s).padStart(2,'0') : String(s) + 's');
   },
 
-  buzz() {
-    // Vibrate
-    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
-    // Sound — Web Audio API beep
+  _tones(spec) {
+    // spec: [{t, hz, vol, len}] — played on the primed context (iOS-safe)
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const times = [0, 0.3, 0.6];
-      times.forEach((t, i) => {
+      _tmrPrime();
+      const ctx = _tmrCtx || new (window.AudioContext || window.webkitAudioContext)();
+      spec.forEach(s => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
         gain.connect(ctx.destination);
-        osc.frequency.value = i === 2 ? 880 : 660;
+        osc.frequency.value = s.hz;
         osc.type = 'sine';
-        gain.gain.setValueAtTime(0.4, ctx.currentTime + t);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.25);
-        osc.start(ctx.currentTime + t);
-        osc.stop(ctx.currentTime + t + 0.25);
+        gain.gain.setValueAtTime(s.vol, ctx.currentTime + s.t);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + s.t + s.len);
+        osc.start(ctx.currentTime + s.t);
+        osc.stop(ctx.currentTime + s.t + s.len);
       });
     } catch(e) {}
+  },
+
+  buzz() {
+    const p = MC_PREFS.get();
+    // Vibrate (no-op on iOS — audio is the only cue there, so never gate it on haptics)
+    if (p.haptics && navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+    if (p.sound) this._tones([
+      { t: 0,   hz: 660, vol: 0.4, len: 0.25 },
+      { t: 0.3, hz: 660, vol: 0.4, len: 0.25 },
+      { t: 0.6, hz: 880, vol: 0.4, len: 0.25 }
+    ]);
+  },
+
+  // soft 10-seconds-left warning: quieter double-beep + short tap
+  cue10() {
+    const p = MC_PREFS.get();
+    if (!p.cue10s) return;
+    if (p.haptics && navigator.vibrate) navigator.vibrate(100);
+    if (p.sound) this._tones([
+      { t: 0,    hz: 520, vol: 0.22, len: 0.12 },
+      { t: 0.18, hz: 520, vol: 0.22, len: 0.12 }
+    ]);
   },
 
   start(el, durationSecs, exerciseName) {
@@ -65,6 +112,7 @@ const TMR = {
     this.startTime = Date.now();
     this.activeEl = el;
     this.activeName = exerciseName;
+    this._cued10 = false;
 
     el.className = 'rest-timer running';
     el.querySelector('.rest-timer-label').textContent = this.formatTime(durationSecs);
@@ -96,6 +144,12 @@ const TMR = {
       floatTime.textContent = this.formatTime(remaining);
 
       if (remaining > 0) {
+        // exactly-10 check means a tick missed while backgrounded skips the
+        // warning rather than firing it late
+        if (remaining === 10 && this.duration > 15 && !this._cued10) {
+          this._cued10 = true;
+          this.cue10();
+        }
         const pct = (remaining / this.duration) * 100;
         floatProgress.style.width = pct + '%';
         floatTime.className = 'timer-float-time';
@@ -155,12 +209,13 @@ const TMR = {
       ft.classList.add("visible");
     }
     this.activeEl=null;
+    this._cued10=false;
     this.interval=setInterval(()=>{
       const rem=Math.ceil(this.duration-(Date.now()-this.startTime)/1000);
       const ft2=document.getElementById("timerFloat");if(!ft2)return;
       const tt2=ft2.querySelector(".timer-float-time"),tp2=ft2.querySelector(".timer-float-progress"),tl2=ft2.querySelector(".timer-float-label");
-      if(rem>0){if(tt2){tt2.textContent=rem+"s";tt2.className="timer-float-time";}if(tp2){tp2.style.width=Math.round((rem/this.duration)*100)+"%";tp2.className="timer-float-progress";}}
-      else if(rem===0){if(tt2){tt2.textContent="DONE!";tt2.className="timer-float-time done";}if(tp2){tp2.style.width="100%";tp2.className="timer-float-progress done";}if(tl2)tl2.textContent="DONE ✓";try{navigator.vibrate&&navigator.vibrate([200,100,200,100,400]);}catch(e){}if(!TMR._autoDismiss)TMR._autoDismiss=setTimeout(()=>TMR.stop(),4000);}
+      if(rem>0){if(rem===10&&this.duration>15&&!this._cued10){this._cued10=true;this.cue10();}if(tt2){tt2.textContent=rem+"s";tt2.className="timer-float-time";}if(tp2){tp2.style.width=Math.round((rem/this.duration)*100)+"%";tp2.className="timer-float-progress";}}
+      else if(rem===0){if(tt2){tt2.textContent="DONE!";tt2.className="timer-float-time done";}if(tp2){tp2.style.width="100%";tp2.className="timer-float-progress done";}if(tl2)tl2.textContent="DONE ✓";this.buzz();if(!TMR._autoDismiss)TMR._autoDismiss=setTimeout(()=>TMR.stop(),4000);}
       else{if(tt2){tt2.textContent="+"+Math.abs(rem)+"s";tt2.className="timer-float-time overtime";}if(tp2)tp2.className="timer-float-progress overtime";}
     },1000);
   }
@@ -179,10 +234,48 @@ function buildTimerFloat() {
     <div class="timer-float-actions">
       <button class="timer-float-btn timer-float-skip" onclick="TMR.stop()">✓ Done</button>
       <button class="timer-float-btn timer-float-reset" onclick="TMR.stop()">✕ Cancel</button>
-    </div>`;
+    </div>
+    <div class="timer-float-prefs" id="timerFloatPrefs"></div>`;
   document.body.appendChild(div);
+  renderTimerPrefs();
   if(!document.getElementById('timerOverlay')){const _tov=document.createElement('div');_tov.id='timerOverlay';_tov.style.cssText='position:fixed;inset:0;z-index:99;display:none;cursor:pointer;';_tov.addEventListener('click',function(){TMR.stop();});document.body.insertBefore(_tov,div);}
 }
+// ── cue preference toggles inside the timer float ──
+function renderTimerPrefs() {
+  const host = document.getElementById('timerFloatPrefs');
+  if (!host) return;
+  if (!document.getElementById('mcTimerPrefsCss')) {
+    const st = document.createElement('style');
+    st.id = 'mcTimerPrefsCss';
+    st.textContent =
+      '.timer-float-prefs{display:flex;gap:6px;margin-top:8px;justify-content:center;}' +
+      '.tf-pref{padding:4px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);' +
+        'background:rgba(255,255,255,0.05);color:#475569;font-size:10px;font-weight:800;' +
+        'letter-spacing:0.05em;cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
+      '.tf-pref.on{color:#fbbf24;border-color:rgba(212,175,55,0.4);background:rgba(212,175,55,0.12);}';
+    document.head.appendChild(st);
+  }
+  const defs = [
+    { k: 'sound',   lbl: '🔊 Sound' },
+    { k: 'haptics', lbl: '📳 Vibrate' },
+    { k: 'cue10s',  lbl: '⏰ 10s cue' }
+  ];
+  const p = MC_PREFS.get();
+  host.innerHTML = '';
+  defs.forEach(d => {
+    const b = document.createElement('button');
+    b.className = 'tf-pref' + (p[d.k] ? ' on' : '');
+    b.textContent = d.lbl;
+    b.addEventListener('click', ev => {
+      ev.stopPropagation();
+      const cur = MC_PREFS.get();
+      MC_PREFS.set(d.k, !cur[d.k]);
+      b.classList.toggle('on', !cur[d.k]);
+    });
+    host.appendChild(b);
+  });
+}
+
 buildTimerFloat();
 
 // ── SESSION PROGRESS BAR ──
