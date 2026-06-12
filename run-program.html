@@ -39,10 +39,15 @@
 <div class="content" id="app"></div>
 
 <script src="mc-program-store.js"></script>
+<script src="mc-program-pub.js"></script>
 <script src="mc-timer.js"></script>
 <script>
 (function () {
+  // local custom program first; otherwise the owner-published mirror (it is
+  // always warm here — every path to this page goes through cat-custom.html,
+  // which fetches published programs before its day links render)
   var p = window.MCPrograms ? MCPrograms.get(window.__CP.prog) : null;
+  if (!p && window.MCPub) p = MCPub.get(window.__CP.prog);
   var day = p && p.days[window.__CP.day - 1];
   var app = document.getElementById('app');
 

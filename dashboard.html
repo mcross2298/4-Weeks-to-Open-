@@ -648,6 +648,9 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
     </div>
     <!-- MARKET:STRIP influencer-programs END -->
 
+    <div class="tier-label influencer" id="pubTier" style="display:none;">📣 Published Programs</div>
+    <div id="pubProgList"></div>
+
     <div class="tier-label influencer" id="customTier" style="display:none;">🧩 Your Programs</div>
     <div id="customProgList"></div>
     <a href="build-program.html" class="cat-card" style="border-style:dashed;text-align:center;padding:22px 16px;display:block;">
@@ -719,6 +722,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 <script src="conditioning-data.js"></script>
 <script src="mc-cond.js"></script>
 <script src="mc-program-store.js"></script>
+<script src="mc-program-pub.js"></script>
 <script>window.MC_SUBS_NO_BUTTON=true;</script>
 <script src="mc-subs.js"></script>
 <script src="mc-live-tracker.js"></script>
@@ -769,14 +773,20 @@ const STORE='mc_active_prog';
 let activeProg=null;
 let tempSel=null;
 
-// built-in programs + the user's custom programs (mc-program-store.js),
-// mapped into the same card shape so hero/select/theming need no special cases
+// built-in programs + the user's custom programs (mc-program-store.js) + the
+// owner-published programs (mc-program-pub.js), mapped into the same card
+// shape so hero/select/theming need no special cases. A published program the
+// user also has locally only appears once, as their own custom copy.
 function allProgs(){
-  let customs=[];
+  let customs=[],pubs=[];
   try{
     if(window.MCPrograms) customs=MCPrograms.getAll().map(p=>MCPrograms.asProgCard(p));
+    if(window.MCPub){
+      const mine=new Set(customs.map(c=>c.cprogId));
+      pubs=MCPub.getAll().filter(p=>!mine.has(p.id)).map(p=>MCPub.asProgCard(p));
+    }
   }catch(e){}
-  return PROGS.concat(customs);
+  return PROGS.concat(customs,pubs);
 }
 
 function loadState(){
@@ -789,6 +799,12 @@ function loadState(){
       const cur=MCPrograms.get(activeProg.cprogId);
       if(cur){activeProg=MCPrograms.asProgCard(cur);localStorage.setItem(STORE,JSON.stringify(activeProg));}
       else{activeProg=null;localStorage.removeItem(STORE);}
+    }
+    // a pinned published program may have been re-published since — re-resolve
+    // from the mirror, but keep the stored card if the mirror is still cold
+    if(activeProg&&activeProg.pubId&&window.MCPub){
+      const pub=MCPub.get(activeProg.pubId);
+      if(pub){activeProg=MCPub.asProgCard(pub);localStorage.setItem(STORE,JSON.stringify(activeProg));}
     }
     renderHero();
   }catch(e){}
@@ -834,13 +850,37 @@ function renderCustomPrograms(){
   tier.style.display=progs.length?'':'none';
   list.innerHTML=progs.map(p=>{
     const col=p.color||'#34d399';
+    const pub=window.MCPub&&MCPub.isPublished(p.id);
     return `<a href="cat-custom.html?prog=${p.id}" class="cat-card" style="border-color:${col}55;background:linear-gradient(135deg,${col}14,var(--surface));">
       <span class="cat-icon">${p.icon||'🧩'}</span>
-      <div class="cat-tag" style="color:${col};">Custom · ${p.weeks} Weeks</div>
+      <div class="cat-tag" style="color:${col};">Custom · ${p.weeks} Weeks${pub?' · 📣 Published':''}</div>
       <div class="cat-name">${esc(p.name)}</div>
       <div class="cat-meta">${p.days.map(d=>esc(d.name)).join(' · ')}</div>
       <div class="cat-count">${p.days.length} Days →</div>
       <div class="cat-designer">✍️ Designed by you</div>
+    </a>`;
+  }).join('');
+}
+
+// ── PUBLISHED PROGRAMS (Programs tab list) ──
+// Owner-published programs from Supabase (mc-program-pub.js mirror). Ones the
+// user also has locally stay under "Your Programs" with a 📣 badge instead.
+function renderPublishedPrograms(){
+  const tier=document.getElementById('pubTier');
+  const list=document.getElementById('pubProgList');
+  if(!tier||!list||!window.MCPub)return;
+  const mine=new Set(window.MCPrograms?MCPrograms.getAll().map(p=>p.id):[]);
+  const progs=MCPub.getAll().filter(p=>!mine.has(p.id));
+  tier.style.display=progs.length?'':'none';
+  list.innerHTML=progs.map(p=>{
+    const col=p.color||'#34d399';
+    return `<a href="cat-custom.html?pub=${p.id}" class="cat-card" style="border-color:${col}55;background:linear-gradient(135deg,${col}14,var(--surface));">
+      <span class="cat-icon">${p.icon||'📣'}</span>
+      <div class="cat-tag" style="color:${col};">Published · ${p.weeks} Weeks</div>
+      <div class="cat-name">${esc(p.name)}</div>
+      <div class="cat-meta">${p.days.map(d=>esc(d.name)).join(' · ')}</div>
+      <div class="cat-count">${p.days.length} Days →</div>
+      <div class="cat-designer">✍️ Designed by Mike Cross</div>
     </a>`;
   }).join('');
 }
@@ -1022,6 +1062,9 @@ try{ sessionStorage.removeItem('mc_back_to'); }catch(e){}
 loadState();
 renderConditioning();
 renderCustomPrograms();
+renderPublishedPrograms();
+// re-render when mc-program-pub.js pulls fresh published programs
+document.addEventListener('mc:published-programs',()=>{renderPublishedPrograms();renderCustomPrograms();loadState();});
 // honor ?tab= deep-link from the global bottom nav (mc-nav.js)
 (function(){var t=new URLSearchParams(location.search).get('tab');if(t&&document.getElementById('scr-'+t))switchTab(t);})();
 </script>
