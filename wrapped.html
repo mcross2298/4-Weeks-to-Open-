@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MC Wrapped — MC Training</title>
+<link rel="stylesheet" href="base.css?v=65"/>
+<link rel="stylesheet" href="mc-nav.css"/>
+<script src="mc-theme.js"></script>
+<style>
+body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
+.topbar{display:flex;align-items:center;gap:12px;padding:16px 18px 8px;}
+.back{font-size:20px;color:var(--accent,#d4af37);text-decoration:none;-webkit-tap-highlight-color:transparent;}
+.topbar-title{font-size:16px;font-weight:900;color:#fff;}
+.topbar-sub{font-size:11px;color:#64748b;font-weight:600;}
+.content{max-width:560px;margin:0 auto;padding:10px 18px 110px;}
+.wr-tabs{display:flex;gap:6px;margin-bottom:14px;}
+.wr-tab{flex:1;padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);
+  color:#94a3b8;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
+.wr-tab.on{background:var(--accent,#d4af37);border-color:var(--accent,#d4af37);color:#000;}
+.wr-card{position:relative;background:#0d0d0d;border:2px solid var(--accent,#d4af37);border-radius:20px;
+  padding:24px 20px;overflow:hidden;}
+.wr-card:before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 18% 12%,rgba(var(--accent-rgb,212,175,55),0.16),transparent 60%);}
+.wr-eyebrow{font-size:11px;font-weight:800;letter-spacing:0.3em;color:var(--accent,#d4af37);text-transform:uppercase;}
+.wr-title{font-size:34px;font-weight:900;color:#fff;letter-spacing:-0.02em;margin:6px 0 18px;}
+.wr-row{display:grid;grid-template-columns:40px 1fr;align-items:baseline;column-gap:6px;padding:9px 0;}
+.wr-ico{font-size:22px;}
+.wr-main{font-size:19px;font-weight:900;color:#fff;}
+.wr-sub{grid-column:2;font-size:12px;font-weight:700;color:#94a3b8;margin-top:2px;}
+.wr-foot{margin-top:18px;font-size:13px;font-weight:800;color:var(--accent,#d4af37);}
+.wr-empty{padding:36px 10px;text-align:center;color:#64748b;font-size:13px;font-weight:700;line-height:1.6;}
+.wr-save{display:block;width:100%;margin-top:14px;padding:15px;border:none;border-radius:13px;cursor:pointer;
+  background:var(--accent,#d4af37);color:#000;font-size:15px;font-weight:900;font-family:inherit;letter-spacing:0.03em;
+  -webkit-tap-highlight-color:transparent;}
+.wr-save:active{transform:scale(0.99);}
+</style>
+</head><body>
+
+<div class="topbar">
+  <a href="stats.html" class="back">←</a>
+  <div>
+    <div class="topbar-title">🎁 MC Wrapped</div>
+    <div class="topbar-sub">Your training, summed up — save it, send it</div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="wr-tabs" id="wrapTabs"></div>
+  <div class="wr-card" id="wrapCard"></div>
+  <button class="wr-save" id="wrapSave">💾 Save card</button>
+</div>
+
+<script src="mc-muscle-map.js"></script>
+<script src="mc-wrapped.js"></script>
+<script src="mc-supabase.js"></script>
+<script src="mc-sync.js"></script>
+<script src="mc-nav.js"></script>
+<script src="mc-sw-update.js?v=45"></script>
+</body></html>
