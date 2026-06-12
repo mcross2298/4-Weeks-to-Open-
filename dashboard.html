@@ -509,6 +509,11 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
         <div class="tool-name">Build Your Own</div>
         <div class="tool-sub">Create workouts from the library</div>
       </a>
+      <a href="build-program.html" class="tool-card">
+        <div class="tool-icon-wrap">🧩</div>
+        <div class="tool-name">Program Builder</div>
+        <div class="tool-sub">Multi-week custom programs</div>
+      </a>
       <a href="program-guide.html" class="tool-card gold">
         <div class="tool-icon-wrap">📋</div>
         <div class="tool-name">Program Guide</div>
@@ -641,6 +646,15 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 
     </div>
 
+    <div class="tier-label influencer" id="customTier" style="display:none;">🧩 Your Programs</div>
+    <div id="customProgList"></div>
+    <a href="build-program.html" class="cat-card" style="border-style:dashed;text-align:center;padding:22px 16px;display:block;">
+      <span class="cat-icon">🧩</span>
+      <div class="cat-name">Build a Program</div>
+      <div class="cat-meta">Multi-week custom program with its own hero card, schedule and color rail.</div>
+      <div class="cat-count">Open Builder →</div>
+    </a>
+
   </div>
 </div>
 
@@ -701,6 +715,8 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 
 <script src="custom-workouts-store.js"></script>
 <script src="conditioning-data.js"></script>
+<script src="mc-cond.js"></script>
+<script src="mc-program-store.js"></script>
 <script>window.MC_SUBS_NO_BUTTON=true;</script>
 <script src="mc-subs.js"></script>
 <script src="mc-live-tracker.js"></script>
@@ -749,8 +765,29 @@ const STORE='mc_active_prog';
 let activeProg=null;
 let tempSel=null;
 
+// built-in programs + the user's custom programs (mc-program-store.js),
+// mapped into the same card shape so hero/select/theming need no special cases
+function allProgs(){
+  let customs=[];
+  try{
+    if(window.MCPrograms) customs=MCPrograms.getAll().map(p=>MCPrograms.asProgCard(p));
+  }catch(e){}
+  return PROGS.concat(customs);
+}
+
 function loadState(){
-  try{const s=localStorage.getItem(STORE);if(s){activeProg=JSON.parse(s);renderHero();}}catch(e){}
+  try{
+    const s=localStorage.getItem(STORE);
+    if(!s)return;
+    activeProg=JSON.parse(s);
+    // a pinned custom program may have been edited since — re-resolve it
+    if(activeProg&&activeProg.cprogId&&window.MCPrograms){
+      const cur=MCPrograms.get(activeProg.cprogId);
+      if(cur){activeProg=MCPrograms.asProgCard(cur);localStorage.setItem(STORE,JSON.stringify(activeProg));}
+      else{activeProg=null;localStorage.removeItem(STORE);}
+    }
+    renderHero();
+  }catch(e){}
 }
 
 // ── TABS ──
@@ -784,11 +821,31 @@ function renderHero(){
   ).join('');
 }
 
+// ── CUSTOM PROGRAMS (Programs tab list) ──
+function renderCustomPrograms(){
+  const tier=document.getElementById('customTier');
+  const list=document.getElementById('customProgList');
+  if(!tier||!list||!window.MCPrograms)return;
+  const progs=MCPrograms.getAll();
+  tier.style.display=progs.length?'':'none';
+  list.innerHTML=progs.map(p=>{
+    const col=p.color||'#34d399';
+    return `<a href="cat-custom.html?prog=${p.id}" class="cat-card" style="border-color:${col}55;background:linear-gradient(135deg,${col}14,var(--surface));">
+      <span class="cat-icon">${p.icon||'🧩'}</span>
+      <div class="cat-tag" style="color:${col};">Custom · ${p.weeks} Weeks</div>
+      <div class="cat-name">${esc(p.name)}</div>
+      <div class="cat-meta">${p.days.map(d=>esc(d.name)).join(' · ')}</div>
+      <div class="cat-count">${p.days.length} Days →</div>
+      <div class="cat-designer">✍️ Designed by you</div>
+    </a>`;
+  }).join('');
+}
+
 // ── PROGRAM SELECT ──
 function buildProgCards(){
   const wrap=document.getElementById('psCards');
   wrap.innerHTML='';
-  PROGS.forEach(p=>{
+  allProgs().forEach(p=>{
     const d=document.createElement('div');
     d.className='ps-card'+(activeProg&&activeProg.id===p.id?' sel':'');
     d.id='psc-'+p.id;
@@ -812,7 +869,7 @@ function closeProgSelectOutside(e){
 
 function selectProg(id){
   tempSel=id;
-  PROGS.forEach(p=>{
+  allProgs().forEach(p=>{
     const c=document.getElementById('psc-'+p.id);
     const ch=document.getElementById('pschk-'+p.id);
     if(c){c.classList.toggle('sel',p.id===id);}
@@ -822,7 +879,7 @@ function selectProg(id){
 
 function confirmProg(){
   if(!tempSel)return;
-  activeProg=PROGS.find(p=>p.id===tempSel);
+  activeProg=allProgs().find(p=>p.id===tempSel);
   try{localStorage.setItem(STORE,JSON.stringify(activeProg));}catch(e){}
   document.getElementById('psOverlay').classList.remove('open');
   renderHero();
@@ -960,6 +1017,7 @@ function renderConditioning(){
 try{ sessionStorage.removeItem('mc_back_to'); }catch(e){}
 loadState();
 renderConditioning();
+renderCustomPrograms();
 // honor ?tab= deep-link from the global bottom nav (mc-nav.js)
 (function(){var t=new URLSearchParams(location.search).get('tab');if(t&&document.getElementById('scr-'+t))switchTab(t);})();
 </script>

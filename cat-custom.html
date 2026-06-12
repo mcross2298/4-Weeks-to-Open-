@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Custom Program — MC Training</title>
+<link rel="stylesheet" href="base.css?v=65"/>
+<link rel="stylesheet" href="mc-nav.css"/>
+<style>
+:root{--accent:#34d399;--accent-rgb:52,211,153;}
+body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
+.header{padding:18px 18px 20px;background:linear-gradient(135deg,rgba(var(--accent-rgb),0.14),#0a0a0a);}
+.back-link{color:var(--accent);text-decoration:none;font-size:14px;font-weight:800;}
+.hd-row{display:flex;align-items:center;gap:14px;margin-top:14px;}
+.hd-icon{width:54px;height:54px;border-radius:14px;background:rgba(var(--accent-rgb),0.14);
+  border:1px solid rgba(var(--accent-rgb),0.4);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+.hd-eyebrow{font-size:11px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent);}
+.hd-title{font-size:24px;font-weight:900;color:#fff;letter-spacing:-0.02em;line-height:1.15;}
+.hd-meta{font-size:12px;font-weight:700;color:#94a3b8;margin-top:3px;}
+.hd-actions{display:flex;gap:8px;margin-top:16px;}
+.hd-btn{flex:1;padding:11px 0;border-radius:11px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.06);
+  color:#e2e8f0;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;text-align:center;text-decoration:none;
+  -webkit-tap-highlight-color:transparent;}
+.hd-btn.pin{background:var(--accent);border-color:var(--accent);color:#000;}
+.hd-btn.danger{color:#f87171;border-color:rgba(239,68,68,0.25);flex:0 0 48px;}
+.content{max-width:680px;margin:0 auto;padding:18px 18px 110px;}
+.week-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:14px;-webkit-overflow-scrolling:touch;}
+.wt{flex-shrink:0;padding:8px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);
+  color:#94a3b8;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
+.wt.on{background:var(--accent);border-color:var(--accent);color:#000;}
+.day-link{display:flex;align-items:center;gap:13px;background:#101010;border:1px solid rgba(255,255,255,0.08);
+  border-left:3px solid var(--accent);border-radius:14px;padding:15px 14px;margin-bottom:10px;text-decoration:none;
+  -webkit-tap-highlight-color:transparent;}
+.day-link:active{background:#141414;}
+.dl-num{width:34px;height:34px;border-radius:10px;background:rgba(var(--accent-rgb),0.12);border:1px solid rgba(var(--accent-rgb),0.35);
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--accent);flex-shrink:0;}
+.dl-name{flex:1;font-size:15px;font-weight:800;color:#fff;min-width:0;}
+.dl-meta{font-size:11px;font-weight:700;color:#64748b;margin-top:2px;}
+.dl-done{font-size:11px;font-weight:900;color:#34d399;flex-shrink:0;}
+.dl-arrow{color:#64748b;font-size:15px;flex-shrink:0;}
+.missing{padding:60px 20px;text-align:center;color:#94a3b8;font-size:14px;font-weight:700;}
+.missing a{color:var(--accent);}
+.new-banner{margin-bottom:14px;padding:11px 14px;border-radius:12px;background:rgba(52,211,153,0.1);
+  border:1px solid rgba(52,211,153,0.3);color:#34d399;font-size:13px;font-weight:800;text-align:center;}
+</style>
+</head><body>
+
+<div class="header" id="hd">
+  <a href="dashboard.html?tab=programs" class="back-link">← Programs</a>
+  <div class="hd-row">
+    <div class="hd-icon" id="hdIcon">🧩</div>
+    <div>
+      <div class="hd-eyebrow">Custom Program</div>
+      <div class="hd-title" id="hdTitle">…</div>
+      <div class="hd-meta" id="hdMeta"></div>
+    </div>
+  </div>
+  <div class="hd-actions" id="hdActions" style="display:none;">
+    <button class="hd-btn pin" id="pinBtn">📌 Set as Active</button>
+    <a class="hd-btn" id="editBtn" href="#">✏️ Edit</a>
+    <button class="hd-btn danger" id="delBtn" title="Delete program">🗑</button>
+  </div>
+</div>
+
+<div class="content">
+  <div id="newBanner" class="new-banner" style="display:none;">✅ Program saved — it now lives in your Programs tab.</div>
+  <div class="week-tabs" id="weekTabs"></div>
+  <div id="dayList"></div>
+</div>
+
+<script src="mc-program-store.js"></script>
+<script>
+(function () {
+  var qs = new URLSearchParams(location.search);
+  var progId = qs.get('prog') || '';
+  var week = Math.max(1, parseInt(qs.get('w'), 10) || 1);
+  var p = window.MCPrograms ? MCPrograms.get(progId) : null;
+  var $ = function (id) { return document.getElementById(id); };
+
+  if (!p) {
+    document.querySelector('.content').innerHTML =
+      '<div class="missing">Program not found on this device.<br><br>' +
+      '<a href="build-program.html">＋ Build a program</a></div>';
+    $('hdTitle').textContent = 'Not found';
+    return;
+  }
+
+  if (qs.get('new')) $('newBanner').style.display = 'block';
+
+  // accent = the program's own color rail
+  var hex = p.color || '#34d399';
+  var m = /^#?(..)(..)(..)$/.exec(hex);
+  if (m) {
+    document.documentElement.style.setProperty('--accent', hex);
+    document.documentElement.style.setProperty('--accent-rgb',
+      parseInt(m[1], 16) + ',' + parseInt(m[2], 16) + ',' + parseInt(m[3], 16));
+  }
+
+  document.title = p.name + ' — MC Training';
+  $('hdIcon').textContent = p.icon || '🧩';
+  $('hdTitle').textContent = p.name;
+  $('hdMeta').textContent = p.weeks + ' weeks · ' + p.days.length + ' days/week';
+  $('hdActions').style.display = 'flex';
+  $('editBtn').href = 'build-program.html?id=' + p.id;
+
+  $('pinBtn').addEventListener('click', function () {
+    try {
+      localStorage.setItem('mc_active_prog', JSON.stringify(MCPrograms.asProgCard(p)));
+      document.dispatchEvent(new CustomEvent('mc:program-changed'));
+    } catch (e) {}
+    $('pinBtn').textContent = '✓ Active Program';
+  });
+  $('delBtn').addEventListener('click', function () {
+    if (!confirm('Delete "' + p.name + '"? Logged history is kept; the program itself is removed.')) return;
+    MCPrograms.remove(p.id);
+    try {
+      var act = JSON.parse(localStorage.getItem('mc_active_prog') || 'null');
+      if (act && act.cprogId === p.id) localStorage.removeItem('mc_active_prog');
+    } catch (e) {}
+    location.href = 'dashboard.html?tab=programs';
+  });
+
+  // ✓ done = the day was finished within the trailing 7 days (logging history
+  // is intentionally week-agnostic so "Last: X lb" cues carry across weeks)
+  function doneMap() {
+    var map = {};
+    var cutoff = Date.now() - 7 * 24 * 3600 * 1000;
+    try {
+      (JSON.parse(localStorage.getItem('mc_workout_log_v1') || '[]') || []).forEach(function (e) {
+        var dm = new RegExp('^cprog-' + p.id + '-d(\\d+)$').exec(e.pageId || '');
+        if (dm && new Date(e.date || 0).getTime() >= cutoff) map[dm[1]] = true;
+      });
+    } catch (e) {}
+    return map;
+  }
+
+  function render() {
+    var tabs = '';
+    for (var w = 1; w <= p.weeks; w++) {
+      tabs += '<button class="wt' + (w === week ? ' on' : '') + '" data-w="' + w + '">Week ' + w + '</button>';
+    }
+    $('weekTabs').innerHTML = p.weeks > 1 ? tabs : '';
+
+    var done = doneMap();
+    $('dayList').innerHTML = p.days.map(function (d, i) {
+      var n = d.exercises.length;
+      var sets = d.exercises.reduce(function (s, e) { return s + (parseInt(e.sets, 10) || 0); }, 0);
+      return '<a class="day-link" href="run-program.html?prog=' + p.id + '&w=' + week + '&d=' + (i + 1) + '">' +
+        '<span class="dl-num">' + (i + 1) + '</span>' +
+        '<span style="flex:1;min-width:0;"><span class="dl-name">' + d.name.replace(/</g, '&lt;') + '</span>' +
+          '<div class="dl-meta">' + n + ' exercises · ' + sets + ' sets</div></span>' +
+        (done[String(i + 1)] ? '<span class="dl-done">✓ done</span>' : '') +
+        '<span class="dl-arrow">→</span></a>';
+    }).join('');
+  }
+
+  $('weekTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('.wt'); if (!b) return;
+    week = parseInt(b.dataset.w, 10) || 1;
+    render();
+  });
+
+  render();
+})();
+</script>
+<script src="mc-supabase.js"></script>
+<script src="mc-sync.js"></script>
+<script src="mc-resume.js"></script>
+<script src="mc-nav.js"></script>
+<script src="mc-sw-update.js?v=45"></script>
+</body></html>

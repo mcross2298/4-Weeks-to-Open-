@@ -29,6 +29,7 @@
     'mc_history':            'arrayById',
     'mc_replace_log':        'arrayById',
     'mc_custom_workouts_v1': 'arrayById',
+    'mc_custom_programs_v1': 'arrayById',
     'mc_workout_log_v1':     'workoutLog',
     'mc_cond_log_v1':        'arrayById',
     'mc_activity':           'activity',

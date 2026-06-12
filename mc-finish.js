@@ -5,7 +5,9 @@
   var WL_KEY='mc_workout_log_v1';
   var SL_KEY='mc_setlog_v1';
   var startTime=Date.now();
-  var pageId=location.pathname.split('/').pop().replace('.html','');
+  // MC_PID_OVERRIDE namespaces custom program/workout runners (run-program.html)
+  // so each saved day keeps its own history instead of colliding on the filename
+  var pageId=(window.MC_PID_OVERRIDE||location.pathname.split('/').pop().replace('.html',''));
 
   // Get workout name from page title
   function getWorkoutName(){

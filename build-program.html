@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Program Builder — MC Training</title>
+<link rel="stylesheet" href="base.css?v=65"/>
+<link rel="stylesheet" href="mc-nav.css"/>
+<script src="mc-theme.js"></script>
+<style>
+body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;padding-bottom:120px;}
+.topbar{display:flex;align-items:center;gap:12px;padding:16px 18px 8px;}
+.back{font-size:20px;color:var(--accent,#d4af37);text-decoration:none;-webkit-tap-highlight-color:transparent;}
+.topbar-title{font-size:16px;font-weight:900;color:#fff;}
+.topbar-sub{font-size:11px;color:#64748b;font-weight:600;}
+.content{max-width:680px;margin:0 auto;padding:8px 18px 0;}
+.sec-lbl{font-size:11px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#94a3b8;margin:20px 0 8px;}
+.inp{width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.05);color:#f1f5f9;font-size:15px;font-weight:700;font-family:inherit;outline:none;}
+.inp:focus{border-color:var(--accent,#d4af37);}
+.row{display:flex;gap:10px;}
+.pick-row{display:flex;gap:8px;flex-wrap:wrap;}
+.pick{width:44px;height:44px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);
+  display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.pick.sel{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,0.35);}
+.pick.color-pick{font-size:0;}
+.pick.color-pick .swatch{width:22px;height:22px;border-radius:50%;}
+.weeks-row{display:flex;gap:8px;}
+.wk-btn{flex:1;padding:11px 0;border-radius:11px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);
+  color:#94a3b8;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
+.wk-btn.sel{background:var(--accent,#d4af37);border-color:var(--accent,#d4af37);color:#000;}
+.day-card{background:#101010;border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:14px;margin-bottom:10px;}
+.day-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.day-name-inp{flex:1;padding:9px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-weight:800;font-family:inherit;outline:none;}
+.day-del{background:none;border:none;color:#f87171;font-size:16px;cursor:pointer;padding:6px;-webkit-tap-highlight-color:transparent;}
+.dx-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.dx-row:last-child{border-bottom:none;}
+.dx-name{flex:1;font-size:13px;font-weight:700;color:#e2e8f0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dx-mini{width:52px;padding:6px 4px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.04);color:#e2e8f0;font-size:12px;font-weight:700;text-align:center;font-family:inherit;outline:none;}
+.dx-del{background:none;border:none;color:#64748b;font-size:14px;cursor:pointer;padding:4px;-webkit-tap-highlight-color:transparent;}
+.dx-hdr{display:flex;gap:8px;padding:2px 0 4px;font-size:10px;font-weight:900;letter-spacing:0.08em;color:#475569;text-transform:uppercase;}
+.dx-hdr span:first-child{flex:1;}
+.dx-hdr span{width:52px;text-align:center;}
+.dx-hdr span:last-child{width:24px;}
+.add-ex{width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1.5px dashed rgba(255,255,255,0.15);
+  background:none;color:#94a3b8;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
+.add-day{width:100%;padding:13px;border-radius:12px;border:1.5px dashed rgba(255,255,255,0.18);background:none;
+  color:#cbd5e1;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
+.save-bar{position:fixed;bottom:0;left:0;right:0;z-index:60;display:flex;gap:10px;align-items:center;
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(10,10,10,0.96);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid rgba(255,255,255,0.08);}
+.save-note{font-size:11px;font-weight:700;color:#64748b;flex:1;}
+.save-btn{padding:13px 26px;border-radius:12px;border:none;background:var(--accent,#d4af37);color:#000;
+  font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.03em;-webkit-tap-highlight-color:transparent;}
+.save-btn:disabled{opacity:0.35;}
+/* exercise picker sheet */
+.pk-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:100;display:none;align-items:flex-end;}
+.pk-overlay.open{display:flex;}
+.pk-sheet{width:100%;max-width:680px;margin:0 auto;height:78vh;display:flex;flex-direction:column;
+  background:#101010;border-radius:18px 18px 0 0;border:1px solid rgba(255,255,255,0.1);border-bottom:0;padding:14px 16px 0;}
+.pk-search{padding:11px 13px;border-radius:11px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);
+  color:#f1f5f9;font-size:14px;font-family:inherit;outline:none;margin-bottom:10px;}
+.pk-filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch;}
+.pk-f{flex-shrink:0;padding:6px 12px;border-radius:9px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);
+  color:#94a3b8;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
+.pk-f.on{background:var(--accent,#d4af37);border-color:var(--accent,#d4af37);color:#000;}
+.pk-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(16px + env(safe-area-inset-bottom));}
+.pk-row{display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.pk-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.pk-nm{flex:1;font-size:14px;font-weight:700;color:#e2e8f0;}
+.pk-add{font-size:16px;color:#34d399;font-weight:900;}
+</style>
+</head><body>
+
+<div class="topbar">
+  <a href="dashboard.html" class="back">←</a>
+  <div>
+    <div class="topbar-title" id="pbTitle">Program Builder</div>
+    <div class="topbar-sub">Multi-week custom program — hero card, schedule &amp; logging included</div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="sec-lbl">Program name</div>
+  <input class="inp" id="pName" placeholder="e.g. Off-Season Builder" maxlength="40">
+
+  <div class="sec-lbl">Icon</div>
+  <div class="pick-row" id="pIcons"></div>
+
+  <div class="sec-lbl">Color rail</div>
+  <div class="pick-row" id="pColors"></div>
+
+  <div class="sec-lbl">Weeks</div>
+  <div class="weeks-row" id="pWeeks"></div>
+
+  <div class="sec-lbl">Training days</div>
+  <div id="pDays"></div>
+  <button class="add-day" onclick="MCPB.addDay()">＋ Add training day</button>
+</div>
+
+<div class="save-bar">
+  <div class="save-note" id="saveNote">Name it, add at least one day with one exercise.</div>
+  <button class="save-btn" id="saveBtn" onclick="MCPB.save()" disabled>Save Program</button>
+</div>
+
+<div class="pk-overlay" id="pkOverlay">
+  <div class="pk-sheet">
+    <input class="pk-search" id="pkSearch" placeholder="Search 500+ exercises…">
+    <div class="pk-filters" id="pkFilters"></div>
+    <div class="pk-list" id="pkList"></div>
+  </div>
+</div>
+
+<script src="exercise-catalog.js"></script>
+<script src="mc-program-store.js"></script>
+<script src="mc-program-builder.js"></script>
+<script src="mc-supabase.js"></script>
+<script src="mc-sync.js"></script>
+<script src="mc-nav.js"></script>
+<script src="mc-sw-update.js?v=45"></script>
+</body></html>
