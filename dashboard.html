@@ -423,6 +423,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .custom-wk-del{padding:11px 14px;border-radius:11px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.05);color:#f87171;font-size:13px;cursor:pointer;font-family:inherit;}
 .custom-wk-del:active{background:rgba(239,68,68,0.15);}
 </style>
+<script src="mc-theme.js"></script>
 </head>
 <body>
 
@@ -825,6 +826,8 @@ function confirmProg(){
   try{localStorage.setItem(STORE,JSON.stringify(activeProg));}catch(e){}
   document.getElementById('psOverlay').classList.remove('open');
   renderHero();
+  // shift the chrome accent to the newly pinned program (mc-theme.js)
+  try{document.dispatchEvent(new CustomEvent('mc:program-changed'));}catch(e){}
 }
 
 // ── OFFLINE ──
