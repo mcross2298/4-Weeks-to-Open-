@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Import — MC Training</title>
+<link rel="stylesheet" href="base.css?v=65"/>
+<link rel="stylesheet" href="mc-nav.css"/>
+<style>
+:root{--accent:#34d399;--accent-rgb:52,211,153;}
+body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
+.topbar{display:flex;align-items:center;gap:12px;padding:16px 18px 8px;}
+.back{font-size:20px;color:var(--accent);text-decoration:none;-webkit-tap-highlight-color:transparent;}
+.topbar-title{font-size:16px;font-weight:900;color:#fff;}
+.content{max-width:560px;margin:0 auto;padding:14px 18px 110px;}
+.imp-card{background:#101010;border:1px solid rgba(var(--accent-rgb),0.35);border-radius:18px;padding:20px 18px;}
+.imp-tag{font-size:11px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent);}
+.imp-name{font-size:22px;font-weight:900;color:#fff;margin:6px 0 4px;display:flex;align-items:center;gap:10px;}
+.imp-meta{font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:14px;}
+.imp-day{padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
+  border-radius:11px;margin-bottom:7px;}
+.imp-day-name{font-size:13px;font-weight:900;color:#e2e8f0;margin-bottom:3px;}
+.imp-day-ex{font-size:11px;font-weight:600;color:#64748b;line-height:1.5;}
+.imp-btn{display:block;width:100%;margin-top:16px;padding:15px;border:none;border-radius:13px;cursor:pointer;
+  background:var(--accent);color:#000;font-size:15px;font-weight:900;font-family:inherit;letter-spacing:0.03em;
+  -webkit-tap-highlight-color:transparent;}
+.imp-btn:active{transform:scale(0.99);}
+.imp-bad{padding:50px 20px;text-align:center;color:#94a3b8;font-size:14px;font-weight:700;line-height:1.6;}
+.imp-bad a{color:var(--accent);}
+</style>
+</head><body>
+
+<div class="topbar">
+  <a href="dashboard.html" class="back">←</a>
+  <div><div class="topbar-title">📥 Import</div></div>
+</div>
+
+<div class="content" id="impBody"></div>
+
+<script src="mc-share.js"></script>
+<script src="mc-program-store.js"></script>
+<script>
+(function () {
+  var body = document.getElementById('impBody');
+  var pkg = window.MCShare ? MCShare.decode(location.hash) : null;
+
+  function esc(s) { return String(s == null ? '' : s).replace(/</g, '&lt;'); }
+
+  if (!pkg) {
+    body.innerHTML = '<div class="imp-bad">This import link is invalid or incomplete.<br><br>' +
+      'Ask the sender to share it again from their app.<br><br>' +
+      '<a href="dashboard.html">← Dashboard</a></div>';
+    return;
+  }
+
+  var d = pkg.d;
+  if (pkg.t === 'program') {
+    var col = /^#[0-9a-f]{6}$/i.test(d.color || '') ? d.color : '#34d399';
+    document.documentElement.style.setProperty('--accent', col);
+    body.innerHTML =
+      '<div class="imp-card" style="border-color:' + col + '55;">' +
+        '<div class="imp-tag">Shared program</div>' +
+        '<div class="imp-name">' + esc(d.icon || '🧩') + ' ' + esc(d.name) + '</div>' +
+        '<div class="imp-meta">' + (parseInt(d.weeks, 10) || 1) + ' weeks · ' +
+          (d.days || []).length + ' days/week</div>' +
+        (d.days || []).map(function (day) {
+          return '<div class="imp-day"><div class="imp-day-name">' + esc(day.name) + '</div>' +
+            '<div class="imp-day-ex">' + (day.exercises || []).map(function (x) {
+              return esc(x.name) + ' ' + (x.sets || 3) + '×' + esc(x.reps || '10');
+            }).join(' · ') + '</div></div>';
+        }).join('') +
+        '<button class="imp-btn" id="impGo">📥 Import program</button>' +
+      '</div>';
+    document.getElementById('impGo').addEventListener('click', function () {
+      var saved = MCPrograms.save({
+        name: String(d.name || 'Shared program').slice(0, 40),
+        icon: String(d.icon || '🧩').slice(0, 4),
+        color: col,
+        weeks: Math.min(12, Math.max(1, parseInt(d.weeks, 10) || 1)),
+        days: (d.days || []).map(function (day) {
+          return {
+            name: String(day.name || 'Day').slice(0, 28),
+            exercises: (day.exercises || []).map(function (x) {
+              return { name: String(x.name || '').slice(0, 60), muscle: String(x.muscle || '').slice(0, 20),
+                       sets: parseInt(x.sets, 10) || 3, reps: String(x.reps || '10').slice(0, 6),
+                       rest: parseInt(x.rest, 10) || 90 };
+            })
+          };
+        })
+      });
+      location.href = 'cat-custom.html?prog=' + saved.id + '&new=1';
+    });
+  } else {
+    body.innerHTML =
+      '<div class="imp-card">' +
+        '<div class="imp-tag">Shared workout</div>' +
+        '<div class="imp-name">⚡ ' + esc(d.name) + '</div>' +
+        '<div class="imp-meta">' + (d.exercises || []).length + ' exercises</div>' +
+        '<div class="imp-day"><div class="imp-day-ex">' + (d.exercises || []).map(function (x) {
+          return esc(x.name) + ' ' + (x.sets || 3) + '×' + esc(x.reps || '10');
+        }).join(' · ') + '</div></div>' +
+        '<button class="imp-btn" id="impGo">📥 Import workout</button>' +
+      '</div>';
+    document.getElementById('impGo').addEventListener('click', function () {
+      var wk = {
+        id: 'cw-' + Date.now().toString(36),
+        name: String(d.name || 'Shared workout').slice(0, 40),
+        created: new Date().toISOString(),
+        exercises: (d.exercises || []).map(function (x) {
+          return { name: String(x.name || '').slice(0, 60), muscle: String(x.muscle || '').slice(0, 20),
+                   sets: parseInt(x.sets, 10) || 3, reps: String(x.reps || '10').slice(0, 6) };
+        })
+      };
+      var all;
+      try { all = JSON.parse(localStorage.getItem('mc_custom_workouts_v1') || '[]'); } catch (e) { all = []; }
+      all.unshift(wk);
+      try { localStorage.setItem('mc_custom_workouts_v1', JSON.stringify(all)); } catch (e) {}
+      try { if (window.MC_SYNC && MC_SYNC.push) MC_SYNC.push(); } catch (e) {}
+      location.href = 'build-workout.html';
+    });
+  }
+})();
+</script>
+<script src="mc-supabase.js"></script>
+<script src="mc-sync.js"></script>
+<script src="mc-nav.js"></script>
+<script src="mc-sw-update.js?v=45"></script>
+</body></html>
