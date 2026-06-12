@@ -1,0 +1,91 @@
+{
+  "_comment": [
+    "Content provenance manifest \u2014 Horizon 1 of the market-extraction plan.",
+    "RULE: every file is ORIGINAL (safe for the market app) unless listed under",
+    "'licensed' (third-party program content that cannot be marketed) or",
+    "'scratch' (concept/superseded files that ship to neither build).",
+    "tools/build-market.py consumes this to generate the clean market repo",
+    "and to CI-check that no licensed content leaks into it.",
+    "When adding a new influencer page/asset, list it here in the same change."
+  ],
+  "licensed": {
+    "stndr": {
+      "owner": "STNDR / CBUM",
+      "files": [
+        "cat-stndr.html",
+        "stndr-instructions.html",
+        "stndr-checkoff.js",
+        "push-pull-legs.html",
+        "legacy-prep.html",
+        "arnold-legacy.html",
+        "weeks-to-open.html"
+      ]
+    },
+    "pump": {
+      "owner": "Julian Smith / Daily Pump",
+      "files": [
+        "back-traps-pump.html",
+        "bis-tris-pump.html",
+        "bonus-pump-cst.html",
+        "bonus-pump-lats.html",
+        "cat-pump-new4.html",
+        "cat-pump.html",
+        "chest-tri-pump.html",
+        "hams-glutes-pump.html",
+        "legs-pump.html",
+        "legs-s3-pump.html",
+        "pump-instructions.html",
+        "quads-pump.html",
+        "s3-back-traps.html",
+        "s3-chest-biceps.html",
+        "s3-shoulders-triceps.html",
+        "s3-upper-body.html",
+        "s4-legs.html",
+        "s4-pull.html",
+        "s4-push.html",
+        "shoulders-back-pump.html",
+        "shoulders-bis-forearms-pump.html"
+      ]
+    },
+    "gainz": {
+      "owner": "Bradley Martyn / Daily Gainz",
+      "files": [
+        "2on-1off.html",
+        "3on-1off-high-freq.html",
+        "5on-2off.html",
+        "bro-split.html",
+        "cat-gainz.html",
+        "every-arms-day.html",
+        "every-chest-day.html",
+        "gainz-dark.css",
+        "gainz-instructions.html",
+        "lets-get-shredded.html",
+        "mens-lean-bulk.html",
+        "mens-shred.html"
+      ]
+    },
+    "psu": {
+      "owner": "Penn State Football S&C",
+      "files": [
+        "cat-psu.html",
+        "psu-strength.html"
+      ]
+    }
+  },
+  "scratch": [
+    "index-v4.html",
+    "stndr-card-concepts.html",
+    "exercisedata-phase8.json",
+    "exercisedata-phase8_1.json"
+  ],
+  "brand_terms": [
+    "CBUM",
+    "STNDR",
+    "Julian Smith",
+    "Daily Pump",
+    "Bradley Martyn",
+    "Daily Gainz",
+    "PSU Football",
+    "Penn State"
+  ]
+}
