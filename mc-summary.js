@@ -45,6 +45,13 @@
   function startTimer() {
     if (_timerStarted) return;
     _timerStarted = true;
+    // survive reloads (incl. the SW deploy force-reload): seed the elapsed
+    // clock from the persisted session start (mc-session.js)
+    try {
+      if (window.MCSession && MCSession.startedTs)
+        _elapsedSecs = Math.max(_elapsedSecs,
+          Math.floor((Date.now() - MCSession.startedTs) / 1000));
+    } catch (e) {}
     _timerInterval = setInterval(function () {
       _elapsedSecs++;
       var el = document.getElementById('mcsTimerVal');
