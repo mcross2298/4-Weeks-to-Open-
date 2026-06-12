@@ -66,10 +66,12 @@
   function saveWorkout(){
     var sets=getSessionSets();
     var prs=sets.filter(function(s){return s.pr;}).length;
+    var iso=new Date().toISOString();
     var entry={
+      id:pageId+'|'+iso,   // dedupe key for cross-device sync (mc-sync.js)
       pageId:pageId,
       workoutName:getWorkoutName(),
-      date:new Date().toISOString(),
+      date:iso,
       time:new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),
       duration:getDuration(),
       sets:sets,
@@ -165,6 +167,8 @@
     },
     confirm:function(){
       saveWorkout();
+      // back up the finished session right away (no-op when signed out)
+      try{if(window.MC_SYNC&&MC_SYNC.push)MC_SYNC.push();}catch(e){}
       window._FW.close();
       // Flash confirmation
       var btn=document.querySelector('.fw-btn');
