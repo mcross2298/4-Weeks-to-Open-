@@ -57,6 +57,7 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
     <button class="hd-btn pin" id="pinBtn">📌 Set as Active</button>
     <a class="hd-btn" id="editBtn" href="#">✏️ Edit</a>
     <button class="hd-btn" id="shareBtn">📤 Share</button>
+    <button class="hd-btn" id="pubBtn" style="display:none;">📣 Publish</button>
     <button class="hd-btn danger" id="delBtn" title="Delete program">🗑</button>
   </div>
 </div>
@@ -68,22 +69,51 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
 </div>
 
 <script src="mc-program-store.js"></script>
+<script src="mc-program-pub.js"></script>
 <script src="mc-share.js"></script>
 <script>
 (function () {
   var qs = new URLSearchParams(location.search);
-  var progId = qs.get('prog') || '';
+  var progId = qs.get('prog') || qs.get('pub') || '';
   var week = Math.max(1, parseInt(qs.get('w'), 10) || 1);
-  var p = window.MCPrograms ? MCPrograms.get(progId) : null;
   var $ = function (id) { return document.getElementById(id); };
 
-  if (!p) {
+  function onReady(fn) {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+    else fn();
+  }
+
+  // the local copy wins (it's the editable one); otherwise fall back to the
+  // owner-published mirror so any user can open a published program
+  function resolve() {
+    var local = window.MCPrograms ? MCPrograms.get(progId) : null;
+    if (local) return { p: local, isPub: false };
+    var pub = window.MCPub ? MCPub.get(progId) : null;
+    return pub ? { p: pub, isPub: true } : null;
+  }
+
+  function notFound() {
     document.querySelector('.content').innerHTML =
       '<div class="missing">Program not found on this device.<br><br>' +
       '<a href="build-program.html">＋ Build a program</a></div>';
     $('hdTitle').textContent = 'Not found';
-    return;
   }
+
+  var hit = resolve();
+  if (hit) { boot(hit.p, hit.isPub); return; }
+  // not on this device — the published mirror may just be cold; pull it once
+  // Supabase is up (mc-program-pub.js / mc-supabase.js load below us)
+  onReady(function () {
+    var done = function () {
+      var h = resolve();
+      if (h) boot(h.p, h.isPub); else notFound();
+    };
+    if (window.MCPub) MCPub.refresh(true).then(done, done);
+    else done();
+  });
+  return;
+
+  function boot(p, isPub) {
 
   if (qs.get('new')) $('newBanner').style.display = 'block';
 
@@ -101,11 +131,20 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
   $('hdTitle').textContent = p.name;
   $('hdMeta').textContent = p.weeks + ' weeks · ' + p.days.length + ' days/week';
   $('hdActions').style.display = 'flex';
-  $('editBtn').href = 'build-program.html?id=' + p.id;
+
+  if (isPub) {
+    // someone else's published program — viewable and runnable, not editable
+    document.querySelector('.hd-eyebrow').textContent = 'Published Program';
+    $('editBtn').style.display = 'none';
+    $('delBtn').style.display = 'none';
+  } else {
+    $('editBtn').href = 'build-program.html?id=' + p.id;
+  }
 
   $('pinBtn').addEventListener('click', function () {
     try {
-      localStorage.setItem('mc_active_prog', JSON.stringify(MCPrograms.asProgCard(p)));
+      var card = isPub ? MCPub.asProgCard(p) : MCPrograms.asProgCard(p);
+      localStorage.setItem('mc_active_prog', JSON.stringify(card));
       document.dispatchEvent(new CustomEvent('mc:program-changed'));
     } catch (e) {}
     $('pinBtn').textContent = '✓ Active Program';
@@ -122,6 +161,48 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
     } catch (e) {}
     location.href = 'dashboard.html?tab=programs';
   });
+
+  // ---- PM-only: publish this program to ALL users (Supabase, RLS-guarded) ----
+  // The PM session flag just reveals the button; the real boundary is the
+  // admin-only write policy on published_programs (supabase/phase3.sql).
+  (function () {
+    var pmActive = false;
+    try { pmActive = sessionStorage.getItem('mc_pm_active') === '1'; } catch (e) {}
+    if (isPub || !pmActive || !window.MCPub) return;
+    var btn = $('pubBtn');
+    function refreshLabel() { btn.textContent = MCPub.isPublished(p.id) ? '✓ Published' : '📣 Publish'; }
+    document.addEventListener('mc:published-programs', refreshLabel);
+    onReady(function () {
+      if (!window.MC_SB || !MC_SB.configured) return;
+      MC_SB.isOwner().then(function (owner) {
+        if (!owner) return;
+        refreshLabel();
+        btn.style.display = '';
+      });
+    });
+    btn.addEventListener('click', function () {
+      function fail(e) {
+        btn.disabled = false; refreshLabel();
+        alert('Publish failed: ' + ((e && e.message) || 'unknown error') +
+              '\nIf this is a permission error, your account is not in the admins table.');
+      }
+      function doPublish() {
+        btn.disabled = true; btn.textContent = 'Publishing…';
+        MCPub.publish(JSON.parse(JSON.stringify(p))).then(function () {
+          btn.disabled = false; refreshLabel();
+          alert('Published — "' + p.name + '" appears in every user\'s Programs tab within ~1 minute.');
+        }, fail);
+      }
+      if (!MCPub.isPublished(p.id)) {
+        if (confirm('Publish "' + p.name + '" to ALL users?\nIt appears in everyone\'s Programs tab within ~1 minute.')) doPublish();
+      } else if (confirm('"' + p.name + '" is already live.\n\nOK — push this version as an update to all users.\nCancel — more options.')) {
+        doPublish();
+      } else if (confirm('Unpublish "' + p.name + '"?\nIt disappears from everyone\'s Programs tab (their logged history is kept).')) {
+        btn.disabled = true; btn.textContent = 'Removing…';
+        MCPub.unpublish(p.id).then(function () { btn.disabled = false; refreshLabel(); }, fail);
+      }
+    });
+  })();
 
   // ✓ done = the day was finished within the trailing 7 days (logging history
   // is intentionally week-agnostic so "Last: X lb" cues carry across weeks)
@@ -164,6 +245,7 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
   });
 
   render();
+  }
 })();
 </script>
 <script src="mc-supabase.js"></script>
