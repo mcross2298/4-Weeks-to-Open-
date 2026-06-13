@@ -246,6 +246,72 @@
   function doPublish() {
     if (!window.MC_PO) { msg('Not loaded', 'Override layer not loaded on this page.'); return; }
     if (!window.MC_SB || !MC_SB.configured) { msg('No backend', 'Supabase is not configured — use Export instead.'); return; }
+    var summary = summarizePublish();
+    if (!summary.count) { msg('Nothing to publish', 'No local edits to publish.'); return; }
+    // pre-publish review: show exactly what goes live, then confirm
+    showModal({
+      title: 'Publish ' + summary.count + ' change' + (summary.count === 1 ? '' : 's') + '?',
+      body: 'Goes live for all users within ~1 minute.' + summary.html,
+      buttons: [
+        { label: 'Cancel', cb: function () {} },
+        { label: 'Publish', primary: true, cb: function () { executePublish(); } }
+      ]
+    });
+  }
+
+  // build a human-readable diff of the working copy for the review sheet
+  function summarizePublish() {
+    var local = MC_PO.local() || {};
+    var groups = [], n = 0, k;
+    function act(p) {
+      if (!p) return 'edited';
+      if (p.reset) return 'reset to original';
+      if (p.name) return '→ “' + p.name + '”';
+      if (p.label) return '→ “' + p.label + '”' + (p.color ? ' (' + p.color + ')' : '');
+      var bits = [];
+      ['icon', 'desc', 'sets', 'rest', 'note', 'tempo', 'color'].forEach(function (f) { if (p[f]) bits.push(f); });
+      return bits.length ? ('edited: ' + bits.join(', ')) : 'edited';
+    }
+    function ctx(s) { return ' <span class="mc-pp-ctx">(' + esc(s) + ')</span>'; }
+
+    var pages = local.pages || {}, pItems = [], pid, nm;
+    for (pid in pages) for (nm in pages[pid]) { pItems.push(esc(nm + ' — ' + act(pages[pid][nm])) + ctx(pid)); n++; }
+    if (pItems.length) groups.push({ t: 'Split-level exercise edits', items: pItems });
+
+    var exs = local.exercises || {}, eItems = [];
+    for (k in exs) { eItems.push(esc(k + ' — ' + act(exs[k]))); n++; }
+    if (eItems.length) groups.push({ t: 'Global exercise renames', items: eItems });
+
+    var progs = local.programs || {}, prItems = [];
+    for (k in progs) { prItems.push(esc(k + ' — ' + act(progs[k]))); n++; }
+    if (prItems.length) groups.push({ t: 'Programs', items: prItems });
+
+    var spl = local.splits || {}, sItems = [], sp, sn;
+    for (sp in spl) for (sn in spl[sp]) { sItems.push(esc(sn + ' — ' + act(spl[sp][sn])) + ctx(sp)); n++; }
+    if (sItems.length) groups.push({ t: 'Splits', items: sItems });
+
+    var bdg = local.badges || {}, bItems = [], bp, bid;
+    for (bp in bdg) for (bid in bdg[bp]) { bItems.push(esc(bid + ' — ' + act(bdg[bp][bid])) + ctx(bp)); n++; }
+    if (bItems.length) groups.push({ t: 'Badges', items: bItems });
+
+    if (window.MC_EXCATALOG && MC_EXCATALOG.getPending().length) {
+      var c = MC_EXCATALOG.getPending().length;
+      groups.push({ t: 'New catalog exercises', items: [c + ' new exercise' + (c === 1 ? '' : 's')] });
+      n += c;
+    }
+
+    var html = '<div class="mc-pp-list">';
+    groups.forEach(function (g) {
+      html += '<div class="mc-pp-grp">' + esc(g.t) + ' (' + g.items.length + ')</div>';
+      g.items.forEach(function (it) { html += '<div class="mc-pp-item">' + it + '</div>'; });
+    });
+    html += '</div>';
+    return { count: n, html: html };
+  }
+
+  // push the working copy to Supabase (upsert edits, delete resets), then clear
+  // local so it folds into the live published set. Owner-only via RLS.
+  function executePublish() {
     var local = MC_PO.local() || {};
     var pages = local.pages || {};
     var ops = [], pid, nm, k, p;
@@ -925,7 +991,13 @@
       '.mc-rc-expicker{margin-top:8px;}' +
       '.mc-rc-exlist{max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;}' +
       '.mc-rc-exopt{text-align:left;width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);' +
-        'border-radius:8px;padding:8px 10px;color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}';
+        'border-radius:8px;padding:8px 10px;color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}' +
+      // pre-publish review sheet (inside showModal)
+      '.mc-pp-list{margin-top:12px;max-height:38vh;overflow-y:auto;text-align:left;' +
+        'border-top:1px solid rgba(255,255,255,0.12);padding-top:8px;}' +
+      '.mc-pp-grp{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#22d3ee;margin:8px 0 4px;}' +
+      '.mc-pp-item{font-size:12px;color:#cbd5e1;padding:3px 0;line-height:1.35;word-break:break-word;}' +
+      '.mc-pp-ctx{color:#64748b;}';
     var st = document.createElement('style');
     st.textContent = css;
     document.head.appendChild(st);
