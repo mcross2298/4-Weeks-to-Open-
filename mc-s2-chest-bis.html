@@ -16,6 +16,7 @@
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
 <div id="app"></div>
 <script src="mc-timer.js"></script>
+<script src="mc-reps.js"></script>
 <script>
 
 function makeRestTimer(restStr, exerciseName) {
@@ -40,26 +41,6 @@ function B(arr){
     'tb-highrep':'🔥 High Rep','tb-midset':'💪 Mid Set','tb-drop':'↘️ Drop Set',
     'tb-amrap':'💀 AMRAP','tb-highset':'⚡ High Set','tb-superset':'⚡ Superset'};
   return arr.map(b=>'<span class="type-badge '+b+'">'+L[b]+'</span>').join('');
-}
-function aReps(setsStr){
-  var legs=String(setsStr==null?'—':setsStr).split('/').map(function(s){return s.trim();});
-  return legs.map(function(part,pi){
-    var reps=part.split(',').map(function(r){return r.trim();});
-    var chips;
-    if(reps.length>1 && reps.every(function(r){return r===reps[0];})){
-      var rep=reps[0], sp=/amrap/i.test(rep)||/drop/i.test(rep)||rep.indexOf('×')>=0;
-      chips='<span class="'+(sp?'a-rep special':'a-rep live')+'">'+reps.length+'× '+rep+'</span>';
-    } else {
-      chips=reps.map(function(rep,ri){
-        var sp=/amrap/i.test(rep)||/drop/i.test(rep);
-        var cls=sp?'a-rep special':(ri===0?'a-rep live':'a-rep');
-        var sep=ri<reps.length-1?'<span class="a-sep">·</span>':'';
-        return '<span class="'+cls+'">'+rep+'</span>'+sep;
-      }).join('');
-    }
-    var lt=legs.length>1?'<span class="a-legtag">'+(pi===0?'A':'B')+'</span>':'';
-    return '<div class="a-leg">'+lt+chips+'</div>';
-  }).join('');
 }
 function rS(ex,wk){
   const id=wk+'-s-'+ex.num,ck=checkState[id]?'checked':'';

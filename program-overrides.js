@@ -102,6 +102,35 @@
     return (entry && entry.name && !entry.reset) ? entry.name : null;
   }
 
+  // original (HTML-authored) name stamped on the card, or its visible text
+  // before any rename has painted. Reads data-mc-orig-name first so it stays
+  // stable mid-scan even after a card's displayed name has been repainted.
+  function origNameOfCard(card) {
+    var attr = card.getAttribute('data-mc-orig-name');
+    if (attr) return attr;
+    var el = card.querySelector(NAME_SEL);
+    return el ? el.textContent.trim() : '';
+  }
+
+  // page-tier override key: the original name, disambiguated by DOM occurrence
+  // order when a page repeats a name. Mirrors mc-setlog.js#nameId() so the
+  // override layer and the logging layer agree on which card is which. The
+  // FIRST occurrence keeps the bare name, so existing published overrides keyed
+  // by plain name keep applying unchanged (backward compatible). Without this,
+  // two cards sharing an original name resolve to one key and edits to one
+  // paint both.
+  function cardKey(card) {
+    var base = origNameOfCard(card);
+    if (!base) return '';
+    var want = base.trim().toLowerCase();
+    var cards = document.querySelectorAll(CARD_SEL), occ = 0;
+    for (var i = 0; i < cards.length; i++) {
+      if (cards[i] === card) break;
+      if (origNameOfCard(cards[i]).trim().toLowerCase() === want) occ++;
+    }
+    return occ ? base + '#' + occ : base;
+  }
+
   function overrideFor(origName) {
     var page = effective().pages[PAGE_ID];
     if (!page) return null;
@@ -156,7 +185,7 @@
     var nameEl = card.querySelector(NAME_SEL);
     if (!nameEl) return;
     var origName = card.getAttribute('data-mc-orig-name') || nameEl.textContent.trim();
-    var o = overrideFor(origName);                    // page-level override (highest priority)
+    var o = overrideFor(cardKey(card));               // page-level override (per-card; highest priority)
     var gName = (!o || !o.name) ? globalExerciseName(origName) : null; // global fallback
     var body = card.querySelector(BODY_SEL) || card;
     var noteEl = card.querySelector('.mcpo-note');
@@ -245,6 +274,7 @@
   window.MC_PO = {
     pageId: PAGE_ID,
     refresh: scan,
+    cardKey: cardKey,
     published: function () { return published; },
     local: readLocal,
     setLocal: function (obj) {

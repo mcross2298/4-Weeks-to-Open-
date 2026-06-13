@@ -453,11 +453,12 @@
     var ind = document.getElementById('mcPmTier');
     if (!ind || !editorCard) return;
     var orig = cardOrigName(editorCard);
+    var key  = MC_PO.cardKey ? MC_PO.cardKey(editorCard) : orig;
     var isGlobal = document.getElementById('mcPmGlobal').checked;
     var nameVal = document.getElementById('mcPmName').value.trim();
     var globalName = MC_PO.globalExerciseName(orig);
-    var pageEntry = ((MC_PO.local().pages || {})[MC_PO.pageId] || {})[orig] ||
-                    ((MC_PO.published().pages || {})[MC_PO.pageId] || {})[orig] || {};
+    var pageEntry = ((MC_PO.local().pages || {})[MC_PO.pageId] || {})[key] ||
+                    ((MC_PO.published().pages || {})[MC_PO.pageId] || {})[key] || {};
     var pageName = (pageEntry && !pageEntry.reset) ? pageEntry.name : '';
     var txt, cls = '';
     if (nameVal && isGlobal)       { txt = '🌐 Renames in ALL programs & splits'; cls = 'g'; }
@@ -520,8 +521,9 @@
     if (!editorOverlay) buildEditor();
     editorCard = card;
     var orig = cardOrigName(card);
-    var entry = ((MC_PO.local().pages || {})[MC_PO.pageId] || {})[orig] ||
-                ((MC_PO.published().pages || {})[MC_PO.pageId] || {})[orig] || {};
+    var key  = MC_PO.cardKey ? MC_PO.cardKey(card) : orig;
+    var entry = ((MC_PO.local().pages || {})[MC_PO.pageId] || {})[key] ||
+                ((MC_PO.published().pages || {})[MC_PO.pageId] || {})[key] || {};
     if (entry.reset) entry = {};
     var pageName   = entry.name || '';
     var globalName = MC_PO.globalExerciseName(orig);
@@ -546,11 +548,15 @@
   function saveEditor(reset) {
     var orig = cardOrigName(editorCard);
     if (!orig) { closeEditor(); return; }
+    // page tier is keyed per-card (orig + occurrence) so duplicate-named cards
+    // edit independently; the global tier stays keyed by the plain orig name so
+    // a global rename still applies to every copy.
+    var key  = MC_PO.cardKey ? MC_PO.cardKey(editorCard) : orig;
     var data = MC_PO.local();
     if (!data.pages) data.pages = {};
     if (!data.exercises) data.exercises = {};
     var page = data.pages[MC_PO.pageId] || (data.pages[MC_PO.pageId] = {});
-    var publishedHas       = !!(((MC_PO.published().pages || {})[MC_PO.pageId] || {})[orig]);
+    var publishedHas       = !!(((MC_PO.published().pages || {})[MC_PO.pageId] || {})[key]);
     var publishedGlobalHas = !!((MC_PO.published().exercises || {})[orig]);
 
     // drop a local global rename, shadowing a published one so the original shows
@@ -562,8 +568,8 @@
     if (reset) {
       // reset clears BOTH tiers so the original name renders everywhere; shadow
       // published entries, otherwise just drop the local entry
-      if (publishedHas) page[orig] = { reset: true };
-      else delete page[orig];
+      if (publishedHas) page[key] = { reset: true };
+      else delete page[key];
       clearGlobal();
     } else {
       var isGlobal = document.getElementById('mcPmGlobal').checked;
@@ -576,9 +582,9 @@
       if ((v = document.getElementById('mcPmRest').value.trim()))  entry.rest  = v;
       if ((v = document.getElementById('mcPmNote').value.trim()))  entry.note  = v;
       if ((v = document.getElementById('mcPmTempo').value.trim())) entry.tempo = v;
-      if (Object.keys(entry).length) page[orig] = entry;
-      else if (publishedHas) page[orig] = { reset: true };
-      else delete page[orig];
+      if (Object.keys(entry).length) page[key] = entry;
+      else if (publishedHas) page[key] = { reset: true };
+      else delete page[key];
 
       // global tier: only touched when the global box is checked
       if (isGlobal) {

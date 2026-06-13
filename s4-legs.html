@@ -34,6 +34,7 @@
 <body>
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
 <div class="app" id="app"></div>
+<script src="mc-reps.js"></script>
 <script>
 const TMR = {
   interval: null, startTime: null, duration: 0, activeEl: null, activeName: '',
@@ -288,21 +289,6 @@ const checkState = {};
 
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-function aReps(setsStr){
-  var legs=String(setsStr==null?'—':setsStr).split('/').map(s=>s.trim());
-  return legs.map((part,pi)=>{
-    var reps=part.split(',').map(r=>r.trim());
-    var chips;
-    if(reps.length>1&&reps.every(r=>r===reps[0])){
-      var rep=reps[0],sp=/amrap/i.test(rep)||/drop/i.test(rep)||rep.indexOf('×')>=0;
-      chips=`<span class="${sp?'a-rep special':'a-rep live'}">${reps.length}× ${rep}</span>`;
-    }else{
-      chips=reps.map((rep,ri)=>{var sp=/amrap/i.test(rep)||/drop/i.test(rep);var cls=sp?'a-rep special':(ri===0?'a-rep live':'a-rep');var sep=ri<reps.length-1?'<span class="a-sep">·</span>':'';return `<span class="${cls}">${rep}</span>${sep}`;}).join('');
-    }
-    var lt=legs.length>1?`<span class="a-legtag">${pi===0?'A':'B'}</span>`:'';
-    return `<div class="a-leg">${lt}${chips}</div>`;
-  }).join('');
-}
 function renderEx(ex, prefix, idx) {
   const id = `${activeIdx}-${prefix}-${idx}`;
   const checked = checkState[id] ? "checked" : "";
