@@ -191,6 +191,20 @@ eq(D.program('nope'), null, 'K5 unknown program -> null');
 ok(D.badges.card['tb-superset'] && D.badges.legend['lb-ss'], 'K6 badge label maps present');
 ok(D.programs[0].id === 'ss' && D.programs[3].id === 'bobw', 'K7 flagship tier first, in order');
 
+// ---- L: MC_PM_DATA ↔ progOf coverage (catches B2-style resolution gaps) ----
+// Every program's catalog page must resolve back to its id, and every program
+// must carry splits; every badge id must have a non-empty label.
+D.programs.forEach(function (p) {
+  eq(N.progOf(p.href), p.id, 'L: ' + p.id + ' cat page (' + p.href + ') resolves to its program');
+  ok(Array.isArray(p.splits) && p.splits.length > 0, 'L: ' + p.id + ' carries splits');
+});
+['card', 'legend'].forEach(function (grp) {
+  Object.keys(D.badges[grp]).forEach(function (bid) {
+    ok(typeof D.badges[grp][bid] === 'string' && D.badges[grp][bid].length > 0,
+       'L: badge ' + bid + ' has a label');
+  });
+});
+
 // ---- summary --------------------------------------------------------------
 console.log('\nnaming resolver tests: ' + passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);
