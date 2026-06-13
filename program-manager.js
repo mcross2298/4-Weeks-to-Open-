@@ -45,13 +45,19 @@
     pmc:   { icon: '⚡', name: 'Project Muscle Confusion',        desc: 'Supersets, pyramids, drop sets, AMRAP, and tempo',                    splits: ['Split 1', 'Split 2', 'Split 3', 'Split 4', 'Split 5', 'Split 6', 'Split 7'] },
     mc:    { icon: '👑', name: "Mike Cross' Favorite Splits",     desc: '5 personal splits across every major training style',                 splits: ['Split 1', 'Split 2', 'Split 3', 'Split 4', 'Split 5'] },
     bobw:  { icon: '🌗', name: 'Best of Both Worlds',             desc: 'Heavy resistance balanced with daily LISS + HIIT conditioning',       splits: ['Legs', 'Chest', 'Back', 'Biceps', 'Triceps', 'Shoulders'] },
+    /* MARKET:STRIP influencer-progs START */
     stndr: { icon: '🏋️', name: 'STNDR',                          desc: 'Structured progressive overload — CBUM method',                       splits: ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4'] },
     pump:  { icon: '⚡', name: 'Daily Pump',                      desc: 'Julian Smith pump protocols — in and out fast',                       splits: ['Back', 'Chest', 'Shoulders', 'Arms', 'Legs'] },
     gainz: { icon: '💪', name: 'Daily Gainz',                     desc: 'Bradley Martyn volume — built for size',                              splits: ['Bro Split', 'Push/Pull', '5 On 2 Off', '3 On 1 Off'] },
     psu:   { icon: '🏈', name: 'PSU Football',                    desc: 'Penn State strength and conditioning',                                splits: ['Phase 1', 'Phase 2', 'Phase 3'] }
+    /* MARKET:STRIP influencer-progs END */
   };
   // Order programs are listed in the Rename Center selector.
-  var PROG_ORDER = ['ss', 'pmc', 'mc', 'bobw', 'stndr', 'pump', 'gainz', 'psu'];
+  var PROG_ORDER = ['ss', 'pmc', 'mc', 'bobw'
+    /* MARKET:STRIP influencer-progs START */
+    , 'stndr', 'pump', 'gainz', 'psu'
+    /* MARKET:STRIP influencer-progs END */
+  ];
 
   // Default badge labels keyed by the stable badge id. "card" badges (tb-*)
   // render on workout cards; "legend" badges (lb-*) render in the cat-page

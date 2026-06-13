@@ -41,10 +41,12 @@
     if (/^mc-/.test(pageId))  return 'mc';
     if (/^ss-/.test(pageId) || /^cat-strength/.test(pageId)) return 'ss';
     if (/^bobw-/.test(pageId)) return 'bobw';
+    /* MARKET:STRIP influencer-progs START */
     if (/^stndr-/.test(pageId)) return 'stndr';
     if (/^pump-/.test(pageId)) return 'pump';
     if (/^gainz-/.test(pageId)) return 'gainz';
     if (/^psu-/.test(pageId)) return 'psu';
+    /* MARKET:STRIP influencer-progs END */
     return null;
   }
 
