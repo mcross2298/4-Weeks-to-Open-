@@ -17,5 +17,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: JS syntax check (node --check)
+        run: |
+          fail=0
+          for f in $(git ls-files '*.js'); do
+            node --check "$f" || { echo "::error file=$f::JavaScript syntax error"; fail=1; }
+          done
+          exit $fail
       - name: Market-extraction leak check
         run: python3 tools/build-market.py --check

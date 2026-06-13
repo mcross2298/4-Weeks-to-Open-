@@ -37,15 +37,23 @@
 
   function progOf(pageId) {
     if (pageId in PAGE_PROG_EXPLICIT) return PAGE_PROG_EXPLICIT[pageId];
+    // workout pages: content-prefixed filenames
     if (/^pmc-/.test(pageId)) return 'pmc';
     if (/^mc-/.test(pageId))  return 'mc';
-    if (/^ss-/.test(pageId) || /^cat-strength/.test(pageId)) return 'ss';
+    if (/^ss-/.test(pageId))  return 'ss';
     if (/^bobw-/.test(pageId)) return 'bobw';
+    // catalog/schedule pages: filenames differ from the content prefix
+    // (cat-pmc.html, cat-mc.html, cat-bobw.html, cat-strength.html) so they
+    // need their own mapping or program-scoped badge/split paint never fires
+    if (/^cat-pmc/.test(pageId))      return 'pmc';
+    if (/^cat-mc/.test(pageId))       return 'mc';
+    if (/^cat-bobw/.test(pageId))     return 'bobw';
+    if (/^cat-strength/.test(pageId)) return 'ss';
     /* MARKET:STRIP influencer-progs START */
-    if (/^stndr-/.test(pageId)) return 'stndr';
-    if (/^pump-/.test(pageId)) return 'pump';
-    if (/^gainz-/.test(pageId)) return 'gainz';
-    if (/^psu-/.test(pageId)) return 'psu';
+    if (/^stndr-/.test(pageId) || /^cat-stndr/.test(pageId)) return 'stndr';
+    if (/^pump-/.test(pageId)  || /^cat-pump/.test(pageId))  return 'pump';
+    if (/^gainz-/.test(pageId) || /^cat-gainz/.test(pageId)) return 'gainz';
+    if (/^psu-/.test(pageId)   || /^cat-psu/.test(pageId))   return 'psu';
     /* MARKET:STRIP influencer-progs END */
     return null;
   }
