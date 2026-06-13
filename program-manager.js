@@ -91,6 +91,17 @@
   // one-button info dialog (iOS-safe custom modal, not native alert)
   function msg(title, body) { showModal({ title: title, body: body || '', buttons: [{ label: 'OK', cb: function () {} }] }); }
 
+  // two-button confirm dialog (iOS-safe; native confirm() is suppressed in PWAs)
+  function confirmModal(title, body, onConfirm, confirmLabel) {
+    showModal({
+      title: title, body: body || '',
+      buttons: [
+        { label: 'Cancel', cb: function () {} },
+        { label: confirmLabel || 'OK', primary: true, cb: function () { onConfirm(); } }
+      ]
+    });
+  }
+
   // ---- custom modal (replaces prompt/alert which are suppressed in iOS PWA) --
   function showModal(cfg) {
     // cfg: { title, body, fields:[{id,label,type}], buttons:[{label,primary,cb}] }
@@ -327,7 +338,7 @@
   }
 
   function doExport() {
-    if (!window.MC_PO) { alert('Override layer not loaded on this page.'); return; }
+    if (!window.MC_PO) { msg('Not loaded', 'Override layer not loaded on this page.'); return; }
     var data = MC_PO.exportData();
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     var a = document.createElement('a');
@@ -336,7 +347,7 @@
     document.body.appendChild(a);
     a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 400);
-    alert('Exported program-overrides.json.\nCommit it to the repo root to publish these edits to all users.');
+    msg('Exported', 'Saved <b>program-overrides.json</b>.<br>Commit it to the repo root to publish these edits to all users.');
   }
 
   function doImport() {
@@ -358,8 +369,8 @@
             badges:    data.badges    || {}
           });
           renderBar();
-          alert('Imported overrides as local working copy.');
-        } catch (e) { alert('Could not read that file as an overrides JSON.'); }
+          msg('Imported', 'Imported overrides as your local working copy.');
+        } catch (e) { msg('Import failed', 'Could not read that file as an overrides JSON.'); }
       };
       rd.readAsText(f);
     });
@@ -368,9 +379,13 @@
 
   function doDiscard() {
     if (!window.MC_PO) return;
-    if (!confirm('Discard ALL unpublished local edits?\nPublished overrides (committed JSON) are unaffected.')) return;
-    MC_PO.setLocal({ pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} });
-    renderBar();
+    confirmModal('Discard local edits?',
+      'Discard ALL unpublished local edits? Published overrides are unaffected.',
+      function () {
+        MC_PO.setLocal({ pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} });
+        renderBar();
+      },
+      'Discard');
   }
 
   // ---- editor modal --------------------------------------------------------
@@ -501,7 +516,7 @@
   }
 
   function openEditor(card) {
-    if (!window.MC_PO) { alert('Override layer not loaded on this page.'); return; }
+    if (!window.MC_PO) { msg('Not loaded', 'Override layer not loaded on this page.'); return; }
     if (!editorOverlay) buildEditor();
     editorCard = card;
     var orig = cardOrigName(card);
