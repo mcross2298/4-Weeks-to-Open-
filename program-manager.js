@@ -34,7 +34,7 @@
   var ACTIVE_KEY = 'mc_pm_active';    // sessionStorage: '1' while unlocked this session
   var NAME_SEL   = '.ex-name, .lift-name, .var-name, .ss-name';
 
-  var bar = null, editorOverlay = null, editorCard = null, rcOverlay = null;
+  var bar = null, editorOverlay = null, editorCard = null, rcOverlay = null, ppOverlay = null;
 
   // ---- shared program / badge data (single source: mc-pm-data.js) ---------
   // window.MC_PM_DATA is the one place this data lives — also consumed by the
@@ -294,18 +294,49 @@
     if (!window.MC_SB || !MC_SB.configured) { msg('No backend', 'Supabase is not configured — use Export instead.'); return; }
     var summary = summarizePublish();
     if (!summary.count) { msg('Nothing to publish', 'No local edits to publish.'); return; }
-    // pre-publish review: show exactly what goes live, then confirm
-    showModal({
-      title: 'Publish ' + summary.count + ' change' + (summary.count === 1 ? '' : 's') + '?',
-      body: 'Goes live for all users within ~1 minute.' + summary.html,
-      buttons: [
-        { label: 'Cancel', cb: function () {} },
-        { label: 'Publish', primary: true, cb: function () { executePublish(); } }
-      ]
+    if (!ppOverlay) buildPublishSheet();
+    ppOverlay.querySelector('#mcPpTitle').textContent =
+      'Publish ' + summary.count + ' change' + (summary.count === 1 ? '' : 's') + '?';
+    ppOverlay.querySelector('#mcPpBody').innerHTML = summary.groups.map(function (g) {
+      return '<label class="mc-pp-grp-row"><input type="checkbox" class="mc-pp-chk" data-key="' + g.key + '" checked/>' +
+             '<span class="mc-pp-grp">' + esc(g.t) + ' (' + g.items.length + ')</span></label>' +
+             g.items.map(function (it) { return '<div class="mc-pp-item">' + it + '</div>'; }).join('');
+    }).join('');
+    ppOverlay.classList.add('open');
+  }
+
+  // pre-publish review sheet with a per-section checkbox (selective publish)
+  function buildPublishSheet() {
+    ppOverlay = document.createElement('div');
+    ppOverlay.className = 'mc-pm-overlay';
+    ppOverlay.innerHTML =
+      '<div class="mc-pm-modal">' +
+        '<div class="mc-pm-title" id="mcPpTitle">Publish changes?</div>' +
+        '<div class="mc-pm-orig">Goes live for all users within ~1 minute. Untick a section to hold it back.</div>' +
+        '<div class="mc-pp-list" id="mcPpBody"></div>' +
+        '<div class="mc-pm-btns"><span style="flex:1"></span>' +
+          '<button class="mc-pm-cancel" data-act="pp-cancel">Cancel</button>' +
+          '<button class="mc-pm-save" data-act="pp-go">Publish selected</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(ppOverlay);
+    ppOverlay.addEventListener('click', function (e) {
+      if (e.target === ppOverlay) { ppOverlay.classList.remove('open'); return; }
+      var b = e.target.closest('button[data-act]');
+      if (!b) return;
+      if (b.dataset.act === 'pp-cancel') { ppOverlay.classList.remove('open'); return; }
+      if (b.dataset.act === 'pp-go') {
+        var keys = [];
+        Array.prototype.forEach.call(ppOverlay.querySelectorAll('.mc-pp-chk'), function (c) {
+          if (c.checked) keys.push(c.getAttribute('data-key'));
+        });
+        ppOverlay.classList.remove('open');
+        if (keys.length) executePublish(keys);
+      }
     });
   }
 
-  // build a human-readable diff of the working copy for the review sheet
+  // build a grouped, keyed diff of the working copy for the review sheet
   function summarizePublish() {
     var local = MC_PO.local() || {};
     var groups = [], n = 0, k;
@@ -322,91 +353,84 @@
 
     var pages = local.pages || {}, pItems = [], pid, nm;
     for (pid in pages) for (nm in pages[pid]) { pItems.push(esc(nm + ' — ' + act(pages[pid][nm])) + ctx(pid)); n++; }
-    if (pItems.length) groups.push({ t: 'Split-level exercise edits', items: pItems });
+    if (pItems.length) groups.push({ t: 'Split-level exercise edits', key: 'pages', items: pItems });
 
     var exs = local.exercises || {}, eItems = [];
     for (k in exs) { eItems.push(esc(k + ' — ' + act(exs[k]))); n++; }
-    if (eItems.length) groups.push({ t: 'Global exercise renames', items: eItems });
+    if (eItems.length) groups.push({ t: 'Global exercise renames', key: 'exercises', items: eItems });
 
     var progs = local.programs || {}, prItems = [];
     for (k in progs) { prItems.push(esc(k + ' — ' + act(progs[k]))); n++; }
-    if (prItems.length) groups.push({ t: 'Programs', items: prItems });
+    if (prItems.length) groups.push({ t: 'Programs', key: 'programs', items: prItems });
 
     var spl = local.splits || {}, sItems = [], sp, sn;
     for (sp in spl) for (sn in spl[sp]) { sItems.push(esc(sn + ' — ' + act(spl[sp][sn])) + ctx(sp)); n++; }
-    if (sItems.length) groups.push({ t: 'Splits', items: sItems });
+    if (sItems.length) groups.push({ t: 'Splits', key: 'splits', items: sItems });
 
     var bdg = local.badges || {}, bItems = [], bp, bid;
     for (bp in bdg) for (bid in bdg[bp]) { bItems.push(esc(bid + ' — ' + act(bdg[bp][bid])) + ctx(bp)); n++; }
-    if (bItems.length) groups.push({ t: 'Badges', items: bItems });
+    if (bItems.length) groups.push({ t: 'Badges', key: 'badges', items: bItems });
 
     if (window.MC_EXCATALOG && MC_EXCATALOG.getPending().length) {
       var c = MC_EXCATALOG.getPending().length;
-      groups.push({ t: 'New catalog exercises', items: [c + ' new exercise' + (c === 1 ? '' : 's')] });
+      groups.push({ t: 'New catalog exercises', key: 'catalog', items: [c + ' new exercise' + (c === 1 ? '' : 's')] });
       n += c;
     }
-
-    var html = '<div class="mc-pp-list">';
-    groups.forEach(function (g) {
-      html += '<div class="mc-pp-grp">' + esc(g.t) + ' (' + g.items.length + ')</div>';
-      g.items.forEach(function (it) { html += '<div class="mc-pp-item">' + it + '</div>'; });
-    });
-    html += '</div>';
-    return { count: n, html: html };
+    return { count: n, groups: groups };
   }
 
-  // push the working copy to Supabase (upsert edits, delete resets), then clear
-  // local so it folds into the live published set. Owner-only via RLS.
-  function executePublish() {
+  // push selected sections to Supabase (upsert edits, delete resets), then clear
+  // only those sections from the working copy. sections omitted ⇒ publish all.
+  function executePublish(sections) {
+    var inc = {};
+    (sections && sections.length ? sections : ['pages', 'exercises', 'programs', 'splits', 'badges', 'catalog'])
+      .forEach(function (s) { inc[s] = true; });
     var local = MC_PO.local() || {};
-    var pages = local.pages || {};
-    var ops = [], pid, nm, k, p;
-    // page-level overrides
-    for (pid in pages) for (nm in pages[pid]) {
-      p = pages[pid][nm];
-      ops.push((p && p.reset) ? MC_SB.remove(pid, nm) : MC_SB.upsert(pid, nm, p));
+    var ops = [], pid, nm, p;
+    if (inc.pages) {
+      var pages = local.pages || {};
+      for (pid in pages) for (nm in pages[pid]) {
+        p = pages[pid][nm];
+        ops.push((p && p.reset) ? MC_SB.remove(pid, nm) : MC_SB.upsert(pid, nm, p));
+      }
     }
-    // v2 naming sections
     if (typeof MC_SB.upsertNaming === 'function') {
       // 1-level: exercises, programs
       ['exercises', 'programs'].forEach(function (sec) {
+        if (!inc[sec]) return;
         var scope = sec.slice(0, -1);
         var section = local[sec] || {};
-        for (k in section) {
-          p = section[k];
-          ops.push((p && p.reset) ? MC_SB.removeNaming(scope, k) : MC_SB.upsertNaming(scope, k, p));
+        for (var kk in section) {
+          var pp = section[kk];
+          ops.push((pp && pp.reset) ? MC_SB.removeNaming(scope, kk) : MC_SB.upsertNaming(scope, kk, pp));
         }
       });
-      // 2-level: splits (scopeId = "progId|origSplit")
-      var splitsSec = local.splits || {};
-      var spid, sname, sid;
-      for (spid in splitsSec) {
-        for (sname in splitsSec[spid]) {
-          p = splitsSec[spid][sname];
-          sid = spid + '|' + sname;
+      if (inc.splits) {
+        var splitsSec = local.splits || {}, spid, sname, sid;
+        for (spid in splitsSec) for (sname in splitsSec[spid]) {
+          p = splitsSec[spid][sname]; sid = spid + '|' + sname;
           ops.push((p && p.reset) ? MC_SB.removeNaming('split', sid) : MC_SB.upsertNaming('split', sid, p));
         }
       }
-      // 2-level: badges (scopeId = "progId|badgeId" or "global|badgeId")
-      var badgesSec = local.badges || {};
-      var bpid, bid, bsid;
-      for (bpid in badgesSec) {
-        for (bid in badgesSec[bpid]) {
-          p = badgesSec[bpid][bid];
-          bsid = bpid + '|' + bid;
+      if (inc.badges) {
+        var badgesSec = local.badges || {}, bpid, bid, bsid;
+        for (bpid in badgesSec) for (bid in badgesSec[bpid]) {
+          p = badgesSec[bpid][bid]; bsid = bpid + '|' + bid;
           ops.push((p && p.reset) ? MC_SB.removeNaming('badge', bsid) : MC_SB.upsertNaming('badge', bsid, p));
         }
       }
     }
-    // exercise catalog pending additions
-    if (window.MC_EXCATALOG && MC_EXCATALOG.getPending().length) {
+    if (inc.catalog && window.MC_EXCATALOG && MC_EXCATALOG.getPending().length) {
       ops.push(MC_EXCATALOG.publishPending());
     }
     if (!ops.length) { msg('Nothing to publish', 'No local edits to publish.'); return; }
     var btn = bar && bar.querySelector('.mc-pm-publish');
     if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
     Promise.all(ops).then(function () {
-      MC_PO.setLocal({ pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} });
+      // clear only the sections that were published; keep the rest as local edits
+      var cur = MC_PO.local() || {};
+      ['pages', 'exercises', 'programs', 'splits', 'badges'].forEach(function (sec) { if (inc[sec]) cur[sec] = {}; });
+      MC_PO.setLocal(cur);
       if (btn) btn.textContent = 'Publish';
       renderBar();
       MC_PO.refresh();
@@ -1107,7 +1131,10 @@
         'border-top:1px solid rgba(255,255,255,0.12);padding-top:8px;}' +
       '.mc-pp-grp{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#22d3ee;margin:8px 0 4px;}' +
       '.mc-pp-item{font-size:12px;color:#cbd5e1;padding:3px 0;line-height:1.35;word-break:break-word;}' +
-      '.mc-pp-ctx{color:#64748b;}';
+      '.mc-pp-ctx{color:#64748b;}' +
+      '.mc-pp-grp-row{display:flex;align-items:center;gap:8px;margin:10px 0 2px;cursor:pointer;}' +
+      '.mc-pp-grp-row input{width:16px;height:16px;flex:0 0 auto;accent-color:#22d3ee;cursor:pointer;}' +
+      '.mc-pp-grp-row .mc-pp-grp{margin:0;}';
     var st = document.createElement('style');
     st.textContent = css;
     document.head.appendChild(st);
