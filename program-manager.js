@@ -34,7 +34,7 @@
   var ACTIVE_KEY = 'mc_pm_active';    // sessionStorage: '1' while unlocked this session
   var NAME_SEL   = '.ex-name, .lift-name, .var-name, .ss-name';
 
-  var bar = null, editorOverlay = null, editorCard = null, rcOverlay = null;
+  var bar = null, editorOverlay = null, editorCard = null, rcOverlay = null, hOverlay = null;
 
   // ---- shared program / badge data (single source: mc-pm-data.js) ---------
   // window.MC_PM_DATA is the one place this data lives — also consumed by the
@@ -234,6 +234,7 @@
         '<button data-act="preview">Preview</button>' +
         '<button data-act="export">Export</button>' +
         '<button data-act="import">Import</button>' +
+        '<button data-act="history">History</button>' +
         '<button data-act="discard">Discard</button>' +
         '<button data-act="lock">Lock</button>';
       document.body.appendChild(bar);
@@ -246,6 +247,7 @@
         else if (act === 'preview') togglePreview();
         else if (act === 'export') doExport();
         else if (act === 'import') doImport();
+        else if (act === 'history') openHistory();
         else if (act === 'discard') doDiscard();
         else if (act === 'lock') setActive(false);
       });
@@ -329,12 +331,21 @@
   // local so it folds into the live published set. Owner-only via RLS.
   function executePublish() {
     var local = MC_PO.local() || {};
+    var pub = (MC_PO.published && MC_PO.published()) || {};
     var pages = local.pages || {};
-    var ops = [], pid, nm, k, p;
+    var ops = [], entries = [], pid, nm, k, p;
+    // capture a changelog/restore entry alongside each op (prev = the value that
+    // was published before this op overwrites it, for H1 restore)
+    function rec(section, scopeId, patch, prev) {
+      entries.push({ section: section, scope_id: scopeId,
+        action: (patch && patch.reset) ? 'remove' : 'upsert',
+        patch: (patch && patch.reset) ? null : patch, prev: prev || null });
+    }
     // page-level overrides
     for (pid in pages) for (nm in pages[pid]) {
       p = pages[pid][nm];
       ops.push((p && p.reset) ? MC_SB.remove(pid, nm) : MC_SB.upsert(pid, nm, p));
+      rec('pages', pid + '|' + nm, p, ((pub.pages || {})[pid] || {})[nm]);
     }
     // v2 naming sections
     if (typeof MC_SB.upsertNaming === 'function') {
@@ -342,9 +353,10 @@
       ['exercises', 'programs'].forEach(function (sec) {
         var scope = sec.slice(0, -1);
         var section = local[sec] || {};
-        for (k in section) {
-          p = section[k];
-          ops.push((p && p.reset) ? MC_SB.removeNaming(scope, k) : MC_SB.upsertNaming(scope, k, p));
+        for (var kk in section) {
+          var pp = section[kk];
+          ops.push((pp && pp.reset) ? MC_SB.removeNaming(scope, kk) : MC_SB.upsertNaming(scope, kk, pp));
+          rec(sec, kk, pp, (pub[sec] || {})[kk]);
         }
       });
       // 2-level: splits (scopeId = "progId|origSplit")
@@ -355,6 +367,7 @@
           p = splitsSec[spid][sname];
           sid = spid + '|' + sname;
           ops.push((p && p.reset) ? MC_SB.removeNaming('split', sid) : MC_SB.upsertNaming('split', sid, p));
+          rec('splits', sid, p, ((pub.splits || {})[spid] || {})[sname]);
         }
       }
       // 2-level: badges (scopeId = "progId|badgeId" or "global|badgeId")
@@ -365,6 +378,7 @@
           p = badgesSec[bpid][bid];
           bsid = bpid + '|' + bid;
           ops.push((p && p.reset) ? MC_SB.removeNaming('badge', bsid) : MC_SB.upsertNaming('badge', bsid, p));
+          rec('badges', bsid, p, ((pub.badges || {})[bpid] || {})[bid]);
         }
       }
     }
@@ -376,6 +390,8 @@
     var btn = bar && bar.querySelector('.mc-pm-publish');
     if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
     Promise.all(ops).then(function () {
+      // best-effort changelog/history write — never fail a publish on logging
+      if (typeof MC_SB.logPublish === 'function') { try { MC_SB.logPublish(entries).catch(function () {}); } catch (e) {} }
       MC_PO.setLocal({ pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} });
       if (btn) btn.textContent = 'Publish';
       renderBar();
@@ -960,6 +976,91 @@
     if (rcOverlay && rcOverlay.classList.contains('open')) toggleExPicker(true);
   }
 
+  // ---- Publish history (changelog + restore) -------------------------------
+  function histWhen(iso) { try { return new Date(iso).toLocaleString(); } catch (e) { return iso || ''; } }
+  function histWhat(r) {
+    if (r.action === 'remove') return 'reset to original';
+    if (r.patch && (r.patch.name || r.patch.label)) return '→ “' + (r.patch.name || r.patch.label) + '”';
+    return 'edited';
+  }
+
+  function buildHistory() {
+    hOverlay = document.createElement('div');
+    hOverlay.className = 'mc-pm-overlay';
+    hOverlay.innerHTML =
+      '<div class="mc-pm-modal">' +
+        '<div class="mc-pm-title">🕘 Publish history</div>' +
+        '<div class="mc-pm-orig">Recent published changes. Restore stages the prior value as a local edit to review &amp; re-publish.</div>' +
+        '<div class="mc-pp-list" id="mcHistBody"></div>' +
+        '<div class="mc-pm-btns"><span style="flex:1"></span>' +
+          '<button class="mc-pm-save" data-act="hist-done">Done</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(hOverlay);
+    hOverlay.addEventListener('click', function (e) {
+      if (e.target === hOverlay) { hOverlay.classList.remove('open'); return; }
+      if (e.target.closest('[data-act="hist-done"]')) { hOverlay.classList.remove('open'); return; }
+      var rb = e.target.closest('.mc-hist-restore');
+      if (rb) {
+        var id = parseInt(rb.getAttribute('data-id'), 10);
+        var rows = hOverlay._rows || [], row = null;
+        for (var i = 0; i < rows.length; i++) { if (rows[i].id === id) { row = rows[i]; break; } }
+        if (row) restoreFromLog(row);
+      }
+    });
+  }
+
+  function openHistory() {
+    if (!window.MC_SB || !MC_SB.configured) { msg('No backend', 'Publish history needs Supabase.'); return; }
+    if (typeof MC_SB.getPublishLog !== 'function') { msg('Unavailable', 'This build has no publish log.'); return; }
+    if (!hOverlay) buildHistory();
+    var body = hOverlay.querySelector('#mcHistBody');
+    body.innerHTML = '<div class="mc-pm-empty">Loading…</div>';
+    hOverlay.classList.add('open');
+    MC_SB.getPublishLog(100).then(function (rows) {
+      hOverlay._rows = rows || [];
+      if (!rows || !rows.length) { body.innerHTML = '<div class="mc-pm-empty">No published changes recorded yet.</div>'; return; }
+      body.innerHTML = rows.map(function (r) {
+        return '<div class="mc-hist-row">' +
+          '<div class="mc-hist-main">' +
+            '<span class="mc-hist-sec">' + esc(r.section) + '</span> ' +
+            '<span class="mc-hist-key">' + esc(r.scope_id) + '</span> ' +
+            '<span class="mc-hist-act">' + esc(histWhat(r)) + '</span>' +
+          '</div>' +
+          '<div class="mc-hist-meta">' + esc(histWhen(r.at)) + '</div>' +
+          '<button class="mc-hist-restore" data-id="' + r.id + '">Restore</button>' +
+        '</div>';
+      }).join('');
+    }).catch(function (e) {
+      body.innerHTML = '<div class="mc-pm-empty">Could not load history' + (e && e.message ? ': ' + esc(e.message) : '') + '.</div>';
+    });
+  }
+
+  // stage a log entry's prior value back into the working copy (owner reviews
+  // and re-publishes — restore never silently re-publishes).
+  function restoreFromLog(row) {
+    var data = MC_PO.local(), sec = row.section, sid = row.scope_id;
+    var staged = row.prev ? row.prev : { reset: true };  // prev value, or reset if it was a creation
+    if (sec === 'exercises' || sec === 'programs') {
+      if (!data[sec]) data[sec] = {};
+      data[sec][sid] = staged;
+    } else if (sec === 'pages' || sec === 'splits' || sec === 'badges') {
+      var idx = sid.indexOf('|');
+      if (idx < 0) { msg('Cannot restore', 'That entry is malformed.'); return; }
+      var outer = sid.slice(0, idx), inner = sid.slice(idx + 1);
+      if (!data[sec]) data[sec] = {};
+      if (!data[sec][outer]) data[sec][outer] = {};
+      data[sec][outer][inner] = staged;
+    } else {
+      msg('Cannot restore', 'This entry type can’t be restored automatically.');
+      return;
+    }
+    MC_PO.setLocal(data);
+    renderBar();
+    hOverlay.classList.remove('open');
+    msg('Staged for review', 'The prior value is now a local edit. Review it, then Publish to apply.');
+  }
+
   // ---- styles ---------------------------------------------------------------
   function injectStyles() {
     var css =
@@ -1050,7 +1151,16 @@
         'border-top:1px solid rgba(255,255,255,0.12);padding-top:8px;}' +
       '.mc-pp-grp{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#22d3ee;margin:8px 0 4px;}' +
       '.mc-pp-item{font-size:12px;color:#cbd5e1;padding:3px 0;line-height:1.35;word-break:break-word;}' +
-      '.mc-pp-ctx{color:#64748b;}';
+      '.mc-pp-ctx{color:#64748b;}' +
+      // Publish history sheet
+      '.mc-hist-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.06);}' +
+      '.mc-hist-main{flex:1;min-width:0;font-size:12px;color:#cbd5e1;word-break:break-word;}' +
+      '.mc-hist-sec{font-size:10px;font-weight:800;text-transform:uppercase;color:#22d3ee;}' +
+      '.mc-hist-key{color:#e2e8f0;font-weight:700;}' +
+      '.mc-hist-act{color:#94a3b8;}' +
+      '.mc-hist-meta{font-size:10px;color:#64748b;width:100%;}' +
+      '.mc-hist-restore{flex:0 0 auto;background:rgba(34,211,238,0.12);color:#67e8f9;' +
+        'border:1px solid rgba(34,211,238,0.4);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;}';
     var st = document.createElement('style');
     st.textContent = css;
     document.head.appendChild(st);

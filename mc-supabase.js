@@ -248,6 +248,38 @@
     });
   }
 
+  // ---- pm_publish_log table (Process & history: changelog + restore) -------
+  // entries: [{ section, scope_id, action, patch, prev }]. Best-effort: logging
+  // failures must never fail a publish, so callers should not block on this.
+  function logPublish(entries) {
+    if (!entries || !entries.length) return Promise.resolve(null);
+    return ready.then(function (c) {
+      if (!c) return null;
+      return currentUser().then(function (u) {
+        var rows = entries.map(function (e) {
+          return {
+            by: u && u.id,
+            section: e.section, scope_id: e.scope_id, action: e.action,
+            patch: e.patch || null, prev: e.prev || null
+          };
+        });
+        return c.from('pm_publish_log').insert(rows)
+          .then(function (r) { if (r.error) throw r.error; return r; });
+      });
+    });
+  }
+
+  function getPublishLog(limit) {
+    return ready.then(function (c) {
+      if (!c) return [];
+      return c.from('pm_publish_log')
+        .select('id, at, section, scope_id, action, patch, prev')
+        .order('at', { ascending: false })
+        .limit(limit || 100)
+        .then(function (r) { if (r.error) throw r.error; return r.data || []; });
+    });
+  }
+
   window.MC_SB = {
     ready: ready,
     get client() { return client; },
@@ -267,6 +299,8 @@
     getNaming: getNaming,
     upsertNaming: upsertNaming,
     removeNaming: removeNaming,
-    onNamingChange: onNamingChange
+    onNamingChange: onNamingChange,
+    logPublish: logPublish,
+    getPublishLog: getPublishLog
   };
 })();
