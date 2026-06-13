@@ -51,10 +51,22 @@
   function isActive() { try { return sessionStorage.getItem(ACTIVE_KEY) === '1'; } catch (e) { return false; } }
   function setActive(on) {
     try { on ? sessionStorage.setItem(ACTIVE_KEY, '1') : sessionStorage.removeItem(ACTIVE_KEY); } catch (e) {}
+    // leaving PM mode: drop preview so the next unlock shows the working copy
+    if (!on && window.MC_PO && typeof MC_PO.setPreview === 'function' && MC_PO.isPreview()) MC_PO.setPreview(false);
     renderBar();
     // reveal/hide the owner-only item in any already-built meatball menu
     var pmBtn = document.querySelector('[data-act="pm"]');
     if (pmBtn) pmBtn.style.display = on ? '' : 'none';
+  }
+
+  // PM "Preview as user": toggle painting of the published layer only, so the
+  // owner sees exactly what users see. The working copy is untouched.
+  function togglePreview() {
+    if (!window.MC_PO || typeof MC_PO.setPreview !== 'function') { msg('Unavailable', 'Preview needs the override layer on this page.'); return; }
+    var on = !MC_PO.isPreview();
+    MC_PO.setPreview(on);
+    var btn = bar && bar.querySelector('[data-act="preview"]');
+    if (btn) { btn.classList.toggle('mc-pm-on', on); btn.textContent = on ? 'Previewing' : 'Preview'; }
   }
 
   // one-button info dialog (iOS-safe custom modal, not native alert)
@@ -219,6 +231,7 @@
         '<button class="mc-pm-publish" data-act="publish">Publish</button>' +
         '<button data-act="names">Names</button>' +
         '<button data-act="find">Find</button>' +
+        '<button data-act="preview">Preview</button>' +
         '<button data-act="export">Export</button>' +
         '<button data-act="import">Import</button>' +
         '<button data-act="discard">Discard</button>' +
@@ -230,6 +243,7 @@
         if (act === 'publish') doPublish();
         else if (act === 'names') openRenameCenter();
         else if (act === 'find') findExercise();
+        else if (act === 'preview') togglePreview();
         else if (act === 'export') doExport();
         else if (act === 'import') doImport();
         else if (act === 'discard') doDiscard();
@@ -932,6 +946,7 @@
         'color:#cbd5e1;font-size:11px;font-weight:800;border-radius:8px;padding:6px 9px;cursor:pointer;}' +
       '.mc-pm-bar .mc-pm-publish{background:#22d3ee;border-color:#22d3ee;color:#03222b;}' +
       '.mc-pm-bar .mc-pm-publish:disabled{background:rgba(34,211,238,0.25);border-color:transparent;color:#7dd3e8;cursor:default;}' +
+      '.mc-pm-bar button.mc-pm-on{background:#facc15;border-color:#facc15;color:#1a1300;}' +
       '.mc-pm-overlay{position:fixed;inset:0;z-index:1400;display:none;align-items:center;' +
         'justify-content:center;padding:16px;background:rgba(0,0,0,0.65);' +
         'backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}' +
