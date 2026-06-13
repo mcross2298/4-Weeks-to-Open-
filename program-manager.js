@@ -459,6 +459,7 @@
         '<label class="mc-pm-checkrow"><input type="checkbox" id="mcPmGlobal"/>' +
           '<span>Rename in ALL programs &amp; splits</span></label>' +
         '<div class="mc-pm-tier" id="mcPmTier">Showing the original name</div>' +
+        '<div class="mc-pm-warn" id="mcPmWarn" style="display:none"></div>' +
         '<label>Sets / reps</label>' +
         '<input type="text" id="mcPmSets" placeholder="(unchanged) e.g. 4 x 8-10"/>' +
         '<label>Rest</label>' +
@@ -519,6 +520,29 @@
     else                           { txt = 'Showing the original name'; }
     ind.textContent = txt;
     ind.className = 'mc-pm-tier' + (cls ? ' mc-pm-tier-' + cls : '');
+    updateWarnings();
+  }
+
+  // Non-blocking validation: warn on over-long names and on a rename that would
+  // display identically to a *different* catalog exercise (logs stay separate,
+  // but it's worth flagging). Catalog collision check only runs once EXERCISES
+  // is loaded (openEditor preloads it).
+  function updateWarnings() {
+    var warn = document.getElementById('mcPmWarn');
+    if (!warn || !editorCard) return;
+    var name = document.getElementById('mcPmName').value.trim();
+    var orig = cardOrigName(editorCard);
+    var msgs = [];
+    if (name.length > 60) msgs.push('Name is very long (' + name.length + ' chars).');
+    if (name && window.EXERCISES) {
+      var lower = name.toLowerCase();
+      var clash = EXERCISES.some(function (ex) {
+        return ex.name && ex.name.toLowerCase() === lower && ex.name.toLowerCase() !== orig.toLowerCase();
+      });
+      if (clash) msgs.push('Matches another catalog exercise — they will display identically (logs stay separate).');
+    }
+    warn.textContent = msgs.join(' · ');
+    warn.style.display = msgs.length ? '' : 'none';
   }
 
   function togglePicker(force) {
@@ -589,6 +613,8 @@
     document.getElementById('mcPmNote').value  = entry.note  || '';
     document.getElementById('mcPmTempo').value = entry.tempo || '';
     updateTierIndicator();
+    // preload the catalog so collision warnings can check against it
+    ensureCatalog(updateWarnings);
     togglePicker(false);
     document.getElementById('mcPmSearch').value = '';
     editorOverlay.classList.add('open');
@@ -1015,6 +1041,7 @@
       '.mc-pm-tier{font-size:11px;font-weight:700;margin:6px 0 2px;color:#64748b;}' +
       '.mc-pm-tier-g{color:#22d3ee;}' +
       '.mc-pm-tier-p{color:#facc15;}' +
+      '.mc-pm-warn{font-size:11px;font-weight:700;margin:2px 0 2px;color:#fca5a5;line-height:1.35;}' +
       // Rename Center
       '.mc-rc-modal{max-width:460px;}' +
       '.mc-rc-select{width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);' +
