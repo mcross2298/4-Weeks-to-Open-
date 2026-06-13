@@ -37,6 +37,7 @@
   function emptyDoc() { return { pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} }; }
 
   var published = emptyDoc();
+  var previewPublishedOnly = false;   // PM "Preview as user": paint published layer only
   var mo = null, obsDepth = 0, scanTimer = null;
   // original card values captured before the first override application,
   // so clearing an override reverts live without a reload
@@ -60,10 +61,11 @@
   // programs:  1-level  { progId → patch }
   // splits:    2-level  { progId → { origSplit → patch } }
   // badges:    2-level  { progId → { badgeId → patch } }
-  function effective() {
+  // includeLocal=false yields the published-only view (PM "Preview as user").
+  function buildEffective(includeLocal) {
     var out = emptyDoc();
     var pid, nm, k, bpid;
-    [published, readLocal()].forEach(function (layer) {
+    (includeLocal ? [published, readLocal()] : [published]).forEach(function (layer) {
       // pages: 2-level
       var psrc = (layer && layer.pages) || {};
       for (pid in psrc) {
@@ -90,6 +92,8 @@
     });
     return out;
   }
+  // paint/resolver view — honors preview mode; exportData uses buildEffective(true)
+  function effective() { return buildEffective(!previewPublishedOnly); }
 
   // global exercise name from v2 exercises section (no page-level check — caller must do that)
   function globalExerciseName(origName) {
@@ -282,11 +286,21 @@
       scan();
       dispatchNamesChanged();
     },
+    // PM "Preview as user": paint the published layer only (hide the owner's
+    // local working copy) so the owner sees exactly what users see. Does not
+    // touch the working copy itself — export/publish still use the full merge.
+    setPreview: function (on) {
+      previewPublishedOnly = !!on;
+      scan();
+      dispatchNamesChanged();
+    },
+    isPreview: function () { return previewPublishedOnly; },
     effective: effective,
     globalExerciseName: globalExerciseName,
-    // merged export view: local edits over published, reset entries dropped
+    // merged export view: local edits over published, reset entries dropped.
+    // Always includes the working copy (buildEffective(true)) even in preview.
     exportData: function () {
-      var eff = effective(), pages = {}, pid, nm, k, bpid;
+      var eff = buildEffective(true), pages = {}, pid, nm, k, bpid;
       for (pid in eff.pages) {
         for (nm in eff.pages[pid]) {
           if (eff.pages[pid][nm] && !eff.pages[pid][nm].reset) {
