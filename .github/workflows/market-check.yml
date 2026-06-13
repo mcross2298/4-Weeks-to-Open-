@@ -1,0 +1,21 @@
+name: Market leak check
+
+# CI guard: no licensed/influencer content may ever become reachable from the
+# clean market build. Fails on any reference to a licensed file OR any brand
+# term in a shipped file. See content-manifest.json + tools/build-market.py.
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  leak-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Market-extraction leak check
+        run: python3 tools/build-market.py --check

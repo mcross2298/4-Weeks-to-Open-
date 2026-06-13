@@ -48,14 +48,17 @@ DENY_DIRS = {"tools", "supabase", "templates", ".github", ".git"}
 
 
 def collect_urls(root, base):
-    urls = [base]  # the root scope itself
+    # RELATIVE URLs ('./x') resolve against the SW's own location, so the same
+    # sw.js works at any GitHub Pages project subpath (root-absolute '/x' 404s
+    # on project pages, and absolute URLs broke when the repo/URL changed).
+    urls = ["./"]  # the root scope itself
     for p in sorted(root.iterdir()):
         if p.is_dir():
             continue
         if p.name in DENY_FILES:
             continue
         if p.suffix in INCLUDE_EXT or p.name in INCLUDE_FILES:
-            urls.append(base + p.name)
+            urls.append("./" + p.name)
     return urls
 
 

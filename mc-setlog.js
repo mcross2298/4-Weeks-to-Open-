@@ -72,7 +72,9 @@
   // ---- drop-set detection -------------------------------------------------
   // A drop set is an EXTRA set tacked onto the working sets — it must not be
   // folded into the working-set count. Two notations appear across programs:
+  /* MARKET:STRIP influencer-refs START */
   //   • open-ended "drop set"  (Daily Gainz "3×8–12, drop set" / "(drop set)")
+  /* MARKET:STRIP influencer-refs END */
   //       → an AMRAP drop (strip weight, reps to failure)
   //   • numeric  "… drop N"    (PMC/MC/Pump "12,10,8,8 drop 15")
   //       → a drop with a prescribed rep target (N)
@@ -135,8 +137,11 @@
     if (!host) return;
     // Strip any OTHER wave3 logger / notes UI EVERY pass (before the early
     // return), so page-native scripts that re-add their UI after us (e.g.
-    // pmc-workout's .ex-notes) don't win the race. NOTE: we deliberately do NOT
-    // strip .set-row — that is PSU's native exercise content, not a stray logger.
+    // pmc-workout's .ex-notes) don't win the race.
+    /* MARKET:STRIP influencer-refs START */
+    // NOTE: we deliberately do NOT strip .set-row — that is PSU's native
+    // exercise content, not a stray logger.
+    /* MARKET:STRIP influencer-refs END */
     Array.prototype.forEach.call(
       host.querySelectorAll('.setlog-toggle, .setlog-wrap, .note-btn, .note-area, .ex-notes-toggle, .ex-notes-wrap, .log-row'),
       function (n) { n.remove(); }
@@ -223,40 +228,64 @@
   }
 
   // ---- attach to every exercise card -------------------------------------
+  /* MARKET:STRIP influencer-refs START */
   function liftId(card) {
     var nm = card.querySelector('.lift-name');
     return 'psu-' + ((nm ? nm.textContent : '').trim().replace(/\s+/g, '-').toLowerCase().slice(0, 20) || 'x');
   }
+  /* MARKET:STRIP influencer-refs END */
   // Read the prescribed scheme from whichever element a template uses:
+  /* MARKET:STRIP influencer-refs START */
   //   .ex-sets        (PMC/MC/Pump/Gainz chip)
   //   [data-field=sets] / .notes-row  (STNDR editable)
   //   .lift-meta      (PSU "4 × 5" scheme)
+  /* MARKET:STRIP influencer-refs END */
   function setsOf(card) {
     var se = card.querySelector('.ex-sets, [data-field="sets"], .notes-row, .lift-meta');
     return se ? se.textContent.trim() : '';
   }
-  // Deterministic id from the exercise name (NO random fallback — that would
-  // change every pass, breaking persistence and re-rendering forever).
+  // The ORIGINAL (HTML-authored) name of an exercise, never the painted one.
+  // program-overrides.js stamps the immutable original on the card as
+  // data-mc-orig-name the instant it paints a rename, so we key persistence
+  // off that — keying off the visible text would fork a renamed exercise onto
+  // a brand-new history bucket and orphan everything logged before the rename.
+  // Both load orders converge: if this runs before the painter the visible
+  // text IS the original; if the painter ran first the attribute holds it.
+  function origNameOf(el) {
+    if (!el) return '';
+    var card = el.closest('.ex-card, .ss-ex, .ex-item, .lift-card');
+    var orig = card && card.getAttribute('data-mc-orig-name');
+    return orig || el.textContent || '';
+  }
+  function slugOf(el) {
+    return origNameOf(el).trim().replace(/\s+/g, '-').toLowerCase().slice(0, 24) || 'ex';
+  }
+  // Deterministic id from the original exercise name (NO random fallback — that
+  // would change every pass, breaking persistence and re-rendering forever).
   // Duplicate names are disambiguated by their occurrence order in the DOM.
   function nameId(card) {
-    var nm = card.querySelector('.ex-name, .ss-name, .lift-name');
-    var base = (nm ? nm.textContent : '').trim().replace(/\s+/g, '-').toLowerCase().slice(0, 24) || 'ex';
+    var mine = card.querySelector('.ex-name, .ss-name, .lift-name');
+    var base = slugOf(mine);
     var all = document.querySelectorAll('.ex-name, .ss-name, .lift-name');
-    var occ = 0, mine = card.querySelector('.ex-name, .ss-name, .lift-name');
+    var occ = 0;
     for (var i = 0; i < all.length; i++) {
-      var t = all[i].textContent.trim().replace(/\s+/g, '-').toLowerCase().slice(0, 24) || 'ex';
-      if (t === base) { if (all[i] === mine) break; occ++; }
+      if (slugOf(all[i]) === base) { if (all[i] === mine) break; occ++; }
     }
     return 'x-' + base + (occ ? '-' + occ : '');
   }
 
   function run() {
-    // Match cards WITH OR WITHOUT data-id. Older templates (STNDR push-pull-legs,
-    // PSU psu-strength, weeks-to-open, legacy-prep, s4-*, most of pmc-workout)
+    // Match cards WITH OR WITHOUT data-id. Older templates
+    /* MARKET:STRIP influencer-refs START */
+    // (STNDR push-pull-legs, PSU psu-strength, weeks-to-open, legacy-prep,
+    // s4-*, most of pmc-workout)
+    /* MARKET:STRIP influencer-refs END */
     // render .ex-card/.lift-card with no data-id, so a data-id-only selector
     // silently skipped them. Fall back to a stable id derived from the name.
     document.querySelectorAll('.ex-card').forEach(function (c) {
+      /* MARKET:STRIP influencer-refs START */
       // host varies by template: .ex-content (PMC/MC), .ex-body (STNDR), else card
+      /* MARKET:STRIP influencer-refs END */
       build(c.querySelector('.ex-content') || c.querySelector('.ex-body') || c, c, c.dataset.id || nameId(c), setsOf(c), restSecs(c));
     });
     document.querySelectorAll('.ss-ex').forEach(function (c) {
@@ -268,10 +297,12 @@
     document.querySelectorAll('.ex-item').forEach(function (c) {
       build(c, c, c.dataset.id || nameId(c), setsOf(c), restSecs(c));
     });
+    /* MARKET:STRIP influencer-refs START */
     // NOTE: .lift-card (PSU) is intentionally NOT handled here — PSU pages ship
     // their own complete per-set logger (.set-row: Set 1/2/3 with reps+weight+
     // checkbox). Rendering a second logger there caused duplicate rows and the
     // stray strikethroughs. PSU keeps its native logger.
+    /* MARKET:STRIP influencer-refs END */
     normalizeSupersetTimers();
   }
 

@@ -1,0 +1,60 @@
+name: Deploy clean build to MC-Training-Rolodex
+
+# On every push to main: extract the clean market tree (master minus all
+# licensed/influencer content — see content-manifest.json) and force-push it
+# to mcross2298/MC-Training-Rolodex as a single fresh commit.
+#
+# Requires the repo secret ROLODEX_DEPLOY_TOKEN: a fine-grained PAT scoped to
+# mcross2298/MC-Training-Rolodex with "Contents: read & write" permission.
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "rolodex-deploy"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: github.repository == 'mcross2298/4-Weeks-to-Open-'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify deploy token is configured
+        env:
+          TOKEN: ${{ secrets.ROLODEX_DEPLOY_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::error::ROLODEX_DEPLOY_TOKEN secret is not set. Create a fine-grained PAT with 'Contents: read & write' on mcross2298/MC-Training-Rolodex and add it under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - name: Leak check (hard gate)
+        run: python3 tools/build-market.py --check
+
+      - name: Extract clean market tree
+        run: |
+          python3 tools/build-market.py \
+            --extract "$RUNNER_TEMP/market" \
+            --base "https://mcross2298.github.io/MC-Training-Rolodex/"
+
+      - name: Push to MC-Training-Rolodex
+        env:
+          TOKEN: ${{ secrets.ROLODEX_DEPLOY_TOKEN }}
+        run: |
+          cd "$RUNNER_TEMP/market"
+          git init -b main
+          git config user.name "mc-market-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "Clean build from 4-Weeks-to-Open- @ ${GITHUB_SHA::7}"
+          git push --force \
+            "https://x-access-token:${TOKEN}@github.com/mcross2298/MC-Training-Rolodex.git" \
+            main

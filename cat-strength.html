@@ -248,6 +248,7 @@
 // Enable the on-demand "Add Tempo" add-in (shared mc-card-actions.js reads this flag).
 window.MC_TEMPO_ENABLED = true;
 </script>
+<script src="mc-reps.js"></script>
 <script>
 
 // ══════════════════════════════════════════════════════════════
@@ -867,26 +868,6 @@ function badges(arr){
   return (arr||[]).map(b=>`<span class="type-badge ${b}">${BADGE_LABELS[b]||b}</span>`).join('');
 }
 // ── RENDER HELPERS (premium a-card structure, ported from pmc-workout.html) ──
-function aReps(setsStr){
-  const legs=String(setsStr==null?'—':setsStr).split('/').map(s=>s.trim());
-  return legs.map((part,pi)=>{
-    const reps=part.split(',').map(r=>r.trim());
-    let chips;
-    if(reps.length>1 && reps.every(r=>r===reps[0])){
-      const rep=reps[0], sp=/amrap/i.test(rep)||/drop/i.test(rep)||rep.indexOf('×')>=0;
-      chips=`<span class="${sp?'a-rep special':'a-rep live'}">${reps.length}× ${rep}</span>`;
-    } else {
-      chips=reps.map((rep,ri)=>{
-        const sp=/amrap/i.test(rep)||/drop/i.test(rep);
-        const cls=sp?'a-rep special':(ri===0?'a-rep live':'a-rep');
-        const sep=ri<reps.length-1?'<span class="a-sep">·</span>':'';
-        return `<span class="${cls}">${rep}</span>${sep}`;
-      }).join('');
-    }
-    const lt=legs.length>1?`<span class="a-legtag">${pi===0?'A':'B'}</span>`:'';
-    return `<div class="a-leg">${lt}${chips}</div>`;
-  }).join('');
-}
 function renderSingle(ex, wk){
   const id=`${wk}-s-${ex.num}`, ck=checkState[id]?'checked':'';
   const rest=ex.rest||'90 sec';
