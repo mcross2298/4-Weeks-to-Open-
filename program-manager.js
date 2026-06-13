@@ -218,6 +218,7 @@
         '<span class="mc-pm-count"></span>' +
         '<button class="mc-pm-publish" data-act="publish">Publish</button>' +
         '<button data-act="names">Names</button>' +
+        '<button data-act="find">Find</button>' +
         '<button data-act="export">Export</button>' +
         '<button data-act="import">Import</button>' +
         '<button data-act="discard">Discard</button>' +
@@ -228,6 +229,7 @@
         var act = b.dataset.act;
         if (act === 'publish') doPublish();
         else if (act === 'names') openRenameCenter();
+        else if (act === 'find') findExercise();
         else if (act === 'export') doExport();
         else if (act === 'import') doImport();
         else if (act === 'discard') doDiscard();
@@ -908,6 +910,14 @@
     rcOverlay.classList.add('open');
   }
   function closeRenameCenter() { if (rcOverlay) rcOverlay.classList.remove('open'); }
+
+  // Find: jump straight into the global-exercise catalog search from the PM bar,
+  // so an exercise can be renamed everywhere without hunting for a page that
+  // shows it. Opens the Rename Center and surfaces its catalog picker.
+  function findExercise() {
+    openRenameCenter();
+    if (rcOverlay && rcOverlay.classList.contains('open')) toggleExPicker(true);
+  }
 
   // ---- styles ---------------------------------------------------------------
   function injectStyles() {
