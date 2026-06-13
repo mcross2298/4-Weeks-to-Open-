@@ -412,6 +412,8 @@
       if (onload) s.onload = onload;
       document.head.appendChild(s);
     }
+    // shared program/badge data (single source consumed by the Rename Center)
+    if (!window.MC_PM_DATA) loadScript('mc-pm-data.js');
     if (!window.MC_NAMES) {
       loadScript('mc-naming.js', function () {
         if (!window.__mcNamingPaint) loadScript('mc-naming-paint.js');

@@ -36,45 +36,14 @@
 
   var bar = null, editorOverlay = null, editorCard = null, rcOverlay = null;
 
-  // ---- built-in program / badge defaults (for the Rename Center) ----------
-  // Mirror of dashboard.html PROGS (id → name/icon/desc/splits) so the Rename
-  // Center can enumerate programs + splits on every page without loading the
-  // dashboard. Renaming paints over these defaults via the v2 override layer.
-  var PROG_DEFAULTS = {
-    ss:    { icon: '🏋️', name: 'Strength & Supersets',          desc: 'Heavy compounds paired with high-volume supersets + AMRAP finishers', splits: ['Legs', 'Chest', 'Back & Shoulders', 'Arms & Forearms', 'Cardio & Calves'] },
-    pmc:   { icon: '⚡', name: 'Project Muscle Confusion',        desc: 'Supersets, pyramids, drop sets, AMRAP, and tempo',                    splits: ['Split 1', 'Split 2', 'Split 3', 'Split 4', 'Split 5', 'Split 6', 'Split 7'] },
-    mc:    { icon: '👑', name: "Mike Cross' Favorite Splits",     desc: '5 personal splits across every major training style',                 splits: ['Split 1', 'Split 2', 'Split 3', 'Split 4', 'Split 5'] },
-    bobw:  { icon: '🌗', name: 'Best of Both Worlds',             desc: 'Heavy resistance balanced with daily LISS + HIIT conditioning',       splits: ['Legs', 'Chest', 'Back', 'Biceps', 'Triceps', 'Shoulders'] },
-    /* MARKET:STRIP influencer-progs START */
-    stndr: { icon: '🏋️', name: 'STNDR',                          desc: 'Structured progressive overload — CBUM method',                       splits: ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4'] },
-    pump:  { icon: '⚡', name: 'Daily Pump',                      desc: 'Julian Smith pump protocols — in and out fast',                       splits: ['Back', 'Chest', 'Shoulders', 'Arms', 'Legs'] },
-    gainz: { icon: '💪', name: 'Daily Gainz',                     desc: 'Bradley Martyn volume — built for size',                              splits: ['Bro Split', 'Push/Pull', '5 On 2 Off', '3 On 1 Off'] },
-    psu:   { icon: '🏈', name: 'PSU Football',                    desc: 'Penn State strength and conditioning',                                splits: ['Phase 1', 'Phase 2', 'Phase 3'] }
-    /* MARKET:STRIP influencer-progs END */
-  };
-  // Order programs are listed in the Rename Center selector.
-  var PROG_ORDER = ['ss', 'pmc', 'mc', 'bobw'
-    /* MARKET:STRIP influencer-progs START */
-    , 'stndr', 'pump', 'gainz', 'psu'
-    /* MARKET:STRIP influencer-progs END */
-  ];
-
-  // Default badge labels keyed by the stable badge id. "card" badges (tb-*)
-  // render on workout cards; "legend" badges (lb-*) render in the cat-page
-  // key. They are distinct ids painted independently, so both are listed.
-  var BADGE_DEFAULTS = {
-    card: {
-      'tb-superset': '⚡ Superset', 'tb-pyramid': '📈 Pyramid', 'tb-lowrep': '🏋️ Low Rep',
-      'tb-tempo': '⏱️ Tempo', 'tb-highrep12': '🔥 12–15 Reps', 'tb-highrep20': '🔥 20–30 Reps',
-      'tb-drop': '↘️ Drop Set', 'tb-amrap': '💀 AMRAP', 'tb-minrest': '⚡ 20s Rest',
-      'tb-optional': '⭐ Optional', 'tb-finisher': '🏁 Finisher', 'tb-dumbbell': '🏋️ Dumbbell',
-      'tb-cable': '🔗 Cable'
-    },
-    legend: {
-      'lb-ss': '⚡ Superset', 'lb-py': '📈 Pyramid', 'lb-lr': '🏋️ Low Rep', 'lb-tm': '⏱️ Tempo',
-      'lb-hr': '🔥 High Rep', 'lb-dr': '↘️ Drop Set', 'lb-am': '💀 AMRAP', 'lb-mr': '⚡ 20s Rest'
-    }
-  };
+  // ---- shared program / badge data (single source: mc-pm-data.js) ---------
+  // window.MC_PM_DATA is the one place this data lives — also consumed by the
+  // dashboard's PROGS. Loaded via the program-overrides.js dynamic chain and
+  // read lazily here (only when the Rename Center opens). Licensed programs are
+  // MARKET:STRIP'd in mc-pm-data.js, so nothing brand-named lives in this file.
+  function pmProgram(id) { return window.MC_PM_DATA ? MC_PM_DATA.program(id) : null; }
+  function pmOrder()     { return window.MC_PM_DATA ? MC_PM_DATA.programOrder : []; }
+  function pmBadges()    { return (window.MC_PM_DATA && MC_PM_DATA.badges) || { card: {}, legend: {} }; }
 
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
@@ -637,8 +606,9 @@
     document.body.appendChild(rcOverlay);
 
     var sel = rcOverlay.querySelector('#mcRcProg');
-    sel.innerHTML = PROG_ORDER.map(function (id) {
-      return '<option value="' + id + '">' + esc(PROG_DEFAULTS[id].name) + '</option>';
+    sel.innerHTML = pmOrder().map(function (id) {
+      var p = pmProgram(id);
+      return '<option value="' + id + '">' + esc(p ? p.name : id) + '</option>';
     }).join('');
     sel.addEventListener('change', function () { rcProgId = sel.value; renderRcBody(); });
 
@@ -657,7 +627,7 @@
 
   function renderRcBody() {
     var body = rcOverlay.querySelector('#mcRcBody');
-    var prog = PROG_DEFAULTS[rcProgId];
+    var prog = pmProgram(rcProgId);
     if (!prog) { body.innerHTML = ''; return; }
     var pOvr = rcOvr('programs', rcProgId) || {};
     var html = '';
@@ -688,7 +658,7 @@
         '<button class="' + (rcBadgeScope === 'global' ? 'on' : '') + '" data-act="rc-scope" data-scope="global">All programs</button>' +
       '</div>';
     ['card', 'legend'].forEach(function (grp) {
-      var map = BADGE_DEFAULTS[grp];
+      var map = pmBadges()[grp];
       html += '<div class="mc-rc-sub">' + (grp === 'card' ? 'Workout-card badges' : 'Legend-key badges') + '</div>';
       Object.keys(map).forEach(function (bid) {
         var bv = rcOvr('badges', scopeKey, bid);
@@ -778,9 +748,10 @@
 
   function openRenameCenter() {
     if (!window.MC_PO || !window.MC_NAMES) { msg('Not loaded', 'The naming layer is not loaded on this page.'); return; }
+    if (!window.MC_PM_DATA || !pmOrder().length) { msg('One moment', 'Program data is still loading — try again in a moment.'); return; }
     if (!rcOverlay) buildRenameCenter();
     var cur = MC_NAMES.progOf(MC_PO.pageId);
-    if (!cur || !PROG_DEFAULTS[cur]) cur = PROG_ORDER[0];
+    if (!cur || !pmProgram(cur)) cur = pmOrder()[0];
     rcProgId = cur;
     rcBadgeScope = 'prog';
     rcOverlay.querySelector('#mcRcProg').value = cur;

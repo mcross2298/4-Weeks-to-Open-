@@ -179,6 +179,18 @@ PO.refresh();
 eq(nameEl.textContent, 'Pronated DB Chest Flies', 'J3 reverts to original when both cleared');
 cardList = [];
 
+// ---- K: shared program/badge data (mc-pm-data.js, single source) ----------
+load('mc-pm-data.js');
+const D = global.window.MC_PM_DATA;
+ok(D, 'K0 MC_PM_DATA loaded');
+eq(D.programs.length, 8, 'K1 master build lists all 8 programs');
+eq(D.programOrder, ['ss', 'pmc', 'mc', 'bobw', 'stndr', 'pump', 'gainz', 'psu'], 'K2 program order');
+eq(D.program('pmc').name, 'Project Muscle Confusion', 'K3 program lookup by id');
+eq(D.program('pmc').splits.length, 7, 'K4 program carries splits');
+eq(D.program('nope'), null, 'K5 unknown program -> null');
+ok(D.badges.card['tb-superset'] && D.badges.legend['lb-ss'], 'K6 badge label maps present');
+ok(D.programs[0].id === 'ss' && D.programs[3].id === 'bobw', 'K7 flagship tier first, in order');
+
 // ---- summary --------------------------------------------------------------
 console.log('\nnaming resolver tests: ' + passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);
