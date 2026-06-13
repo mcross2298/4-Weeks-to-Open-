@@ -14,7 +14,7 @@
         vibrate + beep when the user returns. No double-buzz: this only fires
         for the hidden-across-zero case the page can't cover.
 
-   2) ACTIVITY LOG (data source for the dashboard's Daily Gainz card)
+   2) ACTIVITY LOG (data source for the dashboard's live streak strip)
       • On a workout page, records the last session (page, title, progress) and
         marks the calendar day trained — purely from the DOM, written when the
         user leaves the page. Exposes window.MCActivity for the dashboard to

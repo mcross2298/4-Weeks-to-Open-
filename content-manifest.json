@@ -11,6 +11,7 @@
   "licensed": {
     "stndr": {
       "owner": "STNDR / CBUM",
+      "program": "STNDR",
       "files": [
         "cat-stndr.html",
         "stndr-instructions.html",
@@ -23,6 +24,7 @@
     },
     "pump": {
       "owner": "Julian Smith / Daily Pump",
+      "program": "Daily Pump",
       "files": [
         "back-traps-pump.html",
         "bis-tris-pump.html",
@@ -49,6 +51,7 @@
     },
     "gainz": {
       "owner": "Bradley Martyn / Daily Gainz",
+      "program": "Daily Gainz",
       "files": [
         "2on-1off.html",
         "3on-1off-high-freq.html",
@@ -66,6 +69,7 @@
     },
     "psu": {
       "owner": "Penn State Football S&C",
+      "program": "PSU Football",
       "files": [
         "cat-psu.html",
         "psu-strength.html"
@@ -76,7 +80,11 @@
     "index-v4.html",
     "stndr-card-concepts.html",
     "exercisedata-phase8.json",
-    "exercisedata-phase8_1.json"
+    "exercisedata-phase8_1.json",
+    "README.txt",
+    "TUTORIAL-SCRIPT.md",
+    "exercise-dedup-proposal.md",
+    "mcsplitsupdate.bundle"
   ],
   "brand_terms": [
     "CBUM",
@@ -86,6 +94,8 @@
     "Bradley Martyn",
     "Daily Gainz",
     "PSU Football",
-    "Penn State"
+    "PSU",
+    "Penn State",
+    "Gainz"
   ]
 }

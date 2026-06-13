@@ -228,7 +228,7 @@
     info = info || { secs: BUFFER_SECS, boundary: false, manageRest: false };
     pending = target;
     ensureBuffer();
-    // When the card manages its own rest (STNDR between/after), claim the rest
+    // When the card manages its own rest (data-between/data-after), claim the rest
     // UI: kill any float a logger just started on this set-check so the buffer
     // is the single countdown. Cards without the data attrs are untouched.
     if (info.manageRest) { try { if (typeof TMR !== 'undefined' && TMR.stop) TMR.stop(); } catch (e) {} }
@@ -278,7 +278,7 @@
 
   // ---- hop dispatch (debounced so a single tap can't double-fire) ---------
   // Decide how long the buffer should run. Cards that opt in via
-  // data-between / data-after (the STNDR superset/triset splitter) get a SHORT
+  // data-between / data-after (the mc-group-split superset/triset splitter) get a SHORT
   // member→member pause inside a round and the LONG round-break rest when the
   // hop wraps back to an earlier station. Cards without those attrs (PMC, MC, …)
   // fall back to the original fixed BUFFER_SECS for every hop — unchanged.

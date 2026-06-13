@@ -19,9 +19,11 @@
 .mcl-wrap{margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:4px;display:none;}
 .mcl-wrap.open{display:block;}
 
+/* MARKET:STRIP influencer-refs START */
 /* Daily Gainz: .ex-item is display:flex;align-items:center, so the logger would
    sit to the SIDE. Force the row to wrap and the logger to span full width below
    the exercise name/sets, full-width. */
+/* MARKET:STRIP influencer-refs END */
 .ex-item{flex-wrap:wrap;}
 .ex-item > .mcl-toggle,
 .ex-item > .mcl-wrap{flex:0 0 100%;width:100%;}

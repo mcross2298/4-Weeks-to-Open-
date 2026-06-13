@@ -139,17 +139,21 @@ function dailyHtml(){
 }
 
 const PROG_COLORS = {
-  mc:'#d4af37', pmc:'#7F77DD', stndr:'#1D9E75',
-  pump:'#D85A30', gainz:'#378ADD', faint:'#E24B4A', psu:'#639922'
+  mc:'#d4af37', pmc:'#7F77DD', faint:'#E24B4A',
+  /* MARKET:STRIP influencer-logs START */
+  stndr:'#1D9E75', pump:'#D85A30', gainz:'#378ADD', psu:'#639922',
+  /* MARKET:STRIP influencer-logs END */
 };
 
 function detectProgram(pageId){
   if(pageId.startsWith('mc-s')) return {name:'MC Splits',color:'#d4af37'};
   if(pageId.startsWith('pmc-s')) return {name:'PMC',color:'#7F77DD'};
+  /* MARKET:STRIP influencer-logs START */
   if(pageId.includes('pump')) return {name:'Daily Pump',color:'#D85A30'};
   if(pageId.includes('gainz')||pageId.includes('lean-bulk')||pageId.includes('shred')||pageId.includes('bro-split')||pageId.includes('push-pull')) return {name:'Daily Gainz',color:'#378ADD'};
   if(pageId.includes('stndr')||pageId.includes('legacy')||pageId.includes('lets-get')) return {name:'STNDR',color:'#1D9E75'};
   if(pageId.includes('psu')) return {name:'PSU Football',color:'#639922'};
+  /* MARKET:STRIP influencer-logs END */
   return {name:'Workout',color:'#d4af37'};
 }
 

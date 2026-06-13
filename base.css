@@ -281,7 +281,9 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .fw-auto-banner{position:fixed;top:0;left:0;right:0;background:rgba(52,211,153,0.12);border-bottom:1px solid rgba(52,211,153,0.3);padding:12px 16px;text-align:center;font-size:13px;font-weight:800;color:#34d399;z-index:50;display:none;letter-spacing:0.02em;cursor:pointer;}
 .fw-auto-banner.show{display:block;}
 
+/* MARKET:STRIP influencer-refs START */
 /* ==== STNDR Concept A exercise card (deploy: 6-stndr-concept-a) ==== */
+/* MARKET:STRIP influencer-refs END */
 /* Accent-driven so each program keeps its own hue (gold / orange / green).
    Scoped to .ex-card.a-card so no other program's cards are affected. */
 .ex-card.a-card{
@@ -298,7 +300,9 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .ex-card.a-card.is-ss::before{background:linear-gradient(180deg,#a855f7,#6d28d9);box-shadow:0 0 16px rgba(168,85,247,0.5);}
 .ex-card.a-card.is-tri::before{background:linear-gradient(180deg,#fbbf24,#b45309);box-shadow:0 0 16px rgba(245,158,11,0.5);}
 .ex-card.a-card.is-cluster::before{background:linear-gradient(180deg,#22d3ee,#0e7490);box-shadow:0 0 16px rgba(34,211,238,0.45);}
+/* MARKET:STRIP influencer-refs START */
 .ex-card.a-card .stndr-ck{display:none;}           /* completion shown via idx + strike; beats checkoff's injected style */
+/* MARKET:STRIP influencer-refs END */
 .a-top{display:flex;align-items:flex-start;gap:11px;padding:14px 42px 10px 18px;}
 .a-idx{font-size:13px;font-weight:900;font-variant-numeric:tabular-nums;min-width:30px;height:30px;
   border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;
@@ -344,10 +348,14 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
   border-left:3px solid rgba(var(--accent-rgb),0.5);border-radius:4px;font-size:11px;color:var(--text);line-height:1.5;}
 /* tidy the logger that mc-setlog injects at the foot of .ex-body */
 .a-card .mcl-toggle,.a-card .setlog-toggle{border-top:1px solid rgba(255,255,255,0.07);}
+/* MARKET:STRIP influencer-refs START */
 /* ==== /STNDR Concept A ==== */
+/* MARKET:STRIP influencer-refs END */
 
 
+/* MARKET:STRIP influencer-refs START */
 /* ==== STNDR superset/triset stations — Concept A (scoped .ss-card.a-ss) ==== */
+/* MARKET:STRIP influencer-refs END */
 .ss-card.a-ss{
   position:relative;border-radius:16px;overflow:hidden;margin-bottom:14px;
   background:linear-gradient(180deg,#100c16,#0a0810);
@@ -387,4 +395,6 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .ss-card.a-ss .ss-ex.checked{opacity:0.72;}
 /* the per-station meatball mc-card-actions injects into .ss-content */
 .ss-card.a-ss .ss-content .mc-meatball{top:0;right:0;}
+/* MARKET:STRIP influencer-refs START */
 /* ==== /STNDR superset stations ==== */
+/* MARKET:STRIP influencer-refs END */
