@@ -123,7 +123,17 @@
         '<span class="pk-nm">' + esc(e.name) + '</span>' +
         '<span class="pk-add">＋</span></div>';
     });
-    $('pkList').innerHTML = rows || '<div style="padding:24px;text-align:center;color:#64748b;font-weight:700;">No matches</div>';
+    if (!rows && q.length >= 2 && window.MC_EXCATALOG) {
+      var muscle = MC_EXCATALOG.classify(q);
+      var col = (window.MUSCLE_COLORS && MUSCLE_COLORS[muscle]) || '#d4af37';
+      rows = '<button type="button" class="pk-row pk-add-new" data-newex="' + q.replace(/"/g, '&quot;') + '">'
+        + '<span class="pk-dot" style="background:' + col + ';box-shadow:0 0 5px ' + col + '44;"></span>'
+        + '<span class="pk-nm">＋ Add &ldquo;' + esc(q) + '&rdquo; as new exercise'
+        + '<span style="display:block;font-size:11px;color:#64748b;font-weight:600;margin-top:2px;">' + esc(muscle) + ' &middot; saved to your library</span>'
+        + '</span>'
+        + '<span class="pk-add">+</span></button>';
+    }
+    $('pkList').innerHTML = rows || '<div class="mc-pm-empty">No matches.</div>';
   }
   $('pkFilters').addEventListener('click', function (e) {
     var b = e.target.closest('.pk-f'); if (!b) return;
@@ -131,9 +141,20 @@
   });
   $('pkSearch').addEventListener('input', renderPicker);
   $('pkList').addEventListener('click', function (e) {
-    var row = e.target.closest('.pk-row'); if (!row) return;
+    var row = e.target.closest('.pk-row');
+    if (!row || pickDay < 0) return;
+    // "Add new exercise" row — data-newex attribute present
+    if (row.dataset.newex !== undefined && window.MC_EXCATALOG) {
+      var entry = MC_EXCATALOG.add(row.dataset.newex);
+      // Queue for PM publish if the owner is editing
+      if (window.MC_PM && MC_PM.active()) MC_EXCATALOG.queueForPublish(entry);
+      prog.days[pickDay].exercises.push({ name: entry.name, muscle: entry.muscle, sets: 3, reps: '10', rest: 90 });
+      renderDays(); validate(); closePicker();
+      return;
+    }
+    // Standard catalog row
     var ex = (window.EXERCISES || [])[parseInt(row.dataset.i, 10)];
-    if (!ex || pickDay < 0) return;
+    if (!ex) return;
     prog.days[pickDay].exercises.push({ name: ex.name, muscle: ex.muscle, sets: 3, reps: '10', rest: 90 });
     renderDays(); validate();
     closePicker();

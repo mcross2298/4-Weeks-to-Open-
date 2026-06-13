@@ -107,6 +107,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 </div>
 
 <script src="exercise-catalog.js"></script>
+<script src="mc-exercise-catalog.js"></script>
 <script>
 var CW_KEY = 'mc_custom_workouts_v1';
 var activeFilter = 'All';
@@ -151,7 +152,34 @@ function renderList(){
       + '<div class="ex-add">'+(added?'✓':'+')+'</div></div>';
   }
   countEl.textContent = n + ' exercise' + (n!==1?'s':'') + (activeFilter!=='All'?' in '+activeFilter:'');
-  list.innerHTML = rows || '<div class="empty-state">No exercises found</div>';
+  if (!rows && q.length >= 2 && window.MC_EXCATALOG) {
+    var muscle = MC_EXCATALOG.classify(q);
+    var col = (MUSCLE_COLORS && MUSCLE_COLORS[muscle]) || '#d4af37';
+    rows = '<div class="ex-row" onclick="addNewExercise()">'
+      + '<div class="ex-dot" style="background:' + col + ';box-shadow:0 0 5px ' + col + '44;"></div>'
+      + '<div style="flex:1;min-width:0;">'
+      + '<div class="ex-nm">＋ Add &ldquo;' + esc(q) + '&rdquo; as new exercise</div>'
+      + '<div style="font-size:11px;color:#64748b;margin-top:2px;">' + esc(muscle) + ' &middot; saved to your library</div>'
+      + '</div>'
+      + '<div class="ex-add">+</div>'
+      + '</div>';
+  } else if (!rows) {
+    rows = '<div class="empty-state">No exercises found</div>';
+  }
+  list.innerHTML = rows;
+}
+
+function addNewExercise() {
+  if (!window.MC_EXCATALOG) return;
+  var q = (document.getElementById('searchBox').value || '').trim();
+  if (!q) return;
+  var entry = MC_EXCATALOG.add(q);
+  if (!selected.some(function(s){ return s.name === entry.name; })) {
+    selected.push({ name: entry.name, muscle: entry.muscle, sets: 3, reps: '10' });
+  }
+  buildFilters();
+  renderList();
+  renderTray();
 }
 
 function toggleEx(i){

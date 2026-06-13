@@ -178,8 +178,11 @@
   // ---- PM bar (visible only while unlocked) --------------------------------
   function localEditCount() {
     if (!window.MC_PO) return 0;
-    var pages = (MC_PO.local() || {}).pages || {}, n = 0, pid, nm;
+    var local = MC_PO.local() || {};
+    var pages = local.pages || {}, n = 0, pid, nm;
     for (pid in pages) for (nm in pages[pid]) n++;
+    if (window.MC_EXCATALOG) n += MC_EXCATALOG.getPending().length;
+    if (window.MC_NAMES) n += MC_NAMES.localNamingEditCount();
     return n;
   }
 
@@ -219,17 +222,55 @@
   function doPublish() {
     if (!window.MC_PO) { msg('Not loaded', 'Override layer not loaded on this page.'); return; }
     if (!window.MC_SB || !MC_SB.configured) { msg('No backend', 'Supabase is not configured — use Export instead.'); return; }
-    var pages = (MC_PO.local() || {}).pages || {};
-    var ops = [], pid, nm;
+    var local = MC_PO.local() || {};
+    var pages = local.pages || {};
+    var ops = [], pid, nm, k, p;
+    // page-level overrides
     for (pid in pages) for (nm in pages[pid]) {
-      var patch = pages[pid][nm];
-      ops.push((patch && patch.reset) ? MC_SB.remove(pid, nm) : MC_SB.upsert(pid, nm, patch));
+      p = pages[pid][nm];
+      ops.push((p && p.reset) ? MC_SB.remove(pid, nm) : MC_SB.upsert(pid, nm, p));
+    }
+    // v2 naming sections
+    if (typeof MC_SB.upsertNaming === 'function') {
+      // 1-level: exercises, programs
+      ['exercises', 'programs'].forEach(function (sec) {
+        var scope = sec.slice(0, -1);
+        var section = local[sec] || {};
+        for (k in section) {
+          p = section[k];
+          ops.push((p && p.reset) ? MC_SB.removeNaming(scope, k) : MC_SB.upsertNaming(scope, k, p));
+        }
+      });
+      // 2-level: splits (scopeId = "progId|origSplit")
+      var splitsSec = local.splits || {};
+      var spid, sname, sid;
+      for (spid in splitsSec) {
+        for (sname in splitsSec[spid]) {
+          p = splitsSec[spid][sname];
+          sid = spid + '|' + sname;
+          ops.push((p && p.reset) ? MC_SB.removeNaming('split', sid) : MC_SB.upsertNaming('split', sid, p));
+        }
+      }
+      // 2-level: badges (scopeId = "progId|badgeId" or "global|badgeId")
+      var badgesSec = local.badges || {};
+      var bpid, bid, bsid;
+      for (bpid in badgesSec) {
+        for (bid in badgesSec[bpid]) {
+          p = badgesSec[bpid][bid];
+          bsid = bpid + '|' + bid;
+          ops.push((p && p.reset) ? MC_SB.removeNaming('badge', bsid) : MC_SB.upsertNaming('badge', bsid, p));
+        }
+      }
+    }
+    // exercise catalog pending additions
+    if (window.MC_EXCATALOG && MC_EXCATALOG.getPending().length) {
+      ops.push(MC_EXCATALOG.publishPending());
     }
     if (!ops.length) { msg('Nothing to publish', 'No local edits to publish.'); return; }
     var btn = bar && bar.querySelector('.mc-pm-publish');
     if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
     Promise.all(ops).then(function () {
-      MC_PO.setLocal({ pages: {} });        // local edits are now published
+      MC_PO.setLocal({ pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} });
       if (btn) btn.textContent = 'Publish';
       renderBar();
       MC_PO.refresh();
@@ -265,7 +306,13 @@
         try {
           var data = JSON.parse(rd.result);
           if (!data || typeof data.pages !== 'object') throw new Error('bad shape');
-          MC_PO.setLocal({ pages: data.pages });
+          MC_PO.setLocal({
+            pages:     data.pages     || {},
+            exercises: data.exercises || {},
+            programs:  data.programs  || {},
+            splits:    data.splits    || {},
+            badges:    data.badges    || {}
+          });
           renderBar();
           alert('Imported overrides as local working copy.');
         } catch (e) { alert('Could not read that file as an overrides JSON.'); }
@@ -278,7 +325,7 @@
   function doDiscard() {
     if (!window.MC_PO) return;
     if (!confirm('Discard ALL unpublished local edits?\nPublished overrides (committed JSON) are unaffected.')) return;
-    MC_PO.setLocal({ pages: {} });
+    MC_PO.setLocal({ pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} });
     renderBar();
   }
 

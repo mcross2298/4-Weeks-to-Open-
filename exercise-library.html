@@ -75,6 +75,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:60px;}
   <p class="lib-note">Global exercise catalog &mdash; Phase 8 updated. Set techniques (Cluster, Heavy, Warm-up, Finisher) appear in workout programs but are excluded here for clean browsing.</p>
 </div>
 <script src="exercise-catalog.js"></script>
+<script src="mc-exercise-catalog.js"></script>
 <script>
 
 var activeFilter="All";
@@ -142,11 +143,15 @@ function buildMasterGroup(masterName,variations,muscle){
 
 function exItemHTML(ex){
   var col=MUSCLE_COLORS[ex.muscle]||"#64748b";
-  var progs=(ex.programs||[]).join(" &middot; ");
+  var isCustom=ex.custom||((ex.programs||[]).indexOf('Custom')!==-1);
+  var isPub=(ex.programs||[]).indexOf('Published')!==-1;
+  var badge=isCustom?'<span style="font-size:10px;font-weight:800;letter-spacing:0.08em;padding:2px 7px;border-radius:5px;background:rgba(212,175,55,0.12);color:#d4af37;border:1px solid rgba(212,175,55,0.3);margin-left:6px;vertical-align:middle;">YOUR EXERCISE</span>'
+    :isPub?'<span style="font-size:10px;font-weight:800;letter-spacing:0.08em;padding:2px 7px;border-radius:5px;background:rgba(34,211,238,0.1);color:#22d3ee;border:1px solid rgba(34,211,238,0.25);margin-left:6px;vertical-align:middle;">ADDED</span>'
+    :"";
   return '<div class="ex-item">'
     +'<div class="ex-muscle-dot" style="background:'+col+';box-shadow:0 0 5px '+col+'44;"></div>'
     +'<div style="flex:1">'
-    +'<div class="ex-name">'+esc(ex.name)+"</div>"
+    +'<div class="ex-name">'+esc(ex.name)+badge+"</div>"
     +"</div>"
     +'<div class="ex-muscle-tag">'+(MUSCLE_ICONS[ex.muscle]||"")+"</div>"
     +"</div>";
@@ -207,6 +212,8 @@ function filterExercises(){
   list.innerHTML=masterHTML+standaloneHTML;
 }
 
+// mc-exercise-catalog.js runs synchronously above and merges custom/published
+// exercises into EXERCISES before we render, so the count and list are accurate.
 document.getElementById("totalCount").textContent=EXERCISES.filter(function(e){return !isConditioning(e);}).length+" exercises across all programs";
 buildFilters();
 filterExercises();
