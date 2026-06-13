@@ -42,22 +42,33 @@ brand-term mention). Hand-editing Rolodex bypasses this guarantee.
 > names/descriptions into `PROG_DEFAULTS` and the `progOf` regexes, embedding
 > licensed brand terms into shipped engine files, and the modules were
 > hand-copied into Rolodex — so the leak reached the public repo. It was fixed
-> with `MARKET:STRIP` markers + a proper rebuild. Several items below exist so
-> this class of mistake is caught automatically next time.
+> with `MARKET:STRIP` markers + a proper rebuild.
+>
+> **Verified afterward:** the deploy pipeline already hard-gates on the leak
+> check. `.github/workflows/market-deploy.yml` runs `build-market.py --check`
+> as a **"Leak check (hard gate)"** step before extract/push, and
+> `.github/workflows/market-check.yml` runs it on every PR. Run `27466636487`
+> (the leaked `ee8fab9`) confirms it: the gate step **failed** and the Extract
+> and Push steps were **skipped** — nothing deployed. The leak reached Rolodex
+> *only* because it was hand-pushed, bypassing CI. So the guardrail gap is not
+> the leak check (it works) — it is that **nothing prevents a human from
+> pushing directly to the generated repo** (see G2/G6 below).
 
 ---
 
 ## Module 1 — Priority matrix
 
 Effort: **S** ≈ <½ day · **M** ≈ 1–2 days · **L** ≈ 3+ days.
-Tiers: **Now** (ship first) · **Next** · **Later**.
+Tiers: **Done** (shipped/verified) · **Now** (ship first) · **Next** · **Later**.
 
 | ID | Item | Area | Impact | Effort | Tier |
 | --- | --- | --- | --- | --- | --- |
-| B1 | iOS-safe Discard/Export/Import dialogs | Safety (bug) | High | S | Now |
+| B1 | iOS-safe Discard/Export/Import dialogs | Safety (bug) | High | S | ✅ Done |
+| G1a | CI leak check (`build-market.py --check`) on PR + deploy hard-gate | Guardrails | High | — | ✅ Done |
+| G2a | Auto-deploy: pipeline force-pushes the clean build to Rolodex | Guardrails | High | — | ✅ Done |
 | B2 | `progOf()` resolves catalog (`cat-*`) pages | Code health (bug) | Med-High | S | Now |
-| G1 | CI: `build-market.py --check` + `node --check` on every push | Guardrails | High | S | Now |
-| G2 | Rolodex parity gate (rebuild-and-diff; never hand-edit) | Guardrails | High | M | Now |
+| G6 | Branch-protect Rolodex `main` (deploy bot only) | Guardrails | High | S | Now |
+| G1b | CI: add `node --check` on changed `*.js` | Guardrails | Med | S | Now |
 | G3 | Resolver/precedence unit tests | Guardrails | High | M | Next |
 | C1 | Single source of truth for program/split/badge/page maps | Code health | High | M-L | Next |
 | W1 | "Global exercise renames" list in the Rename Center | Workflow | High | M | Next |
@@ -79,17 +90,31 @@ Tiers: **Now** (ship first) · **Next** · **Later**.
 
 ---
 
-## Module 2 — Now (correctness + guardrails)
+## Module 2 — Done / verified (shipped this cycle)
 
-### B1 — iOS-PWA-safe Discard/Export/Import dialogs *(bug)*
-**Problem.** `program-manager.js` built `showModal()` precisely because native
-`prompt/alert/confirm` are suppressed in standalone iOS PWAs — yet
-`doDiscard()` still calls `confirm(...)`, and `doExport()`/`doImport()` still
-call `alert(...)`. On iOS, `confirm()` typically returns falsy, so **Discard
-silently does nothing**, and the owner gets no Export/Import feedback.
-**Proposal.** Add a `confirmModal(title, body, onYes)` variant of `showModal`
-and route all three through it (and through `msg()` for notices).
-**Risk.** None; isolated to three call sites. *(S · High)*
+### B1 — iOS-PWA-safe Discard/Export/Import dialogs ✅
+Native `prompt/alert/confirm` are suppressed in standalone iOS PWAs, so
+`doDiscard()`'s `confirm()` silently no-opped and Export/Import gave no
+feedback. **Shipped:** added `confirmModal()` and routed Discard through it,
+with Export/Import/`openEditor` notices through the `showModal`-based `msg()`.
+No native dialogs remain in `program-manager.js`.
+
+### G1a — CI leak check ✅ (already in place, verified)
+`.github/workflows/market-check.yml` runs `build-market.py --check` on every
+PR; `market-deploy.yml` runs it as a **"Leak check (hard gate)"** before any
+extract/push. Verified against run `27466636487`: on the leaked `ee8fab9` the
+gate **failed** and Extract + Push were **skipped**. No action needed.
+
+### G2a — Auto-deploy to Rolodex ✅ (already in place, verified)
+`market-deploy.yml` (on push to `main`) extracts the clean tree and
+**force-pushes it to `MC-Training-Rolodex` as a single fresh commit**
+(`mc-market-bot`, message `Clean build from 4-Weeks-to-Open- @ <sha>`).
+Rolodex is therefore purely generated — the "parity gate" originally proposed
+in G2 is moot; it is already rebuilt-from-source on every deploy.
+
+---
+
+## Module 2b — Now (correctness + the *real* guardrail gap)
 
 ### B2 — `progOf()` resolves catalog pages *(bug)*
 **Problem.** `mc-naming.js#progOf()` matches *content* prefixes (`pmc-`, `mc-`,
@@ -102,24 +127,28 @@ program's main catalog page** (global-scoped badges still show via fallback).
 map has one source. Wrap licensed entries in `MARKET:STRIP`.
 **Risk.** Low; additive lookups. *(S · Med-High)*
 
-### G1 — CI leak + syntax guard
-**Problem.** Nothing automated ran `build-market.py --check`; the Phase 3 leak
-was caught only by manually running it after the fact. 
-**Proposal.** A GitHub Action on push/PR to master that runs
-`python3 tools/build-market.py --check` (fails on any leak) and `node --check`
-on every changed `*.js`. This single job would have blocked the leak.
-**Risk.** None. *(S · High)*
+### G6 — Branch-protect Rolodex `main` (the actual root cause)
+**Problem.** The pipeline is sound (G1a/G2a), yet the leak still reached the
+public repo — because a human (me) **force-pushed directly to Rolodex `main`**,
+bypassing CI entirely. The deploy bot is the only thing that should ever write
+there.
+**Proposal.** Enable branch protection on `MC-Training-Rolodex` `main`:
+restrict pushes to the deploy identity (`mc-market-bot` / the
+`ROLODEX_DEPLOY_TOKEN` actor) and block direct human pushes and force-pushes
+from anyone else. Document "never commit to Rolodex; edit master, let the
+pipeline deploy." This is the single change that would have prevented the
+incident.
+**Risk.** Low (repo setting). Confirm the deploy token's force-push still
+satisfies the protection rule (allow the bot, or use a deploy-key bypass).
+*(S · High)*
 
-### G2 — Rolodex parity gate (never hand-edit the build)
-**Problem.** Rolodex is build output, but Phase 3 modules were hand-copied —
-the root cause of the leak reaching the public repo.
-**Proposal.** CI job (and a documented local command) that regenerates the
-market tree from master and fails if the committed Rolodex tree differs
-(parity = *rebuild-and-diff*, not a naive file diff). Add a banner to the
-Rolodex `README` (already emitted by the build) and a pre-commit reminder.
-Long-term, deploy Rolodex straight from the build artifact so no human commits
-to it at all.
-**Risk.** Medium setup (two-repo CI wiring); high payoff. *(M · High)*
+### G1b — Add `node --check` to CI
+**Problem.** CI runs only the Python leak check; a JS syntax error in an engine
+module (`program-manager.js`, `mc-naming*.js`, …) would still pass CI and
+deploy.
+**Proposal.** Add a step to `market-check.yml` (and ideally the deploy
+pre-gate) that runs `node --check` on every shipped `*.js`. Cheap insurance.
+**Risk.** None. *(S · Med)*
 
 ---
 
@@ -235,8 +264,11 @@ sees changes before everyone. Larger backend change; do after R1. *(L · Med)*
 
 ## Module 5 — Suggested sequencing
 
-1. **3.1 — Stabilize (Now):** B1, B2, G1, G2. Smallest diffs, highest safety;
-   closes the two live bugs and makes the leak class unrepeatable.
+0. **Done this cycle:** B1 (iOS dialogs); verified G1a (CI leak hard-gate) and
+   G2a (auto-deploy) are already in place.
+1. **3.1 — Close the real gap (Now):** G6 (branch-protect Rolodex `main` — the
+   one change that would have prevented the incident), B2 (`cat-*` resolution),
+   G1b (`node --check` in CI). Small, high-safety.
 2. **3.2 — Trustworthy core (Next):** G3 (tests), C1 (one data source — also
    resolves B2 permanently and shrinks the `MARKET:STRIP` surface).
 3. **3.3 — Owner velocity (Next):** W1, W2, S1, W3.
