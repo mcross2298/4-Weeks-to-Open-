@@ -31,34 +31,58 @@
   var BODY_SEL = '.ex-body, .ss-content';
   var PAGE_ID  = (location.pathname.split('/').pop() || 'index.html').split('?')[0];
 
-  var LOCAL_KEY = 'mc_pm_overrides';      // { pages: { pageId: { origName: {...} } } }
+  var LOCAL_KEY = 'mc_pm_overrides';      // v2: { pages, exercises, programs, splits, badges }
   var JSON_URL  = 'program-overrides.json';
 
-  var published = { pages: {} };
+  function emptyDoc() { return { pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} }; }
+
+  var published = emptyDoc();
   var mo = null, obsDepth = 0, scanTimer = null;
   // original card values captured before the first override application,
   // so clearing an override reverts live without a reload
   var snapshots = new WeakMap();
 
   function readLocal() {
-    try { return JSON.parse(localStorage.getItem(LOCAL_KEY)) || { pages: {} }; }
-    catch (e) { return { pages: {} }; }
+    try { return JSON.parse(localStorage.getItem(LOCAL_KEY)) || emptyDoc(); }
+    catch (e) { return emptyDoc(); }
   }
   function writeLocal(obj) {
     try { localStorage.setItem(LOCAL_KEY, JSON.stringify(obj)); } catch (e) {}
   }
 
-  // merged view: published overlaid with the local working copy
+  function dispatchNamesChanged() {
+    try { document.dispatchEvent(new CustomEvent('mc:names-changed')); } catch (e) {}
+  }
+
+  // merged view: published overlaid with the local working copy (all v2 sections)
   function effective() {
-    var out = { pages: {} }, src, pid, nm;
+    var out = emptyDoc();
+    var flatSecs = ['exercises', 'programs', 'splits', 'badges'];
+    var pid, nm, k, i;
     [published, readLocal()].forEach(function (layer) {
-      src = (layer && layer.pages) || {};
-      for (pid in src) {
+      var psrc = (layer && layer.pages) || {};
+      for (pid in psrc) {
         if (!out.pages[pid]) out.pages[pid] = {};
-        for (nm in src[pid]) out.pages[pid][nm] = src[pid][nm];
+        for (nm in psrc[pid]) out.pages[pid][nm] = psrc[pid][nm];
+      }
+      for (i = 0; i < flatSecs.length; i++) {
+        var sec = flatSecs[i];
+        var src = (layer && layer[sec]) || {};
+        for (k in src) out[sec][k] = src[k];
       }
     });
     return out;
+  }
+
+  // global exercise name from v2 exercises section (no page-level check — caller must do that)
+  function globalExerciseName(origName) {
+    var sec = effective().exercises;
+    var entry = sec[origName];
+    if (!entry) {
+      var want = origName.trim().toLowerCase(), k;
+      for (k in sec) { if (k.trim().toLowerCase() === want) { entry = sec[k]; break; } }
+    }
+    return (entry && entry.name && !entry.reset) ? entry.name : null;
   }
 
   function overrideFor(origName) {
@@ -115,13 +139,14 @@
     var nameEl = card.querySelector(NAME_SEL);
     if (!nameEl) return;
     var origName = card.getAttribute('data-mc-orig-name') || nameEl.textContent.trim();
-    var o = overrideFor(origName);
+    var o = overrideFor(origName);                    // page-level override (highest priority)
+    var gName = (!o || !o.name) ? globalExerciseName(origName) : null; // global fallback
     var body = card.querySelector(BODY_SEL) || card;
     var noteEl = card.querySelector('.mcpo-note');
     var tempoEl = card.querySelector('.mcpo-tempo');
 
-    if (!o) {
-      // no (or cleared) override — revert anything we previously painted
+    if (!o && !gName) {
+      // no override at all — revert anything we previously painted
       if (snapshots.has(card)) {
         var s = snapshot(card);
         setText(nameEl, s.name.trim());
@@ -142,29 +167,36 @@
     snapshot(card);
     if (card.getAttribute('data-mc-orig-name') !== origName) card.setAttribute('data-mc-orig-name', origName);
 
-    if (o.name) setText(nameEl, o.name);
+    // page-level name > global name > keep original
+    var effName = (o && o.name) || gName;
+    if (effName) setText(nameEl, effName);
 
-    if (o.sets) {
-      var se = card.querySelector('[data-field="sets"]') || card.querySelector('.ex-sets');
-      if (se) setText(se, o.sets);
-      // premier MC/PMC cards render set chips from the page's own aReps()
-      var re = card.querySelector('.a-reps');
-      if (re && typeof window.aReps === 'function') {
-        try { var h = window.aReps(o.sets); if (re.innerHTML !== h) re.innerHTML = h; } catch (e) {}
+    if (o) {
+      if (o.sets) {
+        var se = card.querySelector('[data-field="sets"]') || card.querySelector('.ex-sets');
+        if (se) setText(se, o.sets);
+        var re = card.querySelector('.a-reps');
+        if (re && typeof window.aReps === 'function') {
+          try { var h = window.aReps(o.sets); if (re.innerHTML !== h) re.innerHTML = h; } catch (e) {}
+        }
       }
+
+      if (o.rest) { var rc = restCell(card); if (rc) setText(rc, o.rest); }
+
+      if (o.note) {
+        if (!noteEl) { noteEl = document.createElement('div'); noteEl.className = 'mcpo-note'; body.appendChild(noteEl); }
+        setText(noteEl, o.note);
+      } else if (noteEl) noteEl.remove();
+
+      if (o.tempo) {
+        if (!tempoEl) { tempoEl = document.createElement('span'); tempoEl.className = 'mcpo-tempo'; body.appendChild(tempoEl); }
+        setText(tempoEl, '⏱ ' + o.tempo);
+      } else if (tempoEl) tempoEl.remove();
+    } else {
+      // global name only — remove any leftover note/tempo from prior page-level override
+      if (noteEl) noteEl.remove();
+      if (tempoEl) tempoEl.remove();
     }
-
-    if (o.rest) { var rc = restCell(card); if (rc) setText(rc, o.rest); }
-
-    if (o.note) {
-      if (!noteEl) { noteEl = document.createElement('div'); noteEl.className = 'mcpo-note'; body.appendChild(noteEl); }
-      setText(noteEl, o.note);
-    } else if (noteEl) noteEl.remove();
-
-    if (o.tempo) {
-      if (!tempoEl) { tempoEl = document.createElement('span'); tempoEl.className = 'mcpo-tempo'; body.appendChild(tempoEl); }
-      setText(tempoEl, '⏱ ' + o.tempo);
-    } else if (tempoEl) tempoEl.remove();
   }
 
   function scan() {
@@ -192,56 +224,113 @@
     document.head.appendChild(st);
   }
 
-  // ---- public API (used by program-manager.js) ----------------------------
+  // ---- public API (used by program-manager.js and mc-naming.js) -----------
   window.MC_PO = {
     pageId: PAGE_ID,
     refresh: scan,
     published: function () { return published; },
     local: readLocal,
-    setLocal: function (obj) { writeLocal(obj || { pages: {} }); scan(); },
+    setLocal: function (obj) {
+      writeLocal(obj || emptyDoc());
+      scan();
+      dispatchNamesChanged();
+    },
     effective: effective,
+    globalExerciseName: globalExerciseName,
     // merged export view: local edits over published, reset entries dropped
     exportData: function () {
-      var eff = effective(), pages = {}, pid, nm, any;
+      var eff = effective(), pages = {}, pid, nm;
       for (pid in eff.pages) {
-        any = false;
         for (nm in eff.pages[pid]) {
           if (eff.pages[pid][nm] && !eff.pages[pid][nm].reset) {
             if (!pages[pid]) pages[pid] = {};
             pages[pid][nm] = eff.pages[pid][nm];
-            any = true;
           }
         }
       }
-      return { version: 1, updated: new Date().toISOString(), pages: pages };
+      function filterFlat(src) {
+        var dst = {}, k;
+        for (k in src) { if (src[k] && !src[k].reset) dst[k] = src[k]; }
+        return dst;
+      }
+      return {
+        version: 2,
+        updated: new Date().toISOString(),
+        pages: pages,
+        exercises: filterFlat(eff.exercises),
+        programs: filterFlat(eff.programs),
+        splits:   filterFlat(eff.splits),
+        badges:   filterFlat(eff.badges)
+      };
     }
   };
 
   // committed JSON fallback: used offline, or when Supabase isn't configured/
-  // reachable. cache:'no-store' + the network-first SW means a freshly
-  // committed file is still picked up on the next load.
+  // reachable. Accepts both v1 ({ pages }) and v2 ({ pages, exercises, ... }).
   function loadFromJSON() {
     return fetch(JSON_URL, { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (data) {
-        if (data && data.pages) { published = data; scan(); }
+        if (data && data.pages) {
+          published = {
+            pages:     data.pages     || {},
+            exercises: data.exercises || {},
+            programs:  data.programs  || {},
+            splits:    data.splits    || {},
+            badges:    data.badges    || {}
+          };
+          scan();
+          dispatchNamesChanged();
+        }
       })
       .catch(function () {});
   }
 
   // Published overrides come from Supabase (live; one-tap publish reaches all
-  // users); the committed JSON is the offline/fallback source. This module
-  // stays agnostic — it just paints whatever `published` holds.
+  // users); the committed JSON is the offline/fallback source.
   function loadPublished() {
     if (window.MC_SB && MC_SB.configured) {
       return MC_SB.getOverrides()
         .then(function (data) {
-          if (data && data.pages) { published = data; scan(); }
-          else return loadFromJSON();
-          // live updates: re-paint when the owner publishes from another device
-          MC_SB.onChange(function () {
-            MC_SB.getOverrides().then(function (d) { if (d && d.pages) { published = d; scan(); } }).catch(function () {});
-          });
+          if (data && data.pages) {
+            published.pages = data.pages;
+            scan();
+            // live updates for page-level overrides
+            MC_SB.onChange(function () {
+              MC_SB.getOverrides()
+                .then(function (d) { if (d && d.pages) { published.pages = d.pages; scan(); } })
+                .catch(function () {});
+            });
+          } else {
+            return loadFromJSON();
+          }
+          // also load naming overrides (non-critical; falls through silently on error)
+          if (typeof MC_SB.getNaming === 'function') {
+            MC_SB.getNaming()
+              .then(function (naming) {
+                if (!naming) return;
+                published.exercises = naming.exercises || {};
+                published.programs  = naming.programs  || {};
+                published.splits    = naming.splits    || {};
+                published.badges    = naming.badges    || {};
+                scan();
+                dispatchNamesChanged();
+                if (typeof MC_SB.onNamingChange === 'function') {
+                  MC_SB.onNamingChange(function () {
+                    MC_SB.getNaming()
+                      .then(function (n) {
+                        if (!n) return;
+                        published.exercises = n.exercises || {};
+                        published.programs  = n.programs  || {};
+                        published.splits    = n.splits    || {};
+                        published.badges    = n.badges    || {};
+                        scan();
+                        dispatchNamesChanged();
+                      }).catch(function () {});
+                  });
+                }
+              }).catch(function () {});
+          }
         })
         .catch(function () { return loadFromJSON(); });
     }
@@ -256,6 +345,13 @@
     setTimeout(scan, 300);
     setTimeout(scan, 800);
     loadPublished();
+    // dynamically load mc-naming.js so naming resolver is available on all
+    // pages without modifying each workout HTML file
+    if (!window.MC_NAMES) {
+      var s = document.createElement('script');
+      s.src = 'mc-naming.js';
+      document.head.appendChild(s);
+    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

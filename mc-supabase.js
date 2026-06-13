@@ -14,6 +14,10 @@
      MC_SB.upsert(page, name, patch)
      MC_SB.remove(page, name)
      MC_SB.onChange(cb)     realtime subscription on program_overrides
+     MC_SB.getNaming()      -> Promise<{ exercises, programs, splits, badges }>
+     MC_SB.upsertNaming(scope, scopeId, patch)
+     MC_SB.removeNaming(scope, scopeId)
+     MC_SB.onNamingChange(cb)  realtime subscription on naming_overrides
 
    The anon key is public by design — every protection is enforced server-side
    by Row-Level Security (read open to all; writes restricted to admins).
@@ -169,6 +173,57 @@
     });
   }
 
+  // ---- naming_overrides table (v2 rename layer) ----------------------------
+  // Returns { exercises:{}, programs:{}, splits:{}, badges:{} }
+  function getNaming() {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return c.from('naming_overrides').select('scope, scope_id, patch')
+        .then(function (r) {
+          if (r.error) throw r.error;
+          var result = { exercises: {}, programs: {}, splits: {}, badges: {} };
+          (r.data || []).forEach(function (row) {
+            var sec = row.scope + 's'; // 'exercise' → 'exercises'
+            if (result[sec]) result[sec][row.scope_id] = row.patch;
+          });
+          return result;
+        });
+    });
+  }
+
+  function upsertNaming(scope, scopeId, patch) {
+    return ready.then(function (c) {
+      if (!c) throw new Error('Supabase not configured');
+      return currentUser().then(function (u) {
+        return c.from('naming_overrides').upsert({
+          scope: scope, scope_id: scopeId, patch: patch,
+          updated_at: new Date().toISOString(), updated_by: u && u.id
+        }, { onConflict: 'scope,scope_id' })
+          .then(function (r) { if (r.error) throw r.error; return r; });
+      });
+    });
+  }
+
+  function removeNaming(scope, scopeId) {
+    return ready.then(function (c) {
+      if (!c) throw new Error('Supabase not configured');
+      return c.from('naming_overrides').delete()
+        .eq('scope', scope).eq('scope_id', scopeId)
+        .then(function (r) { if (r.error) throw r.error; return r; });
+    });
+  }
+
+  function onNamingChange(cb) {
+    ready.then(function (c) {
+      if (!c) return;
+      try {
+        c.channel('naming_overrides_changes')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'naming_overrides' }, cb)
+          .subscribe();
+      } catch (e) {}
+    });
+  }
+
   window.MC_SB = {
     ready: ready,
     get client() { return client; },
@@ -184,6 +239,10 @@
     onChange: onChange,
     getExercises: getExercises,
     upsertExercise: upsertExercise,
-    removeExercise: removeExercise
+    removeExercise: removeExercise,
+    getNaming: getNaming,
+    upsertNaming: upsertNaming,
+    removeNaming: removeNaming,
+    onNamingChange: onNamingChange
   };
 })();
