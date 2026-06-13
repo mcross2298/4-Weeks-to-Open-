@@ -109,7 +109,7 @@ const DATA = {
         {name:"Barbell Walking Lunges",sets:"10, 10, 8",rest:"60 sec",tempo:null,tag:null},
       ]},
       {type:"rest",label:"Rest Day"},
-      {type:"training",label:"Day 4",session:"Chest & Back",color:"#ef4444",icon:"🏋️",exercises:[
+      {type:"training",label:"Day 5",session:"Chest & Back",color:"#ef4444",icon:"🏋️",exercises:[
         {name:"T-Bar Rows",sets:"12, 12, 10, 8, 2× Drop AMRAP",rest:"90 sec / 10 b/t drops",tempo:null,tag:null},
         {name:"Flat DB Bench",sets:"10, 10, 8, 2× Cluster 8 reps",rest:"90 sec / 15 b/t clusters",tempo:null,tag:"CLUSTER"},
         {name:"DB Floor Press",sets:"12, 12, 10, 8",rest:"90 sec",tempo:null,tag:null},
@@ -117,7 +117,7 @@ const DATA = {
         {name:"Incline DB Rows",sets:"10, 10, 3× Cluster 8-6-6 reps",rest:"60 sec / 15 b/t clusters",tempo:null,tag:"CLUSTER"},
         {name:"Underhand Lat Pulldown",sets:"12, 12, 10, 2× Drop AMRAP",rest:"60 sec / 10 b/t drops",tempo:null,tag:null},
       ]},
-      {type:"training",label:"Day 5",session:"Shoulders & Arms",color:"#8b5cf6",icon:"💪",exercises:[
+      {type:"training",label:"Day 6",session:"Shoulders & Arms",color:"#8b5cf6",icon:"💪",exercises:[
         {name:"Standing Side Lateral Raises × Seated Behind-the-Neck Barbell Shoulder Press",sets:"12, 10, 10, 10 / 10, 10, 8, 8",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
         {name:"Barbell Pin Press",sets:"12, 12, 10, 8",rest:"90 sec",tempo:null,tag:null},
         {name:"Barbell Front Raise × Wide Grip Barbell Upright Row",sets:"12, 12, 10 / 10, 10, 8",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
@@ -126,7 +126,7 @@ const DATA = {
         {name:"Rope Cable Pushdowns",sets:"15, 12, 10",rest:"60 sec",tempo:null,tag:null},
         {name:"Standing Alternating DB Hammer Curls × Machine or Barbell Preacher Curls",sets:"12, 12, 10 / 10, 10, 8",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
       ]},
-      {type:"training",label:"Day 6",session:"Legs",color:"#10b981",icon:"🦵",exercises:[
+      {type:"training",label:"Day 7",session:"Legs",color:"#10b981",icon:"🦵",exercises:[
         {name:"Adduction Machine × Abduction Machine",sets:"15, 15, 12 / 12, 12, 10",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
         {name:"Quad Extensions",sets:"10, 12, 15, 20, Drop AMRAP",rest:"60 sec / 10 b/t drop",tempo:null,tag:null},
         {name:"Hack Squat",sets:"12, 12, 10, 8, 2× Drops",rest:"120 sec",tempo:null,tag:null},
@@ -135,6 +135,14 @@ const DATA = {
         {name:"Lying Leg Curl × Sumo DB Goblet Squat",sets:"10, 10, 8 / 12, 12, 10",rest:"10 sec between · 90 sec after superset",tempo:null,tag:"SUPERSET"},
       ]},
       {type:"rest",label:"Rest Day"},
+      {type:"training",label:"Day 9",session:"Chest & Back",color:"#ef4444",icon:"🏋️",exercises:[
+        {name:"DB Pullovers",sets:"15, 12, 12, 10, Drop AMRAP",rest:"60 sec",tempo:null,tag:null},
+        {name:"Incline DB Bench × Incline Pronated Chest Flies",sets:"10, 10, 8 / 10, 10, 8",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
+        {name:"Incline Smith Machine Bench",sets:"15, 12, 10, 10, 2× Drop AMRAP",rest:"—",tempo:null,tag:null},
+        {name:"Decline Hammer Strength Machine Press",sets:"12, 12, 10, 8, 2× Drop AMRAP",rest:"90 sec / 10 b/t drops",tempo:null,tag:null,notes:"90 sec between working sets · 10 sec after last working set and between drop sets"},
+        {name:"Barbell Pendlay Rows",sets:"12, 12, 8, 6",rest:"90 sec",tempo:null,tag:null,notes:"90 sec rest after last set"},
+        {name:"Seated Cable Row (Wide Grip)",sets:"—",rest:"—",tempo:null,tag:null},
+      ]},
   ]
 };
 
@@ -301,11 +309,11 @@ if(typeof updateProgress!=="undefined")updateProgress();
   </div>
   <div class="sum-card" style="background:#0f0f0f;border:1px solid #d4af3733;">
     <div class="sum-sub" style="color:#d4af37;">4-Week Block · 3 On / 1 Off · Rolling Split</div>
-    <div class="sum-row" style="border-bottom-color:#d4af3722;"><span class="sum-ico">🏋️</span><span class="sum-nm">Chest &amp; Back — Day 1</span><div class="sum-dt"><span class="sum-st" style="color:#d4af37;">7 lifts</span><span class="sum-rp" style="color:#d4af37;">High volume</span></div></div><div class="sum-row" style="border-bottom-color:#d4af3722;"><span class="sum-ico">💪</span><span class="sum-nm">Shoulders &amp; Arms — Day 2</span><div class="sum-dt"><span class="sum-st" style="color:#d4af37;">7 lifts</span><span class="sum-rp" style="color:#d4af37;">Supersets</span></div></div><div class="sum-row" style="border-bottom-color:#d4af3722;"><span class="sum-ico">🦵</span><span class="sum-nm">Legs — Day 3</span><div class="sum-dt"><span class="sum-st" style="color:#d4af37;">6 lifts</span><span class="sum-rp" style="color:#d4af37;">Drop · AMRAP</span></div></div><div class="sum-row" style="border-bottom-color:#d4af3722;"><span class="sum-ico">😴</span><span class="sum-nm">Rest Day</span><div class="sum-dt"><span class="sum-st" style="color:#d4af37;">— </span><span class="sum-rp" style="color:#d4af37;">Full recovery</span></div></div><div class="sum-row" style="border-bottom-color:#d4af3722;"><span class="sum-ico">🏋️</span><span class="sum-nm">Chest &amp; Back — Day 4</span><div class="sum-dt"><span class="sum-st" style="color:#d4af37;">6 lifts</span><span class="sum-rp" style="color:#d4af37;">Drops · Clusters</span></div></div><div class="sum-row" style="border-bottom-color:#d4af3722;"><span class="sum-ico">💪</span><span class="sum-nm">Shoulders &amp; Arms — Day 5</span><div class="sum-dt"><span class="sum-st" style="color:#d4af37;">7 lifts</span><span class="sum-rp" style="color:#d4af37;">Supersets</span></div></div><div class="sum-row" style="border-bottom-color:#d4af3722;"><span class="sum-ico">🦵</span><span class="sum-nm">Legs — Day 6</span><div class="sum-dt"><span class="sum-st" style="color:#d4af37;">6 lifts</span><span class="sum-rp" style="color:#d4af37;">Drop · AMRAP</span></div></div><div class="sum-row" style="border-bottom-color:#d4af3722;"><span class="sum-ico">😴</span><span class="sum-nm">Rest Day</span><div class="sum-dt"><span class="sum-st" style="color:#d4af37;">— </span><span class="sum-rp" style="color:#d4af37;">Full recovery</span></div></div>
+    <div class="sum-row" style="border-bottom-color:#d4af3722;"><span class="sum-ico">🏋️</span><span class="sum-nm">Chest &amp; Back — Day 1</span><div class="sum-dt"><span class="sum-st" style="color:#d4af37;">7 lifts</span><span class="sum-rp" style="color:#d4af37;">High volume</span></div></div><div class="sum-row" style="border-bottom-color:#d4af3722;"><span class="sum-ico">💪</span><span class="sum-nm">Shoulders &amp; Arms — Day 2</span><div class="sum-dt"><span class="sum-st" style="color:#d4af37;">7 lifts</span><span class="sum-rp" style="color:#d4af37;">Supersets</span></div></div><div class="sum-row" style="border-bottom-color:#d4af3722;"><span class="sum-ico">🦵</span><span class="sum-nm">Legs — Day 3</span><div class="sum-dt"><span class="sum-st" style="color:#d4af37;">6 lifts</span><span class="sum-rp" style="color:#d4af37;">Drop · AMRAP</span></div></div><div class="sum-row" style="border-bottom-color:#d4af3722;"><span class="sum-ico">😴</span><span class="sum-nm">Rest Day</span><div class="sum-dt"><span class="sum-st" style="color:#d4af37;">— </span><span class="sum-rp" style="color:#d4af37;">Full recovery</span></div></div><div class="sum-row" style="border-bottom-color:#d4af3722;"><span class="sum-ico">🏋️</span><span class="sum-nm">Chest &amp; Back — Day 5</span><div class="sum-dt"><span class="sum-st" style="color:#d4af37;">6 lifts</span><span class="sum-rp" style="color:#d4af37;">Drops · Clusters</span></div></div><div class="sum-row" style="border-bottom-color:#d4af3722;"><span class="sum-ico">💪</span><span class="sum-nm">Shoulders &amp; Arms — Day 6</span><div class="sum-dt"><span class="sum-st" style="color:#d4af37;">7 lifts</span><span class="sum-rp" style="color:#d4af37;">Supersets</span></div></div><div class="sum-row" style="border-bottom-color:#d4af3722;"><span class="sum-ico">🦵</span><span class="sum-nm">Legs — Day 7</span><div class="sum-dt"><span class="sum-st" style="color:#d4af37;">6 lifts</span><span class="sum-rp" style="color:#d4af37;">Drop · AMRAP</span></div></div><div class="sum-row" style="border-bottom-color:#d4af3722;"><span class="sum-ico">😴</span><span class="sum-nm">Rest Day</span><div class="sum-dt"><span class="sum-st" style="color:#d4af37;">— </span><span class="sum-rp" style="color:#d4af37;">Full recovery</span></div></div><div class="sum-row" style="border-bottom-color:#d4af3722;"><span class="sum-ico">🏋️</span><span class="sum-nm">Chest &amp; Back — Day 9</span><div class="sum-dt"><span class="sum-st" style="color:#d4af37;">6 lifts</span><span class="sum-rp" style="color:#d4af37;">Drop AMRAPs</span></div></div>
     <div class="sum-div" style="background:#d4af3726;"></div>
     <div class="sum-grid">
       <div class="sum-tot" style="background:#d4af3714;border:1px solid #d4af3726;">
-        <div class="sum-tv" style="color:#d4af37;">39 lifts</div>
+        <div class="sum-tv" style="color:#d4af37;">45 lifts</div>
         <div class="sum-tl" style="color:#d4af37;">Per Cycle</div>
       </div>
       <div class="sum-tot" style="background:#d4af3714;border:1px solid #d4af3726;">
