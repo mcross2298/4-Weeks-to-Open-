@@ -244,17 +244,32 @@
     var se = card.querySelector('.ex-sets, [data-field="sets"], .notes-row, .lift-meta');
     return se ? se.textContent.trim() : '';
   }
-  // Deterministic id from the exercise name (NO random fallback — that would
-  // change every pass, breaking persistence and re-rendering forever).
+  // The ORIGINAL (HTML-authored) name of an exercise, never the painted one.
+  // program-overrides.js stamps the immutable original on the card as
+  // data-mc-orig-name the instant it paints a rename, so we key persistence
+  // off that — keying off the visible text would fork a renamed exercise onto
+  // a brand-new history bucket and orphan everything logged before the rename.
+  // Both load orders converge: if this runs before the painter the visible
+  // text IS the original; if the painter ran first the attribute holds it.
+  function origNameOf(el) {
+    if (!el) return '';
+    var card = el.closest('.ex-card, .ss-ex, .ex-item, .lift-card');
+    var orig = card && card.getAttribute('data-mc-orig-name');
+    return orig || el.textContent || '';
+  }
+  function slugOf(el) {
+    return origNameOf(el).trim().replace(/\s+/g, '-').toLowerCase().slice(0, 24) || 'ex';
+  }
+  // Deterministic id from the original exercise name (NO random fallback — that
+  // would change every pass, breaking persistence and re-rendering forever).
   // Duplicate names are disambiguated by their occurrence order in the DOM.
   function nameId(card) {
-    var nm = card.querySelector('.ex-name, .ss-name, .lift-name');
-    var base = (nm ? nm.textContent : '').trim().replace(/\s+/g, '-').toLowerCase().slice(0, 24) || 'ex';
+    var mine = card.querySelector('.ex-name, .ss-name, .lift-name');
+    var base = slugOf(mine);
     var all = document.querySelectorAll('.ex-name, .ss-name, .lift-name');
-    var occ = 0, mine = card.querySelector('.ex-name, .ss-name, .lift-name');
+    var occ = 0;
     for (var i = 0; i < all.length; i++) {
-      var t = all[i].textContent.trim().replace(/\s+/g, '-').toLowerCase().slice(0, 24) || 'ex';
-      if (t === base) { if (all[i] === mine) break; occ++; }
+      if (slugOf(all[i]) === base) { if (all[i] === mine) break; occ++; }
     }
     return 'x-' + base + (occ ? '-' + occ : '');
   }
