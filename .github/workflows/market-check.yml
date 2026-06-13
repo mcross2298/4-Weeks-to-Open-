@@ -24,5 +24,7 @@ jobs:
             node --check "$f" || { echo "::error file=$f::JavaScript syntax error"; fail=1; }
           done
           exit $fail
+      - name: Resolver / precedence unit tests
+        run: node tools/test-naming.js
       - name: Market-extraction leak check
         run: python3 tools/build-market.py --check

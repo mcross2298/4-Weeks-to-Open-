@@ -47,6 +47,9 @@ jobs:
       - name: Leak check (hard gate)
         run: python3 tools/build-market.py --check
 
+      - name: Resolver / precedence unit tests (hard gate)
+        run: node tools/test-naming.js
+
       - name: Extract clean market tree
         run: |
           python3 tools/build-market.py \
