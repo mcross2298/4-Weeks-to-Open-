@@ -614,6 +614,8 @@
 
     rcOverlay.addEventListener('click', function (e) {
       if (e.target === rcOverlay) { closeRenameCenter(); return; }
+      var opt = e.target.closest('.mc-rc-exopt');
+      if (opt) { addExerciseRow(opt.dataset.name); return; }
       var b = e.target.closest('button[data-act]');
       if (!b) return;
       var act = b.dataset.act;
@@ -621,8 +623,66 @@
       else if (act === 'rc-reset-prog') resetProgram();
       else if (act === 'rc-reset-split') resetSplit(b.dataset.split);
       else if (act === 'rc-reset-badge') resetBadge(b.dataset.badge);
+      else if (act === 'rc-reset-ex') resetExercise(b.dataset.orig);
+      else if (act === 'rc-add-ex') toggleExPicker();
       else if (act === 'rc-scope') { rcBadgeScope = b.dataset.scope; renderRcBody(); }
     });
+  }
+
+  // ---- global exercise renames (Rename Center "Exercises — all programs") --
+  function commitExercise(orig, value) {
+    if (value) MC_NAMES.setLocal('exercises', orig, { name: value });
+    else if (rcPubHas('exercises', orig)) MC_NAMES.setLocal('exercises', orig, { reset: true });
+    else MC_NAMES.clearLocal('exercises', orig);
+    renderBar();
+  }
+  function resetExercise(orig) {
+    var inp = rcOverlay.querySelector('.mc-rc-exname[data-orig="' + orig.replace(/"/g, '\\"') + '"]');
+    if (inp) inp.value = '';
+    commitExercise(orig, '');
+  }
+  function toggleExPicker(force) {
+    var p = rcOverlay.querySelector('#mcRcExPicker');
+    if (!p) return;
+    var show = (typeof force === 'boolean') ? force : (p.style.display === 'none');
+    p.style.display = show ? '' : 'none';
+    if (show) {
+      ensureCatalog(renderExPickerList);
+      setTimeout(function () { var s = rcOverlay.querySelector('#mcRcExSearch'); if (s) s.focus(); }, 50);
+    }
+  }
+  function renderExPickerList() {
+    var list = rcOverlay.querySelector('#mcRcExList');
+    if (!list) return;
+    if (!window.EXERCISES) { list.innerHTML = '<div class="mc-pm-empty">Loading catalog…</div>'; return; }
+    var q = ((rcOverlay.querySelector('#mcRcExSearch') || {}).value || '').toLowerCase().trim();
+    var hits = [];
+    for (var i = 0; i < EXERCISES.length && hits.length < 50; i++) {
+      var ex = EXERCISES[i];
+      if (!q || ex.name.toLowerCase().indexOf(q) !== -1 || (ex.muscle || '').toLowerCase().indexOf(q) !== -1) hits.push(ex);
+    }
+    list.innerHTML = hits.map(function (ex) {
+      return '<button type="button" class="mc-rc-exopt" data-name="' + esc(ex.name) + '">' + esc(ex.name) + '</button>';
+    }).join('') || '<div class="mc-pm-empty">No matches.</div>';
+  }
+  function addExerciseRow(orig) {
+    toggleExPicker(false);
+    var existing = rcOverlay.querySelector('.mc-rc-exname[data-orig="' + orig.replace(/"/g, '\\"') + '"]');
+    if (existing) { existing.focus(); return; }
+    var picker = rcOverlay.querySelector('#mcRcExPicker');
+    var sec = picker.parentNode;
+    var empty = sec.querySelector('.mc-pm-empty');
+    if (empty) empty.remove();
+    var row = document.createElement('div');
+    row.className = 'mc-rc-row mc-rc-exrow';
+    row.innerHTML =
+      '<div class="mc-rc-exlabel" title="' + esc(orig) + '">' + esc(orig) + '</div>' +
+      '<input type="text" class="mc-rc-exname" data-orig="' + esc(orig) + '" placeholder="(original)" value=""/>' +
+      '<button class="mc-rc-reset sm" data-act="rc-reset-ex" data-orig="' + esc(orig) + '" title="Reset">↺</button>';
+    sec.insertBefore(row, rcOverlay.querySelector('[data-act="rc-add-ex"]'));
+    var inp = row.querySelector('.mc-rc-exname');
+    inp.addEventListener('change', function () { commitExercise(orig, inp.value.trim()); });
+    inp.focus();
   }
 
   function renderRcBody() {
@@ -672,6 +732,24 @@
     });
     html += '</div>';
 
+    // global exercise renames block (program-independent — applies everywhere)
+    html += '<div class="mc-rc-sec"><div class="mc-rc-h">Exercises — all programs</div>';
+    var exMap = (MC_PO.effective().exercises) || {};
+    var exKeys = Object.keys(exMap).filter(function (k) { return exMap[k] && !exMap[k].reset && exMap[k].name; }).sort();
+    if (!exKeys.length) html += '<div class="mc-pm-empty">No global exercise renames yet.</div>';
+    exKeys.forEach(function (orig) {
+      html += '<div class="mc-rc-row mc-rc-exrow">' +
+        '<div class="mc-rc-exlabel" title="' + esc(orig) + '">' + esc(orig) + '</div>' +
+        '<input type="text" class="mc-rc-exname" data-orig="' + esc(orig) + '" placeholder="(original)" value="' + esc(exMap[orig].name || '') + '"/>' +
+        '<button class="mc-rc-reset sm" data-act="rc-reset-ex" data-orig="' + esc(orig) + '" title="Reset">↺</button>' +
+        '</div>';
+    });
+    html += '<button class="mc-rc-add" data-act="rc-add-ex">+ Add a global rename</button>' +
+      '<div class="mc-rc-expicker" id="mcRcExPicker" style="display:none">' +
+        '<input type="text" id="mcRcExSearch" placeholder="Search exercise catalog…"/>' +
+        '<div class="mc-rc-exlist" id="mcRcExList"></div>' +
+      '</div></div>';
+
     body.innerHTML = html;
 
     body.querySelector('#mcRcProgName').addEventListener('change', commitProgram);
@@ -686,6 +764,11 @@
     Array.prototype.forEach.call(body.querySelectorAll('.mc-rc-bcolor'), function (inp) {
       inp.addEventListener('change', function () { inp.setAttribute('data-touched', '1'); commitBadge(inp.dataset.badge); });
     });
+    Array.prototype.forEach.call(body.querySelectorAll('.mc-rc-exname'), function (inp) {
+      inp.addEventListener('change', function () { commitExercise(inp.dataset.orig, inp.value.trim()); });
+    });
+    var exSearch = body.querySelector('#mcRcExSearch');
+    if (exSearch) exSearch.addEventListener('input', renderExPickerList);
   }
 
   function commitProgram() {
@@ -835,7 +918,14 @@
       '.mc-rc-scope{display:flex;gap:6px;margin-bottom:8px;}' +
       '.mc-rc-scope button{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);' +
         'color:#cbd5e1;font-size:11px;font-weight:800;border-radius:8px;padding:7px;cursor:pointer;font-family:inherit;}' +
-      '.mc-rc-scope button.on{background:#22d3ee;border-color:#22d3ee;color:#03222b;}';
+      '.mc-rc-scope button.on{background:#22d3ee;border-color:#22d3ee;color:#03222b;}' +
+      '.mc-rc-exlabel{flex:1;min-width:0;font-size:12px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+      '.mc-rc-add{margin-top:8px;width:100%;background:rgba(34,211,238,0.1);border:1px dashed rgba(34,211,238,0.4);' +
+        'color:#67e8f9;font-size:12px;font-weight:800;border-radius:8px;padding:9px;cursor:pointer;font-family:inherit;}' +
+      '.mc-rc-expicker{margin-top:8px;}' +
+      '.mc-rc-exlist{max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;}' +
+      '.mc-rc-exopt{text-align:left;width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);' +
+        'border-radius:8px;padding:8px 10px;color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}';
     var st = document.createElement('style');
     st.textContent = css;
     document.head.appendChild(st);
