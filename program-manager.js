@@ -34,7 +34,43 @@
   var ACTIVE_KEY = 'mc_pm_active';    // sessionStorage: '1' while unlocked this session
   var NAME_SEL   = '.ex-name, .lift-name, .var-name, .ss-name';
 
-  var bar = null, editorOverlay = null, editorCard = null;
+  var bar = null, editorOverlay = null, editorCard = null, rcOverlay = null;
+
+  // ---- built-in program / badge defaults (for the Rename Center) ----------
+  // Mirror of dashboard.html PROGS (id → name/icon/desc/splits) so the Rename
+  // Center can enumerate programs + splits on every page without loading the
+  // dashboard. Renaming paints over these defaults via the v2 override layer.
+  var PROG_DEFAULTS = {
+    ss:    { icon: '🏋️', name: 'Strength & Supersets',          desc: 'Heavy compounds paired with high-volume supersets + AMRAP finishers', splits: ['Legs', 'Chest', 'Back & Shoulders', 'Arms & Forearms', 'Cardio & Calves'] },
+    pmc:   { icon: '⚡', name: 'Project Muscle Confusion',        desc: 'Supersets, pyramids, drop sets, AMRAP, and tempo',                    splits: ['Split 1', 'Split 2', 'Split 3', 'Split 4', 'Split 5', 'Split 6', 'Split 7'] },
+    mc:    { icon: '👑', name: "Mike Cross' Favorite Splits",     desc: '5 personal splits across every major training style',                 splits: ['Split 1', 'Split 2', 'Split 3', 'Split 4', 'Split 5'] },
+    bobw:  { icon: '🌗', name: 'Best of Both Worlds',             desc: 'Heavy resistance balanced with daily LISS + HIIT conditioning',       splits: ['Legs', 'Chest', 'Back', 'Biceps', 'Triceps', 'Shoulders'] },
+    stndr: { icon: '🏋️', name: 'STNDR',                          desc: 'Structured progressive overload — CBUM method',                       splits: ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4'] },
+    pump:  { icon: '⚡', name: 'Daily Pump',                      desc: 'Julian Smith pump protocols — in and out fast',                       splits: ['Back', 'Chest', 'Shoulders', 'Arms', 'Legs'] },
+    gainz: { icon: '💪', name: 'Daily Gainz',                     desc: 'Bradley Martyn volume — built for size',                              splits: ['Bro Split', 'Push/Pull', '5 On 2 Off', '3 On 1 Off'] },
+    psu:   { icon: '🏈', name: 'PSU Football',                    desc: 'Penn State strength and conditioning',                                splits: ['Phase 1', 'Phase 2', 'Phase 3'] }
+  };
+  // Order programs are listed in the Rename Center selector.
+  var PROG_ORDER = ['ss', 'pmc', 'mc', 'bobw', 'stndr', 'pump', 'gainz', 'psu'];
+
+  // Default badge labels keyed by the stable badge id. "card" badges (tb-*)
+  // render on workout cards; "legend" badges (lb-*) render in the cat-page
+  // key. They are distinct ids painted independently, so both are listed.
+  var BADGE_DEFAULTS = {
+    card: {
+      'tb-superset': '⚡ Superset', 'tb-pyramid': '📈 Pyramid', 'tb-lowrep': '🏋️ Low Rep',
+      'tb-tempo': '⏱️ Tempo', 'tb-highrep12': '🔥 12–15 Reps', 'tb-highrep20': '🔥 20–30 Reps',
+      'tb-drop': '↘️ Drop Set', 'tb-amrap': '💀 AMRAP', 'tb-minrest': '⚡ 20s Rest',
+      'tb-optional': '⭐ Optional', 'tb-finisher': '🏁 Finisher', 'tb-dumbbell': '🏋️ Dumbbell',
+      'tb-cable': '🔗 Cable'
+    },
+    legend: {
+      'lb-ss': '⚡ Superset', 'lb-py': '📈 Pyramid', 'lb-lr': '🏋️ Low Rep', 'lb-tm': '⏱️ Tempo',
+      'lb-hr': '🔥 High Rep', 'lb-dr': '↘️ Drop Set', 'lb-am': '💀 AMRAP', 'lb-mr': '⚡ 20s Rest'
+    }
+  };
+
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
   // ---- unlock state -------------------------------------------------------
   function isActive() { try { return sessionStorage.getItem(ACTIVE_KEY) === '1'; } catch (e) { return false; } }
@@ -195,6 +231,7 @@
         '<span class="mc-pm-tag">🛠️ PM</span>' +
         '<span class="mc-pm-count"></span>' +
         '<button class="mc-pm-publish" data-act="publish">Publish</button>' +
+        '<button data-act="names">Names</button>' +
         '<button data-act="export">Export</button>' +
         '<button data-act="import">Import</button>' +
         '<button data-act="discard">Discard</button>' +
@@ -204,6 +241,7 @@
         var b = e.target.closest('button'); if (!b) return;
         var act = b.dataset.act;
         if (act === 'publish') doPublish();
+        else if (act === 'names') openRenameCenter();
         else if (act === 'export') doExport();
         else if (act === 'import') doImport();
         else if (act === 'discard') doDiscard();
@@ -346,6 +384,9 @@
           '<input type="text" id="mcPmSearch" placeholder="Search exercise catalog…"/>' +
           '<div class="mc-pm-list" id="mcPmList"></div>' +
         '</div>' +
+        '<label class="mc-pm-checkrow"><input type="checkbox" id="mcPmGlobal"/>' +
+          '<span>Rename in ALL programs &amp; splits</span></label>' +
+        '<div class="mc-pm-tier" id="mcPmTier">Showing the original name</div>' +
         '<label>Sets / reps</label>' +
         '<input type="text" id="mcPmSets" placeholder="(unchanged) e.g. 4 x 8-10"/>' +
         '<label>Rest</label>' +
@@ -381,6 +422,30 @@
       }
     });
     editorOverlay.querySelector('#mcPmSearch').addEventListener('input', renderPickerList);
+    editorOverlay.querySelector('#mcPmName').addEventListener('input', updateTierIndicator);
+    editorOverlay.querySelector('#mcPmGlobal').addEventListener('change', updateTierIndicator);
+  }
+
+  // Reflects which tier currently supplies (or will supply) the visible name,
+  // so the rename scope is never ambiguous in the editor.
+  function updateTierIndicator() {
+    var ind = document.getElementById('mcPmTier');
+    if (!ind || !editorCard) return;
+    var orig = cardOrigName(editorCard);
+    var isGlobal = document.getElementById('mcPmGlobal').checked;
+    var nameVal = document.getElementById('mcPmName').value.trim();
+    var globalName = MC_PO.globalExerciseName(orig);
+    var pageEntry = ((MC_PO.local().pages || {})[MC_PO.pageId] || {})[orig] ||
+                    ((MC_PO.published().pages || {})[MC_PO.pageId] || {})[orig] || {};
+    var pageName = (pageEntry && !pageEntry.reset) ? pageEntry.name : '';
+    var txt, cls = '';
+    if (nameVal && isGlobal)       { txt = '🌐 Renames in ALL programs & splits'; cls = 'g'; }
+    else if (nameVal && !isGlobal) { txt = '✏️ Renames in this split only';        cls = 'p'; }
+    else if (pageName)             { txt = '✏️ Currently renamed in this split';    cls = 'p'; }
+    else if (globalName)           { txt = '🌐 Currently renamed in all programs';  cls = 'g'; }
+    else                           { txt = 'Showing the original name'; }
+    ind.textContent = txt;
+    ind.className = 'mc-pm-tier' + (cls ? ' mc-pm-tier-' + cls : '');
   }
 
   function togglePicker(force) {
@@ -437,12 +502,19 @@
     var entry = ((MC_PO.local().pages || {})[MC_PO.pageId] || {})[orig] ||
                 ((MC_PO.published().pages || {})[MC_PO.pageId] || {})[orig] || {};
     if (entry.reset) entry = {};
+    var pageName   = entry.name || '';
+    var globalName = MC_PO.globalExerciseName(orig);
+    // default to the global tier only when there's no split-level name and a
+    // global rename is the source of the visible name (precedence: page > global)
+    var isGlobal = (!pageName && !!globalName);
     document.getElementById('mcPmOrig').textContent = orig;
-    document.getElementById('mcPmName').value  = entry.name  || '';
+    document.getElementById('mcPmGlobal').checked = isGlobal;
+    document.getElementById('mcPmName').value  = pageName || globalName || '';
     document.getElementById('mcPmSets').value  = entry.sets  || '';
     document.getElementById('mcPmRest').value  = entry.rest  || '';
     document.getElementById('mcPmNote').value  = entry.note  || '';
     document.getElementById('mcPmTempo').value = entry.tempo || '';
+    updateTierIndicator();
     togglePicker(false);
     document.getElementById('mcPmSearch').value = '';
     editorOverlay.classList.add('open');
@@ -455,18 +527,30 @@
     if (!orig) { closeEditor(); return; }
     var data = MC_PO.local();
     if (!data.pages) data.pages = {};
+    if (!data.exercises) data.exercises = {};
     var page = data.pages[MC_PO.pageId] || (data.pages[MC_PO.pageId] = {});
-    var publishedHas = !!(((MC_PO.published().pages || {})[MC_PO.pageId] || {})[orig]);
+    var publishedHas       = !!(((MC_PO.published().pages || {})[MC_PO.pageId] || {})[orig]);
+    var publishedGlobalHas = !!((MC_PO.published().exercises || {})[orig]);
+
+    // drop a local global rename, shadowing a published one so the original shows
+    function clearGlobal() {
+      if (publishedGlobalHas) data.exercises[orig] = { reset: true };
+      else delete data.exercises[orig];
+    }
 
     if (reset) {
-      // shadow a published override so the original renders; if nothing is
-      // published for this card, just drop the local entry
+      // reset clears BOTH tiers so the original name renders everywhere; shadow
+      // published entries, otherwise just drop the local entry
       if (publishedHas) page[orig] = { reset: true };
       else delete page[orig];
+      clearGlobal();
     } else {
+      var isGlobal = document.getElementById('mcPmGlobal').checked;
+      var nameVal  = document.getElementById('mcPmName').value.trim();
       var entry = {};
       var v;
-      if ((v = document.getElementById('mcPmName').value.trim()))  entry.name  = v;
+      // sets/rest/note/tempo stay split-specific (page tier) regardless of scope
+      if (!isGlobal && nameVal) entry.name = nameVal;
       if ((v = document.getElementById('mcPmSets').value.trim()))  entry.sets  = v;
       if ((v = document.getElementById('mcPmRest').value.trim()))  entry.rest  = v;
       if ((v = document.getElementById('mcPmNote').value.trim()))  entry.note  = v;
@@ -474,12 +558,209 @@
       if (Object.keys(entry).length) page[orig] = entry;
       else if (publishedHas) page[orig] = { reset: true };
       else delete page[orig];
+
+      // global tier: only touched when the global box is checked
+      if (isGlobal) {
+        if (nameVal) data.exercises[orig] = { name: nameVal };
+        else clearGlobal();
+      }
     }
     if (!Object.keys(page).length) delete data.pages[MC_PO.pageId];
+    if (!Object.keys(data.exercises).length) delete data.exercises;
     MC_PO.setLocal(data);
     renderBar();
     closeEditor();
   }
+
+  // ---- Rename Center -------------------------------------------------------
+  // PM-bar "Names" panel: rename a program (name/icon/desc), its splits, and
+  // its badges (program-scoped or app-wide). Writes flow through the same v2
+  // working copy + Publish pipeline as exercise renames.
+  var rcProgId = null, rcBadgeScope = 'prog';
+
+  // effective (published+local) override for a key, null when absent/reset
+  function rcOvr(section, key, subKey) {
+    var eff = MC_PO.effective() || {};
+    var sec = eff[section] || {};
+    var e = (subKey !== undefined) ? ((sec[key] || {})[subKey]) : sec[key];
+    return (e && !e.reset) ? e : null;
+  }
+  // does the PUBLISHED layer carry this key? (decides reset-vs-delete on clear)
+  function rcPubHas(section, key, subKey) {
+    var pub = MC_PO.published() || {};
+    var sec = pub[section] || {};
+    if (subKey !== undefined) return !!((sec[key] || {})[subKey]);
+    return !!sec[key];
+  }
+
+  function buildRenameCenter() {
+    rcOverlay = document.createElement('div');
+    rcOverlay.className = 'mc-pm-overlay';
+    rcOverlay.innerHTML =
+      '<div class="mc-pm-modal mc-rc-modal">' +
+        '<div class="mc-pm-title">🏷️ Rename Center</div>' +
+        '<div class="mc-pm-orig">Edits preview instantly — use Publish to go live for everyone.</div>' +
+        '<label>Program</label>' +
+        '<select id="mcRcProg" class="mc-rc-select"></select>' +
+        '<div id="mcRcBody"></div>' +
+        '<div class="mc-pm-btns"><span style="flex:1"></span>' +
+          '<button class="mc-pm-save" data-act="rc-done">Done</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(rcOverlay);
+
+    var sel = rcOverlay.querySelector('#mcRcProg');
+    sel.innerHTML = PROG_ORDER.map(function (id) {
+      return '<option value="' + id + '">' + esc(PROG_DEFAULTS[id].name) + '</option>';
+    }).join('');
+    sel.addEventListener('change', function () { rcProgId = sel.value; renderRcBody(); });
+
+    rcOverlay.addEventListener('click', function (e) {
+      if (e.target === rcOverlay) { closeRenameCenter(); return; }
+      var b = e.target.closest('button[data-act]');
+      if (!b) return;
+      var act = b.dataset.act;
+      if (act === 'rc-done') closeRenameCenter();
+      else if (act === 'rc-reset-prog') resetProgram();
+      else if (act === 'rc-reset-split') resetSplit(b.dataset.split);
+      else if (act === 'rc-reset-badge') resetBadge(b.dataset.badge);
+      else if (act === 'rc-scope') { rcBadgeScope = b.dataset.scope; renderRcBody(); }
+    });
+  }
+
+  function renderRcBody() {
+    var body = rcOverlay.querySelector('#mcRcBody');
+    var prog = PROG_DEFAULTS[rcProgId];
+    if (!prog) { body.innerHTML = ''; return; }
+    var pOvr = rcOvr('programs', rcProgId) || {};
+    var html = '';
+
+    // program block
+    html += '<div class="mc-rc-sec"><div class="mc-rc-h">Program</div>' +
+      '<label>Name</label><input type="text" id="mcRcProgName" placeholder="' + esc(prog.name) + '" value="' + esc(pOvr.name || '') + '"/>' +
+      '<label>Icon</label><input type="text" id="mcRcProgIcon" class="mc-rc-icon" placeholder="' + esc(prog.icon) + '" value="' + esc(pOvr.icon || '') + '"/>' +
+      '<label>Description</label><textarea id="mcRcProgDesc" placeholder="' + esc(prog.desc) + '">' + esc(pOvr.desc || '') + '</textarea>' +
+      '<button class="mc-rc-reset" data-act="rc-reset-prog">Reset program</button></div>';
+
+    // splits block
+    html += '<div class="mc-rc-sec"><div class="mc-rc-h">Splits</div>';
+    prog.splits.forEach(function (s) {
+      var sv = rcOvr('splits', rcProgId, s);
+      html += '<div class="mc-rc-row">' +
+        '<input type="text" class="mc-rc-split" data-split="' + esc(s) + '" placeholder="' + esc(s) + '" value="' + esc(sv ? (sv.name || '') : '') + '"/>' +
+        '<button class="mc-rc-reset sm" data-act="rc-reset-split" data-split="' + esc(s) + '" title="Reset">↺</button>' +
+        '</div>';
+    });
+    html += '</div>';
+
+    // badges block
+    var scopeKey = (rcBadgeScope === 'global') ? 'global' : rcProgId;
+    html += '<div class="mc-rc-sec"><div class="mc-rc-h">Badges</div>' +
+      '<div class="mc-rc-scope">' +
+        '<button class="' + (rcBadgeScope === 'prog'   ? 'on' : '') + '" data-act="rc-scope" data-scope="prog">This program</button>' +
+        '<button class="' + (rcBadgeScope === 'global' ? 'on' : '') + '" data-act="rc-scope" data-scope="global">All programs</button>' +
+      '</div>';
+    ['card', 'legend'].forEach(function (grp) {
+      var map = BADGE_DEFAULTS[grp];
+      html += '<div class="mc-rc-sub">' + (grp === 'card' ? 'Workout-card badges' : 'Legend-key badges') + '</div>';
+      Object.keys(map).forEach(function (bid) {
+        var bv = rcOvr('badges', scopeKey, bid);
+        var hasColor = !!(bv && bv.color);
+        html += '<div class="mc-rc-row mc-rc-badge">' +
+          '<input type="text" class="mc-rc-blabel" data-badge="' + bid + '" placeholder="' + esc(map[bid]) + '" value="' + esc(bv ? (bv.label || '') : '') + '"/>' +
+          '<input type="color" class="mc-rc-bcolor" data-badge="' + bid + '" data-touched="' + (hasColor ? '1' : '') + '" value="' + (hasColor ? esc(bv.color) : '#22d3ee') + '"/>' +
+          '<button class="mc-rc-reset sm" data-act="rc-reset-badge" data-badge="' + bid + '" title="Reset">↺</button>' +
+          '</div>';
+      });
+    });
+    html += '</div>';
+
+    body.innerHTML = html;
+
+    body.querySelector('#mcRcProgName').addEventListener('change', commitProgram);
+    body.querySelector('#mcRcProgIcon').addEventListener('change', commitProgram);
+    body.querySelector('#mcRcProgDesc').addEventListener('change', commitProgram);
+    Array.prototype.forEach.call(body.querySelectorAll('.mc-rc-split'), function (inp) {
+      inp.addEventListener('change', function () { commitSplit(inp.dataset.split, inp.value.trim()); });
+    });
+    Array.prototype.forEach.call(body.querySelectorAll('.mc-rc-blabel'), function (inp) {
+      inp.addEventListener('change', function () { commitBadge(inp.dataset.badge); });
+    });
+    Array.prototype.forEach.call(body.querySelectorAll('.mc-rc-bcolor'), function (inp) {
+      inp.addEventListener('change', function () { inp.setAttribute('data-touched', '1'); commitBadge(inp.dataset.badge); });
+    });
+  }
+
+  function commitProgram() {
+    var body = rcOverlay.querySelector('#mcRcBody');
+    var name = body.querySelector('#mcRcProgName').value.trim();
+    var icon = body.querySelector('#mcRcProgIcon').value.trim();
+    var desc = body.querySelector('#mcRcProgDesc').value.trim();
+    var patch = {};
+    if (name) patch.name = name;
+    if (icon) patch.icon = icon;
+    if (desc) patch.desc = desc;
+    if (Object.keys(patch).length) MC_NAMES.setLocal('programs', rcProgId, patch);
+    else if (rcPubHas('programs', rcProgId)) MC_NAMES.setLocal('programs', rcProgId, { reset: true });
+    else MC_NAMES.clearLocal('programs', rcProgId);
+    renderBar();
+  }
+  function resetProgram() {
+    var body = rcOverlay.querySelector('#mcRcBody');
+    body.querySelector('#mcRcProgName').value = '';
+    body.querySelector('#mcRcProgIcon').value = '';
+    body.querySelector('#mcRcProgDesc').value = '';
+    commitProgram();
+  }
+
+  function commitSplit(origSplit, value) {
+    if (value) MC_NAMES.setLocal('splits', rcProgId, { name: value }, origSplit);
+    else if (rcPubHas('splits', rcProgId, origSplit)) MC_NAMES.setLocal('splits', rcProgId, { reset: true }, origSplit);
+    else MC_NAMES.clearLocal('splits', rcProgId, origSplit);
+    renderBar();
+  }
+  function resetSplit(origSplit) {
+    var inp = rcOverlay.querySelector('.mc-rc-split[data-split="' + origSplit.replace(/"/g, '\\"') + '"]');
+    if (inp) inp.value = '';
+    commitSplit(origSplit, '');
+  }
+
+  function commitBadge(badgeId) {
+    var scopeKey = (rcBadgeScope === 'global') ? 'global' : rcProgId;
+    var body = rcOverlay.querySelector('#mcRcBody');
+    var labelInp = body.querySelector('.mc-rc-blabel[data-badge="' + badgeId + '"]');
+    var colorInp = body.querySelector('.mc-rc-bcolor[data-badge="' + badgeId + '"]');
+    var label = labelInp ? labelInp.value.trim() : '';
+    var useColor = colorInp && colorInp.getAttribute('data-touched') === '1' && colorInp.value;
+    var patch = {};
+    if (label) patch.label = label;
+    if (useColor) patch.color = colorInp.value;
+    if (Object.keys(patch).length) MC_NAMES.setLocal('badges', scopeKey, patch, badgeId);
+    else if (rcPubHas('badges', scopeKey, badgeId)) MC_NAMES.setLocal('badges', scopeKey, { reset: true }, badgeId);
+    else MC_NAMES.clearLocal('badges', scopeKey, badgeId);
+    renderBar();
+  }
+  function resetBadge(badgeId) {
+    var body = rcOverlay.querySelector('#mcRcBody');
+    var labelInp = body.querySelector('.mc-rc-blabel[data-badge="' + badgeId + '"]');
+    var colorInp = body.querySelector('.mc-rc-bcolor[data-badge="' + badgeId + '"]');
+    if (labelInp) labelInp.value = '';
+    if (colorInp) colorInp.setAttribute('data-touched', '');
+    commitBadge(badgeId);
+  }
+
+  function openRenameCenter() {
+    if (!window.MC_PO || !window.MC_NAMES) { msg('Not loaded', 'The naming layer is not loaded on this page.'); return; }
+    if (!rcOverlay) buildRenameCenter();
+    var cur = MC_NAMES.progOf(MC_PO.pageId);
+    if (!cur || !PROG_DEFAULTS[cur]) cur = PROG_ORDER[0];
+    rcProgId = cur;
+    rcBadgeScope = 'prog';
+    rcOverlay.querySelector('#mcRcProg').value = cur;
+    renderRcBody();
+    rcOverlay.classList.add('open');
+  }
+  function closeRenameCenter() { if (rcOverlay) rcOverlay.classList.remove('open'); }
 
   // ---- styles ---------------------------------------------------------------
   function injectStyles() {
@@ -526,7 +807,37 @@
         'font-weight:800;cursor:pointer;font-family:inherit;}' +
       '.mc-pm-reset{background:rgba(248,113,113,0.12);color:#f87171;border:1px solid rgba(248,113,113,0.3)!important;}' +
       '.mc-pm-cancel{background:rgba(255,255,255,0.07);color:#cbd5e1;}' +
-      '.mc-pm-save{background:#22d3ee;color:#03222b;}';
+      '.mc-pm-save{background:#22d3ee;color:#03222b;}' +
+      // exercise-modal global-rename checkbox + tier indicator
+      '.mc-pm-checkrow{display:flex!important;align-items:center;gap:8px;text-transform:none!important;' +
+        'letter-spacing:0;font-size:13px!important;font-weight:700!important;color:#e2e8f0!important;' +
+        'cursor:pointer;margin-top:12px!important;}' +
+      '.mc-pm-checkrow input{width:18px!important;height:18px;flex:0 0 auto;accent-color:#22d3ee;cursor:pointer;}' +
+      '.mc-pm-tier{font-size:11px;font-weight:700;margin:6px 0 2px;color:#64748b;}' +
+      '.mc-pm-tier-g{color:#22d3ee;}' +
+      '.mc-pm-tier-p{color:#facc15;}' +
+      // Rename Center
+      '.mc-rc-modal{max-width:460px;}' +
+      '.mc-rc-select{width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);' +
+        'border:1px solid rgba(255,255,255,0.14);border-radius:10px;padding:10px 12px;color:#e2e8f0;' +
+        'font-size:14px;font-weight:700;outline:none;}' +
+      '.mc-rc-sec{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);}' +
+      '.mc-rc-h{font-size:13px;font-weight:900;color:#22d3ee;text-transform:uppercase;' +
+        'letter-spacing:0.06em;margin-bottom:6px;}' +
+      '.mc-rc-sub{font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;' +
+        'letter-spacing:0.06em;margin:12px 0 6px;}' +
+      '.mc-rc-icon{max-width:90px;}' +
+      '.mc-rc-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}' +
+      '.mc-rc-row input[type=text]{flex:1;min-width:0;}' +
+      '.mc-rc-badge input[type=color]{flex:0 0 auto;width:38px;height:38px;padding:2px;cursor:pointer;' +
+        'background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);border-radius:10px;}' +
+      '.mc-rc-reset{background:rgba(248,113,113,0.12);color:#f87171;border:1px solid rgba(248,113,113,0.3);' +
+        'border-radius:10px;padding:9px 12px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:8px;}' +
+      '.mc-rc-reset.sm{flex:0 0 auto;width:38px;height:38px;padding:0;margin-top:0;font-size:15px;}' +
+      '.mc-rc-scope{display:flex;gap:6px;margin-bottom:8px;}' +
+      '.mc-rc-scope button{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);' +
+        'color:#cbd5e1;font-size:11px;font-weight:800;border-radius:8px;padding:7px;cursor:pointer;font-family:inherit;}' +
+      '.mc-rc-scope button.on{background:#22d3ee;border-color:#22d3ee;color:#03222b;}';
     var st = document.createElement('style');
     st.textContent = css;
     document.head.appendChild(st);

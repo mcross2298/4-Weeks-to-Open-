@@ -126,8 +126,15 @@
       return progs.map(function (p) {
         var out = {}, key;
         for (key in p) out[key] = p[key];
-        var progName = MC_NAMES.program(p.id);
-        if (progName) out.name = progName;
+        var meta = MC_NAMES.programMeta ? MC_NAMES.programMeta(p.id) : null;
+        if (meta && (meta.name || meta.icon || meta.desc)) {
+          if (meta.name) out.name = meta.name;
+          if (meta.icon) out.icon = meta.icon;
+          if (meta.desc) out.desc = meta.desc;
+        } else {
+          var progName = MC_NAMES.program(p.id);
+          if (progName) out.name = progName;
+        }
         if (p.splits && p.id) {
           out.splits = p.splits.map(function (s) {
             return MC_NAMES.split(p.id, s) || s;

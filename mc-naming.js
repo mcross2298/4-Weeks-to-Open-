@@ -117,6 +117,19 @@
   function exercise(origName) { return resolve1('exercises', origName); }
   function program(progId)    { return resolve1('programs',  progId); }
 
+  // full merged program patch ({ name, icon, desc } subset) — for surfaces
+  // that paint more than just the name (dashboard hero icon/description).
+  function programMeta(progId) {
+    if (!progId) return {};
+    var sec = eff().programs || {};
+    var entry = sec[progId];
+    if (!entry) {
+      var want = progId.trim().toLowerCase(), k;
+      for (k in sec) { if (k.trim().toLowerCase() === want) { entry = sec[k]; break; } }
+    }
+    return (entry && !entry.reset) ? entry : {};
+  }
+
   // ---- write helpers -------------------------------------------------------
   // For 1-level sections (exercises, programs): setLocal(section, key, patch)
   // For 2-level sections (splits, badges):      setLocal(section, key, patch, subKey)
@@ -164,6 +177,7 @@
   window.MC_NAMES = {
     exercise: exercise,
     program: program,
+    programMeta: programMeta,
     split: split,
     badge: badge,
     progOf: progOf,
