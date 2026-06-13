@@ -654,7 +654,7 @@
   // PM-bar "Names" panel: rename a program (name/icon/desc), its splits, and
   // its badges (program-scoped or app-wide). Writes flow through the same v2
   // working copy + Publish pipeline as exercise renames.
-  var rcProgId = null, rcBadgeScope = 'prog';
+  var rcProgId = null, rcBadgeScope = 'prog', rcLastProg = null;
 
   // effective (published+local) override for a key, null when absent/reset
   function rcOvr(section, key, subKey) {
@@ -680,6 +680,7 @@
         '<div class="mc-pm-orig">Edits preview instantly — use Publish to go live for everyone.</div>' +
         '<label>Program</label>' +
         '<select id="mcRcProg" class="mc-rc-select"></select>' +
+        '<input type="text" id="mcRcFilter" class="mc-rc-select mc-rc-filter" placeholder="Filter splits, badges, exercises…"/>' +
         '<div id="mcRcBody"></div>' +
         '<div class="mc-pm-btns"><span style="flex:1"></span>' +
           '<button class="mc-pm-save" data-act="rc-done">Done</button>' +
@@ -692,7 +693,9 @@
       var p = pmProgram(id);
       return '<option value="' + id + '">' + esc(p ? p.name : id) + '</option>';
     }).join('');
-    sel.addEventListener('change', function () { rcProgId = sel.value; renderRcBody(); });
+    sel.addEventListener('change', function () { rcProgId = sel.value; rcLastProg = sel.value; renderRcBody(); });
+    var filt = rcOverlay.querySelector('#mcRcFilter');
+    filt.addEventListener('input', function () { filterRc(filt.value); });
 
     rcOverlay.addEventListener('click', function (e) {
       if (e.target === rcOverlay) { closeRenameCenter(); return; }
@@ -851,6 +854,28 @@
     });
     var exSearch = body.querySelector('#mcRcExSearch');
     if (exSearch) exSearch.addEventListener('input', renderExPickerList);
+
+    // keep any active filter applied across program switches / re-renders
+    var filt = rcOverlay.querySelector('#mcRcFilter');
+    if (filt && filt.value) filterRc(filt.value);
+  }
+
+  // filter the splits / badges / exercises rows by free text
+  function filterRc(q) {
+    q = (q || '').toLowerCase().trim();
+    var body = rcOverlay.querySelector('#mcRcBody');
+    if (!body) return;
+    Array.prototype.forEach.call(body.querySelectorAll('.mc-rc-row'), function (row) {
+      if (!q) { row.style.display = ''; return; }
+      var hay = row.textContent || '';
+      var inp = row.querySelector('input');
+      if (inp) {
+        hay += ' ' + (inp.getAttribute('placeholder') || '') + ' ' + (inp.value || '') +
+               ' ' + (inp.getAttribute('data-badge') || '') + ' ' + (inp.getAttribute('data-split') || '') +
+               ' ' + (inp.getAttribute('data-orig') || '');
+      }
+      row.style.display = (hay.toLowerCase().indexOf(q) !== -1) ? '' : 'none';
+    });
   }
 
   function commitProgram() {
@@ -915,9 +940,11 @@
     if (!window.MC_PO || !window.MC_NAMES) { msg('Not loaded', 'The naming layer is not loaded on this page.'); return; }
     if (!window.MC_PM_DATA || !pmOrder().length) { msg('One moment', 'Program data is still loading — try again in a moment.'); return; }
     if (!rcOverlay) buildRenameCenter();
-    var cur = MC_NAMES.progOf(MC_PO.pageId);
+    // remember the last program chosen this session; else the current page's
+    var cur = rcLastProg || MC_NAMES.progOf(MC_PO.pageId);
     if (!cur || !pmProgram(cur)) cur = pmOrder()[0];
     rcProgId = cur;
+    rcLastProg = cur;
     rcBadgeScope = 'prog';
     rcOverlay.querySelector('#mcRcProg').value = cur;
     renderRcBody();
@@ -993,6 +1020,7 @@
       '.mc-rc-select{width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);' +
         'border:1px solid rgba(255,255,255,0.14);border-radius:10px;padding:10px 12px;color:#e2e8f0;' +
         'font-size:14px;font-weight:700;outline:none;}' +
+      '.mc-rc-filter{margin-top:8px;font-weight:600;}' +
       '.mc-rc-sec{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);}' +
       '.mc-rc-h{font-size:13px;font-weight:900;color:#22d3ee;text-transform:uppercase;' +
         'letter-spacing:0.06em;margin-bottom:6px;}' +
