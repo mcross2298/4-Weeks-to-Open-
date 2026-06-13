@@ -224,7 +224,7 @@ if('serviceWorker' in navigator){
     });
   });
   // Re-register with the current sw.js
-  navigator.serviceWorker.register('/4-Weeks-to-Open-/sw.js').then(function(reg){
+  navigator.serviceWorker.register('./sw.js').then(function(reg){
     reg.addEventListener('updatefound', function(){
       var newWorker = reg.installing;
       newWorker.addEventListener('statechange', function(){

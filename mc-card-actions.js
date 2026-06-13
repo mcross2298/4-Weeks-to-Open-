@@ -29,10 +29,12 @@
   var TEMPO_KEY = 'mc_ex_tempo';   // { pageId: { name: "3:0:1:0" } }
 
   // "Add Tempo" add-in — on by default for every program that loads this
-  // engine. A page can opt OUT with window.MC_TEMPO_ENABLED = false. Tempo
-  // notation + values are pulled from the STNDR program
-  // (Eccentric : Pause-bottom : Concentric : Pause-top). A page can override
-  // the menu with window.MC_TEMPO_OPTIONS = [{t:'3:0:1:0',d:'…'}, …].
+  // engine. A page can opt OUT with window.MC_TEMPO_ENABLED = false.
+  /* MARKET:STRIP influencer-refs START */
+  // Tempo notation + values are pulled from the STNDR program.
+  /* MARKET:STRIP influencer-refs END */
+  // Tempo format is (Eccentric : Pause-bottom : Concentric : Pause-top). A page
+  // can override the menu with window.MC_TEMPO_OPTIONS = [{t:'3:0:1:0',d:'…'}, …].
   var TEMPO_OPTIONS = (window.MC_TEMPO_OPTIONS && window.MC_TEMPO_OPTIONS.length) ? window.MC_TEMPO_OPTIONS : [
     { t: '3:0:1:0', d: '3s lower · explosive lift up' },
     { t: '4:0:1:0', d: '4s negative · controlled lift' },
@@ -229,7 +231,7 @@
   }
 
   // ====================================================================== //
-  //  TEMPO  (optional on-demand intensifier · STNDR notation)              //
+  //  TEMPO  (optional on-demand intensifier · tempo notation)              //
   // ====================================================================== //
   var tempoOverlay, tempoCard = null;
 
