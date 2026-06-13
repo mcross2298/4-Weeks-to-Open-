@@ -26,5 +26,7 @@ jobs:
           exit $fail
       - name: Resolver / precedence unit tests
         run: node tools/test-naming.js
+      - name: Validate program-overrides.json
+        run: python3 tools/validate-overrides.py
       - name: Market-extraction leak check
         run: python3 tools/build-market.py --check
