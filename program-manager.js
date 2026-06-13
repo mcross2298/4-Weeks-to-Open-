@@ -234,6 +234,7 @@
         '<button data-act="preview">Preview</button>' +
         '<button data-act="export">Export</button>' +
         '<button data-act="import">Import</button>' +
+        '<button data-act="undo">Undo</button>' +
         '<button data-act="discard">Discard</button>' +
         '<button data-act="lock">Lock</button>';
       document.body.appendChild(bar);
@@ -246,14 +247,43 @@
         else if (act === 'preview') togglePreview();
         else if (act === 'export') doExport();
         else if (act === 'import') doImport();
+        else if (act === 'undo') doUndo();
         else if (act === 'discard') doDiscard();
         else if (act === 'lock') setActive(false);
       });
     }
+    trackUndo();
     var n = localEditCount();
     bar.querySelector('.mc-pm-count').textContent = n ? n + ' unpublished edit' + (n === 1 ? '' : 's') : 'no local edits';
     var pub = bar.querySelector('.mc-pm-publish');
     if (pub) pub.disabled = !n || !(window.MC_SB && MC_SB.configured);
+    var undo = bar.querySelector('[data-act="undo"]');
+    if (undo) { undo.disabled = !undoStack.length; undo.textContent = undoStack.length ? 'Undo (' + undoStack.length + ')' : 'Undo'; }
+  }
+
+  // ---- session undo (in-memory; reverts the working copy step by step) -----
+  var undoStack = [], lastLocalJSON = null, undoing = false;
+  function snapshotLocalJSON() { try { return JSON.stringify(MC_PO.local()); } catch (e) { return null; } }
+  // record the prior working-copy state whenever it changes (called from
+  // renderBar, which every PM edit triggers). Skips published refreshes (those
+  // don't go through renderBar) and the undo itself.
+  function trackUndo() {
+    if (!window.MC_PO) return;
+    var cur = snapshotLocalJSON();
+    if (!undoing && lastLocalJSON !== null && cur !== lastLocalJSON) {
+      undoStack.push(lastLocalJSON);
+      if (undoStack.length > 25) undoStack.shift();
+    }
+    lastLocalJSON = cur;
+  }
+  function doUndo() {
+    if (!undoStack.length) return;
+    var prev = undoStack.pop();
+    undoing = true;
+    try { MC_PO.setLocal(JSON.parse(prev)); } catch (e) {}
+    undoing = false;
+    lastLocalJSON = snapshotLocalJSON();
+    renderBar();
   }
 
   // one-tap publish: push the local working copy to Supabase (upsert edits,
