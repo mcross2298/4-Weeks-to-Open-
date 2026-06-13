@@ -180,6 +180,7 @@
     if (!window.MC_PO) return 0;
     var pages = (MC_PO.local() || {}).pages || {}, n = 0, pid, nm;
     for (pid in pages) for (nm in pages[pid]) n++;
+    if (window.MC_EXCATALOG) n += MC_EXCATALOG.getPending().length;
     return n;
   }
 
@@ -224,6 +225,9 @@
     for (pid in pages) for (nm in pages[pid]) {
       var patch = pages[pid][nm];
       ops.push((patch && patch.reset) ? MC_SB.remove(pid, nm) : MC_SB.upsert(pid, nm, patch));
+    }
+    if (window.MC_EXCATALOG && MC_EXCATALOG.getPending().length) {
+      ops.push(MC_EXCATALOG.publishPending());
     }
     if (!ops.length) { msg('Nothing to publish', 'No local edits to publish.'); return; }
     var btn = bar && bar.querySelector('.mc-pm-publish');

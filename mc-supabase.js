@@ -137,6 +137,38 @@
     });
   }
 
+  // ---- published_exercises table (PM-pushed catalog additions) -------------
+  function getExercises() {
+    return ready.then(function (c) {
+      if (!c) return [];
+      return c.from('published_exercises').select('name, muscle, master, programs')
+        .then(function (r) { if (r.error) throw r.error; return r.data || []; });
+    });
+  }
+
+  function upsertExercise(entry) {
+    return ready.then(function (c) {
+      if (!c) throw new Error('Supabase not configured');
+      return currentUser().then(function (u) {
+        return c.from('published_exercises').upsert({
+          name: entry.name,
+          muscle: entry.muscle,
+          master: entry.master || null,
+          programs: entry.programs || ['Custom'],
+          added_by: u && u.id
+        }, { onConflict: 'name' }).then(function (r) { if (r.error) throw r.error; return r; });
+      });
+    });
+  }
+
+  function removeExercise(name) {
+    return ready.then(function (c) {
+      if (!c) throw new Error('Supabase not configured');
+      return c.from('published_exercises').delete().eq('name', name)
+        .then(function (r) { if (r.error) throw r.error; return r; });
+    });
+  }
+
   window.MC_SB = {
     ready: ready,
     get client() { return client; },
@@ -149,6 +181,9 @@
     getOverrides: getOverrides,
     upsert: upsert,
     remove: remove,
-    onChange: onChange
+    onChange: onChange,
+    getExercises: getExercises,
+    upsertExercise: upsertExercise,
+    removeExercise: removeExercise
   };
 })();
