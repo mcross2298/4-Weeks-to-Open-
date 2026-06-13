@@ -174,7 +174,11 @@
   }
 
   // ---- naming_overrides table (v2 rename layer) ----------------------------
-  // Returns { exercises:{}, programs:{}, splits:{}, badges:{} }
+  // Returns:
+  //   exercises: { origName → patch }
+  //   programs:  { progId  → patch }
+  //   splits:    { progId  → { origSplit → patch } }  (scope_id = "progId|origSplit")
+  //   badges:    { progId  → { badgeId   → patch } }  (scope_id = "progId|badgeId")
   function getNaming() {
     return ready.then(function (c) {
       if (!c) return null;
@@ -183,8 +187,28 @@
           if (r.error) throw r.error;
           var result = { exercises: {}, programs: {}, splits: {}, badges: {} };
           (r.data || []).forEach(function (row) {
-            var sec = row.scope + 's'; // 'exercise' → 'exercises'
-            if (result[sec]) result[sec][row.scope_id] = row.patch;
+            var idx;
+            if (row.scope === 'exercise') {
+              result.exercises[row.scope_id] = row.patch;
+            } else if (row.scope === 'program') {
+              result.programs[row.scope_id] = row.patch;
+            } else if (row.scope === 'split') {
+              // scope_id = "progId|origSplit"
+              idx = row.scope_id.indexOf('|');
+              if (idx > -1) {
+                var spid = row.scope_id.slice(0, idx), sname = row.scope_id.slice(idx + 1);
+                if (!result.splits[spid]) result.splits[spid] = {};
+                result.splits[spid][sname] = row.patch;
+              }
+            } else if (row.scope === 'badge') {
+              // scope_id = "progId|badgeId" or "global|badgeId"
+              idx = row.scope_id.indexOf('|');
+              if (idx > -1) {
+                var bpid = row.scope_id.slice(0, idx), bid = row.scope_id.slice(idx + 1);
+                if (!result.badges[bpid]) result.badges[bpid] = {};
+                result.badges[bpid][bid] = row.patch;
+              }
+            }
           });
           return result;
         });

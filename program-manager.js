@@ -232,15 +232,35 @@
     }
     // v2 naming sections
     if (typeof MC_SB.upsertNaming === 'function') {
-      var namingSecs = ['exercises', 'programs', 'splits', 'badges'];
-      namingSecs.forEach(function (sec) {
-        var scope = sec.slice(0, -1); // 'exercises' → 'exercise'
+      // 1-level: exercises, programs
+      ['exercises', 'programs'].forEach(function (sec) {
+        var scope = sec.slice(0, -1);
         var section = local[sec] || {};
         for (k in section) {
           p = section[k];
           ops.push((p && p.reset) ? MC_SB.removeNaming(scope, k) : MC_SB.upsertNaming(scope, k, p));
         }
       });
+      // 2-level: splits (scopeId = "progId|origSplit")
+      var splitsSec = local.splits || {};
+      var spid, sname, sid;
+      for (spid in splitsSec) {
+        for (sname in splitsSec[spid]) {
+          p = splitsSec[spid][sname];
+          sid = spid + '|' + sname;
+          ops.push((p && p.reset) ? MC_SB.removeNaming('split', sid) : MC_SB.upsertNaming('split', sid, p));
+        }
+      }
+      // 2-level: badges (scopeId = "progId|badgeId" or "global|badgeId")
+      var badgesSec = local.badges || {};
+      var bpid, bid, bsid;
+      for (bpid in badgesSec) {
+        for (bid in badgesSec[bpid]) {
+          p = badgesSec[bpid][bid];
+          bsid = bpid + '|' + bid;
+          ops.push((p && p.reset) ? MC_SB.removeNaming('badge', bsid) : MC_SB.upsertNaming('badge', bsid, p));
+        }
+      }
     }
     // exercise catalog pending additions
     if (window.MC_EXCATALOG && MC_EXCATALOG.getPending().length) {

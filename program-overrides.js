@@ -55,20 +55,37 @@
   }
 
   // merged view: published overlaid with the local working copy (all v2 sections)
+  // pages:     2-level  { pageId → { origName → patch } }
+  // exercises: 1-level  { origName → patch }
+  // programs:  1-level  { progId → patch }
+  // splits:    2-level  { progId → { origSplit → patch } }
+  // badges:    2-level  { progId → { badgeId → patch } }
   function effective() {
     var out = emptyDoc();
-    var flatSecs = ['exercises', 'programs', 'splits', 'badges'];
-    var pid, nm, k, i;
+    var pid, nm, k, bpid;
     [published, readLocal()].forEach(function (layer) {
+      // pages: 2-level
       var psrc = (layer && layer.pages) || {};
       for (pid in psrc) {
         if (!out.pages[pid]) out.pages[pid] = {};
         for (nm in psrc[pid]) out.pages[pid][nm] = psrc[pid][nm];
       }
-      for (i = 0; i < flatSecs.length; i++) {
-        var sec = flatSecs[i];
-        var src = (layer && layer[sec]) || {};
-        for (k in src) out[sec][k] = src[k];
+      // exercises, programs: 1-level
+      var esrc = (layer && layer.exercises) || {};
+      for (k in esrc) out.exercises[k] = esrc[k];
+      var prsrc = (layer && layer.programs) || {};
+      for (k in prsrc) out.programs[k] = prsrc[k];
+      // splits: 2-level
+      var ssrc = (layer && layer.splits) || {};
+      for (pid in ssrc) {
+        if (!out.splits[pid]) out.splits[pid] = {};
+        for (k in ssrc[pid]) out.splits[pid][k] = ssrc[pid][k];
+      }
+      // badges: 2-level
+      var bsrc = (layer && layer.badges) || {};
+      for (bpid in bsrc) {
+        if (!out.badges[bpid]) out.badges[bpid] = {};
+        for (k in bsrc[bpid]) out.badges[bpid][k] = bsrc[bpid][k];
       }
     });
     return out;
@@ -239,7 +256,7 @@
     globalExerciseName: globalExerciseName,
     // merged export view: local edits over published, reset entries dropped
     exportData: function () {
-      var eff = effective(), pages = {}, pid, nm;
+      var eff = effective(), pages = {}, pid, nm, k, bpid;
       for (pid in eff.pages) {
         for (nm in eff.pages[pid]) {
           if (eff.pages[pid][nm] && !eff.pages[pid][nm].reset) {
@@ -249,18 +266,30 @@
         }
       }
       function filterFlat(src) {
-        var dst = {}, k;
-        for (k in src) { if (src[k] && !src[k].reset) dst[k] = src[k]; }
+        var dst = {};
+        for (var fk in src) { if (src[fk] && !src[fk].reset) dst[fk] = src[fk]; }
+        return dst;
+      }
+      function filterNested(src) {
+        var dst = {};
+        for (var np in src) {
+          for (var nk in src[np]) {
+            if (src[np][nk] && !src[np][nk].reset) {
+              if (!dst[np]) dst[np] = {};
+              dst[np][nk] = src[np][nk];
+            }
+          }
+        }
         return dst;
       }
       return {
         version: 2,
         updated: new Date().toISOString(),
-        pages: pages,
+        pages:     pages,
         exercises: filterFlat(eff.exercises),
-        programs: filterFlat(eff.programs),
-        splits:   filterFlat(eff.splits),
-        badges:   filterFlat(eff.badges)
+        programs:  filterFlat(eff.programs),
+        splits:    filterNested(eff.splits),
+        badges:    filterNested(eff.badges)
       };
     }
   };
@@ -345,12 +374,20 @@
     setTimeout(scan, 300);
     setTimeout(scan, 800);
     loadPublished();
-    // dynamically load mc-naming.js so naming resolver is available on all
-    // pages without modifying each workout HTML file
-    if (!window.MC_NAMES) {
+    // dynamically load mc-naming.js → mc-naming-paint.js so both modules
+    // are available on all pages without modifying each workout HTML file
+    function loadScript(src, onload) {
       var s = document.createElement('script');
-      s.src = 'mc-naming.js';
+      s.src = src;
+      if (onload) s.onload = onload;
       document.head.appendChild(s);
+    }
+    if (!window.MC_NAMES) {
+      loadScript('mc-naming.js', function () {
+        if (!window.__mcNamingPaint) loadScript('mc-naming-paint.js');
+      });
+    } else if (!window.__mcNamingPaint) {
+      loadScript('mc-naming-paint.js');
     }
   }
 
