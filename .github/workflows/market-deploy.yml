@@ -54,7 +54,8 @@ jobs:
         run: |
           python3 tools/build-market.py \
             --extract "$RUNNER_TEMP/market" \
-            --base "https://mcross2298.github.io/MC-Training-Rolodex/"
+            --base "https://mcross2298.github.io/MC-Training-Rolodex/" \
+            --sw-version "market-ci-${{ github.run_number }}"
 
       - name: Push to MC-Training-Rolodex
         env:
