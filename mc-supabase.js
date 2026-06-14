@@ -280,6 +280,40 @@
     });
   }
 
+  // ---- pm_drafts table (Staged rollout R1: server-side draft snapshots) ----
+  // doc is a full v2 overrides document (the MC_PO working copy). Owner-only.
+  function saveDraft(name, doc) {
+    return ready.then(function (c) {
+      if (!c) throw new Error('Supabase not configured');
+      return currentUser().then(function (u) {
+        return c.from('pm_drafts').insert({ name: name, doc: doc, updated_by: u && u.id })
+          .then(function (r) { if (r.error) throw r.error; return r; });
+      });
+    });
+  }
+  function listDrafts() {
+    return ready.then(function (c) {
+      if (!c) return [];
+      return c.from('pm_drafts').select('id, name, updated_at')
+        .order('updated_at', { ascending: false }).limit(50)
+        .then(function (r) { if (r.error) throw r.error; return r.data || []; });
+    });
+  }
+  function getDraft(id) {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return c.from('pm_drafts').select('id, name, doc').eq('id', id).maybeSingle()
+        .then(function (r) { if (r.error) throw r.error; return r.data || null; });
+    });
+  }
+  function deleteDraft(id) {
+    return ready.then(function (c) {
+      if (!c) throw new Error('Supabase not configured');
+      return c.from('pm_drafts').delete().eq('id', id)
+        .then(function (r) { if (r.error) throw r.error; return r; });
+    });
+  }
+
   window.MC_SB = {
     ready: ready,
     get client() { return client; },
@@ -301,6 +335,10 @@
     removeNaming: removeNaming,
     onNamingChange: onNamingChange,
     logPublish: logPublish,
-    getPublishLog: getPublishLog
+    getPublishLog: getPublishLog,
+    saveDraft: saveDraft,
+    listDrafts: listDrafts,
+    getDraft: getDraft,
+    deleteDraft: deleteDraft
   };
 })();

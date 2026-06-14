@@ -34,7 +34,7 @@
   var ACTIVE_KEY = 'mc_pm_active';    // sessionStorage: '1' while unlocked this session
   var NAME_SEL   = '.ex-name, .lift-name, .var-name, .ss-name';
 
-  var bar = null, editorOverlay = null, editorCard = null, rcOverlay = null, hOverlay = null;
+  var bar = null, editorOverlay = null, editorCard = null, rcOverlay = null, hOverlay = null, dOverlay = null;
 
   // ---- shared program / badge data (single source: mc-pm-data.js) ---------
   // window.MC_PM_DATA is the one place this data lives — also consumed by the
@@ -235,6 +235,7 @@
         '<button data-act="export">Export</button>' +
         '<button data-act="import">Import</button>' +
         '<button data-act="history">History</button>' +
+        '<button data-act="drafts">Drafts</button>' +
         '<button data-act="discard">Discard</button>' +
         '<button data-act="lock">Lock</button>';
       document.body.appendChild(bar);
@@ -248,6 +249,7 @@
         else if (act === 'export') doExport();
         else if (act === 'import') doImport();
         else if (act === 'history') openHistory();
+        else if (act === 'drafts') openDrafts();
         else if (act === 'discard') doDiscard();
         else if (act === 'lock') setActive(false);
       });
@@ -1061,6 +1063,110 @@
     msg('Staged for review', 'The prior value is now a local edit. Review it, then Publish to apply.');
   }
 
+  // ---- Drafts (Staged rollout R1: server-side draft → load → promote) ------
+  function draftWhen(iso) { try { return new Date(iso).toLocaleString(); } catch (e) { return iso || ''; } }
+
+  function buildDrafts() {
+    dOverlay = document.createElement('div');
+    dOverlay.className = 'mc-pm-overlay';
+    dOverlay.innerHTML =
+      '<div class="mc-pm-modal">' +
+        '<div class="mc-pm-title">🗂️ Drafts</div>' +
+        '<div class="mc-pm-orig">Save the current working copy to the cloud (synced across your devices), then load &amp; Publish it when ready. Drafts are never visible to users.</div>' +
+        '<button class="mc-rc-add" data-act="draft-save">＋ Save current edits as a draft</button>' +
+        '<div class="mc-pp-list" id="mcDraftBody"></div>' +
+        '<div class="mc-pm-btns"><span style="flex:1"></span>' +
+          '<button class="mc-pm-save" data-act="draft-done">Done</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(dOverlay);
+    dOverlay.addEventListener('click', function (e) {
+      if (e.target === dOverlay) { dOverlay.classList.remove('open'); return; }
+      if (e.target.closest('[data-act="draft-done"]')) { dOverlay.classList.remove('open'); return; }
+      if (e.target.closest('[data-act="draft-save"]')) { saveDraftFlow(); return; }
+      var id, b;
+      if ((b = e.target.closest('.mc-draft-load')))   { id = +b.getAttribute('data-id'); loadDraft(id, false); return; }
+      if ((b = e.target.closest('.mc-draft-promote'))) { id = +b.getAttribute('data-id'); loadDraft(id, true); return; }
+      if ((b = e.target.closest('.mc-draft-del')))     { id = +b.getAttribute('data-id'); removeDraft(id); return; }
+    });
+  }
+
+  function openDrafts() {
+    if (!window.MC_SB || !MC_SB.configured) { msg('No backend', 'Drafts need Supabase.'); return; }
+    if (typeof MC_SB.listDrafts !== 'function') { msg('Unavailable', 'This build has no drafts support.'); return; }
+    if (!dOverlay) buildDrafts();
+    refreshDraftList();
+    dOverlay.classList.add('open');
+  }
+
+  function refreshDraftList() {
+    var body = dOverlay.querySelector('#mcDraftBody');
+    body.innerHTML = '<div class="mc-pm-empty">Loading…</div>';
+    MC_SB.listDrafts().then(function (rows) {
+      if (!rows || !rows.length) { body.innerHTML = '<div class="mc-pm-empty">No saved drafts yet.</div>'; return; }
+      body.innerHTML = rows.map(function (r) {
+        return '<div class="mc-draft-row">' +
+          '<div class="mc-draft-main"><span class="mc-hist-key">' + esc(r.name) + '</span>' +
+            '<div class="mc-hist-meta">' + esc(draftWhen(r.updated_at)) + '</div></div>' +
+          '<button class="mc-draft-load" data-id="' + r.id + '">Load</button>' +
+          '<button class="mc-draft-promote" data-id="' + r.id + '">Promote</button>' +
+          '<button class="mc-draft-del mc-rc-reset sm" data-id="' + r.id + '" title="Delete">🗑</button>' +
+        '</div>';
+      }).join('');
+    }).catch(function (e) {
+      body.innerHTML = '<div class="mc-pm-empty">Could not load drafts' + (e && e.message ? ': ' + esc(e.message) : '') + '.</div>';
+    });
+  }
+
+  function saveDraftFlow() {
+    var doc = MC_PO.local() || {};
+    var has = JSON.stringify(doc) !== JSON.stringify({ pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} });
+    if (!has && !localEditCount()) { msg('Nothing to save', 'There are no local edits to save as a draft.'); return; }
+    showModal({
+      title: 'Save draft',
+      body: 'Name this draft so you can find it later.',
+      fields: [{ id: 'name', label: 'Draft name', type: 'text' }],
+      buttons: [
+        { label: 'Cancel', cb: function () {} },
+        { label: 'Save', primary: true, cb: function (v) {
+          var name = (v.name || '').trim() || ('Draft ' + new Date().toLocaleString());
+          MC_SB.saveDraft(name, doc).then(function () {
+            refreshDraftList();
+            msg('Draft saved', 'Saved to the cloud. Load it on any of your devices, then Publish to go live.');
+          }).catch(function (e) {
+            msg('Save failed', (e && e.message) ? e.message : 'unknown error');
+          });
+        } }
+      ]
+    });
+  }
+
+  // load a draft into the working copy; if promote, open the Publish sheet after
+  function loadDraft(id, promote) {
+    MC_SB.getDraft(id).then(function (d) {
+      if (!d || !d.doc) { msg('Not found', 'That draft could not be loaded.'); return; }
+      var doc = d.doc;
+      MC_PO.setLocal({
+        pages: doc.pages || {}, exercises: doc.exercises || {},
+        programs: doc.programs || {}, splits: doc.splits || {}, badges: doc.badges || {}
+      });
+      renderBar();
+      dOverlay.classList.remove('open');
+      if (promote) doPublish();
+      else msg('Draft loaded', 'Loaded as your working copy (preview). Review, then Publish when ready.');
+    }).catch(function (e) {
+      msg('Load failed', (e && e.message) ? e.message : 'unknown error');
+    });
+  }
+
+  function removeDraft(id) {
+    confirmModal('Delete draft?', 'Remove this saved draft? Your current working copy is unaffected.', function () {
+      MC_SB.deleteDraft(id).then(refreshDraftList).catch(function (e) {
+        msg('Delete failed', (e && e.message) ? e.message : 'unknown error');
+      });
+    }, 'Delete');
+  }
+
   // ---- styles ---------------------------------------------------------------
   function injectStyles() {
     var css =
@@ -1160,7 +1266,13 @@
       '.mc-hist-act{color:#94a3b8;}' +
       '.mc-hist-meta{font-size:10px;color:#64748b;width:100%;}' +
       '.mc-hist-restore{flex:0 0 auto;background:rgba(34,211,238,0.12);color:#67e8f9;' +
-        'border:1px solid rgba(34,211,238,0.4);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;}';
+        'border:1px solid rgba(34,211,238,0.4);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;}' +
+      // Drafts sheet
+      '.mc-draft-row{display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.06);}' +
+      '.mc-draft-main{flex:1;min-width:0;word-break:break-word;}' +
+      '.mc-draft-load,.mc-draft-promote{flex:0 0 auto;background:rgba(34,211,238,0.12);color:#67e8f9;' +
+        'border:1px solid rgba(34,211,238,0.4);border-radius:8px;padding:5px 9px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;}' +
+      '.mc-draft-promote{background:#22d3ee;color:#03222b;}';
     var st = document.createElement('style');
     st.textContent = css;
     document.head.appendChild(st);
