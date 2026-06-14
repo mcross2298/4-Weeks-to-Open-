@@ -34,7 +34,7 @@
   var ACTIVE_KEY = 'mc_pm_active';    // sessionStorage: '1' while unlocked this session
   var NAME_SEL   = '.ex-name, .lift-name, .var-name, .ss-name';
 
-  var bar = null, editorOverlay = null, editorCard = null, rcOverlay = null, hOverlay = null;
+  var bar = null, editorOverlay = null, editorCard = null, rcOverlay = null, hOverlay = null, dOverlay = null;
 
   // ---- shared program / badge data (single source: mc-pm-data.js) ---------
   // window.MC_PM_DATA is the one place this data lives — also consumed by the
@@ -235,6 +235,7 @@
         '<button data-act="export">Export</button>' +
         '<button data-act="import">Import</button>' +
         '<button data-act="history">History</button>' +
+        '<button data-act="drafts">Drafts</button>' +
         '<button data-act="discard">Discard</button>' +
         '<button data-act="lock">Lock</button>';
       document.body.appendChild(bar);
@@ -248,6 +249,7 @@
         else if (act === 'export') doExport();
         else if (act === 'import') doImport();
         else if (act === 'history') openHistory();
+        else if (act === 'drafts') openDrafts();
         else if (act === 'discard') doDiscard();
         else if (act === 'lock') setActive(false);
       });
@@ -265,16 +267,46 @@
     if (!window.MC_PO) { msg('Not loaded', 'Override layer not loaded on this page.'); return; }
     if (!window.MC_SB || !MC_SB.configured) { msg('No backend', 'Supabase is not configured — use Export instead.'); return; }
     var summary = summarizePublish();
-    if (!summary.count) { msg('Nothing to publish', 'No local edits to publish.'); return; }
-    // pre-publish review: show exactly what goes live, then confirm
-    showModal({
-      title: 'Publish ' + summary.count + ' change' + (summary.count === 1 ? '' : 's') + '?',
-      body: 'Goes live for all users within ~1 minute.' + summary.html,
-      buttons: [
-        { label: 'Cancel', cb: function () {} },
-        { label: 'Publish', primary: true, cb: function () { executePublish(); } }
-      ]
+    var canarySupported = (typeof MC_SB.listCanary === 'function');
+    // find out if a canary set is live (so we can offer Promote), then review
+    var probe = canarySupported ? MC_SB.listCanary().catch(function () { return []; }) : Promise.resolve([]);
+    probe.then(function (canaryRows) {
+      var nCanary = (canaryRows || []).length;
+      if (!summary.count && !nCanary) { msg('Nothing to publish', 'No local edits to publish.'); return; }
+      var buttons = [{ label: 'Cancel', cb: function () {} }];
+      if (summary.count && canarySupported) buttons.push({ label: 'To testers', cb: function () { executePublish('canary'); } });
+      if (summary.count) buttons.push({ label: 'Publish', primary: true, cb: function () { executePublish('live'); } });
+      if (nCanary) buttons.push({ label: 'Promote (' + nCanary + ')', primary: !summary.count, cb: function () { promoteCanary(); } });
+      var body = (summary.count ? 'Publish goes live for everyone (~1 min). “To testers” shows it to canary testers only.' : '')
+               + (nCanary ? '<div class="mc-pp-grp">Live to testers (' + nCanary + ') — Promote to send to everyone.</div>' : '')
+               + (summary.html || '');
+      showModal({
+        title: summary.count ? ('Publish ' + summary.count + ' change' + (summary.count === 1 ? '' : 's') + '?') : 'Promote testers → live?',
+        body: body,
+        buttons: buttons
+      });
     });
+  }
+
+  // promote the canary set to live: copy each canary row into the live naming
+  // table, then clear canary. Confirmed first.
+  function promoteCanary() {
+    if (typeof MC_SB.listCanary !== 'function') { msg('Unavailable', 'This build has no canary support.'); return; }
+    confirmModal('Promote to everyone?', 'Copy all canary (testers-only) rename changes to live for all users, then clear the canary set?', function () {
+      MC_SB.listCanary().then(function (rows) {
+        if (!rows || !rows.length) { msg('Nothing to promote', 'There are no canary changes.'); return; }
+        var ops = rows.map(function (r) {
+          return MC_SB.upsertNaming(r.scope, r.scope_id, r.patch)
+            .then(function () { return MC_SB.removeCanaryNaming(r.scope, r.scope_id); });
+        });
+        Promise.all(ops).then(function () {
+          MC_PO.refresh();
+          msg('Promoted', rows.length + ' change' + (rows.length === 1 ? '' : 's') + ' now live for everyone.');
+        }).catch(function (e) {
+          msg('Promote failed', (e && e.message) ? e.message : 'unknown error');
+        });
+      }).catch(function (e) { msg('Promote failed', (e && e.message) ? e.message : 'unknown error'); });
+    }, 'Promote');
   }
 
   // build a human-readable diff of the working copy for the review sheet
@@ -327,35 +359,44 @@
     return { count: n, html: html };
   }
 
-  // push the working copy to Supabase (upsert edits, delete resets), then clear
-  // local so it folds into the live published set. Owner-only via RLS.
-  function executePublish() {
+  // push the working copy to Supabase. target 'live' (default) writes the live
+  // tables (everyone) and logs to history; target 'canary' writes the v2 naming
+  // sections to the testers-only canary table (no pages/catalog, no history).
+  // On success, clears the published sections from the working copy.
+  function executePublish(target) {
+    var canaryMode = (target === 'canary');
+    if (canaryMode && typeof MC_SB.upsertCanaryNaming !== 'function') { msg('Unavailable', 'This build has no canary support.'); return; }
     var local = MC_PO.local() || {};
     var pub = (MC_PO.published && MC_PO.published()) || {};
     var pages = local.pages || {};
-    var ops = [], entries = [], pid, nm, k, p;
-    // capture a changelog/restore entry alongside each op (prev = the value that
-    // was published before this op overwrites it, for H1 restore)
+    var ops = [], entries = [], pid, nm, p;
+    var upN = canaryMode ? MC_SB.upsertCanaryNaming : MC_SB.upsertNaming;
+    var rmN = canaryMode ? MC_SB.removeCanaryNaming : MC_SB.removeNaming;
+    // capture a changelog/restore entry alongside each live op (prev = value
+    // published before this op overwrites it, for H1 restore). Canary isn't logged.
     function rec(section, scopeId, patch, prev) {
+      if (canaryMode) return;
       entries.push({ section: section, scope_id: scopeId,
         action: (patch && patch.reset) ? 'remove' : 'upsert',
         patch: (patch && patch.reset) ? null : patch, prev: prev || null });
     }
-    // page-level overrides
-    for (pid in pages) for (nm in pages[pid]) {
-      p = pages[pid][nm];
-      ops.push((p && p.reset) ? MC_SB.remove(pid, nm) : MC_SB.upsert(pid, nm, p));
-      rec('pages', pid + '|' + nm, p, ((pub.pages || {})[pid] || {})[nm]);
+    // page-level overrides — live only (pages are not canaried in this version)
+    if (!canaryMode) {
+      for (pid in pages) for (nm in pages[pid]) {
+        p = pages[pid][nm];
+        ops.push((p && p.reset) ? MC_SB.remove(pid, nm) : MC_SB.upsert(pid, nm, p));
+        rec('pages', pid + '|' + nm, p, ((pub.pages || {})[pid] || {})[nm]);
+      }
     }
-    // v2 naming sections
-    if (typeof MC_SB.upsertNaming === 'function') {
+    // v2 naming sections (→ live or canary tables depending on target)
+    if (typeof upN === 'function') {
       // 1-level: exercises, programs
       ['exercises', 'programs'].forEach(function (sec) {
         var scope = sec.slice(0, -1);
         var section = local[sec] || {};
         for (var kk in section) {
           var pp = section[kk];
-          ops.push((pp && pp.reset) ? MC_SB.removeNaming(scope, kk) : MC_SB.upsertNaming(scope, kk, pp));
+          ops.push((pp && pp.reset) ? rmN(scope, kk) : upN(scope, kk, pp));
           rec(sec, kk, pp, (pub[sec] || {})[kk]);
         }
       });
@@ -366,7 +407,7 @@
         for (sname in splitsSec[spid]) {
           p = splitsSec[spid][sname];
           sid = spid + '|' + sname;
-          ops.push((p && p.reset) ? MC_SB.removeNaming('split', sid) : MC_SB.upsertNaming('split', sid, p));
+          ops.push((p && p.reset) ? rmN('split', sid) : upN('split', sid, p));
           rec('splits', sid, p, ((pub.splits || {})[spid] || {})[sname]);
         }
       }
@@ -377,26 +418,31 @@
         for (bid in badgesSec[bpid]) {
           p = badgesSec[bpid][bid];
           bsid = bpid + '|' + bid;
-          ops.push((p && p.reset) ? MC_SB.removeNaming('badge', bsid) : MC_SB.upsertNaming('badge', bsid, p));
+          ops.push((p && p.reset) ? rmN('badge', bsid) : upN('badge', bsid, p));
           rec('badges', bsid, p, ((pub.badges || {})[bpid] || {})[bid]);
         }
       }
     }
-    // exercise catalog pending additions
-    if (window.MC_EXCATALOG && MC_EXCATALOG.getPending().length) {
+    // exercise catalog pending additions — live only
+    if (!canaryMode && window.MC_EXCATALOG && MC_EXCATALOG.getPending().length) {
       ops.push(MC_EXCATALOG.publishPending());
     }
-    if (!ops.length) { msg('Nothing to publish', 'No local edits to publish.'); return; }
+    if (!ops.length) { msg('Nothing to publish', canaryMode ? 'No rename edits to send to testers (pages/catalog publish live only).' : 'No local edits to publish.'); return; }
     var btn = bar && bar.querySelector('.mc-pm-publish');
     if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
     Promise.all(ops).then(function () {
       // best-effort changelog/history write — never fail a publish on logging
-      if (typeof MC_SB.logPublish === 'function') { try { MC_SB.logPublish(entries).catch(function () {}); } catch (e) {} }
-      MC_PO.setLocal({ pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} });
+      if (!canaryMode && typeof MC_SB.logPublish === 'function') { try { MC_SB.logPublish(entries).catch(function () {}); } catch (e) {} }
+      var cur = MC_PO.local() || {};
+      if (canaryMode) { cur.exercises = {}; cur.programs = {}; cur.splits = {}; cur.badges = {}; }
+      else cur = { pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} };
+      MC_PO.setLocal(cur);
       if (btn) btn.textContent = 'Publish';
       renderBar();
       MC_PO.refresh();
-      msg('Published', 'Live for all users within ~1 minute.');
+      msg(canaryMode ? 'Sent to testers' : 'Published',
+          canaryMode ? 'Rename changes are now live for testers only. Use “Promote testers → live” when ready for everyone.'
+                     : 'Live for all users within ~1 minute.');
     }).catch(function (e) {
       if (btn) { btn.disabled = false; btn.textContent = 'Publish'; }
       var detail = (e && e.message) ? e.message : 'unknown error';
@@ -1061,6 +1107,110 @@
     msg('Staged for review', 'The prior value is now a local edit. Review it, then Publish to apply.');
   }
 
+  // ---- Drafts (Staged rollout R1: server-side draft → load → promote) ------
+  function draftWhen(iso) { try { return new Date(iso).toLocaleString(); } catch (e) { return iso || ''; } }
+
+  function buildDrafts() {
+    dOverlay = document.createElement('div');
+    dOverlay.className = 'mc-pm-overlay';
+    dOverlay.innerHTML =
+      '<div class="mc-pm-modal">' +
+        '<div class="mc-pm-title">🗂️ Drafts</div>' +
+        '<div class="mc-pm-orig">Save the current working copy to the cloud (synced across your devices), then load &amp; Publish it when ready. Drafts are never visible to users.</div>' +
+        '<button class="mc-rc-add" data-act="draft-save">＋ Save current edits as a draft</button>' +
+        '<div class="mc-pp-list" id="mcDraftBody"></div>' +
+        '<div class="mc-pm-btns"><span style="flex:1"></span>' +
+          '<button class="mc-pm-save" data-act="draft-done">Done</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(dOverlay);
+    dOverlay.addEventListener('click', function (e) {
+      if (e.target === dOverlay) { dOverlay.classList.remove('open'); return; }
+      if (e.target.closest('[data-act="draft-done"]')) { dOverlay.classList.remove('open'); return; }
+      if (e.target.closest('[data-act="draft-save"]')) { saveDraftFlow(); return; }
+      var id, b;
+      if ((b = e.target.closest('.mc-draft-load')))   { id = +b.getAttribute('data-id'); loadDraft(id, false); return; }
+      if ((b = e.target.closest('.mc-draft-promote'))) { id = +b.getAttribute('data-id'); loadDraft(id, true); return; }
+      if ((b = e.target.closest('.mc-draft-del')))     { id = +b.getAttribute('data-id'); removeDraft(id); return; }
+    });
+  }
+
+  function openDrafts() {
+    if (!window.MC_SB || !MC_SB.configured) { msg('No backend', 'Drafts need Supabase.'); return; }
+    if (typeof MC_SB.listDrafts !== 'function') { msg('Unavailable', 'This build has no drafts support.'); return; }
+    if (!dOverlay) buildDrafts();
+    refreshDraftList();
+    dOverlay.classList.add('open');
+  }
+
+  function refreshDraftList() {
+    var body = dOverlay.querySelector('#mcDraftBody');
+    body.innerHTML = '<div class="mc-pm-empty">Loading…</div>';
+    MC_SB.listDrafts().then(function (rows) {
+      if (!rows || !rows.length) { body.innerHTML = '<div class="mc-pm-empty">No saved drafts yet.</div>'; return; }
+      body.innerHTML = rows.map(function (r) {
+        return '<div class="mc-draft-row">' +
+          '<div class="mc-draft-main"><span class="mc-hist-key">' + esc(r.name) + '</span>' +
+            '<div class="mc-hist-meta">' + esc(draftWhen(r.updated_at)) + '</div></div>' +
+          '<button class="mc-draft-load" data-id="' + r.id + '">Load</button>' +
+          '<button class="mc-draft-promote" data-id="' + r.id + '">Promote</button>' +
+          '<button class="mc-draft-del mc-rc-reset sm" data-id="' + r.id + '" title="Delete">🗑</button>' +
+        '</div>';
+      }).join('');
+    }).catch(function (e) {
+      body.innerHTML = '<div class="mc-pm-empty">Could not load drafts' + (e && e.message ? ': ' + esc(e.message) : '') + '.</div>';
+    });
+  }
+
+  function saveDraftFlow() {
+    var doc = MC_PO.local() || {};
+    var has = JSON.stringify(doc) !== JSON.stringify({ pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} });
+    if (!has && !localEditCount()) { msg('Nothing to save', 'There are no local edits to save as a draft.'); return; }
+    showModal({
+      title: 'Save draft',
+      body: 'Name this draft so you can find it later.',
+      fields: [{ id: 'name', label: 'Draft name', type: 'text' }],
+      buttons: [
+        { label: 'Cancel', cb: function () {} },
+        { label: 'Save', primary: true, cb: function (v) {
+          var name = (v.name || '').trim() || ('Draft ' + new Date().toLocaleString());
+          MC_SB.saveDraft(name, doc).then(function () {
+            refreshDraftList();
+            msg('Draft saved', 'Saved to the cloud. Load it on any of your devices, then Publish to go live.');
+          }).catch(function (e) {
+            msg('Save failed', (e && e.message) ? e.message : 'unknown error');
+          });
+        } }
+      ]
+    });
+  }
+
+  // load a draft into the working copy; if promote, open the Publish sheet after
+  function loadDraft(id, promote) {
+    MC_SB.getDraft(id).then(function (d) {
+      if (!d || !d.doc) { msg('Not found', 'That draft could not be loaded.'); return; }
+      var doc = d.doc;
+      MC_PO.setLocal({
+        pages: doc.pages || {}, exercises: doc.exercises || {},
+        programs: doc.programs || {}, splits: doc.splits || {}, badges: doc.badges || {}
+      });
+      renderBar();
+      dOverlay.classList.remove('open');
+      if (promote) doPublish();
+      else msg('Draft loaded', 'Loaded as your working copy (preview). Review, then Publish when ready.');
+    }).catch(function (e) {
+      msg('Load failed', (e && e.message) ? e.message : 'unknown error');
+    });
+  }
+
+  function removeDraft(id) {
+    confirmModal('Delete draft?', 'Remove this saved draft? Your current working copy is unaffected.', function () {
+      MC_SB.deleteDraft(id).then(refreshDraftList).catch(function (e) {
+        msg('Delete failed', (e && e.message) ? e.message : 'unknown error');
+      });
+    }, 'Delete');
+  }
+
   // ---- styles ---------------------------------------------------------------
   function injectStyles() {
     var css =
@@ -1160,7 +1310,13 @@
       '.mc-hist-act{color:#94a3b8;}' +
       '.mc-hist-meta{font-size:10px;color:#64748b;width:100%;}' +
       '.mc-hist-restore{flex:0 0 auto;background:rgba(34,211,238,0.12);color:#67e8f9;' +
-        'border:1px solid rgba(34,211,238,0.4);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;}';
+        'border:1px solid rgba(34,211,238,0.4);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;}' +
+      // Drafts sheet
+      '.mc-draft-row{display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.06);}' +
+      '.mc-draft-main{flex:1;min-width:0;word-break:break-word;}' +
+      '.mc-draft-load,.mc-draft-promote{flex:0 0 auto;background:rgba(34,211,238,0.12);color:#67e8f9;' +
+        'border:1px solid rgba(34,211,238,0.4);border-radius:8px;padding:5px 9px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;}' +
+      '.mc-draft-promote{background:#22d3ee;color:#03222b;}';
     var st = document.createElement('style');
     st.textContent = css;
     document.head.appendChild(st);
