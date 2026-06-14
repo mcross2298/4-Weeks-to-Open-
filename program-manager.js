@@ -269,9 +269,10 @@
     else if (act === 'lock') setActive(false);
   }
 
-  // Top control pill: a compact, always-visible "🛠️ PM · N edits · Publish" so
-  // the owner can publish from any page. It is Publish-only — every other tool
-  // opens from the dashboard "PM Mode" module (which opens the hub).
+  // Top control pill: a compact, always-visible "🛠️ PM · N edits · Tools · Publish"
+  // so the owner can reach every tool and publish from ANY page. "Tools" opens
+  // the same hub as the dashboard "PM Mode" module — kept on the pill so the
+  // tools stay reachable from the dashboard (where that module isn't shown).
   function renderBar() {
     if (!isActive()) { if (bar) { bar.remove(); bar = null; } closeHub(); return; }
     if (!bar) {
@@ -280,6 +281,7 @@
       bar.innerHTML =
         '<span class="mc-pm-tag">🛠️ PM</span>' +
         '<span class="mc-pm-count"></span>' +
+        '<button class="mc-pm-tools" data-act="tools">Tools</button>' +
         '<button class="mc-pm-publish" data-act="publish">Publish</button>';
       document.body.appendChild(bar);
       bar.addEventListener('click', function (e) {
@@ -1347,6 +1349,9 @@
       '.mc-pm-top .mc-pm-publish{background:#22d3ee;border:none;color:#03222b;font-size:11px;font-weight:900;' +
         'border-radius:999px;padding:7px 15px;cursor:pointer;font-family:inherit;}' +
       '.mc-pm-top .mc-pm-publish:disabled{background:rgba(34,211,238,0.25);color:#7dd3e8;cursor:default;}' +
+      '.mc-pm-top .mc-pm-tools{background:rgba(34,211,238,0.14);border:1px solid rgba(34,211,238,0.5);' +
+        'color:#22d3ee;font-size:11px;font-weight:900;border-radius:999px;padding:6px 13px;cursor:pointer;font-family:inherit;}' +
+      '.mc-pm-top .mc-pm-tools:active{background:rgba(34,211,238,0.28);}' +
       // tools hub bottom sheet
       '.mc-pm-hub-bd{position:fixed;inset:0;z-index:1500;background:rgba(0,0,0,0.6);' +
         'backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;}' +
