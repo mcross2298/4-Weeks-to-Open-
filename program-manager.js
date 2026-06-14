@@ -34,6 +34,7 @@
   window.__mcProgramManager = true;
 
   var ACTIVE_KEY = 'mc_pm_active';    // sessionStorage: '1' while unlocked this session
+  var OWNER_SEEN_KEY = 'mc_pm_owner_seen'; // localStorage: '1' once this device confirmed owner
   var NAME_SEL   = '.ex-name, .lift-name, .var-name, .ss-name';
 
   var bar = null, editorOverlay = null, editorCard = null, rcOverlay = null, hOverlay = null, dOverlay = null;
@@ -61,6 +62,7 @@
     // reveal/hide the owner-only item in any already-built meatball menu
     var pmBtn = document.querySelector('[data-act="pm"]');
     if (pmBtn) pmBtn.style.display = on ? '' : 'none';
+    if (on) { markOwnerSeen(); showDashboardEntry(); }
     if (on && openHubAfterUnlock) { openHubAfterUnlock = false; openHub(); }
   }
 
@@ -1470,16 +1472,27 @@
     enter: enterPM
   };
 
-  // Wire + reveal the dashboard "PM Mode" module. It's hidden for everyone; we
-  // show it when this session is already unlocked, or when Supabase confirms the
-  // signed-in user is the owner (persists across visits, so no ?pm=1 needed).
+  // Wire + reveal the dashboard "PM Mode" module. It's hidden for everyone but
+  // the owner. To survive PWA relaunches (which drop the session) and a possibly
+  // dropped Supabase session, we remember once this device has been the owner in
+  // a persistent flag and reveal instantly on later loads; we still confirm via
+  // Supabase (covers a fresh device where the owner is signed in) and reveal the
+  // moment PM mode is unlocked.
+  function ownerSeen() { try { return localStorage.getItem(OWNER_SEEN_KEY) === '1'; } catch (e) { return false; } }
+  function markOwnerSeen() { try { localStorage.setItem(OWNER_SEEN_KEY, '1'); } catch (e) {} }
+  function showDashboardEntry() {
+    var card = document.getElementById('pmModeCard');
+    if (card) card.style.display = 'block';
+  }
   function revealDashboardEntry() {
     var card = document.getElementById('pmModeCard');
     if (!card) return;
     card.addEventListener('click', function (e) { e.preventDefault(); enterPM(); });
-    if (isActive()) { card.style.display = 'block'; return; }
+    // reveal immediately if we already know this is the owner's device, or if
+    // the URL is explicitly entering PM mode
+    if (isActive() || ownerSeen() || /[?&]pm=1/.test(location.search)) { showDashboardEntry(); }
     if (window.MC_SB && MC_SB.configured && typeof MC_SB.isOwner === 'function') {
-      MC_SB.isOwner().then(function (owner) { if (owner) card.style.display = 'block'; }).catch(function () {});
+      MC_SB.isOwner().then(function (owner) { if (owner) { markOwnerSeen(); showDashboardEntry(); } }).catch(function () {});
     }
   }
 
