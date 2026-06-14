@@ -557,6 +557,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 
     <div class="tier-label flag">★ Flagship Programs</div>
 
+    <div class="prog-cards lay-stack" id="flagGrid">
     <a href="cat-strength.html" class="cat-card ss">
       <span class="ss-glow"></span>
       <span class="ss-sheen"></span>
@@ -611,6 +612,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <div class="cat-count">Coming Soon →</div>
       <div class="cat-designer">✍️ Designed by Mike Cross</div>
     </a>
+    </div><!-- /#flagGrid -->
 
     <!-- Bonus Workouts — auto-collected standalone workouts (rendered by mc-bonus-routing.js when ≥1 exists) -->
     <div id="bonusCardSlot"></div>
@@ -1081,6 +1083,7 @@ document.addEventListener('mc:published-programs',()=>{renderPublishedPrograms()
 <script src="mc-account.js"></script>
 <script src="mc-biometric.js"></script>
 <script src="program-overrides.js"></script>
+<script src="mc-layout.js"></script>
 <script src="program-manager.js"></script>
 <script>
 // Trigger PM unlock immediately after scripts load if ?pm=1 is in URL
