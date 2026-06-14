@@ -281,14 +281,53 @@ ground-up rewrite is ever on the table. **Decision: stay vanilla.**
 
 ---
 
-## Open questions for review (before Phase 1 code)
+## Resolved decisions (owner, 2026-06-14)
 
-1. **Bonus card placement** — top of the dashboard grid, bottom, or its own
-   section above "Influencer Programs"? (Default proposed: just under the
-   flagship grid.)
-2. **Bonus workout target page** — reuse `cat-custom.html` to render a bonus
-   workout, or a dedicated `bonus-workouts.html` container? (Default proposed:
-   dedicated container card → existing custom-workout viewer per item.)
-3. **Assign control scope** — should assigning to a multi-week program require
-   picking *which split/day*, or just attach loosely for now? (Default
-   proposed: loose attach in Phase 1; split targeting in Phase 3 wizard.)
+1. **Bonus card placement** — **under the flagship grid** on the dashboard
+   (above "Influencer Programs").
+2. **Bonus structure** — the **"Bonus Workouts"** dashboard card opens a
+   landing that follows the **Daily Pump / Daily Gainz** pattern: a category
+   page built from collapsible **modules** (`.module` → `.module-header` +
+   `.drill`) whose `drill-inner` lists `workout-row` links. See the existing
+   `<!-- BONUS -->` module in `cat-pump-new4.html` (lines ~253–275) as the
+   template. Each auto-routed custom workout is appended as a new
+   `workout-row` (`row-emoji` / `row-name` / `row-detail` / `row-badge` /
+   `row-arrow`), newest first. A dedicated `bonus-workouts.html` hosts this
+   landing; individual items open via the existing custom-workout viewer.
+3. **Assign control scope** — **loose attach** in Phase 1 (program-level only;
+   no split/day picker). Split/day targeting deferred to the Phase 3 wizard.
+
+---
+
+## Module 8 — Additional template options catalog (candidates)
+
+Beyond the base Style A/B set in Module 2. **Candidate list — not committed**;
+the owner greenlights which land in Phase 2. Owner recommendation captured:
+ship the three ⭐ low-cost theme knobs + one standout layout per view
+(featured+grid, timeline, week-calendar, superset-grouped); the rest stay here
+as future options.
+
+### 8.1 Themes (extend `ThemeConfig`)
+| Option | Adds | Cost |
+| --- | --- | --- |
+| **Preset palettes** ⭐ | Named vibes (e.g. "Crimson Steel") — one tap re-skins all four ThemeConfig fields | Low |
+| Accent gradient / dual-tone | Gradient direction + 2nd color (cat-cards already use `135deg`) | Low |
+| **Density** ⭐ (compact/comfortable/spacious) | App-wide padding & row height token | Low |
+| Shape/radius (sharp/rounded/pill) | Corner-radius token | Low |
+| **Motion level** ⭐ (off/subtle/hype) | Gates glow/sheen/pulse; respects reduced-motion | Low |
+| Surface finish (flat/glass/outlined) | Glassmorphism token (already in save bars) | Med |
+| Light / high-contrast mode | Non-black variant (accessibility) | Med-High |
+
+### 8.2 Layouts (add Style C per view)
+- **Program Cards:** `featured-grid` (one hero + grid) ⭐ · `compact-list` (dense `plan-card` rows).
+- **Landing:** `timeline` (vertical phase/progress tracker) ⭐.
+- **Split:** `week-calendar` (7-day grid) ⭐ · `day-carousel` (swipe day-cards).
+- **Workout:** `superset-grouped` (bracketed pairs) ⭐ · `timer-first` (reuse `conditioning-timer.html`) · `checklist` (compact).
+
+### 8.3 Structures (net-new containers)
+- **Bonus Workouts** — Phase 1 (in progress).
+- **Collections / Folders** — tag-based grouping independent of programs (pairs with Bonus).
+- **Featured / Spotlight strip** — rotating featured workout on the dashboard.
+- **Filter / segmented control** — landing filter by muscle group / duration.
+- **Resume card** — "Continue where you left off" (reuses history/streak data).
+- **Weekday scheduler** — assign workouts to days of the week.
