@@ -37,6 +37,7 @@
   function emptyDoc() { return { pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} }; }
 
   var published = emptyDoc();
+  var canary = emptyDoc();            // R2: testers-only overlay (naming sections); empty for normal users
   var previewPublishedOnly = false;   // PM "Preview as user": paint published layer only
   var mo = null, obsDepth = 0, scanTimer = null;
   // original card values captured before the first override application,
@@ -62,10 +63,16 @@
   // splits:    2-level  { progId → { origSplit → patch } }
   // badges:    2-level  { progId → { badgeId → patch } }
   // includeLocal=false yields the published-only view (PM "Preview as user").
-  function buildEffective(includeLocal) {
+  // layers, low→high precedence: published < canary (testers only) < local working copy.
+  // includeCanary overlays the testers-only canary set (empty for normal users via
+  // RLS); excluded from preview (= normal-user view) and from export.
+  function buildEffective(includeLocal, includeCanary) {
     var out = emptyDoc();
     var pid, nm, k, bpid;
-    (includeLocal ? [published, readLocal()] : [published]).forEach(function (layer) {
+    var layers = [published];
+    if (includeCanary) layers.push(canary);
+    if (includeLocal) layers.push(readLocal());
+    layers.forEach(function (layer) {
       // pages: 2-level
       var psrc = (layer && layer.pages) || {};
       for (pid in psrc) {
@@ -92,8 +99,9 @@
     });
     return out;
   }
-  // paint/resolver view — honors preview mode; exportData uses buildEffective(true)
-  function effective() { return buildEffective(!previewPublishedOnly); }
+  // paint/resolver view — honors preview mode (preview = pure published, the
+  // normal-user view: no local, no canary). Otherwise overlays canary + local.
+  function effective() { return buildEffective(!previewPublishedOnly, !previewPublishedOnly); }
 
   // global exercise name from v2 exercises section (no page-level check — caller must do that)
   function globalExerciseName(origName) {
@@ -300,7 +308,7 @@
     // merged export view: local edits over published, reset entries dropped.
     // Always includes the working copy (buildEffective(true)) even in preview.
     exportData: function () {
-      var eff = buildEffective(true), pages = {}, pid, nm, k, bpid;
+      var eff = buildEffective(true, false), pages = {}, pid, nm, k, bpid;
       for (pid in eff.pages) {
         for (nm in eff.pages[pid]) {
           if (eff.pages[pid][nm] && !eff.pages[pid][nm].reset) {
@@ -397,6 +405,35 @@
                         published.programs  = n.programs  || {};
                         published.splits    = n.splits    || {};
                         published.badges    = n.badges    || {};
+                        scan();
+                        dispatchNamesChanged();
+                      }).catch(function () {});
+                  });
+                }
+              }).catch(function () {});
+          }
+          // R2: testers-only canary overlay. RLS returns rows only for
+          // testers/admins, so this is a no-op (empty) for normal users. Always
+          // fail-open: any error keeps the live paint untouched.
+          if (typeof MC_SB.getCanaryNaming === 'function') {
+            MC_SB.getCanaryNaming()
+              .then(function (cn) {
+                if (!cn) return;
+                canary.exercises = cn.exercises || {};
+                canary.programs  = cn.programs  || {};
+                canary.splits    = cn.splits    || {};
+                canary.badges    = cn.badges    || {};
+                scan();
+                dispatchNamesChanged();
+                if (typeof MC_SB.onCanaryChange === 'function') {
+                  MC_SB.onCanaryChange(function () {
+                    MC_SB.getCanaryNaming()
+                      .then(function (n) {
+                        if (!n) return;
+                        canary.exercises = n.exercises || {};
+                        canary.programs  = n.programs  || {};
+                        canary.splits    = n.splits    || {};
+                        canary.badges    = n.badges    || {};
                         scan();
                         dispatchNamesChanged();
                       }).catch(function () {});

@@ -314,6 +314,82 @@
     });
   }
 
+  // ---- naming_overrides_canary + testers (Staged rollout R2) ---------------
+  // Same shape as getNaming(); RLS returns rows only for testers/admins, so for
+  // a normal user this resolves to an empty overlay.
+  function getCanaryNaming() {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return c.from('naming_overrides_canary').select('scope, scope_id, patch')
+        .then(function (r) {
+          if (r.error) throw r.error;
+          var out = { exercises: {}, programs: {}, splits: {}, badges: {} };
+          (r.data || []).forEach(function (row) {
+            var idx;
+            if (row.scope === 'exercise') out.exercises[row.scope_id] = row.patch;
+            else if (row.scope === 'program') out.programs[row.scope_id] = row.patch;
+            else if (row.scope === 'split') {
+              idx = row.scope_id.indexOf('|');
+              if (idx > -1) { var sp = row.scope_id.slice(0, idx), sn = row.scope_id.slice(idx + 1); (out.splits[sp] || (out.splits[sp] = {}))[sn] = row.patch; }
+            } else if (row.scope === 'badge') {
+              idx = row.scope_id.indexOf('|');
+              if (idx > -1) { var bp = row.scope_id.slice(0, idx), bd = row.scope_id.slice(idx + 1); (out.badges[bp] || (out.badges[bp] = {}))[bd] = row.patch; }
+            }
+          });
+          return out;
+        });
+    });
+  }
+  // raw rows, for promotion (canary → live)
+  function listCanary() {
+    return ready.then(function (c) {
+      if (!c) return [];
+      return c.from('naming_overrides_canary').select('scope, scope_id, patch')
+        .then(function (r) { if (r.error) throw r.error; return r.data || []; });
+    });
+  }
+  function upsertCanaryNaming(scope, scopeId, patch) {
+    return ready.then(function (c) {
+      if (!c) throw new Error('Supabase not configured');
+      return currentUser().then(function (u) {
+        return c.from('naming_overrides_canary').upsert({
+          scope: scope, scope_id: scopeId, patch: patch,
+          updated_at: new Date().toISOString(), updated_by: u && u.id
+        }, { onConflict: 'scope,scope_id' })
+          .then(function (r) { if (r.error) throw r.error; return r; });
+      });
+    });
+  }
+  function removeCanaryNaming(scope, scopeId) {
+    return ready.then(function (c) {
+      if (!c) throw new Error('Supabase not configured');
+      return c.from('naming_overrides_canary').delete().eq('scope', scope).eq('scope_id', scopeId)
+        .then(function (r) { if (r.error) throw r.error; return r; });
+    });
+  }
+  function onCanaryChange(cb) {
+    ready.then(function (c) {
+      if (!c) return;
+      try {
+        c.channel('naming_overrides_canary_changes')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'naming_overrides_canary' }, cb)
+          .subscribe();
+      } catch (e) {}
+    });
+  }
+  // is the signed-in user a canary tester? (RLS exposes only the caller's own row)
+  function isTester() {
+    return ready.then(function (c) {
+      if (!c) return false;
+      return currentUser().then(function (u) {
+        if (!u) return false;
+        return c.from('testers').select('user_id').eq('user_id', u.id).maybeSingle()
+          .then(function (r) { return !!(r && r.data); })
+          .catch(function () { return false; });
+      });
+    });
+  }
+
   window.MC_SB = {
     ready: ready,
     get client() { return client; },
@@ -339,6 +415,12 @@
     saveDraft: saveDraft,
     listDrafts: listDrafts,
     getDraft: getDraft,
-    deleteDraft: deleteDraft
+    deleteDraft: deleteDraft,
+    getCanaryNaming: getCanaryNaming,
+    listCanary: listCanary,
+    upsertCanaryNaming: upsertCanaryNaming,
+    removeCanaryNaming: removeCanaryNaming,
+    onCanaryChange: onCanaryChange,
+    isTester: isTester
   };
 })();
