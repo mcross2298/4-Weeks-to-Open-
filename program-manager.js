@@ -265,6 +265,7 @@
         '<button data-act="import">Import</button>' +
         '<button data-act="history">History</button>' +
         '<button data-act="drafts">Drafts</button>' +
+        '<button data-act="guide">Guide</button>' +
         '<button data-act="discard">Discard</button>' +
         '<button data-act="lock">Lock</button>';
       document.body.appendChild(bar);
@@ -281,6 +282,7 @@
         else if (act === 'import') doImport();
         else if (act === 'history') openHistory();
         else if (act === 'drafts') openDrafts();
+        else if (act === 'guide') location.href = 'pm-mode-overview.html';
         else if (act === 'discard') doDiscard();
         else if (act === 'lock') setActive(false);
       });
