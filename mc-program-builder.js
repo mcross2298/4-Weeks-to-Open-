@@ -208,9 +208,26 @@
       if (!validate()) return;
       prog.days = prog.days.filter(function (d) { return d.exercises.length || confirm('"' + d.name + '" has no exercises — keep it anyway?'); });
       var saved = MCPrograms.save(prog);
+      applyCreateIntent(saved.id);
       location.href = 'cat-custom.html?prog=' + saved.id + '&new=1';
     }
   };
+
+  // "+ Create" wizard hand-off: when a new program was started from the
+  // creator, persist its chosen structure as the program's landing layout
+  // override (PM working copy). Consumed once, only for program-typed intents.
+  function applyCreateIntent(progId) {
+    var intent;
+    try { intent = JSON.parse(localStorage.getItem('mc_pm_create_intent') || 'null'); } catch (e) { return; }
+    if (!intent || intent.type !== 'program' || !intent.structure) return;
+    try { localStorage.removeItem('mc_pm_create_intent'); } catch (e) {}
+    try {
+      var doc = JSON.parse(localStorage.getItem('mc_pm_overrides') || '{}');
+      if (!doc.layouts) doc.layouts = {};
+      doc.layouts['landing:cprog-' + progId] = { style: intent.structure };
+      localStorage.setItem('mc_pm_overrides', JSON.stringify(doc));
+    } catch (e) {}
+  }
 
   renderMeta();
   renderDays();

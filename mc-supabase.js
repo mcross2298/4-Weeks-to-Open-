@@ -179,19 +179,27 @@
   //   programs:  { progId  → patch }
   //   splits:    { progId  → { origSplit → patch } }  (scope_id = "progId|origSplit")
   //   badges:    { progId  → { badgeId   → patch } }  (scope_id = "progId|badgeId")
+  //   layouts:   { viewScope → { style } }            (scope = 'layout')
+  //   themes:    { themeScope → ThemeConfig }          (scope = 'theme')
   function getNaming() {
     return ready.then(function (c) {
       if (!c) return null;
       return c.from('naming_overrides').select('scope, scope_id, patch')
         .then(function (r) {
           if (r.error) throw r.error;
-          var result = { exercises: {}, programs: {}, splits: {}, badges: {} };
+          var result = { exercises: {}, programs: {}, splits: {}, badges: {}, layouts: {}, themes: {} };
           (r.data || []).forEach(function (row) {
             var idx;
             if (row.scope === 'exercise') {
               result.exercises[row.scope_id] = row.patch;
             } else if (row.scope === 'program') {
               result.programs[row.scope_id] = row.patch;
+            } else if (row.scope === 'layout') {
+              // scope_id = view scope ('program-cards', 'workout:<id>', …); patch = { style }
+              result.layouts[row.scope_id] = row.patch;
+            } else if (row.scope === 'theme') {
+              // scope_id = theme scope ('global', …); patch = ThemeConfig
+              result.themes[row.scope_id] = row.patch;
             } else if (row.scope === 'split') {
               // scope_id = "progId|origSplit"
               idx = row.scope_id.indexOf('|');

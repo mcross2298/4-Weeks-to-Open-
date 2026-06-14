@@ -209,12 +209,39 @@
   }
 
 
+  // ---- inline "Edit Layout" editor (PM Phase 3) ----------------------------
+  // The structural-layout + ThemeConfig sidebar lives in its own module
+  // (mc-pm-layout-editor.js). Lazy-load it on first use so normal pages never
+  // pay for it; it's owner-gated by virtue of living behind this PM bar.
+  function openLayoutEditor() {
+    if (window.MC_PM_LAYOUT) { MC_PM_LAYOUT.open(); return; }
+    var s = document.createElement('script');
+    s.src = 'mc-pm-layout-editor.js';
+    s.onload = function () { if (window.MC_PM_LAYOUT) MC_PM_LAYOUT.open(); };
+    s.onerror = function () { msg('Unavailable', 'Could not load the layout editor on this page.'); };
+    document.head.appendChild(s);
+  }
+
+  // "+" Master Content & Template Creator (PM Phase 3b). Lazy-loaded like the
+  // layout editor; owner-gated behind this PM bar.
+  function openCreator() {
+    if (window.MC_PM_CREATOR) { MC_PM_CREATOR.open(); return; }
+    var s = document.createElement('script');
+    s.src = 'mc-pm-creator.js';
+    s.onload = function () { if (window.MC_PM_CREATOR) MC_PM_CREATOR.open(); };
+    s.onerror = function () { msg('Unavailable', 'Could not load the creator on this page.'); };
+    document.head.appendChild(s);
+  }
+
   // ---- PM bar (visible only while unlocked) --------------------------------
   function localEditCount() {
     if (!window.MC_PO) return 0;
     var local = MC_PO.local() || {};
-    var pages = local.pages || {}, n = 0, pid, nm;
+    var pages = local.pages || {}, n = 0, pid, nm, k;
     for (pid in pages) for (nm in pages[pid]) n++;
+    // layouts + themes (PM Phase 2/3) — 1-level sections
+    var lay = local.layouts || {}; for (k in lay) n++;
+    var thm = local.themes || {};  for (k in thm) n++;
     if (window.MC_EXCATALOG) n += MC_EXCATALOG.getPending().length;
     if (window.MC_NAMES) n += MC_NAMES.localNamingEditCount();
     return n;
@@ -230,6 +257,8 @@
         '<span class="mc-pm-count"></span>' +
         '<button class="mc-pm-publish" data-act="publish">Publish</button>' +
         '<button data-act="names">Names</button>' +
+        '<button data-act="layout">Edit Layout</button>' +
+        '<button data-act="create">＋ Create</button>' +
         '<button data-act="find">Find</button>' +
         '<button data-act="preview">Preview</button>' +
         '<button data-act="export">Export</button>' +
@@ -244,6 +273,8 @@
         var act = b.dataset.act;
         if (act === 'publish') doPublish();
         else if (act === 'names') openRenameCenter();
+        else if (act === 'layout') openLayoutEditor();
+        else if (act === 'create') openCreator();
         else if (act === 'find') findExercise();
         else if (act === 'preview') togglePreview();
         else if (act === 'export') doExport();
@@ -344,6 +375,19 @@
     for (bp in bdg) for (bid in bdg[bp]) { bItems.push(esc(bid + ' — ' + act(bdg[bp][bid])) + ctx(bp)); n++; }
     if (bItems.length) groups.push({ t: 'Badges', items: bItems });
 
+    // PM Phase 2/3 — layout + theme edits (publish live via the naming table).
+    var lay = local.layouts || {}, lItems = [], lk;
+    for (lk in lay) { lItems.push(esc(lk + ' — layout “' + (lay[lk] && lay[lk].style || '') + '”')); n++; }
+    if (lItems.length) groups.push({ t: 'Layouts', items: lItems });
+    var thm = local.themes || {}, tItems = [], tk;
+    for (tk in thm) {
+      var tc = thm[tk] || {}, bits = [];
+      ['preset', 'accent', 'typography', 'density', 'motion'].forEach(function (f) { if (tc[f]) bits.push(f + ':' + tc[f]); });
+      tItems.push(esc(tk + ' — ' + (bits.join(', ') || 'theme')));
+      n++;
+    }
+    if (tItems.length) groups.push({ t: 'Theme', items: tItems });
+
     if (window.MC_EXCATALOG && MC_EXCATALOG.getPending().length) {
       var c = MC_EXCATALOG.getPending().length;
       groups.push({ t: 'New catalog exercises', items: [c + ' new exercise' + (c === 1 ? '' : 's')] });
@@ -422,6 +466,22 @@
           rec('badges', bsid, p, ((pub.badges || {})[bpid] || {})[bid]);
         }
       }
+      // layouts + themes (PM Phase 2/3) — 1-level, live only (not canaried).
+      // Ride the scope-agnostic naming_overrides table via scope 'layout'/'theme'.
+      if (!canaryMode) {
+        var layoutsSec = local.layouts || {}, lk;
+        for (lk in layoutsSec) {
+          p = layoutsSec[lk];
+          ops.push((p && p.reset) ? rmN('layout', lk) : upN('layout', lk, p));
+          rec('layouts', lk, p, (pub.layouts || {})[lk]);
+        }
+        var themesSec = local.themes || {}, tk;
+        for (tk in themesSec) {
+          p = themesSec[tk];
+          ops.push((p && p.reset) ? rmN('theme', tk) : upN('theme', tk, p));
+          rec('themes', tk, p, (pub.themes || {})[tk]);
+        }
+      }
     }
     // exercise catalog pending additions — live only
     if (!canaryMode && window.MC_EXCATALOG && MC_EXCATALOG.getPending().length) {
@@ -434,8 +494,11 @@
       // best-effort changelog/history write — never fail a publish on logging
       if (!canaryMode && typeof MC_SB.logPublish === 'function') { try { MC_SB.logPublish(entries).catch(function () {}); } catch (e) {} }
       var cur = MC_PO.local() || {};
+      // live publish pushes every section (incl. layouts/themes via the
+      // scope-agnostic naming table) and clears the working copy; canary only
+      // sends the naming sections to testers.
       if (canaryMode) { cur.exercises = {}; cur.programs = {}; cur.splits = {}; cur.badges = {}; }
-      else cur = { pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} };
+      else cur = { pages: {}, exercises: {}, programs: {}, splits: {}, badges: {}, layouts: {}, themes: {} };
       MC_PO.setLocal(cur);
       if (btn) btn.textContent = 'Publish';
       renderBar();
@@ -495,7 +558,7 @@
     confirmModal('Discard local edits?',
       'Discard ALL unpublished local edits? Published overrides are unaffected.',
       function () {
-        MC_PO.setLocal({ pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} });
+        MC_PO.setLocal({ pages: {}, exercises: {}, programs: {}, splits: {}, badges: {}, layouts: {}, themes: {} });
         renderBar();
       },
       'Discard');
@@ -1329,10 +1392,16 @@
     unlock: unlockFlow
   };
 
+  // minimal publish hook for the Edit Layout sidebar (reuses the review sheet)
+  window.MC_PM_PUBLISH = function () { doPublish(); };
+
   function init() {
     injectStyles();
     attachLongPress();        // ?pm=1 trigger
     renderBar();
+    // keep the unpublished-edit count live while the Edit Layout sidebar writes
+    // layout/theme edits to the working copy
+    document.addEventListener('mc:layout-changed', function () { renderBar(); });
     // reveal the PM menu item if we're already unlocked this session
     if (isActive()) {
       var btn = document.querySelector('[data-act="pm"]');

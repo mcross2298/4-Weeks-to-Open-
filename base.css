@@ -15,7 +15,68 @@
   --muted2:       #475569;
   --border-faint: rgba(255,255,255,0.07);
   --border-dim:   rgba(255,255,255,0.1);
+  --surface-bg:   #0a0a0a;
+  --density:      1;       /* PM ThemeConfig density scale (mc-theme.js) */
 }
+
+/* ── PM Phase 2 — ThemeConfig knobs (set by mc-theme.js on <html>) ──── */
+/* Typography: High-Impact Athletic Bold vs Clean Sans (default). */
+html[data-typography="athletic"] body,
+html[data-typography="athletic"] .title,
+html[data-typography="athletic"] .cat-name,
+html[data-typography="athletic"] .prog-title{
+  font-family:'Bebas Neue','Arial Narrow',system-ui,sans-serif;letter-spacing:0.02em;}
+html[data-typography="athletic"] .cat-name,
+html[data-typography="athletic"] .title{font-weight:900;}
+/* Density scale (components that opt in via var(--density)). */
+html[data-density="compact"]{--density:0.82;}
+html[data-density="spacious"]{--density:1.18;}
+/* Motion level: off = kill all animation/transition; subtle = stop decorative
+   looping animations (glow/sheen/pulse) but keep interaction transitions. */
+html[data-motion="off"] *,html[data-motion="off"] *::before,html[data-motion="off"] *::after{
+  animation:none!important;transition:none!important;}
+html[data-motion="subtle"] [class*="glow"],
+html[data-motion="subtle"] [class*="sheen"],
+html[data-motion="subtle"] .cat-icon{animation:none!important;}
+
+/* ── PM Phase 2 — Program Cards layout styles (applied to #flagGrid) ──── */
+/* lay-stack is the shipped default (vertical stack); the rest are opt-in. */
+.prog-cards.lay-stack{display:block;}
+.prog-cards.lay-stack .cat-card{margin-bottom:11px;}
+.prog-cards.lay-grid{display:grid;grid-template-columns:1fr;gap:11px;}
+.prog-cards.lay-grid .cat-card{margin-bottom:0;}
+@media (min-width:560px){.prog-cards.lay-grid{grid-template-columns:1fr 1fr;}}
+.prog-cards.lay-featured{display:grid;grid-template-columns:1fr;gap:11px;}
+.prog-cards.lay-featured .cat-card{margin-bottom:0;}
+.prog-cards.lay-featured .cat-card:first-child{grid-column:1 / -1;}
+@media (min-width:560px){.prog-cards.lay-featured{grid-template-columns:1fr 1fr;}}
+.prog-cards.lay-carousel{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;padding-bottom:6px;}
+.prog-cards.lay-carousel::-webkit-scrollbar{display:none;}
+.prog-cards.lay-carousel .cat-card{flex:0 0 82%;max-width:340px;scroll-snap-align:start;margin-bottom:0;}
+
+/* ── PM Phase 2b — Workout Card layouts (body[data-workout-layout]) ──── */
+/* superset-grouped: emphasize the already-grouped .ss-card supersets with a
+   bold accent bracket so paired work reads as one block. */
+body[data-workout-layout="superset-grouped"] .ss-card{
+  border-left:3px solid var(--accent,#d4af37);
+  background:rgba(var(--accent-rgb,212,175,55),0.06);
+  border-radius:14px;padding-left:6px;margin:14px 0;
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb,212,175,55),0.18);}
+body[data-workout-layout="superset-grouped"] .ss-label{color:var(--accent,#d4af37);font-weight:900;}
+body[data-workout-layout="superset-grouped"] .ss-divider .ss-x{
+  background:rgba(var(--accent-rgb,212,175,55),0.14);color:var(--accent,#d4af37);
+  padding:2px 10px;border-radius:20px;font-weight:800;}
+/* swipe: one card-block at a time, horizontal scroll-snap. Targets the
+   detected cards container so it works regardless of the page wrapper. */
+body[data-workout-layout="swipe"] [data-mc-cards]{
+  display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;padding-bottom:8px;}
+body[data-workout-layout="swipe"] [data-mc-cards]::-webkit-scrollbar{display:none;}
+body[data-workout-layout="swipe"] [data-mc-cards] > .ex-card,
+body[data-workout-layout="swipe"] [data-mc-cards] > .ss-card,
+body[data-workout-layout="swipe"] [data-mc-cards] > .a-card{
+  flex:0 0 86%;max-width:520px;scroll-snap-align:start;}
 
 /* ── RESET ──────────────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}

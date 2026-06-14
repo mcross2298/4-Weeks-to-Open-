@@ -70,7 +70,11 @@
   var LOCAL_KEY = 'mc_pm_overrides';      // v2: { pages, exercises, programs, splits, badges }
   var JSON_URL  = 'program-overrides.json';
 
-  function emptyDoc() { return { pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} }; }
+  // v2 sections. layouts/themes (PM Phase 2) are 1-level maps keyed by a view
+  // scope ('program-cards', 'landing:<id>', 'split:<id>', 'workout:<pageId>',
+  // or 'global' for app chrome). Old clients ignore unknown sections, so this
+  // stays backward compatible.
+  function emptyDoc() { return { pages: {}, exercises: {}, programs: {}, splits: {}, badges: {}, layouts: {}, themes: {} }; }
 
   var published = emptyDoc();
   var canary = emptyDoc();            // R2: testers-only overlay (naming sections); empty for normal users
@@ -89,6 +93,11 @@
 
   function dispatchNamesChanged() {
     try { document.dispatchEvent(new CustomEvent('mc:names-changed')); } catch (e) {}
+  }
+  // PM Phase 2 — layout/theme repaint signal (mc-layout.js + mc-theme.js listen)
+  function dispatchLayoutChanged() {
+    dispatchNamesChanged();
+    try { document.dispatchEvent(new CustomEvent('mc:layout-changed')); } catch (e) {}
   }
 
   // merged view: published overlaid with the local working copy (all v2 sections)
@@ -131,6 +140,11 @@
         if (!out.badges[bpid]) out.badges[bpid] = {};
         for (k in bsrc[bpid]) out.badges[bpid][k] = bsrc[bpid][k];
       }
+      // layouts, themes: 1-level (PM Phase 2)
+      var lsrc = (layer && layer.layouts) || {};
+      for (k in lsrc) out.layouts[k] = lsrc[k];
+      var tsrc = (layer && layer.themes) || {};
+      for (k in tsrc) out.themes[k] = tsrc[k];
     });
     return out;
   }
@@ -332,6 +346,30 @@
     isPreview: function () { return previewPublishedOnly; },
     effective: effective,
     globalExerciseName: globalExerciseName,
+    // PM Phase 2 — resolved layout/theme for a view scope (published+local),
+    // honoring preview mode. layoutFor → style id | null; themeFor → config | null.
+    layoutFor: function (scope) {
+      var e = effective().layouts[scope];
+      return (e && !e.reset && e.style) ? e.style : null;
+    },
+    themeFor: function (scope) {
+      var e = effective().themes[scope];
+      return (e && !e.reset) ? e : null;
+    },
+    // local-working-copy writers (instant preview; Publish path unchanged).
+    // Passing null/empty clears the entry. style/cfg merge into the section.
+    setLayoutLocal: function (scope, style) {
+      var doc = readLocal();
+      if (!doc.layouts) doc.layouts = {};
+      if (style) doc.layouts[scope] = { style: style }; else delete doc.layouts[scope];
+      writeLocal(doc); scan(); dispatchLayoutChanged();
+    },
+    setThemeLocal: function (scope, cfg) {
+      var doc = readLocal();
+      if (!doc.themes) doc.themes = {};
+      if (cfg) doc.themes[scope] = cfg; else delete doc.themes[scope];
+      writeLocal(doc); scan(); dispatchLayoutChanged();
+    },
     // merged export view: local edits over published, reset entries dropped.
     // Always includes the working copy (buildEffective(true)) even in preview.
     exportData: function () {
@@ -368,7 +406,9 @@
         exercises: filterFlat(eff.exercises),
         programs:  filterFlat(eff.programs),
         splits:    filterNested(eff.splits),
-        badges:    filterNested(eff.badges)
+        badges:    filterNested(eff.badges),
+        layouts:   filterFlat(eff.layouts),
+        themes:    filterFlat(eff.themes)
       };
     }
   };
@@ -385,10 +425,12 @@
             exercises: data.exercises || {},
             programs:  data.programs  || {},
             splits:    data.splits    || {},
-            badges:    data.badges    || {}
+            badges:    data.badges    || {},
+            layouts:   data.layouts   || {},
+            themes:    data.themes    || {}
           };
           scan();
-          dispatchNamesChanged();
+          dispatchLayoutChanged();
         }
       })
       .catch(function () {});
@@ -421,8 +463,10 @@
                 published.programs  = naming.programs  || {};
                 published.splits    = naming.splits    || {};
                 published.badges    = naming.badges    || {};
+                published.layouts   = naming.layouts   || {};
+                published.themes    = naming.themes    || {};
                 scan();
-                dispatchNamesChanged();
+                dispatchLayoutChanged();
                 if (typeof MC_SB.onNamingChange === 'function') {
                   MC_SB.onNamingChange(function () {
                     MC_SB.getNaming()
@@ -432,8 +476,10 @@
                         published.programs  = n.programs  || {};
                         published.splits    = n.splits    || {};
                         published.badges    = n.badges    || {};
+                        published.layouts   = n.layouts   || {};
+                        published.themes    = n.themes    || {};
                         scan();
-                        dispatchNamesChanged();
+                        dispatchLayoutChanged();
                       }).catch(function () {});
                   });
                 }
@@ -492,6 +538,9 @@
     }
     // shared program/badge data (single source consumed by the Rename Center)
     if (!window.MC_PM_DATA) loadScript('mc-pm-data.js');
+    // structural layout resolver/painters (PM Phase 2) — self-no-ops on pages
+    // without a flagship grid or workout cards; paints published layout styles.
+    if (!window.MC_LAYOUT) loadScript('mc-layout.js');
     if (!window.MC_NAMES) {
       loadScript('mc-naming.js', function () {
         if (!window.__mcNamingPaint) loadScript('mc-naming-paint.js');
