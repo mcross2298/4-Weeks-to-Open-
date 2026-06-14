@@ -473,7 +473,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <div class="hero-empty-btn">Choose Program</div>
     </div>
 
-    <div class="hero-card" id="heroCard" onclick="openProgSelect()">
+    <div class="hero-card" id="heroCard" onclick="openActiveProgram()">
       <div class="hero-glow"></div>
       <div class="hero-inner">
         <div class="hero-top-row">
@@ -486,7 +486,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
         <div class="hero-name" id="heroName"></div>
         <div class="hero-desc" id="heroDesc"></div>
         <div class="hero-phases" id="heroPhases"></div>
-        <div class="hero-tap">Tap to change program →</div>
+        <div class="hero-tap" id="heroTap">Open program →</div>
       </div>
     </div>
 
@@ -861,11 +861,73 @@ function renderHero(){
   const ring=document.getElementById('heroRing');
   ring.style.borderTopColor=activeProg.color;
   ring.style.borderRightColor=activeProg.color;
-  // Phases
+  // Next lift, derived from workout completion data (see heroNextLift)
+  const nx=heroNextLift(activeProg);
+  // Phases — keep a 4-pill window that always includes the next split, highlighted
+  const splits=activeProg.splits||[];
+  let start=0;
+  if(nx.idx>=4)start=Math.min(nx.idx-3,Math.max(0,splits.length-4));
   const ph=document.getElementById('heroPhases');
-  ph.innerHTML=activeProg.splits.slice(0,4).map((s,i)=>
-    `<div class="phase-pill${i===0?' active':''}">${s}</div>`
+  ph.innerHTML=splits.slice(start,start+4).map((s,i)=>
+    `<div class="phase-pill${(start+i)===nx.idx?' active':''}">${s}</div>`
   ).join('');
+  const tap=document.getElementById('heroTap');
+  if(tap)tap.textContent=nx.cta;
+}
+
+// Does a split label (e.g. "Back & Shoulders") share a muscle/keyword with a
+// logged workout title? Used to line up completion history with the program's
+// rotation. Generic words are ignored so only real body-part matches count.
+function heroSplitMatches(splitLabel,title){
+  const stop={and:1,the:1,day:1,amp:1,split:1,splits:1,workout:1,week:1,'of':1,both:1,worlds:1,favorite:1,'for':1};
+  const tw=((title||'').toLowerCase().match(/[a-z]+/g)||[]);
+  return ((splitLabel||'').toLowerCase().match(/[a-z]+/g)||[])
+    .some(w=>w.length>=3&&!stop[w]&&tw.indexOf(w)>=0);
+}
+
+// Work out which lift is "next" for the active program from completion data:
+//   • an in-progress session (mc_activity.last) that matches this program wins
+//     — that's literally the lift to resume, and we deep-link straight to it.
+//   • otherwise step one past the most-recently-finished split in the rotation
+//     (mc_workout_log_v1). With no history we start at the first split.
+function heroNextLift(p){
+  const splits=p.splits||[];
+  // 1) in-progress workout — exact resume signal (kept in step with mc-resume.js)
+  let act={};try{act=JSON.parse(localStorage.getItem('mc_activity')||'{}')||{};}catch(e){}
+  const L=act.last;
+  const live=!!(L&&L.done>0&&L.done<L.total&&!L.dismissed&&(Date.now()-L.ts)<=36*3600*1000);
+  // 2) most recently finished split for this program → next in rotation
+  let lastIdx=-1,lastTs=0;
+  try{
+    (JSON.parse(localStorage.getItem('mc_workout_log_v1')||'[]')||[]).forEach(e=>{
+      const t=Date.parse(e.date)||0;
+      splits.forEach((s,i)=>{if(t>lastTs&&heroSplitMatches(s,e.workoutName)){lastTs=t;lastIdx=i;}});
+    });
+  }catch(e){}
+  let idx=lastIdx>=0?(lastIdx+1)%splits.length:0;
+  // a live session that belongs to this program takes over the "next" slot
+  let resumeHref=null;
+  if(live){
+    let mi=-1;splits.forEach((s,i)=>{if(mi<0&&heroSplitMatches(s,L.title))mi=i;});
+    if(mi>=0){idx=mi;resumeHref=L.pageId;}
+  }
+  let cta;
+  if(resumeHref){cta='↩️ Resume '+(L.title||'workout')+' · '+L.done+'/'+L.total+' →';}
+  else{cta=(lastIdx>=0?'Next up: ':'Start: ')+(splits[idx]||'')+' →';}
+  return {idx:idx,cta:cta,resumeHref:resumeHref};
+}
+
+// Hero tap → open the CURRENT program (not the change-program sheet — that
+// lives on "See all"). If completion data points at an in-progress lift for
+// this program, jump straight to it; otherwise open the program's page.
+function openActiveProgram(){
+  if(!activeProg){openProgSelect();return;}
+  const nx=heroNextLift(activeProg);
+  if(nx.resumeHref){location.href=nx.resumeHref;return;}
+  let url=activeProg.href
+    ||(activeProg.cprogId?'cat-custom.html?prog='+encodeURIComponent(activeProg.cprogId)
+    :(activeProg.pubId?'cat-custom.html?pub='+encodeURIComponent(activeProg.pubId):''));
+  if(url)location.href=url;else openProgSelect();
 }
 
 // ── CUSTOM PROGRAMS (Programs tab list) ──
