@@ -125,6 +125,9 @@ select.name-input option{background:#0d1f3c;color:#e2e8f0;}
 var CW_KEY = 'mc_custom_workouts_v1';
 var activeFilter = 'All';
 var selected = [];   // [{name,muscle,sets,reps}]
+// PM "+ Create" wizard hand-off: a new workout carries the structure/skin it
+// was created with. Consumed once, then cleared.
+var CREATE_INTENT = (function(){ try{ var i=JSON.parse(localStorage.getItem('mc_pm_create_intent')||'null'); localStorage.removeItem('mc_pm_create_intent'); return i; }catch(e){ return null; } })();
 
 function getSaved(){ try{ return JSON.parse(localStorage.getItem(CW_KEY)||'[]'); }catch(e){ return []; } }
 function setSaved(a){ try{ localStorage.setItem(CW_KEY, JSON.stringify(a)); }catch(e){} }
@@ -280,6 +283,8 @@ function createWorkout(){
       return { name:s.name, muscle:s.muscle, sets:parseInt(s.sets,10)||3, reps:(''+s.reps).trim()||'10' };
     })
   };
+  // carry the layout/skin chosen in the "+ Create" wizard onto the new workout
+  if(CREATE_INTENT && CREATE_INTENT.structure) wk.layout = CREATE_INTENT.structure;
   // Automated routing: an unassigned workout is stamped + collected into Bonus.
   if(window.MC_BONUS) MC_BONUS.route(wk);
   saved.unshift(wk);

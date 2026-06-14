@@ -222,6 +222,17 @@
     document.head.appendChild(s);
   }
 
+  // "+" Master Content & Template Creator (PM Phase 3b). Lazy-loaded like the
+  // layout editor; owner-gated behind this PM bar.
+  function openCreator() {
+    if (window.MC_PM_CREATOR) { MC_PM_CREATOR.open(); return; }
+    var s = document.createElement('script');
+    s.src = 'mc-pm-creator.js';
+    s.onload = function () { if (window.MC_PM_CREATOR) MC_PM_CREATOR.open(); };
+    s.onerror = function () { msg('Unavailable', 'Could not load the creator on this page.'); };
+    document.head.appendChild(s);
+  }
+
   // ---- PM bar (visible only while unlocked) --------------------------------
   function localEditCount() {
     if (!window.MC_PO) return 0;
@@ -247,6 +258,7 @@
         '<button class="mc-pm-publish" data-act="publish">Publish</button>' +
         '<button data-act="names">Names</button>' +
         '<button data-act="layout">Edit Layout</button>' +
+        '<button data-act="create">＋ Create</button>' +
         '<button data-act="find">Find</button>' +
         '<button data-act="preview">Preview</button>' +
         '<button data-act="export">Export</button>' +
@@ -262,6 +274,7 @@
         if (act === 'publish') doPublish();
         else if (act === 'names') openRenameCenter();
         else if (act === 'layout') openLayoutEditor();
+        else if (act === 'create') openCreator();
         else if (act === 'find') findExercise();
         else if (act === 'preview') togglePreview();
         else if (act === 'export') doExport();
