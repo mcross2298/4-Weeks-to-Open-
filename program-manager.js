@@ -20,10 +20,10 @@
        exercise-catalog.js) or edit sets / rest / note / tempo, or reset
        the card back to the original program.
      • a compact top control pill always offers Publish (one-tap upsert to
-       Supabase — live for all users) plus a "PM Mode" button that opens a tools
+       Supabase — live for all users) and nothing else.
+     • all other tools open from the dashboard "PM Mode" module, which opens a
        hub (Edit Layout, Rename Center, Create, Find, Preview, History, Drafts,
-       Export, Import, Guide, Discard, Lock). The hub is also reachable from a
-       "PM Mode" module on the dashboard.
+       Export, Import, Guide, Discard, Lock).
 
    Edits write to the localStorage working copy and preview instantly via
    MC_PO.refresh(); Publish pushes them to Supabase so every user sees them
@@ -267,16 +267,16 @@
     else if (act === 'lock') setActive(false);
   }
 
-  // Top control pill: a compact, always-visible "🛠️ PM Mode · N edits · Publish"
-  // so the owner can publish from any page without reopening the hub. Tapping
-  // "PM Mode" opens the tools hub (page-context tools like Edit Layout work here).
+  // Top control pill: a compact, always-visible "🛠️ PM · N edits · Publish" so
+  // the owner can publish from any page. It is Publish-only — every other tool
+  // opens from the dashboard "PM Mode" module (which opens the hub).
   function renderBar() {
     if (!isActive()) { if (bar) { bar.remove(); bar = null; } closeHub(); return; }
     if (!bar) {
       bar = document.createElement('div');
       bar.className = 'mc-pm-top';
       bar.innerHTML =
-        '<button class="mc-pm-tools" data-act="tools">🛠️ PM Mode</button>' +
+        '<span class="mc-pm-tag">🛠️ PM</span>' +
         '<span class="mc-pm-count"></span>' +
         '<button class="mc-pm-publish" data-act="publish">Publish</button>';
       document.body.appendChild(bar);
@@ -1335,13 +1335,12 @@
   // ---- styles ---------------------------------------------------------------
   function injectStyles() {
     var css =
-      // top control pill — Publish is always reachable; "PM Mode" opens the hub
+      // top control pill — Publish only; all tools open from the dashboard module
       '.mc-pm-top{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:10px;z-index:1350;' +
         'display:flex;align-items:center;gap:10px;padding:6px 6px 6px 13px;border-radius:999px;' +
         'background:rgba(8,20,35,0.96);border:1px solid rgba(34,211,238,0.45);' +
         'box-shadow:0 6px 20px rgba(0,0,0,0.5);color:#94a3b8;}' +
-      '.mc-pm-top .mc-pm-tools{background:none;border:none;color:#22d3ee;font-weight:900;font-size:12px;' +
-        'cursor:pointer;font-family:inherit;padding:0;white-space:nowrap;}' +
+      '.mc-pm-top .mc-pm-tag{color:#22d3ee;font-weight:900;font-size:12px;white-space:nowrap;}' +
       '.mc-pm-top .mc-pm-count{font-weight:700;color:#94a3b8;font-size:11px;white-space:nowrap;}' +
       '.mc-pm-top .mc-pm-publish{background:#22d3ee;border:none;color:#03222b;font-size:11px;font-weight:900;' +
         'border-radius:999px;padding:7px 15px;cursor:pointer;font-family:inherit;}' +
