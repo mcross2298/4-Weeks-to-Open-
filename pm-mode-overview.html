@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Executive Summary — Program Manager Mode</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="MC Training"/>
+<meta name="theme-color" content="#0a0a0a"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0a0a0a;--surface:#111;--surface2:#161616;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.1);
+  --gold:#22d3ee;--gold-dim:rgba(34,211,238,0.15);--gold-glow:rgba(34,211,238,0.25);
+  --text:#fff;--muted:#9ca3af;--muted2:#64748b;
+}
+body{background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;padding-bottom:40px;}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px;}
+
+/* ── TOP BAR ── */
+.topbar{
+  display:flex;align-items:center;gap:12px;padding:18px 16px 12px;
+  position:sticky;top:0;z-index:20;
+  background:linear-gradient(to bottom,var(--bg) 78%,transparent);
+}
+.back{
+  display:flex;align-items:center;justify-content:center;
+  width:36px;height:36px;border-radius:10px;flex-shrink:0;
+  background:var(--surface);border:1px solid var(--border2);
+  color:var(--gold);font-size:16px;text-decoration:none;
+}
+.topbar-info{flex:1;min-width:0;}
+.topbar-title{font-size:17px;font-weight:900;letter-spacing:-0.02em;}
+.topbar-sub{font-size:12px;color:var(--muted2);margin-top:1px;}
+
+/* ── HERO ── */
+.hero{
+  position:relative;border-radius:18px;overflow:hidden;margin-bottom:14px;
+  background:linear-gradient(135deg,#04141f,#020b12);
+  border:1px solid rgba(34,211,238,0.28);
+  box-shadow:0 8px 30px rgba(0,0,0,0.45);
+  padding:24px 20px 20px;
+}
+.hero-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 25% 25%,rgba(34,211,238,0.14) 0%,transparent 62%);}
+.eyebrow{font-size:11px;font-weight:900;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.hero h1{font-size:26px;font-weight:900;letter-spacing:-0.02em;line-height:1.15;margin-bottom:10px;position:relative;}
+.hero p{font-size:14px;line-height:1.6;color:#cbd5e1;position:relative;}
+.stat-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;position:relative;}
+.stat-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;
+  color:var(--gold);background:rgba(34,211,238,0.1);
+  border:1px solid rgba(34,211,238,0.3);border-radius:20px;padding:5px 11px;
+}
+
+/* ── JUMP CHIPS ── */
+.jump-row{display:flex;gap:8px;overflow-x:auto;padding:2px 0 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.jump-row::-webkit-scrollbar{display:none;}
+.jump{
+  flex-shrink:0;font-size:12px;font-weight:800;color:#cbd5e1;text-decoration:none;
+  background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:7px 13px;
+}
+.jump:active{border-color:var(--gold);color:var(--gold);}
+
+/* ── SECTIONS ── */
+.sec{margin-bottom:26px;scroll-margin-top:74px;}
+.sec-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.sec-num{
+  flex-shrink:0;width:26px;height:26px;border-radius:8px;
+  background:var(--gold-dim);border:1px solid rgba(34,211,238,0.3);
+  color:var(--gold);font-size:13px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;
+}
+.sec-title{font-size:19px;font-weight:900;letter-spacing:-0.02em;}
+.sec-lede{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:14px;}
+.sec p.body{font-size:13.5px;line-height:1.6;color:#cbd5e1;margin-bottom:12px;}
+.sec b{color:#fff;font-weight:800;}
+.sec .gold{color:var(--gold);font-weight:800;}
+
+/* ── FEATURE CARDS ── */
+.cards{display:flex;flex-direction:column;gap:9px;}
+.card{
+  position:relative;background:var(--surface);border:1px solid var(--border);
+  border-radius:13px;padding:13px 15px 13px 18px;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:linear-gradient(to bottom,var(--rail,var(--gold)),transparent 130%);
+  box-shadow:0 0 12px var(--rail,var(--gold));
+}
+.card-top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:4px;}
+.card-name{font-size:14.5px;font-weight:900;letter-spacing:-0.01em;}
+.card-tag{
+  font-size:10px;font-weight:800;letter-spacing:0.09em;text-transform:uppercase;
+  color:var(--rail,var(--gold));background:rgba(255,255,255,0.04);
+  border:1px solid var(--border2);border-radius:14px;padding:2px 8px;
+}
+.card-tx{font-size:12.5px;line-height:1.55;color:#9ca3af;}
+.card-tx b{color:#e2e8f0;font-weight:800;}
+
+/* ── CHECK LIST ── */
+.ticks{list-style:none;display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.ticks li{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.55;color:#cbd5e1;}
+.ticks .chk{color:var(--gold);font-weight:900;flex-shrink:0;}
+.ticks b{color:#fff;font-weight:800;}
+
+/* ── COACH NOTE ── */
+.coach{
+  background:var(--surface);border:1px solid var(--border2);border-radius:14px;
+  padding:14px 16px;margin-top:14px;position:relative;
+}
+.coach::before{content:'🛠️ PM NOTE';position:absolute;top:-9px;left:14px;font-size:10px;font-weight:900;letter-spacing:0.12em;color:var(--gold);background:var(--bg);padding:0 7px;}
+.coach p{font-size:13.5px;line-height:1.6;color:#e2e8f0;margin-top:4px;}
+
+/* ── DIVIDER LABEL ── */
+.tier{font-size:11px;font-weight:900;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted2);margin:16px 0 10px;display:flex;align-items:center;gap:8px;}
+.tier.flag{color:var(--gold);}
+.tier::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.1),transparent);}
+
+/* ── PALETTE SWATCHES ── */
+.swatches{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.swatch{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--surface);border:1px solid var(--border2);border-radius:20px;
+  padding:5px 12px 5px 7px;font-size:11.5px;font-weight:800;color:#cbd5e1;
+}
+.swatch .sw{width:14px;height:14px;border-radius:50%;box-shadow:0 0 8px currentColor;}
+
+/* ── FOOT CTAs ── */
+.foot{margin-top:30px;}
+.cta{
+  display:flex;align-items:center;gap:10px;text-decoration:none;
+  background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.3);
+  border-radius:14px;padding:13px 15px;margin-bottom:10px;
+}
+.cta:active{background:rgba(34,211,238,0.14);}
+.cta-ico{font-size:19px;}
+.cta-body{flex:1;min-width:0;}
+.cta-lbl{font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);}
+.cta-nm{font-size:13.5px;font-weight:800;color:#fff;margin-top:1px;}
+.cta-arrow{color:var(--gold);font-size:16px;flex-shrink:0;}
+.cta.solid{background:var(--gold);border-color:var(--gold);justify-content:center;}
+.cta.solid .cta-nm{color:#000;font-size:15px;font-weight:900;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="dashboard.html" class="back" aria-label="Back to Dashboard">←</a>
+  <div class="topbar-info">
+    <div class="topbar-title">Executive Summary</div>
+    <div class="topbar-sub">Program Manager Mode — the owner's control layer</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ── HERO ── -->
+  <div class="hero">
+    <div class="hero-glow"></div>
+    <div class="eyebrow">Program Manager Mode · The Big Picture</div>
+    <h1>Run your app like a product — from your phone</h1>
+    <p>Program Manager Mode is the owner-only control layer that sits on top of the live app. From a single toolbar you can restructure how programs look, re-skin the whole app, spin up new workouts and programs, group sessions into folders, and push it all to every user with one tap. Everything is <b>paint-on-top</b>: your originals are never rewritten, and nothing reaches users until you publish. This page is the full end-to-end — read it once and you'll know exactly what PM Mode can do.</p>
+    <div class="stat-row">
+      <span class="stat-chip">🔒 Owner-only</span>
+      <span class="stat-chip">🧩 4 views, layout swaps</span>
+      <span class="stat-chip">🎨 Live re-skin</span>
+      <span class="stat-chip">☁️ One-tap publish</span>
+      <span class="stat-chip">🎁 Auto Bonus routing</span>
+    </div>
+  </div>
+
+  <!-- ── JUMP NAV ── -->
+  <div class="jump-row">
+    <a class="jump" href="#bar">🛠️ The PM Bar</a>
+    <a class="jump" href="#bonus">🎁 Bonus Workouts</a>
+    <a class="jump" href="#layouts">🧩 Layouts</a>
+    <a class="jump" href="#theme">🎨 Theme Engine</a>
+    <a class="jump" href="#edit">✏️ Edit Layout</a>
+    <a class="jump" href="#create">＋ Creator</a>
+    <a class="jump" href="#collections">🗂️ Collections</a>
+    <a class="jump" href="#publish">☁️ Publish &amp; Safety</a>
+  </div>
+
+  <!-- ── 1 · THE PM BAR ── -->
+  <div class="sec" id="bar">
+    <div class="sec-head"><div class="sec-num">1</div><div class="sec-title">The PM bar — your control room</div></div>
+    <p class="sec-lede">Invisible to everyone but you. Unlock it once and a floating toolbar follows you across the app, putting every owner action one tap away.</p>
+    <ul class="ticks">
+      <li><span class="chk">✓</span><span><b>Owner unlock</b> — sign in with your owner account, then <b>Face ID / Touch ID</b> gates entry on your device. Normal users never see a trace of any of this.</span></li>
+      <li><span class="chk">✓</span><span><b>One toolbar, every tool</b> — <span class="gold">Publish · Names · Edit Layout · ＋ Create · Find · Preview · Export · Import · History · Drafts · Discard · Lock</span>. A live counter shows how many <b>unpublished edits</b> are waiting.</span></li>
+      <li><span class="chk">✓</span><span><b>Preview as user</b> — flip to exactly what your users see (published only), with your in-progress edits hidden. Lock when you're done and the app is a normal app again.</span></li>
+    </ul>
+    <div class="coach"><p>Think of it as a hidden cockpit. The app stays a clean training app for everyone else; you get a control panel layered on top of the very same screens.</p></div>
+  </div>
+
+  <!-- ── 2 · BONUS WORKOUTS ── -->
+  <div class="sec" id="bonus">
+    <div class="sec-head"><div class="sec-num">2</div><div class="sec-title">Bonus Workouts — zero-effort routing</div></div>
+    <p class="sec-lede">Build a one-off workout and you don't have to file it anywhere. The app files it for you.</p>
+    <ul class="ticks">
+      <li><span class="chk">✓</span><span><b>Build it, skip the paperwork</b> — in the Workout Builder, the <b>“Assign to program”</b> control is optional. Leave it on <b>Bonus</b> and you're done.</span></li>
+      <li><span class="chk">✓</span><span><b>It auto-collects</b> — any unassigned workout is routed into a permanent <b>Bonus Workouts</b> card on the dashboard, <b>newest first</b>. No manual linking, ever.</span></li>
+      <li><span class="chk">✓</span><span><b>Reassign anytime</b> — point a Bonus workout at a real program later and it quietly leaves the Bonus shelf. Change your mind freely.</span></li>
+    </ul>
+  </div>
+
+  <!-- ── 3 · LAYOUTS ── -->
+  <div class="sec" id="layouts">
+    <div class="sec-head"><div class="sec-num">3</div><div class="sec-title">Layout templates — swap the structure</div></div>
+    <p class="sec-lede">Four core views, each with selectable structural styles. A swap re-flows the existing content — it never rewrites your programs or workouts.</p>
+    <div class="cards">
+      <div class="card" style="--rail:#22d3ee;">
+        <div class="card-top"><span class="card-name">Program Cards</span><span class="card-tag">4 styles</span></div>
+        <div class="card-tx"><b>Stack · Grid · Featured · Carousel.</b> Reshape the dashboard's program grid from a clean vertical stack to a dense matrix, a hero-plus-grid, or a horizontal swipe.</div>
+      </div>
+      <div class="card" style="--rail:#22d3ee;">
+        <div class="card-top"><span class="card-name">Landing Pages</span><span class="card-tag">3 styles</span></div>
+        <div class="card-tx"><b>Hero · Split · Timeline.</b> Present a program as a bold hero stack, a sticky-summary split view, or a vertical week-by-week timeline tracker.</div>
+      </div>
+      <div class="card" style="--rail:#22d3ee;">
+        <div class="card-top"><span class="card-name">Split Cards</span><span class="card-tag">3 styles</span></div>
+        <div class="card-tx"><b>Accordion · Tabbed · Week-Calendar.</b> Collapsible day rows, top week tabs, or a 7-day calendar grid. (Accordion is the default for <b>Strength &amp; Supersets</b> only — every other program defaults to tabbed.)</div>
+      </div>
+      <div class="card" style="--rail:#22d3ee;">
+        <div class="card-top"><span class="card-name">Workout Cards</span><span class="card-tag">3 styles</span></div>
+        <div class="card-tx"><b>List · Swipe · Superset-Grouped.</b> A chronological list, one card-block at a time, or paired supersets bracketed as a single emphasized block.</div>
+      </div>
+    </div>
+    <div class="coach"><p>Every style is additive and behind a toggle — your users see the shipped default until you publish a different one. Swapping never destroys content; it only changes how it's arranged.</p></div>
+  </div>
+
+  <!-- ── 4 · THEME ENGINE ── -->
+  <div class="sec" id="theme">
+    <div class="sec-head"><div class="sec-num">4</div><div class="sec-title">The theme engine — re-skin the whole app</div></div>
+    <p class="sec-lede">One ThemeConfig drives the app's chrome. Pick a vibe in a tap, or fine-tune each control.</p>
+    <ul class="ticks">
+      <li><span class="chk">✓</span><span><b>Preset palettes</b> — one tap sets background, surface, accent and type together: <b>Midnight Gold, Crimson Steel, Violet Haze, Deep Teal, Ember</b>.</span></li>
+      <li><span class="chk">✓</span><span><b>Accent color</b> — override the highlight used on active states, buttons, progress and PRs — or leave it <b>Auto</b> to follow the pinned program's color.</span></li>
+      <li><span class="chk">✓</span><span><b>Typography</b> — switch between <b>Clean Sans</b> and <b>High-Impact Athletic Bold</b>.</span></li>
+      <li><span class="chk">✓</span><span><b>Density &amp; Motion</b> — tighten or relax spacing (<b>Compact · Default · Spacious</b>) and dial the animation level (<b>Full · Subtle · Off</b>, always honoring reduce-motion).</span></li>
+    </ul>
+    <div class="swatches">
+      <span class="swatch"><span class="sw" style="background:#d4af37;color:#d4af37;"></span>Midnight Gold</span>
+      <span class="swatch"><span class="sw" style="background:#e11d48;color:#e11d48;"></span>Crimson Steel</span>
+      <span class="swatch"><span class="sw" style="background:#7F77DD;color:#7F77DD;"></span>Violet Haze</span>
+      <span class="swatch"><span class="sw" style="background:#14b8a6;color:#14b8a6;"></span>Deep Teal</span>
+      <span class="swatch"><span class="sw" style="background:#f97316;color:#f97316;"></span>Ember</span>
+    </div>
+  </div>
+
+  <!-- ── 5 · EDIT LAYOUT ── -->
+  <div class="sec" id="edit">
+    <div class="sec-head"><div class="sec-num">5</div><div class="sec-title">Edit Layout — change it live, in place</div></div>
+    <p class="sec-lede">Tap <b>Edit Layout</b> on any screen and that screen drops into a draft state with a config sidebar.</p>
+    <ul class="ticks">
+      <li><span class="chk">✓</span><span><b>Context-aware</b> — the sidebar offers the layout options for the view you're on (program cards on the dashboard, workout layout on a session, landing &amp; day-list on a custom program) plus the global theme controls.</span></li>
+      <li><span class="chk">✓</span><span><b>Instant preview</b> — every change repaints live, on the real screen, against real content. No mockups.</span></li>
+      <li><span class="chk">✓</span><span><b>Save &amp; Publish or Discard</b> — commit it live for everyone, or throw the draft away and snap back to the published look. Nothing leaks until you say so.</span></li>
+    </ul>
+  </div>
+
+  <!-- ── 6 · CREATOR ── -->
+  <div class="sec" id="create">
+    <div class="sec-head"><div class="sec-num">6</div><div class="sec-title">The “＋” Creator — make new things</div></div>
+    <p class="sec-lede">A guided wizard for spinning up content, with a fixed, foolproof order.</p>
+    <ul class="ticks">
+      <li><span class="chk">✓</span><span><b>Pick a type</b> — <span class="gold">New Program · New Workout · New Card Template</span>.</span></li>
+      <li><span class="chk">✓</span><span><b>Structure → Skin → Destination</b> — choose the baseline layout, apply a theme skin (previews live), then hand off to the right builder for content. Your structure choice rides along onto the new item.</span></li>
+      <li><span class="chk">✓</span><span><b>Smart destination</b> — a new workout left unassigned drops straight into <b>Bonus Workouts</b>; a new program gets its own landing layout from your structure pick.</span></li>
+    </ul>
+  </div>
+
+  <!-- ── 7 · COLLECTIONS ── -->
+  <div class="sec" id="collections">
+    <div class="sec-head"><div class="sec-num">7</div><div class="sec-title">Collections — folders for your workouts</div></div>
+    <p class="sec-lede">Group standalone workouts however you think about them — by goal, body part, intensity, anything.</p>
+    <ul class="ticks">
+      <li><span class="chk">✓</span><span><b>Make a folder</b> — name it, pick an icon and color on the Collections page. It's yours, synced across your devices.</span></li>
+      <li><span class="chk">✓</span><span><b>Tag on save</b> — the Workout Builder has an <b>“Add to collection”</b> picker; a workout can be Bonus or program-assigned <b>and</b> live in a collection at the same time.</span></li>
+      <li><span class="chk">✓</span><span><b>Surfaces automatically</b> — every non-empty collection becomes its own dashboard card that opens a clean, newest-first list.</span></li>
+    </ul>
+  </div>
+
+  <!-- ── 8 · PUBLISH & SAFETY ── -->
+  <div class="sec" id="publish">
+    <div class="sec-head"><div class="sec-num">8</div><div class="sec-title">Publish &amp; safety — one tap, fully reversible</div></div>
+    <p class="sec-lede">Every change flows through one working copy and one Publish, with guardrails the whole way.</p>
+    <ul class="ticks">
+      <li><span class="chk">✓</span><span><b>Paint-on-top</b> — names, layouts and themes are overlays keyed to your originals. The authored content and your members' logs are never rewritten.</span></li>
+      <li><span class="chk">✓</span><span><b>One working copy, one Publish</b> — edits stack locally as a draft. <b>Publish</b> pushes them live for everyone in about a minute; an <b>Export</b> fallback writes the same file when you'd rather commit it offline.</span></li>
+      <li><span class="chk">✓</span><span><b>Review before you ship</b> — Publish shows a diff sheet of exactly what's changing. <b>Discard</b> wipes the draft; <b>History</b> lets you look back and restore.</span></li>
+      <li><span class="chk">✓</span><span><b>Test on a few first</b> — push naming changes <b>To testers</b> (a canary audience), then <b>Promote</b> to everyone when you're happy.</span></li>
+      <li><span class="chk">✓</span><span><b>Owner-locked end to end</b> — writes are owner-only and enforced server-side, so only you can change what users see.</span></li>
+    </ul>
+    <div class="coach"><p>That's the whole machine — a hidden toolbar that lets you restructure, re-skin, create and group, all previewed live and shipped (or thrown away) with one tap. Nothing breaks, nothing leaks, and every change can be walked back.</p></div>
+  </div>
+
+  <!-- ── FOOT ── -->
+  <div class="foot">
+    <a class="cta solid" href="dashboard.html"><div class="cta-nm">⚡ Open the Dashboard</div></a>
+  </div>
+
+</div>
+</body>
+</html>
