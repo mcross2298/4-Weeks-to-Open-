@@ -26,6 +26,42 @@
   if (window.__mcProgOverrides) return;   // guard against double-include
   window.__mcProgOverrides = true;
 
+  // ---- shared scan scheduler (C2) -----------------------------------------
+  // One MutationObserver for the whole engine. Modules that paint on DOM
+  // changes (this file, mc-card-actions.js) subscribe a scan callback instead
+  // of each running their own observer + debounce. withoutObserver() is shared
+  // so any module's DOM writes are muted for ALL subscribers (writes are
+  // idempotent across modules, so this only removes redundant re-scans).
+  // Defined here because program-overrides.js loads before mc-card-actions.js
+  // on every page; the latter falls back to its own observer if MC_SCAN is absent.
+  if (!window.MC_SCAN) {
+    window.MC_SCAN = (function () {
+      var subs = [], mo = null, depth = 0, timer = null;
+      function run() { for (var i = 0; i < subs.length; i++) { try { subs[i](); } catch (e) {} } }
+      function schedule() { clearTimeout(timer); timer = setTimeout(run, 80); }
+      function withoutObserver(fn) {
+        if (mo && depth === 0) mo.disconnect();
+        depth++;
+        try { fn(); }
+        finally {
+          depth--;
+          if (mo && depth === 0) { mo.takeRecords(); mo.observe(document.body, { childList: true, subtree: true }); }
+        }
+      }
+      function start() {
+        if (mo || !document.body) return;
+        mo = new MutationObserver(schedule);
+        mo.observe(document.body, { childList: true, subtree: true });
+      }
+      return {
+        subscribe: function (fn) { if (subs.indexOf(fn) === -1) subs.push(fn); },
+        schedule: schedule,
+        withoutObserver: withoutObserver,
+        start: start
+      };
+    })();
+  }
+
   var CARD_SEL = '.ex-card, .ex-item, .lift-card, .ss-ex';
   var NAME_SEL = '.ex-name, .lift-name, .var-name, .ss-name';
   var BODY_SEL = '.ex-body, .ss-content';
@@ -38,7 +74,6 @@
 
   var published = emptyDoc();
   var previewPublishedOnly = false;   // PM "Preview as user": paint published layer only
-  var mo = null, obsDepth = 0, scanTimer = null;
   // original card values captured before the first override application,
   // so clearing an override reverts live without a reload
   var snapshots = new WeakMap();
@@ -147,15 +182,7 @@
     return (o && !o.reset) ? o : null;
   }
 
-  function withoutObserver(fn) {
-    if (mo && obsDepth === 0) mo.disconnect();
-    obsDepth++;
-    try { fn(); }
-    finally {
-      obsDepth--;
-      if (mo && obsDepth === 0) { mo.takeRecords(); mo.observe(document.body, { childList: true, subtree: true }); }
-    }
-  }
+  function withoutObserver(fn) { MC_SCAN.withoutObserver(fn); }
 
   function setText(el, txt) { if (el && el.textContent !== txt) el.textContent = txt; }
 
@@ -256,7 +283,7 @@
       Array.prototype.forEach.call(cards, applyToCard);
     });
   }
-  function scheduleScan() { clearTimeout(scanTimer); scanTimer = setTimeout(scan, 80); }
+  function scheduleScan() { MC_SCAN.schedule(); }
 
   function injectStyles() {
     var css =
@@ -412,8 +439,8 @@
 
   function init() {
     injectStyles();
-    mo = new MutationObserver(scheduleScan);
-    mo.observe(document.body, { childList: true, subtree: true });
+    MC_SCAN.subscribe(scan);
+    MC_SCAN.start();
     scan();
     setTimeout(scan, 300);
     setTimeout(scan, 800);

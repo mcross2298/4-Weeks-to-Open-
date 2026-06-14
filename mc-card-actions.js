@@ -54,6 +54,9 @@
   // Re-entrant: only the OUTERMOST call disconnects/reconnects, so nested calls
   // (scan → applyOrder/renderNote) never re-observe mid-flight and loop.
   function withoutObserver(fn) {
+    // C2: use the shared engine scheduler when present (program-overrides.js
+    // defines it and loads first); otherwise fall back to our own observer.
+    if (window.MC_SCAN) { window.MC_SCAN.withoutObserver(fn); return; }
     if (mo && obsDepth === 0) mo.disconnect();
     obsDepth++;
     try { fn(); }
@@ -417,14 +420,21 @@
   }
 
   function scheduleScan() {
+    if (window.MC_SCAN) { window.MC_SCAN.schedule(); return; }
     clearTimeout(hydrateTimer);
     hydrateTimer = setTimeout(scan, 60);
   }
 
   function init() {
     buildChrome();
-    mo = new MutationObserver(function () { scheduleScan(); });
-    mo.observe(document.body, { childList: true, subtree: true });
+    // C2: subscribe to the shared engine observer when available; else run our own
+    if (window.MC_SCAN) {
+      window.MC_SCAN.subscribe(scan);
+      window.MC_SCAN.start();
+    } else {
+      mo = new MutationObserver(function () { scheduleScan(); });
+      mo.observe(document.body, { childList: true, subtree: true });
+    }
     scan();
     // a couple of delayed passes catch render()/setTimeout-based pages
     setTimeout(scan, 300);
