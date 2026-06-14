@@ -267,16 +267,46 @@
     if (!window.MC_PO) { msg('Not loaded', 'Override layer not loaded on this page.'); return; }
     if (!window.MC_SB || !MC_SB.configured) { msg('No backend', 'Supabase is not configured — use Export instead.'); return; }
     var summary = summarizePublish();
-    if (!summary.count) { msg('Nothing to publish', 'No local edits to publish.'); return; }
-    // pre-publish review: show exactly what goes live, then confirm
-    showModal({
-      title: 'Publish ' + summary.count + ' change' + (summary.count === 1 ? '' : 's') + '?',
-      body: 'Goes live for all users within ~1 minute.' + summary.html,
-      buttons: [
-        { label: 'Cancel', cb: function () {} },
-        { label: 'Publish', primary: true, cb: function () { executePublish(); } }
-      ]
+    var canarySupported = (typeof MC_SB.listCanary === 'function');
+    // find out if a canary set is live (so we can offer Promote), then review
+    var probe = canarySupported ? MC_SB.listCanary().catch(function () { return []; }) : Promise.resolve([]);
+    probe.then(function (canaryRows) {
+      var nCanary = (canaryRows || []).length;
+      if (!summary.count && !nCanary) { msg('Nothing to publish', 'No local edits to publish.'); return; }
+      var buttons = [{ label: 'Cancel', cb: function () {} }];
+      if (summary.count && canarySupported) buttons.push({ label: 'To testers', cb: function () { executePublish('canary'); } });
+      if (summary.count) buttons.push({ label: 'Publish', primary: true, cb: function () { executePublish('live'); } });
+      if (nCanary) buttons.push({ label: 'Promote (' + nCanary + ')', primary: !summary.count, cb: function () { promoteCanary(); } });
+      var body = (summary.count ? 'Publish goes live for everyone (~1 min). “To testers” shows it to canary testers only.' : '')
+               + (nCanary ? '<div class="mc-pp-grp">Live to testers (' + nCanary + ') — Promote to send to everyone.</div>' : '')
+               + (summary.html || '');
+      showModal({
+        title: summary.count ? ('Publish ' + summary.count + ' change' + (summary.count === 1 ? '' : 's') + '?') : 'Promote testers → live?',
+        body: body,
+        buttons: buttons
+      });
     });
+  }
+
+  // promote the canary set to live: copy each canary row into the live naming
+  // table, then clear canary. Confirmed first.
+  function promoteCanary() {
+    if (typeof MC_SB.listCanary !== 'function') { msg('Unavailable', 'This build has no canary support.'); return; }
+    confirmModal('Promote to everyone?', 'Copy all canary (testers-only) rename changes to live for all users, then clear the canary set?', function () {
+      MC_SB.listCanary().then(function (rows) {
+        if (!rows || !rows.length) { msg('Nothing to promote', 'There are no canary changes.'); return; }
+        var ops = rows.map(function (r) {
+          return MC_SB.upsertNaming(r.scope, r.scope_id, r.patch)
+            .then(function () { return MC_SB.removeCanaryNaming(r.scope, r.scope_id); });
+        });
+        Promise.all(ops).then(function () {
+          MC_PO.refresh();
+          msg('Promoted', rows.length + ' change' + (rows.length === 1 ? '' : 's') + ' now live for everyone.');
+        }).catch(function (e) {
+          msg('Promote failed', (e && e.message) ? e.message : 'unknown error');
+        });
+      }).catch(function (e) { msg('Promote failed', (e && e.message) ? e.message : 'unknown error'); });
+    }, 'Promote');
   }
 
   // build a human-readable diff of the working copy for the review sheet
@@ -329,35 +359,44 @@
     return { count: n, html: html };
   }
 
-  // push the working copy to Supabase (upsert edits, delete resets), then clear
-  // local so it folds into the live published set. Owner-only via RLS.
-  function executePublish() {
+  // push the working copy to Supabase. target 'live' (default) writes the live
+  // tables (everyone) and logs to history; target 'canary' writes the v2 naming
+  // sections to the testers-only canary table (no pages/catalog, no history).
+  // On success, clears the published sections from the working copy.
+  function executePublish(target) {
+    var canaryMode = (target === 'canary');
+    if (canaryMode && typeof MC_SB.upsertCanaryNaming !== 'function') { msg('Unavailable', 'This build has no canary support.'); return; }
     var local = MC_PO.local() || {};
     var pub = (MC_PO.published && MC_PO.published()) || {};
     var pages = local.pages || {};
-    var ops = [], entries = [], pid, nm, k, p;
-    // capture a changelog/restore entry alongside each op (prev = the value that
-    // was published before this op overwrites it, for H1 restore)
+    var ops = [], entries = [], pid, nm, p;
+    var upN = canaryMode ? MC_SB.upsertCanaryNaming : MC_SB.upsertNaming;
+    var rmN = canaryMode ? MC_SB.removeCanaryNaming : MC_SB.removeNaming;
+    // capture a changelog/restore entry alongside each live op (prev = value
+    // published before this op overwrites it, for H1 restore). Canary isn't logged.
     function rec(section, scopeId, patch, prev) {
+      if (canaryMode) return;
       entries.push({ section: section, scope_id: scopeId,
         action: (patch && patch.reset) ? 'remove' : 'upsert',
         patch: (patch && patch.reset) ? null : patch, prev: prev || null });
     }
-    // page-level overrides
-    for (pid in pages) for (nm in pages[pid]) {
-      p = pages[pid][nm];
-      ops.push((p && p.reset) ? MC_SB.remove(pid, nm) : MC_SB.upsert(pid, nm, p));
-      rec('pages', pid + '|' + nm, p, ((pub.pages || {})[pid] || {})[nm]);
+    // page-level overrides — live only (pages are not canaried in this version)
+    if (!canaryMode) {
+      for (pid in pages) for (nm in pages[pid]) {
+        p = pages[pid][nm];
+        ops.push((p && p.reset) ? MC_SB.remove(pid, nm) : MC_SB.upsert(pid, nm, p));
+        rec('pages', pid + '|' + nm, p, ((pub.pages || {})[pid] || {})[nm]);
+      }
     }
-    // v2 naming sections
-    if (typeof MC_SB.upsertNaming === 'function') {
+    // v2 naming sections (→ live or canary tables depending on target)
+    if (typeof upN === 'function') {
       // 1-level: exercises, programs
       ['exercises', 'programs'].forEach(function (sec) {
         var scope = sec.slice(0, -1);
         var section = local[sec] || {};
         for (var kk in section) {
           var pp = section[kk];
-          ops.push((pp && pp.reset) ? MC_SB.removeNaming(scope, kk) : MC_SB.upsertNaming(scope, kk, pp));
+          ops.push((pp && pp.reset) ? rmN(scope, kk) : upN(scope, kk, pp));
           rec(sec, kk, pp, (pub[sec] || {})[kk]);
         }
       });
@@ -368,7 +407,7 @@
         for (sname in splitsSec[spid]) {
           p = splitsSec[spid][sname];
           sid = spid + '|' + sname;
-          ops.push((p && p.reset) ? MC_SB.removeNaming('split', sid) : MC_SB.upsertNaming('split', sid, p));
+          ops.push((p && p.reset) ? rmN('split', sid) : upN('split', sid, p));
           rec('splits', sid, p, ((pub.splits || {})[spid] || {})[sname]);
         }
       }
@@ -379,26 +418,31 @@
         for (bid in badgesSec[bpid]) {
           p = badgesSec[bpid][bid];
           bsid = bpid + '|' + bid;
-          ops.push((p && p.reset) ? MC_SB.removeNaming('badge', bsid) : MC_SB.upsertNaming('badge', bsid, p));
+          ops.push((p && p.reset) ? rmN('badge', bsid) : upN('badge', bsid, p));
           rec('badges', bsid, p, ((pub.badges || {})[bpid] || {})[bid]);
         }
       }
     }
-    // exercise catalog pending additions
-    if (window.MC_EXCATALOG && MC_EXCATALOG.getPending().length) {
+    // exercise catalog pending additions — live only
+    if (!canaryMode && window.MC_EXCATALOG && MC_EXCATALOG.getPending().length) {
       ops.push(MC_EXCATALOG.publishPending());
     }
-    if (!ops.length) { msg('Nothing to publish', 'No local edits to publish.'); return; }
+    if (!ops.length) { msg('Nothing to publish', canaryMode ? 'No rename edits to send to testers (pages/catalog publish live only).' : 'No local edits to publish.'); return; }
     var btn = bar && bar.querySelector('.mc-pm-publish');
     if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
     Promise.all(ops).then(function () {
       // best-effort changelog/history write — never fail a publish on logging
-      if (typeof MC_SB.logPublish === 'function') { try { MC_SB.logPublish(entries).catch(function () {}); } catch (e) {} }
-      MC_PO.setLocal({ pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} });
+      if (!canaryMode && typeof MC_SB.logPublish === 'function') { try { MC_SB.logPublish(entries).catch(function () {}); } catch (e) {} }
+      var cur = MC_PO.local() || {};
+      if (canaryMode) { cur.exercises = {}; cur.programs = {}; cur.splits = {}; cur.badges = {}; }
+      else cur = { pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} };
+      MC_PO.setLocal(cur);
       if (btn) btn.textContent = 'Publish';
       renderBar();
       MC_PO.refresh();
-      msg('Published', 'Live for all users within ~1 minute.');
+      msg(canaryMode ? 'Sent to testers' : 'Published',
+          canaryMode ? 'Rename changes are now live for testers only. Use “Promote testers → live” when ready for everyone.'
+                     : 'Live for all users within ~1 minute.');
     }).catch(function (e) {
       if (btn) { btn.disabled = false; btn.textContent = 'Publish'; }
       var detail = (e && e.message) ? e.message : 'unknown error';
