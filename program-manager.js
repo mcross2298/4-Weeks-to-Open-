@@ -1484,9 +1484,28 @@
     var card = document.getElementById('pmModeCard');
     if (card) card.style.display = 'block';
   }
+  function buildPmCard() {
+    var a = document.createElement('a');
+    a.id = 'pmModeCard'; a.href = '#'; a.className = 'cat-card';
+    a.style.cssText = 'border-style:dashed;border-color:rgba(34,211,238,0.5);text-align:center;padding:22px 16px;display:none;';
+    a.innerHTML = '<span class="cat-icon">🛠️</span>' +
+      '<div class="cat-name">PM Mode</div>' +
+      '<div class="cat-meta">Owner control room — rename, restyle, create, and publish your app.</div>' +
+      '<div class="cat-count" style="color:#22d3ee;">Open Tools →</div>';
+    return a;
+  }
   function revealDashboardEntry() {
     var card = document.getElementById('pmModeCard');
-    if (!card) return;
+    if (!card) {
+      // The static element is missing (e.g. a cached older dashboard.html that
+      // predates the card). Inject it next to the dashboard's utility cards so
+      // the module appears wherever this (fresh) script runs. Only on the
+      // dashboard — those .cat-card anchors don't exist elsewhere.
+      var anchor = document.querySelector('a.cat-card[href="collections.html"], a.cat-card[href="build-program.html"]');
+      if (!anchor || !anchor.parentNode) return;
+      card = buildPmCard();
+      anchor.parentNode.appendChild(card);
+    }
     card.addEventListener('click', function (e) { e.preventDefault(); enterPM(); });
     // reveal immediately if we already know this is the owner's device, or if
     // the URL is explicitly entering PM mode
