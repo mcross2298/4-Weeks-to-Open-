@@ -61,6 +61,12 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 .run-btn{flex:1;text-align:center;text-decoration:none;padding:10px;border-radius:10px;background:linear-gradient(90deg,#22d3ee,#34d399);color:#04121f;font-size:13px;font-weight:900;}
 .del-btn{padding:10px 14px;border-radius:10px;background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.35);color:#f87171;font-size:13px;font-weight:800;cursor:pointer;}
 .no-saved{font-size:12px;color:#475569;font-weight:600;padding:6px 0 14px;}
+select.name-input{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%2364748b' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;}
+select.name-input option{background:#0d1f3c;color:#e2e8f0;}
+.assign-hint{font-size:11px;color:#64748b;font-weight:600;line-height:1.5;margin-top:7px;}
+.assign-hint strong{color:#7dd3fc;}
+.saved-flag{font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:6px;background:rgba(56,189,248,0.16);color:#7dd3fc;border:1px solid rgba(56,189,248,0.3);}
+.saved-flag.prog{background:rgba(52,211,153,0.14);color:#34d399;border-color:rgba(52,211,153,0.3);}
 </style>
 <link rel="stylesheet" href="base.css?v=65"/>
 <link rel="stylesheet" href="mc-nav.css"/>
@@ -82,6 +88,10 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 
   <div class="sec-label">Create a New Workout</div>
   <input type="text" class="name-input" id="wkName" placeholder="Workout name (e.g. Sunday Push)" maxlength="48"/>
+
+  <div class="sec-label">Assign to program <span style="color:#475569;font-weight:700;">— optional</span></div>
+  <select class="name-input" id="wkProgram"></select>
+  <div class="assign-hint" id="assignHint">Leave as <strong>Bonus</strong> and this workout is auto-collected into your <strong>Bonus Workouts</strong> card — no manual linking.</div>
 
   <div class="search-wrap">
     <div class="search-rel">
@@ -108,6 +118,9 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 
 <script src="exercise-catalog.js"></script>
 <script src="mc-exercise-catalog.js"></script>
+<script src="mc-pm-data.js"></script>
+<script src="mc-program-store.js"></script>
+<script src="mc-bonus-routing.js"></script>
 <script>
 var CW_KEY = 'mc_custom_workouts_v1';
 var activeFilter = 'All';
@@ -116,6 +129,42 @@ var selected = [];   // [{name,muscle,sets,reps}]
 function getSaved(){ try{ return JSON.parse(localStorage.getItem(CW_KEY)||'[]'); }catch(e){ return []; } }
 function setSaved(a){ try{ localStorage.setItem(CW_KEY, JSON.stringify(a)); }catch(e){} }
 function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+/* program assignment — '' (None) routes the workout into Bonus Workouts.
+   Options come from the shared program data (MC_PM_DATA, leak-safe in the
+   public build) plus the owner's custom programs (MCPrograms). */
+function programOptions(){
+  var opts = [];
+  if(window.MC_PM_DATA) MC_PM_DATA.programs.forEach(function(p){ opts.push({id:p.id, name:p.name}); });
+  if(window.MCPrograms) MCPrograms.getAll().forEach(function(p){ opts.push({id:'cprog-'+p.id, name:p.name}); });
+  return opts;
+}
+function progName(id){
+  if(!id) return '';
+  var o = programOptions().filter(function(p){ return p.id===id; })[0];
+  return o ? o.name : id;
+}
+function buildProgramOptions(){
+  var sel = document.getElementById('wkProgram');
+  if(!sel) return;
+  var html = '<option value="">— None (Bonus) —</option>';
+  programOptions().forEach(function(p){
+    html += '<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>';
+  });
+  sel.innerHTML = html;
+  sel.onchange = updateAssignHint;
+  updateAssignHint();
+}
+function updateAssignHint(){
+  var sel = document.getElementById('wkProgram');
+  var hint = document.getElementById('assignHint');
+  if(!sel || !hint) return;
+  if(sel.value){
+    hint.innerHTML = 'Assigned to <strong>'+esc(progName(sel.value))+'</strong> — it will not appear in Bonus Workouts.';
+  } else {
+    hint.innerHTML = 'Leave as <strong>Bonus</strong> and this workout is auto-collected into your <strong>Bonus Workouts</strong> card — no manual linking.';
+  }
+}
 
 var CONDITIONING = ['Cardio','Core'];
 function visible(ex){ return CONDITIONING.indexOf(ex.muscle)===-1; }
@@ -219,18 +268,26 @@ function createWorkout(){
   if(!name){ alert('Give your workout a name first.'); document.getElementById('wkName').focus(); return; }
   if(!selected.length){ alert('Add at least one exercise.'); return; }
   var saved = getSaved();
+  var now = new Date().toISOString();
+  var program = (document.getElementById('wkProgram')||{}).value || '';
   var wk = {
     id: 'cw-' + Date.now().toString(36),
     name: name,
-    created: new Date().toISOString(),
+    created: now,
+    publishedAt: now,
+    program: program,                       // '' ⇒ routed to Bonus Workouts
     exercises: selected.map(function(s){
       return { name:s.name, muscle:s.muscle, sets:parseInt(s.sets,10)||3, reps:(''+s.reps).trim()||'10' };
     })
   };
+  // Automated routing: an unassigned workout is stamped + collected into Bonus.
+  if(window.MC_BONUS) MC_BONUS.route(wk);
   saved.unshift(wk);
   setSaved(saved);
+  try{ if(window.MC_SYNC && MC_SYNC.push) MC_SYNC.push(); }catch(e){}
   selected = [];
   document.getElementById('wkName').value = '';
+  var ps = document.getElementById('wkProgram'); if(ps){ ps.value=''; updateAssignHint(); }
   renderList(); renderTray(); renderSaved();
   window.scrollTo({ top:0, behavior:'smooth' });
 }
@@ -253,8 +310,11 @@ function renderSaved(){
   el.innerHTML = saved.map(function(w){
     var d = new Date(w.created);
     var when = d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    var flag = w.program
+      ? '<span class="saved-flag prog">'+esc(progName(w.program))+'</span>'
+      : '<span class="saved-flag">🎁 Bonus</span>';
     return '<div class="saved-card">'
-      + '<div class="saved-top"><div class="saved-name">'+esc(w.name)+'</div></div>'
+      + '<div class="saved-top"><div class="saved-name">'+esc(w.name)+'</div>'+flag+'</div>'
       + '<div class="saved-meta">'+w.exercises.length+' exercise'+(w.exercises.length!==1?'s':'')+' · created '+when+'</div>'
       + '<div class="saved-actions">'
       +   '<a class="run-btn" href="run-workout.html?id='+encodeURIComponent(w.id)+'">▶ Start Workout</a>'
@@ -265,6 +325,7 @@ function renderSaved(){
 }
 
 buildFilters();
+buildProgramOptions();
 renderList();
 renderSaved();
 </script>

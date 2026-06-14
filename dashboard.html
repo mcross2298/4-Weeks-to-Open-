@@ -612,6 +612,9 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <div class="cat-designer">✍️ Designed by Mike Cross</div>
     </a>
 
+    <!-- Bonus Workouts — auto-collected standalone workouts (rendered by mc-bonus-routing.js when ≥1 exists) -->
+    <div id="bonusCardSlot"></div>
+
     <!-- MARKET:STRIP influencer-programs START — licensed content, see content-manifest.json -->
     <div class="tier-label influencer">Influencer Programs</div>
 
@@ -734,6 +737,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 <script src="conditioning-data.js"></script>
 <script src="mc-cond.js"></script>
 <script src="mc-program-store.js"></script>
+<script src="mc-bonus-routing.js"></script>
 <script src="mc-program-pub.js"></script>
 <script>window.MC_SUBS_NO_BUTTON=true;</script>
 <script src="mc-subs.js"></script>
@@ -1065,6 +1069,7 @@ loadState();
 renderConditioning();
 renderCustomPrograms();
 renderPublishedPrograms();
+if(window.MC_BONUS) MC_BONUS.renderDashboardCard();
 // re-render when mc-program-pub.js pulls fresh published programs
 document.addEventListener('mc:published-programs',()=>{renderPublishedPrograms();renderCustomPrograms();loadState();});
 // honor ?tab= deep-link from the global bottom nav (mc-nav.js)
