@@ -108,23 +108,29 @@
     var body = document.createElement('div'); body.className = 'mcle-body';
 
     // 1) Structural layout for the view(s) on THIS page (context-aware).
+    // Auto-detected views (program cards, workout) + any the page declares via
+    // window.MC_VIEW_SCOPES (e.g. a custom program's landing + split).
     if (window.MC_LAYOUT) {
       var PAGE_ID = (location.pathname.split('/').pop() || 'index.html').split('?')[0];
       var views = [];
       if (document.getElementById('flagGrid')) {
-        views.push({ view: 'program-cards', scope: 'program-cards', label: 'Program Cards layout' });
+        views.push({ view: 'program-cards', id: '', scope: 'program-cards', label: 'Program Cards layout' });
       }
       if (document.querySelector('.ex-card, .ss-card, .a-card')) {
-        views.push({ view: 'workout', scope: 'workout:' + PAGE_ID, label: 'Workout layout' });
+        views.push({ view: 'workout', id: PAGE_ID, scope: 'workout:' + PAGE_ID, label: 'Workout layout' });
       }
+      (window.MC_VIEW_SCOPES || []).forEach(function (s) {
+        if (s && s.view && s.id) views.push({ view: s.view, id: s.id, scope: s.view + ':' + s.id, label: s.label || (cap(s.view) + ' layout') });
+      });
       views.forEach(function (vw) {
-        var cur = MC_LAYOUT.styleFor(vw.view, vw.view === 'program-cards' ? '' : PAGE_ID);
+        var cur = MC_LAYOUT.styleFor(vw.view, vw.id);
         var opts = (MC_LAYOUT.OPTIONS[vw.view] || []).map(function (v) {
           return { val: v, label: cap(v).replace('-', ' ') };
         });
         body.appendChild(group(vw.label, opts, cur, function (v) {
           if (window.MC_PO && MC_PO.setLayoutLocal) MC_PO.setLayoutLocal(vw.scope, v);
           if (window.MC_LAYOUT) MC_LAYOUT.repaint();
+          document.dispatchEvent(new CustomEvent('mc:layout-changed'));
           refreshBar();
         }));
       });

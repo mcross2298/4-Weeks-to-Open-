@@ -36,6 +36,16 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
 .dl-meta{font-size:11px;font-weight:700;color:#64748b;margin-top:2px;}
 .dl-done{font-size:11px;font-weight:900;color:#34d399;flex-shrink:0;}
 .dl-arrow{color:#64748b;font-size:15px;flex-shrink:0;}
+/* PM Phase 2b — custom-program layout variants (set by applyLayout) */
+#dayList.dl-calendar{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+@media(min-width:560px){#dayList.dl-calendar{grid-template-columns:repeat(3,1fr);}}
+#dayList.dl-calendar .day-link{flex-direction:column;align-items:flex-start;gap:8px;min-height:104px;margin-bottom:0;}
+#dayList.dl-calendar .dl-arrow{display:none;}
+#dayList.dl-timeline{position:relative;padding-left:6px;}
+#dayList.dl-timeline .day-link{position:relative;margin-left:20px;}
+#dayList.dl-timeline .day-link::before{content:'';position:absolute;left:-20px;top:0;bottom:-12px;width:2px;background:rgba(var(--accent-rgb),0.3);}
+#dayList.dl-timeline .day-link::after{content:'';position:absolute;left:-25px;top:16px;width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(var(--accent-rgb),0.18);}
+#dayList.dl-timeline .day-link:last-child::before{bottom:auto;height:16px;}
 .missing{padding:60px 20px;text-align:center;color:#94a3b8;font-size:14px;font-weight:700;}
 .missing a{color:var(--accent);}
 .new-banner{margin-bottom:14px;padding:11px 14px;border-radius:12px;background:rgba(52,211,153,0.1);
@@ -236,7 +246,29 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
         (done[String(i + 1)] ? '<span class="dl-done">✓ done</span>' : '') +
         '<span class="dl-arrow">→</span></a>';
     }).join('');
+    applyLayout();
   }
+
+  // PM Phase 2b — apply the owner-selected landing/split layout to the day
+  // list. timeline (landing) takes precedence over week-calendar (split);
+  // neither set = the default list. Resolves via MC_LAYOUT once it loads.
+  var SCOPE_ID = 'cprog-' + p.id;
+  window.MC_VIEW_SCOPES = [
+    { view: 'landing', id: SCOPE_ID, label: 'Program landing' },
+    { view: 'split',   id: SCOPE_ID, label: 'Day list (split)' }
+  ];
+  function applyLayout() {
+    var dl = $('dayList');
+    if (!dl) return;
+    dl.classList.remove('dl-timeline', 'dl-calendar');
+    if (!window.MC_LAYOUT) return;
+    var land = MC_LAYOUT.styleFor('landing', SCOPE_ID);
+    var spl  = MC_LAYOUT.styleFor('split', SCOPE_ID);
+    if (land === 'timeline') dl.classList.add('dl-timeline');
+    else if (spl === 'week-calendar') dl.classList.add('dl-calendar');
+  }
+  document.addEventListener('mc:layout-changed', applyLayout);
+  document.addEventListener('mc:names-changed', applyLayout);
 
   $('weekTabs').addEventListener('click', function (e) {
     var b = e.target.closest('.wt'); if (!b) return;
@@ -252,5 +284,7 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
 <script src="mc-sync.js"></script>
 <script src="mc-resume.js"></script>
 <script src="mc-nav.js"></script>
+<script src="program-overrides.js"></script>
+<script src="program-manager.js"></script>
 <script src="mc-sw-update.js?v=45"></script>
 </body></html>
