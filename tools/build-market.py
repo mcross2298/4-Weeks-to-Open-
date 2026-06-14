@@ -104,7 +104,7 @@ def patch_pwa_manifest(out):
     mf.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
 
-def extract(out, base, manifest, licensed, scratch, programs):
+def extract(out, base, manifest, licensed, scratch, programs, sw_version="market-v1"):
     out.mkdir(parents=True, exist_ok=True)
     skip_names = licensed | scratch | {MANIFEST.name}
     copied = []
@@ -128,10 +128,14 @@ def extract(out, base, manifest, licensed, scratch, programs):
     patch_pwa_manifest(out)
     (out / "README.md").write_text(MARKET_README, encoding="utf-8")
 
-    # regenerate the service worker for the market deployment URL
+    # regenerate the service worker for the market deployment URL. The cache
+    # name carries the version, and browsers only treat sw.js as "changed" when
+    # its bytes change — so a static version would never bust the cache on a
+    # content-only edit. The deploy passes a unique per-run version to guarantee
+    # every deploy ships a fresh service worker.
     subprocess.run(
         [sys.executable, str(ROOT / "tools" / "build-sw.py"),
-         "--version", "market-v1", "--root", str(out), "--base", base],
+         "--version", sw_version, "--root", str(out), "--base", base],
         check=True)
     return copied
 
@@ -165,6 +169,9 @@ def main():
                    help="dry-extract + leak scan; exit 1 on any leak (CI)")
     ap.add_argument("--base", default=DEFAULT_BASE,
                     help="deploy URL for the market app's service worker")
+    ap.add_argument("--sw-version", default="market-v1",
+                    help="cache version baked into the market service worker; "
+                         "pass a unique value per deploy so the cache always busts")
     args = ap.parse_args()
 
     manifest, licensed, scratch, brand_terms, programs = load_manifest()
@@ -172,7 +179,8 @@ def main():
     if args.check:
         tmp = Path(tempfile.mkdtemp(prefix="mc-market-"))
         try:
-            extract(tmp, args.base, manifest, licensed, scratch, programs)
+            extract(tmp, args.base, manifest, licensed, scratch, programs,
+                    args.sw_version)
             hard, soft = leak_scan(tmp, licensed, brand_terms)
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
@@ -180,7 +188,8 @@ def main():
         out = Path(args.extract).resolve()
         if ROOT in out.parents or out == ROOT:
             sys.exit("--extract target must be outside the repo")
-        copied = extract(out, args.base, manifest, licensed, scratch, programs)
+        copied = extract(out, args.base, manifest, licensed, scratch, programs,
+                         args.sw_version)
         hard, soft = leak_scan(out, licensed, brand_terms)
         print("market tree: %d files -> %s" % (len(copied), out))
 
