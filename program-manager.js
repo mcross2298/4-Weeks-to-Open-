@@ -19,9 +19,11 @@
        opens an editor to permanently replace the exercise (picker backed by
        exercise-catalog.js) or edit sets / rest / note / tempo, or reset
        the card back to the original program.
-     • a fixed PM bar offers Publish (one-tap upsert to Supabase — live for all
-       users), Export (download the program-overrides.json fallback), Import,
-       Discard local edits, and Lock.
+     • a compact top control pill always offers Publish (one-tap upsert to
+       Supabase — live for all users) plus a "PM Mode" button that opens a tools
+       hub (Edit Layout, Rename Center, Create, Find, Preview, History, Drafts,
+       Export, Import, Guide, Discard, Lock). The hub is also reachable from a
+       "PM Mode" module on the dashboard.
 
    Edits write to the localStorage working copy and preview instantly via
    MC_PO.refresh(); Publish pushes them to Supabase so every user sees them
@@ -35,6 +37,8 @@
   var NAME_SEL   = '.ex-name, .lift-name, .var-name, .ss-name';
 
   var bar = null, editorOverlay = null, editorCard = null, rcOverlay = null, hOverlay = null, dOverlay = null;
+  var hubOv = null;                 // tools hub bottom sheet
+  var openHubAfterUnlock = false;   // open the hub once unlock completes
 
   // ---- shared program / badge data (single source: mc-pm-data.js) ---------
   // window.MC_PM_DATA is the one place this data lives — also consumed by the
@@ -57,16 +61,14 @@
     // reveal/hide the owner-only item in any already-built meatball menu
     var pmBtn = document.querySelector('[data-act="pm"]');
     if (pmBtn) pmBtn.style.display = on ? '' : 'none';
+    if (on && openHubAfterUnlock) { openHubAfterUnlock = false; openHub(); }
   }
 
   // PM "Preview as user": toggle painting of the published layer only, so the
   // owner sees exactly what users see. The working copy is untouched.
   function togglePreview() {
     if (!window.MC_PO || typeof MC_PO.setPreview !== 'function') { msg('Unavailable', 'Preview needs the override layer on this page.'); return; }
-    var on = !MC_PO.isPreview();
-    MC_PO.setPreview(on);
-    var btn = bar && bar.querySelector('[data-act="preview"]');
-    if (btn) { btn.classList.toggle('mc-pm-on', on); btn.textContent = on ? 'Previewing' : 'Preview'; }
+    MC_PO.setPreview(!MC_PO.isPreview());
   }
 
   // one-button info dialog (iOS-safe custom modal, not native alert)
@@ -247,50 +249,104 @@
     return n;
   }
 
+  // central action dispatch — shared by the top pill and the tools hub
+  function runAct(act) {
+    if (act === 'publish') doPublish();
+    else if (act === 'tools') openHub();
+    else if (act === 'names') openRenameCenter();
+    else if (act === 'layout') openLayoutEditor();
+    else if (act === 'create') openCreator();
+    else if (act === 'find') findExercise();
+    else if (act === 'preview') togglePreview();
+    else if (act === 'export') doExport();
+    else if (act === 'import') doImport();
+    else if (act === 'history') openHistory();
+    else if (act === 'drafts') openDrafts();
+    else if (act === 'guide') location.href = 'pm-mode-overview.html';
+    else if (act === 'discard') doDiscard();
+    else if (act === 'lock') setActive(false);
+  }
+
+  // Top control pill: a compact, always-visible "🛠️ PM Mode · N edits · Publish"
+  // so the owner can publish from any page without reopening the hub. Tapping
+  // "PM Mode" opens the tools hub (page-context tools like Edit Layout work here).
   function renderBar() {
-    if (!isActive()) { if (bar) bar.remove(); bar = null; return; }
+    if (!isActive()) { if (bar) { bar.remove(); bar = null; } closeHub(); return; }
     if (!bar) {
       bar = document.createElement('div');
-      bar.className = 'mc-pm-bar';
+      bar.className = 'mc-pm-top';
       bar.innerHTML =
-        '<span class="mc-pm-tag">🛠️ PM</span>' +
+        '<button class="mc-pm-tools" data-act="tools">🛠️ PM Mode</button>' +
         '<span class="mc-pm-count"></span>' +
-        '<button class="mc-pm-publish" data-act="publish">Publish</button>' +
-        '<button data-act="names">Names</button>' +
-        '<button data-act="layout">Edit Layout</button>' +
-        '<button data-act="create">＋ Create</button>' +
-        '<button data-act="find">Find</button>' +
-        '<button data-act="preview">Preview</button>' +
-        '<button data-act="export">Export</button>' +
-        '<button data-act="import">Import</button>' +
-        '<button data-act="history">History</button>' +
-        '<button data-act="drafts">Drafts</button>' +
-        '<button data-act="guide">Guide</button>' +
-        '<button data-act="discard">Discard</button>' +
-        '<button data-act="lock">Lock</button>';
+        '<button class="mc-pm-publish" data-act="publish">Publish</button>';
       document.body.appendChild(bar);
       bar.addEventListener('click', function (e) {
         var b = e.target.closest('button'); if (!b) return;
-        var act = b.dataset.act;
-        if (act === 'publish') doPublish();
-        else if (act === 'names') openRenameCenter();
-        else if (act === 'layout') openLayoutEditor();
-        else if (act === 'create') openCreator();
-        else if (act === 'find') findExercise();
-        else if (act === 'preview') togglePreview();
-        else if (act === 'export') doExport();
-        else if (act === 'import') doImport();
-        else if (act === 'history') openHistory();
-        else if (act === 'drafts') openDrafts();
-        else if (act === 'guide') location.href = 'pm-mode-overview.html';
-        else if (act === 'discard') doDiscard();
-        else if (act === 'lock') setActive(false);
+        runAct(b.dataset.act);
       });
     }
     var n = localEditCount();
-    bar.querySelector('.mc-pm-count').textContent = n ? n + ' unpublished edit' + (n === 1 ? '' : 's') : 'no local edits';
+    bar.querySelector('.mc-pm-count').textContent = n ? (n + ' edit' + (n === 1 ? '' : 's')) : 'saved';
     var pub = bar.querySelector('.mc-pm-publish');
     if (pub) pub.disabled = !n || !(window.MC_SB && MC_SB.configured);
+  }
+
+  // The tools hub — a bottom sheet exposing every PM action, replacing the old
+  // 13-button bar. Opened from the top pill and the dashboard "PM Mode" module.
+  var HUB_GROUPS = [
+    { t: 'Edit & create', items: [
+      ['layout', '✏️', 'Edit Layout'], ['names', '🏷️', 'Rename Center'],
+      ['create', '＋', 'Create New'],  ['find', '🔍', 'Find Exercise'] ] },
+    { t: 'Review & publish', items: [
+      ['publish', '☁️', 'Publish'],    ['preview', '👁️', 'Preview as user'],
+      ['history', '🕘', 'History'],     ['drafts', '🗂️', 'Drafts'] ] },
+    { t: 'Data & help', items: [
+      ['export', '⬇️', 'Export'],       ['import', '⬆️', 'Import'],
+      ['guide', '📖', 'PM Guide'] ] },
+    { t: 'Session', items: [
+      ['discard', '🗑️', 'Discard edits'], ['lock', '🔒', 'Lock PM Mode'] ] }
+  ];
+  function openHub() {
+    if (!isActive()) { unlockFlow(); return; }
+    closeHub();
+    var previewing = !!(window.MC_PO && MC_PO.isPreview && MC_PO.isPreview());
+    var n = localEditCount();
+    var html = '<div class="mc-pm-hub" role="dialog" aria-label="Program Manager tools">' +
+      '<div class="mc-pm-hub-hd"><div class="mc-pm-hub-ttl">🛠️ Program Manager</div>' +
+        '<button class="mc-pm-hub-x" data-act="hub-close" aria-label="Close">✕</button></div>' +
+      '<div class="mc-pm-hub-sub">' + (n ? (n + ' unpublished edit' + (n === 1 ? '' : 's')) : 'All changes published') + '</div>';
+    HUB_GROUPS.forEach(function (g) {
+      html += '<div class="mc-pm-hub-grp">' + g.t + '</div><div class="mc-pm-hub-grid">';
+      g.items.forEach(function (it) {
+        var act = it[0];
+        var cls = 'mc-pm-tile' + (act === 'preview' && previewing ? ' on' : '') +
+                  (act === 'discard' || act === 'lock' ? ' danger' : '');
+        var label = (act === 'preview' && previewing) ? 'Previewing — exit' : it[2];
+        html += '<button class="' + cls + '" data-tile="' + act + '"><span class="ti">' + it[1] + '</span><span>' + label + '</span></button>';
+      });
+      html += '</div>';
+    });
+    html += '</div>';
+    hubOv = document.createElement('div');
+    hubOv.className = 'mc-pm-hub-bd';
+    hubOv.innerHTML = html;
+    document.body.appendChild(hubOv);
+    hubOv.addEventListener('click', function (e) {
+      if (e.target === hubOv || e.target.closest('[data-act="hub-close"]')) { closeHub(); return; }
+      var t = e.target.closest('[data-tile]'); if (!t) return;
+      var act = t.dataset.tile;
+      if (act === 'preview') { togglePreview(); openHub(); return; }  // re-render to reflect state
+      closeHub();
+      runAct(act);
+    });
+  }
+  function closeHub() { if (hubOv) { hubOv.remove(); hubOv = null; } }
+
+  // Entry from the dashboard "PM Mode" module: unlock if needed, then open hub.
+  function enterPM() {
+    if (isActive()) { openHub(); return; }
+    openHubAfterUnlock = true;
+    unlockFlow();
   }
 
   // one-tap publish: push the local working copy to Supabase (upsert edits,
@@ -1279,18 +1335,36 @@
   // ---- styles ---------------------------------------------------------------
   function injectStyles() {
     var css =
-      '.mc-pm-bar{position:fixed;left:10px;right:10px;bottom:76px;z-index:1300;' +
-        'display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;' +
-        'max-height:42vh;overflow-y:auto;' +
-        'background:rgba(8,20,35,0.95);border:1px solid rgba(34,211,238,0.4);' +
-        'box-shadow:0 6px 24px rgba(0,0,0,0.5);font-size:12px;color:#94a3b8;}' +
-      '.mc-pm-bar .mc-pm-tag{font-weight:900;color:#22d3ee;}' +
-      '.mc-pm-bar .mc-pm-count{flex:1;font-weight:600;}' +
-      '.mc-pm-bar button{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);' +
-        'color:#cbd5e1;font-size:11px;font-weight:800;border-radius:8px;padding:6px 9px;cursor:pointer;flex-shrink:0;}' +
-      '.mc-pm-bar .mc-pm-publish{background:#22d3ee;border-color:#22d3ee;color:#03222b;}' +
-      '.mc-pm-bar .mc-pm-publish:disabled{background:rgba(34,211,238,0.25);border-color:transparent;color:#7dd3e8;cursor:default;}' +
-      '.mc-pm-bar button.mc-pm-on{background:#facc15;border-color:#facc15;color:#1a1300;}' +
+      // top control pill — Publish is always reachable; "PM Mode" opens the hub
+      '.mc-pm-top{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:10px;z-index:1350;' +
+        'display:flex;align-items:center;gap:10px;padding:6px 6px 6px 13px;border-radius:999px;' +
+        'background:rgba(8,20,35,0.96);border:1px solid rgba(34,211,238,0.45);' +
+        'box-shadow:0 6px 20px rgba(0,0,0,0.5);color:#94a3b8;}' +
+      '.mc-pm-top .mc-pm-tools{background:none;border:none;color:#22d3ee;font-weight:900;font-size:12px;' +
+        'cursor:pointer;font-family:inherit;padding:0;white-space:nowrap;}' +
+      '.mc-pm-top .mc-pm-count{font-weight:700;color:#94a3b8;font-size:11px;white-space:nowrap;}' +
+      '.mc-pm-top .mc-pm-publish{background:#22d3ee;border:none;color:#03222b;font-size:11px;font-weight:900;' +
+        'border-radius:999px;padding:7px 15px;cursor:pointer;font-family:inherit;}' +
+      '.mc-pm-top .mc-pm-publish:disabled{background:rgba(34,211,238,0.25);color:#7dd3e8;cursor:default;}' +
+      // tools hub bottom sheet
+      '.mc-pm-hub-bd{position:fixed;inset:0;z-index:1500;background:rgba(0,0,0,0.6);' +
+        'backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;}' +
+      '.mc-pm-hub{width:100%;max-width:480px;background:#0b1626;border:1px solid rgba(34,211,238,0.3);' +
+        'border-radius:18px 18px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 20px);max-height:88vh;overflow-y:auto;}' +
+      '.mc-pm-hub-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}' +
+      '.mc-pm-hub-ttl{font-size:17px;font-weight:900;color:#22d3ee;}' +
+      '.mc-pm-hub-x{background:rgba(255,255,255,0.08);border:none;color:#cbd5e1;width:30px;height:30px;' +
+        'border-radius:50%;font-size:14px;cursor:pointer;font-family:inherit;}' +
+      '.mc-pm-hub-sub{font-size:12px;color:#94a3b8;margin-bottom:8px;}' +
+      '.mc-pm-hub-grp{font-size:10px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#64748b;margin:14px 0 8px;}' +
+      '.mc-pm-hub-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}' +
+      '.mc-pm-tile{display:flex;align-items:center;gap:10px;text-align:left;background:rgba(255,255,255,0.05);' +
+        'border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;color:#e2e8f0;font-size:13px;' +
+        'font-weight:800;cursor:pointer;font-family:inherit;}' +
+      '.mc-pm-tile:active{background:rgba(34,211,238,0.12);}' +
+      '.mc-pm-tile .ti{font-size:18px;flex-shrink:0;}' +
+      '.mc-pm-tile.on{border-color:#facc15;color:#facc15;}' +
+      '.mc-pm-tile.danger{color:#f87171;border-color:rgba(248,113,113,0.3);}' +
       '.mc-pm-overlay{position:fixed;inset:0;z-index:1400;display:none;align-items:center;' +
         'justify-content:center;padding:16px;background:rgba(0,0,0,0.65);' +
         'backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}' +
@@ -1392,8 +1466,23 @@
   window.MC_PM = {
     active: isActive,
     openEditor: openEditor,
-    unlock: unlockFlow
+    unlock: unlockFlow,
+    openHub: openHub,
+    enter: enterPM
   };
+
+  // Wire + reveal the dashboard "PM Mode" module. It's hidden for everyone; we
+  // show it when this session is already unlocked, or when Supabase confirms the
+  // signed-in user is the owner (persists across visits, so no ?pm=1 needed).
+  function revealDashboardEntry() {
+    var card = document.getElementById('pmModeCard');
+    if (!card) return;
+    card.addEventListener('click', function (e) { e.preventDefault(); enterPM(); });
+    if (isActive()) { card.style.display = 'block'; return; }
+    if (window.MC_SB && MC_SB.configured && typeof MC_SB.isOwner === 'function') {
+      MC_SB.isOwner().then(function (owner) { if (owner) card.style.display = 'block'; }).catch(function () {});
+    }
+  }
 
   // minimal publish hook for the Edit Layout sidebar (reuses the review sheet)
   window.MC_PM_PUBLISH = function () { doPublish(); };
@@ -1402,6 +1491,7 @@
     injectStyles();
     attachLongPress();        // ?pm=1 trigger
     renderBar();
+    revealDashboardEntry();   // owner-only dashboard "PM Mode" module
     // keep the unpublished-edit count live while the Edit Layout sidebar writes
     // layout/theme edits to the working copy
     document.addEventListener('mc:layout-changed', function () { renderBar(); });

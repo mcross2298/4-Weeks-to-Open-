@@ -203,8 +203,9 @@
     if (wasOpen) build();
   }
   function refreshBar() {
-    // nudge the PM bar count to reflect new local edits
+    // nudge the override layer + the PM top pill's unpublished-edit count
     try { if (window.MC_PO && MC_PO.refresh) MC_PO.refresh(); } catch (e) {}
+    try { document.dispatchEvent(new CustomEvent('mc:layout-changed')); } catch (e) {}
   }
 
   function publish() {
