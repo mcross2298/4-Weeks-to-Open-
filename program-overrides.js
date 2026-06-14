@@ -463,8 +463,10 @@
                 published.programs  = naming.programs  || {};
                 published.splits    = naming.splits    || {};
                 published.badges    = naming.badges    || {};
+                published.layouts   = naming.layouts   || {};
+                published.themes    = naming.themes    || {};
                 scan();
-                dispatchNamesChanged();
+                dispatchLayoutChanged();
                 if (typeof MC_SB.onNamingChange === 'function') {
                   MC_SB.onNamingChange(function () {
                     MC_SB.getNaming()
@@ -474,8 +476,10 @@
                         published.programs  = n.programs  || {};
                         published.splits    = n.splits    || {};
                         published.badges    = n.badges    || {};
+                        published.layouts   = n.layouts   || {};
+                        published.themes    = n.themes    || {};
                         scan();
-                        dispatchNamesChanged();
+                        dispatchLayoutChanged();
                       }).catch(function () {});
                   });
                 }

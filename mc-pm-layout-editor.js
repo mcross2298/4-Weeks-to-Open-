@@ -208,6 +208,13 @@
   }
 
   function publish() {
+    // Prefer the instant Supabase publish (same review sheet as the PM bar);
+    // fall back to a JSON export where Supabase isn't configured.
+    if (window.MC_PM_PUBLISH && window.MC_SB && MC_SB.configured) {
+      close();
+      window.MC_PM_PUBLISH();
+      return;
+    }
     if (!window.MC_PO || !MC_PO.exportData) { alert('Override layer not loaded.'); return; }
     var data = MC_PO.exportData();
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -215,7 +222,7 @@
     a.href = URL.createObjectURL(blob); a.download = 'program-overrides.json';
     document.body.appendChild(a); a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 400);
-    showInfo('Saved program-overrides.json', 'Commit it to the repo root to publish your layout & theme to all users. (Naming edits still publish instantly via the PM bar’s Publish button.)');
+    showInfo('Saved program-overrides.json', 'Commit it to the repo root to publish your layout & theme to all users.');
   }
 
   function discard() {

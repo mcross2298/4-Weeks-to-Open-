@@ -67,6 +67,7 @@ select.name-input option{background:#0d1f3c;color:#e2e8f0;}
 .assign-hint strong{color:#7dd3fc;}
 .saved-flag{font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:6px;background:rgba(56,189,248,0.16);color:#7dd3fc;border:1px solid rgba(56,189,248,0.3);}
 .saved-flag.prog{background:rgba(52,211,153,0.14);color:#34d399;border-color:rgba(52,211,153,0.3);}
+.saved-flag.col{background:rgba(168,85,247,0.16);color:#d8b4fe;border-color:rgba(168,85,247,0.32);}
 </style>
 <link rel="stylesheet" href="base.css?v=65"/>
 <link rel="stylesheet" href="mc-nav.css"/>
@@ -92,6 +93,10 @@ select.name-input option{background:#0d1f3c;color:#e2e8f0;}
   <div class="sec-label">Assign to program <span style="color:#475569;font-weight:700;">— optional</span></div>
   <select class="name-input" id="wkProgram"></select>
   <div class="assign-hint" id="assignHint">Leave as <strong>Bonus</strong> and this workout is auto-collected into your <strong>Bonus Workouts</strong> card — no manual linking.</div>
+
+  <div class="sec-label">Add to collection <span style="color:#475569;font-weight:700;">— optional</span></div>
+  <select class="name-input" id="wkCollection"></select>
+  <div class="assign-hint">Group it into a <strong>Collection</strong> (folder). <a href="collections.html" style="color:#7dd3fc;">Manage collections →</a></div>
 
   <div class="search-wrap">
     <div class="search-rel">
@@ -121,6 +126,7 @@ select.name-input option{background:#0d1f3c;color:#e2e8f0;}
 <script src="mc-pm-data.js"></script>
 <script src="mc-program-store.js"></script>
 <script src="mc-bonus-routing.js"></script>
+<script src="mc-collections.js"></script>
 <script>
 var CW_KEY = 'mc_custom_workouts_v1';
 var activeFilter = 'All';
@@ -167,6 +173,22 @@ function updateAssignHint(){
   } else {
     hint.innerHTML = 'Leave as <strong>Bonus</strong> and this workout is auto-collected into your <strong>Bonus Workouts</strong> card — no manual linking.';
   }
+}
+function collName(id){
+  if(!id || !window.MC_COLLECTIONS) return '';
+  var c = MC_COLLECTIONS.get(id);
+  return c ? c.name : '';
+}
+function buildCollectionOptions(){
+  var sel = document.getElementById('wkCollection');
+  if(!sel) return;
+  var html = '<option value="">— None —</option>';
+  if(window.MC_COLLECTIONS){
+    MC_COLLECTIONS.getAll().forEach(function(c){
+      html += '<option value="'+esc(c.id)+'">'+esc((c.icon||'🗂️')+' '+c.name)+'</option>';
+    });
+  }
+  sel.innerHTML = html;
 }
 
 var CONDITIONING = ['Cardio','Core'];
@@ -273,12 +295,14 @@ function createWorkout(){
   var saved = getSaved();
   var now = new Date().toISOString();
   var program = (document.getElementById('wkProgram')||{}).value || '';
+  var collection = (document.getElementById('wkCollection')||{}).value || '';
   var wk = {
     id: 'cw-' + Date.now().toString(36),
     name: name,
     created: now,
     publishedAt: now,
     program: program,                       // '' ⇒ routed to Bonus Workouts
+    collection: collection,                 // '' ⇒ not in any collection
     exercises: selected.map(function(s){
       return { name:s.name, muscle:s.muscle, sets:parseInt(s.sets,10)||3, reps:(''+s.reps).trim()||'10' };
     })
@@ -293,6 +317,7 @@ function createWorkout(){
   selected = [];
   document.getElementById('wkName').value = '';
   var ps = document.getElementById('wkProgram'); if(ps){ ps.value=''; updateAssignHint(); }
+  var cs = document.getElementById('wkCollection'); if(cs){ cs.value=''; }
   renderList(); renderTray(); renderSaved();
   window.scrollTo({ top:0, behavior:'smooth' });
 }
@@ -318,6 +343,7 @@ function renderSaved(){
     var flag = w.program
       ? '<span class="saved-flag prog">'+esc(progName(w.program))+'</span>'
       : '<span class="saved-flag">🎁 Bonus</span>';
+    if(w.collection && collName(w.collection)) flag += ' <span class="saved-flag col">🗂️ '+esc(collName(w.collection))+'</span>';
     return '<div class="saved-card">'
       + '<div class="saved-top"><div class="saved-name">'+esc(w.name)+'</div>'+flag+'</div>'
       + '<div class="saved-meta">'+w.exercises.length+' exercise'+(w.exercises.length!==1?'s':'')+' · created '+when+'</div>'
@@ -331,6 +357,7 @@ function renderSaved(){
 
 buildFilters();
 buildProgramOptions();
+buildCollectionOptions();
 renderList();
 renderSaved();
 </script>

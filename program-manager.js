@@ -375,12 +375,10 @@
     for (bp in bdg) for (bid in bdg[bp]) { bItems.push(esc(bid + ' — ' + act(bdg[bp][bid])) + ctx(bp)); n++; }
     if (bItems.length) groups.push({ t: 'Badges', items: bItems });
 
-    // PM Phase 2/3 — layout + theme edits. These publish via Export → commit
-    // program-overrides.json (the live Supabase path for them is a follow-up),
-    // so they are counted and listed but not pushed by the Supabase upsert below.
+    // PM Phase 2/3 — layout + theme edits (publish live via the naming table).
     var lay = local.layouts || {}, lItems = [], lk;
     for (lk in lay) { lItems.push(esc(lk + ' — layout “' + (lay[lk] && lay[lk].style || '') + '”')); n++; }
-    if (lItems.length) groups.push({ t: 'Layouts (Export to publish)', items: lItems });
+    if (lItems.length) groups.push({ t: 'Layouts', items: lItems });
     var thm = local.themes || {}, tItems = [], tk;
     for (tk in thm) {
       var tc = thm[tk] || {}, bits = [];
@@ -388,7 +386,7 @@
       tItems.push(esc(tk + ' — ' + (bits.join(', ') || 'theme')));
       n++;
     }
-    if (tItems.length) groups.push({ t: 'Theme (Export to publish)', items: tItems });
+    if (tItems.length) groups.push({ t: 'Theme', items: tItems });
 
     if (window.MC_EXCATALOG && MC_EXCATALOG.getPending().length) {
       var c = MC_EXCATALOG.getPending().length;
@@ -468,6 +466,22 @@
           rec('badges', bsid, p, ((pub.badges || {})[bpid] || {})[bid]);
         }
       }
+      // layouts + themes (PM Phase 2/3) — 1-level, live only (not canaried).
+      // Ride the scope-agnostic naming_overrides table via scope 'layout'/'theme'.
+      if (!canaryMode) {
+        var layoutsSec = local.layouts || {}, lk;
+        for (lk in layoutsSec) {
+          p = layoutsSec[lk];
+          ops.push((p && p.reset) ? rmN('layout', lk) : upN('layout', lk, p));
+          rec('layouts', lk, p, (pub.layouts || {})[lk]);
+        }
+        var themesSec = local.themes || {}, tk;
+        for (tk in themesSec) {
+          p = themesSec[tk];
+          ops.push((p && p.reset) ? rmN('theme', tk) : upN('theme', tk, p));
+          rec('themes', tk, p, (pub.themes || {})[tk]);
+        }
+      }
     }
     // exercise catalog pending additions — live only
     if (!canaryMode && window.MC_EXCATALOG && MC_EXCATALOG.getPending().length) {
@@ -480,11 +494,11 @@
       // best-effort changelog/history write — never fail a publish on logging
       if (!canaryMode && typeof MC_SB.logPublish === 'function') { try { MC_SB.logPublish(entries).catch(function () {}); } catch (e) {} }
       var cur = MC_PO.local() || {};
+      // live publish pushes every section (incl. layouts/themes via the
+      // scope-agnostic naming table) and clears the working copy; canary only
+      // sends the naming sections to testers.
       if (canaryMode) { cur.exercises = {}; cur.programs = {}; cur.splits = {}; cur.badges = {}; }
-      // live publish clears the pushed sections but PRESERVES layouts/themes,
-      // which publish via Export (commit program-overrides.json), not Supabase.
-      else cur = { pages: {}, exercises: {}, programs: {}, splits: {}, badges: {},
-                   layouts: cur.layouts || {}, themes: cur.themes || {} };
+      else cur = { pages: {}, exercises: {}, programs: {}, splits: {}, badges: {}, layouts: {}, themes: {} };
       MC_PO.setLocal(cur);
       if (btn) btn.textContent = 'Publish';
       renderBar();
@@ -1377,6 +1391,9 @@
     openEditor: openEditor,
     unlock: unlockFlow
   };
+
+  // minimal publish hook for the Edit Layout sidebar (reuses the review sheet)
+  window.MC_PM_PUBLISH = function () { doPublish(); };
 
   function init() {
     injectStyles();

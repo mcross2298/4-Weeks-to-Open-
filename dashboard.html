@@ -617,6 +617,9 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
     <!-- Bonus Workouts — auto-collected standalone workouts (rendered by mc-bonus-routing.js when ≥1 exists) -->
     <div id="bonusCardSlot"></div>
 
+    <!-- Collections — owner folders of standalone workouts (rendered by mc-collections.js) -->
+    <div id="collectionsSlot"></div>
+
     <!-- MARKET:STRIP influencer-programs START — licensed content, see content-manifest.json -->
     <div class="tier-label influencer">Influencer Programs</div>
 
@@ -675,6 +678,13 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       <div class="cat-name">Build a Program</div>
       <div class="cat-meta">Multi-week custom program with its own hero card, schedule and color rail.</div>
       <div class="cat-count">Open Builder →</div>
+    </a>
+
+    <a href="collections.html" class="cat-card" style="border-style:dashed;text-align:center;padding:22px 16px;display:block;">
+      <span class="cat-icon">🗂️</span>
+      <div class="cat-name">Collections</div>
+      <div class="cat-meta">Group standalone workouts into folders — by goal, body part, or anything.</div>
+      <div class="cat-count">Manage Collections →</div>
     </a>
 
   </div>
@@ -740,6 +750,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 <script src="mc-cond.js"></script>
 <script src="mc-program-store.js"></script>
 <script src="mc-bonus-routing.js"></script>
+<script src="mc-collections.js"></script>
 <script src="mc-program-pub.js"></script>
 <script>window.MC_SUBS_NO_BUTTON=true;</script>
 <script src="mc-subs.js"></script>
@@ -1072,6 +1083,7 @@ renderConditioning();
 renderCustomPrograms();
 renderPublishedPrograms();
 if(window.MC_BONUS) MC_BONUS.renderDashboardCard();
+if(window.MC_COLLECTIONS) MC_COLLECTIONS.renderDashboardCards();
 // re-render when mc-program-pub.js pulls fresh published programs
 document.addEventListener('mc:published-programs',()=>{renderPublishedPrograms();renderCustomPrograms();loadState();});
 // honor ?tab= deep-link from the global bottom nav (mc-nav.js)
