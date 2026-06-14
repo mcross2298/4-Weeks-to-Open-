@@ -534,6 +534,9 @@
     }
     // shared program/badge data (single source consumed by the Rename Center)
     if (!window.MC_PM_DATA) loadScript('mc-pm-data.js');
+    // structural layout resolver/painters (PM Phase 2) — self-no-ops on pages
+    // without a flagship grid or workout cards; paints published layout styles.
+    if (!window.MC_LAYOUT) loadScript('mc-layout.js');
     if (!window.MC_NAMES) {
       loadScript('mc-naming.js', function () {
         if (!window.__mcNamingPaint) loadScript('mc-naming-paint.js');

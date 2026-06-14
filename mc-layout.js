@@ -57,6 +57,8 @@
     return style;
   }
 
+  var PAGE_ID = (location.pathname.split('/').pop() || 'index.html').split('?')[0];
+
   // ---- painters ------------------------------------------------------------
   // Program cards: applies `lay-<style>` to the flagship grid container.
   function paintProgramCards(el) {
@@ -66,8 +68,30 @@
     el.className = ('prog-cards lay-' + style);
   }
 
+  // Workout cards: re-flows the existing card markup (.ex-card/.ss-card/.a-card)
+  // shared by every workout page. Sets body[data-workout-layout] (CSS in
+  // base.css) and tags the detected cards container for the swipe layout. No
+  // per-page rewrite — only a class swap on shared structure (G1). No-op on
+  // pages without workout cards.
+  function paintWorkout() {
+    var cards = document.querySelectorAll('.ex-card, .ss-card, .a-card');
+    if (!cards.length) return;
+    var style = styleFor('workout', PAGE_ID);
+    var body = document.body;
+    if (style && style !== 'list') body.setAttribute('data-workout-layout', style);
+    else body.removeAttribute('data-workout-layout');
+    // tag the container holding the cards (their common parent) for swipe
+    var container = cards[0].parentElement;
+    if (container) {
+      var prev = document.querySelector('[data-mc-cards]');
+      if (prev && prev !== container) prev.removeAttribute('data-mc-cards');
+      container.setAttribute('data-mc-cards', '');
+    }
+  }
+
   function repaint() {
     try { paintProgramCards(); } catch (e) {}
+    try { paintWorkout(); } catch (e) {}
   }
 
   window.MC_LAYOUT = {
@@ -76,12 +100,17 @@
     scopeOf: scopeOf,
     styleFor: styleFor,
     paintProgramCards: paintProgramCards,
+    paintWorkout: paintWorkout,
     repaint: repaint
   };
 
   // repaint when the override layer changes (owner editing) or finishes loading
   document.addEventListener('mc:layout-changed', repaint);
   document.addEventListener('mc:names-changed', repaint);
+  // workout cards render after load — repaint when the DOM settles. MC_SCAN
+  // observes childList/subtree only and our writes are attribute-only +
+  // idempotent, so this cannot loop.
+  if (window.MC_SCAN && MC_SCAN.subscribe) MC_SCAN.subscribe(repaint);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', repaint);
   else repaint();
 })();
