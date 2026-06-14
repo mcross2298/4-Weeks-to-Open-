@@ -21,6 +21,7 @@
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
 
   // accent palette offered in the editor (program colors + a neutral set)
   var ACCENTS = ['#d4af37', '#e11d48', '#7F77DD', '#14b8a6', '#f97316', '#38bdf8', '#34d399', '#f43f5e', '#a855f7', '#eab308'];
@@ -106,17 +107,27 @@
 
     var body = document.createElement('div'); body.className = 'mcle-body';
 
-    // 1) Program Cards layout — only where the grid exists (dashboard)
-    if (document.getElementById('flagGrid') && window.MC_LAYOUT) {
-      var cur = MC_LAYOUT.styleFor('program-cards');
-      var opts = (MC_LAYOUT.OPTIONS['program-cards'] || []).map(function (v) {
-        return { val: v, label: v.charAt(0).toUpperCase() + v.slice(1) };
+    // 1) Structural layout for the view(s) on THIS page (context-aware).
+    if (window.MC_LAYOUT) {
+      var PAGE_ID = (location.pathname.split('/').pop() || 'index.html').split('?')[0];
+      var views = [];
+      if (document.getElementById('flagGrid')) {
+        views.push({ view: 'program-cards', scope: 'program-cards', label: 'Program Cards layout' });
+      }
+      if (document.querySelector('.ex-card, .ss-card, .a-card')) {
+        views.push({ view: 'workout', scope: 'workout:' + PAGE_ID, label: 'Workout layout' });
+      }
+      views.forEach(function (vw) {
+        var cur = MC_LAYOUT.styleFor(vw.view, vw.view === 'program-cards' ? '' : PAGE_ID);
+        var opts = (MC_LAYOUT.OPTIONS[vw.view] || []).map(function (v) {
+          return { val: v, label: cap(v).replace('-', ' ') };
+        });
+        body.appendChild(group(vw.label, opts, cur, function (v) {
+          if (window.MC_PO && MC_PO.setLayoutLocal) MC_PO.setLayoutLocal(vw.scope, v);
+          if (window.MC_LAYOUT) MC_LAYOUT.repaint();
+          refreshBar();
+        }));
       });
-      body.appendChild(group('Program Cards layout', opts, cur, function (v) {
-        if (window.MC_PO && MC_PO.setLayoutLocal) MC_PO.setLayoutLocal('program-cards', v);
-        if (window.MC_LAYOUT) MC_LAYOUT.repaint();
-        refreshBar();
-      }));
     }
 
     if (window.MC_THEME) {
