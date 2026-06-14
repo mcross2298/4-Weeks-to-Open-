@@ -38,7 +38,10 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 .ex-row.added .ex-add{color:#34d399;}
 .empty-state{text-align:center;padding:40px 20px;color:#334155;}
 /* selected tray */
-.tray{position:fixed;left:0;right:0;bottom:0;z-index:30;background:linear-gradient(180deg,rgba(5,13,26,0.4),#050d1a 30%);border-top:1px solid rgba(52,211,153,0.25);padding:12px 16px calc(14px + env(safe-area-inset-bottom));box-shadow:0 -8px 30px rgba(0,0,0,0.5);}
+/* z-index 150 keeps the tray (and its Create button) above the fixed bottom
+   nav (z-index 140); its bottom offset is set in JS to the live nav height so
+   it rests directly on top of the nav instead of being hidden behind it. */
+.tray{position:fixed;left:0;right:0;bottom:0;z-index:150;background:linear-gradient(180deg,rgba(5,13,26,0.4),#050d1a 30%);border-top:1px solid rgba(52,211,153,0.25);padding:12px 16px 14px;box-shadow:0 -8px 30px rgba(0,0,0,0.5);}
 .tray-inner{max-width:680px;margin:0 auto;}
 .tray-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
 .tray-title{font-size:12px;font-weight:900;letter-spacing:0.06em;color:#34d399;text-transform:uppercase;}
@@ -107,6 +110,8 @@ select.name-input option{background:#0d1f3c;color:#e2e8f0;}
   </div>
   <div class="results-count" id="resultsCount"></div>
   <div class="ex-list" id="exList"></div>
+  <!-- dynamic spacer so the last exercises clear the fixed selection tray -->
+  <div id="traySpace" style="height:0;"></div>
 </div>
 
 <!-- selected tray -->
@@ -267,12 +272,26 @@ function clearSelected(){ selected = []; renderList(); renderTray(); }
 function removeSel(i){ selected.splice(i,1); renderList(); renderTray(); }
 function updSel(i, field, val){ if(selected[i]) selected[i][field] = val; }
 
+// Height of the fixed bottom nav (added late by mc-nav.js), so the tray can
+// rest on top of it rather than being hidden behind it.
+function navHeight(){ var n = document.querySelector('.mc-nav'); return n ? n.offsetHeight : 0; }
+
+function syncTraySpace(){
+  var tray = document.getElementById('tray');
+  var space = document.getElementById('traySpace');
+  if(!space) return;
+  if(tray.style.display === 'none' || !selected.length){ space.style.height = '0'; return; }
+  tray.style.bottom = navHeight() + 'px';
+  // pad the scroll area so the last exercise rows can sit clear of the tray
+  space.style.height = (tray.offsetHeight + 16) + 'px';
+}
+
 function renderTray(){
   var tray = document.getElementById('tray');
   var title = document.getElementById('trayTitle');
   var selList = document.getElementById('selList');
   var btn = document.getElementById('createBtn');
-  if(!selected.length){ tray.style.display = 'none'; return; }
+  if(!selected.length){ tray.style.display = 'none'; syncTraySpace(); return; }
   tray.style.display = 'block';
   title.textContent = selected.length + ' exercise' + (selected.length!==1?'s':'') + ' selected';
   selList.innerHTML = selected.map(function(s,i){
@@ -286,7 +305,10 @@ function renderTray(){
       + '</div>';
   }).join('');
   btn.disabled = false;
+  // wait a frame so the tray has laid out before measuring its height
+  requestAnimationFrame(syncTraySpace);
 }
+window.addEventListener('resize', syncTraySpace);
 
 function createWorkout(){
   var name = (document.getElementById('wkName').value||'').trim();

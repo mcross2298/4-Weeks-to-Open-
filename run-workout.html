@@ -35,9 +35,7 @@
 <div class="content" id="cards"></div>
 
 <div class="fw-bar" id="fwBar" style="display:none;">
-  <div class="fw-inner">
-    <button class="finish-btn" onclick="finishWorkout()">🏁 Finish Workout</button>
-  </div>
+  <button class="fw-btn" onclick="finishWorkout()">🏁 Finish Workout</button>
 </div>
 
 <script>
@@ -66,23 +64,26 @@ function render(){
   document.title = wk.name + ' — MC Training';
   document.getElementById('wkSub').textContent = wk.exercises.length + ' exercises';
 
-  cards.innerHTML = wk.exercises.map(function(ex, i){
-    var scheme = (ex.sets||3) + ' × ' + (ex.reps||'10');
+  // Render with the premium .a-card layout — same markup contract the program
+  // pages and run-program.html use, so set-logging, cues, summary, charts and
+  // the sleek accent rail all wire up automatically.
+  cards.innerHTML = '<div class="tap-hint">Tap to check off</div>' + wk.exercises.map(function(ex, i){
+    var scheme = (ex.sets||3) + '×' + (ex.reps||'10');
     var did = 'cw' + i + '-' + slug(ex.name);
-    return '<div class="ex-card" data-id="'+did+'">'
-      + '<div class="ex-head" data-toggle="1">'
-      +   '<div class="ex-check">✓</div>'
-      +   '<div class="ex-info"><div class="ex-name">'+esc(ex.name)+'</div>'
-      +     '<div class="ex-muscle">'+esc(ex.muscle||'')+'</div></div>'
-      +   '<div class="ex-sets">'+esc(scheme)+'</div>'
-      + '</div>'
-      + '<div class="ex-content"></div>'
-      + '</div>';
+    return '<div class="ex-card a-card" data-id="'+did+'" data-type="single">'
+      + '<div class="ex-body"><div class="ex-content">'
+      +   '<div class="a-top"><div class="a-idx">'+(i+1)+'</div>'
+      +   '<div class="a-head"><div class="ex-name a-name">'+esc(ex.name)+'</div>'
+      +   (ex.muscle?'<div class="a-badges"><span class="type-badge tb-midset">'+esc(ex.muscle)+'</span></div>':'')
+      +   '</div></div>'
+      +   '<div class="a-strip"><div class="a-cell"><span class="k">Sets</span><span class="v"><span class="ex-sets" data-field="sets">'+esc(scheme)+'</span></span></div>'
+      +   '<div class="a-cell"><span class="k">Rest</span><span class="v">—</span></div></div>'
+      + '</div></div></div>';
   }).join('');
 
-  // tap header to toggle completion (drives the live summary + daily tracking)
-  Array.prototype.forEach.call(cards.querySelectorAll('.ex-head[data-toggle]'), function(h){
-    h.addEventListener('click', function(){ h.closest('.ex-card').classList.toggle('checked'); });
+  // tap card to toggle completion (drives the live summary + daily tracking)
+  Array.prototype.forEach.call(cards.querySelectorAll('.ex-card'), function(c){
+    c.addEventListener('click', function(){ c.classList.toggle('checked'); });
   });
   document.getElementById('fwBar').style.display = 'block';
 }
@@ -123,7 +124,6 @@ render();
 <script src="mc-biometric.js"></script>
 <script src="program-overrides.js"></script>
 <script src="mc-card-actions.js"></script>
-<script src="program-manager.js"></script>
 <script src="mc-setlog.js"></script>
 <script src="mc-session.js"></script>
 <script src="mc-suggest.js"></script>
