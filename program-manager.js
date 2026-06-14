@@ -209,12 +209,28 @@
   }
 
 
+  // ---- inline "Edit Layout" editor (PM Phase 3) ----------------------------
+  // The structural-layout + ThemeConfig sidebar lives in its own module
+  // (mc-pm-layout-editor.js). Lazy-load it on first use so normal pages never
+  // pay for it; it's owner-gated by virtue of living behind this PM bar.
+  function openLayoutEditor() {
+    if (window.MC_PM_LAYOUT) { MC_PM_LAYOUT.open(); return; }
+    var s = document.createElement('script');
+    s.src = 'mc-pm-layout-editor.js';
+    s.onload = function () { if (window.MC_PM_LAYOUT) MC_PM_LAYOUT.open(); };
+    s.onerror = function () { msg('Unavailable', 'Could not load the layout editor on this page.'); };
+    document.head.appendChild(s);
+  }
+
   // ---- PM bar (visible only while unlocked) --------------------------------
   function localEditCount() {
     if (!window.MC_PO) return 0;
     var local = MC_PO.local() || {};
-    var pages = local.pages || {}, n = 0, pid, nm;
+    var pages = local.pages || {}, n = 0, pid, nm, k;
     for (pid in pages) for (nm in pages[pid]) n++;
+    // layouts + themes (PM Phase 2/3) — 1-level sections
+    var lay = local.layouts || {}; for (k in lay) n++;
+    var thm = local.themes || {};  for (k in thm) n++;
     if (window.MC_EXCATALOG) n += MC_EXCATALOG.getPending().length;
     if (window.MC_NAMES) n += MC_NAMES.localNamingEditCount();
     return n;
@@ -230,6 +246,7 @@
         '<span class="mc-pm-count"></span>' +
         '<button class="mc-pm-publish" data-act="publish">Publish</button>' +
         '<button data-act="names">Names</button>' +
+        '<button data-act="layout">Edit Layout</button>' +
         '<button data-act="find">Find</button>' +
         '<button data-act="preview">Preview</button>' +
         '<button data-act="export">Export</button>' +
@@ -244,6 +261,7 @@
         var act = b.dataset.act;
         if (act === 'publish') doPublish();
         else if (act === 'names') openRenameCenter();
+        else if (act === 'layout') openLayoutEditor();
         else if (act === 'find') findExercise();
         else if (act === 'preview') togglePreview();
         else if (act === 'export') doExport();
@@ -344,6 +362,21 @@
     for (bp in bdg) for (bid in bdg[bp]) { bItems.push(esc(bid + ' — ' + act(bdg[bp][bid])) + ctx(bp)); n++; }
     if (bItems.length) groups.push({ t: 'Badges', items: bItems });
 
+    // PM Phase 2/3 — layout + theme edits. These publish via Export → commit
+    // program-overrides.json (the live Supabase path for them is a follow-up),
+    // so they are counted and listed but not pushed by the Supabase upsert below.
+    var lay = local.layouts || {}, lItems = [], lk;
+    for (lk in lay) { lItems.push(esc(lk + ' — layout “' + (lay[lk] && lay[lk].style || '') + '”')); n++; }
+    if (lItems.length) groups.push({ t: 'Layouts (Export to publish)', items: lItems });
+    var thm = local.themes || {}, tItems = [], tk;
+    for (tk in thm) {
+      var tc = thm[tk] || {}, bits = [];
+      ['preset', 'accent', 'typography', 'density', 'motion'].forEach(function (f) { if (tc[f]) bits.push(f + ':' + tc[f]); });
+      tItems.push(esc(tk + ' — ' + (bits.join(', ') || 'theme')));
+      n++;
+    }
+    if (tItems.length) groups.push({ t: 'Theme (Export to publish)', items: tItems });
+
     if (window.MC_EXCATALOG && MC_EXCATALOG.getPending().length) {
       var c = MC_EXCATALOG.getPending().length;
       groups.push({ t: 'New catalog exercises', items: [c + ' new exercise' + (c === 1 ? '' : 's')] });
@@ -435,7 +468,10 @@
       if (!canaryMode && typeof MC_SB.logPublish === 'function') { try { MC_SB.logPublish(entries).catch(function () {}); } catch (e) {} }
       var cur = MC_PO.local() || {};
       if (canaryMode) { cur.exercises = {}; cur.programs = {}; cur.splits = {}; cur.badges = {}; }
-      else cur = { pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} };
+      // live publish clears the pushed sections but PRESERVES layouts/themes,
+      // which publish via Export (commit program-overrides.json), not Supabase.
+      else cur = { pages: {}, exercises: {}, programs: {}, splits: {}, badges: {},
+                   layouts: cur.layouts || {}, themes: cur.themes || {} };
       MC_PO.setLocal(cur);
       if (btn) btn.textContent = 'Publish';
       renderBar();
@@ -495,7 +531,7 @@
     confirmModal('Discard local edits?',
       'Discard ALL unpublished local edits? Published overrides are unaffected.',
       function () {
-        MC_PO.setLocal({ pages: {}, exercises: {}, programs: {}, splits: {}, badges: {} });
+        MC_PO.setLocal({ pages: {}, exercises: {}, programs: {}, splits: {}, badges: {}, layouts: {}, themes: {} });
         renderBar();
       },
       'Discard');
@@ -1333,6 +1369,9 @@
     injectStyles();
     attachLongPress();        // ?pm=1 trigger
     renderBar();
+    // keep the unpublished-edit count live while the Edit Layout sidebar writes
+    // layout/theme edits to the working copy
+    document.addEventListener('mc:layout-changed', function () { renderBar(); });
     // reveal the PM menu item if we're already unlocked this session
     if (isActive()) {
       var btn = document.querySelector('[data-act="pm"]');
