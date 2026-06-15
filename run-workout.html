@@ -69,15 +69,21 @@ function render(){
   // the sleek accent rail all wire up automatically.
   cards.innerHTML = '<div class="tap-hint">Tap to check off</div>' + wk.exercises.map(function(ex, i){
     var scheme = (ex.sets||3) + '×' + (ex.reps||'10');
+    // Append the drop clause so mc-setlog's parseDrop adds the drop row, and the
+    // working-set count still parses off the leading "N×".
+    if(ex.drop) scheme += (ex.drop==='AMRAP' ? ' drop set' : ' drop ' + ex.drop);
+    var badges = '';
+    if(ex.muscle) badges += '<span class="type-badge tb-midset">'+esc(ex.muscle)+'</span>';
+    if(ex.drop)   badges += '<span class="type-badge tb-drop">↘️ Drop'+(ex.drop!=='AMRAP'?' '+esc(ex.drop):' set')+'</span>';
     var did = 'cw' + i + '-' + slug(ex.name);
     return '<div class="ex-card a-card" data-id="'+did+'" data-type="single">'
       + '<div class="ex-body"><div class="ex-content">'
       +   '<div class="a-top"><div class="a-idx">'+(i+1)+'</div>'
       +   '<div class="a-head"><div class="ex-name a-name">'+esc(ex.name)+'</div>'
-      +   (ex.muscle?'<div class="a-badges"><span class="type-badge tb-midset">'+esc(ex.muscle)+'</span></div>':'')
+      +   (badges?'<div class="a-badges">'+badges+'</div>':'')
       +   '</div></div>'
       +   '<div class="a-strip"><div class="a-cell"><span class="k">Sets</span><span class="v"><span class="ex-sets" data-field="sets">'+esc(scheme)+'</span></span></div>'
-      +   '<div class="a-cell"><span class="k">Rest</span><span class="v">—</span></div></div>'
+      +   '<div class="a-cell"><span class="k">'+(ex.tempo?'Tempo':'Rest')+'</span><span class="v">'+(ex.tempo?'⏱ '+esc(ex.tempo):'—')+'</span></div></div>'
       + '</div></div></div>';
   }).join('');
 

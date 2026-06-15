@@ -50,9 +50,13 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 .create-btn:disabled{opacity:0.4;cursor:not-allowed;filter:grayscale(0.5);}
 .create-btn:active:not(:disabled){transform:scale(0.98);}
 .sel-list{display:flex;flex-direction:column;gap:6px;max-height:34vh;overflow-y:auto;}
-.sel-item{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:8px 10px;}
+.sel-item{display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:9px 10px;}
+.sel-top{display:flex;align-items:center;gap:8px;}
+.sel-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .sel-nm{flex:1;font-size:12px;font-weight:700;color:#e2e8f0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.sel-inp{width:54px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 6px;color:#e2e8f0;font-size:12px;font-weight:700;text-align:center;outline:none;}
+.sel-inp{width:48px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 6px;color:#e2e8f0;font-size:12px;font-weight:700;text-align:center;outline:none;}
+.sel-sel{flex:1 1 96px;min-width:96px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 8px;color:#e2e8f0;font-size:12px;font-weight:700;outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;}
+.sel-sel option{background:#0d1f3c;color:#e2e8f0;}
 .sel-x{font-size:16px;color:#f87171;background:none;border:none;cursor:pointer;padding:0 4px;flex-shrink:0;}
 .sel-lbl{font-size:11px;color:#475569;font-weight:700;text-transform:uppercase;}
 /* saved workouts */
@@ -135,7 +139,25 @@ select.name-input option{background:#0d1f3c;color:#e2e8f0;}
 <script>
 var CW_KEY = 'mc_custom_workouts_v1';
 var activeFilter = 'All';
-var selected = [];   // [{name,muscle,sets,reps}]
+var selected = [];   // [{name,muscle,sets,reps,tempo,drop}]
+
+// Tempo presets mirror mc-card-actions.js (Eccentric:Pause:Concentric:Pause).
+var TEMPO_PRESETS = ['3:0:1:0','4:0:1:0','5:0:1:0','3:1:1:0','2:0:1:2','3:3:1:0','2:2:1:0','3:0:3:0'];
+// Drop-set presets — value is the drop target the runner/logger understands:
+// 'AMRAP' => "drop set" (to failure), a number => "drop N" reps.
+var DROP_PRESETS = [['AMRAP','Drop · to failure'],['15','Drop · 15'],['12','Drop · 12'],['10','Drop · 10'],['8','Drop · 8'],['6','Drop · 6']];
+function tempoSelect(i, val){
+  val = val || '';
+  var opts = '<option value="">Tempo: none</option>';
+  TEMPO_PRESETS.forEach(function(t){ opts += '<option value="'+t+'"'+(t===val?' selected':'')+'>⏱ '+t+'</option>'; });
+  return '<select class="sel-sel" onchange="updSel('+i+',\'tempo\',this.value)" title="Lifting tempo">'+opts+'</select>';
+}
+function dropSelect(i, val){
+  val = val || '';
+  var opts = '<option value="">No drop set</option>';
+  DROP_PRESETS.forEach(function(d){ opts += '<option value="'+esc(d[0])+'"'+(d[0]===val?' selected':'')+'>↘️ '+esc(d[1])+'</option>'; });
+  return '<select class="sel-sel" onchange="updSel('+i+',\'drop\',this.value)" title="Drop set">'+opts+'</select>';
+}
 // PM "+ Create" wizard hand-off: a new workout carries the structure/skin it
 // was created with. Consumed once, then cleared.
 var CREATE_INTENT = (function(){ try{ var i=JSON.parse(localStorage.getItem('mc_pm_create_intent')||'null'); localStorage.removeItem('mc_pm_create_intent'); return i; }catch(e){ return null; } })();
@@ -254,7 +276,7 @@ function addNewExercise() {
   if (!q) return;
   var entry = MC_EXCATALOG.add(q);
   if (!selected.some(function(s){ return s.name === entry.name; })) {
-    selected.push({ name: entry.name, muscle: entry.muscle, sets: 3, reps: '10' });
+    selected.push({ name: entry.name, muscle: entry.muscle, sets: 3, reps: '10', tempo: '', drop: '' });
   }
   buildFilters();
   renderList();
@@ -265,7 +287,7 @@ function toggleEx(i){
   var e = EXERCISES[i];
   var idx = selected.findIndex(function(s){ return s.name===e.name; });
   if(idx>=0) selected.splice(idx,1);
-  else selected.push({ name:e.name, muscle:e.muscle, sets:3, reps:'10' });
+  else selected.push({ name:e.name, muscle:e.muscle, sets:3, reps:'10', tempo:'', drop:'' });
   renderList(); renderTray();
 }
 function clearSelected(){ selected = []; renderList(); renderTray(); }
@@ -296,12 +318,18 @@ function renderTray(){
   title.textContent = selected.length + ' exercise' + (selected.length!==1?'s':'') + ' selected';
   selList.innerHTML = selected.map(function(s,i){
     return '<div class="sel-item">'
-      + '<div class="sel-nm">'+esc(s.name)+'</div>'
-      + '<input class="sel-inp" type="number" min="1" max="12" value="'+esc(s.sets)+'" onchange="updSel('+i+',\'sets\',this.value)" title="sets"/>'
-      + '<span class="sel-lbl">sets</span>'
-      + '<input class="sel-inp" type="text" value="'+esc(s.reps)+'" onchange="updSel('+i+',\'reps\',this.value)" title="reps"/>'
-      + '<span class="sel-lbl">reps</span>'
-      + '<button class="sel-x" onclick="removeSel('+i+')">✕</button>'
+      + '<div class="sel-top">'
+      +   '<div class="sel-nm">'+esc(s.name)+'</div>'
+      +   '<button class="sel-x" onclick="removeSel('+i+')">✕</button>'
+      + '</div>'
+      + '<div class="sel-controls">'
+      +   '<input class="sel-inp" type="number" min="1" max="12" value="'+esc(s.sets)+'" onchange="updSel('+i+',\'sets\',this.value)" title="sets"/>'
+      +   '<span class="sel-lbl">sets</span>'
+      +   '<input class="sel-inp" type="text" value="'+esc(s.reps)+'" onchange="updSel('+i+',\'reps\',this.value)" title="reps"/>'
+      +   '<span class="sel-lbl">reps</span>'
+      +   tempoSelect(i, s.tempo)
+      +   dropSelect(i, s.drop)
+      + '</div>'
       + '</div>';
   }).join('');
   btn.disabled = false;
@@ -326,7 +354,7 @@ function createWorkout(){
     program: program,                       // '' ⇒ routed to Bonus Workouts
     collection: collection,                 // '' ⇒ not in any collection
     exercises: selected.map(function(s){
-      return { name:s.name, muscle:s.muscle, sets:parseInt(s.sets,10)||3, reps:(''+s.reps).trim()||'10' };
+      return { name:s.name, muscle:s.muscle, sets:parseInt(s.sets,10)||3, reps:(''+s.reps).trim()||'10', tempo:(s.tempo||''), drop:(s.drop||'') };
     })
   };
   // carry the layout/skin chosen in the "+ Create" wizard onto the new workout
