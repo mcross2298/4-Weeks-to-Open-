@@ -52,6 +52,80 @@ function getWorkout(){
 function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 function slug(s){ return String(s).trim().replace(/\s+/g,'-').toLowerCase().replace(/[^a-z0-9_-]/g,'').slice(0,24)||'ex'; }
 
+// --- drop sets: an exercise may carry a SEQUENCE of drops -----------------
+// New workouts store ex.drops = ['AMRAP','8',...]; older ones a single ex.drop.
+function dropsOf(ex){
+  if(ex.drops && ex.drops.length) return ex.drops.slice();
+  if(ex.drop) return [ex.drop];
+  return [];
+}
+// Build the "drop a,b,c" clause mc-setlog's parseDrop understands, appended to
+// the working-set scheme so each drop becomes its own logged row.
+function dropClause(drops){
+  if(!drops.length) return '';
+  return ' drop ' + drops.map(function(d){ return d==='AMRAP' ? 'AMRAP' : d; }).join(',');
+}
+function dropBadge(drops){
+  if(!drops.length) return '';
+  if(drops.length===1){
+    var d=drops[0];
+    return '<span class="type-badge tb-drop">↘️ Drop'+(d!=='AMRAP'?' '+esc(d):' set')+'</span>';
+  }
+  var allAmrap = drops.every(function(d){ return d==='AMRAP'; });
+  var txt = allAmrap
+    ? ('↘️ Drop ×'+drops.length)
+    : ('↘️ Drop '+drops.map(function(d){ return d==='AMRAP'?'∞':esc(d); }).join('→'));
+  return '<span class="type-badge tb-drop">'+txt+'</span>';
+}
+
+// A single (non-superset) exercise card — the original .a-card layout.
+function renderSingle(ex, i){
+  var drops = dropsOf(ex);
+  var scheme = (ex.sets||3) + '×' + (ex.reps||'10') + dropClause(drops);
+  var badges = '';
+  if(ex.muscle) badges += '<span class="type-badge tb-midset">'+esc(ex.muscle)+'</span>';
+  badges += dropBadge(drops);
+  var did = 'cw' + i + '-' + slug(ex.name);
+  return '<div class="ex-card a-card" data-id="'+did+'" data-type="single">'
+    + '<div class="ex-body"><div class="ex-content">'
+    +   '<div class="a-top"><div class="a-idx">'+(i+1)+'</div>'
+    +   '<div class="a-head"><div class="ex-name a-name">'+esc(ex.name)+'</div>'
+    +   (badges?'<div class="a-badges">'+badges+'</div>':'')
+    +   '</div></div>'
+    +   '<div class="a-strip"><div class="a-cell"><span class="k">Sets</span><span class="v"><span class="ex-sets" data-field="sets">'+esc(scheme)+'</span></span></div>'
+    +   '<div class="a-cell"><span class="k">'+(ex.tempo?'Tempo':'Rest')+'</span><span class="v">'+(ex.tempo?'⏱ '+esc(ex.tempo):'—')+'</span></div></div>'
+    + '</div></div></div>';
+}
+
+// A superset group (2+ chained exercises) — the shared .ss-card contract the
+// program pages use, so the set-logger and summary wire up automatically.
+function renderSuperset(g){
+  var legs = g.map(function(ex, k){
+    var i = ex._i;
+    var drops = dropsOf(ex);
+    var scheme = (ex.sets||3) + '×' + (ex.reps||'10') + dropClause(drops);
+    var badges = '';
+    if(ex.muscle) badges += '<span class="type-badge tb-midset">'+esc(ex.muscle)+'</span>';
+    badges += dropBadge(drops);
+    if(ex.tempo) badges += '<span class="type-badge tb-tempo">⏱ '+esc(ex.tempo)+'</span>';
+    var did = 'cw' + i + '-' + slug(ex.name);
+    var letter = String.fromCharCode(65 + k);   // A, B, C…
+    return '<div class="ss-ex" data-id="'+did+'" data-type="ssex">'
+      + '<div class="ss-num">'+letter+'</div>'
+      + '<div class="ss-content">'
+      +   '<div class="ss-name">'+esc(ex.name)+'</div>'
+      +   '<div class="a-ss-reps"><span style="font-size:12px;font-weight:800;color:#c084fc;">'+esc(scheme)+'</span></div>'
+      +   '<span class="ex-sets a-ss-sets-hidden">'+esc(scheme)+'</span>'
+      +   (badges?'<div class="a-badges">'+badges+'</div>':'')
+      + '</div></div>';
+  });
+  var isTri = g.length>=3;
+  return '<div class="ss-card a-ss'+(isTri?' is-tri':'')+'">'
+    + '<div class="ss-header"><span class="ss-label">⚡ Superset</span></div>'
+    + legs.join('<div class="ss-divider"><span class="ss-x">× SUPERSET ×</span></div>')
+    + '</div>';
+}
+
 function render(){
   var wk = getWorkout();
   var cards = document.getElementById('cards');
@@ -66,30 +140,25 @@ function render(){
 
   // Render with the premium .a-card layout — same markup contract the program
   // pages and run-program.html use, so set-logging, cues, summary, charts and
-  // the sleek accent rail all wire up automatically.
-  cards.innerHTML = '<div class="tap-hint">Tap to check off</div>' + wk.exercises.map(function(ex, i){
-    var scheme = (ex.sets||3) + '×' + (ex.reps||'10');
-    // Append the drop clause so mc-setlog's parseDrop adds the drop row, and the
-    // working-set count still parses off the leading "N×".
-    if(ex.drop) scheme += (ex.drop==='AMRAP' ? ' drop set' : ' drop ' + ex.drop);
-    var badges = '';
-    if(ex.muscle) badges += '<span class="type-badge tb-midset">'+esc(ex.muscle)+'</span>';
-    if(ex.drop)   badges += '<span class="type-badge tb-drop">↘️ Drop'+(ex.drop!=='AMRAP'?' '+esc(ex.drop):' set')+'</span>';
-    var did = 'cw' + i + '-' + slug(ex.name);
-    return '<div class="ex-card a-card" data-id="'+did+'" data-type="single">'
-      + '<div class="ex-body"><div class="ex-content">'
-      +   '<div class="a-top"><div class="a-idx">'+(i+1)+'</div>'
-      +   '<div class="a-head"><div class="ex-name a-name">'+esc(ex.name)+'</div>'
-      +   (badges?'<div class="a-badges">'+badges+'</div>':'')
-      +   '</div></div>'
-      +   '<div class="a-strip"><div class="a-cell"><span class="k">Sets</span><span class="v"><span class="ex-sets" data-field="sets">'+esc(scheme)+'</span></span></div>'
-      +   '<div class="a-cell"><span class="k">'+(ex.tempo?'Tempo':'Rest')+'</span><span class="v">'+(ex.tempo?'⏱ '+esc(ex.tempo):'—')+'</span></div></div>'
-      + '</div></div></div>';
+  // the sleek accent rail all wire up automatically. Consecutive exercises
+  // flagged superset are grouped into a single .ss-card.
+  var groups = [];
+  wk.exercises.forEach(function(ex, i){
+    ex._i = i;   // keep the absolute index for stable per-exercise log ids
+    if(i>0 && ex.superset && groups.length) groups[groups.length-1].push(ex);
+    else groups.push([ex]);
+  });
+  cards.innerHTML = '<div class="tap-hint">Tap to check off</div>' + groups.map(function(g){
+    return g.length>1 ? renderSuperset(g) : renderSingle(g[0], g[0]._i);
   }).join('');
 
   // tap card to toggle completion (drives the live summary + daily tracking)
   Array.prototype.forEach.call(cards.querySelectorAll('.ex-card'), function(c){
     c.addEventListener('click', function(){ c.classList.toggle('checked'); });
+  });
+  // superset legs check off individually; stop the tap bubbling to the group
+  Array.prototype.forEach.call(cards.querySelectorAll('.ss-ex'), function(c){
+    c.addEventListener('click', function(e){ e.stopPropagation(); c.classList.toggle('checked'); });
   });
   document.getElementById('fwBar').style.display = 'block';
 }
@@ -97,10 +166,10 @@ function render(){
 function finishWorkout(){
   var wk = getWorkout(); if(!wk) return;
   var sl; try{ sl = JSON.parse(localStorage.getItem(SL_KEY)||'{}'); }catch(e){ sl = {}; }
-  var cards = document.querySelectorAll('.ex-card');
+  var cards = document.querySelectorAll('.ex-card, .ss-ex');
   var sets = [];
   Array.prototype.forEach.call(cards, function(c){
-    var name = (c.querySelector('.ex-name')||{}).textContent || '';
+    var name = (c.querySelector('.ex-name, .ss-name')||{}).textContent || '';
     var arr = sl[PID + '|' + c.dataset.id];
     var sess = arr && arr[0];
     if(sess && sess.sets){
@@ -110,7 +179,7 @@ function finishWorkout(){
       });
     }
   });
-  var done = document.querySelectorAll('.ex-card.checked').length;
+  var done = document.querySelectorAll('.ex-card.checked, .ss-ex.checked').length;
   var log; try{ log = JSON.parse(localStorage.getItem(WL_KEY)||'[]'); }catch(e){ log = []; }
   log.push({
     date: new Date().toISOString(),

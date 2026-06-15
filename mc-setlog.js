@@ -82,11 +82,14 @@
   // A bare "drop" with no number and no "set" (rare) is NOT treated as a drop.
   function parseDrop(name, sets) {
     var hay = (name || '') + ' ' + (sets || '');
-    if (!/drop/i.test(hay)) return { is: false, reps: '' };
-    var m = hay.match(/drop\s*(\d+)/i);                 // "drop 15", "drop 8"
-    if (m) return { is: true, reps: m[1] };
-    if (/drop\s*set/i.test(hay)) return { is: true, reps: 'AMRAP' };
-    return { is: false, reps: '' };
+    // Tokens must immediately follow "drop": one or more of set/AMRAP/number,
+    // comma-separated — "drop set", "drop 15", "drop 8,12", "drop AMRAP,AMRAP".
+    var m = hay.match(/\bdrop\b\s*((?:set|amrap|\d+)(?:\s*,\s*(?:set|amrap|\d+))*)/i);
+    if (!m) return { is: false, drops: [] };
+    var drops = [], tok = /(\d+)|set|amrap/gi, t;
+    while ((t = tok.exec(m[1]))) drops.push(t[1] ? t[1] : 'AMRAP');
+    if (!drops.length) return { is: false, drops: [] };
+    return { is: true, drops: drops };
   }
   // Strip the trailing "drop …" clause so the WORKING sets parse cleanly
   // ("12,10,8,8 drop 15" → "12,10,8,8"; no more garbled "815" rep target).
@@ -156,16 +159,22 @@
     var drop = parseDrop(nmEl ? nmEl.textContent : '', setsStr);
     var work = drop.is ? stripDrop(setsStr) : setsStr;
     var n = setCount(work);
-    var total = drop.is ? n + 1 : n;   // the appended row is the drop set
-    var dropAmrap = drop.reps === 'AMRAP';
+    var nd = drop.is ? drop.drops.length : 0;   // number of appended drop rows
+    var total = n + nd;
+    var dropAmrap = nd === 1 && drop.drops[0] === 'AMRAP';
 
+    var dropTag = '', dropTitle = '';
+    if (drop.is) {
+      dropTag = nd > 1 ? ('+ ' + nd + ' DROPS') : (dropAmrap ? '+ AMRAP' : '+ DROP');
+      dropTitle = nd > 1
+        ? ('Drop sets — ' + nd + ' successive drops after your working sets')
+        : (dropAmrap ? 'Drop set — extra set to failure after your working sets'
+                     : 'Drop set — strip weight after the last set, rep out (~' + drop.drops[0] + ')');
+    }
     var toggle = document.createElement('div');
     toggle.className = 'mcl-toggle';
     toggle.innerHTML = '<span class="mcl-chev">▾</span><span class="mcl-lbl">Log Sets</span>' +
-                       (drop.is ? '<span class="mcl-amrap" title="' +
-                          (dropAmrap ? 'Drop set — extra set to failure after your working sets'
-                                     : 'Drop set — strip weight after the last set, rep out (~' + drop.reps + ')') +
-                          '">' + (dropAmrap ? '+ AMRAP' : '+ DROP') + '</span>' : '') +
+                       (drop.is ? '<span class="mcl-amrap" title="' + dropTitle + '">' + dropTag + '</span>' : '') +
                        '<span class="mcl-hist mcl-hist-' + cid + '">' + histText(exId) + '</span>';
 
     var wrap = document.createElement('div');
@@ -174,10 +183,12 @@
                '<div class="mcl-hl">Reps</div><div class="mcl-hl">RPE</div><div class="mcl-hl"></div></div>';
     for (var i = 0; i < total; i++) {
       var sn = i + 1, last = lset(exId, sn);
-      var isDropRow = drop.is && i === total - 1;   // the appended drop set row
+      var dropIdx = i - n;                          // ≥0 ⇒ this is a drop row
+      var isDropRow = drop.is && dropIdx >= 0;
+      var dropTarget = isDropRow ? drop.drops[dropIdx] : '';
       var pr = isDropRow ? '' : repFor(work, i);
       var wPh = (last && last.w) ? (last.w + ' lb') : 'lb';
-      var rPh = isDropRow ? drop.reps : (pr || (last && last.r ? last.r : 'reps'));
+      var rPh = isDropRow ? (dropTarget === 'AMRAP' ? 'AMRAP' : dropTarget) : (pr || (last && last.r ? last.r : 'reps'));
       var rpe = (last && last.rpe) || '';
       html += '<div class="mcl-row' + (isDropRow ? ' mcl-row-amrap' : '') + '" id="mclr-' + cid + '-' + sn + '">' +
                 '<div class="mcl-num">' + (isDropRow ? '↓' : sn) + '</div>' +
