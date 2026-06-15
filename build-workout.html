@@ -73,7 +73,13 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 .sel-drop{flex:1 1 130px;min-width:130px;}
 .sel-dropadd{font-size:11px;font-weight:800;border-radius:8px;padding:6px 9px;cursor:pointer;font-family:inherit;flex-shrink:0;background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.3);color:#67e8f9;}
 .sel-grouptag{font-size:10px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#fbbf24;}
-.sel-cluster{flex:1 1 130px;min-width:130px;}
+.cluster-toggle{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#22d3ee;cursor:pointer;flex-shrink:0;}
+.cluster-toggle input[type=checkbox]{accent-color:#22d3ee;width:15px;height:15px;cursor:pointer;}
+.cluster-config{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;width:100%;}
+.cluster-plus{font-size:13px;font-weight:700;color:#22d3ee;}
+.cluster-rep{width:38px;min-width:38px;}
+.cluster-count{flex:0 0 auto;min-width:80px;}
+.cluster-editor{flex-direction:column;align-items:flex-start;}
 /* saved workouts */
 .saved-card{background:#0d1f3c;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;margin-bottom:8px;}
 .saved-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
@@ -216,13 +222,36 @@ function groupLabel(n){ return n>=4 ? 'Giant set' : (n===3 ? 'Tri-set' : 'Supers
 // A cluster set breaks each working set into mini-sets with a short intra-set
 // rest (e.g. 3+3+3 with 15s between clusters). Stored as ex.cluster (the rep
 // grouping) + ex.clusterRest (intra-set rest); shown on the run card.
-var CLUSTER_PRESETS = ['2+2+2','3+3+3','4+4+4','5+5','2+2+2+2','3+3'];
 var CLUSTER_REST = ['10s','15s','20s','30s'];
-function clusterSelect(i, val){
-  val = val || '';
-  var opts = '<option value="">No cluster</option>';
-  CLUSTER_PRESETS.forEach(function(c){ opts += '<option value="'+esc(c)+'"'+(c===val?' selected':'')+'>🧩 Cluster '+esc(c)+'</option>'; });
-  return '<select class="sel-sel sel-cluster" onchange="updCluster('+i+',this.value)" title="Cluster set — mini-sets with short intra-set rest">'+opts+'</select>';
+function parseCluster(val){ return val ? val.split('+').map(function(p){ return p.trim(); }) : []; }
+function buildCluster(parts){ return parts.filter(function(p){ return p; }).join('+'); }
+function updClusterToggle(i, checked){
+  var s = selected[i]; if(!s) return;
+  if(checked){
+    s.cluster = s.cluster || '5+5+5';
+    if(!s.clusterRest) s.clusterRest = '15s';
+  } else {
+    s.cluster = '';
+    s.clusterRest = '';
+  }
+  renderTray();
+}
+function updClusterCount(i, n){
+  var s = selected[i]; if(!s) return;
+  n = parseInt(n, 10);
+  var parts = parseCluster(s.cluster);
+  var last = parts[parts.length - 1] || '5';
+  while(parts.length < n) parts.push(last);
+  parts = parts.slice(0, n);
+  s.cluster = buildCluster(parts);
+  renderTray();
+}
+function updClusterRep(i, k, val){
+  var s = selected[i]; if(!s) return;
+  var parts = parseCluster(s.cluster);
+  parts[k] = (val || '').trim() || '5';
+  s.cluster = buildCluster(parts);
+  renderTray();
 }
 function clusterRestSelect(i, val){
   val = val || '15s';
@@ -230,12 +259,27 @@ function clusterRestSelect(i, val){
   CLUSTER_REST.forEach(function(r){ opts += '<option value="'+esc(r)+'"'+(r===val?' selected':'')+'>⏲ '+esc(r)+' intra-rest</option>'; });
   return '<select class="sel-sel" onchange="updSel('+i+',\'clusterRest\',this.value)" title="Rest between clusters">'+opts+'</select>';
 }
-function updCluster(i, val){
-  var s = selected[i]; if(!s) return;
-  s.cluster = val;
-  if(!val) s.clusterRest = '';
-  else if(!s.clusterRest) s.clusterRest = '15s';
-  renderTray();
+function clusterEditor(i, s){
+  var active = !!(s.cluster);
+  var parts = parseCluster(s.cluster);
+  if(active && parts.length < 3) parts = ['5','5','5'];
+  var html = '<label class="cluster-toggle"><input type="checkbox"'+(active?' checked':'')+' onchange="updClusterToggle('+i+',this.checked)"> 🧩 Cluster set</label>';
+  if(active){
+    html += '<div class="cluster-config">';
+    html += '<select class="sel-sel cluster-count" onchange="updClusterCount('+i+',this.value)" title="Number of mini-sets">';
+    [3,4].forEach(function(n){
+      html += '<option value="'+n+'"'+(parts.length===n?' selected':'')+'>'+n+' mini-sets</option>';
+    });
+    html += '</select>';
+    parts.forEach(function(p, k){
+      if(k > 0) html += '<span class="cluster-plus">+</span>';
+      html += '<input class="sel-inp cluster-rep" type="text" value="'+esc(p)+'" onchange="updClusterRep('+i+','+k+',this.value)" title="Mini-set '+(k+1)+' reps">';
+    });
+    html += '<span class="sel-lbl">reps</span>';
+    html += '</div>';
+    html += clusterRestSelect(i, s.clusterRest);
+  }
+  return html;
 }
 // PM "+ Create" wizard hand-off: a new workout carries the structure/skin it
 // was created with. Consumed once, then cleared.
@@ -428,7 +472,7 @@ function renderTray(){
       +   tempoSelect(i, s.tempo)
       + '</div>'
       + '<div class="sel-controls sel-drops">'+dropEditor(i, s.drops)+'</div>'
-      + '<div class="sel-controls">'+clusterSelect(i, s.cluster)+(s.cluster?clusterRestSelect(i, s.clusterRest):'')+'</div>'
+      + '<div class="sel-controls cluster-editor">'+clusterEditor(i, s)+'</div>'
       + '</div>';
   }).join('');
   btn.disabled = false;
