@@ -29,7 +29,8 @@
     landing: 'hero',
     split: 'tabbed',
     splitSS: 'accordion',         // ss only
-    workout: 'list'
+    workout: 'list',
+    conditioning: 'cards'         // Conditioning Corner = current card stack
   };
 
   // Selectable styles per view (base A/B + the Phase-2 Module-8 additions).
@@ -37,11 +38,13 @@
     'program-cards': ['stack', 'grid', 'featured', 'carousel'],
     landing:  ['hero', 'split', 'timeline'],
     split:    ['accordion', 'tabbed', 'week-calendar'],
-    workout:  ['list', 'swipe', 'superset-grouped']
+    workout:  ['list', 'swipe', 'superset-grouped'],
+    conditioning: ['cards', 'compact', 'grid']
   };
 
   function scopeOf(view, id) {
     if (view === 'program-cards') return 'program-cards';
+    if (view === 'conditioning') return 'conditioning';
     return view + ':' + (id || '');
   }
 
@@ -89,9 +92,22 @@
     }
   }
 
+  // Conditioning Corner: re-flows the dashboard Conditioning tab cards by
+  // tagging #condBody with the resolved style. CSS in dashboard.html keys off
+  // [data-cond-layout]; the default 'cards' clears the attribute so nothing
+  // changes for users until an override is published. Attribute-only + reversible.
+  function paintConditioning(el) {
+    el = el || document.getElementById('condBody');
+    if (!el) return;
+    var style = styleFor('conditioning');
+    if (style && style !== 'cards') el.setAttribute('data-cond-layout', style);
+    else el.removeAttribute('data-cond-layout');
+  }
+
   function repaint() {
     try { paintProgramCards(); } catch (e) {}
     try { paintWorkout(); } catch (e) {}
+    try { paintConditioning(); } catch (e) {}
   }
 
   window.MC_LAYOUT = {
@@ -101,6 +117,7 @@
     styleFor: styleFor,
     paintProgramCards: paintProgramCards,
     paintWorkout: paintWorkout,
+    paintConditioning: paintConditioning,
     repaint: repaint
   };
 

@@ -163,6 +163,17 @@
     } catch (e) {}
   }
 
+  // ---- CONDITIONING CORNER -------------------------------------------------
+  // The dashboard Conditioning tab renders its cards from CONDITIONING via
+  // renderConditioning(), which resolves text overrides through MC_PO at build
+  // time. Re-call it on mc:names-changed so inline edits preview live (mirrors
+  // repaintDashboard()/renderHero()). No-op on pages without that renderer.
+  function repaintConditioning() {
+    if (typeof window.renderConditioning !== 'function') return;
+    if (!document.getElementById('condBody')) return;
+    try { window.renderConditioning(); } catch (e) {}
+  }
+
   // ---- MAIN PAINT TICK -----------------------------------------------------
   var scanTimer = null;
 
@@ -171,6 +182,7 @@
     paintSplitHubHeader();
     hookDashboard();
     repaintDashboard();
+    repaintConditioning();
   }
 
   function schedule() { clearTimeout(scanTimer); scanTimer = setTimeout(paint, 80); }

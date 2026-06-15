@@ -396,6 +396,17 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .cond-arrow{position:absolute;right:16px;top:16px;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);}
 .cond-ex-grid{display:flex;flex-wrap:wrap;gap:7px;}
 .cond-ex-item{font-size:12px;font-weight:700;color:#cbd5e1;background:var(--surface);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:8px 12px;}
+/* ── Conditioning Corner — owner-selectable layouts (mc-layout.js) ── */
+/* compact: tighter cards, drop the description + stat pills for a dense list */
+#condBody[data-cond-layout="compact"] .cond-card{padding:11px 15px;margin-bottom:8px;}
+#condBody[data-cond-layout="compact"] .cond-meta,
+#condBody[data-cond-layout="compact"] .cond-stats{display:none;}
+#condBody[data-cond-layout="compact"] .cond-name{font-size:15px;margin-bottom:3px;}
+/* grid: two-up card grid within each sub-category */
+#condBody[data-cond-layout="grid"] .cond-sub{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+#condBody[data-cond-layout="grid"] .cond-sub-head{grid-column:1/-1;}
+#condBody[data-cond-layout="grid"] .cond-card{margin-bottom:0;}
+#condBody[data-cond-layout="grid"] .cond-meta{display:none;}
 
 /* ── Custom Workouts section (Build Your Own) ── */
 .custom-section{margin-bottom:28px;}
@@ -1100,6 +1111,17 @@ function hexA(hex,a){
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 var condSubTab='workouts';
 function setCondSubTab(t){ condSubTab=t; renderConditioning(); }
+// resolved owner override for a conditioning routine (published+local, via
+// the shared page-override layer). Returns {name?,tag?,meta?} or null.
+function condOverride(id){
+  try{
+    if(window.MC_PO&&MC_PO.effective){
+      var p=((MC_PO.effective().pages||{}).cond||{})[id];
+      if(p&&!p.reset) return p;
+    }
+  }catch(e){}
+  return null;
+}
 function renderCondLib(q){ var el=document.getElementById('condLib'); if(el&&window.MCSubs) el.innerHTML=MCSubs.libGroupsHTML(q,false); }
 function renderConditioning(){
   var body=document.getElementById('condBody');
@@ -1118,11 +1140,16 @@ function renderConditioning(){
         +'<div><div class="cond-sub-name">'+esc(sub.name)+'</div>'
         +(sub.blurb?'<div class="cond-sub-blurb">'+esc(sub.blurb)+'</div>':'')+'</div></div>';
       (sub.routines||[]).forEach(function(r){
-        html+='<a href="'+r.href+'" class="cond-card" style="background:linear-gradient(135deg,'+hexA(col,0.12)+','+'var(--surface));border-color:'+hexA(col,0.33)+'">'
+        // resolve owner inline-text overrides (mc-pm-inline.js, 'cond' page).
+        var ov=condOverride(r.id);
+        var nm=(ov&&ov.name)||r.name, tg=(ov&&ov.tag!=null&&ov.tag!=='')?ov.tag:r.tag, mt=(ov&&ov.meta)||r.meta;
+        html+='<a href="'+r.href+'" class="cond-card" data-cond-id="'+esc(r.id)+'"'
+            +' data-mc-orig-name="'+esc(r.name)+'" data-mc-orig-tag="'+esc(r.tag||'')+'" data-mc-orig-meta="'+esc(r.meta||'')+'"'
+            +' style="background:linear-gradient(135deg,'+hexA(col,0.12)+','+'var(--surface));border-color:'+hexA(col,0.33)+'">'
             +'<div class="cond-arrow" style="background:'+hexA(col,0.2)+';border-color:'+hexA(col,0.33)+'">→</div>'
-            +(r.tag?'<div class="cond-tag" style="color:'+col+'">'+esc(r.tag)+'</div>':'')
-            +'<div class="cond-name">'+esc(r.name)+'</div>'
-            +(r.meta?'<div class="cond-meta">'+esc(r.meta)+'</div>':'')
+            +(tg?'<div class="cond-tag" style="color:'+col+'">'+esc(tg)+'</div>':'')
+            +'<div class="cond-name">'+esc(nm)+'</div>'
+            +(mt?'<div class="cond-meta">'+esc(mt)+'</div>':'')
             +((r.stats&&r.stats.length)?'<div class="cond-stats">'+r.stats.map(function(s){return '<span class="cond-stat">'+esc(s)+'</span>';}).join('')+'</div>':'')
             +'</a>';
       });

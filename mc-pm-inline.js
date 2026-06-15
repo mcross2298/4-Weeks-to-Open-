@@ -24,7 +24,9 @@
      • Badge chip       lb-… / tb-… chips    → badges[progId|badgeId] (label+color)
      • Split header      .hero .title         → splits[progId|origSplit]
      • Program name      #heroName (dashboard)→ programs[progId]
+     • Conditioning card .cond-card           → pages['cond'][routineId] (name/tag/meta)
      • Layout & theme    #flagGrid / workout  → layouts[scope] / themes.global
+                         + Conditioning Corner → layouts['conditioning']
 
    The pencil is always inserted as a SIBLING of the text element, never a
    child, so the paint layer's data-mc-orig-* textContent capture stays clean.
@@ -218,6 +220,73 @@
     };
   }
 
+  // ---- A2. conditioning card (Conditioning Corner) ------------------------
+  // Reuses the page-override pipeline under a synthetic 'cond' page so no new
+  // Supabase section is needed: scope_id = routine id. Fields: name/tag/meta.
+  var COND_PAGE = 'cond';
+  function condSpec(card, nameEl) {
+    var key = card.getAttribute('data-cond-id') || '';
+    if (!key) return null;
+    var origName = card.getAttribute('data-mc-orig-name') || (nameEl.textContent || '').trim();
+    var origTag  = card.getAttribute('data-mc-orig-tag')  || '';
+    var origMeta = card.getAttribute('data-mc-orig-meta') || '';
+    function curEntry() { return ((localDoc().pages || {})[COND_PAGE] || {})[key] || null; }
+    function pubEntry() { return (((MC_PO.published().pages || {})[COND_PAGE]) || {})[key] || null; }
+    function pubHas() { return !!pubEntry(); }
+    var seed = curEntry() || pubEntry() || {};
+    if (seed.reset) seed = {};
+    function scrapLocal() {
+      var data = MC_PO.local();
+      if (data.pages && data.pages[COND_PAGE]) {
+        delete data.pages[COND_PAGE][key];
+        if (!Object.keys(data.pages[COND_PAGE]).length) delete data.pages[COND_PAGE];
+      }
+      MC_PO.setLocal(data);
+    }
+    return {
+      title: 'Edit conditioning',
+      origLabel: 'Original: <b>' + esc(origName) + '</b>',
+      fields: [
+        { id: 'name', label: 'Name', type: 'text', value: seed.name || '', placeholder: origName },
+        { id: 'tag', label: 'Tag', type: 'text', value: seed.tag || '', placeholder: origTag || '(none)' },
+        { id: 'meta', label: 'Description', type: 'textarea', value: seed.meta || '', placeholder: origMeta || '(none)' }
+      ],
+      isPending: function () { return !!curEntry(); },
+      preview: function (v, doReset) {
+        var data = MC_PO.local();
+        data.pages = data.pages || {};
+        var pg = data.pages[COND_PAGE] || (data.pages[COND_PAGE] = {});
+        if (doReset) {
+          if (pubHas()) pg[key] = { reset: true }; else delete pg[key];
+        } else {
+          var e = {};
+          if (v.name) e.name = v.name;
+          if (v.tag) e.tag = v.tag;
+          if (v.meta) e.meta = v.meta;
+          if (Object.keys(e).length) pg[key] = e;
+          else if (pubHas()) pg[key] = { reset: true };
+          else delete pg[key];
+        }
+        if (!Object.keys(pg).length) delete data.pages[COND_PAGE];
+        MC_PO.setLocal(data);
+      },
+      scrap: scrapLocal,
+      publish: function () {
+        var entry = curEntry();
+        var prev = pubEntry();
+        var patch = (entry && !entry.reset) ? entry : null;
+        var op = patch ? MC_SB.upsert(COND_PAGE, key, patch) : MC_SB.remove(COND_PAGE, key);
+        return op.then(function () {
+          var pub = MC_PO.published(); pub.pages = pub.pages || {};
+          pub.pages[COND_PAGE] = pub.pages[COND_PAGE] || {};
+          if (patch) pub.pages[COND_PAGE][key] = patch; else delete pub.pages[COND_PAGE][key];
+          scrapLocal();
+          logOne('pages', COND_PAGE + '|' + key, patch, prev);
+        });
+      }
+    };
+  }
+
   // ---- generic v2-naming spec (badge / split / program) -------------------
   // section: 'badges'|'splits'|'programs'; scope: supabase scope string.
   // key/subKey address the working-copy doc; scopeId addresses supabase.
@@ -362,8 +431,8 @@
     var clean = {}; ['preset', 'accent', 'typography', 'density', 'motion'].forEach(function (f) { if (cfg[f]) clean[f] = cfg[f]; });
     if (window.MC_PO && MC_PO.setThemeLocal) MC_PO.setThemeLocal('global', Object.keys(clean).length ? clean : null);
   }
-  function layoutSpec() {
-    var views = layoutViews();
+  function layoutSpec(viewsArg) {
+    var views = viewsArg || layoutViews();
     return {
       title: 'Layout & theme',
       origLabel: 'Changes preview live on this page.',
@@ -638,6 +707,23 @@
     target.parentNode.insertBefore(chip, target);
   }
 
+  // insert a labeled chip as the first child of `container` (a "line" at the
+  // top of a section, e.g. the Conditioning Corner)
+  function attachChipFirst(container, label, specFactory) {
+    if (!container || container.getAttribute('data-mcpi-chip') === '1') return;
+    container.setAttribute('data-mcpi-chip', '1');
+    var chip = document.createElement('button');
+    chip.type = 'button'; chip.className = 'mcpi-chip'; chip.innerHTML = '🎨 <span>' + label + '</span>';
+    chip.addEventListener('click', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      var spec; try { spec = specFactory(); } catch (err) { spec = null; }
+      if (!spec) return;
+      openPop(spec, chip.getBoundingClientRect());
+    });
+    if (container.firstChild) container.insertBefore(chip, container.firstChild);
+    else container.appendChild(chip);
+  }
+
   function scan() {
     if (!active) return;
     try {
@@ -667,6 +753,19 @@
         var grid = document.getElementById('flagGrid');
         var anchor = grid || document.querySelector('.ex-card, .ss-card, .a-card');
         if (anchor) attachChipBefore(anchor, 'Layout & Theme', function () { return layoutSpec(); });
+      }
+      // F. conditioning cards (Conditioning Corner — direct inline text edits)
+      document.querySelectorAll('.cond-card[data-cond-id]').forEach(function (card) {
+        var nameEl = card.querySelector('.cond-name');
+        if (!nameEl) return;
+        attachAfter(nameEl, function () { return condSpec(card, nameEl); });
+      });
+      // G. conditioning layout & theme line (scoped to the Conditioning view)
+      var condBody = document.getElementById('condBody');
+      if (window.MC_LAYOUT && condBody && condBody.querySelector('.cond-card[data-cond-id]')) {
+        attachChipFirst(condBody, 'Layout & Theme', function () {
+          return layoutSpec([{ view: 'conditioning', id: '', scope: 'conditioning', label: 'Conditioning' }]);
+        });
       }
       refreshPendingDots();
     } catch (e) { /* never break the page */ }
