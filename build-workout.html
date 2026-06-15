@@ -60,7 +60,11 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 .sel-x{font-size:16px;color:#f87171;background:none;border:none;cursor:pointer;padding:0 4px;flex-shrink:0;}
 .sel-lbl{font-size:11px;color:#475569;font-weight:700;text-transform:uppercase;}
 /* superset + drop-set controls */
-.sel-ss{font-size:11px;font-weight:800;border-radius:8px;padding:5px 9px;cursor:pointer;font-family:inherit;flex-shrink:0;background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.35);color:#c084fc;}
+/* Off (default) state is a neutral, clearly-inactive "opt in" button so a
+   freshly-added exercise never *looks* like it's already a superset. The
+   purple ⚡ active look is reserved for when the link is explicitly toggled on. */
+.sel-ss{font-size:11px;font-weight:800;border-radius:8px;padding:5px 9px;cursor:pointer;font-family:inherit;flex-shrink:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);color:#94a3b8;}
+.sel-ss:hover{border-color:rgba(168,85,247,0.5);color:#c084fc;}
 .sel-ss.on{background:#a855f7;border-color:#a855f7;color:#0a0810;}
 .sel-sshint{font-size:11px;color:#334155;flex-shrink:0;padding:0 4px;font-weight:800;}
 .sel-item.ss-linked{border-color:rgba(168,85,247,0.4);background:rgba(168,85,247,0.07);}
@@ -405,7 +409,9 @@ function renderTray(){
     var groupTag = (gSize>1 && firstOfGroup) ? '<div class="sel-grouptag">⚡ '+groupLabel(gSize)+'</div>' : '';
     var ssBtn = i===0
       ? '<span class="sel-sshint" title="The first exercise starts a group">—</span>'
-      : '<button type="button" class="sel-ss'+(ssActive?' on':'')+'" onclick="toggleSuperset('+i+')" title="Chain with the exercise above (superset → tri-set → giant set)">⚡ Superset</button>';
+      : '<button type="button" class="sel-ss'+(ssActive?' on':'')+'" onclick="toggleSuperset('+i+')" title="'
+        + (ssActive ? 'Linked as a superset with the exercise above — click to unlink' : 'Link this with the exercise above as a superset (superset → tri-set → giant set)')
+        + '">' + (ssActive ? '⚡ Superset' : '🔗 Make superset') + '</button>';
     return '<div class="sel-item'+(ssActive?' ss-linked':'')+'">'
       + groupTag
       + (ssActive?'<div class="sel-sslink">⚡ Linked with '+esc(selected[i-1].name)+'</div>':'')
