@@ -64,6 +64,19 @@
     if (pmBtn) pmBtn.style.display = on ? '' : 'none';
     if (on) { markOwnerSeen(); showDashboardEntry(); }
     if (on && openHubAfterUnlock) { openHubAfterUnlock = false; openHub(); }
+    // localized inline editing layer: pencils on editable surfaces while unlocked
+    toggleInline(on);
+  }
+
+  // lazy-load mc-pm-inline.js on first unlock (normal pages never pay for it),
+  // then enable/disable its in-context pencils as PM mode toggles.
+  function toggleInline(on) {
+    if (window.MC_PM_INLINE) { on ? MC_PM_INLINE.enable() : MC_PM_INLINE.disable(); return; }
+    if (!on) return;
+    var s = document.createElement('script');
+    s.src = 'mc-pm-inline.js';
+    s.onload = function () { if (isActive() && window.MC_PM_INLINE) MC_PM_INLINE.enable(); };
+    document.head.appendChild(s);
   }
 
   // PM "Preview as user": toggle painting of the published layer only, so the
@@ -1531,10 +1544,14 @@
     // keep the unpublished-edit count live while the Edit Layout sidebar writes
     // layout/theme edits to the working copy
     document.addEventListener('mc:layout-changed', function () { renderBar(); });
+    // inline edits write the working copy and fire mc:names-changed — keep the
+    // unpublished-edit count live for those too
+    document.addEventListener('mc:names-changed', function () { renderBar(); });
     // reveal the PM menu item if we're already unlocked this session
     if (isActive()) {
       var btn = document.querySelector('[data-act="pm"]');
       if (btn) btn.style.display = '';
+      toggleInline(true);   // re-attach inline pencils on reload while unlocked
     }
   }
 
