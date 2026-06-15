@@ -7,6 +7,7 @@
 <style>
 :root{--accent:#34d399;--accent-rgb:52,211,153;}
 .header{background:linear-gradient(90deg,#0d1f3c,#050d1a);}
+.tb-cluster{background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.28);}
 </style>
 <link rel="stylesheet" href="base.css?v=65"/>
 <link rel="stylesheet" href="mc-nav.css"/>
@@ -77,6 +78,17 @@ function dropBadge(drops){
     : ('↘️ Drop '+drops.map(function(d){ return d==='AMRAP'?'∞':esc(d); }).join('→'));
   return '<span class="type-badge tb-drop">'+txt+'</span>';
 }
+// Cluster set: each working set is split into mini-sets with a short intra-set
+// rest. Shown as a badge plus an explanatory note line.
+function clusterBadge(ex){
+  if(!ex.cluster) return '';
+  return '<span class="type-badge tb-cluster">🧩 Cluster '+esc(ex.cluster)+'</span>';
+}
+function clusterNote(ex){
+  if(!ex.cluster) return '';
+  var rest = ex.clusterRest ? (' · '+esc(ex.clusterRest)+' intra-set rest') : '';
+  return '<div class="a-notes">🧩 Cluster set — '+esc(ex.cluster)+' per working set'+rest+'</div>';
+}
 
 // A single (non-superset) exercise card — the original .a-card layout.
 function renderSingle(ex, i){
@@ -85,6 +97,7 @@ function renderSingle(ex, i){
   var badges = '';
   if(ex.muscle) badges += '<span class="type-badge tb-midset">'+esc(ex.muscle)+'</span>';
   badges += dropBadge(drops);
+  badges += clusterBadge(ex);
   var did = 'cw' + i + '-' + slug(ex.name);
   return '<div class="ex-card a-card" data-id="'+did+'" data-type="single">'
     + '<div class="ex-body"><div class="ex-content">'
@@ -94,6 +107,7 @@ function renderSingle(ex, i){
     +   '</div></div>'
     +   '<div class="a-strip"><div class="a-cell"><span class="k">Sets</span><span class="v"><span class="ex-sets" data-field="sets">'+esc(scheme)+'</span></span></div>'
     +   '<div class="a-cell"><span class="k">'+(ex.tempo?'Tempo':'Rest')+'</span><span class="v">'+(ex.tempo?'⏱ '+esc(ex.tempo):'—')+'</span></div></div>'
+    +   clusterNote(ex)
     + '</div></div></div>';
 }
 
@@ -107,6 +121,7 @@ function renderSuperset(g){
     var badges = '';
     if(ex.muscle) badges += '<span class="type-badge tb-midset">'+esc(ex.muscle)+'</span>';
     badges += dropBadge(drops);
+    badges += clusterBadge(ex);
     if(ex.tempo) badges += '<span class="type-badge tb-tempo">⏱ '+esc(ex.tempo)+'</span>';
     var did = 'cw' + i + '-' + slug(ex.name);
     var letter = String.fromCharCode(65 + k);   // A, B, C…
@@ -117,12 +132,15 @@ function renderSuperset(g){
       +   '<div class="a-ss-reps"><span style="font-size:12px;font-weight:800;color:#c084fc;">'+esc(scheme)+'</span></div>'
       +   '<span class="ex-sets a-ss-sets-hidden">'+esc(scheme)+'</span>'
       +   (badges?'<div class="a-badges">'+badges+'</div>':'')
+      +   clusterNote(ex)
       + '</div></div>';
   });
-  var isTri = g.length>=3;
-  return '<div class="ss-card a-ss'+(isTri?' is-tri':'')+'">'
-    + '<div class="ss-header"><span class="ss-label">⚡ Superset</span></div>'
-    + legs.join('<div class="ss-divider"><span class="ss-x">× SUPERSET ×</span></div>')
+  // 2 = superset, 3 = tri-set, 4+ = giant set; tri+ get the amber .is-tri skin.
+  var label = g.length>=4 ? 'Giant Set' : (g.length===3 ? 'Tri-Set' : 'Superset');
+  var divider = g.length>=3 ? '× TRI-SET ×' : '× SUPERSET ×';
+  return '<div class="ss-card a-ss'+(g.length>=3?' is-tri':'')+'">'
+    + '<div class="ss-header"><span class="ss-label">⚡ '+label+'</span></div>'
+    + legs.join('<div class="ss-divider"><span class="ss-x">'+divider+'</span></div>')
     + '</div>';
 }
 
