@@ -26,6 +26,69 @@
     });
   }
 
+  // ---- intensifiers --------------------------------------------------------
+  // Same set of intensifiers the standalone workout builder (build-workout.html)
+  // exposes, so a program DAY and a custom workout offer identical tools:
+  // tempo, drop sets (a chained sequence), supersets/tri-sets/giant sets
+  // (consecutive linked exercises) and cluster sets. Each exercise also keeps
+  // its sets/reps/rest. The day runner (run-program.html) reads the same fields.
+  var TEMPO_PRESETS = ['3:0:1:0', '4:0:1:0', '5:0:1:0', '3:1:1:0', '2:0:1:2', '3:3:1:0', '2:2:1:0', '3:0:3:0'];
+  var DROP_PRESETS = [['AMRAP', 'Drop · to failure'], ['15', 'Drop · 15'], ['12', 'Drop · 12'], ['10', 'Drop · 10'], ['8', 'Drop · 8'], ['6', 'Drop · 6']];
+  var CLUSTER_REST = ['10s', '15s', '20s', '30s'];
+
+  function newExercise(name, muscle) {
+    return { name: name, muscle: muscle, sets: 3, reps: '10', rest: 90, tempo: '', drops: [], superset: false, cluster: '', clusterRest: '' };
+  }
+  function groupLabel(n) { return n >= 4 ? 'Giant set' : (n === 3 ? 'Tri-set' : 'Superset'); }
+  function parseCluster(val) { return val ? val.split('+').map(function (p) { return p.trim(); }) : []; }
+  function buildCluster(parts) { return parts.filter(function (p) { return p; }).join('+'); }
+
+  function tempoSel(di, xi, val) {
+    val = val || '';
+    var opts = '<option value="">Tempo: none</option>';
+    TEMPO_PRESETS.forEach(function (t) { opts += '<option value="' + t + '"' + (t === val ? ' selected' : '') + '>⏱ ' + t + '</option>'; });
+    return '<select class="dx-sel" onchange="MCPB.upd(' + di + ',' + xi + ',\'tempo\',this.value)" title="Lifting tempo">' + opts + '</select>';
+  }
+  function dropStepSel(di, xi, k, val, isFirst) {
+    val = val || '';
+    var none = isFirst ? 'No drop set' : '— remove drop —';
+    var opts = '<option value="">' + none + '</option>';
+    DROP_PRESETS.forEach(function (d) { opts += '<option value="' + esc(d[0]) + '"' + (d[0] === val ? ' selected' : '') + '>↘️ ' + esc(d[1]) + '</option>'; });
+    return '<select class="dx-sel dx-drop" onchange="MCPB.updDrop(' + di + ',' + xi + ',' + k + ',this.value)" title="Drop set ' + (k + 1) + '">' + opts + '</select>';
+  }
+  function dropEditor(di, xi, drops) {
+    drops = drops || [];
+    var h = dropStepSel(di, xi, 0, drops[0] || '', true);
+    for (var k = 1; k < drops.length; k++) h += dropStepSel(di, xi, k, drops[k], false);
+    if (drops.length >= 1) h += '<button type="button" class="dx-dropadd" onclick="MCPB.addDrop(' + di + ',' + xi + ')" title="Add another drop">＋ drop</button>';
+    return h;
+  }
+  function clusterRestSel(di, xi, val) {
+    val = val || '15s';
+    var opts = '';
+    CLUSTER_REST.forEach(function (r) { opts += '<option value="' + esc(r) + '"' + (r === val ? ' selected' : '') + '>⏲ ' + esc(r) + ' intra-rest</option>'; });
+    return '<select class="dx-sel" onchange="MCPB.upd(' + di + ',' + xi + ',\'clusterRest\',this.value)" title="Rest between clusters">' + opts + '</select>';
+  }
+  function clusterEditor(di, xi, ex) {
+    var active = !!ex.cluster;
+    var parts = parseCluster(ex.cluster);
+    if (active && parts.length < 3) parts = ['5', '5', '5'];
+    var h = '<label class="cluster-toggle"><input type="checkbox"' + (active ? ' checked' : '') + ' onchange="MCPB.clusterToggle(' + di + ',' + xi + ',this.checked)"> 🧩 Cluster set</label>';
+    if (active) {
+      h += '<div class="cluster-config">';
+      h += '<select class="dx-sel cluster-count" onchange="MCPB.clusterCount(' + di + ',' + xi + ',this.value)" title="Number of mini-sets">';
+      [3, 4].forEach(function (n) { h += '<option value="' + n + '"' + (parts.length === n ? ' selected' : '') + '>' + n + ' mini-sets</option>'; });
+      h += '</select>';
+      parts.forEach(function (p, k) {
+        if (k > 0) h += '<span class="cluster-plus">+</span>';
+        h += '<input class="dx-mini cluster-rep" type="text" value="' + esc(p) + '" onchange="MCPB.clusterRep(' + di + ',' + xi + ',' + k + ',this.value)" title="Mini-set ' + (k + 1) + ' reps">';
+      });
+      h += '<span class="dx-lbl">reps</span></div>';
+      h += clusterRestSel(di, xi, ex.clusterRest);
+    }
+    return h;
+  }
+
   // ---- load for editing -----------------------------------------------------
   (function () {
     var id = new URLSearchParams(location.search).get('id');
@@ -74,16 +137,40 @@
   // ---- days -------------------------------------------------------------------
   function renderDays() {
     $('pDays').innerHTML = prog.days.map(function (d, di) {
+      // group consecutive superset-linked exercises (per day) so each chain can
+      // be labelled by size (superset / tri-set / giant set).
+      var grp = [], sizes = [];
+      d.exercises.forEach(function (ex, xi) {
+        if (xi > 0 && ex.superset && grp.length) { var g = grp[xi - 1]; grp[xi] = g; sizes[g]++; }
+        else { var ng = sizes.length; grp[xi] = ng; sizes[ng] = 1; }
+      });
       var rows = d.exercises.map(function (ex, xi) {
-        return '<div class="dx-row">' +
-          '<span class="dx-name">' + esc(ex.name) + '</span>' +
-          '<input class="dx-mini" type="number" value="' + esc(ex.sets) + '" min="1" max="12"' +
-            ' onchange="MCPB.upd(' + di + ',' + xi + ',\'sets\',this.value)">' +
-          '<input class="dx-mini" value="' + esc(ex.reps) + '" maxlength="6"' +
-            ' onchange="MCPB.upd(' + di + ',' + xi + ',\'reps\',this.value)">' +
-          '<input class="dx-mini" type="number" value="' + esc(ex.rest) + '" min="0" max="600" step="15"' +
-            ' onchange="MCPB.upd(' + di + ',' + xi + ',\'rest\',this.value)">' +
-          '<button class="dx-del" onclick="MCPB.delEx(' + di + ',' + xi + ')">✕</button>' +
+        var ssActive = !!ex.superset && xi > 0;
+        var gSize = sizes[grp[xi]];
+        var firstOfGroup = (xi === 0 || grp[xi] !== grp[xi - 1]);
+        var groupTag = (gSize > 1 && firstOfGroup) ? '<div class="dx-grouptag">⚡ ' + groupLabel(gSize) + '</div>' : '';
+        var ssBtn = xi === 0
+          ? '<span class="dx-sshint" title="The first exercise starts a group">—</span>'
+          : '<button type="button" class="dx-ss' + (ssActive ? ' on' : '') + '" onclick="MCPB.toggleSuperset(' + di + ',' + xi + ')" title="'
+            + (ssActive ? 'Linked as a superset with the exercise above — click to unlink' : 'Link with the exercise above (superset → tri-set → giant set)')
+            + '">' + (ssActive ? '⚡ Superset' : '🔗 Make superset') + '</button>';
+        var moveBtns = '<button class="dx-move" onclick="MCPB.moveEx(' + di + ',' + xi + ',-1)" ' + (xi === 0 ? 'disabled' : '') + ' title="Move up — reorder to pick superset partners">▲</button>'
+          + '<button class="dx-move" onclick="MCPB.moveEx(' + di + ',' + xi + ',1)" ' + (xi === d.exercises.length - 1 ? 'disabled' : '') + ' title="Move down — reorder to pick superset partners">▼</button>';
+        return '<div class="dx-item' + (ssActive ? ' ss-linked' : '') + '">' +
+          groupTag +
+          (ssActive ? '<div class="dx-sslink">⚡ Linked with ' + esc(d.exercises[xi - 1].name) + '</div>' : '') +
+          '<div class="dx-top">' + moveBtns +
+            '<span class="dx-name">' + esc(ex.name) + '</span>' + ssBtn +
+            '<button class="dx-del" onclick="MCPB.delEx(' + di + ',' + xi + ')" title="Remove">✕</button>' +
+          '</div>' +
+          '<div class="dx-controls">' +
+            '<input class="dx-mini" type="number" min="1" max="12" value="' + esc(ex.sets) + '" onchange="MCPB.upd(' + di + ',' + xi + ',\'sets\',this.value)" title="sets"><span class="dx-lbl">sets</span>' +
+            '<input class="dx-mini" value="' + esc(ex.reps) + '" maxlength="6" onchange="MCPB.upd(' + di + ',' + xi + ',\'reps\',this.value)" title="reps"><span class="dx-lbl">reps</span>' +
+            '<input class="dx-mini" type="number" min="0" max="600" step="15" value="' + esc(ex.rest) + '" onchange="MCPB.upd(' + di + ',' + xi + ',\'rest\',this.value)" title="rest (seconds)"><span class="dx-lbl">rest s</span>' +
+            tempoSel(di, xi, ex.tempo) +
+          '</div>' +
+          '<div class="dx-controls dx-drops">' + dropEditor(di, xi, ex.drops) + '</div>' +
+          '<div class="dx-controls cluster-editor">' + clusterEditor(di, xi, ex) + '</div>' +
         '</div>';
       }).join('');
       return '<div class="day-card">' +
@@ -93,7 +180,7 @@
           '<button class="day-del" onclick="MCPB.delDay(' + di + ')" title="Delete day">🗑</button>' +
         '</div>' +
         (d.exercises.length
-          ? '<div class="dx-hdr"><span>Exercise</span><span>Sets</span><span>Reps</span><span>Rest s</span><span></span></div>' + rows
+          ? rows
           : '<div style="font-size:12px;color:#475569;font-weight:700;padding:4px 0;">No exercises yet.</div>') +
         '<button class="add-ex" onclick="MCPB.openPicker(' + di + ')">＋ Add exercise</button>' +
       '</div>';
@@ -148,14 +235,14 @@
       var entry = MC_EXCATALOG.add(row.dataset.newex);
       // Queue for PM publish if the owner is editing
       if (window.MC_PM && MC_PM.active()) MC_EXCATALOG.queueForPublish(entry);
-      prog.days[pickDay].exercises.push({ name: entry.name, muscle: entry.muscle, sets: 3, reps: '10', rest: 90 });
+      prog.days[pickDay].exercises.push(newExercise(entry.name, entry.muscle));
       renderDays(); validate(); closePicker();
       return;
     }
     // Standard catalog row
     var ex = (window.EXERCISES || [])[parseInt(row.dataset.i, 10)];
     if (!ex) return;
-    prog.days[pickDay].exercises.push({ name: ex.name, muscle: ex.muscle, sets: 3, reps: '10', rest: 90 });
+    prog.days[pickDay].exercises.push(newExercise(ex.name, ex.muscle));
     renderDays(); validate();
     closePicker();
   });
@@ -194,9 +281,72 @@
     upd: function (di, xi, field, v) {
       var ex = prog.days[di] && prog.days[di].exercises[xi];
       if (!ex) return;
+      // sets/reps/rest/tempo/clusterRest change in place without a re-render so
+      // the focused field is not torn down mid-edit; structural changes below
+      // (superset, reorder, drops, cluster on/off) do re-render.
       if (field === 'sets') ex.sets = Math.max(1, Math.min(12, parseInt(v, 10) || 3));
-      else if (field === 'rest') ex.rest = Math.max(0, Math.min(600, parseInt(v, 10) || 90));
+      else if (field === 'rest') ex.rest = Math.max(0, Math.min(600, parseInt(v, 10) || 0));
+      else if (field === 'tempo') ex.tempo = v || '';
+      else if (field === 'clusterRest') ex.clusterRest = v || '15s';
       else ex.reps = String(v).slice(0, 6) || '10';
+    },
+    // Link/unlink with the exercise directly above. The first exercise in a day
+    // can never be a superset (nothing above it), so reorder controls let any
+    // two exercises be placed adjacent and paired — not just a fixed neighbour.
+    toggleSuperset: function (di, xi) {
+      var ex = prog.days[di] && prog.days[di].exercises[xi];
+      if (!ex || xi === 0) return;
+      ex.superset = !ex.superset;
+      renderDays();
+    },
+    moveEx: function (di, xi, dir) {
+      var exs = prog.days[di] && prog.days[di].exercises;
+      if (!exs) return;
+      var j = xi + dir;
+      if (j < 0 || j >= exs.length) return;
+      var tmp = exs[xi]; exs[xi] = exs[j]; exs[j] = tmp;
+      if (exs[0]) exs[0].superset = false;   // first slot can't superset upward
+      renderDays();
+    },
+    updDrop: function (di, xi, k, v) {
+      var ex = prog.days[di] && prog.days[di].exercises[xi];
+      if (!ex) return;
+      ex.drops = (ex.drops || []).slice();
+      if (v === '') ex.drops.splice(k, 1); else ex.drops[k] = v;
+      renderDays();
+    },
+    addDrop: function (di, xi) {
+      var ex = prog.days[di] && prog.days[di].exercises[xi];
+      if (!ex) return;
+      ex.drops = (ex.drops || []).slice();
+      ex.drops.push('AMRAP');   // new drop defaults to "to failure"
+      renderDays();
+    },
+    clusterToggle: function (di, xi, checked) {
+      var ex = prog.days[di] && prog.days[di].exercises[xi];
+      if (!ex) return;
+      if (checked) { ex.cluster = ex.cluster || '5+5+5'; if (!ex.clusterRest) ex.clusterRest = '15s'; }
+      else { ex.cluster = ''; ex.clusterRest = ''; }
+      renderDays();
+    },
+    clusterCount: function (di, xi, n) {
+      var ex = prog.days[di] && prog.days[di].exercises[xi];
+      if (!ex) return;
+      n = parseInt(n, 10);
+      var parts = parseCluster(ex.cluster);
+      var last = parts[parts.length - 1] || '5';
+      while (parts.length < n) parts.push(last);
+      parts = parts.slice(0, n);
+      ex.cluster = buildCluster(parts);
+      renderDays();
+    },
+    clusterRep: function (di, xi, k, v) {
+      var ex = prog.days[di] && prog.days[di].exercises[xi];
+      if (!ex) return;
+      var parts = parseCluster(ex.cluster);
+      parts[k] = (v || '').trim() || '5';
+      ex.cluster = buildCluster(parts);
+      renderDays();
     },
     openPicker: function (di) {
       pickDay = di;

@@ -42,6 +42,32 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;padding-bottom:120px;}
 .dx-hdr span:first-child{flex:1;}
 .dx-hdr span{width:52px;text-align:center;}
 .dx-hdr span:last-child{width:24px;}
+/* exercise card with full intensifier controls (mirrors build-workout.html) */
+.dx-item{display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:9px 10px;margin-bottom:7px;}
+.dx-item.ss-linked{border-color:rgba(168,85,247,0.4);background:rgba(168,85,247,0.07);}
+.dx-top{display:flex;align-items:center;gap:6px;}
+.dx-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.dx-lbl{font-size:11px;color:#475569;font-weight:700;text-transform:uppercase;}
+.dx-sel{flex:1 1 96px;min-width:96px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 8px;color:#e2e8f0;font-size:12px;font-weight:700;outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;font-family:inherit;}
+.dx-sel option{background:#0d1f3c;color:#e2e8f0;}
+.dx-move{font-size:12px;line-height:1;color:#94a3b8;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);border-radius:7px;padding:5px 7px;cursor:pointer;flex-shrink:0;font-family:inherit;}
+.dx-move:hover:not(:disabled){border-color:var(--accent,#22d3ee);color:#67e8f9;}
+.dx-move:disabled{opacity:0.3;cursor:not-allowed;}
+.dx-ss{font-size:11px;font-weight:800;border-radius:8px;padding:5px 9px;cursor:pointer;font-family:inherit;flex-shrink:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);color:#94a3b8;}
+.dx-ss:hover{border-color:rgba(168,85,247,0.5);color:#c084fc;}
+.dx-ss.on{background:#a855f7;border-color:#a855f7;color:#0a0810;}
+.dx-sshint{font-size:11px;color:#334155;flex-shrink:0;padding:0 4px;font-weight:800;}
+.dx-grouptag{font-size:10px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#fbbf24;}
+.dx-sslink{font-size:10px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:#c084fc;}
+.dx-drop{flex:1 1 130px;min-width:130px;}
+.dx-dropadd{font-size:11px;font-weight:800;border-radius:8px;padding:6px 9px;cursor:pointer;font-family:inherit;flex-shrink:0;background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.3);color:#67e8f9;}
+.cluster-toggle{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#22d3ee;cursor:pointer;flex-shrink:0;}
+.cluster-toggle input[type=checkbox]{accent-color:#22d3ee;width:15px;height:15px;cursor:pointer;}
+.cluster-editor{flex-direction:column;align-items:flex-start;}
+.cluster-config{display:flex;align-items:center;gap:6px;flex-wrap:wrap;width:100%;}
+.cluster-plus{font-size:13px;font-weight:700;color:#22d3ee;}
+.cluster-rep{width:38px;min-width:38px;}
+.cluster-count{flex:0 0 auto;min-width:80px;}
 .add-ex{width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1.5px dashed rgba(255,255,255,0.15);
   background:none;color:#94a3b8;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
 .add-day{width:100%;padding:13px;border-radius:12px;border:1.5px dashed rgba(255,255,255,0.18);background:none;
