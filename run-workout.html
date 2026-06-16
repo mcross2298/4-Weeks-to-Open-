@@ -8,6 +8,7 @@
 :root{--accent:#34d399;--accent-rgb:52,211,153;}
 .header{background:linear-gradient(90deg,#0d1f3c,#050d1a);}
 .tb-cluster{background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.28);}
+.tb-rest{background:rgba(34,211,238,0.15);color:#67e8f9;border:1px solid rgba(34,211,238,0.28);}
 </style>
 <link rel="stylesheet" href="base.css?v=65"/>
 <link rel="stylesheet" href="mc-nav.css"/>
@@ -90,6 +91,21 @@ function clusterNote(ex){
   return '<div class="a-notes">🧩 Cluster set — '+esc(ex.cluster)+' per working set'+rest+'</div>';
 }
 
+// --- prescribed rest ------------------------------------------------------
+// Custom workouts store ex.rest in SECONDS (set in build-workout.html). Show
+// it in the Rest cell and offer a tap-to-start rest timer — the same contract
+// the program pages + run-program.html use, so mc-setlog auto-starts it.
+function restLabel(secs){ secs = parseInt(secs,10)||0; if(!secs) return ''; return (secs%60===0)?(secs/60)+' min':secs+'s'; }
+function restTimer(rest, name){
+  var secs = parseInt(rest,10)||0;
+  if(!secs) return '';
+  var label = secs>=60 && secs%60===0 ? (secs/60)+' min' : secs+' sec';
+  return '<span class="rest-timer idle" data-rest="'+label+'" data-label="'+label+'" '
+    + 'onclick="buildTimerFloat();TMR.toggle(this,'+secs+',\''+esc(name).replace(/'/g,'')+'\')" '
+    + 'title="Tap to start rest timer">'
+    + '<span class="rest-timer-icon">⏱️</span><span class="rest-timer-label">'+label+'</span></span>';
+}
+
 // A single (non-superset) exercise card — the original .a-card layout.
 function renderSingle(ex, i){
   var drops = dropsOf(ex);
@@ -98,6 +114,7 @@ function renderSingle(ex, i){
   if(ex.muscle) badges += '<span class="type-badge tb-midset">'+esc(ex.muscle)+'</span>';
   badges += dropBadge(drops);
   badges += clusterBadge(ex);
+  if(ex.tempo) badges += '<span class="type-badge tb-tempo">⏱ '+esc(ex.tempo)+'</span>';
   var did = 'cw' + i + '-' + slug(ex.name);
   return '<div class="ex-card a-card" data-id="'+did+'" data-type="single">'
     + '<div class="ex-body"><div class="ex-content">'
@@ -106,7 +123,8 @@ function renderSingle(ex, i){
     +   (badges?'<div class="a-badges">'+badges+'</div>':'')
     +   '</div></div>'
     +   '<div class="a-strip"><div class="a-cell"><span class="k">Sets</span><span class="v"><span class="ex-sets" data-field="sets">'+esc(scheme)+'</span></span></div>'
-    +   '<div class="a-cell"><span class="k">'+(ex.tempo?'Tempo':'Rest')+'</span><span class="v">'+(ex.tempo?'⏱ '+esc(ex.tempo):'—')+'</span></div></div>'
+    +   '<div class="a-cell"><span class="k">Rest</span><span class="v">'+(ex.rest?esc(restLabel(ex.rest)):'—')+'</span></div></div>'
+    +   (ex.rest?'<div class="a-timerbar">'+restTimer(ex.rest, ex.name)+'</div>':'')
     +   clusterNote(ex)
     + '</div></div></div>';
 }
@@ -123,6 +141,7 @@ function renderSuperset(g){
     badges += dropBadge(drops);
     badges += clusterBadge(ex);
     if(ex.tempo) badges += '<span class="type-badge tb-tempo">⏱ '+esc(ex.tempo)+'</span>';
+    if(ex.rest) badges += '<span class="type-badge tb-rest">⏲ '+esc(restLabel(ex.rest))+' rest</span>';
     var did = 'cw' + i + '-' + slug(ex.name);
     var letter = String.fromCharCode(65 + k);   // A, B, C…
     return '<div class="ss-ex" data-id="'+did+'" data-type="ssex">'
@@ -212,6 +231,7 @@ function finishWorkout(){
 
 render();
 </script>
+<script src="mc-timer.js"></script>
 <script src="mc-supabase.js"></script>
 <script src="mc-sync.js"></script>
 <script src="mc-biometric.js"></script>

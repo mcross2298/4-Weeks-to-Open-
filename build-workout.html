@@ -58,6 +58,13 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 .sel-sel{flex:1 1 96px;min-width:96px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 8px;color:#e2e8f0;font-size:12px;font-weight:700;outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;}
 .sel-sel option{background:#0d1f3c;color:#e2e8f0;}
 .sel-x{font-size:16px;color:#f87171;background:none;border:none;cursor:pointer;padding:0 4px;flex-shrink:0;}
+/* reorder controls — let any two exercises be placed adjacent so the user
+   chooses which pair forms a superset, instead of being locked to a neighbour */
+.sel-move{font-size:12px;line-height:1;color:#94a3b8;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);border-radius:7px;padding:5px 7px;cursor:pointer;flex-shrink:0;font-family:inherit;}
+.sel-move:hover:not(:disabled){border-color:#22d3ee;color:#67e8f9;}
+.sel-move:disabled{opacity:0.3;cursor:not-allowed;}
+.sel-hint{font-size:11px;color:#64748b;font-weight:600;line-height:1.5;margin-top:9px;}
+.sel-hint b{color:#a855f7;}
 .sel-lbl{font-size:11px;color:#475569;font-weight:700;text-transform:uppercase;}
 /* superset + drop-set controls */
 /* Off (default) state is a neutral, clearly-inactive "opt in" button so a
@@ -147,6 +154,7 @@ select.name-input option{background:#0d1f3c;color:#e2e8f0;}
       <button class="tray-clear" onclick="clearSelected()">Clear</button>
     </div>
     <div class="sel-list" id="selList"></div>
+    <div class="sel-hint" id="selHint" style="display:none;">Tip: use <b>▲▼</b> to reorder, then <b>🔗 Make superset</b> to link <i>any</i> two exercises into a superset / tri-set.</div>
     <button class="create-btn" id="createBtn" onclick="createWorkout()">✅ Create Workout</button>
   </div>
 </div>
@@ -160,7 +168,7 @@ select.name-input option{background:#0d1f3c;color:#e2e8f0;}
 <script>
 var CW_KEY = 'mc_custom_workouts_v1';
 var activeFilter = 'All';
-var selected = [];   // [{name,muscle,sets,reps,tempo,drops:[],superset:bool,cluster:'',clusterRest:''}]
+var selected = [];   // [{name,muscle,sets,reps,tempo,rest,drops:[],superset:bool,cluster:'',clusterRest:''}]
 
 // Tempo presets mirror mc-card-actions.js (Eccentric:Pause:Concentric:Pause).
 var TEMPO_PRESETS = ['3:0:1:0','4:0:1:0','5:0:1:0','3:1:1:0','2:0:1:2','3:3:1:0','2:2:1:0','3:0:3:0'];
@@ -169,11 +177,23 @@ var TEMPO_PRESETS = ['3:0:1:0','4:0:1:0','5:0:1:0','3:1:1:0','2:0:1:2','3:3:1:0'
 // SEVERAL drops in sequence (e.g. [8,12] = "drop 8,12"; [AMRAP,AMRAP,AMRAP]
 // = "3× AMRAP"), which the runner appends as a "drop a,b,c" clause.
 var DROP_PRESETS = [['AMRAP','Drop · to failure'],['15','Drop · 15'],['12','Drop · 12'],['10','Drop · 10'],['8','Drop · 8'],['6','Drop · 6']];
+// Rest presets — value is the rest in SECONDS the runner + rest-timer
+// understand. '' = no prescribed rest. Mirrors the rest options in the program
+// builder (build-program.html) so a custom workout and a program day expose the
+// same recovery choices.
+var REST_PRESETS = [30,45,60,90,120,180,240,300];
+function restLabel(secs){ secs = parseInt(secs,10)||0; if(!secs) return ''; return (secs%60===0)?(secs/60)+' min':secs+'s'; }
 function tempoSelect(i, val){
   val = val || '';
   var opts = '<option value="">Tempo: none</option>';
   TEMPO_PRESETS.forEach(function(t){ opts += '<option value="'+t+'"'+(t===val?' selected':'')+'>⏱ '+t+'</option>'; });
   return '<select class="sel-sel" onchange="updSel('+i+',\'tempo\',this.value)" title="Lifting tempo">'+opts+'</select>';
+}
+function restSelect(i, val){
+  val = parseInt(val,10)||0;
+  var opts = '<option value="">Rest: none</option>';
+  REST_PRESETS.forEach(function(s){ opts += '<option value="'+s+'"'+(s===val?' selected':'')+'>⏲ '+restLabel(s)+' rest</option>'; });
+  return '<select class="sel-sel" onchange="updSel('+i+',\'rest\',this.value)" title="Rest between sets">'+opts+'</select>';
 }
 // One drop-step selector. The first step's empty option clears the drop;
 // later steps' empty option removes just that step.
@@ -209,11 +229,23 @@ function addDrop(i){
 }
 // Toggle a superset link with the exercise directly above. Chaining two makes
 // a superset, three a tri-set, four+ a giant set. The first exercise can't
-// link up (nothing above it), so it always starts a group.
+// link up (nothing above it), so it always starts a group. To pair ANY two
+// exercises (not just the predetermined neighbour) the builder exposes ▲/▼
+// reorder controls — move the partners next to each other, then link them.
 function toggleSuperset(i){
   if(i===0 || !selected[i]) return;
   selected[i].superset = !selected[i].superset;
   renderTray();
+}
+// Move a selected exercise up/down so the user can place any two exercises
+// adjacent and superset whichever pair they choose. The first slot can never be
+// a superset (nothing above it), so clear that flag after a reorder.
+function moveSel(i, dir){
+  var j = i + dir;
+  if(j<0 || j>=selected.length) return;
+  var tmp = selected[i]; selected[i] = selected[j]; selected[j] = tmp;
+  if(selected[0]) selected[0].superset = false;
+  renderList(); renderTray();
 }
 // Name a group by how many exercises are chained together.
 function groupLabel(n){ return n>=4 ? 'Giant set' : (n===3 ? 'Tri-set' : 'Superset'); }
@@ -399,7 +431,7 @@ function addNewExercise() {
   if (!q) return;
   var entry = MC_EXCATALOG.add(q);
   if (!selected.some(function(s){ return s.name === entry.name; })) {
-    selected.push({ name: entry.name, muscle: entry.muscle, sets: 3, reps: '10', tempo: '', drops: [], superset: false, cluster: '', clusterRest: '' });
+    selected.push({ name: entry.name, muscle: entry.muscle, sets: 3, reps: '10', tempo: '', rest: '', drops: [], superset: false, cluster: '', clusterRest: '' });
   }
   buildFilters();
   renderList();
@@ -410,7 +442,7 @@ function toggleEx(i){
   var e = EXERCISES[i];
   var idx = selected.findIndex(function(s){ return s.name===e.name; });
   if(idx>=0) selected.splice(idx,1);
-  else selected.push({ name:e.name, muscle:e.muscle, sets:3, reps:'10', tempo:'', drops:[], superset:false, cluster:'', clusterRest:'' });
+  else selected.push({ name:e.name, muscle:e.muscle, sets:3, reps:'10', tempo:'', rest:'', drops:[], superset:false, cluster:'', clusterRest:'' });
   renderList(); renderTray();
 }
 function clearSelected(){ selected = []; renderList(); renderTray(); }
@@ -456,10 +488,13 @@ function renderTray(){
       : '<button type="button" class="sel-ss'+(ssActive?' on':'')+'" onclick="toggleSuperset('+i+')" title="'
         + (ssActive ? 'Linked as a superset with the exercise above — click to unlink' : 'Link this with the exercise above as a superset (superset → tri-set → giant set)')
         + '">' + (ssActive ? '⚡ Superset' : '🔗 Make superset') + '</button>';
+    var moveBtns = '<button class="sel-move" onclick="moveSel('+i+',-1)" '+(i===0?'disabled':'')+' title="Move up — reorder to pick superset partners">▲</button>'
+      + '<button class="sel-move" onclick="moveSel('+i+',1)" '+(i===selected.length-1?'disabled':'')+' title="Move down — reorder to pick superset partners">▼</button>';
     return '<div class="sel-item'+(ssActive?' ss-linked':'')+'">'
       + groupTag
       + (ssActive?'<div class="sel-sslink">⚡ Linked with '+esc(selected[i-1].name)+'</div>':'')
       + '<div class="sel-top">'
+      +   moveBtns
       +   '<div class="sel-nm">'+esc(s.name)+'</div>'
       +   ssBtn
       +   '<button class="sel-x" onclick="removeSel('+i+')">✕</button>'
@@ -470,12 +505,15 @@ function renderTray(){
       +   '<input class="sel-inp" type="text" value="'+esc(s.reps)+'" onchange="updSel('+i+',\'reps\',this.value)" title="reps"/>'
       +   '<span class="sel-lbl">reps</span>'
       +   tempoSelect(i, s.tempo)
+      +   restSelect(i, s.rest)
       + '</div>'
       + '<div class="sel-controls sel-drops">'+dropEditor(i, s.drops)+'</div>'
       + '<div class="sel-controls cluster-editor">'+clusterEditor(i, s)+'</div>'
       + '</div>';
   }).join('');
   btn.disabled = false;
+  var hint = document.getElementById('selHint');
+  if(hint) hint.style.display = selected.length > 1 ? 'block' : 'none';
   // wait a frame so the tray has laid out before measuring its height
   requestAnimationFrame(syncTraySpace);
 }
@@ -497,7 +535,7 @@ function createWorkout(){
     program: program,                       // '' ⇒ routed to Bonus Workouts
     collection: collection,                 // '' ⇒ not in any collection
     exercises: selected.map(function(s,idx){
-      return { name:s.name, muscle:s.muscle, sets:parseInt(s.sets,10)||3, reps:(''+s.reps).trim()||'10', tempo:(s.tempo||''), drops:(s.drops||[]).slice(), superset:(idx>0 && !!s.superset), cluster:(s.cluster||''), clusterRest:(s.cluster?(s.clusterRest||'15s'):'') };
+      return { name:s.name, muscle:s.muscle, sets:parseInt(s.sets,10)||3, reps:(''+s.reps).trim()||'10', tempo:(s.tempo||''), rest:(parseInt(s.rest,10)||0), drops:(s.drops||[]).slice(), superset:(idx>0 && !!s.superset), cluster:(s.cluster||''), clusterRest:(s.cluster?(s.clusterRest||'15s'):'') };
     })
   };
   // carry the layout/skin chosen in the "+ Create" wizard onto the new workout
