@@ -708,8 +708,9 @@
     var isGlobal = document.getElementById('mcPmGlobal').checked;
     var nameVal = document.getElementById('mcPmName').value.trim();
     var globalName = MC_PO.globalExerciseName(orig);
-    var pageEntry = ((MC_PO.local().pages || {})[MC_PO.pageId] || {})[key] ||
-                    ((MC_PO.published().pages || {})[MC_PO.pageId] || {})[key] || {};
+    var PG = MC_PO.pagesKey ? MC_PO.pagesKey() : MC_PO.pageId;   // week-aware page bucket
+    var pageEntry = ((MC_PO.local().pages || {})[PG] || {})[key] ||
+                    ((MC_PO.published().pages || {})[PG] || {})[key] || {};
     var pageName = (pageEntry && !pageEntry.reset) ? pageEntry.name : '';
     var txt, cls = '';
     if (nameVal && isGlobal)       { txt = '🌐 Renames in ALL programs & splits'; cls = 'g'; }
@@ -773,8 +774,9 @@
     editorCard = card;
     var orig = cardOrigName(card);
     var key  = MC_PO.cardKey ? MC_PO.cardKey(card) : orig;
-    var entry = ((MC_PO.local().pages || {})[MC_PO.pageId] || {})[key] ||
-                ((MC_PO.published().pages || {})[MC_PO.pageId] || {})[key] || {};
+    var PG = MC_PO.pagesKey ? MC_PO.pagesKey() : MC_PO.pageId;   // week-aware page bucket
+    var entry = ((MC_PO.local().pages || {})[PG] || {})[key] ||
+                ((MC_PO.published().pages || {})[PG] || {})[key] || {};
     if (entry.reset) entry = {};
     var pageName   = entry.name || '';
     var globalName = MC_PO.globalExerciseName(orig);
@@ -803,11 +805,12 @@
     // edit independently; the global tier stays keyed by the plain orig name so
     // a global rename still applies to every copy.
     var key  = MC_PO.cardKey ? MC_PO.cardKey(editorCard) : orig;
+    var PG   = MC_PO.pagesKey ? MC_PO.pagesKey() : MC_PO.pageId;   // week-aware page bucket
     var data = MC_PO.local();
     if (!data.pages) data.pages = {};
     if (!data.exercises) data.exercises = {};
-    var page = data.pages[MC_PO.pageId] || (data.pages[MC_PO.pageId] = {});
-    var publishedHas       = !!(((MC_PO.published().pages || {})[MC_PO.pageId] || {})[key]);
+    var page = data.pages[PG] || (data.pages[PG] = {});
+    var publishedHas       = !!(((MC_PO.published().pages || {})[PG] || {})[key]);
     var publishedGlobalHas = !!((MC_PO.published().exercises || {})[orig]);
 
     // drop a local global rename, shadowing a published one so the original shows
@@ -843,7 +846,7 @@
         else clearGlobal();
       }
     }
-    if (!Object.keys(page).length) delete data.pages[MC_PO.pageId];
+    if (!Object.keys(page).length) delete data.pages[PG];
     if (!Object.keys(data.exercises).length) delete data.exercises;
     MC_PO.setLocal(data);
     renderBar();

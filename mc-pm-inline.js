@@ -129,6 +129,9 @@
     return m ? m[1] : null;
   }
   function pid() { return window.MC_PO ? MC_PO.pageId : ''; }
+  // week-aware bucket for the exercise (page-tier) override section, so an edit
+  // on week 3 doesn't paint week 4. Naming/layout surfaces keep using pid().
+  function pagesId() { return (window.MC_PO && MC_PO.pagesKey) ? MC_PO.pagesKey() : pid(); }
   function localDoc() { return (window.MC_PO && MC_PO.local()) || {}; }
   function sbReady() { return !!(window.MC_SB && MC_SB.configured); }
   function logOne(section, scopeId, patch, prev) {
@@ -152,8 +155,9 @@
   function exSpec(card, nameEl) {
     var key = (MC_PO.cardKey ? MC_PO.cardKey(card) : '') || '';
     var orig = card.getAttribute('data-mc-orig-name') || (nameEl.textContent || '').trim();
-    function curEntry() { return ((localDoc().pages || {})[pid()] || {})[key] || null; }
-    function pubEntry() { return (((MC_PO.published().pages || {})[pid()]) || {})[key] || null; }
+    var PG = pagesId();
+    function curEntry() { return ((localDoc().pages || {})[PG] || {})[key] || null; }
+    function pubEntry() { return (((MC_PO.published().pages || {})[PG]) || {})[key] || null; }
     function pubHas() { return !!pubEntry(); }
     var seed = curEntry() || pubEntry() || {};
     if (seed.reset) seed = {};
@@ -171,7 +175,7 @@
       preview: function (v, doReset) {
         var data = MC_PO.local();
         data.pages = data.pages || {};
-        var pg = data.pages[pid()] || (data.pages[pid()] = {});
+        var pg = data.pages[PG] || (data.pages[PG] = {});
         if (doReset) {
           if (pubHas()) pg[key] = { reset: true }; else delete pg[key];
         } else {
@@ -185,14 +189,14 @@
           else if (pubHas()) pg[key] = { reset: true };
           else delete pg[key];
         }
-        if (!Object.keys(pg).length) delete data.pages[pid()];
+        if (!Object.keys(pg).length) delete data.pages[PG];
         MC_PO.setLocal(data);
       },
       scrap: function () {
         var data = MC_PO.local();
-        if (data.pages && data.pages[pid()]) {
-          delete data.pages[pid()][key];
-          if (!Object.keys(data.pages[pid()]).length) delete data.pages[pid()];
+        if (data.pages && data.pages[PG]) {
+          delete data.pages[PG][key];
+          if (!Object.keys(data.pages[PG]).length) delete data.pages[PG];
         }
         MC_PO.setLocal(data);
       },
@@ -200,19 +204,19 @@
         var entry = curEntry();
         var prev = pubEntry();
         var patch = (entry && !entry.reset) ? entry : null;
-        var op = patch ? MC_SB.upsert(pid(), key, patch) : MC_SB.remove(pid(), key);
+        var op = patch ? MC_SB.upsert(PG, key, patch) : MC_SB.remove(PG, key);
         return op.then(function () {
           var pub = MC_PO.published(); pub.pages = pub.pages || {};
-          pub.pages[pid()] = pub.pages[pid()] || {};
-          if (patch) pub.pages[pid()][key] = patch; else delete pub.pages[pid()][key];
+          pub.pages[PG] = pub.pages[PG] || {};
+          if (patch) pub.pages[PG][key] = patch; else delete pub.pages[PG][key];
           this_scrapLocal();
-          logOne('pages', pid() + '|' + key, patch, prev);
+          logOne('pages', PG + '|' + key, patch, prev);
         });
         function this_scrapLocal() {
           var data = MC_PO.local();
-          if (data.pages && data.pages[pid()]) {
-            delete data.pages[pid()][key];
-            if (!Object.keys(data.pages[pid()]).length) delete data.pages[pid()];
+          if (data.pages && data.pages[PG]) {
+            delete data.pages[PG][key];
+            if (!Object.keys(data.pages[PG]).length) delete data.pages[PG];
           }
           MC_PO.setLocal(data);
         }

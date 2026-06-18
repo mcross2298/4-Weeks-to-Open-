@@ -67,6 +67,27 @@
   var BODY_SEL = '.ex-body, .ss-content';
   var PAGE_ID  = (location.pathname.split('/').pop() || 'index.html').split('?')[0];
 
+  // Multi-week pages (mc-s*-*, pmc-s*-*, run-program.html, …) render a different
+  // workout per week off the SAME file, selecting the week via ?w=N (or, for
+  // pages that switch weeks in place, window.MC_WEEK). The page-tier override
+  // bucket must therefore be week-aware, or an edit to one week paints every
+  // week (the "edit week 3 → week 4 mirrors it" bug). The PROGRAM/SPLIT/BADGE
+  // tiers stay keyed by the bare filename (via MC_PO.pageId) so naming
+  // resolution — MC_NAMES.progOf()/splitOf() — is unaffected.
+  //
+  // Week 1 (or no week) keeps the bare PAGE_ID so every already-published
+  // override on these pages keeps applying unchanged; only weeks ≥ 2 take a
+  // "|wN" suffix, which is what makes each later week independently editable.
+  function curWeek() {
+    if (window.MC_WEEK != null && window.MC_WEEK !== '') return String(window.MC_WEEK);
+    try { var w = new URLSearchParams(location.search).get('w'); return w ? String(w) : ''; }
+    catch (e) { return ''; }
+  }
+  function pagesKey() {
+    var w = curWeek();
+    return (w && w !== '1') ? (PAGE_ID + '|w' + w) : PAGE_ID;
+  }
+
   var LOCAL_KEY = 'mc_pm_overrides';      // v2: { pages, exercises, programs, splits, badges }
   var JSON_URL  = 'program-overrides.json';
 
@@ -193,7 +214,7 @@
   }
 
   function overrideFor(origName) {
-    var page = effective().pages[PAGE_ID];
+    var page = effective().pages[pagesKey()];
     if (!page) return null;
     var o = page[origName];
     if (!o) {
@@ -326,6 +347,11 @@
   // ---- public API (used by program-manager.js and mc-naming.js) -----------
   window.MC_PO = {
     pageId: PAGE_ID,
+    // week-aware bucket for the page-tier (exercise) override section. Equals
+    // pageId on single-week pages and on week 1; "<pageId>|wN" for weeks ≥ 2.
+    // Consumers writing/reading the `pages` section (program-manager.js,
+    // mc-pm-inline.js) must use this, NOT pageId, so weeks edit independently.
+    pagesKey: pagesKey,
     refresh: scan,
     cardKey: cardKey,
     published: function () { return published; },
