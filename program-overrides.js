@@ -255,11 +255,64 @@
     return snap;
   }
 
+  // ---- intensifiers (Drop set / Cluster set) ------------------------------
+  // PM-published, week-aware, and stored UNDER THEIR OWN page-tier keys
+  // ("<cardKey>@drop" / "<cardKey>@cluster") so they are fully decoupled from
+  // the name/sets/rest/note/tempo patch — the inline pencil and the permanent-
+  // edit modal never clobber an intensifier, and vice versa. The patch shapes:
+  //   drop:    { on:1, detail?:string }
+  //   cluster: { on:1, reps?:string, rest?:string, detail?:string }
+  function intensifierFor(baseKey, kind) {
+    var page = effective().pages[pagesKey()];
+    if (!page) return null;
+    var e = page[baseKey + '@' + kind];
+    return (e && !e.reset && (e.on || e.detail || e.reps || e.rest)) ? e : null;
+  }
+  function dropLine(o)    { return '↘️ Drop set' + (o.detail ? ' — ' + o.detail : ''); }
+  function clusterLine(o) {
+    var bits = [];
+    if (o.reps) bits.push(o.reps + ' per working set');
+    if (o.rest) bits.push(o.rest + ' intra-set rest');
+    if (o.detail) bits.push(o.detail);
+    return '🧩 Cluster set' + (bits.length ? ' — ' + bits.join(' · ') : '');
+  }
+  // paint (or clear) one intensifier's badge + note on a card. Reversible: when
+  // `o` is null we remove anything we previously injected.
+  function applyIntensifier(card, kind, o) {
+    var badgeText = kind === 'drop' ? '↘️ Drop Set' : '🧩 Cluster';
+    var noteText  = !o ? '' : (kind === 'drop' ? dropLine(o) : clusterLine(o));
+    var noteCls   = 'mcpo-int mcpo-int-' + kind;
+    var badgeCls  = 'mcpo-ibadge mcpo-ibadge-' + kind;
+    var body = card.querySelector(BODY_SEL) || card;
+    var existingNote  = card.querySelector('.mcpo-int-' + kind);
+    var existingBadge = card.querySelector('.mcpo-ibadge-' + kind);
+    if (o) {
+      var badges = card.querySelector('.a-badges');
+      if (badges) {
+        if (!existingBadge) { existingBadge = document.createElement('span'); existingBadge.className = badgeCls; badges.appendChild(existingBadge); }
+        if (existingBadge.textContent !== badgeText) existingBadge.textContent = badgeText;
+      } else if (existingBadge) { existingBadge.remove(); }
+      if (!existingNote) { existingNote = document.createElement('div'); existingNote.className = noteCls; body.appendChild(existingNote); }
+      if (existingNote.textContent !== noteText) existingNote.textContent = noteText;
+    } else {
+      if (existingNote)  existingNote.remove();
+      if (existingBadge) existingBadge.remove();
+    }
+  }
+  // applied for EVERY scanned card, independent of whether the card carries a
+  // name/sets override — a card may have only an intensifier.
+  function applyIntensifiers(card, baseKey) {
+    applyIntensifier(card, 'drop', intensifierFor(baseKey, 'drop'));
+    applyIntensifier(card, 'cluster', intensifierFor(baseKey, 'cluster'));
+  }
+
   function applyToCard(card) {
     var nameEl = card.querySelector(NAME_SEL);
     if (!nameEl) return;
+    var ck = cardKey(card);
+    applyIntensifiers(card, ck);
     var origName = card.getAttribute('data-mc-orig-name') || nameEl.textContent.trim();
-    var o = overrideFor(cardKey(card));               // page-level override (per-card; highest priority)
+    var o = overrideFor(ck);                           // page-level override (per-card; highest priority)
     var gName = (!o || !o.name) ? globalExerciseName(origName) : null; // global fallback
     var body = card.querySelector(BODY_SEL) || card;
     var noteEl = card.querySelector('.mcpo-note');
@@ -338,7 +391,17 @@
       '.mcpo-tempo{display:inline-flex;align-items:center;margin:4px 14px;' +
         'font-size:11px;font-weight:800;letter-spacing:0.02em;padding:3px 8px;border-radius:6px;' +
         'font-family:"SF Mono",ui-monospace,SFMono-Regular,Menlo,monospace;' +
-        'background:rgba(34,211,238,0.12);color:#22d3ee;border:1px solid rgba(34,211,238,0.32);}';
+        'background:rgba(34,211,238,0.12);color:#22d3ee;border:1px solid rgba(34,211,238,0.32);}' +
+      // intensifiers (Drop set / Cluster set) — self-contained styling so they
+      // render consistently on every page regardless of its own badge CSS.
+      '.mcpo-ibadge{display:inline-block;font-size:11px;font-weight:800;padding:3px 8px;border-radius:5px;' +
+        'letter-spacing:0.05em;text-transform:uppercase;}' +
+      '.mcpo-ibadge-drop{background:rgba(244,63,94,0.15);color:#fb7185;border:1px solid rgba(244,63,94,0.28);}' +
+      '.mcpo-ibadge-cluster{background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.28);}' +
+      '.mcpo-int{margin:6px 14px 0;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:700;line-height:1.4;' +
+        'white-space:pre-wrap;word-break:break-word;}' +
+      '.mcpo-int-drop{background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.22);color:#fb7185;}' +
+      '.mcpo-int-cluster{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.22);color:#fbbf24;}';
     var st = document.createElement('style');
     st.textContent = css;
     document.head.appendChild(st);

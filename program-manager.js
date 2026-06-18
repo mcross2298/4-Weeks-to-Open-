@@ -59,9 +59,9 @@
     // leaving PM mode: drop preview so the next unlock shows the working copy
     if (!on && window.MC_PO && typeof MC_PO.setPreview === 'function' && MC_PO.isPreview()) MC_PO.setPreview(false);
     renderBar();
-    // reveal/hide the owner-only item in any already-built meatball menu
-    var pmBtn = document.querySelector('[data-act="pm"]');
-    if (pmBtn) pmBtn.style.display = on ? '' : 'none';
+    // reveal/hide the owner-only items in any already-built meatball menu
+    var pmItems = document.querySelectorAll('.mc-item-pm, [data-act="pm"]');
+    Array.prototype.forEach.call(pmItems, function (b) { b.style.display = on ? '' : 'none'; });
     if (on) { markOwnerSeen(); showDashboardEntry(); }
     if (on && openHubAfterUnlock) { openHubAfterUnlock = false; openHub(); }
     // localized inline editing layer: pencils on editable surfaces while unlocked
@@ -853,6 +853,111 @@
     closeEditor();
   }
 
+  // ---- intensifier editor (Drop set / Cluster set) ------------------------
+  // PM-published intensifiers, stored under their own page-tier keys
+  // ("<cardKey>@drop" / "<cardKey>@cluster") via the same working-copy +
+  // Publish pipeline as renames, so they stay decoupled from the name/sets
+  // patch and (like everything in the pages section) are week-aware.
+  var intOverlay = null, intCard = null, intKind = null;
+
+  function pmPagesKey() { return MC_PO.pagesKey ? MC_PO.pagesKey() : MC_PO.pageId; }
+  function intKeyFor(card, kind) {
+    var base = MC_PO.cardKey ? MC_PO.cardKey(card) : cardOrigName(card);
+    return base + '@' + kind;
+  }
+  function curIntPatch(card, kind) {
+    var key = intKeyFor(card, kind);
+    var e = ((MC_PO.local().pages || {})[pmPagesKey()] || {})[key] ||
+            ((MC_PO.published().pages || {})[pmPagesKey()] || {})[key] || {};
+    return e.reset ? {} : e;
+  }
+  function ifval(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+  function buildIntEditor() {
+    intOverlay = document.createElement('div');
+    intOverlay.className = 'mc-pm-overlay';
+    intOverlay.innerHTML =
+      '<div class="mc-pm-modal">' +
+        '<div class="mc-pm-title" id="mcPmIntTitle">Intensifier</div>' +
+        '<div class="mc-pm-orig">On: <b id="mcPmIntOrig"></b></div>' +
+        '<div id="mcPmIntBody"></div>' +
+        '<div class="mc-pm-btns">' +
+          '<button class="mc-pm-reset" data-act="int-remove">Remove</button>' +
+          '<span style="flex:1"></span>' +
+          '<button class="mc-pm-cancel" data-act="int-cancel">Cancel</button>' +
+          '<button class="mc-pm-save" data-act="int-save">Save</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(intOverlay);
+    intOverlay.addEventListener('click', function (e) {
+      if (e.target === intOverlay) { closeIntEditor(); return; }
+      var b = e.target.closest('button[data-act]'); if (!b) return;
+      var act = b.dataset.act;
+      if (act === 'int-cancel') closeIntEditor();
+      else if (act === 'int-save') saveIntensifier(false);
+      else if (act === 'int-remove') saveIntensifier(true);
+    });
+  }
+
+  function openIntensifier(card, kind) {
+    if (!window.MC_PO) { msg('Not loaded', 'Override layer not loaded on this page.'); return; }
+    if (kind !== 'drop' && kind !== 'cluster') return;
+    if (!intOverlay) buildIntEditor();
+    intCard = card; intKind = kind;
+    var cur = curIntPatch(card, kind);
+    document.getElementById('mcPmIntTitle').textContent =
+      kind === 'drop' ? '↘️ Drop set' : '🧩 Cluster set';
+    document.getElementById('mcPmIntOrig').textContent = cardOrigName(card);
+    var body = document.getElementById('mcPmIntBody');
+    if (kind === 'drop') {
+      body.innerHTML =
+        '<label>Detail (optional)</label>' +
+        '<input type="text" id="mcPmIntDetail" placeholder="e.g. triple drop, −20% each, to failure"/>';
+      document.getElementById('mcPmIntDetail').value = cur.detail || '';
+    } else {
+      body.innerHTML =
+        '<label>Reps per cluster (optional)</label>' +
+        '<input type="text" id="mcPmIntReps" placeholder="e.g. 3 × 3"/>' +
+        '<label>Intra-set rest (optional)</label>' +
+        '<input type="text" id="mcPmIntRest" placeholder="e.g. 15 sec"/>' +
+        '<label>Detail (optional)</label>' +
+        '<input type="text" id="mcPmIntDetail" placeholder="e.g. rest-pause to a hard 10"/>';
+      document.getElementById('mcPmIntReps').value = cur.reps || '';
+      document.getElementById('mcPmIntRest').value = cur.rest || '';
+      document.getElementById('mcPmIntDetail').value = cur.detail || '';
+    }
+    intOverlay.classList.add('open');
+  }
+
+  function closeIntEditor() { if (intOverlay) intOverlay.classList.remove('open'); intCard = null; intKind = null; }
+
+  function saveIntensifier(remove) {
+    if (!intCard || !intKind) { closeIntEditor(); return; }
+    var key = intKeyFor(intCard, intKind);
+    var PG = pmPagesKey();
+    var data = MC_PO.local();
+    if (!data.pages) data.pages = {};
+    var page = data.pages[PG] || (data.pages[PG] = {});
+    var publishedHas = !!(((MC_PO.published().pages || {})[PG] || {})[key]);
+    if (remove) {
+      if (publishedHas) page[key] = { reset: true }; else delete page[key];
+    } else {
+      var patch = { on: 1 };
+      if (intKind === 'drop') {
+        var d = ifval('mcPmIntDetail'); if (d) patch.detail = d;
+      } else {
+        var reps = ifval('mcPmIntReps'); if (reps) patch.reps = reps;
+        var rest = ifval('mcPmIntRest'); if (rest) patch.rest = rest;
+        var det = ifval('mcPmIntDetail'); if (det) patch.detail = det;
+      }
+      page[key] = patch;
+    }
+    if (!Object.keys(page).length) delete data.pages[PG];
+    MC_PO.setLocal(data);
+    renderBar();
+    closeIntEditor();
+  }
+
   // ---- Rename Center -------------------------------------------------------
   // PM-bar "Names" panel: rename a program (name/icon/desc), its splits, and
   // its badges (program-scoped or app-wide). Writes flow through the same v2
@@ -1488,6 +1593,7 @@
   window.MC_PM = {
     active: isActive,
     openEditor: openEditor,
+    openIntensifier: openIntensifier,
     unlock: unlockFlow,
     openHub: openHub,
     enter: enterPM
