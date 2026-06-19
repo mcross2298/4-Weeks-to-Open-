@@ -111,13 +111,20 @@
     var w = row.querySelector('.mcl-w'), r = row.querySelector('.mcl-r');
     if (ck.classList.contains('done')) {
       ck.classList.remove('done'); ck.textContent = '☐'; row.classList.remove('done-row');
+      updateCount(card, exId);
       return;
     }
     var rpeEl = row.querySelector('.mcl-rpe');
     save(exId, sn, w ? w.value.trim() : '', r ? r.value.trim() : '',
          rpeEl ? (rpeEl.dataset.rpe || '') : '');
     ck.classList.add('done'); ck.textContent = '✓'; row.classList.add('done-row');
+    // Light confirming tap on check (respects the timer's haptics pref if loaded).
+    try {
+      var hp = (typeof MC_PREFS !== 'undefined') ? MC_PREFS.get().haptics : true;
+      if (hp && navigator.vibrate) navigator.vibrate(15);
+    } catch (e) {}
     updateHist(card, exId);
+    updateCount(card, exId);
     if (rs > 0 && typeof TMR !== 'undefined' && TMR.start) {
       var t = card.querySelector('.rest-timer');
       if (t) {
@@ -132,6 +139,19 @@
   function updateHist(card, exId) {
     var h = card.querySelector('.mcl-hist-' + cssId(exId));
     if (h) h.textContent = histText(exId);
+  }
+  // Collapsed-header "done / total" so set progress reads without expanding.
+  function updateCount(card, exId) {
+    var cid = cssId(exId);
+    var el = card.querySelector('.mcl-count-' + cid);
+    if (!el) return;
+    var rows = card.querySelectorAll('.mcl-row[id^="mclr-' + cid + '-"]');
+    var done = 0;
+    Array.prototype.forEach.call(rows, function (r) {
+      if (r.querySelector('.mcl-ck.done')) done++;
+    });
+    el.textContent = done + '/' + rows.length;
+    el.classList.toggle('done', done > 0 && done === rows.length);
   }
   function cssId(id) { return String(id).replace(/[^a-zA-Z0-9_-]/g, '_'); }
 
@@ -174,6 +194,7 @@
     var toggle = document.createElement('div');
     toggle.className = 'mcl-toggle';
     toggle.innerHTML = '<span class="mcl-chev">▾</span><span class="mcl-lbl">Log Sets</span>' +
+                       '<span class="mcl-count mcl-count-' + cid + '">0/' + total + '</span>' +
                        (drop.is ? '<span class="mcl-amrap" title="' + dropTitle + '">' + dropTag + '</span>' : '') +
                        '<span class="mcl-hist mcl-hist-' + cid + '">' + histText(exId) + '</span>';
 
@@ -190,10 +211,16 @@
       var wPh = (last && last.w) ? (last.w + ' lb') : 'lb';
       var rPh = isDropRow ? (dropTarget === 'AMRAP' ? 'AMRAP' : dropTarget) : (pr || (last && last.r ? last.r : 'reps'));
       var rpe = (last && last.rpe) || '';
+      // One-tap fill values: focusing an empty field drops in last session's
+      // weight (and the prescribed / last reps) so the athlete confirms instead
+      // of retyping. Carry-down (below) keeps later sets' fill in sync with set 1.
+      var wFill = (last && last.w) ? last.w : '';
+      var rFill = isDropRow ? (dropTarget === 'AMRAP' ? '' : dropTarget)
+                            : (pr || (last && last.r) || '');
       html += '<div class="mcl-row' + (isDropRow ? ' mcl-row-amrap' : '') + '" id="mclr-' + cid + '-' + sn + '">' +
                 '<div class="mcl-num">' + (isDropRow ? '↓' : sn) + '</div>' +
-                '<input class="mcl-inp mcl-w" type="number" inputmode="decimal" placeholder="' + wPh + '">' +
-                '<input class="mcl-inp mcl-r" type="number" inputmode="numeric" placeholder="' + rPh + '">' +
+                '<input class="mcl-inp mcl-w" type="number" inputmode="decimal" placeholder="' + wPh + '"' + (wFill !== '' ? ' data-fill="' + wFill + '"' : '') + '>' +
+                '<input class="mcl-inp mcl-r" type="number" inputmode="numeric" placeholder="' + rPh + '"' + (rFill !== '' ? ' data-fill="' + rFill + '"' : '') + '>' +
                 '<div class="mcl-rpe' + (rpe ? ' set' : '') + '" data-rpe="' + rpe + '" ' +
                   'title="Rate of Perceived Exertion — tap to cycle, F = to failure">' + (rpe || '–') + '</div>' +
                 '<div class="mcl-ck set-check" data-sn="' + sn + '">☐</div>' +
@@ -230,6 +257,32 @@
           var w = row.querySelector('.mcl-w'), r = row.querySelector('.mcl-r');
           save(exId, parseInt(ck.dataset.sn, 10), w ? w.value.trim() : '', r ? r.value.trim() : '', next);
           updateHist(card, exId);
+        }
+      });
+    });
+
+    // Tap-to-fill: focusing an empty input drops in its suggested value (last
+    // weight / prescribed reps) and selects it, so typing still overrides
+    // instantly but a single tap-then-check accepts last time's number.
+    Array.prototype.forEach.call(wrap.querySelectorAll('.mcl-inp'), function (inp) {
+      inp.addEventListener('focus', function () {
+        if (!inp.value.trim() && inp.dataset.fill) {
+          inp.value = inp.dataset.fill;
+          try { inp.select(); } catch (e) {}
+        }
+      });
+    });
+    // Carry-down: typing set 1's weight updates the fill/placeholder of every
+    // later still-empty working set (drop rows excluded — weight is stripped).
+    var wInputs = Array.prototype.slice.call(
+      wrap.querySelectorAll('.mcl-row:not(.mcl-row-amrap) .mcl-w'));
+    wInputs.forEach(function (inp, idx) {
+      inp.addEventListener('input', function () {
+        var v = inp.value.trim();
+        if (!v) return;
+        for (var j = idx + 1; j < wInputs.length; j++) {
+          var nxt = wInputs[j];
+          if (!nxt.value.trim()) { nxt.placeholder = v + ' lb'; nxt.dataset.fill = v; }
         }
       });
     });
