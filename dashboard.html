@@ -58,6 +58,28 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 }
 .topbar-title{font-size:19px;font-weight:900;color:var(--text);letter-spacing:-0.02em;}
 .topbar-sub{font-size:12px;color:var(--muted2);margin-top:1px;}
+
+/* ── Universal momentum strip ────────────────────────────────────────────────
+   Market-safe: a standalone element (NOT inside a licensed program card), so it
+   survives the Rolodex build and gives the public app a streak signal too. */
+.momentum-strip{
+  display:none;align-items:center;gap:11px;margin:0 18px 22px;
+  padding:12px 15px;border-radius:14px;
+  background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.025));
+  border:1px solid rgba(212,175,55,0.22);
+}
+.momentum-strip.show{display:flex;}
+.ms-flame{font-size:20px;line-height:1;filter:drop-shadow(0 0 7px rgba(212,175,55,0.55));}
+.ms-body{min-width:0;flex:1;}
+.ms-streak{font-size:14px;font-weight:900;color:var(--text);letter-spacing:-0.01em;line-height:1.15;}
+.ms-sub{font-size:11px;font-weight:700;color:var(--muted2);margin-top:2px;}
+.ms-sub.today{color:#34d399;}
+.ms-badge{
+  font-size:11px;font-weight:900;letter-spacing:0.05em;flex-shrink:0;
+  padding:5px 11px;border-radius:9px;
+  background:rgba(212,175,55,0.16);color:var(--gold);border:1px solid rgba(212,175,55,0.3);
+}
+.ms-badge.today{background:rgba(52,211,153,0.16);color:#34d399;border-color:rgba(52,211,153,0.35);}
 .topbar-icon{
   width:36px;height:36px;border-radius:10px;
   background:var(--surface);border:1px solid var(--border2);
@@ -130,6 +152,15 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 }
 .phase-pill.active{background:var(--gold);color:#000;border-color:var(--gold);}
 .hero-tap{font-size:11px;color:var(--muted2);font-weight:600;letter-spacing:0.04em;margin-top:10px;}
+/* In-progress session: promote the muted CTA into an obvious green Resume pill
+   so getting back into a half-finished workout is one clear tap. */
+.hero-tap.resume{
+  display:inline-flex;align-items:center;margin-top:14px;
+  padding:10px 16px;border-radius:11px;
+  font-size:13px;font-weight:900;letter-spacing:0;color:#022c22;
+  background:linear-gradient(135deg,#34d399,#10b981);
+  box-shadow:0 4px 16px rgba(16,185,129,0.35);
+}
 
 /* ── TOOLS GRID ── */
 .tools-wrap{padding:0 18px;margin-bottom:28px;}
@@ -459,7 +490,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
     <div class="topbar-left">
       <div class="avatar">MC</div>
       <div>
-        <div class="topbar-title">Workout</div>
+        <div class="topbar-title" id="greeting">Workout</div>
         <div class="topbar-sub" id="todayDate"></div>
       </div>
     </div>
@@ -469,6 +500,16 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 
   <div id="offlineBar" class="offline-bar">📵 Offline — showing cached content</div>
   <div id="swUpdate" class="sw-update" onclick="doSwUpdate()">🔄 Update available — tap to reload</div>
+
+  <!-- Universal momentum strip (streak) — market-safe, hidden until earned -->
+  <div class="momentum-strip" id="momentumStrip">
+    <span class="ms-flame">🔥</span>
+    <div class="ms-body">
+      <div class="ms-streak" id="msStreak"></div>
+      <div class="ms-sub" id="msSub"></div>
+    </div>
+    <div class="ms-badge" id="msBadge"></div>
+  </div>
 
   <!-- Current Program -->
   <div class="sec-header">
@@ -785,6 +826,38 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 const d=new Date();
 document.getElementById('todayDate').textContent=d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
 
+// ── GREETING (time-aware) ──
+(function(){
+  const h=d.getHours();
+  const g=h<5?'Late night':h<12?'Good morning':h<17?'Good afternoon':h<21?'Good evening':'Winding down';
+  const el=document.getElementById('greeting');
+  if(el)el.textContent=g;
+})();
+
+// ── MOMENTUM STRIP (universal · market-safe) ──
+// Same streak the licensed program card shows, but as a standalone element
+// that survives the Rolodex build so the public app has it too.
+(function populateMomentum(){
+  if(!window.MCActivity) return;
+  const a=window.MCActivity.get();
+  const strip=document.getElementById('momentumStrip');
+  if(!strip) return;
+  if(a.streak>0){
+    document.getElementById('msStreak').textContent=a.streak+'-day streak';
+    const sub=document.getElementById('msSub'), badge=document.getElementById('msBadge');
+    if(a.trainedToday){
+      sub.textContent='Nice — you trained today'; sub.className='ms-sub today';
+      badge.textContent='✓ TODAY'; badge.className='ms-badge today';
+    } else {
+      sub.textContent="Don't break the chain"; sub.className='ms-sub';
+      badge.textContent='KEEP ALIVE'; badge.className='ms-badge';
+    }
+    strip.classList.add('show');
+  } else {
+    strip.classList.remove('show');
+  }
+})();
+
 /* MARKET:STRIP influencer-js START */
 // ── DAILY GAINZ — dynamic live strip (Phase 2) ──
 // Resume now lives inside the program category pages (mc-resume.js); this strip
@@ -885,7 +958,11 @@ function renderHero(){
     `<div class="phase-pill${(start+i)===nx.idx?' active':''}">${s}</div>`
   ).join('');
   const tap=document.getElementById('heroTap');
-  if(tap)tap.textContent=nx.cta;
+  if(tap){
+    tap.textContent=nx.cta;
+    // In-progress session → promote the muted CTA into a green Resume pill.
+    tap.classList.toggle('resume', !!nx.resumeHref);
+  }
 }
 
 // Does a split label (e.g. "Back & Shoulders") share a muscle/keyword with a
