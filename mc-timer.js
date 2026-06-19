@@ -125,7 +125,9 @@ const TMR = {
 
     float.classList.add('visible');
     const _sov=document.getElementById('timerOverlay');if(_sov)_sov.style.display='block';
-    floatEx.textContent = exerciseName;
+    // Header reads "REST · <exercise>". Suppress a generic "Rest" name so it
+    // doesn't render as the redundant "REST Rest".
+    floatEx.textContent = (exerciseName && !/^rest$/i.test(exerciseName.trim())) ? exerciseName : '';
     floatLabel.textContent = 'REST';
     floatTime.className = 'timer-float-time';
     floatProgress.className = 'timer-float-progress';
@@ -239,27 +241,57 @@ const TMR = {
   }
 };
 
-// Timer-float cosmetics, injected once into <head> at runtime so they apply
-// on EVERY workout page identically — the per-page inline .timer-float CSS is
-// duplicated and divergent across ~11 pages, and a runtime <head> rule lands
-// after those linked/inline styles in the cascade (so it wins without editing
-// each page). Covers: larger glanceable numerals, a smoother done "pop", a
-// slide-up entrance, and the ±15s adjust buttons.
+// Timer-float layout + cosmetics, injected once into <head> at runtime so they
+// apply on EVERY workout page identically. The per-page inline .timer-float CSS
+// is duplicated and divergent across ~11 pages (a cramped 64px single-row bar);
+// a runtime <head> rule lands after those linked/inline styles in the cascade,
+// so this fully re-owns the float as a clean vertical "card" without editing
+// each page. The set-once controls (cue prefs + quick-timer presets) collapse
+// behind a ⚙️ gear so a live rest shows only the essentials.
 function injectTimerEnhCss() {
   if (document.getElementById('mcTimerEnhCss')) return;
   const st = document.createElement('style');
   st.id = 'mcTimerEnhCss';
   st.textContent =
-    '.timer-float-time{font-size:46px!important;transition:color .25s ease;}' +
+    // ── container: bottom sheet, auto-height vertical stack, centered on wide ──
+    '.timer-float{height:auto!important;width:auto!important;left:0!important;right:0!important;' +
+      'flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;' +
+      'gap:9px!important;max-width:480px;margin:0 auto;' +
+      'padding:10px 18px calc(16px + env(safe-area-inset-bottom,0px))!important;' +
+      'border-radius:20px 20px 0 0;border:1px solid rgba(255,255,255,0.1);border-bottom:none;}' +
+    '.tf-grip{width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,0.18);margin:0 auto 2px;flex-shrink:0;}' +
+    // ── header: REST · exercise on the left, gear on the right ──
+    '.tf-head{display:flex;align-items:center;justify-content:space-between;gap:10px;}' +
+    '.tf-head-text{display:flex;align-items:baseline;gap:8px;min-width:0;}' +
+    '.timer-float-label{flex-shrink:0;}' +
+    '.timer-float-ex{text-align:left!important;max-width:none!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+    '.tf-head-text .timer-float-ex:not(:empty)::before{content:"· ";color:#475569;}' +
+    '.tf-gear{flex-shrink:0;width:34px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,0.12);' +
+      'background:rgba(255,255,255,0.05);color:#94a3b8;font-size:15px;cursor:pointer;display:flex;' +
+      'align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:transform .2s;}' +
+    '.tf-gear.on{color:#fbbf24;border-color:rgba(212,175,55,0.4);background:rgba(212,175,55,0.12);transform:rotate(60deg);}' +
+    // ── big glanceable numerals + full-width progress ──
+    '.timer-float-time{font-size:54px!important;text-align:center;width:100%;line-height:1;margin:2px 0;transition:color .25s ease;}' +
+    '.timer-float-bar{width:100%!important;margin:0!important;}' +
+    // ── one tidy control row: adjust group left, actions group right ──
+    '.tf-controls{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:2px;}' +
+    '.timer-float-adjust{display:flex;gap:8px;margin:0!important;justify-content:flex-start;}' +
+    '.timer-float-actions{display:flex;gap:8px;margin:0!important;}' +
+    '.timer-float-adj{padding:9px 15px;border-radius:9px;border:1px solid rgba(255,255,255,0.14);' +
+      'background:rgba(255,255,255,0.05);color:#cbd5e1;font-size:13px;font-weight:800;letter-spacing:0.03em;' +
+      'cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}' +
+    '.timer-float-adj:active{background:rgba(212,175,55,0.16);color:#fbbf24;border-color:rgba(212,175,55,0.4);}' +
+    '.timer-float-btn{padding:9px 16px!important;font-size:13px!important;}' +
+    // ── collapsible tray: cue prefs + presets, hidden until the gear is tapped ──
+    '.tf-tray{max-height:0;overflow:hidden;transition:max-height .25s ease;}' +
+    '.tf-tray.open{max-height:200px;}' +
+    '.timer-float-prefs{margin:6px 0 0!important;flex-wrap:wrap;}' +
+    '.timer-presets{margin-top:8px!important;}' +
+    // ── carried-over motion ──
     '@keyframes mcTmrDonePop{0%{transform:scale(.9);opacity:.65}60%{transform:scale(1.05)}100%{transform:scale(1)}}' +
     '.timer-float-time.done{animation:mcTmrDonePop .45s ease-out;}' +
     '@keyframes mcTmrSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}' +
-    '.timer-float.visible{animation:mcTmrSlideUp .22s ease-out;}' +
-    '.timer-float-adjust{display:flex;gap:8px;justify-content:center;}' +
-    '.timer-float-adj{padding:6px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.14);' +
-      'background:rgba(255,255,255,0.05);color:#cbd5e1;font-size:12px;font-weight:800;' +
-      'letter-spacing:0.04em;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}' +
-    '.timer-float-adj:active{background:rgba(212,175,55,0.16);color:#fbbf24;border-color:rgba(212,175,55,0.4);}';
+    '.timer-float.visible{animation:mcTmrSlideUp .22s ease-out;}';
   document.head.appendChild(st);
 }
 
@@ -270,21 +302,40 @@ function buildTimerFloat() {
   div.id = 'timerFloat';
   div.className = 'timer-float';
   div.innerHTML = `
-    <div id="timerFloatLabel" class="timer-float-label">REST</div>
+    <div class="tf-grip"></div>
+    <div class="tf-head">
+      <div class="tf-head-text">
+        <span id="timerFloatLabel" class="timer-float-label">REST</span>
+        <span id="timerFloatEx" class="timer-float-ex"></span>
+      </div>
+      <button class="tf-gear" id="tfGear" aria-label="Timer settings">⚙️</button>
+    </div>
     <div id="timerFloatTime" class="timer-float-time">0s</div>
-    <div id="timerFloatEx" class="timer-float-ex"></div>
     <div class="timer-float-bar"><div id="timerFloatProgress" class="timer-float-progress"></div></div>
-    <div class="timer-float-adjust">
-      <button class="timer-float-adj" onclick="TMR.adjust(-15)">−15s</button>
-      <button class="timer-float-adj" onclick="TMR.adjust(15)">+15s</button>
+    <div class="tf-controls">
+      <div class="timer-float-adjust">
+        <button class="timer-float-adj" onclick="TMR.adjust(-15)">−15s</button>
+        <button class="timer-float-adj" onclick="TMR.adjust(15)">+15s</button>
+      </div>
+      <div class="timer-float-actions">
+        <button class="timer-float-btn timer-float-skip" onclick="TMR.stop()">✓ Done</button>
+        <button class="timer-float-btn timer-float-reset" onclick="TMR.stop()" aria-label="Cancel rest">✕</button>
+      </div>
     </div>
-    <div class="timer-float-actions">
-      <button class="timer-float-btn timer-float-skip" onclick="TMR.stop()">✓ Done</button>
-      <button class="timer-float-btn timer-float-reset" onclick="TMR.stop()">✕ Cancel</button>
-    </div>
-    <div class="timer-float-prefs" id="timerFloatPrefs"></div>`;
+    <div class="tf-tray" id="tfTray">
+      <div class="timer-float-prefs" id="timerFloatPrefs"></div>
+    </div>`;
   document.body.appendChild(div);
   renderTimerPrefs();
+  // ⚙️ gear reveals/hides the set-once tray (cue prefs + quick-timer presets).
+  const gear = document.getElementById('tfGear'), tray = document.getElementById('tfTray');
+  if (gear && tray) {
+    gear.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const open = tray.classList.toggle('open');
+      gear.classList.toggle('on', open);
+    });
+  }
   if(!document.getElementById('timerOverlay')){const _tov=document.createElement('div');_tov.id='timerOverlay';_tov.style.cssText='position:fixed;inset:0;z-index:99;display:none;cursor:pointer;';_tov.addEventListener('click',function(){TMR.stop();});document.body.insertBefore(_tov,div);}
 }
 // ── cue preference toggles inside the timer float ──
@@ -345,13 +396,17 @@ document.addEventListener('DOMContentLoaded', function() {
 function addTimerPresets() {
   const tf = document.getElementById('timerFloat');
   if (!tf || tf.querySelector('.timer-presets')) return;
+  // Presets are a manual-timer convenience, not needed during an auto-rest —
+  // park them in the collapsible tray (behind the ⚙️ gear) to keep the live
+  // rest view clean. Fall back to the float root if the tray isn't present.
+  const host = document.getElementById('tfTray') || tf;
   const presets = document.createElement('div');
   presets.className = 'timer-presets';
   presets.innerHTML = ['45s','60s','90s','2min'].map(function(l) {
     const s = l==='2min'?120:parseInt(l);
     return '<button class="timer-preset" onclick="TMR.setTime && TMR.setTime('+s+',\''+l+'\')" >' + l + '</button>';
   }).join('');
-  tf.appendChild(presets);
+  host.appendChild(presets);
 }
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(addTimerPresets, 500);
