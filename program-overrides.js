@@ -306,6 +306,73 @@
     applyIntensifier(card, 'cluster', intensifierFor(baseKey, 'cluster'));
   }
 
+  // ---- supersets (true two-exercise pairing) ------------------------------
+  // PM-published, week-aware. Stored on the FIRST leg under "<cardKey>@ss"
+  // ({ on:1 }) and means "pair this exercise with the next one on the day".
+  // At paint time two adjacent top-level single cards are MOVED into a
+  // self-contained .mcpo-ss wrapper (A/B legs). Reversible: removing the
+  // override unwraps the cards back to their original place. A self-contained
+  // wrapper (rather than each page's native .ss-card markup) keeps rendering
+  // consistent and reversible across every page. Tri-sets / 3+ are out of
+  // scope for this pass — only two-exercise pairing.
+  var SS_SINGLE_SEL = '.ex-card, .ex-item, .lift-card';   // top-level cards (NOT .ss-ex legs)
+  function ssOverrideFor(baseKey) {
+    var page = effective().pages[pagesKey()];
+    if (!page) return null;
+    var e = page[baseKey + '@ss'];
+    return (e && !e.reset && e.on) ? e : null;
+  }
+  function nextSingleSibling(card) {
+    var n = card.nextElementSibling;
+    while (n) { if (n.matches && n.matches(SS_SINGLE_SEL)) return n; n = n.nextElementSibling; }
+    return null;
+  }
+  function legLabel(card, letter) {
+    var head = card.querySelector('.a-head') || card.querySelector(BODY_SEL) || card;
+    var lab = card.querySelector('.mcpo-ss-leg');
+    if (!lab) { lab = document.createElement('span'); lab.className = 'mcpo-ss-leg'; head.insertBefore(lab, head.firstChild); }
+    if (lab.textContent !== letter) lab.textContent = letter;
+  }
+  function stripLeg(card) { var l = card.querySelector('.mcpo-ss-leg'); if (l) l.remove(); }
+
+  // leg cards (in order) inside a wrapper's .mcpo-ss-legs
+  function legCardsOf(w) {
+    var box = w.querySelector('.mcpo-ss-legs');
+    if (!box) return [];
+    return Array.prototype.filter.call(box.children, function (el) { return el.matches && el.matches(SS_SINGLE_SEL); });
+  }
+  // unwrap a .mcpo-ss group: move its leg cards back out (in order) ahead of the
+  // wrapper, strip the A/B labels, then drop the wrapper shell.
+  function unwrapSS(w) {
+    var parent = w.parentNode; if (!parent) { w.remove(); return; }
+    legCardsOf(w).forEach(function (c) { stripLeg(c); parent.insertBefore(c, w); });
+    w.remove();
+  }
+
+  function applySupersets() {
+    // 1) teardown — any existing wrapper whose controlling override is gone
+    document.querySelectorAll('.mcpo-ss').forEach(function (w) {
+      var first = legCardsOf(w)[0];
+      if (!first || !ssOverrideFor(cardKey(first))) unwrapSS(w);
+    });
+    // 2) build — pair each flagged card with its next sibling single card
+    Array.prototype.forEach.call(document.querySelectorAll(SS_SINGLE_SEL), function (a) {
+      if (a.closest('.mcpo-ss')) return;                 // already grouped
+      if (!ssOverrideFor(cardKey(a))) return;
+      var b = nextSingleSibling(a);
+      if (!b || b.closest('.mcpo-ss')) return;
+      var parent = a.parentNode; if (!parent) return;
+      var w = document.createElement('div'); w.className = 'mcpo-ss';
+      var hd = document.createElement('div'); hd.className = 'mcpo-ss-hd'; hd.textContent = '⚡ Superset';
+      var legs = document.createElement('div'); legs.className = 'mcpo-ss-legs';
+      var divider = document.createElement('div'); divider.className = 'mcpo-ss-div'; divider.textContent = '× SUPERSET ×';
+      parent.insertBefore(w, a);                         // wrapper takes A's slot → reversible
+      w.appendChild(hd); w.appendChild(legs);
+      legs.appendChild(a); legs.appendChild(divider); legs.appendChild(b);
+      legLabel(a, 'A'); legLabel(b, 'B');
+    });
+  }
+
   function applyToCard(card) {
     var nameEl = card.querySelector(NAME_SEL);
     if (!nameEl) return;
@@ -377,6 +444,7 @@
     if (!cards.length) return;
     withoutObserver(function () {
       Array.prototype.forEach.call(cards, applyToCard);
+      applySupersets();
     });
   }
   function scheduleScan() { MC_SCAN.schedule(); }
@@ -401,7 +469,19 @@
       '.mcpo-int{margin:6px 14px 0;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:700;line-height:1.4;' +
         'white-space:pre-wrap;word-break:break-word;}' +
       '.mcpo-int-drop{background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.22);color:#fb7185;}' +
-      '.mcpo-int-cluster{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.22);color:#fbbf24;}';
+      '.mcpo-int-cluster{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.22);color:#fbbf24;}' +
+      // superset wrapper (self-contained; two adjacent cards moved inside)
+      '.mcpo-ss{margin:10px 12px;border:1px solid rgba(168,85,247,0.4);border-radius:14px;overflow:hidden;' +
+        'background:rgba(168,85,247,0.05);}' +
+      '.mcpo-ss-hd{padding:8px 12px;font-size:12px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;' +
+        'color:#c084fc;background:rgba(168,85,247,0.12);border-bottom:1px solid rgba(168,85,247,0.25);}' +
+      '.mcpo-ss-legs{padding:4px;}' +
+      '.mcpo-ss-legs > .ex-card,.mcpo-ss-legs > .ex-item,.mcpo-ss-legs > .lift-card{margin:4px 0;}' +
+      '.mcpo-ss-div{text-align:center;font-size:10px;font-weight:800;letter-spacing:0.12em;color:#a855f7;' +
+        'padding:3px 0;opacity:0.75;}' +
+      '.mcpo-ss-leg{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;' +
+        'margin-right:7px;padding:0 5px;border-radius:6px;background:#a855f7;color:#fff;font-size:11px;font-weight:900;' +
+        'vertical-align:middle;}';
     var st = document.createElement('style');
     st.textContent = css;
     document.head.appendChild(st);

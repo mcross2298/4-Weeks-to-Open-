@@ -133,6 +133,7 @@
         '<button class="mc-item" data-act="notes"><span class="mc-ico">📝</span>Notes</button>' +
         '<button class="mc-item mc-item-pm" data-act="int-drop" style="display:none"><span class="mc-ico">↘️</span>Drop set</button>' +
         '<button class="mc-item mc-item-pm" data-act="int-cluster" style="display:none"><span class="mc-ico">🧩</span>Cluster set</button>' +
+        '<button class="mc-item mc-item-pm" data-act="int-ss" style="display:none"><span class="mc-ico">⚡</span><span class="mc-ss-label">Make superset</span></button>' +
         '<button class="mc-item mc-item-pm" data-act="pm" style="display:none"><span class="mc-ico">🛠️</span>Program Manager edit</button>' +
         '<button class="mc-item mc-item-cancel" data-act="cancel">Cancel</button>' +
       '</div>';
@@ -153,6 +154,7 @@
       else if (act === 'tempo') openTempo(card);
       else if (act === 'int-drop' && window.MC_PM) window.MC_PM.openIntensifier(card, 'drop');
       else if (act === 'int-cluster' && window.MC_PM) window.MC_PM.openIntensifier(card, 'cluster');
+      else if (act === 'int-ss' && window.MC_PM) window.MC_PM.toggleSuperset(card);
       else if (act === 'pm' && window.MC_PM) window.MC_PM.openEditor(card);
     });
 
@@ -174,6 +176,11 @@
     Array.prototype.forEach.call(menuOverlay.querySelectorAll('.mc-item-pm'), function (b) {
       b.style.display = pmOn ? '' : 'none';
     });
+    // contextual superset label: pair vs unpair depending on current state
+    if (pmOn && window.MC_PM && window.MC_PM.isSuperset) {
+      var ssLbl = menuOverlay.querySelector('.mc-ss-label');
+      if (ssLbl) ssLbl.textContent = window.MC_PM.isSuperset(card) ? 'Unpair superset' : 'Make superset';
+    }
     menuOverlay.classList.add('open');
   }
   function closeMenu() { menuOverlay.classList.remove('open'); activeCard = null; }

@@ -958,6 +958,51 @@
     closeIntEditor();
   }
 
+  // ---- superset pairing (true two-exercise A/B) ---------------------------
+  // Stored on the FIRST leg under "<cardKey>@ss" ({ on:1 }); the paint engine
+  // (program-overrides.js) groups it with the next exercise. PM only flips the
+  // flag — pairing with the adjacent card and the wrap/unwrap visuals live in
+  // the paint layer, which previews live and publishes via the PM bar.
+  var SS_SINGLE_SEL = '.ex-card, .ex-item, .lift-card';
+  // is this card already part of a superset group? returns the controlling
+  // (first-leg) card so unpair always clears the right key.
+  function ssGroupOf(card) {
+    var grp = card.closest ? card.closest('.mcpo-ss') : null;
+    if (!grp) return null;
+    var box = grp.querySelector('.mcpo-ss-legs');
+    var first = box && Array.prototype.filter.call(box.children, function (el) {
+      return el.matches && el.matches(SS_SINGLE_SEL);
+    })[0];
+    return { group: grp, first: first || card };
+  }
+  function nextSingleCard(card) {
+    var n = card.nextElementSibling;
+    while (n) { if (n.matches && n.matches(SS_SINGLE_SEL)) return n; n = n.nextElementSibling; }
+    return null;
+  }
+  function isSuperset(card) { return !!ssGroupOf(card); }
+
+  function toggleSuperset(card) {
+    if (!window.MC_PO) { msg('Not loaded', 'Override layer not loaded on this page.'); return; }
+    var PG = pmPagesKey();
+    var data = MC_PO.local();
+    if (!data.pages) data.pages = {};
+    var page = data.pages[PG] || (data.pages[PG] = {});
+    var grp = ssGroupOf(card);
+    if (grp) {
+      // unpair: clear @ss on the first leg
+      var key = (MC_PO.cardKey ? MC_PO.cardKey(grp.first) : cardOrigName(grp.first)) + '@ss';
+      var publishedHas = !!(((MC_PO.published().pages || {})[PG] || {})[key]);
+      if (publishedHas) page[key] = { reset: true }; else delete page[key];
+    } else {
+      if (!nextSingleCard(card)) { msg('No partner', 'There is no next exercise on this day to superset with. Reorder the exercises so the pair sits together, then try again.'); return; }
+      page[(MC_PO.cardKey ? MC_PO.cardKey(card) : cardOrigName(card)) + '@ss'] = { on: 1 };
+    }
+    if (!Object.keys(page).length) delete data.pages[PG];
+    MC_PO.setLocal(data);
+    renderBar();
+  }
+
   // ---- Rename Center -------------------------------------------------------
   // PM-bar "Names" panel: rename a program (name/icon/desc), its splits, and
   // its badges (program-scoped or app-wide). Writes flow through the same v2
@@ -1594,6 +1639,8 @@
     active: isActive,
     openEditor: openEditor,
     openIntensifier: openIntensifier,
+    toggleSuperset: toggleSuperset,
+    isSuperset: isSuperset,
     unlock: unlockFlow,
     openHub: openHub,
     enter: enterPM
