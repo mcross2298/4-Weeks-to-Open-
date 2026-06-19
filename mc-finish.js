@@ -66,6 +66,42 @@
     }catch(e){return[];}
   }
 
+  // ── recap helpers (Phase 5: Finish-Workout payoff) ──────────────────────
+  function esc(s){
+    return String(s).replace(/[&<>"]/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+    });
+  }
+  // The set store keys exercises by their synthetic id (e.g. "x-bench-press" or
+  // "x-bench-press-2" for a duplicate). Reconstruct a clean display name.
+  function deSlug(id){
+    return String(id)
+      .replace(/^x-/,'')          // synthetic id prefix
+      .replace(/-\d+$/,'')        // duplicate-occurrence suffix
+      .replace(/-/g,' ')
+      .replace(/\b\w/g,function(c){return c.toUpperCase();})
+      .trim() || String(id);
+  }
+  function sessionTonnage(sets){
+    var t=0;
+    (sets||[]).forEach(function(s){
+      var w=parseFloat(s.weight)||0, r=parseInt(s.reps,10)||0;
+      t+=w*r;
+    });
+    return t;
+  }
+  function fmtLb(n){ return Math.round(n).toLocaleString('en-US'); }
+  // PR'd exercises with the best (heaviest) PR weight each.
+  function prSpotlight(sets){
+    var best={};
+    (sets||[]).forEach(function(s){
+      if(!s.pr)return;
+      var w=parseFloat(s.weight)||0, nm=deSlug(s.name);
+      if(!(nm in best)||w>best[nm])best[nm]=w;
+    });
+    return Object.keys(best).map(function(nm){return {name:nm,weight:best[nm]};});
+  }
+
   // Save to workout log
   function saveWorkout(){
     var sets=getSessionSets();
@@ -126,9 +162,74 @@
   var autoBanner='<div class="fw-auto-banner" id="fwAutoBanner" onclick="_FW.open()">'+
     '🏆 All sets complete — tap to finish workout</div>';
 
+  // Celebratory "Session Complete" recap shown after Save & Finish.
+  var doneHTML='<div class="fw-modal-overlay" id="fwDone">'+
+    '<div class="fw-modal fw-done-card">'+
+      '<div class="fw-done-emoji" id="fwDoneEmoji">💪</div>'+
+      '<div class="fw-done-title">Session Complete</div>'+
+      '<div class="fw-done-sub" id="fwDoneSub"></div>'+
+      '<div class="fw-done-grid" id="fwDoneGrid"></div>'+
+      '<div class="fw-done-prs" id="fwDonePRs"></div>'+
+      '<button class="fw-confirm" style="flex:none;width:100%;" onclick="_FW.doneClose()">Done</button>'+
+    '</div>'+
+  '</div>';
+
+  function injectDoneCss(){
+    if(document.getElementById('fwDoneCss'))return;
+    var st=document.createElement('style');st.id='fwDoneCss';
+    st.textContent=
+      '.fw-done-card{text-align:center;}'+
+      '.fw-done-emoji{font-size:46px;line-height:1;margin-bottom:6px;animation:fwPop .5s ease-out;}'+
+      '@keyframes fwPop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1)}}'+
+      '.fw-done-title{font-size:22px;font-weight:900;letter-spacing:-0.02em;color:#fff;}'+
+      '.fw-done-sub{font-size:13px;color:#64748b;font-weight:700;margin:2px 0 16px;}'+
+      '.fw-done-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}'+
+      '.fw-done-cell{background:#141414;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 8px;}'+
+      '.fw-done-num{font-size:22px;font-weight:900;color:var(--accent,#d4af37);letter-spacing:-0.01em;}'+
+      '.fw-done-lbl{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;margin-top:4px;}'+
+      '.fw-done-prs:not(:empty){margin-bottom:16px;}'+
+      '.fw-done-prs-title{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#d4af37;margin-bottom:8px;}'+
+      '.fw-pr-chip{display:inline-block;margin:3px;padding:7px 12px;border-radius:10px;background:rgba(212,175,55,0.14);border:1px solid rgba(212,175,55,0.35);color:#f5d76e;font-size:12px;font-weight:800;}';
+    document.head.appendChild(st);
+  }
+
+  function cell(val,lbl){
+    return '<div class="fw-done-cell"><div class="fw-done-num">'+val+'</div><div class="fw-done-lbl">'+lbl+'</div></div>';
+  }
+  function showDone(entry){
+    var sets=entry.sets||[];
+    var prList=prSpotlight(sets);
+    var grid=document.getElementById('fwDoneGrid');
+    if(grid){
+      grid.innerHTML=
+        cell(entry.duration,'Duration')+
+        cell(sets.length,'Sets')+
+        cell(fmtLb(sessionTonnage(sets)),'Volume (lb)')+
+        cell(prList.length?('🏆 '+prList.length):'—','PRs');
+    }
+    var sub=document.getElementById('fwDoneSub');
+    if(sub)sub.textContent=entry.workoutName||'';
+    var emoji=document.getElementById('fwDoneEmoji');
+    if(emoji)emoji.textContent=prList.length?'🏆':'💪';
+    var prEl=document.getElementById('fwDonePRs');
+    if(prEl){
+      prEl.innerHTML=prList.length
+        ?('<div class="fw-done-prs-title">New Personal Records</div>'+
+          prList.map(function(p){return '<div class="fw-pr-chip">🏆 '+esc(p.name)+' · '+p.weight+' lb</div>';}).join(''))
+        :'';
+    }
+    try{
+      var hp=(typeof MC_PREFS!=='undefined')?MC_PREFS.get().haptics:true;
+      if(hp&&navigator.vibrate)navigator.vibrate(prList.length?[60,40,120]:30);
+    }catch(e){}
+    var ov=document.getElementById('fwDone');
+    if(ov)ov.classList.add('open');
+  }
+
   // Inject UI
   function inject(){
-    document.body.insertAdjacentHTML('beforeend',barHTML+modalHTML+autoBanner);
+    injectDoneCss();
+    document.body.insertAdjacentHTML('beforeend',barHTML+modalHTML+autoBanner+doneHTML);
     // Watch for set check changes
     document.addEventListener('click',function(e){
       if(e.target.classList.contains('sl-ck')||
@@ -151,16 +252,21 @@
   window._FW={
     open:function(){
       var sets=getSessionSets();
-      var prs=sets.filter(function(s){return s.pr;}).length;
+      var prList=prSpotlight(sets);
+      var tonnage=sessionTonnage(sets);
       var summary=document.getElementById('fwSummary');
       if(summary){
         summary.innerHTML=
-          '<div class="fw-summary-row"><span class="fw-summary-label">Workout</span><span class="fw-summary-val">'+getWorkoutName()+'</span></div>'+
+          '<div class="fw-summary-row"><span class="fw-summary-label">Workout</span><span class="fw-summary-val">'+esc(getWorkoutName())+'</span></div>'+
           '<div class="fw-summary-row"><span class="fw-summary-label">Duration</span><span class="fw-summary-val">'+getDuration()+'</span></div>'+
           '<div class="fw-summary-row"><span class="fw-summary-label">Sets checked</span><span class="fw-summary-val">'+getCheckedSets()+' / '+getTotalSets()+'</span></div>'+
           '<div class="fw-summary-row"><span class="fw-summary-label">Sets logged</span><span class="fw-summary-val">'+sets.length+'</span></div>'+
-          (prs?'<div class="fw-summary-row"><span class="fw-summary-label">PRs set</span><span class="fw-summary-val" style="color:#d4af37;">🏆 '+prs+'</span></div>':'')+
-          (function(){var sk=getSkippedExercises();return sk.length?'<div class="fw-summary-row"><span class="fw-summary-label" style="color:#f87171;">Skipped</span><span class="fw-summary-val" style="color:#f87171;font-size:11px;">'+sk.join(', ')+'</span></div>':'';}());
+          '<div class="fw-summary-row"><span class="fw-summary-label">Volume</span><span class="fw-summary-val">'+fmtLb(tonnage)+' lb</span></div>'+
+          (prList.length?prList.map(function(p){
+            return '<div class="fw-summary-row"><span class="fw-summary-label" style="color:#d4af37;">🏆 PR</span>'+
+                   '<span class="fw-summary-val" style="color:#d4af37;">'+esc(p.name)+' — '+p.weight+' lb</span></div>';
+          }).join(''):'')+
+          (function(){var sk=getSkippedExercises();return sk.length?'<div class="fw-summary-row"><span class="fw-summary-label" style="color:#f87171;">Skipped</span><span class="fw-summary-val" style="color:#f87171;font-size:11px;">'+esc(sk.join(', '))+'</span></div>':'';}());
       }
       var m=document.getElementById('fwModal');
       if(m)m.classList.add('open');
@@ -170,11 +276,13 @@
       if(m)m.classList.remove('open');
     },
     confirm:function(){
-      saveWorkout();
+      var entry=saveWorkout();
       // back up the finished session right away (no-op when signed out)
       try{if(window.MC_SYNC&&MC_SYNC.push)MC_SYNC.push();}catch(e){}
       window._FW.close();
-      // Flash confirmation
+      // Celebratory recap instead of just a button flash
+      showDone(entry);
+      // Flash confirmation on the bar too
       var btn=document.querySelector('.fw-btn');
       if(btn){btn.textContent='✓ Saved!';btn.style.background='#34d399';}
       var banner=document.getElementById('fwAutoBanner');
@@ -182,6 +290,10 @@
       setTimeout(function(){
         if(btn){btn.textContent='Finish Workout ✓';btn.style.background='';}
       },2000);
+    },
+    doneClose:function(){
+      var ov=document.getElementById('fwDone');
+      if(ov)ov.classList.remove('open');
     }
   };
 
