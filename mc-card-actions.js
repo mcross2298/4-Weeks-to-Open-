@@ -308,8 +308,14 @@
   //  REORDER                                                               //
   // ====================================================================== //
   function startReorder(card) {
+    // Flatten any superset blocks so the whole day reorders as one flat list
+    // (cards inside a .mcpo-ss wrapper would otherwise only move within it).
+    // The flag keeps the paint engine from re-wrapping mid-reorder; endReorder
+    // clears it and refreshes so pairs re-form around the new order.
+    window.MC_PM_SUSPEND_SS = true;
+    if (window.MC_PO && MC_PO.flattenSupersets) MC_PO.flattenSupersets();
     var container = card.parentElement;
-    if (!container) return;
+    if (!container) { window.MC_PM_SUSPEND_SS = false; return; }
     reorderContainer = container;
     withoutObserver(function () {
       container.classList.add('mc-reordering');
@@ -329,6 +335,11 @@
     }
     reorderContainer = null;
     reorderBar.classList.remove('open');
+    // resume + re-pair supersets around the new order
+    if (window.MC_PM_SUSPEND_SS) {
+      window.MC_PM_SUSPEND_SS = false;
+      if (window.MC_PO && MC_PO.refresh) MC_PO.refresh();
+    }
   }
 
   function addArrows(card) {

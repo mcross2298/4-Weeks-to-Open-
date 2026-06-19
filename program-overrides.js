@@ -350,6 +350,9 @@
   }
 
   function applySupersets() {
+    // suspended during a Reorder session so the day reorders as a flat list
+    // (mc-card-actions flattens the wrappers first, then refreshes on Done).
+    if (window.MC_PM_SUSPEND_SS) return;
     // 1) teardown — any existing wrapper whose controlling override is gone
     document.querySelectorAll('.mcpo-ss').forEach(function (w) {
       var first = legCardsOf(w)[0];
@@ -370,6 +373,13 @@
       w.appendChild(hd); w.appendChild(legs);
       legs.appendChild(a); legs.appendChild(divider); legs.appendChild(b);
       legLabel(a, 'A'); legLabel(b, 'B');
+    });
+  }
+  // unconditionally unwrap every superset group (used by Reorder so the day
+  // becomes a flat, fully-reorderable list; refresh() re-pairs afterwards).
+  function flattenSupersets() {
+    withoutObserver(function () {
+      document.querySelectorAll('.mcpo-ss').forEach(unwrapSS);
     });
   }
 
@@ -496,6 +506,7 @@
     // mc-pm-inline.js) must use this, NOT pageId, so weeks edit independently.
     pagesKey: pagesKey,
     refresh: scan,
+    flattenSupersets: flattenSupersets,
     cardKey: cardKey,
     published: function () { return published; },
     local: readLocal,
