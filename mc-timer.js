@@ -196,6 +196,24 @@ const TMR = {
       this.start(el, durationSecs, exerciseName);
     }
   },
+
+  // Extend / trim the rest currently running without cancelling it — the
+  // prescribed rest often isn't what you want that day (heavy set → +15s,
+  // feeling good → −15s). Works for both the rest flow and the preset flow.
+  adjust(delta) {
+    if (this.startTime == null || !this.interval) return;
+    this.duration = Math.max(0, this.duration + delta);
+    if (this._autoDismiss) { clearTimeout(this._autoDismiss); this._autoDismiss = null; }
+    const remaining = Math.ceil(this.duration - (Date.now() - this.startTime) / 1000);
+    if (remaining > 10) this._cued10 = false;   // re-arm the 10s cue if we bought time back
+    const ft = document.getElementById('timerFloatTime');   // snappy immediate repaint
+    if (ft) {
+      ft.textContent = this.formatTime(remaining);
+      ft.className = 'timer-float-time' + (remaining <= 0 ? ' overtime' : '');
+    }
+    const p = MC_PREFS.get();   // light tick so the tap registers
+    if (p.haptics && navigator.vibrate) navigator.vibrate(10);
+  },
   setTime(secs,label){
     this.stop();
     if(this.interval){clearInterval(this.interval);this.interval=null;}
@@ -221,8 +239,33 @@ const TMR = {
   }
 };
 
+// Timer-float cosmetics, injected once into <head> at runtime so they apply
+// on EVERY workout page identically — the per-page inline .timer-float CSS is
+// duplicated and divergent across ~11 pages, and a runtime <head> rule lands
+// after those linked/inline styles in the cascade (so it wins without editing
+// each page). Covers: larger glanceable numerals, a smoother done "pop", a
+// slide-up entrance, and the ±15s adjust buttons.
+function injectTimerEnhCss() {
+  if (document.getElementById('mcTimerEnhCss')) return;
+  const st = document.createElement('style');
+  st.id = 'mcTimerEnhCss';
+  st.textContent =
+    '.timer-float-time{font-size:46px!important;transition:color .25s ease;}' +
+    '@keyframes mcTmrDonePop{0%{transform:scale(.9);opacity:.65}60%{transform:scale(1.05)}100%{transform:scale(1)}}' +
+    '.timer-float-time.done{animation:mcTmrDonePop .45s ease-out;}' +
+    '@keyframes mcTmrSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}' +
+    '.timer-float.visible{animation:mcTmrSlideUp .22s ease-out;}' +
+    '.timer-float-adjust{display:flex;gap:8px;justify-content:center;}' +
+    '.timer-float-adj{padding:6px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.14);' +
+      'background:rgba(255,255,255,0.05);color:#cbd5e1;font-size:12px;font-weight:800;' +
+      'letter-spacing:0.04em;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}' +
+    '.timer-float-adj:active{background:rgba(212,175,55,0.16);color:#fbbf24;border-color:rgba(212,175,55,0.4);}';
+  document.head.appendChild(st);
+}
+
 function buildTimerFloat() {
   if (document.getElementById('timerFloat')) return;
+  injectTimerEnhCss();
   const div = document.createElement('div');
   div.id = 'timerFloat';
   div.className = 'timer-float';
@@ -231,6 +274,10 @@ function buildTimerFloat() {
     <div id="timerFloatTime" class="timer-float-time">0s</div>
     <div id="timerFloatEx" class="timer-float-ex"></div>
     <div class="timer-float-bar"><div id="timerFloatProgress" class="timer-float-progress"></div></div>
+    <div class="timer-float-adjust">
+      <button class="timer-float-adj" onclick="TMR.adjust(-15)">−15s</button>
+      <button class="timer-float-adj" onclick="TMR.adjust(15)">+15s</button>
+    </div>
     <div class="timer-float-actions">
       <button class="timer-float-btn timer-float-skip" onclick="TMR.stop()">✓ Done</button>
       <button class="timer-float-btn timer-float-reset" onclick="TMR.stop()">✕ Cancel</button>
