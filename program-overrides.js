@@ -255,18 +255,28 @@
     return snap;
   }
 
-  // ---- intensifiers (Drop set / Cluster set) ------------------------------
-  // PM-published, week-aware, and stored UNDER THEIR OWN page-tier keys
-  // ("<cardKey>@drop" / "<cardKey>@cluster") so they are fully decoupled from
-  // the name/sets/rest/note/tempo patch — the inline pencil and the permanent-
-  // edit modal never clobber an intensifier, and vice versa. The patch shapes:
-  //   drop:    { on:1, detail?:string }
-  //   cluster: { on:1, reps?:string, rest?:string, detail?:string }
+  // ---- intensifiers (Drop set / Cluster set / superset) -------------------
+  // Two layers paint through the SAME engine:
+  //   • PM-published — week-aware, stored under the page-tier keys
+  //     "<cardKey>@drop" / "<cardKey>@cluster" / "<cardKey>@ss" in the override
+  //     doc, pushed to Supabase, live for everyone.
+  //   • Personal — any user's own device-only intensifiers, in a separate
+  //     localStorage map keyed by pagesKey()→cardKey→{ drop, cluster, ss }.
+  //     Never published. Published takes priority; personal fills in where the
+  //     owner hasn't set one (and ss flags combine, so a user can build their
+  //     own supersets / tri-sets).
+  // Patch shapes: drop { on:1, detail? }  cluster { on:1, reps?, rest?, detail? }
+  var PERSONAL_KEY = 'mc_personal_intensifiers';
+  function readPersonal() { try { return JSON.parse(localStorage.getItem(PERSONAL_KEY)) || {}; } catch (e) { return {}; } }
+  function writePersonal(o) { try { localStorage.setItem(PERSONAL_KEY, JSON.stringify(o || {})); } catch (e) {} }
+  function personalCard(baseKey) { var pg = readPersonal()[pagesKey()]; return (pg && pg[baseKey]) || null; }
+
   function intensifierFor(baseKey, kind) {
     var page = effective().pages[pagesKey()];
-    if (!page) return null;
-    var e = page[baseKey + '@' + kind];
-    return (e && !e.reset && (e.on || e.detail || e.reps || e.rest)) ? e : null;
+    var e = page && page[baseKey + '@' + kind];
+    if (e && !e.reset && (e.on || e.detail || e.reps || e.rest)) return e;        // PM/published wins
+    var p = personalCard(baseKey); p = p && p[kind];                              // else personal
+    return (p && (p.on || p.detail || p.reps || p.rest)) ? p : null;
   }
   function dropLine(o)    { return '↘️ Drop set' + (o.detail ? ' — ' + o.detail : ''); }
   function clusterLine(o) {
@@ -318,9 +328,10 @@
   var SS_SINGLE_SEL = '.ex-card, .ex-item, .lift-card';   // top-level cards (NOT .ss-ex legs)
   function ssOverrideFor(baseKey) {
     var page = effective().pages[pagesKey()];
-    if (!page) return null;
-    var e = page[baseKey + '@ss'];
-    return (e && !e.reset && e.on) ? e : null;
+    var e = page && page[baseKey + '@ss'];
+    if (e && !e.reset && e.on) return e;                   // PM/published flag
+    var p = personalCard(baseKey);                         // OR a personal flag (they combine)
+    return (p && p.ss) ? { on: 1 } : null;
   }
   function nextSingleSibling(card) {
     var n = card.nextElementSibling;
@@ -523,6 +534,24 @@
     refresh: scan,
     flattenSupersets: flattenSupersets,
     cardKey: cardKey,
+    // ---- personal (device-only) intensifiers, for non-PM users ------------
+    // kind: 'drop' | 'cluster'; patch null clears it. 'ss' is a bare flag.
+    getPersonalIntensifier: function (card, kind) {
+      var p = personalCard(cardKey(card)); return (p && p[kind]) || null;
+    },
+    setPersonalIntensifier: function (card, kind, patch) {
+      var store = readPersonal(), pk = pagesKey(), ck = cardKey(card);
+      var pg = store[pk] || (store[pk] = {});
+      var e = pg[ck] || (pg[ck] = {});
+      if (patch) e[kind] = patch; else delete e[kind];
+      if (!Object.keys(e).length) delete pg[ck];
+      if (!Object.keys(pg).length) delete store[pk];
+      writePersonal(store); scan();
+    },
+    hasPersonalSS: function (card) { var p = personalCard(cardKey(card)); return !!(p && p.ss); },
+    togglePersonalSS: function (card) {
+      this.setPersonalIntensifier(card, 'ss', this.hasPersonalSS(card) ? null : 1);
+    },
     published: function () { return published; },
     local: readLocal,
     setLocal: function (obj) {

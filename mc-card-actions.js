@@ -130,9 +130,9 @@
         '<button class="mc-item" data-act="reorder"><span class="mc-ico">↕️</span>Reorder exercises</button>' +
         tempoItem +
         '<button class="mc-item" data-act="notes"><span class="mc-ico">📝</span>Notes</button>' +
-        '<button class="mc-item mc-item-pm" data-act="int-drop" style="display:none"><span class="mc-ico">↘️</span>Drop set</button>' +
-        '<button class="mc-item mc-item-pm" data-act="int-cluster" style="display:none"><span class="mc-ico">🧩</span>Cluster set</button>' +
-        '<button class="mc-item mc-item-pm" data-act="int-ss" style="display:none"><span class="mc-ico">⚡</span><span class="mc-ss-label">Make superset</span></button>' +
+        '<button class="mc-item mc-item-int" data-act="int-drop" style="display:none"><span class="mc-ico">↘️</span>Drop set</button>' +
+        '<button class="mc-item mc-item-int" data-act="int-cluster" style="display:none"><span class="mc-ico">🧩</span>Cluster set</button>' +
+        '<button class="mc-item mc-item-int" data-act="int-ss" style="display:none"><span class="mc-ico">⚡</span><span class="mc-ss-label">Make superset</span></button>' +
         '<button class="mc-item mc-item-pm" data-act="pm" style="display:none"><span class="mc-ico">🛠️</span>Program Manager edit</button>' +
         '<button class="mc-item mc-item-cancel" data-act="cancel">Cancel</button>' +
       '</div>';
@@ -150,9 +150,11 @@
       else if (act === 'reorder') startReorder(card);
       else if (act === 'notes') openNote(card);
       else if (act === 'tempo') openTempo(card);
-      else if (act === 'int-drop' && window.MC_PM) window.MC_PM.openIntensifier(card, 'drop');
-      else if (act === 'int-cluster' && window.MC_PM) window.MC_PM.openIntensifier(card, 'cluster');
-      else if (act === 'int-ss' && window.MC_PM) window.MC_PM.toggleSuperset(card);
+      // intensifiers: in PM mode they publish to everyone; otherwise they save
+      // personally to this device (like Notes / Add Tempo).
+      else if (act === 'int-drop') { if (pmActive() && window.MC_PM) MC_PM.openIntensifier(card, 'drop'); else openPersonalIntensifier(card, 'drop'); }
+      else if (act === 'int-cluster') { if (pmActive() && window.MC_PM) MC_PM.openIntensifier(card, 'cluster'); else openPersonalIntensifier(card, 'cluster'); }
+      else if (act === 'int-ss') { if (pmActive() && window.MC_PM) MC_PM.toggleSuperset(card); else if (window.MC_PO) MC_PO.togglePersonalSS(card); }
       else if (act === 'pm' && window.MC_PM) window.MC_PM.openEditor(card);
     });
 
@@ -168,18 +170,35 @@
   function openMenu(card) {
     activeCard = card;
     sheetTitle.textContent = cardName(card) || 'Exercise';
-    // owner-only items (Drop set / Cluster set / Program Manager edit): visible
-    // only while Program Manager mode is unlocked
-    var pmOn = !!(window.MC_PM && window.MC_PM.active());
+    var pmOn = pmActive();
+    // owner-only item ("Program Manager edit"): visible only while PM unlocked
     Array.prototype.forEach.call(menuOverlay.querySelectorAll('.mc-item-pm'), function (b) {
       b.style.display = pmOn ? '' : 'none';
     });
-    // contextual superset label: pair vs unpair depending on current state
-    if (pmOn && window.MC_PM && window.MC_PM.isSuperset) {
-      var ssLbl = menuOverlay.querySelector('.mc-ss-label');
-      if (ssLbl) ssLbl.textContent = window.MC_PM.isSuperset(card) ? 'Unpair superset' : 'Make superset';
+    // intensifiers (Drop / Cluster / superset): available to everyone on a
+    // top-level single card (needs the paint engine to render + persist).
+    var isTop = !!(card.matches && card.matches('.ex-card, .ex-item, .lift-card'));
+    var intOn = !!window.MC_PO && isTop;
+    Array.prototype.forEach.call(menuOverlay.querySelectorAll('.mc-item-int'), function (b) {
+      b.style.display = intOn ? '' : 'none';
+    });
+    // superset item: contextual label, and hidden when there's nothing to pair
+    var ssItem = menuOverlay.querySelector('[data-act="int-ss"]');
+    if (ssItem && intOn) {
+      var paired = pmOn ? !!(window.MC_PM && MC_PM.isSuperset && MC_PM.isSuperset(card))
+                        : !!(window.MC_PO && MC_PO.hasPersonalSS && MC_PO.hasPersonalSS(card));
+      ssItem.style.display = (paired || hasNextTopCard(card)) ? '' : 'none';
+      var ssLbl = ssItem.querySelector('.mc-ss-label');
+      if (ssLbl) ssLbl.textContent = paired ? 'Unpair superset' : 'Make superset';
     }
     menuOverlay.classList.add('open');
+  }
+  function pmActive() { return !!(window.MC_PM && window.MC_PM.active()); }
+  // is there a following top-level exercise card (document order, wrapper-safe)?
+  function hasNextTopCard(card) {
+    var all = document.querySelectorAll('.ex-card, .ex-item, .lift-card');
+    for (var i = 0; i < all.length; i++) { if (all[i] === card) return !!all[i + 1]; }
+    return false;
   }
   function closeMenu() { menuOverlay.classList.remove('open'); activeCard = null; }
 
@@ -300,6 +319,66 @@
     } else if (existing) { existing.remove(); }
     var mb = card.querySelector('.mc-meatball');
     if (mb) mb.classList.toggle('mc-has-tempo', !!val);
+  }
+
+  // ====================================================================== //
+  //  PERSONAL INTENSIFIERS  (device-only Drop / Cluster · non-PM users)    //
+  //  Routed through MC_PO so the paint engine renders them identically to  //
+  //  the owner-published ones, but they live in localStorage and never     //
+  //  publish. Superset is a one-tap toggle handled in the click router.    //
+  // ====================================================================== //
+  var piOverlay = null, piCard = null, piKind = null;
+  var PI_LBL = 'display:block;font-size:11px;font-weight:800;letter-spacing:0.04em;color:#94a3b8;margin:12px 2px 5px;text-transform:uppercase;';
+  var PI_IN = 'width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);border-radius:10px;padding:11px 12px;color:#e2e8f0;font-size:14px;font-family:inherit;outline:none;';
+  function piEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
+
+  function openPersonalIntensifier(card, kind) {
+    if (!window.MC_PO || !MC_PO.setPersonalIntensifier) return;
+    piCard = card; piKind = kind;
+    if (!piOverlay) {
+      piOverlay = document.createElement('div');
+      piOverlay.className = 'mc-menu-overlay';
+      document.body.appendChild(piOverlay);
+      piOverlay.addEventListener('click', function (e) {
+        if (e.target === piOverlay) { piOverlay.classList.remove('open'); return; }
+        var b = e.target.closest('.mc-btn'); if (!b) return;
+        if (b.dataset.act === 'save') savePersonalIntensifier();
+        else if (b.dataset.act === 'remove') MC_PO.setPersonalIntensifier(piCard, piKind, null);
+        piOverlay.classList.remove('open');
+      });
+    }
+    var cur = MC_PO.getPersonalIntensifier(card, kind) || {};
+    var title = (kind === 'drop' ? '↘️ Drop set' : '🧩 Cluster set') + ' · ' + piEsc(cardName(card) || 'Exercise');
+    var fields;
+    if (kind === 'drop') {
+      fields = '<label style="' + PI_LBL + '">Detail (optional)</label>' +
+        '<input class="pi-f" data-f="detail" style="' + PI_IN + '" placeholder="e.g. triple drop, −20% each" value="' + piEsc(cur.detail) + '"/>';
+    } else {
+      fields = '<label style="' + PI_LBL + '">Reps per cluster (optional)</label>' +
+        '<input class="pi-f" data-f="reps" style="' + PI_IN + '" placeholder="e.g. 3 × 3" value="' + piEsc(cur.reps) + '"/>' +
+        '<label style="' + PI_LBL + '">Intra-set rest (optional)</label>' +
+        '<input class="pi-f" data-f="rest" style="' + PI_IN + '" placeholder="e.g. 15 sec" value="' + piEsc(cur.rest) + '"/>' +
+        '<label style="' + PI_LBL + '">Detail (optional)</label>' +
+        '<input class="pi-f" data-f="detail" style="' + PI_IN + '" placeholder="e.g. rest-pause to a hard 10" value="' + piEsc(cur.detail) + '"/>';
+    }
+    piOverlay.innerHTML =
+      '<div class="mc-note-modal">' +
+        '<div class="mc-sheet-title">' + title + '</div>' +
+        fields +
+        '<div class="mc-note-btns">' +
+          '<button class="mc-btn" data-act="remove" style="background:rgba(248,113,113,0.14);color:#f87171;">Remove</button>' +
+          '<button class="mc-btn mc-btn-cancel" data-act="cancel">Cancel</button>' +
+          '<button class="mc-btn mc-btn-save" data-act="save">Save</button>' +
+        '</div>' +
+      '</div>';
+    piOverlay.classList.add('open');
+  }
+  function savePersonalIntensifier() {
+    function v(f) { var el = piOverlay.querySelector('[data-f="' + f + '"]'); return el ? el.value.trim() : ''; }
+    var patch = { on: 1 }, d;
+    if (piKind === 'drop') { if ((d = v('detail'))) patch.detail = d; }
+    else { if ((d = v('reps'))) patch.reps = d; if ((d = v('rest'))) patch.rest = d; if ((d = v('detail'))) patch.detail = d; }
+    MC_PO.setPersonalIntensifier(piCard, piKind, patch);
   }
 
   // ====================================================================== //
