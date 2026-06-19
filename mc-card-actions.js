@@ -182,14 +182,34 @@
     Array.prototype.forEach.call(menuOverlay.querySelectorAll('.mc-item-int'), function (b) {
       b.style.display = intOn ? '' : 'none';
     });
-    // superset item: contextual label, and hidden when there's nothing to pair
-    var ssItem = menuOverlay.querySelector('[data-act="int-ss"]');
-    if (ssItem && intOn) {
-      var paired = pmOn ? !!(window.MC_PM && MC_PM.isSuperset && MC_PM.isSuperset(card))
-                        : !!(window.MC_PO && MC_PO.hasPersonalSS && MC_PO.hasPersonalSS(card));
-      ssItem.style.display = (paired || hasNextTopCard(card)) ? '' : 'none';
-      var ssLbl = ssItem.querySelector('.mc-ss-label');
-      if (ssLbl) ssLbl.textContent = paired ? 'Unpair superset' : 'Make superset';
+    if (intOn) {
+      // outside PM, users can only ADD their own — lock Drop/Cluster when the
+      // owner already published one on this card (published always wins).
+      if (!pmOn) {
+        ['drop', 'cluster'].forEach(function (kind) {
+          var it = menuOverlay.querySelector('[data-act="int-' + kind + '"]');
+          if (it && window.MC_PO.hasOwnerIntensifier && MC_PO.hasOwnerIntensifier(card, kind)) it.style.display = 'none';
+        });
+      }
+      // superset item: contextual label, hidden when there's nothing to pair
+      // or (for users) when the card belongs to one of the owner's pairings.
+      var ssItem = menuOverlay.querySelector('[data-act="int-ss"]');
+      if (ssItem) {
+        var show, label = 'Make superset';
+        if (pmOn) {
+          var pairedPM = !!(window.MC_PM && MC_PM.isSuperset && MC_PM.isSuperset(card));
+          label = pairedPM ? 'Unpair superset' : 'Make superset';
+          show = pairedPM || hasNextTopCard(card);
+        } else {
+          var personal = !!(MC_PO.hasPersonalSS && MC_PO.hasPersonalSS(card));
+          if (personal) { show = true; label = 'Unpair superset'; }
+          else if (card.closest && card.closest('.mcpo-ss')) { show = false; }   // owner's pairing — locked
+          else { show = hasNextTopCard(card); label = 'Make superset'; }
+        }
+        ssItem.style.display = show ? '' : 'none';
+        var ssLbl = ssItem.querySelector('.mc-ss-label');
+        if (ssLbl) ssLbl.textContent = label;
+      }
     }
     menuOverlay.classList.add('open');
   }

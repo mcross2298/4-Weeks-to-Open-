@@ -549,6 +549,13 @@
       writePersonal(store); scan();
     },
     hasPersonalSS: function (card) { var p = personalCard(cardKey(card)); return !!(p && p.ss); },
+    // does the owner-published/PM layer (NOT personal) carry this intensifier?
+    // used to lock the personal menu items so users can only add their own.
+    hasOwnerIntensifier: function (card, kind) {
+      var page = effective().pages[pagesKey()];
+      var e = page && page[cardKey(card) + '@' + kind];
+      return !!(e && !e.reset && (e.on || e.detail || e.reps || e.rest));
+    },
     togglePersonalSS: function (card) {
       this.setPersonalIntensifier(card, 'ss', this.hasPersonalSS(card) ? null : 1);
     },
