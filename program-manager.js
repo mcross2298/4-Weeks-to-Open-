@@ -958,45 +958,44 @@
     closeIntEditor();
   }
 
-  // ---- superset pairing (true two-exercise A/B) ---------------------------
-  // Stored on the FIRST leg under "<cardKey>@ss" ({ on:1 }); the paint engine
-  // (program-overrides.js) groups it with the next exercise. PM only flips the
-  // flag — pairing with the adjacent card and the wrap/unwrap visuals live in
-  // the paint layer, which previews live and publishes via the PM bar.
+  // ---- superset / tri-set / giant-set pairing -----------------------------
+  // A card's "<cardKey>@ss" flag ({ on:1 }) means "joined to the NEXT exercise."
+  // The paint engine (program-overrides.js) walks a maximal run of linked cards
+  // into one group: 2 legs = superset, 3 = tri-set, 4+ = giant set. PM only
+  // flips a card's own flag; wrapping/visuals + chaining live in the paint
+  // layer, which previews live and publishes via the PM bar.
   var SS_SINGLE_SEL = '.ex-card, .ex-item, .lift-card';
-  // is this card already part of a superset group? returns the controlling
-  // (first-leg) card so unpair always clears the right key.
-  function ssGroupOf(card) {
-    var grp = card.closest ? card.closest('.mcpo-ss') : null;
-    if (!grp) return null;
-    var box = grp.querySelector('.mcpo-ss-legs');
-    var first = box && Array.prototype.filter.call(box.children, function (el) {
-      return el.matches && el.matches(SS_SINGLE_SEL);
-    })[0];
-    return { group: grp, first: first || card };
-  }
+  // next exercise in DOCUMENT order — robust whether or not cards are currently
+  // wrapped (querySelectorAll matches single cards inside .mcpo-ss too). This is
+  // exactly the card the paint layer will pair once the flag is set.
   function nextSingleCard(card) {
-    var n = card.nextElementSibling;
-    while (n) { if (n.matches && n.matches(SS_SINGLE_SEL)) return n; n = n.nextElementSibling; }
+    var all = document.querySelectorAll(SS_SINGLE_SEL);
+    for (var i = 0; i < all.length; i++) { if (all[i] === card) return all[i + 1] || null; }
     return null;
   }
-  function isSuperset(card) { return !!ssGroupOf(card); }
+  function ssKeyOf(card) { return (MC_PO.cardKey ? MC_PO.cardKey(card) : cardOrigName(card)) + '@ss'; }
+  // does this card carry its own @ss flag (i.e. is it joined to the next card)?
+  function isSuperset(card) {
+    if (!window.MC_PO || !MC_PO.effective) return false;
+    var pages = MC_PO.effective().pages || {};
+    var e = (pages[pmPagesKey()] || {})[ssKeyOf(card)];
+    return !!(e && !e.reset && e.on);
+  }
 
   function toggleSuperset(card) {
     if (!window.MC_PO) { msg('Not loaded', 'Override layer not loaded on this page.'); return; }
     var PG = pmPagesKey();
+    var key = ssKeyOf(card);
     var data = MC_PO.local();
     if (!data.pages) data.pages = {};
     var page = data.pages[PG] || (data.pages[PG] = {});
-    var grp = ssGroupOf(card);
-    if (grp) {
-      // unpair: clear @ss on the first leg
-      var key = (MC_PO.cardKey ? MC_PO.cardKey(grp.first) : cardOrigName(grp.first)) + '@ss';
+    if (isSuperset(card)) {
+      // clear this card's link to the next (splits the group after this card)
       var publishedHas = !!(((MC_PO.published().pages || {})[PG] || {})[key]);
       if (publishedHas) page[key] = { reset: true }; else delete page[key];
     } else {
-      if (!nextSingleCard(card)) { msg('No partner', 'There is no next exercise on this day to superset with. Reorder the exercises so the pair sits together, then try again.'); return; }
-      page[(MC_PO.cardKey ? MC_PO.cardKey(card) : cardOrigName(card)) + '@ss'] = { on: 1 };
+      if (!nextSingleCard(card)) { msg('No partner', 'There is no next exercise on this day to join. Reorder so the exercises sit together, then try again.'); return; }
+      page[key] = { on: 1 };   // join to the next exercise (creates / extends a group)
     }
     if (!Object.keys(page).length) delete data.pages[PG];
     MC_PO.setLocal(data);

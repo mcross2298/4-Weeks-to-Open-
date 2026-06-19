@@ -349,30 +349,45 @@
     w.remove();
   }
 
+  // header / divider wording scales with the number of legs (matches the
+  // wording the static pages use): 2 = Superset, 3 = Tri-Set, 4+ = Giant Set.
+  function ssWording(n) {
+    if (n >= 4) return { label: '⚡ Giant Set', div: '× GIANT SET ×' };
+    if (n === 3) return { label: '⚡ Tri-Set', div: '× TRI-SET ×' };
+    return { label: '⚡ Superset', div: '× SUPERSET ×' };
+  }
   function applySupersets() {
     // suspended during a Reorder session so the day reorders as a flat list
     // (mc-card-actions flattens the wrappers first, then refreshes on Done).
     if (window.MC_PM_SUSPEND_SS) return;
-    // 1) teardown — any existing wrapper whose controlling override is gone
-    document.querySelectorAll('.mcpo-ss').forEach(function (w) {
-      var first = legCardsOf(w)[0];
-      if (!first || !ssOverrideFor(cardKey(first))) unwrapSS(w);
-    });
-    // 2) build — pair each flagged card with its next sibling single card
+    // 1) teardown — unwrap every group, then rebuild from scratch so chains
+    //    that grew/shrank (tri-set ↔ superset) always reflect the current flags.
+    document.querySelectorAll('.mcpo-ss').forEach(unwrapSS);
+    // 2) build — a card's @ss flag means "joined to the next exercise". Walk a
+    //    maximal run of linked cards into ONE group (2 = superset, 3+ = tri/
+    //    giant set). Cards already absorbed into an earlier group are skipped.
     Array.prototype.forEach.call(document.querySelectorAll(SS_SINGLE_SEL), function (a) {
-      if (a.closest('.mcpo-ss')) return;                 // already grouped
-      if (!ssOverrideFor(cardKey(a))) return;
-      var b = nextSingleSibling(a);
-      if (!b || b.closest('.mcpo-ss')) return;
+      if (a.closest('.mcpo-ss')) return;                 // absorbed by an earlier group
+      if (!ssOverrideFor(cardKey(a))) return;            // a is not joined to the next card
+      var legs = [a], cur = a, nxt;
+      while (ssOverrideFor(cardKey(cur))) {
+        nxt = nextSingleSibling(cur);
+        if (!nxt) break;
+        legs.push(nxt); cur = nxt;
+      }
+      if (legs.length < 2) return;
       var parent = a.parentNode; if (!parent) return;
+      var word = ssWording(legs.length);
       var w = document.createElement('div'); w.className = 'mcpo-ss';
-      var hd = document.createElement('div'); hd.className = 'mcpo-ss-hd'; hd.textContent = '⚡ Superset';
-      var legs = document.createElement('div'); legs.className = 'mcpo-ss-legs';
-      var divider = document.createElement('div'); divider.className = 'mcpo-ss-div'; divider.textContent = '× SUPERSET ×';
+      var hd = document.createElement('div'); hd.className = 'mcpo-ss-hd'; hd.textContent = word.label;
+      var box = document.createElement('div'); box.className = 'mcpo-ss-legs';
       parent.insertBefore(w, a);                         // wrapper takes A's slot → reversible
-      w.appendChild(hd); w.appendChild(legs);
-      legs.appendChild(a); legs.appendChild(divider); legs.appendChild(b);
-      legLabel(a, 'A'); legLabel(b, 'B');
+      w.appendChild(hd); w.appendChild(box);
+      legs.forEach(function (leg, i) {
+        if (i) { var d = document.createElement('div'); d.className = 'mcpo-ss-div'; d.textContent = word.div; box.appendChild(d); }
+        box.appendChild(leg);
+        legLabel(leg, String.fromCharCode(65 + i));
+      });
     });
   }
   // unconditionally unwrap every superset group (used by Reorder so the day
