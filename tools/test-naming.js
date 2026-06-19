@@ -55,7 +55,7 @@ global.document = {
   createElement: () => ({ style: {}, setAttribute: noop, appendChild: noop, onload: null }),
   head: { appendChild: noop },
   body: {},
-  querySelectorAll: () => cardList.slice()
+  querySelectorAll: (sel) => /mcpo-ss/.test(String(sel)) ? [] : cardList.slice()
 };
 // In a browser, `window` IS the global object, so the modules use `window.MC_PO`
 // and bare `MC_PO` interchangeably. Mirror that so both resolve here.

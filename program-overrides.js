@@ -355,6 +355,7 @@
   // unwrap a .mcpo-ss group: move its leg cards back out (in order) ahead of the
   // wrapper, strip the A/B labels, then drop the wrapper shell.
   function unwrapSS(w) {
+    if (!w || typeof w.remove !== 'function') return;   // defensive (non-DOM/stub envs)
     var parent = w.parentNode; if (!parent) { w.remove(); return; }
     legCardsOf(w).forEach(function (c) { stripLeg(c); parent.insertBefore(c, w); });
     w.remove();
@@ -378,7 +379,7 @@
     //    maximal run of linked cards into ONE group (2 = superset, 3+ = tri/
     //    giant set). Cards already absorbed into an earlier group are skipped.
     Array.prototype.forEach.call(document.querySelectorAll(SS_SINGLE_SEL), function (a) {
-      if (a.closest('.mcpo-ss')) return;                 // absorbed by an earlier group
+      if (a.closest && a.closest('.mcpo-ss')) return;    // absorbed by an earlier group
       if (!ssOverrideFor(cardKey(a))) return;            // a is not joined to the next card
       var legs = [a], cur = a, nxt;
       while (ssOverrideFor(cardKey(cur))) {
