@@ -16,6 +16,12 @@
   font-size:11px;font-weight:700;color:rgba(212,175,55,0.6);
   margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;
 }
+/* collapsed-header set progress, e.g. "2/4" — greens out when all sets done */
+.mcl-count{
+  font-size:11px;font-weight:900;letter-spacing:0.04em;color:#64748b;
+  padding:1px 6px;border-radius:6px;background:rgba(255,255,255,0.05);
+}
+.mcl-count.done{color:#34d399;background:rgba(52,211,153,0.14);}
 .mcl-wrap{margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:4px;display:none;}
 .mcl-wrap.open{display:block;}
 
@@ -55,7 +61,8 @@
   -webkit-tap-highlight-color:transparent;
 }
 .mcl-ck.done{background:rgba(52,211,153,0.16);border-color:rgba(52,211,153,0.45);color:#34d399;}
-.mcl-row.done-row .mcl-inp{opacity:0.5;text-decoration:line-through;}
+.mcl-row.done-row{background:rgba(52,211,153,0.06);border-radius:7px;}
+.mcl-row.done-row .mcl-inp{opacity:0.55;text-decoration:line-through;border-color:rgba(52,211,153,0.18);}
 
 /* ── Drop-set AMRAP tag — the final drop is taken to failure (as-many-reps-as-
    possible). Warm amber stands apart from the cool logger so it reads as an
