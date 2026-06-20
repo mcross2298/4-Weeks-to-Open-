@@ -27,6 +27,35 @@
   } catch (e) {}
 })();
 
+// ── SAFE-AREA / NOTCH ────────────────────────────────────────────────────────
+// Activate iOS safe-area insets (viewport-fit=cover) so the fixed bottom chrome
+// — nav, Finish bar, rest-timer float, all already padded with
+// env(safe-area-inset-bottom) — actually clears the home indicator, and pad the
+// few fixed/sticky TOP bars so they clear the status bar/notch in standalone.
+// env() is 0 in non-notch / browser contexts, so this is a no-op there.
+// Central + reversible: no per-page edits.
+(function () {
+  try {
+    var vp = document.querySelector('meta[name="viewport"]');
+    if (vp) {
+      var c = vp.getAttribute('content') || '';
+      if (!/viewport-fit/.test(c)) vp.setAttribute('content', c.replace(/\s*,?\s*$/, '') + ', viewport-fit=cover');
+    }
+    if (!document.getElementById('mcSafeAreaCss')) {
+      var st = document.createElement('style');
+      st.id = 'mcSafeAreaCss';
+      st.textContent =
+        '@supports (top: env(safe-area-inset-top)) {' +
+          '.topbar{padding-top:calc(20px + env(safe-area-inset-top));}' +
+          '.week-tabs{padding-top:env(safe-area-inset-top);}' +
+          '.fw-auto-banner{padding-top:calc(12px + env(safe-area-inset-top));}' +
+          '.prog-bar-wrap{top:env(safe-area-inset-top);}' +
+        '}';
+      document.head.appendChild(st);
+    }
+  } catch (e) {}
+})();
+
 (function () {
   if (window.__mcNav) return;
   window.__mcNav = true;

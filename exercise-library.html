@@ -15,7 +15,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:60px;}
 .subtitle{font-size:13px;color:#64748b;font-weight:600;}
 .content{max-width:680px;margin:0 auto;padding:0 16px;}
 .search-wrap{position:sticky;top:0;z-index:10;background:#050d1a;padding:14px 0 10px;border-bottom:1px solid rgba(255,255,255,0.06);}
-.search-box{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 16px 12px 40px;color:#e2e8f0;font-size:14px;font-weight:600;outline:none;}
+.search-box{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 16px 12px 40px;color:#e2e8f0;font-size:16px;font-weight:600;outline:none;}/* 16px: no iOS focus-zoom */
 .search-box::placeholder{color:#334155;}
 .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
 .search-rel{position:relative;}
@@ -30,6 +30,9 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:60px;}
 .ex-name{flex:1;font-size:13px;font-weight:700;color:#e2e8f0;line-height:1.4;}
 .ex-programs{font-size:11px;color:#334155;font-weight:600;margin-top:2px;}
 .ex-muscle-tag{font-size:14px;flex-shrink:0;}
+.fav-btn{flex-shrink:0;background:none;border:none;font-size:19px;line-height:1;color:#334155;cursor:pointer;padding:2px 0 2px 8px;-webkit-tap-highlight-color:transparent;transition:color .15s,transform .1s;}
+.fav-btn.on{color:#d4af37;}
+.fav-btn:active{transform:scale(0.85);}
 .master-group{border-radius:10px;overflow:hidden;border:1px solid rgba(212,175,55,0.2);background:#0d1f3c;}
 .master-header{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;}
 .master-header:active{background:#112240;}
@@ -80,6 +83,22 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:60px;}
 
 var activeFilter="All";
 
+// ── Favorites (device-local) ──────────────────────────────────────────────
+var FAV_KEY="mc_ex_favs";
+function getFavs(){ try{return JSON.parse(localStorage.getItem(FAV_KEY)||"[]")||[];}catch(e){return [];} }
+function isFav(name){ return getFavs().indexOf(name)!==-1; }
+function toggleFav(name){
+  var f=getFavs(), i=f.indexOf(name);
+  if(i>=0) f.splice(i,1); else f.push(name);
+  try{ localStorage.setItem(FAV_KEY,JSON.stringify(f)); }catch(e){}
+  filterExercises();
+}
+function favClick(ev,btn){ ev.stopPropagation(); toggleFav(btn.dataset.name); }
+function favBtnHTML(name){
+  var on=isFav(name);
+  return '<button class="fav-btn'+(on?' on':'')+'" data-name="'+esc(name)+'" onclick="favClick(event,this)" aria-label="Toggle favorite" title="Toggle favorite">'+(on?'&#9733;':'&#9734;')+'</button>';
+}
+
 // Phase 1: cardio/conditioning/core work now lives in the Conditioning tab.
 // These muscle groups are filtered OUT of the main library (data is kept intact
 // in EXERCISES — this is a display filter only, reversible and Phase-3 ready).
@@ -87,12 +106,13 @@ var CONDITIONING_MUSCLES=["Cardio","Core"];
 function isConditioning(ex){return CONDITIONING_MUSCLES.indexOf(ex.muscle)!==-1;}
 
 function buildFilters(){
-  var muscles=["All"].concat(Object.keys(MUSCLE_COLORS).filter(function(m){return CONDITIONING_MUSCLES.indexOf(m)===-1;}).sort());
+  var muscles=["★","All"].concat(Object.keys(MUSCLE_COLORS).filter(function(m){return CONDITIONING_MUSCLES.indexOf(m)===-1;}).sort());
   var html="";
   for(var i=0;i<muscles.length;i++){
     var m=muscles[i];
     var cls="filter-btn"+(m===activeFilter?" active":"");
-    html+='<button class="'+cls+'" data-muscle="'+m+'" onclick="setFilter(this.dataset.muscle)">'+(MUSCLE_ICONS[m]||"")+" "+m+"</button>";
+    var label=(m==="★")?"★ Favorites":((MUSCLE_ICONS[m]||"")+" "+m);
+    html+='<button class="'+cls+'" data-muscle="'+m+'" onclick="setFilter(this.dataset.muscle)">'+label+"</button>";
   }
   document.getElementById("filterWrap").innerHTML=html;
 }
@@ -125,7 +145,9 @@ function buildMasterGroup(masterName,variations,muscle){
       +'<div class="var-dot" style="background:'+col+';"></div>'
       +'<div style="flex:1">'
       +'<div class="var-name">'+esc(ex.name)+"</div>"
-      +"</div></div>";
+      +"</div>"
+      +favBtnHTML(ex.name)
+      +"</div>";
   }
   var safeid=masterName.replace(/ /g,"-").replace(/[^a-zA-Z0-9-]/g,"");
   return '<div class="master-group" id="mg-'+safeid+'">'
@@ -154,6 +176,7 @@ function exItemHTML(ex){
     +'<div class="ex-name">'+esc(ex.name)+badge+"</div>"
     +"</div>"
     +'<div class="ex-muscle-tag">'+(MUSCLE_ICONS[ex.muscle]||"")+"</div>"
+    +favBtnHTML(ex.name)
     +"</div>";
 }
 
@@ -164,23 +187,31 @@ function filterExercises(){
   var filtered=[];
   var i;
 
+  var favView=(activeFilter==="★");
   for(i=0;i<EXERCISES.length;i++){
     var e=EXERCISES[i];
     if(isConditioning(e)) continue; // cardio/core moved to the Conditioning tab
-    if(activeFilter!=="All" && e.muscle!==activeFilter) continue;
+    if(favView){ if(!isFav(e.name)) continue; }
+    else if(activeFilter!=="All" && e.muscle!==activeFilter) continue;
     if(q && e.name.toLowerCase().indexOf(q)===-1) continue;
     filtered.push(e);
   }
 
-  var suffix=activeFilter!=="All"?" in "+activeFilter:"";
+  var suffix=favView?" favorited":(activeFilter!=="All"?" in "+activeFilter:"");
 
-  if(q){
+  // Flat list for a search OR the Favorites view; grouped master-list otherwise.
+  if(q || favView){
     if(!filtered.length){
-      countEl.textContent="0 exercises"+suffix+" matching "+q;
-      list.innerHTML='<div class="empty-state"><div class="empty-icon">&#127947;</div><div class="empty-text">No exercises found</div></div>';
+      if(favView && !q){
+        countEl.textContent="No favorites yet";
+        list.innerHTML='<div class="empty-state"><div class="empty-icon">&#9733;</div><div class="empty-text">No favorites yet — tap a &#9734; to save one</div></div>';
+      } else {
+        countEl.textContent="0 exercises"+suffix+(q?" matching "+q:"");
+        list.innerHTML='<div class="empty-state"><div class="empty-icon">&#127947;</div><div class="empty-text">No exercises found</div></div>';
+      }
       return;
     }
-    countEl.textContent=filtered.length+" exercise"+(filtered.length!==1?"s":"")+suffix+" matching "+q;
+    countEl.textContent=filtered.length+" exercise"+(filtered.length!==1?"s":"")+suffix+(q?" matching "+q:"");
     var rows="";
     for(i=0;i<filtered.length;i++) rows+=exItemHTML(filtered[i]);
     list.innerHTML=rows;

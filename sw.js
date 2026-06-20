@@ -258,24 +258,51 @@ self.addEventListener('activate', event => {
     );
 });
 
-// Fetch — HTML: network-only (always fresh). CSS/JS/assets: network-first with cache fallback.
+// Offline fallback page (shared by the HTML + asset handlers).
+function offlinePage(msg) {
+    return new Response(
+        '<html><body style="background:#0a0a0a;color:#fff;font-family:sans-serif;text-align:center;padding:60px 20px"><h2 style="color:#d4af37">MC Training</h2><p style="color:#9ca3af;margin-top:12px">' +
+        (msg || 'You are offline.') +
+        '</p><a href="/" style="display:inline-block;margin-top:20px;color:#d4af37">← Home</a></body></html>',
+        { headers: { 'Content-Type': 'text/html' } }
+    );
+}
+
+// HTML strategy: network-FIRST so a fresh build still wins on good signal, but
+// fall back to cache after a short timeout so navigations stay fast on poor gym
+// signal (and the cache keeps updating in the background — fresh next load).
+function htmlStrategy(request) {
+    return new Promise(resolve => {
+        let settled = false;
+        const finish = r => { if (!settled) { settled = true; resolve(r); } };
+        // After 2.5s of waiting on the network, serve cache if we have it.
+        const timer = setTimeout(() => {
+            caches.match(request).then(cached => { if (cached) finish(cached); });
+        }, 2500);
+        fetch(request).then(resp => {
+            if (resp && resp.status === 200) {
+                const clone = resp.clone();
+                caches.open(CACHE_NAME).then(c => c.put(request, clone));
+            }
+            clearTimeout(timer);
+            finish(resp);   // no-op if the timeout already served cache; cache was still refreshed above
+        }).catch(() => {
+            clearTimeout(timer);
+            caches.match(request).then(cached => finish(cached || offlinePage()));
+        });
+    });
+}
+
+// Fetch — HTML: network-first w/ fast cache fallback. CSS/JS/assets: network-first with cache fallback.
 self.addEventListener('fetch', event => {
     const url = event.request.url;
 
     // Only handle requests to our domain
     if (!url.startsWith('https://mcross2298.github.io')) return;
 
-    // HTML files must always be fresh — never serve from cache
     const isHTML = url.endsWith('.html') || url.endsWith('/') || !url.split('/').pop().includes('.');
     if (isHTML) {
-        event.respondWith(
-            fetch(event.request).catch(() => {
-                return caches.match(event.request).then(cached => cached || new Response(
-                    '<html><body style="background:#0a0a0a;color:#fff;font-family:sans-serif;text-align:center;padding:60px 20px"><h2 style="color:#d4af37">MC Training</h2><p style="color:#9ca3af;margin-top:12px">You are offline.</p><a href="/" style="display:inline-block;margin-top:20px;color:#d4af37">← Home</a></body></html>',
-                    {headers: {'Content-Type': 'text/html'}}
-                ));
-            })
-        );
+        event.respondWith(htmlStrategy(event.request));
         return;
     }
 
