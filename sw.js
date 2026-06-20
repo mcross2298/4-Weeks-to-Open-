@@ -237,11 +237,14 @@ self.addEventListener('install', event => {
             ), Promise.resolve());
         })
     );
-    self.skipWaiting();
+    // NOTE: intentionally NOT calling self.skipWaiting() here. Activation is
+    // page-controlled (mc-sw-update.js posts 'skipWaiting' only when no workout
+    // is in progress) so a new build never force-reloads someone mid-set.
 });
 
-// Activate — remove ALL old caches, take control, and force-reload every open
-// tab so stale pages held by a previous worker are replaced immediately.
+// Activate — remove ALL old caches and take control. The page-side reload is
+// driven by mc-sw-update.js's 'controllerchange' handler (which guards against
+// reloading mid-workout), so we do NOT force-navigate tabs here.
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys()
@@ -252,11 +255,6 @@ self.addEventListener('activate', event => {
                 })
             ))
             .then(() => self.clients.claim())
-            .then(() => self.clients.matchAll({ type: 'window' }))
-            .then(clients => clients.forEach(c => {
-                // Reload each controlled tab once so it picks up fresh files.
-                try { c.navigate(c.url); } catch (e) {}
-            }))
     );
 });
 

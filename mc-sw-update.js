@@ -40,22 +40,49 @@
     if (b) b.classList.add('show');
   }
 
-  function activate(worker) {
+  var pendingWorker = null;
+
+  // A workout is "in progress" if a rest timer is counting or any set is
+  // checked — i.e. the user is mid-session and must not be force-reloaded.
+  function workoutInProgress() {
+    var tf = document.getElementById('timerFloat');
+    if (tf && tf.classList.contains('visible')) return true;
+    return !!document.querySelector(
+      '.ex-card.checked, .ss-ex.checked, .lift-card.checked, .mcl-ck.done, .set-check.done, .sl-ck.done');
+  }
+
+  function apply(worker) {
     swWaiting = worker;
-    try { worker.postMessage('skipWaiting'); } catch (e) {}
+    try { worker.postMessage('skipWaiting'); } catch (e) {}   // → controllerchange → reload
+  }
+
+  function activate(worker) {
+    swWaiting = worker;     // keep available so the banner's manual apply works anytime
     showBanner();
+    if (workoutInProgress()) { pendingWorker = worker; return; }   // hold: never reload mid-set
+    apply(worker);
+  }
+
+  // Apply a held update the moment the user is no longer mid-workout (also
+  // covered naturally by navigating away, e.g. finishing → dashboard).
+  function applyIfIdle() {
+    if (pendingWorker && !workoutInProgress()) {
+      var w = pendingWorker; pendingWorker = null;
+      apply(w);
+    }
   }
 
   navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) {
     function check() { try { reg.update(); } catch (e) {} }
 
-    // Check now, on every return to the tab, and periodically.
+    // Check now, on every return to the tab, and periodically — and each of
+    // those is also a chance to apply an update that was held during a workout.
     check();
     document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'visible') check();
+      if (document.visibilityState === 'visible') { check(); applyIfIdle(); }
     });
-    window.addEventListener('focus', check);
-    setInterval(check, 60000);
+    window.addEventListener('focus', function () { check(); applyIfIdle(); });
+    setInterval(function () { check(); applyIfIdle(); }, 60000);
 
     // A new worker may already be waiting from a previous check.
     if (reg.waiting && navigator.serviceWorker.controller) activate(reg.waiting);
