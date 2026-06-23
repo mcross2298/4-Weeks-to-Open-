@@ -1,0 +1,148 @@
+/* ==========================================================================
+   mc-foodapi.js — Open Food Facts client for the Nutrition tab
+   --------------------------------------------------------------------------
+   Looks up packaged/brand foods from Open Food Facts (free, no API key, CORS
+   enabled) and normalizes the messy `nutriments` blob into the app's macro
+   shape: { kcal, p, f, c }. Two entry points:
+
+     MCFoodAPI.search(query)   -> Promise<[item]>   (text search)
+     MCFoodAPI.lookup(barcode) -> Promise<item|null> (barcode → product)
+
+   A normalized `item` is:
+     { code, name, brand, basis:'serving'|'100g', servingLabel,
+       kcal, p, f, c }
+   where the macros are PER ONE UNIT of `basis` (one serving if the product
+   declares a serving size, else per 100 g — `servingLabel` says which).
+
+   Every successful result is cached in localStorage ('mc_foodapi_cache_v1')
+   so repeat foods resolve instantly and work offline (kitchen Wi-Fi is
+   flaky). On a network/lookup miss the callers fall back to manual entry.
+   ========================================================================== */
+(function () {
+  if (window.MCFoodAPI) return;
+
+  var BASE = 'https://world.openfoodfacts.org';
+  var FIELDS = 'code,product_name,brands,nutriments,serving_size,nutrition_data_per';
+  var CACHE_KEY = 'mc_foodapi_cache_v1';
+  var CACHE_MAX = 300;          // cap cached lookups
+  var TIMEOUT_MS = 8000;
+
+  function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
+
+  // ---- localStorage cache (simple { key: {t, v} } map, LRU-ish by trim) ----
+  function readCache() {
+    try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '{}') || {}; }
+    catch (e) { return {}; }
+  }
+  function writeCache(c) {
+    try {
+      var keys = Object.keys(c);
+      if (keys.length > CACHE_MAX) {
+        // drop the oldest entries by timestamp
+        keys.sort(function (a, b) { return (c[a].t || 0) - (c[b].t || 0); });
+        keys.slice(0, keys.length - CACHE_MAX).forEach(function (k) { delete c[k]; });
+      }
+      localStorage.setItem(CACHE_KEY, JSON.stringify(c));
+    } catch (e) {}
+  }
+  function cacheGet(key) { var c = readCache(); return c[key] ? c[key].v : null; }
+  function cacheSet(key, val) { var c = readCache(); c[key] = { t: Date.now(), v: val }; writeCache(c); }
+
+  // ---- fetch with timeout --------------------------------------------------
+  function fetchJSON(url) {
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, TIMEOUT_MS) : null;
+    var opts = ctrl ? { signal: ctrl.signal } : {};
+    return fetch(url, opts).then(function (r) {
+      if (timer) clearTimeout(timer);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).catch(function (e) {
+      if (timer) clearTimeout(timer);
+      throw e;
+    });
+  }
+
+  // ---- normalize one OFF product → item or null ----------------------------
+  // Prefers per-serving values when the product declares a serving size and
+  // carries *_serving nutriments; otherwise falls back to per-100g.
+  function normalize(prod) {
+    if (!prod) return null;
+    var n = prod.nutriments || {};
+    var name = (prod.product_name || '').trim();
+    if (!name) return null;
+
+    var hasServing = !!prod.serving_size &&
+      (n['energy-kcal_serving'] != null || n.proteins_serving != null);
+
+    var item = {
+      code: prod.code || '',
+      name: name,
+      brand: ((prod.brands || '').split(',')[0] || '').trim()
+    };
+
+    if (hasServing) {
+      item.basis = 'serving';
+      item.servingLabel = String(prod.serving_size);
+      item.kcal = Math.round(num(n['energy-kcal_serving']));
+      item.p = Math.round(num(n.proteins_serving));
+      item.f = Math.round(num(n.fat_serving));
+      item.c = Math.round(num(n.carbohydrates_serving));
+    } else {
+      item.basis = '100g';
+      item.servingLabel = '100 g';
+      item.kcal = Math.round(num(n['energy-kcal_100g']));
+      item.p = Math.round(num(n.proteins_100g));
+      item.f = Math.round(num(n.fat_100g));
+      item.c = Math.round(num(n.carbohydrates_100g));
+    }
+    // a product with no usable energy value is useless for logging
+    if (!item.kcal && !item.p && !item.f && !item.c) return null;
+    return item;
+  }
+
+  // ---- public: text search -------------------------------------------------
+  function search(query) {
+    query = (query || '').trim();
+    if (!query) return Promise.resolve([]);
+    var ckey = 'q:' + query.toLowerCase();
+    var cached = cacheGet(ckey);
+    if (cached) return Promise.resolve(cached);
+
+    var url = BASE + '/cgi/search.pl?search_simple=1&action=process&json=1' +
+      '&page_size=20&fields=' + encodeURIComponent(FIELDS) +
+      '&search_terms=' + encodeURIComponent(query);
+
+    return fetchJSON(url).then(function (data) {
+      var products = (data && data.products) || [];
+      var items = [];
+      for (var i = 0; i < products.length; i++) {
+        var it = normalize(products[i]);
+        if (it) items.push(it);
+      }
+      if (items.length) cacheSet(ckey, items);
+      return items;
+    }).catch(function () { return cached || []; });
+  }
+
+  // ---- public: barcode lookup ---------------------------------------------
+  function lookup(barcode) {
+    barcode = (barcode || '').replace(/\D/g, '');
+    if (!barcode) return Promise.resolve(null);
+    var ckey = 'b:' + barcode;
+    var cached = cacheGet(ckey);
+    if (cached) return Promise.resolve(cached);
+
+    var url = BASE + '/api/v2/product/' + encodeURIComponent(barcode) +
+      '.json?fields=' + encodeURIComponent(FIELDS);
+
+    return fetchJSON(url).then(function (data) {
+      if (!data || data.status === 0 || !data.product) return null;
+      var it = normalize(data.product);
+      if (it) cacheSet(ckey, it);
+      return it;
+    }).catch(function () { return cached || null; });
+  }
+
+  window.MCFoodAPI = { search: search, lookup: lookup };
+})();

@@ -773,6 +773,26 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 </div>
 
 <!-- ══════════════════════════════════════
+     NUTRITION SCREEN (macro tracker)
+══════════════════════════════════════ -->
+<div class="screen" id="scr-nutrition">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Nutrition</div>
+      <div class="topbar-sub">Daily macros · goals · food log</div>
+    </div>
+  </div>
+  <div class="prog-screen-inner">
+    <div class="prog-header">
+      <div class="prog-eyebrow">Macro Tracker</div>
+      <h1 class="prog-title">Fuel the Work</h1>
+      <div class="prog-sub">Set your targets, then log what you eat against them.</div>
+    </div>
+    <div id="nutritionBody"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
      BOTTOM TAB BAR
 ══════════════════════════════════════ -->
 <div class="tab-bar">
@@ -787,6 +807,10 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   <div class="tab" id="tab-conditioning" onclick="switchTab('conditioning')">
     <div class="tab-icon">🔥</div>
     <div>Conditioning</div>
+  </div>
+  <div class="tab" id="tab-nutrition" onclick="switchTab('nutrition')">
+    <div class="tab-icon">🍎</div>
+    <div>Nutrition</div>
   </div>
   <div class="tab" id="tab-stats" onclick="location.href='stats.html'">
     <div class="tab-icon">📈</div>
@@ -821,6 +845,9 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 <script src="mc-chart.js"></script>
 <script src="mc-recap.js"></script>
 <script src="mc-pm-data.js"></script>
+<script src="mc-macrocalc.js"></script>
+<script src="mc-foodapi.js"></script>
+<script src="mc-macros.js"></script>
 <script>
 // ── DATE ──
 const d=new Date();

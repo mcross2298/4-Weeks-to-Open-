@@ -36,7 +36,8 @@
     'mc_body_v1':            'arrayById',
     'mc_max_v1':             'arrayById',
     'mc_activity':           'activity',
-    'mc_daily_v1':           'dictByTs'
+    'mc_daily_v1':           'dictByTs',
+    'mc_macros_v1':          'macros'
   };
   var PUSH_MS = 30000;
 
@@ -143,12 +144,40 @@
     return out;
   }
 
+  // macros: { ts, profile, goals, days:{ "date":{entries:[{id,ts,...}]} } }.
+  // Scalar parts (profile + goals) resolve by the top-level ts (last edit wins);
+  // each day's entries union by id, and within an id the greater entry.ts wins
+  // so a same-entry edit on either device converges. (Removals don't propagate
+  // — same append-biased tradeoff as the other array stores; fine for v1.)
+  function mergeMacros(local, remote) {
+    local = local || {}; remote = remote || {};
+    var lts = local.ts || 0, rts = remote.ts || 0;
+    var newer = rts > lts ? remote : local;
+    var out = { v: 1, ts: Math.max(lts, rts), profile: newer.profile, goals: newer.goals, days: {} };
+    var ld = local.days || {}, rd = remote.days || {}, dates = {}, d;
+    for (d in ld) dates[d] = 1;
+    for (d in rd) dates[d] = 1;
+    for (d in dates) {
+      var le = (ld[d] && ld[d].entries) || [], re = (rd[d] && rd[d].entries) || [];
+      var seen = {}, list = [];
+      le.concat(re).forEach(function (e) {
+        var id = e && e.id;
+        if (id == null) { list.push(e); return; }
+        if (seen[id] == null) { seen[id] = list.length; list.push(e); }
+        else if ((e.ts || 0) > (list[seen[id]].ts || 0)) list[seen[id]] = e;
+      });
+      out.days[d] = { entries: list };
+    }
+    return out;
+  }
+
   function mergeStore(strategy, local, remote) {
     if (strategy === 'arrayById') return mergeArrayById(local, remote);
     if (strategy === 'workoutLog') return mergeWorkoutLog(local, remote);
     if (strategy === 'setlog')    return mergeSetlog(local, remote);
     if (strategy === 'activity')  return mergeActivity(local, remote);
     if (strategy === 'dictByTs')  return mergeDictByTs(local, remote);
+    if (strategy === 'macros')    return mergeMacros(local, remote);
     return remote != null ? remote : local;
   }
 
