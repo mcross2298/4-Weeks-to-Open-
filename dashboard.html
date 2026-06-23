@@ -347,11 +347,14 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   padding-bottom:env(safe-area-inset-bottom);
 }
 .tab{
-  flex:1;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:4px;cursor:pointer;
-  font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;
+  flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:4px;cursor:pointer;padding:0 2px;
+  font-size:9.5px;font-weight:700;letter-spacing:0.01em;text-transform:uppercase;
   color:var(--muted2);transition:color 0.15s;
 }
+/* 5 tabs: keep each label on one line and clipped to its column so labels
+   never run into each other on narrow phones. */
+.tab>div:last-child{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}
 .tab.active{color:var(--gold);}
 .tab-icon{font-size:20px;line-height:1;}
 
