@@ -1,9 +1,14 @@
 /* ==========================================================================
-   mc-macros.js — Nutrition tab (macro tracker, Phase 1)
+   mc-macros.js — Nutrition tab (macro tracker)
    --------------------------------------------------------------------------
-   Renders the Nutrition tab on dashboard.html (#nutritionBody): daily macro
-   goals vs. today's totals, plus a food log you build by Open Food Facts
-   text search or manual entry. Owns the single localStorage store:
+   A day-based tracker on dashboard.html (#nutritionBody), laid out as:
+
+     1. a live WEEK CALENDAR strip to move between past / future days,
+     2. the MACRO TRACKER bar (calories + P/F/C vs. goals) for the picked day,
+     3. an HOUR-BY-HOUR TIMELINE where foods are logged into the hour they
+        were eaten (tap the + on any hour, or the search bar / scan).
+
+   Single localStorage store:
 
      mc_macros_v1 = {
        v: 1,
@@ -11,18 +16,15 @@
        profile: { sex, age, heightCm, weightLb, activity, goal },
        goals:   { kcal, p, f, c },     // per-day targets
        days: { "YYYY-MM-DD": { entries: [
-         { id, ts, name, source, unit, qty, per:{kcal,p,f,c} }
+         { id, ts, at, name, source, unit, qty, per:{kcal,p,f,c} }
        ] } }
      }
 
-   Goals are produced by the suggest-then-adjust calculator (mc-macrocalc.js):
-   the engine proposes numbers from the user's profile, then increase/decrease
-   steppers let them tune calories and each macro to their own levels. Weight
-   is pre-filled from the existing bodyweight log (mc_body_v1) when present.
-
-   The store is registered in mc-sync.js (strategy 'macros') so it syncs per
-   user with zero extra backend. All persistence is localStorage; on a network
-   miss food lookups fall back to manual entry.
+   `at` is the slot time (ms) the food is placed at on the timeline; `ts` is the
+   last-write time used by sync conflict resolution. Goals come from the
+   suggest-then-adjust calculator (mc-macrocalc.js); weight pre-fills from the
+   bodyweight log (mc_body_v1). The store is registered in mc-sync.js (strategy
+   'macros') so it syncs per user with zero extra backend.
    ========================================================================== */
 (function () {
   if (window.MCMacros) return;
@@ -32,104 +34,40 @@
   var KEY = 'mc_macros_v1';
   var BODY_KEY = 'mc_body_v1';   // existing bodyweight log, for weight pre-fill
 
-  // ---- styles (injected once, mirrors mc-account.js's self-contained CSS) ---
-  (function injectStyles() {
-    if (document.getElementById('nt-styles')) return;
-    var css =
-      '#nutritionBody{max-width:680px;margin:0 auto;padding:0 18px 24px;}' +
-      '.nt-card{background:var(--surface);border:1px solid var(--border2);border-radius:18px;padding:18px;margin-bottom:16px;}' +
-      '.nt-empty{text-align:center;padding:8px 4px 16px;}' +
-      '.nt-empty-emoji{font-size:34px;margin-bottom:8px;}' +
-      '.nt-empty-title{font-size:18px;font-weight:900;color:var(--text);margin-bottom:6px;}' +
-      '.nt-empty-sub{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:16px;}' +
-      '.nt-btn{width:100%;box-sizing:border-box;padding:14px;border-radius:13px;border:1px solid var(--border2);' +
-        'background:var(--surface2);color:var(--text);font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;}' +
-      '.nt-btn-gold{background:var(--gold);border-color:var(--gold);color:#000;}' +
-      '.nt-btn-danger{background:transparent;border-color:rgba(248,113,113,0.4);color:#f87171;margin-top:8px;}' +
-      '.nt-link{display:block;width:100%;background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;' +
-        'cursor:pointer;font-family:inherit;margin-top:14px;text-align:center;}' +
-      '.nt-ringwrap{display:flex;align-items:center;gap:18px;margin-bottom:18px;}' +
-      '.nt-ring{width:104px;height:104px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;}' +
-      '.nt-ring-hole{width:82px;height:82px;border-radius:50%;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;}' +
-      '.nt-ring-num{font-size:24px;font-weight:900;color:var(--text);line-height:1;}' +
-      '.nt-ring-lbl{font-size:10px;color:var(--muted2);font-weight:700;margin-top:3px;}' +
-      '.nt-ring-side{flex:1;}' +
-      '.nt-remain{font-size:22px;font-weight:900;color:var(--gold);}' +
-      '.nt-remain.over{color:#f87171;}' +
-      '.nt-remain-sub{font-size:12px;color:var(--muted2);font-weight:700;margin-top:2px;}' +
-      '.nt-mbar{margin-top:12px;}' +
-      '.nt-mbar-top{display:flex;justify-content:space-between;font-size:12px;font-weight:800;color:var(--text);margin-bottom:5px;}' +
-      '.nt-mbar-val{color:var(--muted);font-weight:700;}' +
-      '.nt-mbar-track{height:8px;border-radius:5px;background:rgba(255,255,255,0.08);overflow:hidden;}' +
-      '.nt-mbar-fill{height:100%;border-radius:5px;transition:width 0.3s ease;}' +
-      '.nt-actions-wrap{display:flex;flex-direction:column;gap:10px;margin-bottom:22px;}' +
-      '.nt-actions{display:flex;gap:10px;}' +
-      '.nt-loghead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}' +
-      '.nt-loghead-title{font-size:13px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted2);}' +
-      '.nt-loghead-count{font-size:12px;color:var(--muted2);font-weight:700;}' +
-      '.nt-logempty{font-size:13px;color:var(--muted2);text-align:center;padding:24px 12px;line-height:1.5;}' +
-      '.nt-log{display:flex;flex-direction:column;gap:8px;}' +
-      '.nt-item{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);' +
-        'border-radius:13px;padding:12px 14px;cursor:pointer;}' +
-      '.nt-item-main{flex:1;min-width:0;}' +
-      '.nt-item-name{font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
-      '.nt-item-qty{color:var(--gold);font-weight:800;}' +
-      '.nt-item-macros{font-size:12px;color:var(--muted2);font-weight:600;margin-top:2px;}' +
-      '.nt-item-kcal{font-size:16px;font-weight:900;color:var(--text);flex-shrink:0;}' +
-      /* sheets */
-      '.nt-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);' +
-        'display:flex;align-items:flex-end;justify-content:center;z-index:1200;opacity:0;transition:opacity 0.2s;}' +
-      '.nt-overlay.open{opacity:1;}' +
-      '.nt-sheet{width:100%;max-width:560px;background:#0e0e0e;border-top:1px solid var(--border2);border-radius:24px 24px 0 0;' +
-        'padding:14px 18px calc(28px + env(safe-area-inset-bottom));max-height:90vh;overflow-y:auto;' +
-        'transform:translateY(16px);transition:transform 0.2s;}' +
-      '.nt-overlay.open .nt-sheet{transform:translateY(0);}' +
-      '.nt-handle{width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px;}' +
-      '.nt-sheet-title{font-size:19px;font-weight:900;color:var(--text);letter-spacing:-0.01em;}' +
-      '.nt-sheet-sub{font-size:13px;color:var(--muted);margin:4px 0 16px;line-height:1.5;}' +
-      '.nt-form{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}' +
-      '.nt-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}' +
-      '.nt-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}' +
-      '.nt-field{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:var(--muted);}' +
-      '.nt-field input,.nt-field select,.nt-input{width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);' +
-        'border:1px solid var(--border2);border-radius:11px;padding:12px;color:var(--text);font-size:15px;font-family:inherit;}' +
-      '.nt-input{margin-bottom:12px;}' +
-      '.nt-seg{display:flex;gap:8px;}' +
-      '.nt-seg button{flex:1;padding:12px;border-radius:11px;border:1px solid var(--border2);background:rgba(255,255,255,0.04);' +
-        'color:var(--muted);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;}' +
-      '.nt-seg button.on{background:var(--gold);border-color:var(--gold);color:#000;}' +
-      '.nt-results{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto;}' +
-      '.nt-results-msg{font-size:13px;color:var(--muted2);text-align:center;padding:18px;}' +
-      '.nt-result{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);' +
-        'border-radius:12px;padding:11px 13px;cursor:pointer;}' +
-      '.nt-result-main{flex:1;min-width:0;}' +
-      '.nt-result-name{font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
-      '.nt-result-sub{font-size:11px;color:var(--muted2);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
-      '.nt-result-kcal{font-size:15px;font-weight:900;color:var(--text);flex-shrink:0;text-align:center;}' +
-      '.nt-result-kcal span{display:block;font-size:9px;color:var(--muted2);font-weight:700;}' +
-      '.nt-adjust{margin-top:8px;}' +
-      '.nt-adjust-head{font-size:12px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted2);margin-bottom:10px;}' +
-      '.nt-calsum{display:flex;align-items:baseline;gap:10px;margin-bottom:14px;}' +
-      '.nt-calsum-k{font-size:26px;font-weight:900;color:var(--gold);}' +
-      '.nt-calsum-split{font-size:13px;font-weight:700;color:var(--muted);}' +
-      '.nt-step{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);}' +
-      '.nt-step-lbl{font-size:14px;font-weight:800;color:var(--text);}' +
-      '.nt-step-ctl{display:flex;align-items:center;gap:14px;}' +
-      '.nt-step-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--border2);background:var(--surface2);' +
-        'color:var(--text);font-size:20px;font-weight:800;cursor:pointer;font-family:inherit;line-height:1;}' +
-      '.nt-step-val{min-width:54px;text-align:center;font-size:18px;font-weight:900;color:var(--text);}' +
-      '@media (prefers-reduced-motion: reduce){.nt-overlay,.nt-sheet,.nt-mbar-fill{transition:none;}}';
-    var st = document.createElement('style');
-    st.id = 'nt-styles'; st.textContent = css;
-    document.head.appendChild(st);
-  })();
+  // macro colors (match the reference design: cal blue, P purple, F yellow, C orange)
+  var COL = { kcal: '#4d9fff', p: '#a78bfa', f: '#fbbf24', c: '#fb923c' };
+  var WD = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
   // ---- tiny helpers --------------------------------------------------------
   function $(sel, root) { return (root || document).querySelector(sel); }
   function el(tag, cls, html) { var n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function num(v, d) { var n = parseFloat(v); return isFinite(n) ? n : (d || 0); }
-  function todayKey() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  // ---- date helpers --------------------------------------------------------
+  function keyFromDate(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function dateFromKey(k) { var p = String(k).split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function todayKey() { return keyFromDate(new Date()); }
+  function addDays(k, n) { var d = dateFromKey(k); d.setDate(d.getDate() + n); return keyFromDate(d); }
+  function mondayOf(k) { var d = dateFromKey(k); var wd = (d.getDay() + 6) % 7; d.setDate(d.getDate() - wd); return keyFromDate(d); }
+  function hourLabel(h) { var ap = h < 12 ? 'AM' : 'PM'; var hh = h % 12; if (hh === 0) hh = 12; return hh + ' ' + ap; }
+  function timeLabel(ms) { var d = new Date(ms); var h = d.getHours(); var ap = h < 12 ? 'AM' : 'PM'; var hh = h % 12; if (hh === 0) hh = 12; return hh + ':' + pad(d.getMinutes()) + ' ' + ap; }
+  function prettyDay(k) {
+    if (k === todayKey()) return 'Today';
+    return dateFromKey(k).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  }
+
+  // selected day + the slot the next add lands on
+  var selKey = todayKey();
+  var addSlotMs = null;
+
+  function defaultSlot() {
+    if (selKey === todayKey()) return Date.now();
+    var d = dateFromKey(selKey); d.setHours(12, 0, 0, 0); return d.getTime();
+  }
+  function hourSlot(hour) { var d = dateFromKey(selKey); d.setHours(hour, 0, 0, 0); return d.getTime(); }
+  function entryHour(e) { return new Date(e.at || e.ts || Date.now()).getHours(); }
 
   // ---- store ---------------------------------------------------------------
   function read() {
@@ -149,18 +87,15 @@
   function latestWeightLb() {
     try {
       var a = JSON.parse(localStorage.getItem(BODY_KEY) || '[]') || [];
-      // mc_body_v1 is newest-first [{date,w}]; first valid wins.
       for (var i = 0; i < a.length; i++) { var w = num(a[i] && a[i].w); if (w > 0) return Math.round(w); }
     } catch (e) {}
     return 0;
   }
-
-  function dayTotals(day) {
+  function totalsOf(entries) {
     var t = { kcal: 0, p: 0, f: 0, c: 0 };
-    (day.entries || []).forEach(function (e) {
+    (entries || []).forEach(function (e) {
       var q = num(e.qty, 1), per = e.per || {};
-      t.kcal += num(per.kcal) * q; t.p += num(per.p) * q;
-      t.f += num(per.f) * q; t.c += num(per.c) * q;
+      t.kcal += num(per.kcal) * q; t.p += num(per.p) * q; t.f += num(per.f) * q; t.c += num(per.c) * q;
     });
     t.kcal = Math.round(t.kcal); t.p = Math.round(t.p); t.f = Math.round(t.f); t.c = Math.round(t.c);
     return t;
@@ -172,99 +107,138 @@
   function render() {
     var data = read();
     var goals = data.goals || null;
-    var day = getDay(data, todayKey());
-    var totals = dayTotals(day);
+    var entries = getDay(data, selKey).entries;
+    var totals = totalsOf(entries);
 
     host.innerHTML = '';
-
-    // ---- goals / progress card --------------------------------------------
-    var card = el('div', 'nt-card');
-    if (!goals) {
-      card.appendChild(el('div', 'nt-empty',
-        '<div class="nt-empty-emoji">🎯</div>' +
-        '<div class="nt-empty-title">Set your daily targets</div>' +
-        '<div class="nt-empty-sub">Use the calculator to get suggested calories and macros from your stats — then tune them to your own levels.</div>'));
-      var setBtn = el('button', 'nt-btn nt-btn-gold', 'Open macro calculator');
-      setBtn.onclick = openCalculator;
-      card.appendChild(setBtn);
-    } else {
-      var pct = Math.min(100, Math.round((totals.kcal / (goals.kcal || 1)) * 100));
-      var remaining = (goals.kcal || 0) - totals.kcal;
-      card.appendChild(el('div', 'nt-ringwrap',
-        '<div class="nt-ring" style="background:conic-gradient(var(--gold) ' + pct + '%, rgba(255,255,255,0.08) 0)">' +
-          '<div class="nt-ring-hole">' +
-            '<div class="nt-ring-num">' + totals.kcal + '</div>' +
-            '<div class="nt-ring-lbl">/ ' + (goals.kcal || 0) + ' kcal</div>' +
-          '</div>' +
-        '</div>' +
-        '<div class="nt-ring-side">' +
-          '<div class="nt-remain ' + (remaining < 0 ? 'over' : '') + '">' +
-            (remaining < 0 ? Math.abs(remaining) + ' over' : remaining + ' left') + '</div>' +
-          '<div class="nt-remain-sub">' + pct + '% of goal</div>' +
-        '</div>'));
-
-      card.appendChild(macroBar('Protein', totals.p, goals.p, '#60a5fa'));
-      card.appendChild(macroBar('Fat', totals.f, goals.f, '#fbbf24'));
-      card.appendChild(macroBar('Carbs', totals.c, goals.c, '#34d399'));
-
-      var edit = el('button', 'nt-link', '⚙︎ Edit goals / recalculate');
-      edit.onclick = openCalculator;
-      card.appendChild(edit);
-    }
-    host.appendChild(card);
-
-    // ---- add actions ------------------------------------------------------
-    var wrap = el('div', 'nt-actions-wrap');
-    var canScan = !!(window.MCBarcode && MCBarcode.supported());
-    if (canScan) {
-      var bScan = el('button', 'nt-btn nt-btn-gold', '📷 Scan barcode');
-      bScan.onclick = openScan;
-      wrap.appendChild(bScan);
-    }
-    var row = el('div', 'nt-actions');
-    var bSearch = el('button', canScan ? 'nt-btn' : 'nt-btn nt-btn-gold', '🔍 Search');
-    bSearch.onclick = openSearch;
-    var bManual = el('button', 'nt-btn', '✏️ Manual');
-    bManual.onclick = function () { openManual(); };
-    row.appendChild(bSearch); row.appendChild(bManual);
-    wrap.appendChild(row);
-    host.appendChild(wrap);
-
-    // ---- today's log ------------------------------------------------------
-    var logHead = el('div', 'nt-loghead');
-    logHead.appendChild(el('span', 'nt-loghead-title', "Today's log"));
-    logHead.appendChild(el('span', 'nt-loghead-count', day.entries.length + (day.entries.length === 1 ? ' item' : ' items')));
-    host.appendChild(logHead);
-
-    if (!day.entries.length) {
-      host.appendChild(el('div', 'nt-logempty', 'Nothing logged yet. Search a food or add one manually.'));
-    } else {
-      var list = el('div', 'nt-log');
-      day.entries.slice().reverse().forEach(function (e) {
-        var q = num(e.qty, 1), per = e.per || {};
-        var row = el('div', 'nt-item');
-        row.innerHTML =
-          '<div class="nt-item-main">' +
-            '<div class="nt-item-name">' + esc(e.name) + (q !== 1 ? ' <span class="nt-item-qty">×' + q + '</span>' : '') + '</div>' +
-            '<div class="nt-item-macros">' +
-              'P ' + Math.round(num(per.p) * q) + ' · F ' + Math.round(num(per.f) * q) + ' · C ' + Math.round(num(per.c) * q) +
-            '</div>' +
-          '</div>' +
-          '<div class="nt-item-kcal">' + Math.round(num(per.kcal) * q) + '</div>';
-        row.onclick = function () { openEdit(e.id); };
-        list.appendChild(row);
-      });
-      host.appendChild(list);
-    }
+    var root = el('div', 'ntx');
+    root.appendChild(renderHead());
+    root.appendChild(renderCalendar());
+    root.appendChild(renderSummary(totals, goals));
+    root.appendChild(renderFind());
+    root.appendChild(renderTimeline(entries));
+    host.appendChild(root);
   }
 
-  function macroBar(label, have, goal, color) {
-    var pct = Math.min(100, Math.round((have / (goal || 1)) * 100));
-    var wrap = el('div', 'nt-mbar');
-    wrap.innerHTML =
-      '<div class="nt-mbar-top"><span>' + label + '</span><span class="nt-mbar-val">' + have + ' / ' + (goal || 0) + ' g</span></div>' +
-      '<div class="nt-mbar-track"><div class="nt-mbar-fill" style="width:' + pct + '%;background:' + color + '"></div></div>';
-    return wrap;
+  function renderHead() {
+    var head = el('div', 'ntx-head');
+    head.appendChild(el('div', 'ntx-head-date', esc(prettyDay(selKey))));
+    var actions = el('div', 'ntx-head-actions');
+    var today = el('button', 'ntx-ico', '◎'); today.title = 'Jump to today';
+    today.onclick = function () { selKey = todayKey(); render(); };
+    var gear = el('button', 'ntx-ico', '⚙'); gear.title = 'Goals';
+    gear.onclick = openCalculator;
+    actions.appendChild(today); actions.appendChild(gear);
+    head.appendChild(actions);
+    return head;
+  }
+
+  function renderCalendar() {
+    var cal = el('div', 'ntx-cal');
+    var prev = el('button', 'ntx-cal-nav', '‹');
+    prev.onclick = function () { selKey = addDays(selKey, -7); render(); };
+    var next = el('button', 'ntx-cal-nav', '›');
+    next.onclick = function () { selKey = addDays(selKey, 7); render(); };
+    var days = el('div', 'ntx-cal-days');
+    var start = mondayOf(selKey), tk = todayKey();
+    for (var i = 0; i < 7; i++) {
+      (function (k) {
+        var d = dateFromKey(k);
+        var cls = 'ntx-day' + (k === selKey ? ' sel' : '') + (k === tk ? ' today' : '');
+        var cell = el('div', cls,
+          '<div class="ntx-day-wd">' + WD[(d.getDay() + 6) % 7] + '</div>' +
+          '<div class="ntx-day-num">' + d.getDate() + '</div>' +
+          '<div class="ntx-day-dot"></div>');
+        cell.onclick = function () { selKey = k; render(); };
+        days.appendChild(cell);
+      })(addDays(start, i));
+    }
+    cal.appendChild(prev); cal.appendChild(days); cal.appendChild(next);
+    return cal;
+  }
+
+  function renderSummary(totals, goals) {
+    var sum = el('div', 'ntx-sum');
+    sum.title = 'Edit goals';
+    var metrics = el('div', 'ntx-sum-metrics');
+    metrics.appendChild(metric('🔥', totals.kcal, goals && goals.kcal, COL.kcal, true));
+    metrics.appendChild(metric('P', totals.p, goals && goals.p, COL.p, false));
+    metrics.appendChild(metric('F', totals.f, goals && goals.f, COL.f, false));
+    metrics.appendChild(metric('C', totals.c, goals && goals.c, COL.c, false));
+    sum.appendChild(metrics);
+    sum.appendChild(el('div', 'ntx-sum-exp', '›'));
+    sum.onclick = openCalculator;
+    return sum;
+  }
+
+  function metric(ic, have, goal, color, isCal) {
+    var pct = goal ? Math.min(100, Math.round((have / goal) * 100)) : 0;
+    var over = goal && have > goal;
+    var m = el('div', 'ntx-met');
+    m.innerHTML =
+      '<div class="ntx-met-top">' +
+        '<span class="ntx-met-ic" style="color:' + color + '">' + ic + '</span>' +
+        '<span class="ntx-met-val">' + have + '</span>' +
+        '<span class="ntx-met-goal">/' + (goal || '—') + '</span>' +
+      '</div>' +
+      '<div class="ntx-met-track"><div class="ntx-met-fill" style="width:' + pct + '%;background:' + (over ? '#f87171' : color) + '"></div></div>';
+    return m;
+  }
+
+  function renderFind() {
+    var bar = el('div', 'ntx-find');
+    bar.appendChild(el('span', 'ntx-find-ic', '🔍'));
+    var txt = el('button', 'ntx-find-txt', 'Search food database');
+    txt.onclick = function () { addSlotMs = defaultSlot(); openSearch(); };
+    bar.appendChild(txt);
+    if (window.MCBarcode && MCBarcode.supported()) {
+      var scan = el('button', 'ntx-find-scan', '▦'); scan.title = 'Scan barcode';
+      scan.onclick = function () { addSlotMs = defaultSlot(); openScan(); };
+      bar.appendChild(scan);
+    }
+    return bar;
+  }
+
+  function renderTimeline(entries) {
+    // bucket entries by hour
+    var byHour = {};
+    (entries || []).forEach(function (e) { (byHour[entryHour(e)] = byHour[entryHour(e)] || []).push(e); });
+    Object.keys(byHour).forEach(function (h) {
+      byHour[h].sort(function (a, b) { return (a.at || a.ts || 0) - (b.at || b.ts || 0); });
+    });
+
+    var nowHour = (selKey === todayKey()) ? new Date().getHours() : -1;
+    var time = el('div', 'ntx-time');
+    for (var h = 0; h < 24; h++) {
+      var list = byHour[h] || [];
+      var row = el('div', 'ntx-hr' + (list.length ? ' has' : '') + (h === nowHour ? ' now' : ''));
+      var rail = el('div', 'ntx-hr-rail');
+      rail.appendChild(el('div', 'ntx-hr-lbl', hourLabel(h)));
+      var add = el('button', 'ntx-hr-add', '+');
+      (function (hour) { add.onclick = function () { openHourAdd(hour); }; })(h);
+      rail.appendChild(add);
+      row.appendChild(rail);
+
+      var body = el('div', 'ntx-hr-body');
+      list.forEach(function (e) {
+        var q = num(e.qty, 1), per = e.per || {};
+        var card = el('div', 'ntx-fcard');
+        card.innerHTML =
+          '<div class="ntx-fcard-top">' +
+            '<div class="ntx-fcard-name">' + esc(e.name) + (q !== 1 ? ' ×' + q : '') + '</div>' +
+            '<div class="ntx-fcard-time">' + timeLabel(e.at || e.ts || Date.now()) + '</div>' +
+          '</div>' +
+          '<div class="ntx-fcard-macros">' +
+            '<b style="color:' + COL.kcal + '">🔥' + Math.round(num(per.kcal) * q) + '</b>  ' +
+            'P ' + Math.round(num(per.p) * q) + '  F ' + Math.round(num(per.f) * q) + '  C ' + Math.round(num(per.c) * q) +
+          '</div>';
+        (function (id) { card.onclick = function () { openEdit(id); }; })(e.id);
+        body.appendChild(card);
+      });
+      row.appendChild(body);
+      time.appendChild(row);
+    }
+    return time;
   }
 
   // ====================================================================== //
@@ -300,6 +274,43 @@
     return row;
   }
 
+  // a float-friendly stepper for servings (0.5 step)
+  function stepperFloat(label, value) {
+    var row = el('div', 'nt-step');
+    row.innerHTML = '<div class="nt-step-lbl">' + esc(label) + '</div>';
+    var ctl = el('div', 'nt-step-ctl');
+    var minus = el('button', 'nt-step-btn', '−');
+    var val = el('div', 'nt-step-val', String(value));
+    var plus = el('button', 'nt-step-btn', '+');
+    function set(v) { v = Math.max(0.5, Math.round(v * 2) / 2); val.textContent = String(v); }
+    minus.onclick = function () { set(num(val.textContent) - 0.5); };
+    plus.onclick = function () { set(num(val.textContent) + 0.5); };
+    ctl.appendChild(minus); ctl.appendChild(val); ctl.appendChild(plus);
+    row.appendChild(ctl);
+    row.value = function () { return num(val.textContent, 1); };
+    return row;
+  }
+
+  // ---- per-hour add chooser ------------------------------------------------
+  function openHourAdd(hour) {
+    addSlotMs = hourSlot(hour);
+    var s = sheet('Add food · ' + hourLabel(hour), prettyDay(selKey));
+    var w = el('div', 'nt-actions-wrap');
+    if (window.MCBarcode && MCBarcode.supported()) {
+      var b1 = el('button', 'nt-btn nt-btn-gold', '📷 Scan barcode');
+      b1.onclick = function () { s.close(); openScan(); };
+      w.appendChild(b1);
+    }
+    var row = el('div', 'nt-actions');
+    var b2 = el('button', 'nt-btn', '🔍 Search');
+    b2.onclick = function () { s.close(); openSearch(); };
+    var b3 = el('button', 'nt-btn', '✏️ Manual');
+    b3.onclick = function () { s.close(); openManual(); };
+    row.appendChild(b2); row.appendChild(b3);
+    w.appendChild(row);
+    s.sh.appendChild(w);
+  }
+
   // ---- calculator sheet ----------------------------------------------------
   function openCalculator() {
     var data = read();
@@ -331,7 +342,6 @@
       '</div>';
     s.sh.appendChild(form);
 
-    // segmented-button wiring
     function seg(id, fallback) {
       var box = $('#' + id, s.sh);
       box.addEventListener('click', function (ev) {
@@ -359,14 +369,12 @@
     var calcBtn = el('button', 'nt-btn nt-btn-gold', 'Calculate suggested macros');
     s.sh.appendChild(calcBtn);
 
-    // ---- adjust section (revealed after calculate) ----
     var adjust = el('div', 'nt-adjust');
     adjust.style.display = 'none';
     s.sh.appendChild(adjust);
 
     var cur = data.goals ? { kcal: data.goals.kcal, p: data.goals.p, f: data.goals.f, c: data.goals.c } : null;
     var profSnapshot = null;
-
     var kcalStep, pStep, fStep, cStep, summary;
 
     function buildAdjust() {
@@ -377,8 +385,6 @@
 
       kcalStep = stepper('Calories', cur.kcal, 50, 0, function (v) {
         cur.kcal = v;
-        // re-derive split for this calorie level (protein/fat stay anchored to
-        // bodyweight, carbs absorb the change — the muscle-preserving move)
         var sp = MCMacroCalc.splitFromCalories(v, profSnapshot.weightLb, profSnapshot.goal);
         cur.p = sp.p; cur.f = sp.f; cur.c = sp.c;
         pStep.setVal(cur.p); fStep.setVal(cur.f); cStep.setVal(cur.c);
@@ -424,7 +430,6 @@
       adjust.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     };
 
-    // if goals already exist, show the adjust section straight away
     if (cur) { profSnapshot = data.profile || readProfile(); calcBtn.textContent = 'Recalculate'; buildAdjust(); adjust.style.display = 'block'; }
   }
 
@@ -466,13 +471,10 @@
   }
 
   // ---- barcode scan flow ---------------------------------------------------
-  // Scan → Open Food Facts lookup → prefill the manual sheet (so the user can
-  // set quantity / tweak before adding). A miss or offline falls back to a
-  // blank manual entry, never a dead end.
   function openScan() {
     if (!(window.MCBarcode && MCBarcode.supported())) { openManual(); return; }
     MCBarcode.scan().then(function (code) {
-      if (!code) return;                       // user cancelled
+      if (!code) return;
       var s = sheet('Looking up…', 'Barcode ' + code);
       MCFoodAPI.lookup(code).then(function (it) {
         s.close();
@@ -490,7 +492,7 @@
   // ---- manual entry sheet --------------------------------------------------
   function openManual(prefill) {
     prefill = prefill || {};
-    var s = sheet('Manual entry', prefill.note || 'Per serving — quantity is set below.');
+    var s = sheet('Manual entry', prefill.note || ('Adding to ' + prettyDay(selKey) + ' · ' + timeLabel(addSlotMs || defaultSlot())));
     var form = el('div', 'nt-form');
     form.innerHTML =
       '<label class="nt-field"><span>Food name</span><input id="mName" type="text" value="' + esc(prefill.name || '') + '" placeholder="Ribeye steak"></label>' +
@@ -504,10 +506,10 @@
         '<label class="nt-field"><span>Carbs g</span><input id="mC" type="number" inputmode="numeric" value="' + (prefill.c != null ? esc(prefill.c) : '') + '"></label>' +
       '</div>';
     s.sh.appendChild(form);
-    var add = el('button', 'nt-btn nt-btn-gold', 'Add to today');
+    var add = el('button', 'nt-btn nt-btn-gold', 'Add');
     add.onclick = function () {
       var name = $('#mName', s.sh).value.trim();
-      if (!name) { add.textContent = 'Enter a name first'; setTimeout(function () { add.textContent = 'Add to today'; }, 1500); return; }
+      if (!name) { add.textContent = 'Enter a name first'; setTimeout(function () { add.textContent = 'Add'; }, 1500); return; }
       addEntry({
         name: name, source: prefill.source || 'manual', unit: 'serving', qty: num($('#mQ', s.sh).value, 1),
         per: { kcal: num($('#mK', s.sh).value), p: num($('#mP', s.sh).value), f: num($('#mF', s.sh).value), c: num($('#mC', s.sh).value) }
@@ -519,11 +521,11 @@
 
   // ---- edit logged entry ---------------------------------------------------
   function openEdit(id) {
-    var data = read(), day = getDay(data, todayKey());
+    var data = read(), day = getDay(data, selKey);
     var entry = null;
     day.entries.forEach(function (e) { if (e.id === id) entry = e; });
     if (!entry) return;
-    var s = sheet(entry.name, 'Adjust quantity or remove.');
+    var s = sheet(entry.name, 'Logged at ' + timeLabel(entry.at || entry.ts || Date.now()) + ' · adjust quantity or remove.');
     var qWrap = el('div', 'nt-form');
     s.sh.appendChild(qWrap);
     var qStep = stepperFloat('Servings', num(entry.qty, 1));
@@ -531,59 +533,162 @@
 
     var save = el('button', 'nt-btn nt-btn-gold', 'Save');
     save.onclick = function () {
-      var obj = read(), d = getDay(obj, todayKey());
-      d.entries.forEach(function (e) { if (e.id === id) e.qty = qStep.value(); });
+      var obj = read(), d = getDay(obj, selKey);
+      d.entries.forEach(function (e) { if (e.id === id) { e.qty = qStep.value(); e.ts = Date.now(); } });
       write(obj); s.close(); render();
     };
     var del = el('button', 'nt-btn nt-btn-danger', 'Remove from log');
     del.onclick = function () {
-      var obj = read(), d = getDay(obj, todayKey());
+      var obj = read(), d = getDay(obj, selKey);
       d.entries = d.entries.filter(function (e) { return e.id !== id; });
       write(obj); s.close(); render();
     };
     s.sh.appendChild(save); s.sh.appendChild(del);
   }
 
-  // a float-friendly stepper for servings (0.5 step)
-  function stepperFloat(label, value) {
-    var row = el('div', 'nt-step');
-    row.innerHTML = '<div class="nt-step-lbl">' + esc(label) + '</div>';
-    var ctl = el('div', 'nt-step-ctl');
-    var minus = el('button', 'nt-step-btn', '−');
-    var val = el('div', 'nt-step-val', String(value));
-    var plus = el('button', 'nt-step-btn', '+');
-    function set(v) { v = Math.max(0.5, Math.round(v * 2) / 2); val.textContent = String(v); }
-    minus.onclick = function () { set(num(val.textContent) - 0.5); };
-    plus.onclick = function () { set(num(val.textContent) + 0.5); };
-    ctl.appendChild(minus); ctl.appendChild(val); ctl.appendChild(plus);
-    row.appendChild(ctl);
-    row.value = function () { return num(val.textContent, 1); };
-    return row;
-  }
-
-  // ---- add an entry to today ----------------------------------------------
+  // ---- add an entry at the pending slot ------------------------------------
   function addEntry(e) {
-    var obj = read(), day = getDay(obj, todayKey());
+    var slot = (typeof addSlotMs === 'number') ? addSlotMs : defaultSlot();
+    var dk = keyFromDate(new Date(slot));
+    var obj = read(), day = getDay(obj, dk);
     e.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     e.ts = Date.now();
+    e.at = slot;
     day.entries.push(e);
     write(obj);
+    addSlotMs = null;
   }
 
-  // ---- deep-link ingestion (cookbook "Log to tracker" handoff, Phase 3) ----
+  // ---- deep-link ingestion (cookbook "Log to tracker" handoff) -------------
   // dashboard.html?tab=nutrition&log=1&name=…&kcal=…&p=…&f=…&c=…
   function consumeDeepLink() {
     try {
       var q = new URLSearchParams(location.search);
       if (q.get('log') !== '1') return;
       var pre = { name: q.get('name') || '', kcal: q.get('kcal') || '', p: q.get('p') || '', f: q.get('f') || '', c: q.get('c') || '' };
-      // strip the handoff params so a refresh doesn't re-open the sheet
       ['log', 'name', 'kcal', 'p', 'f', 'c'].forEach(function (k) { q.delete(k); });
       var qs = q.toString();
       history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
+      selKey = todayKey(); addSlotMs = defaultSlot();
       openManual(pre);
     } catch (e) {}
   }
+
+  // ---- styles (injected once, mirrors mc-account.js's self-contained CSS) ---
+  (function injectStyles() {
+    if (document.getElementById('nt-styles')) return;
+    var css =
+      '#nutritionBody{max-width:680px;margin:0 auto;padding:0 16px 24px;}' +
+      '.ntx{padding-top:2px;}' +
+      /* header */
+      '.ntx-head{display:flex;align-items:center;justify-content:space-between;margin:0 2px 12px;}' +
+      '.ntx-head-date{font-size:16px;font-weight:900;color:var(--text);letter-spacing:-0.01em;}' +
+      '.ntx-head-actions{display:flex;gap:8px;}' +
+      '.ntx-ico{width:38px;height:38px;border-radius:11px;border:1px solid var(--border2);background:var(--surface2);' +
+        'color:var(--text);font-size:16px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;}' +
+      /* calendar */
+      '.ntx-cal{display:flex;align-items:center;gap:2px;margin-bottom:14px;}' +
+      '.ntx-cal-nav{flex:0 0 auto;width:24px;height:48px;border:none;background:none;color:var(--muted2);font-size:20px;font-weight:800;cursor:pointer;font-family:inherit;}' +
+      '.ntx-cal-days{flex:1;display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}' +
+      '.ntx-day{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 5px;border-radius:12px;' +
+        'cursor:pointer;border:1.5px solid transparent;}' +
+      '.ntx-day-wd{font-size:9px;font-weight:800;letter-spacing:0.04em;color:var(--muted2);}' +
+      '.ntx-day-num{font-size:15px;font-weight:800;color:var(--text);}' +
+      '.ntx-day-dot{width:4px;height:4px;border-radius:50%;background:transparent;}' +
+      '.ntx-day.today .ntx-day-dot{background:var(--gold);}' +
+      '.ntx-day.sel{border-color:var(--gold);background:rgba(212,175,55,0.08);}' +
+      '.ntx-day.sel .ntx-day-num{color:var(--gold);}' +
+      /* macro summary */
+      '.ntx-sum{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border2);' +
+        'border-radius:16px;padding:12px;margin-bottom:14px;cursor:pointer;}' +
+      '.ntx-sum-metrics{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:9px;min-width:0;}' +
+      '.ntx-met{min-width:0;}' +
+      '.ntx-met-top{display:flex;align-items:baseline;gap:2px;white-space:nowrap;overflow:hidden;}' +
+      '.ntx-met-ic{font-size:11px;font-weight:900;flex:0 0 auto;}' +
+      '.ntx-met-val{font-size:13px;font-weight:900;color:var(--text);}' +
+      '.ntx-met-goal{font-size:10px;color:var(--muted2);font-weight:700;}' +
+      '.ntx-met-track{height:3px;border-radius:2px;background:rgba(255,255,255,0.1);margin-top:6px;overflow:hidden;}' +
+      '.ntx-met-fill{height:100%;border-radius:2px;transition:width 0.3s ease;}' +
+      '.ntx-sum-exp{flex:0 0 auto;color:var(--muted2);font-size:20px;font-weight:800;line-height:1;}' +
+      /* find bar */
+      '.ntx-find{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--border2);' +
+        'border-radius:13px;padding:10px 12px;margin-bottom:16px;}' +
+      '.ntx-find-ic{font-size:14px;}' +
+      '.ntx-find-txt{flex:1;text-align:left;background:none;border:none;color:var(--muted);font-size:14px;' +
+        'cursor:pointer;font-family:inherit;padding:0;}' +
+      '.ntx-find-scan{width:34px;height:34px;border-radius:9px;border:1px solid var(--border2);background:var(--surface2);' +
+        'color:var(--text);font-size:15px;cursor:pointer;font-family:inherit;}' +
+      /* timeline */
+      '.ntx-time{position:relative;}' +
+      '.ntx-hr{display:grid;grid-template-columns:52px 1fr;gap:10px;align-items:stretch;}' +
+      '.ntx-hr-rail{display:flex;flex-direction:column;align-items:center;padding-top:5px;' +
+        'border-right:1px dashed rgba(255,255,255,0.12);}' +
+      '.ntx-hr-lbl{font-size:10px;font-weight:800;color:var(--muted2);white-space:nowrap;}' +
+      '.ntx-hr-add{margin-top:6px;width:26px;height:26px;border-radius:50%;border:1px solid var(--border2);' +
+        'background:var(--surface2);color:var(--gold);font-size:17px;line-height:1;cursor:pointer;font-family:inherit;}' +
+      '.ntx-hr-body{padding:4px 0 12px;display:flex;flex-direction:column;gap:6px;min-width:0;}' +
+      '.ntx-hr.has .ntx-hr-rail{border-right-color:rgba(212,175,55,0.35);}' +
+      '.ntx-hr.now .ntx-hr-lbl{color:var(--gold);}' +
+      '.ntx-fcard{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:9px 12px;cursor:pointer;}' +
+      '.ntx-fcard-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline;}' +
+      '.ntx-fcard-name{font-size:13px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}' +
+      '.ntx-fcard-time{font-size:10px;color:var(--muted2);font-weight:700;flex:0 0 auto;}' +
+      '.ntx-fcard-macros{font-size:11px;color:var(--muted2);font-weight:600;margin-top:3px;}' +
+      '.ntx-fcard-macros b{font-weight:800;}' +
+      /* buttons reused across sheets */
+      '.nt-btn{width:100%;box-sizing:border-box;padding:14px;border-radius:13px;border:1px solid var(--border2);' +
+        'background:var(--surface2);color:var(--text);font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;}' +
+      '.nt-btn-gold{background:var(--gold);border-color:var(--gold);color:#000;}' +
+      '.nt-btn-danger{background:transparent;border-color:rgba(248,113,113,0.4);color:#f87171;margin-top:8px;}' +
+      '.nt-actions-wrap{display:flex;flex-direction:column;gap:10px;}' +
+      '.nt-actions{display:flex;gap:10px;}' +
+      /* sheets */
+      '.nt-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);' +
+        'display:flex;align-items:flex-end;justify-content:center;z-index:1200;opacity:0;transition:opacity 0.2s;}' +
+      '.nt-overlay.open{opacity:1;}' +
+      '.nt-sheet{width:100%;max-width:560px;background:#0e0e0e;border-top:1px solid var(--border2);border-radius:24px 24px 0 0;' +
+        'padding:14px 18px calc(28px + env(safe-area-inset-bottom));max-height:90vh;overflow-y:auto;' +
+        'transform:translateY(16px);transition:transform 0.2s;}' +
+      '.nt-overlay.open .nt-sheet{transform:translateY(0);}' +
+      '.nt-handle{width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px;}' +
+      '.nt-sheet-title{font-size:19px;font-weight:900;color:var(--text);letter-spacing:-0.01em;}' +
+      '.nt-sheet-sub{font-size:13px;color:var(--muted);margin:4px 0 16px;line-height:1.5;}' +
+      '.nt-form{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}' +
+      '.nt-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}' +
+      '.nt-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}' +
+      '.nt-field{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:var(--muted);}' +
+      '.nt-field input,.nt-field select,.nt-input{width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);' +
+        'border:1px solid var(--border2);border-radius:11px;padding:12px;color:var(--text);font-size:15px;font-family:inherit;}' +
+      '.nt-input{margin-bottom:12px;}' +
+      '.nt-seg{display:flex;gap:8px;}' +
+      '.nt-seg button{flex:1;padding:12px;border-radius:11px;border:1px solid var(--border2);background:rgba(255,255,255,0.04);' +
+        'color:var(--muted);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;}' +
+      '.nt-seg button.on{background:var(--gold);border-color:var(--gold);color:#000;}' +
+      '.nt-results{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto;}' +
+      '.nt-results-msg{font-size:13px;color:var(--muted2);text-align:center;padding:18px;}' +
+      '.nt-result{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);' +
+        'border-radius:12px;padding:11px 13px;cursor:pointer;}' +
+      '.nt-result-main{flex:1;min-width:0;}' +
+      '.nt-result-name{font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+      '.nt-result-sub{font-size:11px;color:var(--muted2);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+      '.nt-result-kcal{font-size:15px;font-weight:900;color:var(--text);flex-shrink:0;text-align:center;}' +
+      '.nt-result-kcal span{display:block;font-size:9px;color:var(--muted2);font-weight:700;}' +
+      '.nt-adjust{margin-top:8px;}' +
+      '.nt-adjust-head{font-size:12px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted2);margin-bottom:10px;}' +
+      '.nt-calsum{display:flex;align-items:baseline;gap:10px;margin-bottom:14px;}' +
+      '.nt-calsum-k{font-size:26px;font-weight:900;color:var(--gold);}' +
+      '.nt-calsum-split{font-size:13px;font-weight:700;color:var(--muted);}' +
+      '.nt-step{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);}' +
+      '.nt-step-lbl{font-size:14px;font-weight:800;color:var(--text);}' +
+      '.nt-step-ctl{display:flex;align-items:center;gap:14px;}' +
+      '.nt-step-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--border2);background:var(--surface2);' +
+        'color:var(--text);font-size:20px;font-weight:800;cursor:pointer;font-family:inherit;line-height:1;}' +
+      '.nt-step-val{min-width:54px;text-align:center;font-size:18px;font-weight:900;color:var(--text);}' +
+      '@media (prefers-reduced-motion: reduce){.nt-overlay,.nt-sheet,.ntx-met-fill{transition:none;}}';
+    var st = document.createElement('style');
+    st.id = 'nt-styles'; st.textContent = css;
+    document.head.appendChild(st);
+  })();
 
   // re-render when another tab/device changes the store (sync pull)
   window.addEventListener('storage', function (ev) { if (ev.key === KEY) render(); });
