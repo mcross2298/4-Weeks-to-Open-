@@ -62,7 +62,8 @@
       '.nt-mbar-val{color:var(--muted);font-weight:700;}' +
       '.nt-mbar-track{height:8px;border-radius:5px;background:rgba(255,255,255,0.08);overflow:hidden;}' +
       '.nt-mbar-fill{height:100%;border-radius:5px;transition:width 0.3s ease;}' +
-      '.nt-actions{display:flex;gap:10px;margin-bottom:22px;}' +
+      '.nt-actions-wrap{display:flex;flex-direction:column;gap:10px;margin-bottom:22px;}' +
+      '.nt-actions{display:flex;gap:10px;}' +
       '.nt-loghead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}' +
       '.nt-loghead-title{font-size:13px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted2);}' +
       '.nt-loghead-count{font-size:12px;color:var(--muted2);font-weight:700;}' +
@@ -213,13 +214,21 @@
     host.appendChild(card);
 
     // ---- add actions ------------------------------------------------------
-    var actions = el('div', 'nt-actions');
-    var bSearch = el('button', 'nt-btn nt-btn-gold', '🔍 Search foods');
+    var wrap = el('div', 'nt-actions-wrap');
+    var canScan = !!(window.MCBarcode && MCBarcode.supported());
+    if (canScan) {
+      var bScan = el('button', 'nt-btn nt-btn-gold', '📷 Scan barcode');
+      bScan.onclick = openScan;
+      wrap.appendChild(bScan);
+    }
+    var row = el('div', 'nt-actions');
+    var bSearch = el('button', canScan ? 'nt-btn' : 'nt-btn nt-btn-gold', '🔍 Search');
     bSearch.onclick = openSearch;
-    var bManual = el('button', 'nt-btn', '✏️ Manual entry');
+    var bManual = el('button', 'nt-btn', '✏️ Manual');
     bManual.onclick = function () { openManual(); };
-    actions.appendChild(bSearch); actions.appendChild(bManual);
-    host.appendChild(actions);
+    row.appendChild(bSearch); row.appendChild(bManual);
+    wrap.appendChild(row);
+    host.appendChild(wrap);
 
     // ---- today's log ------------------------------------------------------
     var logHead = el('div', 'nt-loghead');
@@ -456,10 +465,32 @@
     setTimeout(function () { input.focus(); }, 250);
   }
 
+  // ---- barcode scan flow ---------------------------------------------------
+  // Scan → Open Food Facts lookup → prefill the manual sheet (so the user can
+  // set quantity / tweak before adding). A miss or offline falls back to a
+  // blank manual entry, never a dead end.
+  function openScan() {
+    if (!(window.MCBarcode && MCBarcode.supported())) { openManual(); return; }
+    MCBarcode.scan().then(function (code) {
+      if (!code) return;                       // user cancelled
+      var s = sheet('Looking up…', 'Barcode ' + code);
+      MCFoodAPI.lookup(code).then(function (it) {
+        s.close();
+        if (it) {
+          openManual({ source: 'barcode', name: it.name + (it.brand ? ' (' + it.brand + ')' : ''), kcal: it.kcal, p: it.p, f: it.f, c: it.c, note: 'Found via barcode · per ' + it.servingLabel + ' — adjust if needed.' });
+        } else {
+          openManual({ source: 'barcode', note: 'No match for barcode ' + code + '. Enter its macros manually.' });
+        }
+      }).catch(function () { s.close(); openManual({ source: 'barcode', note: 'Lookup failed (offline?). Enter macros manually.' }); });
+    }).catch(function (err) {
+      alert((err && err.message) || 'Could not open the scanner.');
+    });
+  }
+
   // ---- manual entry sheet --------------------------------------------------
   function openManual(prefill) {
     prefill = prefill || {};
-    var s = sheet('Manual entry', 'Per serving — quantity is set below.');
+    var s = sheet('Manual entry', prefill.note || 'Per serving — quantity is set below.');
     var form = el('div', 'nt-form');
     form.innerHTML =
       '<label class="nt-field"><span>Food name</span><input id="mName" type="text" value="' + esc(prefill.name || '') + '" placeholder="Ribeye steak"></label>' +
@@ -478,7 +509,7 @@
       var name = $('#mName', s.sh).value.trim();
       if (!name) { add.textContent = 'Enter a name first'; setTimeout(function () { add.textContent = 'Add to today'; }, 1500); return; }
       addEntry({
-        name: name, source: 'manual', unit: 'serving', qty: num($('#mQ', s.sh).value, 1),
+        name: name, source: prefill.source || 'manual', unit: 'serving', qty: num($('#mQ', s.sh).value, 1),
         per: { kcal: num($('#mK', s.sh).value), p: num($('#mP', s.sh).value), f: num($('#mF', s.sh).value), c: num($('#mC', s.sh).value) }
       });
       s.close(); render();
