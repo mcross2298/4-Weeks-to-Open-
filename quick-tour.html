@@ -233,8 +233,8 @@ const SLIDES = [
     eyebrow:'Welcome',
     title:"Welcome to MC Training",
     tagline:"Your pocket gym — programs, set logging, PRs, and custom workouts, all offline-ready. This 3-minute tour gets you moving with zero guesswork.",
-    scene:{glyph:'💪',caption:'9 programs · 500+ exercises · full set & PR tracking',color:'rgba(212,175,55,0.3)',glow:'rgba(212,175,55,0.14)'},
-    narration:"Welcome in. Whether you came to lift heavy, chase a pump, or build your own session — everything lives one or two taps from your dashboard. Swipe or hit Next, and I'll walk you through it.",
+    scene:{glyph:'💪',caption:'9 programs · 500+ exercises · set & PR tracking · macro tracker',color:'rgba(212,175,55,0.3)',glow:'rgba(212,175,55,0.14)'},
+    narration:"Welcome in. Whether you came to lift heavy, chase a pump, build your own session, or track your macros — everything lives one or two taps from your dashboard. Swipe or hit Next, and I'll walk you through it.",
     steps:[
       {tx:"Use <span class='tap'>Next →</span> / <b>← Back</b> below, the dots, or swipe left/right."},
       {tx:"Tap any gold <span class='tap'>Open it</span> card to jump straight into the real screen and try it live."},
@@ -375,7 +375,50 @@ const SLIDES = [
     cta:{ico:'📚',label:'Try it now',name:'Open the Exercise Library',href:'exercise-library.html'}
   },
   {
-    eyebrow:'Module 10 · Take it anywhere',
+    eyebrow:'Module 10 · Fuel the work',
+    title:"Track macros in the Nutrition tab",
+    tagline:"Lifting is half the job — the 🍎 Nutrition tab tracks calories, protein, fat and carbs against your goals, day by day.",
+    scene:{glyph:'🍎',caption:'Daily kcal · P/F/C rings · day calendar · food search + barcode',color:'rgba(239,68,68,0.32)',glow:'rgba(239,68,68,0.12)'},
+    narration:"Tap the apple on the bottom bar. Up top, a week calendar — tap any day to log against it. Below, your daily totals as rings filling toward your goals for calories, protein, fat and carbs. Set those goals once with the gear, then search a huge food database — or tap the barcode icon and scan a label to pull a food in instantly.",
+    steps:[
+      {tx:"Tap <span class='tap'>🍎 Nutrition</span> in the bottom bar."},
+      {tx:"Tap the <span class='tap'>⚙ gear</span> to set or auto-calculate your <b>calorie & macro goals</b>."},
+      {tx:"Tap a day in the <b>week calendar</b> — the rings show how close you are to each goal."},
+      {tx:"Tap <span class='tap'>Search food database</span>, or hit the <span class='tap'>▦ barcode</span> icon to scan a label."}
+    ],
+    tip:"The barcode scanner reads a label and auto-fills the food's full nutrition — no typing.",
+    cta:{ico:'🍎',label:'Try it now',name:'Open the Nutrition tracker',href:'dashboard.html?tab=nutrition'}
+  },
+  {
+    eyebrow:'Module 11 · Dial in the details',
+    title:"Nutrition facts, your serving size",
+    tagline:"Every food opens a tappable nutrition-facts sheet — flip between grams and oz, key in your exact amount, and the macros recalc live.",
+    scene:{glyph:'🔢',caption:'Tap a food → UOM toggle (g / oz) → keypad qty → Log Food',color:'rgba(52,211,153,0.32)',glow:'rgba(52,211,153,0.12)'},
+    narration:"Tap any food and its nutrition-facts sheet slides up: calories, the macro breakdown, and the micronutrients beneath. Toggle the unit between grams and ounces, or stick with the standard serving. Then use the keypad to enter exactly how much you ate — type 3 for three servings, or punch in the grams — and everything updates as you go. When it's right, tap Log Food.",
+    steps:[
+      {tx:"Tap any food (from search, a scan, or your day) to open its <b>nutrition-facts sheet</b>."},
+      {tx:"Toggle <span class='tap'>grams</span> / <span class='tap'>oz</span> / serving — the macros recalculate instantly."},
+      {tx:"Use the <b>keypad</b> to enter a custom quantity or a multiple (e.g. <b>3 ×</b> a 2-tbsp serving)."},
+      {tx:"Tap <span class='tap'>Log Food</span> to drop it into your day's timeline."}
+    ],
+    tip:"Calories, protein, fat and carbs all update <b>live</b> as you change the unit or quantity — what you see is what gets logged."
+  },
+  {
+    eyebrow:'Module 12 · Your go-to foods',
+    title:"Favorites — log your staples fast",
+    tagline:"The foods you eat every day shouldn't need a search every time. Star them once and quick-log from your Favorites library.",
+    scene:{glyph:'⭐',caption:'☆ on any food → Favorites library → tap → Log Food',color:'rgba(212,175,55,0.32)',glow:'rgba(212,175,55,0.14)'},
+    narration:"See that star on the nutrition-facts sheet? Tap it to save the food to your Favorites. Then, from the star in the Nutrition header, open your Favorites library — your most-eaten foods and any saved meals, ready to go. Tap one, confirm the amount, and Log Food. Your daily staples go in with two taps instead of a fresh search every time.",
+    steps:[
+      {tx:"On any nutrition-facts sheet, tap the <span class='tap'>☆ star</span> to favorite the food."},
+      {tx:"Open <span class='tap'>★ Favorites</span> from the Nutrition tab header."},
+      {tx:"Switch between your favorite <b>Foods</b> and saved <b>Meals</b>."},
+      {tx:"Tap a favorite and hit <span class='tap'>Log Food</span> to add it to today instantly."}
+    ],
+    cta:{ico:'⭐',label:'Try it now',name:'Open your food Favorites',href:'dashboard.html?tab=nutrition'}
+  },
+  {
+    eyebrow:'Module 13 · Take it anywhere',
     title:"Install & train offline",
     tagline:"MC Training is a PWA — add it to your home screen and it works in the gym with zero signal.",
     scene:{glyph:'📲',caption:'Add to Home Screen → launches full-screen → works offline',color:'rgba(212,175,55,0.3)',glow:'rgba(212,175,55,0.14)'},
@@ -390,15 +433,16 @@ const SLIDES = [
   {
     eyebrow:'You’re ready',
     title:"That’s the whole app 💪",
-    tagline:"You can now find a workout, log every set, earn PRs, review your history, and build your own. Time to train.",
-    scene:{glyph:'🔥',caption:'Pin · Log · Finish · Review · Build — you’ve got it all',color:'rgba(212,175,55,0.35)',glow:'rgba(212,175,55,0.16)'},
-    narration:"That's it — you're tour-complete. Pin a program, log your sets, finish strong, and watch those PRs stack up. Replay this tour anytime from the dashboard. Now go put in the work.",
+    tagline:"You can now find a workout, log every set, earn PRs, review your history, build your own, and track your macros. Time to train.",
+    scene:{glyph:'🔥',caption:'Pin · Log · Finish · Review · Build · Fuel — you’ve got it all',color:'rgba(212,175,55,0.35)',glow:'rgba(212,175,55,0.16)'},
+    narration:"That's it — you're tour-complete. Pin a program, log your sets, finish strong, and watch those PRs stack up — then fuel it all in the Nutrition tab. Replay this tour anytime from the dashboard. Now go put in the work.",
     finish:[
       "Pin your Current Program from the dashboard",
       "Log sets with weight, reps & auto rest timer",
       "Finish Workout to bank your PRs",
       "Review everything in Workout Logs",
-      "Build & run your own custom workouts"
+      "Build & run your own custom workouts",
+      "Track macros, scan barcodes & log favorite foods"
     ],
     cta:{ico:'⚡',label:'Start training',name:'Go to my Dashboard',href:'dashboard.html'},
     last:true
