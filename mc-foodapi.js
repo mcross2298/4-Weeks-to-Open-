@@ -27,6 +27,16 @@
   var CACHE_MAX = 300;          // cap cached lookups
   var TIMEOUT_MS = 8000;
 
+  // Master food aggregator (Supabase edge function: USDA + OFF, server-side
+  // keys, owned cache). We call it first and fall back to OFF direct if it's
+  // unreachable — so the app keeps working even before the function is deployed.
+  var FN_URL = 'https://dhlxmoyjfxohbeiexwnr.supabase.co/functions/v1/food';
+  var FN_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRobHhtb3lqZnhvaGJlaWV4d25yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMjgwNDAsImV4cCI6MjA5NjcwNDA0MH0.G9XpWjEqaGhY7mdLjz8yAaQBFl5EXvYFfAkJMivG38E';
+  function fnJSON(qs) {
+    return fetch(FN_URL + '?' + qs, { headers: { apikey: FN_KEY, Authorization: 'Bearer ' + FN_KEY } })
+      .then(function (r) { if (!r.ok) throw new Error('fn ' + r.status); return r.json(); });
+  }
+
   function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
 
   // ---- localStorage cache (simple { key: {t, v} } map, LRU-ish by trim) ----
@@ -109,10 +119,18 @@
     var cached = cacheGet(ckey);
     if (cached) return Promise.resolve(cached);
 
+    // aggregator first (USDA + OFF), then OFF direct as a fallback
+    return fnJSON('q=' + encodeURIComponent(query)).then(function (data) {
+      var items = (data && data.items) || [];
+      if (items.length) { cacheSet(ckey, items); return items; }
+      return offSearchDirect(query, ckey, cached);
+    }).catch(function () { return offSearchDirect(query, ckey, cached); });
+  }
+
+  function offSearchDirect(query, ckey, cached) {
     var url = BASE + '/cgi/search.pl?search_simple=1&action=process&json=1' +
       '&page_size=20&fields=' + encodeURIComponent(FIELDS) +
       '&search_terms=' + encodeURIComponent(query);
-
     return fetchJSON(url).then(function (data) {
       var products = (data && data.products) || [];
       var items = [];
@@ -133,9 +151,16 @@
     var cached = cacheGet(ckey);
     if (cached) return Promise.resolve(cached);
 
+    return fnJSON('barcode=' + encodeURIComponent(barcode)).then(function (data) {
+      var it = data && data.item;
+      if (it) { cacheSet(ckey, it); return it; }
+      return offLookupDirect(barcode, ckey, cached);
+    }).catch(function () { return offLookupDirect(barcode, ckey, cached); });
+  }
+
+  function offLookupDirect(barcode, ckey, cached) {
     var url = BASE + '/api/v2/product/' + encodeURIComponent(barcode) +
       '.json?fields=' + encodeURIComponent(FIELDS);
-
     return fetchJSON(url).then(function (data) {
       if (!data || data.status === 0 || !data.product) return null;
       var it = normalize(data.product);
