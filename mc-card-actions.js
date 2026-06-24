@@ -223,14 +223,209 @@
   function closeMenu() { menuOverlay.classList.remove('open'); activeCard = null; }
 
   // ====================================================================== //
-  //  REPLACE  (reuses existing flow)                                       //
+  //  SUBSTITUTE  (Phase 1 — biomechanical, in-place swap)                  //
+  //  Opens a bottom-sheet of alternatives ranked by movement similarity +  //
+  //  the user's Gym Profile (available equipment first), each with a        //
+  //  predicted starting weight. Picking one swaps the card in place, badges //
+  //  it REPLACED (mc-replace.js storage shape) and paints a weight hint —   //
+  //  master templates are never touched.                                    //
   // ====================================================================== //
+  var REPLACE_KEY  = 'mc_replacements|' + PAGE_ID;   // { origLower: newName }
+  var SWAP_SUG_KEY = 'mc_swap_suggest|' + PAGE_ID;   // { nameLower: weightLb }
+  var subOverlay = null, subCard = null;
+
+  function subEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+  // Best-effort: the weight last logged for a card (heaviest set), so the
+  // conversion has a real number to scale from. Reads mc-setlog's store.
+  function lastLoggedWeight(card) {
+    try {
+      var store = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}');
+      var name = cardName(card);
+      var slug = name.trim().replace(/\s+/g, '-').toLowerCase().slice(0, 24);
+      var best = 0;
+      Object.keys(store).forEach(function (k) {
+        if (k.toLowerCase().indexOf(slug) < 0) return;
+        var sets = store[k] && store[k].sets; if (!sets) return;
+        Object.keys(sets).forEach(function (sn) {
+          var w = parseFloat(sets[sn] && sets[sn].w); if (isFinite(w) && w > best) best = w;
+        });
+      });
+      return best;
+    } catch (e) { return 0; }
+  }
+
+  // entry from the meatball menu
   function doReplace(card) {
     var name = cardName(card);
     if (!name) return;
-    if (confirm('Replace "' + name.substring(0, 40) + '"?\nTap OK to open Exercise Library.')) {
-      window.location.href = 'exercise-library.html?replace=' + encodeURIComponent(name);
+    if (!window.MCBiomech) {           // engine missing → old library flow
+      if (confirm('Replace "' + name.substring(0, 40) + '"?\nTap OK to open Exercise Library.')) {
+        window.location.href = 'exercise-library.html?replace=' + encodeURIComponent(name);
+      }
+      return;
     }
+    openSubstitute(card);
+  }
+
+  function openSubstitute(card) {
+    subCard = card;
+    if (!subOverlay) {
+      subOverlay = document.createElement('div');
+      subOverlay.className = 'mc-menu-overlay';
+      document.body.appendChild(subOverlay);
+      subOverlay.addEventListener('click', function (e) {
+        if (e.target === subOverlay) { closeSub(); return; }
+        var act = e.target.closest('[data-sub]');
+        if (act) {
+          var a = act.dataset.sub;
+          if (a === 'cancel') { closeSub(); return; }
+          if (a === 'gym') { renderSub(true); return; }
+          if (a === 'gym-back') { renderSub(false); return; }
+          if (a === 'library') {
+            var nm = cardName(subCard); closeSub();
+            window.location.href = 'exercise-library.html?replace=' + encodeURIComponent(nm);
+            return;
+          }
+          return;
+        }
+        var gt = e.target.closest('[data-gym]');
+        if (gt) { toggleGym(gt.dataset.gym); return; }
+        var pick = e.target.closest('[data-pick]');
+        if (pick) { applySwap(subCard, pick.dataset.pick, pick.dataset.w); }
+      });
+    }
+    renderSub(false);
+    subOverlay.classList.add('open');
+  }
+  function closeSub() { if (subOverlay) subOverlay.classList.remove('open'); subCard = null; }
+
+  function toggleGym(key) {
+    var g = MCBiomech.getGym(); g[key] = !g[key]; MCBiomech.setGym(g); renderSub(true);
+  }
+
+  function renderSub(gymView) {
+    var name = cardName(subCard);
+    var info = MCBiomech.classify(name);
+    if (gymView) { subOverlay.innerHTML = gymHtml(); return; }
+    var alts = MCBiomech.alternatives(name, { lastWeight: lastLoggedWeight(subCard) });
+    var rows = alts.length ? alts.map(subRow).join('')
+      : '<div class="mc-sub-empty">No close biomechanical match in the quick list. Browse the full library instead.</div>';
+    var patt = String(info.pattern || '').replace(/-/g, ' ');
+    subOverlay.innerHTML =
+      '<div class="mc-sheet mc-sub-sheet" role="menu">' +
+        '<div class="mc-sub-head">' +
+          '<div class="mc-sub-title">Substitute exercise</div>' +
+          '<div class="mc-sub-sub">' + subEsc(name) + ' &middot; <span class="mc-sub-tag">' + subEsc(info.muscle) + ' &middot; ' + subEsc(patt) + '</span></div>' +
+        '</div>' +
+        '<button class="mc-sub-gymline" data-sub="gym"><span class="mc-ico">🏋️</span>' + gymSummary() + '<span class="mc-sub-edit">Edit</span></button>' +
+        '<div class="mc-sub-list">' + rows + '</div>' +
+        '<button class="mc-item mc-sub-lib" data-sub="library"><span class="mc-ico">📚</span>Browse full library…</button>' +
+        '<button class="mc-item mc-item-cancel" data-sub="cancel">Cancel</button>' +
+      '</div>';
+  }
+
+  function subRow(a) {
+    var cls = 'mc-sub-row' + (a.available ? '' : ' mc-sub-na');
+    var wt = a.weight ? '<span class="mc-sub-wt">≈ ' + a.weight + ' lb</span>' : '';
+    var na = a.available ? '' : '<span class="mc-sub-naflag">not in gym</span>';
+    return '<button class="' + cls + '" data-pick="' + subEsc(a.name) + '" data-w="' + (a.weight || '') + '">' +
+             '<span class="mc-sub-eq mc-eq-' + a.equipment.toLowerCase().replace(/[^a-z]/g, '') + '">' + subEsc(a.equipment) + '</span>' +
+             '<span class="mc-sub-name">' + subEsc(a.name) + '</span>' +
+             wt + na +
+           '</button>';
+  }
+
+  function gymSummary() {
+    var g = MCBiomech.getGym();
+    var on = [];
+    if (g.barbells) on.push('Barbells'); if (g.dumbbells) on.push('Dumbbells');
+    if (g.cables) on.push('Cables'); if (g.machines) on.push('Machines');
+    return '<span class="mc-sub-gymtxt">Gym: ' + (on.length === 4 ? 'all equipment' : (on.length ? on.join(', ') : 'bodyweight only')) + '</span>';
+  }
+
+  function gymHtml() {
+    var g = MCBiomech.getGym();
+    var defs = [['barbells', 'Barbells'], ['dumbbells', 'Dumbbells'], ['cables', 'Cables'], ['machines', 'Machines & plate-loaded']];
+    var chips = defs.map(function (d) {
+      return '<button class="mc-gym-chip' + (g[d[0]] ? ' on' : '') + '" data-gym="' + d[0] + '">' +
+               '<span class="mc-gym-ck">' + (g[d[0]] ? '✓' : '') + '</span>' + d[1] + '</button>';
+    }).join('');
+    return '<div class="mc-sheet mc-sub-sheet" role="menu">' +
+        '<div class="mc-sub-head">' +
+          '<div class="mc-sub-title">Your gym</div>' +
+          '<div class="mc-sub-sub">Toggle what\'s available — substitutes match it first.</div>' +
+        '</div>' +
+        '<div class="mc-gym-grid">' + chips + '</div>' +
+        '<button class="mc-item mc-sub-done" data-sub="gym-back">Done</button>' +
+      '</div>';
+  }
+
+  // Apply the swap: persist (mc-replace.js shape, re-rooted to the immutable
+  // original), repaint name + REPLACED badge in place, store + paint the
+  // predicted weight, and pre-fill the set logger's empty weight fields.
+  function applySwap(card, newName, weight) {
+    if (!card || !newName) { closeSub(); return; }
+    var nameEl = card.querySelector(NAME_SEL); if (!nameEl) { closeSub(); return; }
+    var visible = cardName(card);
+    var reps = readJSON(REPLACE_KEY);
+    // re-root: if the current name is itself a replacement target, update the
+    // original key so a reload chains correctly instead of forking.
+    var rootKey = visible.toLowerCase();
+    Object.keys(reps).forEach(function (k) {
+      if (reps[k] && reps[k].toLowerCase() === rootKey) rootKey = k;
+    });
+    reps[rootKey] = newName;
+    writeJSON(REPLACE_KEY, reps);
+
+    // weight suggestion store, keyed by the new name (what the card now shows)
+    var sug = readJSON(SWAP_SUG_KEY);
+    if (weight) sug[newName.toLowerCase()] = weight; else delete sug[newName.toLowerCase()];
+    writeJSON(SWAP_SUG_KEY, sug);
+
+    withoutObserver(function () {
+      paintReplaced(card, newName);
+      renderSwapPill(card);
+      prefillWeight(card, weight);
+    });
+    closeSub();
+  }
+
+  // mirror mc-replace.js's applyReplacements paint (cyan name + REPLACED badge)
+  function paintReplaced(card, newName) {
+    var nameEl = card.querySelector(NAME_SEL); if (!nameEl) return;
+    nameEl.textContent = newName;
+    nameEl.style.color = '#22d3ee';
+    if (!card.querySelector('.replaced-badge')) {
+      var badge = document.createElement('span');
+      badge.className = 'replaced-badge';
+      badge.style.cssText = 'font-size:11px;font-weight:900;color:#22d3ee;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.25);border-radius:4px;padding:2px 5px;margin-left:6px;letter-spacing:0.06em;vertical-align:middle;';
+      badge.textContent = 'REPLACED';
+      nameEl.parentNode.insertBefore(badge, nameEl.nextSibling);
+    }
+  }
+
+  // paint (or clear) the "≈ N lb to start" hint for the swapped card
+  function renderSwapPill(card) {
+    var sug = readJSON(SWAP_SUG_KEY);
+    var w = sug[cardName(card).toLowerCase()];
+    var host = card.querySelector('.ex-tags') || card.querySelector(BODY_SEL) || card;
+    var existing = card.querySelector('.mc-swap-pill');
+    if (w) {
+      if (!existing) { existing = document.createElement('span'); existing.className = 'mc-swap-pill'; host.appendChild(existing); }
+      var label = '≈ ' + w + ' lb to start';
+      if (existing.textContent !== label) existing.textContent = label;
+    } else if (existing) { existing.remove(); }
+  }
+
+  // best-effort: drop the predicted weight into the logger's empty weight
+  // inputs (placeholder + tap-to-fill) so a single tap accepts it.
+  function prefillWeight(card, weight) {
+    if (!weight) return;
+    var inputs = card.querySelectorAll('.mcl-w');
+    Array.prototype.forEach.call(inputs, function (inp) {
+      if (!inp.value.trim()) { inp.placeholder = weight + ' lb'; inp.dataset.fill = String(weight); }
+    });
   }
 
   // ====================================================================== //
@@ -538,6 +733,7 @@
       containers.forEach(applyOrder);
       Array.prototype.forEach.call(document.querySelectorAll(CARD_SEL), renderNote);
       if (tempoEnabled()) Array.prototype.forEach.call(document.querySelectorAll(CARD_SEL), renderTempo);
+      Array.prototype.forEach.call(document.querySelectorAll(CARD_SEL), renderSwapPill);
     });
   }
 
@@ -549,6 +745,13 @@
 
   function init() {
     buildChrome();
+    // Phase 1: lazy-load the biomech substitution engine (pages don't include
+    // it directly). Precached by the SW, so it's available offline too.
+    if (!window.MCBiomech) {
+      var bs = document.createElement('script');
+      bs.src = 'mc-biomech.js'; bs.async = true;
+      document.head.appendChild(bs);
+    }
     // C2: subscribe to the shared engine observer when available; else run our own
     if (window.MC_SCAN) {
       window.MC_SCAN.subscribe(scan);
