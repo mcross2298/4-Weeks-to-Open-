@@ -126,9 +126,11 @@
     var actions = el('div', 'ntx-head-actions');
     var today = el('button', 'ntx-ico', '◎'); today.title = 'Jump to today';
     today.onclick = function () { selKey = todayKey(); render(); };
+    var fav = el('button', 'ntx-ico', '★'); fav.title = 'Favorite foods';
+    fav.onclick = function () { addSlotMs = defaultSlot(); openFavorites(); };
     var gear = el('button', 'ntx-ico', '⚙'); gear.title = 'Goals';
     gear.onclick = openCalculator;
-    actions.appendChild(today); actions.appendChild(gear);
+    actions.appendChild(today); actions.appendChild(fav); actions.appendChild(gear);
     head.appendChild(actions);
     return head;
   }
@@ -232,7 +234,7 @@
             '<b style="color:' + COL.kcal + '">🔥' + Math.round(num(per.kcal) * q) + '</b>  ' +
             'P ' + Math.round(num(per.p) * q) + '  F ' + Math.round(num(per.f) * q) + '  C ' + Math.round(num(per.c) * q) +
           '</div>';
-        (function (id) { card.onclick = function () { openEdit(id); }; })(e.id);
+        (function (entry) { card.onclick = function () { openFacts(foodFromEntry(entry), { entryId: entry.id, qty: num(entry.qty, 1) }); }; })(e);
         body.appendChild(card);
       });
       row.appendChild(body);
@@ -458,10 +460,7 @@
               '<div class="nt-result-sub">' + (it.brand ? esc(it.brand) + ' · ' : '') + 'per ' + esc(it.servingLabel) + '</div>' +
             '</div>' +
             '<div class="nt-result-kcal">' + it.kcal + '<span>kcal</span></div>';
-          row.onclick = function () {
-            addEntry({ name: it.name + (it.brand ? ' (' + it.brand + ')' : ''), source: 'search', unit: it.basis, qty: 1, per: { kcal: it.kcal, p: it.p, f: it.f, c: it.c } });
-            s.close(); render();
-          };
+          row.onclick = function () { s.close(); openFacts(foodFromItem(it), {}); };
           results.appendChild(row);
         });
       });
@@ -479,7 +478,7 @@
       MCFoodAPI.lookup(code).then(function (it) {
         s.close();
         if (it) {
-          openManual({ source: 'barcode', name: it.name + (it.brand ? ' (' + it.brand + ')' : ''), kcal: it.kcal, p: it.p, f: it.f, c: it.c, note: 'Found via barcode · per ' + it.servingLabel + ' — adjust if needed.' });
+          openFacts(foodFromItem({ name: it.name, brand: it.brand, basis: it.basis, servingLabel: it.servingLabel, grams: it.grams, kcal: it.kcal, p: it.p, f: it.f, c: it.c, nutr: it.nutr, source: 'barcode', code: it.code }), {});
         } else {
           openManual({ source: 'barcode', note: 'No match for barcode ' + code + '. Enter its macros manually.' });
         }
@@ -572,6 +571,251 @@
       selKey = todayKey(); addSlotMs = defaultSlot();
       openManual(pre);
     } catch (e) {}
+  }
+
+  // ====================================================================== //
+  //  NUTRITION FACTS SHEET  (Phase 3 — UOM toggle · keypad · micronutrients) //
+  // ====================================================================== //
+  var OZ_G = 28.3495;
+
+  // build a sheet-ready "food" from a search/barcode item or a logged entry.
+  function foodFromItem(it) {
+    return {
+      name: it.name + (it.brand ? ' (' + it.brand + ')' : ''), brand: it.brand || '',
+      basis: it.basis || 'serving', servingLabel: it.servingLabel || 'serving',
+      grams: (it.grams && it.grams > 0) ? it.grams : null,
+      per: { kcal: it.kcal, p: it.p, f: it.f, c: it.c }, nutr: it.nutr || {},
+      source: it.source || 'search', code: it.code || ''
+    };
+  }
+  function foodFromEntry(e) {
+    return {
+      name: e.name, brand: '', basis: e.unit || 'serving',
+      servingLabel: e.unit === '100g' ? '100 g' : 'serving',
+      grams: (e.grams && e.grams > 0) ? e.grams : null,
+      per: e.per || {}, nutr: e.nutr || {}, source: e.source || 'manual', code: e.code || ''
+    };
+  }
+  function baseGramsOf(food) {
+    if (food.basis === '100g') return 100;
+    return (food.grams && food.grams > 0) ? food.grams : null;
+  }
+  function fmt(n, dp) { var v = num(n, 0); return dp ? (+v.toFixed(dp)) : Math.round(v); }
+
+  // ---- favorites store (lives inside mc_macros_v1) -------------------------
+  function favKey(food) { return food.code ? ('c:' + food.code) : ('n:' + String(food.name).toLowerCase()); }
+  function getFavs() { var d = read(); return d.favorites || []; }
+  function isFav(food) { var k = favKey(food); return getFavs().some(function (f) { return favKey(f) === k; }); }
+  function toggleFav(food) {
+    var d = read(); d.favorites = d.favorites || [];
+    var k = favKey(food), i = -1;
+    d.favorites.forEach(function (f, idx) { if (favKey(f) === k) i = idx; });
+    if (i >= 0) { d.favorites.splice(i, 1); }
+    else {
+      d.favorites.unshift({
+        name: food.name, brand: food.brand, basis: food.basis, servingLabel: food.servingLabel,
+        grams: food.grams, per: food.per, nutr: food.nutr, code: food.code,
+        source: food.source || 'fav', kind: food.kind || 'food'
+      });
+    }
+    write(d); return i < 0;
+  }
+
+  // ---- the facts sheet -----------------------------------------------------
+  function openFacts(food, opts) {
+    opts = opts || {};
+    var editId = opts.entryId || null;
+    var baseG = baseGramsOf(food);
+    var unit = (opts.unit === 'g' || opts.unit === 'oz') && baseG ? opts.unit : 'base';
+    var qty = (opts.qty != null) ? String(opts.qty) : '1';
+    var goals = read().goals || null;
+
+    var s = sheet(food.name, (food.brand ? esc(food.brand) + ' · ' : '') + 'Nutrition facts');
+    var body = el('div', 'nt-facts');
+    s.sh.appendChild(body);
+
+    function multBase() {                          // current quantity in BASE units
+      var q = num(qty, 0);
+      if (unit === 'base' || !baseG) return q;
+      var grams = unit === 'oz' ? q * OZ_G : q;
+      return grams / baseG;
+    }
+    function pct(have, goal) { return goal ? Math.min(999, Math.round((have / goal) * 100)) : null; }
+
+    function ringTile(lbl, val, suf, color, p) {
+      return '<div class="nt-ring" style="--rc:' + color + '">' +
+        '<div class="nt-ring-dot"></div>' +
+        '<div class="nt-ring-val">' + val + '<span>' + suf + '</span></div>' +
+        '<div class="nt-ring-lbl">' + lbl + '</div>' +
+        '<div class="nt-ring-pct">' + (p == null ? '' : p + '%') + '</div></div>';
+    }
+    function nutrRow(lbl, val, suf) {
+      var has = val !== '' && val != null;
+      return '<div class="nt-nrow"><span>' + lbl + '</span><b>' + (has ? val + ' ' + suf : '—') + '</b></div>';
+    }
+
+    function refresh() {
+      var m = multBase(), per = food.per || {}, nu = food.nutr || {};
+      var kcal = fmt(per.kcal * m), p = fmt(per.p * m), f = fmt(per.f * m), c = fmt(per.c * m);
+      var fib = nu.fiber != null ? fmt(nu.fiber * m, 1) : '';
+      var sug = nu.sugar != null ? fmt(nu.sugar * m, 1) : '';
+      var cho = nu.chol != null ? fmt(nu.chol * m) : '';
+      var sod = nu.sodium != null ? fmt(nu.sodium * m) : '';
+      var fav = isFav(food);
+
+      body.innerHTML =
+        '<div class="nt-rings">' +
+          ringTile('Cal', kcal, '', COL.kcal, pct(kcal, goals && goals.kcal)) +
+          ringTile('Protein', p, 'g', COL.p, pct(p, goals && goals.p)) +
+          ringTile('Fat', f, 'g', COL.f, pct(f, goals && goals.f)) +
+          ringTile('Carbs', c, 'g', COL.c, pct(c, goals && goals.c)) +
+        '</div>' +
+        '<div class="nt-nutrients">' +
+          '<div class="nt-nutrients-h">Nutrients</div>' +
+          nutrRow('Fiber', fib, 'g') + nutrRow('Sugars', sug, 'g') +
+          nutrRow('Cholesterol', cho, 'mg') + nutrRow('Sodium', sod, 'mg') +
+        '</div>' +
+        '<div class="nt-uomrow">' +
+          '<div class="nt-uom" id="ntUom">' +
+            '<button data-u="base"' + (unit === 'base' ? ' class="on"' : '') + '>' + esc(food.servingLabel || 'serving') + '</button>' +
+            (baseG ? '<button data-u="g"' + (unit === 'g' ? ' class="on"' : '') + '>grams</button>' +
+                     '<button data-u="oz"' + (unit === 'oz' ? ' class="on"' : '') + '>oz</button>' : '') +
+          '</div>' +
+          '<div class="nt-qty"><span id="ntQty">' + esc(qty) + '</span>' +
+            '<small>' + (unit === 'base' ? '×' : unit) + '</small></div>' +
+        '</div>' +
+        keypadHtml() +
+        '<div class="nt-facts-btns">' +
+          '<button class="nt-fav" id="ntFav" title="Favorite">' + (fav ? '★' : '☆') + '</button>' +
+          '<button class="nt-btn nt-btn-gold" id="ntLog">' + (editId ? 'Update' : 'Log Food') + '</button>' +
+        '</div>' +
+        (editId ? '<button class="nt-btn nt-btn-danger" id="ntDel">Remove from log</button>' : '');
+
+      wire();
+    }
+    function keypadHtml() {
+      var keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'];
+      return '<div class="nt-keypad" id="ntPad">' + keys.map(function (k) {
+        return '<button data-k="' + k + '">' + k + '</button>';
+      }).join('') + '</div>';
+    }
+    function press(k) {
+      if (k === '⌫') { qty = qty.length > 1 ? qty.slice(0, -1) : '0'; }
+      else if (k === '.') { if (qty.indexOf('.') < 0) qty += '.'; }
+      else { qty = (qty === '0') ? k : (qty.length < 6 ? qty + k : qty); }
+      $('#ntQty', s.sh).textContent = qty;
+      // live-update everything except the keypad (cheap full refresh is fine)
+      var m = multBase(), per = food.per || {}, nu = food.nutr || {};
+      refreshNumbers(m, per, nu);
+    }
+    function refreshNumbers(m, per, nu) {
+      var rings = s.sh.querySelectorAll('.nt-ring-val');
+      if (rings.length === 4) {
+        rings[0].innerHTML = fmt(per.kcal * m) + '<span></span>';
+        rings[1].innerHTML = fmt(per.p * m) + '<span>g</span>';
+        rings[2].innerHTML = fmt(per.f * m) + '<span>g</span>';
+        rings[3].innerHTML = fmt(per.c * m) + '<span>g</span>';
+      }
+      var goalsArr = [goals && goals.kcal, goals && goals.p, goals && goals.f, goals && goals.c];
+      var vals = [fmt(per.kcal * m), fmt(per.p * m), fmt(per.f * m), fmt(per.c * m)];
+      var pcts = s.sh.querySelectorAll('.nt-ring-pct');
+      pcts.forEach(function (e, i) { var pc = pct(vals[i], goalsArr[i]); e.textContent = pc == null ? '' : pc + '%'; });
+      var nrows = s.sh.querySelectorAll('.nt-nrow b');
+      if (nrows.length === 4) {
+        nrows[0].textContent = nu.fiber != null ? fmt(nu.fiber * m, 1) + ' g' : '—';
+        nrows[1].textContent = nu.sugar != null ? fmt(nu.sugar * m, 1) + ' g' : '—';
+        nrows[2].textContent = nu.chol != null ? fmt(nu.chol * m) + ' mg' : '—';
+        nrows[3].textContent = nu.sodium != null ? fmt(nu.sodium * m) + ' mg' : '—';
+      }
+    }
+    function setUnit(u) {
+      if (u === unit) return;
+      var curMult = multBase();
+      if (u === 'base') { qty = String(+curMult.toFixed(2)); }
+      else { var grams = curMult * baseG; qty = String(u === 'oz' ? +(grams / OZ_G).toFixed(1) : Math.round(grams)); }
+      unit = u; refresh();
+    }
+    function wire() {
+      var pad = $('#ntPad', s.sh);
+      pad.onclick = function (e) { var b = e.target.closest('[data-k]'); if (b) press(b.dataset.k); };
+      var uom = $('#ntUom', s.sh);
+      uom.onclick = function (e) { var b = e.target.closest('[data-u]'); if (b) setUnit(b.dataset.u); };
+      $('#ntFav', s.sh).onclick = function () { toggleFav(food); var on = isFav(food); this.textContent = on ? '★' : '☆'; this.classList.toggle('on', on); };
+      $('#ntFav', s.sh).classList.toggle('on', isFav(food));
+      $('#ntLog', s.sh).onclick = function () {
+        var m = multBase();
+        if (!(m > 0)) return;
+        if (editId) {
+          var obj = read(), d = getDay(obj, selKey);
+          d.entries.forEach(function (e) { if (e.id === editId) { e.qty = m; e.unit = food.basis; e.ts = Date.now(); } });
+          write(obj);
+        } else {
+          addEntry({ name: food.name, source: food.source || 'manual', unit: food.basis, qty: m,
+            per: food.per, nutr: food.nutr, grams: food.grams, code: food.code });
+        }
+        s.close(); render();
+      };
+      if (editId) $('#ntDel', s.sh).onclick = function () {
+        var obj = read(), d = getDay(obj, selKey);
+        d.entries = d.entries.filter(function (e) { return e.id !== editId; });
+        write(obj); s.close(); render();
+      };
+    }
+    refresh();
+  }
+
+  // ====================================================================== //
+  //  FAVORITES LIBRARY  (Phase 3)                                            //
+  // ====================================================================== //
+  function openFavorites() {
+    addSlotMs = addSlotMs || defaultSlot();
+    var s = sheet('Favorite Foods', 'Quick-log the foods you eat most.');
+    var tab = 'food';
+    var pending = [];
+    var wrap = el('div', 'nt-fav-wrap');
+    s.sh.appendChild(wrap);
+    var bar = el('div', 'nt-fav-bar');
+    s.sh.appendChild(bar);
+
+    function favsOf(kind) { return getFavs().filter(function (f) { return (f.kind || 'food') === kind; }); }
+    function paint() {
+      var favs = favsOf(tab);
+      wrap.innerHTML =
+        '<div class="nt-seg nt-fav-tabs">' +
+          '<button data-t="food"' + (tab === 'food' ? ' class="on"' : '') + '>🍽 Foods</button>' +
+          '<button data-t="meal"' + (tab === 'meal' ? ' class="on"' : '') + '>🥗 Meals</button>' +
+        '</div>' +
+        (favs.length ? '<div class="nt-fav-list">' + favs.map(function (f, i) {
+          var per = f.per || {};
+          return '<div class="nt-fav-row" data-i="' + i + '">' +
+            '<div class="nt-fav-main"><div class="nt-fav-name">' + esc(f.name) + '</div>' +
+              '<div class="nt-fav-macros">🔥' + fmt(per.kcal) + ' · P' + fmt(per.p) + ' F' + fmt(per.f) + ' C' + fmt(per.c) + '</div></div>' +
+            '<button class="nt-fav-add" data-add="' + i + '">+</button></div>';
+        }).join('') + '</div>'
+        : '<div class="nt-results-msg">No ' + (tab === 'meal' ? 'saved meals' : 'favorite foods') + ' yet. Tap ☆ on any food’s nutrition facts to save it here.</div>');
+      paintBar();
+    }
+    function paintBar() {
+      bar.innerHTML =
+        '<div class="nt-fav-count">' + pending.length + ' item' + (pending.length === 1 ? '' : 's') + ' added</div>' +
+        '<button class="nt-btn nt-btn-gold nt-fav-log"' + (pending.length ? '' : ' disabled') + '>Log Food</button>';
+      var lg = bar.querySelector('.nt-fav-log');
+      if (lg) lg.onclick = function () {
+        pending.forEach(function (f) {
+          addEntry({ name: f.name, source: 'favorite', unit: f.basis, qty: 1, per: f.per, nutr: f.nutr, grams: f.grams, code: f.code });
+        });
+        s.close(); render();
+      };
+    }
+    wrap.onclick = function (e) {
+      var t = e.target.closest('[data-t]');
+      if (t) { tab = t.dataset.t; pending = []; paint(); return; }
+      var add = e.target.closest('[data-add]');
+      if (add) { var f = favsOf(tab)[+add.dataset.add]; if (f) { pending.push(f); paintBar(); add.textContent = '✓'; setTimeout(function () { add.textContent = '+'; }, 700); } return; }
+      var row = e.target.closest('.nt-fav-row');
+      if (row) { var ff = favsOf(tab)[+row.dataset.i]; if (ff) openFacts(ff, {}); }
+    };
+    paint();
   }
 
   // ---- styles (injected once, mirrors mc-account.js's self-contained CSS) ---
@@ -684,6 +928,48 @@
       '.nt-step-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--border2);background:var(--surface2);' +
         'color:var(--text);font-size:20px;font-weight:800;cursor:pointer;font-family:inherit;line-height:1;}' +
       '.nt-step-val{min-width:54px;text-align:center;font-size:18px;font-weight:900;color:var(--text);}' +
+      /* ── Nutrition Facts sheet (Phase 3) ── */
+      '.nt-facts{display:flex;flex-direction:column;gap:14px;}' +
+      '.nt-rings{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;}' +
+      '.nt-ring{position:relative;border:1.5px solid color-mix(in srgb, var(--rc) 55%, transparent);border-radius:14px;' +
+        'padding:12px 6px 9px;text-align:center;background:color-mix(in srgb, var(--rc) 9%, transparent);}' +
+      '.nt-ring-dot{position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--rc);box-shadow:0 0 8px var(--rc);}' +
+      '.nt-ring-val{font-size:19px;font-weight:900;color:var(--text);line-height:1;}' +
+      '.nt-ring-val span{font-size:11px;font-weight:800;color:var(--muted);}' +
+      '.nt-ring-lbl{font-size:10px;font-weight:800;letter-spacing:0.03em;color:var(--muted);margin-top:5px;}' +
+      '.nt-ring-pct{font-size:11px;font-weight:900;color:var(--rc);margin-top:3px;min-height:13px;}' +
+      '.nt-nutrients{border:1px solid var(--border2);border-radius:14px;padding:4px 14px;}' +
+      '.nt-nutrients-h{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted2);padding:10px 0 4px;}' +
+      '.nt-nrow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid var(--border);font-size:13px;font-weight:700;color:var(--muted);}' +
+      '.nt-nrow b{color:var(--text);font-weight:800;}' +
+      '.nt-uomrow{display:flex;align-items:center;gap:12px;}' +
+      '.nt-uom{flex:1;display:flex;gap:6px;}' +
+      '.nt-uom button{flex:1;padding:10px 4px;border-radius:10px;border:1px solid var(--border2);background:rgba(255,255,255,0.04);' +
+        'color:var(--muted);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+      '.nt-uom button.on{background:var(--gold);border-color:var(--gold);color:#000;}' +
+      '.nt-qty{flex:0 0 auto;display:flex;align-items:baseline;gap:4px;font-size:26px;font-weight:900;color:var(--text);min-width:74px;justify-content:flex-end;}' +
+      '.nt-qty small{font-size:13px;font-weight:800;color:var(--muted);}' +
+      '.nt-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}' +
+      '.nt-keypad button{padding:15px 0;border-radius:12px;border:1px solid var(--border2);background:var(--surface2);' +
+        'color:var(--text);font-size:20px;font-weight:800;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}' +
+      '.nt-keypad button:active{background:rgba(212,175,55,0.18);}' +
+      '.nt-facts-btns{display:flex;gap:10px;align-items:stretch;}' +
+      '.nt-fav{flex:0 0 52px;border-radius:13px;border:1px solid var(--border2);background:var(--surface2);' +
+        'color:var(--muted2);font-size:22px;cursor:pointer;font-family:inherit;}' +
+      '.nt-fav.on{color:var(--gold);border-color:var(--gold);}' +
+      /* ── Favorites library (Phase 3) ── */
+      '.nt-fav-tabs{margin-bottom:12px;}' +
+      '.nt-fav-list{display:flex;flex-direction:column;gap:8px;max-height:54vh;overflow-y:auto;}' +
+      '.nt-fav-row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 13px;cursor:pointer;}' +
+      '.nt-fav-main{flex:1;min-width:0;}' +
+      '.nt-fav-name{font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+      '.nt-fav-macros{font-size:11px;color:var(--muted2);font-weight:700;margin-top:2px;}' +
+      '.nt-fav-add{flex:0 0 38px;height:38px;border-radius:10px;border:1px solid var(--border2);background:var(--surface2);' +
+        'color:var(--gold);font-size:20px;font-weight:800;cursor:pointer;font-family:inherit;line-height:1;}' +
+      '.nt-fav-bar{display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border2);position:sticky;bottom:0;background:#0e0e0e;}' +
+      '.nt-fav-count{flex:1;font-size:13px;font-weight:800;color:var(--muted);}' +
+      '.nt-fav-log{width:auto;flex:0 0 auto;padding:13px 26px;}' +
+      '.nt-fav-log:disabled{opacity:0.4;}' +
       '@media (prefers-reduced-motion: reduce){.nt-overlay,.nt-sheet,.ntx-met-fill{transition:none;}}';
     var st = document.createElement('style');
     st.id = 'nt-styles'; st.textContent = css;
