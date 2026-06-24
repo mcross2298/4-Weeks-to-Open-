@@ -497,7 +497,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
         <div class="topbar-sub" id="todayDate"></div>
       </div>
     </div>
-    <div class="topbar-icon">📅</div>
+    <div class="topbar-icon" onclick="if(window.MCCalendar)MCCalendar.focus();" style="cursor:pointer;" title="Jump to workout calendar">📅</div>
     <div id="pmUnlockBtn" onclick="if(window.MC_PM)MC_PM.unlock();" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0.15;font-size:18px;-webkit-tap-highlight-color:transparent;">🔐</div>
   </div>
 
@@ -546,6 +546,9 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
     </div>
 
   </div>
+
+  <!-- Workout-history calendar (filled by mc-calendar.js) -->
+  <div id="calendarCard"></div>
 
   <!-- Weekly recap (filled by mc-recap.js when there's history) -->
   <div id="recapCard"></div>
@@ -841,6 +844,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 <script src="mc-live-tracker.js"></script>
 <script src="mc-resume.js"></script>
 <script src="mc-chart.js"></script>
+<script src="mc-calendar.js"></script>
 <script src="mc-recap.js"></script>
 <script src="mc-pm-data.js"></script>
 <script src="mc-macrocalc.js"></script>
