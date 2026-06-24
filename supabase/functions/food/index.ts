@@ -159,8 +159,113 @@ async function cache(items: Item[]) {
   } catch (_) { /* swallow */ }
 }
 
+// ---- Smart Trigger: brand keyword interceptor -------------------------------
+// Detect a known brand inside the raw query and contract the search to ONLY
+// that brand's verified products instead of the usual blended firehose. Longer,
+// more specific names come first so `find` matches "kirkland signature" before
+// the bare "kirkland".
+const KNOWN_BRANDS = [
+  "kirkland signature", "kirkland", "tyson", "chobani", "quest", "fairlife",
+];
+
+type ParsedSearch =
+  | { isBrandSearch: true; brand: string; keywords: string }
+  | { isBrandSearch: false; originalQuery: string };
+
+function parseSearchInput(rawInput: string): ParsedSearch {
+  const cleanInput = (rawInput || "").toLowerCase().trim();
+  const foundBrand = KNOWN_BRANDS.find((brand) => cleanInput.includes(brand));
+  if (foundBrand) {
+    // Isolate the remaining product keywords (e.g. "chicken" from "kirkland chicken")
+    const keywords = cleanInput.replace(foundBrand, " ").replace(/\s+/g, " ").trim();
+    return { isBrandSearch: true, brand: foundBrand, keywords };
+  }
+  return { isBrandSearch: false, originalQuery: cleanInput };
+}
+
+// A barcode embedded in free text (GTIN-8 and up). Used as the brand-search
+// fallback: if the contracted brand query finds nothing, scan the code instead.
+function extractBarcode(raw: string): string {
+  const digits = (raw || "").replace(/\D/g, "");
+  return digits.length >= 8 ? digits : "";
+}
+
+// True only when an item genuinely carries the detected brand — this is what
+// enforces the hard contraction and cuts the secondary/noise entries.
+function brandMatches(it: Item, brand: string): boolean {
+  return (it.brand || "").toLowerCase().includes(brand);
+}
+
+// Brand-scoped variants of the live sources. OFF gets a real brands tag filter;
+// USDA folds the brand into the query (its brandOwner rarely equals the
+// consumer brand, e.g. Kirkland → "Costco Wholesale Corporation"), and the
+// brandMatches post-filter does the final contraction for both.
+async function offBrandSearch(brand: string, term: string): Promise<Item[]> {
+  const url = "https://world.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1&page_size=20"
+    + "&fields=code,product_name,brands,nutriments,serving_size"
+    + "&tagtype_0=brands&tag_contains_0=contains&tag_0=" + encodeURIComponent(brand)
+    + "&search_terms=" + encodeURIComponent(term);
+  const res = await fetch(url); if (!res.ok) return [];
+  const data = await res.json();
+  return (data.products || []).map(offNormalize).filter(Boolean) as Item[];
+}
+async function usdaBrandSearch(brand: string, term: string): Promise<Item[]> {
+  if (!USDA_KEY) return [];
+  const query = (brand + " " + term).trim();
+  const res = await fetch("https://api.nal.usda.gov/fdc/v1/foods/search?api_key=" + USDA_KEY, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, pageSize: 20, dataType: ["Branded"] }),
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data.foods || []).map(usdaNormalize).filter(Boolean) as Item[];
+}
+
 // ---- handlers ---------------------------------------------------------------
+// Dispatcher: a detected brand contracts to that brand only; otherwise the
+// normal blended search runs.
 async function handleSearch(q: string): Promise<Item[]> {
+  const parsed = parseSearchInput(q);
+  if (parsed.isBrandSearch) {
+    const items = await handleBrandSearch(parsed.brand, parsed.keywords);
+    if (items.length) return items;
+    // Nothing verified for this brand (typo, or brand carries no matching item):
+    // if the query embeds a barcode, scan it directly before giving up.
+    const bc = extractBarcode(q);
+    if (bc) {
+      const hit = await handleLookup(bc);
+      if (hit) return [hit];
+    }
+    // Still nothing — fall back to a normal search so the user isn't stranded.
+  }
+  return handleBlendedSearch(q.trim());
+}
+
+// Hard-contracted search: our library + brand-scoped USDA/OFF, then filtered
+// down to only items that actually carry the brand.
+async function handleBrandSearch(brand: string, keywords: string): Promise<Item[]> {
+  const term = keywords || brand;
+
+  const fromDb: Item[] = [];
+  try {
+    let qb = db.from("foods").select("*").ilike("brand", "%" + brand + "%");
+    if (keywords) qb = qb.ilike("name", "%" + keywords + "%");
+    const { data } = await qb.limit(20);
+    (data || []).forEach((r) => fromDb.push(rowToItem(r)));
+  } catch (_) { /* ignore */ }
+
+  const [off, usda] = await Promise.all([
+    offBrandSearch(brand, term).catch(() => []),
+    usdaBrandSearch(brand, term).catch(() => []),
+  ]);
+  const live = [...usda, ...off];
+  if (live.length) await cache(live);
+
+  return dedupe([...fromDb, ...live]).filter((it) => brandMatches(it, brand)).slice(0, 20);
+}
+
+async function handleBlendedSearch(q: string): Promise<Item[]> {
   const fromDb: Item[] = [];
   try {
     const { data } = await db.from("foods").select("*").textSearch("search", q, { type: "websearch" }).limit(20);
