@@ -19,12 +19,18 @@
 // finish modules read it — they capture window.MC_PID_OVERRIDE on load.
 (function () {
   var qs = new URLSearchParams(location.search);
+  var cons = qs.get('cons'), cd = qs.get('cd');
   window.__CP = {
     prog: qs.get('prog') || '',
     week: Math.max(1, parseInt(qs.get('w'), 10) || 1),
-    day: Math.max(1, parseInt(qs.get('d'), 10) || 1)
+    day: Math.max(1, parseInt(qs.get('d'), 10) || 1),
+    // Phase 2: a consolidated (merged) day carries cons=<targetDays>&cd=<index>
+    cons: cons ? Math.max(1, parseInt(cons, 10) || 0) : 0,
+    cd: cd != null ? Math.max(0, parseInt(cd, 10) || 0) : -1
   };
-  window.MC_PID_OVERRIDE = 'cprog-' + __CP.prog + '-d' + __CP.day;
+  window.MC_PID_OVERRIDE = __CP.cons
+    ? 'cprog-' + __CP.prog + '-cons' + __CP.cons + '-d' + __CP.cd
+    : 'cprog-' + __CP.prog + '-d' + __CP.day;
 })();
 </script>
 </head><body>
@@ -42,6 +48,8 @@
 
 <script src="mc-program-store.js"></script>
 <script src="mc-program-pub.js"></script>
+<script src="mc-biomech.js"></script>
+<script src="mc-schedule.js"></script>
 <script src="mc-timer.js"></script>
 <script>
 (function () {
@@ -50,7 +58,14 @@
   // which fetches published programs before its day links render)
   var p = window.MCPrograms ? MCPrograms.get(window.__CP.prog) : null;
   if (!p && window.MCPub) p = MCPub.get(window.__CP.prog);
-  var day = p && p.days[window.__CP.day - 1];
+  // Phase 2: a consolidated day is rebuilt deterministically from the same
+  // (program, targetDays) inputs the listing used — no merged data is stored.
+  var day;
+  if (p && window.__CP.cons && window.MCSchedule) {
+    day = MCSchedule.consolidatedDay(p, window.__CP.cons, window.__CP.cd);
+  } else {
+    day = p && p.days[window.__CP.day - 1];
+  }
   var app = document.getElementById('app');
 
   if (!p || !day) {
@@ -72,7 +87,8 @@
   document.title = p.name + ' — ' + day.name;
   document.getElementById('hdEyebrow').textContent = (p.icon || '🧩') + ' ' + p.name;
   document.getElementById('hdTitle').textContent = day.name;
-  document.getElementById('hdWeek').textContent = 'Week ' + window.__CP.week + ' of ' + p.weeks;
+  document.getElementById('hdWeek').textContent = 'Week ' + window.__CP.week + ' of ' +
+    (window.MCSchedule ? MCSchedule.totalWeeks(p) : p.weeks);
   document.getElementById('backLink').href = 'cat-custom.html?prog=' + p.id + '&w=' + window.__CP.week;
 
   function esc(s) {
@@ -106,7 +122,7 @@
   function clusterNote(ex) { if (!ex.cluster) return ''; var rest = ex.clusterRest ? (' · ' + esc(ex.clusterRest) + ' intra-set rest') : ''; return '<div class="a-notes">🧩 Cluster set — ' + esc(ex.cluster) + ' per working set' + rest + '</div>'; }
   function restLabel(secs) { secs = parseInt(secs, 10) || 0; if (!secs) return ''; return (secs % 60 === 0) ? (secs / 60) + ' min' : secs + 's'; }
 
-  var DAY = window.__CP.day;
+  var DAY = window.__CP.cons ? ('c' + window.__CP.cd) : window.__CP.day;
   function didOf(i) { return 'd' + DAY + '-x' + (i + 1); }
 
   function renderSingle(ex, i) {
