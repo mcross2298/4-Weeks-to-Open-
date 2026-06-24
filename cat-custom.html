@@ -50,6 +50,16 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
 .missing a{color:var(--accent);}
 .new-banner{margin-bottom:14px;padding:11px 14px;border-radius:12px;background:rgba(52,211,153,0.1);
   border:1px solid rgba(52,211,153,0.3);color:#34d399;font-size:13px;font-weight:800;text-align:center;}
+.sched-ctl{margin-bottom:14px;}
+.sched-adjust{width:100%;padding:12px 14px;border-radius:12px;cursor:pointer;font-family:inherit;
+  background:rgba(var(--accent-rgb),0.1);border:1px solid rgba(var(--accent-rgb),0.32);
+  color:var(--accent);font-size:14px;font-weight:800;-webkit-tap-highlight-color:transparent;}
+.sched-banner{margin-top:10px;padding:10px 13px;border-radius:11px;background:rgba(var(--accent-rgb),0.08);
+  border:1px solid rgba(var(--accent-rgb),0.22);color:#cbd5e1;font-size:12px;font-weight:700;line-height:1.5;}
+.dl-from{font-size:10px;font-weight:800;letter-spacing:0.03em;color:var(--accent);
+  background:rgba(var(--accent-rgb),0.12);border:1px solid rgba(var(--accent-rgb),0.28);
+  border-radius:5px;padding:2px 6px;margin-left:6px;white-space:nowrap;}
+.wt.wt-catchup{border-style:dashed;border-color:rgba(var(--accent-rgb),0.5);color:var(--accent);}
 </style>
 </head><body>
 
@@ -74,11 +84,17 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
 
 <div class="content">
   <div id="newBanner" class="new-banner" style="display:none;">✅ Program saved — it now lives in your Programs tab.</div>
+  <div id="schedCtl" class="sched-ctl" style="display:none;">
+    <button id="adjustBtn" class="sched-adjust" type="button">🗓️ Adjust this week</button>
+    <div id="adjBanner" class="sched-banner" style="display:none;"></div>
+  </div>
   <div class="week-tabs" id="weekTabs"></div>
   <div id="dayList"></div>
 </div>
 
 <script src="mc-program-store.js"></script>
+<script src="mc-biomech.js"></script>
+<script src="mc-schedule.js"></script>
 <script src="mc-program-pub.js"></script>
 <script src="mc-share.js"></script>
 <script>
@@ -214,40 +230,83 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
     });
   })();
 
-  // ✓ done = the day was finished within the trailing 7 days (logging history
-  // is intentionally week-agnostic so "Last: X lb" cues carry across weeks)
-  function doneMap() {
-    var map = {};
+  // ✓ done = a session (by its persistence id) finished within the trailing 7
+  // days. Set of done pageIds so both original and consolidated (merged) days
+  // resolve correctly — each day carries its own pid from MCSchedule.
+  function donePids() {
+    var set = {};
     var cutoff = Date.now() - 7 * 24 * 3600 * 1000;
     try {
       (JSON.parse(localStorage.getItem('mc_workout_log_v1') || '[]') || []).forEach(function (e) {
-        var dm = new RegExp('^cprog-' + p.id + '-d(\\d+)$').exec(e.pageId || '');
-        if (dm && new Date(e.date || 0).getTime() >= cutoff) map[dm[1]] = true;
+        if ((e.pageId || '').indexOf('cprog-' + p.id + '-') === 0 &&
+            new Date(e.date || 0).getTime() >= cutoff) set[e.pageId] = true;
       });
     } catch (e) {}
-    return map;
+    return set;
   }
+
+  // Phase 2: a week can be adjusted (consolidated / postponed). The day list,
+  // week count and links all resolve through MCSchedule from an instance-level
+  // override — the stored program template is never mutated.
+  function hasSched() { return !!window.MCSchedule; }
 
   function render() {
+    var total = hasSched() ? MCSchedule.totalWeeks(p) : p.weeks;
+    if (week > total) week = total;
     var tabs = '';
-    for (var w = 1; w <= p.weeks; w++) {
-      tabs += '<button class="wt' + (w === week ? ' on' : '') + '" data-w="' + w + '">Week ' + w + '</button>';
+    var weekMeta = hasSched() ? MCSchedule.schedule(p).weeks : null;
+    for (var w = 1; w <= total; w++) {
+      var wm = weekMeta && weekMeta[w - 1];
+      var extra = (wm && wm.source === 'catchup') ? ' wt-catchup' : '';
+      var lbl = (wm && wm.source === 'catchup') ? 'Catch-up' : ('Week ' + w);
+      tabs += '<button class="wt' + (w === week ? ' on' : '') + extra + '" data-w="' + w + '">' + lbl + '</button>';
     }
-    $('weekTabs').innerHTML = p.weeks > 1 ? tabs : '';
+    $('weekTabs').innerHTML = total > 1 ? tabs : '';
 
-    var done = doneMap();
-    $('dayList').innerHTML = p.days.map(function (d, i) {
+    var done = donePids();
+    var resolved = hasSched()
+      ? MCSchedule.daysForWeek(p, week)
+      : { week: null, days: p.days.map(function (d, i) {
+          return { name: d.name, exercises: d.exercises, mergedFrom: [],
+                   pid: 'cprog-' + p.id + '-d' + (i + 1),
+                   href: 'run-program.html?prog=' + p.id + '&w=' + week + '&d=' + (i + 1) }; }) };
+
+    $('dayList').innerHTML = resolved.days.map(function (d, i) {
       var n = d.exercises.length;
       var sets = d.exercises.reduce(function (s, e) { return s + (parseInt(e.sets, 10) || 0); }, 0);
-      return '<a class="day-link" href="run-program.html?prog=' + p.id + '&w=' + week + '&d=' + (i + 1) + '">' +
+      var from = (d.mergedFrom && d.mergedFrom.length)
+        ? '<span class="dl-from">+ ' + d.mergedFrom.join(', ').replace(/</g, '&lt;') + '</span>' : '';
+      return '<a class="day-link" href="' + d.href + '">' +
         '<span class="dl-num">' + (i + 1) + '</span>' +
-        '<span style="flex:1;min-width:0;"><span class="dl-name">' + d.name.replace(/</g, '&lt;') + '</span>' +
+        '<span style="flex:1;min-width:0;"><span class="dl-name">' + d.name.replace(/</g, '&lt;') + from + '</span>' +
           '<div class="dl-meta">' + n + ' exercises · ' + sets + ' sets</div></span>' +
-        (done[String(i + 1)] ? '<span class="dl-done">✓ done</span>' : '') +
+        (done[d.pid] ? '<span class="dl-done">✓ done</span>' : '') +
         '<span class="dl-arrow">→</span></a>';
     }).join('');
+
+    // adjust control + adjusted banner
+    if (hasSched() && !isPub) {
+      $('schedCtl').style.display = 'block';
+      var wm2 = resolved.week;
+      if (wm2 && wm2.adjusted) {
+        $('adjBanner').style.display = 'block';
+        $('adjBanner').textContent = (wm2.strategy === 'postpone' ? '📆 ' : '🧬 ') + wm2.note;
+        $('adjustBtn').textContent = '🗓️ Adjust this week · active';
+      } else {
+        $('adjBanner').style.display = 'none';
+        $('adjustBtn').textContent = '🗓️ Adjust this week';
+      }
+    }
     applyLayout();
   }
+
+  // open the adjust sheet for the currently viewed week, then re-render
+  onReady(function () {
+    var ab = $('adjustBtn');
+    if (ab) ab.addEventListener('click', function () {
+      if (window.MCSchedule) MCSchedule.openSheet(p, week, render);
+    });
+  });
 
   // PM Phase 2b — apply the owner-selected landing/split layout to the day
   // list. timeline (landing) takes precedence over week-calendar (split);
