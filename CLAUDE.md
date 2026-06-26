@@ -1,5 +1,13 @@
 # Project notes for Claude
 
+## Planning rule — executive summary required
+
+**Before implementing any non-trivial code change, invoke the `executive-summary`
+skill** (`.claude/skills/executive-summary/SKILL.md`) to produce a Word-style
+executive summary and wait for the owner's explicit approval ("approved" / "go")
+before writing or editing any file. See the skill for scope guidance on when this
+applies and when it can be skipped.
+
 ## Repository relationship & deploy pipeline (IMPORTANT)
 
 `4-Weeks-to-Open-` is the **master repository**. `MC-Training-Rolodex` is a
