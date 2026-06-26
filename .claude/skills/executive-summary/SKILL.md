@@ -16,6 +16,18 @@ Before writing a single line of code, produce a structured executive summary for
 
 ## Workflow
 
+### 0. Align on requirements first (AskUserQuestion)
+
+**Before researching or planning**, use `AskUserQuestion` to resolve any ambiguity
+in the request. Ask only what you genuinely cannot infer — scope, preferred approach,
+or a key constraint. One to three focused questions maximum. Skip this step only when
+the request is already fully specified and unambiguous.
+
+Example questions to consider:
+- Which tab / section / program should this affect?
+- Should the change be Rolodex-visible or stripped via `MARKET:STRIP`?
+- Is this backed by Supabase or client-side only?
+
 ### 1. Research the task
 
 Use Glob, Grep, and Read to understand:
@@ -25,7 +37,8 @@ Use Glob, Grep, and Read to understand:
 
 ### 2. Draft the executive summary
 
-Render it using the exact template below. Keep each section tight — one to three sentences or a short bullet list. This is a summary, not a design doc.
+Render it using the exact template below. Keep each section tight — one to three
+sentences or a short bullet list. This is a summary, not a design doc.
 
 ---
 
@@ -47,6 +60,11 @@ Files affected:
   • [file path] — [what changes and why]
   (list every file; mark NEW if creating, DEL if removing)
 
+IMPLEMENTATION PHASES  (omit if single-phase)
+  Phase 1 — [label]: [what gets built]
+  Phase 2 — [label]: [what gets built]
+  (break multi-part work into discrete phases the owner can approve one at a time)
+
 IMPLEMENTATION APPROACH
 [Two to four bullet points describing HOW you will implement it —
 data structure changes, rendering logic, Supabase queries, deploy-script impact, etc.]
@@ -67,7 +85,7 @@ ESTIMATED EFFORT
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  ACTION REQUIRED
- Reply "approved" or "go" to proceed.
+ Reply "approved" or "go" to proceed with Phase 1 (or the full plan).
  Reply with feedback to revise the plan before any code is written.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -77,12 +95,26 @@ ESTIMATED EFFORT
 **Do not write, edit, or create any file until the user explicitly approves.**
 
 - If the user replies with revisions, update the summary and re-present it.
-- If the user approves, thank them briefly and begin implementation.
-- If the task turns out to be simpler than expected mid-implementation (single-line fix, obvious typo), you may note that in the summary and ask if a full plan is still needed.
+- If the user approves, thank them briefly and begin Phase 1 (or full implementation).
+- If the task turns out to be simpler than expected (single-line fix, obvious typo),
+  note that in the summary and ask if a full plan is still needed.
 
-### 4. Implement
+### 4. Implement — phase gate (AskUserQuestion between phases)
 
-Follow the approved plan exactly. If you discover a material deviation is needed, pause, note the change, and confirm before continuing.
+For **multi-phase work**: complete Phase 1, then **pause and use `AskUserQuestion`**
+before starting the next phase. Show what was just completed and confirm the owner
+is happy to continue. Example:
+
+> "Phase 1 (Supabase schema) is complete — migration applied and types regenerated.
+> Ready to move to Phase 2 (dashboard rendering in `conditioning-data.js`)?"
+
+Only proceed to the next phase after explicit confirmation. This gives the owner a
+natural checkpoint to course-correct, reprioritise, or stop early.
+
+For **single-phase work**: implement continuously without mid-task interruptions.
+
+If you discover a material deviation from the approved plan at any point, pause,
+describe the change, and confirm before continuing.
 
 ---
 
@@ -108,4 +140,10 @@ Follow the approved plan exactly. If you discover a material deviation is needed
 
 User: "Add a rest-day banner to the conditioning tab"
 
-You: [research dashboard.html, conditioning-data.js, mc-pm-inline.js, base.css] → render executive summary → wait for "approved" → implement.
+You:
+1. AskUserQuestion — "Should this banner show for all users or only when the PM
+   inline-edit layer is active? Should it be Rolodex-visible or stripped?"
+2. Research `dashboard.html`, `conditioning-data.js`, `mc-pm-inline.js`, `base.css`
+3. Render executive summary → wait for "approved"
+4. Implement Phase 1 (data + markup) → AskUserQuestion phase gate
+5. Implement Phase 2 (styling + PM edit hook) → done.
