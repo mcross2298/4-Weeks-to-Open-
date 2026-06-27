@@ -461,6 +461,19 @@
   }
 
   // ---- search sheet --------------------------------------------------------
+  function tokenFilter(items, q) {
+    var tokens = q.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
+    if (tokens.length <= 1) return items;
+    var threshold = tokens.length >= 4 ? tokens.length : Math.ceil(tokens.length / 2);
+    var scored = items.map(function (it) {
+      var hay = ((it.name || '') + ' ' + (it.brand || '')).toLowerCase();
+      var score = tokens.filter(function (t) { return hay.indexOf(t) >= 0; }).length;
+      return { item: it, score: score };
+    }).filter(function (x) { return x.score >= threshold; });
+    scored.sort(function (a, b) { return b.score - a.score; });
+    return scored.map(function (x) { return x.item; });
+  }
+
   function openSearch() {
     var s = sheet('Search foods', 'Powered by Open Food Facts.');
     var input = el('input', 'nt-input');
@@ -469,15 +482,27 @@
     var results = el('div', 'nt-results');
     s.sh.appendChild(results);
 
+    function showEmpty() {
+      results.innerHTML = '<div class="nt-results-msg">🔍 Type at least 2 characters to search the food database.</div>';
+    }
+    showEmpty();
+
     var timer = null;
     function run() {
       var q = input.value.trim();
-      if (q.length < 2) { results.innerHTML = ''; return; }
+      if (q.length < 2) { showEmpty(); return; }
       results.innerHTML = '<div class="nt-results-msg">Searching…</div>';
       MCFoodAPI.search(q).then(function (items) {
-        if (!items.length) { results.innerHTML = '<div class="nt-results-msg">No matches. Try a different term or add it manually.</div>'; return; }
+        var filtered = tokenFilter(items, q);
+        if (!filtered.length) {
+          var msg = items.length && q.split(/\s+/).length > 1
+            ? 'No exact matches — try fewer keywords.'
+            : 'No matches. Try a different term or add it manually.';
+          results.innerHTML = '<div class="nt-results-msg">' + esc(msg) + '</div>';
+          return;
+        }
         results.innerHTML = '';
-        items.forEach(function (it) {
+        filtered.forEach(function (it) {
           var row = el('div', 'nt-result');
           row.innerHTML =
             '<div class="nt-result-main">' +
@@ -490,7 +515,11 @@
         });
       });
     }
-    input.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(run, 350); });
+    input.addEventListener('input', function () {
+      clearTimeout(timer);
+      if (!input.value.trim()) { showEmpty(); return; }
+      timer = setTimeout(run, 350);
+    });
     setTimeout(function () { input.focus(); }, 250);
   }
 
@@ -961,11 +990,11 @@
       '.nt-ring-dot{position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--rc);box-shadow:0 0 8px var(--rc);}' +
       '.nt-ring-val{font-size:19px;font-weight:900;color:var(--text);line-height:1;}' +
       '.nt-ring-val span{font-size:11px;font-weight:800;color:var(--muted);}' +
-      '.nt-ring-lbl{font-size:10px;font-weight:800;letter-spacing:0.03em;color:var(--muted);margin-top:5px;}' +
+      '.nt-ring-lbl{font-size:10px;font-weight:800;letter-spacing:0.03em;color:var(--text);margin-top:5px;}' +
       '.nt-ring-pct{font-size:11px;font-weight:900;color:var(--rc);margin-top:3px;min-height:13px;}' +
       '.nt-nutrients{border:1px solid var(--border2);border-radius:14px;padding:4px 14px;}' +
       '.nt-nutrients-h{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted2);padding:10px 0 4px;}' +
-      '.nt-nrow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid var(--border);font-size:13px;font-weight:700;color:var(--muted);}' +
+      '.nt-nrow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid var(--border);font-size:13px;font-weight:800;color:var(--text);}' +
       '.nt-nrow b{color:var(--text);font-weight:800;}' +
       '.nt-uomrow{display:flex;align-items:center;gap:12px;}' +
       '.nt-uom{flex:1;display:flex;gap:6px;}' +
