@@ -78,7 +78,7 @@
   // ====================================================================== //
   //  WAKE LOCK                                                             //
   // ====================================================================== //
-  var wakeLock = null, wantLock = false, acquiring = false;
+  var wakeLock = null, wantLock = false, acquiring = false, sessionActive = false;
 
   function timerRunning() {
     var f = document.getElementById('timerFloat');
@@ -100,7 +100,7 @@
     try { if (wakeLock) { wakeLock.release(); wakeLock = null; } } catch (e) {}
   }
   function syncLock() {
-    if (timerRunning()) { wantLock = true; acquire(); }
+    if (timerRunning() || sessionActive) { wantLock = true; acquire(); }
     else { wantLock = false; release(); }
   }
 
@@ -194,7 +194,9 @@
       var a = readAct();
       return { last: isResumable(a.last) ? a.last : null,
                streak: computeStreak(a.days), trainedToday: !!(a.days && a.days[dayKey()]) };
-    }
+    },
+    enableSessionLock:  function () { sessionActive = true;  syncLock(); },
+    releaseSessionLock: function () { sessionActive = false; syncLock(); }
   };
 
   // ====================================================================== //
