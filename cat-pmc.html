@@ -1599,13 +1599,13 @@ function getWeekData(workout, week){
 function applyTheme(workout){
   const c = workout.color || '#c084fc';
   const bg = workout.bg || '#1a0040';
-  document.querySelector('.header').style.background = `linear-gradient(135deg,${bg},#0d0618)`;
-  document.querySelector('.header').style.borderBottomColor = c+'33';
-  document.querySelector('.eyebrow').style.color = c;
-  document.querySelector('.week-badge').style.color = c;
-  document.querySelector('.week-badge').style.background = c+'22';
-  document.querySelector('.week-badge').style.borderColor = c+'55';
-  document.querySelector('.week-tabs').style.borderBottomColor = c+'1a';
+  document.getElementById('workoutViewHeader').style.background = `linear-gradient(135deg,${bg},#0d0618)`;
+  document.getElementById('workoutViewHeader').style.borderBottomColor = c+'33';
+  document.getElementById('workoutEyebrow').style.color = c;
+  document.getElementById('workoutWeekBadge').style.color = c;
+  document.getElementById('workoutWeekBadge').style.background = c+'22';
+  document.getElementById('workoutWeekBadge').style.borderColor = c+'55';
+  document.getElementById('weekTabsWrap').style.borderBottomColor = c+'1a';
   document.querySelectorAll('.wtab.active').forEach(t=>{t.style.color=c;t.style.borderBottomColor=c;});
   document.querySelectorAll('.ex-num').forEach(n=>{n.style.background=c+'2e';n.style.color=c;n.style.borderColor=c+'44';});
   document.querySelectorAll('.ex-sets').forEach(s=>{s.style.background=c+'1a';s.style.borderColor=c+'33';});
@@ -1658,16 +1658,8 @@ function render(){
     contentHtml = renderBlocks(blocks, wid);
     // Split 7 cycles rep ranges across 4 weeks, so it needs the week tabs too.
     const blockWeekTabs = workout.s7 ? `<div class="week-tabs" style="border-bottom:1px solid ${_wcolor}1a;"><div class="wtabs">${tabs}</div></div>` : '';
+    document.getElementById('workoutWeekBadge').textContent = `Week ${activeWeek} · complete 5 rounds per lift`;
     document.getElementById('workoutContent').innerHTML = `
-      <div class="header">
-        <a href="${workout.backUrl}" class="back-link">← ${workout.split}</a>
-        <div class="header-inner">
-          <div class="eyebrow">${workout.icon} PMC · ${workout.split}</div>
-          <div class="title">${workout.title}</div>
-          <span class="week-badge">Week ${activeWeek} · complete 5 rounds per lift</span>
-        </div>
-      </div>
-      ${blockWeekTabs}
       <div class="content">
         <div class="tap-hint">Tap exercises to check off · tap round buttons when complete</div>
         ${contentHtml}
@@ -1687,17 +1679,6 @@ function render(){
     contentHtml = warmupHtml + confusionBanner(activeWeek) + exercises.map(e=>renderEx(e,activeWeek)).join('');
 
     document.getElementById('workoutContent').innerHTML = `
-      <div class="header">
-        <a href="${workout.backUrl}" class="back-link">← ${workout.split}</a>
-        <div class="header-inner">
-          <div class="eyebrow">${workout.icon} PMC · ${workout.split}</div>
-          <div class="title">${workout.title}</div>
-          <span class="week-badge">Week ${activeWeek}</span>
-        </div>
-      </div>
-      <div class="week-tabs" style="border-bottom:1px solid ${workout.color}1a;">
-        <div class="wtabs">${tabs}</div>
-      </div>
       <div class="content">
         <div class="tap-hint">Tap any exercise to check off</div>
         ${contentHtml}
