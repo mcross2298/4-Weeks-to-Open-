@@ -21,6 +21,20 @@
   function esc(s) { return String(s == null ? '' : s).replace(/</g, '&lt;'); }
   function round5(x) { return Math.max(BAR, Math.round(x / 5) * 5); }
 
+  // Equipment coefficient: Cable/Machine estimates get ×0.85 to offset machine-assisted leverage.
+  function equipCat(name) {
+    if (window.EXERCISES) {
+      var nl = (name || '').toLowerCase();
+      for (var i = 0; i < EXERCISES.length; i++) {
+        if (EXERCISES[i].name.toLowerCase() === nl) return EXERCISES[i].equipment || '';
+      }
+    }
+    var s = ' ' + (name || '').toLowerCase() + ' ';
+    if (/\bcable\b|pulldown|push-?down|rope |lat pull|face pull/.test(s)) return 'Cable';
+    if (/\bmachine\b|leg press|leg extension|leg curl|pec deck|abductor|adductor/.test(s)) return 'Machine';
+    return 'Barbell';
+  }
+
   function logs() {
     try { return JSON.parse(localStorage.getItem(WL_KEY) || '[]') || []; }
     catch (e) { return []; }
@@ -97,7 +111,8 @@
 
   function start(l) {
     lift = l;
-    var t = l.e1;
+    var equip = equipCat(l.name);
+    var t = (equip === 'Cable' || equip === 'Machine') ? Math.round(l.e1 * 0.85) : l.e1;
     plan = [
       { lbl: 'Warm-up 1', w: BAR, r: '× 10', note: 'Empty bar. Groove the pattern.' },
       { lbl: 'Warm-up 2', w: round5(t * 0.4), r: '× 5', note: 'Fast and crisp.' },

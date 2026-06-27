@@ -280,37 +280,31 @@
         if (act) {
           var a = act.dataset.sub;
           if (a === 'cancel') { closeSub(); return; }
-          if (a === 'gym') { renderSub(true); return; }
-          if (a === 'gym-back') { renderSub(false); return; }
           if (a === 'library') {
-            var nm = cardName(subCard); closeSub();
-            window.location.href = 'exercise-library.html?replace=' + encodeURIComponent(nm);
+            var nm = cardName(subCard);
+            var inf = window.MCBiomech ? MCBiomech.classify(nm) : {};
+            closeSub();
+            window.location.href = 'exercise-library.html?replace=' + encodeURIComponent(nm) +
+              (inf.muscle ? '&muscle=' + encodeURIComponent(inf.muscle) : '');
             return;
           }
           return;
         }
-        var gt = e.target.closest('[data-gym]');
-        if (gt) { toggleGym(gt.dataset.gym); return; }
         var pick = e.target.closest('[data-pick]');
         if (pick) { applySwap(subCard, pick.dataset.pick, pick.dataset.w); }
       });
     }
-    renderSub(false);
+    renderSub();
     subOverlay.classList.add('open');
   }
   function closeSub() { if (subOverlay) subOverlay.classList.remove('open'); subCard = null; }
 
-  function toggleGym(key) {
-    var g = MCBiomech.getGym(); g[key] = !g[key]; MCBiomech.setGym(g); renderSub(true);
-  }
-
-  function renderSub(gymView) {
+  function renderSub() {
     var name = cardName(subCard);
     var info = MCBiomech.classify(name);
-    if (gymView) { subOverlay.innerHTML = gymHtml(); return; }
-    var alts = MCBiomech.alternatives(name, { lastWeight: lastLoggedWeight(subCard) });
+    var alts = MCBiomech.alternatives(name, { lastWeight: lastLoggedWeight(subCard) }).slice(0, 3);
     var rows = alts.length ? alts.map(subRow).join('')
-      : '<div class="mc-sub-empty">No close biomechanical match in the quick list. Browse the full library instead.</div>';
+      : '<div class="mc-sub-empty">No exact matches — try fewer keywords</div>';
     var patt = String(info.pattern || '').replace(/-/g, ' ');
     subOverlay.innerHTML =
       '<div class="mc-sheet mc-sub-sheet" role="menu">' +
@@ -318,9 +312,8 @@
           '<div class="mc-sub-title">Substitute exercise</div>' +
           '<div class="mc-sub-sub">' + subEsc(name) + ' &middot; <span class="mc-sub-tag">' + subEsc(info.muscle) + ' &middot; ' + subEsc(patt) + '</span></div>' +
         '</div>' +
-        '<button class="mc-sub-gymline" data-sub="gym"><span class="mc-ico">🏋️</span>' + gymSummary() + '<span class="mc-sub-edit">Edit</span></button>' +
         '<div class="mc-sub-list">' + rows + '</div>' +
-        '<button class="mc-item mc-sub-lib" data-sub="library"><span class="mc-ico">📚</span>Browse full library…</button>' +
+        '<button class="mc-item mc-sub-lib" data-sub="library"><span class="mc-ico">📚</span>Browse all for ' + subEsc(info.muscle) + '…</button>' +
         '<button class="mc-item mc-item-cancel" data-sub="cancel">Cancel</button>' +
       '</div>';
   }
@@ -336,34 +329,13 @@
            '</button>';
   }
 
-  function gymSummary() {
-    var g = MCBiomech.getGym();
-    var on = [];
-    if (g.barbells) on.push('Barbells'); if (g.dumbbells) on.push('Dumbbells');
-    if (g.cables) on.push('Cables'); if (g.machines) on.push('Machines');
-    return '<span class="mc-sub-gymtxt">Gym: ' + (on.length === 4 ? 'all equipment' : (on.length ? on.join(', ') : 'bodyweight only')) + '</span>';
-  }
-
-  function gymHtml() {
-    var g = MCBiomech.getGym();
-    var defs = [['barbells', 'Barbells'], ['dumbbells', 'Dumbbells'], ['cables', 'Cables'], ['machines', 'Machines & plate-loaded']];
-    var chips = defs.map(function (d) {
-      return '<button class="mc-gym-chip' + (g[d[0]] ? ' on' : '') + '" data-gym="' + d[0] + '">' +
-               '<span class="mc-gym-ck">' + (g[d[0]] ? '✓' : '') + '</span>' + d[1] + '</button>';
-    }).join('');
-    return '<div class="mc-sheet mc-sub-sheet" role="menu">' +
-        '<div class="mc-sub-head">' +
-          '<div class="mc-sub-title">Your gym</div>' +
-          '<div class="mc-sub-sub">Toggle what\'s available — substitutes match it first.</div>' +
-        '</div>' +
-        '<div class="mc-gym-grid">' + chips + '</div>' +
-        '<button class="mc-item mc-sub-done" data-sub="gym-back">Done</button>' +
-      '</div>';
-  }
-
   // Apply the swap: persist (mc-replace.js shape, re-rooted to the immutable
   // original), repaint name + REPLACED badge in place, store + paint the
   // predicted weight, and pre-fill the set logger's empty weight fields.
+  // Persistence chain: applySwap() writes {origLower: newName} to
+  // mc_replacements|<pageId> in localStorage; on the next page load
+  // mc-replace.js::applyReplacements() reads that key and re-paints the swap,
+  // so the substitution survives a refresh without any additional write-back.
   function applySwap(card, newName, weight) {
     if (!card || !newName) { closeSub(); return; }
     var nameEl = card.querySelector(NAME_SEL); if (!nameEl) { closeSub(); return; }
@@ -751,6 +723,11 @@
       var bs = document.createElement('script');
       bs.src = 'mc-biomech.js'; bs.async = true;
       document.head.appendChild(bs);
+    }
+    if (!window.EXERCISES) {
+      var cs = document.createElement('script');
+      cs.src = 'exercise-catalog.js'; cs.async = true;
+      document.head.appendChild(cs);
     }
     // C2: subscribe to the shared engine observer when available; else run our own
     if (window.MC_SCAN) {
