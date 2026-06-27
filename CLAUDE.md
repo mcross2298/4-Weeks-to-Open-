@@ -12,6 +12,26 @@ before writing or editing any file.
 corrections, copy/wording tweaks, and trivial CSS adjustments. See the skill for
 full scope guidance.
 
+---
+
+## New Program Creation Workflow
+
+Whenever asked to **create a new program**, follow this pipeline exactly:
+
+1. **Executive summary first** — invoke the `executive-summary` skill and wait for
+   explicit approval before writing any file.
+2. **Build the program HTML page** — follow the 7-day layout standard and
+   station-anchoring constraints documented below. All new programs use
+   `5-on 2-off` and the 7-card day structure.
+3. **Register in `mc-pm-data.js`** — add a new entry to the flagship programs
+   array (before the `MARKET:STRIP` block) unless the program uses licensed
+   influencer content, in which case place it inside the MARKET:STRIP section.
+   Required fields: `id`, `icon`, `name`, `meta`, `color`, `desc`, `href`, `splits`.
+4. **Commit and push to a feature branch in `4-Weeks-to-Open-`.**
+5. **Create a draft PR targeting `main` of `4-Weeks-to-Open-`.**
+6. **Merge to main** → the deploy pipeline auto-propagates all changes to
+   `MC-Training-Rolodex`. Never push directly to the Rolodex repo.
+
 ## Repository relationship & deploy pipeline (IMPORTANT)
 
 `4-Weeks-to-Open-` is the **master repository**. `MC-Training-Rolodex` is a
