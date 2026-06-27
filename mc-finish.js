@@ -277,6 +277,7 @@
     },
     confirm:function(){
       var entry=saveWorkout();
+      try{if(window.MCActivity&&MCActivity.releaseSessionLock)MCActivity.releaseSessionLock();}catch(e){}
       // back up the finished session right away (no-op when signed out)
       try{if(window.MC_SYNC&&MC_SYNC.push)MC_SYNC.push();}catch(e){}
       window._FW.close();

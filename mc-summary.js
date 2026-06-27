@@ -52,6 +52,7 @@
         _elapsedSecs = Math.max(_elapsedSecs,
           Math.floor((Date.now() - MCSession.startedTs) / 1000));
     } catch (e) {}
+    try { if (window.MCActivity && MCActivity.enableSessionLock) MCActivity.enableSessionLock(); } catch (e) {}
     _timerInterval = setInterval(function () {
       _elapsedSecs++;
       var el = document.getElementById('mcsTimerVal');
