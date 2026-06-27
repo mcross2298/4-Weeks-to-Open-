@@ -76,6 +76,8 @@
   var viewY = today.getFullYear();
   var viewM = today.getMonth();
   var selKey = todayKey;
+  var CAL_COLLAPSED_KEY = 'mc_cal_collapsed';
+  var collapsed = sessionStorage.getItem(CAL_COLLAPSED_KEY) === '1';
 
   function setMonth(y, m) {
     // normalize overflow (m === 12 → next year, m === -1 → prev year)
@@ -114,10 +116,11 @@
         '</button>';
     }
 
+    var chevron = collapsed ? '▸' : '▾';
     var head =
-      '<div class="sec-header" style="margin-bottom:0;">' +
-        '<div class="sec-title">History</div>' +
-        '<a class="sec-link" href="workout-logs.html" style="text-decoration:none;">All logs →</a>' +
+      '<div class="sec-header cal-toggle-header" style="margin-bottom:0;cursor:pointer;" id="calToggleHeader" aria-expanded="' + (!collapsed) + '">' +
+        '<div class="sec-title">History <span class="cal-chevron">' + chevron + '</span></div>' +
+        '<a class="sec-link" href="workout-logs.html" style="text-decoration:none;" onclick="event.stopPropagation()">All logs →</a>' +
       '</div>';
 
     var nav =
@@ -130,8 +133,7 @@
     var dow = '<div class="cal-dow">' +
       WD.map(function (w) { return '<div>' + w[0] + '</div>'; }).join('') + '</div>';
 
-    host.innerHTML =
-      head +
+    var bodyHtml = collapsed ? '' :
       '<div class="cal-card">' +
         nav +
         dow +
@@ -143,7 +145,13 @@
         '<div class="cal-detail" id="calDetail"></div>' +
       '</div>';
 
-    // wire interactions
+    host.innerHTML = head + bodyHtml;
+
+    // wire header toggle
+    var toggleHeader = host.querySelector('#calToggleHeader');
+    if (toggleHeader) toggleHeader.onclick = function () { toggle(); };
+
+    // wire interactions (only when expanded)
     host.querySelectorAll('.cal-nav').forEach(function (b) {
       b.onclick = function () { setMonth(viewY, viewM + parseInt(b.getAttribute('data-step'), 10)); };
     });
@@ -153,13 +161,22 @@
       b.onclick = function () { selKey = b.getAttribute('data-key'); render(); };
     });
 
-    renderDetail();
+    if (!collapsed) renderDetail();
     injectCss();
   }
 
   function jumpToToday() {
     selKey = todayKey;
     setMonth(today.getFullYear(), today.getMonth());
+  }
+
+  function toggle() {
+    collapsed = !collapsed;
+    sessionStorage.setItem(CAL_COLLAPSED_KEY, collapsed ? '1' : '0');
+    render();
+    if (!collapsed) {
+      try { host.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
+    }
   }
 
   function prettyKey(key) {
@@ -230,6 +247,8 @@
     st.id = 'mcCalCss';
     st.textContent =
       '#calendarCard{display:block;}' +
+      '.cal-toggle-header{-webkit-tap-highlight-color:transparent;user-select:none;}' +
+      '.cal-chevron{font-size:14px;color:var(--muted2,#64748b);margin-left:6px;transition:transform 0.2s;}' +
       '.cal-card{margin:0 18px 28px;background:var(--card-bg,#0f0f0f);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:14px 14px 16px;}' +
       '.cal-monthbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}' +
       '.cal-nav{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:var(--gold,#d4af37);font-size:18px;font-weight:900;cursor:pointer;line-height:1;-webkit-tap-highlight-color:transparent;}' +
@@ -271,9 +290,11 @@
     document.head.appendChild(st);
   }
 
-  // expose a tiny hook so the topbar 📅 can scroll the calendar into view
+  // expose hooks so the topbar 📅 can toggle/focus the calendar
   window.MCCalendar = {
+    toggle: function () { toggle(); },
     focus: function () {
+      if (collapsed) { collapsed = false; sessionStorage.setItem(CAL_COLLAPSED_KEY, '0'); render(); }
       jumpToToday();
       try { host.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
     }

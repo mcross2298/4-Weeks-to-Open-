@@ -142,8 +142,8 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 }
 .hero-ring-num{font-size:17px;font-weight:900;color:var(--gold);line-height:1;}
 .hero-ring-lbl{font-size:11px;color:var(--muted2);font-weight:700;letter-spacing:0.08em;}
-.hero-name{font-size:22px;font-weight:900;letter-spacing:-0.02em;color:var(--text);line-height:1.2;margin-bottom:6px;}
-.hero-desc{font-size:13px;color:var(--muted2);line-height:1.5;margin-bottom:14px;}
+.hero-name{font-size:22px;font-weight:900;letter-spacing:-0.02em;color:var(--text);line-height:1.2;margin-bottom:6px;overflow-wrap:break-word;word-break:break-word;}
+.hero-desc{font-size:13px;color:var(--muted2);line-height:1.5;margin-bottom:14px;overflow-wrap:break-word;}
 .hero-phases{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:6px;}
 .phase-pill{
   padding:5px 13px;border-radius:20px;font-size:11px;font-weight:700;
@@ -236,9 +236,9 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 /* MARKET:STRIP influencer-css END */
 .cat-card.pmc .cat-tag{background:rgba(139,92,246,0.2);color:#c084fc;border:1px solid rgba(139,92,246,0.35);}
 .cat-card.mc .cat-tag{background:rgba(212,175,55,0.12);color:#d4af37;border:1px solid rgba(212,175,55,0.3);}
-.cat-name{font-size:20px;font-weight:900;color:#fff;margin-bottom:4px;letter-spacing:-0.01em;padding-right:44px;}
+.cat-name{font-size:20px;font-weight:900;color:#fff;margin-bottom:4px;letter-spacing:-0.01em;padding-right:44px;overflow-wrap:break-word;word-break:break-word;}
 .cat-meta{font-size:13px;color:#cbd5e1;line-height:1.5;padding-right:44px;
-  display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
 .cat-count{margin-top:7px;display:inline-block;font-size:11px;color:#94a3b8;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
 .cat-designer{margin-top:7px;font-size:11px;font-weight:700;letter-spacing:0.03em;opacity:0.8;display:flex;align-items:center;gap:5px;}
 .cat-card.faint .cat-designer{color:#fca5a5;}
@@ -326,7 +326,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .influencer-grid .cat-tag{font-size:10px;padding:2px 7px;margin-bottom:6px;letter-spacing:0.1em;}
 .influencer-grid .cat-name{font-size:17px;margin-bottom:3px;padding-right:34px;}
 .influencer-grid .cat-meta{font-size:12px;line-height:1.45;padding-right:8px;
-  display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
 .influencer-grid .cat-count{margin-top:6px;}
 .influencer-grid .cat-designer{margin-top:5px;}
 
@@ -497,7 +497,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
         <div class="topbar-sub" id="todayDate"></div>
       </div>
     </div>
-    <div class="topbar-icon" onclick="if(window.MCCalendar)MCCalendar.focus();" style="cursor:pointer;" title="Jump to workout calendar">📅</div>
+    <div class="topbar-icon" onclick="if(window.MCCalendar)MCCalendar.toggle();" style="cursor:pointer;" title="Toggle workout calendar">📅</div>
     <div id="pmUnlockBtn" onclick="if(window.MC_PM)MC_PM.unlock();" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0.15;font-size:18px;-webkit-tap-highlight-color:transparent;">🔐</div>
   </div>
 
