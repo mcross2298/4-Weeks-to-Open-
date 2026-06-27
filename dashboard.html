@@ -151,6 +151,13 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   background:rgba(255,255,255,0.04);
 }
 .phase-pill.active{background:var(--gold);color:#000;border-color:var(--gold);}
+.hero-fatigue{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.hero-fatigue-chip{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:800;letter-spacing:0.04em;
+  background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.3);
+  color:#f87171;border-radius:20px;padding:3px 9px;
+}
 .hero-tap{font-size:11px;color:var(--muted2);font-weight:600;letter-spacing:0.04em;margin-top:10px;}
 /* In-progress session: promote the muted CTA into an obvious green Resume pill
    so getting back into a half-finished workout is one clear tap. */
@@ -541,6 +548,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
         <div class="hero-name" id="heroName"></div>
         <div class="hero-desc" id="heroDesc"></div>
         <div class="hero-phases" id="heroPhases"></div>
+        <div class="hero-fatigue" id="heroFatigue"></div>
         <div class="hero-tap" id="heroTap">Open program →</div>
       </div>
     </div>
@@ -1343,6 +1351,24 @@ function renderConditioning(){
 // page opened later never inherits a back destination from a prior visit.
 try{ sessionStorage.removeItem('mc_back_to'); }catch(e){}
 loadState();
+// Fatigue flag: non-blocking — populates hero card with high-load muscle
+// warnings from the last 7 days of Supabase workout logs.
+(function(){
+  var THRESHOLD=20; // sets per muscle per 7 days = "high load" flag
+  function renderFatigue(counts){
+    var el=document.getElementById('heroFatigue'); if(!el) return;
+    var high=Object.keys(counts).filter(function(m){return counts[m]>=THRESHOLD&&m!=='Other';});
+    if(!high.length){el.innerHTML='';return;}
+    el.innerHTML=high.map(function(m){
+      return '<span class="hero-fatigue-chip">🔥 '+m+' · '+counts[m]+' sets</span>';
+    }).join('');
+  }
+  try{
+    if(window.MC_SB&&MC_SB.configured&&MC_SB.getWeeklyVolume){
+      MC_SB.getWeeklyVolume(7).then(renderFatigue).catch(function(){});
+    }
+  }catch(e){}
+})();
 renderConditioning();
 renderCustomPrograms();
 renderPublishedPrograms();
