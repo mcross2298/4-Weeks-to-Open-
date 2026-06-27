@@ -49,6 +49,7 @@
     if (/^cat-mc/.test(pageId))       return 'mc';
     if (/^cat-bobw/.test(pageId))     return 'bobw';
     if (/^cat-strength/.test(pageId)) return 'ss';
+    if (pageId === 'kitchen-sink.html') return 'ks';
     /* MARKET:STRIP influencer-progs START */
     if (/^stndr-/.test(pageId) || /^cat-stndr/.test(pageId)) return 'stndr';
     if (/^pump-/.test(pageId)  || /^cat-pump/.test(pageId))  return 'pump';
