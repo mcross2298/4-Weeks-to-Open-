@@ -25,6 +25,8 @@
   // through run-workout.html and set window.MC_PID_OVERRIDE so each saved workout
   // keeps its own logging history instead of colliding on the shared filename.
   var PID = (window.MC_PID_OVERRIDE || location.pathname.split('/').pop().replace('.html', ''));
+  // Unique id for this page-load session; groups all sets into one session row.
+  var SESSION_ID = 'sess-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 
   // ---- storage (shape-compatible with the Finish-Workout module) ---------
   function st() { try { return JSON.parse(localStorage.getItem(SK) || '{}'); } catch (e) { return {}; } }
@@ -115,8 +117,31 @@
       return;
     }
     var rpeEl = row.querySelector('.mcl-rpe');
-    save(exId, sn, w ? w.value.trim() : '', r ? r.value.trim() : '',
-         rpeEl ? (rpeEl.dataset.rpe || '') : '');
+    var wVal = w ? w.value.trim() : '';
+    var rVal = r ? r.value.trim() : '';
+    var rpeVal = rpeEl ? (rpeEl.dataset.rpe || '') : '';
+    save(exId, sn, wVal, rVal, rpeVal);
+    // Best-effort Supabase write — builds durable per-set history for the
+    // auto-weight pre-fill and fatigue flag. Never blocks the UI.
+    try {
+      if (window.MC_SB && MC_SB.configured && MC_SB.logSet) {
+        var nmEl = card.querySelector('.ex-name, .ss-name, .lift-name, .var-name');
+        var exName = origNameOf(nmEl);
+        var muscle = '';
+        try { if (window.MC_EXCATALOG) muscle = MC_EXCATALOG.classify(exName); } catch (me) {}
+        MC_SB.logSet({
+          session_id:   SESSION_ID,
+          exercise:     exName,
+          muscle:       muscle,
+          set_number:   sn,
+          weight_lbs:   wVal ? (parseFloat(wVal) || null) : null,
+          reps:         rVal ? (parseInt(rVal, 10) || null) : null,
+          rpe:          rpeVal || null,
+          workout_name: document.title || '',
+          program_id:   (window.activeProg && activeProg.id) || ''
+        }).catch(function () {});
+      }
+    } catch (e) {}
     ck.classList.add('done'); ck.textContent = '✓'; row.classList.add('done-row');
     // Light confirming tap on check (respects the timer's haptics pref if loaded).
     try {
@@ -405,12 +430,42 @@
   // re-implementing the prescribed-scheme parser anywhere else
   window.MCSetlogUtil = { setCount: setCount, repFor: repFor, pid: PID, histKey: ek };
 
+  // ---- cross-device pre-fill from Supabase ----------------------------------
+  // When localStorage has no history (e.g. new device), query Supabase for the
+  // last logged weight per exercise and update data-fill on weight inputs.
+  // Non-blocking — runs 2s after the initial render to avoid startup latency.
+  function trySupabasePrefill() {
+    if (!window.MC_SB || !MC_SB.configured || !MC_SB.getLastWeight) return;
+    document.querySelectorAll('.mcl-wrap').forEach(function (wrap) {
+      var wInputs = wrap.querySelectorAll('.mcl-row:not(.mcl-row-amrap) .mcl-w');
+      if (!wInputs.length) return;
+      // Only fetch from Supabase when localStorage has no fill for this exercise
+      var firstInput = wInputs[0];
+      if (firstInput.dataset.fill) return;
+      var card = wrap.closest('.ex-card, .ss-ex, .ex-item') || wrap.parentNode;
+      var nmEl = card && card.querySelector('.ex-name, .ss-name, .lift-name, .var-name');
+      if (!nmEl) return;
+      var name = origNameOf(nmEl);
+      MC_SB.getLastWeight(name).then(function (w) {
+        if (!w) return;
+        Array.prototype.forEach.call(wInputs, function (inp) {
+          if (!inp.dataset.fill && !inp.value) {
+            inp.dataset.fill = String(w);
+            inp.placeholder = w + ' lb';
+          }
+        });
+      }).catch(function () {});
+    });
+  }
+
   // ---- init: run now + retry passes to win any race with native render ---
   function init() {
     run();
     [250, 700, 1500, 2600].forEach(function (d) { setTimeout(run, d); });
     var mo = new MutationObserver(function () { clearTimeout(init._t); init._t = setTimeout(run, 120); });
     mo.observe(document.body, { childList: true, subtree: true });
+    // Supabase pre-fill: after initial render settles
+    setTimeout(trySupabasePrefill, 2000);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();

@@ -385,6 +385,113 @@
       } catch (e) {}
     });
   }
+  // ---- workout_logs table (per-set history for suggestions + fatigue flag) -
+  // logSet() is best-effort — callers should .catch() silently.
+  function logSet(entry) {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return currentUser().then(function (u) {
+        if (!u) return null;
+        return c.from('workout_logs').insert({
+          user_id:      u.id,
+          session_id:   entry.session_id   || 'unknown',
+          exercise:     entry.exercise     || '',
+          muscle:       entry.muscle       || null,
+          set_number:   entry.set_number   || 1,
+          weight_lbs:   entry.weight_lbs   != null ? entry.weight_lbs : null,
+          reps:         entry.reps         != null ? entry.reps : null,
+          rpe:          entry.rpe          || null,
+          workout_name: entry.workout_name || null,
+          program_id:   entry.program_id   || null
+        }).then(function (r) { if (r.error) throw r.error; return r; });
+      });
+    });
+  }
+
+  // Most recent weight logged for a given exercise (for cross-device pre-fill).
+  function getLastWeight(exercise) {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return currentUser().then(function (u) {
+        if (!u) return null;
+        return c.from('workout_logs')
+          .select('weight_lbs')
+          .eq('user_id', u.id)
+          .eq('exercise', exercise)
+          .order('logged_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+          .then(function (r) {
+            if (r.error) throw r.error;
+            return r.data ? r.data.weight_lbs : null;
+          });
+      });
+    });
+  }
+
+  // Rolling set count per muscle group for the last N days.
+  // Returns an object: { 'Chest': 24, 'Back': 18, ... }
+  function getWeeklyVolume(daysBack) {
+    return ready.then(function (c) {
+      if (!c) return {};
+      return currentUser().then(function (u) {
+        if (!u) return {};
+        var since = new Date(Date.now() - (daysBack || 7) * 86400000).toISOString();
+        return c.from('workout_logs')
+          .select('muscle')
+          .eq('user_id', u.id)
+          .gte('logged_at', since)
+          .then(function (r) {
+            if (r.error) throw r.error;
+            var counts = {};
+            (r.data || []).forEach(function (row) {
+              var m = row.muscle || 'Other';
+              counts[m] = (counts[m] || 0) + 1;
+            });
+            return counts;
+          });
+      });
+    });
+  }
+
+  // ---- user_programs table (active program + start date) -------------------
+  // program_data stores the full prog card; started_at is the ISO timestamp
+  // from which training day count is calculated.
+  function saveActiveProgram(progCard) {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return currentUser().then(function (u) {
+        if (!u) return null;
+        return c.from('user_programs').upsert({
+          user_id: u.id,
+          program_id: progCard.id,
+          program_name: progCard.name,
+          started_at: progCard.startedAt || new Date().toISOString(),
+          program_data: progCard,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' }).then(function (r) { if (r.error) throw r.error; return r; });
+      });
+    });
+  }
+
+  function getActiveProgram() {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return currentUser().then(function (u) {
+        if (!u) return null;
+        return c.from('user_programs').select('program_data, started_at')
+          .eq('user_id', u.id).maybeSingle()
+          .then(function (r) {
+            if (r.error) throw r.error;
+            if (!r.data) return null;
+            var card = Object.assign({}, r.data.program_data || {});
+            card.startedAt = r.data.started_at;
+            return card;
+          });
+      });
+    });
+  }
+
   // is the signed-in user a canary tester? (RLS exposes only the caller's own row)
   function isTester() {
     return ready.then(function (c) {
@@ -429,6 +536,11 @@
     upsertCanaryNaming: upsertCanaryNaming,
     removeCanaryNaming: removeCanaryNaming,
     onCanaryChange: onCanaryChange,
-    isTester: isTester
+    isTester: isTester,
+    saveActiveProgram: saveActiveProgram,
+    getActiveProgram: getActiveProgram,
+    logSet: logSet,
+    getLastWeight: getLastWeight,
+    getWeeklyVolume: getWeeklyVolume
   };
 })();
