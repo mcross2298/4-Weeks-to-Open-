@@ -22,6 +22,30 @@ applies and when it can be skipped.
   by the deploy pipeline). Manually overwriting Rolodex `main` would be
   destructive and is never the right move.
 
+## Active Development Plan — workout_cookbook_dev_plan_v2
+
+### Decisions locked in (via AskUserQuestion, session 2026-06-27)
+- **Catalog scope (Task 3.1):** Full catalog — add `equipment` + `movement` fields to ALL 539+ exercises
+- **Weight engine (Task 3.3):** Hardcoded multipliers per equipment type (no user-input friction)
+- **Search no-results fallback (Task 2.1):** Show "No exact matches — try fewer keywords" message
+- **Execution order:** Phase 1 → Phase 2 → Phase 3 in sequence; AskUserQuestion alignment check before each phase
+
+### Phase 1 — Polish & Stability ✅ Complete (merged to main)
+- `mc-calendar.js`: collapsible toggle (sessionStorage `mc_cal_collapsed`), chevron indicator, `MCCalendar.toggle()` / `MCCalendar.focus()` API
+- `dashboard.html` / `base.css`: text truncation fixes (`overflow-wrap`, `word-break`) on `.hero-name`, `.cat-name`, `.ex-name`, `.ss-name`; `.cat-meta` `-webkit-line-clamp` relaxed 2→3
+- `mc-macros.js`: swipe-to-dismiss gesture on bottom-sheet handle (touchstart/move/end, 50 px threshold, scrollTop guard)
+
+### Phase 2 — Search & Nutrition UX ✅ Complete (PR #96, merged to main)
+- `mc-macros.js`: `tokenFilter()` client-side multi-keyword AND scoring post-API; `showEmpty()` always-visible prompt (never blank); backspace clears immediately without debounce
+- `mc-macros.js`: nutrition sheet contrast — `.nt-ring-lbl` + `.nt-nrow` upgraded from `var(--muted)` → `var(--text)`, font-weight 700→800
+
+### Phase 3 — Exercise Intelligence ⏳ Pending (4-Weeks-to-Open- only)
+- **Task 3.1:** `exercise-catalog.js` — add `equipment` (Barbell/Dumbbell/Cable/Plate-Loaded/Bodyweight/Machine) and `movement` (Push/Pull/Hinge/Squat/Carry/Isolation) fields to all exercises; `mc-replace.js` — rebuild picker to filter by muscle group + equipment from `mc_gym_profile_v1` localStorage
+- **Task 3.2:** `mc-replace.js` — swap confirmation writes replacement exercise name into `mc_daily_v1` localStorage (currently DOM-only); verify `mc-live-tracker.js` reads from store, not DOM
+- **Task 3.3:** `mc-suggest.js` — equipment-aware increment table (Cable/Machine ×0.5 → +2.5 lb step, Dumbbell labeled "per hand"); `mc-maxout.js` — equipment coefficient on Epley formula (Cable/Machine ×0.85); `.github/workflows/pages.yml` — inline Node assertion test step for weight-math regression coverage
+
+---
+
 ## Conditioning Corner
 
 The "Conditioning Corner" is the **Conditioning tab** on `dashboard.html`
