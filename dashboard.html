@@ -169,6 +169,29 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   box-shadow:0 4px 16px rgba(16,185,129,0.35);
 }
 
+/* ── COACH SECTION ── */
+.coach-section{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:18px;margin:0 18px 16px;overflow:hidden;
+}
+.coach-toggle{
+  display:flex;align-items:center;gap:10px;width:100%;
+  padding:14px 16px;background:none;border:none;cursor:pointer;text-align:left;
+}
+.coach-icon{font-size:18px;line-height:1;}
+.coach-label{flex:1;font-size:14px;font-weight:700;color:var(--text);letter-spacing:0.01em;}
+.coach-chevron{
+  font-size:20px;color:var(--muted2);font-weight:400;
+  transition:transform 0.2s;display:inline-block;
+}
+.coach-section.open .coach-chevron{transform:rotate(90deg);}
+.coach-body{display:none;padding:0 16px 16px;}
+.coach-section.open .coach-body{display:block;}
+.coach-note{
+  font-size:14px;line-height:1.65;color:var(--text2,var(--text));
+  border-top:1px solid var(--border2);padding-top:12px;
+}
+
 /* ── TOOLS GRID ── */
 .tools-wrap{padding:0 18px;margin-bottom:28px;}
 .tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -553,6 +576,18 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
       </div>
     </div>
 
+  </div>
+
+  <!-- Coach Claude (collapsed by default; fetches once per day) -->
+  <div class="coach-section" id="coachSection">
+    <button class="coach-toggle" id="coachToggle" onclick="toggleCoach()" aria-expanded="false">
+      <span class="coach-icon">🤖</span>
+      <span class="coach-label">Coach Note</span>
+      <span class="coach-chevron" id="coachChevron">›</span>
+    </button>
+    <div class="coach-body" id="coachBody">
+      <div class="coach-note" id="coachNote"></div>
+    </div>
   </div>
 
   <!-- Workout-history calendar (filled by mc-calendar.js) -->
@@ -1378,6 +1413,35 @@ if(window.MC_COLLECTIONS) MC_COLLECTIONS.renderDashboardCards();
 document.addEventListener('mc:published-programs',()=>{renderPublishedPrograms();renderCustomPrograms();loadState();});
 // honor ?tab= deep-link from the global bottom nav (mc-nav.js)
 (function(){var t=new URLSearchParams(location.search).get('tab');if(t&&document.getElementById('scr-'+t))switchTab(t);})();
+
+// ── Coach Claude section (collapsed by default; fetches once per day) ──────
+function toggleCoach(){
+  var sec=document.getElementById('coachSection');
+  if(!sec) return;
+  var opening=!sec.classList.contains('open');
+  sec.classList.toggle('open',opening);
+  var btn=document.getElementById('coachToggle');
+  if(btn) btn.setAttribute('aria-expanded',opening?'true':'false');
+  if(opening) loadCoachNote();
+}
+function loadCoachNote(){
+  var el=document.getElementById('coachNote');
+  if(!el) return;
+  var today=new Date().toISOString().slice(0,10);
+  try{
+    var cached=JSON.parse(localStorage.getItem('mc_coach_note_v1')||'null');
+    if(cached&&cached.date===today&&cached.note){el.textContent=cached.note;return;}
+  }catch(e){}
+  el.textContent='Analyzing your training…';
+  try{
+    if(!window.MC_SB||!MC_SB.callCoach){el.textContent='Sign in to unlock your coaching note.';return;}
+    MC_SB.callCoach().then(function(note){
+      if(!note){el.textContent='Log some workouts and check back for personalized insights.';return;}
+      el.textContent=note;
+      try{localStorage.setItem('mc_coach_note_v1',JSON.stringify({date:today,note:note}));}catch(e){}
+    }).catch(function(){el.textContent='Coach unavailable right now — check back later.';});
+  }catch(e){el.textContent='Coach unavailable right now — check back later.';}
+}
 </script>
 <script src="mc-supabase.js"></script>
 <script src="mc-sync.js"></script>

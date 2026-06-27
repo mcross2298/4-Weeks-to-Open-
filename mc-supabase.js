@@ -454,6 +454,31 @@
     });
   }
 
+  // ---- coach-claude Edge Function (AI coaching note, server-side Anthropic) -
+  // Sends the user's access token to the Edge Function, which reads 30 days of
+  // workout_logs and calls the Anthropic API (key never touches the browser).
+  // Resolves with a coaching note string, or null if the user is not signed in
+  // or the function is unavailable.
+  function callCoach() {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return c.auth.getSession().then(function (r) {
+        var session = r && r.data && r.data.session;
+        if (!session) return null;
+        return fetch(SUPABASE_URL + '/functions/v1/coach-claude', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + session.access_token
+          }
+        }).then(function (res) {
+          if (!res.ok) throw new Error('Coach call failed: ' + res.status);
+          return res.json();
+        }).then(function (data) { return data.note || null; });
+      });
+    });
+  }
+
   // ---- user_programs table (active program + start date) -------------------
   // program_data stores the full prog card; started_at is the ISO timestamp
   // from which training day count is calculated.
@@ -541,6 +566,7 @@
     getActiveProgram: getActiveProgram,
     logSet: logSet,
     getLastWeight: getLastWeight,
-    getWeeklyVolume: getWeeklyVolume
+    getWeeklyVolume: getWeeklyVolume,
+    callCoach: callCoach
   };
 })();
