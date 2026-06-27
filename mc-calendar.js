@@ -77,7 +77,7 @@
   var viewM = today.getMonth();
   var selKey = todayKey;
   var CAL_COLLAPSED_KEY = 'mc_cal_collapsed';
-  var collapsed = sessionStorage.getItem(CAL_COLLAPSED_KEY) === '1';
+  var collapsed = sessionStorage.getItem(CAL_COLLAPSED_KEY) !== '0';
 
   function setMonth(y, m) {
     // normalize overflow (m === 12 → next year, m === -1 → prev year)
