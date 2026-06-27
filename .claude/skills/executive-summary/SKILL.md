@@ -134,6 +134,12 @@ describe the change, and confirm before continuing.
 - Pure copy/wording fixes in one file
 - Trivial CSS colour or spacing tweaks in isolation
 
+**Never required for:**
+- Isolated bug fixes contained to 1–2 files with obvious, narrow scope
+- Single-line or single-value corrections (wrong colour, broken selector, off-by-one)
+- Typo fixes anywhere
+- Debugging / investigating an issue without writing code yet
+
 ---
 
 ## Example invocation

@@ -2,11 +2,15 @@
 
 ## Planning rule — executive summary required
 
-**Before implementing any non-trivial code change, invoke the `executive-summary`
-skill** (`.claude/skills/executive-summary/SKILL.md`) to produce a Word-style
-executive summary and wait for the owner's explicit approval ("approved" / "go")
-before writing or editing any file. See the skill for scope guidance on when this
-applies and when it can be skipped.
+**Invoke the `executive-summary` skill** (`.claude/skills/executive-summary/SKILL.md`)
+for: new features or UI additions, development phases, multi-file refactors,
+schema/pipeline changes, new HTML pages, and exercise-data structural changes.
+Produce a Word-style executive summary and wait for explicit approval ("approved" / "go")
+before writing or editing any file.
+
+**Skip the summary for:** isolated bug fixes contained to 1–2 files, single-line
+corrections, copy/wording tweaks, and trivial CSS adjustments. See the skill for
+full scope guidance.
 
 ## Repository relationship & deploy pipeline (IMPORTANT)
 
