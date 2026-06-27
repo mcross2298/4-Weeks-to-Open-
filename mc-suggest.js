@@ -27,6 +27,21 @@
   // big compound movements progress in 10 lb jumps; everything else 5 lb
   var BIG = /squat|deadlift|leg press|bench|overhead press|ohp|barbell press|military/i;
 
+  // Resolve equipment type for an exercise: catalog lookup first, then keyword fallback.
+  function equipCat(name) {
+    if (window.EXERCISES) {
+      var nl = (name || '').toLowerCase();
+      for (var i = 0; i < EXERCISES.length; i++) {
+        if (EXERCISES[i].name.toLowerCase() === nl) return EXERCISES[i].equipment || '';
+      }
+    }
+    var s = ' ' + (name || '').toLowerCase() + ' ';
+    if (/\bcable\b|pulldown|push-?down|rope |lat pull|face pull/.test(s)) return 'Cable';
+    if (/\bmachine\b|leg press|leg extension|leg curl|pec deck|abductor|adductor/.test(s)) return 'Machine';
+    if (/dumbbell|\bdb\b/.test(s)) return 'Dumbbell';
+    return 'Barbell';
+  }
+
   function topRep(setsStr) {
     // prescribed top reps for the scheme ("4x12" → 12, "12,10,8,8" → 8 (last))
     if (!setsStr) return 0;
@@ -75,6 +90,8 @@
       if (anyLogged && !allHit) return { w: W, why: 'repeat — chase the rep target' };
       if (anyLogged && allHit) {
         var inc = BIG.test(name || '') ? 10 : 5;
+        var eq = equipCat(name || '');
+        if (eq === 'Cable' || eq === 'Machine') inc = 2.5;
         return { w: W + inc, why: 'all reps hit last time — move up' };
       }
     }
@@ -97,13 +114,15 @@
       var seEl = card.querySelector('.ex-sets, [data-field="sets"], .lift-meta');
       var exId = (card.dataset && card.dataset.id) || cls.slice('mcl-hist-'.length);
 
-      var s = suggestFor(exId, nmEl ? nmEl.textContent : '', seEl ? seEl.textContent.trim() : '');
+      var nmStr = nmEl ? nmEl.textContent : '';
+      var s = suggestFor(exId, nmStr, seEl ? seEl.textContent.trim() : '');
       if (!s || !s.w) return;
 
       var hint = document.createElement('span');
       hint.className = 'mcl-suggest';
       hint.title = s.why;
-      hint.textContent = 'Suggested: ' + s.w + ' lb';
+      var perHand = equipCat(nmStr) === 'Dumbbell' ? ' per hand' : '';
+      hint.textContent = 'Suggested: ' + s.w + ' lb' + perHand;
       tgl.insertBefore(hint, hist);
     });
   }

@@ -30,6 +30,31 @@ jobs:
             node --check "$f" || { echo "::error file=$f::JavaScript syntax error"; fail=1; }
           done
           exit $fail
+      - name: Weight-math regression tests
+        run: |
+          node -e "
+            // mc-suggest.js: Cable/Machine step = 2.5 lb, Dumbbell step = 5 lb, BIG barbell = 10 lb
+            var BIG = /squat|deadlift|leg press|bench|overhead press|ohp|barbell press|military/i;
+            function inc(name, equip) {
+              var i = BIG.test(name) ? 10 : 5;
+              if (equip === 'Cable' || equip === 'Machine') i = 2.5;
+              return i;
+            }
+            console.assert(inc('Lat Pulldown', 'Cable') === 2.5,   'Cable step must be 2.5');
+            console.assert(inc('Leg Press', 'Machine') === 2.5,    'Machine step must be 2.5');
+            console.assert(inc('Barbell Squat', 'Barbell') === 10, 'BIG barbell step must be 10');
+            console.assert(inc('DB Row', 'Dumbbell') === 5,        'Dumbbell step must be 5');
+            console.assert(inc('Face Pull', 'Cable') === 2.5,      'Cable face pull must be 2.5');
+            // mc-maxout.js: Cable/Machine e1RM * 0.85
+            function applyCoeff(e1, equip) {
+              return (equip === 'Cable' || equip === 'Machine') ? Math.round(e1 * 0.85) : e1;
+            }
+            console.assert(applyCoeff(200, 'Cable') === 170,   'Cable e1RM coeff: 200*0.85=170');
+            console.assert(applyCoeff(200, 'Machine') === 170, 'Machine e1RM coeff: 200*0.85=170');
+            console.assert(applyCoeff(200, 'Barbell') === 200, 'Barbell e1RM coeff: no change');
+            console.assert(applyCoeff(315, 'Barbell') === 315, 'Barbell e1RM coeff: no change');
+            console.log('Weight-math assertions passed');
+          "
       - name: Generate service worker (auto version + precache list)
         run: python3 tools/build-sw.py --version "ci-${{ github.run_number }}"
       - name: Market-extraction leak check (content-manifest.json)

@@ -247,7 +247,8 @@ function filterExercises(){
 // exercises into EXERCISES before we render, so the count and list are accurate.
 document.getElementById("totalCount").textContent=EXERCISES.filter(function(e){return !isConditioning(e);}).length+" exercises across all programs";
 buildFilters();
-filterExercises();
+var _urlMuscle = new URLSearchParams(location.search).get('muscle');
+if (_urlMuscle) setFilter(_urlMuscle); else filterExercises();
 
 </script>
 
