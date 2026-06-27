@@ -454,6 +454,75 @@
     });
   }
 
+  // ---- push_subscriptions table (Web Push opt-in) --------------------------
+  function savePushSubscription(sub) {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return currentUser().then(function (u) {
+        if (!u) return null;
+        return c.from('push_subscriptions').upsert({
+          user_id: u.id,
+          endpoint: sub.endpoint,
+          p256dh: sub.p256dh,
+          auth: sub.auth
+        }, { onConflict: 'endpoint' }).then(function (r) { if (r.error) throw r.error; return r; });
+      });
+    });
+  }
+
+  function deletePushSubscription(endpoint) {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return currentUser().then(function (u) {
+        if (!u) return null;
+        return c.from('push_subscriptions').delete()
+          .eq('user_id', u.id).eq('endpoint', endpoint)
+          .then(function (r) { if (r.error) throw r.error; return r; });
+      });
+    });
+  }
+
+  // Calls the push-notify Edge Function to send a Web Push to the current user.
+  // Best-effort — caller should .catch() silently.
+  function sendPush(opts) {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return c.auth.getSession().then(function (r) {
+        var session = r && r.data && r.data.session;
+        if (!session) return null;
+        return fetch(SUPABASE_URL + '/functions/v1/push-notify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + session.access_token
+          },
+          body: JSON.stringify({ title: opts.title || 'MC Training', body: opts.body || '' })
+        }).then(function (res) { return res.json(); });
+      });
+    });
+  }
+
+  // All-time max weight for an exercise (used for PR detection).
+  function getMaxWeight(exercise) {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return currentUser().then(function (u) {
+        if (!u) return null;
+        return c.from('workout_logs')
+          .select('weight_lbs')
+          .eq('user_id', u.id)
+          .eq('exercise', exercise)
+          .order('weight_lbs', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+          .then(function (r) {
+            if (r.error) throw r.error;
+            return r.data ? r.data.weight_lbs : null;
+          });
+      });
+    });
+  }
+
   // ---- coach-claude Edge Function (AI coaching note, server-side Anthropic) -
   // Sends the user's access token to the Edge Function, which reads 30 days of
   // workout_logs and calls the Anthropic API (key never touches the browser).
@@ -567,6 +636,10 @@
     logSet: logSet,
     getLastWeight: getLastWeight,
     getWeeklyVolume: getWeeklyVolume,
-    callCoach: callCoach
+    getMaxWeight: getMaxWeight,
+    callCoach: callCoach,
+    savePushSubscription: savePushSubscription,
+    deletePushSubscription: deletePushSubscription,
+    sendPush: sendPush
   };
 })();

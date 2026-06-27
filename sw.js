@@ -333,6 +333,40 @@ self.addEventListener('fetch', event => {
     );
 });
 
+// Push — show notification from server-sent milestone alert
+self.addEventListener('push', event => {
+    let title = 'MC Training', body = 'You have a new milestone!', icon = './icon.svg';
+    try {
+        if (event.data) {
+            const d = event.data.json();
+            if (d.title) title = d.title;
+            if (d.body)  body  = d.body;
+            if (d.icon)  icon  = d.icon;
+        }
+    } catch (_) {}
+    event.waitUntil(
+        self.registration.showNotification(title, {
+            body,
+            icon,
+            badge: './icon.svg',
+            tag: 'mc-milestone',
+            renotify: true
+        })
+    );
+});
+
+// Notification click — open the dashboard
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+            const dash = list.find(c => c.url.includes('dashboard.html'));
+            if (dash) return dash.focus();
+            return clients.openWindow('./dashboard.html');
+        })
+    );
+});
+
 // Message — force update
 self.addEventListener('message', event => {
     if (event.data === 'skipWaiting') self.skipWaiting();

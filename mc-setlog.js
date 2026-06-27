@@ -122,24 +122,41 @@
     var rpeVal = rpeEl ? (rpeEl.dataset.rpe || '') : '';
     save(exId, sn, wVal, rVal, rpeVal);
     // Best-effort Supabase write — builds durable per-set history for the
-    // auto-weight pre-fill and fatigue flag. Never blocks the UI.
+    // auto-weight pre-fill, fatigue flag, and PR milestone detection.
+    // Never blocks the UI; all Supabase calls are fire-and-forget.
     try {
       if (window.MC_SB && MC_SB.configured && MC_SB.logSet) {
         var nmEl = card.querySelector('.ex-name, .ss-name, .lift-name, .var-name');
         var exName = origNameOf(nmEl);
         var muscle = '';
         try { if (window.MC_EXCATALOG) muscle = MC_EXCATALOG.classify(exName); } catch (me) {}
-        MC_SB.logSet({
+        var wNum = wVal ? (parseFloat(wVal) || null) : null;
+        var logEntry = {
           session_id:   SESSION_ID,
           exercise:     exName,
           muscle:       muscle,
           set_number:   sn,
-          weight_lbs:   wVal ? (parseFloat(wVal) || null) : null,
+          weight_lbs:   wNum,
           reps:         rVal ? (parseInt(rVal, 10) || null) : null,
           rpe:          rpeVal || null,
           workout_name: document.title || '',
           program_id:   (window.activeProg && activeProg.id) || ''
-        }).catch(function () {});
+        };
+        // Get previous max weight BEFORE inserting, then check for PR
+        var prevMaxP = (wNum && MC_SB.getMaxWeight) ? MC_SB.getMaxWeight(exName) : Promise.resolve(null);
+        prevMaxP.then(function (prevMax) {
+          MC_SB.logSet(logEntry).then(function () {
+            // PR detected: new weight exceeds historical max
+            if (wNum && (prevMax === null || wNum > prevMax) && MC_SB.sendPush) {
+              MC_SB.sendPush({
+                title: '🏆 New PR — ' + exName + '!',
+                body: wNum + ' lbs — your best lift ever. Keep pushing!'
+              }).catch(function () {});
+            }
+          }).catch(function () {});
+        }).catch(function () {
+          MC_SB.logSet(logEntry).catch(function () {});
+        });
       }
     } catch (e) {}
     ck.classList.add('done'); ck.textContent = '✓'; row.classList.add('done-row');

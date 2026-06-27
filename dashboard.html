@@ -172,6 +172,56 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
   box-shadow:0 4px 16px rgba(16,185,129,0.35);
 }
 
+/* ── PUSH ALERTS CHIP ── */
+.push-chip{
+  display:none;align-items:center;gap:8px;
+  margin:0 18px 14px;padding:11px 14px;
+  background:var(--surface);border:1px solid var(--border2);border-radius:14px;
+  cursor:pointer;
+}
+.push-chip.visible{display:flex;}
+.push-chip-icon{font-size:18px;line-height:1;}
+.push-chip-text{flex:1;font-size:13px;font-weight:700;color:var(--text);}
+.push-chip-sub{font-size:11px;color:var(--muted2);font-weight:500;display:block;margin-top:1px;}
+.push-chip-btn{
+  font-size:12px;font-weight:800;color:var(--gold);
+  background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.25);
+  border-radius:8px;padding:5px 10px;white-space:nowrap;
+}
+
+/* ── MC WRAPPED CARD ── */
+.wrapped-card{
+  margin:0 18px 20px;
+  background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(30,30,40,0));
+  border:1px solid rgba(212,175,55,0.22);border-radius:20px;padding:18px 18px 16px;
+  display:none;
+}
+.wrapped-card.visible{display:block;}
+.wrapped-header{
+  display:flex;align-items:center;gap:10px;margin-bottom:14px;
+}
+.wrapped-title{font-size:15px;font-weight:900;color:var(--gold);letter-spacing:0.02em;flex:1;}
+.wrapped-refresh{
+  font-size:18px;cursor:pointer;color:var(--muted2);
+  background:none;border:none;padding:4px;line-height:1;
+}
+.wrapped-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+}
+.wrapped-stat{
+  background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:12px 14px;
+}
+.wrapped-stat-num{font-size:22px;font-weight:900;color:var(--text);line-height:1;}
+.wrapped-stat-lbl{font-size:10px;font-weight:700;color:var(--muted2);letter-spacing:0.06em;margin-top:3px;text-transform:uppercase;}
+.wrapped-muscle{
+  grid-column:1/-1;
+  display:flex;align-items:center;gap:12px;
+}
+.wrapped-muscle-bar{
+  flex:1;height:4px;background:var(--border2);border-radius:2px;overflow:hidden;
+}
+.wrapped-muscle-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 0.5s;}
+
 /* ── COACH SECTION ── */
 .coach-section{
   background:var(--surface);border:1px solid var(--border2);
@@ -598,6 +648,47 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 
   <!-- Weekly recap (filled by mc-recap.js when there's history) -->
   <div id="recapCard"></div>
+
+  <!-- Push alerts opt-in chip (hidden until supported + not yet granted) -->
+  <div class="push-chip" id="pushChip" onclick="onEnablePush()">
+    <span class="push-chip-icon">🔔</span>
+    <div class="push-chip-text">
+      Milestone Alerts
+      <span class="push-chip-sub">PRs, streaks &amp; program finishes</span>
+    </div>
+    <span class="push-chip-btn">Enable</span>
+  </div>
+
+  <!-- MC Wrapped — your training stats at a glance -->
+  <div class="wrapped-card" id="wrappedCard">
+    <div class="wrapped-header">
+      <span class="wrapped-title">⚡ Your Stats</span>
+      <button class="wrapped-refresh" id="wrappedRefresh" onclick="loadWrapped()" title="Refresh">↻</button>
+    </div>
+    <div class="wrapped-grid" id="wrappedGrid">
+      <div class="wrapped-stat">
+        <div class="wrapped-stat-num" id="wDays">—</div>
+        <div class="wrapped-stat-lbl">Training Days</div>
+      </div>
+      <div class="wrapped-stat">
+        <div class="wrapped-stat-num" id="wSets">—</div>
+        <div class="wrapped-stat-lbl">Sets Logged</div>
+      </div>
+      <div class="wrapped-stat wrapped-muscle" id="wMuscleStat">
+        <div>
+          <div class="wrapped-stat-num" id="wMuscle">—</div>
+          <div class="wrapped-stat-lbl">Top Muscle</div>
+        </div>
+        <div class="wrapped-muscle-bar">
+          <div class="wrapped-muscle-fill" id="wMuscleBar" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="wrapped-stat">
+        <div class="wrapped-stat-num" id="wProgram">—</div>
+        <div class="wrapped-stat-lbl">Active Program</div>
+      </div>
+    </div>
+  </div>
 
   <!-- Training Tools -->
   <div class="sec-header">
@@ -1445,8 +1536,97 @@ function loadCoachNote(){
     }).catch(function(){el.textContent='Coach unavailable right now — check back later.';});
   }catch(e){el.textContent='Coach unavailable right now — check back later.';}
 }
+
+// ── Push notification chip (appears when supported + not yet granted) ────────
+(function(){
+  function initPushChip(){
+    if(!window.MC_PUSH||!MC_PUSH.isSupported()) return;
+    if(MC_PUSH.getState()==='granted'){maybeCheckStreak();return;}
+    if(MC_PUSH.getState()==='denied') return;
+    var chip=document.getElementById('pushChip');
+    if(chip) chip.classList.add('visible');
+  }
+  // Run after scripts load
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',initPushChip);
+  } else { setTimeout(initPushChip,1200); }
+})();
+
+function onEnablePush(){
+  if(!window.MC_PUSH) return;
+  MC_PUSH.requestAndSubscribe().then(function(sub){
+    var chip=document.getElementById('pushChip');
+    if(chip) chip.classList.remove('visible');
+    if(sub) maybeCheckStreak();
+  }).catch(function(){});
+}
+
+// ── 7-day streak milestone detection ────────────────────────────────────────
+function maybeCheckStreak(){
+  try{
+    var log=JSON.parse(localStorage.getItem('mc_workout_log_v1')||'[]');
+    if(!Array.isArray(log)||log.length<7) return;
+    var today=new Date(); today.setHours(0,0,0,0);
+    var streak=0;
+    for(var i=0;i<7;i++){
+      var d=new Date(today); d.setDate(d.getDate()-i);
+      var ds=d.toDateString();
+      if(log.some(function(e){return e.date&&new Date(e.date).toDateString()===ds;})){streak++;}
+      else break;
+    }
+    if(streak<7) return;
+    // Don't spam — only push once per streak detection per day
+    var streakKey='mc_streak_push_'+new Date().toISOString().slice(0,10);
+    if(localStorage.getItem(streakKey)) return;
+    localStorage.setItem(streakKey,'1');
+    if(window.MC_SB&&MC_SB.sendPush){
+      MC_SB.sendPush({title:'🔥 7-Day Streak!',body:'You\'ve trained 7 days in a row. Incredible consistency — keep it going!'}).catch(function(){});
+    }
+  }catch(e){}
+}
+
+// ── MC Wrapped — training stats card ────────────────────────────────────────
+function loadWrapped(){
+  try{
+    var log=JSON.parse(localStorage.getItem('mc_workout_log_v1')||'[]');
+    var days=new Set();
+    (Array.isArray(log)?log:[]).forEach(function(e){if(e.date)days.add(new Date(e.date).toDateString());});
+    var dayCount=days.size;
+    if(dayCount===0) return; // hide card when no data
+    var card=document.getElementById('wrappedCard');
+    if(card) card.classList.add('visible');
+
+    document.getElementById('wDays').textContent=dayCount;
+
+    // Active program name (short)
+    try{
+      var prog=JSON.parse(localStorage.getItem('mc_active_prog')||'null');
+      var progEl=document.getElementById('wProgram');
+      if(progEl) progEl.textContent=prog&&prog.name?prog.name.slice(0,12):'—';
+    }catch(e){}
+
+    // Sets + top muscle from Supabase (non-blocking)
+    if(window.MC_SB&&MC_SB.getWeeklyVolume){
+      MC_SB.getWeeklyVolume(365).then(function(counts){
+        var total=Object.values(counts).reduce(function(a,b){return a+b;},0);
+        var setsEl=document.getElementById('wSets');
+        if(setsEl) setsEl.textContent=total||'—';
+        if(!total) return;
+        var top=Object.entries(counts).sort(function(a,b){return b[1]-a[1];})[0];
+        if(!top) return;
+        var muscleEl=document.getElementById('wMuscle');
+        if(muscleEl) muscleEl.textContent=top[0].split(' ')[0]; // first word
+        var bar=document.getElementById('wMuscleBar');
+        if(bar) bar.style.width=Math.round(top[1]/total*100)+'%';
+      }).catch(function(){});
+    }
+  }catch(e){}
+}
+// Render on load after scripts settle
+setTimeout(loadWrapped,1500);
 </script>
 <script src="mc-supabase.js"></script>
+<script src="mc-push.js"></script>
 <script src="mc-sync.js"></script>
 <script src="mc-backup-status.js"></script>
 <script src="mc-account.js"></script>
