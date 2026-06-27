@@ -535,7 +535,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
           <div class="hero-badge" id="heroBadge">Active</div>
           <div class="hero-ring" id="heroRing">
             <div class="hero-ring-num" id="heroDay">—</div>
-            <div class="hero-ring-lbl">SPLIT</div>
+            <div class="hero-ring-lbl" id="heroRingLbl">DAY</div>
           </div>
         </div>
         <div class="hero-name" id="heroName"></div>
@@ -935,21 +935,39 @@ function allProgs(){
 function loadState(){
   try{
     const s=localStorage.getItem(STORE);
-    if(!s)return;
-    activeProg=JSON.parse(s);
-    // a pinned custom program may have been edited since — re-resolve it
-    if(activeProg&&activeProg.cprogId&&window.MCPrograms){
-      const cur=MCPrograms.get(activeProg.cprogId);
-      if(cur){activeProg=MCPrograms.asProgCard(cur);localStorage.setItem(STORE,JSON.stringify(activeProg));}
-      else{activeProg=null;localStorage.removeItem(STORE);}
+    if(s){
+      activeProg=JSON.parse(s);
+      // a pinned custom program may have been edited since — re-resolve it
+      if(activeProg&&activeProg.cprogId&&window.MCPrograms){
+        const cur=MCPrograms.get(activeProg.cprogId);
+        if(cur){activeProg=MCPrograms.asProgCard(cur);localStorage.setItem(STORE,JSON.stringify(activeProg));}
+        else{activeProg=null;localStorage.removeItem(STORE);}
+      }
+      // a pinned published program may have been re-published since — re-resolve
+      // from the mirror, but keep the stored card if the mirror is still cold
+      if(activeProg&&activeProg.pubId&&window.MCPub){
+        const pub=MCPub.get(activeProg.pubId);
+        if(pub){activeProg=MCPub.asProgCard(pub);localStorage.setItem(STORE,JSON.stringify(activeProg));}
+      }
+      renderHero();
     }
-    // a pinned published program may have been re-published since — re-resolve
-    // from the mirror, but keep the stored card if the mirror is still cold
-    if(activeProg&&activeProg.pubId&&window.MCPub){
-      const pub=MCPub.get(activeProg.pubId);
-      if(pub){activeProg=MCPub.asProgCard(pub);localStorage.setItem(STORE,JSON.stringify(activeProg));}
+  }catch(e){}
+  // Non-blocking Supabase hydration: if authenticated, pull startedAt from the
+  // cloud so the Day Navigator survives browser clears and works cross-device.
+  try{
+    if(window.MC_SB&&MC_SB.configured){
+      MC_SB.getActiveProgram().then(function(sbProg){
+        if(!sbProg||!sbProg.startedAt) return;
+        // Use the cloud record only when it has a newer (or the only) startedAt.
+        if(!activeProg||(activeProg.id===sbProg.id&&(!activeProg.startedAt||sbProg.startedAt>activeProg.startedAt))){
+          if(activeProg) sbProg.id=activeProg.id; // keep local id resolution
+          if(activeProg&&activeProg.startedAt&&sbProg.startedAt<activeProg.startedAt) return;
+          activeProg=Object.assign({},activeProg||{},{startedAt:sbProg.startedAt});
+          try{localStorage.setItem(STORE,JSON.stringify(activeProg));}catch(e2){}
+          renderHero();
+        }
+      }).catch(function(){});
     }
-    renderHero();
   }catch(e){}
 }
 
@@ -973,7 +991,16 @@ function renderHero(){
   card.style.boxShadow='0 8px 28px '+activeProg.color+'22';
   document.getElementById('heroName').textContent=activeProg.name;
   document.getElementById('heroDesc').textContent=activeProg.desc;
-  document.getElementById('heroDay').textContent=activeProg.splits.length;
+  const di=heroDayCount(activeProg);
+  if(di){
+    document.getElementById('heroDay').textContent=di.day;
+    document.getElementById('heroRingLbl').textContent='WK '+di.week;
+    document.getElementById('heroBadge').textContent='Day '+di.day+' · Week '+di.week;
+  }else{
+    document.getElementById('heroDay').textContent=activeProg.splits.length;
+    document.getElementById('heroRingLbl').textContent='SPLIT';
+    document.getElementById('heroBadge').textContent='Active';
+  }
   const ring=document.getElementById('heroRing');
   ring.style.borderTopColor=activeProg.color;
   ring.style.borderRightColor=activeProg.color;
@@ -993,6 +1020,27 @@ function renderHero(){
     // In-progress session → promote the muted CTA into a green Resume pill.
     tap.classList.toggle('resume', !!nx.resumeHref);
   }
+}
+
+// Count unique training days logged since the program's start date.
+// Returns { day, week } where day = sessions since startedAt (deduped by
+// calendar date) and week = which program cycle the user is in.
+// Returns null when no startedAt is set (backward compat for old saves).
+function heroDayCount(prog){
+  if(!prog||!prog.startedAt) return null;
+  const since=Date.parse(prog.startedAt);
+  const daySet=new Set();
+  try{
+    (JSON.parse(localStorage.getItem('mc_workout_log_v1')||'[]')||[]).forEach(function(e){
+      const t=Date.parse(e.date)||0;
+      if(t>=since) daySet.add(new Date(t).toDateString());
+    });
+  }catch(e){}
+  const count=daySet.size;
+  const day=Math.max(1,count);
+  const splitsLen=(prog.splits&&prog.splits.length)||1;
+  const week=Math.max(1,Math.ceil(day/splitsLen));
+  return {day:day,week:week};
 }
 
 // Does a split label (e.g. "Back & Shoulders") share a muscle/keyword with a
@@ -1132,12 +1180,22 @@ function selectProg(id){
 
 function confirmProg(){
   if(!tempSel)return;
-  activeProg=allProgs().find(p=>p.id===tempSel);
+  const sel=allProgs().find(p=>p.id===tempSel);
+  if(!sel)return;
+  // Preserve startedAt when re-confirming the same program; reset on switch.
+  if(activeProg&&activeProg.id===tempSel&&activeProg.startedAt){
+    sel.startedAt=activeProg.startedAt;
+  }else{
+    sel.startedAt=new Date().toISOString();
+  }
+  activeProg=sel;
   try{localStorage.setItem(STORE,JSON.stringify(activeProg));}catch(e){}
   document.getElementById('psOverlay').classList.remove('open');
   renderHero();
   // shift the chrome accent to the newly pinned program (mc-theme.js)
   try{document.dispatchEvent(new CustomEvent('mc:program-changed'));}catch(e){}
+  // best-effort Supabase sync so start date survives browser clears
+  try{if(window.MC_SB&&MC_SB.configured)MC_SB.saveActiveProgram(activeProg).catch(function(){});}catch(e){}
 }
 
 // ── OFFLINE ──

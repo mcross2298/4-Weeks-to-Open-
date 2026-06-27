@@ -385,6 +385,44 @@
       } catch (e) {}
     });
   }
+  // ---- user_programs table (active program + start date) -------------------
+  // program_data stores the full prog card; started_at is the ISO timestamp
+  // from which training day count is calculated.
+  function saveActiveProgram(progCard) {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return currentUser().then(function (u) {
+        if (!u) return null;
+        return c.from('user_programs').upsert({
+          user_id: u.id,
+          program_id: progCard.id,
+          program_name: progCard.name,
+          started_at: progCard.startedAt || new Date().toISOString(),
+          program_data: progCard,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' }).then(function (r) { if (r.error) throw r.error; return r; });
+      });
+    });
+  }
+
+  function getActiveProgram() {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return currentUser().then(function (u) {
+        if (!u) return null;
+        return c.from('user_programs').select('program_data, started_at')
+          .eq('user_id', u.id).maybeSingle()
+          .then(function (r) {
+            if (r.error) throw r.error;
+            if (!r.data) return null;
+            var card = Object.assign({}, r.data.program_data || {});
+            card.startedAt = r.data.started_at;
+            return card;
+          });
+      });
+    });
+  }
+
   // is the signed-in user a canary tester? (RLS exposes only the caller's own row)
   function isTester() {
     return ready.then(function (c) {
@@ -429,6 +467,8 @@
     upsertCanaryNaming: upsertCanaryNaming,
     removeCanaryNaming: removeCanaryNaming,
     onCanaryChange: onCanaryChange,
-    isTester: isTester
+    isTester: isTester,
+    saveActiveProgram: saveActiveProgram,
+    getActiveProgram: getActiveProgram
   };
 })();
