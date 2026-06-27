@@ -62,3 +62,107 @@ The owner-only PM inline-editing layer (`mc-pm-inline.js`) covers it:
   (scope_id = routine id) — no dedicated Supabase section,
 - a "Layout & Theme" line (🎨 chip) scoped to the `conditioning` layout view
   (`cards` / `compact` / `grid`, defined in `mc-layout.js`).
+
+---
+
+## Weekly Layout Standard — 7-Day 5-On 2-Off Architecture
+
+> **Permanent rule.** All program HTML pages using this schedule pattern must
+> implement a full 7-card day layout. Plain-text rest/active-rest banners are
+> forbidden. Every day must be a `.day-card` UI component.
+
+### Schedule pattern
+- **Label:** `5-on 2-off` (replace all legacy `4-on 2-off` labels)
+- **Day count:** 7 cards per week — Days 1–5 are training/conditioning; Days 6–7 are recovery
+
+### Day specification
+
+| Day | Card Title | Subtext | Card Type |
+|-----|-----------|---------|-----------|
+| 1 | Chest & Biceps | `Day 1 · 10 exercises · 5-on 2-off` | Standard (Expandable list) |
+| 2 | Shoulders & Triceps | `Day 2 · 10 exercises · 5-on 2-off` | Standard (Expandable list) |
+| 3 | Back & Traps | `Day 3 · 10 exercises · 5-on 2-off` | Standard (Expandable list) |
+| 4 | Legs | `Day 4 · 10 exercises · 5-on 2-off` | Standard (Expandable list) |
+| 5 | Conditioning Day | `Day 5 · Select Workout · 5-on 2-off` | Interactive dropdown / link to Conditioning Corner |
+| 6 | Active Rest Day | `Day 6 · Recovery Plan · 5-on 2-off` | Info card: Low Intensity Cardio · Stretching · Mobility Work |
+| 7 | Rest Day | `Day 7 · Full Rest · 5-on 2-off` | Info card: Full Rest · Deep Sleep & Active Recovery · Optimized Nutrition |
+
+### Card rendering rules
+- **Day 5 (Conditioning):** Render as `.day-card` with amber (`#d97706`) accent. Expandable
+  panel shows a "Browse Conditioning Corner →" link to `dashboard.html?tab=conditioning`.
+  No static exercise list — pulls from the Conditioning Corner library at runtime.
+- **Day 6 (Active Rest):** Render as `.day-card` with teal (`#0d9488`) accent. Expandable
+  panel shows three activity rows (icon + name + description). Not a training card — no
+  exercise counter, no rest timers.
+- **Day 7 (Rest):** Render as `.day-card` with slate (`#334155`) accent. Expandable
+  panel shows three recovery-focus rows. No exercise counter, no rest timers.
+- **Footer order:** PROGRAM SUMMARY → navigation bar → Finish Workout banner must
+  appear below the Day 7 card. No content may overlap or clip Day 7.
+
+---
+
+## Gym Programming Rules & Station-Anchoring Constraints
+
+> **Permanent constraint applied to all future program builds.** Every superset,
+> triset, and giant set must satisfy exactly one of the four approved archetypes.
+> These rules exist to eliminate equipment hogging in a commercial gym.
+
+### The Station-Anchoring Principle
+
+All supersets, trisets, and giant sets must be **completely station-anchored**.
+The trainee completes the entire sequence within a single, minimal footprint —
+one piece of equipment or one square area — without walking across the floor.
+
+**Forbidden pairings (never do this):**
+- Two different major machines in the same block
+- A machine + a separate cable column
+- A barbell rack + a distant bench movement
+
+### Approved archetypes
+
+**A. DB / Bench Anchor**
+Entirely dumbbell-based movements at a single adjustable bench.
+> Example: Seated DB Shoulder Press → Incline DB Fly → Incline DB Hex Press
+
+**B. DB / Fixed-Barbell Combo**
+A single fixed-weight barbell or EZ-bar paired with dumbbells or bodyweight
+at a single bench station.
+> Example: EZ-Bar Skull Crusher → DB Hammer Curl (seated at same bench)
+
+**C. Single-Machine Anchor**
+A machine movement paired **only** with a bodyweight exercise or a dumbbell
+exercise where the DBs are brought directly to that machine before starting.
+> Example: Leg Press → BW Calf Raises on the platform → DB Goblet Squat next to machine
+
+**D. Single-Cable Column Anchor**
+One cable stack with multiple attachments, or a cable movement paired with
+a DB/bodyweight exercise executed directly in front of that same machine.
+> Example: Tricep Rope Pushdown → Overhead Cable Extension (same pulley) → BW Push-Ups
+
+### Intensity & time-efficiency drivers
+
+- **Mechanical Drop Sets:** Transition immediately from a weaker to a stronger
+  movement using the same weight and equipment (e.g., DB Fly → DB Hex Press,
+  same dumbbells).
+- **Rest-Pause / Myo-Reps:** Single-station or machine movements only —
+  no weight changes or setup adjustments required.
+
+### Applied workout structure (10 exercises/session)
+
+| Position | Exercise type | Station rule |
+|----------|--------------|--------------|
+| 1–2 | Compound (standalone) | No superset — station-anchoring N/A |
+| 3–5 | TRI-SET | Must satisfy one archetype (A/B/C/D) |
+| 6–7 | SUPERSET | Must satisfy one archetype (A/B/C/D) |
+| 8 | CLUSTER SET | Single station only |
+| 9 | DROP SET | Single station only |
+| 10 | FINISHER | Bodyweight only — no station constraint |
+
+### Day-type archetype assignments (reference)
+
+| Day | Tri-Set Archetype | Superset Archetype |
+|-----|------------------|--------------------|
+| Chest & Biceps | D (Single Cable Column) | B (EZ-Bar + DB at bench) |
+| Shoulders & Triceps | D (Single Cable Column) | D (Single Cable Column) |
+| Back & Traps | A (DB / Bench Anchor) | C (Machine + DB pre-staged) |
+| Legs | C (Leg Press or Machine Anchor) | C (Machine + DB or BW) |

@@ -89,7 +89,7 @@ buildTimerFloat();
 // ── PROGRAM DATA ──
 const DATA = {
   name: "EVERYTHING BUT THE KITCHEN SINK",
-  schedule: "4-Week · 4-On 2-Off · Chest/Bis · Shoulders/Tris · Back/Traps · Legs",
+  schedule: "4-Week · 5-On 2-Off · Chest/Bis · Shoulders/Tris · Back/Traps · Legs · Conditioning",
   weeks: [
     {
       id:"w1", label:"Week 1",
@@ -98,11 +98,11 @@ const DATA = {
         {type:"training",label:"Day 1",session:"Chest & Biceps",color:"#e11d48",icon:"💪",exercises:[
           {name:"BB Flat Bench Press",sets:"12, 12, 10, 8",rest:"90 sec",tag:null,notes:"Compound 1 — Standard. Drive through mid-chest. Control the descent."},
           {name:"Incline DB Press",sets:"12, 10, 8, 8",rest:"90 sec",tag:null,tempo:"3-1-1",notes:"Compound 2 — Tempo: 3s lower, 1s pause at chest, 1s press."},
-          {name:"Pec Deck Machine",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"No rest — flow directly to next exercise."},
-          {name:"Cable Low-to-High Fly",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Cables set at low pulley. No rest."},
-          {name:"Incline DB Curl",sets:"15, 12, 10",rest:"2 min",tag:"TRI-SET",notes:"Complete tri-set rounds, then rest 2 min."},
-          {name:"Machine Preacher Curl",sets:"8, 10, 12, 15",rest:"—",tag:"SUPERSET",notes:"REVERSE PYRAMID — heaviest set first, reduce load each set."},
-          {name:"Cable Rope Hammer Curl",sets:"12, 10, 8, 8",rest:"60 sec",tag:"SUPERSET",notes:"60 sec rest after both superset exercises are complete."},
+          {name:"Cable Mid-Chest Fly",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Single cable column · Pulley at mid-chest height, arms wide arc to center. No rest."},
+          {name:"Cable High-to-Low Fly",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Raise pulley to top, pull down and across to hip. Same cable column. No rest."},
+          {name:"Cable Rope Curl",sets:"15, 12, 10",rest:"2 min",tag:"TRI-SET",notes:"Lower pulley to floor, rope attachment, supinate at peak. Same cable column. Rest 2 min after full tri-set round."},
+          {name:"Seated EZ-Bar Curl",sets:"8, 10, 12, 15",rest:"—",tag:"SUPERSET",notes:"REVERSE PYRAMID — EZ-bar seated at bench, start heavy. No rest between A and B."},
+          {name:"DB Hammer Curl",sets:"12, 10, 8, 8",rest:"60 sec",tag:"SUPERSET",notes:"DBs pre-staged at same bench. Neutral grip, no supination. 60 sec rest after superset."},
           {name:"DB Concentration Curl",sets:"15, 12, 12 → 3×10",rest:"90 sec",tag:"CLUSTER",notes:"3 base sets (15,12,12). After final base set: 3 cluster micro-sets of 10 reps, 15 sec rest between each micro-set. Total: 6 sets."},
           {name:"Cable Chest Fly",sets:"12, 10, 8, 8 → AMRAP, AMRAP",rest:"90 sec",tag:"DROP SET",notes:"4 base sets (12,10,8,8). Immediately after final base set: drop weight 25% → AMRAP. Drop again 25% → AMRAP. No rest between drops. Total: 6 sets."},
           {name:"Push-Ups",sets:"AMRAP × 3",rest:"45 sec",tag:"FINISHER",notes:"3 rounds to failure. Strict form — no partial reps. 45 sec rest between rounds."},
@@ -110,11 +110,11 @@ const DATA = {
         {type:"training",label:"Day 2",session:"Shoulders & Triceps",color:"#7c3aed",icon:"🔥",exercises:[
           {name:"BB Overhead Press",sets:"12, 12, 10, 8",rest:"90 sec",tag:null,notes:"Compound 1 — Standard. Seated or standing. Brace core throughout."},
           {name:"DB Arnold Press",sets:"12, 10, 8, 8",rest:"90 sec",tag:null,tempo:"2-0-2",notes:"Compound 2 — Tempo: 2s lower, no pause, 2s press. Rotate palms."},
-          {name:"DB Lateral Raise",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Lead with elbows. No rest."},
-          {name:"Cable Face Pull",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Rope to forehead, elbows high, external rotate. No rest."},
-          {name:"Machine Lateral Raise",sets:"15, 12, 10",rest:"2 min",tag:"TRI-SET",notes:"Rest 2 min after completing all 3 tri-set exercises."},
-          {name:"Cable Tricep Pushdown (Rope)",sets:"8, 10, 12, 15",rest:"—",tag:"SUPERSET",notes:"REVERSE PYRAMID — start heavy, reduce load each set. Elbows pinned."},
-          {name:"DB Skull Crusher",sets:"12, 10, 8, 8",rest:"60 sec",tag:"SUPERSET",notes:"Lower to forehead. Elbow flare minimized. 60 sec rest after superset."},
+          {name:"Cable Lateral Raise",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Single cable column · Low pulley, single arm, lead with elbow. No rest."},
+          {name:"Cable Face Pull",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"High pulley, rope to forehead, elbows flared, external rotate. Same cable column. No rest."},
+          {name:"Cable Rope Pushdown",sets:"15, 12, 10",rest:"2 min",tag:"TRI-SET",notes:"High pulley, rope attachment, flare at bottom. Same cable column. Rest 2 min after full tri-set round."},
+          {name:"Cable Overhead Rope Extension",sets:"8, 10, 12, 15",rest:"—",tag:"SUPERSET",notes:"REVERSE PYRAMID — face away from cable, high pulley, rope overhead. Full stretch at bottom. No rest between A and B."},
+          {name:"Cable Tricep Pushdown (Bar)",sets:"12, 10, 8, 8",rest:"60 sec",tag:"SUPERSET",notes:"Spin to face cable, straight bar attachment, same high pulley. Elbows pinned. 60 sec rest after superset."},
           {name:"Machine Shoulder Press",sets:"15, 12, 12 → 3×10",rest:"90 sec",tag:"CLUSTER",notes:"3 base sets (15,12,12). Add 3 cluster micro-sets of 10 reps with 15 sec rest each. Total: 6 sets."},
           {name:"BB Close-Grip Bench Press",sets:"12, 10, 8, 8 → AMRAP, AMRAP",rest:"90 sec",tag:"DROP SET",notes:"4 base sets. After final base set: drop 20-25% → AMRAP twice. No rest between drops. Total: 6 sets."},
           {name:"Diamond Push-Ups",sets:"AMRAP × 3",rest:"45 sec",tag:"FINISHER",notes:"3 rounds to failure. Elbows tight to ribs throughout."},
@@ -122,11 +122,11 @@ const DATA = {
         {type:"training",label:"Day 3",session:"Back & Traps",color:"#0891b2",icon:"🏋️",exercises:[
           {name:"BB Bent-Over Row",sets:"12, 12, 10, 8",rest:"90 sec",tag:null,notes:"Compound 1 — Standard. Overhand grip. Retract scapula at top."},
           {name:"Weighted Pull-Ups",sets:"10, 8, 6, 6",rest:"90 sec",tag:null,tempo:"3-1-0",notes:"Compound 2 — Tempo: 3s lower, 1s hold at top, explode up."},
-          {name:"Wide-Grip Lat Pulldown",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Full stretch at top. Drive elbows to hips. No rest."},
-          {name:"Neutral-Grip Seated Cable Row",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Elbows tight. Hard squeeze at peak. No rest."},
-          {name:"DB Rear Delt Fly",sets:"15, 12, 10",rest:"2-3 min",tag:"TRI-SET",notes:"Chest supported on incline bench. Rest 2-3 min after tri-set."},
-          {name:"Hammer Strength Machine Row",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Unilateral. Full stretch, hard peak squeeze."},
-          {name:"DB Shrug",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID — start heavy. Hold 2 sec at top each rep. 60 sec rest after superset."},
+          {name:"Single-Arm DB Row",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Incline bench anchor · Brace on bench, row to hip. No rest."},
+          {name:"DB Chest-Supported Rear Delt Fly",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Same incline bench, chest down, DBs hanging. Fly to shoulder height. No rest."},
+          {name:"DB Face Pull",sets:"15, 12, 10",rest:"2-3 min",tag:"TRI-SET",notes:"Same incline bench support — rear delt fly with external rotation at peak. Same DBs. Rest 2-3 min after full tri-set round."},
+          {name:"Hammer Strength Machine Row",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Unilateral. Full stretch, hard peak squeeze. Pre-stage DB at machine foot before starting. No rest between A and B."},
+          {name:"DB Shrug",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID — DB pre-staged at machine. 2 sec hold at top each rep. Archetype C: same machine station. 60 sec rest after superset."},
           {name:"Cable Straight-Arm Pulldown",sets:"15, 12, 12 → 3×10",rest:"90 sec",tag:"CLUSTER",notes:"3 base sets (15,12,12). Add 3 cluster micro-sets of 10 reps, 15 sec rest each. Total: 6 sets."},
           {name:"BB Upright Row",sets:"12, 10, 8, 8 → AMRAP, AMRAP",rest:"90 sec",tag:"DROP SET",notes:"4 base sets. After final base set: drop 20-25% → AMRAP twice. Total: 6 sets."},
           {name:"Machine Rear Delt Fly",sets:"AMRAP × 3",rest:"45 sec",tag:"FINISHER",notes:"3 rounds to failure. Control the negative on every rep."},
@@ -134,17 +134,18 @@ const DATA = {
         {type:"training",label:"Day 4",session:"Legs",color:"#16a34a",icon:"🦵",exercises:[
           {name:"BB Back Squat",sets:"12, 12, 10, 8",rest:"90 sec",tag:null,notes:"Compound 1 — Standard. Full depth. Brace core throughout."},
           {name:"Romanian Deadlift",sets:"12, 10, 8, 8",rest:"90 sec",tag:null,tempo:"3-1-1",notes:"Compound 2 — Tempo: 3s lower, 1s hamstring stretch, 1s rise. Feel the stretch."},
-          {name:"Leg Press",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Shoulder-width stance. Full range. No rest."},
-          {name:"DB Walking Lunge",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Per leg count. Control descent. No rest."},
-          {name:"Cable Pull-Through",sets:"15, 12, 10",rest:"2-3 min",tag:"TRI-SET",notes:"Hip hinge pattern. Drive hips through at top. Rest 2-3 min after tri-set."},
-          {name:"Hack Squat Machine",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Feet shoulder-width. Full depth — knees tracking toes."},
-          {name:"DB Stiff-Leg Deadlift",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID — feel hamstring stretch on every rep. 60 sec rest after superset."},
+          {name:"Leg Press",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Shoulder-width stance. Full range. No rest — stay on machine for next exercise."},
+          {name:"BW Calf Raise (Platform)",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Remain on leg press platform — toes on edge, full range, pause at top. No rest."},
+          {name:"DB Goblet Squat",sets:"15, 12, 10",rest:"2-3 min",tag:"TRI-SET",notes:"DB pre-staged at machine foot before starting. Heels slightly elevated, drive knees out. Archetype C: same machine station. Rest 2-3 min after full tri-set round."},
+          {name:"Hack Squat Machine",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Feet shoulder-width. Full depth — knees tracking toes. No rest between A and B."},
+          {name:"DB Romanian Deadlift",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID — DB pre-staged at hack squat machine foot. Hip hinge, feel hamstring stretch. Archetype C: same station. 60 sec rest after superset."},
           {name:"Leg Extension",sets:"15, 12, 12 → 3×10",rest:"90 sec",tag:"CLUSTER",notes:"3 base sets (15,12,12). Add 3 cluster micro-sets of 10 with 15 sec rest each. Total: 6 sets."},
           {name:"Leg Curl (Cable Ankle)",sets:"12, 10, 8, 8 → AMRAP, AMRAP",rest:"90 sec",tag:"DROP SET",notes:"4 base sets. Drop weight 25% twice after final set → AMRAP each drop. Total: 6 sets."},
           {name:"DB Goblet Squat",sets:"AMRAP × 3",rest:"45 sec",tag:"FINISHER",notes:"Heels elevated if available. 3 rounds to failure. 45 sec rest."},
         ]},
-        {type:"rest",label:"Day 5"},
-        {type:"activerest",label:"Day 6"},
+        {type:"conditioning",label:"Day 5",session:"Conditioning Day",color:"#d97706"},
+        {type:"activerest",label:"Day 6",session:"Active Rest Day",color:"#0d9488"},
+        {type:"rest",label:"Day 7",session:"Rest Day",color:"#334155"},
       ]
     },
     {
@@ -154,11 +155,11 @@ const DATA = {
         {type:"training",label:"Day 1",session:"Chest & Biceps",color:"#e11d48",icon:"💪",exercises:[
           {name:"Incline BB Bench Press",sets:"12, 10, 8, 8",rest:"90 sec",tag:null,notes:"Compound 1 — Standard. Keep arch, drive through upper chest."},
           {name:"Flat DB Fly",sets:"12, 10, 8, 8",rest:"90 sec",tag:null,tempo:"2-1-2",notes:"Compound 2 — Tempo: 2s open, 1s stretch, 2s close. Control the arc."},
-          {name:"Seated Machine Chest Press",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"No rest between tri-set exercises."},
-          {name:"Cable High-to-Low Fly",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Cables at shoulder height, pull down and across. No rest."},
-          {name:"EZ-Bar Preacher Curl",sets:"15, 12, 10",rest:"2 min",tag:"TRI-SET",notes:"Full range — dead hang to full contraction. Rest 2 min after tri-set."},
-          {name:"Cable Preacher Curl",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Peak squeeze at top. Controlled negative."},
-          {name:"DB Incline Curl",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID. Supinate fully at top. 60 sec rest after superset."},
+          {name:"Cable Low-to-High Fly",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Single cable column · Low pulley, arc up and across to chest height. No rest."},
+          {name:"Cable Mid-Chest Crossover",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Mid pulley, cross at chest height, add slight squeeze. Same cable column. No rest."},
+          {name:"Cable Rope Hammer Curl",sets:"15, 12, 10",rest:"2 min",tag:"TRI-SET",notes:"Lower pulley to floor, rope, neutral-grip curl. Same cable column. Rest 2 min after full tri-set round."},
+          {name:"EZ-Bar Preacher Curl",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"EZ-bar at incline bench used as preacher support. Full dead-hang stretch at bottom. No rest between A and B."},
+          {name:"DB Incline Curl",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID — recline same bench to incline, DBs pre-staged. Supinate fully at top. 60 sec rest after superset."},
           {name:"Pec Deck Machine",sets:"15, 12, 12 → 3×11",rest:"90 sec",tag:"CLUSTER",notes:"3 base sets (15,12,12). Add 3 cluster micro-sets of 11 reps with 15 sec rest each. Total: 6 sets."},
           {name:"BB Curl",sets:"12, 10, 8, 8 → AMRAP, AMRAP",rest:"90 sec",tag:"DROP SET",notes:"4 base sets. Drop 20% twice after final set → true AMRAP each drop. Total: 6 sets."},
           {name:"Wide Push-Ups",sets:"AMRAP × 3",rest:"45 sec",tag:"FINISHER",notes:"Hands wider than shoulder-width. 3 rounds to failure."},
@@ -166,11 +167,11 @@ const DATA = {
         {type:"training",label:"Day 2",session:"Shoulders & Triceps",color:"#7c3aed",icon:"🔥",exercises:[
           {name:"DB Seated Overhead Press",sets:"12, 10, 8, 8",rest:"90 sec",tag:null,notes:"Compound 1 — Standard. Neutral spine. Full range of motion."},
           {name:"BB Push Press",sets:"10, 8, 6, 6",rest:"90 sec",tag:null,tempo:"2-0-1",notes:"Compound 2 — Tempo: 2s lower, slight knee dip, explosive drive. Catch and control."},
-          {name:"DB Front Raise",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Alternating or bilateral. Control the negative. No rest."},
-          {name:"Cable Lateral Raise",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Single arm, cable at hip. Lead with elbow. No rest."},
-          {name:"DB Bent-Over Rear Delt Fly",sets:"15, 12, 10",rest:"2 min",tag:"TRI-SET",notes:"Chest parallel to floor. Rest 2 min after tri-set."},
-          {name:"Overhead Cable Tricep Extension",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Rope attachment. Full overhead stretch at top."},
-          {name:"BB Skull Crusher",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID. Lower to forehead — controlled. 60 sec rest after superset."},
+          {name:"Cable Front Raise",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Single cable column · Low pulley, rope or bar, raise to eye level. No rest."},
+          {name:"Cable Lateral Raise",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Hip-height pulley, single arm, lead with elbow. Same cable column. No rest."},
+          {name:"Cable Rear Delt Face Pull",sets:"15, 12, 10",rest:"2 min",tag:"TRI-SET",notes:"High pulley, rope to forehead, elbows flared. Same cable column. Rest 2 min after full tri-set round."},
+          {name:"Overhead Cable Rope Extension",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Face away from cable, high pulley, rope overhead — full stretch at bottom, extend to lockout. No rest between A and B."},
+          {name:"Cable Rope Pushdown",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID — spin to face cable, same high pulley, rope. Elbows pinned. 60 sec rest after superset."},
           {name:"Machine Tricep Dip",sets:"15, 12, 12 → 3×11",rest:"90 sec",tag:"CLUSTER",notes:"3 base sets (15,12,12). Add 3 cluster micro-sets of 11 reps with 15 sec rest each. Total: 6 sets."},
           {name:"Cable Lateral Raise (Drop)",sets:"12, 10, 8, 8 → AMRAP, AMRAP",rest:"90 sec",tag:"DROP SET",notes:"4 base sets. Drop 20-25% twice after final set → AMRAP each drop. Total: 6 sets."},
           {name:"Bodyweight Dips",sets:"AMRAP × 3",rest:"45 sec",tag:"FINISHER",notes:"3 rounds to failure. Full depth, slight forward lean for tricep focus."},
@@ -178,11 +179,11 @@ const DATA = {
         {type:"training",label:"Day 3",session:"Back & Traps",color:"#0891b2",icon:"🏋️",exercises:[
           {name:"T-Bar Row",sets:"12, 10, 8, 8",rest:"90 sec",tag:null,notes:"Compound 1 — Standard. Chest supported. Full range — dead hang to hard squeeze."},
           {name:"Barbell Deadlift",sets:"8, 6, 4, 4",rest:"90 sec",tag:null,tempo:"3-1-1",notes:"Compound 2 — Tempo: 3s lower, 1s pause at floor, 1s rise. Hinge, not squat."},
-          {name:"Single-Arm Cable Row",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Elbow drives to hip. No rest."},
-          {name:"DB Chest-Supported Row",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Incline bench, DB hanging. No rest."},
-          {name:"Cable Face Pull",sets:"15, 12, 10",rest:"2-3 min",tag:"TRI-SET",notes:"Rope to forehead, elbows high. Rest 2-3 min after tri-set."},
-          {name:"Machine Pullover",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Lat-focused. Full stretch at top, drive elbows to hips."},
-          {name:"BB Shrug",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID — start heavy. 2 sec hold at top each rep. 60 sec after superset."},
+          {name:"Single-Arm DB Row",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Incline bench anchor · Brace with free hand, row to hip. No rest."},
+          {name:"DB Chest-Supported Row",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Same incline bench, chest down, both arms, elbows to hips. No rest."},
+          {name:"DB Rear Delt Fly",sets:"15, 12, 10",rest:"2-3 min",tag:"TRI-SET",notes:"Same incline bench, chest supported. Fly to shoulder height. Rest 2-3 min after full tri-set round."},
+          {name:"Machine Pullover",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Full lat stretch at top, drive elbows to hips. Pre-stage DB at machine before starting. No rest between A and B."},
+          {name:"DB Shrug",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID — DB pre-staged at pullover machine. 2 sec hold at peak. Archetype C: same machine station. 60 sec rest after superset."},
           {name:"Underhand Lat Pulldown",sets:"15, 12, 12 → 3×11",rest:"90 sec",tag:"CLUSTER",notes:"3 base sets. Add 3 cluster micro-sets of 11 reps with 15 sec rest each. Total: 6 sets."},
           {name:"Seated Cable Row",sets:"12, 10, 8, 8 → AMRAP, AMRAP",rest:"90 sec",tag:"DROP SET",notes:"Wide bar. Drop 25% twice after final base set → true AMRAP each drop. Total: 6 sets."},
           {name:"Cable Rope Face Pull",sets:"AMRAP × 3",rest:"45 sec",tag:"FINISHER",notes:"3 rounds to failure. High elbows, full external rotation."},
@@ -190,17 +191,18 @@ const DATA = {
         {type:"training",label:"Day 4",session:"Legs",color:"#16a34a",icon:"🦵",exercises:[
           {name:"Front BB Squat",sets:"10, 8, 6, 6",rest:"90 sec",tag:null,notes:"Compound 1 — Standard. Front rack or crossed-arm. Knees track toes."},
           {name:"BB Sumo Deadlift",sets:"10, 8, 6, 6",rest:"90 sec",tag:null,tempo:"3-1-1",notes:"Compound 2 — Tempo: 3s lower, 1s pause at floor, 1s drive. Wide stance."},
-          {name:"Leg Extension",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Pause 1 sec at full extension. No rest."},
-          {name:"Seated Leg Curl",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Full range. No rest."},
-          {name:"DB Bulgarian Split Squat",sets:"15, 12, 10",rest:"2-3 min",tag:"TRI-SET",notes:"Rear foot elevated. Per leg. Rest 2-3 min after tri-set."},
-          {name:"Smith Machine Squat",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Feet slightly forward. Full depth — control the descent."},
-          {name:"DB Stiff-Leg Deadlift",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID. Feel hamstring stretch throughout. 60 sec rest after superset."},
+          {name:"Leg Extension",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Pause 1 sec at full extension. No rest — stay at machine."},
+          {name:"BW Sissy Squat",sets:"15, 12, 10",rest:"—",tag:"TRI-SET",notes:"Stand immediately next to machine for balance. Lean back, knees forward, full quad stretch. No rest."},
+          {name:"DB Goblet Squat",sets:"15, 12, 10",rest:"2-3 min",tag:"TRI-SET",notes:"DB pre-staged next to leg extension machine. Heels slightly elevated, drive knees out. Archetype C: same station. Rest 2-3 min after full tri-set round."},
+          {name:"Smith Machine Squat",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Feet slightly forward. Full depth — control the descent. No rest between A and B."},
+          {name:"DB Romanian Deadlift",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID — DB pre-staged at Smith Machine station. Hip hinge, hamstring stretch. Archetype C: same station. 60 sec rest after superset."},
           {name:"Leg Press",sets:"15, 12, 12 → 3×11",rest:"90 sec",tag:"CLUSTER",notes:"3 base sets (15,12,12). Add 3 cluster micro-sets of 11 reps with 15 sec rest each. Total: 6 sets."},
           {name:"Leg Extension (Drop)",sets:"12, 10, 8, 8 → AMRAP, AMRAP",rest:"90 sec",tag:"DROP SET",notes:"4 base sets. Drop 25% twice after final set → true AMRAP each drop. Total: 6 sets."},
           {name:"BW Jump Squats",sets:"AMRAP × 3",rest:"45 sec",tag:"FINISHER",notes:"Explosive! Land soft. 3 rounds to failure."},
         ]},
-        {type:"rest",label:"Day 5"},
-        {type:"activerest",label:"Day 6"},
+        {type:"conditioning",label:"Day 5",session:"Conditioning Day",color:"#d97706"},
+        {type:"activerest",label:"Day 6",session:"Active Rest Day",color:"#0d9488"},
+        {type:"rest",label:"Day 7",session:"Rest Day",color:"#334155"},
       ]
     },
     {
@@ -210,11 +212,11 @@ const DATA = {
         {type:"training",label:"Day 1",session:"Chest & Biceps",color:"#e11d48",icon:"💪",exercises:[
           {name:"Decline BB Bench Press",sets:"15, 12, 10, 10",rest:"90 sec",tag:null,notes:"Compound 1 — Standard. Lower chest focus. Controlled descent."},
           {name:"DB Pullover",sets:"10, 8, 6, 6",rest:"90 sec",tag:null,tempo:"3-0-2",notes:"Compound 2 — Tempo: 3s arc overhead, no pause, 2s controlled pull back. Lat + chest."},
-          {name:"Seated Machine Chest Press",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"No rest between tri-set exercises."},
-          {name:"Cable Mid-Fly",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Cables at chest height. Full range. No rest."},
-          {name:"DB Zottman Curl",sets:"12, 10, 8",rest:"2-3 min",tag:"TRI-SET",notes:"Supinate on the way up, pronate on the way down. Rest 2-3 min after tri-set."},
-          {name:"BB Preacher Curl",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Full dead-hang stretch at bottom. No swinging."},
-          {name:"Cable Curl",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID. Straight bar. Peak squeeze. 60 sec rest after superset."},
+          {name:"Cable Mid-Fly",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Single cable column · Chest-height pulleys, full arc, squeeze at center. No rest."},
+          {name:"Cable High-to-Low Crossover",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Raise pulley to top, pull down and across to opposite hip. Same cable column. No rest."},
+          {name:"Cable Rope Concentration Curl",sets:"12, 10, 8",rest:"2-3 min",tag:"TRI-SET",notes:"Lower pulley to floor, single-arm rope curl, peak squeeze. Same cable column. Rest 2-3 min after full tri-set round."},
+          {name:"EZ-Bar Skull Crusher",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Lie on flat bench, EZ-bar to forehead — elbows stationary, controlled descent. No rest between A and B."},
+          {name:"DB Zottman Curl",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID — DBs pre-staged at same bench, seated upright. Supinate up, pronate down. 60 sec rest after superset."},
           {name:"Incline DB Curl",sets:"15, 12, 12 → 3×12",rest:"90 sec",tag:"CLUSTER",notes:"3 base sets (15,12,12). Add 3 cluster micro-sets of 12 reps with 15 sec rest each. Total: 6 sets."},
           {name:"Cable Chest Fly (Drop)",sets:"12, 10, 8, 8 → AMRAP, AMRAP",rest:"90 sec",tag:"DROP SET",notes:"4 base sets. Drop 25% twice after final set → absolute AMRAP each drop. Total: 6 sets."},
           {name:"Incline Push-Ups",sets:"AMRAP × 3",rest:"45 sec",tag:"FINISHER",notes:"Hands elevated on bench. Upper chest focus. 3 rounds to failure."},
@@ -222,11 +224,11 @@ const DATA = {
         {type:"training",label:"Day 2",session:"Shoulders & Triceps",color:"#7c3aed",icon:"🔥",exercises:[
           {name:"Smith Machine OHP",sets:"15, 12, 10, 10",rest:"90 sec",tag:null,notes:"Compound 1 — Standard. Guide the bar path. Brace core."},
           {name:"Seated DB Overhead Press",sets:"12, 10, 8, 8",rest:"90 sec",tag:null,tempo:"2-1-2",notes:"Compound 2 — Tempo: 2s lower, 1s hold at jaw, 2s press. No lockout bounce."},
-          {name:"DB Lateral Raise",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Slight elbow bend. Lead with elbows. No rest."},
-          {name:"Cable Front Raise",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Rope or straight bar. Straight arms. No rest."},
-          {name:"BB Skull Crusher",sets:"12, 10, 8",rest:"2-3 min",tag:"TRI-SET",notes:"EZ-bar to forehead. Elbows stationary. Rest 2-3 min after tri-set."},
-          {name:"Machine OHP",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Guided path. Full range — feel the shoulder stretch at bottom."},
-          {name:"DB Tricep Kickback",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID. Full lockout every rep. 60 sec rest after superset."},
+          {name:"Cable Lateral Raise",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Single cable column · Low pulley, single arm, slow and controlled. No rest."},
+          {name:"Cable Upright Row",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Low pulley, straight bar, elbows drive high. Same cable column. No rest."},
+          {name:"Cable Rope Pushdown",sets:"12, 10, 8",rest:"2-3 min",tag:"TRI-SET",notes:"High pulley, rope attachment, full lockout at bottom. Same cable column. Rest 2-3 min after full tri-set round."},
+          {name:"Cable Straight-Bar Pushdown",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"High pulley, straight bar, elbows pinned to sides. No rest between A and B."},
+          {name:"Overhead Cable Rope Extension",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID — face away from cable, same high pulley, rope overhead. Full stretch at bottom. 60 sec rest after superset."},
           {name:"Cable Pushdown (Bar)",sets:"15, 12, 12 → 3×12",rest:"90 sec",tag:"CLUSTER",notes:"3 base sets (15,12,12). Add 3 cluster micro-sets of 12 reps with 15 sec rest each. Total: 6 sets."},
           {name:"Machine Lateral Raise (Drop)",sets:"12, 10, 8, 8 → AMRAP, AMRAP",rest:"90 sec",tag:"DROP SET",notes:"4 base sets. Drop 25% twice after final set → absolute AMRAP each drop. Total: 6 sets."},
           {name:"Close-Grip Push-Ups",sets:"AMRAP × 3",rest:"45 sec",tag:"FINISHER",notes:"Elbows tight to ribcage. 3 rounds to failure."},
@@ -234,11 +236,11 @@ const DATA = {
         {type:"training",label:"Day 3",session:"Back & Traps",color:"#0891b2",icon:"🏋️",exercises:[
           {name:"BB Pendlay Row",sets:"15, 12, 10, 10",rest:"90 sec",tag:null,notes:"Compound 1 — Standard. Dead stop on floor each rep. Explosive concentric pull."},
           {name:"Cable Seated Row (Wide Grip)",sets:"10, 8, 6, 6",rest:"90 sec",tag:null,tempo:"3-1-1",notes:"Compound 2 — Tempo: 3s extend, 1s stretch, 1s row. Full range of motion."},
-          {name:"Single-Arm DB Row",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Elbow drives to ceiling. Full stretch at bottom. No rest."},
-          {name:"Machine Row",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Squeeze hard at peak contraction. No rest."},
-          {name:"DB Face Pull",sets:"12, 10, 8",rest:"2-3 min",tag:"TRI-SET",notes:"Lying on incline bench, rear delt fly motion. Rest 2-3 min after tri-set."},
-          {name:"Wide-Grip Pulldown",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Full dead hang at top. Drive elbows to hip pockets."},
-          {name:"DB Trap Raise",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID. Scapular elevation, slight forward lean. 60 sec after superset."},
+          {name:"Single-Arm DB Row",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Incline bench anchor · Elbow drives to ceiling, full stretch at bottom. No rest."},
+          {name:"DB Rear Delt Fly",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Same incline bench, chest supported. Control the negative. No rest."},
+          {name:"DB Chest-Supported Trap Raise",sets:"12, 10, 8",rest:"2-3 min",tag:"TRI-SET",notes:"Same incline bench — shrug motion with scapular elevation, slight forward lean. Rest 2-3 min after full tri-set round."},
+          {name:"Wide-Grip Lat Pulldown",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Full dead hang at top, drive elbows to hip pockets. Pre-stage DB at machine before starting. No rest between A and B."},
+          {name:"DB Shrug",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID — DB pre-staged at pulldown machine. 2 sec hold at top. Archetype C: same machine station. 60 sec rest after superset."},
           {name:"Machine Rear Delt Fly",sets:"15, 12, 12 → 3×12",rest:"90 sec",tag:"CLUSTER",notes:"3 base sets (15,12,12). Add 3 cluster micro-sets of 12 reps with 15 sec rest each. Total: 6 sets."},
           {name:"BB Shrug (Drop)",sets:"12, 10, 8, 8 → AMRAP, AMRAP",rest:"90 sec",tag:"DROP SET",notes:"4 base sets. Drop 20% twice after final set → AMRAP. 2-sec squeeze at top. Total: 6 sets."},
           {name:"Wide-Grip Pull-Ups",sets:"AMRAP × 3",rest:"45 sec",tag:"FINISHER",notes:"Full hang to chin over bar. 3 rounds to failure."},
@@ -246,17 +248,18 @@ const DATA = {
         {type:"training",label:"Day 4",session:"Legs",color:"#16a34a",icon:"🦵",exercises:[
           {name:"BB Pause Squat",sets:"15, 12, 10, 10",rest:"90 sec",tag:null,notes:"Compound 1 — Standard. 2-sec pause at parallel. Builds explosive drive off the hole."},
           {name:"BB Hip Thrust",sets:"12, 10, 8, 8",rest:"90 sec",tag:null,tempo:"2-1-2",notes:"Compound 2 — Tempo: 2s lower, 1s hold at top, 2s return. Full glute squeeze at peak."},
-          {name:"Hack Squat",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Heels elevated if available. Full depth. No rest."},
-          {name:"Cable Hip Abduction",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Standing, cable at ankle. Control the return. No rest."},
-          {name:"DB Single-Leg RDL",sets:"12, 10, 8",rest:"2-3 min",tag:"TRI-SET",notes:"Per leg. Balance focus — slow and controlled. Rest 2-3 min after tri-set."},
-          {name:"Seated Leg Curl",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Full range. Squeeze hard at full contraction."},
-          {name:"DB Alternating Lunge",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID. Per leg count. 60 sec rest after superset."},
+          {name:"Hack Squat",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Heels elevated if available. Full depth. No rest — stay on machine."},
+          {name:"BW Calf Raise (Hack Squat Platform)",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Remain on platform — toes on edge, full range, pause at top. No rest."},
+          {name:"DB Single-Leg Romanian Deadlift",sets:"12, 10, 8",rest:"2-3 min",tag:"TRI-SET",notes:"DB pre-staged at machine foot. Per leg, balance focus, slow and controlled. Archetype C: same station. Rest 2-3 min after full tri-set round."},
+          {name:"Seated Leg Curl",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Full range. Squeeze hard at full contraction. No rest between A and B."},
+          {name:"DB Single-Leg Stiff-Leg Deadlift",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID — DB pre-staged at leg curl machine. Per leg, feel hamstring stretch. Archetype C: same station. 60 sec rest after superset."},
           {name:"Smith Machine Squat",sets:"15, 12, 12 → 3×12",rest:"90 sec",tag:"CLUSTER",notes:"3 base sets (15,12,12). Add 3 cluster micro-sets of 12 reps with 15 sec rest each. Total: 6 sets."},
           {name:"Leg Press (Drop)",sets:"12, 10, 8, 8 → AMRAP, AMRAP",rest:"90 sec",tag:"DROP SET",notes:"4 base sets. Drop 25% twice after final set → absolute AMRAP each drop. Total: 6 sets."},
           {name:"BW Squat",sets:"AMRAP × 3",rest:"45 sec",tag:"FINISHER",notes:"Heels elevated if possible. Full depth. 3 rounds to failure."},
         ]},
-        {type:"rest",label:"Day 5"},
-        {type:"activerest",label:"Day 6"},
+        {type:"conditioning",label:"Day 5",session:"Conditioning Day",color:"#d97706"},
+        {type:"activerest",label:"Day 6",session:"Active Rest Day",color:"#0d9488"},
+        {type:"rest",label:"Day 7",session:"Rest Day",color:"#334155"},
       ]
     },
     {
@@ -266,11 +269,11 @@ const DATA = {
         {type:"training",label:"Day 1",session:"Chest & Biceps",color:"#e11d48",icon:"💪",exercises:[
           {name:"Plate-Loaded Machine Chest Press",sets:"10, 8, 6, 6",rest:"90 sec",tag:null,notes:"Compound 1 — Standard. Heavy. Full range of motion — feel the stretch."},
           {name:"Incline Cable Press",sets:"12, 10, 8, 8",rest:"90 sec",tag:null,tempo:"3-0-1",notes:"Compound 2 — Tempo: 3s lower, no pause, explosive press. Upper chest focus."},
-          {name:"Decline DB Press",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Lower DBs with full control. No rest."},
-          {name:"Cable Crossover",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Cables at mid-chest. Full squeeze at cross. No rest."},
-          {name:"Cable Preacher Curl",sets:"12, 10, 8",rest:"2-3 min",tag:"TRI-SET",notes:"Full range. No swinging. Rest 2-3 min after tri-set."},
-          {name:"DB Hammer Curl",sets:"8, 10, 12, 15",rest:"—",tag:"SUPERSET",notes:"REVERSE PYRAMID — neutral grip. No supination. Brachialis focus."},
-          {name:"Machine Curl",sets:"12, 10, 8, 8",rest:"60 sec",tag:"SUPERSET",notes:"Full stretch and full squeeze. 60 sec rest after superset."},
+          {name:"Cable High-to-Low Fly",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Single cable column · High pulley, pull down and cross to hip. No rest."},
+          {name:"Cable Crossover",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Mid pulley, full squeeze at cross — add slight crunch. Same cable column. No rest."},
+          {name:"Cable Rope Curl Twist",sets:"12, 10, 8",rest:"2-3 min",tag:"TRI-SET",notes:"Lower pulley to floor, rope, curl and supinate hard at peak. Same cable column. Rest 2-3 min after full tri-set round."},
+          {name:"DB Hammer Curl",sets:"8, 10, 12, 15",rest:"—",tag:"SUPERSET",notes:"REVERSE PYRAMID — neutral grip at bench, start heavy. No rest between A and B."},
+          {name:"DB Incline Curl",sets:"12, 10, 8, 8",rest:"60 sec",tag:"SUPERSET",notes:"Recline bench to incline, DBs pre-staged. Supinate fully at peak. Same bench station. 60 sec rest after superset."},
           {name:"BB Curl",sets:"15, 12, 12 → 3×12",rest:"90 sec",tag:"CLUSTER",notes:"3 base sets (15,12,12). Add 3 cluster micro-sets of 12 reps with 15 sec rest each. Total: 6 sets."},
           {name:"Pec Deck Machine (Drop)",sets:"12, 10, 8, 8 → AMRAP, AMRAP",rest:"90 sec",tag:"DROP SET",notes:"4 base sets. Drop weight 25% twice after final set → true AMRAP each drop. Total: 6 sets."},
           {name:"Wide Push-Ups",sets:"AMRAP × 3",rest:"45 sec",tag:"FINISHER",notes:"Hands wider than shoulder-width. 3 rounds to failure."},
@@ -278,11 +281,11 @@ const DATA = {
         {type:"training",label:"Day 2",session:"Shoulders & Triceps",color:"#7c3aed",icon:"🔥",exercises:[
           {name:"BB Seated Overhead Press",sets:"10, 8, 6, 6",rest:"90 sec",tag:null,notes:"Compound 1 — Standard. Heavy. Brace core — no lower back arch."},
           {name:"Landmine Press",sets:"12, 10, 8, 8",rest:"90 sec",tag:null,tempo:"2-0-2",notes:"Compound 2 — Tempo: 2s lower, no pause, 2s press. Unilateral or bilateral."},
-          {name:"Machine Rear Delt Fly",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Lead with elbows, not hands. No rest."},
-          {name:"Cable Lateral Raise",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Cable at hip height. Slow and controlled. No rest."},
-          {name:"DB Overhead Tricep Extension",sets:"12, 10, 8",rest:"2-3 min",tag:"TRI-SET",notes:"Two hands on one DB. Full overhead stretch at bottom. Rest 2-3 min after tri-set."},
-          {name:"Cable Pushdown (V-Bar)",sets:"8, 10, 12, 15",rest:"—",tag:"SUPERSET",notes:"REVERSE PYRAMID. Elbows stationary, pinned to sides. Full lockout."},
-          {name:"DB Lateral Raise (SS)",sets:"12, 10, 8, 8",rest:"60 sec",tag:"SUPERSET",notes:"Slight bend in elbow. 60 sec rest after superset."},
+          {name:"Cable Rear Delt Face Pull",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Single cable column · High pulley, rope, elbows flared, external rotate. No rest."},
+          {name:"Cable Lateral Raise",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Low pulley, single arm, slow and controlled. Same cable column. No rest."},
+          {name:"Cable V-Bar Pushdown",sets:"12, 10, 8",rest:"2-3 min",tag:"TRI-SET",notes:"High pulley, V-bar attachment, elbows pinned. Same cable column. Rest 2-3 min after full tri-set round."},
+          {name:"Cable Rope Pushdown",sets:"8, 10, 12, 15",rest:"—",tag:"SUPERSET",notes:"REVERSE PYRAMID — high pulley rope, elbows stationary, full lockout. No rest between A and B."},
+          {name:"Overhead Cable Single-Arm Extension",sets:"12, 10, 8, 8",rest:"60 sec",tag:"SUPERSET",notes:"Face away, same cable stack, single arm overhead. Full stretch at bottom. Archetype D: same cable column. 60 sec rest after superset."},
           {name:"Machine Shoulder Press",sets:"15, 12, 12 → 3×12",rest:"90 sec",tag:"CLUSTER",notes:"3 base sets (15,12,12). Add 3 cluster micro-sets of 12 reps with 15 sec rest each. Total: 6 sets."},
           {name:"BB Overhead Tricep Extension",sets:"12, 10, 8, 8 → AMRAP, AMRAP",rest:"90 sec",tag:"DROP SET",notes:"4 base sets. Drop 20-25% twice after final set → AMRAP. Total: 6 sets."},
           {name:"Decline Push-Ups",sets:"AMRAP × 3",rest:"45 sec",tag:"FINISHER",notes:"Feet elevated on bench. 3 rounds to failure."},
@@ -290,11 +293,11 @@ const DATA = {
         {type:"training",label:"Day 3",session:"Back & Traps",color:"#0891b2",icon:"🏋️",exercises:[
           {name:"BB Seal Row",sets:"12, 10, 8, 8",rest:"90 sec",tag:null,notes:"Compound 1 — Standard. Chest supported on bench. Dead hang at bottom — no momentum."},
           {name:"Close-Grip Lat Pulldown",sets:"10, 8, 6, 6",rest:"90 sec",tag:null,tempo:"3-1-0",notes:"Compound 2 — Tempo: 3s lower to full stretch, 1s hold at bottom, explosive pull."},
-          {name:"Machine Row",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Elbow to hip. Hard squeeze. No rest."},
-          {name:"Single-Arm DB Row",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Brace on bench. Elbow drives to ceiling. No rest."},
-          {name:"Cable Rope Pull-Down",sets:"12, 10, 8",rest:"2-3 min",tag:"TRI-SET",notes:"Rope attachment, pull to upper chest. Rest 2-3 min after tri-set."},
-          {name:"Machine Pullover",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Full lat stretch. Drive elbows toward hips on concentric."},
-          {name:"DB Shrug",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID. 2-sec hold at top every rep. 60 sec rest after superset."},
+          {name:"DB Chest-Supported Row",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Incline bench anchor · Chest down, both arms, elbows to hips. No rest."},
+          {name:"Single-Arm DB Row",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Same incline bench, brace with free hand. Elbow drives to ceiling. No rest."},
+          {name:"DB Rear Delt Fly",sets:"12, 10, 8",rest:"2-3 min",tag:"TRI-SET",notes:"Same incline bench, chest supported. Full range. Rest 2-3 min after full tri-set round."},
+          {name:"Machine Pullover",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Full lat stretch, drive elbows toward hips on concentric. Pre-stage DBs at machine before starting. No rest between A and B."},
+          {name:"DB Shrug",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID — DBs pre-staged at machine. 2-sec hold at top every rep. Archetype C: same machine station. 60 sec rest after superset."},
           {name:"Wide-Grip Lat Pulldown",sets:"15, 12, 12 → 3×12",rest:"90 sec",tag:"CLUSTER",notes:"3 base sets (15,12,12). Add 3 cluster micro-sets of 12 reps with 15 sec rest each. Total: 6 sets."},
           {name:"Cable Row (Drop)",sets:"12, 10, 8, 8 → AMRAP, AMRAP",rest:"90 sec",tag:"DROP SET",notes:"4 base sets. Drop 25% twice after final set → absolute AMRAP each drop. Total: 6 sets."},
           {name:"Inverted Row",sets:"AMRAP × 3",rest:"45 sec",tag:"FINISHER",notes:"Bar at hip height, heels on floor. 3 rounds to failure."},
@@ -302,17 +305,18 @@ const DATA = {
         {type:"training",label:"Day 4",session:"Legs",color:"#16a34a",icon:"🦵",exercises:[
           {name:"BB Box Squat",sets:"10, 8, 6, 6",rest:"90 sec",tag:null,notes:"Compound 1 — Standard. Sit back onto box. 1-sec pause. Drive through heels."},
           {name:"Cable Pull-Through",sets:"12, 10, 8, 8",rest:"90 sec",tag:null,tempo:"2-1-1",notes:"Compound 2 — Tempo: 2s hinge back, 1s pause at hip flexion, 1s hip drive. Glute focus."},
-          {name:"Leg Press (Narrow Stance)",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Quad-biased stance. No rest."},
-          {name:"Prone Leg Curl",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Full range. No rest."},
-          {name:"Cable Kickback",sets:"12, 10, 8",rest:"2-3 min",tag:"TRI-SET",notes:"Per leg. Glute-focused. Rest 2-3 min after tri-set."},
-          {name:"DB Step-Up",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Per leg. Box at knee height. Controlled descent."},
-          {name:"BB Pause RDL",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID. 2-sec pause at hamstring stretch. 60 sec rest after superset."},
+          {name:"Leg Press (Narrow Stance)",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Quad-biased narrow stance. No rest — stay on machine."},
+          {name:"BW Calf Raise (Platform)",sets:"12, 10, 8",rest:"—",tag:"TRI-SET",notes:"Remain on leg press platform — full range, pause at top. No rest."},
+          {name:"DB Goblet Squat",sets:"12, 10, 8",rest:"2-3 min",tag:"TRI-SET",notes:"DB pre-staged at machine foot. Heels elevated, drive knees out. Archetype C: same station. Rest 2-3 min after full tri-set round."},
+          {name:"Hack Squat Machine",sets:"12, 10, 8, 8",rest:"—",tag:"SUPERSET",notes:"Deep range — feel full quad stretch at bottom. No rest between A and B."},
+          {name:"DB Romanian Deadlift",sets:"8, 10, 12, 15",rest:"60 sec",tag:"SUPERSET",notes:"REVERSE PYRAMID — DB pre-staged at hack squat machine. 2-sec pause at hamstring stretch. Archetype C: same station. 60 sec rest after superset."},
           {name:"Hack Squat Machine",sets:"15, 12, 12 → 3×12",rest:"90 sec",tag:"CLUSTER",notes:"3 base sets (15,12,12). Add 3 cluster micro-sets of 12 reps with 15 sec rest each. Total: 6 sets."},
           {name:"Leg Extension (Drop)",sets:"12, 10, 8, 8 → AMRAP, AMRAP",rest:"90 sec",tag:"DROP SET",notes:"4 base sets. Drop 25% twice after final set → absolute AMRAP each drop. Total: 6 sets."},
           {name:"BW Reverse Lunge",sets:"AMRAP × 3",rest:"45 sec",tag:"FINISHER",notes:"Alternating legs. Full depth. 3 rounds to failure. Leave nothing."},
         ]},
-        {type:"rest",label:"Day 5"},
-        {type:"activerest",label:"Day 6"},
+        {type:"conditioning",label:"Day 5",session:"Conditioning Day",color:"#d97706"},
+        {type:"activerest",label:"Day 6",session:"Active Rest Day",color:"#0d9488"},
+        {type:"rest",label:"Day 7",session:"Rest Day",color:"#334155"},
       ]
     },
   ]
@@ -422,11 +426,78 @@ function groupBanner(tag){
 
 // ── DAY RENDERER ──
 function renderDay(day,dIdx){
-  if(day.type==='rest'){
-    return`<div class="rest-day"><span style="font-size:20px">😴</span><div><div class="rest-label">DAY 5 — FULL REST</div><div class="rest-sub">Recovery. Sleep. Nutrition. No gym.</div></div></div>`;
+  if(day.type==='conditioning'){
+    const rgb='217,119,6';
+    return`<div class="day-card" data-d="${dIdx}" style="--day-rgb:${rgb}">
+      <div class="day-header">
+        <div class="day-icon" style="background:#d97706;box-shadow:0 2px 10px #d9770666">⚡</div>
+        <div class="day-info">
+          <div class="day-session">Conditioning Day</div>
+          <div class="day-meta">Day 5 · Select Workout · 5-on 2-off</div>
+        </div>
+        <div class="day-toggle">▼</div>
+      </div>
+      <div class="exercises" style="border-top-color:#d9770633">
+        <div style="padding:10px 4px 4px;font-size:10.5px;color:#fbbf24;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;opacity:0.65">Select a conditioning session</div>
+        <a href="dashboard.html?tab=conditioning" style="display:flex;align-items:center;justify-content:space-between;background:rgba(217,119,6,0.08);border:1px solid rgba(217,119,6,0.3);border-radius:12px;padding:14px 16px;margin:6px 0 12px;text-decoration:none;">
+          <div>
+            <div style="font-weight:800;font-size:14px;color:#fbbf24;">Browse Conditioning Corner →</div>
+            <div style="font-size:11px;color:#92400e;margin-top:3px;">HIIT · Cardio · Circuits · Lactate Threshold</div>
+          </div>
+          <div style="font-size:18px;color:#fbbf24;">⚡</div>
+        </a>
+      </div>
+    </div>`;
   }
   if(day.type==='activerest'){
-    return`<div class="rest-day" style="border-color:rgba(52,211,153,0.18);background:rgba(52,211,153,0.03)"><span style="font-size:20px">🚶</span><div><div class="rest-label" style="color:#34d399">DAY 6 — ACTIVE REST</div><div class="rest-sub" style="color:#059669">Light walk · Stretching · Mobility · No loading</div></div></div>`;
+    const rgb='13,148,136';
+    const acts=[
+      {icon:'🚶',name:'Low Intensity Cardio',desc:'20–30 min easy walk, light bike, or swim'},
+      {icon:'🧘',name:'Stretching',desc:'Full-body static stretch — hold 30–60 sec per position'},
+      {icon:'🔄',name:'Mobility Work',desc:'Hip circles, thoracic rotations, ankle CARs'},
+    ];
+    const actsHtml=acts.map(a=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(13,148,136,0.1);">
+      <span style="font-size:18px;flex-shrink:0">${a.icon}</span>
+      <div><div style="font-weight:800;font-size:13px;color:#2dd4bf">${a.name}</div><div style="font-size:11px;color:#0d9488;margin-top:2px">${a.desc}</div></div>
+    </div>`).join('');
+    return`<div class="day-card" data-d="${dIdx}" style="--day-rgb:${rgb}">
+      <div class="day-header">
+        <div class="day-icon" style="background:#0d9488;box-shadow:0 2px 10px #0d948866">🚶</div>
+        <div class="day-info">
+          <div class="day-session">Active Rest Day</div>
+          <div class="day-meta">Day 6 · Recovery Plan · 5-on 2-off</div>
+        </div>
+        <div class="day-toggle">▼</div>
+      </div>
+      <div class="exercises" style="border-top-color:#0d948833">
+        <div style="padding:4px 4px 4px 4px">${actsHtml}</div>
+      </div>
+    </div>`;
+  }
+  if(day.type==='rest'){
+    const rgb='51,65,85';
+    const acts=[
+      {icon:'😴',name:'Full Rest',desc:'No training, no structured activity — complete physical recovery'},
+      {icon:'🌙',name:'Deep Sleep & Active Recovery',desc:'Prioritize 8–9 hrs sleep; light foam roll only if needed'},
+      {icon:'🥗',name:'Optimized Nutrition / Fueling',desc:'Hit protein targets; emphasize micronutrient-dense whole foods'},
+    ];
+    const actsHtml=acts.map(a=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(51,65,85,0.2);">
+      <span style="font-size:18px;flex-shrink:0">${a.icon}</span>
+      <div><div style="font-weight:800;font-size:13px;color:#94a3b8">${a.name}</div><div style="font-size:11px;color:#475569;margin-top:2px">${a.desc}</div></div>
+    </div>`).join('');
+    return`<div class="day-card" data-d="${dIdx}" style="--day-rgb:${rgb}">
+      <div class="day-header">
+        <div class="day-icon" style="background:#334155;box-shadow:0 2px 10px #33415566">😴</div>
+        <div class="day-info">
+          <div class="day-session">Rest Day</div>
+          <div class="day-meta">Day 7 · Full Rest · 5-on 2-off</div>
+        </div>
+        <div class="day-toggle">▼</div>
+      </div>
+      <div class="exercises" style="border-top-color:#33415533">
+        <div style="padding:4px 4px 4px 4px">${actsHtml}</div>
+      </div>
+    </div>`;
   }
   let lastTag=null;
   const exHtml=day.exercises.map((ex,eIdx)=>{
@@ -440,7 +511,7 @@ function renderDay(day,dIdx){
       <div class="day-icon" style="background:${day.color};box-shadow:0 2px 10px ${day.color}66">${day.icon}</div>
       <div class="day-info">
         <div class="day-session">${escapeHtml(day.session)}</div>
-        <div class="day-meta">${escapeHtml(day.label)} · 10 exercises · 4-on 2-off</div>
+        <div class="day-meta">${escapeHtml(day.label)} · 10 exercises · 5-on 2-off</div>
       </div>
       <div class="day-toggle">▼</div>
     </div>
@@ -457,7 +528,7 @@ function render(){
     <div class="header">
       <a href="dashboard.html" class="back-link">← Programs</a>
       <div class="header-inner">
-        <div class="eyebrow">4-Day Split · 4-Week Block · Hypertrophy</div>
+        <div class="eyebrow">5-Day Split · 4-Week Block · Hypertrophy</div>
         <div class="title">${escapeHtml(DATA.name)}</div>
         <div><span class="schedule">${escapeHtml(DATA.schedule)}</span></div>
       </div>
@@ -526,11 +597,14 @@ render();
     <span style="flex:1;height:1px;background:linear-gradient(90deg,#f59e0b4d,transparent);display:block;margin-left:8px;"></span>
   </div>
   <div class="sum-card" style="background:#0f0f0f;border:1px solid #f59e0b33;">
-    <div class="sum-sub" style="color:#f59e0b;">4 Weeks · 4 On / 2 Off · 10 Exercises/Session · Pyramid + Cluster + Drop Set + Finisher</div>
-    <div class="sum-row" style="border-bottom-color:#f59e0b22;"><span class="sum-ico">💪</span><span class="sum-nm">Chest &amp; Biceps — Day 1</span><div class="sum-dt"><span class="sum-st" style="color:#f59e0b;">10 exs</span><span class="sum-rp" style="color:#f59e0b;">Bench · Tri-Set · Cluster · Drop</span></div></div>
-    <div class="sum-row" style="border-bottom-color:#f59e0b22;"><span class="sum-ico">🔥</span><span class="sum-nm">Shoulders &amp; Triceps — Day 2</span><div class="sum-dt"><span class="sum-st" style="color:#f59e0b;">10 exs</span><span class="sum-rp" style="color:#f59e0b;">OHP · Tri-Set · Cluster · Drop</span></div></div>
-    <div class="sum-row" style="border-bottom-color:#f59e0b22;"><span class="sum-ico">🏋️</span><span class="sum-nm">Back &amp; Traps — Day 3</span><div class="sum-dt"><span class="sum-st" style="color:#f59e0b;">10 exs</span><span class="sum-rp" style="color:#f59e0b;">Rows · Tri-Set · Cluster · Drop</span></div></div>
-    <div class="sum-row" style="border-bottom-color:#f59e0b22;"><span class="sum-ico">🦵</span><span class="sum-nm">Legs — Day 4</span><div class="sum-dt"><span class="sum-st" style="color:#f59e0b;">10 exs</span><span class="sum-rp" style="color:#f59e0b;">Squat · Tri-Set · Cluster · Drop</span></div></div>
+    <div class="sum-sub" style="color:#f59e0b;">4 Weeks · 5 On / 2 Off · 10 Exercises/Session · Station-Anchored · Pyramid + Cluster + Drop Set + Finisher</div>
+    <div class="sum-row" style="border-bottom-color:#f59e0b22;"><span class="sum-ico">💪</span><span class="sum-nm">Chest &amp; Biceps — Day 1</span><div class="sum-dt"><span class="sum-st" style="color:#f59e0b;">10 exs</span><span class="sum-rp" style="color:#f59e0b;">Bench · Cable Tri-Set · Cluster · Drop</span></div></div>
+    <div class="sum-row" style="border-bottom-color:#f59e0b22;"><span class="sum-ico">🔥</span><span class="sum-nm">Shoulders &amp; Triceps — Day 2</span><div class="sum-dt"><span class="sum-st" style="color:#f59e0b;">10 exs</span><span class="sum-rp" style="color:#f59e0b;">OHP · Cable Tri-Set · Cluster · Drop</span></div></div>
+    <div class="sum-row" style="border-bottom-color:#f59e0b22;"><span class="sum-ico">🏋️</span><span class="sum-nm">Back &amp; Traps — Day 3</span><div class="sum-dt"><span class="sum-st" style="color:#f59e0b;">10 exs</span><span class="sum-rp" style="color:#f59e0b;">Rows · DB Bench Tri-Set · Cluster · Drop</span></div></div>
+    <div class="sum-row" style="border-bottom-color:#f59e0b22;"><span class="sum-ico">🦵</span><span class="sum-nm">Legs — Day 4</span><div class="sum-dt"><span class="sum-st" style="color:#f59e0b;">10 exs</span><span class="sum-rp" style="color:#f59e0b;">Squat · Leg Press Tri-Set · Cluster · Drop</span></div></div>
+    <div class="sum-row" style="border-bottom-color:#d9770622;"><span class="sum-ico">⚡</span><span class="sum-nm" style="color:#fbbf24;">Conditioning Day — Day 5</span><div class="sum-dt"><span class="sum-st" style="color:#d97706;">Varies</span><span class="sum-rp" style="color:#d97706;">Select from Conditioning Corner</span></div></div>
+    <div class="sum-row" style="border-bottom-color:#0d948822;"><span class="sum-ico">🚶</span><span class="sum-nm" style="color:#2dd4bf;">Active Rest Day — Day 6</span><div class="sum-dt"><span class="sum-st" style="color:#0d9488;">Recovery</span><span class="sum-rp" style="color:#0d9488;">Cardio · Stretch · Mobility</span></div></div>
+    <div class="sum-row" style="border-bottom-color:#33415522;"><span class="sum-ico">😴</span><span class="sum-nm" style="color:#94a3b8;">Rest Day — Day 7</span><div class="sum-dt"><span class="sum-st" style="color:#475569;">Full Rest</span><span class="sum-rp" style="color:#475569;">Sleep · Nutrition · Recovery</span></div></div>
     <div class="sum-div" style="background:#f59e0b26;"></div>
     <div class="sum-grid">
       <div class="sum-tot" style="background:#f59e0b14;border:1px solid #f59e0b26;">
