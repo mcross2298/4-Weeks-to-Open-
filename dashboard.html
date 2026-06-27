@@ -35,10 +35,10 @@
   --muted2:#64748b;
   --tab-h:64px;
 }
-body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(--tab-h);}
+body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom));}
 
 /* ── SCREENS ── */
-.screen{display:none;min-height:calc(100vh - var(--tab-h));padding-bottom:24px;}
+.screen{display:none;min-height:calc(100vh - var(--tab-h) - env(safe-area-inset-bottom));padding-bottom:24px;}
 .screen.active{display:block;}
 
 /* ── TOP BAR ── */
@@ -346,7 +346,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 /* ── BOTTOM TAB BAR ── */
 .tab-bar{
   position:fixed;bottom:0;left:0;right:0;
-  height:var(--tab-h);
+  height:calc(var(--tab-h) + env(safe-area-inset-bottom));
   background:rgba(10,10,10,0.96);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-top:1px solid rgba(255,255,255,0.07);
