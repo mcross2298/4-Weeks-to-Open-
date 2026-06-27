@@ -27,9 +27,14 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
    array (before the `MARKET:STRIP` block) unless the program uses licensed
    influencer content, in which case place it inside the MARKET:STRIP section.
    Required fields: `id`, `icon`, `name`, `meta`, `color`, `desc`, `href`, `splits`.
-4. **Commit and push to a feature branch in `4-Weeks-to-Open-`.**
-5. **Create a draft PR targeting `main` of `4-Weeks-to-Open-`.**
-6. **Merge to main** → the deploy pipeline auto-propagates all changes to
+4. **Add card to `dashboard.html`** — insert a `.cat-card` block in `#flagGrid`
+   (between the last flagship and the "Iron & Engine" coming-soon card). Add matching
+   `.cat-card.<id>` CSS (background gradient, border-top, `.cat-tag`, `.cat-designer`
+   color) immediately after the `.cat-card.ie` block. Increment the `.topbar-sub`
+   program count by 1.
+5. **Commit and push to a feature branch in `4-Weeks-to-Open-`.**
+6. **Create a draft PR targeting `main` of `4-Weeks-to-Open-`.**
+7. **Merge to main** → the deploy pipeline auto-propagates all changes to
    `MC-Training-Rolodex`. Never push directly to the Rolodex repo.
 
 ## Repository relationship & deploy pipeline (IMPORTANT)
