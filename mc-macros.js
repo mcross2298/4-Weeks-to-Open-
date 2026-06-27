@@ -249,7 +249,8 @@
   function sheet(title, sub) {
     var ov = el('div', 'nt-overlay');
     var sh = el('div', 'nt-sheet');
-    sh.appendChild(el('div', 'nt-handle'));
+    var handle = el('div', 'nt-handle');
+    sh.appendChild(handle);
     sh.appendChild(el('div', 'nt-sheet-title', esc(title)));
     if (sub) sh.appendChild(el('div', 'nt-sheet-sub', esc(sub)));
     ov.appendChild(sh);
@@ -257,6 +258,30 @@
     document.body.appendChild(ov);
     requestAnimationFrame(function () { ov.classList.add('open'); });
     function close() { ov.classList.remove('open'); setTimeout(function () { ov.remove(); }, 200); }
+
+    // swipe-down to dismiss on the drag handle
+    var startY = 0;
+    handle.addEventListener('touchstart', function (e) {
+      startY = e.touches[0].clientY;
+      sh.style.transition = 'none';
+    }, { passive: true });
+    handle.addEventListener('touchmove', function (e) {
+      var delta = e.touches[0].clientY - startY;
+      if (delta > 0 && sh.scrollTop === 0) {
+        sh.style.transform = 'translateY(' + delta + 'px)';
+      }
+    }, { passive: true });
+    handle.addEventListener('touchend', function (e) {
+      var delta = e.changedTouches[0].clientY - startY;
+      sh.style.transition = '';
+      if (delta >= 50) {
+        close();
+      } else {
+        sh.style.transform = '';
+      }
+    });
+    handle.addEventListener('click', function () { close(); });
+
     return { ov: ov, sh: sh, close: close };
   }
 
@@ -894,7 +919,7 @@
         'padding:14px 18px calc(28px + env(safe-area-inset-bottom));max-height:90vh;overflow-y:auto;' +
         'transform:translateY(16px);transition:transform 0.2s;}' +
       '.nt-overlay.open .nt-sheet{transform:translateY(0);}' +
-      '.nt-handle{width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px;}' +
+      '.nt-handle{width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px;padding:12px 0;box-sizing:content-box;cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
       '.nt-sheet-title{font-size:19px;font-weight:900;color:var(--text);letter-spacing:-0.01em;}' +
       '.nt-sheet-sub{font-size:13px;color:var(--muted);margin:4px 0 16px;line-height:1.5;}' +
       '.nt-form{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}' +
