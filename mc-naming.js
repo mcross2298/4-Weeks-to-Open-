@@ -49,7 +49,7 @@
     if (/^cat-mc/.test(pageId))       return 'mc';
     if (/^cat-bobw/.test(pageId))     return 'bobw';
     if (/^cat-strength/.test(pageId)) return 'ss';
-    if (pageId === 'kitchen-sink.html') return 'ks';
+    if (pageId === 'cat-ks.html' || pageId === 'kitchen-sink.html') return 'ks';
     if (pageId === 'cat-ie.html' || pageId === 'iron-engine.html') return 'ie';
     /* MARKET:STRIP influencer-progs START */
     if (/^stndr-/.test(pageId) || /^cat-stndr/.test(pageId)) return 'stndr';
