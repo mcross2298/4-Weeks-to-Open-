@@ -91,17 +91,17 @@ function attachEv(){
 const DATA = {
   1:[
     {type:'ss',num:1,a:{name:'Seated Side Lateral Raises',sets:'5x12',b:['tb-highset'],note:'High sets · squeeze at top'},
-                  b:{name:'Skull Crushers',sets:'4x10',b:['tb-midset','tb-tempo'],note:'2 sec pause at bottom · 1:2:1:0'}},
-    {type:'ss',num:2,a:{name:'Pelican Raises',sets:'4x12',b:['tb-midset'],note:'2 sec pause at top · anterior delt focus'},
+                  b:{name:'Seated DB Overhead Tricep Extension',sets:'4x10',b:['tb-midset','tb-tempo'],note:'Seated at same area · 2 sec pause at bottom · 1:2:1:0'}},
+    {type:'ss',num:2,a:{name:'DB Front Raises',sets:'4x12',b:['tb-midset'],note:'2 sec pause at top · anterior delt focus · same DB area'},
                   b:{name:'Seated Overhead DB Tricep Extension',sets:'4x15',b:['tb-highrep'],note:'12-15 reps · bilateral · full overhead extension'}},
     {type:'single',num:3,name:'Barbell or DB Shoulder Press',sets:'5x5',b:['tb-lowrep'],note:'Low rep · heavy · strict press'},
-    {type:'ss',num:4,a:{name:'Barbell Front Raises',sets:'4x15',b:['tb-highrep'],note:'12-15 reps · anterior delt pump'},
+    {type:'ss',num:4,a:{name:'Cable Front Raise',sets:'4x15',b:['tb-highrep'],note:'12-15 reps · anterior delt pump · same cable as pushdowns'},
                   b:{name:'Rope Pushdowns',sets:'4x20',b:['tb-highrep'],note:'20 reps · bilateral · squeeze at bottom'}},
     {type:'single',num:5,name:'Wide Grip Tricep Pulldowns',sets:'12,10,8,8',b:['tb-pyramid'],note:'Pyramid up · bilateral · 2 sec pause at bottom'},
   ],
-  2:[{type:'ss',num:1,a:{name:'Cable Lateral Raises',sets:'5x12',b:['tb-highset'],note:'High sets · squeeze at top'},b:{name:'Rope Pushdowns',sets:'5x12',b:['tb-highset'],note:'High sets · 2 sec pause at bottom'}},{type:'ss',num:2,a:{name:'Seated DB Shoulder Press',sets:'12,10,8,8',b:['tb-pyramid'],note:'Pyramid up · tricep emphasis'},b:{name:'Pec Deck Fly',sets:'3xfailure',b:['tb-amrap'],note:'Push to failure · full ROM'}},{type:'ss',num:3,a:{name:'Face Pulls',sets:'4x15',b:['tb-highrep'],note:'High rep · anterior delt pump'},b:{name:'Overhead DB Tricep Extension',sets:'4x12',b:['tb-midset'],note:'High rep · Moderate weight · deep stretch'}},{type:'ss',num:4,a:{name:'Cable Lateral Raise',sets:'4x12',b:['tb-midset'],note:'Strict form · pause at top'},b:{name:'Rope Pushdowns',sets:'4x15',b:['tb-highrep'],note:'High sets · bilateral'}}],
-  3:[{type:'ss',num:1,a:{name:'Cable Lateral Raises',sets:'5x12',b:['tb-highset'],note:'High sets · constant tension · squeeze at top'},b:{name:'Rope Pushdowns',sets:'5x12',b:['tb-highset'],note:'Bilateral · squeeze at bottom'}},{type:'ss',num:2,a:{name:'Seated DB Shoulder Press',sets:'12,10,8,8',b:['tb-pyramid'],note:'Pyramid · tricep emphasis'},b:{name:'Pec Deck Fly',sets:'3xfailure',b:['tb-amrap'],note:'Push to failure · full ROM'}},{type:'ss',num:3,a:{name:'Cable Lateral Raise',sets:'4x15',b:['tb-highrep'],note:'Constant tension · squeeze at top'},b:{name:'Rope Pushdowns',sets:'5x12',b:['tb-highset'],note:'Bilateral · squeeze at bottom'}},{type:'ss',num:4,a:{name:'Face Pulls',sets:'4x12',b:['tb-midset'],note:'2 sec hold at peak · rear delt focus'},b:{name:'Overhead DB Tricep Extension',sets:'4x12',b:['tb-midset'],note:'Bilateral · full overhead extension'}}],
-  4:[{type:'ss',num:1,a:{name:'Cable Lateral Raises',sets:'5x12',b:['tb-highset'],note:'High sets · 2 sec pause at top'},b:{name:'Rope Pushdowns',sets:'4x15',b:['tb-highrep'],note:'High rep · bilateral · squeeze at bottom'}},{type:'ss',num:2,a:{name:'Seated DB Shoulder Press',sets:'12,10,8,8',b:['tb-pyramid'],note:'Pyramid · tricep emphasis'},b:{name:'Pec Deck Fly',sets:'3xfailure',b:['tb-amrap'],note:'Push to failure · full ROM'}},{type:'ss',num:3,a:{name:'Cable Lateral Raise',sets:'4x15',b:['tb-highrep'],note:'High rep · 2 sec pause at top'},b:{name:'Rope Pushdowns',sets:'5x12',b:['tb-highset'],note:'High sets · squeeze at bottom'}},{type:'ss',num:4,a:{name:'Face Pulls',sets:'4x15',b:['tb-highrep'],note:'High rep · 2 sec hold at peak'},b:{name:'Overhead DB Tricep Extension',sets:'4x12',b:['tb-midset'],note:'Full extension · overhead'}}]
+  2:[{type:'ss',num:1,a:{name:'Cable Lateral Raises',sets:'5x12',b:['tb-highset'],note:'High sets · squeeze at top'},b:{name:'Rope Pushdowns',sets:'5x12',b:['tb-highset'],note:'High sets · 2 sec pause at bottom'}},{type:'ss',num:2,a:{name:'Seated DB Shoulder Press',sets:'12,10,8,8',b:['tb-pyramid'],note:'Pyramid up · tricep emphasis'},b:{name:'DB Rear Delt Fly',sets:'3xfailure',b:['tb-amrap'],note:'Seated · same bench as shoulder press · push to failure'}},{type:'ss',num:3,a:{name:'Face Pulls',sets:'4x15',b:['tb-highrep'],note:'High rep · anterior delt pump'},b:{name:'Overhead Cable Tricep Extension',sets:'4x12',b:['tb-midset'],note:'Same cable as face pulls · deep stretch · full ROM'}},{type:'ss',num:4,a:{name:'Cable Lateral Raise',sets:'4x12',b:['tb-midset'],note:'Strict form · pause at top'},b:{name:'Rope Pushdowns',sets:'4x15',b:['tb-highrep'],note:'High sets · bilateral'}}],
+  3:[{type:'ss',num:1,a:{name:'Cable Lateral Raises',sets:'5x12',b:['tb-highset'],note:'High sets · constant tension · squeeze at top'},b:{name:'Rope Pushdowns',sets:'5x12',b:['tb-highset'],note:'Bilateral · squeeze at bottom'}},{type:'ss',num:2,a:{name:'Seated DB Shoulder Press',sets:'12,10,8,8',b:['tb-pyramid'],note:'Pyramid · tricep emphasis'},b:{name:'DB Rear Delt Fly',sets:'3xfailure',b:['tb-amrap'],note:'Seated · same bench as shoulder press · push to failure'}},{type:'ss',num:3,a:{name:'Cable Lateral Raise',sets:'4x15',b:['tb-highrep'],note:'Constant tension · squeeze at top'},b:{name:'Rope Pushdowns',sets:'5x12',b:['tb-highset'],note:'Bilateral · squeeze at bottom'}},{type:'ss',num:4,a:{name:'Face Pulls',sets:'4x12',b:['tb-midset'],note:'2 sec hold at peak · rear delt focus'},b:{name:'Overhead Cable Tricep Extension',sets:'4x12',b:['tb-midset'],note:'Same cable as face pulls · bilateral · full overhead extension'}}],
+  4:[{type:'ss',num:1,a:{name:'Cable Lateral Raises',sets:'5x12',b:['tb-highset'],note:'High sets · 2 sec pause at top'},b:{name:'Rope Pushdowns',sets:'4x15',b:['tb-highrep'],note:'High rep · bilateral · squeeze at bottom'}},{type:'ss',num:2,a:{name:'Seated DB Shoulder Press',sets:'12,10,8,8',b:['tb-pyramid'],note:'Pyramid · tricep emphasis'},b:{name:'DB Rear Delt Fly',sets:'3xfailure',b:['tb-amrap'],note:'Seated · same bench as shoulder press · push to failure'}},{type:'ss',num:3,a:{name:'Cable Lateral Raise',sets:'4x15',b:['tb-highrep'],note:'High rep · 2 sec pause at top'},b:{name:'Rope Pushdowns',sets:'5x12',b:['tb-highset'],note:'High sets · squeeze at bottom'}},{type:'ss',num:4,a:{name:'Face Pulls',sets:'4x15',b:['tb-highrep'],note:'High rep · 2 sec hold at peak'},b:{name:'Overhead Cable Tricep Extension',sets:'4x12',b:['tb-midset'],note:'Same cable as face pulls · full extension · overhead'}}]
 };
 
 function render(){
@@ -137,7 +137,7 @@ if(typeof updateProgress!=="undefined")updateProgress();
     
       <div class="sum-row" style="border-bottom-color:rgba(52,211,153,0.08);">
         <span class="sum-icon">🔀</span>
-        <span class="sum-name">Seated Lateral Raises × Skull Crushers</span>
+        <span class="sum-name">Seated Lateral Raises × DB Overhead Tri Extension</span>
         <div class="sum-detail">
           <span class="sum-sets" style="color:#34d399;">4–5 sets</span>
           <span class="sum-reps" style="color:#34d399;">12 reps / 10 reps</span>
@@ -145,7 +145,7 @@ if(typeof updateProgress!=="undefined")updateProgress();
       </div>
       <div class="sum-row" style="border-bottom-color:rgba(52,211,153,0.08);">
         <span class="sum-icon">🔀</span>
-        <span class="sum-name">Pelican Raises × Overhead DB Extension</span>
+        <span class="sum-name">DB Front Raises × Overhead DB Extension</span>
         <div class="sum-detail">
           <span class="sum-sets" style="color:#34d399;">4 sets</span>
           <span class="sum-reps" style="color:#34d399;">12 reps / 15 reps</span>
@@ -161,7 +161,7 @@ if(typeof updateProgress!=="undefined")updateProgress();
       </div>
       <div class="sum-row" style="border-bottom-color:rgba(52,211,153,0.08);">
         <span class="sum-icon">🔀</span>
-        <span class="sum-name">Barbell Front Raises × Rope Pushdowns</span>
+        <span class="sum-name">Cable Front Raises × Rope Pushdowns</span>
         <div class="sum-detail">
           <span class="sum-sets" style="color:#34d399;">4 sets</span>
           <span class="sum-reps" style="color:#34d399;">15 reps / 20 reps</span>

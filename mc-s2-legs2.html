@@ -91,15 +91,15 @@ function attachEv(){
 const DATA = {
   1:[
     {type:'ss',num:1,a:{name:'Quad Extensions',sets:'5x12',b:['tb-highset'],note:'High sets · 3 sec negative · 4:0:1:0'},
-                  b:{name:'Seated Hamstring Curls',sets:'12,10,8,8',b:['tb-pyramid'],note:'Pyramid up · 2 sec pause at peak'}},
+                  b:{name:'DB Goblet Squats',sets:'12,10,8,8',b:['tb-pyramid'],note:'DBs pre-staged at extension machine · upright torso · pyramid up'}},
     {type:'ss',num:2,a:{name:'Single Leg Quad Extensions',sets:'4x12 each drop 15',b:['tb-drop'],note:'Drop set after each set · squeeze at extension'},
-                  b:{name:'Barbell RDLs',sets:'5x5',b:['tb-lowrep'],note:'Low rep · heavy bilateral · strong hip hinge'}},
+                  b:{name:'DB Romanian Deadlifts',sets:'5x5',b:['tb-lowrep'],note:'DBs pre-staged at extension machine · low rep · strong hip hinge'}},
     {type:'single',num:3,name:'Neutral Stance Goblet Squats',sets:'4x10',b:['tb-midset'],note:'4 sec negative · 4:0:1:0 · upright torso'},
     {type:'single',num:4,name:'Single Leg Split Squats + Calf Raises',sets:'4x10 each · 4x20 calves',b:['tb-midset','tb-highrep'],note:'3 sec negative · control the descent'},
   ],
-  2:[{type:'single',num:1,name:'Barbell Squat',sets:'5x12',b:['tb-highset'],note:'High sets · 3 sec negative · squeeze at top'},{type:'single',num:2,name:'Romanian Deadlift',sets:'4x10',b:['tb-midset'],note:'Strong hip hinge'},{type:'single',num:3,name:'Goblet Squat',sets:'4x12',b:['tb-midset'],note:'Controlled · 2 sec pause'},{type:'single',num:4,name:'Leg Press',sets:'4x12 drop 15 each',b:['tb-highrep'],note:'Drop set · balance focus'},{type:'single',num:5,name:'Quad Extensions',sets:'5x12',b:['tb-highset'],note:'High sets'},{type:'single',num:6,name:'DB Walking Lunges',sets:'3xfailure',b:['tb-amrap'],note:'Push to failure · descent'}],
-  3:[{type:'single',num:1,name:'Barbell Squat',sets:'4x12',b:['tb-midset'],note:'Full ROM'},{type:'single',num:2,name:'Romanian Deadlift',sets:'4x10',b:['tb-midset'],note:'Strong hip hinge · bilateral'},{type:'single',num:3,name:'Goblet Squat (wide stance, toes out)',sets:'4x12',b:['tb-midset'],note:'Heels flat · deep squat'},{type:'single',num:4,name:'DB Walking Lunges',sets:'4x15',b:['tb-highrep'],note:'Continuous · drive through front heel · required'},{type:'single',num:5,name:'Quad Extensions',sets:'5x12',b:['tb-highset'],note:'3 sec negative · both legs'}],
-  4:[{type:'single',num:1,name:'Barbell Squat',sets:'5x5',b:['tb-lowrep'],note:'Strong hip hinge'},{type:'single',num:2,name:'Romanian Deadlift',sets:'4x10',b:['tb-midset'],note:'Leg Press heavy · slow controlled descent'},{type:'single',num:3,name:'Goblet Squat (wide stance, toes out)',sets:'4x15',b:['tb-highrep'],note:'High rep · upright torso'},{type:'single',num:4,name:'DB Walking Lunges',sets:'3xfailure',b:['tb-amrap'],note:'Walk to technical failure · required'},{type:'single',num:5,name:'Quad Extensions',sets:'3xfailure',b:['tb-amrap'],note:'AMRAP · walk to failure'}]
+  2:[{type:'single',num:1,name:'Barbell Squat',sets:'5x12',b:['tb-highset'],note:'High sets · 3 sec negative · squeeze at top'},{type:'single',num:2,name:'Romanian Deadlift',sets:'4x10',b:['tb-midset'],note:'Strong hip hinge'},{type:'single',num:3,name:'Goblet Squat',sets:'4x12',b:['tb-midset'],note:'Controlled · 2 sec pause'},{type:'single',num:4,name:'Leg Press',sets:'4x12 drop 15 each',b:['tb-highrep'],note:'Drop set · balance focus'},{type:'ss',num:5,a:{name:'Quad Extensions',sets:'5x12',b:['tb-highset'],note:'High sets'},b:{name:'DB Reverse Lunges (in place)',sets:'3xfailure',b:['tb-amrap'],note:'DBs pre-staged at extension machine · push to failure'}}],
+  3:[{type:'single',num:1,name:'Barbell Squat',sets:'4x12',b:['tb-midset'],note:'Full ROM'},{type:'single',num:2,name:'Romanian Deadlift',sets:'4x10',b:['tb-midset'],note:'Strong hip hinge · bilateral'},{type:'single',num:3,name:'Goblet Squat (wide stance, toes out)',sets:'4x12',b:['tb-midset'],note:'Heels flat · deep squat'},{type:'ss',num:4,a:{name:'Quad Extensions',sets:'5x12',b:['tb-highset'],note:'3 sec negative · both legs'},b:{name:'DB Reverse Lunges (in place)',sets:'4x15',b:['tb-highrep'],note:'DBs pre-staged at extension machine · drive through front heel'}}],
+  4:[{type:'single',num:1,name:'Barbell Squat',sets:'5x5',b:['tb-lowrep'],note:'Strong hip hinge'},{type:'single',num:2,name:'Romanian Deadlift',sets:'4x10',b:['tb-midset'],note:'Leg Press heavy · slow controlled descent'},{type:'single',num:3,name:'Goblet Squat (wide stance, toes out)',sets:'4x15',b:['tb-highrep'],note:'High rep · upright torso'},{type:'ss',num:4,a:{name:'Quad Extensions',sets:'3xfailure',b:['tb-amrap'],note:'AMRAP · to failure'},b:{name:'DB Reverse Lunges (in place)',sets:'3xfailure',b:['tb-amrap'],note:'DBs pre-staged at extension machine · failure each side'}}]
 };
 
 function render(){
@@ -135,7 +135,7 @@ if(typeof updateProgress!=="undefined")updateProgress();
     
       <div class="sum-row" style="border-bottom-color:rgba(248,113,113,0.08);">
         <span class="sum-icon">🔀</span>
-        <span class="sum-name">Quad Extensions × Seated Ham Curl</span>
+        <span class="sum-name">Quad Extensions × DB Goblet Squats</span>
         <div class="sum-detail">
           <span class="sum-sets" style="color:#f87171;">5 sets</span>
           <span class="sum-reps" style="color:#f87171;">12 reps / 12,10,8,8</span>
@@ -143,7 +143,7 @@ if(typeof updateProgress!=="undefined")updateProgress();
       </div>
       <div class="sum-row" style="border-bottom-color:rgba(248,113,113,0.08);">
         <span class="sum-icon">🏋️</span>
-        <span class="sum-name">Single Leg Extensions × Barbell RDLs</span>
+        <span class="sum-name">Single Leg Extensions × DB RDLs</span>
         <div class="sum-detail">
           <span class="sum-sets" style="color:#f87171;">5 sets</span>
           <span class="sum-reps" style="color:#f87171;">12 drop / 5 reps</span>

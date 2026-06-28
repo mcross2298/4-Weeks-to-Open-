@@ -93,12 +93,12 @@ const DATA = {
     {type:'single',num:1,name:'Smith Machine Split Squats',sets:'5x12',b:['tb-highset'],note:'3 sec negative · 4:0:1:0 · both legs'},
     {type:'single',num:2,name:'Close Stance Barbell or Goblet Squats',sets:'5x5',b:['tb-lowrep'],note:'Low rep · heavy · heels elevated if needed'},
     {type:'ss',num:3,a:{name:'Quad Extensions',sets:'12,10,8,8 drop 15',b:['tb-pyramid','tb-drop'],note:'Pyramid + drop set · 2 sec pause'},
-                  b:{name:'RDLs (Barbell or DB)',sets:'4x10',b:['tb-midset'],note:'Bilateral · 3 sec negative · feel the stretch'}},
+                  b:{name:'DB RDLs',sets:'4x10',b:['tb-midset'],note:'DBs pre-staged at extension machine · 3 sec negative · feel the stretch'}},
     {type:'ss',num:4,a:{name:'Seated Hamstring Curls',sets:'4x12 drop 20',b:['tb-drop','tb-highrep'],note:'Drop to 20 reps · 2 sec pause at peak'},
-                  b:{name:'Quad Extensions (AMRAP)',sets:'3xfailure',b:['tb-amrap'],note:'Failure each set · burn it out'}},
+                  b:{name:'BW Sissy Squats (AMRAP)',sets:'3xfailure',b:['tb-amrap'],note:'Bodyweight · in front of hamstring curl machine · failure each set'}},
     {type:'single',num:5,name:'Calf Raises',sets:'5x20',b:['tb-highrep'],note:'20 reps · 2 sec pause at top · 1:0:1:2'},
   ],
-  2:[{type:'single',num:1,name:'Smith Machine Cannonball Squats',sets:'5x12',b:['tb-highset'],note:'High sets · close stance · outside thighs'},{type:'single',num:2,name:'Hack Squat (low foot placement)',sets:'12,10,8,8',b:['tb-pyramid'],note:'Pyramid · quad position angle'},{type:'single',num:3,name:'Quad Extensions',sets:'3xfailure',b:['tb-amrap'],note:'AMRAP · full extension'},{type:'single',num:4,name:'Leg Press (high and wide)',sets:'4x20',b:['tb-highrep'],note:'High rep · anterior delt'},{type:'single',num:5,name:'DB Walking Lunges',sets:'4x12',b:['tb-midset'],note:'Required · torso upright'}],
+  2:[{type:'single',num:1,name:'Smith Machine Cannonball Squats',sets:'5x12',b:['tb-highset'],note:'High sets · close stance · outside thighs'},{type:'single',num:2,name:'Hack Squat (low foot placement)',sets:'12,10,8,8',b:['tb-pyramid'],note:'Pyramid · quad position angle'},{type:'single',num:3,name:'Quad Extensions',sets:'3xfailure',b:['tb-amrap'],note:'AMRAP · full extension'},{type:'ss',num:4,a:{name:'Leg Press (high and wide)',sets:'4x20',b:['tb-highrep'],note:'High rep · anterior delt'},b:{name:'DB Reverse Lunges (in place)',sets:'4x12',b:['tb-midset'],note:'DBs pre-staged at leg press · torso upright'}}],
   3:[{type:'single',num:1,name:'Barbell Squat',sets:'12,10,8,8',b:['tb-pyramid'],note:'Pyramid then high sets · constant tension'},{type:'ss',num:2,a:{name:'Cable Lateral Raises',sets:'4x15',b:['tb-highrep'],note:'Constant tension · squeeze at top'},b:{name:'Face Pull',sets:'5x12',b:['tb-highset'],note:'2 sec hold at peak · rear delt focus'}},{type:'ss',num:3,a:{name:'Seated DB Shoulder Press',sets:'12,10,8,8',b:['tb-pyramid'],note:'Pyramid up · heavy · strict press'},b:{name:'DB Rear Delt Fly',sets:'4x12',b:['tb-midset'],note:'Bilateral · squeeze rear delts'}},{type:'single',num:4,name:'DB Walking Lunges',sets:'4x10',b:['tb-midset'],note:'Required · torso upright'}],
   4:[{type:'single',num:1,name:'Barbell Squat',sets:'5x15',b:['tb-highset'],note:'Constant tension'},{type:'ss',num:2,a:{name:'Cable Lateral Raises',sets:'4x10',b:['tb-midset'],note:'Squeeze at top'},b:{name:'Face Pulls',sets:'5x12',b:['tb-highset'],note:'2 sec hold at peak'}},{type:'ss',num:3,a:{name:'Seated DB Shoulder Press',sets:'12,10,8,8',b:['tb-pyramid'],note:'Pyramid up · strict press'},b:{name:'DB Rear Delt Fly',sets:'4x15',b:['tb-highrep'],note:'High rep pump · bilateral'}},{type:'single',num:4,name:'DB Walking Lunges',sets:'3xfailure',b:['tb-amrap'],note:'Walk to failure · heavy'}]
 };
@@ -152,7 +152,7 @@ if(typeof updateProgress!=="undefined")updateProgress();
       </div>
       <div class="sum-row" style="border-bottom-color:rgba(248,113,113,0.08);">
         <span class="sum-icon">🔀</span>
-        <span class="sum-name">Quad Extensions × RDLs</span>
+        <span class="sum-name">Quad Extensions × DB RDLs</span>
         <div class="sum-detail">
           <span class="sum-sets" style="color:#f87171;">4 sets</span>
           <span class="sum-reps" style="color:#f87171;">12,10,8,8 drop / 10 reps</span>
@@ -160,7 +160,7 @@ if(typeof updateProgress!=="undefined")updateProgress();
       </div>
       <div class="sum-row" style="border-bottom-color:rgba(248,113,113,0.08);">
         <span class="sum-icon">🔀</span>
-        <span class="sum-name">Seated Ham Curl × Quad Ext AMRAP</span>
+        <span class="sum-name">Seated Ham Curl × BW Sissy Squats</span>
         <div class="sum-detail">
           <span class="sum-sets" style="color:#f87171;">4 sets</span>
           <span class="sum-reps" style="color:#f87171;">12 drop / failure</span>
