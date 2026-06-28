@@ -49,6 +49,32 @@
     var a = read();
     a.unshift(entry);
     write(a.slice(0, 500));
+
+    // Also write to the shared workout log so the calendar and logs page see it
+    try {
+      var r = routines().filter(function (x) { return x.id === routineId; })[0];
+      var srcProg = '';
+      try { srcProg = sessionStorage.getItem('mc_cond_src_prog') || ''; } catch (e) {}
+      var wlEntry = {
+        id: routineId + '|' + iso,
+        pageId: routineId,
+        workoutName: (r && r.name) ? r.name : routineId,
+        date: iso,
+        time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        duration: fmt(Math.round(timeSec)),
+        sets: [],
+        prs: 0,
+        setsChecked: 0,
+        type: 'conditioning',
+        timeSec: Math.round(timeSec),
+        programId: srcProg
+      };
+      var wl = JSON.parse(localStorage.getItem('mc_workout_log_v1') || '[]');
+      wl.unshift(wlEntry);
+      localStorage.setItem('mc_workout_log_v1', JSON.stringify(wl.slice(0, 200)));
+      try { sessionStorage.removeItem('mc_cond_src_prog'); } catch (e) {}
+    } catch (e) {}
+
     try { if (window.MC_SYNC && MC_SYNC.push) MC_SYNC.push(); } catch (e) {}
     return entry;
   }
