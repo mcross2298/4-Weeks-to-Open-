@@ -198,26 +198,33 @@ a DB/bodyweight exercise executed directly in front of that same machine.
 
 > **Permanent rule.** In any program where the exercises stay fixed across a
 > multi-week block (e.g. **The Modality Matrix**), every training day must
-> independently carry the **FULL intensifier spread in every week**. A weekly
-> theme must never strip an intensifier out of the day — the dominant style
-> touches only 3–4 feature lifts, not the whole workout.
+> independently carry the **7 intensifiers in every week** (low-rep, high-rep,
+> TUT, tri-set, superset, cluster, drop). A weekly theme must never strip an
+> intensifier out of the day — the week's dominant style is applied **visibly to
+> exactly 4 feature lifts**, not the whole workout.
 
 **Each training day = 10 exercises** on a fixed position → intensifier blueprint
 (the 10-exercise table above). The intensifier TYPE per position never changes
 week to week. Within those 10 exercises:
 
 - **Required every day, every week:** low-rep, high-rep, TUT, tri-set, superset,
-  cluster, drop set — plus a **3 / 4 / 5 working-set mix**.
-- **Anchors (~6–7 exercises)** keep a FIXED rep scheme across all 4 weeks (only
-  load/cues progress). Anchors guarantee the spread is always present:
-  - **Pos 1** = low-rep anchor (heavy ~5×5, every week)
+  cluster, drop set — plus a **2 / 4 / 4 working-set mix** (2 five-set, 4 four-set,
+  4 three-set). **Tri-sets are always 3 sets.**
+- **6 ANCHORs** keep a FIXED rep scheme across all weeks (only load/cues progress).
+  Anchors guarantee the spread is always present:
+  - **Pos 1** = low-rep anchor (heavy ~5×5, every week) · **Pos 10** = high-rep
+    finisher anchor (bodyweight, high-rep/AMRAP every week)
   - **Pos 4** (a tri-set member) = TUT anchor — fixed **3 sec negatives / 2 sec
     pauses** every week (TUT gets an explicit structural home, not just notes)
-  - **Pos 3** tri-set · **Pos 6–7** superset · **Pos 8** cluster · **Pos 9** drop
-  - **Pos 10** = high-rep finisher anchor (bodyweight, high-rep/AMRAP every week)
-- **Feature lifts (~3–4 exercises: Pos 2, Pos 5, Pos 8)** rotate their rep scheme
-  with the week's dominant flavor — **Week 1 Low-Rep · Week 2 Pyramid · Week 3
-  Tempo/Superset · Week 4 High-Rep**.
+  - **Pos 3** tri-set · **Pos 7** superset · **Pos 9** drop
+- **4 FEATURE lifts (Pos 2, Pos 5, Pos 6, Pos 8)** visibly take on the week's
+  theme in the **set field itself** (real pyramid strings, explicit `@ tempo`
+  notation, paired supersets) while keeping their set count and base role.
+- **Week themes (5-week block):** **W1 Low-Rep · W2 Pyramid · W3 Tempo (explicit
+  e.g. `@ 4-0-1`) · W4 High-Rep · W5 Superset.** Pyramid and tempo must appear as
+  actual schemes, not just coaching notes. The low-rep week uses a **mix**
+  (5×5 · 5×8 · 8/6/4/4 · 4×6) across the lifts of differing set counts.
+- **`renderWeekTabs` must derive from `WEEK_THEMES`** (no hardcoded 4-week list).
 
 > **8-exercise training days are forbidden** under this rule — expand to the full
 > 10-position blueprint so the complete intensifier spread fits.
