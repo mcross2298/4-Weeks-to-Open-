@@ -228,3 +228,24 @@ week to week. Within those 10 exercises:
 
 > **8-exercise training days are forbidden** under this rule — expand to the full
 > 10-position blueprint so the complete intensifier spread fits.
+
+### Shipping checklist — get a multi-week program right the first time
+
+These are hard-won gotchas; check them **before opening the PR**:
+
+1. **One `w[]` entry per week theme.** Every exercise's `w` array length MUST equal
+   `WEEK_THEMES.length` — `currentWeek` indexes straight into it, so a short array
+   renders `undefined`. Add a week theme → add a `w[]` entry to *every* exercise.
+2. **Week/phase count must agree in every surface.** When the count changes, update
+   ALL of: the render schedule label (`"N-Week Block"`), the `cat-*.html` meta
+   badges **and** phase week-ranges, the `dashboard.html` `.cat-count`, and the
+   `mc-pm-data.js` `meta`. (The Modality Matrix lives in 4+ spots — 12→15 touched
+   them all.)
+3. **Themes drive the tabs.** `renderWeekTabs` derives from `WEEK_THEMES`; never
+   hardcode the week list or duplicate the short theme names so they can drift.
+4. **Pre-merge parse-check (required gate).** `new Function()`-syntax-check the
+   inline `<script>`, then parse the `DAYS` array and assert for **every training
+   day × every week**: all 7 intensifiers present, the 2/4/4 working-set mix holds,
+   tri-sets = 3 sets, and the week's theme is **visible in the set field** (a real
+   pyramid string in the pyramid week, `@ x-x-x` tempo in the tempo week, a paired
+   superset in the superset week). Notes alone do not satisfy this.
