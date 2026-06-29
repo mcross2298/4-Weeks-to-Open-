@@ -51,6 +51,7 @@
     if (/^cat-strength/.test(pageId)) return 'ss';
     if (pageId === 'cat-ks.html' || pageId === 'kitchen-sink.html') return 'ks';
     if (pageId === 'cat-ie.html' || pageId === 'iron-engine.html') return 'ie';
+    if (pageId === 'cat-mm.html' || /^mm-/.test(pageId)) return 'mm';
     /* MARKET:STRIP influencer-progs START */
     if (/^stndr-/.test(pageId) || /^cat-stndr/.test(pageId)) return 'stndr';
     if (/^pump-/.test(pageId)  || /^cat-pump/.test(pageId))  return 'pump';
