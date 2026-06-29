@@ -191,3 +191,33 @@ a DB/bodyweight exercise executed directly in front of that same machine.
 | Shoulders & Triceps | D (Single Cable Column) | D (Single Cable Column) |
 | Back & Traps | A (DB / Bench Anchor) | C (Machine + DB pre-staged) |
 | Legs | C (Leg Press or Machine Anchor) | C (Machine + DB or BW) |
+
+---
+
+## Per-Day Intensifier Coverage (multi-week / modality programs)
+
+> **Permanent rule.** In any program where the exercises stay fixed across a
+> multi-week block (e.g. **The Modality Matrix**), every training day must
+> independently carry the **FULL intensifier spread in every week**. A weekly
+> theme must never strip an intensifier out of the day — the dominant style
+> touches only 3–4 feature lifts, not the whole workout.
+
+**Each training day = 10 exercises** on a fixed position → intensifier blueprint
+(the 10-exercise table above). The intensifier TYPE per position never changes
+week to week. Within those 10 exercises:
+
+- **Required every day, every week:** low-rep, high-rep, TUT, tri-set, superset,
+  cluster, drop set — plus a **3 / 4 / 5 working-set mix**.
+- **Anchors (~6–7 exercises)** keep a FIXED rep scheme across all 4 weeks (only
+  load/cues progress). Anchors guarantee the spread is always present:
+  - **Pos 1** = low-rep anchor (heavy ~5×5, every week)
+  - **Pos 4** (a tri-set member) = TUT anchor — fixed **3 sec negatives / 2 sec
+    pauses** every week (TUT gets an explicit structural home, not just notes)
+  - **Pos 3** tri-set · **Pos 6–7** superset · **Pos 8** cluster · **Pos 9** drop
+  - **Pos 10** = high-rep finisher anchor (bodyweight, high-rep/AMRAP every week)
+- **Feature lifts (~3–4 exercises: Pos 2, Pos 5, Pos 8)** rotate their rep scheme
+  with the week's dominant flavor — **Week 1 Low-Rep · Week 2 Pyramid · Week 3
+  Tempo/Superset · Week 4 High-Rep**.
+
+> **8-exercise training days are forbidden** under this rule — expand to the full
+> 10-position blueprint so the complete intensifier spread fits.
