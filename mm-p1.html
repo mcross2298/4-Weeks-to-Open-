@@ -146,7 +146,9 @@ const WEEK_THEMES = [
   ANCHORs keep a fixed rep scheme across all 4 weeks (load/cues progress only);
   this guarantees every day carries the full spread every week. FEATUREs (~3–4)
   rotate to give each week its dominant flavor without stripping any intensifier.
-  Each day mixes 3 / 4 / 5 working-set exercises.
+  Working-set mix per day = 2 five-set (Pos 1–2 compounds) · 4 four-set
+  (Pos 6–7 superset, Pos 8 cluster, Pos 9 drop) · 4 three-set (Pos 3–5
+  tri-sets — always 3 sets — + Pos 10 finisher). Holds every week.
 */
 
 const DAYS = [
@@ -166,10 +168,10 @@ const DAYS = [
       ]},
       /* Ex 2 — FEATURE compound (rep scheme rotates with weekly theme) · 4 sets */
       { name: "Flat DB Press", w: [
-        { sets:"4×6",          rest:"90 sec", tag:null, note:"FEATURE · Week 1 low-rep · 2–3 sec bottom pause · drive through full ROM · lock out clean" },
-        { sets:"12, 10, 8, 8", rest:"90 sec", tag:null, note:"FEATURE · Week 2 pyramid — add weight each set · 3–4 sec eccentric on final sets" },
-        { sets:"4×10",         rest:"75 sec", tag:null, note:"FEATURE · Week 3 tempo/superset feel · 3–4 sec eccentric · full chest stretch · moderate load" },
-        { sets:"4×20",         rest:"60 sec", tag:null, note:"FEATURE · Week 4 high-rep blast · 2–3 sec bottom pause · moderate weight · full ROM" },
+        { sets:"5×6",          rest:"90 sec", tag:null, note:"FEATURE · Week 1 low-rep · 2–3 sec bottom pause · drive through full ROM · lock out clean" },
+        { sets:"15, 12, 10, 8, 6", rest:"90 sec", tag:null, note:"FEATURE · Week 2 pyramid — add weight each set · 3–4 sec eccentric on final sets" },
+        { sets:"5×10",         rest:"75 sec", tag:null, note:"FEATURE · Week 3 tempo/superset feel · 3–4 sec eccentric · full chest stretch · moderate load" },
+        { sets:"5×20",         rest:"60 sec", tag:null, note:"FEATURE · Week 4 high-rep blast · 2–3 sec bottom pause · moderate weight · full ROM" },
       ]},
       /* Ex 3 — TRI-SET A · anchor (3×10 every week) */
       { name: "Decline DB Press", w: [
@@ -194,31 +196,31 @@ const DAYS = [
       ]},
       /* Ex 6 — SUPERSET A · anchor (3×12 + 2×AMRAP every week) */
       { name: "Flat DB Fly", w: [
-        { sets:"3×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · 3 working sets + 2 AMRAP burnout rounds · full arc · 2–3 sec bottom pause" },
-        { sets:"3×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · add load vs W1 · constant tension · 2 AMRAP rounds to finish" },
-        { sets:"3×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · slow arc · 3–4 sec eccentric · 2 AMRAP burnout rounds" },
-        { sets:"3×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · full ROM · squeeze at peak · 2 AMRAP rounds to failure" },
+        { sets:"4×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · 4 working sets + 2 AMRAP burnout rounds · full arc · 2–3 sec bottom pause" },
+        { sets:"4×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · add load vs W1 · constant tension · 2 AMRAP rounds to finish" },
+        { sets:"4×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · slow arc · 3–4 sec eccentric · 2 AMRAP burnout rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · full ROM · squeeze at peak · 2 AMRAP rounds to failure" },
       ]},
       /* Ex 7 — SUPERSET B · anchor */
       { name: "DB Pullover (supine on flat bench)", w: [
-        { sets:"3×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · lats + chest stretch · 3–4 sec eccentric · 2 AMRAP rounds · elbows soft" },
-        { sets:"3×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · add load · feel lats engage · 2–3 sec bottom stretch · 2 AMRAP rounds" },
-        { sets:"3×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · slow controlled arc · 3–4 sec eccentric · 2 AMRAP burnout rounds" },
-        { sets:"3×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · full stretch overhead · 2–3 sec bottom pause · 2 AMRAP rounds to failure" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · lats + chest stretch · 3–4 sec eccentric · 2 AMRAP rounds · elbows soft" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · add load · feel lats engage · 2–3 sec bottom stretch · 2 AMRAP rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · slow controlled arc · 3–4 sec eccentric · 2 AMRAP burnout rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · full stretch overhead · 2–3 sec bottom pause · 2 AMRAP rounds to failure" },
       ]},
       /* Ex 8 — CLUSTER · FEATURE (rotates with weekly theme) */
       { name: "DB Squeeze Press (flat, DBs touching)", w: [
-        { sets:"3×6, + Cluster 8/8/8",     rest:"90 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 1 heavy working sets then 3 clusters of 8 · 15 sec between · squeeze DBs throughout" },
-        { sets:"3×8, + Cluster 8/10/12",   rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 2 pyramid cue · ascending cluster 8→10→12 · 15 sec between" },
+        { sets:"4×6, + Cluster 8/8/8",     rest:"90 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 1 heavy working sets then 3 clusters of 8 · 15 sec between · squeeze DBs throughout" },
+        { sets:"4×8, + Cluster 8/10/12",   rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 2 pyramid cue · ascending cluster 8→10→12 · 15 sec between" },
         { sets:"4×8, + Cluster 10/10/10",  rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 3 · 4 working sets then 3 clusters of 10 · 15 sec micro-rest" },
-        { sets:"3×12, + Cluster 12/12/15", rest:"60 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 4 high-rep · ascending cluster 12→12→15 · metabolic peak" },
+        { sets:"4×12, + Cluster 12/12/15", rest:"60 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 4 high-rep · ascending cluster 12→12→15 · metabolic peak" },
       ]},
       /* Ex 9 — DROP · anchor (3×12 then strip to failure, every week) */
       { name: "Low-Incline DB Press (drop set)", w: [
-        { sets:"3×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · 3 working sets then strip ~30% · AMRAP to failure · 3–4 sec eccentric · full ROM" },
-        { sets:"3×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · add load vs W1 · strip ~30% · AMRAP to failure · controlled press" },
-        { sets:"3×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · progress load · double-drop optional · squeeze each rep" },
-        { sets:"3×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · strip to failure · chase the pump on high-rep week" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · 4 working sets then strip ~30% · AMRAP to failure · 3–4 sec eccentric · full ROM" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · add load vs W1 · strip ~30% · AMRAP to failure · controlled press" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · progress load · double-drop optional · squeeze each rep" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · strip to failure · chase the pump on high-rep week" },
       ]},
       /* Ex 10 — FINISHER · HIGH-REP ANCHOR (bodyweight, high-rep every week) */
       { name: "Push-Up (bodyweight finisher)", w: [
@@ -245,10 +247,10 @@ const DAYS = [
       ]},
       /* Ex 2 — FEATURE compound (rep scheme rotates with weekly theme) · 4 sets */
       { name: "DB Skull Crusher (flat bench)", w: [
-        { sets:"4×6",          rest:"90 sec", tag:null, note:"FEATURE · Week 1 low-rep · 2–3 sec bottom pause · elbows stacked over shoulders" },
-        { sets:"12, 10, 8, 8", rest:"90 sec", tag:null, note:"FEATURE · Week 2 pyramid — increase weight · 3–4 sec eccentric descent · controlled to forehead" },
-        { sets:"4×10",         rest:"75 sec", tag:null, note:"FEATURE · Week 3 tempo · 3–4 sec eccentric · elbows stay stacked · full ROM lockout" },
-        { sets:"4×20",         rest:"60 sec", tag:null, note:"FEATURE · Week 4 high-rep · moderate weight · 2–3 sec bottom pause · squeeze at lockout" },
+        { sets:"5×6",          rest:"90 sec", tag:null, note:"FEATURE · Week 1 low-rep · 2–3 sec bottom pause · elbows stacked over shoulders" },
+        { sets:"15, 12, 10, 8, 6", rest:"90 sec", tag:null, note:"FEATURE · Week 2 pyramid — increase weight · 3–4 sec eccentric descent · controlled to forehead" },
+        { sets:"5×10",         rest:"75 sec", tag:null, note:"FEATURE · Week 3 tempo · 3–4 sec eccentric · elbows stay stacked · full ROM lockout" },
+        { sets:"5×20",         rest:"60 sec", tag:null, note:"FEATURE · Week 4 high-rep · moderate weight · 2–3 sec bottom pause · squeeze at lockout" },
       ]},
       /* Ex 3 — TRI-SET A · anchor (3×10 every week) */
       { name: "Incline DB Curl (bilateral, on incline bench)", w: [
@@ -273,31 +275,31 @@ const DAYS = [
       ]},
       /* Ex 6 — SUPERSET A · anchor (3×12 + 2×AMRAP every week) */
       { name: "DB Concentration Curl (seated on bench)", w: [
-        { sets:"3×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · 3 working sets + 2 AMRAP burnout rounds · 3–4 sec eccentric · elbow braced on inner thigh" },
-        { sets:"3×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · add load vs W1 · 2–3 sec bottom pause · 2 AMRAP rounds" },
-        { sets:"3×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · slow curl · 3–4 sec eccentric · 2 AMRAP rounds to failure" },
-        { sets:"3×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · moderate weight · 2–3 sec bottom pause · 2 AMRAP burnout rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · 4 working sets + 2 AMRAP burnout rounds · 3–4 sec eccentric · elbow braced on inner thigh" },
+        { sets:"4×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · add load vs W1 · 2–3 sec bottom pause · 2 AMRAP rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · slow curl · 3–4 sec eccentric · 2 AMRAP rounds to failure" },
+        { sets:"4×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · moderate weight · 2–3 sec bottom pause · 2 AMRAP burnout rounds" },
       ]},
       /* Ex 7 — SUPERSET B · anchor */
       { name: "DB Kickback (bent over at bench, bilateral)", w: [
-        { sets:"3×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 2–3 sec hold at full extension · 2 AMRAP rounds to failure · upper arm parallel" },
-        { sets:"3×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · add load · 3–4 sec eccentric · squeeze tricep at lockout · 2 AMRAP rounds" },
-        { sets:"3×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 3–4 sec eccentric lower · controlled · 2 AMRAP burnout rounds" },
-        { sets:"3×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 2–3 sec isometric hold at extension · 2 AMRAP rounds to failure" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 2–3 sec hold at full extension · 2 AMRAP rounds to failure · upper arm parallel" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · add load · 3–4 sec eccentric · squeeze tricep at lockout · 2 AMRAP rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 3–4 sec eccentric lower · controlled · 2 AMRAP burnout rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 2–3 sec isometric hold at extension · 2 AMRAP rounds to failure" },
       ]},
       /* Ex 8 — CLUSTER · FEATURE (rotates with weekly theme) */
       { name: "DB 21s (standing, full + partial curls)", w: [
-        { sets:"3×21, + Cluster 8/8/8",    rest:"90 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 1 heavy · working sets of 21 then 3 clusters of 8 lower-range · 15 sec between · 3–4 sec eccentric" },
-        { sets:"3×21, + Cluster 8/10/12",  rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 2 pyramid cue · ascending cluster 8→10→12 lower-range · 15 sec between · 2–3 sec bottom pause" },
+        { sets:"4×21, + Cluster 8/8/8",    rest:"90 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 1 heavy · working sets of 21 then 3 clusters of 8 lower-range · 15 sec between · 3–4 sec eccentric" },
+        { sets:"4×21, + Cluster 8/10/12",  rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 2 pyramid cue · ascending cluster 8→10→12 lower-range · 15 sec between · 2–3 sec bottom pause" },
         { sets:"4×21, + Cluster 10/10/10", rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 3 · 4 working sets of 21 then 3 clusters of 10 · 15 sec micro-rest" },
-        { sets:"3×21, + Cluster 12/12/15", rest:"60 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 4 high-rep · ascending cluster 12→12→15 · metabolic peak" },
+        { sets:"4×21, + Cluster 12/12/15", rest:"60 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 4 high-rep · ascending cluster 12→12→15 · metabolic peak" },
       ]},
       /* Ex 9 — DROP · anchor (3×12 then strip to failure, every week) */
       { name: "Single-Arm DB Preacher Curl (on incline bench)", w: [
-        { sets:"3×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · strict preacher position · 3–4 sec eccentric · strip ~30% · AMRAP to failure · squeeze at peak" },
-        { sets:"3×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · add load vs W1 · 2–3 sec bottom pause · strip ~30% · AMRAP to failure" },
-        { sets:"3×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · controlled · 3–4 sec eccentric · full stretch at bottom · drop to absolute failure" },
-        { sets:"3×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · double-drop optional · 2–3 sec bottom pause · squeeze hard through failure" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · strict preacher position · 3–4 sec eccentric · strip ~30% · AMRAP to failure · squeeze at peak" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · add load vs W1 · 2–3 sec bottom pause · strip ~30% · AMRAP to failure" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · controlled · 3–4 sec eccentric · full stretch at bottom · drop to absolute failure" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · double-drop optional · 2–3 sec bottom pause · squeeze hard through failure" },
       ]},
       /* Ex 10 — FINISHER · HIGH-REP ANCHOR (bodyweight, high-rep every week) */
       { name: "Diamond Push-Up (bodyweight finisher)", w: [
@@ -324,10 +326,10 @@ const DAYS = [
       ]},
       /* Ex 2 — FEATURE compound (rep scheme rotates with weekly theme) · 4 sets */
       { name: "DB Romanian Deadlift (bilateral)", w: [
-        { sets:"4×6",          rest:"90 sec", tag:null, note:"FEATURE · Week 1 low-rep · 3–4 sec eccentric · hinge at hips · squeeze glutes at top" },
-        { sets:"12, 10, 8, 8", rest:"90 sec", tag:null, note:"FEATURE · Week 2 pyramid — increase weight · hip hinge strict · 2–3 sec bottom pause" },
-        { sets:"4×10",         rest:"75 sec", tag:null, note:"FEATURE · Week 3 tempo · 3–4 sec eccentric · hamstring fully loaded at stretch point" },
-        { sets:"4×20",         rest:"60 sec", tag:null, note:"FEATURE · Week 4 high-rep · feel hamstring stretch every rep · moderate weight" },
+        { sets:"5×6",          rest:"90 sec", tag:null, note:"FEATURE · Week 1 low-rep · 3–4 sec eccentric · hinge at hips · squeeze glutes at top" },
+        { sets:"15, 12, 10, 8, 6", rest:"90 sec", tag:null, note:"FEATURE · Week 2 pyramid — increase weight · hip hinge strict · 2–3 sec bottom pause" },
+        { sets:"5×10",         rest:"75 sec", tag:null, note:"FEATURE · Week 3 tempo · 3–4 sec eccentric · hamstring fully loaded at stretch point" },
+        { sets:"5×20",         rest:"60 sec", tag:null, note:"FEATURE · Week 4 high-rep · feel hamstring stretch every rep · moderate weight" },
       ]},
       /* Ex 3 — TRI-SET A · anchor (3×10 each every week) */
       { name: "DB Bulgarian Split Squat (rear foot on bench)", w: [
@@ -352,31 +354,31 @@ const DAYS = [
       ]},
       /* Ex 6 — SUPERSET A · anchor (3×12 + 2×AMRAP every week) */
       { name: "DB Glute Bridge (feet elevated on bench)", w: [
-        { sets:"3×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · 3 working sets + 2 AMRAP burnout rounds · 2–3 sec peak hold · full hip drive" },
-        { sets:"3×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · add load vs W1 · 3–4 sec eccentric lower · 2 AMRAP rounds" },
-        { sets:"3×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · 3–4 sec eccentric · 2 AMRAP burnout rounds · full hip extension every rep" },
-        { sets:"3×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · 2–3 sec peak pause · 2 AMRAP rounds · moderate weight" },
+        { sets:"4×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · 4 working sets + 2 AMRAP burnout rounds · 2–3 sec peak hold · full hip drive" },
+        { sets:"4×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · add load vs W1 · 3–4 sec eccentric lower · 2 AMRAP rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · 3–4 sec eccentric · 2 AMRAP burnout rounds · full hip extension every rep" },
+        { sets:"4×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · 2–3 sec peak pause · 2 AMRAP rounds · moderate weight" },
       ]},
       /* Ex 7 — SUPERSET B · anchor */
       { name: "Seated DB Calf Raise (seated on bench edge)", w: [
-        { sets:"3×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 2–3 sec peak squeeze · 2 AMRAP rounds to failure · full ROM · DB on knees" },
-        { sets:"3×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · add load · 3–4 sec eccentric lower · full stretch at bottom · 2 AMRAP rounds" },
-        { sets:"3×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 3–4 sec eccentric lower · 2 AMRAP burnout rounds · feel gastrocnemius stretch" },
-        { sets:"3×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 2–3 sec peak pause · 2 AMRAP rounds · full range every rep" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 2–3 sec peak squeeze · 2 AMRAP rounds to failure · full ROM · DB on knees" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · add load · 3–4 sec eccentric lower · full stretch at bottom · 2 AMRAP rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 3–4 sec eccentric lower · 2 AMRAP burnout rounds · feel gastrocnemius stretch" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 2–3 sec peak pause · 2 AMRAP rounds · full range every rep" },
       ]},
       /* Ex 8 — CLUSTER · FEATURE (rotates with weekly theme) */
       { name: "DB Walking Lunge", w: [
-        { sets:"3×8 each, + Cluster 8/8/8",     rest:"90 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 1 heavy · 3 working sets then 3 clusters of 8 steps each side · 15 sec between · 3–4 sec eccentric" },
-        { sets:"3×10 each, + Cluster 8/10/12",  rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 2 pyramid cue · ascending cluster 8→10→12 steps each side · 15 sec between" },
+        { sets:"4×8 each, + Cluster 8/8/8",     rest:"90 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 1 heavy · 3 working sets then 3 clusters of 8 steps each side · 15 sec between · 3–4 sec eccentric" },
+        { sets:"4×10 each, + Cluster 8/10/12",  rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 2 pyramid cue · ascending cluster 8→10→12 steps each side · 15 sec between" },
         { sets:"4×10 each, + Cluster 10/10/10", rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 3 · 4 working sets then 3 clusters of 10 each · 15 sec micro-rest" },
-        { sets:"3×15 each, + Cluster 12/12/15", rest:"60 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 4 high-rep · ascending cluster 12→12→15 each side · metabolic peak" },
+        { sets:"4×15 each, + Cluster 12/12/15", rest:"60 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 4 high-rep · ascending cluster 12→12→15 each side · metabolic peak" },
       ]},
       /* Ex 9 — DROP · anchor (3×12 then strip to failure, every week) */
       { name: "Heels-Elevated DB Goblet Squat (drop set)", w: [
-        { sets:"3×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · heels on plates · 3 working sets then strip ~30% · AMRAP to failure · 3–4 sec eccentric · full depth" },
-        { sets:"3×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · add load vs W1 · 2–3 sec bottom pause · strip ~30% · AMRAP to failure" },
-        { sets:"3×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · controlled · 3–4 sec eccentric · double-drop optional · drive up out of the hole" },
-        { sets:"3×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · strip to failure · chase the burn on high-rep week · upright torso" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · heels on plates · 4 working sets then strip ~30% · AMRAP to failure · 3–4 sec eccentric · full depth" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · add load vs W1 · 2–3 sec bottom pause · strip ~30% · AMRAP to failure" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · controlled · 3–4 sec eccentric · double-drop optional · drive up out of the hole" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · strip to failure · chase the burn on high-rep week · upright torso" },
       ]},
       /* Ex 10 — FINISHER · HIGH-REP ANCHOR (bodyweight, high-rep every week) */
       { name: "Bodyweight Squat (finisher)", w: [
@@ -403,10 +405,10 @@ const DAYS = [
       ]},
       /* Ex 2 — FEATURE compound (rep scheme rotates with weekly theme) · 4 sets */
       { name: "Seated DB Shoulder Press", w: [
-        { sets:"4×6",          rest:"90 sec", tag:null, note:"FEATURE · Week 1 low-rep · heavy bilateral press · 3–4 sec eccentric · full lockout" },
-        { sets:"12, 10, 8, 8", rest:"90 sec", tag:null, note:"FEATURE · Week 2 pyramid — increase weight · 2–3 sec bottom pause · controlled descent" },
-        { sets:"4×10",         rest:"75 sec", tag:null, note:"FEATURE · Week 3 tempo · 2–3 sec bottom pause · control the descent · full ROM press" },
-        { sets:"4×20",         rest:"60 sec", tag:null, note:"FEATURE · Week 4 high-rep shoulder blast · 3–4 sec eccentric · moderate weight · full ROM" },
+        { sets:"5×6",          rest:"90 sec", tag:null, note:"FEATURE · Week 1 low-rep · heavy bilateral press · 3–4 sec eccentric · full lockout" },
+        { sets:"15, 12, 10, 8, 6", rest:"90 sec", tag:null, note:"FEATURE · Week 2 pyramid — increase weight · 2–3 sec bottom pause · controlled descent" },
+        { sets:"5×10",         rest:"75 sec", tag:null, note:"FEATURE · Week 3 tempo · 2–3 sec bottom pause · control the descent · full ROM press" },
+        { sets:"5×20",         rest:"60 sec", tag:null, note:"FEATURE · Week 4 high-rep shoulder blast · 3–4 sec eccentric · moderate weight · full ROM" },
       ]},
       /* Ex 3 — TRI-SET A · anchor (3×10 every week) */
       { name: "Prone Incline DB Row (face down on incline bench)", w: [
@@ -431,31 +433,31 @@ const DAYS = [
       ]},
       /* Ex 6 — SUPERSET A · anchor (3×12 + 2×AMRAP every week) */
       { name: "DB Arnold Press (seated on bench)", w: [
-        { sets:"3×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · 3 working sets + 2 AMRAP burnout rounds · 3–4 sec eccentric · full rotation neutral→pronated" },
-        { sets:"3×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · add load vs W1 · 2–3 sec bottom pause · full rotation · 2 AMRAP rounds" },
-        { sets:"3×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · controlled rotation · 3–4 sec eccentric · 2 AMRAP burnout rounds" },
-        { sets:"3×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · moderate weight · 2–3 sec bottom pause · 2 AMRAP rounds to failure" },
+        { sets:"4×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · 4 working sets + 2 AMRAP burnout rounds · 3–4 sec eccentric · full rotation neutral→pronated" },
+        { sets:"4×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · add load vs W1 · 2–3 sec bottom pause · full rotation · 2 AMRAP rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · controlled rotation · 3–4 sec eccentric · 2 AMRAP burnout rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · anchor · moderate weight · 2–3 sec bottom pause · 2 AMRAP rounds to failure" },
       ]},
       /* Ex 7 — SUPERSET B · anchor */
       { name: "Seated DB Lateral Raise (seated on bench)", w: [
-        { sets:"3×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 2–3 sec hold at top · 2 AMRAP rounds to failure · elbows slightly soft" },
-        { sets:"3×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · add load · 3–4 sec eccentric lower · squeeze at shoulder height · 2 AMRAP rounds" },
-        { sets:"3×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · strict form · 3–4 sec eccentric · 2 AMRAP burnout rounds" },
-        { sets:"3×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 2–3 sec peak isometric hold · 2 AMRAP rounds every rep controlled" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 2–3 sec hold at top · 2 AMRAP rounds to failure · elbows slightly soft" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · add load · 3–4 sec eccentric lower · squeeze at shoulder height · 2 AMRAP rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · strict form · 3–4 sec eccentric · 2 AMRAP burnout rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 2–3 sec peak isometric hold · 2 AMRAP rounds every rep controlled" },
       ]},
       /* Ex 8 — CLUSTER · FEATURE (rotates with weekly theme) */
       { name: "DB Upright Row", w: [
         { sets:"4×6, + Cluster 8/8/8",     rest:"90 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 1 heavy · 4 working sets then 3 clusters of 8 · 15 sec between · elbows drive high" },
-        { sets:"3×8, + Cluster 8/10/12",   rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 2 pyramid cue · ascending cluster 8→10→12 · 15 sec between · 2–3 sec peak squeeze" },
+        { sets:"4×8, + Cluster 8/10/12",   rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 2 pyramid cue · ascending cluster 8→10→12 · 15 sec between · 2–3 sec peak squeeze" },
         { sets:"4×8, + Cluster 10/10/10",  rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 3 · 4 working sets then 3 clusters of 10 · 15 sec micro-rest · drive elbows up" },
-        { sets:"3×12, + Cluster 12/12/15", rest:"60 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 4 high-rep · ascending cluster 12→12→15 · shoulder pump peak" },
+        { sets:"4×12, + Cluster 12/12/15", rest:"60 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · FEATURE · Week 4 high-rep · ascending cluster 12→12→15 · shoulder pump peak" },
       ]},
       /* Ex 9 — DROP · anchor (3×12 then strip to failure, every week) */
       { name: "DB Bent-Over Rear Delt Fly (seated on bench, torso horizontal)", w: [
-        { sets:"3×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · seated torso horizontal · 2–3 sec peak squeeze · strip ~30% · AMRAP to failure" },
-        { sets:"3×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · add load vs W1 · 3–4 sec eccentric lower · rear delt isolation · strip on final set" },
-        { sets:"3×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · controlled arc · 3–4 sec eccentric · drop to absolute failure · light to moderate" },
-        { sets:"3×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · 2–3 sec peak squeeze · immediate drop · squeeze through failure on high-rep week" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · seated torso horizontal · 2–3 sec peak squeeze · strip ~30% · AMRAP to failure" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · add load vs W1 · 3–4 sec eccentric lower · rear delt isolation · strip on final set" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · controlled arc · 3–4 sec eccentric · drop to absolute failure · light to moderate" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · anchor · 2–3 sec peak squeeze · immediate drop · squeeze through failure on high-rep week" },
       ]},
       /* Ex 10 — FINISHER · HIGH-REP ANCHOR (bodyweight, high-rep every week) */
       { name: "Superman Hold (bodyweight, prone on floor)", w: [
