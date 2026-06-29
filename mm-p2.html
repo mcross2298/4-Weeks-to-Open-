@@ -557,7 +557,16 @@ function makeRestTimer(restStr, exName){
 ───────────────────────────────────────────────── */
 function renderExercise(ex, dIdx, eIdx){
   const wd = ex.w[currentWeek];
-  const tag = wd.tag;
+  let tag = wd.tag;
+  let note = wd.note;
+  // ── Superset-week contingency ──────────────────────────────────────
+  // The final theme week (W5) is superset-dominant, so a tri-set defeats the
+  // logic. Collapse the Pos 3–5 tri-set: Ex 3 (eIdx 2) runs STANDALONE while
+  // Ex 4–5 pair as the superset. Render-only — blueprint data is unchanged.
+  if(currentWeek === WEEK_THEMES.length - 1 && wd.tag === "TRI-SET"){
+    if(eIdx === 2){ tag = null; note = "SUPERSET WEEK — run STANDALONE (tri-set collapses; Ex 4–5 pair as the superset) · " + note; }
+    else { tag = "SUPERSET"; }
+  }
   const isSS = tag === "SUPERSET";
   const isTS = tag === "TRI-SET";
   const isCL = tag === "CLUSTER";
@@ -582,7 +591,7 @@ function renderExercise(ex, dIdx, eIdx){
   const pillCls = isSS?"grp":isTS?"grp triset":isCL?"grp cluster":isDR?"grp drop":isFN?"grp finisher":"grp";
   const pillLabel = isSS?"⚡ Superset":isTS?"▲ Tri-Set":isCL?"◈ Cluster":isDR?"↘ Drop Set":isFN?"🏁 Finisher":"";
   const badgeHtml = tag ? '<div class="a-badges"><span class="a-pill '+pillCls+'">'+pillLabel+'</span></div>' : "";
-  const noteHtml = wd.note ? '<div class="a-notes">'+esc(wd.note)+'</div>' : "";
+  const noteHtml = note ? '<div class="a-notes">'+esc(note)+'</div>' : "";
 
   return '<div class="ex-card a-card'+ssCls+'" data-d="'+dIdx+'" data-e="'+eIdx+'">' +
     '<div class="ex-body">' +

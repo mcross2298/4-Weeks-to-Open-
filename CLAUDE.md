@@ -246,6 +246,12 @@ week to week. Within those 10 exercises:
   actual schemes, not just coaching notes. The low-rep week uses a **mix**
   (5×5 · 5×8 · 8/6/4/4 · 4×6) across the lifts of differing set counts.
 - **`renderWeekTabs` must derive from `WEEK_THEMES`** (no hardcoded 4-week list).
+- **W5 superset-week contingency (render-time).** The Superset week is
+  superset-dominant, so a tri-set defeats the theme. `renderExercise` collapses
+  the Pos 3–5 tri-set **in W5 only** — **Ex 3 runs standalone, Ex 4–5 pair as a
+  superset** — keyed off `currentWeek === WEEK_THEMES.length-1 && tag === "TRI-SET"`.
+  The blueprint **data is unchanged** (Pos 3–5 stay tagged `TRI-SET`); the swap
+  is display-only and must be carried in every cloned program page.
 
 > **8-exercise training days are forbidden** under this rule — expand to the full
 > 10-position blueprint so the complete intensifier spread fits.
