@@ -172,6 +172,27 @@ a DB/bodyweight exercise executed directly in front of that same machine.
 - **Rest-Pause / Myo-Reps:** Single-station or machine movements only —
   no weight changes or setup adjustments required.
 
+### Single-bar barbell complex (grouped-block archetype for barbell phases)
+
+A tri-set or superset may be run as a **single-bar complex**: one loaded
+barbell / EZ-bar used for 2–3 movements back-to-back at one station, no
+re-loading and no walking. This is the most station-anchored block possible and
+keeps a barbell phase barbell-dominant (it extends Archetype B).
+
+### Smith / Olympic-barbell independence (Modality Matrix Phase 2 rule)
+
+> **Permanent rule for Barbell & Smith programs.** Smith-machine and Olympic
+> (7 ft) barbell movements are **independent** — they may never share a tri-set
+> or superset. Concretely:
+> - **Smith lives only at Pos 8 (cluster) & Pos 9 (drop)** — single-station,
+>   never inside a grouped block. Exactly **2 Smith lifts per day**.
+> - **Olympic-barbell compounds are standalone** (Pos 1–2) — never supersetted.
+> - **Grouped blocks (Pos 3–7) are single-bar EZ/short-barbell complexes.** A
+>   Smith move may only ever pair with a **mobile EZ-bar / BW / DB** brought to
+>   the Smith — never with an Olympic compound.
+> - The day is **dominantly barbell** (Olympic at Pos 1–2 + barbell complexes at
+>   Pos 3–7), with the Pos 10 bodyweight finisher per the standard.
+
 ### Applied workout structure (10 exercises/session)
 
 | Position | Exercise type | Station rule |
