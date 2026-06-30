@@ -51,6 +51,13 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:60px;}
 .empty-text{font-size:14px;font-weight:700;}
 .lib-note{margin:14px 0 0;font-size:11px;color:#334155;line-height:1.5;border-top:1px solid rgba(255,255,255,0.05);padding-top:12px;}
 .phase8-badge{display:inline-block;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.3);color:#d4af37;font-size:11px;font-weight:800;letter-spacing:0.1em;padding:2px 8px;border-radius:20px;margin-left:8px;text-transform:uppercase;vertical-align:middle;}
+/* Replace mode — arrived via ?replace= so the user can pick a swap */
+.replace-banner{background:linear-gradient(90deg,rgba(34,211,238,0.14),rgba(34,211,238,0.05));border:1px solid rgba(34,211,238,0.3);border-radius:10px;padding:11px 14px;margin:14px 0 0;color:#a5f3fc;font-size:13px;font-weight:700;line-height:1.5;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.replace-banner strong{color:#22d3ee;}
+.replace-banner a{margin-left:auto;color:#94a3b8;font-size:12px;font-weight:800;text-decoration:none;border:1px solid rgba(255,255,255,0.15);padding:5px 12px;border-radius:14px;-webkit-tap-highlight-color:transparent;}
+.ex-item.pickable,.var-item.pickable{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .12s,border-color .12s;}
+.ex-item.pickable:active,.var-item.pickable:active{background:#112240;border-color:rgba(34,211,238,0.4);}
+.pick-cue{font-size:11px;font-weight:800;color:#22d3ee;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.28);border-radius:14px;padding:3px 9px;flex-shrink:0;letter-spacing:0.04em;white-space:nowrap;}
 </style>
 <link rel="stylesheet" href="base.css?v=65"/>
 <link rel="stylesheet" href="mc-nav.css"/>
@@ -66,6 +73,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:60px;}
   </div>
 </div>
 <div class="content">
+  <div class="replace-banner" id="replaceBanner" style="display:none"></div>
   <div class="search-wrap">
     <div class="search-rel">
       <span class="search-icon">&#128269;</span>
@@ -82,6 +90,52 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:60px;}
 <script>
 
 var activeFilter="All";
+
+// ── Replace mode ──────────────────────────────────────────────────────────
+// Reached from a program page's "Replace exercise → Browse all" flow, which
+// links here as ?replace=<orig name>&from=<program page>&muscle=<group>. In this
+// mode every exercise row becomes tappable: picking one writes the swap to the
+// origin page's scoped key (mc_replacements|<from>) — the same shape
+// mc-replace.js/mc-card-actions.js read — then returns to that program page,
+// where applyReplacements() repaints the card with its REPLACED badge.
+var _params=new URLSearchParams(location.search);
+var REPLACE_ORIG=_params.get('replace')||"";
+var RETURN_PAGE=_params.get('from')||"";
+
+function renderReplaceBanner(){
+  if(!REPLACE_ORIG) return;
+  var b=document.getElementById("replaceBanner");
+  if(!b) return;
+  var cancel=RETURN_PAGE||"index.html";
+  b.innerHTML='&#128257; Replacing <strong>'+esc(REPLACE_ORIG)+'</strong> &mdash; tap an exercise to swap it in.'
+    +'<a href="'+esc(cancel)+'">Cancel</a>';
+  b.style.display="flex";
+}
+
+function pickReplacement(el){
+  var newName=el&&el.dataset?el.dataset.pickname:"";
+  if(!REPLACE_ORIG||!newName) return;
+  var orig=REPLACE_ORIG.toLowerCase();
+  function write(key){
+    var m={};
+    try{ m=JSON.parse(localStorage.getItem(key)||"{}"); }catch(e){ m={}; }
+    // re-root chains: if orig is already a replacement target, update that
+    // original key instead of forking a new one.
+    var rootKey=orig;
+    Object.keys(m).forEach(function(k){ if(m[k]&&String(m[k]).toLowerCase()===orig) rootKey=k; });
+    m[rootKey]=newName;
+    try{ localStorage.setItem(key,JSON.stringify(m)); }catch(e){}
+  }
+  if(RETURN_PAGE){
+    write("mc_replacements|"+RETURN_PAGE);
+    window.location.href=RETURN_PAGE;
+  } else {
+    // Legacy link with no origin page: fall back to the global key (mc-replace.js
+    // migrates it into the scoped key on the next program-page load) and go back.
+    write("mc_replacements");
+    if(history.length>1) history.back(); else window.location.href="index.html";
+  }
+}
 
 // ── Favorites (device-local) ──────────────────────────────────────────────
 var FAV_KEY="mc_ex_favs";
@@ -141,11 +195,14 @@ function buildMasterGroup(masterName,variations,muscle){
   for(var i=0;i<variations.length;i++){
     var ex=variations[i];
     var progs=(ex.programs||[]).join(" &middot; ");
-    varRows+='<div class="var-item">'
+    var vpick=REPLACE_ORIG?' pickable" data-pickname="'+esc(ex.name)+'" onclick="pickReplacement(this)':"";
+    var vcue=REPLACE_ORIG?'<span class="pick-cue">Swap in &rarr;</span>':"";
+    varRows+='<div class="var-item'+vpick+'">'
       +'<div class="var-dot" style="background:'+col+';"></div>'
       +'<div style="flex:1">'
       +'<div class="var-name">'+esc(ex.name)+"</div>"
       +"</div>"
+      +vcue
       +favBtnHTML(ex.name)
       +"</div>";
   }
@@ -170,12 +227,15 @@ function exItemHTML(ex){
   var badge=isCustom?'<span style="font-size:10px;font-weight:800;letter-spacing:0.08em;padding:2px 7px;border-radius:5px;background:rgba(212,175,55,0.12);color:#d4af37;border:1px solid rgba(212,175,55,0.3);margin-left:6px;vertical-align:middle;">YOUR EXERCISE</span>'
     :isPub?'<span style="font-size:10px;font-weight:800;letter-spacing:0.08em;padding:2px 7px;border-radius:5px;background:rgba(34,211,238,0.1);color:#22d3ee;border:1px solid rgba(34,211,238,0.25);margin-left:6px;vertical-align:middle;">ADDED</span>'
     :"";
-  return '<div class="ex-item">'
+  var pick=REPLACE_ORIG?' pickable" data-pickname="'+esc(ex.name)+'" onclick="pickReplacement(this)':"";
+  var cue=REPLACE_ORIG?'<span class="pick-cue">Swap in &rarr;</span>':"";
+  return '<div class="ex-item'+pick+'">'
     +'<div class="ex-muscle-dot" style="background:'+col+';box-shadow:0 0 5px '+col+'44;"></div>'
     +'<div style="flex:1">'
     +'<div class="ex-name">'+esc(ex.name)+badge+"</div>"
     +"</div>"
     +'<div class="ex-muscle-tag">'+(MUSCLE_ICONS[ex.muscle]||"")+"</div>"
+    +cue
     +favBtnHTML(ex.name)
     +"</div>";
 }
@@ -247,7 +307,8 @@ function filterExercises(){
 // exercises into EXERCISES before we render, so the count and list are accurate.
 document.getElementById("totalCount").textContent=EXERCISES.filter(function(e){return !isConditioning(e);}).length+" exercises across all programs";
 buildFilters();
-var _urlMuscle = new URLSearchParams(location.search).get('muscle');
+renderReplaceBanner();
+var _urlMuscle = _params.get('muscle');
 if (_urlMuscle) setFilter(_urlMuscle); else filterExercises();
 
 </script>
