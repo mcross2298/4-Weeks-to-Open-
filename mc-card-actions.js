@@ -261,7 +261,8 @@
     if (!name) return;
     if (!window.MCBiomech) {           // engine missing → old library flow
       if (confirm('Replace "' + name.substring(0, 40) + '"?\nTap OK to open Exercise Library.')) {
-        window.location.href = 'exercise-library.html?replace=' + encodeURIComponent(name);
+        window.location.href = 'exercise-library.html?replace=' + encodeURIComponent(name) +
+          '&from=' + encodeURIComponent(PAGE_ID);
       }
       return;
     }
@@ -285,7 +286,8 @@
             var inf = window.MCBiomech ? MCBiomech.classify(nm) : {};
             closeSub();
             window.location.href = 'exercise-library.html?replace=' + encodeURIComponent(nm) +
-              (inf.muscle ? '&muscle=' + encodeURIComponent(inf.muscle) : '');
+              (inf.muscle ? '&muscle=' + encodeURIComponent(inf.muscle) : '') +
+              '&from=' + encodeURIComponent(PAGE_ID);
             return;
           }
           return;
