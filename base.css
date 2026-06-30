@@ -199,15 +199,22 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 }
 
 /* ── SUPERSET CARD ──────────────────────────────────────────────── */
-.ss-card{border-radius:14px;border:1px solid rgba(168,85,247,0.28);margin-bottom:10px;overflow:hidden;position:relative;
+/* Grouped block (superset / tri-set / giant set): a single continuous left
+   "spine" rail + a branch tie into each numbered leg, so the chained moves
+   read as one back-to-back unit. Extra bottom margin sets grouped blocks
+   clearly apart from neighbouring standalone cards. */
+.ss-card{border-radius:14px;border:1px solid rgba(168,85,247,0.28);margin-bottom:16px;overflow:hidden;position:relative;
   background:linear-gradient(180deg,#0d0f12,#0a0b0d);
   box-shadow:0 8px 26px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05);}
 /* Premier purpose-rail — violet for supersets (structural grammar) */
-.ss-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;z-index:1;
-  background:linear-gradient(180deg,#a855f7,#6d28d9);box-shadow:0 0 14px rgba(168,85,247,0.45);}
-.ss-header{background:rgba(168,85,247,0.12);padding:8px 14px 8px 18px;border-bottom:1px solid rgba(168,85,247,0.15);}
+.ss-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;z-index:1;
+  background:linear-gradient(180deg,#a855f7,#6d28d9);box-shadow:0 0 16px rgba(168,85,247,0.55);}
+.ss-header{background:rgba(168,85,247,0.14);padding:8px 14px 8px 18px;border-bottom:1px solid rgba(168,85,247,0.18);}
 .ss-label{font-size:11px;font-weight:900;letter-spacing:0.18em;color:#c084fc;text-transform:uppercase;}
-.ss-ex{display:flex;gap:10px;align-items:flex-start;padding:11px 14px 11px 18px;cursor:pointer;}
+.ss-ex{display:flex;gap:10px;align-items:flex-start;padding:11px 14px 11px 18px;cursor:pointer;position:relative;}
+/* branch tie — links the shared spine to this leg's number node */
+.ss-ex::after{content:'';position:absolute;left:5px;top:25px;width:13px;height:2px;z-index:2;
+  background:#a855f7;border-radius:1px;box-shadow:0 0 6px rgba(168,85,247,0.5);}
 .ss-ex:not(:last-child){border-bottom:1px solid rgba(168,85,247,0.1);}
 .ss-ex.checked .ss-name{text-decoration:line-through;color:#34d399;}
 .ss-ex.checked .ss-num{background:#065f46!important;border-color:transparent!important;color:#fff!important;}
@@ -229,6 +236,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .ss-card.is-tri .ss-label{color:#fbbf24;}
 .ss-card.is-tri .ss-num{background:rgba(245,158,11,0.18);color:#fbbf24;border-color:rgba(245,158,11,0.3);}
 .ss-card.is-tri .ss-ex:not(:last-child){border-bottom-color:rgba(245,158,11,0.12);}
+.ss-card.is-tri .ss-ex::after{background:#fbbf24;box-shadow:0 0 6px rgba(245,158,11,0.5);}
 .ss-card.is-tri .ss-divider{background:rgba(245,158,11,0.06);}
 .ss-card.is-tri .ss-x{color:#f59e0b;}
 
@@ -356,7 +364,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
   border-radius:16px;overflow:hidden;position:relative;
 }
 .ex-card.a-card::after{content:none;}              /* drop base square affordance */
-.ex-card.a-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;z-index:1;
+.ex-card.a-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;z-index:1;
   background:linear-gradient(180deg,rgba(var(--accent-rgb),1),rgba(var(--accent-rgb),0.45));
   box-shadow:0 0 16px rgba(var(--accent-rgb),0.5);}
 /* Structural "purpose" colors — universal grammar: superset=violet, tri-set=amber, cluster=cyan */
