@@ -193,6 +193,18 @@ keeps a barbell phase barbell-dominant (it extends Archetype B).
 > - The day is **dominantly barbell** (Olympic at Pos 1–2 + barbell complexes at
 >   Pos 3–7), with the Pos 10 bodyweight finisher per the standard.
 
+### Cable / plate-loaded independence (Modality Matrix Phase 3 rule)
+
+> **Permanent rule for Cable & Plate-Loaded programs.** The day is
+> **cable-dominant** with exactly **3 plate-loaded machines**, and the 3 phases
+> together (DB → Barbell/Smith → Cable/Plate-loaded) cover every equipment type.
+> - **Plate-loaded lives only at Pos 1 (low-rep anchor), Pos 8 (cluster) &
+>   Pos 9 (drop)** — standalone single-station, never inside a tri-set/superset.
+>   The Pos 1 plate-loaded compound carries the heavy 5×5 the cables can't.
+> - **Grouped blocks (Pos 3–7) are pure single cable-column complexes** — one
+>   stack, swap attachments for 2–3 moves at that column (Archetype D), no DB/BW.
+> - **Cable** fills Pos 2–7; the **Pos 10 bodyweight finisher** per the standard.
+
 ### Applied workout structure (10 exercises/session)
 
 | Position | Exercise type | Station rule |

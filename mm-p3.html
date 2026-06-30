@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Modality Matrix — Phase 3: Cable &amp; Plate-Loaded</title>
+<style>
+:root{--accent:#10b981;--accent-rgb:16,185,129;}
+.header{background:linear-gradient(135deg,#04231a,#0a0a0a);}
+</style>
+<link rel="stylesheet" href="base.css?v=65"/>
+<link rel="stylesheet" href="mc-card-actions.css"/>
+<link rel="stylesheet" href="mc-nav.css"/>
+<link rel="stylesheet" href="mc-summary.css"/>
+<link rel="stylesheet" href="mc-setlog.css"/>
+<style>
+.app{min-height:100vh;}
+.schedule{display:inline-block;background:rgba(var(--accent-rgb),0.12);border:1px solid rgba(var(--accent-rgb),0.3);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--accent);font-weight:700;}
+.hint{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;text-align:center;opacity:0.6;}
+
+/* ── Week selector ── */
+.week-selector{display:flex;gap:6px;padding:14px 16px;background:#0a0a0a;border-bottom:1px solid rgba(255,255,255,0.05);position:sticky;top:0;z-index:20;}
+.wtab{flex:1;padding:8px 4px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:#475569;font-size:11px;font-weight:800;letter-spacing:0.08em;text-align:center;cursor:pointer;transition:all 0.15s;line-height:1.3;}
+.wtab:active{transform:scale(0.97);}
+.wtab.active{background:rgba(59,130,246,0.15);border-color:rgba(59,130,246,0.4);color:#60a5fa;}
+.wtab .wt-label{display:block;font-size:9px;font-weight:700;color:#334155;letter-spacing:0.1em;text-transform:uppercase;margin-top:2px;}
+.wtab.active .wt-label{color:#10b981;opacity:0.8;}
+
+/* ── Day accordion ── */
+.day-card{border-radius:16px;border:1px solid rgba(255,255,255,0.06);margin-bottom:10px;overflow:hidden;transition:all 0.2s;background:rgba(255,255,255,0.02);}
+.day-card.open{border-color:rgba(var(--day-rgb),0.4);box-shadow:0 4px 24px rgba(var(--day-rgb),0.12),0 0 0 1px rgba(var(--day-rgb),0.1);}
+.day-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background 0.15s;}
+.day-card.open .day-header{background:rgba(var(--day-rgb),0.06);}
+.day-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:#fff;}
+.day-info{flex:1;}
+.day-session{font-weight:800;font-size:14px;color:#e2e8f0;letter-spacing:-0.01em;}
+.day-meta{font-size:11px;color:#475569;margin-top:2px;}
+.day-toggle{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.05);color:#475569;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.08);transition:all 0.2s;}
+.day-card.open .day-toggle{color:#fff;}
+
+/* ── Exercises ── */
+.exercises{padding:4px 12px 14px;border-top:1px solid rgba(var(--day-rgb),0.08);display:none;}
+.day-card.open .exercises{display:block;}
+
+/* ── Rest & Conditioning day cards ── */
+.rest-card{background:rgba(255,255,255,0.015);border:1px dashed rgba(255,255,255,0.08);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.rest-label{font-weight:800;font-size:13px;color:#334155;letter-spacing:0.06em;}
+.rest-sub{font-size:11px;color:#1e293b;margin-top:2px;}
+.cond-day-card{background:rgba(217,119,6,0.05);border:1px solid rgba(217,119,6,0.2);border-radius:14px;padding:0;margin-bottom:10px;overflow:hidden;transition:border-color 0.15s;}
+.cond-day-card .day-header{cursor:pointer;}
+.cond-day-card.open{border-color:rgba(217,119,6,0.4);}
+.cond-day-card.open .day-header{background:rgba(217,119,6,0.06);}
+.cond-day-card .exercises{border-top:1px solid rgba(217,119,6,0.1);}
+.cond-link-row{display:flex;align-items:center;gap:12px;padding:14px 4px;border-radius:10px;text-decoration:none;color:#fbbf24;font-weight:700;font-size:13px;transition:background 0.15s;}
+.cond-link-row:hover{background:rgba(217,119,6,0.08);}
+.cond-activity{display:flex;align-items:flex-start;gap:10px;padding:10px 4px;border-bottom:1px solid rgba(217,119,6,0.08);}
+.cond-activity:last-child{border-bottom:none;}
+.cond-act-icon{font-size:16px;margin-top:1px;flex-shrink:0;}
+.cond-act-name{font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:2px;}
+.cond-act-desc{font-size:11px;color:#92400e;}
+
+/* ── Tag banners ── */
+.ex-tag{font-size:11px;font-weight:900;letter-spacing:0.14em;padding:5px 14px;text-transform:uppercase;position:relative;}
+.ex-tag.superset{background:rgba(251,191,36,0.12);color:#fbbf24;border-bottom:1px solid rgba(251,191,36,0.15);}
+.ex-tag.triset{background:rgba(168,85,247,0.12);color:#c084fc;border-bottom:1px solid rgba(168,85,247,0.15);}
+.ex-tag.cluster{background:rgba(34,211,238,0.1);color:#22d3ee;border-bottom:1px solid rgba(34,211,238,0.15);}
+.ex-tag.drop{background:rgba(244,63,94,0.1);color:#fb7185;border-bottom:1px solid rgba(244,63,94,0.15);}
+.ex-tag.finisher{background:rgba(251,146,60,0.1);color:#fb923c;border-bottom:1px solid rgba(251,146,60,0.15);}
+.ex-tag.tut{background:rgba(6,182,212,0.1);color:#22d3ee;border-bottom:1px solid rgba(6,182,212,0.15);}
+
+/* ── Exercise card (a-card style, matches arnold-legacy) ── */
+.a-card{margin-bottom:2px;padding:12px 0 10px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.a-card:last-child{border-bottom:none;padding-bottom:4px;}
+.a-card.is-ss{margin-left:6px;border-left:2px solid rgba(251,191,36,0.3);padding-left:10px;}
+.a-card.is-cluster{border-left:2px solid rgba(34,211,238,0.3);padding-left:10px;margin-left:6px;}
+.a-card.is-drop{border-left:2px solid rgba(244,63,94,0.3);padding-left:10px;margin-left:6px;}
+.a-top{display:flex;gap:10px;margin-bottom:8px;}
+.a-idx{min-width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#475569;flex-shrink:0;margin-top:1px;}
+.a-head{flex:1;min-width:0;}
+.a-name{font-size:14px;font-weight:800;color:#e2e8f0;line-height:1.3;margin-bottom:4px;}
+.a-badges{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;}
+.a-pill{font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:0.05em;text-transform:uppercase;}
+.a-pill.grp{background:rgba(251,191,36,0.12);color:#fbbf24;border:1px solid rgba(251,191,36,0.2);}
+.a-pill.grp.triset{background:rgba(168,85,247,0.12);color:#c084fc;border-color:rgba(168,85,247,0.2);}
+.a-pill.grp.cluster{background:rgba(34,211,238,0.1);color:#22d3ee;border-color:rgba(34,211,238,0.2);}
+.a-pill.grp.drop{background:rgba(244,63,94,0.1);color:#fb7185;border-color:rgba(244,63,94,0.2);}
+.a-pill.grp.finisher{background:rgba(251,146,60,0.1);color:#fb923c;border-color:rgba(251,146,60,0.2);}
+.a-pill.tempo{background:rgba(6,182,212,0.08);color:#22d3ee;border:1px solid rgba(6,182,212,0.18);}
+.a-reps{display:flex;flex-direction:column;gap:3px;margin-bottom:8px;padding-left:32px;}
+.a-leg{display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
+.a-legtag{font-size:9px;font-weight:900;color:#475569;letter-spacing:0.08em;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:4px;margin-right:2px;}
+.a-rep{font-size:12px;font-weight:800;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:#e2e8f0;}
+.a-rep.live{background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.25);color:#60a5fa;}
+.a-rep.special{background:rgba(244,63,94,0.1);border-color:rgba(244,63,94,0.25);color:#fb7185;}
+.a-sep{color:#334155;font-size:11px;font-weight:600;padding:0 1px;}
+.a-strip{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-bottom:6px;padding-left:32px;}
+.a-cell .k{font-size:10px;font-weight:800;color:#475569;letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:2px;}
+.a-cell .v{font-size:12px;font-weight:700;color:#94a3b8;}
+.a-timerbar{padding-left:32px;}
+.a-notes{font-size:11px;color:#475569;font-style:italic;margin-top:5px;padding-left:32px;line-height:1.45;}
+.editable{cursor:text;border-bottom:1px dashed rgba(59,130,246,0.4);padding-bottom:1px;display:inline-block;color:#e2e8f0;}
+
+/* ── Week theme badge ── */
+.week-theme-bar{background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.wtb-icon{font-size:16px;flex-shrink:0;}
+.wtb-text{font-size:12px;color:#93c5fd;font-weight:700;line-height:1.4;}
+.wtb-label{font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#10b981;margin-bottom:2px;}
+</style>
+</head>
+<body>
+<div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
+<div class="app" id="app"></div>
+<script src="mc-timer.js"></script>
+<script>
+
+/* ─────────────────────────────────────────────────
+   MODALITY MATRIX — PHASE 1: DUMBBELL SPLIT
+   4 days × 4 weeks · equipment: dumbbell only
+   station-anchoring: Archetype A (DB / Bench)
+───────────────────────────────────────────────── */
+
+let currentWeek = 0;
+
+const WEEK_THEMES = [
+  { icon: "🏋️", label: "Week 1 · Low-Rep", text: "Low-Rep Strength — the 4 FEATURE lifts run heavy (5×5 · 8/6/4/4 · 4×6). Every anchor holds its scheme, so each day still carries all 7 intensifiers: low-rep, high-rep, TUT, tri-set, superset, cluster and drop." },
+  { icon: "📈", label: "Week 2 · Pyramid", text: "Pyramid — the 4 FEATURE lifts run ascending-weight pyramids (15/12/10/8/6 · 12/10/8). All anchors stay put, so the full intensifier spread is intact." },
+  { icon: "⏱️", label: "Week 3 · Tempo", text: "Tempo — the 4 FEATURE lifts use explicit tempo (5×10 @ 4-0-1 · 4×10 @ 3-1-1): slow eccentrics, constant tension. The complete intensifier spread remains across all 10 exercises." },
+  { icon: "🔥", label: "Week 4 · High-Rep", text: "High-Rep Hypertrophy — the 4 FEATURE lifts blast 15–20 reps. The low-rep anchor stays heavy so every day keeps both ends of the rep spectrum." },
+  { icon: "🔗", label: "Week 5 · Superset", text: "Superset — the 4 FEATURE lifts run paired back-to-back with AMRAP burnouts and minimal rest. Tri-set, cluster, drop, low-rep and high-rep anchors all remain, so every intensifier is still present." },
+];
+
+/*
+  Exercise data structure:
+  { name, w: [ {sets, rest, tag, note}, × 4 weeks ] }
+  tag values: null | "SUPERSET" | "TRI-SET" | "CLUSTER" | "DROP" | "FINISHER"
+
+  Each exercise has 5 week entries (w[0..4]) = W1 Low-Rep · W2 Pyramid ·
+  W3 Tempo · W4 High-Rep · W5 Superset.
+
+  Per-day intensifier blueprint (fixed position → intensifier role):
+    Pos 1   Compound  — LOW-REP ANCHOR  (heavy ~5×5, identical every week)
+    Pos 2   Compound  — FEATURE         (rep scheme rotates with weekly theme)
+    Pos 3   TRI-SET A — anchor
+    Pos 4   TRI-SET B — TUT ANCHOR      (fixed 3 sec negatives / 2 sec pauses)
+    Pos 5   TRI-SET C — FEATURE         (rotates with weekly theme)
+    Pos 6   SUPERSET A — FEATURE        (rotates; superset is its home in W5)
+    Pos 7   SUPERSET B — anchor (+ 2×AMRAP)
+    Pos 8   CLUSTER   — FEATURE         (working sets rotate; always a cluster)
+    Pos 9   DROP      — anchor
+    Pos 10  FINISHER  — HIGH-REP ANCHOR (bodyweight, high-rep/AMRAP every week)
+  The 4 FEATURE lifts (Pos 2, 5, 6, 8) visibly take on the week's theme — real
+  pyramids in W2, explicit @ tempo notation in W3, paired supersets in W5. The
+  6 ANCHORs keep a fixed scheme across all 5 weeks (load/cues progress only),
+  which guarantees every day carries all 7 intensifiers every week.
+  Working-set mix per day = 2 five-set (Pos 1–2 compounds) · 4 four-set
+  (Pos 6–7 superset, Pos 8 cluster, Pos 9 drop) · 4 three-set (Pos 3–5
+  tri-sets — always 3 sets — + Pos 10 finisher). Holds every week.
+*/
+
+const DAYS = [
+
+  /* ════════════════ DAY 1 — PUSH (10 exercises) ════════════════ */
+  {
+    type: "training", label: "Day 1", session: "Push",
+    color: "#f43f5e", icon: "🏋️", exCount: 10,
+    meta: "Cable-Dominant · Single-Column Complexes · Plate-Loaded Pos 1·8·9",
+    exercises: [
+      /* Ex 1 — PLATE-LOADED · LOW-REP ANCHOR (heavy 5×5 every week, standalone) */
+      { name: "Plate-Loaded Chest Press (Hammer Strength)", w: [
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · plate-loaded · heavy 5×5 every week · 3–4 sec eccentric · drive through the handles · full stretch" },
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · same 5×5 · add a plate vs W1 · controlled descent · squeeze at lockout" },
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · same 5×5 · progress load · 3–4 sec eccentric · pause at the chest" },
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · same 5×5 · stay heavy even on high-rep week · explosive press" },
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · same 5×5 · keep it heavy on superset week · full lockout" },
+      ]},
+      /* Ex 2 — CABLE · FEATURE compound (5 sets, rotates with theme, standalone) */
+      { name: "Cable Chest Press (dual pulley)", w: [
+        { sets:"8, 6, 5, 5, 4",    rest:"90 sec", tag:null, note:"FEATURE · Week 1 LOW-REP · heavy descending load · constant tension · squeeze at the midline" },
+        { sets:"15, 12, 10, 8, 6", rest:"90 sec", tag:null, note:"FEATURE · Week 2 PYRAMID — add weight each set · 3–4 sec eccentric on heavier sets" },
+        { sets:"5×10 @ 4-0-1",     rest:"75 sec", tag:null, note:"FEATURE · Week 3 TEMPO · 4-0-1 (4 sec out · 0 pause · 1 sec in) · constant tension" },
+        { sets:"5×20",             rest:"60 sec", tag:null, note:"FEATURE · Week 4 HIGH-REP · moderate load · full ROM · squeeze every rep" },
+        { sets:"5×10, + 2×AMRAP",  rest:"45 sec", tag:null, note:"FEATURE · Week 5 SUPERSET · run paired back-to-back · minimal rest · 2 AMRAP burnout rounds" },
+      ]},
+      /* Ex 3–5 — TRI-SET · single cable-column complex (one stack, swap attachments, station-anchored) */
+      /* Ex 3 — TRI-SET A · anchor (3×10 every week) */
+      { name: "Cable Fly (high-to-low)", w: [
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · same cable column · big arc · 3–4 sec eccentric · squeeze at the midline" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · add load vs W1 · controlled stretch · constant tension" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · progress load · 3–4 sec eccentric · full stretch" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · hold load on high-rep week · squeeze hard" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · superset week — minimal rest, swap the attachment for the next move" },
+      ]},
+      /* Ex 4 — TRI-SET B · TUT ANCHOR (3 sec negatives, fixed every week) */
+      { name: "Cable Incline Press (same column)", w: [
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives every rep · same column · drive up · constant tension" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives · 2 sec stretch pause · controlled" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives · squeeze at lockout · upper-chest focus" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives · full ROM · no bounce" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives held on superset week · constant tension" },
+      ]},
+      /* Ex 5 — TRI-SET C · FEATURE (rotates · always 3 sets · same column) */
+      { name: "Cable Tricep Pushdown (same column)", w: [
+        { sets:"3×6",          rest:"75 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 1 LOW-REP · heavy · same column · elbows pinned · full lockout" },
+        { sets:"12, 10, 8",    rest:"60 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 2 PYRAMID — ascending weight across the 3 sets · squeeze" },
+        { sets:"3×10 @ 4-0-1", rest:"60 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 3 TEMPO · 4-0-1 · slow return · constant tension" },
+        { sets:"3×20",         rest:"60 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 4 HIGH-REP · light-moderate · tricep pump" },
+        { sets:"3×12",         rest:"45 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 5 SUPERSET · paired superset on the same column · minimal rest" },
+      ]},
+      /* Ex 6–7 — SUPERSET · single cable-column complex (one stack, swap attachments) */
+      /* Ex 6 — SUPERSET A · FEATURE (rotates · 4 sets · superset is its home in W5) */
+      { name: "Cable Overhead Tricep Extension", w: [
+        { sets:"8, 6, 4, 4, + 2×AMRAP",  rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 1 LOW-REP · heavy 8/6/4/4 + 2 AMRAP burnouts · full overhead stretch" },
+        { sets:"12, 10, 8, 6, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 2 PYRAMID working sets + 2 AMRAP rounds · constant tension" },
+        { sets:"4×10 @ 3-1-1, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 3 TEMPO · 3-1-1 · + 2 AMRAP burnout rounds" },
+        { sets:"4×20, + 2×AMRAP",         rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 4 HIGH-REP + 2 AMRAP rounds · full stretch" },
+        { sets:"4×12, + 2×AMRAP",         rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 5 SUPERSET — its home week · 4×12 paired + 2 AMRAP burnouts" },
+      ]},
+      /* Ex 7 — SUPERSET B · anchor (4×12 + 2×AMRAP every week · same column) */
+      { name: "Cable Lateral Raise (same column)", w: [
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · same column · lead with the elbow · 2 AMRAP rounds to failure" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · add load · constant tension · 2 AMRAP rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 3–4 sec eccentric · 2 AMRAP burnout rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · strict form · 2 AMRAP rounds · no swing" },
+        { sets:"4×12, + 2×AMRAP", rest:"60 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · superset week — minimal rest · 2 AMRAP rounds to failure" },
+      ]},
+      /* Ex 8 — PLATE-LOADED · CLUSTER · FEATURE (single station · working sets rotate · always a cluster) */
+      { name: "Plate-Loaded Shoulder Press (Hammer Strength)", w: [
+        { sets:"4×6, + Cluster 6/6/6",       rest:"90 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 1 LOW-REP · heavy 4×6 then 3 clusters of 6 · 15 sec between" },
+        { sets:"12, 10, 8, 6, + Cluster 8/10/12", rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 2 PYRAMID working sets + ascending cluster 8→10→12 · 15 sec between" },
+        { sets:"4×8 @ 4-0-1, + Cluster 10/10/10", rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 3 TEMPO · 4-0-1 working sets + 3 clusters of 10 · 15 sec micro-rest" },
+        { sets:"4×15, + Cluster 15/15/20",   rest:"60 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 4 HIGH-REP + ascending cluster 15→15→20 · shoulder pump peak" },
+        { sets:"4×12, + Cluster 12/12/12",   rest:"60 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 5 SUPERSET · superset the working sets · + 3 clusters of 12" },
+      ]},
+      /* Ex 9 — PLATE-LOADED · DROP · anchor (single station · strip a plate every week) */
+      { name: "Plate-Loaded Incline Press (drop set)", w: [
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · 4 working sets then strip a plate per side ~30% · AMRAP to failure · 3–4 sec eccentric" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · add load vs W1 · 2–3 sec pause · strip ~30% · AMRAP to failure" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · controlled · 3–4 sec eccentric · double-drop optional · upper-chest squeeze" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · strip to failure · chase the pump on high-rep week" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · superset week — strip to failure · minimal rest" },
+      ]},
+      /* Ex 10 — FINISHER · HIGH-REP ANCHOR (bodyweight, high-rep every week) */
+      { name: "Push-Up (bodyweight finisher)", w: [
+        { sets:"3×AMRAP", rest:"60 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · BW only · max reps each set · 3–4 sec eccentric lower · chest to floor" },
+        { sets:"3×AMRAP", rest:"60 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · beat W1 reps · 2–3 sec bottom pause · full lockout" },
+        { sets:"3×AMRAP", rest:"45 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · shorter rest · max reps · controlled tempo" },
+        { sets:"3×AMRAP", rest:"45 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · absolute failure each set · full ROM · chest pump flush" },
+        { sets:"3×AMRAP", rest:"45 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · superset week — max reps · minimal rest · full ROM" },
+      ]},
+    ]
+  },
+
+  /* ════════════════ DAY 2 — PULL (10 exercises) ════════════════ */
+  {
+    type: "training", label: "Day 2", session: "Pull",
+    color: "#0891b2", icon: "🔙", exCount: 10,
+    meta: "Cable-Dominant · Single-Column Complexes · Plate-Loaded Pos 1·8·9",
+    exercises: [
+      /* Ex 1 — PLATE-LOADED · LOW-REP ANCHOR (heavy 5×5 every week, standalone) */
+      { name: "Plate-Loaded Row (Hammer Strength)", w: [
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · plate-loaded · heavy 5×5 every week · 3–4 sec eccentric · drive elbows back · full retraction" },
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · same 5×5 · add a plate vs W1 · 2–3 sec peak squeeze · chest on pad" },
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · same 5×5 · progress load · 3–4 sec eccentric · full scapular retraction" },
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · same 5×5 · stay heavy even on high-rep week · squeeze each rep" },
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · same 5×5 · keep it heavy on superset week · full retraction" },
+      ]},
+      /* Ex 2 — CABLE · FEATURE compound (5 sets, rotates with theme, standalone) */
+      { name: "Lat Pulldown (cable)", w: [
+        { sets:"8, 6, 5, 5, 4",    rest:"90 sec", tag:null, note:"FEATURE · Week 1 LOW-REP · heavy descending load · drive elbows down · full stretch at top" },
+        { sets:"15, 12, 10, 8, 6", rest:"90 sec", tag:null, note:"FEATURE · Week 2 PYRAMID — add weight each set · 3–4 sec eccentric on heavier sets" },
+        { sets:"5×10 @ 4-0-1",     rest:"75 sec", tag:null, note:"FEATURE · Week 3 TEMPO · 4-0-1 · controlled return · constant tension on the lats" },
+        { sets:"5×20",             rest:"60 sec", tag:null, note:"FEATURE · Week 4 HIGH-REP · moderate load · full ROM · squeeze the lats" },
+        { sets:"5×10, + 2×AMRAP",  rest:"45 sec", tag:null, note:"FEATURE · Week 5 SUPERSET · run paired back-to-back · minimal rest · 2 AMRAP burnout rounds" },
+      ]},
+      /* Ex 3–5 — TRI-SET · single cable-column complex (one stack, swap attachments, station-anchored) */
+      /* Ex 3 — TRI-SET A · anchor (3×10 every week) */
+      { name: "Seated Cable Row", w: [
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · same cable column · drive elbows back · 2–3 sec peak squeeze · chest tall" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · add load vs W1 · 3–4 sec eccentric · full retraction" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · progress load · 3–4 sec eccentric · no torso swing" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · hold load on high-rep week · squeeze scapulae" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · superset week — minimal rest, swap the attachment for the next move" },
+      ]},
+      /* Ex 4 — TRI-SET B · TUT ANCHOR (3 sec negatives, fixed every week) */
+      { name: "Cable Straight-Arm Pulldown (same column)", w: [
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives every rep · same column · lats drive the bar down · constant tension" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives · 2 sec stretch pause overhead · controlled" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives · squeeze the lats at the bottom · soft elbows" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives · full ROM · no momentum" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives held on superset week · constant tension" },
+      ]},
+      /* Ex 5 — TRI-SET C · FEATURE (rotates · always 3 sets · same column) */
+      { name: "Cable Face Pull (same column)", w: [
+        { sets:"3×6",          rest:"75 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 1 LOW-REP · heavier · same column · pull to the forehead · 2 sec squeeze" },
+        { sets:"12, 10, 8",    rest:"60 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 2 PYRAMID — ascending weight across the 3 sets · external rotation" },
+        { sets:"3×10 @ 4-0-1", rest:"60 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 3 TEMPO · 4-0-1 · slow return · rear-delt focus" },
+        { sets:"3×20",         rest:"60 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 4 HIGH-REP · light · constant tension · rear-delt pump" },
+        { sets:"3×12",         rest:"45 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 5 SUPERSET · paired superset on the same column · minimal rest" },
+      ]},
+      /* Ex 6–7 — SUPERSET · single cable-column complex (one stack, swap attachments) */
+      /* Ex 6 — SUPERSET A · FEATURE (rotates · 4 sets · superset is its home in W5) */
+      { name: "Cable Bicep Curl", w: [
+        { sets:"8, 6, 4, 4, + 2×AMRAP",  rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 1 LOW-REP · heavy 8/6/4/4 + 2 AMRAP burnouts · strict · no swing" },
+        { sets:"12, 10, 8, 6, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 2 PYRAMID working sets + 2 AMRAP rounds · squeeze at top" },
+        { sets:"4×10 @ 3-1-1, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 3 TEMPO · 3-1-1 · + 2 AMRAP burnout rounds" },
+        { sets:"4×20, + 2×AMRAP",         rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 4 HIGH-REP + 2 AMRAP rounds · constant tension" },
+        { sets:"4×12, + 2×AMRAP",         rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 5 SUPERSET — its home week · 4×12 paired + 2 AMRAP burnouts" },
+      ]},
+      /* Ex 7 — SUPERSET B · anchor (4×12 + 2×AMRAP every week · same column) */
+      { name: "Cable Hammer Curl (rope, same column)", w: [
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · same column · neutral rope grip · brachialis focus · 2 AMRAP rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · add load · strict form · 2 AMRAP rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 3–4 sec eccentric · 2 AMRAP burnout rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · controlled · 2 AMRAP rounds · squeeze at top" },
+        { sets:"4×12, + 2×AMRAP", rest:"60 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · superset week — minimal rest · 2 AMRAP rounds to failure" },
+      ]},
+      /* Ex 8 — PLATE-LOADED · CLUSTER · FEATURE (single station · working sets rotate · always a cluster) */
+      { name: "Plate-Loaded Iso-Lateral Pulldown", w: [
+        { sets:"4×6, + Cluster 6/6/6",       rest:"90 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 1 LOW-REP · heavy 4×6 then 3 clusters of 6 · 15 sec between" },
+        { sets:"12, 10, 8, 6, + Cluster 8/10/12", rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 2 PYRAMID working sets + ascending cluster 8→10→12 · 15 sec between" },
+        { sets:"4×8 @ 4-0-1, + Cluster 10/10/10", rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 3 TEMPO · 4-0-1 working sets + 3 clusters of 10 · 15 sec micro-rest" },
+        { sets:"4×15, + Cluster 15/15/20",   rest:"60 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 4 HIGH-REP + ascending cluster 15→15→20 · lat pump peak" },
+        { sets:"4×12, + Cluster 12/12/12",   rest:"60 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 5 SUPERSET · superset the working sets · + 3 clusters of 12" },
+      ]},
+      /* Ex 9 — PLATE-LOADED · DROP · anchor (single station · strip a plate every week) */
+      { name: "Plate-Loaded High Row (drop set)", w: [
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · 4 working sets then strip a plate per side ~30% · AMRAP to failure · 2 sec squeeze" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · add load vs W1 · 3–4 sec eccentric · strip ~30% · AMRAP to failure" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · controlled · 3–4 sec eccentric · double-drop optional · lat squeeze" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · strip to failure · chase the pump on high-rep week" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · superset week — strip to failure · minimal rest" },
+      ]},
+      /* Ex 10 — FINISHER · HIGH-REP ANCHOR (bodyweight, high-rep every week) */
+      { name: "Inverted Row (bodyweight finisher)", w: [
+        { sets:"3×AMRAP", rest:"60 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · BW only · chest to bar · max reps each set · 2 sec peak squeeze" },
+        { sets:"3×AMRAP", rest:"60 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · beat W1 reps · 3–4 sec eccentric lower · full retraction" },
+        { sets:"3×AMRAP", rest:"45 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · shorter rest · max reps · controlled tempo" },
+        { sets:"3×AMRAP", rest:"45 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · absolute failure each set · feet forward to scale · back pump flush" },
+        { sets:"3×AMRAP", rest:"45 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · superset week — max reps · minimal rest · squeeze each rep" },
+      ]},
+    ]
+  },
+
+  /* ════════════════ DAY 3 — LEGS (10 exercises) ════════════════ */
+  {
+    type: "training", label: "Day 3", session: "Legs",
+    color: "#22c55e", icon: "🦵", exCount: 10,
+    meta: "Cable-Dominant · Single-Column Complexes · Plate-Loaded Pos 1·8·9",
+    exercises: [
+      /* Ex 1 — PLATE-LOADED · LOW-REP ANCHOR (heavy 5×5 every week, standalone) */
+      { name: "Plate-Loaded Leg Press", w: [
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · plate-loaded · heavy 5×5 every week · 3–4 sec eccentric · full depth · drive through midfoot" },
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · same 5×5 · add a plate vs W1 · controlled descent · knees track toes" },
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · same 5×5 · progress load · 3–4 sec eccentric · deep ROM" },
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · same 5×5 · stay heavy even on high-rep week · drive hard" },
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · same 5×5 · keep it heavy on superset week · full ROM" },
+      ]},
+      /* Ex 2 — CABLE · FEATURE compound (5 sets, rotates with theme, standalone) */
+      { name: "Cable Pull-Through (hinge)", w: [
+        { sets:"8, 6, 5, 5, 4",    rest:"90 sec", tag:null, note:"FEATURE · Week 1 LOW-REP · heavy descending load · hinge at hips · snap glutes at the top" },
+        { sets:"15, 12, 10, 8, 6", rest:"90 sec", tag:null, note:"FEATURE · Week 2 PYRAMID — add weight each set · flat back · push hips back" },
+        { sets:"5×10 @ 4-0-1",     rest:"75 sec", tag:null, note:"FEATURE · Week 3 TEMPO · 4-0-1 · hamstrings loaded at the stretch · constant tension" },
+        { sets:"5×20",             rest:"60 sec", tag:null, note:"FEATURE · Week 4 HIGH-REP · moderate load · feel the stretch every rep · squeeze glutes" },
+        { sets:"5×10, + 2×AMRAP",  rest:"45 sec", tag:null, note:"FEATURE · Week 5 SUPERSET · run paired back-to-back · minimal rest · 2 AMRAP burnout rounds" },
+      ]},
+      /* Ex 3–5 — TRI-SET · single cable-column complex (one stack, swap attachments, station-anchored) */
+      /* Ex 3 — TRI-SET A · anchor (3×10 every week) */
+      { name: "Cable Romanian Deadlift", w: [
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · same cable column · hip hinge · 3–4 sec eccentric · feel hamstrings" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · add load vs W1 · flat back · soft knees" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · progress load · 3–4 sec eccentric · hamstring stretch" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · hold load on high-rep week · controlled hinge" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · superset week — minimal rest, swap the attachment for the next move" },
+      ]},
+      /* Ex 4 — TRI-SET B · TUT ANCHOR (3 sec negatives, fixed every week) */
+      { name: "Cable Glute Kickback (same column)", w: [
+        { sets:"3×10 each", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives every rep · same column · drive heel back · 2 sec glute squeeze" },
+        { sets:"3×10 each", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives · 2 sec hold at full extension · controlled" },
+        { sets:"3×10 each", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives · no swing · glute focus" },
+        { sets:"3×10 each", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives · full ROM · squeeze each rep" },
+        { sets:"3×10 each", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives held on superset week · constant tension" },
+      ]},
+      /* Ex 5 — TRI-SET C · FEATURE (rotates · always 3 sets · same column) */
+      { name: "Cable Goblet Squat (rope, same column)", w: [
+        { sets:"3×6",          rest:"75 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 1 LOW-REP · heavy · same column · upright torso · full depth" },
+        { sets:"12, 10, 8",    rest:"60 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 2 PYRAMID — ascending weight across the 3 sets · drive up" },
+        { sets:"3×10 @ 4-0-1", rest:"60 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 3 TEMPO · 4-0-1 · constant tension · deep ROM" },
+        { sets:"3×20",         rest:"60 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 4 HIGH-REP · light-moderate · full depth every rep" },
+        { sets:"3×12",         rest:"45 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 5 SUPERSET · paired superset on the same column · minimal rest" },
+      ]},
+      /* Ex 6–7 — SUPERSET · single cable-column complex (one stack, swap attachments) */
+      /* Ex 6 — SUPERSET A · FEATURE (rotates · 4 sets · superset is its home in W5) */
+      { name: "Cable Hip Thrust (belt/strap)", w: [
+        { sets:"8, 6, 4, 4, + 2×AMRAP",  rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 1 LOW-REP · heavy 8/6/4/4 + 2 AMRAP burnouts · drive hips · 2 sec hold" },
+        { sets:"12, 10, 8, 6, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 2 PYRAMID working sets + 2 AMRAP rounds · full hip extension" },
+        { sets:"4×10 @ 3-1-1, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 3 TEMPO · 3-1-1 · + 2 AMRAP burnout rounds" },
+        { sets:"4×20, + 2×AMRAP",         rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 4 HIGH-REP + 2 AMRAP rounds · squeeze glutes every rep" },
+        { sets:"4×12, + 2×AMRAP",         rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 5 SUPERSET — its home week · 4×12 paired + 2 AMRAP burnouts" },
+      ]},
+      /* Ex 7 — SUPERSET B · anchor (4×12 + 2×AMRAP every week · same column) */
+      { name: "Cable Glute Bridge (same column)", w: [
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · same column · 2–3 sec peak hold · 2 AMRAP rounds to failure" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · add load · full hip drive · 2 AMRAP rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 3–4 sec eccentric · 2 AMRAP burnout rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 2–3 sec peak pause · 2 AMRAP rounds · full extension" },
+        { sets:"4×12, + 2×AMRAP", rest:"60 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · superset week — minimal rest · 2 AMRAP rounds to failure" },
+      ]},
+      /* Ex 8 — PLATE-LOADED · CLUSTER · FEATURE (single station · working sets rotate · always a cluster) */
+      { name: "Plate-Loaded Hack Squat", w: [
+        { sets:"4×6, + Cluster 6/6/6",       rest:"90 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 1 LOW-REP · heavy 4×6 then 3 clusters of 6 · 15 sec between · full depth" },
+        { sets:"12, 10, 8, 6, + Cluster 8/10/12", rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 2 PYRAMID working sets + ascending cluster 8→10→12 · 15 sec between" },
+        { sets:"4×8 @ 4-0-1, + Cluster 10/10/10", rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 3 TEMPO · 4-0-1 working sets + 3 clusters of 10 · 15 sec micro-rest" },
+        { sets:"4×15, + Cluster 15/15/20",   rest:"60 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 4 HIGH-REP + ascending cluster 15→15→20 · quad pump peak" },
+        { sets:"4×12, + Cluster 12/12/12",   rest:"60 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 5 SUPERSET · superset the working sets · + 3 clusters of 12" },
+      ]},
+      /* Ex 9 — PLATE-LOADED · DROP · anchor (single station · strip a plate every week) */
+      { name: "Plate-Loaded Leg Curl (drop set)", w: [
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · 4 working sets then strip a plate per side ~30% · AMRAP to failure · 3–4 sec eccentric" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · add load vs W1 · 2 sec peak squeeze · strip ~30% · AMRAP to failure" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · controlled · 3–4 sec eccentric · double-drop optional · hamstring squeeze" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · strip to failure · chase the burn on high-rep week" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · superset week — strip to failure · minimal rest" },
+      ]},
+      /* Ex 10 — FINISHER · HIGH-REP ANCHOR (bodyweight, high-rep every week) */
+      { name: "Bodyweight Walking Lunge (finisher)", w: [
+        { sets:"3×AMRAP", rest:"60 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · BW only · max steps each set · controlled · full ROM each stride" },
+        { sets:"3×AMRAP", rest:"60 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · beat W1 steps · drive through front heel · torso tall" },
+        { sets:"3×AMRAP", rest:"45 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · shorter rest · max steps · controlled tempo" },
+        { sets:"3×AMRAP", rest:"45 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · absolute failure each set · full ROM · quad/glute pump finish" },
+        { sets:"3×AMRAP", rest:"45 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · superset week — max steps · minimal rest · keep moving" },
+      ]},
+    ]
+  },
+
+  /* ════════════════ DAY 4 — DELTS & ARMS (10 exercises) ════════════════ */
+  {
+    type: "training", label: "Day 4", session: "Delts & Arms",
+    color: "#a855f7", icon: "💪", exCount: 10,
+    meta: "Cable-Dominant · Single-Column Complexes · Plate-Loaded Pos 1·8·9",
+    exercises: [
+      /* Ex 1 — PLATE-LOADED · LOW-REP ANCHOR (heavy 5×5 every week, standalone) */
+      { name: "Plate-Loaded Shoulder Press (Hammer Strength)", w: [
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · plate-loaded · heavy 5×5 every week · 3–4 sec eccentric · drive overhead · full lockout" },
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · same 5×5 · add a plate vs W1 · controlled lower · no momentum" },
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · same 5×5 · progress load · 3–4 sec eccentric · brace hard" },
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · same 5×5 · stay heavy even on high-rep week · strict press" },
+        { sets:"5×5", rest:"90 sec", tag:null, note:"LOW-REP ANCHOR · same 5×5 · keep it heavy on superset week · full lockout" },
+      ]},
+      /* Ex 2 — CABLE · FEATURE compound (5 sets, rotates with theme, standalone) */
+      { name: "Cable Lateral Raise (single arm or dual)", w: [
+        { sets:"8, 6, 5, 5, 4",    rest:"90 sec", tag:null, note:"FEATURE · Week 1 LOW-REP · heavier descending load · lead with the elbow · constant tension" },
+        { sets:"15, 12, 10, 8, 6", rest:"90 sec", tag:null, note:"FEATURE · Week 2 PYRAMID — add weight each set · controlled · no swing" },
+        { sets:"5×10 @ 4-0-1",     rest:"75 sec", tag:null, note:"FEATURE · Week 3 TEMPO · 4-0-1 · slow lower · constant tension on the side delt" },
+        { sets:"5×20",             rest:"60 sec", tag:null, note:"FEATURE · Week 4 HIGH-REP · light-moderate · full ROM · side-delt pump" },
+        { sets:"5×10, + 2×AMRAP",  rest:"45 sec", tag:null, note:"FEATURE · Week 5 SUPERSET · run paired back-to-back · minimal rest · 2 AMRAP burnout rounds" },
+      ]},
+      /* Ex 3–5 — TRI-SET · single cable-column complex (one stack, swap attachments, station-anchored) */
+      /* Ex 3 — TRI-SET A · anchor (3×10 every week) */
+      { name: "Cable Rear Delt Fly", w: [
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · same cable column · big arc · 2–3 sec peak squeeze · rear-delt focus" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · add load vs W1 · 3–4 sec eccentric · soft elbows" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · progress load · controlled arc · squeeze at peak" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · hold load on high-rep week · constant tension" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET A · anchor 3×10 · superset week — minimal rest, swap the attachment for the next move" },
+      ]},
+      /* Ex 4 — TRI-SET B · TUT ANCHOR (3 sec negatives, fixed every week) */
+      { name: "Cable Front Raise (same column)", w: [
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives every rep · same column · raise to eye level · no swing" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives · 2 sec hold at top · strict front delt" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives · controlled · no momentum" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives · full ROM · front-delt burn" },
+        { sets:"3×10", rest:"—", tag:"TRI-SET", note:"TRI-SET B · TUT ANCHOR · 3 sec negatives held on superset week · constant tension" },
+      ]},
+      /* Ex 5 — TRI-SET C · FEATURE (rotates · always 3 sets · same column) */
+      { name: "Cable Upright Row (same column)", w: [
+        { sets:"3×6",          rest:"75 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 1 LOW-REP · heavier · same column · elbows lead high · controlled" },
+        { sets:"12, 10, 8",    rest:"60 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 2 PYRAMID — ascending weight across the 3 sets · 2 sec peak squeeze" },
+        { sets:"3×10 @ 4-0-1", rest:"60 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 3 TEMPO · 4-0-1 · controlled lift · no swing" },
+        { sets:"3×20",         rest:"60 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 4 HIGH-REP · light · constant tension · delt/trap burn" },
+        { sets:"3×12",         rest:"45 sec after tri-set", tag:"TRI-SET", note:"TRI-SET C · FEATURE · Week 5 SUPERSET · paired superset on the same column · minimal rest" },
+      ]},
+      /* Ex 6–7 — SUPERSET · single cable-column complex (one stack, swap attachments) */
+      /* Ex 6 — SUPERSET A · FEATURE (rotates · 4 sets · superset is its home in W5) */
+      { name: "Cable Bicep Curl", w: [
+        { sets:"8, 6, 4, 4, + 2×AMRAP",  rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 1 LOW-REP · heavy 8/6/4/4 + 2 AMRAP burnouts · strict · no swing" },
+        { sets:"12, 10, 8, 6, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 2 PYRAMID working sets + 2 AMRAP rounds · squeeze at top" },
+        { sets:"4×10 @ 3-1-1, + 2×AMRAP", rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 3 TEMPO · 3-1-1 · + 2 AMRAP burnout rounds" },
+        { sets:"4×20, + 2×AMRAP",         rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 4 HIGH-REP + 2 AMRAP rounds · constant tension" },
+        { sets:"4×12, + 2×AMRAP",         rest:"—", tag:"SUPERSET", note:"SUPERSET A · FEATURE · Week 5 SUPERSET — its home week · 4×12 paired + 2 AMRAP burnouts" },
+      ]},
+      /* Ex 7 — SUPERSET B · anchor (4×12 + 2×AMRAP every week · same column) */
+      { name: "Cable Tricep Pushdown (same column)", w: [
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · same column · elbows pinned · full lockout · 2 AMRAP rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · add load · controlled · 2 AMRAP rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · 3–4 sec eccentric · 2 AMRAP burnout rounds" },
+        { sets:"4×12, + 2×AMRAP", rest:"75 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · squeeze at lockout · 2 AMRAP rounds · no swing" },
+        { sets:"4×12, + 2×AMRAP", rest:"60 sec after superset", tag:"SUPERSET", note:"SUPERSET B · anchor · superset week — minimal rest · 2 AMRAP rounds to failure" },
+      ]},
+      /* Ex 8 — PLATE-LOADED · CLUSTER · FEATURE (single station · working sets rotate · always a cluster) */
+      { name: "Plate-Loaded Preacher Curl", w: [
+        { sets:"4×6, + Cluster 6/6/6",       rest:"90 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 1 LOW-REP · heavy 4×6 then 3 clusters of 6 · 15 sec between · strict preacher" },
+        { sets:"12, 10, 8, 6, + Cluster 8/10/12", rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 2 PYRAMID working sets + ascending cluster 8→10→12 · 15 sec between" },
+        { sets:"4×8 @ 4-0-1, + Cluster 10/10/10", rest:"75 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 3 TEMPO · 4-0-1 working sets + 3 clusters of 10 · 15 sec micro-rest" },
+        { sets:"4×15, + Cluster 15/15/20",   rest:"60 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 4 HIGH-REP + ascending cluster 15→15→20 · bicep pump peak" },
+        { sets:"4×12, + Cluster 12/12/12",   rest:"60 sec / 15 sec b/t clusters", tag:"CLUSTER", note:"CLUSTER · PLATE-LOADED · FEATURE · Week 5 SUPERSET · superset the working sets · + 3 clusters of 12" },
+      ]},
+      /* Ex 9 — PLATE-LOADED · DROP · anchor (single station · strip a plate every week) */
+      { name: "Plate-Loaded Seated Dip (drop set)", w: [
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · 4 working sets then strip a plate per side ~30% · AMRAP to failure · 3–4 sec eccentric" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · add load vs W1 · full lockout · strip ~30% · AMRAP to failure" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · controlled · 3–4 sec eccentric · double-drop optional · tricep squeeze" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · strip to failure · chase the pump on high-rep week" },
+        { sets:"4×12, Drop AMRAP", rest:"60 sec / 0 sec before drop", tag:"DROP", note:"DROP · PLATE-LOADED · anchor · superset week — strip to failure · minimal rest" },
+      ]},
+      /* Ex 10 — FINISHER · HIGH-REP ANCHOR (bodyweight, high-rep every week) */
+      { name: "Diamond Push-Up (bodyweight finisher)", w: [
+        { sets:"3×AMRAP", rest:"60 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · BW only · hands diamond shape · tricep focus · 3–4 sec eccentric lower" },
+        { sets:"3×AMRAP", rest:"60 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · beat W1 reps · 2–3 sec bottom pause · chest to hands" },
+        { sets:"3×AMRAP", rest:"45 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · shorter rest · max reps · controlled tempo" },
+        { sets:"3×AMRAP", rest:"45 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · absolute failure each set · full ROM · tri pump flush" },
+        { sets:"3×AMRAP", rest:"45 sec", tag:"FINISHER", note:"FINISHER · HIGH-REP ANCHOR · superset week — max reps · minimal rest · full ROM" },
+      ]},
+    ]
+  },
+
+  /* ════════════════ DAY 5 — REST ════════════════ */
+  { type: "rest", label: "Day 5", session: "Rest Day" },
+
+  /* ════════════════ DAYS 6 & 7 — CONDITIONING ════════════════ */
+  { type: "cond", label: "Day 6", session: "Conditioning Corner", icon: "⚡", color: "#d97706" },
+  { type: "cond", label: "Day 7", session: "Conditioning Corner", icon: "⚡", color: "#d97706" },
+];
+
+/* ─────────────────────────────────────────────────
+   UTILITIES
+───────────────────────────────────────────────── */
+function hexToRgb(hex){
+  const r=parseInt(hex.slice(1,3),16);
+  const g=parseInt(hex.slice(3,5),16);
+  const b=parseInt(hex.slice(5,7),16);
+  return r+','+g+','+b;
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function makeRestTimer(restStr, exName){
+  const secs = TMR.parseSeconds(restStr);
+  if(!secs) return '<span class="ex-sets" style="opacity:0.5">⏱️ '+esc(restStr)+'</span>';
+  return '<span class="rest-timer idle" data-rest="'+esc(restStr)+'" data-label="'+esc(restStr)+'" '+
+    'onclick="buildTimerFloat();TMR.toggle(this,'+secs+',\''+esc(exName).substring(0,30)+'...\')" '+
+    'title="Tap to start rest timer">'+
+    '<span class="rest-timer-icon">⏱️</span>'+
+    '<span class="rest-timer-label">'+esc(restStr)+'</span></span>';
+}
+
+/* ─────────────────────────────────────────────────
+   RENDER EXERCISE CARD
+───────────────────────────────────────────────── */
+function renderExercise(ex, dIdx, eIdx){
+  const wd = ex.w[currentWeek];
+  let tag = wd.tag;
+  let note = wd.note;
+  // ── Superset-week contingency ──────────────────────────────────────
+  // The final theme week (W5) is superset-dominant, so a tri-set defeats the
+  // logic. Collapse the Pos 3–5 tri-set: Ex 3 (eIdx 2) runs STANDALONE while
+  // Ex 4–5 pair as the superset. Render-only — blueprint data is unchanged.
+  if(currentWeek === WEEK_THEMES.length - 1 && wd.tag === "TRI-SET"){
+    if(eIdx === 2){ tag = null; note = "SUPERSET WEEK — run STANDALONE (tri-set collapses; Ex 4–5 pair as the superset) · " + note; }
+    else { tag = "SUPERSET"; }
+  }
+  const isSS = tag === "SUPERSET";
+  const isTS = tag === "TRI-SET";
+  const isCL = tag === "CLUSTER";
+  const isDR = tag === "DROP";
+  const isFN = tag === "FINISHER";
+  const grouped = isSS || isTS;
+  const ssCls = grouped ? " is-ss" : (isCL ? " is-cluster" : (isDR ? " is-drop" : ""));
+
+  const parts = String(wd.sets||"—").split("/").map(s=>s.trim());
+  const repsHtml = parts.map((part,pi)=>{
+    const reps = part.split(",").map(r=>r.trim());
+    const legTag = parts.length>1 ? '<span class="a-legtag">'+["A","B","C"][pi]+'</span>' : "";
+    const chips = reps.map((rep,ri)=>{
+      const special = rep.toUpperCase().includes("AMRAP")||rep.includes("Drop")||rep.includes("×")||rep.includes("Cluster")||rep.includes("BW");
+      const cls = special?"a-rep special":(ri===0?"a-rep live":"a-rep");
+      const sep = ri<reps.length-1?'<span class="a-sep">·</span>':"";
+      return '<span class="'+cls+'">'+esc(rep)+'</span>'+sep;
+    }).join("");
+    return '<div class="a-leg">'+legTag+chips+'</div>';
+  }).join("");
+
+  const pillCls = isSS?"grp":isTS?"grp triset":isCL?"grp cluster":isDR?"grp drop":isFN?"grp finisher":"grp";
+  const pillLabel = isSS?"⚡ Superset":isTS?"▲ Tri-Set":isCL?"◈ Cluster":isDR?"↘ Drop Set":isFN?"🏁 Finisher":"";
+  const badgeHtml = tag ? '<div class="a-badges"><span class="a-pill '+pillCls+'">'+pillLabel+'</span></div>' : "";
+  const noteHtml = note ? '<div class="a-notes">'+esc(note)+'</div>' : "";
+
+  return '<div class="ex-card a-card'+ssCls+'" data-d="'+dIdx+'" data-e="'+eIdx+'">' +
+    '<div class="ex-body">' +
+    '<div class="a-top">' +
+      '<div class="a-idx">'+(eIdx+1)+'</div>' +
+      '<div class="a-head">' +
+        '<div class="ex-name a-name"><span class="editable" data-field="name" data-d="'+dIdx+'" data-e="'+eIdx+'">'+esc(ex.name)+'</span></div>' +
+        badgeHtml +
+      '</div>' +
+    '</div>' +
+    '<div class="a-reps">'+repsHtml+'</div>' +
+    '<div class="a-strip">' +
+      '<div class="a-cell"><span class="k">Sets</span><span class="v"><span class="editable" data-field="sets" data-d="'+dIdx+'" data-e="'+eIdx+'">'+esc(wd.sets)+'</span></span></div>' +
+      '<div class="a-cell"><span class="k">Rest</span><span class="v"><span class="editable" data-field="rest" data-d="'+dIdx+'" data-e="'+eIdx+'">'+esc(wd.rest)+'</span></span></div>' +
+    '</div>' +
+    '<div class="a-timerbar">'+makeRestTimer(wd.rest||'60 sec', ex.name)+'</div>' +
+    noteHtml +
+    '</div></div>';
+}
+
+/* ─────────────────────────────────────────────────
+   RENDER DAY CARD
+───────────────────────────────────────────────── */
+function renderDay(day, dIdx){
+  if(day.type === "rest"){
+    return '<div class="rest-card"><span style="font-size:20px">😴</span><div><div class="rest-label">REST DAY</div><div class="rest-sub">Full Recovery &amp; Growth</div></div></div>';
+  }
+  if(day.type === "cond"){
+    return '<div class="cond-day-card" data-d="'+dIdx+'">' +
+      '<div class="day-header" onclick="toggleCond(this.parentElement,'+dIdx+')">' +
+        '<div class="day-icon" style="background:'+day.color+';box-shadow:0 2px 8px '+day.color+'55">'+day.icon+'</div>' +
+        '<div class="day-info">' +
+          '<div class="day-session">'+esc(day.session)+'</div>' +
+          '<div class="day-meta">'+esc(day.label)+' · Conditioning Corner · 4-On 1-Off 2-On</div>' +
+        '</div>' +
+        '<div class="day-toggle" id="cond-tog-'+dIdx+'">▼</div>' +
+      '</div>' +
+      '<div class="exercises" id="cond-ex-'+dIdx+'" style="display:none;padding:12px 16px;">' +
+        '<div class="cond-activity"><span class="cond-act-icon">🏃</span><div><div class="cond-act-name">Choose Your Session</div><div class="cond-act-desc">Browse the Conditioning Corner for HIIT, circuits, lactate threshold work, and more.</div></div></div>' +
+        '<a href="dashboard.html?tab=conditioning" class="cond-link-row"><span>Browse Conditioning Corner →</span></a>' +
+      '</div>' +
+    '</div>';
+  }
+  const exHtml = day.exercises.map((ex,eIdx)=>renderExercise(ex,dIdx,eIdx)).join("");
+  const wt = WEEK_THEMES[currentWeek];
+  const themeBar = '<div class="week-theme-bar"><span class="wtb-icon">'+wt.icon+'</span><div><div class="wtb-label">'+esc(wt.label)+'</div><div class="wtb-text">'+esc(wt.text)+'</div></div></div>';
+  return '<div class="day-card" data-d="'+dIdx+'">' +
+    '<div class="day-header" onclick="toggleDay(this.parentElement,'+dIdx+')">' +
+      '<div class="day-icon" style="background:'+day.color+';box-shadow:0 2px 8px '+day.color+'55">'+day.icon+'</div>' +
+      '<div class="day-info">' +
+        '<div class="day-session">'+esc(day.session)+'</div>' +
+        '<div class="day-meta">'+esc(day.label)+' · '+day.exCount+' exercises · '+esc(day.meta)+'</div>' +
+      '</div>' +
+      '<div class="day-toggle" id="tog-'+dIdx+'">▼</div>' +
+    '</div>' +
+    '<div class="exercises" id="ex-'+dIdx+'" style="display:none;border-top-color:'+day.color+'33">'+themeBar+exHtml+'</div>' +
+  '</div>';
+}
+
+/* ─────────────────────────────────────────────────
+   TOGGLE HELPERS
+───────────────────────────────────────────────── */
+function toggleDay(card, dIdx){
+  const day = DAYS[dIdx];
+  const exDiv = document.getElementById('ex-'+dIdx);
+  const tog = document.getElementById('tog-'+dIdx);
+  const isOpen = card.classList.contains('open');
+  card.classList.toggle('open');
+  exDiv.style.display = isOpen ? 'none' : 'block';
+  tog.textContent = isOpen ? '▼' : '▲';
+  if(!isOpen){
+    tog.style.background = day.color+'cc';
+    card.style.setProperty('--day-rgb', hexToRgb(day.color));
+    card.style.boxShadow = '0 4px 24px '+day.color+'22';
+  } else {
+    tog.style.background = 'rgba(255,255,255,0.06)';
+    card.style.boxShadow = 'none';
+  }
+}
+function toggleCond(card, dIdx){
+  const exDiv = document.getElementById('cond-ex-'+dIdx);
+  const tog = document.getElementById('cond-tog-'+dIdx);
+  const isOpen = card.classList.contains('open');
+  card.classList.toggle('open');
+  exDiv.style.display = isOpen ? 'none' : 'block';
+  tog.textContent = isOpen ? '▼' : '▲';
+}
+
+/* ─────────────────────────────────────────────────
+   WEEK TABS
+───────────────────────────────────────────────── */
+function renderWeekTabs(){
+  const themes = ["Low-Rep","Pyramid","Tempo","High-Rep","Superset"];
+  return WEEK_THEMES.map((_,i)=>
+    '<button class="wtab'+(i===currentWeek?' active':'')+'" onclick="switchWeek('+i+')">W'+(i+1)+'<span class="wt-label">'+themes[i]+'</span></button>'
+  ).join("");
+}
+
+function switchWeek(w){
+  currentWeek = w;
+  render();
+}
+
+/* ─────────────────────────────────────────────────
+   MAIN RENDER
+───────────────────────────────────────────────── */
+function render(){
+  const daysHtml = DAYS.map((d,i)=>renderDay(d,i)).join("");
+  document.getElementById("app").innerHTML =
+    '<div class="header"><a href="cat-mm.html" class="back-link">← The Modality Matrix</a>' +
+    '<div class="header-inner">' +
+      '<div class="eyebrow">⬡ The Modality Matrix · Phase 3</div>' +
+      '<div class="title">Cable &amp; Plate-Loaded</div>' +
+      '<span class="schedule">5-Week Block · 4-On / 1-Off / 2-On · Cable &amp; Plate-Loaded</span>' +
+      '<div style="font-size:12px;font-weight:700;color:var(--accent);opacity:0.85;margin-top:8px;">✍️ Designed by Mike Cross</div>' +
+    '</div></div>' +
+    '<div class="week-selector" id="weekSel">'+renderWeekTabs()+'</div>' +
+    '<div class="content"><div class="hint">Tap a session to expand · Tap any field to edit</div>'+daysHtml+'</div>';
+
+  bindEditable();
+  buildTimerFloat();
+  applyReplacements();
+}
+
+/* ─────────────────────────────────────────────────
+   EDITABLE FIELDS
+───────────────────────────────────────────────── */
+function bindEditable(){
+  document.querySelectorAll(".editable").forEach(el=>{
+    el.addEventListener("click",e=>{
+      e.stopPropagation();
+      const field = el.dataset.field;
+      const dIdx = parseInt(el.dataset.d);
+      const eIdx = parseInt(el.dataset.e);
+      const day = DAYS[dIdx];
+      const ex = day.exercises[eIdx];
+      const wd = ex.w[currentWeek];
+      const input = document.createElement("input");
+      input.value = field==="name" ? ex.name : wd[field];
+      input.className = "edit-input";
+      el.replaceWith(input);
+      input.focus();
+      const save = ()=>{
+        if(field==="name") ex.name = input.value;
+        else wd[field] = input.value;
+        render();
+      };
+      input.addEventListener("blur",save);
+      input.addEventListener("keydown",ev=>{ if(ev.key==="Enter") input.blur(); });
+    });
+  });
+}
+
+/* ─────────────────────────────────────────────────
+   REPLACEMENT BADGE (existing mc-replace.js compat)
+───────────────────────────────────────────────── */
+function applyReplacements(){
+  const _PAGE_ID = location.pathname.split('/').pop().split('?')[0];
+  const KEY = 'mc_replacements|'+_PAGE_ID;
+  const replacements = JSON.parse(localStorage.getItem(KEY)||'{}');
+  if(!Object.keys(replacements).length) return;
+  document.querySelectorAll('.ex-card').forEach(card=>{
+    const nameEl = card.querySelector('.ex-name');
+    if(!nameEl) return;
+    const orig = nameEl.textContent.trim();
+    const rep = replacements[orig.toLowerCase()];
+    if(rep){
+      nameEl.textContent = rep;
+      nameEl.style.color = '#22d3ee';
+      if(!card.querySelector('.replaced-badge')){
+        const b = document.createElement('span');
+        b.className='replaced-badge';
+        b.style.cssText='font-size:11px;font-weight:900;color:#22d3ee;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.25);border-radius:4px;padding:2px 5px;margin-left:6px;letter-spacing:0.06em;vertical-align:middle;';
+        b.textContent='REPLACED';
+        nameEl.parentNode.insertBefore(b, nameEl.nextSibling);
+      }
+    }
+  });
+}
+
+buildTimerFloat();
+render();
+if(typeof updateProgress!=="undefined") updateProgress();
+
+</script>
+
+<!-- ── PROGRAM SUMMARY ─────────────────────────────── -->
+<div style="max-width:680px;margin:0 auto;">
+<div class="sum-section">
+  <div class="sum-hd" style="color:#10b981;">📊 Phase 3 Summary
+    <span style="flex:1;height:1px;background:linear-gradient(90deg,#10b9814d,transparent);display:block;margin-left:8px;"></span>
+  </div>
+  <div class="sum-card" style="background:#0f0f0f;border:1px solid #10b98133;">
+    <div class="sum-sub" style="color:#10b981;">Phase 3 · Cable &amp; Plate-Loaded · 5-Week Block · 4-On / 1-Off / 2-On</div>
+    <div class="sum-row" style="border-bottom-color:#10b98122;"><span class="sum-ico">🏋️</span><span class="sum-nm">Push — Day 1</span><div class="sum-dt"><span class="sum-st" style="color:#10b981;">10 lifts</span><span class="sum-rp" style="color:#10b981;">Tri-Set · Superset · Cluster · Drop</span></div></div>
+    <div class="sum-row" style="border-bottom-color:#10b98122;"><span class="sum-ico">🔙</span><span class="sum-nm">Pull — Day 2</span><div class="sum-dt"><span class="sum-st" style="color:#10b981;">10 lifts</span><span class="sum-rp" style="color:#10b981;">Tri-Set · Superset · Cluster · Drop</span></div></div>
+    <div class="sum-row" style="border-bottom-color:#10b98122;"><span class="sum-ico">🦵</span><span class="sum-nm">Legs — Day 3</span><div class="sum-dt"><span class="sum-st" style="color:#10b981;">10 lifts</span><span class="sum-rp" style="color:#10b981;">Tri-Set · Superset · Cluster · Drop</span></div></div>
+    <div class="sum-row" style="border-bottom-color:#10b98122;"><span class="sum-ico">💪</span><span class="sum-nm">Delts &amp; Arms — Day 4</span><div class="sum-dt"><span class="sum-st" style="color:#10b981;">10 lifts</span><span class="sum-rp" style="color:#10b981;">Tri-Set · Superset · Cluster · Drop</span></div></div>
+    <div class="sum-row" style="border-bottom-color:#10b98122;"><span class="sum-ico">😴</span><span class="sum-nm">Rest Day — Day 5</span><div class="sum-dt"><span class="sum-st" style="color:#10b981;">—</span><span class="sum-rp" style="color:#10b981;">Full recovery</span></div></div>
+    <div class="sum-row" style="border-bottom-color:#10b98122;"><span class="sum-ico">⚡</span><span class="sum-nm">Conditioning — Days 6 &amp; 7</span><div class="sum-dt"><span class="sum-st" style="color:#10b981;">×2</span><span class="sum-rp" style="color:#10b981;">Conditioning Corner</span></div></div>
+    <div class="sum-div" style="background:#10b98126;"></div>
+    <div class="sum-grid">
+      <div class="sum-tot" style="background:#10b98114;border:1px solid #10b98126;">
+        <div class="sum-tv" style="color:#10b981;">40 lifts</div>
+        <div class="sum-tl" style="color:#10b981;">Per Week</div>
+      </div>
+      <div class="sum-tot" style="background:#10b98114;border:1px solid #10b98126;">
+        <div class="sum-tv" style="color:#10b981;">Cable &amp; Plate-Loaded</div>
+        <div class="sum-tl" style="color:#10b981;">Phase 3 Modality</div>
+      </div>
+      <div class="sum-tot" style="background:#10b98114;border:1px solid #10b98126;">
+        <div class="sum-tv" style="color:#10b981;">60–75 min</div>
+        <div class="sum-tl" style="color:#10b981;">Est. Per Session</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script src="mc-finish.js"></script>
+<script src="mc-supabase.js"></script>
+<script src="mc-sync.js"></script>
+<script src="mc-biometric.js"></script>
+<script src="program-overrides.js"></script>
+<script src="mc-card-actions.js"></script>
+<script src="program-manager.js"></script>
+<script src="mc-live-tracker.js"></script>
+<script src="mc-nav.js"></script>
+<script src="mc-summary.js"></script>
+<script src="mc-setlog.js"></script>
+<script src="mc-session.js"></script>
+<script src="mc-suggest.js"></script>
+<script src="mc-chart.js"></script>
+<script src="mc-exercise-trends.js"></script>
+<script src="mc-cues-data.js"></script>
+<script src="mc-cues.js"></script>
+<script src="mc-group-split.js?v=45"></script>
+<script src="mc-superset-hop.js?v=46"></script>
+<script src="mc-sw-update.js?v=45"></script>
+</body>
+</html>
