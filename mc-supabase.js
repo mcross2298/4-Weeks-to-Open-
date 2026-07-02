@@ -586,19 +586,6 @@
     });
   }
 
-  // is the signed-in user a canary tester? (RLS exposes only the caller's own row)
-  function isTester() {
-    return ready.then(function (c) {
-      if (!c) return false;
-      return currentUser().then(function (u) {
-        if (!u) return false;
-        return c.from('testers').select('user_id').eq('user_id', u.id).maybeSingle()
-          .then(function (r) { return !!(r && r.data); })
-          .catch(function () { return false; });
-      });
-    });
-  }
-
   window.MC_SB = {
     ready: ready,
     get client() { return client; },
@@ -630,7 +617,6 @@
     upsertCanaryNaming: upsertCanaryNaming,
     removeCanaryNaming: removeCanaryNaming,
     onCanaryChange: onCanaryChange,
-    isTester: isTester,
     saveActiveProgram: saveActiveProgram,
     getActiveProgram: getActiveProgram,
     logSet: logSet,

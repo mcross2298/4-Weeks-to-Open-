@@ -246,31 +246,37 @@
   }
 
   // ---- alternatives -------------------------------------------------------
-  // Strict similarity: same movement pattern AND same primary muscle. Available
-  // equipment first (alpha by equipment order), unavailable ones after, flagged.
+  // Catalog-driven only, no gym-profile filtering: tier 1 is same movement
+  // pattern AND same primary muscle; tier 2 (used to fill out the top 3 when
+  // tier 1 is thin) is same muscle, any pattern. Each tier is sorted
+  // alphabetically. `available` is still computed and returned so the UI can
+  // show its "not in gym" flag, but it never affects which exercises make the
+  // list or their order.
   function alternatives(name, opts) {
     opts = opts || {};
     var src = classify(name, opts.muscle);
     var gym = opts.gym || getGym();
     var selfKey = String(name || '').trim().toLowerCase();
-    var rows = pool().filter(function (e) {
-      return e.pattern === src.pattern && e.muscle === src.muscle &&
-             e.name.toLowerCase() !== selfKey;
-    }).map(function (e) {
-      var available = equipAvailable(e.equipment, gym);
+    var candidates = pool().filter(function (e) {
+      return e.name.toLowerCase() !== selfKey;
+    });
+    var tier1 = candidates.filter(function (e) {
+      return e.pattern === src.pattern && e.muscle === src.muscle;
+    });
+    var tier1Keys = {};
+    tier1.forEach(function (e) { tier1Keys[e.name.toLowerCase()] = 1; });
+    var tier2 = candidates.filter(function (e) {
+      return e.muscle === src.muscle && e.pattern !== src.pattern && !tier1Keys[e.name.toLowerCase()];
+    });
+    function toRow(e) {
       return {
         name: e.name, equipment: e.equipment, pattern: e.pattern, muscle: e.muscle,
-        available: available,
+        available: equipAvailable(e.equipment, gym),
         weight: convertWeight(name, e.name, opts.lastWeight)
       };
-    });
-    rows.sort(function (a, b) {
-      if (a.available !== b.available) return a.available ? -1 : 1;
-      var ea = EQUIP.indexOf(a.equipment), eb = EQUIP.indexOf(b.equipment);
-      if (ea !== eb) return ea - eb;
-      return a.name.localeCompare(b.name);
-    });
-    return rows;
+    }
+    function byName(a, b) { return a.name.localeCompare(b.name); }
+    return tier1.map(toRow).sort(byName).concat(tier2.map(toRow).sort(byName));
   }
 
   // ---- weight conversion --------------------------------------------------

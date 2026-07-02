@@ -101,7 +101,6 @@ const CACHE_URLS = [
     './mc-program-builder.js',
     './mc-program-pub.js',
     './mc-program-store.js',
-    './mc-recap.js',
     './mc-rep-progress.js',
     './mc-replace.js',
     './mc-reps.js',
