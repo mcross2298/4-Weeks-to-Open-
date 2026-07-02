@@ -691,7 +691,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
   <div class="topbar">
     <div>
       <div class="topbar-title">Programs</div>
-      <div class="topbar-sub">10 training programs</div>
+      <div class="topbar-sub" id="flagCount"></div>
     </div>
   </div>
   <div class="prog-screen-inner">
@@ -739,7 +739,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
       <div class="cat-tag ks-flag">★ Flagship · Station-Anchored · 6 Splits</div>
       <div class="cat-name">Everything Under the Kitchen Sink</div>
       <div class="cat-meta">Six distinct training splits under one roof — the complete MC arsenal, station-anchored for commercial gym efficiency.</div>
-      <div class="cat-count">6 Splits · 4 Weeks Each →</div>
+      <div class="cat-count">6 Splits · Station-Anchored →</div>
       <div class="cat-designer">✍️ Designed by Mike Cross</div>
     </a>
 
@@ -890,6 +890,10 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 // ── DATE ──
 const d=new Date();
 document.getElementById('todayDate').textContent=d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+
+// ── FLAGSHIP PROGRAM COUNT ── computed from the actual rendered cards so it
+// never drifts from reality (this repo's history is full of stale counts).
+document.getElementById('flagCount').textContent=document.querySelectorAll('#flagGrid .cat-card').length+' training programs';
 
 // ── GREETING (time-aware) ──
 (function(){
