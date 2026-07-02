@@ -114,7 +114,6 @@ eq(N.badge('pmc', 'tb-drop'), null, 'D5 badge reset -> null');
 // ---- E: progOf mapping incl. cat-* pages (B2) -----------------------------
 eq(N.progOf('cat-pmc.html'), 'pmc', 'E1 cat-pmc -> pmc');
 eq(N.progOf('cat-mc.html'), 'mc', 'E2 cat-mc -> mc');
-eq(N.progOf('cat-bobw.html'), 'bobw', 'E3 cat-bobw -> bobw');
 eq(N.progOf('cat-strength.html'), 'ss', 'E4 cat-strength -> ss');
 eq(N.progOf('cat-stndr.html'), 'stndr', 'E5 cat-stndr -> stndr (master build)');
 eq(N.progOf('pmc-s5-push.html'), 'pmc', 'E6 workout page -> pmc');
@@ -183,13 +182,13 @@ cardList = [];
 load('mc-pm-data.js');
 const D = global.window.MC_PM_DATA;
 ok(D, 'K0 MC_PM_DATA loaded');
-eq(D.programs.length, 11, 'K1 master build lists all 11 programs');
-eq(D.programOrder, ['ss', 'pmc', 'mc', 'bobw', 'ks', 'ie', 'mm', 'stndr', 'pump', 'gainz', 'psu'], 'K2 program order');
+eq(D.programs.length, 9, 'K1 master build lists all 9 programs');
+eq(D.programOrder, ['ss', 'pmc', 'mc', 'ks', 'mm', 'stndr', 'pump', 'gainz', 'psu'], 'K2 program order');
 eq(D.program('pmc').name, 'Project Muscle Confusion', 'K3 program lookup by id');
 eq(D.program('pmc').splits.length, 7, 'K4 program carries splits');
 eq(D.program('nope'), null, 'K5 unknown program -> null');
 ok(D.badges.card['tb-superset'] && D.badges.legend['lb-ss'], 'K6 badge label maps present');
-ok(D.programs[0].id === 'ss' && D.programs[3].id === 'bobw', 'K7 flagship tier first, in order');
+ok(D.programs[0].id === 'ss' && D.programs[3].id === 'ks', 'K7 flagship tier first, in order');
 
 // ---- L: MC_PM_DATA ↔ progOf coverage (catches B2-style resolution gaps) ----
 // Every program's catalog page must resolve back to its id, and every program

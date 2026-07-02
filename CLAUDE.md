@@ -27,11 +27,11 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
    array (before the `MARKET:STRIP` block) unless the program uses licensed
    influencer content, in which case place it inside the MARKET:STRIP section.
    Required fields: `id`, `icon`, `name`, `meta`, `color`, `desc`, `href`, `splits`.
-4. **Add card to `dashboard.html`** — insert a `.cat-card` block in `#flagGrid`
-   (between the last flagship and the "Iron & Engine" coming-soon card). Add matching
-   `.cat-card.<id>` CSS (background gradient, border-top, `.cat-tag`, `.cat-designer`
-   color) immediately after the `.cat-card.ie` block. Increment the `.topbar-sub`
-   program count by 1.
+4. **Add card to `dashboard.html`** — insert a `.cat-card` block at the end of
+   `#flagGrid`, after the last existing flagship card. Add matching `.cat-card.<id>`
+   CSS (background gradient, border-top, `.cat-tag`, `.cat-designer` color) after the
+   last existing `.cat-card.<id>` block. The `.topbar-sub` program count is computed
+   from the rendered cards at runtime — no manual count to update.
 5. **Commit and push to a feature branch in `4-Weeks-to-Open-`.**
 6. **Create a draft PR targeting `main` of `4-Weeks-to-Open-`.**
 7. **Merge to main** → the deploy pipeline auto-propagates all changes to
@@ -68,10 +68,11 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 - `mc-macros.js`: `tokenFilter()` client-side multi-keyword AND scoring post-API; `showEmpty()` always-visible prompt (never blank); backspace clears immediately without debounce
 - `mc-macros.js`: nutrition sheet contrast — `.nt-ring-lbl` + `.nt-nrow` upgraded from `var(--muted)` → `var(--text)`, font-weight 700→800
 
-### Phase 3 — Exercise Intelligence ⏳ Pending (4-Weeks-to-Open- only)
-- **Task 3.1:** `exercise-catalog.js` — add `equipment` (Barbell/Dumbbell/Cable/Plate-Loaded/Bodyweight/Machine) and `movement` (Push/Pull/Hinge/Squat/Carry/Isolation) fields to all exercises; `mc-replace.js` — rebuild picker to show **top 3 closest matches** (same muscle + same movement first, then same muscle any movement) + "Browse all for [muscle]" link that opens the full catalog filtered to that muscle group. No gym profile filtering — catalog-driven only.
-- **Task 3.2:** `mc-replace.js` — swap confirmation writes replacement exercise name into `mc_daily_v1` localStorage (currently DOM-only); verify `mc-live-tracker.js` reads from store, not DOM
-- **Task 3.3:** `mc-suggest.js` — equipment-aware increment table (Cable/Machine ×0.5 → +2.5 lb step, Dumbbell labeled "per hand"); `mc-maxout.js` — equipment coefficient on Epley formula (Cable/Machine ×0.85); `.github/workflows/pages.yml` — inline Node assertion test step for weight-math regression coverage
+### Phase 3 — Exercise Intelligence ✅ Complete (4-Weeks-to-Open- only)
+- **Task 3.1:** Done — `exercise-catalog.js` has `equipment` and `movement` fields on all 577 exercises; the actual picker (`mc-card-actions.js` → `openSubstitute()`, powered by `mc-biomech.js`'s `alternatives()`) shows the top 3 closest matches (same muscle + same movement first, then same muscle any movement) plus a "Browse all for [muscle]" link, with gym-profile filtering removed so results are catalog-driven only, matching the locked decision. `Smith` exists as a 7th equipment value alongside the original 6 — left as-is rather than force-folded into Barbell/Machine, since it's a real distinct equipment type on gym floors.
+- **Task 3.2:** Still open — `mc-replace.js` swap confirmation and whether `mc-live-tracker.js` reads from the `mc_daily_v1` store vs. DOM has not been re-verified since this plan was written.
+- **Task 3.3:** Done — `mc-suggest.js` has the equipment-aware increment table (Cable/Machine ×0.5 step, Dumbbell "per hand" label) and `mc-maxout.js` has the Cable/Machine ×0.85 Epley coefficient. The `.github/workflows/pages.yml` regression-coverage step has not been added.
+- **New:** `exercisedata.json` (904 records, no `equipment`/`movement` fields) is a legacy, unenriched dataset superseded by `exercise-catalog.js` — confirm nothing still reads it, then retire it.
 
 ---
 

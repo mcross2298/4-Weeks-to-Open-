@@ -41,13 +41,11 @@
     if (/^pmc-/.test(pageId)) return 'pmc';
     if (/^mc-/.test(pageId))  return 'mc';
     if (/^ss-/.test(pageId))  return 'ss';
-    if (/^bobw-/.test(pageId)) return 'bobw';
     // catalog/schedule pages: filenames differ from the content prefix
-    // (cat-pmc.html, cat-mc.html, cat-bobw.html, cat-strength.html) so they
-    // need their own mapping or program-scoped badge/split paint never fires
+    // (cat-pmc.html, cat-mc.html, cat-strength.html) so they need their own
+    // mapping or program-scoped badge/split paint never fires
     if (/^cat-pmc/.test(pageId))      return 'pmc';
     if (/^cat-mc/.test(pageId))       return 'mc';
-    if (/^cat-bobw/.test(pageId))     return 'bobw';
     if (/^cat-strength/.test(pageId)) return 'ss';
     if (pageId === 'cat-ks.html' || pageId === 'kitchen-sink.html') return 'ks';
     if (pageId === 'cat-ie.html' || pageId === 'iron-engine.html') return 'ie';
