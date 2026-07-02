@@ -20,7 +20,6 @@
     ss:    '#e11d48',   // Strength & Supersets — crimson
     pmc:   '#7F77DD',   // Project Muscle Confusion — violet
     mc:    '#d4af37',   // Mike Cross' Favorites — gold (brand default)
-    bobw:  '#14b8a6',   // Best of Both Worlds — teal
     ie:    '#f97316',   // Iron & Engine — orange
     /* MARKET:STRIP influencer-theme START */
     stndr: '#1D9E75',   // STNDR — green
