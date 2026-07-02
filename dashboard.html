@@ -299,12 +299,6 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 .cat-card.ss{background:linear-gradient(135deg,#2a0710,#0d0205);box-shadow:0 4px 20px rgba(225,29,72,0.15);border-color:rgba(225,29,72,0.3);border-top:3px solid #e11d48;}
 .cat-card.ss .cat-tag{background:rgba(225,29,72,0.2);color:#fb7185;border:1px solid rgba(225,29,72,0.35);}
 .cat-card.ss .cat-designer{color:#fb7185;}
-.cat-card.bobw{background:linear-gradient(135deg,#04201c,#020b09);box-shadow:0 4px 20px rgba(20,184,166,0.15);border-color:rgba(20,184,166,0.3);border-top:3px solid #14b8a6;}
-.cat-card.bobw .cat-tag{background:rgba(20,184,166,0.18);color:#5eead4;border:1px solid rgba(20,184,166,0.35);}
-.cat-card.bobw .cat-designer{color:#5eead4;}
-.cat-card.ie{background:linear-gradient(135deg,#1a1206,#0a0a0a);box-shadow:0 4px 20px rgba(249,115,22,0.15);border-color:rgba(249,115,22,0.3);border-top:3px solid #f97316;}
-.cat-card.ie .cat-tag{background:rgba(249,115,22,0.18);color:#fdba74;border:1px solid rgba(249,115,22,0.35);}
-.cat-card.ie .cat-designer{color:#fdba74;}
 .cat-card.mm{background:linear-gradient(135deg,#0d0e2e,#0a0a0a);box-shadow:0 4px 20px rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.3);border-top:3px solid #6366f1;}
 .cat-card.mm .cat-tag{background:rgba(99,102,241,0.18);color:#a5b4fc;border:1px solid rgba(99,102,241,0.35);}
 .cat-card.mm .cat-designer{color:#a5b4fc;}
@@ -735,17 +729,6 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
       <div class="cat-name">Mike Cross' Favorite Splits</div>
       <div class="cat-meta">Mike's five personal splits spanning every major training style — the way he actually trains.</div>
       <div class="cat-count">5 Splits →</div>
-      <div class="cat-designer">✍️ Designed by Mike Cross</div>
-    </a>
-
-    <a href="cat-bobw.html" class="cat-card bobw">
-      <span class="bobw-glow"></span>
-      <span class="bobw-sheen"></span>
-      <span class="cat-icon">🌗</span>
-      <div class="cat-tag bobw-flag">★ Flagship · Lifting + Cardio</div>
-      <div class="cat-name">Best of Both Worlds</div>
-      <div class="cat-meta">Heavy resistance balanced with daily LISS and HIIT cardio, so you build muscle without losing your engine.</div>
-      <div class="cat-count">6 Body Parts · 4 Weeks →</div>
       <div class="cat-designer">✍️ Designed by Mike Cross</div>
     </a>
 
@@ -1258,66 +1241,6 @@ if(!navigator.onLine)document.getElementById('offlineBar').classList.add('show')
 // ── SW ── registration + reliable auto-update handled by mc-sw-update.js
 // (loaded near the end of body). It defines window.doSwUpdate for the banner.
 
-// ── CUSTOM WORKOUTS ──
-function renderCustomSection() {
-  var workouts = (typeof CustomWorkouts !== 'undefined') ? CustomWorkouts.getAll() : [];
-  var html = '<div class="custom-section">'
-    + '<div class="custom-section-head">'
-    + '<div class="custom-section-title">'
-    + '<div class="custom-section-icon">⚡</div>'
-    + '<div><div class="custom-section-name">My Custom Workouts</div>'
-    + '<div class="custom-section-sub">Your saved conditioning circuits</div></div>'
-    + '</div>'
-    + (workouts.length ? '<button class="custom-build-btn-sm" onclick="location.href=\'custom-workout-builder.html\'">+ Build New</button>' : '')
-    + '</div>';
-
-  if (!workouts.length) {
-    html += '<div class="custom-empty">'
-      + '<div class="custom-empty-icon">🏗️</div>'
-      + '<div class="custom-empty-title">No custom workouts yet</div>'
-      + '<div class="custom-empty-sub">Build a workout from the exercise library — pick movements, set reps or time targets, then run it anytime.</div>'
-      + '<a href="custom-workout-builder.html" class="custom-build-btn">+ Build Your Own Conditioning Workout</a>'
-      + '</div>';
-  } else {
-    workouts.forEach(function (w) {
-      var exCount = w.exercises ? w.exercises.length : 0;
-      var repCount = w.exercises ? w.exercises.filter(function(e){return e.mode==='reps';}).length : 0;
-      var timeCount = exCount - repCount;
-      var metaParts = [exCount + ' exercise' + (exCount===1?'':'s')];
-      if (repCount)  metaParts.push(repCount  + ' rep-based');
-      if (timeCount) metaParts.push(timeCount + ' timed');
-      if (w.restSecs > 0) metaParts.push(w.restSecs + 's rest');
-
-      var pills = (w.exercises||[]).slice(0,4).map(function(e){
-        return '<span class="custom-wk-pill">' + esc(e.name.split('—')[0].trim()) + '</span>';
-      }).join('') + (exCount > 4 ? '<span class="custom-wk-pill">+' + (exCount-4) + ' more</span>' : '');
-
-      html += '<div class="custom-wk-card">'
-        + '<div class="custom-wk-card-top">'
-        + '<div class="custom-wk-name">' + esc(w.name) + '</div>'
-        + '<div class="custom-wk-badge">Custom</div>'
-        + '</div>'
-        + '<div class="custom-wk-meta">' + esc(metaParts.join(' · ')) + (w.lastRun ? ' · Last run ' + w.lastRun : '') + '</div>'
-        + '<div class="custom-wk-pills">' + pills + '</div>'
-        + '<div class="custom-wk-actions">'
-        + '<button class="custom-wk-run" onclick="location.href=\'custom-workout-runner.html?id=' + esc(w.id) + '\'">▶ Run Workout</button>'
-        + '<button class="custom-wk-edit" onclick="location.href=\'custom-workout-builder.html?edit=' + esc(w.id) + '\'">Edit</button>'
-        + '<button class="custom-wk-del" onclick="deleteCustomWorkout(\'' + esc(w.id) + '\')">🗑</button>'
-        + '</div>'
-        + '</div>';
-    });
-  }
-
-  html += '</div>';
-  return html;
-}
-
-function deleteCustomWorkout(id) {
-  if (!confirm('Delete this workout? This cannot be undone.')) return;
-  if (typeof CustomWorkouts !== 'undefined') CustomWorkouts.remove(id);
-  renderConditioning();
-}
-
 // ── CONDITIONING TAB ──
 function hexA(hex,a){
   var h=hex.replace('#','');
@@ -1348,7 +1271,6 @@ function renderConditioning(){
 
   var html='';
   if(condSubTab==='workouts'){
-    html += renderCustomSection();
     CONDITIONING.subcategories.forEach(function(sub){
       if(sub.type!=='routines') return;
       var col=sub.color||'#E24B4A';
