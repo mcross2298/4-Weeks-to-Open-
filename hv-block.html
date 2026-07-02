@@ -45,6 +45,7 @@
 .a-card.is-ss{margin-left:6px;border-left:3px solid rgba(168,85,247,0.45);padding-left:10px;}
 .a-card.is-cluster{border-left:3px solid rgba(34,211,238,0.45);padding-left:10px;margin-left:6px;}
 .a-card.is-drop{border-left:3px solid rgba(244,63,94,0.45);padding-left:10px;margin-left:6px;}
+.a-card.is-circuit{border-left:3px solid rgba(249,115,22,0.45);padding-left:10px;margin-left:6px;}
 .a-top{display:flex;gap:10px;margin-bottom:8px;}
 .a-idx{min-width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#475569;flex-shrink:0;margin-top:1px;}
 .a-head{flex:1;min-width:0;}
@@ -54,6 +55,7 @@
 .a-pill.grp{background:rgba(168,85,247,0.16);color:#c084fc;border:1px solid rgba(168,85,247,0.3);}
 .a-pill.grp.cluster{background:rgba(34,211,238,0.1);color:#22d3ee;border-color:rgba(34,211,238,0.2);}
 .a-pill.grp.drop{background:rgba(244,63,94,0.1);color:#fb7185;border-color:rgba(244,63,94,0.2);}
+.a-pill.grp.circuit{background:rgba(249,115,22,0.12);color:#fb923c;border-color:rgba(249,115,22,0.25);}
 .a-reps{display:flex;flex-direction:column;gap:3px;margin-bottom:8px;padding-left:32px;}
 .a-leg{display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
 .a-rep{font-size:12px;font-weight:800;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:#e2e8f0;}
@@ -104,6 +106,10 @@ const WEEK_META = [
     text: "Single body-part days, 2-On / 1-Off. 6 exercises/day: 2 standalone compounds + 1 station-anchored superset + 1 low-volume drop set (6–8 reps) + 1 low-volume cluster set (6–8 reps). Rest: 90 sec standalone/drop/cluster · 120 sec superset." },
   { tag: "W2", label: "Week 2 · Fully Supersetted", icon: "⚡",
     text: "Multi-body-part days, all 8 exercises run as 4 station-anchored supersets. One superset's 2nd exercise is a low-volume drop set, one's 2nd exercise is a low-volume cluster set. Rest: 120 sec for every superset, all week." },
+  { tag: "W3", label: "Week 3 · High-Volume Pyramids", icon: "📈",
+    text: "3-On / 2-Off. 8 exercises/day: 4 standalone ascending/descending pyramids (12–25 reps) + 1 station-anchored superset + 1 low-volume drop set (6–10 reps) + 1 low-volume cluster set (6–10 reps). Rest: 90 sec standalone/drop/cluster · 120 sec superset." },
+  { tag: "W4", label: "Week 4 · Bodyweight & Accessory", icon: "🔁",
+    text: "Full Body & Core days run as one continuous 8-exercise circuit. Calves & Forearms days run 2 station-anchored supersets (1 calves, 1 forearms) + 4 standalone (2 calves, 2 forearms). Rest: 45–60 sec max, everywhere, all week." },
 ];
 
 /*
@@ -220,6 +226,131 @@ const WEEKS = [
     ]
   },
 
+  /* ════════════════════════ WEEK 3 — HIGH-VOLUME PYRAMIDS ════════════════════════ */
+  {
+    days: [
+      { type: "training", label: "Day 1", session: "Chest & Shoulders", icon: "🏋️", color: "#f97316", exCount: 8, meta: "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster", exercises: [
+        { name: "Barbell Bench Press", tag: null, sets: "25/20/20/15/12", rest: "90 sec", note: "Ascending-weight pyramid · reps drop as load climbs each set" },
+        { name: "Standing Overhead Barbell Press", tag: null, sets: "15/15/15/12/12/12", rest: "90 sec", note: "6-set pyramid · hold reps in pairs, add load every 2 sets" },
+        { name: "Slight Incline Dumbbell Press (neutral grip)", tag: null, sets: "12/12/15/20/25", rest: "90 sec", note: "Reverse pyramid · start heavy/low-rep, unload weight as reps climb" },
+        { name: "DB Lateral Raise", tag: null, sets: "15/15/20/20/25", rest: "90 sec", note: "Reverse pyramid · light throughout, reps climb late" },
+        { name: "Flat Chest Press Machine", tag: "SUPERSET", sets: "25/25/20/20/15/15", rest: "120 sec after superset", note: "SUPERSET · Archetype C (Machine + DB pre-staged) · pyramid scheme on both" },
+        { name: "DB Front Raises", tag: "SUPERSET", sets: "25/25/20/20/15/15", rest: "120 sec after superset", note: "SUPERSET · Archetype C · dumbbells staged at the machine" },
+        { name: "Cable Crossover", tag: "DROP", sets: "4×10, Drop AMRAP", rest: "90 sec", note: "DROP · single cable column · low-volume 6–10 reps · strip the pin ~30% · AMRAP" },
+        { name: "Machine Shoulder Press", tag: "CLUSTER", sets: "4×8, + Cluster 8/8/8", rest: "90 sec", note: "CLUSTER · single-station machine · low-volume 6–10 reps · 3 mini-clusters of 8" },
+      ]},
+      { type: "training", label: "Day 2", session: "Arms", icon: "💪", color: "#8b5cf6", exCount: 8, meta: "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster", exercises: [
+        { name: "Barbell Curl", tag: null, sets: "25/20/20/15/12", rest: "90 sec", note: "Ascending-weight pyramid" },
+        { name: "Close-Grip Bench Press", tag: null, sets: "15/15/15/12/12/12", rest: "90 sec", note: "6-set pyramid" },
+        { name: "Incline DB Curl (Incline, Alternating)", tag: null, sets: "12/12/15/20/25", rest: "90 sec", note: "Reverse pyramid" },
+        { name: "Tricep Pushdown (Cable)", tag: null, sets: "15/15/20/20/25", rest: "90 sec", note: "Reverse pyramid" },
+        { name: "Skull Crushers (EZ bar)", tag: "SUPERSET", sets: "25/25/20/20/15/15", rest: "120 sec after superset", note: "SUPERSET · Archetype B (EZ-Bar + DB, same bench) · pyramid scheme on both" },
+        { name: "2 Arm DB Hammer Curl", tag: "SUPERSET", sets: "25/25/20/20/15/15", rest: "120 sec after superset", note: "SUPERSET · Archetype B · same bench, right after the skull crushers" },
+        { name: "Cable Curl (Cable)", tag: "DROP", sets: "4×10, Drop AMRAP", rest: "90 sec", note: "DROP · single cable column · low-volume 6–10 reps · strip the pin ~30% · AMRAP" },
+        { name: "Machine Preacher Curl", tag: "CLUSTER", sets: "4×8, + Cluster 8/8/8", rest: "90 sec", note: "CLUSTER · single-station machine · low-volume 6–10 reps · 3 mini-clusters of 8" },
+      ]},
+      { type: "rest", label: "Day 3", session: "Rest Day" },
+      { type: "training", label: "Day 4", session: "Back & Traps", icon: "🔙", color: "#0891b2", exCount: 8, meta: "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster", exercises: [
+        { name: "Barbell Row (Bent Over)", tag: null, sets: "25/20/20/15/12", rest: "90 sec", note: "Ascending-weight pyramid" },
+        { name: "Wide-Grip Lat Pulldown", tag: null, sets: "15/15/15/12/12/12", rest: "90 sec", note: "6-set pyramid" },
+        { name: "DB Row (Incline)", tag: null, sets: "12/12/15/20/25", rest: "90 sec", note: "Reverse pyramid" },
+        { name: "Wide-Grip Barbell Shrug", tag: null, sets: "15/15/20/20/25", rest: "90 sec", note: "Reverse pyramid" },
+        { name: "Straight Arm Pulldown", tag: "SUPERSET", sets: "25/25/20/20/15/15", rest: "120 sec after superset", note: "SUPERSET · Archetype D (single cable column) · pyramid scheme on both" },
+        { name: "Seated Cable Row (Cable, Seated, Close)", tag: "SUPERSET", sets: "25/25/20/20/15/15", rest: "120 sec after superset", note: "SUPERSET · Archetype D · same tower, swap attachment" },
+        { name: "Machine Row (Machine)", tag: "DROP", sets: "4×10, Drop AMRAP", rest: "90 sec", note: "DROP · single-station machine · low-volume 6–10 reps · strip the pin ~30% · AMRAP" },
+        { name: "Cable Shrug (close V grip)", tag: "CLUSTER", sets: "4×8, + Cluster 8/8/8", rest: "90 sec", note: "CLUSTER · single cable column · low-volume 6–10 reps · 3 mini-clusters of 8" },
+      ]},
+      { type: "training", label: "Day 5", session: "Legs", icon: "🦵", color: "#22c55e", exCount: 8, meta: "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster", exercises: [
+        { name: "Barbell Back Squat", tag: null, sets: "25/20/20/15/12", rest: "90 sec", note: "Ascending-weight pyramid" },
+        { name: "Leg Press", tag: null, sets: "15/15/15/12/12/12", rest: "90 sec", note: "6-set pyramid" },
+        { name: "Hack Squat", tag: null, sets: "12/12/15/20/25", rest: "90 sec", note: "Reverse pyramid" },
+        { name: "Leg Curl (Lying)", tag: null, sets: "15/15/20/20/25", rest: "90 sec", note: "Reverse pyramid" },
+        { name: "Leg Extension", tag: "SUPERSET", sets: "25/25/20/20/15/15", rest: "120 sec after superset", note: "SUPERSET · Archetype C (Machine + DB pre-staged) · pyramid scheme on both" },
+        { name: "DB Goblet Squat (heels elevated, feet together)", tag: "SUPERSET", sets: "25/25/20/20/15/15", rest: "120 sec after superset", note: "SUPERSET · Archetype C · dumbbell staged at the leg extension" },
+        { name: "Leg Curl (Seated)", tag: "DROP", sets: "4×10, Drop AMRAP", rest: "90 sec", note: "DROP · single-station machine · low-volume 6–10 reps · strip the pin ~30% · AMRAP" },
+        { name: "Neutral Stance Leg Press", tag: "CLUSTER", sets: "4×8, + Cluster 8/8/8", rest: "90 sec", note: "CLUSTER · single-station machine · low-volume 6–10 reps · 3 mini-clusters of 8" },
+      ]},
+      { type: "training", label: "Day 6", session: "Rear Delts + Arms", icon: "🔺", color: "#ec4899", exCount: 8, meta: "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster", exercises: [
+        { name: "Seated Bent Over Rear Delt DB Fly", tag: null, sets: "25/20/20/15/12", rest: "90 sec", note: "Ascending-weight pyramid" },
+        { name: "EZ Bar Curl (EZ Bar)", tag: null, sets: "15/15/15/12/12/12", rest: "90 sec", note: "6-set pyramid" },
+        { name: "Rear Delt Fly (Cable)", tag: null, sets: "12/12/15/20/25", rest: "90 sec", note: "Reverse pyramid" },
+        { name: "Overhead DB Extension (two hands)", tag: null, sets: "15/15/20/20/25", rest: "90 sec", note: "Reverse pyramid" },
+        { name: "DB Spider Curls", tag: "SUPERSET", sets: "25/25/20/20/15/15", rest: "120 sec after superset", note: "SUPERSET · Archetype A (DB/Bench) · pyramid scheme on both" },
+        { name: "2 Arm DB Hammer Curl", tag: "SUPERSET", sets: "25/25/20/20/15/15", rest: "120 sec after superset", note: "SUPERSET · Archetype A · same bench, right after the spider curls" },
+        { name: "Face Pull (Rope)", tag: "DROP", sets: "4×10, Drop AMRAP", rest: "90 sec", note: "DROP · single cable column · low-volume 6–10 reps · strip the pin ~30% · AMRAP" },
+        { name: "Reverse Pec Deck Fly", tag: "CLUSTER", sets: "4×8, + Cluster 8/8/8", rest: "90 sec", note: "CLUSTER · single-station machine · low-volume 6–10 reps · 3 mini-clusters of 8" },
+      ]},
+      { type: "rest", label: "Day 7", session: "Rest Day" },
+    ]
+  },
+
+  /* ════════════════════════ WEEK 4 — BODYWEIGHT & ACCESSORY VOLUME ════════════════════════ */
+  {
+    days: [
+      { type: "training", label: "Day 1", session: "Full Body (Circuit Format)", icon: "🔁", color: "#f97316", exCount: 8, meta: "Continuous Circuit · 45–60 sec Rest", exercises: [
+        { name: "Weighted Push-ups", tag: "CIRCUIT", sets: "5×15", rest: "45 sec", note: "CIRCUIT · straight into the next exercise · rest only between full rounds" },
+        { name: "Plate Shoulder Front Raise", tag: "CIRCUIT", sets: "5×15", rest: "45 sec", note: "CIRCUIT · single weight plate, arms straight" },
+        { name: "Plate Press", tag: "CIRCUIT", sets: "5×15", rest: "45 sec", note: "CIRCUIT · plate pressed straight overhead or out from chest" },
+        { name: "Alternating Kettlebell Swings", tag: "CIRCUIT", sets: "5×20", rest: "45 sec", note: "CIRCUIT · hip-hinge drive, alternate arms each rep" },
+        { name: "Double Arm Kettlebell Swings", tag: "CIRCUIT", sets: "5×20", rest: "45 sec", note: "CIRCUIT · both hands on the bell, full hip extension" },
+        { name: "Bodyweight Squats", tag: "CIRCUIT", sets: "5×25", rest: "45 sec", note: "CIRCUIT · full depth, brisk tempo" },
+        { name: "Walking Lunges", tag: "CIRCUIT", sets: "5×20 each", rest: "45 sec", note: "CIRCUIT · bodyweight, continuous steps" },
+        { name: "Spider Crawl", tag: "CIRCUIT", sets: "5×20 (10 each side)", rest: "60 sec", note: "CIRCUIT · finisher · rest 60 sec before repeating the round" },
+      ]},
+      { type: "training", label: "Day 2", session: "Core (Circuit Format)", icon: "🎯", color: "#eab308", exCount: 8, meta: "Continuous Circuit · 45–60 sec Rest", exercises: [
+        { name: "Hanging Leg Raises", tag: "CIRCUIT", sets: "5×15", rest: "45 sec" },
+        { name: "Ab Wheel Rollout", tag: "CIRCUIT", sets: "5×15", rest: "45 sec" },
+        { name: "Plank", tag: "CIRCUIT", sets: "5×45 sec hold", rest: "45 sec" },
+        { name: "Side Plank", tag: "CIRCUIT", sets: "5×30 sec each side", rest: "45 sec" },
+        { name: "Sit-Ups (AMRAP)", tag: "CIRCUIT", sets: "5×AMRAP", rest: "45 sec" },
+        { name: "USA Twists", tag: "CIRCUIT", sets: "5×20", rest: "45 sec" },
+        { name: "V-Sit", tag: "CIRCUIT", sets: "5×15", rest: "45 sec" },
+        { name: "In & Outs", tag: "CIRCUIT", sets: "5×20", rest: "60 sec", note: "CIRCUIT · finisher · rest 60 sec before repeating the round" },
+      ]},
+      { type: "training", label: "Day 3", session: "Calves & Forearms", icon: "🦶", color: "#0891b2", exCount: 8, meta: "2 Supersets + 4 Standalone · 45–60 sec Rest", exercises: [
+        { name: "Standing Calf Raise (feet neutral)", tag: null, sets: "5×20", rest: "60 sec", note: "Standalone · single-station machine" },
+        { name: "Seated Calf Raise (feet neutral)", tag: null, sets: "5×20", rest: "60 sec", note: "Standalone · single-station machine" },
+        { name: "Leg Press Calf Raise", tag: "SUPERSET", sets: "5×20", rest: "60 sec", note: "SUPERSET · Archetype C — bodyweight calf raises right on the same platform" },
+        { name: "Calf Raises", tag: "SUPERSET", sets: "5×20", rest: "60 sec", note: "SUPERSET · Archetype C · bodyweight, same leg press platform" },
+        { name: "Barbell Wrist Curl", tag: null, sets: "5×20", rest: "60 sec", note: "Standalone" },
+        { name: "Wrist Rolls", tag: null, sets: "5×20", rest: "60 sec", note: "Standalone" },
+        { name: "DB Wrist Curl", tag: "SUPERSET", sets: "5×20", rest: "60 sec", note: "SUPERSET · Archetype A (DB/Bench) — same bench" },
+        { name: "Kneeling Single-Arm DB Forearm Curl", tag: "SUPERSET", sets: "5×20 each", rest: "60 sec", note: "SUPERSET · Archetype A · same bench, right after the wrist curls" },
+      ]},
+      { type: "rest", label: "Day 4", session: "Rest Day" },
+      { type: "training", label: "Day 5", session: "Full Body (Circuit Format)", icon: "🔁", color: "#f97316", exCount: 8, meta: "Continuous Circuit · 45–60 sec Rest", exercises: [
+        { name: "Weighted Push-ups", tag: "CIRCUIT", sets: "5×15", rest: "45 sec", note: "CIRCUIT · straight into the next exercise · rest only between full rounds" },
+        { name: "Plate Shoulder Front Raise", tag: "CIRCUIT", sets: "5×15", rest: "45 sec", note: "CIRCUIT · single weight plate, arms straight" },
+        { name: "Plate Press", tag: "CIRCUIT", sets: "5×15", rest: "45 sec", note: "CIRCUIT · plate pressed straight overhead or out from chest" },
+        { name: "Alternating Kettlebell Swings", tag: "CIRCUIT", sets: "5×20", rest: "45 sec", note: "CIRCUIT · hip-hinge drive, alternate arms each rep" },
+        { name: "Double Arm Kettlebell Swings", tag: "CIRCUIT", sets: "5×20", rest: "45 sec", note: "CIRCUIT · both hands on the bell, full hip extension" },
+        { name: "Bodyweight Squats", tag: "CIRCUIT", sets: "5×25", rest: "45 sec", note: "CIRCUIT · full depth, brisk tempo" },
+        { name: "Walking Lunges", tag: "CIRCUIT", sets: "5×20 each", rest: "45 sec", note: "CIRCUIT · bodyweight, continuous steps" },
+        { name: "Spider Crawl", tag: "CIRCUIT", sets: "5×20 (10 each side)", rest: "60 sec", note: "CIRCUIT · finisher · rest 60 sec before repeating the round" },
+      ]},
+      { type: "training", label: "Day 6", session: "Core (Circuit Format)", icon: "🎯", color: "#eab308", exCount: 8, meta: "Continuous Circuit · 45–60 sec Rest", exercises: [
+        { name: "Hanging Leg Raises", tag: "CIRCUIT", sets: "5×15", rest: "45 sec" },
+        { name: "Ab Wheel Rollout", tag: "CIRCUIT", sets: "5×15", rest: "45 sec" },
+        { name: "Plank", tag: "CIRCUIT", sets: "5×45 sec hold", rest: "45 sec" },
+        { name: "Side Plank", tag: "CIRCUIT", sets: "5×30 sec each side", rest: "45 sec" },
+        { name: "Sit-Ups (AMRAP)", tag: "CIRCUIT", sets: "5×AMRAP", rest: "45 sec" },
+        { name: "USA Twists", tag: "CIRCUIT", sets: "5×20", rest: "45 sec" },
+        { name: "V-Sit", tag: "CIRCUIT", sets: "5×15", rest: "45 sec" },
+        { name: "In & Outs", tag: "CIRCUIT", sets: "5×20", rest: "60 sec", note: "CIRCUIT · finisher · rest 60 sec before repeating the round" },
+      ]},
+      { type: "training", label: "Day 7", session: "Calves & Forearms", icon: "🦶", color: "#0891b2", exCount: 8, meta: "2 Supersets + 4 Standalone · 45–60 sec Rest", exercises: [
+        { name: "Standing Calf Raise (feet neutral)", tag: null, sets: "5×20", rest: "60 sec", note: "Standalone · single-station machine" },
+        { name: "Seated Calf Raise (feet neutral)", tag: null, sets: "5×20", rest: "60 sec", note: "Standalone · single-station machine" },
+        { name: "Leg Press Calf Raise", tag: "SUPERSET", sets: "5×20", rest: "60 sec", note: "SUPERSET · Archetype C — bodyweight calf raises right on the same platform" },
+        { name: "Calf Raises", tag: "SUPERSET", sets: "5×20", rest: "60 sec", note: "SUPERSET · Archetype C · bodyweight, same leg press platform" },
+        { name: "Barbell Wrist Curl", tag: null, sets: "5×20", rest: "60 sec", note: "Standalone" },
+        { name: "Wrist Rolls", tag: null, sets: "5×20", rest: "60 sec", note: "Standalone" },
+        { name: "DB Wrist Curl", tag: "SUPERSET", sets: "5×20", rest: "60 sec", note: "SUPERSET · Archetype A (DB/Bench) — same bench" },
+        { name: "Kneeling Single-Arm DB Forearm Curl", tag: "SUPERSET", sets: "5×20 each", rest: "60 sec", note: "SUPERSET · Archetype A · same bench, right after the wrist curls" },
+      ]},
+    ]
+  },
+
 ];
 
 /* ─────────────────────────────────────────────────
@@ -251,7 +382,8 @@ function renderExercise(ex, wIdx, dIdx, eIdx){
   const isSS = tag === "SUPERSET";
   const isCL = tag === "CLUSTER";
   const isDR = tag === "DROP";
-  const ssCls = isSS ? " is-ss" : (isCL ? " is-cluster" : (isDR ? " is-drop" : ""));
+  const isCC = tag === "CIRCUIT";
+  const ssCls = isSS ? " is-ss" : (isCL ? " is-cluster" : (isDR ? " is-drop" : (isCC ? " is-circuit" : "")));
 
   const reps = String(ex.sets||"—").split(",").map(r=>r.trim());
   const repsHtml = '<div class="a-leg">' + reps.map((rep,ri)=>{
@@ -261,8 +393,8 @@ function renderExercise(ex, wIdx, dIdx, eIdx){
     return '<span class="'+cls+'">'+esc(rep)+'</span>'+sep;
   }).join("") + '</div>';
 
-  const pillCls = isSS?"grp":isCL?"grp cluster":isDR?"grp drop":"grp";
-  const pillLabel = isSS?"⚡ Superset":isCL?"◈ Cluster":isDR?"↘ Drop Set":"";
+  const pillCls = isSS?"grp":isCL?"grp cluster":isDR?"grp drop":isCC?"grp circuit":"grp";
+  const pillLabel = isSS?"⚡ Superset":isCL?"◈ Cluster":isDR?"↘ Drop Set":isCC?"🔁 Circuit":"";
   const badgeHtml = tag ? '<div class="a-badges"><span class="a-pill '+pillCls+'">'+pillLabel+'</span></div>' : "";
   const noteHtml = ex.note ? '<div class="a-notes">'+esc(ex.note)+'</div>' : "";
 
