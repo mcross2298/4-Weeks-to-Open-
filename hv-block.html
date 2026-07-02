@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>High-Volume Training Template</title>
+<style>
+:root{--accent:#84cc16;--accent-rgb:132,204,22;}
+.header{background:linear-gradient(135deg,#1a2e05,#0a0a0a);}
+.schedule{display:inline-block;background:rgba(var(--accent-rgb),0.12);border:1px solid rgba(var(--accent-rgb),0.3);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--accent);font-weight:700;}
+.hint{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;text-align:center;opacity:0.6;}
+
+/* ── Week selector ── */
+.week-selector{display:flex;gap:6px;padding:14px 16px;background:#0a0a0a;border-bottom:1px solid rgba(255,255,255,0.05);position:sticky;top:0;z-index:20;}
+.wtab{flex:1;padding:8px 4px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:#475569;font-size:11px;font-weight:800;letter-spacing:0.08em;text-align:center;cursor:pointer;transition:all 0.15s;line-height:1.3;}
+.wtab:active{transform:scale(0.97);}
+.wtab.active{background:rgba(132,204,22,0.15);border-color:rgba(132,204,22,0.4);color:#a3e635;}
+.wtab .wt-label{display:block;font-size:9px;font-weight:700;color:#334155;letter-spacing:0.1em;text-transform:uppercase;margin-top:2px;}
+.wtab.active .wt-label{color:#84cc16;opacity:0.8;}
+
+/* ── Day accordion ── */
+.day-card{border-radius:16px;border:1px solid rgba(255,255,255,0.06);margin-bottom:10px;overflow:hidden;transition:all 0.2s;background:rgba(255,255,255,0.02);}
+.day-card.open{border-color:rgba(var(--day-rgb),0.4);box-shadow:0 4px 24px rgba(var(--day-rgb),0.12),0 0 0 1px rgba(var(--day-rgb),0.1);}
+.day-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background 0.15s;}
+.day-card.open .day-header{background:rgba(var(--day-rgb),0.06);}
+.day-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:#fff;}
+.day-info{flex:1;}
+.day-session{font-weight:800;font-size:14px;color:#e2e8f0;letter-spacing:-0.01em;}
+.day-meta{font-size:11px;color:#475569;margin-top:2px;}
+.day-toggle{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.05);color:#475569;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.08);transition:all 0.2s;}
+.day-card.open .day-toggle{color:#fff;}
+
+/* ── Exercises ── */
+.exercises{padding:4px 12px 14px;border-top:1px solid rgba(var(--day-rgb),0.08);display:none;}
+.day-card.open .exercises{display:block;}
+
+/* ── Rest day cards ── */
+.rest-card{background:rgba(255,255,255,0.015);border:1px dashed rgba(255,255,255,0.08);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.rest-label{font-weight:800;font-size:13px;color:#334155;letter-spacing:0.06em;}
+.rest-sub{font-size:11px;color:#1e293b;margin-top:2px;}
+
+/* ── Exercise card (a-card style, matches mm-p2 / arnold-legacy) ── */
+.a-card{margin-bottom:2px;padding:12px 0 10px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.a-card:last-child{border-bottom:none;padding-bottom:4px;}
+.a-card.is-ss{margin-left:6px;border-left:3px solid rgba(168,85,247,0.45);padding-left:10px;}
+.a-card.is-cluster{border-left:3px solid rgba(34,211,238,0.45);padding-left:10px;margin-left:6px;}
+.a-card.is-drop{border-left:3px solid rgba(244,63,94,0.45);padding-left:10px;margin-left:6px;}
+.a-top{display:flex;gap:10px;margin-bottom:8px;}
+.a-idx{min-width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#475569;flex-shrink:0;margin-top:1px;}
+.a-head{flex:1;min-width:0;}
+.a-name{font-size:14px;font-weight:800;color:#e2e8f0;line-height:1.3;margin-bottom:4px;}
+.a-badges{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;}
+.a-pill{font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:0.05em;text-transform:uppercase;}
+.a-pill.grp{background:rgba(168,85,247,0.16);color:#c084fc;border:1px solid rgba(168,85,247,0.3);}
+.a-pill.grp.cluster{background:rgba(34,211,238,0.1);color:#22d3ee;border-color:rgba(34,211,238,0.2);}
+.a-pill.grp.drop{background:rgba(244,63,94,0.1);color:#fb7185;border-color:rgba(244,63,94,0.2);}
+.a-reps{display:flex;flex-direction:column;gap:3px;margin-bottom:8px;padding-left:32px;}
+.a-leg{display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
+.a-rep{font-size:12px;font-weight:800;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:#e2e8f0;}
+.a-rep.live{background:rgba(132,204,22,0.12);border-color:rgba(132,204,22,0.25);color:#a3e635;}
+.a-rep.special{background:rgba(244,63,94,0.1);border-color:rgba(244,63,94,0.25);color:#fb7185;}
+.a-sep{color:#334155;font-size:11px;font-weight:600;padding:0 1px;}
+.a-strip{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-bottom:6px;padding-left:32px;}
+.a-cell .k{font-size:10px;font-weight:800;color:#475569;letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:2px;}
+.a-cell .v{font-size:12px;font-weight:700;color:#94a3b8;}
+.a-timerbar{padding-left:32px;}
+.a-notes{font-size:11px;color:#475569;font-style:italic;margin-top:5px;padding-left:32px;line-height:1.45;}
+.editable{cursor:text;border-bottom:1px dashed rgba(132,204,22,0.4);padding-bottom:1px;display:inline-block;color:#e2e8f0;}
+
+/* ── Week theme / rules banner ── */
+.week-theme-bar{background:rgba(132,204,22,0.07);border:1px solid rgba(132,204,22,0.2);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.wtb-icon{font-size:16px;flex-shrink:0;}
+.wtb-text{font-size:12px;color:#bef264;font-weight:700;line-height:1.4;}
+.wtb-label{font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#84cc16;margin-bottom:2px;}
+</style>
+<link rel="stylesheet" href="base.css?v=65"/>
+<link rel="stylesheet" href="mc-card-actions.css"/>
+<link rel="stylesheet" href="mc-nav.css"/>
+<link rel="stylesheet" href="mc-summary.css"/>
+<link rel="stylesheet" href="mc-setlog.css"/>
+<style>
+.app{min-height:100vh;}
+</style>
+</head>
+<body>
+<div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
+<div class="app" id="app"></div>
+<script src="mc-timer.js"></script>
+<script>
+
+/* ─────────────────────────────────────────────────
+   HIGH-VOLUME TRAINING TEMPLATE — 4-Week Program Block
+   5–6 sets x 15–25 reps (unless modified) · trisets banned
+   Unlike The Modality Matrix, exercises are NOT fixed across
+   weeks — each week has its own splits, day counts and rest
+   days per the source spec, so this is a flat WEEKS -> days ->
+   exercises tree (no per-week w[] arrays needed).
+───────────────────────────────────────────────── */
+
+let currentWeek = 0;
+
+const WEEK_META = [
+  { tag: "W1", label: "Week 1 · Compound Dominant", icon: "🏋️",
+    text: "Single body-part days, 2-On / 1-Off. 6 exercises/day: 2 standalone compounds + 1 station-anchored superset + 1 low-volume drop set (6–8 reps) + 1 low-volume cluster set (6–8 reps). Rest: 90 sec standalone/drop/cluster · 120 sec superset." },
+  { tag: "W2", label: "Week 2 · Fully Supersetted", icon: "⚡",
+    text: "Multi-body-part days, all 8 exercises run as 4 station-anchored supersets. One superset's 2nd exercise is a low-volume drop set, one's 2nd exercise is a low-volume cluster set. Rest: 120 sec for every superset, all week." },
+];
+
+/*
+  Exercise entry: { name, tag: null|"SUPERSET"|"CLUSTER"|"DROP", sets, rest, note }
+  No trisets anywhere in this program (per source spec). Every SUPERSET/CLUSTER/
+  DROP satisfies Archetype A/B/C/D station-anchoring — noted per exercise.
+*/
+
+const WEEKS = [
+
+  /* ════════════════════════ WEEK 1 — COMPOUND DOMINANT ════════════════════════ */
+  {
+    days: [
+      { type: "training", label: "Day 1", session: "Chest", icon: "🏋️", color: "#ef4444", exCount: 6, meta: "4 Compound · 2 Accessory", exercises: [
+        { name: "Barbell Bench Press", tag: null, sets: "5×20", rest: "90 sec", note: "Standalone compound · flat bench · controlled descent, drive through mid-chest" },
+        { name: "Incline Barbell Bench Press", tag: null, sets: "5×18", rest: "90 sec", note: "Standalone compound · 30–45° incline · upper-chest emphasis" },
+        { name: "Flat DB Bench Flies", tag: "SUPERSET", sets: "5×20", rest: "120 sec after superset", note: "SUPERSET · Archetype A (DB/Bench) · same flat bench · big stretch, squeeze at the top" },
+        { name: "Flat Bench DB Press (hands touching)", tag: "SUPERSET", sets: "5×20", rest: "120 sec after superset", note: "SUPERSET · Archetype A · same dumbbells, same bench, straight into the press" },
+        { name: "Cable Crossover", tag: "DROP", sets: "4×8, Drop AMRAP", rest: "90 sec", note: "DROP · single cable column · 4 low-volume sets then strip the pin ~30% · AMRAP to failure" },
+        { name: "Dip Machine", tag: "CLUSTER", sets: "4×6, + Cluster 6/6/6", rest: "90 sec", note: "CLUSTER · single-station machine · 3 mini-clusters of 6, ~15 sec between" },
+      ]},
+      { type: "training", label: "Day 2", session: "Arms", icon: "💪", color: "#8b5cf6", exCount: 6, meta: "4 Compound · 2 Accessory", exercises: [
+        { name: "Barbell Curl", tag: null, sets: "5×20", rest: "90 sec", note: "Standalone compound · strict, no swing" },
+        { name: "Close-Grip Bench Press", tag: null, sets: "5×18", rest: "90 sec", note: "Standalone compound · elbows tucked, tricep drive" },
+        { name: "Skull Crushers (EZ bar)", tag: "SUPERSET", sets: "5×15", rest: "120 sec after superset", note: "SUPERSET · Archetype B (EZ-Bar + DB, same bench) · elbows stacked, controlled lower" },
+        { name: "2 Arm DB Hammer Curl", tag: "SUPERSET", sets: "5×15", rest: "120 sec after superset", note: "SUPERSET · Archetype B · seated at the same bench right after the skull crushers" },
+        { name: "Tricep Pushdown (Rope)", tag: "DROP", sets: "4×8, Drop AMRAP", rest: "90 sec", note: "DROP · single cable column · strip the pin ~30% · AMRAP to failure" },
+        { name: "Machine Preacher Curl", tag: "CLUSTER", sets: "4×6, + Cluster 6/6/6", rest: "90 sec", note: "CLUSTER · single-station machine · 3 mini-clusters of 6" },
+      ]},
+      { type: "rest", label: "Day 3", session: "Rest Day" },
+      { type: "training", label: "Day 4", session: "Legs", icon: "🦵", color: "#22c55e", exCount: 6, meta: "4 Compound · 2 Accessory", exercises: [
+        { name: "Barbell Back Squat", tag: null, sets: "5×20", rest: "90 sec", note: "Standalone compound · full depth, brace hard" },
+        { name: "Leg Press", tag: null, sets: "5×20", rest: "90 sec", note: "Standalone compound · full ROM, controlled tempo" },
+        { name: "Leg Extension", tag: "SUPERSET", sets: "5×20", rest: "120 sec after superset", note: "SUPERSET · Archetype C (Machine + DB pre-staged) · dumbbells brought to the leg extension" },
+        { name: "DB Goblet Squat (heels elevated, feet together)", tag: "SUPERSET", sets: "5×20", rest: "120 sec after superset", note: "SUPERSET · Archetype C · same footprint as the leg extension, no walking" },
+        { name: "Leg Curl (Lying)", tag: "DROP", sets: "4×8, Drop AMRAP", rest: "90 sec", note: "DROP · single-station machine · strip the pin ~30% · AMRAP to failure" },
+        { name: "Hack Squat", tag: "CLUSTER", sets: "4×6, + Cluster 6/6/6", rest: "90 sec", note: "CLUSTER · single-station plate-loaded machine · 3 mini-clusters of 6" },
+      ]},
+      { type: "training", label: "Day 5", session: "Shoulders", icon: "🎯", color: "#eab308", exCount: 6, meta: "4 Compound · 2 Accessory", exercises: [
+        { name: "Standing Overhead Barbell Press", tag: null, sets: "5×18", rest: "90 sec", note: "Standalone compound · strict press, no leg drive" },
+        { name: "DB Shoulder Press", tag: null, sets: "5×20", rest: "90 sec", note: "Standalone compound · full lockout each rep" },
+        { name: "Seated DB Lateral Raise", tag: "SUPERSET", sets: "5×20", rest: "120 sec after superset", note: "SUPERSET · Archetype A (DB/Bench) · same seated station, raise straight into the press" },
+        { name: "DB Seated Shoulder Press", tag: "SUPERSET", sets: "5×20", rest: "120 sec after superset", note: "SUPERSET · Archetype A · same dumbbells, same seat, mechanical drop-set feel" },
+        { name: "Side Lateral Raise (Cable, Single Arm)", tag: "DROP", sets: "4×8, Drop AMRAP", rest: "90 sec", note: "DROP · single cable column · strip the pin ~30% · AMRAP to failure" },
+        { name: "Machine Shoulder Press", tag: "CLUSTER", sets: "4×6, + Cluster 6/6/6", rest: "90 sec", note: "CLUSTER · single-station machine · 3 mini-clusters of 6" },
+      ]},
+      { type: "rest", label: "Day 6", session: "Rest Day" },
+      { type: "training", label: "Day 7", session: "Back", icon: "🔙", color: "#0891b2", exCount: 6, meta: "4 Compound · 2 Accessory", exercises: [
+        { name: "Barbell Row (Bent Over)", tag: null, sets: "5×18", rest: "90 sec", note: "Standalone compound · hinge at hips, flat back" },
+        { name: "Wide-Grip Lat Pulldown", tag: null, sets: "5×20", rest: "90 sec", note: "Standalone compound · full stretch at top, drive elbows down" },
+        { name: "Machine Row (Machine)", tag: "SUPERSET", sets: "5×18", rest: "120 sec after superset", note: "SUPERSET · Archetype C (Machine + DB pre-staged) · dumbbell brought to the row machine" },
+        { name: "Single Arm DB Row", tag: "SUPERSET", sets: "5×18 each", rest: "120 sec after superset", note: "SUPERSET · Archetype C · braced on the same machine's chest pad, no walking" },
+        { name: "Straight Arm Pulldown", tag: "DROP", sets: "4×8, Drop AMRAP", rest: "90 sec", note: "DROP · single cable column · strip the pin ~30% · AMRAP to failure" },
+        { name: "Wide-Grip Barbell Shrug", tag: "CLUSTER", sets: "4×6, + Cluster 6/6/6", rest: "90 sec", note: "CLUSTER · single-station barbell · 3 mini-clusters of 6" },
+      ]},
+    ]
+  },
+
+  /* ════════════════════════ WEEK 2 — FULLY SUPERSETTED ════════════════════════ */
+  {
+    days: [
+      { type: "training", label: "Day 1", session: "Chest & Biceps", icon: "🏋️", color: "#ef4444", exCount: 8, meta: "4 Supersets · All 120 sec Rest", exercises: [
+        { name: "Flat DB Bench Flies", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "Flat Bench DB Press (hands touching)", tag: "SUPERSET", sets: "5×20", rest: "120 sec", note: "SUPERSET 1 · Archetype A (DB/Bench)" },
+        { name: "EZ Bar Curl (EZ Bar)", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "Incline DB Curl (Incline, Alternating)", tag: "SUPERSET", sets: "5×20", rest: "120 sec", note: "SUPERSET 2 · Archetype B (EZ-Bar + DB, same bench)" },
+        { name: "Cable Crossover", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "Cable Curl (Cable)", tag: "DROP", sets: "4×8, Drop AMRAP", rest: "120 sec", note: "SUPERSET 3 · Archetype D (single cable column) · 2nd exercise carries the drop set — strip ~30% · AMRAP" },
+        { name: "Flat Chest Press Machine", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "2 Arm DB Hammer Curl", tag: "CLUSTER", sets: "4×6, + Cluster 6/6/6", rest: "120 sec", note: "SUPERSET 4 · Archetype C (Machine + DB pre-staged) · 2nd exercise carries the cluster set" },
+      ]},
+      { type: "training", label: "Day 2", session: "Shoulders & Triceps", icon: "🎯", color: "#eab308", exCount: 8, meta: "4 Supersets · All 120 sec Rest", exercises: [
+        { name: "Seated DB Lateral Raise", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "DB Seated Shoulder Press", tag: "SUPERSET", sets: "5×20", rest: "120 sec", note: "SUPERSET 1 · Archetype A" },
+        { name: "Skull Crushers (EZ bar)", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "Overhead DB Extension (two hands)", tag: "SUPERSET", sets: "5×20", rest: "120 sec", note: "SUPERSET 2 · Archetype B" },
+        { name: "Side Lateral Raise (Cable, Single Arm)", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "Tricep Pushdown (Rope)", tag: "DROP", sets: "4×8, Drop AMRAP", rest: "120 sec", note: "SUPERSET 3 · Archetype D · 2nd exercise carries the drop set" },
+        { name: "Machine Shoulder Press", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "DB Front Raises", tag: "CLUSTER", sets: "4×6, + Cluster 6/6/6", rest: "120 sec", note: "SUPERSET 4 · Archetype C · 2nd exercise carries the cluster set" },
+      ]},
+      { type: "training", label: "Day 3", session: "Legs", icon: "🦵", color: "#22c55e", exCount: 8, meta: "4 Supersets · All 120 sec Rest", exercises: [
+        { name: "Leg Press", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "Calf Raises", tag: "SUPERSET", sets: "5×20", rest: "120 sec", note: "SUPERSET 1 · Archetype C — bodyweight calf raises right on the leg press platform" },
+        { name: "Leg Extension", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "DB Goblet Squat (heels elevated, feet together)", tag: "SUPERSET", sets: "5×20", rest: "120 sec", note: "SUPERSET 2 · Archetype C — dumbbell staged next to the leg extension" },
+        { name: "DB Walking Lunges", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "Hack Squat", tag: "DROP", sets: "4×8, Drop AMRAP", rest: "120 sec", note: "SUPERSET 3 · Archetype C · 2nd exercise (Hack Squat) carries the drop set" },
+        { name: "Glute Bridge", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "Leg Curl (Seated)", tag: "CLUSTER", sets: "4×6, + Cluster 6/6/6", rest: "120 sec", note: "SUPERSET 4 · Archetype C · 2nd exercise (Leg Curl) carries the cluster set" },
+      ]},
+      { type: "training", label: "Day 4", session: "Back", icon: "🔙", color: "#0891b2", exCount: 8, meta: "4 Supersets · All 120 sec Rest", exercises: [
+        { name: "Machine Row (Machine)", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "Single Arm DB Row", tag: "SUPERSET", sets: "5×20 each", rest: "120 sec", note: "SUPERSET 1 · Archetype C" },
+        { name: "Wide-Grip Lat Pulldown", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "Straight Arm Pulldown", tag: "SUPERSET", sets: "5×20", rest: "120 sec", note: "SUPERSET 2 · Archetype D — same cable tower, swap attachment" },
+        { name: "Seated Cable Row (Cable, Wide)", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "Seated Cable Row (Cable, Seated, Close)", tag: "DROP", sets: "4×8, Drop AMRAP", rest: "120 sec", note: "SUPERSET 3 · Archetype D · 2nd exercise carries the drop set" },
+        { name: "DB Row (Slight Incline)", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "DB Row (Incline)", tag: "CLUSTER", sets: "4×6, + Cluster 6/6/6", rest: "120 sec", note: "SUPERSET 4 · Archetype A · 2nd exercise carries the cluster set" },
+      ]},
+      { type: "training", label: "Day 5", session: "Rear Delts & Traps", icon: "🔺", color: "#ec4899", exCount: 8, meta: "4 Supersets · All 120 sec Rest", exercises: [
+        { name: "Seated Bent Over Rear Delt DB Fly", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "DB Shrug", tag: "SUPERSET", sets: "5×20", rest: "120 sec", note: "SUPERSET 1 · Archetype A" },
+        { name: "Rear Delt Fly (Cable)", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "Cable Shrug (close V grip)", tag: "SUPERSET", sets: "5×20", rest: "120 sec", note: "SUPERSET 2 · Archetype D — same cable tower" },
+        { name: "Reverse Incline Face Pulls", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "Face Pull (Rope)", tag: "DROP", sets: "4×8, Drop AMRAP", rest: "120 sec", note: "SUPERSET 3 · Archetype D · 2nd exercise carries the drop set" },
+        { name: "Reverse Pec Deck Fly", tag: "SUPERSET", sets: "5×20", rest: "120 sec" },
+        { name: "DB Shrug", tag: "CLUSTER", sets: "4×6, + Cluster 6/6/6", rest: "120 sec", note: "SUPERSET 4 · Archetype C · dumbbell brought to the pec deck · 2nd exercise carries the cluster set" },
+      ]},
+      { type: "rest", label: "Day 6", session: "Rest Day" },
+      { type: "rest", label: "Day 7", session: "Rest Day" },
+    ]
+  },
+
+];
+
+/* ─────────────────────────────────────────────────
+   UTILITIES
+───────────────────────────────────────────────── */
+function hexToRgb(hex){
+  const r=parseInt(hex.slice(1,3),16);
+  const g=parseInt(hex.slice(3,5),16);
+  const b=parseInt(hex.slice(5,7),16);
+  return r+','+g+','+b;
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function makeRestTimer(restStr, exName){
+  const secs = TMR.parseSeconds(restStr);
+  if(!secs) return '<span class="ex-sets" style="opacity:0.5">⏱️ '+esc(restStr)+'</span>';
+  return '<span class="rest-timer idle" data-rest="'+esc(restStr)+'" data-label="'+esc(restStr)+'" '+
+    'onclick="buildTimerFloat();TMR.toggle(this,'+secs+',\''+esc(exName).substring(0,30)+'...\')" '+
+    'title="Tap to start rest timer">'+
+    '<span class="rest-timer-icon">⏱️</span>'+
+    '<span class="rest-timer-label">'+esc(restStr)+'</span></span>';
+}
+
+/* ─────────────────────────────────────────────────
+   RENDER EXERCISE CARD
+───────────────────────────────────────────────── */
+function renderExercise(ex, wIdx, dIdx, eIdx){
+  const tag = ex.tag;
+  const isSS = tag === "SUPERSET";
+  const isCL = tag === "CLUSTER";
+  const isDR = tag === "DROP";
+  const ssCls = isSS ? " is-ss" : (isCL ? " is-cluster" : (isDR ? " is-drop" : ""));
+
+  const reps = String(ex.sets||"—").split(",").map(r=>r.trim());
+  const repsHtml = '<div class="a-leg">' + reps.map((rep,ri)=>{
+    const special = rep.toUpperCase().includes("AMRAP")||rep.includes("Drop")||rep.includes("×")||rep.includes("Cluster");
+    const cls = special?"a-rep special":(ri===0?"a-rep live":"a-rep");
+    const sep = ri<reps.length-1?'<span class="a-sep">·</span>':"";
+    return '<span class="'+cls+'">'+esc(rep)+'</span>'+sep;
+  }).join("") + '</div>';
+
+  const pillCls = isSS?"grp":isCL?"grp cluster":isDR?"grp drop":"grp";
+  const pillLabel = isSS?"⚡ Superset":isCL?"◈ Cluster":isDR?"↘ Drop Set":"";
+  const badgeHtml = tag ? '<div class="a-badges"><span class="a-pill '+pillCls+'">'+pillLabel+'</span></div>' : "";
+  const noteHtml = ex.note ? '<div class="a-notes">'+esc(ex.note)+'</div>' : "";
+
+  return '<div class="ex-card a-card'+ssCls+'" data-w="'+wIdx+'" data-d="'+dIdx+'" data-e="'+eIdx+'">' +
+    '<div class="ex-body">' +
+    '<div class="a-top">' +
+      '<div class="a-idx">'+(eIdx+1)+'</div>' +
+      '<div class="a-head">' +
+        '<div class="ex-name a-name"><span class="editable" data-field="name" data-w="'+wIdx+'" data-d="'+dIdx+'" data-e="'+eIdx+'">'+esc(ex.name)+'</span></div>' +
+        badgeHtml +
+      '</div>' +
+    '</div>' +
+    '<div class="a-reps">'+repsHtml+'</div>' +
+    '<div class="a-strip">' +
+      '<div class="a-cell"><span class="k">Sets</span><span class="v"><span class="editable" data-field="sets" data-w="'+wIdx+'" data-d="'+dIdx+'" data-e="'+eIdx+'">'+esc(ex.sets)+'</span></span></div>' +
+      '<div class="a-cell"><span class="k">Rest</span><span class="v"><span class="editable" data-field="rest" data-w="'+wIdx+'" data-d="'+dIdx+'" data-e="'+eIdx+'">'+esc(ex.rest)+'</span></span></div>' +
+    '</div>' +
+    '<div class="a-timerbar">'+makeRestTimer(ex.rest||'60 sec', ex.name)+'</div>' +
+    noteHtml +
+    '</div></div>';
+}
+
+/* ─────────────────────────────────────────────────
+   RENDER DAY CARD
+───────────────────────────────────────────────── */
+function renderDay(day, wIdx, dIdx){
+  if(day.type === "rest"){
+    return '<div class="rest-card"><span style="font-size:20px">😴</span><div><div class="rest-label">REST DAY</div><div class="rest-sub">Full Recovery &amp; Growth</div></div></div>';
+  }
+  const exHtml = day.exercises.map((ex,eIdx)=>renderExercise(ex,wIdx,dIdx,eIdx)).join("");
+  return '<div class="day-card" data-w="'+wIdx+'" data-d="'+dIdx+'">' +
+    '<div class="day-header" onclick="toggleDay(this.parentElement,\''+wIdx+'-'+dIdx+'\')">' +
+      '<div class="day-icon" style="background:'+day.color+';box-shadow:0 2px 8px '+day.color+'55">'+day.icon+'</div>' +
+      '<div class="day-info">' +
+        '<div class="day-session">'+esc(day.session)+'</div>' +
+        '<div class="day-meta">'+esc(day.label)+' · '+day.exCount+' exercises · '+esc(day.meta)+'</div>' +
+      '</div>' +
+      '<div class="day-toggle" id="tog-'+wIdx+'-'+dIdx+'">▼</div>' +
+    '</div>' +
+    '<div class="exercises" id="ex-'+wIdx+'-'+dIdx+'" style="display:none;border-top-color:'+day.color+'33">'+exHtml+'</div>' +
+  '</div>';
+}
+
+/* ─────────────────────────────────────────────────
+   TOGGLE HELPERS
+───────────────────────────────────────────────── */
+function toggleDay(card, key){
+  const exDiv = document.getElementById('ex-'+key);
+  const tog = document.getElementById('tog-'+key);
+  const isOpen = card.classList.contains('open');
+  const color = card.querySelector('.day-icon').style.background;
+  card.classList.toggle('open');
+  exDiv.style.display = isOpen ? 'none' : 'block';
+  tog.textContent = isOpen ? '▼' : '▲';
+  if(!isOpen){
+    tog.style.background = color;
+    card.style.setProperty('--day-rgb', hexToRgb(rgbToHex(color)));
+    card.style.boxShadow = '0 4px 24px rgba(0,0,0,0.2)';
+  } else {
+    tog.style.background = 'rgba(255,255,255,0.06)';
+    card.style.boxShadow = 'none';
+  }
+}
+function rgbToHex(rgbStr){
+  const m = rgbStr.match(/\d+/g);
+  if(!m) return '#84cc16';
+  return '#'+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,'0')).join('');
+}
+
+/* ─────────────────────────────────────────────────
+   WEEK TABS
+───────────────────────────────────────────────── */
+function renderWeekTabs(){
+  const shortLabels = ["Compound","Superset","Pyramid","Circuit"];
+  return WEEKS.map((_,i)=>
+    '<button class="wtab'+(i===currentWeek?' active':'')+'" onclick="switchWeek('+i+')">W'+(i+1)+'<span class="wt-label">'+(shortLabels[i]||'')+'</span></button>'
+  ).join("");
+}
+
+function switchWeek(w){
+  currentWeek = w;
+  render();
+}
+
+/* ─────────────────────────────────────────────────
+   MAIN RENDER
+───────────────────────────────────────────────── */
+function render(){
+  const week = WEEKS[currentWeek];
+  const meta = WEEK_META[currentWeek];
+  const daysHtml = week.days.map((d,i)=>renderDay(d,currentWeek,i)).join("");
+  const themeBar = meta ? '<div class="week-theme-bar"><span class="wtb-icon">'+meta.icon+'</span><div><div class="wtb-label">'+esc(meta.label)+'</div><div class="wtb-text">'+esc(meta.text)+'</div></div></div>' : '';
+  document.getElementById("app").innerHTML =
+    '<div class="header"><a href="cat-hv.html" class="back-link">← High-Volume Training Template</a>' +
+    '<div class="header-inner">' +
+      '<div class="eyebrow">💥 High-Volume Training Template</div>' +
+      '<div class="title">4-Week Program Block</div>' +
+      '<span class="schedule">5–6 Sets · 15–25 Reps · Trisets Banned</span>' +
+      '<div style="font-size:12px;font-weight:700;color:var(--accent);opacity:0.85;margin-top:8px;">✍️ Designed by Mike Cross</div>' +
+    '</div></div>' +
+    '<div class="week-selector" id="weekSel">'+renderWeekTabs()+'</div>' +
+    '<div class="content"><div class="hint">Tap a session to expand · Tap any field to edit</div>'+themeBar+daysHtml+'</div>';
+
+  bindEditable();
+  buildTimerFloat();
+  applyReplacements();
+}
+
+/* ─────────────────────────────────────────────────
+   EDITABLE FIELDS
+───────────────────────────────────────────────── */
+function bindEditable(){
+  document.querySelectorAll(".editable").forEach(el=>{
+    el.addEventListener("click",e=>{
+      e.stopPropagation();
+      const field = el.dataset.field;
+      const wIdx = parseInt(el.dataset.w);
+      const dIdx = parseInt(el.dataset.d);
+      const eIdx = parseInt(el.dataset.e);
+      const ex = WEEKS[wIdx].days[dIdx].exercises[eIdx];
+      const input = document.createElement("input");
+      input.value = field==="name" ? ex.name : ex[field];
+      input.className = "edit-input";
+      el.replaceWith(input);
+      input.focus();
+      const save = ()=>{
+        ex[field] = input.value;
+        render();
+      };
+      input.addEventListener("blur",save);
+      input.addEventListener("keydown",ev=>{ if(ev.key==="Enter") input.blur(); });
+    });
+  });
+}
+
+/* ─────────────────────────────────────────────────
+   REPLACEMENT BADGE (existing mc-replace.js compat)
+───────────────────────────────────────────────── */
+function applyReplacements(){
+  const _PAGE_ID = location.pathname.split('/').pop().split('?')[0];
+  const KEY = 'mc_replacements|'+_PAGE_ID;
+  const replacements = JSON.parse(localStorage.getItem(KEY)||'{}');
+  if(!Object.keys(replacements).length) return;
+  document.querySelectorAll('.ex-card').forEach(card=>{
+    const nameEl = card.querySelector('.ex-name');
+    if(!nameEl) return;
+    const orig = nameEl.textContent.trim();
+    const rep = replacements[orig.toLowerCase()];
+    if(rep){
+      nameEl.textContent = rep;
+      nameEl.style.color = '#22d3ee';
+      if(!card.querySelector('.replaced-badge')){
+        const b = document.createElement('span');
+        b.className='replaced-badge';
+        b.style.cssText='font-size:11px;font-weight:900;color:#22d3ee;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.25);border-radius:4px;padding:2px 5px;margin-left:6px;letter-spacing:0.06em;vertical-align:middle;';
+        b.textContent='REPLACED';
+        nameEl.parentNode.insertBefore(b, nameEl.nextSibling);
+      }
+    }
+  });
+}
+
+buildTimerFloat();
+render();
+if(typeof updateProgress!=="undefined") updateProgress();
+
+</script>
+
+<script src="mc-finish.js"></script>
+<script src="mc-supabase.js"></script>
+<script src="mc-sync.js"></script>
+<script src="mc-biometric.js"></script>
+<script src="program-overrides.js"></script>
+<script src="mc-card-actions.js"></script>
+<script src="program-manager.js"></script>
+<script src="mc-live-tracker.js"></script>
+<script src="mc-nav.js"></script>
+<script src="mc-summary.js"></script>
+<script src="mc-setlog.js"></script>
+<script src="mc-session.js"></script>
+<script src="mc-suggest.js"></script>
+<script src="mc-chart.js"></script>
+<script src="mc-exercise-trends.js"></script>
+<script src="mc-cues-data.js"></script>
+<script src="mc-cues.js"></script>
+<script src="mc-group-split.js?v=45"></script>
+<script src="mc-superset-hop.js?v=46"></script>
+<script src="mc-sw-update.js?v=45"></script>
+</body>
+</html>

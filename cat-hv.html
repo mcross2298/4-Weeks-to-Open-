@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>High-Volume Training Template — 4-Week Program Block</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111;
+    --border: #1e1e1e;
+    --text: #e5e5e5;
+    --muted: #6b7280;
+    --accent: #84cc16;
+    --accent-dim: rgba(132,204,22,0.12);
+    --accent-glow: rgba(132,204,22,0.25);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; padding-bottom: 60px; }
+
+  .page-wrap { max-width: 680px; margin: 0 auto; padding: 0 16px; }
+
+  .back-nav { padding: 16px 0 0; }
+  .back-nav a { color: var(--muted); text-decoration: none; font-size: 13px; letter-spacing: 0.02em; }
+  .back-nav a:hover { color: var(--accent); }
+
+  .program-header {
+    margin-top: 20px;
+    padding: 24px 20px;
+    background: linear-gradient(135deg, #1a2e05, #0a0a0a);
+    border: 1px solid rgba(132,204,22,0.3);
+    border-top: 3px solid var(--accent);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .program-header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(132,204,22,0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .program-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .program-icon { font-size: 28px; margin-bottom: 10px; display: block; }
+  .program-header h1 { font-size: clamp(24px, 5vw, 30px); font-weight: 900; line-height: 1.1; color: #fff; margin-bottom: 10px; letter-spacing: -0.02em; }
+  .program-tagline { font-size: 14px; color: var(--muted); line-height: 1.55; margin-bottom: 18px; }
+  .program-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+  .meta-badge { background: var(--accent-dim); border: 1px solid var(--accent-glow); color: var(--accent); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.04em; }
+  .designer-credit { font-size: 12px; color: var(--muted); margin-top: 14px; }
+
+  .section-label { font-size: 11px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 28px 0 12px; }
+
+  /* ── Weekly schedule ── */
+  .week-overview { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 10px; }
+  .week-overview-label { font-size: 10.5px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .week-overview-sub { font-size: 12px; color: #94a3b8; line-height: 1.5; margin-bottom: 12px; }
+  .week-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+  .week-row:last-child { border-bottom: none; }
+  .week-day { font-size: 10.5px; font-weight: 700; color: var(--muted); width: 44px; flex-shrink: 0; letter-spacing: 0.06em; }
+  .week-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .week-name { font-weight: 700; color: #e2e8f0; }
+  .week-tag { font-size: 10.5px; color: var(--muted); margin-left: auto; letter-spacing: 0.04em; }
+
+  /* ── Rules banner ── */
+  .prog-banner {
+    background: rgba(132,204,22,0.06);
+    border: 1px solid rgba(132,204,22,0.2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .prog-banner-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .prog-banner-text { font-size: 12px; color: #bef264; line-height: 1.55; }
+  .prog-banner-text strong { color: #d9f99d; font-weight: 800; }
+
+  /* ── Start card ── */
+  .start-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface);
+    border: 1.5px solid rgba(132,204,22,0.3);
+    border-radius: 14px;
+    padding: 18px 20px;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .start-card:hover { background: rgba(255,255,255,0.02); border-color: rgba(132,204,22,0.5); }
+  .start-icon { width: 52px; height: 52px; border-radius: 14px; background: rgba(132,204,22,0.12); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .start-body { flex: 1; min-width: 0; }
+  .start-eyebrow { font-size: 10.5px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+  .start-name { font-size: 16px; font-weight: 900; color: #e2e8f0; margin-bottom: 3px; letter-spacing: -0.01em; }
+  .start-desc { font-size: 12px; color: var(--muted); line-height: 1.45; }
+  .start-arrow { font-size: 16px; color: var(--muted); flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+  <div class="back-nav">
+    <a href="index.html">← Programs</a>
+  </div>
+
+  <div class="program-header">
+    <div class="program-eyebrow">🔷 Flagship Program</div>
+    <span class="program-icon">💥</span>
+    <h1>High-Volume Training Template</h1>
+    <p class="program-tagline">A 4-week high-set, high-rep progression — compound-dominant single-body-part days build into full supersets, then high-set pyramids, then finish with bodyweight &amp; accessory density. 5–6 sets, 15–25 reps, trisets strictly banned.</p>
+    <div class="program-meta">
+      <span class="meta-badge">4-Week Block</span>
+      <span class="meta-badge">5–6 Sets · 15–25 Reps</span>
+      <span class="meta-badge">No Trisets</span>
+      <span class="meta-badge">Station-Anchored</span>
+    </div>
+    <div class="designer-credit">✍️ Designed by Mike Cross</div>
+  </div>
+
+  <div class="section-label">Weekly Schedule</div>
+
+  <div class="week-overview">
+    <div class="week-overview-label">Week 1 · Compound Dominant</div>
+    <div class="week-overview-sub">2-On / 1-Off · 6 exercises/day · 1 superset + 1 drop set + 1 cluster set per workout</div>
+    <div class="week-row"><span class="week-day">DAY 1</span><span class="week-dot" style="background:#ef4444;"></span><span class="week-name">Chest</span><span class="week-tag">6 Exercises</span></div>
+    <div class="week-row"><span class="week-day">DAY 2</span><span class="week-dot" style="background:#8b5cf6;"></span><span class="week-name">Arms</span><span class="week-tag">6 Exercises</span></div>
+    <div class="week-row"><span class="week-day">DAY 3</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#94a3b8;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
+    <div class="week-row"><span class="week-day">DAY 4</span><span class="week-dot" style="background:#22c55e;"></span><span class="week-name">Legs</span><span class="week-tag">6 Exercises</span></div>
+    <div class="week-row"><span class="week-day">DAY 5</span><span class="week-dot" style="background:#eab308;"></span><span class="week-name">Shoulders</span><span class="week-tag">6 Exercises</span></div>
+    <div class="week-row"><span class="week-day">DAY 6</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#94a3b8;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
+    <div class="week-row"><span class="week-day">DAY 7</span><span class="week-dot" style="background:#0891b2;"></span><span class="week-name">Back</span><span class="week-tag">6 Exercises</span></div>
+  </div>
+
+  <div class="week-overview">
+    <div class="week-overview-label">Week 2 · Fully Supersetted</div>
+    <div class="week-overview-sub">5 straight training days + 2 rest days · 8 exercises/day, all 4 pairs run as station-anchored supersets · 120 sec rest all week</div>
+    <div class="week-row"><span class="week-day">DAY 1</span><span class="week-dot" style="background:#ef4444;"></span><span class="week-name">Chest &amp; Biceps</span><span class="week-tag">8 Exercises</span></div>
+    <div class="week-row"><span class="week-day">DAY 2</span><span class="week-dot" style="background:#eab308;"></span><span class="week-name">Shoulders &amp; Triceps</span><span class="week-tag">8 Exercises</span></div>
+    <div class="week-row"><span class="week-day">DAY 3</span><span class="week-dot" style="background:#22c55e;"></span><span class="week-name">Legs</span><span class="week-tag">8 Exercises</span></div>
+    <div class="week-row"><span class="week-day">DAY 4</span><span class="week-dot" style="background:#0891b2;"></span><span class="week-name">Back</span><span class="week-tag">8 Exercises</span></div>
+    <div class="week-row"><span class="week-day">DAY 5</span><span class="week-dot" style="background:#ec4899;"></span><span class="week-name">Rear Delts &amp; Traps</span><span class="week-tag">8 Exercises</span></div>
+    <div class="week-row"><span class="week-day">DAY 6</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#94a3b8;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
+    <div class="week-row"><span class="week-day">DAY 7</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#94a3b8;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
+  </div>
+
+  <div class="prog-banner">
+    <span class="prog-banner-icon">🚫</span>
+    <div class="prog-banner-text">
+      <strong>Trisets are strictly banned in this program.</strong> Every grouped block is a superset at most, and every superset, drop set and cluster set is completely station-anchored — one piece of equipment, no walking the floor.
+    </div>
+  </div>
+
+  <div class="section-label">Begin Training</div>
+
+  <a href="hv-block.html" class="start-card">
+    <div class="start-icon">💥</div>
+    <div class="start-body">
+      <div class="start-eyebrow">Week 1 of 4 · Compound Dominant</div>
+      <div class="start-name">Start the Block</div>
+      <div class="start-desc">Week-by-week tabs, expandable day cards, built-in rest timers and set logging.</div>
+    </div>
+    <div class="start-arrow">→</div>
+  </a>
+
+</div>
+<script src="mc-nav.js"></script>
+</body>
+</html>
