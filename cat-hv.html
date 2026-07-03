@@ -51,6 +51,12 @@
   .designer-credit { font-size: 12px; color: var(--muted); margin-top: 14px; }
 
   .section-label { font-size: 11px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 28px 0 12px; }
+  .section-label.toggle { display: flex; align-items: center; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+  .section-label.toggle:hover { color: var(--accent); }
+  .section-label .chev { margin-left: auto; font-size: 12px; color: var(--muted); transition: transform 0.2s ease; }
+  .section-label.toggle:hover .chev { color: var(--accent); }
+  .section-label.collapsed .chev { transform: rotate(-90deg); }
+  .week-body.collapsed { display: none; }
 
   /* ── Weekly schedule ── */
   .week-overview { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 10px; }
@@ -120,8 +126,21 @@
     <div class="designer-credit">✍️ Designed by Mike Cross</div>
   </div>
 
-  <div class="section-label">Weekly Schedule</div>
+  <div class="section-label">Begin Training</div>
 
+  <a href="hv-block.html" class="start-card">
+    <div class="start-icon">💥</div>
+    <div class="start-body">
+      <div class="start-eyebrow">Week 1 of 4 · Compound Dominant</div>
+      <div class="start-name">Start the Block</div>
+      <div class="start-desc">Week-by-week tabs, expandable day cards, built-in rest timers and set logging.</div>
+    </div>
+    <div class="start-arrow">→</div>
+  </a>
+
+  <div class="section-label toggle collapsed" id="weekScheduleLabel" onclick="toggleWeekSchedule()">Weekly Schedule<span class="chev">▾</span></div>
+
+  <div class="week-body collapsed" id="weekBody">
   <div class="week-overview">
     <div class="week-overview-label">Week 1 · Compound Dominant</div>
     <div class="week-overview-sub">2-On / 1-Off · 6 exercises/day · 3 pyramids (12–25 reps) + 1 static 5×20 + 1 drop set + 1 cluster set per workout</div>
@@ -170,6 +189,8 @@
     <div class="week-row"><span class="week-day">DAY 7</span><span class="week-dot" style="background:#0891b2;"></span><span class="week-name">Calves &amp; Forearms</span><span class="week-tag">8 Exercises</span></div>
   </div>
 
+  </div>
+
   <div class="prog-banner">
     <span class="prog-banner-icon">🚫</span>
     <div class="prog-banner-text">
@@ -177,19 +198,25 @@
     </div>
   </div>
 
-  <div class="section-label">Begin Training</div>
-
-  <a href="hv-block.html" class="start-card">
-    <div class="start-icon">💥</div>
-    <div class="start-body">
-      <div class="start-eyebrow">Week 1 of 4 · Compound Dominant</div>
-      <div class="start-name">Start the Block</div>
-      <div class="start-desc">Week-by-week tabs, expandable day cards, built-in rest timers and set logging.</div>
-    </div>
-    <div class="start-arrow">→</div>
-  </a>
-
 </div>
+<script>
+  function toggleWeekSchedule(){
+    var lbl = document.getElementById('weekScheduleLabel');
+    var body = document.getElementById('weekBody');
+    var collapsed = body.classList.toggle('collapsed');
+    lbl.classList.toggle('collapsed', collapsed);
+    try { localStorage.setItem('hv_week_collapsed', collapsed ? '1' : '0'); } catch(e){}
+  }
+  (function(){
+    var saved = '1'; // default collapsed
+    try { var s = localStorage.getItem('hv_week_collapsed'); if(s !== null) saved = s; } catch(e){}
+    var lbl = document.getElementById('weekScheduleLabel');
+    var body = document.getElementById('weekBody');
+    var collapsed = saved === '1';
+    body.classList.toggle('collapsed', collapsed);
+    lbl.classList.toggle('collapsed', collapsed);
+  })();
+</script>
 <script src="mc-nav.js"></script>
 </body>
 </html>
