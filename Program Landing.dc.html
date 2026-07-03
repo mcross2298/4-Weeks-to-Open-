@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;background:#e7e4de;font-family:'Manrope',system-ui,sans-serif;}
+  .plist::-webkit-scrollbar{display:none;}
+  @keyframes sheenSlide{0%{transform:translateX(-120%) skewX(-18deg);}55%,100%{transform:translateX(320%) skewX(-18deg);}}
+</style>
+</helmet>
+
+<section id="turn1" style="padding:60px 48px 90px;font-family:'Manrope',system-ui,sans-serif;">
+  <div style="max-width:900px;margin:0 auto 40px;">
+    <div style="font-family:'Archivo';font-weight:800;font-size:30px;letter-spacing:-.02em;color:#1c1a17;">Program landing page — Onyx</div>
+    <div style="font-size:15px;color:#6b6862;margin-top:8px;max-width:640px;line-height:1.55;">The first screen after tapping into a program. Continues the Onyx system (dark, refined gold, Archivo/Manrope) from the Dashboard and Programs redesigns. Accent color, name, and description are tweakable — swap the accent to match any of the app's flagship/influencer programs.</div>
+  </div>
+
+  <div id="1a" style="display:flex;flex-direction:column;align-items:center;gap:18px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="font-family:'Archivo';font-weight:800;font-size:13px;letter-spacing:.14em;color:#fff;background:#1c1a17;border-radius:8px;padding:5px 11px;">1a</span>
+      <div>
+        <div style="font-family:'Archivo';font-weight:700;font-size:17px;color:#1c1a17;letter-spacing:-.01em;">Onyx — Program Landing</div>
+        <div style="font-size:12.5px;color:#6b6862;">Hero + stats + schedule preview + start CTA</div>
+      </div>
+    </div>
+
+    <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" width="{{ 402 }}" height="{{ 874 }}" hint-size="402px,874px">
+      <div style="height:100%;display:flex;flex-direction:column;background:radial-gradient(120% 60% at 50% -10%,{{ accentGlow }} 0%,#0a0a0b 46%);">
+        <div class="plist" style="flex:1;overflow:auto;padding-top:58px;scrollbar-width:none;">
+
+          <!-- top bar -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 18px 4px;">
+            <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e2e2e6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+            </div>
+            <div style="font-family:'Archivo';font-weight:800;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8b8b92;">{{ tierLabel }}</div>
+            <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="{{ accent }}"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+            </div>
+          </div>
+
+          <!-- hero image band -->
+          <div style="position:relative;margin:14px 18px 0;border-radius:22px;overflow:hidden;height:190px;background:repeating-linear-gradient(135deg,{{ accentFaint }} 0px,{{ accentFaint }} 2px,#141314 2px,#141314 14px);border:1px solid {{ accentBorder }};">
+            <div style="position:absolute;inset:0;background:linear-gradient(0deg,#0a0a0b 0%,rgba(10,10,11,.15) 55%,rgba(10,10,11,.55) 100%);"></div>
+            <div style="position:absolute;top:0;bottom:0;left:0;width:80px;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,.10),transparent);animation:sheenSlide 7s ease-in-out infinite;"></div>
+            <div style="position:absolute;left:14px;bottom:12px;font-family:'Archivo Narrow',monospace;font-size:10px;letter-spacing:.08em;color:{{ accentSoft }};font-weight:700;">PROGRAM HERO IMAGE · 3:2</div>
+            <div style="position:absolute;top:14px;left:14px;width:44px;height:44px;border-radius:13px;background:{{ accentBadgeBg }};border:1px solid {{ accentBorder }};display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -8px {{ accent }}88;">
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="{{ accent }}" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>
+            </div>
+          </div>
+
+          <!-- title block -->
+          <div style="padding:16px 20px 0;">
+            <div style="display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:{{ accentSoft }};background:{{ accentFaint }};border:1px solid {{ accentBorder }};border-radius:20px;padding:4px 11px;margin-bottom:12px;">{{ tierLabel }}</div>
+            <div style="font-family:'Archivo';font-weight:800;font-size:27px;line-height:1.08;letter-spacing:-.02em;color:#f6f5f2;">{{ programName }}</div>
+            <div style="font-size:13.5px;font-weight:500;color:#a6a6ad;line-height:1.55;margin-top:9px;">{{ tagline }}</div>
+          </div>
+
+          <!-- stat strip -->
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:18px 20px 0;">
+            <div style="border-radius:14px;padding:12px 6px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);text-align:center;">
+              <div style="font-family:'Archivo';font-weight:900;font-size:17px;color:#f4f3f1;">{{ weeks }}</div>
+              <div style="font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7d7d84;margin-top:3px;">Weeks</div>
+            </div>
+            <div style="border-radius:14px;padding:12px 6px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);text-align:center;">
+              <div style="font-family:'Archivo';font-weight:900;font-size:17px;color:#f4f3f1;">{{ daysPerWeek }}</div>
+              <div style="font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7d7d84;margin-top:3px;">Days / wk</div>
+            </div>
+            <div style="border-radius:14px;padding:12px 6px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);text-align:center;">
+              <div style="font-family:'Archivo';font-weight:900;font-size:17px;color:#f4f3f1;">{{ difficulty }}</div>
+              <div style="font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7d7d84;margin-top:3px;">Level</div>
+            </div>
+          </div>
+
+          <!-- schedule preview -->
+          <div style="display:flex;align-items:baseline;justify-content:space-between;padding:24px 20px 10px;">
+            <div style="font-family:'Archivo';font-weight:800;font-size:16px;letter-spacing:-.01em;color:#f4f3f1;">This week</div>
+            <div style="font-size:12px;font-weight:700;color:{{ accentSoft }};">{{ scheduleLabel }}</div>
+          </div>
+          <div style="display:flex;gap:8px;padding:0 20px;">
+            <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+                <div style="width:100%;aspect-ratio:1;border-radius:11px;display:flex;align-items:center;justify-content:center;font-family:'Archivo';font-weight:800;font-size:11px;background:{{ d.on }};border:1px solid {{ d.border }};color:{{ d.text }};">{{ d.glyph }}</div>
+                <div style="font-size:8.5px;font-weight:700;color:#7d7d84;letter-spacing:.02em;">{{ d.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- structure / what's inside -->
+          <div style="font-family:'Archivo';font-weight:800;font-size:16px;letter-spacing:-.01em;color:#f4f3f1;padding:26px 20px 10px;">What's inside</div>
+          <div style="display:flex;flex-direction:column;gap:9px;padding:0 20px;">
+            <div style="display:flex;align-items:flex-start;gap:11px;border-radius:15px;padding:13px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);">
+              <div style="width:30px;height:30px;border-radius:9px;background:{{ accentFaint }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{ accent }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+              </div>
+              <div>
+                <div style="font-family:'Archivo';font-weight:700;font-size:13.5px;color:#f4f3f1;">{{ structureTitle1 }}</div>
+                <div style="font-size:12px;color:#8b8b92;margin-top:2px;line-height:1.45;">{{ structureBody1 }}</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:11px;border-radius:15px;padding:13px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);">
+              <div style="width:30px;height:30px;border-radius:9px;background:{{ accentFaint }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{ accent }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+              </div>
+              <div>
+                <div style="font-family:'Archivo';font-weight:700;font-size:13.5px;color:#f4f3f1;">{{ structureTitle2 }}</div>
+                <div style="font-size:12px;color:#8b8b92;margin-top:2px;line-height:1.45;">{{ structureBody2 }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:118px;"></div>
+        </div>
+
+        <!-- sticky CTA -->
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:14px 18px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(0deg,#0a0a0b 55%,rgba(10,10,11,0));">
+          <div style="display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:15px;border-radius:16px;background:linear-gradient(135deg,{{ accentLight }},{{ accent }});box-shadow:0 14px 28px -10px {{ accent }}77;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#14110b"><path d="M7 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 7 5.5z"/></svg>
+            <span style="font-family:'Archivo';font-weight:800;font-size:15.5px;color:#14110b;letter-spacing:.01em;">Start Program</span>
+          </div>
+          <div style="text-align:center;font-size:12px;font-weight:700;color:#8b8b92;margin-top:11px;">View full {{ weeks }}-week schedule →</div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: {&quot;width&quot;: 900, &quot;height&quot;: 960},
+  &quot;accentColor&quot;: {&quot;editor&quot;: &quot;color&quot;, &quot;default&quot;: &quot;#e6c579&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;options&quot;: [&quot;#e6c579&quot;, &quot;#c9505a&quot;, &quot;#8b7ff0&quot;, &quot;#1d9e75&quot;, &quot;#378add&quot;], &quot;section&quot;: &quot;Program identity&quot;},
+  &quot;accentLight&quot;: {&quot;editor&quot;: null, &quot;default&quot;: &quot;#f0d99a&quot;, &quot;tsType&quot;: &quot;string&quot;},
+  &quot;programName&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Strength &amp; Supersets&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Program identity&quot;},
+  &quot;tagline&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Heavy compounds paired with high-volume supersets and AMRAP finishers to build strength and size at once.&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Program identity&quot;},
+  &quot;tierLabel&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;Flagship&quot;, &quot;options&quot;: [&quot;Flagship&quot;, &quot;Influencer&quot;, &quot;Custom&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Program identity&quot;},
+  &quot;weeks&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 6, &quot;min&quot;: 1, &quot;max&quot;: 20, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Schedule&quot;},
+  &quot;daysPerWeek&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 5, &quot;min&quot;: 1, &quot;max&quot;: 7, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Schedule&quot;},
+  &quot;difficulty&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;Int.&quot;, &quot;options&quot;: [&quot;Beg.&quot;, &quot;Int.&quot;, &quot;Adv.&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Schedule&quot;},
+  &quot;scheduleLabel&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;5-on 2-off&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Schedule&quot;},
+  &quot;structureTitle1&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Station-anchored supersets&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;What's inside&quot;},
+  &quot;structureBody1&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Every pairing runs at one station — no walking the floor mid-set.&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;What's inside&quot;},
+  &quot;structureTitle2&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Progressive overload built in&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;What's inside&quot;},
+  &quot;structureBody2&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Load and reps escalate every week — no guesswork between sessions.&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;What's inside&quot;}
+}">
+class Component extends DCLogic {
+  hexToRgb(hex) {
+    const h = hex.replace('#','');
+    const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+    return `${r},${g},${b}`;
+  }
+
+  renderVals() {
+    const accent = this.props.accentColor ?? '#e6c579';
+    const rgb = this.hexToRgb(accent);
+    const light = this.props.accentLight ?? '#f0d99a';
+
+    const daysPattern = (this.props.daysPerWeek ?? 5);
+    const glyphs = ['M','T','W','T','F','S','S'];
+    const weekDays = glyphs.map((g,i) => {
+      const isTraining = i < daysPattern;
+      return {
+        glyph: isTraining ? '●' : '·',
+        label: g,
+        on: isTraining ? `rgba(${rgb},.16)` : 'rgba(255,255,255,.03)',
+        border: isTraining ? `rgba(${rgb},.4)` : 'rgba(255,255,255,.06)',
+        text: isTraining ? accent : '#4a4a50',
+      };
+    });
+
+    return {
+      accent,
+      accentLight: light,
+      accentGlow: `rgba(${rgb},.16)`,
+      accentFaint: `rgba(${rgb},.14)`,
+      accentBorder: `rgba(${rgb},.3)`,
+      accentSoft: light,
+      accentBadgeBg: `rgba(${rgb},.18)`,
+      programName: this.props.programName ?? "Strength & Supersets",
+      tagline: this.props.tagline ?? "Heavy compounds paired with high-volume supersets and AMRAP finishers to build strength and size at once.",
+      tierLabel: this.props.tierLabel ?? "Flagship",
+      weeks: this.props.weeks ?? 6,
+      daysPerWeek: this.props.daysPerWeek ?? 5,
+      difficulty: this.props.difficulty ?? "Int.",
+      scheduleLabel: this.props.scheduleLabel ?? "5-on 2-off",
+      weekDays,
+      structureTitle1: this.props.structureTitle1 ?? "Station-anchored supersets",
+      structureBody1: this.props.structureBody1 ?? "Every pairing runs at one station — no walking the floor mid-set.",
+      structureTitle2: this.props.structureTitle2 ?? "Progressive overload built in",
+      structureBody2: this.props.structureBody2 ?? "Load and reps escalate every week — no guesswork between sessions.",
+    };
+  }
+}
+</script>
+</body>
+</html>
