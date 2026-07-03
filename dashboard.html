@@ -878,6 +878,19 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 #scr-conditioning .prog-title{font-family:'Archivo',system-ui,sans-serif;font-weight:800;color:#f6f5f2;letter-spacing:-.02em;}
 #scr-conditioning .prog-sub{color:#a6a6ad;}
 
+/* ══════════════════════════════════════════════════════════════
+   ONYX — Nutrition screen wrapper. mc-macros.js renders/styles
+   everything inside #nutritionBody itself; this just gives the
+   screen shell (topbar) the same Onyx treatment as the other tabs.
+   Scoped to #scr-nutrition.
+   ══════════════════════════════════════════════════════════════ */
+#scr-nutrition{
+  background:radial-gradient(120% 60% at 50% -10%, #171612 0%, #0a0a0b 46%);
+  font-family:'Manrope',system-ui,sans-serif;
+}
+#scr-nutrition .topbar-title{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:26px;letter-spacing:-.02em;color:#f6f5f2;line-height:1.1;}
+#scr-nutrition .topbar-sub{font-family:'Manrope',system-ui,sans-serif;font-weight:600;font-size:13px;color:#a6a6ad;margin-top:6px;}
+
 #condBody{
   --o-gold:#e6c579;
   --o-gold-grad:linear-gradient(135deg,#e9cb7d,#c79c4f);
@@ -1305,6 +1318,21 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
       <div class="prog-sub">Finish a lift with conditioning, or run it as a standalone session.</div>
     </div>
     <div id="condBody"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     NUTRITION SCREEN (macro tracker)
+══════════════════════════════════════ -->
+<div class="screen" id="scr-nutrition">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Nutrition</div>
+      <div class="topbar-sub">Daily macros · goals · food log</div>
+    </div>
+  </div>
+  <div class="prog-screen-inner">
+    <div id="nutritionBody"></div>
   </div>
 </div>
 
