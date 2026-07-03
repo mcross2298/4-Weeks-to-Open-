@@ -86,7 +86,11 @@
     "exercise-dedup-proposal.md",
     "pm-improvement-roadmap.md",
     "pm-layout-theme-design.md",
-    "mcsplitsupdate.bundle"
+    "mcsplitsupdate.bundle",
+    "README.md",
+    "Programs Redesign.dc.html",
+    "onyx-programs-tokens-and-styles.css",
+    "markup-snippets.md"
   ],
   "brand_terms": [
     "CBUM",
