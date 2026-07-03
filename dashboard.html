@@ -4,6 +4,9 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>MC Training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="base.css?v=65"/>
 <link rel="manifest" href="manifest.json"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -565,6 +568,165 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 .custom-wk-edit:active{border-color:var(--gold);color:var(--gold);}
 .custom-wk-del{padding:11px 14px;border-radius:11px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.05);color:#f87171;font-size:13px;cursor:pointer;font-family:inherit;}
 .custom-wk-del:active{background:rgba(239,68,68,0.15);}
+
+/* ══════════════════════════════════════════════════════════════
+   ONYX — Dashboard redesign (direction 1a)
+   Per design_handoff_dashboard_onyx/README.md. Shared chrome
+   (.avatar/.topbar/.tab-bar) is restyled app-wide since this file
+   has one copy of each, reused by every screen. Everything else is
+   scoped to #scr-dashboard so other screens keep their current look.
+   ══════════════════════════════════════════════════════════════ */
+#scr-dashboard{
+  --o-gold:#e6c579;
+  --o-gold-grad:linear-gradient(135deg,#e9cb7d,#c79c4f);
+  --o-text:#f4f3f1;
+  --o-muted:#a6a6ad;
+  --o-muted-2:#8b8b92;
+  --o-faint:#7d7d84;
+  --o-surface:rgba(255,255,255,0.035);
+  --o-surface-border:rgba(255,255,255,0.07);
+  --font-display:'Archivo',system-ui,sans-serif;
+  --font-ui:'Manrope',system-ui,sans-serif;
+  background:radial-gradient(120% 60% at 50% -10%, #171612 0%, #0a0a0b 46%);
+  font-family:var(--font-ui);
+}
+
+/* Header (shared) */
+.avatar{
+  width:44px;height:44px;border-radius:14px;
+  background:linear-gradient(140deg,#e6c579,#b8934a);
+  color:#1a1409;font-family:var(--font-display),'Archivo',system-ui,sans-serif;
+  font-weight:900;font-size:15px;border:none;
+  box-shadow:0 6px 18px -6px rgba(216,180,99,.55);
+}
+.topbar-title{font-family:'Archivo',system-ui,sans-serif;font-weight:700;font-size:18px;letter-spacing:-.01em;}
+.topbar-sub{font-family:'Manrope',system-ui,sans-serif;font-weight:600;}
+.topbar-icon{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;}
+
+/* Streak strip */
+#scr-dashboard .momentum-strip{
+  background:linear-gradient(120deg,rgba(216,180,99,.12),rgba(216,180,99,.02));
+  border:1px solid rgba(216,180,99,.2);border-radius:14px;
+}
+#scr-dashboard .ms-flame{filter:none;}
+#scr-dashboard .ms-flame svg{display:block;}
+#scr-dashboard .ms-streak{font-family:var(--font-display);font-weight:700;font-size:13.5px;color:var(--o-text);letter-spacing:0;}
+#scr-dashboard .ms-sub{font-size:11px;font-weight:600;color:var(--o-muted-2);}
+#scr-dashboard .ms-badge{font-size:11px;font-weight:800;letter-spacing:.05em;color:var(--o-gold);background:rgba(216,180,99,.14);border:1px solid rgba(216,180,99,.28);border-radius:9px;}
+
+/* Section headers */
+#scr-dashboard .sec-title{font-family:var(--font-display);font-weight:800;font-size:19px;letter-spacing:-.01em;color:var(--o-text);}
+#scr-dashboard .sec-link{color:var(--o-gold);}
+
+/* Hero eyebrow (new) */
+#scr-dashboard .hero-eyebrow{
+  font-family:var(--font-display);font-weight:700;font-size:11px;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--o-muted-2);
+  margin:0 2px 10px;padding:0 18px;
+}
+
+/* Hero card */
+#scr-dashboard .hero-card{
+  border-radius:24px;
+  background:linear-gradient(158deg,#1c1a16 0%,#0e0e10 68%);
+  border:1px solid rgba(216,180,99,.24);
+  box-shadow:0 24px 50px -24px rgba(0,0,0,.85);
+}
+#scr-dashboard .hero-glow{background:radial-gradient(90% 70% at 15% 0%,rgba(216,180,99,.12) 0%,transparent 60%);}
+#scr-dashboard .hero-sheen{
+  position:absolute;top:0;bottom:0;left:0;width:70px;pointer-events:none;
+  background:linear-gradient(90deg,rgba(255,255,255,.14),transparent);
+  animation:oSheenSlide 6.5s ease-in-out infinite;
+}
+@keyframes oSheenSlide{
+  0%{transform:translateX(-120%) skewX(-18deg);}
+  55%,100%{transform:translateX(320%) skewX(-18deg);}
+}
+@media (prefers-reduced-motion:reduce){
+  #scr-dashboard .hero-sheen{animation:none;display:none;}
+  #scr-dashboard .hero-tap:active,#scr-dashboard .rail-card:active,#scr-dashboard .tool-card:active{transform:none;}
+}
+#scr-dashboard .hero-badge{
+  font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--o-gold);background:rgba(216,180,99,.12);
+  border:1px solid rgba(216,180,99,.3);border-radius:20px;padding:4px 11px;
+}
+#scr-dashboard .hero-name{font-family:var(--font-display);font-weight:800;font-size:23px;line-height:1.12;letter-spacing:-.02em;color:#f6f5f2;margin-bottom:5px;}
+#scr-dashboard .hero-desc{font-family:var(--font-ui);font-size:13px;font-weight:600;color:var(--o-muted);}
+#scr-dashboard .hero-ring{position:relative;width:56px;height:56px;flex-shrink:0;border:none;}
+#scr-dashboard .hero-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+#scr-dashboard .hero-ring-num{font-family:var(--font-display);font-weight:900;font-size:16px;line-height:1;color:var(--o-gold);}
+#scr-dashboard .hero-ring-lbl{font-size:8.5px;font-weight:700;letter-spacing:.08em;color:var(--o-faint);}
+#scr-dashboard .phase-pill{font-size:11px;font-weight:700;border-radius:20px;padding:5px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--o-muted);}
+#scr-dashboard .phase-pill.active{background:var(--o-gold);color:#0f0e0c;border-color:var(--o-gold);}
+#scr-dashboard .hero-fatigue-chip{background:rgba(248,113,113,0.12);border-color:rgba(248,113,113,0.3);}
+#scr-dashboard .hero-tap{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  width:100%;padding:14px;border-radius:15px;margin-top:14px;
+  background:var(--o-gold-grad)!important;
+  box-shadow:0 12px 26px -10px rgba(216,180,99,.65)!important;
+  font-family:var(--font-display);font-weight:800;font-size:15.5px;color:#1a1409!important;
+  transition:transform .12s ease;text-align:center;
+}
+#scr-dashboard .hero-tap::before{
+  content:'';width:0;height:0;flex-shrink:0;
+  border-style:solid;border-width:7px 0 7px 11px;
+  border-color:transparent transparent transparent #1a1409;
+}
+#scr-dashboard .hero-tap:active{transform:scale(.985);}
+#scr-dashboard .hero-empty{background:var(--o-surface);border:1.5px dashed rgba(216,180,99,.25);border-radius:18px;}
+#scr-dashboard .hero-empty-title{font-family:var(--font-display);color:var(--o-text);}
+#scr-dashboard .hero-empty-sub{color:var(--o-muted);}
+#scr-dashboard .hero-empty-btn{background:var(--o-gold-grad);color:#1a1409;}
+
+/* Programs rail (new) */
+#scr-dashboard .prog-rail-head{display:flex;align-items:baseline;justify-content:space-between;padding:0 18px;margin-bottom:14px;}
+#scr-dashboard .prog-rail-title{font-family:var(--font-display);font-weight:800;font-size:19px;letter-spacing:-.01em;color:var(--o-text);}
+#scr-dashboard .prog-rail-link{font-size:13px;font-weight:700;color:var(--o-gold);cursor:pointer;}
+#scr-dashboard .prog-rail{display:flex;gap:12px;overflow-x:auto;padding:2px 18px 4px;margin-bottom:28px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+#scr-dashboard .prog-rail::-webkit-scrollbar{display:none;}
+#scr-dashboard .rail-card{flex:0 0 156px;border-radius:18px;padding:15px;text-decoration:none;transition:transform .12s ease;display:block;}
+#scr-dashboard .rail-card:active{transform:scale(.98);}
+#scr-dashboard .rail-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:26px;}
+#scr-dashboard .rail-name{font-family:var(--font-display);font-weight:800;font-size:15px;color:var(--o-text);line-height:1.2;overflow-wrap:break-word;word-break:break-word;}
+#scr-dashboard .rail-meta{font-size:11.5px;color:var(--o-muted-2);margin-top:5px;line-height:1.4;}
+#scr-dashboard .rail-card.ss{background:linear-gradient(160deg,rgba(201,80,90,.16),rgba(20,20,22,.4));border:1px solid rgba(201,80,90,.28);border-top:2.5px solid #c9505a;}
+#scr-dashboard .rail-card.ss .rail-icon{background:rgba(201,80,90,.16);}
+#scr-dashboard .rail-card.pmc{background:linear-gradient(160deg,rgba(139,127,240,.16),rgba(20,20,22,.4));border:1px solid rgba(139,127,240,.28);border-top:2.5px solid #8b7ff0;}
+#scr-dashboard .rail-card.pmc .rail-icon{background:rgba(139,127,240,.16);}
+#scr-dashboard .rail-card.mc{background:linear-gradient(160deg,rgba(216,180,99,.16),rgba(20,20,22,.4));border:1px solid rgba(216,180,99,.3);border-top:2.5px solid #d8b463;}
+#scr-dashboard .rail-card.mc .rail-icon{background:rgba(216,180,99,.16);}
+#scr-dashboard .rail-card.ks{background:linear-gradient(160deg,rgba(224,160,60,.16),rgba(20,20,22,.4));border:1px solid rgba(224,160,60,.28);border-top:2.5px solid #e0a03c;}
+#scr-dashboard .rail-card.ks .rail-icon{background:rgba(224,160,60,.16);}
+#scr-dashboard .rail-card.mm{background:linear-gradient(160deg,rgba(111,119,224,.16),rgba(20,20,22,.4));border:1px solid rgba(111,119,224,.28);border-top:2.5px solid #6f77e0;}
+#scr-dashboard .rail-card.mm .rail-icon{background:rgba(111,119,224,.16);}
+#scr-dashboard .rail-card.hv{background:linear-gradient(160deg,rgba(159,191,74,.16),rgba(20,20,22,.4));border:1px solid rgba(159,191,74,.28);border-top:2.5px solid #9fbf4a;}
+#scr-dashboard .rail-card.hv .rail-icon{background:rgba(159,191,74,.16);}
+
+/* Training tools */
+#scr-dashboard .tool-card{border-radius:16px;padding:14px;background:var(--o-surface);border:1px solid var(--o-surface-border);transition:transform .12s ease;}
+#scr-dashboard .tool-card:active{transform:scale(.98);box-shadow:none;}
+#scr-dashboard .tool-icon-wrap{width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);margin-bottom:9px;display:flex;align-items:center;justify-content:center;font-size:inherit;}
+#scr-dashboard .tool-card.gold .tool-icon-wrap{background:rgba(216,180,99,.1);border-color:rgba(216,180,99,.2);}
+#scr-dashboard .tool-name{font-family:var(--font-display);font-weight:700;font-size:13.5px;color:var(--o-text);}
+#scr-dashboard .tool-sub{font-size:11px;color:var(--o-faint);margin-top:2px;}
+
+/* Light-touch retheme for sections not pictured in the reference (kept in
+   place per the approved plan — just blended into the new dark surface) */
+#scr-dashboard .coach-section,#scr-dashboard .wrapped-card,#scr-dashboard .push-chip{
+  background:var(--o-surface);border-color:var(--o-surface-border);
+}
+#scr-dashboard .coach-label,#scr-dashboard .wrapped-title{font-family:var(--font-display);}
+
+/* Bottom tab bar (shared) */
+.tab-bar{
+  background:rgba(10,10,11,.82);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid rgba(255,255,255,.07);
+}
+.tab{color:#6b6b72;}
+.tab>div:last-child{font-size:9.5px;font-weight:700;}
+.tab.active{color:#e6c579;}
 </style>
 <script src="mc-theme.js"></script>
 </head>
@@ -583,7 +745,9 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
         <div class="topbar-sub" id="todayDate"></div>
       </div>
     </div>
-    <div class="topbar-icon" onclick="if(window.MCCalendar)MCCalendar.toggle();" style="cursor:pointer;" title="Toggle workout calendar">📅</div>
+    <div class="topbar-icon" onclick="if(window.MCCalendar)MCCalendar.toggle();" style="cursor:pointer;display:flex;align-items:center;justify-content:center;width:40px;height:40px;" title="Toggle workout calendar">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="16" rx="2.5" stroke="#c9c9cf" stroke-width="2"/><path d="M4 9.5h16M9 3v3M15 3v3" stroke="#c9c9cf" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
     <div id="pmUnlockBtn" onclick="if(window.MC_PM)MC_PM.unlock();" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0.15;font-size:18px;-webkit-tap-highlight-color:transparent;">🔐</div>
   </div>
 
@@ -592,7 +756,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 
   <!-- Universal momentum strip (streak) — market-safe, hidden until earned -->
   <div class="momentum-strip" id="momentumStrip">
-    <span class="ms-flame">🔥</span>
+    <span class="ms-flame"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 3c1.6 3 4 4.2 4 7.5A4 4 0 0 1 8 11c0-1 .3-1.7.8-2.4C8 9 7 10.3 7 12.5A5 5 0 0 0 17 12.5C17 8 13.5 6 12 3z" fill="#e6c579"/></svg></span>
     <div class="ms-body">
       <div class="ms-streak" id="msStreak"></div>
       <div class="ms-sub" id="msSub"></div>
@@ -605,6 +769,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
     <div class="sec-title">Current Program</div>
     <div class="sec-link" onclick="openProgSelect()">See all</div>
   </div>
+  <div class="hero-eyebrow">Continue where you left off</div>
   <div class="hero-wrap">
 
     <div class="hero-empty" id="heroEmpty" onclick="openProgSelect()">
@@ -616,12 +781,19 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 
     <div class="hero-card" id="heroCard" onclick="openActiveProgram()">
       <div class="hero-glow"></div>
+      <div class="hero-sheen"></div>
       <div class="hero-inner">
         <div class="hero-top-row">
           <div class="hero-badge" id="heroBadge">Active</div>
           <div class="hero-ring" id="heroRing">
-            <div class="hero-ring-num" id="heroDay">—</div>
-            <div class="hero-ring-lbl" id="heroRingLbl">DAY</div>
+            <svg width="56" height="56" viewBox="0 0 56 56" style="transform:rotate(-90deg);display:block;">
+              <circle cx="28" cy="28" r="24" stroke="rgba(255,255,255,.08)" stroke-width="5" fill="none"/>
+              <circle id="heroRingProgress" cx="28" cy="28" r="24" stroke="#e6c579" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="151" stroke-dashoffset="60"/>
+            </svg>
+            <div class="hero-ring-center">
+              <div class="hero-ring-num" id="heroDay">—</div>
+              <div class="hero-ring-lbl" id="heroRingLbl">DAY</div>
+            </div>
           </div>
         </div>
         <div class="hero-name" id="heroName"></div>
@@ -649,6 +821,44 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
   <!-- Workout-history calendar (filled by mc-calendar.js) -->
   <div id="calendarCard"></div>
 
+  <!-- Programs rail (new — Onyx redesign) -->
+  <div class="prog-rail-head">
+    <div class="prog-rail-title">Programs</div>
+    <div class="prog-rail-link" onclick="switchTab('programs')">Browse all</div>
+  </div>
+  <div class="prog-rail">
+    <a href="cat-strength.html" class="rail-card ss">
+      <div class="rail-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#e8828b" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg></div>
+      <div class="rail-name">Strength &amp; Supersets</div>
+      <div class="rail-meta">6-Week Cycle · 5 Days</div>
+    </a>
+    <a href="cat-pmc.html" class="rail-card pmc">
+      <div class="rail-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#b3aaf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></div>
+      <div class="rail-name">Project Muscle Confusion</div>
+      <div class="rail-meta">7 Splits · 2 Weeks Each</div>
+    </a>
+    <a href="cat-mc.html" class="rail-card mc">
+      <div class="rail-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#e6c579" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l3.5 2.5L12 4l4.5 6.5L20 8l-1.5 10h-13z"/></svg></div>
+      <div class="rail-name">Mike Cross' Favorite Splits</div>
+      <div class="rail-meta">5 Splits · 23 Workouts</div>
+    </a>
+    <a href="cat-ks.html" class="rail-card ks">
+      <div class="rail-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#f6c177" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1.6 3 4 4.2 4 7.5A4 4 0 0 1 8 11c0-1 .3-1.7.8-2.4C8 9 7 10.3 7 12.5A5 5 0 0 0 17 12.5C17 8 13.5 6 12 3z"/></svg></div>
+      <div class="rail-name">Everything Under the Kitchen Sink</div>
+      <div class="rail-meta">6 Splits · Station-Anchored</div>
+    </a>
+    <a href="cat-mm.html" class="rail-card mm">
+      <div class="rail-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#a9aef2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/></svg></div>
+      <div class="rail-name">The Modality Matrix</div>
+      <div class="rail-meta">15 Weeks · 3 Phases · 4-Day Split</div>
+    </a>
+    <a href="cat-hv.html" class="rail-card hv">
+      <div class="rail-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#c3e08a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></div>
+      <div class="rail-name">High-Volume Training Template</div>
+      <div class="rail-meta">4-Week Block · 5–6 Sets · 15–25 Reps</div>
+    </a>
+  </div>
+
   <!-- Training Tools -->
   <div class="sec-header">
     <div class="sec-title">Training Tools</div>
@@ -656,27 +866,27 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
   <div class="tools-wrap">
     <div class="tools-grid">
       <a href="exercise-library.html" class="tool-card gold">
-        <div class="tool-icon-wrap">📚</div>
+        <div class="tool-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e6c579" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H12v16H5.5A1.5 1.5 0 0 1 4 18.5zM20 5.5A1.5 1.5 0 0 0 18.5 4H12v16h6.5A1.5 1.5 0 0 0 20 18.5z"/></svg></div>
         <div class="tool-name">Exercise Library</div>
         <div class="tool-sub" id="libCountDash">539 exercises by muscle group</div>
       </a>
       <a href="build-workout.html" class="tool-card">
-        <div class="tool-icon-wrap">🔧</div>
+        <div class="tool-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9c9cf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6M3 21l1-4L15 6l3 3L7 20z"/></svg></div>
         <div class="tool-name">Build Your Own</div>
         <div class="tool-sub">Create workouts from the library</div>
       </a>
       <a href="build-program.html" class="tool-card">
-        <div class="tool-icon-wrap">🧩</div>
+        <div class="tool-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9c9cf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg></div>
         <div class="tool-name">Program Builder</div>
         <div class="tool-sub">Multi-week custom programs</div>
       </a>
       <a href="program-guide.html" class="tool-card gold">
-        <div class="tool-icon-wrap">📋</div>
+        <div class="tool-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e6c579" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h9.5a2 2 0 0 1 2 2V20H7a2 2 0 0 1-2-2z"/><path d="M5 4.5v13.5a2 2 0 0 0 2 2h9.5" /><path d="M8 9h6M8 12.5h6"/></svg></div>
         <div class="tool-name">Program Guide</div>
         <div class="tool-sub">Instructions for every program</div>
       </a>
       <a href="quick-tour.html" class="tool-card gold" id="quickTourCard" style="grid-column:1 / -1;">
-        <div class="tool-icon-wrap">🎬</div>
+        <div class="tool-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e6c579" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 7 5.5z" fill="#e6c579" stroke="none"/></svg></div>
         <div class="tool-name">Quick Tour <span id="tourBadge" style="display:none;font-size:11px;font-weight:900;letter-spacing:0.08em;color:#000;background:var(--gold);border-radius:5px;padding:1px 6px;margin-left:4px;vertical-align:middle;">NEW</span></div>
         <div class="tool-sub">3-min guided walkthrough of the whole app</div>
       </a>
@@ -845,23 +1055,23 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 ══════════════════════════════════════ -->
 <div class="tab-bar">
   <div class="tab active" id="tab-dashboard" onclick="switchTab('dashboard')">
-    <div class="tab-icon">⚡</div>
+    <div class="tab-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7M6 9.5V20h12V9.5"/></svg></div>
     <div>Dashboard</div>
   </div>
   <div class="tab" id="tab-programs" onclick="switchTab('programs')">
-    <div class="tab-icon">🏋️</div>
+    <div class="tab-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg></div>
     <div>Programs</div>
   </div>
   <div class="tab" id="tab-conditioning" onclick="switchTab('conditioning')">
-    <div class="tab-icon">🔥</div>
+    <div class="tab-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1.6 3 4 4.2 4 7.5A4 4 0 0 1 8 11c0-1 .3-1.7.8-2.4C8 9 7 10.3 7 12.5A5 5 0 0 0 17 12.5"/></svg></div>
     <div>Conditioning</div>
   </div>
   <div class="tab" id="tab-nutrition" onclick="switchTab('nutrition')">
-    <div class="tab-icon">🍎</div>
+    <div class="tab-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8c-2-3 1-5 2-5-1 2 .5 3 1.5 4A5 5 0 1 1 8 8.5C9 10 11 10 12 8z"/></svg></div>
     <div>Nutrition</div>
   </div>
   <div class="tab" id="tab-stats" onclick="location.href='stats.html'">
-    <div class="tab-icon">📅</div>
+    <div class="tab-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2.5"/><path d="M4 9h16M9 3v3M15 3v3"/></svg></div>
     <div>History</div>
   </div>
 </div>
@@ -1037,8 +1247,6 @@ function renderHero(){
   if(!activeProg){empty.style.display='block';card.style.display='none';return;}
   empty.style.display='none';
   card.style.display='block';
-  card.style.borderColor=activeProg.color+'44';
-  card.style.boxShadow='0 8px 28px '+activeProg.color+'22';
   document.getElementById('heroName').textContent=activeProg.name;
   document.getElementById('heroDesc').textContent=activeProg.desc;
   const di=heroDayCount(activeProg);
@@ -1051,9 +1259,9 @@ function renderHero(){
     document.getElementById('heroRingLbl').textContent='SPLIT';
     document.getElementById('heroBadge').textContent='Active';
   }
-  const ring=document.getElementById('heroRing');
-  ring.style.borderTopColor=activeProg.color;
-  ring.style.borderRightColor=activeProg.color;
+  // Ring stroke stays the fixed Onyx gold (#e6c579 in the static markup) —
+  // matches the reference design's single-accent restraint rather than the
+  // old per-program border/shadow tint.
   // Next lift, derived from workout completion data (see heroNextLift)
   const nx=heroNextLift(activeProg);
   // Phases — keep a 4-pill window that always includes the next split, highlighted
