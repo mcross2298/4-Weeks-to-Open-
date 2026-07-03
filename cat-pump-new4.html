@@ -167,8 +167,11 @@
 </style>
 <link rel="stylesheet" href="base.css?v=65"/>
 <link rel="stylesheet" href="mc-nav.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="mc-program-hero.css"/>
 </head>
 <body>
+<div id="programHero"></div>
 <div class="wrap">
 
   <div class="header">
@@ -394,5 +397,25 @@
 </script>
 <script>window.MC_PROG={id:'pump',icon:'⚡',name:'Daily Pump',meta:'10 Workouts',color:'#D85A30',desc:'Julian Smith pump protocols — in and out fast',href:'cat-pump-new4.html',splits:['Back','Chest','Shoulders','Arms','Legs']};</script>
 <script src="mc-pin-bar.js"></script>
+<script src="mc-program-hero.js"></script>
+<script>
+MCProgramHero.mount(document.getElementById('programHero'), {
+  variant: 'trimmed',
+  accent: '#D85A30',
+  iconKey: 'pump',
+  tierLabel: 'Influencer',
+  name: 'Daily Pump',
+  tagline: 'Julian Smith pump protocols — in and out fast',
+  whatsInside: [
+    { icon: 'chevron', title: 'Split #1 · Arms + Shoulders', body: '3 workouts · 25 total variations', href: 'bis-tris-pump.html' },
+    { icon: 'chevron', title: 'Split #2 · Full Body Rotation', body: '4 workouts · 30 total variations', href: 'back-traps-pump.html' },
+    { icon: 'chevron', title: 'Bonus Workouts', body: '2 workouts · 16 total variations', href: 'bonus-pump-lats.html' },
+    { icon: 'chevron', title: 'Split #3 · Upper Body Rotation', body: '5 workouts · 20 total variations', href: 's3-back-traps.html' },
+    { icon: 'bars', title: 'Split #4 · Time Under Tension', body: '3 workouts · 18 total variations', href: 's4-pull.html' }
+  ],
+  ctaLabel: 'Browse splits',
+  backHref: 'dashboard.html'
+});
+</script>
 </body>
 </html>

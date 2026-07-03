@@ -407,8 +407,11 @@
 </style>
 <link rel="stylesheet" href="base.css?v=65"/>
 <link rel="stylesheet" href="mc-nav.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="mc-program-hero.css"/>
 </head>
 <body>
+<div id="programHero"></div>
 <div class="page-wrap">
 
   <!-- Back Nav -->
@@ -673,5 +676,26 @@
 </script>
 <script src="mc-nav.js"></script>
 <script src="mc-resume.js"></script>
+<script src="mc-program-hero.js"></script>
+<script>
+MCProgramHero.mount(document.getElementById('programHero'), {
+  variant: 'trimmed',
+  accent: '#d4af37',
+  iconKey: 'mc',
+  tierLabel: 'Flagship',
+  name: "Mike Cross' Favorite Splits",
+  tagline: '5 personal splits across every major training style',
+  whatsInside: [
+    { icon: 'chevron', title: 'Gold', body: 'The 7-Day Week · 5 workouts + cardio', href: 'mc-split1.html' },
+    { icon: 'chevron', title: 'Crimson', body: 'The 5-Day Split · 5 workouts', href: 'mc-split2.html' },
+    { icon: 'chevron', title: 'Emerald', body: 'The 6-Workout · 6 workouts', href: 'mc-split3.html' },
+    { icon: 'chevron', title: 'Amber', body: 'The 4-Workout · 4 workouts', href: 'mc-split4.html' },
+    { icon: 'chevron', title: 'Electric Purple', body: 'Push / Pull / Legs · 3-day rotation', href: 'mc-split5.html' },
+    { icon: 'bars', title: 'Cardio', body: 'Bonus cardio sessions', href: 'mc-cardio.html' }
+  ],
+  ctaLabel: 'Browse splits',
+  backHref: 'index.html'
+});
+</script>
 </body>
 </html>

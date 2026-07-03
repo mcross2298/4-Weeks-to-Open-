@@ -105,8 +105,11 @@
   .start-desc { font-size: 12px; color: var(--muted); line-height: 1.45; }
   .start-arrow { font-size: 16px; color: var(--muted); flex-shrink: 0; }
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="mc-program-hero.css"/>
 </head>
 <body>
+<div id="programHero"></div>
 <div class="page-wrap">
   <div class="back-nav">
     <a href="index.html">← Programs</a>
@@ -218,5 +221,26 @@
   })();
 </script>
 <script src="mc-nav.js"></script>
+<script src="mc-program-hero.js"></script>
+<script>
+MCProgramHero.mount(document.getElementById('programHero'), {
+  variant: 'full',
+  accent: '#84cc16',
+  iconKey: 'hv',
+  tierLabel: 'Flagship',
+  name: 'High-Volume Training Template',
+  tagline: 'Compound-dominant into full supersets, into high-set pyramids, into bodyweight & accessory density — trisets banned throughout.',
+  weeks: 4,
+  daysPerWeek: '5–6',
+  level: 'Int.',
+  scheduleLabel: '4-Week Block',
+  whatsInside: [
+    { icon: 'chevron', title: 'Compound into superset into pyramid' },
+    { icon: 'bars', title: 'Volume escalates week to week; trisets are banned by design.' }
+  ],
+  startHref: 'hv-block.html',
+  backHref: 'index.html'
+});
+</script>
 </body>
 </html>

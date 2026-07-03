@@ -150,9 +150,12 @@
 .ccc-dropdown-chev{color:#fb923c;font-size:14px;flex-shrink:0;}
 .ccc-sub{font-size:11px;color:#94a3b8;line-height:1.5;margin-top:8px;}
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="mc-program-hero.css"/>
 </head>
 <body>
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
+<div id="programHero"></div>
 
 <!-- ═══════════════════════════════════
      VIEW 1: DASHBOARD
@@ -1262,5 +1265,25 @@ window._FW={
 <script src="mc-sw-update.js?v=45"></script>
 <script src="mc-nav.js"></script>
 <script src="mc-resume.js"></script>
+<script src="mc-program-hero.js"></script>
+<script>
+MCProgramHero.mount(document.getElementById('programHero'), {
+  variant: 'full',
+  accent: '#e11d48',
+  iconKey: 'ss',
+  tierLabel: 'Flagship',
+  name: "Strength & Supersets",
+  tagline: 'Heavy compounds paired with high-volume supersets + AMRAP finishers',
+  weeks: 6,
+  daysPerWeek: 5,
+  level: 'Int.',
+  scheduleLabel: '5-on 2-off',
+  whatsInside: [
+    { icon: 'chevron', title: 'Heavy compound lifts every session' },
+    { icon: 'bars', title: 'Supersets and AMRAP finishers push volume at the end, not the start.' }
+  ],
+  backHref: 'dashboard.html'
+});
+</script>
 </body>
 </html>
