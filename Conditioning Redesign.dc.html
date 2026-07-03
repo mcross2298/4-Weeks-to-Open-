@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;background:#e7e4de;font-family:'Manrope',system-ui,sans-serif;}
+</style>
+</helmet>
+
+<section id="turn1" style="padding:60px 48px 90px;font-family:'Manrope',system-ui,sans-serif;">
+  <div style="max-width:900px;margin:0 auto 40px;">
+    <div style="font-family:'Archivo';font-weight:800;font-size:30px;letter-spacing:-.02em;color:#1c1a17;">Conditioning Corner — Onyx</div>
+    <div style="font-size:15px;color:#6b6862;margin-top:8px;max-width:640px;line-height:1.55;">Third screen in the Onyx rollout. Same data (Workouts / Exercises sub-tabs, "Not for the Faint of Heart" routines with their stat pills and finish-time PBs) — restyled to the shipped system. The red intensity accent (#E24B4A) stays as the category's signature color, everything else moves onto Onyx surfaces + gold chrome. Reference: <a href="#1a" style="color:#a9762f;">1a</a>.</div>
+  </div>
+
+  <div id="1a" style="display:flex;flex-direction:column;align-items:center;gap:18px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="font-family:'Archivo';font-weight:800;font-size:13px;letter-spacing:.14em;color:#fff;background:#1c1a17;border-radius:8px;padding:5px 11px;">1a</span>
+      <div>
+        <div style="font-family:'Archivo';font-weight:700;font-size:17px;color:#1c1a17;letter-spacing:-.01em;">Onyx — Conditioning</div>
+        <div style="font-size:12.5px;color:#6b6862;">Workouts sub-tab shown · Exercises sub-tab as search/library</div>
+      </div>
+    </div>
+
+    <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" width="{{ 402 }}" height="{{ 874 }}" hint-size="402px,874px">
+      <div style="height:100%;display:flex;flex-direction:column;background:radial-gradient(120% 60% at 50% -10%,#171612 0%,#0a0a0b 46%);">
+        <div style="flex:1;overflow:auto;padding-top:58px;">
+
+          <!-- header -->
+          <div style="padding:6px 20px 4px;">
+            <div style="font-family:'Archivo';font-weight:700;font-size:11px;letter-spacing:.18em;color:#8b8b92;text-transform:uppercase;margin-bottom:8px;">Push through it</div>
+            <div style="font-family:'Archivo';font-weight:800;font-size:26px;letter-spacing:-.02em;color:#f6f5f2;line-height:1.1;">Conditioning</div>
+            <div style="font-size:13px;font-weight:600;color:#a6a6ad;margin-top:6px;">High-intensity circuits, cardio &amp; core — drop in after a lift or run solo</div>
+          </div>
+
+          <!-- sub-tab toggle -->
+          <div style="display:flex;gap:4px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:4px;margin:18px 20px 22px;">
+            <div style="flex:1;padding:10px;border-radius:11px;text-align:center;font-family:'Archivo';font-weight:800;font-size:13px;letter-spacing:.02em;background:linear-gradient(135deg,#e9cb7d,#c79c4f);color:#1a1409;">🔥 Workouts</div>
+            <div style="flex:1;padding:10px;border-radius:11px;text-align:center;font-family:'Archivo';font-weight:800;font-size:13px;letter-spacing:.02em;color:#8b8b92;">🏃 Exercises</div>
+          </div>
+
+          <!-- sub-category header -->
+          <div style="display:flex;align-items:center;gap:12px;padding:0 20px;margin-bottom:16px;">
+            <div style="width:38px;height:38px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(226,75,74,.14);border:1px solid rgba(226,75,74,.35);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3c1.6 3 4 4.2 4 7.5A4 4 0 0 1 8 11c0-1 .3-1.7.8-2.4C8 9 7 10.3 7 12.5A5 5 0 0 0 17 12.5C17 8 13.5 6 12 3z" fill="#f0837f"/></svg>
+            </div>
+            <div>
+              <div style="font-family:'Archivo';font-weight:800;font-size:16px;color:#f4f3f1;letter-spacing:-.01em;">Not for the Faint of Heart</div>
+              <div style="font-size:12px;color:#a6a6ad;margin-top:1px;">High-intensity circuits and challenge workouts</div>
+            </div>
+          </div>
+
+          <!-- routine cards -->
+          <div style="display:flex;flex-direction:column;gap:10px;padding:0 20px;margin-bottom:8px;">
+
+            <a href="#" style="position:relative;display:block;border-radius:16px;padding:16px 18px;text-decoration:none;background:linear-gradient(135deg,rgba(226,75,74,.1),rgba(20,20,22,.5));border:1px solid rgba(226,75,74,.28);" style-active="transform:scale(.985);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:16px;top:18px;"><path d="M9 6l6 6-6 6"/></svg>
+              <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#f0837f;margin-bottom:6px;">Challenge Workout</div>
+              <div style="font-family:'Archivo';font-weight:800;font-size:16.5px;color:#f4f3f1;margin-bottom:5px;padding-right:24px;">The 500</div>
+              <div style="font-size:12px;color:#a6a6ad;line-height:1.5;padding-right:8px;">300 walking lunges + 15 min jump rope + the 1–18 pushup ladder. A test of grit.</div>
+              <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;">
+                <span style="font-size:11px;font-weight:700;color:#c9c9cf;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:4px 10px;">🔥 ~45 min</span>
+                <span style="font-size:11px;font-weight:700;color:#c9c9cf;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:4px 10px;">💀 Full body</span>
+              </div>
+            </a>
+
+            <a href="#" style="position:relative;display:block;border-radius:16px;padding:16px 18px;text-decoration:none;background:linear-gradient(135deg,rgba(226,75,74,.1),rgba(20,20,22,.5));border:1px solid rgba(226,75,74,.28);" style-active="transform:scale(.985);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:16px;top:18px;"><path d="M9 6l6 6-6 6"/></svg>
+              <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#f0837f;margin-bottom:6px;">Pushups + Core</div>
+              <div style="font-family:'Archivo';font-weight:800;font-size:16.5px;color:#f4f3f1;margin-bottom:5px;padding-right:24px;">Driveway Demolition</div>
+              <div style="font-size:12px;color:#a6a6ad;line-height:1.5;padding-right:8px;">The 1–18 pushup challenge (171 reps) paired with rotating 1-minute max-effort core circuits.</div>
+              <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;">
+                <span style="font-size:11px;font-weight:700;color:#c9c9cf;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:4px 10px;">⏱️ Daily</span>
+                <span style="font-size:11px;font-weight:700;color:#c9c9cf;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:4px 10px;">💪 Pushups + Core</span>
+              </div>
+            </a>
+
+            <a href="#" style="position:relative;display:block;border-radius:16px;padding:16px 18px;text-decoration:none;background:linear-gradient(135deg,rgba(226,75,74,.1),rgba(20,20,22,.5));border:1px solid rgba(226,75,74,.28);" style-active="transform:scale(.985);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:16px;top:18px;"><path d="M9 6l6 6-6 6"/></svg>
+              <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#f0837f;margin-bottom:6px;">5 Rounds · No Quitting</div>
+              <div style="font-family:'Archivo';font-weight:800;font-size:16.5px;color:#f4f3f1;margin-bottom:5px;padding-right:24px;">Hell Week</div>
+              <div style="font-size:12px;color:#a6a6ad;line-height:1.5;padding-right:8px;">5 rounds of 1-min max effort exercises. Burpees, lunges, jump rope, and a finisher built to break you.</div>
+              <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;align-items:center;">
+                <span style="font-size:11px;font-weight:700;color:#c9c9cf;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:4px 10px;">🔥 5 rounds</span>
+                <span style="font-size:11px;font-weight:700;color:#c9c9cf;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:4px 10px;">💀 Elite only</span>
+                <span style="font-size:11px;font-weight:800;color:#e6c579;background:rgba(216,180,99,.12);border:1px solid rgba(216,180,99,.28);border-radius:20px;padding:4px 10px;margin-left:auto;">🏆 PB 38:12</span>
+              </div>
+            </a>
+
+            <a href="#" style="position:relative;display:block;border-radius:16px;padding:16px 18px;text-decoration:none;background:linear-gradient(135deg,rgba(226,75,74,.1),rgba(20,20,22,.5));border:1px solid rgba(226,75,74,.28);" style-active="transform:scale(.985);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:16px;top:18px;"><path d="M9 6l6 6-6 6"/></svg>
+              <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#f0837f;margin-bottom:6px;">30 Min · 2 Options</div>
+              <div style="font-family:'Archivo';font-weight:800;font-size:16.5px;color:#f4f3f1;margin-bottom:5px;padding-right:24px;">30 Minute Turn &amp; Burn</div>
+              <div style="font-size:12px;color:#a6a6ad;line-height:1.5;padding-right:8px;">15 min jump rope + your choice: 10 rounds of max effort burpees OR the brutal 1–18 pushup ladder.</div>
+              <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;">
+                <span style="font-size:11px;font-weight:700;color:#c9c9cf;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:4px 10px;">⏱️ 30 min</span>
+                <span style="font-size:11px;font-weight:700;color:#c9c9cf;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:4px 10px;">🔥 2 options</span>
+              </div>
+            </a>
+
+            <a href="#" style="position:relative;display:block;border-radius:16px;padding:16px 18px;text-decoration:none;background:linear-gradient(135deg,rgba(226,75,74,.1),rgba(20,20,22,.5));border:1px solid rgba(226,75,74,.28);" style-active="transform:scale(.985);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:16px;top:18px;"><path d="M9 6l6 6-6 6"/></svg>
+              <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#f0837f;margin-bottom:6px;">Pyramid · Timed + Reps</div>
+              <div style="font-family:'Archivo';font-weight:800;font-size:16.5px;color:#f4f3f1;margin-bottom:5px;padding-right:24px;">Full Body Pyramid</div>
+              <div style="font-size:12px;color:#a6a6ad;line-height:1.5;padding-right:8px;">Two pyramid formats — timed rounds (90s–2min per exercise) or rep-based ascending/descending.</div>
+              <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;">
+                <span style="font-size:11px;font-weight:700;color:#c9c9cf;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:4px 10px;">🔺 2 formats</span>
+                <span style="font-size:11px;font-weight:700;color:#c9c9cf;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:4px 10px;">💀 Full body</span>
+              </div>
+            </a>
+
+            <div style="text-align:center;padding:6px 0 4px;font-size:12px;font-weight:700;color:#7d7d84;">+ 4 more — Boxing Routine, Battle Ropes, Popeye, 45 Minute Burner</div>
+
+          </div>
+
+        </div>
+
+        <!-- tab bar -->
+        <div style="flex-shrink:0;display:flex;padding:10px 8px 30px;background:rgba(10,10,11,.82);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.07);">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6b6b72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7M6 9.5V20h12V9.5"/></svg>
+            <span style="font-size:9.5px;font-weight:700;color:#6b6b72;">Home</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6b6b72" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>
+            <span style="font-size:9.5px;font-weight:700;color:#6b6b72;">Programs</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#e6c579" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1.6 3 4 4.2 4 7.5A4 4 0 0 1 8 11c0-1 .3-1.7.8-2.4C8 9 7 10.3 7 12.5A5 5 0 0 0 17 12.5"/></svg>
+            <span style="font-size:9.5px;font-weight:700;color:#e6c579;">Conditioning</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6b6b72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8c-2-3 1-5 2-5-1 2 .5 3 1.5 4A5 5 0 1 1 8 8.5C9 10 11 10 12 8z"/></svg>
+            <span style="font-size:9.5px;font-weight:700;color:#6b6b72;">Nutrition</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6b6b72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2.5"/><path d="M4 9h16M9 3v3M15 3v3"/></svg>
+            <span style="font-size:9.5px;font-weight:700;color:#6b6b72;">History</span>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+</section>
+
+</x-dc>
+</body>
+</html>

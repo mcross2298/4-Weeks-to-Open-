@@ -1,231 +1,157 @@
-# Handoff: Programs Screen Redesign — "Onyx" (continuing direction 1a)
+# Handoff: Conditioning Corner Redesign — "Onyx" (continuing direction 1a)
 
 ## Overview
-A premium restyle of the **Programs screen** (`#scr-programs` in `dashboard.html`,
-reached via the bottom tab bar or the dashboard's "Browse all" link). Same content,
-same data source, same tiering (Flagship → Influencer) — restyled to match the
-**Onyx** system already shipped on the Dashboard (`#scr-dashboard`): layered
-near-black surfaces, refined soft gold accent, glass depth, Archivo/Manrope
-typography, line icons instead of emoji.
+Restyle of the **Conditioning tab** (`switchTab('conditioning')` → the screen
+rendered into `#condBody` by `renderConditioning()` in `dashboard.html`, driven
+by `conditioning-data.js`). Same data and sub-tab structure (🔥 Workouts /
+🏃 Exercises) — restyled to the **Onyx** system already shipped on the
+Dashboard and Programs screens: dark layered surfaces, refined gold chrome,
+Archivo/Manrope type, line icons. The category's signature red
+(`#E24B4A`) is kept as the intensity accent — everything else moves onto Onyx
+tokens.
 
-This is a **direct continuation** of the Onyx dashboard handoff that shipped
-earlier (see the `#scr-dashboard` Onyx block already in `dashboard.html`'s
-`<style>`). It closes the visual gap users currently hit: Onyx hero → tap
-"Browse all" → flat, un-restyled `.cat-card` grid.
-
-> Scope: this handoff covers the **`#scr-programs` screen only** (the Flagship
-> and Influencer program lists, the Exercise Library link, and the "Build a
-> Program" CTA). The individual program pages (`cat-*.html`) are out of scope —
-> a separate handoff.
+> Scope: this handoff covers the **Workouts sub-tab** (sub-category header +
+> routine cards for "Not for the Faint of Heart") and the **toggle control**
+> itself. The Exercises sub-tab reuses the shared exercise-library search UI
+> (`MCSubs.libGroupsHTML`) — only its container chrome needs Onyx tokens, no
+> new layout.
 
 ## About the design files
 The files in this bundle are **design references created in HTML** — a
-streaming "Design Component" prototype (`Programs Redesign.dc.html`) rendered
-inside an iPhone bezel, showing the intended look and behavior. **Do not copy
-the `.dc.html` / `ios-frame.jsx` files into the app.** They use a prototyping
-runtime that doesn't belong in production.
-
-Your task is to **recreate the Onyx Programs screen in the app's existing
-environment**: the inline `<style>` block in `dashboard.html` and/or `base.css`,
-using the app's established class names, element ids, and JS hooks — exactly
-like the dashboard Onyx rollout did. Everything you need is in this README plus
-the two companion files:
-- `onyx-programs-tokens-and-styles.css` — paste-ready CSS
-- `markup-snippets.md` — the restyled tier headers, flagship cards, influencer
-  grid, library link, and "Build a Program" CTA, with inline SVG line icons
+streaming prototype (`Conditioning Redesign.dc.html`) rendered in an iPhone
+bezel. **Do not copy the `.dc.html` / `ios-frame.jsx` files into the app** —
+recreate the design in `dashboard.html`'s existing inline `<style>` block /
+`base.css`, using the app's existing ids, classes and render function
+(`renderConditioning()` in `dashboard.html`). Companion files:
+- `onyx-conditioning-tokens-and-styles.css` — paste-ready CSS
+- `markup-snippets.md` — restyled toggle, sub-category header, and routine
+  card template (as produced by `renderConditioning()`'s string-building JS)
 
 ## Fidelity
-**High-fidelity.** Colors, typography, spacing, radii, borders and per-program
-accent tints are specified exactly below. Recreate pixel-for-pixel; ask the
-designer for prototype screenshots if useful for cross-checking.
+**High-fidelity.** Colors, typography, spacing and radii specified exactly
+below.
 
 ---
 
 ## ⚠️ Codebase conventions to respect (from the app's `CLAUDE.md`)
 - **Invoke the `executive-summary` skill and get explicit approval before
-  editing files** — this is a UI change to an existing page, which that rule
-  covers.
-- Work only in the **`4-Weeks-to-Open-` master repo**; feature branch → draft PR
-  → merge to `main`. **Never push to `MC-Training-Rolodex`** (auto-deploy
-  target).
-- `dashboard.html` links `base.css?v=65`. If styles go in `base.css`, **bump
-  the `?v=` query** on every page that links it.
-- **Preserve every existing element id, `href`, and script hook.** The
-  Programs screen is simpler than the dashboard (mostly static links + a few
-  JS-populated slots), but these ids are load-bearing:
-  - `#flagGrid` — flagship card container (count is read at runtime by
-    `document.querySelectorAll('#flagGrid .cat-card').length` into `#flagCount`)
-  - `#bonusCardSlot`, `#collectionsSlot` — populated by `mc-bonus-routing.js` /
-    `mc-collections.js`
-  - `#pubTier` / `#pubProgList`, `#customTier` / `#customProgList` — owner
-    published/custom programs, toggled `display:none` → visible by JS
-  - `#gainzCard` / `#gzLive` / `#gzStreak` — Daily Gainz's live streak module
-  - The `MARKET:STRIP` comment markers around the Influencer Programs block —
-    **do not remove or move these**; the Rolodex (public) build strips
-    everything between them. Keep the restyle **inside** the markers.
-- This is a **presentation-layer** change; do not alter routing, data, or JS
-  behavior. Every `<a href="cat-*.html">` stays a plain link.
+  editing files.**
+- Work only in `4-Weeks-to-Open-`; feature branch → draft PR → merge to
+  `main`. Never push to `MC-Training-Rolodex`.
+- Bump `base.css?v=` if shared styles move there.
+- **This screen is built by JS, not static markup** — `renderConditioning()`
+  in `dashboard.html` (search for `function renderConditioning`) builds the
+  toggle + cards as HTML strings and injects them into `#condBody`. Restyle by
+  editing the CSS (below) plus the small string templates inside that
+  function (see `markup-snippets.md` for the exact `html +=` lines to change)
+  — **do not rewrite the function's data flow, ids, or the
+  `onclick="setCondSubTab(...)"` / `data-cond-id` / `data-mc-orig-*` attributes**.
+  Those are read by `mc-pm-inline.js` (owner inline-editing) and `mc-cond.js`
+  (PB pill decoration, guided-timer bar) — removing them breaks both.
+- Keep `#condBody[data-cond-layout="…"]` attribute selectors working — the
+  owner-selectable "compact" / "grid" layouts (`mc-layout.js`) key off them.
+  Don't rename `.cond-card` / `.cond-sub` / `.cond-tag` / `.cond-name` /
+  `.cond-meta` / `.cond-stats` / `.cond-arrow` — retheme in place.
+- `mc-cond.js` appends a `.mcc-pb` "🏆 PB mm:ss" pill to any `<a>` whose `href`
+  matches a routine — it's appended as a child of `.cond-card` at runtime, so
+  make sure the card's flex/block layout has room for a trailing pill (see
+  the Hell Week card in the prototype for the intended look, gold-tinted).
 
 ---
 
-## Screen: Programs (`#scr-programs`)
+## Screen: Conditioning (`#condBody`, inside whichever screen wrapper hosts it)
 
 ### Layout (top → bottom)
-Single scrolling column inside `.prog-screen-inner` (max-width 680px, centered),
-on the Onyx background (shared with `#scr-dashboard`). Fixed bottom tab bar.
-Section order:
-
-1. **Top bar** — "Programs" title + live count sub-label (existing `.topbar`,
-   restyled to Onyx tokens — same treatment as the dashboard's top bar)
-2. **Flagship Programs** — tier label + 6 full-width stacked cards (`#flagGrid`)
-3. Bonus/Collections slots (unchanged, JS-populated — inherit Onyx surface
-   tokens automatically since they use `.cat-card`)
-4. **Influencer Programs** — tier label + 2-up compact grid (`.influencer-grid`,
-   4 cards) — kept inside `MARKET:STRIP` markers
-5. Published/Custom program slots (owner-only, unchanged)
-6. **Exercise Library** link card (existing `.lib-link`, restyled)
-7. **Build a Program** dashed CTA card
-8. Bottom tab bar (existing `.tab-bar` — already Onyx-styled app-wide from the
-   dashboard rollout; "Programs" tab shows active/gold here)
+1. **Screen header** — "Conditioning" title + one-line description (new copy
+   framing, not currently in the JS — optional addition, ask the owner)
+2. **Sub-tab toggle** (🔥 Workouts / 🏃 Exercises) — existing inline-styled
+   buttons built by the `tgBtn()` helper in `renderConditioning()`
+3. **Workouts tab**: for each `type:'routines'` sub-category in
+   `CONDITIONING.subcategories` — a `.cond-sub` block: icon chip + name +
+   blurb (`.cond-sub-head`), then its `.cond-card` routines
+4. **Exercises tab**: intro copy + search input + `#condLib` (shared library
+   search, `MCSubs.libGroupsHTML`) — container restyled to Onyx surface only
 
 ### Component specs
 
-**Screen background** — apply the same radial gradient used on
-`#scr-dashboard`: `radial-gradient(120% 60% at 50% -10%, #171612 0%, #0a0a0b 46%)`.
+**Sub-tab toggle** — replace the current flat "active=red-fill" pill pair with
+the Onyx gold-gradient active state (matches the segmented feel used
+elsewhere in Onyx):
+- Track: `background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:4px;`
+- Active button: `background:linear-gradient(135deg,#e9cb7d,#c79c4f); color:#1a1409;` Archivo 800, 13px
+- Inactive button: transparent, `color:#8b8b92`
 
-**Top bar** — title ("Programs"): Archivo 800, 26px, `#f6f5f2`, `-0.02em`. Count
-sub-label (`#flagCount`, e.g. "10 training programs"): Manrope 600, 13px,
-`#a6a6ad`.
+**Sub-category header (`.cond-sub-head`)**
+- Icon chip (`.cond-sub-icon`): 38×38, `border-radius:11px`,
+  `background:rgba(226,75,74,.14)`, `border:1px solid rgba(226,75,74,.35)` —
+  keep the JS-computed `hexA(col,…)` tint formula, just updated alpha/radius
+- Name (`.cond-sub-name`): Archivo 800, 16px, `#f4f3f1`
+- Blurb (`.cond-sub-blurb`): 12px, `#a6a6ad`
 
-**Tier label (`.tier-label`)** — Archivo 800, 11px, `.16em` letter-spacing,
-uppercase, with a hairline rule filling the remaining width
-(`::after{flex:1;height:1px;background:rgba(255,255,255,.08)}`).
-- `.tier-label.flag` — "★ Flagship Programs" — color `#e6c579` (gold).
-- `.tier-label.influencer` — "Influencer Programs" — color `#8b8b92` (muted),
-  `margin-top:24px` to separate from the flagship block above.
+**Routine card (`.cond-card`)**
+- `border-radius:16px; padding:16px 18px;`
+- Fill: `linear-gradient(135deg, rgba(ACCENT,.1), rgba(20,20,22,.5))` (ACCENT =
+  the sub-category's `color`, e.g. `#E24B4A` for "Not for the Faint of Heart")
+- Border: `1px solid rgba(ACCENT,.28)`
+- Tag (`.cond-tag`): 11px 800, uppercase, `.08em`, colored to ACCENT tint
+  (`#f0837f` on the red family)
+- Name (`.cond-name`): Archivo 800, 16.5px, `#f4f3f1`
+- Description (`.cond-meta`): 12px, `#a6a6ad`, line-height 1.5
+- Stat pills (`.cond-stats` / `.cond-stat`): 11px 700, `#c9c9cf`,
+  `background:rgba(255,255,255,.05)`, `border:1px solid rgba(255,255,255,.08)`,
+  pill shape
+- Arrow (`.cond-arrow`, replaces the current colored circle+→): a plain 15px
+  chevron-right line icon, `#8b8b92`, top-right, no background circle — quieter
+  than the current filled-circle treatment
+- PB pill (`.mcc-pb`, from `mc-cond.js`): restyle to
+  `color:#e6c579; background:rgba(216,180,99,.12); border:1px solid rgba(216,180,99,.28);`
+  gold instead of the current amber, `border-radius:20px`
 
-**Flagship card (`.cat-card`, inside `#flagGrid`)** — full-width, stacked,
-`gap:12px` between cards.
-- Shape: `border-radius:20px; padding:18px; overflow:hidden;`
-- Fill: `linear-gradient(160deg, rgba(ACCENT,.16), rgba(20,20,22,.5))`
-- Border: `1px solid rgba(ACCENT,.28–.3)`; `border-top:2.5px solid ACCENT`
-- Icon chip (`.cat-icon`, replaces emoji): 34×34, `border-radius:10px`,
-  `background:rgba(ACCENT,.18)`, centered line-icon SVG stroke tinted to the
-  accent, `margin-bottom:14px`
-- Flagship pill (`.cat-tag`): "Flagship" — 10px 800, uppercase, `.1em`, pill,
-  `background:rgba(ACCENT,.2)`, `border:1px solid rgba(ACCENT,.4)`, text tinted
-  to accent (light tint, e.g. `#fda4af` for the rose accent) — replaces the old
-  "★ Flagship · …" long-form tag copy with just **"Flagship"**
-- Name (`.cat-name`): Archivo 800, 18px, `#f6f5f2`, line-height 1.2
-- Description (`.cat-meta`): Manrope 12.5px, `#c9c9cf`, line-height 1.5
-- Meta row (`.cat-count`): Manrope 700, 11px, uppercase, `.06em`, `#8b8b92` —
-  drop the trailing "→" (a chevron SVG in the top-right does that job now)
-- Chevron affordance: 18px line-icon arrow, `#8b8b92`, top-right of the card,
-  vertically aligned with the name (see markup snippet)
-- Active/tap: `transform:scale(.985)`
-
-**Accent map (per program id, same hex family as the dashboard's rail):**
-- `ss` Strength & Supersets → `#c9505a`
-- `pmc` Project Muscle Confusion → `#8b7ff0`
-- `mc` Mike Cross' Favorite Splits → `#d8b463`
-- `ks` Everything Under the Kitchen Sink → `#e0a03c`
-- `mm` The Modality Matrix → `#6f77e0`
-- `hv` High-Volume Training Template → `#9fbf4a`
-
-**Influencer card (`.influencer-grid .cat-card`)** — 2-column grid, `gap:10px`
-(1-column under ~560px width, matching the existing responsive rule).
-- Shape: `border-radius:16px; padding:14px;`
-- Fill/border: same accent-tint formula as flagship but lighter —
-  `linear-gradient(160deg, rgba(ACCENT,.14), rgba(20,20,22,.5))`,
-  `border:1px solid rgba(ACCENT,.26)`, `border-top:2px solid ACCENT`
-- Icon chip: 28×28, `border-radius:8px`, `margin-bottom:20px` (pushes name
-  toward the bottom, echoing the dashboard rail card's proportions)
-- Name (`.cat-name`): Archivo 800, 14px, `#f4f3f1`
-- One-line description (`.cat-meta`): 11px, `#8b8b92`, line-clamp 2
-- Meta (`.cat-count`): 10px 700, uppercase, `.06em`, `#7d7d84`
-- No flagship pill on influencer cards (keeps them visually secondary, per the
-  existing tier hierarchy)
-
-**Accent map (influencer):**
-- `stndr` → `#1d9e75` · `pump` → `#d85a30` · `gainz` → `#378add` ·
-  `psu` → `#639922`
-
-**Exercise Library link (`.lib-link`)** — full-width card.
-- `border-radius:16px; padding:14px 16px;`
-- `background:rgba(216,180,99,.08); border:1px solid rgba(216,180,99,.24);`
-- Icon chip: 32×32, `border-radius:9px`, `background:rgba(216,180,99,.14)`,
-  gold line-icon (open-book / library glyph)
-- Title (`.lib-name`): Archivo 800, 14px, `#e6c579`
-- Sub (`.lib-sub`): 11px 600, `#8b8b92`
-- Trailing chevron, same style as flagship cards
-
-**Build a Program CTA** — dashed empty-state card.
-- `border-radius:18px; border:1.5px dashed rgba(216,180,99,.3);`
-- `background:rgba(255,255,255,.02); padding:24px 18px; text-align:center;`
-- Plus-icon (24px, gold stroke) above title
-- Title: Archivo 800, 15px, `#f4f3f1`. Sub: 12px, `#8b8b92`, line-height 1.5
+**Exercises tab container** — intro text `#a6a6ad`, search input
+`background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12); color:#f4f3f1;`
+`border-radius:11px`. `#condLib`'s inner group headers/rows come from
+`MCSubs.libGroupsHTML` (shared with Exercise Library) — no changes here beyond
+whatever the Exercise Library redesign (future handoff) applies globally.
 
 ---
 
 ## Interactions & behavior
-- No new JS logic. Every card stays a plain `<a href="cat-*.html">` /
-  `<a href="build-program.html">` / `<a href="exercise-library.html">`.
-- **Tap feedback**: cards scale to `.98`–`.985` on `:active`
-  (`transition: transform .12s ease`), matching the dashboard's rail/tool cards.
-- `#flagCount` continues to be computed at runtime from the rendered `#flagGrid`
-  children — do not hardcode a count.
-- JS-populated slots (`#bonusCardSlot`, `#collectionsSlot`, `#pubProgList`,
-  `#customProgList`) render `.cat-card` elements from their own scripts — since
-  they reuse the same class, they inherit the Onyx restyle automatically. No
-  changes needed in `mc-bonus-routing.js`, `mc-collections.js`, etc.
+No new JS logic — `renderConditioning()` keeps building the same DOM; only its
+inline style strings/class usage change (see `markup-snippets.md`). Sub-tab
+switching (`setCondSubTab`), PB pills, and the guided-timer action bar
+(`mc-cond.js`) are unaffected.
 
 ## State management
-No new state. All values are static (program list) or already populated by
-existing scripts. This is a pure restyle of existing DOM/CSS.
+None new. `condSubTab` module variable, `CONDITIONING` data, and
+`localStorage('mc_cond_log_v1')` PBs are all unchanged.
 
 ## Design tokens
-Reuses the **same Onyx tokens** already defined for `#scr-dashboard` — scope
-new rules to `#scr-programs` the same way (or promote the shared tokens to a
-common ancestor if `#scr-dashboard`'s tokens are refactored to be global later).
-
-Colors
+Same Onyx palette as the Dashboard/Programs handoffs:
 - Background: `radial-gradient(120% 60% at 50% -10%, #171612 0%, #0a0a0b 46%)`
-- Card surface tint: `rgba(255,255,255,.02–.035)` base, accent-tinted gradients
-  per program (see accent maps above)
-- Text: primary `#f6f5f2` / `#f4f3f1`; muted `#c9c9cf` / `#a6a6ad`; muted-2
-  `#8b8b92`; faint `#7d7d84`
-- Refined gold (primary accent): `#e6c579`
+- Text: `#f4f3f1` / `#f6f5f2` primary, `#a6a6ad` muted, `#8b8b92` muted-2,
+  `#7d7d84` faint
+- Gold: `#e6c579`, gradient `#e9cb7d → #c79c4f`
+- Category accent (kept): `#E24B4A` ("Not for the Faint of Heart")
+- Fonts: Archivo 700/800/900 display, Manrope 400/600/700 body (already
+  loaded app-wide since the Dashboard Onyx rollout)
 
-Typography — same as dashboard Onyx:
-- Display: **Archivo** 700/800/900 · UI/body: **Manrope** 400/600/700/800
-- Scale: screen title 26/800 · tier label 11/800 (`.16em` uppercase) · flagship
-  name 18/800 · flagship desc 12.5/600 · influencer name 14/800 · meta 10–11/700
-  uppercase
-
-Radius: flagship card 20 · influencer card 16 · icon chip 8–10 · library/CTA
-card 16–18 · pill 999
-Motion: `:active` scale .98–.985, `transition:transform .12s ease`
+Radius: sub-icon chip 11 · routine card 16 · stat pill / PB pill 999 · toggle
+track 14 / buttons 11
+Motion: `:active` scale .985 on cards, `transition:transform .12s ease`
 
 ## Assets
-No image assets. All iconography is **inline SVG line icons** (in
-`markup-snippets.md`) — barbell, bolt, crown, flame, hexagon, bar-chart, open
-book, plus, chevron-right. Fonts already loaded app-wide from the dashboard
-Onyx rollout (Archivo + Manrope via Google Fonts).
+No image assets — inline SVG line icons (flame, chevron-right) in
+`markup-snippets.md`. Fonts already loaded from the Dashboard Onyx rollout.
 
 ## Files in this bundle
-- `README.md` — this document (self-sufficient spec)
-- `onyx-programs-tokens-and-styles.css` — paste-ready CSS: component styles
-- `markup-snippets.md` — tier headers, flagship cards (all 6), influencer grid
-  (all 4), library link, build CTA — with inline SVGs, ready to paste into
-  `#scr-programs`
-- `Programs Redesign.dc.html` — the HTML prototype these specs were written
-  from. **Visual reference only — not for production use.**
+- `README.md` — this document
+- `onyx-conditioning-tokens-and-styles.css` — paste-ready CSS
+- `markup-snippets.md` — toggle / sub-header / card templates to paste into
+  `renderConditioning()`'s string-building JS
+- `Conditioning Redesign.dc.html` — HTML prototype. **Visual reference only.**
 
 ## Files in the app to edit
-- `dashboard.html` — inline `<style>` block (add the Onyx Programs rules,
-  scoped `#scr-programs …`) + the `#scr-programs` markup (replace emoji icons
-  and long-form tags on the 6 `#flagGrid` cards and 4 `.influencer-grid` cards
-  per `markup-snippets.md`; keep every `href`, id, and the `MARKET:STRIP`
-  markers exactly where they are).
-- `base.css` — only if you choose to move shared styles there instead (bump
-  `?v=` on every page that links it if so).
+- `dashboard.html` — inline `<style>` block (add Onyx Conditioning rules) +
+  the `renderConditioning()` function's HTML-string templates (toggle, sub
+  header, card markup) — per `markup-snippets.md`. Keep every id, `onclick`,
+  and `data-*` attribute exactly as-is.
