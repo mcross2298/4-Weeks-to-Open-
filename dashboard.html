@@ -863,6 +863,86 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 #scr-programs .build-cta-title{font-family:var(--font-display);font-weight:800;font-size:15px;color:var(--o-text);margin:10px 0 4px;}
 #scr-programs .build-cta-sub{font-size:12px;color:var(--o-muted-3);line-height:1.5;}
 
+/* ══════════════════════════════════════════════════════════════
+   ONYX — Conditioning Corner redesign (continuation of the Onyx
+   handoff series). Per design_handoff_conditioning_onyx/README.md.
+   Scoped to #scr-conditioning / #condBody.
+   ══════════════════════════════════════════════════════════════ */
+#scr-conditioning{
+  background:radial-gradient(120% 60% at 50% -10%, #171612 0%, #0a0a0b 46%);
+  font-family:'Manrope',system-ui,sans-serif;
+}
+#scr-conditioning .topbar-title{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:26px;letter-spacing:-.02em;color:#f6f5f2;line-height:1.1;}
+#scr-conditioning .topbar-sub{font-family:'Manrope',system-ui,sans-serif;font-weight:600;font-size:13px;color:#a6a6ad;margin-top:6px;}
+#scr-conditioning .prog-eyebrow{font-family:'Archivo',system-ui,sans-serif;font-weight:700;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8b8b92;}
+#scr-conditioning .prog-title{font-family:'Archivo',system-ui,sans-serif;font-weight:800;color:#f6f5f2;letter-spacing:-.02em;}
+#scr-conditioning .prog-sub{color:#a6a6ad;}
+
+#condBody{
+  --o-gold:#e6c579;
+  --o-gold-grad:linear-gradient(135deg,#e9cb7d,#c79c4f);
+  --o-text:#f4f3f1;
+  --o-text-2:#f6f5f2;
+  --o-muted:#c9c9cf;
+  --o-muted-2:#a6a6ad;
+  --o-muted-3:#8b8b92;
+  --o-faint:#7d7d84;
+  --font-display:'Archivo',system-ui,sans-serif;
+  --font-ui:'Manrope',system-ui,sans-serif;
+}
+
+/* Sub-tab toggle buttons (rendered inline by tgBtn()) */
+#condBody .cond-toggle-btn.active{
+  background:var(--o-gold-grad)!important;color:#1a1409!important;
+  font-family:var(--font-display);font-weight:800;
+}
+#condBody .cond-toggle-btn{color:var(--o-muted-3);font-family:var(--font-display);font-weight:800;}
+
+/* Sub-category header */
+#condBody .cond-sub-head{display:flex;align-items:center;gap:12px;margin:0 0 16px;}
+#condBody .cond-sub-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#condBody .cond-sub-name{font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--o-text);letter-spacing:-.01em;}
+#condBody .cond-sub-blurb{font-size:12px;color:var(--o-muted-2);margin-top:1px;}
+
+/* Routine cards */
+#condBody .cond-card{
+  position:relative;display:block;border-radius:16px;padding:16px 18px;
+  text-decoration:none;color:inherit;margin-bottom:10px;
+  transition:transform .12s ease;
+}
+#condBody .cond-card:active{transform:scale(.985);}
+#condBody .cond-tag{font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;}
+#condBody .cond-name{font-family:var(--font-display);font-weight:800;font-size:16.5px;color:var(--o-text);margin-bottom:5px;padding-right:24px;}
+#condBody .cond-meta{font-family:var(--font-ui);font-size:12px;color:var(--o-muted-2);line-height:1.5;padding-right:8px;}
+#condBody .cond-stats{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;align-items:center;}
+#condBody .cond-stat{
+  font-size:11px;font-weight:700;color:var(--o-muted);
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  border-radius:20px;padding:4px 10px;
+}
+#condBody .cond-arrow{
+  position:absolute;right:16px;top:18px;width:auto;height:auto;
+  background:none!important;border:none!important;
+}
+
+/* PB pill (appended at runtime by mc-cond.js) */
+#condBody .mcc-pb,
+.mcc-pb{
+  color:var(--o-gold)!important;
+  background:rgba(216,180,99,.12)!important;
+  border:1px solid rgba(216,180,99,.28)!important;
+  border-radius:20px!important;
+  font-size:11px!important;font-weight:800!important;
+  margin-left:auto;
+}
+
+/* Exercises sub-tab container */
+#condBody input[placeholder="Search exercises…"]{
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);
+  color:var(--o-text);border-radius:11px;
+}
+#condBody{color:var(--o-muted-2);}
+
 /* Bottom tab bar (shared) */
 .tab-bar{
   background:rgba(10,10,11,.82);
@@ -1205,6 +1285,26 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
       <div class="build-cta-sub">Group standalone workouts into folders — by goal, body part, or anything.</div>
     </a>
 
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     CONDITIONING SCREEN
+══════════════════════════════════════ -->
+<div class="screen" id="scr-conditioning">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Conditioning</div>
+      <div class="topbar-sub">Cardio · conditioning · core</div>
+    </div>
+  </div>
+  <div class="prog-screen-inner">
+    <div class="prog-header">
+      <div class="prog-eyebrow">Conditioning Corner</div>
+      <h1 class="prog-title">Burn It Out</h1>
+      <div class="prog-sub">Finish a lift with conditioning, or run it as a standalone session.</div>
+    </div>
+    <div id="condBody"></div>
   </div>
 </div>
 
@@ -1630,6 +1730,11 @@ function hexA(hex,a){
   return 'rgba('+r+','+g+','+b+','+a+')';
 }
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function tintLight(hex){
+  var h=hex.replace('#',''); var r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);
+  var mix=function(c){return Math.round(c+(255-c)*0.35);};
+  return 'rgb('+mix(r)+','+mix(g)+','+mix(b)+')';
+}
 var condSubTab='workouts';
 function setCondSubTab(t){ condSubTab=t; renderConditioning(); }
 // resolved owner override for a conditioning routine (published+local, via
@@ -1647,7 +1752,7 @@ function renderCondLib(q){ var el=document.getElementById('condLib'); if(el&&win
 function renderConditioning(){
   var body=document.getElementById('condBody');
   if(!body||typeof CONDITIONING==='undefined'){return;}
-  var tgBtn=function(id,label){return '<button onclick="setCondSubTab(\''+id+'\')" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;letter-spacing:0.02em;'+(condSubTab===id?'background:#E24B4A;color:#fff;':'background:transparent;color:#94a3b8;')+'">'+label+'</button>';};
+  var tgBtn=function(id,label){return '<button onclick="setCondSubTab(\''+id+'\')" class="cond-toggle-btn'+(condSubTab===id?' active':'')+'" style="flex:1;padding:10px;border-radius:11px;border:none;cursor:pointer;font-family:\'Archivo\',inherit;font-size:13px;font-weight:800;letter-spacing:0.02em;'+(condSubTab===id?'background:linear-gradient(135deg,#e9cb7d,#c79c4f);color:#1a1409;':'background:transparent;color:#8b8b92;')+'">'+label+'</button>';};
   var toggle='<div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:13px;padding:4px;margin-bottom:18px;">'+tgBtn('workouts','🔥 Workouts')+tgBtn('exercises','🏃 Exercises')+'</div>';
 
   var html='';
@@ -1656,7 +1761,7 @@ function renderConditioning(){
       if(sub.type!=='routines') return;
       var col=sub.color||'#E24B4A';
       html+='<div class="cond-sub"><div class="cond-sub-head">'
-        +'<div class="cond-sub-icon" style="background:'+hexA(col,0.14)+';border-color:'+hexA(col,0.4)+'">'+(sub.icon||'🔥')+'</div>'
+        +'<div class="cond-sub-icon" style="background:'+hexA(col,0.14)+';border:1px solid '+hexA(col,0.35)+'">'+(sub.icon||'🔥')+'</div>'
         +'<div><div class="cond-sub-name">'+esc(sub.name)+'</div>'
         +(sub.blurb?'<div class="cond-sub-blurb">'+esc(sub.blurb)+'</div>':'')+'</div></div>';
       (sub.routines||[]).forEach(function(r){
@@ -1665,9 +1770,9 @@ function renderConditioning(){
         var nm=(ov&&ov.name)||r.name, tg=(ov&&ov.tag!=null&&ov.tag!=='')?ov.tag:r.tag, mt=(ov&&ov.meta)||r.meta;
         html+='<a href="'+r.href+'" class="cond-card" data-cond-id="'+esc(r.id)+'"'
             +' data-mc-orig-name="'+esc(r.name)+'" data-mc-orig-tag="'+esc(r.tag||'')+'" data-mc-orig-meta="'+esc(r.meta||'')+'"'
-            +' style="background:linear-gradient(135deg,'+hexA(col,0.12)+','+'var(--surface));border-color:'+hexA(col,0.33)+'">'
-            +'<div class="cond-arrow" style="background:'+hexA(col,0.2)+';border-color:'+hexA(col,0.33)+'">→</div>'
-            +(tg?'<div class="cond-tag" style="color:'+col+'">'+esc(tg)+'</div>':'')
+            +' style="background:linear-gradient(135deg,'+hexA(col,0.1)+',rgba(20,20,22,.5));border:1px solid '+hexA(col,0.28)+'">'
+            +'<svg class="cond-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>'
+            +(tg?'<div class="cond-tag" style="color:'+tintLight(col)+'">'+esc(tg)+'</div>':'')
             +'<div class="cond-name">'+esc(nm)+'</div>'
             +(mt?'<div class="cond-meta">'+esc(mt)+'</div>':'')
             +((r.stats&&r.stats.length)?'<div class="cond-stats">'+r.stats.map(function(s){return '<span class="cond-stat">'+esc(s)+'</span>';}).join('')+'</div>':'')
@@ -1676,8 +1781,8 @@ function renderConditioning(){
       html+='</div>';
     });
   } else {
-    html='<div style="font-size:12px;color:#94a3b8;line-height:1.5;margin-bottom:12px;">Cardio &amp; conditioning exercise library. On any conditioning workout, tap <b style="color:#fed7aa;">🔁 Swap</b> to live-replace a movement with one of these.</div>'
-      +'<input placeholder="Search exercises…" oninput="renderCondLib(this.value)" style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#f1f5f9;font-size:14px;font-family:inherit;outline:none;margin-bottom:14px;">'
+    html='<div style="font-size:12px;color:#a6a6ad;line-height:1.5;margin-bottom:12px;">Cardio &amp; conditioning exercise library. On any conditioning workout, tap <b style="color:#e6c579;">🔁 Swap</b> to live-replace a movement with one of these.</div>'
+      +'<input placeholder="Search exercises…" oninput="renderCondLib(this.value)" style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#f4f3f1;font-size:14px;font-family:inherit;outline:none;margin-bottom:14px;">'
       +'<div id="condLib">'+(window.MCSubs?MCSubs.libGroupsHTML('',false):'')+'</div>';
   }
   body.innerHTML=toggle+html;
