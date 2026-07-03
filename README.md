@@ -1,229 +1,231 @@
-# Handoff: Dashboard Redesign — "Onyx" (direction 1a)
+# Handoff: Programs Screen Redesign — "Onyx" (continuing direction 1a)
 
 ## Overview
-A premium restyle + light restructure of the **Dashboard (home) screen** in
-`dashboard.html` of the `4-Weeks-to-Open-` app. Same content and data, elevated
-identity: layered near-black surfaces, a refined softer gold accent used
-sparingly, glass depth, refined typography, and **line icons instead of emoji**.
+A premium restyle of the **Programs screen** (`#scr-programs` in `dashboard.html`,
+reached via the bottom tab bar or the dashboard's "Browse all" link). Same content,
+same data source, same tiering (Flagship → Influencer) — restyled to match the
+**Onyx** system already shipped on the Dashboard (`#scr-dashboard`): layered
+near-black surfaces, refined soft gold accent, glass depth, Archivo/Manrope
+typography, line icons instead of emoji.
 
-The redesign is built around three usability goals the owner asked for:
-1. **One-tap to the right workout** — the hero becomes a bold "Resume workout"
-   card (program + week/day + progress ring + primary button).
-2. **Browse/pick a program fast** — a new horizontal **Programs rail** on the
-   dashboard, sourced from the same flagship programs already in the app.
-3. **Cleaner hierarchy & nav** — fewer competing sections, a refined 5-tab bar.
+This is a **direct continuation** of the Onyx dashboard handoff that shipped
+earlier (see the `#scr-dashboard` Onyx block already in `dashboard.html`'s
+`<style>`). It closes the visual gap users currently hit: Onyx hero → tap
+"Browse all" → flat, un-restyled `.cat-card` grid.
 
-> Scope: this handoff covers the **`#scr-dashboard` screen only**. The Programs
-> screen, program pages, nutrition, etc. keep their current markup — but the new
-> design tokens (fonts + refined gold) can be rolled out app-wide later.
+> Scope: this handoff covers the **`#scr-programs` screen only** (the Flagship
+> and Influencer program lists, the Exercise Library link, and the "Build a
+> Program" CTA). The individual program pages (`cat-*.html`) are out of scope —
+> a separate handoff.
 
 ## About the design files
-The files in this bundle are **design references created in HTML** — a streaming
-"Design Component" prototype (`Dashboard Redesign.dc.html`) showing the intended
-look and behavior. **Do not copy the `.dc.html` / `ios-frame.jsx` files into the
-app.** They use a prototyping runtime and an iPhone bezel that don't belong in
-production.
+The files in this bundle are **design references created in HTML** — a
+streaming "Design Component" prototype (`Programs Redesign.dc.html`) rendered
+inside an iPhone bezel, showing the intended look and behavior. **Do not copy
+the `.dc.html` / `ios-frame.jsx` files into the app.** They use a prototyping
+runtime that doesn't belong in production.
 
-Your task is to **recreate the Onyx dashboard in the app's existing environment**:
-plain HTML + the inline `<style>` block in `dashboard.html` and/or `base.css`,
-using the app's established class names, element ids, and JS hooks. Everything you
-need (exact values + paste-ready CSS + markup snippets) is in this README and the
-two companion files:
-- `onyx-tokens-and-styles.css` — paste-ready CSS (design tokens + component styles)
-- `markup-snippets.md` — the hero, programs rail, tools, and tab-bar markup with
-  the inline SVG line icons
+Your task is to **recreate the Onyx Programs screen in the app's existing
+environment**: the inline `<style>` block in `dashboard.html` and/or `base.css`,
+using the app's established class names, element ids, and JS hooks — exactly
+like the dashboard Onyx rollout did. Everything you need is in this README plus
+the two companion files:
+- `onyx-programs-tokens-and-styles.css` — paste-ready CSS
+- `markup-snippets.md` — the restyled tier headers, flagship cards, influencer
+  grid, library link, and "Build a Program" CTA, with inline SVG line icons
 
 ## Fidelity
-**High-fidelity.** Final colors, typography, spacing, radii, shadows, and motion
-are specified exactly below. Recreate pixel-for-pixel, then verify against the
-prototype screenshots (ask the designer to include them if not attached).
+**High-fidelity.** Colors, typography, spacing, radii, borders and per-program
+accent tints are specified exactly below. Recreate pixel-for-pixel; ask the
+designer for prototype screenshots if useful for cross-checking.
 
 ---
 
 ## ⚠️ Codebase conventions to respect (from the app's `CLAUDE.md`)
-- **Invoke the `executive-summary` skill and get explicit approval before editing
-  files** — this is a UI change to an existing page, which that rule covers.
-- Work only in the **`4-Weeks-to-Open-` master repo**; open a feature branch → draft
-  PR → merge to `main`. **Never push to `MC-Training-Rolodex`** (auto-deploy target).
-- `dashboard.html` links `base.css?v=65`. If you put styles in `base.css`, **bump
-  the `?v=` query** on every page that links it so the PWA cache serves fresh CSS.
-- Preserve every existing element **id**, **`onclick=`**, and script hook — the
-  dashboard is heavily JS-driven (hero, streak, tabs, calendar, macros). This is a
-  **presentation-layer** change; do not alter JS behavior.
+- **Invoke the `executive-summary` skill and get explicit approval before
+  editing files** — this is a UI change to an existing page, which that rule
+  covers.
+- Work only in the **`4-Weeks-to-Open-` master repo**; feature branch → draft PR
+  → merge to `main`. **Never push to `MC-Training-Rolodex`** (auto-deploy
+  target).
+- `dashboard.html` links `base.css?v=65`. If styles go in `base.css`, **bump
+  the `?v=` query** on every page that links it.
+- **Preserve every existing element id, `href`, and script hook.** The
+  Programs screen is simpler than the dashboard (mostly static links + a few
+  JS-populated slots), but these ids are load-bearing:
+  - `#flagGrid` — flagship card container (count is read at runtime by
+    `document.querySelectorAll('#flagGrid .cat-card').length` into `#flagCount`)
+  - `#bonusCardSlot`, `#collectionsSlot` — populated by `mc-bonus-routing.js` /
+    `mc-collections.js`
+  - `#pubTier` / `#pubProgList`, `#customTier` / `#customProgList` — owner
+    published/custom programs, toggled `display:none` → visible by JS
+  - `#gainzCard` / `#gzLive` / `#gzStreak` — Daily Gainz's live streak module
+  - The `MARKET:STRIP` comment markers around the Influencer Programs block —
+    **do not remove or move these**; the Rolodex (public) build strips
+    everything between them. Keep the restyle **inside** the markers.
+- This is a **presentation-layer** change; do not alter routing, data, or JS
+  behavior. Every `<a href="cat-*.html">` stays a plain link.
 
 ---
 
-## Screen: Dashboard (`#scr-dashboard`)
+## Screen: Programs (`#scr-programs`)
 
 ### Layout (top → bottom)
-Single scrolling column, 20px horizontal padding, on the Onyx background.
-Fixed bottom tab bar (existing `.tab-bar`). Section order:
+Single scrolling column inside `.prog-screen-inner` (max-width 680px, centered),
+on the Onyx background (shared with `#scr-dashboard`). Fixed bottom tab bar.
+Section order:
 
-1. **Header row** — monogram + greeting/date (left), search pill (right)
-2. **Streak strip** (existing `.momentum-strip`, restyled) — flame + streak + DAY badge
-3. **Hero — "Continue where you left off"** (existing `.hero-card`, restyled) —
-   active program, week/day, progress ring, muscle pills, **Resume workout** button
-4. **Programs** section — header ("Browse all") + **horizontal rail** (NEW)
-5. **Training tools** — 2×2 grid (existing `.tools-grid`, restyled, emoji → SVG)
-6. **Bottom tab bar** (existing `.tab-bar`, restyled, emoji → SVG)
+1. **Top bar** — "Programs" title + live count sub-label (existing `.topbar`,
+   restyled to Onyx tokens — same treatment as the dashboard's top bar)
+2. **Flagship Programs** — tier label + 6 full-width stacked cards (`#flagGrid`)
+3. Bonus/Collections slots (unchanged, JS-populated — inherit Onyx surface
+   tokens automatically since they use `.cat-card`)
+4. **Influencer Programs** — tier label + 2-up compact grid (`.influencer-grid`,
+   4 cards) — kept inside `MARKET:STRIP` markers
+5. Published/Custom program slots (owner-only, unchanged)
+6. **Exercise Library** link card (existing `.lib-link`, restyled)
+7. **Build a Program** dashed CTA card
+8. Bottom tab bar (existing `.tab-bar` — already Onyx-styled app-wide from the
+   dashboard rollout; "Programs" tab shows active/gold here)
 
 ### Component specs
 
-**Background** — apply to `#scr-dashboard` (or `body` on the dashboard):
-`radial-gradient(120% 60% at 50% -10%, #171612 0%, #0a0a0b 46%)`.
+**Screen background** — apply the same radial gradient used on
+`#scr-dashboard`: `radial-gradient(120% 60% at 50% -10%, #171612 0%, #0a0a0b 46%)`.
 
-**Header monogram (`.avatar`)** — 44×44, `border-radius:14px`,
-`background:linear-gradient(140deg,#e6c579,#b8934a)`, text `#1a1409`, Archivo 900
-15px, shadow `0 6px 18px -6px rgba(216,180,99,.55)`.
-- Greeting (`.topbar-title`): Archivo 700, 18px, `#f4f3f1`, `-0.01em`.
-- Date (`.topbar-sub`): Manrope 600, 12px, `#7d7d84`.
-- **Search pill** (right, replaces the 🔐/📅 cluster visually — keep those handlers):
-  40×40, `border-radius:12px`, `background:rgba(255,255,255,.05)`, border
-  `1px solid rgba(255,255,255,.08)`, magnifier SVG stroke `#c9c9cf`.
+**Top bar** — title ("Programs"): Archivo 800, 26px, `#f6f5f2`, `-0.02em`. Count
+sub-label (`#flagCount`, e.g. "10 training programs"): Manrope 600, 13px,
+`#a6a6ad`.
 
-**Streak strip (`.momentum-strip`)** — keep ids `#msStreak`, `#msSub`, `#msBadge`.
-- Container: margin `16px 20px 20px`, padding `10px 14px`, `border-radius:14px`,
-  `background:linear-gradient(120deg,rgba(216,180,99,.12),rgba(216,180,99,.02))`,
-  border `1px solid rgba(216,180,99,.2)`.
-- Flame: line/filled SVG, fill `#e6c579` (drop the 🔥 emoji).
-- `#msStreak`: Archivo 700, 13.5px, `#f4f3f1`. `#msSub`: 11px 600, `#8b8b92`.
-- `#msBadge`: 11px 800, `#e6c579`, bg `rgba(216,180,99,.14)`, border
-  `1px solid rgba(216,180,99,.28)`, `border-radius:9px`, padding `5px 10px`.
+**Tier label (`.tier-label`)** — Archivo 800, 11px, `.16em` letter-spacing,
+uppercase, with a hairline rule filling the remaining width
+(`::after{flex:1;height:1px;background:rgba(255,255,255,.08)}`).
+- `.tier-label.flag` — "★ Flagship Programs" — color `#e6c579` (gold).
+- `.tier-label.influencer` — "Influencer Programs" — color `#8b8b92` (muted),
+  `margin-top:24px` to separate from the flagship block above.
 
-**Hero (`.hero-card`)** — the star. Keep `onclick="openActiveProgram()"` and ids
-`#heroName`, `#heroDesc`, `#heroDay`, `#heroPhases`.
-- Eyebrow above card: Archivo 700, 11px, `letter-spacing:.18em`, uppercase,
-  `#8b8b92` — text "Continue where you left off".
-- Card: `border-radius:24px; overflow:hidden;`
-  `background:linear-gradient(158deg,#1c1a16 0%,#0e0e10 68%)`,
-  border `1px solid rgba(216,180,99,.24)`,
-  shadow `0 24px 50px -24px rgba(0,0,0,.85)`.
-- Glow overlay: `radial-gradient(90% 70% at 15% 0%, rgba(216,180,99,.12), transparent 60%)`.
-- Sheen overlay: a 70px vertical band `linear-gradient(90deg,rgba(255,255,255,.14),transparent)`
-  animated `sheenSlide 6.5s ease-in-out infinite` (keyframe in the CSS file).
-- Inner padding `20px 20px 18px`.
-- "Active Program" chip: 10.5px 800, uppercase, `.1em`, `#e6c579`, bg
-  `rgba(216,180,99,.12)`, border `1px solid rgba(216,180,99,.3)`, pill.
-- Program name (`#heroName`): Archivo 800, 23px, `line-height:1.12`, `-0.02em`, `#f6f5f2`.
-- Meta (`#heroDesc` → repurpose to "Week 2 · Day 3 · Push"): 13px 600, `#a6a6ad`.
-- **Progress ring** (56–60px): SVG, track `rgba(255,255,255,.08)` width 5, progress
-  stroke `#e6c579` width 5 round-cap; center shows `#heroDay`-driven % (Archivo 900
-  16px `#e6c579`) + "CYCLE" label 8.5px `#7d7d84`. (Compute stroke-dashoffset from
-  cycle %; r=26 → circumference ≈163.)
-- Muscle pills (`#heroPhases`): first/active pill filled `#e6c579` text `#0f0e0c`;
-  rest `rgba(255,255,255,.05)` bg, `1px solid rgba(255,255,255,.1)` border, text
-  `#a6a6ad`. 11px 700, pill, padding `5px 12px`.
-- **Resume button** (repurpose `.hero-tap` → make it the primary CTA; drop the
-  green `.hero-tap.resume` treatment): full-width, padding 14px, `border-radius:15px`,
-  `background:linear-gradient(135deg,#e9cb7d,#c79c4f)`, shadow
-  `0 12px 26px -10px rgba(216,180,99,.65)`; play-triangle SVG `#1a1409` +
-  "Resume workout" Archivo 800 15.5px `#1a1409`. Active: `transform:scale(.985)`.
+**Flagship card (`.cat-card`, inside `#flagGrid`)** — full-width, stacked,
+`gap:12px` between cards.
+- Shape: `border-radius:20px; padding:18px; overflow:hidden;`
+- Fill: `linear-gradient(160deg, rgba(ACCENT,.16), rgba(20,20,22,.5))`
+- Border: `1px solid rgba(ACCENT,.28–.3)`; `border-top:2.5px solid ACCENT`
+- Icon chip (`.cat-icon`, replaces emoji): 34×34, `border-radius:10px`,
+  `background:rgba(ACCENT,.18)`, centered line-icon SVG stroke tinted to the
+  accent, `margin-bottom:14px`
+- Flagship pill (`.cat-tag`): "Flagship" — 10px 800, uppercase, `.1em`, pill,
+  `background:rgba(ACCENT,.2)`, `border:1px solid rgba(ACCENT,.4)`, text tinted
+  to accent (light tint, e.g. `#fda4af` for the rose accent) — replaces the old
+  "★ Flagship · …" long-form tag copy with just **"Flagship"**
+- Name (`.cat-name`): Archivo 800, 18px, `#f6f5f2`, line-height 1.2
+- Description (`.cat-meta`): Manrope 12.5px, `#c9c9cf`, line-height 1.5
+- Meta row (`.cat-count`): Manrope 700, 11px, uppercase, `.06em`, `#8b8b92` —
+  drop the trailing "→" (a chevron SVG in the top-right does that job now)
+- Chevron affordance: 18px line-icon arrow, `#8b8b92`, top-right of the card,
+  vertically aligned with the name (see markup snippet)
+- Active/tap: `transform:scale(.985)`
 
-**Programs rail (NEW)** — insert between the hero and Training tools on the
-dashboard. Source the cards from the flagship programs already defined in
-`mc-pm-data.js` / rendered in `#flagGrid` (Strength & Supersets, Project Muscle
-Confusion, Mike's Favorite Splits, …). Each rail card links to its `cat-*.html`.
-- Section header: title "Programs" Archivo 800 19px `#f4f3f1`; right link "Browse
-  all" 13px 700 `#e6c579` → `switchTab('programs')`.
-- Rail: `display:flex; gap:12px; overflow-x:auto;` hide scrollbar; padding
-  `2px 20px 4px`.
-- Card: `flex:0 0 156px; border-radius:18px; padding:15px;` tinted gradient of the
-  program's accent over the dark surface,
-  `background:linear-gradient(160deg, rgba(ACCENT,.16), rgba(20,20,22,.4))`,
-  border `1px solid rgba(ACCENT,.28)`, `border-top:2.5px solid ACCENT`.
-  Active `transform:scale(.98)`.
-- Card icon chip: 34×34, `border-radius:10px`, bg `rgba(ACCENT,.16)`, line-icon SVG
-  in accent tint.
-- Card title: Archivo 800 15px `#f4f3f1` line-height 1.2. Meta: 11.5px `#8b8b92`.
-- Accent map: Strength & Supersets `#c9505a`; Project Muscle Confusion `#8b7ff0`;
-  Mike's Favorite Splits `#d8b463`; Kitchen Sink `#e0a03c`; Modality Matrix
-  `#6f77e0`; High-Volume `#9fbf4a`. (These are refined versions of the existing
-  `.cat-card.*` accents — see markup-snippets.md.)
+**Accent map (per program id, same hex family as the dashboard's rail):**
+- `ss` Strength & Supersets → `#c9505a`
+- `pmc` Project Muscle Confusion → `#8b7ff0`
+- `mc` Mike Cross' Favorite Splits → `#d8b463`
+- `ks` Everything Under the Kitchen Sink → `#e0a03c`
+- `mm` The Modality Matrix → `#6f77e0`
+- `hv` High-Volume Training Template → `#9fbf4a`
 
-**Training tools (`.tools-grid` / `.tool-card`)** — keep the existing `<a href>`
-targets (`exercise-library.html`, `build-workout.html`, etc.).
-- Card: `border-radius:16px; padding:14px;` bg `rgba(255,255,255,.035)`, border
-  `1px solid rgba(255,255,255,.07)`. Active `scale(.98)`.
-- Icon chip: 30×30, `border-radius:9px`; the gold "featured" tool uses bg
-  `rgba(216,180,99,.1)` + border `rgba(216,180,99,.2)` and gold SVG; others use
-  `rgba(255,255,255,.05)` + `rgba(255,255,255,.08)` and `#c9c9cf` SVG.
-- Name: Archivo 700 13.5px `#f4f3f1`. Sub: 11px `#7d7d84`.
-- Replace emoji (📚🔧📊🍎) with line-icon SVGs (in markup-snippets.md).
+**Influencer card (`.influencer-grid .cat-card`)** — 2-column grid, `gap:10px`
+(1-column under ~560px width, matching the existing responsive rule).
+- Shape: `border-radius:16px; padding:14px;`
+- Fill/border: same accent-tint formula as flagship but lighter —
+  `linear-gradient(160deg, rgba(ACCENT,.14), rgba(20,20,22,.5))`,
+  `border:1px solid rgba(ACCENT,.26)`, `border-top:2px solid ACCENT`
+- Icon chip: 28×28, `border-radius:8px`, `margin-bottom:20px` (pushes name
+  toward the bottom, echoing the dashboard rail card's proportions)
+- Name (`.cat-name`): Archivo 800, 14px, `#f4f3f1`
+- One-line description (`.cat-meta`): 11px, `#8b8b92`, line-clamp 2
+- Meta (`.cat-count`): 10px 700, uppercase, `.06em`, `#7d7d84`
+- No flagship pill on influencer cards (keeps them visually secondary, per the
+  existing tier hierarchy)
 
-**Tab bar (`.tab-bar` / `.tab` / `.tab-icon`)** — keep `onclick="switchTab(...)"`.
-- Bar: `background:rgba(10,10,11,.82)`, `backdrop-filter:blur(20px)`, top border
-  `1px solid rgba(255,255,255,.07)`, padding `10px 8px 30px` (+ safe-area inset).
-- Replace emoji tab icons with 21px line-icon SVGs. Active tab: stroke + label
-  `#e6c579`; inactive: `#6b6b72`. Labels 9.5px 700.
+**Accent map (influencer):**
+- `stndr` → `#1d9e75` · `pump` → `#d85a30` · `gainz` → `#378add` ·
+  `psu` → `#639922`
+
+**Exercise Library link (`.lib-link`)** — full-width card.
+- `border-radius:16px; padding:14px 16px;`
+- `background:rgba(216,180,99,.08); border:1px solid rgba(216,180,99,.24);`
+- Icon chip: 32×32, `border-radius:9px`, `background:rgba(216,180,99,.14)`,
+  gold line-icon (open-book / library glyph)
+- Title (`.lib-name`): Archivo 800, 14px, `#e6c579`
+- Sub (`.lib-sub`): 11px 600, `#8b8b92`
+- Trailing chevron, same style as flagship cards
+
+**Build a Program CTA** — dashed empty-state card.
+- `border-radius:18px; border:1.5px dashed rgba(216,180,99,.3);`
+- `background:rgba(255,255,255,.02); padding:24px 18px; text-align:center;`
+- Plus-icon (24px, gold stroke) above title
+- Title: Archivo 800, 15px, `#f4f3f1`. Sub: 12px, `#8b8b92`, line-height 1.5
 
 ---
 
 ## Interactions & behavior
-- **Resume workout** → existing `openActiveProgram()` (opens the active program's
-  current day). Keep the whole hero tappable too.
-- **Programs → Browse all** and **rail cards** → navigate to `cat-*.html` /
-  `switchTab('programs')`. No new JS logic — reuse existing routing.
-- **Tap feedback**: every card/button scales to `.98`–`.985` on `:active`
-  (`transition: transform .12s ease`).
-- **Hero sheen**: CSS-only `sheenSlide` keyframe, 6.5s loop; wrap in
-  `@media (prefers-reduced-motion: reduce){ animation:none }`.
-- **Progress ring**: driven by the same value that currently fills `#heroDay` /
-  cycle position — set `stroke-dashoffset` from the cycle %.
+- No new JS logic. Every card stays a plain `<a href="cat-*.html">` /
+  `<a href="build-program.html">` / `<a href="exercise-library.html">`.
+- **Tap feedback**: cards scale to `.98`–`.985` on `:active`
+  (`transition: transform .12s ease`), matching the dashboard's rail/tool cards.
+- `#flagCount` continues to be computed at runtime from the rendered `#flagGrid`
+  children — do not hardcode a count.
+- JS-populated slots (`#bonusCardSlot`, `#collectionsSlot`, `#pubProgList`,
+  `#customProgList`) render `.cat-card` elements from their own scripts — since
+  they reuse the same class, they inherit the Onyx restyle automatically. No
+  changes needed in `mc-bonus-routing.js`, `mc-collections.js`, etc.
 
 ## State management
-No new state. All dynamic values already exist and are populated by the app's
-scripts: active program + day (hero JS), streak (`#msStreak`/`#msSub`/`#msBadge`
-via the momentum-strip logic), program list (`mc-pm-data.js`). The rail should
-render from the same program data used for `#flagGrid` (ideally generated by the
-same code path so it stays in sync).
+No new state. All values are static (program list) or already populated by
+existing scripts. This is a pure restyle of existing DOM/CSS.
 
 ## Design tokens
+Reuses the **same Onyx tokens** already defined for `#scr-dashboard` — scope
+new rules to `#scr-programs` the same way (or promote the shared tokens to a
+common ancestor if `#scr-dashboard`'s tokens are refactored to be global later).
+
 Colors
-- Background: `#0a0a0b`; dashboard radial `#171612 → #0a0a0b`
-- Surface: `rgba(255,255,255,.035)`; surface border `rgba(255,255,255,.07)`
-- Hero surface: `linear-gradient(158deg,#1c1a16,#0e0e10)`; hero border `rgba(216,180,99,.24)`
-- **Refined gold (primary accent):** `#e6c579`; gradient `#e9cb7d → #c79c4f`; deep `#b8934a`
-- Gold tints: `rgba(216,180,99,.12)` bg, `.28`/`.3` borders
-- Text: primary `#f4f3f1` / `#f6f5f2`; muted `#a6a6ad`; muted-2 `#8b8b92`; faint `#7d7d84` / `#6b6b72`
-- Program accents: `#c9505a`, `#8b7ff0`, `#d8b463`, `#e0a03c`, `#6f77e0`, `#9fbf4a`
+- Background: `radial-gradient(120% 60% at 50% -10%, #171612 0%, #0a0a0b 46%)`
+- Card surface tint: `rgba(255,255,255,.02–.035)` base, accent-tinted gradients
+  per program (see accent maps above)
+- Text: primary `#f6f5f2` / `#f4f3f1`; muted `#c9c9cf` / `#a6a6ad`; muted-2
+  `#8b8b92`; faint `#7d7d84`
+- Refined gold (primary accent): `#e6c579`
 
-> Migration note: the app currently uses `--gold:#d4af37`. Onyx uses a softer
-> `#e6c579`. Recommended: retune `--gold` to `#e6c579` app-wide for a cohesive
-> lift (it flows through every screen's gold accents), OR scope new tokens to the
-> dashboard if you want to stage the rollout.
+Typography — same as dashboard Onyx:
+- Display: **Archivo** 700/800/900 · UI/body: **Manrope** 400/600/700/800
+- Scale: screen title 26/800 · tier label 11/800 (`.16em` uppercase) · flagship
+  name 18/800 · flagship desc 12.5/600 · influencer name 14/800 · meta 10–11/700
+  uppercase
 
-Typography — **add Google Fonts** (currently the app uses `'Segoe UI'`):
-- Display: **Archivo** — 700 / 800 / 900 (headlines, names, buttons, section titles)
-- UI/body: **Manrope** — 400 / 600 / 700 (labels, meta, sub-text)
-- Scale: greeting 18/700 · section title 19/800 · hero name 23/800 (`-0.02em`) ·
-  meta 13/600 · eyebrow 11 (`.18em`, uppercase) · tool name 13.5/700 · tab label 9.5/700
-
-Radius: rail card 18 · card 16 · hero 24 · icon chip 9–14 · pill/999 · button 15
-Shadows: hero `0 24px 50px -24px rgba(0,0,0,.85)` · button `0 12px 26px -10px rgba(216,180,99,.65)` · monogram `0 6px 18px -6px rgba(216,180,99,.55)`
-Motion: `sheenSlide` 6.5s ease-in-out infinite; `:active` scale .98–.985
+Radius: flagship card 20 · influencer card 16 · icon chip 8–10 · library/CTA
+card 16–18 · pill 999
+Motion: `:active` scale .98–.985, `transition:transform .12s ease`
 
 ## Assets
-No image assets. All iconography is **inline SVG line icons** (provided in
-`markup-snippets.md`) — search, flame, dumbbell, bolt, chart, apple, book, wrench,
-home, calendar, play. Fonts load from Google Fonts (Archivo + Manrope). If the PWA
-must work fully offline, self-host the two font families and reference them via
-`@font-face` instead of the Google CDN link.
+No image assets. All iconography is **inline SVG line icons** (in
+`markup-snippets.md`) — barbell, bolt, crown, flame, hexagon, bar-chart, open
+book, plus, chevron-right. Fonts already loaded app-wide from the dashboard
+Onyx rollout (Archivo + Manrope via Google Fonts).
 
 ## Files in this bundle
 - `README.md` — this document (self-sufficient spec)
-- `onyx-tokens-and-styles.css` — paste-ready CSS: tokens + component styles + keyframes
-- `markup-snippets.md` — hero, programs rail, tools, tab-bar HTML with inline SVGs
-- `reference/onyx-dashboard.png` — **dashboard** in Onyx (header, streak, Resume
-  hero, programs rail, tools, tab bar) — the target of this handoff
-- `Dashboard Redesign.dc.html` + `ios-frame.jsx` — the HTML prototype these PNGs
-  were rendered from. **Visual reference only — not for production use.**
-
-> Match the PNGs pixel-for-pixel. The gold shown is the retuned `#e6c579`; note how
-> sparingly it appears (chips, active pill, set numbers, one primary button per
-> screen) — keep that restraint when applying it app-wide.
+- `onyx-programs-tokens-and-styles.css` — paste-ready CSS: component styles
+- `markup-snippets.md` — tier headers, flagship cards (all 6), influencer grid
+  (all 4), library link, build CTA — with inline SVGs, ready to paste into
+  `#scr-programs`
+- `Programs Redesign.dc.html` — the HTML prototype these specs were written
+  from. **Visual reference only — not for production use.**
 
 ## Files in the app to edit
-- `dashboard.html` — inline `<style>` block + the `#scr-dashboard` markup (header,
-  momentum strip, hero, **new programs rail**, tools grid); tab-bar icons.
-- `base.css` — if you prefer shared styles here (bump `?v=` on all pages that link it).
-- Font `<link>` in `<head>` of `dashboard.html` (and other pages if rolling out).
+- `dashboard.html` — inline `<style>` block (add the Onyx Programs rules,
+  scoped `#scr-programs …`) + the `#scr-programs` markup (replace emoji icons
+  and long-form tags on the 6 `#flagGrid` cards and 4 `.influencer-grid` cards
+  per `markup-snippets.md`; keep every `href`, id, and the `MARKET:STRIP`
+  markers exactly where they are).
+- `base.css` — only if you choose to move shared styles there instead (bump
+  `?v=` on every page that links it if so).

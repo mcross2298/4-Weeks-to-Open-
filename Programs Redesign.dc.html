@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;background:#e7e4de;font-family:'Manrope',system-ui,sans-serif;}
+  .prail::-webkit-scrollbar{display:none;}
+</style>
+</helmet>
+
+<section id="turn1" style="padding:60px 48px 90px;font-family:'Manrope',system-ui,sans-serif;">
+  <div style="max-width:900px;margin:0 auto 40px;">
+    <div style="font-family:'Archivo';font-weight:800;font-size:30px;letter-spacing:-.02em;color:#1c1a17;">Programs screen — Onyx</div>
+    <div style="font-size:15px;color:#6b6862;margin-top:8px;max-width:640px;line-height:1.55;">Continuing the Onyx dashboard's system onto the full "Browse all" Programs screen — same tokens (refined gold, Archivo/Manrope, glass depth), applied to the flagship/influencer tier structure that already exists in the app. Reference: <a href="#1a" style="color:#a9762f;">1a</a>.</div>
+  </div>
+
+  <div id="1a" style="display:flex;flex-direction:column;align-items:center;gap:18px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="font-family:'Archivo';font-weight:800;font-size:13px;letter-spacing:.14em;color:#fff;background:#1c1a17;border-radius:8px;padding:5px 11px;">1a</span>
+      <div>
+        <div style="font-family:'Archivo';font-weight:700;font-size:17px;color:#1c1a17;letter-spacing:-.01em;">Onyx — Programs</div>
+        <div style="font-size:12.5px;color:#6b6862;">Flagship tier (full cards) · Influencer tier (compact grid)</div>
+      </div>
+    </div>
+
+    <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" width="{{ 402 }}" height="{{ 874 }}" hint-size="402px,874px">
+      <div style="height:100%;display:flex;flex-direction:column;background:radial-gradient(120% 60% at 50% -10%,#171612 0%,#0a0a0b 46%);">
+        <div style="flex:1;overflow:auto;padding-top:58px;">
+
+          <!-- header -->
+          <div style="padding:6px 20px 4px;">
+            <div style="font-family:'Archivo';font-weight:700;font-size:11px;letter-spacing:.18em;color:#8b8b92;text-transform:uppercase;margin-bottom:8px;">Choose your path</div>
+            <div style="font-family:'Archivo';font-weight:800;font-size:26px;letter-spacing:-.02em;color:#f6f5f2;line-height:1.1;">Programs</div>
+            <div style="font-size:13px;font-weight:600;color:#a6a6ad;margin-top:6px;">10 training programs · pick one, or keep browsing anytime</div>
+          </div>
+
+          <!-- Flagship tier -->
+          <div style="display:flex;align-items:center;gap:10px;margin:26px 20px 14px;">
+            <span style="font-family:'Archivo';font-weight:800;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#e6c579;">★ Flagship Programs</span>
+            <div style="flex:1;height:1px;background:rgba(255,255,255,.08);"></div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px;padding:0 20px;margin-bottom:8px;">
+
+            <!-- Strength & Supersets -->
+            <a href="#" style="position:relative;display:block;border-radius:20px;padding:18px;overflow:hidden;text-decoration:none;background:linear-gradient(160deg,rgba(201,80,90,.16),rgba(20,20,22,.5));border:1px solid rgba(201,80,90,.3);border-top:2.5px solid #c9505a;" style-active="transform:scale(.985);">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                <div style="min-width:0;">
+                  <div style="width:34px;height:34px;border-radius:10px;background:rgba(201,80,90,.18);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e8828b" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>
+                  </div>
+                  <div style="display:inline-block;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#fda4af;background:rgba(201,80,90,.2);border:1px solid rgba(201,80,90,.4);border-radius:20px;padding:3px 10px;margin-bottom:9px;">Flagship</div>
+                  <div style="font-family:'Archivo';font-weight:800;font-size:18px;color:#f6f5f2;line-height:1.2;">Strength &amp; Supersets</div>
+                  <div style="font-size:12.5px;color:#c9c9cf;line-height:1.5;margin-top:5px;">Heavy compounds paired with high-volume supersets + AMRAP finishers</div>
+                </div>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><path d="M9 6l6 6-6 6"/></svg>
+              </div>
+              <div style="font-size:11px;font-weight:700;color:#8b8b92;letter-spacing:.06em;text-transform:uppercase;margin-top:12px;">6-Week Cycle · 5 Days</div>
+            </a>
+
+            <!-- Project Muscle Confusion -->
+            <a href="#" style="position:relative;display:block;border-radius:20px;padding:18px;overflow:hidden;text-decoration:none;background:linear-gradient(160deg,rgba(139,127,240,.16),rgba(20,20,22,.5));border:1px solid rgba(139,127,240,.28);border-top:2.5px solid #8b7ff0;" style-active="transform:scale(.985);">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                <div style="min-width:0;">
+                  <div style="width:34px;height:34px;border-radius:10px;background:rgba(139,127,240,.18);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b3aaf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+                  </div>
+                  <div style="display:inline-block;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#c4bdfa;background:rgba(139,127,240,.2);border:1px solid rgba(139,127,240,.4);border-radius:20px;padding:3px 10px;margin-bottom:9px;">Flagship</div>
+                  <div style="font-family:'Archivo';font-weight:800;font-size:18px;color:#f6f5f2;line-height:1.2;">Project Muscle Confusion</div>
+                  <div style="font-size:12.5px;color:#c9c9cf;line-height:1.5;margin-top:5px;">Supersets, pyramids, drop sets, AMRAP, and tempo</div>
+                </div>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><path d="M9 6l6 6-6 6"/></svg>
+              </div>
+              <div style="font-size:11px;font-weight:700;color:#8b8b92;letter-spacing:.06em;text-transform:uppercase;margin-top:12px;">7 Splits · 2 Weeks Each</div>
+            </a>
+
+            <!-- Mike Cross' Favorite Splits -->
+            <a href="#" style="position:relative;display:block;border-radius:20px;padding:18px;overflow:hidden;text-decoration:none;background:linear-gradient(160deg,rgba(216,180,99,.16),rgba(20,20,22,.5));border:1px solid rgba(216,180,99,.3);border-top:2.5px solid #d8b463;" style-active="transform:scale(.985);">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                <div style="min-width:0;">
+                  <div style="width:34px;height:34px;border-radius:10px;background:rgba(216,180,99,.18);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e6c579" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l3.5 2.5L12 4l4.5 6.5L20 8l-1.5 10h-13z"/></svg>
+                  </div>
+                  <div style="display:inline-block;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#e6c579;background:rgba(216,180,99,.2);border:1px solid rgba(216,180,99,.4);border-radius:20px;padding:3px 10px;margin-bottom:9px;">Flagship</div>
+                  <div style="font-family:'Archivo';font-weight:800;font-size:18px;color:#f6f5f2;line-height:1.2;">Mike Cross' Favorite Splits</div>
+                  <div style="font-size:12.5px;color:#c9c9cf;line-height:1.5;margin-top:5px;">5 personal splits across every major training style</div>
+                </div>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><path d="M9 6l6 6-6 6"/></svg>
+              </div>
+              <div style="font-size:11px;font-weight:700;color:#8b8b92;letter-spacing:.06em;text-transform:uppercase;margin-top:12px;">5 Splits · 23 Workouts</div>
+            </a>
+
+            <!-- Kitchen Sink -->
+            <a href="#" style="position:relative;display:block;border-radius:20px;padding:18px;overflow:hidden;text-decoration:none;background:linear-gradient(160deg,rgba(224,160,60,.16),rgba(20,20,22,.5));border:1px solid rgba(224,160,60,.28);border-top:2.5px solid #e0a03c;" style-active="transform:scale(.985);">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                <div style="min-width:0;">
+                  <div style="width:34px;height:34px;border-radius:10px;background:rgba(224,160,60,.18);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3c1.6 3 4 4.2 4 7.5A4 4 0 0 1 8 11c0-1 .3-1.7.8-2.4C8 9 7 10.3 7 12.5A5 5 0 0 0 17 12.5C17 8 13.5 6 12 3z" fill="#f0c078"/></svg>
+                  </div>
+                  <div style="display:inline-block;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#f0c078;background:rgba(224,160,60,.2);border:1px solid rgba(224,160,60,.4);border-radius:20px;padding:3px 10px;margin-bottom:9px;">Flagship</div>
+                  <div style="font-family:'Archivo';font-weight:800;font-size:18px;color:#f6f5f2;line-height:1.2;">Everything Under the Kitchen Sink</div>
+                  <div style="font-size:12.5px;color:#c9c9cf;line-height:1.5;margin-top:5px;">Six distinct training splits under one roof — the complete library</div>
+                </div>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><path d="M9 6l6 6-6 6"/></svg>
+              </div>
+              <div style="font-size:11px;font-weight:700;color:#8b8b92;letter-spacing:.06em;text-transform:uppercase;margin-top:12px;">6 Splits · Station-Anchored</div>
+            </a>
+
+            <!-- Modality Matrix -->
+            <a href="#" style="position:relative;display:block;border-radius:20px;padding:18px;overflow:hidden;text-decoration:none;background:linear-gradient(160deg,rgba(111,119,224,.16),rgba(20,20,22,.5));border:1px solid rgba(111,119,224,.28);border-top:2.5px solid #6f77e0;" style-active="transform:scale(.985);">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                <div style="min-width:0;">
+                  <div style="width:34px;height:34px;border-radius:10px;background:rgba(111,119,224,.18);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a3a8f2" stroke-width="2" stroke-linejoin="round"><path d="M12 2.5 20 7v10l-8 4.5L4 17V7z"/></svg>
+                  </div>
+                  <div style="display:inline-block;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a3a8f2;background:rgba(111,119,224,.2);border:1px solid rgba(111,119,224,.4);border-radius:20px;padding:3px 10px;margin-bottom:9px;">Flagship</div>
+                  <div style="font-family:'Archivo';font-weight:800;font-size:18px;color:#f6f5f2;line-height:1.2;">The Modality Matrix</div>
+                  <div style="font-size:12.5px;color:#c9c9cf;line-height:1.5;margin-top:5px;">Three phases, three modalities — dumbbell, barbell, cable</div>
+                </div>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><path d="M9 6l6 6-6 6"/></svg>
+              </div>
+              <div style="font-size:11px;font-weight:700;color:#8b8b92;letter-spacing:.06em;text-transform:uppercase;margin-top:12px;">15 Weeks · 3 Phases · 4-Day Split</div>
+            </a>
+
+            <!-- High-Volume -->
+            <a href="#" style="position:relative;display:block;border-radius:20px;padding:18px;overflow:hidden;text-decoration:none;background:linear-gradient(160deg,rgba(159,191,74,.16),rgba(20,20,22,.5));border:1px solid rgba(159,191,74,.28);border-top:2.5px solid #9fbf4a;" style-active="transform:scale(.985);">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                <div style="min-width:0;">
+                  <div style="width:34px;height:34px;border-radius:10px;background:rgba(159,191,74,.18);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c3dc8f" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+                  </div>
+                  <div style="display:inline-block;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#c3dc8f;background:rgba(159,191,74,.2);border:1px solid rgba(159,191,74,.4);border-radius:20px;padding:3px 10px;margin-bottom:9px;">Flagship</div>
+                  <div style="font-family:'Archivo';font-weight:800;font-size:18px;color:#f6f5f2;line-height:1.2;">High-Volume Training Template</div>
+                  <div style="font-size:12.5px;color:#c9c9cf;line-height:1.5;margin-top:5px;">Compound-dominant into full supersets, into high-set finishers</div>
+                </div>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><path d="M9 6l6 6-6 6"/></svg>
+              </div>
+              <div style="font-size:11px;font-weight:700;color:#8b8b92;letter-spacing:.06em;text-transform:uppercase;margin-top:12px;">4-Week Block · 5–6 Sets · 15–25 Reps</div>
+            </a>
+
+          </div>
+
+          <!-- Influencer tier -->
+          <div style="display:flex;align-items:center;gap:10px;margin:24px 20px 14px;">
+            <span style="font-family:'Archivo';font-weight:800;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8b8b92;">Influencer Programs</span>
+            <div style="flex:1;height:1px;background:rgba(255,255,255,.08);"></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px;margin-bottom:8px;">
+
+            <a href="#" style="position:relative;display:block;border-radius:16px;padding:14px;overflow:hidden;text-decoration:none;background:linear-gradient(160deg,rgba(29,158,117,.14),rgba(20,20,22,.5));border:1px solid rgba(29,158,117,.26);border-top:2px solid #1d9e75;" style-active="transform:scale(.98);">
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(29,158,117,.18);display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6bd9b3" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>
+              </div>
+              <div style="font-family:'Archivo';font-weight:800;font-size:14px;color:#f4f3f1;line-height:1.2;">STNDR</div>
+              <div style="font-size:11px;color:#8b8b92;margin-top:4px;line-height:1.4;">Structured progressive overload</div>
+              <div style="font-size:10px;font-weight:700;color:#7d7d84;letter-spacing:.06em;text-transform:uppercase;margin-top:8px;">4 Programs</div>
+            </a>
+
+            <a href="#" style="position:relative;display:block;border-radius:16px;padding:14px;overflow:hidden;text-decoration:none;background:linear-gradient(160deg,rgba(216,90,48,.14),rgba(20,20,22,.5));border:1px solid rgba(216,90,48,.26);border-top:2px solid #d85a30;" style-active="transform:scale(.98);">
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(216,90,48,.18);display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f0a583" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+              </div>
+              <div style="font-family:'Archivo';font-weight:800;font-size:14px;color:#f4f3f1;line-height:1.2;">Daily Pump</div>
+              <div style="font-size:11px;color:#8b8b92;margin-top:4px;line-height:1.4;">Pump protocols, in and out fast</div>
+              <div style="font-size:10px;font-weight:700;color:#7d7d84;letter-spacing:.06em;text-transform:uppercase;margin-top:8px;">10 Workouts</div>
+            </a>
+
+            <a href="#" style="position:relative;display:block;border-radius:16px;padding:14px;overflow:hidden;text-decoration:none;background:linear-gradient(160deg,rgba(55,138,221,.14),rgba(20,20,22,.5));border:1px solid rgba(55,138,221,.26);border-top:2px solid #378add;" style-active="transform:scale(.98);">
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(55,138,221,.18);display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8fbdec" stroke-width="2" stroke-linecap="round"><path d="M7 12h10M4 9v6M8 6v12M16 6v12M20 9v6"/></svg>
+              </div>
+              <div style="font-family:'Archivo';font-weight:800;font-size:14px;color:#f4f3f1;line-height:1.2;">Daily Gainz</div>
+              <div style="font-size:11px;color:#8b8b92;margin-top:4px;line-height:1.4;">Volume built for size</div>
+              <div style="font-size:10px;font-weight:700;color:#7d7d84;letter-spacing:.06em;text-transform:uppercase;margin-top:8px;">8 Programs</div>
+            </a>
+
+            <a href="#" style="position:relative;display:block;border-radius:16px;padding:14px;overflow:hidden;text-decoration:none;background:linear-gradient(160deg,rgba(99,153,34,.14),rgba(20,20,22,.5));border:1px solid rgba(99,153,34,.26);border-top:2px solid #639922;" style-active="transform:scale(.98);">
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(99,153,34,.18);display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b2d97f" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2"/></svg>
+              </div>
+              <div style="font-family:'Archivo';font-weight:800;font-size:14px;color:#f4f3f1;line-height:1.2;">PSU Football</div>
+              <div style="font-size:11px;color:#8b8b92;margin-top:4px;line-height:1.4;">Strength &amp; conditioning</div>
+              <div style="font-size:10px;font-weight:700;color:#7d7d84;letter-spacing:.06em;text-transform:uppercase;margin-top:8px;">Strength Program</div>
+            </a>
+
+          </div>
+
+          <!-- Exercise library link -->
+          <div style="padding:22px 20px 0;">
+            <a href="#" style="display:flex;align-items:center;gap:12px;background:rgba(216,180,99,.08);border:1px solid rgba(216,180,99,.24);border-radius:16px;padding:14px 16px;text-decoration:none;" style-active="transform:scale(.985);">
+              <div style="width:32px;height:32px;border-radius:9px;background:rgba(216,180,99,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e6c579" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H12v16H5.5A1.5 1.5 0 0 1 4 18.5zM20 5.5A1.5 1.5 0 0 0 18.5 4H12v16h6.5A1.5 1.5 0 0 0 20 18.5z"/></svg>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-family:'Archivo';font-weight:800;font-size:14px;color:#e6c579;">Exercise Library</div>
+                <div style="font-size:11px;color:#8b8b92;font-weight:600;margin-top:1px;">577 exercises · search &amp; substitute</div>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 6l6 6-6 6"/></svg>
+            </a>
+          </div>
+
+          <!-- Build your own CTA -->
+          <div style="padding:14px 20px 24px;">
+            <a href="#" style="display:block;border-radius:18px;border:1.5px dashed rgba(216,180,99,.3);padding:24px 18px;text-align:center;text-decoration:none;background:rgba(255,255,255,.02);" style-active="transform:scale(.985);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e6c579" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:10px;"><path d="M12 5v14M5 12h14"/></svg>
+              <div style="font-family:'Archivo';font-weight:800;font-size:15px;color:#f4f3f1;margin-bottom:4px;">Build Your Own Program</div>
+              <div style="font-size:12px;color:#8b8b92;line-height:1.5;">Custom splits from the full exercise catalog</div>
+            </a>
+          </div>
+
+        </div>
+
+        <!-- tab bar -->
+        <div style="flex-shrink:0;display:flex;padding:10px 8px 30px;background:rgba(10,10,11,.82);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.07);">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6b6b72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7M6 9.5V20h12V9.5"/></svg>
+            <span style="font-size:9.5px;font-weight:700;color:#6b6b72;">Home</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#e6c579" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>
+            <span style="font-size:9.5px;font-weight:700;color:#e6c579;">Programs</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6b6b72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1.6 3 4 4.2 4 7.5A4 4 0 0 1 8 11c0-1 .3-1.7.8-2.4C8 9 7 10.3 7 12.5A5 5 0 0 0 17 12.5"/></svg>
+            <span style="font-size:9.5px;font-weight:700;color:#6b6b72;">Conditioning</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6b6b72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8c-2-3 1-5 2-5-1 2 .5 3 1.5 4A5 5 0 1 1 8 8.5C9 10 11 10 12 8z"/></svg>
+            <span style="font-size:9.5px;font-weight:700;color:#6b6b72;">Nutrition</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6b6b72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2.5"/><path d="M4 9h16M9 3v3M15 3v3"/></svg>
+            <span style="font-size:9.5px;font-weight:700;color:#6b6b72;">History</span>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+</section>
+
+</x-dc>
+</body>
+</html>

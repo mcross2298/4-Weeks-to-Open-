@@ -1,209 +1,197 @@
-# Onyx — markup snippets & line icons
+# Markup snippets — Onyx Programs screen
 
-Drop-in HTML for the redesigned `#scr-dashboard`. Classes match
-`onyx-tokens-and-styles.css`. **Keep every existing id and `onclick`** — only the
-structure/styling around them changes. Inline SVGs replace all emoji.
+Paste-ready replacements for the existing `#scr-programs` markup in
+`dashboard.html`. Every `href`, id, and the `MARKET:STRIP` comment markers are
+preserved exactly — only the inner content of each card changes (emoji → SVG
+icon chip, long-form tag → short "Flagship" pill + trailing chevron, once per
+card).
 
----
-
-## 1. Header (topbar)
+## Top bar
 
 ```html
 <div class="topbar">
-  <div class="topbar-left">
-    <div class="avatar">MC</div>
-    <div>
-      <div class="topbar-sub" id="todayDate"></div>
-      <div class="topbar-title" id="greeting">Good morning, Mike</div>
-    </div>
-  </div>
-  <!-- keep the existing calendar/PM handlers on this control -->
-  <div class="topbar-icon" onclick="if(window.MCCalendar)MCCalendar.toggle();" title="Search / calendar">
-    <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-      <circle cx="11" cy="11" r="7" stroke="#c9c9cf" stroke-width="2"/>
-      <path d="M20 20l-3.2-3.2" stroke="#c9c9cf" stroke-width="2" stroke-linecap="round"/>
-    </svg>
+  <div>
+    <div class="topbar-title">Programs</div>
+    <div class="topbar-sub" id="flagCount"></div>
   </div>
 </div>
 ```
+(unchanged structure — styling comes from the CSS file)
 
-## 2. Streak strip (existing `.momentum-strip` — restyled, emoji → SVG)
+## Flagship tier — `#flagGrid`
 
 ```html
-<div class="momentum-strip show" id="momentumStrip">
-  <span class="ms-flame">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 3c1.6 3 4 4.2 4 7.5A4 4 0 0 1 8 11c0-1 .3-1.7.8-2.4C8 9 7 10.3 7 12.5A5 5 0 0 0 17 12.5C17 8 13.5 6 12 3z" fill="#e6c579"/></svg>
+<div class="tier-label flag">★ Flagship Programs</div>
+
+<div class="prog-cards lay-stack" id="flagGrid">
+
+  <a href="cat-strength.html" class="cat-card ss">
+    <svg class="cat-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    <span class="cat-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e8828b" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>
+    </span>
+    <div class="cat-tag">Flagship</div>
+    <div class="cat-name">Strength &amp; Supersets</div>
+    <div class="cat-meta">Heavy low-rep compounds paired with high-volume supersets and AMRAP finishers for raw strength and size.</div>
+    <div class="cat-count">6-Week Cycle · 5 Days</div>
+  </a>
+
+  <a href="cat-pmc.html" class="cat-card pmc">
+    <svg class="cat-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    <span class="cat-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b3aaf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+    </span>
+    <div class="cat-tag">Flagship</div>
+    <div class="cat-name">Project Muscle Confusion</div>
+    <div class="cat-meta">Constantly varied supersets, pyramids, drop sets, AMRAP and tempo work that never lets your muscles adapt.</div>
+    <div class="cat-count">7 Splits · 2 Weeks Each</div>
+  </a>
+
+  <a href="cat-mc.html" class="cat-card mc">
+    <svg class="cat-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    <span class="cat-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e6c579" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l3.5 2.5L12 4l4.5 6.5L20 8l-1.5 10h-13z"/></svg>
+    </span>
+    <div class="cat-tag">Flagship</div>
+    <div class="cat-name">Mike Cross' Favorite Splits</div>
+    <div class="cat-meta">Mike's five personal splits spanning every major training style — the way he actually trains.</div>
+    <div class="cat-count">5 Splits · 23 Workouts</div>
+  </a>
+
+  <a href="cat-ks.html" class="cat-card ks">
+    <svg class="cat-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    <span class="cat-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3c1.6 3 4 4.2 4 7.5A4 4 0 0 1 8 11c0-1 .3-1.7.8-2.4C8 9 7 10.3 7 12.5A5 5 0 0 0 17 12.5C17 8 13.5 6 12 3z" fill="#f0c078"/></svg>
+    </span>
+    <div class="cat-tag">Flagship</div>
+    <div class="cat-name">Everything Under the Kitchen Sink</div>
+    <div class="cat-meta">Six distinct training splits under one roof — the complete MC arsenal, station-anchored for commercial gym efficiency.</div>
+    <div class="cat-count">6 Splits · Station-Anchored</div>
+  </a>
+
+  <a href="cat-mm.html" class="cat-card mm">
+    <svg class="cat-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    <span class="cat-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a3a8f2" stroke-width="2" stroke-linejoin="round"><path d="M12 2.5 20 7v10l-8 4.5L4 17V7z"/></svg>
+    </span>
+    <div class="cat-tag">Flagship</div>
+    <div class="cat-name">The Modality Matrix</div>
+    <div class="cat-meta">Three phases, three modalities — dumbbell isolation, barbell strength, cable conditioning — one complete system.</div>
+    <div class="cat-count">15 Weeks · 3 Phases · 4-Day Split</div>
+  </a>
+
+  <a href="cat-hv.html" class="cat-card hv">
+    <svg class="cat-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    <span class="cat-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c3dc8f" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+    </span>
+    <div class="cat-tag">Flagship</div>
+    <div class="cat-name">High-Volume Training Template</div>
+    <div class="cat-meta">Compound-dominant into full supersets, into high-set pyramids, into bodyweight &amp; accessory density — trisets banned throughout.</div>
+    <div class="cat-count">4-Week Block · 5–6 Sets · 15–25 Reps</div>
+  </a>
+
+</div><!-- /#flagGrid -->
+```
+
+> The `.ss-glow` / `.ss-sheen` / `.pmc-glow` / `.pmc-sheen` / `.mc-glow` /
+> `.mc-sheen` / `.ks-glow` / `.ks-sheen` decorative spans from the current
+> markup are dropped — Onyx's flat accent-tint gradient replaces the old
+> animated glow/sheen treatment for a calmer, more premium feel. If the owner
+> wants to keep the breathing/sheen animation, layer the existing keyframes
+> back in unchanged; they're purely additive and don't conflict with the new
+> tokens.
+
+Leave `#bonusCardSlot` and `#collectionsSlot` exactly as they are — untouched,
+JS-populated, and they inherit `.cat-card` styling automatically.
+
+## Influencer tier — `.influencer-grid`
+
+Keep this entire block, including both `MARKET:STRIP` comments, exactly where
+it is in the file — only the card internals change:
+
+```html
+<!-- MARKET:STRIP influencer-programs START — licensed content, see content-manifest.json -->
+<div class="tier-label influencer">Influencer Programs</div>
+
+<div class="influencer-grid">
+
+  <a href="cat-stndr.html" class="cat-card stndr">
+    <span class="cat-icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6bd9b3" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>
+    </span>
+    <div class="cat-name">STNDR</div>
+    <div class="cat-meta">CBUM-style structured lifting built on progressive overload, supersets and smart periodization.</div>
+    <div class="cat-count">5 Programs</div>
+  </a>
+
+  <a href="cat-pump-new4.html" class="cat-card pump">
+    <span class="cat-icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f0a583" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+    </span>
+    <div class="cat-name">Daily Pump</div>
+    <div class="cat-meta">Fast, high-rep isolation work that chases maximum pump and muscle fullness.</div>
+    <div class="cat-count">10 Workouts</div>
+  </a>
+
+  <a href="cat-gainz.html" class="cat-card gainz" id="gainzCard">
+    <span class="cat-icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8fbdec" stroke-width="2" stroke-linecap="round"><path d="M7 12h10M4 9v6M8 6v12M16 6v12M20 9v6"/></svg>
+    </span>
+    <div class="cat-name">Daily Gainz</div>
+    <div class="cat-meta">Bradley Martyn volume training — daily builders engineered for steady, consistent size.</div>
+    <div class="gz-live" id="gzLive" style="display:none;">
+      <div class="gz-streak" id="gzStreak"></div>
+    </div>
+    <div class="cat-count">8 Programs</div>
+  </a>
+
+  <a href="cat-psu.html" class="cat-card psu">
+    <span class="cat-icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b2d97f" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2"/></svg>
+    </span>
+    <div class="cat-name">PSU Football</div>
+    <div class="cat-meta">Penn State's strength and conditioning system, built for real athletic performance.</div>
+    <div class="cat-count">1 Program</div>
+  </a>
+
+</div>
+<!-- MARKET:STRIP influencer-programs END -->
+```
+
+> `#gzLive` / `#gzStreak` keep their existing `.gz-live` / `.gz-streak` classes
+> and inline `display:none` toggle — `mc-*.js` continues to control them
+> unmodified. The `.gz-sheen` decorative span is dropped for the same calmer
+> Onyx treatment noted above; re-add if the owner wants to keep it.
+
+Leave `#pubTier` / `#pubProgList` and `#customTier` / `#customProgList`
+untouched — owner-only, JS-toggled, inherit `.cat-card` styling automatically.
+
+## Exercise Library link
+
+```html
+<a href="exercise-library.html" class="lib-link">
+  <span class="lib-icon">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e6c579" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H12v16H5.5A1.5 1.5 0 0 1 4 18.5zM20 5.5A1.5 1.5 0 0 0 18.5 4H12v16h6.5A1.5 1.5 0 0 0 20 18.5z"/></svg>
   </span>
-  <div class="ms-body">
-    <div class="ms-streak" id="msStreak">12-day streak</div>
-    <div class="ms-sub" id="msSub">Train today to keep it alive</div>
+  <div style="flex:1;min-width:0;">
+    <div class="lib-name">Exercise Library</div>
+    <div class="lib-sub">577 exercises · search &amp; substitute</div>
   </div>
-  <div class="ms-badge" id="msBadge">DAY 3</div>
-</div>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+</a>
 ```
 
-## 3. Hero — Continue / Resume (existing `.hero-card`)
+## Build a Program CTA
 
 ```html
-<div class="hero-wrap">
-  <div class="hero-eyebrow">Continue where you left off</div>
-  <div class="hero-card" id="heroCard" onclick="openActiveProgram()">
-    <div class="hero-glow"></div>
-    <div class="hero-sheen"></div>
-    <div class="hero-inner">
-      <div class="hero-top-row">
-        <div>
-          <div class="hero-badge" id="heroBadge">Active Program</div>
-          <div class="hero-name" id="heroName">Strength &amp; Supersets</div>
-          <div class="hero-desc" id="heroDesc">Week 2 · Day 3 · Push</div>
-        </div>
-        <!-- progress ring: set stroke-dashoffset from cycle % (r=26, C≈163) -->
-        <div class="hero-ring">
-          <svg width="60" height="60" viewBox="0 0 60 60" style="transform:rotate(-90deg)">
-            <circle cx="30" cy="30" r="26" stroke="rgba(255,255,255,.08)" stroke-width="5" fill="none"/>
-            <circle cx="30" cy="30" r="26" stroke="#e6c579" stroke-width="5" fill="none"
-                    stroke-linecap="round" stroke-dasharray="163" stroke-dashoffset="62"/>
-          </svg>
-          <div class="hero-ring-center">
-            <div class="hero-ring-num" id="heroDay">62%</div>
-            <div class="hero-ring-lbl">CYCLE</div>
-          </div>
-        </div>
-      </div>
-      <div class="hero-phases" id="heroPhases">
-        <span class="phase-pill active">Chest</span>
-        <span class="phase-pill">Shoulders</span>
-        <span class="phase-pill">Triceps</span>
-        <span class="phase-pill">10 lifts</span>
-      </div>
-      <div class="hero-tap" id="heroTap">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="#1a1409"><path d="M7 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 7 5.5z"/></svg>
-        Resume workout
-      </div>
-    </div>
-  </div>
-</div>
-```
-> Ring geometry: `dashoffset = 163 * (1 - pct/100)`. For 62% → ~62. Wire this to
-> the same value that drives the current cycle/day display.
-
-## 4. Programs rail (NEW — insert after hero, before Training Tools)
-
-Ideally render this from the same program data as `#flagGrid` (`mc-pm-data.js`) so
-it never drifts. Static reference markup:
-
-```html
-<div class="prog-rail-head">
-  <div class="prog-rail-title">Programs</div>
-  <div class="prog-rail-link" onclick="switchTab('programs')">Browse all</div>
-</div>
-<div class="prog-rail">
-  <a href="cat-strength.html" class="rail-card ss">
-    <div class="rail-icon">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#e8828b" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>
-    </div>
-    <div class="rail-name">Strength &amp; Supersets</div>
-    <div class="rail-meta">6-week cycle · 5 days</div>
-  </a>
-  <a href="cat-pmc.html" class="rail-card pmc">
-    <div class="rail-icon">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#b3aaf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
-    </div>
-    <div class="rail-name">Project Muscle Confusion</div>
-    <div class="rail-meta">7 splits · advanced</div>
-  </a>
-  <a href="cat-mc.html" class="rail-card mc">
-    <div class="rail-icon">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#e6c579" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l3.5 2.5L12 4l4.5 6.5L20 8l-1.5 10h-13z"/></svg>
-    </div>
-    <div class="rail-name">Mike's Favorite Splits</div>
-    <div class="rail-meta">5 splits · all styles</div>
-  </a>
-  <!-- + cat-ks (.ks), cat-mm (.mm), cat-hv (.hv) with matching accents -->
-</div>
+<a href="build-program.html" class="build-cta">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e6c579" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+  <div class="build-cta-title">Build a Program</div>
+  <div class="build-cta-sub">Multi-week custom program with its own hero card, schedule and color rail.</div>
+</a>
 ```
 
-## 5. Training tools (existing `.tools-grid` — emoji → SVG)
-
-```html
-<div class="tools-grid">
-  <a href="exercise-library.html" class="tool-card gold">
-    <div class="tool-icon-wrap">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e6c579" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H12v16H5.5A1.5 1.5 0 0 1 4 18.5zM20 5.5A1.5 1.5 0 0 0 18.5 4H12v16h6.5A1.5 1.5 0 0 0 20 18.5z"/></svg>
-    </div>
-    <div class="tool-name">Exercise Library</div>
-    <div class="tool-sub" id="libCountDash">577 exercises</div>
-  </a>
-  <a href="build-workout.html" class="tool-card">
-    <div class="tool-icon-wrap">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9c9cf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6M3 21l1-4L15 6l3 3L7 20z"/></svg>
-    </div>
-    <div class="tool-name">Build Your Own</div>
-    <div class="tool-sub">Custom workouts</div>
-  </a>
-  <a href="stats.html" class="tool-card">
-    <div class="tool-icon-wrap">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9c9cf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
-    </div>
-    <div class="tool-name">Progress</div>
-    <div class="tool-sub">History &amp; PRs</div>
-  </a>
-  <a href="dashboard.html?tab=nutrition" class="tool-card">
-    <div class="tool-icon-wrap">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9c9cf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8c-2-3 1-5 2-5-1 2 .5 3 1.5 4A5 5 0 1 1 8 8.5C9 10 11 10 12 8z"/></svg>
-    </div>
-    <div class="tool-name">Nutrition</div>
-    <div class="tool-sub">Macros &amp; meals</div>
-  </a>
-</div>
-```
-
-## 6. Tab bar (existing `.tab-bar` — emoji → SVG; keep switchTab handlers)
-
-```html
-<div class="tab-bar">
-  <div class="tab active" id="tab-dashboard" onclick="switchTab('dashboard')">
-    <div class="tab-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#e6c579" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7M6 9.5V20h12V9.5"/></svg></div>
-    <div>Home</div>
-  </div>
-  <div class="tab" id="tab-programs" onclick="switchTab('programs')">
-    <div class="tab-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6b6b72" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg></div>
-    <div>Programs</div>
-  </div>
-  <div class="tab" id="tab-conditioning" onclick="switchTab('conditioning')">
-    <div class="tab-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6b6b72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1.6 3 4 4.2 4 7.5A4 4 0 0 1 8 11c0-1 .3-1.7.8-2.4C8 9 7 10.3 7 12.5A5 5 0 0 0 17 12.5"/></svg></div>
-    <div>Conditioning</div>
-  </div>
-  <div class="tab" id="tab-nutrition" onclick="switchTab('nutrition')">
-    <div class="tab-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6b6b72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8c-2-3 1-5 2-5-1 2 .5 3 1.5 4A5 5 0 1 1 8 8.5C9 10 11 10 12 8z"/></svg></div>
-    <div>Nutrition</div>
-  </div>
-  <div class="tab" id="tab-stats" onclick="location.href='stats.html'">
-    <div class="tab-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6b6b72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2.5"/><path d="M4 9h16M9 3v3M15 3v3"/></svg></div>
-    <div>History</div>
-  </div>
-</div>
-```
-
----
-
-## Helper CSS the snippets assume
-Add alongside `onyx-tokens-and-styles.css`:
-
-```css
-.hero-inner{ position:relative;padding:20px 20px 18px; }
-.hero-top-row{ display:flex;align-items:flex-start;justify-content:space-between;gap:14px; }
-.hero-ring{ position:relative;width:60px;height:60px;flex-shrink:0; }
-.hero-ring-center{ position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center; }
-.hero-phases{ display:flex;gap:7px;flex-wrap:wrap;margin:16px 0; }
-.momentum-strip{ display:flex;align-items:center;gap:9px; }
-.ms-flame{ line-height:0; }
-.topbar-icon{ display:flex;align-items:center;justify-content:center; }
-```
-
-## Icon reference
-search · flame · dumbbell (programs/strength) · bolt (muscle confusion) ·
-star-badge (favorites) · book (library) · wrench (build) · bars (progress) ·
-apple (nutrition) · home · calendar (history) · play (resume). All are 2px-stroke,
-round-cap line icons — swap stroke color to match context (accent vs `#c9c9cf`
-vs `#6b6b72`).
+(replaces the old dashed `.cat-card` CTA — same destination, same intent, new
+class names `.build-cta` / `.build-cta-title` / `.build-cta-sub` defined in
+`onyx-programs-tokens-and-styles.css`)
