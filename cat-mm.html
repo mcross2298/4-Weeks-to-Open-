@@ -133,8 +133,11 @@
   .cond-desc { font-size: 12px; color: #92400e; }
   .cond-arrow { font-size: 16px; color: #d97706; }
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="mc-program-hero.css"/>
 </head>
 <body>
+<div id="programHero"></div>
 <div class="page-wrap">
   <div class="back-nav">
     <a href="index.html">← Programs</a>
@@ -274,5 +277,26 @@
 
 </div>
 <script src="mc-nav.js"></script>
+<script src="mc-program-hero.js"></script>
+<script>
+MCProgramHero.mount(document.getElementById('programHero'), {
+  variant: 'full',
+  accent: '#6366f1',
+  iconKey: 'mm',
+  tierLabel: 'Flagship',
+  name: 'The Modality Matrix',
+  tagline: 'Three phases, three modalities — dumbbell isolation, barbell strength, cable conditioning — one complete system.',
+  weeks: 15,
+  daysPerWeek: 4,
+  level: 'Adv.',
+  scheduleLabel: '3 phases',
+  whatsInside: [
+    { icon: 'chevron', title: 'Three modalities, three phases' },
+    { icon: 'bars', title: 'Dumbbell, then barbell, then cable — 15 weeks covering every equipment type.' }
+  ],
+  startHref: 'mm-p1.html',
+  backHref: 'index.html'
+});
+</script>
 </body>
 </html>

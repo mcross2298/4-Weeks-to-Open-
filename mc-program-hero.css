@@ -1,0 +1,90 @@
+/* ==========================================================================
+   mc-program-hero.css — "Onyx" Program Landing hero
+   --------------------------------------------------------------------------
+   Per README.md (Handoff: Program Landing Page). Renders above each program
+   entry/split page's existing content via mc-program-hero.js. Everything is
+   scoped under .pl-* so it can't leak into a page's own styles. Per-program
+   accent is supplied at render time as inline custom properties on .pl-hero
+   (--pl-accent / --pl-accent-rgb / --pl-accent-light), not the page's own
+   --accent, so this component never depends on a host page defining one.
+   ========================================================================== */
+.pl-hero{
+  position:relative;overflow:hidden;
+  background:radial-gradient(120% 60% at 50% -6%, rgba(var(--pl-accent-rgb),.16) 0%, #0a0a0b 60%);
+  padding-bottom:26px;
+  font-family:'Manrope',system-ui,sans-serif;
+  color:#e5e5e5;
+}
+.pl-hero *{box-sizing:border-box;}
+.pl-hero-inner{max-width:680px;margin:0 auto;}
+
+/* top bar */
+.pl-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 4px;position:relative;z-index:1;}
+.pl-icon-btn{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;}
+.pl-tier-label{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8b8b92;}
+
+/* hero image band */
+.pl-imgband{position:relative;margin:14px 18px 0;border-radius:22px;overflow:hidden;height:190px;
+  background:repeating-linear-gradient(135deg, rgba(var(--pl-accent-rgb),.14) 0px, rgba(var(--pl-accent-rgb),.14) 2px, #141314 2px, #141314 14px);
+  border:1px solid rgba(var(--pl-accent-rgb),.3);
+}
+.pl-imgband-scrim{position:absolute;inset:0;background:linear-gradient(0deg,#0a0a0b 0%,rgba(10,10,11,.15) 55%,rgba(10,10,11,.55) 100%);}
+.pl-sheen{position:absolute;top:0;bottom:0;left:0;width:80px;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,.10),transparent);animation:pl-sheen-slide 7s ease-in-out infinite;}
+@keyframes pl-sheen-slide{0%{transform:translateX(-120%) skewX(-18deg);}55%,100%{transform:translateX(320%) skewX(-18deg);}}
+.pl-badge{position:absolute;top:14px;left:14px;width:44px;height:44px;border-radius:13px;
+  background:rgba(var(--pl-accent-rgb),.18);border:1px solid rgba(var(--pl-accent-rgb),.3);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -8px rgba(var(--pl-accent-rgb),.55);
+}
+
+/* title block */
+.pl-title-block{padding:16px 20px 0;position:relative;z-index:1;}
+.pl-tier-pill{display:inline-block;font-family:'Archivo',system-ui,sans-serif;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--pl-accent-light);background:rgba(var(--pl-accent-rgb),.14);border:1px solid rgba(var(--pl-accent-rgb),.3);
+  border-radius:20px;padding:4px 11px;margin-bottom:12px;
+}
+.pl-name{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:27px;line-height:1.08;letter-spacing:-.02em;color:#f6f5f2;}
+.pl-tagline{font-size:13.5px;font-weight:500;color:#a6a6ad;line-height:1.55;margin-top:9px;}
+
+/* stat strip */
+.pl-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:18px 20px 0;position:relative;z-index:1;}
+.pl-stat{border-radius:14px;padding:12px 6px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);text-align:center;}
+.pl-stat-v{font-family:'Archivo',system-ui,sans-serif;font-weight:900;font-size:17px;color:#f4f3f1;}
+.pl-stat-l{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7d7d84;margin-top:3px;}
+
+/* "this week" schedule strip */
+.pl-sched{padding:24px 20px 0;position:relative;z-index:1;}
+.pl-sched-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;}
+.pl-sched-title{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:16px;letter-spacing:-.01em;color:#f4f3f1;}
+.pl-sched-tag{font-size:12px;font-weight:700;color:var(--pl-accent-light);}
+.pl-sched-row{display:flex;gap:8px;}
+.pl-day{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.pl-day-swatch{width:100%;aspect-ratio:1;border-radius:11px;display:flex;align-items:center;justify-content:center;font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:11px;}
+.pl-day.on .pl-day-swatch{background:rgba(var(--pl-accent-rgb),.16);border:1px solid rgba(var(--pl-accent-rgb),.4);color:var(--pl-accent);}
+.pl-day.off .pl-day-swatch{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);color:#4a4a50;}
+.pl-day-label{font-size:8.5px;font-weight:700;color:#7d7d84;letter-spacing:.02em;}
+
+/* what's inside */
+.pl-inside{padding:26px 20px 0;position:relative;z-index:1;}
+.pl-inside-title-h{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:16px;letter-spacing:-.01em;color:#f4f3f1;margin-bottom:10px;}
+.pl-inside-list{display:flex;flex-direction:column;gap:9px;}
+.pl-inside-row{display:flex;align-items:flex-start;gap:11px;border-radius:15px;padding:13px 14px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);text-decoration:none;color:inherit;
+}
+a.pl-inside-row{transition:background .12s ease;}
+a.pl-inside-row:active{background:rgba(255,255,255,.06);}
+.pl-inside-icon{width:30px;height:30px;border-radius:9px;background:rgba(var(--pl-accent-rgb),.14);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pl-inside-title{font-family:'Archivo',system-ui,sans-serif;font-weight:700;font-size:13.5px;color:#f4f3f1;}
+.pl-inside-body{font-size:12px;color:#8b8b92;margin-top:2px;line-height:1.45;}
+
+/* CTA — the design spec pins this to the viewport bottom, but this hero sits
+   above a page's existing content (timers, nav bars, finish banners already
+   use fixed positioning there), so it renders in normal flow at the end of
+   the hero block instead of position:fixed. */
+.pl-cta-wrap{padding:24px 20px 0;position:relative;z-index:1;}
+.pl-cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:15px;border:none;border-radius:16px;cursor:pointer;
+  background:linear-gradient(135deg,var(--pl-accent-light),var(--pl-accent));
+  box-shadow:0 14px 28px -10px rgba(var(--pl-accent-rgb),.47);
+  font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:15.5px;color:#14110b;letter-spacing:.01em;
+}
+.pl-cta:active{transform:scale(.99);}
+.pl-cta-hint{display:block;width:100%;background:none;border:none;text-align:center;font-size:12px;font-weight:700;color:#8b8b92;margin-top:11px;cursor:pointer;font-family:inherit;padding:4px;}

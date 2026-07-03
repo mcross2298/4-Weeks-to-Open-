@@ -135,9 +135,12 @@
 /* ── WORKOUT CONTENT ── */
 .workout-content{max-width:680px;margin:20px auto 0;padding:0 16px;}
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="mc-program-hero.css"/>
 </head>
 <body>
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
+<div id="programHero"></div>
 
 <!-- ═══════════════════════════════════
      VIEW 1: DASHBOARD
@@ -1836,5 +1839,22 @@ buildStrip();
 <script src="mc-sw-update.js?v=45"></script>
 <script src="mc-nav.js"></script>
 <script src="mc-resume.js"></script>
+<script src="mc-program-hero.js"></script>
+<script>
+MCProgramHero.mount(document.getElementById('programHero'), {
+  variant: 'trimmed',
+  accent: '#7F77DD',
+  iconKey: 'pmc',
+  tierLabel: 'Flagship',
+  name: 'Project Muscle Confusion',
+  tagline: 'Supersets, pyramids, drop sets, AMRAP, and tempo',
+  whatsInside: [
+    { icon: 'chevron', title: 'A new stimulus every 2 weeks' },
+    { icon: 'bars', title: 'Supersets, pyramids, drop sets, tempo and AMRAP rotate through all 7 splits.' }
+  ],
+  ctaLabel: 'Browse splits',
+  backHref: 'index.html'
+});
+</script>
 </body>
 </html>
