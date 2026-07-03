@@ -50,11 +50,13 @@
     mc: { fill: 'none', d: '<path d="M4 8l3.5 2.5L12 4l4.5 6.5L20 8l-1.5 10h-13z"/>' },
     ks: { fill: 'cur', d: '<path d="M12 3c1.6 3 4 4.2 4 7.5A4 4 0 0 1 8 11c0-1 .3-1.7.8-2.4C8 9 7 10.3 7 12.5A5 5 0 0 0 17 12.5C17 8 13.5 6 12 3z"/>' },
     mm: { fill: 'none', d: '<path d="M12 2.5 20 7v10l-8 4.5L4 17V7z" stroke-linejoin="round"/>' },
-    hv: { fill: 'none', d: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>' },
+    hv: { fill: 'none', d: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>' }
+    /* MARKET:STRIP influencer-icons START */,
     stndr: { fill: 'none', d: '<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/>' },
     pump: { fill: 'none', d: '<path d="M13 2 4 14h6l-1 8 9-12h-6z"/>' },
     gainz: { fill: 'none', d: '<path d="M7 12h10M4 9v6M8 6v12M16 6v12M20 9v6"/>' },
     psu: { fill: 'none', d: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2"/>' }
+    /* MARKET:STRIP influencer-icons END */
   };
   var ROW_ICONS = {
     chevron: '<path d="M9 6l6 6-6 6"/>',
