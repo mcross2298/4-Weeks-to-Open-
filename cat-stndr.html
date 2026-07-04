@@ -54,10 +54,9 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
      so keep it static — base.css's absolute back-link would overlap the title. -->
 <style>.back-link{position:static;}</style>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="mc-program-hero.css"/>
+<link rel="stylesheet" href="mc-program-landing.css"/>
 </head>
 <body>
-<div id="programHero"></div>
 <div class="container">
   <a href="index.html" class="back-link">← Categories</a>
   <div class="eyebrow">⚡ STNDR</div>
@@ -66,6 +65,8 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
   <div class="designer">✍️ Designed by CBUM</div>
   <a href="stndr-instructions.html" class="inst-link">📋 Program Guide & Instructions</a>
 
+  <div id="programStatus"></div>
+
   <a href="weeks-to-open.html" class="plan-card blue">
     <div class="plan-tag">4-Week Program</div>
     <div class="plan-name">Weeks to Open</div>
@@ -73,6 +74,10 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
     <div class="plan-stats"><span class="stat">📅 4 weeks</span><span class="stat">🏋️ 5/wk</span></div>
     <div class="plan-arrow">→</div>
   </a>
+
+  <details class="mc-split-picker-other">
+    <summary>Other splits (4)</summary>
+    <div class="mc-split-picker-other-body">
 
   <a href="push-pull-legs.html" class="plan-card orange">
     <div class="plan-tag">PPL · 2 Phases</div>
@@ -105,6 +110,9 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
     <div class="plan-stats"><span class="stat">📅 6 weeks</span><span class="stat">💪 Hypertrophy</span></div>
     <div class="plan-arrow">→</div>
   </a>
+
+    </div>
+  </details>
 </div>
 <script>
 /* ── SMART BACK NAV ── */
@@ -125,25 +133,19 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 })();
 </script>
 <script src="mc-nav.js"></script>
-<script src="mc-resume.js"></script>
-<script src="mc-program-hero.js"></script>
+<script src="mc-program-status.js"></script>
 <script>
-MCProgramHero.mount(document.getElementById('programHero'), {
-  variant: 'trimmed',
-  accent: '#1D9E75',
-  iconKey: 'stndr',
-  tierLabel: 'Influencer',
+MCProgramStatus.mount(document.getElementById('programStatus'), {
   name: 'STNDR',
-  tagline: 'Structured progressive overload — CBUM method',
-  whatsInside: [
-    { icon: 'chevron', title: 'Weeks to Open', body: 'Upper/Lower split with progressive overload, drop sets, and AMRAP intensifiers.', href: 'weeks-to-open.html' },
-    { icon: 'chevron', title: 'Push / Pull / Legs', body: 'Two-phase PPL with TUT-focused supersets, tri-sets, and strength-to-volume waves.', href: 'push-pull-legs.html' },
-    { icon: 'chevron', title: 'Arnold Legacy', body: 'Arnold-inspired Chest & Back / Shoulders & Arms / Legs rotation.', href: 'arnold-legacy.html' },
-    { icon: 'chevron', title: 'Legacy Prep', body: 'Hardcore prep with cluster sets, drop AMRAPs, and aggressive volume.', href: 'legacy-prep.html' },
-    { icon: 'bars', title: 'The Bro Split', body: 'Classic 5-day body-part split across 2 phases.', href: 'bro-split.html' }
+  accent: '#1D9E75',
+  splits: [
+    { title: 'Weeks to Open', href: 'weeks-to-open.html' },
+    { title: 'Push / Pull / Legs', href: 'push-pull-legs.html' },
+    { title: 'Arnold Legacy', href: 'arnold-legacy.html' },
+    { title: 'Legacy Prep', href: 'legacy-prep.html' },
+    { title: 'The Bro Split', href: 'bro-split.html' }
   ],
-  ctaLabel: 'Browse splits',
-  backHref: 'index.html'
+  startHref: 'weeks-to-open.html'
 });
 </script>
 </body>

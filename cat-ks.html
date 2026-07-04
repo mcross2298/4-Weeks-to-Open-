@@ -129,14 +129,15 @@
   .split-pill.pull  { border-color: rgba(8,145,178,0.25);  color: #38bdf8; background: rgba(8,145,178,0.08); }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="mc-program-hero.css"/>
+<link rel="stylesheet" href="mc-program-landing.css"/>
 </head>
 <body>
-<div id="programHero"></div>
 <div class="page-wrap">
   <div class="back-nav">
     <a href="dashboard.html">← Programs</a>
   </div>
+
+  <div id="programStatus"></div>
 
   <!-- Program Header -->
   <div class="program-header">
@@ -173,6 +174,10 @@
       <span>→</span>
     </div>
   </a>
+
+  <details class="mc-split-picker-other">
+    <summary>Other splits (5)</summary>
+    <div class="mc-split-picker-other-body">
 
   <!-- Split 2 -->
   <div class="modules-label">Split 2 — 3-On 1-Off · PPL + Conditioning</div>
@@ -288,28 +293,26 @@
     </div>
   </a>
 
+    </div>
+  </details>
+
 </div>
 
 <script src="mc-nav.js"></script>
-<script src="mc-program-hero.js"></script>
+<script src="mc-program-status.js"></script>
 <script>
-MCProgramHero.mount(document.getElementById('programHero'), {
-  variant: 'trimmed',
-  accent: '#f59e0b',
-  iconKey: 'ks',
-  tierLabel: 'Flagship',
+MCProgramStatus.mount(document.getElementById('programStatus'), {
   name: 'Everything Under the Kitchen Sink',
-  tagline: 'Six distinct training splits under one roof — the complete MC arsenal, station-anchored for commercial gym efficiency.',
-  whatsInside: [
-    { icon: 'chevron', title: 'Everything Under the Kitchen Sink', body: 'Split 1 — 5-On 2-Off · Station-Anchored', href: 'kitchen-sink.html' },
-    { icon: 'chevron', title: 'Iron Engine', body: 'Split 2 — 3-On 1-Off · PPL + Conditioning', href: 'cat-ie.html' },
-    { icon: 'chevron', title: 'Split 3', body: '3-On 1-Off 2-On · Station-Anchored', href: 'kitchen-sink-s3.html' },
-    { icon: 'chevron', title: 'Split 4', body: '5-On 2-Off · Station-Anchored', href: 'kitchen-sink-s4.html' },
-    { icon: 'chevron', title: 'Split 5', body: '3-On 2-Off · Upper / Lower / Full Body', href: 'kitchen-sink-s5.html' },
-    { icon: 'bars', title: 'Split 6', body: '4-On 1-Off 2-On · High-Frequency Hypertrophy', href: 'kitchen-sink-s6.html' }
+  accent: '#f59e0b',
+  splits: [
+    { title: 'Everything Under the Kitchen Sink', href: 'kitchen-sink.html' },
+    { title: 'Iron Engine', href: 'cat-ie.html' },
+    { title: 'Split 3', href: 'kitchen-sink-s3.html' },
+    { title: 'Split 4', href: 'kitchen-sink-s4.html' },
+    { title: 'Split 5', href: 'kitchen-sink-s5.html' },
+    { title: 'Split 6', href: 'kitchen-sink-s6.html' }
   ],
-  ctaLabel: 'Browse splits',
-  backHref: 'dashboard.html'
+  startHref: 'kitchen-sink.html'
 });
 </script>
 </body>

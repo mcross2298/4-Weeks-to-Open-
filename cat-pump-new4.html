@@ -168,10 +168,9 @@
 <link rel="stylesheet" href="base.css?v=65"/>
 <link rel="stylesheet" href="mc-nav.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="mc-program-hero.css"/>
+<link rel="stylesheet" href="mc-program-landing.css"/>
 </head>
 <body>
-<div id="programHero"></div>
 <div class="wrap">
 
   <div class="header">
@@ -183,6 +182,8 @@
   <div style="text-align:center;">
     <a href="pump-instructions.html" class="inst-link">📋 Program Guide & Instructions</a>
   </div>
+
+  <div id="programStatus"></div>
 
   <div class="modules">
 
@@ -382,7 +383,6 @@
 })();
 </script>
 <script src="mc-nav.js"></script>
-<script src="mc-resume.js"></script>
 <script>
 /* Surprise Me — open a random pump workout from the drill lists. */
 (function(){
@@ -397,24 +397,31 @@
 </script>
 <script>window.MC_PROG={id:'pump',icon:'⚡',name:'Daily Pump',meta:'10 Workouts',color:'#D85A30',desc:'Julian Smith pump protocols — in and out fast',href:'cat-pump-new4.html',splits:['Back','Chest','Shoulders','Arms','Legs']};</script>
 <script src="mc-pin-bar.js"></script>
-<script src="mc-program-hero.js"></script>
+<script src="mc-program-status.js"></script>
 <script>
-MCProgramHero.mount(document.getElementById('programHero'), {
-  variant: 'trimmed',
-  accent: '#D85A30',
-  iconKey: 'pump',
-  tierLabel: 'Influencer',
+MCProgramStatus.mount(document.getElementById('programStatus'), {
   name: 'Daily Pump',
-  tagline: 'Julian Smith pump protocols — in and out fast',
-  whatsInside: [
-    { icon: 'chevron', title: 'Split #1 · Arms + Shoulders', body: '3 workouts · 25 total variations', href: 'bis-tris-pump.html' },
-    { icon: 'chevron', title: 'Split #2 · Full Body Rotation', body: '4 workouts · 30 total variations', href: 'back-traps-pump.html' },
-    { icon: 'chevron', title: 'Bonus Workouts', body: '2 workouts · 16 total variations', href: 'bonus-pump-lats.html' },
-    { icon: 'chevron', title: 'Split #3 · Upper Body Rotation', body: '5 workouts · 20 total variations', href: 's3-back-traps.html' },
-    { icon: 'bars', title: 'Split #4 · Time Under Tension', body: '3 workouts · 18 total variations', href: 's4-pull.html' }
+  accent: '#D85A30',
+  splits: [
+    { title: 'Biceps & Triceps', href: 'bis-tris-pump.html' },
+    { title: 'Shoulders & Light Back', href: 'shoulders-back-pump.html' },
+    { title: 'Hamstrings & Glutes', href: 'hams-glutes-pump.html' },
+    { title: 'Back & Traps', href: 'back-traps-pump.html' },
+    { title: 'Chest & Triceps', href: 'chest-tri-pump.html' },
+    { title: 'Shoulders / Biceps / Forearms', href: 'shoulders-bis-forearms-pump.html' },
+    { title: 'Quads / Hamstrings / Glutes', href: 'legs-pump.html' },
+    { title: 'Lats / Traps / Biceps', href: 'bonus-pump-lats.html' },
+    { title: 'Chest / Shoulders / Triceps', href: 'bonus-pump-cst.html' },
+    { title: 'Back & Traps', href: 's3-back-traps.html' },
+    { title: 'Chest & Biceps', href: 's3-chest-biceps.html' },
+    { title: 'Shoulders & Triceps', href: 's3-shoulders-triceps.html' },
+    { title: 'Full Upper Body', href: 's3-upper-body.html' },
+    { title: 'Quads, Calves & Adductors', href: 'quads-pump.html' },
+    { title: 'Pull — Lats/Traps/Biceps', href: 's4-pull.html' },
+    { title: 'Push — Chest/Shoulders/Triceps', href: 's4-push.html' },
+    { title: 'Legs — Quads/Hamstrings/Calves', href: 's4-legs.html' }
   ],
-  ctaLabel: 'Browse splits',
-  backHref: 'dashboard.html'
+  startHref: 'bis-tris-pump.html'
 });
 </script>
 </body>
