@@ -137,10 +137,9 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
      so keep it static — base.css's absolute back-link would overlap the title. -->
 <style>.back-link{position:static;}</style>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="mc-program-hero.css"/>
+<link rel="stylesheet" href="mc-program-landing.css"/>
 </head>
 <body>
-<div id="programHero"></div>
 <div class="container">
   <a href="index.html" class="back-link">← Categories</a>
   <div class="eyebrow">💪 Daily Gainz</div>
@@ -148,6 +147,8 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
   <p class="subtitle">8 programs · Multiple frequency options · Designed for all goals</p>
   <div class="designer">✍️ Designed by Bradley Martyn</div>
   <a href="gainz-instructions.html" class="inst-link">📋 Program Guide & Instructions</a>
+
+  <div id="programStatus"></div>
 
   <div class="sec-head">Bulk Programs</div>
 
@@ -164,6 +165,10 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
     <div class="plan-meta">5-day cut program — higher reps, more drop sets, lower rest. Same compound anchors (5×5). Active rest day option Day 3.</div>
     <div class="plan-arrow">→</div>
   </a>
+
+  <details class="mc-split-picker-other">
+    <summary>Other programs (6)</summary>
+    <div class="mc-split-picker-other-body">
 
   <div class="sec-head">Specialty Programs</div>
 
@@ -210,6 +215,9 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
     <div class="plan-meta">Lower frequency option — ideal for recovery-focused athletes or those with limited training days.</div>
     <div class="plan-arrow">→</div>
   </a>
+
+    </div>
+  </details>
 
 </div>
 
@@ -379,7 +387,6 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 <script src="mc-card-actions.js"></script>
 <script src="program-manager.js"></script>
 <script src="mc-nav.js"></script>
-<script src="mc-resume.js"></script>
 <script src="mc-setlog.js"></script>
 <script src="mc-session.js"></script>
 <script src="mc-suggest.js"></script>
@@ -390,27 +397,22 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 <script src="mc-superset-hop.js?v=46"></script>
 <script src="mc-sw-update.js?v=45"></script>
 <script src="mc-summary.js"></script>
-<script src="mc-program-hero.js"></script>
+<script src="mc-program-status.js"></script>
 <script>
-MCProgramHero.mount(document.getElementById('programHero'), {
-  variant: 'trimmed',
-  accent: '#378ADD',
-  iconKey: 'gainz',
-  tierLabel: 'Influencer',
+MCProgramStatus.mount(document.getElementById('programStatus'), {
   name: 'Daily Gainz',
-  tagline: 'Bradley Martyn volume — built for size',
-  whatsInside: [
-    { icon: 'chevron', title: "Men's Lean Bulk", body: '5-day split — Back/Bis, Chest/Tris, Legs/Abs, Shoulders/Traps, Arms.', href: 'mens-lean-bulk.html' },
-    { icon: 'chevron', title: "Men's Shred", body: '5-day cut program — higher reps, more drop sets, lower rest.', href: 'mens-shred.html' },
-    { icon: 'chevron', title: "Let's Get Shredded", body: 'Full shred-focused program with cardio integration.', href: 'lets-get-shredded.html' },
-    { icon: 'chevron', title: 'Every Chest Day', body: 'Chest hit every day — paired with back, shoulders, arms, or legs.', href: 'every-chest-day.html' },
-    { icon: 'chevron', title: 'Every Arms Day', body: 'Arms hit daily — paired with larger muscle groups.', href: 'every-arms-day.html' },
-    { icon: 'chevron', title: '5-On / 2-Off', body: 'Standard 5-day training week with 2 full rest days.', href: '5on-2off.html' },
-    { icon: 'chevron', title: '3-On / 1-Off High Frequency', body: 'Higher frequency cadence — train 3, rest 1, repeat.', href: '3on-1off-high-freq.html' },
-    { icon: 'bars', title: '2-On / 1-Off', body: 'Lower frequency option for recovery-focused athletes.', href: '2on-1off.html' }
+  accent: '#378ADD',
+  splits: [
+    { title: "Men's Lean Bulk", href: 'mens-lean-bulk.html' },
+    { title: "Men's Shred", href: 'mens-shred.html' },
+    { title: "Let's Get Shredded", href: 'lets-get-shredded.html' },
+    { title: 'Every Chest Day', href: 'every-chest-day.html' },
+    { title: 'Every Arms Day', href: 'every-arms-day.html' },
+    { title: '5-On / 2-Off', href: '5on-2off.html' },
+    { title: '3-On / 1-Off High Frequency', href: '3on-1off-high-freq.html' },
+    { title: '2-On / 1-Off', href: '2on-1off.html' }
   ],
-  ctaLabel: 'Browse splits',
-  backHref: 'index.html'
+  startHref: 'mens-lean-bulk.html'
 });
 </script>
 </body>
