@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>High-Volume Training Template — Program Guide</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#0a0a0a;min-height:100vh;color:#fff;padding:0 0 60px;}
+.back-link{display:inline-block;color:#bef264;text-decoration:none;font-size:13px;font-weight:700;background:rgba(132,204,22,0.1);padding:6px 14px;border-radius:20px;border:1px solid rgba(132,204,22,0.3);margin:20px 16px;}
+.hero{background:linear-gradient(135deg,#1a2e05,#0d0618);padding:26px 20px 22px;border-bottom:1px solid rgba(132,204,22,0.15);}
+.hero-inner{max-width:680px;margin:0 auto;}
+.eyebrow{font-size:11px;font-weight:900;letter-spacing:0.28em;color:#bef264;text-transform:uppercase;margin-bottom:8px;}
+.title{font-size:26px;font-weight:900;color:#fff;letter-spacing:-0.02em;margin-bottom:4px;}
+.subtitle{font-size:12px;color:#6b7280;line-height:1.5;}
+.max-w{max-width:680px;margin:0 auto;padding:0 16px;}
+.sec{margin-top:26px;}
+.sec-head{font-size:11px;font-weight:900;letter-spacing:0.22em;color:#bef264;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.sec-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(132,204,22,0.3),transparent);}
+.card{background:#151f05;border:1px solid rgba(132,204,22,0.15);border-radius:12px;padding:14px 16px;margin-bottom:9px;}
+.card-head{font-size:14px;font-weight:800;color:#fff;margin-bottom:5px;display:flex;align-items:center;gap:8px;}
+.card-icon{font-size:18px;}
+.card-body{font-size:12px;color:#9ca3af;line-height:1.65;}
+.card-body strong{color:#e2e8f0;}
+.rule-box{background:rgba(132,204,22,0.06);border-left:3px solid #bef264;border-radius:0 8px 8px 0;padding:12px 14px;margin-bottom:10px;font-size:12px;color:#d9f99d;line-height:1.65;}
+.rule-box strong{color:#fff;}
+.banned-box{background:rgba(239,68,68,0.08);border-left:3px solid #f87171;border-radius:0 8px 8px 0;padding:12px 14px;margin-bottom:10px;font-size:12px;color:#fca5a5;line-height:1.65;display:flex;gap:10px;align-items:flex-start;}
+.banned-box strong{color:#fff;}
+.banned-icon{font-size:16px;flex-shrink:0;}
+</style><link rel="stylesheet" href="base.css?v=65"/>
+<link rel="stylesheet" href="mc-nav.css"/>
+</head><body>
+<a href="cat-hv.html" class="back-link">← High-Volume Training Template</a>
+<div class="hero"><div class="hero-inner">
+  <div class="eyebrow">📋 Program Guide</div>
+  <h1 class="title">High-Volume Training Template</h1>
+  <p class="subtitle">4-week block · 5–6 sets · 15–25 reps · station-anchored</p>
+</div></div>
+<div class="max-w">
+  <div class="sec">
+    <div class="sec-head">Program Rules</div>
+    <div class="rule-box"><strong>Sets:</strong> 5–6 sets per exercise, most work landing in the <strong>15–25 rep</strong> range</div>
+    <div class="banned-box"><span class="banned-icon">🚫</span><div><strong>Trisets are strictly banned in this program.</strong> Every grouped block is a superset at most, and every superset, drop set and cluster set is completely station-anchored — one piece of equipment, no walking the floor.</div></div>
+  </div>
+  <div class="sec">
+    <div class="sec-head">4-Week Progression</div>
+    <div class="card"><div class="card-head"><span class="card-icon">💥</span>Week 1 — Compound Dominant</div><div class="card-body">2-On / 1-Off · 6 exercises/day · 3 pyramids (12–25 reps) + 1 static 5×20 + 1 drop set + 1 cluster set per workout.</div></div>
+    <div class="card"><div class="card-head"><span class="card-icon">⚡</span>Week 2 — Fully Supersetted</div><div class="card-body">5 straight training days + 2 rest days · 8 exercises/day as 4 station-anchored supersets · 3 pyramids (12–25 reps) paired with static 5×20 · 120 sec rest all week.</div></div>
+    <div class="card"><div class="card-head"><span class="card-icon">📈</span>Week 3 — High-Volume Pyramids</div><div class="card-body">3-On / 2-Off · 8 exercises/day as ascending/descending pyramids (12–25 reps) · 1 superset + 1 drop set + 1 cluster set (6–10 reps) per workout.</div></div>
+    <div class="card"><div class="card-head"><span class="card-icon">🏁</span>Week 4 — Bodyweight &amp; Accessory Volume</div><div class="card-body">Full Body &amp; Core run as one continuous 8-exercise circuit; Calves &amp; Forearms use 3 pyramids (12–25 reps) + 1 static + 2 supersets. 45–60 sec rest everywhere, all week.</div></div>
+  </div>
+</div><script>
+/* ── SMART BACK NAV ── */
+(function(){
+  var back = sessionStorage.getItem('mc_back_to');
+  if(!back) return;
+  document.querySelectorAll('a').forEach(function(a){
+    var href = a.getAttribute('href')||'';
+    if(href === 'index.html' || href === '../' || href === '/' ||
+       href.includes('index') || a.textContent.trim().startsWith('←')){
+      a.href = back;
+      a.addEventListener('click', function(){
+        sessionStorage.removeItem('mc_back_to');
+      });
+    }
+  });
+})();
+</script>
+<script src="mc-nav.js"></script>
+</body></html>

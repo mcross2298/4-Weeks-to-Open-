@@ -50,6 +50,15 @@
   .meta-badge { background: var(--accent-dim); border: 1px solid var(--accent-glow); color: var(--accent); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.04em; }
   .designer-credit { font-size: 12px; color: var(--muted); margin-top: 14px; }
 
+  .guide-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--accent-dim); border: 1px solid var(--accent-glow);
+    color: var(--accent); font-size: 12px; font-weight: 700;
+    padding: 9px 16px; border-radius: 8px; text-decoration: none;
+    margin-top: 16px; transition: background 0.15s;
+  }
+  .guide-link:hover { background: rgba(99,102,241,0.2); }
+
   .section-label { font-size: 11px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 28px 0 12px; }
 
   /* ── Weekly schedule ── */
@@ -157,13 +166,7 @@
       <span class="meta-badge">Station-Anchored</span>
     </div>
     <div class="designer-credit">✍️ Designed by Mike Cross</div>
-  </div>
-
-  <div class="prog-banner">
-    <span class="prog-banner-icon">📈</span>
-    <div class="prog-banner-text">
-      <strong>Every Day Is Complete.</strong> Each training day carries all 7 intensifiers — low-rep, high-rep, TUT, tri-set, superset, cluster and drop — across a 2 / 4 / 4 working-set mix, <strong>every single week</strong>. Each phase isolates one equipment type and runs <strong>5 themed weeks</strong>; the week's dominant style visibly rides on just 4 feature lifts while 6 anchors hold their scheme so no intensifier ever drops out: <strong>Week 1:</strong> Low-Rep · <strong>Week 2:</strong> Pyramid · <strong>Week 3:</strong> Tempo · <strong>Week 4:</strong> High-Rep · <strong>Week 5:</strong> Superset.
-    </div>
+    <a class="guide-link" href="mm-instructions.html">📋 Program Guide &amp; Instructions →</a>
   </div>
 
   <div class="section-label">Select Phase</div>
