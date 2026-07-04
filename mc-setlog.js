@@ -54,6 +54,36 @@
     return 'Last: ' + top.w + ' lb' + (top.rpe ? ' @' + top.rpe : '') + ' · ' + sess.d;
   }
 
+  // ---- active-exercise highlight ------------------------------------------
+  // Marks whichever card the athlete is actually logging sets on right now
+  // (opened its Log Sets panel, checked a set, or focused a weight/reps
+  // field) with .active, so the accent-ring in base.css follows attention
+  // around the workout. Only one card at a time; every other exercise stays
+  // fully visible (no accordion/collapse) — purely a focus cue.
+  // ---- notes: collapse to one line, tap to expand -------------------------
+  // .a-notes is rendered per-page (every program's inline script builds its
+  // own noteHtml), so this runs generically over whatever the DOM already
+  // has rather than requiring per-page changes. Idempotent via data-mc-notes
+  // so repeat run() passes (MutationObserver-driven) don't double-bind.
+  function collapseNotes() {
+    document.querySelectorAll('.a-notes').forEach(function (n) {
+      if (n.dataset.mcNotes) return;
+      n.dataset.mcNotes = '1';
+      n.classList.add('a-notes-collapsible');
+      n.addEventListener('click', function (e) {
+        e.stopPropagation();
+        n.classList.toggle('a-notes-open');
+      });
+    });
+  }
+
+  function setActiveCard(card) {
+    document.querySelectorAll('.ex-card.active, .ss-ex.active').forEach(function (c) {
+      if (c !== card) c.classList.remove('active');
+    });
+    if (card) card.classList.add('active');
+  }
+
   // RPE chip cycle: – → 8 → 8.5 → 9 → 9.5 → 10 → F (to failure) → –
   var RPE_STEPS = ['', '8', '8.5', '9', '9.5', '10', 'F'];
 
@@ -276,11 +306,13 @@
       var open = wrap.classList.toggle('open');
       toggle.classList.toggle('open', open);
       toggle.querySelector('.mcl-lbl').textContent = open ? 'Hide' : 'Log Sets';
+      setActiveCard(open ? card : null);
     });
     wrap.addEventListener('click', function (e) { e.stopPropagation(); });
     Array.prototype.forEach.call(wrap.querySelectorAll('.mcl-ck'), function (ck) {
       ck.addEventListener('click', function (e) {
         e.stopPropagation(); e.preventDefault();
+        setActiveCard(card);
         onCheck(card, exId, parseInt(ck.dataset.sn, 10), rs);
       });
     });
@@ -308,6 +340,7 @@
     // instantly but a single tap-then-check accepts last time's number.
     Array.prototype.forEach.call(wrap.querySelectorAll('.mcl-inp'), function (inp) {
       inp.addEventListener('focus', function () {
+        setActiveCard(card);
         if (!inp.value.trim() && inp.dataset.fill) {
           inp.value = inp.dataset.fill;
           try { inp.select(); } catch (e) {}
@@ -410,6 +443,7 @@
     // stray strikethroughs. PSU keeps its native logger.
     /* MARKET:STRIP influencer-refs END */
     normalizeSupersetTimers();
+    collapseNotes();
   }
 
   // ---- superset rest-timer normalization ---------------------------------

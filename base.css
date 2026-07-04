@@ -397,6 +397,15 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 /* MARKET:STRIP influencer-refs START */
 .ex-card.a-card .stndr-ck{display:none;}           /* completion shown via idx + strike; beats checkoff's injected style */
 /* MARKET:STRIP influencer-refs END */
+/* Active-exercise focus ring — set by mc-setlog.js when the athlete opens a
+   card's Log Sets panel, checks a set, or focuses a weight/reps field. Purely
+   a visual cue (every other exercise stays fully expanded, no accordion);
+   picks up the same per-type color as the hero-number glow. */
+.ex-card.a-card.active{box-shadow:0 0 0 2px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.5),
+  0 10px 30px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05);}
+.ss-card.a-ss .ss-ex.active{background:rgba(168,85,247,0.09);}
+.ss-card.a-ss .ss-ex.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;z-index:1;
+  background:#c084fc;box-shadow:0 0 10px rgba(168,85,247,0.6);}
 .a-top{display:flex;align-items:flex-start;gap:calc(11px * var(--density));
   padding:calc(14px * var(--density)) calc(42px * var(--density)) calc(10px * var(--density)) calc(18px * var(--density));}
 .a-idx{font-size:calc(13px * var(--density));font-weight:900;font-variant-numeric:tabular-nums;
@@ -451,6 +460,14 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .a-notes{margin:0 calc(16px * var(--density)) calc(12px * var(--density)) calc(18px * var(--density));
   padding:calc(7px * var(--density)) calc(10px * var(--density));background:rgba(var(--accent-rgb),0.06);
   border-left:3px solid rgba(var(--accent-rgb),0.5);border-radius:4px;font-size:11px;color:var(--text);line-height:1.5;}
+/* Collapsed to one line by default (mc-setlog.js adds the class + tap
+   handler); tap toggles .a-notes-open to read the full cue. */
+.a-notes.a-notes-collapsible{cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  position:relative;padding-right:24px;}
+.a-notes.a-notes-collapsible::after{content:'⌄';position:absolute;right:8px;top:50%;
+  transform:translateY(-50%);opacity:0.55;font-size:11px;}
+.a-notes.a-notes-collapsible.a-notes-open{white-space:normal;overflow:visible;text-overflow:clip;}
+.a-notes.a-notes-collapsible.a-notes-open::after{content:'⌃';}
 /* tidy the logger that mc-setlog injects at the foot of .ex-body */
 .a-card .mcl-toggle,.a-card .setlog-toggle{border-top:1px solid rgba(255,255,255,0.07);}
 /* MARKET:STRIP influencer-refs START */
