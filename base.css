@@ -441,18 +441,21 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .a-rep.special{color:#fb7185;font-size:18px;text-shadow:0 0 14px rgba(251,113,133,0.4);}
 .a-sep{font-size:12px;color:#475569;font-weight:900;align-self:center;}
 .a-legtag{font-size:11px;font-weight:900;letter-spacing:0.14em;color:#475569;text-transform:uppercase;align-self:center;}
-/* Slim caption strip — was a bordered two-cell grid restating the hero reps
-   number; now a single muted inline line. The Rest cell is dropped only when
-   an interactive .rest-timer is present below (same number, tappable there),
-   so pages without a timer still show it as a fallback. Both .editable spans
-   (data-field="sets"/"rest") stay in the DOM untouched for PM inline-edit. */
+/* Slim caption strip — Rest fallback only. The Sets cell restated the hero
+   reps number (already shown big/bold above) so it's dropped unconditionally;
+   the Rest cell is dropped too whenever an interactive .rest-timer is present
+   below (same number, tappable there), collapsing the whole strip in that
+   case so no empty gap remains. Pages without a timer still show Rest alone
+   as a fallback. Both .editable spans (data-field="sets"/"rest") stay in the
+   DOM untouched for PM inline-edit. */
 .a-strip{display:flex;align-items:baseline;gap:14px;padding:0 calc(16px * var(--density)) calc(9px * var(--density)) calc(18px * var(--density));}
 .a-cell{flex:0 0 auto;padding:0;display:flex;flex-direction:row;align-items:baseline;gap:5px;min-width:0;}
 .a-cell + .a-cell{border-left:none;}
 .a-cell .k{font-size:10px;font-weight:800;letter-spacing:0.1em;color:var(--muted2);text-transform:uppercase;}
 .a-cell .v{font-size:11.5px;font-weight:700;color:var(--muted);}
 .a-card .a-cell .v .editable{border-bottom:1px dashed rgba(var(--accent-rgb),0.4);color:var(--muted);}
-.a-card:has(.a-timerbar .rest-timer) .a-strip .a-cell:nth-child(2){display:none;}
+.a-strip .a-cell:nth-child(1){display:none;}
+.a-card:has(.a-timerbar .rest-timer) .a-strip{display:none;}
 .a-timerbar{padding:calc(10px * var(--density)) calc(16px * var(--density)) calc(12px * var(--density)) calc(18px * var(--density));}
 .a-card .a-timerbar .rest-timer{width:100%;justify-content:center;}
 .a-card .a-timerbar .rest-timer.idle{background:rgba(var(--accent-rgb),0.1);border:1px solid rgba(var(--accent-rgb),0.26);}
