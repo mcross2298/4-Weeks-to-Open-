@@ -241,21 +241,43 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .ss-card.is-tri .ss-x{color:#f59e0b;}
 
 /* ── TYPE BADGES ────────────────────────────────────────────────── */
-.type-badge{display:inline-block;font-size:11px;font-weight:800;padding:3px 8px;border-radius:5px;letter-spacing:0.05em;text-transform:uppercase;}
-.tb-pyramid{background:rgba(249,115,22,0.15);color:#fb923c;border:1px solid rgba(249,115,22,0.25);}
-.tb-lowrep{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.25);}
-.tb-tempo{background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.25);}
-.tb-highrep{background:rgba(212,175,55,0.15);color:#d4af37;border:1px solid rgba(212,175,55,0.25);}
-.tb-highrep12{background:rgba(234,179,8,0.15);color:#fbbf24;border:1px solid rgba(234,179,8,0.25);}
-.tb-highrep20{background:rgba(217,119,6,0.2);color:#fb923c;border:1px solid rgba(217,119,6,0.3);}
-.tb-midset{background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.25);}
-.tb-drop{background:rgba(244,63,94,0.15);color:#fb7185;border:1px solid rgba(244,63,94,0.25);}
-.tb-amrap{background:rgba(239,68,68,0.2);color:#ef4444;border:1px solid rgba(239,68,68,0.35);}
-.tb-highset{background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.25);}
-.tb-superset{background:rgba(168,85,247,0.18);color:#c084fc;border:1px solid rgba(168,85,247,0.3);}
-.tb-minrest{background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.25);}
-.tb-optional{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.25);}
-.tb-finisher{background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.25);}
+/* Flattened — solid tint only, no border. The color still carries into the
+   card's hero rep-number glow via --rep-glow-rgb below, so the badge and the
+   big numbers read as one accent instead of two competing decorations. */
+.type-badge{display:inline-block;font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:6px;letter-spacing:0.04em;text-transform:uppercase;}
+.tb-pyramid{background:rgba(249,115,22,0.2);color:#fb923c;}
+.tb-lowrep{background:rgba(239,68,68,0.2);color:#f87171;}
+.tb-tempo{background:rgba(6,182,212,0.2);color:#22d3ee;}
+.tb-highrep{background:rgba(212,175,55,0.2);color:#d4af37;}
+.tb-highrep12{background:rgba(234,179,8,0.2);color:#fbbf24;}
+.tb-highrep20{background:rgba(217,119,6,0.24);color:#fb923c;}
+.tb-midset{background:rgba(139,92,246,0.2);color:#a78bfa;}
+.tb-drop{background:rgba(244,63,94,0.2);color:#fb7185;}
+.tb-amrap{background:rgba(239,68,68,0.24);color:#ef4444;}
+.tb-highset{background:rgba(52,211,153,0.2);color:#34d399;}
+.tb-superset{background:rgba(168,85,247,0.22);color:#c084fc;}
+.tb-minrest{background:rgba(139,92,246,0.2);color:#a78bfa;}
+.tb-optional{background:rgba(100,116,139,0.2);color:#94a3b8;}
+.tb-finisher{background:rgba(16,185,129,0.2);color:#34d399;}
+
+/* Hero rep-number glow picks up the exercise's featured intensifier color
+   instead of always the page's generic accent. Numbers stay solid white for
+   legibility — only the ambient glow (text-shadow) retints per type. Covers
+   both badge systems in the codebase: descendant .tb-* badges (pmc/cat-*
+   pages) and the .is-* modifier classes (mm-p1/mc-* multi-week pages). */
+.a-card:has(.tb-highrep){--rep-glow-rgb:212,175,55;}
+.a-card:has(.tb-highrep12){--rep-glow-rgb:234,179,8;}
+.a-card:has(.tb-highrep20){--rep-glow-rgb:217,119,6;}
+.a-card:has(.tb-lowrep){--rep-glow-rgb:239,68,68;}
+.a-card:has(.tb-pyramid){--rep-glow-rgb:249,115,22;}
+.a-card:has(.tb-tempo){--rep-glow-rgb:6,182,212;}
+.a-card:has(.tb-drop),.a-card:has(.tb-amrap){--rep-glow-rgb:244,63,94;}
+.a-card:has(.tb-superset),.a-card:has(.tb-midset){--rep-glow-rgb:168,85,247;}
+.a-card:has(.tb-highset),.a-card:has(.tb-finisher){--rep-glow-rgb:52,211,153;}
+.a-card.is-ss{--rep-glow-rgb:168,85,247;}
+.a-card.is-tri{--rep-glow-rgb:245,158,11;}
+.a-card.is-cluster{--rep-glow-rgb:34,211,238;}
+.a-card.is-drop{--rep-glow-rgb:244,63,94;}
 
 /* ── WARMUP CARD ────────────────────────────────────────────────── */
 .warmup-card{border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:flex-start;gap:10px;}
@@ -375,8 +397,19 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 /* MARKET:STRIP influencer-refs START */
 .ex-card.a-card .stndr-ck{display:none;}           /* completion shown via idx + strike; beats checkoff's injected style */
 /* MARKET:STRIP influencer-refs END */
-.a-top{display:flex;align-items:flex-start;gap:11px;padding:14px 42px 10px 18px;}
-.a-idx{font-size:13px;font-weight:900;font-variant-numeric:tabular-nums;min-width:30px;height:30px;
+/* Active-exercise focus ring — set by mc-setlog.js when the athlete opens a
+   card's Log Sets panel, checks a set, or focuses a weight/reps field. Purely
+   a visual cue (every other exercise stays fully expanded, no accordion);
+   picks up the same per-type color as the hero-number glow. */
+.ex-card.a-card.active{box-shadow:0 0 0 2px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.5),
+  0 10px 30px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05);}
+.ss-card.a-ss .ss-ex.active{background:rgba(168,85,247,0.09);}
+.ss-card.a-ss .ss-ex.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;z-index:1;
+  background:#c084fc;box-shadow:0 0 10px rgba(168,85,247,0.6);}
+.a-top{display:flex;align-items:flex-start;gap:calc(11px * var(--density));
+  padding:calc(14px * var(--density)) calc(42px * var(--density)) calc(10px * var(--density)) calc(18px * var(--density));}
+.a-idx{font-size:calc(13px * var(--density));font-weight:900;font-variant-numeric:tabular-nums;
+  min-width:calc(30px * var(--density));height:calc(30px * var(--density));
   border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;
   background:rgba(var(--accent-rgb),0.12);color:var(--accent);border:1px solid rgba(var(--accent-rgb),0.3);}
 .a-card.is-ss .a-idx{background:rgba(168,85,247,0.14);color:#c084fc;border-color:rgba(168,85,247,0.35);}
@@ -385,41 +418,56 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .a-card.is-drop .a-idx{background:rgba(244,63,94,0.14);color:#fb7185;border-color:rgba(244,63,94,0.4);}
 .a-card.checked .a-idx{background:#16a34a;color:#fff;border-color:transparent;}
 .a-head{flex:1;min-width:0;}
-.a-card .ex-name.a-name{font-size:15px;font-weight:800;line-height:1.25;letter-spacing:-0.01em;margin-bottom:0;color:var(--text);padding-right:0;}
-.a-badges{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;}
-.a-pill{font-size:11px;font-weight:900;letter-spacing:0.07em;text-transform:uppercase;padding:3px 8px;border-radius:6px;}
+.a-card .ex-name.a-name{font-size:calc(15px * var(--density));font-weight:800;line-height:1.25;letter-spacing:-0.01em;margin-bottom:0;color:var(--text);padding-right:0;}
+.a-badges{display:flex;gap:6px;margin-top:calc(7px * var(--density));flex-wrap:wrap;}
+.a-pill{font-size:10.5px;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;padding:calc(3px * var(--density)) calc(7px * var(--density));border-radius:6px;}
 .a-pill.grp{background:rgba(168,85,247,0.16);color:#c084fc;border:1px solid rgba(168,85,247,0.32);}
 .a-card.is-tri .a-pill.grp{background:rgba(245,158,11,0.16);color:#fbbf24;border-color:rgba(245,158,11,0.34);}
 .a-card.is-cluster .a-pill.grp{background:rgba(34,211,238,0.16);color:#67e8f9;border-color:rgba(34,211,238,0.34);}
 .a-card.is-drop .a-pill.grp{background:rgba(244,63,94,0.16);color:#fb7185;border-color:rgba(244,63,94,0.34);}
 .a-pill.tempo{background:rgba(var(--accent-rgb),0.1);color:var(--accent);border:1px solid rgba(var(--accent-rgb),0.28);font-family:"SF Mono",ui-monospace,monospace;letter-spacing:0.02em;}
-.a-reps{padding:2px 16px 12px 18px;}
+.a-reps{padding:2px calc(16px * var(--density)) calc(10px * var(--density)) calc(18px * var(--density));}
 .a-leg{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
 .a-leg + .a-leg{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,0.07);}
-.a-rep{font-size:25px;font-weight:900;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;color:#3a4661;line-height:1;transition:color 0.35s ease,opacity 0.35s ease,text-shadow 0.35s ease;}
-.a-rep.live{color:#fff;text-shadow:0 0 10px rgba(var(--accent-rgb),0.55),0 0 22px rgba(var(--accent-rgb),0.4);animation:repGlow 2.6s ease-in-out infinite;}
+.a-rep{font-size:calc(25px * var(--density));font-weight:900;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;color:#3a4661;line-height:1;transition:color 0.35s ease,opacity 0.35s ease,text-shadow 0.35s ease;}
+.a-rep.live{color:#fff;text-shadow:0 0 10px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.55),0 0 22px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.4);animation:repGlow 2.6s ease-in-out infinite;}
 /* completed working set — settles to a calm dim-green, no glow (Phase 3) */
 .a-rep.rep-done{color:#34d399;opacity:0.5;text-shadow:none;animation:none;}
 @keyframes repGlow{
-  0%,100%{text-shadow:0 0 8px rgba(var(--accent-rgb),0.45),0 0 18px rgba(var(--accent-rgb),0.28);}
-  50%{text-shadow:0 0 14px rgba(var(--accent-rgb),0.75),0 0 30px rgba(var(--accent-rgb),0.5);}
+  0%,100%{text-shadow:0 0 8px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.45),0 0 18px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.28);}
+  50%{text-shadow:0 0 14px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.75),0 0 30px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.5);}
 }
 @media(prefers-reduced-motion:reduce){.a-rep.live{animation:none;}}
 .a-rep.special{color:#fb7185;font-size:18px;text-shadow:0 0 14px rgba(251,113,133,0.4);}
 .a-sep{font-size:12px;color:#475569;font-weight:900;align-self:center;}
 .a-legtag{font-size:11px;font-weight:900;letter-spacing:0.14em;color:#475569;text-transform:uppercase;align-self:center;}
-.a-strip{display:flex;align-items:stretch;border-top:1px solid rgba(255,255,255,0.07);background:rgba(0,0,0,0.22);}
-.a-cell{flex:1;padding:9px 14px;display:flex;flex-direction:column;gap:3px;min-width:0;}
-.a-cell + .a-cell{border-left:1px solid rgba(255,255,255,0.07);}
-.a-cell .k{font-size:11px;font-weight:900;letter-spacing:0.14em;color:#475569;text-transform:uppercase;}
-.a-cell .v{font-size:13px;font-weight:800;color:var(--text);}
-.a-card .a-cell .v .editable{border-bottom:1px dashed rgba(var(--accent-rgb),0.4);color:var(--text);}
-.a-timerbar{padding:10px 16px 12px 18px;}
+/* Slim caption strip — was a bordered two-cell grid restating the hero reps
+   number; now a single muted inline line. The Rest cell is dropped only when
+   an interactive .rest-timer is present below (same number, tappable there),
+   so pages without a timer still show it as a fallback. Both .editable spans
+   (data-field="sets"/"rest") stay in the DOM untouched for PM inline-edit. */
+.a-strip{display:flex;align-items:baseline;gap:14px;padding:0 calc(16px * var(--density)) calc(9px * var(--density)) calc(18px * var(--density));}
+.a-cell{flex:0 0 auto;padding:0;display:flex;flex-direction:row;align-items:baseline;gap:5px;min-width:0;}
+.a-cell + .a-cell{border-left:none;}
+.a-cell .k{font-size:10px;font-weight:800;letter-spacing:0.1em;color:var(--muted2);text-transform:uppercase;}
+.a-cell .v{font-size:11.5px;font-weight:700;color:var(--muted);}
+.a-card .a-cell .v .editable{border-bottom:1px dashed rgba(var(--accent-rgb),0.4);color:var(--muted);}
+.a-card:has(.a-timerbar .rest-timer) .a-strip .a-cell:nth-child(2){display:none;}
+.a-timerbar{padding:calc(10px * var(--density)) calc(16px * var(--density)) calc(12px * var(--density)) calc(18px * var(--density));}
 .a-card .a-timerbar .rest-timer{width:100%;justify-content:center;}
 .a-card .a-timerbar .rest-timer.idle{background:rgba(var(--accent-rgb),0.1);border:1px solid rgba(var(--accent-rgb),0.26);}
 .a-card .a-timerbar .rest-timer.idle .rest-timer-label{color:var(--accent);}
-.a-notes{margin:0 16px 12px 18px;padding:7px 10px;background:rgba(var(--accent-rgb),0.06);
+.a-notes{margin:0 calc(16px * var(--density)) calc(12px * var(--density)) calc(18px * var(--density));
+  padding:calc(7px * var(--density)) calc(10px * var(--density));background:rgba(var(--accent-rgb),0.06);
   border-left:3px solid rgba(var(--accent-rgb),0.5);border-radius:4px;font-size:11px;color:var(--text);line-height:1.5;}
+/* Collapsed to one line by default (mc-setlog.js adds the class + tap
+   handler); tap toggles .a-notes-open to read the full cue. */
+.a-notes.a-notes-collapsible{cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  position:relative;padding-right:24px;}
+.a-notes.a-notes-collapsible::after{content:'⌄';position:absolute;right:8px;top:50%;
+  transform:translateY(-50%);opacity:0.55;font-size:11px;}
+.a-notes.a-notes-collapsible.a-notes-open{white-space:normal;overflow:visible;text-overflow:clip;}
+.a-notes.a-notes-collapsible.a-notes-open::after{content:'⌃';}
 /* tidy the logger that mc-setlog injects at the foot of .ex-body */
 .a-card .mcl-toggle,.a-card .setlog-toggle{border-top:1px solid rgba(255,255,255,0.07);}
 /* MARKET:STRIP influencer-refs START */
