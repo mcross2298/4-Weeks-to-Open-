@@ -229,91 +229,6 @@
     padding-left: 26px;
   }
 
-  /* ── Badge Key ── */
-  .badge-key {
-    margin-top: 28px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-  }
-
-  .badge-key-header {
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .badge-key-header span {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    flex: 1;
-  }
-
-  .badge-toggle {
-    font-size: 12px;
-    color: var(--muted);
-    transition: transform 0.2s;
-  }
-
-  .badge-toggle.open { transform: rotate(180deg); }
-
-  .badge-key-body {
-    padding: 16px 18px;
-    display: none;
-  }
-  .badge-key-body.open { display: block; }
-
-  .badge-subtitle {
-    font-size: 11px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 14px;
-  }
-
-  .badge-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 12px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-  }
-  .badge-row:last-child {
-    margin-bottom: 0;
-    padding-bottom: 0;
-    border-bottom: none;
-  }
-
-  .badge-icon {
-    font-size: 20px;
-    flex-shrink: 0;
-    width: 28px;
-    text-align: center;
-  }
-
-  .badge-text strong {
-    display: block;
-    font-size: 13px;
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 2px;
-  }
-
-  .badge-text p {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.45;
-  }
-
   /* ── Bottom Back ── */
   .bottom-back {
     margin-top: 28px;
@@ -458,91 +373,12 @@
     </div>
   </details>
 
-  <!-- ④ Badge Key -->
-  <div class="badge-key">
-    <div class="badge-key-header" onclick="toggleBadgeKey()">
-      <span>🏷 Badge Key</span>
-      <div class="badge-toggle" id="badgeToggle">▼</div>
-    </div>
-    <div class="badge-key-body" id="badgeKeyBody">
-      <div class="badge-subtitle">Exercise Type Labels</div>
-
-      <div class="badge-row">
-        <div class="badge-icon">⚡</div>
-        <div class="badge-text">
-          <strong>Superset</strong>
-          <p>Two exercises back to back, no rest between</p>
-        </div>
-      </div>
-      <div class="badge-row">
-        <div class="badge-icon">📈</div>
-        <div class="badge-text">
-          <strong>Pyramid</strong>
-          <p>Weight increases as reps decrease (12, 10, 8, 8)</p>
-        </div>
-      </div>
-      <div class="badge-row">
-        <div class="badge-icon">🏋️</div>
-        <div class="badge-text">
-          <strong>Low Rep</strong>
-          <p>Heavy load, high sets, low reps (5×5, 6×4)</p>
-        </div>
-      </div>
-      <div class="badge-row">
-        <div class="badge-icon">⏱️</div>
-        <div class="badge-text">
-          <strong>Tempo</strong>
-          <p>Prescribed negatives or pauses (4:0:1:0)</p>
-        </div>
-      </div>
-      <div class="badge-row">
-        <div class="badge-icon">🔥</div>
-        <div class="badge-text">
-          <strong>High Rep</strong>
-          <p>Pump-focused, high volume (5×20, 4×15)</p>
-        </div>
-      </div>
-      <div class="badge-row">
-        <div class="badge-icon">↘️</div>
-        <div class="badge-text">
-          <strong>Drop Set</strong>
-          <p>Strip weight at end of set, continue immediately</p>
-        </div>
-      </div>
-      <div class="badge-row">
-        <div class="badge-icon">💀</div>
-        <div class="badge-text">
-          <strong>AMRAP</strong>
-          <p>As many reps as possible — push until failure</p>
-        </div>
-      </div>
-      <div class="badge-row">
-        <div class="badge-icon">⚡</div>
-        <div class="badge-text">
-          <strong>20s Rest</strong>
-          <p>Minimal rest between sets — metabolic stress</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div class="bottom-back">
     <a href="index.html">← Back to Programs</a>
   </div>
 
 </div><!-- /page-wrap -->
 
-<script>
-  // Badge key toggle
-  function toggleBadgeKey() {
-    const body    = document.getElementById('badgeKeyBody');
-    const toggle  = document.getElementById('badgeToggle');
-    const isOpen  = body.classList.contains('open');
-    body.classList.toggle('open', !isOpen);
-    toggle.classList.toggle('open', !isOpen);
-    toggle.textContent = isOpen ? '▼' : '▲';
-  }
-</script>
 <script>
 /* ── SMART BACK NAV ── */
 (function(){
