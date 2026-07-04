@@ -241,21 +241,43 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .ss-card.is-tri .ss-x{color:#f59e0b;}
 
 /* ── TYPE BADGES ────────────────────────────────────────────────── */
-.type-badge{display:inline-block;font-size:11px;font-weight:800;padding:3px 8px;border-radius:5px;letter-spacing:0.05em;text-transform:uppercase;}
-.tb-pyramid{background:rgba(249,115,22,0.15);color:#fb923c;border:1px solid rgba(249,115,22,0.25);}
-.tb-lowrep{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.25);}
-.tb-tempo{background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.25);}
-.tb-highrep{background:rgba(212,175,55,0.15);color:#d4af37;border:1px solid rgba(212,175,55,0.25);}
-.tb-highrep12{background:rgba(234,179,8,0.15);color:#fbbf24;border:1px solid rgba(234,179,8,0.25);}
-.tb-highrep20{background:rgba(217,119,6,0.2);color:#fb923c;border:1px solid rgba(217,119,6,0.3);}
-.tb-midset{background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.25);}
-.tb-drop{background:rgba(244,63,94,0.15);color:#fb7185;border:1px solid rgba(244,63,94,0.25);}
-.tb-amrap{background:rgba(239,68,68,0.2);color:#ef4444;border:1px solid rgba(239,68,68,0.35);}
-.tb-highset{background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.25);}
-.tb-superset{background:rgba(168,85,247,0.18);color:#c084fc;border:1px solid rgba(168,85,247,0.3);}
-.tb-minrest{background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.25);}
-.tb-optional{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.25);}
-.tb-finisher{background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.25);}
+/* Flattened — solid tint only, no border. The color still carries into the
+   card's hero rep-number glow via --rep-glow-rgb below, so the badge and the
+   big numbers read as one accent instead of two competing decorations. */
+.type-badge{display:inline-block;font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:6px;letter-spacing:0.04em;text-transform:uppercase;}
+.tb-pyramid{background:rgba(249,115,22,0.2);color:#fb923c;}
+.tb-lowrep{background:rgba(239,68,68,0.2);color:#f87171;}
+.tb-tempo{background:rgba(6,182,212,0.2);color:#22d3ee;}
+.tb-highrep{background:rgba(212,175,55,0.2);color:#d4af37;}
+.tb-highrep12{background:rgba(234,179,8,0.2);color:#fbbf24;}
+.tb-highrep20{background:rgba(217,119,6,0.24);color:#fb923c;}
+.tb-midset{background:rgba(139,92,246,0.2);color:#a78bfa;}
+.tb-drop{background:rgba(244,63,94,0.2);color:#fb7185;}
+.tb-amrap{background:rgba(239,68,68,0.24);color:#ef4444;}
+.tb-highset{background:rgba(52,211,153,0.2);color:#34d399;}
+.tb-superset{background:rgba(168,85,247,0.22);color:#c084fc;}
+.tb-minrest{background:rgba(139,92,246,0.2);color:#a78bfa;}
+.tb-optional{background:rgba(100,116,139,0.2);color:#94a3b8;}
+.tb-finisher{background:rgba(16,185,129,0.2);color:#34d399;}
+
+/* Hero rep-number glow picks up the exercise's featured intensifier color
+   instead of always the page's generic accent. Numbers stay solid white for
+   legibility — only the ambient glow (text-shadow) retints per type. Covers
+   both badge systems in the codebase: descendant .tb-* badges (pmc/cat-*
+   pages) and the .is-* modifier classes (mm-p1/mc-* multi-week pages). */
+.a-card:has(.tb-highrep){--rep-glow-rgb:212,175,55;}
+.a-card:has(.tb-highrep12){--rep-glow-rgb:234,179,8;}
+.a-card:has(.tb-highrep20){--rep-glow-rgb:217,119,6;}
+.a-card:has(.tb-lowrep){--rep-glow-rgb:239,68,68;}
+.a-card:has(.tb-pyramid){--rep-glow-rgb:249,115,22;}
+.a-card:has(.tb-tempo){--rep-glow-rgb:6,182,212;}
+.a-card:has(.tb-drop),.a-card:has(.tb-amrap){--rep-glow-rgb:244,63,94;}
+.a-card:has(.tb-superset),.a-card:has(.tb-midset){--rep-glow-rgb:168,85,247;}
+.a-card:has(.tb-highset),.a-card:has(.tb-finisher){--rep-glow-rgb:52,211,153;}
+.a-card.is-ss{--rep-glow-rgb:168,85,247;}
+.a-card.is-tri{--rep-glow-rgb:245,158,11;}
+.a-card.is-cluster{--rep-glow-rgb:34,211,238;}
+.a-card.is-drop{--rep-glow-rgb:244,63,94;}
 
 /* ── WARMUP CARD ────────────────────────────────────────────────── */
 .warmup-card{border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:flex-start;gap:10px;}
@@ -399,12 +421,12 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .a-leg{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
 .a-leg + .a-leg{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,0.07);}
 .a-rep{font-size:calc(25px * var(--density));font-weight:900;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;color:#3a4661;line-height:1;transition:color 0.35s ease,opacity 0.35s ease,text-shadow 0.35s ease;}
-.a-rep.live{color:#fff;text-shadow:0 0 10px rgba(var(--accent-rgb),0.55),0 0 22px rgba(var(--accent-rgb),0.4);animation:repGlow 2.6s ease-in-out infinite;}
+.a-rep.live{color:#fff;text-shadow:0 0 10px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.55),0 0 22px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.4);animation:repGlow 2.6s ease-in-out infinite;}
 /* completed working set — settles to a calm dim-green, no glow (Phase 3) */
 .a-rep.rep-done{color:#34d399;opacity:0.5;text-shadow:none;animation:none;}
 @keyframes repGlow{
-  0%,100%{text-shadow:0 0 8px rgba(var(--accent-rgb),0.45),0 0 18px rgba(var(--accent-rgb),0.28);}
-  50%{text-shadow:0 0 14px rgba(var(--accent-rgb),0.75),0 0 30px rgba(var(--accent-rgb),0.5);}
+  0%,100%{text-shadow:0 0 8px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.45),0 0 18px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.28);}
+  50%{text-shadow:0 0 14px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.75),0 0 30px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.5);}
 }
 @media(prefers-reduced-motion:reduce){.a-rep.live{animation:none;}}
 .a-rep.special{color:#fb7185;font-size:18px;text-shadow:0 0 14px rgba(251,113,133,0.4);}
