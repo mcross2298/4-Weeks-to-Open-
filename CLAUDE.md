@@ -51,6 +51,13 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
    > SVG icons, and the `desc` field text has already drifted from the copy
    > shown in `#flagGrid`'s `.cat-meta`. Until that's tackled as its own phase,
    > follow the two-place manual update above and don't skip the rail.
+   >
+   > `color` is the one field CI actually enforces: `tools/check-program-colors.js`
+   > fails the build if `MC_PM_DATA.programs[].color` doesn't exactly match the
+   > `.cat-card.<id>` border-top color in `dashboard.html`, so a hand-edit that
+   > drifts one without the other is caught before deploy (it does not check
+   > `.rail-card.<id>`, which intentionally uses a muted variant of the same hue,
+   > not the literal color).
 5. **Commit and push to a feature branch in `4-Weeks-to-Open-`.**
 6. **Create a draft PR targeting `main` of `4-Weeks-to-Open-`.**
 7. **Merge to main** → the deploy pipeline auto-propagates all changes to

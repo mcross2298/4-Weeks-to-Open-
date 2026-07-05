@@ -55,6 +55,8 @@ jobs:
             console.assert(applyCoeff(315, 'Barbell') === 315, 'Barbell e1RM coeff: no change');
             console.log('Weight-math assertions passed');
           "
+      - name: Program color-sync check (mc-pm-data.js vs dashboard.html)
+        run: node tools/check-program-colors.js
       - name: Generate service worker (auto version + precache list)
         run: python3 tools/build-sw.py --version "ci-${{ github.run_number }}"
       - name: Market-extraction leak check (content-manifest.json)
