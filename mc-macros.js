@@ -145,11 +145,11 @@
     var head = el('div', 'ntx-head');
     head.appendChild(el('div', 'ntx-head-date', esc(prettyDay(selKey))));
     var actions = el('div', 'ntx-head-actions');
-    var today = el('button', 'ntx-ico', '◎'); today.title = 'Jump to today';
+    var today = el('button', 'ntx-ico', '◎'); today.title = 'Jump to today'; today.setAttribute('aria-label', 'Jump to today');
     today.onclick = function () { selKey = todayKey(); render(); };
-    var fav = el('button', 'ntx-ico', '★'); fav.title = 'Favorite foods';
+    var fav = el('button', 'ntx-ico', '★'); fav.title = 'Favorite foods'; fav.setAttribute('aria-label', 'Favorite foods');
     fav.onclick = function () { addSlotMs = defaultSlot(); openFavorites(); };
-    var gear = el('button', 'ntx-ico', '⚙'); gear.title = 'Goals';
+    var gear = el('button', 'ntx-ico', '⚙'); gear.title = 'Goals'; gear.setAttribute('aria-label', 'Goals');
     gear.onclick = openCalculator;
     actions.appendChild(today); actions.appendChild(fav); actions.appendChild(gear);
     head.appendChild(actions);
@@ -158,9 +158,9 @@
 
   function renderCalendar() {
     var cal = el('div', 'ntx-cal');
-    var prev = el('button', 'ntx-cal-nav', '‹');
+    var prev = el('button', 'ntx-cal-nav', '‹'); prev.setAttribute('aria-label', 'Previous week');
     prev.onclick = function () { selKey = addDays(selKey, -7); render(); };
-    var next = el('button', 'ntx-cal-nav', '›');
+    var next = el('button', 'ntx-cal-nav', '›'); next.setAttribute('aria-label', 'Next week');
     next.onclick = function () { selKey = addDays(selKey, 7); render(); };
     var days = el('div', 'ntx-cal-days');
     var start = mondayOf(selKey), tk = todayKey();
@@ -253,7 +253,7 @@
     txt.onclick = function () { addSlotMs = defaultSlot(); openSearch(); };
     bar.appendChild(txt);
     if (window.MCBarcode && MCBarcode.supported()) {
-      var scan = el('button', 'ntx-find-scan', '▦'); scan.title = 'Scan barcode';
+      var scan = el('button', 'ntx-find-scan', '▦'); scan.title = 'Scan barcode'; scan.setAttribute('aria-label', 'Scan barcode');
       scan.onclick = function () { addSlotMs = defaultSlot(); openScan(); };
       bar.appendChild(scan);
     }
@@ -275,7 +275,7 @@
       var row = el('div', 'ntx-hr' + (list.length ? ' has' : '') + (h === nowHour ? ' now' : ''));
       var rail = el('div', 'ntx-hr-rail');
       rail.appendChild(el('div', 'ntx-hr-lbl', hourLabel(h)));
-      var add = el('button', 'ntx-hr-add', '+');
+      var add = el('button', 'ntx-hr-add', '+'); add.setAttribute('aria-label', 'Add food at ' + hourLabel(h));
       (function (hour) { add.onclick = function () { openHourAdd(hour); }; })(h);
       rail.appendChild(add);
       row.appendChild(rail);
@@ -348,32 +348,15 @@
     var row = el('div', 'nt-step');
     row.innerHTML = '<div class="nt-step-lbl">' + esc(label) + '</div>';
     var ctl = el('div', 'nt-step-ctl');
-    var minus = el('button', 'nt-step-btn', '−');
+    var minus = el('button', 'nt-step-btn', '−'); minus.setAttribute('aria-label', 'Decrease ' + label);
     var val = el('div', 'nt-step-val', String(value));
-    var plus = el('button', 'nt-step-btn', '+');
+    var plus = el('button', 'nt-step-btn', '+'); plus.setAttribute('aria-label', 'Increase ' + label);
     function set(v) { v = Math.max(min, Math.round(v)); val.textContent = String(v); onChange(v); }
     minus.onclick = function () { set(num(val.textContent) - step); };
     plus.onclick = function () { set(num(val.textContent) + step); };
     ctl.appendChild(minus); ctl.appendChild(val); ctl.appendChild(plus);
     row.appendChild(ctl);
     row.setVal = function (v) { val.textContent = String(Math.round(v)); };
-    return row;
-  }
-
-  // a float-friendly stepper for servings (0.5 step)
-  function stepperFloat(label, value) {
-    var row = el('div', 'nt-step');
-    row.innerHTML = '<div class="nt-step-lbl">' + esc(label) + '</div>';
-    var ctl = el('div', 'nt-step-ctl');
-    var minus = el('button', 'nt-step-btn', '−');
-    var val = el('div', 'nt-step-val', String(value));
-    var plus = el('button', 'nt-step-btn', '+');
-    function set(v) { v = Math.max(0.5, Math.round(v * 2) / 2); val.textContent = String(v); }
-    minus.onclick = function () { set(num(val.textContent) - 0.5); };
-    plus.onclick = function () { set(num(val.textContent) + 0.5); };
-    ctl.appendChild(minus); ctl.appendChild(val); ctl.appendChild(plus);
-    row.appendChild(ctl);
-    row.value = function () { return num(val.textContent, 1); };
     return row;
   }
 
@@ -637,7 +620,10 @@
         }
       }).catch(function () { s.close(); openManual({ source: 'barcode', note: 'Lookup failed (offline?). Enter macros manually.' }); });
     }).catch(function (err) {
-      alert((err && err.message) || 'Could not open the scanner.');
+      var s = sheet('Scanner unavailable', (err && err.message) || 'Could not open the scanner.');
+      var ok = el('button', 'nt-btn nt-btn-gold', 'OK');
+      ok.onclick = function () { s.close(); };
+      s.sh.appendChild(ok);
     });
   }
 
@@ -669,33 +655,6 @@
       s.close(); render();
     };
     s.sh.appendChild(add);
-  }
-
-  // ---- edit logged entry ---------------------------------------------------
-  function openEdit(id) {
-    var data = read(), day = getDay(data, selKey);
-    var entry = null;
-    day.entries.forEach(function (e) { if (e.id === id) entry = e; });
-    if (!entry) return;
-    var s = sheet(entry.name, 'Logged at ' + timeLabel(entry.at || entry.ts || Date.now()) + ' · adjust quantity or remove.');
-    var qWrap = el('div', 'nt-form');
-    s.sh.appendChild(qWrap);
-    var qStep = stepperFloat('Servings', num(entry.qty, 1));
-    qWrap.appendChild(qStep);
-
-    var save = el('button', 'nt-btn nt-btn-gold', 'Save');
-    save.onclick = function () {
-      var obj = read(), d = getDay(obj, selKey);
-      d.entries.forEach(function (e) { if (e.id === id) { e.qty = qStep.value(); e.ts = Date.now(); } });
-      write(obj); s.close(); render();
-    };
-    var del = el('button', 'nt-btn nt-btn-danger', 'Remove from log');
-    del.onclick = function () {
-      var obj = read(), d = getDay(obj, selKey);
-      d.entries = d.entries.filter(function (e) { return e.id !== id; });
-      write(obj); s.close(); render();
-    };
-    s.sh.appendChild(save); s.sh.appendChild(del);
   }
 
   // ---- add an entry at the pending slot ------------------------------------
@@ -768,7 +727,7 @@
       d.favorites.unshift({
         name: food.name, brand: food.brand, basis: food.basis, servingLabel: food.servingLabel,
         grams: food.grams, per: food.per, nutr: food.nutr, code: food.code,
-        source: food.source || 'fav', kind: food.kind || 'food'
+        source: food.source || 'fav'
       });
     }
     write(d); return i < 0;
@@ -841,7 +800,7 @@
         '</div>' +
         keypadHtml() +
         '<div class="nt-facts-btns">' +
-          '<button class="nt-fav" id="ntFav" title="Favorite">' + (fav ? '★' : '☆') + '</button>' +
+          '<button class="nt-fav" id="ntFav" title="Favorite" aria-label="' + (fav ? 'Remove from favorites' : 'Add to favorites') + '">' + (fav ? '★' : '☆') + '</button>' +
           '<button class="nt-btn nt-btn-gold" id="ntLog">' + (editId ? 'Update' : 'Log Food') + '</button>' +
         '</div>' +
         (editId ? '<button class="nt-btn nt-btn-danger" id="ntDel">Remove from log</button>' : '');
@@ -851,7 +810,8 @@
     function keypadHtml() {
       var keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'];
       return '<div class="nt-keypad" id="ntPad">' + keys.map(function (k) {
-        return '<button data-k="' + k + '">' + k + '</button>';
+        var label = k === '⌫' ? ' aria-label="Backspace"' : (k === '.' ? ' aria-label="Decimal point"' : '');
+        return '<button data-k="' + k + '"' + label + '>' + k + '</button>';
       }).join('') + '</div>';
     }
     function press(k) {
@@ -904,7 +864,11 @@
       pad.onclick = function (e) { var b = e.target.closest('[data-k]'); if (b) press(b.dataset.k); };
       var uom = $('#ntUom', s.sh);
       uom.onclick = function (e) { var b = e.target.closest('[data-u]'); if (b) setUnit(b.dataset.u); };
-      $('#ntFav', s.sh).onclick = function () { toggleFav(food); var on = isFav(food); this.textContent = on ? '★' : '☆'; this.classList.toggle('on', on); };
+      $('#ntFav', s.sh).onclick = function () {
+        toggleFav(food); var on = isFav(food);
+        this.textContent = on ? '★' : '☆'; this.classList.toggle('on', on);
+        this.setAttribute('aria-label', on ? 'Remove from favorites' : 'Add to favorites');
+      };
       $('#ntFav', s.sh).classList.toggle('on', isFav(food));
       $('#ntLog', s.sh).onclick = function () {
         var m = multBase();
@@ -934,29 +898,23 @@
   function openFavorites() {
     addSlotMs = addSlotMs || defaultSlot();
     var s = sheet('Favorite Foods', 'Quick-log the foods you eat most.');
-    var tab = 'food';
     var pending = [];
     var wrap = el('div', 'nt-fav-wrap');
     s.sh.appendChild(wrap);
     var bar = el('div', 'nt-fav-bar');
     s.sh.appendChild(bar);
 
-    function favsOf(kind) { return getFavs().filter(function (f) { return (f.kind || 'food') === kind; }); }
     function paint() {
-      var favs = favsOf(tab);
+      var favs = getFavs();
       wrap.innerHTML =
-        '<div class="nt-seg nt-fav-tabs">' +
-          '<button data-t="food"' + (tab === 'food' ? ' class="on"' : '') + '>🍽 Foods</button>' +
-          '<button data-t="meal"' + (tab === 'meal' ? ' class="on"' : '') + '>🥗 Meals</button>' +
-        '</div>' +
         (favs.length ? '<div class="nt-fav-list">' + favs.map(function (f, i) {
           var per = f.per || {};
           return '<div class="nt-fav-row" data-i="' + i + '">' +
             '<div class="nt-fav-main"><div class="nt-fav-name">' + esc(f.name) + '</div>' +
               '<div class="nt-fav-macros">🔥' + fmt(per.kcal) + ' · P' + fmt(per.p) + ' F' + fmt(per.f) + ' C' + fmt(per.c) + '</div></div>' +
-            '<button class="nt-fav-add" data-add="' + i + '">+</button></div>';
+            '<button class="nt-fav-add" data-add="' + i + '" aria-label="Add ' + esc(f.name) + ' to log">+</button></div>';
         }).join('') + '</div>'
-        : '<div class="nt-results-msg">No ' + (tab === 'meal' ? 'saved meals' : 'favorite foods') + ' yet. Tap ☆ on any food’s nutrition facts to save it here.</div>');
+        : '<div class="nt-results-msg">No favorite foods yet. Tap ☆ on any food’s nutrition facts to save it here.</div>');
       paintBar();
     }
     function paintBar() {
@@ -972,12 +930,10 @@
       };
     }
     wrap.onclick = function (e) {
-      var t = e.target.closest('[data-t]');
-      if (t) { tab = t.dataset.t; pending = []; paint(); return; }
       var add = e.target.closest('[data-add]');
-      if (add) { var f = favsOf(tab)[+add.dataset.add]; if (f) { pending.push(f); paintBar(); add.textContent = '✓'; setTimeout(function () { add.textContent = '+'; }, 700); } return; }
+      if (add) { var f = getFavs()[+add.dataset.add]; if (f) { pending.push(f); paintBar(); add.textContent = '✓'; setTimeout(function () { add.textContent = '+'; }, 700); } return; }
       var row = e.target.closest('.nt-fav-row');
-      if (row) { var ff = favsOf(tab)[+row.dataset.i]; if (ff) openFacts(ff, {}); }
+      if (row) { var ff = getFavs()[+row.dataset.i]; if (ff) openFacts(ff, {}); }
     };
     paint();
   }
@@ -1135,7 +1091,6 @@
         'color:var(--muted2);font-size:22px;cursor:pointer;font-family:inherit;}' +
       '.nt-fav.on{color:var(--gold);border-color:var(--gold);}' +
       /* ── Favorites library (Phase 3) ── */
-      '.nt-fav-tabs{margin-bottom:12px;}' +
       '.nt-fav-list{display:flex;flex-direction:column;gap:8px;max-height:54vh;overflow-y:auto;}' +
       '.nt-fav-row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 13px;cursor:pointer;}' +
       '.nt-fav-main{flex:1;min-width:0;}' +
@@ -1156,7 +1111,15 @@
   // re-render when another tab/device changes the store (sync pull)
   window.addEventListener('storage', function (ev) { if (ev.key === KEY) render(); });
 
+  // land near "now" (or the first logged food) instead of always at 12 AM
+  function scrollToRelevant() {
+    var target = host.querySelector('.ntx-hr.now') || host.querySelector('.ntx-hr.has');
+    if (!target) return;
+    requestAnimationFrame(function () { target.scrollIntoView({ block: 'center', behavior: 'auto' }); });
+  }
+
   render();
+  scrollToRelevant();
   consumeDeepLink();
   window.MCMacros = { render: render, openCalculator: openCalculator };
 })();
