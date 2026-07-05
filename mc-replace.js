@@ -16,8 +16,15 @@
       }
     }catch(e){}
   }());
+  // Swaps made from the meatball menu (mc-card-actions.js) default to a
+  // global key so the same exercise substitution follows onto other program
+  // pages too; a page-specific entry (this page's REPLACE_KEY) still wins
+  // when both exist, so an existing per-page override keeps working.
+  const GLOBAL_REPLACE_KEY = 'mc_replacements_global';
   function applyReplacements() {
-    const replacements = JSON.parse(localStorage.getItem(REPLACE_KEY)||'{}');
+    var globalReps = JSON.parse(localStorage.getItem(GLOBAL_REPLACE_KEY)||'{}');
+    var pageReps = JSON.parse(localStorage.getItem(REPLACE_KEY)||'{}');
+    const replacements = Object.assign({}, globalReps, pageReps);
     if (!Object.keys(replacements).length) return;
     document.querySelectorAll('.ex-card, .ex-item, .lift-card').forEach(card => {
       const nameEl = card.querySelector('.ex-name, .lift-name');

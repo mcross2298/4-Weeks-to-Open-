@@ -189,7 +189,6 @@
   -webkit-tap-highlight-color:transparent;
 }
 .mc-sub-row:active{background:rgba(34,211,238,0.10);border-color:rgba(34,211,238,0.3);}
-.mc-sub-na{opacity:0.42;}
 .mc-sub-name{flex:1;font-size:14px;font-weight:700;color:#f1f5f9;
   overflow-wrap:break-word;word-break:break-word;}
 .mc-sub-eq{
@@ -203,7 +202,6 @@
 .mc-eq-machine,.mc-eq-plateloaded,.mc-eq-smith{background:rgba(251,146,60,0.14);color:#fdba74;border-color:rgba(251,146,60,0.3);}
 .mc-eq-bodyweight{background:rgba(134,239,172,0.14);color:#86efac;border-color:rgba(134,239,172,0.3);}
 .mc-sub-wt{font-size:12px;font-weight:800;color:#22d3ee;flex-shrink:0;}
-.mc-sub-naflag{font-size:10px;font-weight:700;color:#94a3b8;flex-shrink:0;}
 .mc-sub-empty{padding:18px 14px;font-size:13px;font-weight:600;color:#94a3b8;text-align:center;}
 .mc-sub-lib{justify-content:flex-start;color:#94a3b8;margin-top:4px;}
 .mc-sub-done{justify-content:center;background:#22d3ee;color:#04222a;font-weight:800;margin-top:6px;}

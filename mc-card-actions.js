@@ -247,13 +247,14 @@
 
   // ====================================================================== //
   //  SUBSTITUTE  (Phase 1 — biomechanical, in-place swap)                  //
-  //  Opens a bottom-sheet of alternatives ranked by movement similarity +  //
-  //  the user's Gym Profile (available equipment first), each with a        //
+  //  Opens a bottom-sheet of alternatives ranked by movement + muscle       //
+  //  similarity (catalog-driven only, no gym-profile filter), each with a   //
   //  predicted starting weight. Picking one swaps the card in place, badges //
   //  it REPLACED (mc-replace.js storage shape) and paints a weight hint —   //
   //  master templates are never touched.                                    //
   // ====================================================================== //
-  var REPLACE_KEY  = 'mc_replacements|' + PAGE_ID;   // { origLower: newName }
+  var REPLACE_KEY  = 'mc_replacements|' + PAGE_ID;   // { origLower: newName } — per-page override
+  var GLOBAL_REPLACE_KEY = 'mc_replacements_global'; // { origLower: newName } — applies on every page
   var SWAP_SUG_KEY = 'mc_swap_suggest|' + PAGE_ID;   // { nameLower: weightLb }
   var subOverlay = null, subCard = null;
 
@@ -343,39 +344,54 @@
       '</div>';
   }
 
+  // No gym-profile UI exists to ever set a piece of equipment unavailable
+  // (a locked product decision — see CLAUDE.md Task 3.1: "gym-profile
+  // filtering removed... catalog-driven only, no user-input friction"), so
+  // a.available is always true here. Retired the dead "not in gym" flag
+  // rather than rendering a state that can never actually occur.
   function subRow(a) {
-    var cls = 'mc-sub-row' + (a.available ? '' : ' mc-sub-na');
     var wt = a.weight ? '<span class="mc-sub-wt">≈ ' + a.weight + ' lb</span>' : '';
-    var na = a.available ? '' : '<span class="mc-sub-naflag">not in gym</span>';
-    return '<button class="' + cls + '" data-pick="' + subEsc(a.name) + '" data-w="' + (a.weight || '') + '">' +
+    return '<button class="mc-sub-row" data-pick="' + subEsc(a.name) + '" data-w="' + (a.weight || '') + '">' +
              '<span class="mc-sub-eq mc-eq-' + a.equipment.toLowerCase().replace(/[^a-z]/g, '') + '">' + subEsc(a.equipment) + '</span>' +
              '<span class="mc-sub-name">' + subEsc(a.name) + '</span>' +
-             wt + na +
+             wt +
            '</button>';
   }
 
   // Apply the swap: persist (mc-replace.js shape, re-rooted to the immutable
   // original), repaint name + REPLACED badge in place, store + paint the
   // predicted weight, and pre-fill the set logger's empty weight fields.
-  // Persistence chain: applySwap() writes {origLower: newName} to
-  // mc_replacements|<pageId> in localStorage; on the next page load
-  // mc-replace.js::applyReplacements() reads that key and re-paints the swap,
-  // so the substitution survives a refresh without any additional write-back.
+  // Persistence chain: writes {origLower: newName} either to this page's
+  // mc_replacements|<pageId> or to mc_replacements_global (see writeToPage
+  // below); on the next page load mc-replace.js::applyReplacements() reads
+  // both and re-paints the swap, so it survives a refresh without any
+  // additional write-back.
   function applySwap(card, newName, weight) {
     if (!card || !newName) { closeSub(); return; }
     var nameEl = card.querySelector(NAME_SEL); if (!nameEl) { closeSub(); return; }
     var visible = cardName(card);
-    var reps = readJSON(REPLACE_KEY);
-    // re-root: if the current name is itself a replacement target, update the
-    // original key so a reload chains correctly instead of forking.
+    var pageReps = readJSON(REPLACE_KEY);
+    var globalReps = readJSON(GLOBAL_REPLACE_KEY);
+    var effective = Object.assign({}, globalReps, pageReps);
+    // re-root: if the current name is itself a replacement target, resolve to
+    // the original key (wherever it lives) so a reload chains correctly
+    // instead of forking.
     var rootKey = visible.toLowerCase();
-    Object.keys(reps).forEach(function (k) {
-      if (reps[k] && reps[k].toLowerCase() === rootKey) rootKey = k;
+    Object.keys(effective).forEach(function (k) {
+      if (effective[k] && effective[k].toLowerCase() === rootKey) rootKey = k;
     });
-    var hadRoot = Object.prototype.hasOwnProperty.call(reps, rootKey);
-    var prevRootVal = reps[rootKey];
-    reps[rootKey] = newName;
-    writeJSON(REPLACE_KEY, reps);
+    // This exercise already has a page-specific override → keep respecting
+    // it. Otherwise write globally by default, so the swap follows this
+    // exercise onto every other program page instead of requiring the same
+    // manual re-decision everywhere it appears (repeated gym-floor
+    // constraints were the actual friction this was fixing).
+    var writeToPage = Object.prototype.hasOwnProperty.call(pageReps, rootKey);
+    var targetKey = writeToPage ? REPLACE_KEY : GLOBAL_REPLACE_KEY;
+    var targetMap = writeToPage ? pageReps : globalReps;
+    var hadRoot = Object.prototype.hasOwnProperty.call(targetMap, rootKey);
+    var prevRootVal = targetMap[rootKey];
+    targetMap[rootKey] = newName;
+    writeJSON(targetKey, targetMap);
 
     // weight suggestion store, keyed by the new name (what the card now shows)
     var sug = readJSON(SWAP_SUG_KEY);
@@ -395,9 +411,9 @@
     // A fat-thumb tap swaps a lift mid-set with no recovery path otherwise —
     // give it a few seconds to undo back to exactly the pre-swap state.
     toast(newName + ' — swapped', 'Undo', function () {
-      var reps2 = readJSON(REPLACE_KEY);
-      if (hadRoot) reps2[rootKey] = prevRootVal; else delete reps2[rootKey];
-      writeJSON(REPLACE_KEY, reps2);
+      var m2 = readJSON(targetKey);
+      if (hadRoot) m2[rootKey] = prevRootVal; else delete m2[rootKey];
+      writeJSON(targetKey, m2);
 
       var sug2 = readJSON(SWAP_SUG_KEY);
       if (hadSug) sug2[newKey] = prevSugVal; else delete sug2[newKey];

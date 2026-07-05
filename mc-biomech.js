@@ -12,14 +12,15 @@
    Exposes window.MCBiomech:
      classify(name)                     -> { pattern, equipment, muscle }
      alternatives(name, opts)           -> ranked [{ name, equipment, pattern,
-                                                     muscle, available, weight }]
+                                                     muscle, weight }]
      convertWeight(fromName, toName, w) -> predicted target weight (lb, /5)
-     getGym() / setGym(obj)             -> mc_gym_profile equipment availability
      EQUIP                              -> ordered equipment list
 
    Strict matching (per product decision): an alternative must share BOTH the
-   movement pattern AND the primary muscle. Available-equipment matches rank
-   first; the rest are returned flagged available:false so the UI can dim them.
+   movement pattern AND the primary muscle. Purely catalog-driven — there is
+   no gym-profile equipment filter (a locked decision, see CLAUDE.md Task 3.1:
+   "no user-input friction"); a gym-availability toggle/getGym()/setGym() used
+   to exist here but had no UI ever wired to set it, so it was retired.
 
    Weight conversion: a static leverage table (machines carry more load than
    free weights for the same effort) predicts the starting weight, but any real
@@ -36,13 +37,6 @@
   var LEVERAGE = {
     'Machine': 1.20, 'Plate-Loaded': 1.10, 'Smith': 1.08,
     'Cable': 0.90, 'Barbell': 1.00, 'Dumbbell': 0.82, 'Bodyweight': 1.00
-  };
-  // Gym-profile keys <-> equipment buckets. Smith/Plate-Loaded fold under the
-  // "machines" toggle; Bodyweight is always available.
-  var EQUIP_TO_GYM = {
-    'Machine': 'machines', 'Plate-Loaded': 'machines', 'Smith': 'machines',
-    'Cable': 'cables', 'Barbell': 'barbells', 'Dumbbell': 'dumbbells',
-    'Bodyweight': null
   };
 
   // ---- equipment inference from the exercise name -------------------------
@@ -224,38 +218,14 @@
     return out;
   }
 
-  // ---- gym profile --------------------------------------------------------
-  var GYM_KEY = 'mc_gym_profile';
-  var GYM_DEFAULT = { cables: true, barbells: true, dumbbells: true, machines: true };
-  function getGym() {
-    try {
-      var raw = JSON.parse(localStorage.getItem(GYM_KEY) || '{}');
-      return {
-        cables: raw.cables !== false, barbells: raw.barbells !== false,
-        dumbbells: raw.dumbbells !== false, machines: raw.machines !== false
-      };
-    } catch (e) { return Object.assign({}, GYM_DEFAULT); }
-  }
-  function setGym(obj) {
-    try { localStorage.setItem(GYM_KEY, JSON.stringify(obj || {})); } catch (e) {}
-  }
-  function equipAvailable(equipment, gym) {
-    var k = EQUIP_TO_GYM[equipment];
-    if (!k) return true;            // bodyweight: always available
-    return !!(gym || getGym())[k];
-  }
-
   // ---- alternatives -------------------------------------------------------
   // Catalog-driven only, no gym-profile filtering: tier 1 is same movement
   // pattern AND same primary muscle; tier 2 (used to fill out the top 3 when
   // tier 1 is thin) is same muscle, any pattern. Each tier is sorted
-  // alphabetically. `available` is still computed and returned so the UI can
-  // show its "not in gym" flag, but it never affects which exercises make the
-  // list or their order.
+  // alphabetically.
   function alternatives(name, opts) {
     opts = opts || {};
     var src = classify(name, opts.muscle);
-    var gym = opts.gym || getGym();
     var selfKey = String(name || '').trim().toLowerCase();
     var candidates = pool().filter(function (e) {
       return e.name.toLowerCase() !== selfKey;
@@ -271,7 +241,6 @@
     function toRow(e) {
       return {
         name: e.name, equipment: e.equipment, pattern: e.pattern, muscle: e.muscle,
-        available: equipAvailable(e.equipment, gym),
         weight: convertWeight(name, e.name, opts.lastWeight)
       };
     }
@@ -319,10 +288,6 @@
     classify: classify,
     alternatives: alternatives,
     convertWeight: convertWeight,
-    getGym: getGym,
-    setGym: setGym,
-    equipAvailable: equipAvailable,
-    EQUIP: EQUIP,
-    EQUIP_TO_GYM: EQUIP_TO_GYM
+    EQUIP: EQUIP
   };
 })();
