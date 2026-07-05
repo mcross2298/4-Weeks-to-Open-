@@ -83,6 +83,10 @@
   // selected day + the slot the next add lands on
   var selKey = todayKey();
   var addSlotMs = null;
+  // Empty-hour runs collapse into one tappable strip (see renderTimeline) —
+  // remembers which collapsed runs the user has expanded, keyed by the run's
+  // first hour, so re-renders (e.g. after logging food) don't snap shut.
+  var expandedRuns = {};
 
   function defaultSlot() {
     if (selKey === todayKey()) return Date.now();
@@ -282,6 +286,36 @@
     return bar;
   }
 
+  // One real hour row: rail (label + add button) + any logged food cards.
+  function hourRow(h, list, nowHour) {
+    var row = el('div', 'ntx-hr' + (list.length ? ' has' : '') + (h === nowHour ? ' now' : ''));
+    var rail = el('div', 'ntx-hr-rail');
+    rail.appendChild(el('div', 'ntx-hr-lbl', hourLabel(h)));
+    var add = el('button', 'ntx-hr-add', '+'); add.setAttribute('aria-label', 'Add food at ' + hourLabel(h));
+    add.onclick = function () { openHourAdd(h); };
+    rail.appendChild(add);
+    row.appendChild(rail);
+
+    var body = el('div', 'ntx-hr-body');
+    list.forEach(function (e) {
+      var q = num(e.qty, 1), per = e.per || {};
+      var card = el('div', 'ntx-fcard');
+      card.innerHTML =
+        '<div class="ntx-fcard-top">' +
+          '<div class="ntx-fcard-name">' + esc(e.name) + (q !== 1 ? ' ×' + q : '') + '</div>' +
+          '<div class="ntx-fcard-time">' + timeLabel(e.at || e.ts || Date.now()) + '</div>' +
+        '</div>' +
+        '<div class="ntx-fcard-macros">' +
+          '<b style="color:' + COL.kcal + '">🔥' + Math.round(num(per.kcal) * q) + '</b>  ' +
+          'P ' + Math.round(num(per.p) * q) + '  F ' + Math.round(num(per.f) * q) + '  C ' + Math.round(num(per.c) * q) +
+        '</div>';
+      card.onclick = function () { openFacts(foodFromEntry(e), { entryId: e.id, qty: num(e.qty, 1) }); };
+      body.appendChild(card);
+    });
+    row.appendChild(body);
+    return row;
+  }
+
   function renderTimeline(entries) {
     // bucket entries by hour
     var byHour = {};
@@ -291,35 +325,46 @@
     });
 
     var nowHour = (selKey === todayKey()) ? new Date().getHours() : -1;
-    var time = el('div', 'ntx-time');
-    for (var h = 0; h < 24; h++) {
-      var list = byHour[h] || [];
-      var row = el('div', 'ntx-hr' + (list.length ? ' has' : '') + (h === nowHour ? ' now' : ''));
-      var rail = el('div', 'ntx-hr-rail');
-      rail.appendChild(el('div', 'ntx-hr-lbl', hourLabel(h)));
-      var add = el('button', 'ntx-hr-add', '+'); add.setAttribute('aria-label', 'Add food at ' + hourLabel(h));
-      (function (hour) { add.onclick = function () { openHourAdd(hour); }; })(h);
-      rail.appendChild(add);
-      row.appendChild(rail);
-
-      var body = el('div', 'ntx-hr-body');
-      list.forEach(function (e) {
-        var q = num(e.qty, 1), per = e.per || {};
-        var card = el('div', 'ntx-fcard');
-        card.innerHTML =
-          '<div class="ntx-fcard-top">' +
-            '<div class="ntx-fcard-name">' + esc(e.name) + (q !== 1 ? ' ×' + q : '') + '</div>' +
-            '<div class="ntx-fcard-time">' + timeLabel(e.at || e.ts || Date.now()) + '</div>' +
-          '</div>' +
-          '<div class="ntx-fcard-macros">' +
-            '<b style="color:' + COL.kcal + '">🔥' + Math.round(num(per.kcal) * q) + '</b>  ' +
-            'P ' + Math.round(num(per.p) * q) + '  F ' + Math.round(num(per.f) * q) + '  C ' + Math.round(num(per.c) * q) +
-          '</div>';
-        (function (entry) { card.onclick = function () { openFacts(foodFromEntry(entry), { entryId: entry.id, qty: num(entry.qty, 1) }); }; })(e);
-        body.appendChild(card);
+    // Once a run is expanded, every hour it originally covered renders
+    // individually forever (not just its first hour) — otherwise expanding
+    // just reveals hour 1 and immediately re-collapses hours 2+ into a new
+    // strip, since the run-detection below would treat them as a fresh run.
+    function isExpandedHour(h) {
+      return Object.keys(expandedRuns).some(function (startKey) {
+        var range = expandedRuns[startKey];
+        return h >= range.start && h <= range.end;
       });
-      row.appendChild(body);
-      time.appendChild(row);
+    }
+    var time = el('div', 'ntx-time');
+    var h = 0;
+    while (h < 24) {
+      var list = byHour[h] || [];
+      // A run of 3+ consecutive empty hours (never including "now", so the
+      // current hour is always visible on its own) collapses into one
+      // tappable strip instead of an unbroken wall of empty + buttons.
+      if (!list.length && h !== nowHour && !isExpandedHour(h)) {
+        var runStart = h, runEnd = h;
+        while (runEnd + 1 < 24 && !(byHour[runEnd + 1] || []).length &&
+               runEnd + 1 !== nowHour && !isExpandedHour(runEnd + 1)) runEnd++;
+        var runLen = runEnd - runStart + 1;
+        if (runLen >= 3) {
+          (function (start, end) {
+            var strip = el('div', 'ntx-hr-collapsed');
+            strip.setAttribute('role', 'button');
+            strip.tabIndex = 0;
+            var label = hourLabel(start) + ' – ' + hourLabel(end) + ' · nothing logged';
+            strip.textContent = label + '  ▸';
+            function expand() { expandedRuns[start] = { start: start, end: end }; render(); }
+            strip.onclick = expand;
+            strip.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); expand(); } };
+            time.appendChild(strip);
+          })(runStart, runEnd);
+          h = runEnd + 1;
+          continue;
+        }
+      }
+      time.appendChild(hourRow(h, list, nowHour));
+      h++;
     }
     return time;
   }
@@ -1039,6 +1084,9 @@
       '.ntx-hr-body{padding:4px 0 12px;display:flex;flex-direction:column;gap:6px;min-width:0;}' +
       '.ntx-hr.has .ntx-hr-rail{border-right-color:rgba(212,175,55,0.35);}' +
       '.ntx-hr.now .ntx-hr-lbl{color:var(--gold);}' +
+      '.ntx-hr-collapsed{cursor:pointer;padding:10px 8px 10px 62px;font-size:11px;font-weight:700;' +
+        'color:var(--muted2,#64748b);-webkit-tap-highlight-color:transparent;}' +
+      '.ntx-hr-collapsed:active{color:var(--muted,#94a3b8);}' +
       '.ntx-fcard{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:9px 12px;cursor:pointer;}' +
       '.ntx-fcard-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline;}' +
       '.ntx-fcard-name{font-size:13px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}' +

@@ -446,6 +446,9 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 .tab>div:last-child{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}
 .tab.active{color:var(--gold);}
 .tab-icon{font-size:20px;line-height:1;}
+/* History is the one tab that's a real page navigation, not an in-shell
+   panel switch like the other four — a small mark says so at a glance. */
+#tab-stats>div:last-child:after{content:' ↗';}
 
 /* ── PROGRAM SELECT SHEET ── */
 .ps-overlay{
