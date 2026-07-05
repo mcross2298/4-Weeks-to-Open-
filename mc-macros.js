@@ -117,6 +117,30 @@
     } catch (e) {}
     return 0;
   }
+
+  // Real training frequency (last 7 calendar days) from mc-live-tracker.js's
+  // 'mc_activity' day-streak map, so the macro calculator's Activity level
+  // isn't just a one-time guess disconnected from what the user actually did.
+  function trainedDaysLast7() {
+    try {
+      var act = JSON.parse(localStorage.getItem('mc_activity') || '{}');
+      var days = act.days || {};
+      var n = 0;
+      for (var i = 0; i < 7; i++) {
+        var d = new Date(); d.setDate(d.getDate() - i);
+        var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        if (days[key]) n++;
+      }
+      return n;
+    } catch (e) { return null; }
+  }
+  function suggestActivityFromLoad(n) {
+    if (n == null) return null;
+    if (n <= 1) return 'sedentary';
+    if (n <= 3) return 'light';
+    if (n <= 5) return 'moderate';
+    return 'active';
+  }
   function totalsOf(entries) {
     var t = { kcal: 0, p: 0, f: 0, c: 0 };
     (entries || []).forEach(function (e) {
@@ -473,10 +497,32 @@
       '<label class="nt-field"><span>Activity</span><select id="ntAct">' +
         MCMacroCalc.ACTIVITY.map(function (a) { return '<option value="' + a.id + '"' + (p.activity === a.id ? ' selected' : '') + '>' + a.label + ' — ' + a.sub + '</option>'; }).join('') +
       '</select></label>' +
+      '<div class="nt-act-hint" id="ntActHint"></div>' +
       '<div class="nt-seg nt-seg-3" id="ntGoal">' +
         MCMacroCalc.GOALS.map(function (g) { return '<button data-v="' + g.id + '" class="' + (p.goal === g.id ? 'on' : '') + '">' + g.label + '</button>'; }).join('') +
       '</div>';
     s.sh.appendChild(form);
+
+    // Nudge the Activity field toward what the user actually trained this
+    // week (mc_activity streak data) instead of leaving it a static guess.
+    (function () {
+      var trainedDays = trainedDaysLast7();
+      var suggested = suggestActivityFromLoad(trainedDays);
+      var hintEl = $('#ntActHint', s.sh);
+      if (!hintEl || trainedDays == null) return;
+      var current = p.activity || 'sedentary';
+      if (suggested && suggested !== current) {
+        var label = MCMacroCalc.ACTIVITY.filter(function (a) { return a.id === suggested; })[0];
+        hintEl.innerHTML = 'Trained ' + trainedDays + ' of the last 7 days — ' +
+          '<button type="button" class="nt-act-apply" id="ntActApply">use "' + (label ? label.label : suggested) + '"</button>';
+        $('#ntActApply', hintEl).onclick = function () {
+          $('#ntAct', s.sh).value = suggested;
+          hintEl.textContent = 'Set to match your last 7 days of training (' + trainedDays + ' days).';
+        };
+      } else {
+        hintEl.textContent = 'Matches your last 7 days of training (' + trainedDays + ' day' + (trainedDays === 1 ? '' : 's') + ').';
+      }
+    }());
 
     function seg(id, fallback) {
       var box = $('#' + id, s.sh);
@@ -1122,6 +1168,9 @@
       '.nt-seg button{flex:1;padding:12px;border-radius:11px;border:1px solid var(--border2);background:rgba(255,255,255,0.04);' +
         'color:var(--muted);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;}' +
       '.nt-seg button.on{background:var(--gold);border-color:var(--gold);color:#000;}' +
+      '.nt-act-hint{font-size:11.5px;color:var(--muted2);margin-top:-4px;}' +
+      '.nt-act-apply{background:none;border:none;padding:0;color:var(--gold);font-weight:800;font-size:11.5px;' +
+        'text-decoration:underline;cursor:pointer;font-family:inherit;}' +
       '.nt-results{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto;}' +
       '.nt-results-msg{font-size:13px;color:var(--muted2);text-align:center;padding:18px;}' +
       '.nt-result{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);' +
