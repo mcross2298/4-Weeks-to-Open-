@@ -17,6 +17,12 @@
   --border-dim:   rgba(255,255,255,0.1);
   --surface-bg:   #0a0a0a;
   --density:      1;       /* PM ThemeConfig density scale (mc-theme.js) */
+
+  /* Macro tracker palette (mc-macros.js reads these, not hardcoded hex) */
+  --macro-kcal:    #4d9fff;   /* blue — calories */
+  --macro-protein: #a78bfa;   /* purple — protein */
+  --macro-fat:     #fbbf24;   /* yellow — fat */
+  --macro-carb:    #fb923c;   /* orange — carbs */
 }
 
 /* ── PM Phase 2 — ThemeConfig knobs (set by mc-theme.js on <html>) ──── */
