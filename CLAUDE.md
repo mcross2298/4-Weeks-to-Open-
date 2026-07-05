@@ -27,11 +27,30 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
    array (before the `MARKET:STRIP` block) unless the program uses licensed
    influencer content, in which case place it inside the MARKET:STRIP section.
    Required fields: `id`, `icon`, `name`, `meta`, `color`, `desc`, `href`, `splits`.
-4. **Add card to `dashboard.html`** — insert a `.cat-card` block at the end of
-   `#flagGrid`, after the last existing flagship card. Add matching `.cat-card.<id>`
-   CSS (background gradient, border-top, `.cat-tag`, `.cat-designer` color) after the
-   last existing `.cat-card.<id>` block. The `.topbar-sub` program count is computed
-   from the rendered cards at runtime — no manual count to update.
+4. **Add card to `dashboard.html`** — this needs updates in TWO places, both
+   currently hand-maintained (not data-driven from `mc-pm-data.js` — a known gap,
+   see the "Dashboard rail / Programs grid duplication" note below):
+   - Insert a `.cat-card` block at the end of `#flagGrid`, after the last existing
+     flagship card. Add matching `.cat-card.<id>` CSS (background gradient,
+     border-top, `.cat-tag` color) after the last existing `.cat-card.<id>` block.
+     Do **not** add a `.cat-designer` color rule — `#scr-programs .cat-designer`
+     is set to `display:none`, so flagship/influencer cards never show it; only
+     the separate "Your Programs" / "Published Programs" tiers render that line.
+   - Insert a matching `.rail-card.<id>` into the Home screen's `.prog-rail`
+     (`#scr-dashboard`) — this is the "Continue where you left off" strip, and a
+     program only added to `#flagGrid` stays invisible there. Give it the same
+     icon/name/meta as the `.cat-card`.
+   The `.topbar-sub` program count is computed from the rendered `#flagGrid`
+   cards at runtime — no manual count to update.
+
+   > **Known gap:** `.prog-rail` and `#flagGrid` are two independently
+   > hand-duplicated lists — neither is generated from `MC_PM_DATA.programs` at
+   > runtime, even though that data exists. Making them data-driven is a real
+   > improvement but a bigger lift than it looks: `mc-pm-data.js`'s `icon` field
+   > is a plain emoji today, while both hardcoded lists use bespoke per-program
+   > SVG icons, and the `desc` field text has already drifted from the copy
+   > shown in `#flagGrid`'s `.cat-meta`. Until that's tackled as its own phase,
+   > follow the two-place manual update above and don't skip the rail.
 5. **Commit and push to a feature branch in `4-Weeks-to-Open-`.**
 6. **Create a draft PR targeting `main` of `4-Weeks-to-Open-`.**
 7. **Merge to main** → the deploy pipeline auto-propagates all changes to

@@ -45,6 +45,28 @@
   function num(v, d) { var n = parseFloat(v); return isFinite(n) ? n : (d || 0); }
   function pad(n) { return String(n).padStart(2, '0'); }
 
+  // auto-dismissing confirmation with an optional undo action
+  function toast(msg, actionLabel, onAction) {
+    var t = el('div', 'mc-toast');
+    t.appendChild(el('span', 'mc-toast-msg', esc(msg)));
+    if (actionLabel) {
+      var btn = el('button', 'mc-toast-btn', esc(actionLabel));
+      btn.type = 'button';
+      btn.addEventListener('click', function () {
+        onAction();
+        t.classList.remove('show');
+        setTimeout(function () { t.remove(); }, 300);
+      });
+      t.appendChild(btn);
+    }
+    document.body.appendChild(t);
+    requestAnimationFrame(function () { t.classList.add('show'); });
+    setTimeout(function () {
+      t.classList.remove('show');
+      setTimeout(function () { t.remove(); }, 300);
+    }, 5000);
+  }
+
   // ---- date helpers --------------------------------------------------------
   function keyFromDate(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
   function dateFromKey(k) { var p = String(k).split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
@@ -885,8 +907,20 @@
       };
       if (editId) $('#ntDel', s.sh).onclick = function () {
         var obj = read(), d = getDay(obj, selKey);
+        var removed = null;
+        d.entries.forEach(function (e) { if (e.id === editId) removed = e; });
         d.entries = d.entries.filter(function (e) { return e.id !== editId; });
         write(obj); s.close(); render();
+        if (removed) {
+          toast(removed.name + ' removed', 'Undo', function () {
+            addSlotMs = removed.at;
+            addEntry({
+              name: removed.name, source: removed.source, unit: removed.unit, qty: removed.qty,
+              per: removed.per, nutr: removed.nutr, grams: removed.grams, code: removed.code
+            });
+            render();
+          });
+        }
       };
     }
     refresh();
@@ -1102,7 +1136,20 @@
       '.nt-fav-count{flex:1;font-size:13px;font-weight:800;color:var(--muted);}' +
       '.nt-fav-log{width:auto;flex:0 0 auto;padding:13px 26px;}' +
       '.nt-fav-log:disabled{opacity:0.4;}' +
-      '@media (prefers-reduced-motion: reduce){.nt-overlay,.nt-sheet,.ntx-met-fill{transition:none;}}';
+      '@media (prefers-reduced-motion: reduce){.nt-overlay,.nt-sheet,.ntx-met-fill{transition:none;}}' +
+      /* undo toast (log-entry deletion) */
+      '.mc-toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));z-index:1360;' +
+        'transform:translate(-50%,16px);display:flex;align-items:center;gap:14px;max-width:calc(100vw - 32px);' +
+        'padding:12px 14px 12px 16px;background:#0e0e0e;color:#e2e8f0;border:1px solid rgba(255,255,255,0.1);' +
+        'border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,0.55);font-size:13.5px;font-weight:600;' +
+        'opacity:0;pointer-events:none;transition:opacity 200ms ease,transform 200ms ease;}' +
+      '.mc-toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;}' +
+      '.mc-toast-msg{white-space:nowrap;}' +
+      '.mc-toast-btn{appearance:none;cursor:pointer;flex:0 0 auto;border:0;border-radius:8px;' +
+        'background:var(--gold,#d4af37);color:#1a1208;font-family:inherit;font-size:13px;font-weight:800;' +
+        'padding:8px 14px;transition:transform 120ms ease;}' +
+      '.mc-toast-btn:active{transform:scale(0.95);}' +
+      '@media (prefers-reduced-motion: reduce){.mc-toast{transition:none;}}';
     var st = document.createElement('style');
     st.id = 'nt-styles'; st.textContent = css;
     document.head.appendChild(st);
