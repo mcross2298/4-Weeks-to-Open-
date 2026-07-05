@@ -34,8 +34,8 @@
   var KEY = 'mc_macros_v1';
   var BODY_KEY = 'mc_body_v1';   // existing bodyweight log, for weight pre-fill
 
-  // macro colors (match the reference design: cal blue, P purple, F yellow, C orange)
-  var COL = { kcal: '#4d9fff', p: '#a78bfa', f: '#fbbf24', c: '#fb923c' };
+  // macro colors — theme-driven (base.css :root), not hardcoded hex
+  var COL = { kcal: 'var(--macro-kcal)', p: 'var(--macro-protein)', f: 'var(--macro-fat)', c: 'var(--macro-carb)' };
   var WD = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
   // ---- tiny helpers --------------------------------------------------------
@@ -115,6 +115,7 @@
     root.appendChild(renderHead());
     root.appendChild(renderCalendar());
     root.appendChild(renderSummary(totals, goals));
+    root.appendChild(renderTrend());
     root.appendChild(renderFind());
     root.appendChild(renderTimeline(entries));
     host.appendChild(root);
@@ -146,7 +147,8 @@
     for (var i = 0; i < 7; i++) {
       (function (k) {
         var d = dateFromKey(k);
-        var cls = 'ntx-day' + (k === selKey ? ' sel' : '') + (k === tk ? ' today' : '');
+        var hasEntries = getDay(read(), k).entries.length > 0;
+        var cls = 'ntx-day' + (k === selKey ? ' sel' : '') + (k === tk ? ' today' : '') + (hasEntries ? ' has' : '');
         var cell = el('div', cls,
           '<div class="ntx-day-wd">' + WD[(d.getDay() + 6) % 7] + '</div>' +
           '<div class="ntx-day-num">' + d.getDate() + '</div>' +
@@ -185,6 +187,24 @@
       '</div>' +
       '<div class="ntx-met-track"><div class="ntx-met-fill" style="width:' + pct + '%;background:' + (over ? '#f87171' : color) + '"></div></div>';
     return m;
+  }
+
+  function renderTrend() {
+    var card = el('div', 'ntx-trend');
+    if (!window.MC_CHART) return card;
+    var data = read(), tk = todayKey();
+    var days = [];
+    for (var i = 6; i >= 0; i--) {
+      var k = addDays(tk, -i);
+      var d = dateFromKey(k);
+      days.push({ key: k, label: WD[(d.getDay() + 6) % 7], value: totalsOf(getDay(data, k).entries).kcal });
+    }
+    var hi = -1;
+    days.forEach(function (d, i) { if (d.key === selKey) hi = i; });
+    card.innerHTML =
+      '<div class="ntx-trend-h">Last 7 days · calories</div>' +
+      MC_CHART.bars(days.map(function (d) { return { label: d.label, value: d.value }; }), { height: 56, highlight: hi, color: COL.kcal });
+    return card;
   }
 
   function renderFind() {
@@ -697,9 +717,11 @@
     function pct(have, goal) { return goal ? Math.min(999, Math.round((have / goal) * 100)) : null; }
 
     function ringTile(lbl, val, suf, color, p) {
+      var ringSvg = window.MC_CHART ? MC_CHART.ring(p == null ? 0 : p, { size: 52, stroke: 4, color: color }) : '';
       return '<div class="nt-ring" style="--rc:' + color + '">' +
-        '<div class="nt-ring-dot"></div>' +
-        '<div class="nt-ring-val">' + val + '<span>' + suf + '</span></div>' +
+        '<div class="nt-ring-circle">' + ringSvg +
+          '<div class="nt-ring-center"><span class="nt-ring-val">' + val + '<span>' + suf + '</span></span></div>' +
+        '</div>' +
         '<div class="nt-ring-lbl">' + lbl + '</div>' +
         '<div class="nt-ring-pct">' + (p == null ? '' : p + '%') + '</div></div>';
     }
@@ -772,8 +794,17 @@
       }
       var goalsArr = [goals && goals.kcal, goals && goals.p, goals && goals.f, goals && goals.c];
       var vals = [fmt(per.kcal * m), fmt(per.p * m), fmt(per.f * m), fmt(per.c * m)];
+      var pcArr = vals.map(function (v, i) { return pct(v, goalsArr[i]); });
       var pcts = s.sh.querySelectorAll('.nt-ring-pct');
-      pcts.forEach(function (e, i) { var pc = pct(vals[i], goalsArr[i]); e.textContent = pc == null ? '' : pc + '%'; });
+      pcts.forEach(function (e, i) { e.textContent = pcArr[i] == null ? '' : pcArr[i] + '%'; });
+      var arcs = s.sh.querySelectorAll('.mcchart-ring-arc');
+      if (arcs.length === 4 && window.MC_CHART) {
+        var circ = MC_CHART.ringCircumference({ size: 52, stroke: 4 });
+        arcs.forEach(function (arc, i) {
+          var p = Math.max(0, Math.min(100, pcArr[i] || 0));
+          arc.setAttribute('stroke-dasharray', ((p / 100) * circ).toFixed(2) + ' ' + circ.toFixed(2));
+        });
+      }
       var nrows = s.sh.querySelectorAll('.nt-nrow b');
       if (nrows.length === 4) {
         nrows[0].textContent = nu.fiber != null ? fmt(nu.fiber * m, 1) + ' g' : '—';
@@ -893,7 +924,8 @@
       '.ntx-day-wd{font-size:9px;font-weight:800;letter-spacing:0.04em;color:var(--muted2);}' +
       '.ntx-day-num{font-size:15px;font-weight:800;color:var(--text);}' +
       '.ntx-day-dot{width:4px;height:4px;border-radius:50%;background:transparent;}' +
-      '.ntx-day.today .ntx-day-dot{background:var(--gold);}' +
+      '.ntx-day.has .ntx-day-dot{background:var(--gold);opacity:0.5;}' +
+      '.ntx-day.today .ntx-day-dot{background:var(--gold);opacity:1;}' +
       '.ntx-day.sel{border-color:var(--gold);background:rgba(212,175,55,0.08);}' +
       '.ntx-day.sel .ntx-day-num{color:var(--gold);}' +
       /* macro summary */
@@ -908,6 +940,9 @@
       '.ntx-met-track{height:3px;border-radius:2px;background:rgba(255,255,255,0.1);margin-top:6px;overflow:hidden;}' +
       '.ntx-met-fill{height:100%;border-radius:2px;transition:width 0.3s ease;}' +
       '.ntx-sum-exp{flex:0 0 auto;color:var(--muted2);font-size:20px;font-weight:800;line-height:1;}' +
+      /* 7-day trend */
+      '.ntx-trend{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:12px 14px;margin-bottom:14px;}' +
+      '.ntx-trend-h{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted2);margin-bottom:8px;}' +
       /* find bar */
       '.ntx-find{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--border2);' +
         'border-radius:13px;padding:10px 12px;margin-bottom:16px;}' +
@@ -985,12 +1020,13 @@
       /* ── Nutrition Facts sheet (Phase 3) ── */
       '.nt-facts{display:flex;flex-direction:column;gap:14px;}' +
       '.nt-rings{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;}' +
-      '.nt-ring{position:relative;border:1.5px solid color-mix(in srgb, var(--rc) 55%, transparent);border-radius:14px;' +
-        'padding:12px 6px 9px;text-align:center;background:color-mix(in srgb, var(--rc) 9%, transparent);}' +
-      '.nt-ring-dot{position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--rc);box-shadow:0 0 8px var(--rc);}' +
-      '.nt-ring-val{font-size:19px;font-weight:900;color:var(--text);line-height:1;}' +
-      '.nt-ring-val span{font-size:11px;font-weight:800;color:var(--muted);}' +
-      '.nt-ring-lbl{font-size:10px;font-weight:800;letter-spacing:0.03em;color:var(--text);margin-top:5px;}' +
+      '.nt-ring{position:relative;border:1.5px solid color-mix(in srgb, var(--rc) 45%, transparent);border-radius:14px;' +
+        'padding:10px 4px 9px;text-align:center;background:color-mix(in srgb, var(--rc) 9%, transparent);}' +
+      '.nt-ring-circle{position:relative;width:52px;height:52px;margin:0 auto;}' +
+      '.nt-ring-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}' +
+      '.nt-ring-val{font-size:13px;font-weight:900;color:var(--text);line-height:1.1;text-align:center;}' +
+      '.nt-ring-val span{display:block;font-size:8px;font-weight:800;color:var(--muted);margin-top:1px;}' +
+      '.nt-ring-lbl{font-size:10px;font-weight:800;letter-spacing:0.03em;color:var(--text);margin-top:6px;}' +
       '.nt-ring-pct{font-size:11px;font-weight:900;color:var(--rc);margin-top:3px;min-height:13px;}' +
       '.nt-nutrients{border:1px solid var(--border2);border-radius:14px;padding:4px 14px;}' +
       '.nt-nutrients-h{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted2);padding:10px 0 4px;}' +

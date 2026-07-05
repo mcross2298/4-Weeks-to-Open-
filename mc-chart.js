@@ -2,11 +2,13 @@
    mc-chart.js — tiny hand-rolled SVG charts (Phase 3)
    --------------------------------------------------------------------------
    Offline-first and no build step rule out chart libraries; the app's needs
-   are three small primitives over ≤200-point datasets:
+   are small primitives over ≤200-point datasets:
 
      MC_CHART.line(points, opts)     trend line with dots + min/max labels
      MC_CHART.bars(values, opts)     vertical bars (sparkline or labeled)
      MC_CHART.heatmap(days, opts)    GitHub-style consistency calendar
+     MC_CHART.ring(pct, opts)        circular progress ring, 0-100
+     MC_CHART.ringCircumference(opts) circumference for a ring's stroke-dasharray math
 
    All return SVG markup strings; colors default to the page accent.
    ========================================================================== */
@@ -99,5 +101,29 @@
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block;">' + out + '</svg>';
   }
 
-  window.MC_CHART = { line: line, bars: bars, heatmap: heatmap };
+  function ringCircumference(opts) {
+    opts = opts || {};
+    var size = opts.size || 36, stroke = opts.stroke || 3.5;
+    return 2 * Math.PI * ((size / 2) - stroke);
+  }
+
+  // pct: 0-100 (clamped here). opts: {size, stroke, color, track}
+  function ring(pct, opts) {
+    opts = opts || {};
+    var size = opts.size || 36, stroke = opts.stroke || 3.5;
+    var r = (size / 2) - stroke;
+    var c = 2 * Math.PI * r;
+    var p = Math.max(0, Math.min(100, pct || 0));
+    var dash = (p / 100) * c;
+    var col = accent(opts);
+    var track = opts.track || 'rgba(255,255,255,0.12)';
+    var cx = size / 2, cy = size / 2;
+    return '<svg class="mcchart-ring" viewBox="0 0 ' + size + ' ' + size + '" width="' + size + '" height="' + size + '">' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + track + '" stroke-width="' + stroke + '"/>' +
+      '<circle class="mcchart-ring-arc" cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + col + '" stroke-width="' + stroke +
+        '" stroke-linecap="round" stroke-dasharray="' + dash.toFixed(2) + ' ' + c.toFixed(2) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>' +
+      '</svg>';
+  }
+
+  window.MC_CHART = { line: line, bars: bars, heatmap: heatmap, ring: ring, ringCircumference: ringCircumference };
 })();
