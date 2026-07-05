@@ -6,9 +6,13 @@
    ========================================================================== */
 
 /* ── Meatball trigger button (injected into every .ex-body) ── */
+/* 36px (was 30px) — still short of the 44px guideline, but reorder mode packs
+   this against two .mc-arrow buttons in the same corner, so there isn't room
+   for a full 44px target on every control; this narrows the gap without
+   pushing them into each other (see .mc-reorder-ctrls below). */
 .mc-meatball{
   position:absolute;top:6px;right:6px;z-index:4;
-  width:30px;height:30px;border-radius:8px;
+  width:36px;height:36px;border-radius:8px;
   display:flex;align-items:center;justify-content:center;
   background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
   color:#cbd5e1;font-size:17px;line-height:1;cursor:pointer;
@@ -124,11 +128,13 @@
 
 /* ── Reorder mode ── */
 .mc-reordering{outline:2px dashed rgba(251,191,36,0.35);outline-offset:3px;border-radius:14px;}
+/* right:50px (was 42px) clears the wider 36px .mc-meatball with an 8px gap
+   instead of ~6px; gap:6px (was 4px) does the same between the two arrows. */
 .mc-reorder-ctrls{
-  position:absolute;top:6px;right:42px;z-index:5;display:flex;gap:4px;
+  position:absolute;top:6px;right:50px;z-index:5;display:flex;gap:6px;
 }
 .mc-arrow{
-  width:30px;height:30px;border-radius:8px;
+  width:36px;height:36px;border-radius:8px;
   display:flex;align-items:center;justify-content:center;
   background:rgba(251,191,36,0.14);border:1px solid rgba(251,191,36,0.4);
   color:#fbbf24;font-size:15px;font-weight:900;cursor:pointer;padding:0;

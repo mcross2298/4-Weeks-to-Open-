@@ -18,8 +18,7 @@ What extract does:
      cards/CSS/PROGS entries, program-guide cards, quick-tour narration,
      mc-theme colors, engine comments).
   3. Filters the licensed program names out of every "programs":[...] array
-     in exercise-catalog.js / exercisedata.json (the exercises themselves are
-     original and stay).
+     in exercise-catalog.js (the exercises themselves are original and stay).
   4. Rewrites manifest.json's description for the market app (the master
      description names the licensed programs).
   5. Writes a market README.md and regenerates sw.js for --base.
@@ -52,7 +51,7 @@ TEXT_EXT = {".html", ".js", ".css", ".json", ".md", ".txt", ".yml", ".svg"}
 
 # Files whose "programs":[...] arrays carry per-program tags that must be
 # filtered down to the original (non-licensed) programs.
-PROGRAM_TAG_FILES = {"exercise-catalog.js", "exercisedata.json"}
+PROGRAM_TAG_FILES = {"exercise-catalog.js"}
 PROGRAMS_ARRAY_RE = re.compile(r'("programs"\s*:\s*)(\[[^\]]*\])')
 
 MARKET_DESCRIPTION = ("Workout programs, conditioning and custom builders — "

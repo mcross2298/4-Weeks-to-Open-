@@ -32,7 +32,7 @@ END = "/* AUTOGEN:URLS END */"
 # Deployable file types. Everything else (python scripts, markdown, sql,
 # templates) never reaches users' caches.
 INCLUDE_EXT = {".html", ".js", ".css"}
-INCLUDE_FILES = {"manifest.json", "exercisedata.json",
+INCLUDE_FILES = {"manifest.json",
                  "program-overrides.json", "icon.svg",
                  "icon-192.png", "icon-512.png"}
 

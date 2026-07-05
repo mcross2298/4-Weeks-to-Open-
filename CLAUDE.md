@@ -79,7 +79,7 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 - **Execution order:** Phase 1 → Phase 2 → Phase 3 in sequence; AskUserQuestion alignment check before each phase
 
 ### Phase 1 — Polish & Stability ✅ Complete (merged to main)
-- `mc-calendar.js`: collapsible toggle (sessionStorage `mc_cal_collapsed`), chevron indicator, `MCCalendar.toggle()` / `MCCalendar.focus()` API
+- `mc-calendar.js`: collapsible toggle (`localStorage mc_cal_collapsed` — moved off `sessionStorage`, which reset the collapse state every new tab even for daily users), chevron indicator, `MCCalendar.toggle()` / `MCCalendar.focus()` API
 - `dashboard.html` / `base.css`: text truncation fixes (`overflow-wrap`, `word-break`) on `.hero-name`, `.cat-name`, `.ex-name`, `.ss-name`; `.cat-meta` `-webkit-line-clamp` relaxed 2→3
 - `mc-macros.js`: swipe-to-dismiss gesture on bottom-sheet handle (touchstart/move/end, 50 px threshold, scrollTop guard)
 

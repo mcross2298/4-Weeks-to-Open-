@@ -732,7 +732,7 @@
     if (host.querySelector(':scope > .mc-meatball')) return;
     if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
     var nameEl = card.querySelector(NAME_SEL);
-    if (nameEl) nameEl.style.paddingRight = '34px';
+    if (nameEl) nameEl.style.paddingRight = '44px';
     var btn = document.createElement('button');
     btn.className = 'mc-meatball';
     btn.type = 'button';
