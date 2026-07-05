@@ -14,6 +14,33 @@ full scope guidance.
 
 ---
 
+## Documentation currency rule — keep Quick Tour & Program Guides current
+
+**Permanent rule.** Any time a change adds or meaningfully alters a
+**user-facing feature** — something a trainee needs to discover or learn how
+to use — update the matching onboarding doc in the same piece of work:
+
+- **App-wide feature** (dashboard, Conditioning Corner, calendar, macros
+  search, substitute picker, etc.) → update **`quick-tour.html`** and/or
+  **`quick-tour-overview.html`**.
+- **Program-specific feature** (a new day type, a new intensifier, a change to
+  how a specific program's split/structure works) → update that program's own
+  **`<id>-instructions.html`** guide (e.g. `mc-instructions.html`,
+  `mm-instructions.html`), and add an entry in **`program-guide.html`** if the
+  program itself is new (see the New Program Creation Workflow below, step 4,
+  for the required `dashboard.html` + `mc-pm-data.js` wiring that makes a new
+  program discoverable in the first place).
+
+Purely internal changes (refactors, data-only additions with no user-visible
+behavior change, bug fixes restoring already-documented behavior, CSS/copy
+tweaks) don't require a doc update. If a feature is removed or changed enough
+that existing guide copy is now wrong, update or remove that section rather
+than leaving stale copy. This is independent of the executive-summary gate
+above — even a change small enough to skip the executive summary still needs
+its guide entry if it's user-facing.
+
+---
+
 ## New Program Creation Workflow
 
 Whenever asked to **create a new program**, follow this pipeline exactly:
