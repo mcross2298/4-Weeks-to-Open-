@@ -156,8 +156,8 @@
   }
   // Count of exercises with a real logged set today, per the authoritative
   // 'mc_setlog_v1' store mc-setlog.js writes (weight/reps), NOT the .checked
-  // class — a manual checkbox (stndr-checkoff.js) toggled independently of
-  // actual set logging, so it can over- or under-count real completion.
+  // class — a manual checkbox toggled independently of actual set logging
+  // on some pages, so it can over- or under-count real completion.
   function loggedExerciseCountToday(pid) {
     try {
       var store = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}');
