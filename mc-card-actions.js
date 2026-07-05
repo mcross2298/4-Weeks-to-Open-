@@ -71,6 +71,29 @@
   function readJSON(key) { try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { return {}; } }
   function writeJSON(key, obj) { try { localStorage.setItem(key, JSON.stringify(obj)); } catch (e) {} }
 
+  // auto-dismissing confirmation with an optional undo action
+  function toast(msg, actionLabel, onAction) {
+    var t = document.createElement('div'); t.className = 'mc-toast';
+    var span = document.createElement('span'); span.className = 'mc-toast-msg'; span.textContent = msg;
+    t.appendChild(span);
+    if (actionLabel) {
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'mc-toast-btn'; btn.textContent = actionLabel;
+      btn.addEventListener('click', function () {
+        onAction();
+        t.classList.remove('show');
+        setTimeout(function () { t.remove(); }, 300);
+      });
+      t.appendChild(btn);
+    }
+    document.body.appendChild(t);
+    requestAnimationFrame(function () { t.classList.add('show'); });
+    setTimeout(function () {
+      t.classList.remove('show');
+      setTimeout(function () { t.remove(); }, 300);
+    }, 5000);
+  }
+
   function getOrder(cKey) { var o = readJSON(ORDER_KEY); return (o[PAGE_ID] && o[PAGE_ID][cKey]) || null; }
   function setOrder(cKey, arr) {
     var o = readJSON(ORDER_KEY); if (!o[PAGE_ID]) o[PAGE_ID] = {};
@@ -349,12 +372,17 @@
     Object.keys(reps).forEach(function (k) {
       if (reps[k] && reps[k].toLowerCase() === rootKey) rootKey = k;
     });
+    var hadRoot = Object.prototype.hasOwnProperty.call(reps, rootKey);
+    var prevRootVal = reps[rootKey];
     reps[rootKey] = newName;
     writeJSON(REPLACE_KEY, reps);
 
     // weight suggestion store, keyed by the new name (what the card now shows)
     var sug = readJSON(SWAP_SUG_KEY);
-    if (weight) sug[newName.toLowerCase()] = weight; else delete sug[newName.toLowerCase()];
+    var newKey = newName.toLowerCase();
+    var hadSug = Object.prototype.hasOwnProperty.call(sug, newKey);
+    var prevSugVal = sug[newKey];
+    if (weight) sug[newKey] = weight; else delete sug[newKey];
     writeJSON(SWAP_SUG_KEY, sug);
 
     withoutObserver(function () {
@@ -363,6 +391,33 @@
       prefillWeight(card, weight);
     });
     closeSub();
+
+    // A fat-thumb tap swaps a lift mid-set with no recovery path otherwise —
+    // give it a few seconds to undo back to exactly the pre-swap state.
+    toast(newName + ' — swapped', 'Undo', function () {
+      var reps2 = readJSON(REPLACE_KEY);
+      if (hadRoot) reps2[rootKey] = prevRootVal; else delete reps2[rootKey];
+      writeJSON(REPLACE_KEY, reps2);
+
+      var sug2 = readJSON(SWAP_SUG_KEY);
+      if (hadSug) sug2[newKey] = prevSugVal; else delete sug2[newKey];
+      writeJSON(SWAP_SUG_KEY, sug2);
+
+      withoutObserver(function () {
+        if (hadRoot) { paintReplaced(card, visible); } else { restorePlain(card, visible); }
+        renderSwapPill(card);
+      });
+    });
+  }
+
+  // revert a card to its true, never-swapped original name (clears the
+  // REPLACED badge + cyan color paintReplaced() applied)
+  function restorePlain(card, name) {
+    var nameEl = card.querySelector(NAME_SEL); if (!nameEl) return;
+    nameEl.textContent = name;
+    nameEl.style.color = '';
+    var badge = card.querySelector('.replaced-badge');
+    if (badge) badge.remove();
   }
 
   // mirror mc-replace.js's applyReplacements paint (cyan name + REPLACED badge)
