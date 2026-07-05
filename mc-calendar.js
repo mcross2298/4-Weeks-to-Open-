@@ -77,7 +77,7 @@
   var viewM = today.getMonth();
   var selKey = todayKey;
   var CAL_COLLAPSED_KEY = 'mc_cal_collapsed';
-  var collapsed = sessionStorage.getItem(CAL_COLLAPSED_KEY) !== '0';
+  var collapsed = localStorage.getItem(CAL_COLLAPSED_KEY) !== '0';
 
   function setMonth(y, m) {
     // normalize overflow (m === 12 → next year, m === -1 → prev year)
@@ -172,7 +172,7 @@
 
   function toggle() {
     collapsed = !collapsed;
-    sessionStorage.setItem(CAL_COLLAPSED_KEY, collapsed ? '1' : '0');
+    localStorage.setItem(CAL_COLLAPSED_KEY, collapsed ? '1' : '0');
     render();
     if (!collapsed) {
       try { host.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
@@ -294,7 +294,7 @@
   window.MCCalendar = {
     toggle: function () { toggle(); },
     focus: function () {
-      if (collapsed) { collapsed = false; sessionStorage.setItem(CAL_COLLAPSED_KEY, '0'); render(); }
+      if (collapsed) { collapsed = false; localStorage.setItem(CAL_COLLAPSED_KEY, '0'); render(); }
       jumpToToday();
       try { host.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
     }

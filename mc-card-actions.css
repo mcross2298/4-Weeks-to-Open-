@@ -6,9 +6,13 @@
    ========================================================================== */
 
 /* ── Meatball trigger button (injected into every .ex-body) ── */
+/* 36px (was 30px) — still short of the 44px guideline, but reorder mode packs
+   this against two .mc-arrow buttons in the same corner, so there isn't room
+   for a full 44px target on every control; this narrows the gap without
+   pushing them into each other (see .mc-reorder-ctrls below). */
 .mc-meatball{
   position:absolute;top:6px;right:6px;z-index:4;
-  width:30px;height:30px;border-radius:8px;
+  width:36px;height:36px;border-radius:8px;
   display:flex;align-items:center;justify-content:center;
   background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
   color:#cbd5e1;font-size:17px;line-height:1;cursor:pointer;
@@ -124,11 +128,13 @@
 
 /* ── Reorder mode ── */
 .mc-reordering{outline:2px dashed rgba(251,191,36,0.35);outline-offset:3px;border-radius:14px;}
+/* right:50px (was 42px) clears the wider 36px .mc-meatball with an 8px gap
+   instead of ~6px; gap:6px (was 4px) does the same between the two arrows. */
 .mc-reorder-ctrls{
-  position:absolute;top:6px;right:42px;z-index:5;display:flex;gap:4px;
+  position:absolute;top:6px;right:50px;z-index:5;display:flex;gap:6px;
 }
 .mc-arrow{
-  width:30px;height:30px;border-radius:8px;
+  width:36px;height:36px;border-radius:8px;
   display:flex;align-items:center;justify-content:center;
   background:rgba(251,191,36,0.14);border:1px solid rgba(251,191,36,0.4);
   color:#fbbf24;font-size:15px;font-weight:900;cursor:pointer;padding:0;
@@ -183,7 +189,6 @@
   -webkit-tap-highlight-color:transparent;
 }
 .mc-sub-row:active{background:rgba(34,211,238,0.10);border-color:rgba(34,211,238,0.3);}
-.mc-sub-na{opacity:0.42;}
 .mc-sub-name{flex:1;font-size:14px;font-weight:700;color:#f1f5f9;
   overflow-wrap:break-word;word-break:break-word;}
 .mc-sub-eq{
@@ -197,7 +202,6 @@
 .mc-eq-machine,.mc-eq-plateloaded,.mc-eq-smith{background:rgba(251,146,60,0.14);color:#fdba74;border-color:rgba(251,146,60,0.3);}
 .mc-eq-bodyweight{background:rgba(134,239,172,0.14);color:#86efac;border-color:rgba(134,239,172,0.3);}
 .mc-sub-wt{font-size:12px;font-weight:800;color:#22d3ee;flex-shrink:0;}
-.mc-sub-naflag{font-size:10px;font-weight:700;color:#94a3b8;flex-shrink:0;}
 .mc-sub-empty{padding:18px 14px;font-size:13px;font-weight:600;color:#94a3b8;text-align:center;}
 .mc-sub-lib{justify-content:flex-start;color:#94a3b8;margin-top:4px;}
 .mc-sub-done{justify-content:center;background:#22d3ee;color:#04222a;font-weight:800;margin-top:6px;}

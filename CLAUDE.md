@@ -51,6 +51,13 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
    > SVG icons, and the `desc` field text has already drifted from the copy
    > shown in `#flagGrid`'s `.cat-meta`. Until that's tackled as its own phase,
    > follow the two-place manual update above and don't skip the rail.
+   >
+   > `color` is the one field CI actually enforces: `tools/check-program-colors.js`
+   > fails the build if `MC_PM_DATA.programs[].color` doesn't exactly match the
+   > `.cat-card.<id>` border-top color in `dashboard.html`, so a hand-edit that
+   > drifts one without the other is caught before deploy (it does not check
+   > `.rail-card.<id>`, which intentionally uses a muted variant of the same hue,
+   > not the literal color).
 5. **Commit and push to a feature branch in `4-Weeks-to-Open-`.**
 6. **Create a draft PR targeting `main` of `4-Weeks-to-Open-`.**
 7. **Merge to main** → the deploy pipeline auto-propagates all changes to
@@ -79,7 +86,7 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 - **Execution order:** Phase 1 → Phase 2 → Phase 3 in sequence; AskUserQuestion alignment check before each phase
 
 ### Phase 1 — Polish & Stability ✅ Complete (merged to main)
-- `mc-calendar.js`: collapsible toggle (sessionStorage `mc_cal_collapsed`), chevron indicator, `MCCalendar.toggle()` / `MCCalendar.focus()` API
+- `mc-calendar.js`: collapsible toggle (`localStorage mc_cal_collapsed` — moved off `sessionStorage`, which reset the collapse state every new tab even for daily users), chevron indicator, `MCCalendar.toggle()` / `MCCalendar.focus()` API
 - `dashboard.html` / `base.css`: text truncation fixes (`overflow-wrap`, `word-break`) on `.hero-name`, `.cat-name`, `.ex-name`, `.ss-name`; `.cat-meta` `-webkit-line-clamp` relaxed 2→3
 - `mc-macros.js`: swipe-to-dismiss gesture on bottom-sheet handle (touchstart/move/end, 50 px threshold, scrollTop guard)
 

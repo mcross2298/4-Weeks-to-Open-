@@ -83,6 +83,10 @@
   // selected day + the slot the next add lands on
   var selKey = todayKey();
   var addSlotMs = null;
+  // Empty-hour runs collapse into one tappable strip (see renderTimeline) —
+  // remembers which collapsed runs the user has expanded, keyed by the run's
+  // first hour, so re-renders (e.g. after logging food) don't snap shut.
+  var expandedRuns = {};
 
   function defaultSlot() {
     if (selKey === todayKey()) return Date.now();
@@ -112,6 +116,30 @@
       for (var i = 0; i < a.length; i++) { var w = num(a[i] && a[i].w); if (w > 0) return Math.round(w); }
     } catch (e) {}
     return 0;
+  }
+
+  // Real training frequency (last 7 calendar days) from mc-live-tracker.js's
+  // 'mc_activity' day-streak map, so the macro calculator's Activity level
+  // isn't just a one-time guess disconnected from what the user actually did.
+  function trainedDaysLast7() {
+    try {
+      var act = JSON.parse(localStorage.getItem('mc_activity') || '{}');
+      var days = act.days || {};
+      var n = 0;
+      for (var i = 0; i < 7; i++) {
+        var d = new Date(); d.setDate(d.getDate() - i);
+        var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        if (days[key]) n++;
+      }
+      return n;
+    } catch (e) { return null; }
+  }
+  function suggestActivityFromLoad(n) {
+    if (n == null) return null;
+    if (n <= 1) return 'sedentary';
+    if (n <= 3) return 'light';
+    if (n <= 5) return 'moderate';
+    return 'active';
   }
   function totalsOf(entries) {
     var t = { kcal: 0, p: 0, f: 0, c: 0 };
@@ -282,6 +310,36 @@
     return bar;
   }
 
+  // One real hour row: rail (label + add button) + any logged food cards.
+  function hourRow(h, list, nowHour) {
+    var row = el('div', 'ntx-hr' + (list.length ? ' has' : '') + (h === nowHour ? ' now' : ''));
+    var rail = el('div', 'ntx-hr-rail');
+    rail.appendChild(el('div', 'ntx-hr-lbl', hourLabel(h)));
+    var add = el('button', 'ntx-hr-add', '+'); add.setAttribute('aria-label', 'Add food at ' + hourLabel(h));
+    add.onclick = function () { openHourAdd(h); };
+    rail.appendChild(add);
+    row.appendChild(rail);
+
+    var body = el('div', 'ntx-hr-body');
+    list.forEach(function (e) {
+      var q = num(e.qty, 1), per = e.per || {};
+      var card = el('div', 'ntx-fcard');
+      card.innerHTML =
+        '<div class="ntx-fcard-top">' +
+          '<div class="ntx-fcard-name">' + esc(e.name) + (q !== 1 ? ' ×' + q : '') + '</div>' +
+          '<div class="ntx-fcard-time">' + timeLabel(e.at || e.ts || Date.now()) + '</div>' +
+        '</div>' +
+        '<div class="ntx-fcard-macros">' +
+          '<b style="color:' + COL.kcal + '">🔥' + Math.round(num(per.kcal) * q) + '</b>  ' +
+          'P ' + Math.round(num(per.p) * q) + '  F ' + Math.round(num(per.f) * q) + '  C ' + Math.round(num(per.c) * q) +
+        '</div>';
+      card.onclick = function () { openFacts(foodFromEntry(e), { entryId: e.id, qty: num(e.qty, 1) }); };
+      body.appendChild(card);
+    });
+    row.appendChild(body);
+    return row;
+  }
+
   function renderTimeline(entries) {
     // bucket entries by hour
     var byHour = {};
@@ -291,35 +349,46 @@
     });
 
     var nowHour = (selKey === todayKey()) ? new Date().getHours() : -1;
-    var time = el('div', 'ntx-time');
-    for (var h = 0; h < 24; h++) {
-      var list = byHour[h] || [];
-      var row = el('div', 'ntx-hr' + (list.length ? ' has' : '') + (h === nowHour ? ' now' : ''));
-      var rail = el('div', 'ntx-hr-rail');
-      rail.appendChild(el('div', 'ntx-hr-lbl', hourLabel(h)));
-      var add = el('button', 'ntx-hr-add', '+'); add.setAttribute('aria-label', 'Add food at ' + hourLabel(h));
-      (function (hour) { add.onclick = function () { openHourAdd(hour); }; })(h);
-      rail.appendChild(add);
-      row.appendChild(rail);
-
-      var body = el('div', 'ntx-hr-body');
-      list.forEach(function (e) {
-        var q = num(e.qty, 1), per = e.per || {};
-        var card = el('div', 'ntx-fcard');
-        card.innerHTML =
-          '<div class="ntx-fcard-top">' +
-            '<div class="ntx-fcard-name">' + esc(e.name) + (q !== 1 ? ' ×' + q : '') + '</div>' +
-            '<div class="ntx-fcard-time">' + timeLabel(e.at || e.ts || Date.now()) + '</div>' +
-          '</div>' +
-          '<div class="ntx-fcard-macros">' +
-            '<b style="color:' + COL.kcal + '">🔥' + Math.round(num(per.kcal) * q) + '</b>  ' +
-            'P ' + Math.round(num(per.p) * q) + '  F ' + Math.round(num(per.f) * q) + '  C ' + Math.round(num(per.c) * q) +
-          '</div>';
-        (function (entry) { card.onclick = function () { openFacts(foodFromEntry(entry), { entryId: entry.id, qty: num(entry.qty, 1) }); }; })(e);
-        body.appendChild(card);
+    // Once a run is expanded, every hour it originally covered renders
+    // individually forever (not just its first hour) — otherwise expanding
+    // just reveals hour 1 and immediately re-collapses hours 2+ into a new
+    // strip, since the run-detection below would treat them as a fresh run.
+    function isExpandedHour(h) {
+      return Object.keys(expandedRuns).some(function (startKey) {
+        var range = expandedRuns[startKey];
+        return h >= range.start && h <= range.end;
       });
-      row.appendChild(body);
-      time.appendChild(row);
+    }
+    var time = el('div', 'ntx-time');
+    var h = 0;
+    while (h < 24) {
+      var list = byHour[h] || [];
+      // A run of 3+ consecutive empty hours (never including "now", so the
+      // current hour is always visible on its own) collapses into one
+      // tappable strip instead of an unbroken wall of empty + buttons.
+      if (!list.length && h !== nowHour && !isExpandedHour(h)) {
+        var runStart = h, runEnd = h;
+        while (runEnd + 1 < 24 && !(byHour[runEnd + 1] || []).length &&
+               runEnd + 1 !== nowHour && !isExpandedHour(runEnd + 1)) runEnd++;
+        var runLen = runEnd - runStart + 1;
+        if (runLen >= 3) {
+          (function (start, end) {
+            var strip = el('div', 'ntx-hr-collapsed');
+            strip.setAttribute('role', 'button');
+            strip.tabIndex = 0;
+            var label = hourLabel(start) + ' – ' + hourLabel(end) + ' · nothing logged';
+            strip.textContent = label + '  ▸';
+            function expand() { expandedRuns[start] = { start: start, end: end }; render(); }
+            strip.onclick = expand;
+            strip.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); expand(); } };
+            time.appendChild(strip);
+          })(runStart, runEnd);
+          h = runEnd + 1;
+          continue;
+        }
+      }
+      time.appendChild(hourRow(h, list, nowHour));
+      h++;
     }
     return time;
   }
@@ -428,10 +497,32 @@
       '<label class="nt-field"><span>Activity</span><select id="ntAct">' +
         MCMacroCalc.ACTIVITY.map(function (a) { return '<option value="' + a.id + '"' + (p.activity === a.id ? ' selected' : '') + '>' + a.label + ' — ' + a.sub + '</option>'; }).join('') +
       '</select></label>' +
+      '<div class="nt-act-hint" id="ntActHint"></div>' +
       '<div class="nt-seg nt-seg-3" id="ntGoal">' +
         MCMacroCalc.GOALS.map(function (g) { return '<button data-v="' + g.id + '" class="' + (p.goal === g.id ? 'on' : '') + '">' + g.label + '</button>'; }).join('') +
       '</div>';
     s.sh.appendChild(form);
+
+    // Nudge the Activity field toward what the user actually trained this
+    // week (mc_activity streak data) instead of leaving it a static guess.
+    (function () {
+      var trainedDays = trainedDaysLast7();
+      var suggested = suggestActivityFromLoad(trainedDays);
+      var hintEl = $('#ntActHint', s.sh);
+      if (!hintEl || trainedDays == null) return;
+      var current = p.activity || 'sedentary';
+      if (suggested && suggested !== current) {
+        var label = MCMacroCalc.ACTIVITY.filter(function (a) { return a.id === suggested; })[0];
+        hintEl.innerHTML = 'Trained ' + trainedDays + ' of the last 7 days — ' +
+          '<button type="button" class="nt-act-apply" id="ntActApply">use "' + (label ? label.label : suggested) + '"</button>';
+        $('#ntActApply', hintEl).onclick = function () {
+          $('#ntAct', s.sh).value = suggested;
+          hintEl.textContent = 'Set to match your last 7 days of training (' + trainedDays + ' days).';
+        };
+      } else {
+        hintEl.textContent = 'Matches your last 7 days of training (' + trainedDays + ' day' + (trainedDays === 1 ? '' : 's') + ').';
+      }
+    }());
 
     function seg(id, fallback) {
       var box = $('#' + id, s.sh);
@@ -1039,6 +1130,9 @@
       '.ntx-hr-body{padding:4px 0 12px;display:flex;flex-direction:column;gap:6px;min-width:0;}' +
       '.ntx-hr.has .ntx-hr-rail{border-right-color:rgba(212,175,55,0.35);}' +
       '.ntx-hr.now .ntx-hr-lbl{color:var(--gold);}' +
+      '.ntx-hr-collapsed{cursor:pointer;padding:10px 8px 10px 62px;font-size:11px;font-weight:700;' +
+        'color:var(--muted2,#64748b);-webkit-tap-highlight-color:transparent;}' +
+      '.ntx-hr-collapsed:active{color:var(--muted,#94a3b8);}' +
       '.ntx-fcard{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:9px 12px;cursor:pointer;}' +
       '.ntx-fcard-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline;}' +
       '.ntx-fcard-name{font-size:13px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}' +
@@ -1074,6 +1168,9 @@
       '.nt-seg button{flex:1;padding:12px;border-radius:11px;border:1px solid var(--border2);background:rgba(255,255,255,0.04);' +
         'color:var(--muted);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;}' +
       '.nt-seg button.on{background:var(--gold);border-color:var(--gold);color:#000;}' +
+      '.nt-act-hint{font-size:11.5px;color:var(--muted2);margin-top:-4px;}' +
+      '.nt-act-apply{background:none;border:none;padding:0;color:var(--gold);font-weight:800;font-size:11.5px;' +
+        'text-decoration:underline;cursor:pointer;font-family:inherit;}' +
       '.nt-results{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto;}' +
       '.nt-results-msg{font-size:13px;color:var(--muted2);text-align:center;padding:18px;}' +
       '.nt-result{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);' +

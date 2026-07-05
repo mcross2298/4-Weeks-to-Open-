@@ -124,6 +124,19 @@
       var perHand = equipCat(nmStr) === 'Dumbbell' ? ' per hand' : '';
       hint.textContent = 'Suggested: ' + s.w + ' lb' + perHand;
       tgl.insertBefore(hint, hist);
+
+      // Wire into mc-setlog.js's existing tap-to-fill convention (focusing an
+      // empty weight input applies its data-fill value) instead of leaving
+      // this as text the lifter has to retype into the logger by hand.
+      // Whichever prefill claims an input first wins — never overwrite one
+      // mc-setlog.js (last logged weight) already set.
+      var wInputs = card.querySelectorAll('.mcl-w');
+      Array.prototype.forEach.call(wInputs, function (inp) {
+        if (!inp.value.trim() && !inp.dataset.fill) {
+          inp.placeholder = s.w + ' lb' + perHand;
+          inp.dataset.fill = String(s.w);
+        }
+      });
     });
   }
 

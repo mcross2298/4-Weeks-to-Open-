@@ -43,7 +43,9 @@ html[data-motion="off"] *,html[data-motion="off"] *::before,html[data-motion="of
   animation:none!important;transition:none!important;}
 html[data-motion="subtle"] [class*="glow"],
 html[data-motion="subtle"] [class*="sheen"],
-html[data-motion="subtle"] .cat-icon{animation:none!important;}
+html[data-motion="subtle"] .cat-icon,
+html[data-motion="subtle"] .cat-card,
+html[data-motion="subtle"] .rail-card{animation:none!important;}
 
 /* ── PM Phase 2 — Program Cards layout styles (applied to #flagGrid) ──── */
 /* lay-stack is the shipped default (vertical stack); the rest are opt-in. */
@@ -265,6 +267,16 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .tb-minrest{background:rgba(139,92,246,0.2);color:#a78bfa;}
 .tb-optional{background:rgba(100,116,139,0.2);color:#94a3b8;}
 .tb-finisher{background:rgba(16,185,129,0.2);color:#34d399;}
+/* Equipment badges — distinct from the intensifier set above so
+   station-anchoring (which equipment a block uses) reads as its own visual
+   category, not more intensifier noise. tb-dumbbell/tb-cable existed with
+   no color at all; tb-barbell/tb-machine/tb-smith/tb-plate didn't exist. */
+.tb-barbell{background:rgba(148,163,184,0.2);color:#cbd5e1;}
+.tb-dumbbell{background:rgba(56,189,248,0.2);color:#7dd3fc;}
+.tb-cable{background:rgba(45,212,191,0.2);color:#5eead4;}
+.tb-machine{background:rgba(161,161,170,0.2);color:#d4d4d8;}
+.tb-smith{background:rgba(192,132,252,0.15);color:#e9d5ff;}
+.tb-plate{background:rgba(120,113,108,0.25);color:#d6d3d1;}
 
 /* Hero rep-number glow picks up the exercise's featured intensifier color
    instead of always the page's generic accent. Numbers stay solid white for
@@ -529,3 +541,15 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 /* MARKET:STRIP influencer-refs START */
 /* ==== /STNDR superset stations ==== */
 /* MARKET:STRIP influencer-refs END */
+
+/* ── Shared .day-card base (Visual #2 consolidation) ──────────────────────
+   Program pages each carried their own copy of this exact rule (three
+   distinct variants had drifted into use across 24 files — see CLAUDE.md's
+   dashboard rail/grid duplication note for the sibling issue). This is the
+   variant used by the majority (15 of 24) of program pages; those pages'
+   own inline <style> no longer redeclares it. A handful of older pages
+   intentionally keep a different local .day-card (heavier border, var()
+   surface token) — their local rule still loads after this one in the
+   cascade and overrides it unchanged, so this consolidation only removes
+   duplicates that were already byte-identical. */
+.day-card{border-radius:16px;border:1px solid rgba(255,255,255,0.06);margin-bottom:10px;overflow:hidden;transition:all 0.2s;background:rgba(255,255,255,0.02);}

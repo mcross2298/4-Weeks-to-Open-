@@ -45,7 +45,8 @@
       'tb-tempo': '⏱️ Tempo', 'tb-highrep12': '🔥 12–15 Reps', 'tb-highrep20': '🔥 20–30 Reps',
       'tb-drop': '↘️ Drop Set', 'tb-amrap': '💀 AMRAP', 'tb-minrest': '⚡ 20s Rest',
       'tb-optional': '⭐ Optional', 'tb-finisher': '🏁 Finisher', 'tb-dumbbell': '🏋️ Dumbbell',
-      'tb-cable': '🔗 Cable'
+      'tb-cable': '🔗 Cable', 'tb-barbell': '🏋️‍♂️ Barbell', 'tb-machine': '⚙️ Machine',
+      'tb-smith': '🔧 Smith', 'tb-plate': '🔩 Plate-Loaded'
     },
     legend: {
       'lb-ss': '⚡ Superset', 'lb-py': '📈 Pyramid', 'lb-lr': '🏋️ Low Rep', 'lb-tm': '⏱️ Tempo',

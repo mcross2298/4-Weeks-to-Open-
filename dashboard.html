@@ -446,6 +446,9 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 .tab>div:last-child{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}
 .tab.active{color:var(--gold);}
 .tab-icon{font-size:20px;line-height:1;}
+/* History is the one tab that's a real page navigation, not an in-shell
+   panel switch like the other four — a small mark says so at a glance. */
+#tab-stats>div:last-child:after{content:' ↗';}
 
 /* ── PROGRAM SELECT SHEET ── */
 .ps-overlay{
@@ -794,7 +797,12 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
   display:block;margin-top:12px;font-family:var(--font-ui);font-weight:700;
   font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--o-muted-3);
 }
-#scr-programs .cat-designer{display:none;}
+/* Scoped to #flagGrid (flagship + influencer cards), not the whole screen —
+   a broader #scr-programs selector here used to also hide the "Designed by
+   you"/"Designed by Mike Cross" attribution the separate Your Programs /
+   Published Programs tiers render, which is real information those tiers
+   need, unlike the redundant line on flagship/influencer cards. */
+#flagGrid .cat-designer{display:none;}
 
 /* Chevron affordance (positioned via markup's trailing SVG) */
 #scr-programs .cat-chevron{position:absolute;right:18px;top:18px;flex-shrink:0;}
@@ -835,7 +843,11 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 @media (max-width:559px){#scr-programs .influencer-grid{grid-template-columns:1fr;}}
 #scr-programs .influencer-grid .cat-card{border-radius:16px;padding:14px;margin-bottom:0;}
 #scr-programs .influencer-grid .cat-icon{width:28px;height:28px;border-radius:8px;margin-bottom:20px;}
-#scr-programs .influencer-grid .cat-tag{display:none;}
+/* Was display:none — the compact influencer-grid layout still carries a
+   sizing rule for .cat-tag below (font-size/padding/margin), which only
+   makes sense if something once intended to show it; hiding it was what
+   left the tag-tinting parity gap between flagship and influencer cards. */
+#scr-programs .influencer-grid .cat-tag{display:inline-block;}
 #scr-programs .influencer-grid .cat-name{font-size:14px;padding-right:0;}
 #scr-programs .influencer-grid .cat-meta{
   font-size:11px;color:var(--o-muted-3);line-height:1.4;padding-right:0;
@@ -847,18 +859,22 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 /* MARKET:STRIP influencer-css START */
 #scr-programs .cat-card.stndr{background:linear-gradient(160deg,rgba(29,158,117,.14),rgba(20,20,22,.5));border:1px solid rgba(29,158,117,.26);border-top:2px solid #1d9e75;}
 #scr-programs .cat-card.stndr .cat-icon{background:rgba(29,158,117,.18);}
+#scr-programs .cat-card.stndr .cat-tag{background:rgba(29,158,117,.2);border:1px solid rgba(29,158,117,.4);color:#6ee7b7;}
 #scr-programs .cat-card.stndr:active{box-shadow:0 0 0 2px #1d9e75,0 0 24px rgba(29,158,117,.5);}
 
 #scr-programs .cat-card.pump{background:linear-gradient(160deg,rgba(216,90,48,.14),rgba(20,20,22,.5));border:1px solid rgba(216,90,48,.26);border-top:2px solid #d85a30;}
 #scr-programs .cat-card.pump .cat-icon{background:rgba(216,90,48,.18);}
+#scr-programs .cat-card.pump .cat-tag{background:rgba(216,90,48,.2);border:1px solid rgba(216,90,48,.4);color:#f5a683;}
 #scr-programs .cat-card.pump:active{box-shadow:0 0 0 2px #d85a30,0 0 24px rgba(216,90,48,.5);}
 
 #scr-programs .cat-card.gainz{background:linear-gradient(160deg,rgba(55,138,221,.14),rgba(20,20,22,.5));border:1px solid rgba(55,138,221,.26);border-top:2px solid #378add;}
 #scr-programs .cat-card.gainz .cat-icon{background:rgba(55,138,221,.18);}
+#scr-programs .cat-card.gainz .cat-tag{background:rgba(55,138,221,.2);border:1px solid rgba(55,138,221,.4);color:#93c5fd;}
 #scr-programs .cat-card.gainz:active{box-shadow:0 0 0 2px #378add,0 0 24px rgba(55,138,221,.5);}
 
 #scr-programs .cat-card.psu{background:linear-gradient(160deg,rgba(99,153,34,.14),rgba(20,20,22,.5));border:1px solid rgba(99,153,34,.26);border-top:2px solid #639922;}
 #scr-programs .cat-card.psu .cat-icon{background:rgba(99,153,34,.18);}
+#scr-programs .cat-card.psu .cat-tag{background:rgba(99,153,34,.2);border:1px solid rgba(99,153,34,.4);color:#bef264;}
 #scr-programs .cat-card.psu:active{box-shadow:0 0 0 2px #639922,0 0 24px rgba(99,153,34,.5);}
 /* MARKET:STRIP influencer-css END */
 
@@ -1031,14 +1047,14 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
   <div class="hero-eyebrow">Continue where you left off</div>
   <div class="hero-wrap">
 
-    <div class="hero-empty" id="heroEmpty" onclick="openProgSelect()">
+    <div class="hero-empty" id="heroEmpty" onclick="openProgSelect()" role="button" tabindex="0" aria-label="No active program set — choose a program" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProgSelect();}">
       <div class="hero-empty-icon">⚡</div>
       <div class="hero-empty-title">No active program set</div>
       <div class="hero-empty-sub">Open any program below and tap 'Set as Active' to pin it here.</div>
       <div class="hero-empty-btn">Choose Program</div>
     </div>
 
-    <div class="hero-card" id="heroCard" onclick="openActiveProgram()">
+    <div class="hero-card" id="heroCard" onclick="openActiveProgram()" role="button" tabindex="0" aria-label="Continue your active program" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openActiveProgram();}">
       <div class="hero-glow"></div>
       <div class="hero-sheen"></div>
       <div class="hero-inner">
@@ -1252,6 +1268,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
       <span class="cat-icon">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6bd9b3" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>
       </span>
+      <div class="cat-tag">Partner</div>
       <div class="cat-name">STNDR</div>
       <div class="cat-meta">CBUM-style structured lifting built on progressive overload, supersets and smart periodization.</div>
       <div class="cat-count">5 Programs</div>
@@ -1261,6 +1278,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
       <span class="cat-icon">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f0a583" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
       </span>
+      <div class="cat-tag">Partner</div>
       <div class="cat-name">Daily Pump</div>
       <div class="cat-meta">Fast, high-rep isolation work that chases maximum pump and muscle fullness.</div>
       <div class="cat-count">10 Workouts</div>
@@ -1270,6 +1288,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
       <span class="cat-icon">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8fbdec" stroke-width="2" stroke-linecap="round"><path d="M7 12h10M4 9v6M8 6v12M16 6v12M20 9v6"/></svg>
       </span>
+      <div class="cat-tag">Partner</div>
       <div class="cat-name">Daily Gainz</div>
       <div class="cat-meta">Bradley Martyn volume training — daily builders engineered for steady, consistent size.</div>
       <div class="gz-live" id="gzLive" style="display:none;">
@@ -1282,6 +1301,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
       <span class="cat-icon">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b2d97f" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2"/></svg>
       </span>
+      <div class="cat-tag">Partner</div>
       <div class="cat-name">PSU Football</div>
       <div class="cat-meta">Penn State's strength and conditioning system, built for real athletic performance.</div>
       <div class="cat-count">1 Program</div>
@@ -1360,24 +1380,24 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 <!-- ══════════════════════════════════════
      BOTTOM TAB BAR
 ══════════════════════════════════════ -->
-<div class="tab-bar">
-  <div class="tab active" id="tab-dashboard" onclick="switchTab('dashboard')">
+<div class="tab-bar" role="tablist" aria-label="Main sections">
+  <div class="tab active" id="tab-dashboard" onclick="switchTab('dashboard')" role="tab" aria-selected="true" tabindex="0">
     <div class="tab-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7M6 9.5V20h12V9.5"/></svg></div>
     <div>Dashboard</div>
   </div>
-  <div class="tab" id="tab-programs" onclick="switchTab('programs')">
+  <div class="tab" id="tab-programs" onclick="switchTab('programs')" role="tab" aria-selected="false" tabindex="-1">
     <div class="tab-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg></div>
     <div>Programs</div>
   </div>
-  <div class="tab" id="tab-conditioning" onclick="switchTab('conditioning')">
+  <div class="tab" id="tab-conditioning" onclick="switchTab('conditioning')" role="tab" aria-selected="false" tabindex="-1">
     <div class="tab-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1.6 3 4 4.2 4 7.5A4 4 0 0 1 8 11c0-1 .3-1.7.8-2.4C8 9 7 10.3 7 12.5A5 5 0 0 0 17 12.5"/></svg></div>
     <div>Conditioning</div>
   </div>
-  <div class="tab" id="tab-nutrition" onclick="switchTab('nutrition')">
+  <div class="tab" id="tab-nutrition" onclick="switchTab('nutrition')" role="tab" aria-selected="false" tabindex="-1">
     <div class="tab-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8c-2-3 1-5 2-5-1 2 .5 3 1.5 4A5 5 0 1 1 8 8.5C9 10 11 10 12 8z"/></svg></div>
     <div>Nutrition</div>
   </div>
-  <div class="tab" id="tab-stats" onclick="location.href='stats.html'">
+  <div class="tab" id="tab-stats" onclick="location.href='stats.html'" role="link" aria-label="History — leaves this app section for a separate page">
     <div class="tab-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2.5"/><path d="M4 9h16M9 3v3M15 3v3"/></svg></div>
     <div>History</div>
   </div>
@@ -1387,11 +1407,11 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
      PROGRAM SELECT SHEET
 ══════════════════════════════════════ -->
 <div class="ps-overlay" id="psOverlay" onclick="closeProgSelectOutside(event)">
-  <div class="ps-sheet">
+  <div class="ps-sheet" role="dialog" aria-modal="true" aria-labelledby="psTitle">
     <div class="ps-handle"></div>
-    <div class="ps-title">Set Active Program</div>
+    <div class="ps-title" id="psTitle">Set Active Program</div>
     <div class="ps-sub">Pins to your dashboard hero card.</div>
-    <div id="psCards"></div>
+    <div id="psCards" role="listbox" aria-label="Choose a program"></div>
     <button class="ps-confirm" onclick="confirmProg()">Set as Active Program</button>
   </div>
 </div>
@@ -1541,9 +1561,16 @@ function loadState(){
 // ── TABS ──
 function switchTab(tab){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab[role="tab"]').forEach(t=>{
+    t.classList.remove('active');
+    t.setAttribute('aria-selected','false');
+    t.setAttribute('tabindex','-1');
+  });
   document.getElementById('scr-'+tab).classList.add('active');
-  document.getElementById('tab-'+tab).classList.add('active');
+  const active=document.getElementById('tab-'+tab);
+  active.classList.add('active');
+  active.setAttribute('aria-selected','true');
+  active.setAttribute('tabindex','0');
   window.scrollTo(0,0);
 }
 
@@ -1713,11 +1740,16 @@ function buildProgCards(){
   wrap.innerHTML='';
   allProgs().forEach(p=>{
     const d=document.createElement('div');
-    d.className='ps-card'+(activeProg&&activeProg.id===p.id?' sel':'');
+    const isSel=activeProg&&activeProg.id===p.id;
+    d.className='ps-card'+(isSel?' sel':'');
     d.id='psc-'+p.id;
     d.style.setProperty('--prog-color',p.color);
-    d.innerHTML=`<div class="ps-icon">${p.icon}</div><div class="ps-info"><div class="ps-name">${p.name}</div><div class="ps-meta">${p.meta}</div></div><div class="ps-check" id="pschk-${p.id}">${activeProg&&activeProg.id===p.id?'✓':''}</div>`;
+    d.setAttribute('role','option');
+    d.setAttribute('tabindex','0');
+    d.setAttribute('aria-selected',isSel?'true':'false');
+    d.innerHTML=`<div class="ps-icon">${p.icon}</div><div class="ps-info"><div class="ps-name">${p.name}</div><div class="ps-meta">${p.meta}</div></div><div class="ps-check" id="pschk-${p.id}">${isSel?'✓':''}</div>`;
     d.onclick=()=>selectProg(p.id);
+    d.onkeydown=(e)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selectProg(p.id);}};
     wrap.appendChild(d);
   });
   tempSel=activeProg?activeProg.id:null;
@@ -1738,7 +1770,7 @@ function selectProg(id){
   allProgs().forEach(p=>{
     const c=document.getElementById('psc-'+p.id);
     const ch=document.getElementById('pschk-'+p.id);
-    if(c){c.classList.toggle('sel',p.id===id);}
+    if(c){c.classList.toggle('sel',p.id===id);c.setAttribute('aria-selected',p.id===id?'true':'false');}
     if(ch){ch.textContent=p.id===id?'✓':'';}
   });
 }

@@ -154,9 +154,34 @@
     var t = (h && h.textContent.trim()) || (document.title || '').trim();
     return t.replace(/\s*[|–—-]\s*4.?Weeks.*$/i, '').slice(0, 48) || PAGE_ID;
   }
+  // Count of exercises with a real logged set today, per the authoritative
+  // 'mc_setlog_v1' store mc-setlog.js writes (weight/reps), NOT the .checked
+  // class — a manual checkbox toggled independently of actual set logging
+  // on some pages, so it can over- or under-count real completion.
+  function loggedExerciseCountToday(pid) {
+    try {
+      var store = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}');
+      var today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      var prefix = pid + '|';
+      var n = 0;
+      Object.keys(store).forEach(function (k) {
+        if (k.indexOf(prefix) !== 0) return;
+        var sess = store[k][0];
+        if (sess && sess.d === today && sess.sets && Object.keys(sess.sets).length) n++;
+      });
+      return n;
+    } catch (e) { return 0; }
+  }
   function progress() {
-    return { done: document.querySelectorAll(DONE_SEL).length,
-             total: document.querySelectorAll(CARD_SEL).length };
+    var total = document.querySelectorAll(CARD_SEL).length;
+    // Prefer the setlog store when this page has it wired in (window.MCSetlogUtil
+    // is set by mc-setlog.js); it's the actual weight/rep log, not a checkbox tap.
+    // Falls back to the .checked DOM count on pages without the setlog engine.
+    if (window.MCSetlogUtil) {
+      var done = loggedExerciseCountToday(window.MCSetlogUtil.pid);
+      return { done: Math.min(done, total), total: total };
+    }
+    return { done: document.querySelectorAll(DONE_SEL).length, total: total };
   }
 
   // same id mc-sync.js mints — lets mc-resume.js tell "this device" from
