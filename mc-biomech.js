@@ -218,15 +218,31 @@
     return out;
   }
 
+  // ---- learned ranking from accepted swaps --------------------------------
+  // mc-card-actions.js increments mc_swap_accept_v1[origLower][altLower] each
+  // time a user actually picks that alternative for that original exercise
+  // (and decrements on Undo, so a fat-thumb tap doesn't teach anything). Pure
+  // re-sort of the existing strict-match candidates — never injects a name
+  // outside the same-pattern/same-muscle pool, so it can't override the
+  // locked "strict matching" product decision above.
+  function acceptCounts(origName) {
+    try {
+      var all = JSON.parse(localStorage.getItem('mc_swap_accept_v1') || '{}') || {};
+      return all[String(origName || '').trim().toLowerCase()] || {};
+    } catch (e) { return {}; }
+  }
+
   // ---- alternatives -------------------------------------------------------
   // Catalog-driven only, no gym-profile filtering: tier 1 is same movement
   // pattern AND same primary muscle; tier 2 (used to fill out the top 3 when
-  // tier 1 is thin) is same muscle, any pattern. Each tier is sorted
-  // alphabetically.
+  // tier 1 is thin) is same muscle, any pattern. Within each tier, exercises
+  // the user has previously picked as a substitute for this exact original
+  // sort first (most-accepted first); the rest stay alphabetical.
   function alternatives(name, opts) {
     opts = opts || {};
     var src = classify(name, opts.muscle);
     var selfKey = String(name || '').trim().toLowerCase();
+    var counts = acceptCounts(name);
     var candidates = pool().filter(function (e) {
       return e.name.toLowerCase() !== selfKey;
     });
@@ -239,13 +255,19 @@
       return e.muscle === src.muscle && e.pattern !== src.pattern && !tier1Keys[e.name.toLowerCase()];
     });
     function toRow(e) {
+      var w = convertWeight(name, e.name, opts.lastWeight);
       return {
         name: e.name, equipment: e.equipment, pattern: e.pattern, muscle: e.muscle,
-        weight: convertWeight(name, e.name, opts.lastWeight)
+        weight: w,
+        weightSource: !w ? 'none' : (historyWeight(e.name) > 0 ? 'history' : 'estimate'),
+        acceptCount: counts[e.name.toLowerCase()] || 0
       };
     }
-    function byName(a, b) { return a.name.localeCompare(b.name); }
-    return tier1.map(toRow).sort(byName).concat(tier2.map(toRow).sort(byName));
+    function byAcceptThenName(a, b) {
+      if (a.acceptCount !== b.acceptCount) return b.acceptCount - a.acceptCount;
+      return a.name.localeCompare(b.name);
+    }
+    return tier1.map(toRow).sort(byAcceptThenName).concat(tier2.map(toRow).sort(byAcceptThenName));
   }
 
   // ---- weight conversion --------------------------------------------------

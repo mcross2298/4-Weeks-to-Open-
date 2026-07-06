@@ -256,6 +256,18 @@
   var REPLACE_KEY  = 'mc_replacements|' + PAGE_ID;   // { origLower: newName } — per-page override
   var GLOBAL_REPLACE_KEY = 'mc_replacements_global'; // { origLower: newName } — applies on every page
   var SWAP_SUG_KEY = 'mc_swap_suggest|' + PAGE_ID;   // { nameLower: weightLb }
+  // { origLower: { altLower: count } } — read by MCBiomech.alternatives() to
+  // rank a previously-accepted substitute first next time. Undo decrements
+  // instead of leaving a phantom "accept" from a fat-thumb tap.
+  var ACCEPT_KEY = 'mc_swap_accept_v1';
+  function bumpAccept(origKey, altKey, delta) {
+    var all = readJSON(ACCEPT_KEY);
+    var bucket = all[origKey] || {};
+    var n = (bucket[altKey] || 0) + delta;
+    if (n > 0) bucket[altKey] = n; else delete bucket[altKey];
+    if (Object.keys(bucket).length) all[origKey] = bucket; else delete all[origKey];
+    writeJSON(ACCEPT_KEY, all);
+  }
   var subOverlay = null, subCard = null;
 
   function subEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
@@ -350,11 +362,17 @@
   // a.available is always true here. Retired the dead "not in gym" flag
   // rather than rendering a state that can never actually occur.
   function subRow(a) {
-    var wt = a.weight ? '<span class="mc-sub-wt">≈ ' + a.weight + ' lb</span>' : '';
+    // 'history' = a real logged weight on this exact movement (confident);
+    // 'estimate' = the leverage-table guess (a starting point, not a fact) —
+    // shown differently so a lifter knows which one to trust on set 1.
+    var wt = a.weightSource === 'history' ? '<span class="mc-sub-wt mc-sub-wt-real">' + a.weight + ' lb <em>from your log</em></span>'
+      : a.weightSource === 'estimate' ? '<span class="mc-sub-wt">≈ ' + a.weight + ' lb</span>'
+      : '';
+    var used = a.acceptCount > 0 ? '<span class="mc-sub-used">↻ Used before</span>' : '';
     return '<button class="mc-sub-row" data-pick="' + subEsc(a.name) + '" data-w="' + (a.weight || '') + '">' +
              '<span class="mc-sub-eq mc-eq-' + a.equipment.toLowerCase().replace(/[^a-z]/g, '') + '">' + subEsc(a.equipment) + '</span>' +
              '<span class="mc-sub-name">' + subEsc(a.name) + '</span>' +
-             wt +
+             used + wt +
            '</button>';
   }
 
@@ -401,6 +419,8 @@
     if (weight) sug[newKey] = weight; else delete sug[newKey];
     writeJSON(SWAP_SUG_KEY, sug);
 
+    bumpAccept(rootKey, newKey, 1);
+
     withoutObserver(function () {
       paintReplaced(card, newName);
       renderSwapPill(card);
@@ -418,6 +438,8 @@
       var sug2 = readJSON(SWAP_SUG_KEY);
       if (hadSug) sug2[newKey] = prevSugVal; else delete sug2[newKey];
       writeJSON(SWAP_SUG_KEY, sug2);
+
+      bumpAccept(rootKey, newKey, -1);
 
       withoutObserver(function () {
         if (hadRoot) { paintReplaced(card, visible); } else { restorePlain(card, visible); }
