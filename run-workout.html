@@ -62,21 +62,22 @@ function dropsOf(ex){
   return [];
 }
 // Build the "drop a,b,c" clause mc-setlog's parseDrop understands, appended to
-// the working-set scheme so each drop becomes its own logged row.
+// the working-set scheme so each drop becomes its own logged row. An AMRAP
+// drop target displays as a bare "∞" (one per AMRAP drop, never a "2×∞"
+// shorthand) — mc-setlog.js's parseDrop accepts "∞" as a synonym for the
+// word "AMRAP", so this stays fully parseable (the Log Sets row still shows
+// literal "AMRAP" in the reps box either way).
 function dropClause(drops){
   if(!drops.length) return '';
-  return ' drop ' + drops.map(function(d){ return d==='AMRAP' ? 'AMRAP' : d; }).join(',');
+  return ' drop ' + drops.map(function(d){ return d==='AMRAP' ? '∞' : d; }).join(',');
 }
 function dropBadge(drops){
   if(!drops.length) return '';
   if(drops.length===1){
     var d=drops[0];
-    return '<span class="type-badge tb-drop">↘️ Drop'+(d!=='AMRAP'?' '+esc(d):' set')+'</span>';
+    return '<span class="type-badge tb-drop">↘️ Drop'+(d==='AMRAP'?' ∞':' '+esc(d))+'</span>';
   }
-  var allAmrap = drops.every(function(d){ return d==='AMRAP'; });
-  var txt = allAmrap
-    ? ('↘️ Drop ×'+drops.length)
-    : ('↘️ Drop '+drops.map(function(d){ return d==='AMRAP'?'∞':esc(d); }).join('→'));
+  var txt = '↘️ Drop '+drops.map(function(d){ return d==='AMRAP'?'∞':esc(d); }).join('→');
   return '<span class="type-badge tb-drop">'+txt+'</span>';
 }
 // Cluster set: each working set is split into mini-sets with a short intra-set

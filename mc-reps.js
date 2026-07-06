@@ -38,7 +38,10 @@
   } catch (e) {}
 
   // Expand a single rep token into HTML. Drop chains become work ↓ d1 ↓ d2…;
-  // anything else is returned unchanged.
+  // anything else is returned unchanged. An AMRAP drop target renders as a
+  // bare "∞" (one per AMRAP stage, never a "2×∞" shorthand) — the base
+  // "work" token before the first "drop" is never touched, only the
+  // dropped-to targets themselves.
   function repHTML(rep) {
     if (!/drop/i.test(rep)) return rep;
     var stages = rep.split(/\s*drop\s*/i);          // ['8', '8 & 12'] | ['8','8','12']
@@ -47,7 +50,7 @@
     stages.forEach(function (stage) {
       stage.split('&').forEach(function (d) {
         d = d.trim();
-        if (d) seq.push(d);
+        if (d) seq.push(/^amrap$/i.test(d) ? '∞' : d);
       });
     });
     if (!seq.length) return rep;

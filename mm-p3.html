@@ -541,6 +541,21 @@ function hexToRgb(hex){
 }
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
+// A drop/burnout AMRAP set renders as a bare "∞" (one per AMRAP set), never
+// a "2×∞" shorthand. "Drop AMRAP" and "+ N×AMRAP" always convert (the word
+// "Drop" or a leading "+" signals an added set after real working sets,
+// regardless of context — this covers the Week 5 superset "+ 2×AMRAP"
+// burnout rounds). A BARE "N×AMRAP"/"AMRAP" with neither marker only
+// converts when it's one leg of a multi-exercise superset — never when
+// it's a standalone exercise's entire prescription (a Pos-10 finisher,
+// e.g. solo "3×AMRAP").
+function amrapToInfinity(s,isMultiLeg){
+  s=String(s).replace(/(\+\s*)?(\d+)\s*[x×]\s*(drop\s*)?amrap\b/gi,(m,plus,n,dropWord)=>(!plus&&!dropWord&&!isMultiLeg)?m:(plus||'')+Array(parseInt(n,10)).fill('∞').join(' '));
+  s=s.replace(/\bdrop\s+amrap\b/gi,'∞');
+  if(isMultiLeg)s=s.replace(/^\s*amrap\s*$/i,'∞');
+  return s;
+}
+
 function makeRestTimer(restStr, exName){
   const secs = TMR.parseSeconds(restStr);
   if(!secs) return '<span class="ex-sets" style="opacity:0.5">⏱️ '+esc(restStr)+'</span>';
@@ -581,7 +596,7 @@ function renderExercise(ex, dIdx, eIdx){
       const special = rep.toUpperCase().includes("AMRAP")||rep.includes("Drop")||rep.includes("×")||rep.includes("Cluster")||rep.includes("BW");
       const cls = special?"a-rep special":(ri===0?"a-rep live":"a-rep");
       const sep = ri<reps.length-1?'<span class="a-sep">·</span>':"";
-      return '<span class="'+cls+'">'+esc(rep)+'</span>'+sep;
+      return '<span class="'+cls+'">'+esc(amrapToInfinity(rep,parts.length>1))+'</span>'+sep;
     }).join("");
     return '<div class="a-leg">'+legTag+chips+'</div>';
   }).join("");

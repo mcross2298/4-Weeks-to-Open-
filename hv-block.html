@@ -363,6 +363,17 @@ function hexToRgb(hex){
 }
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
+// A drop set's AMRAP target renders as a bare "∞" (one per AMRAP set), never
+// a "2×∞" shorthand. "Drop AMRAP" always converts (the word "Drop" signals
+// an added set after real working sets). A bare "N×AMRAP"/"AMRAP" with no
+// "Drop" word (e.g. the CIRCUIT "5×AMRAP") is its own standalone
+// prescription, not a drop set, and is left untouched.
+function amrapToInfinity(s){
+  s=String(s).replace(/(\+\s*)?(\d+)\s*[x×]\s*(drop\s*)?amrap\b/gi,(m,plus,n,dropWord)=>(!plus&&!dropWord)?m:(plus||'')+Array(parseInt(n,10)).fill('∞').join(' '));
+  s=s.replace(/\bdrop\s+amrap\b/gi,'∞');
+  return s;
+}
+
 function makeRestTimer(restStr, exName){
   const secs = TMR.parseSeconds(restStr);
   if(!secs) return '<span class="ex-sets" style="opacity:0.5">⏱️ '+esc(restStr)+'</span>';
@@ -389,7 +400,7 @@ function renderExercise(ex, wIdx, dIdx, eIdx){
     const special = rep.toUpperCase().includes("AMRAP")||rep.includes("Drop")||rep.includes("×")||rep.includes("Cluster");
     const cls = special?"a-rep special":(ri===0?"a-rep live":"a-rep");
     const sep = ri<reps.length-1?'<span class="a-sep">·</span>':"";
-    return '<span class="'+cls+'">'+esc(rep)+'</span>'+sep;
+    return '<span class="'+cls+'">'+esc(amrapToInfinity(rep))+'</span>'+sep;
   }).join("") + '</div>';
 
   const pillCls = isSS?"grp":isCL?"grp cluster":isDR?"grp drop":isCC?"grp circuit":"grp";

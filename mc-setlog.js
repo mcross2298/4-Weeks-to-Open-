@@ -103,29 +103,74 @@
 
   // ---- drop-set detection -------------------------------------------------
   // A drop set is an EXTRA set tacked onto the working sets — it must not be
-  // folded into the working-set count. Two notations appear across programs:
+  // folded into the working-set count. FOUR notations appear across programs:
   /* MARKET:STRIP influencer-refs START */
   //   • open-ended "drop set"  (Daily Gainz "3×8–12, drop set" / "(drop set)")
   /* MARKET:STRIP influencer-refs END */
   //       → an AMRAP drop (strip weight, reps to failure)
   //   • numeric  "… drop N"    (PMC/MC/Pump "12,10,8,8 drop 15")
   //       → a drop with a prescribed rep target (N)
-  // Returns {is, reps} where reps is the numeric target or 'AMRAP'.
+  //   • word, optionally multiplier-prefixed  "…, Drop AMRAP" / "…, 2× Drop AMRAP"
+  //       (Iron Engine/Kitchen Sink word family) → the multiplier repeats the
+  //       AMRAP token that many times (one row per drop)
+  //   • arrow, trailing           "12, 10, 8, 8 → AMRAP, AMRAP"
+  //       (Iron Engine/Kitchen Sink family)
+  //   • plus-multiplier, no "drop" word   "8, 6, 4, 4, + 2×AMRAP"
+  //       (Modality Matrix superset/tri-set burnout rounds)
+  //   • "then"                    "12,10,8,8 then AMRAP"
+  // Returns {is, drops} where each entry in drops is a numeric target or 'AMRAP'.
   // A bare "drop" with no number and no "set" (rare) is NOT treated as a drop.
+  // "∞" is accepted everywhere "amrap" is, as a display-swapped synonym —
+  // pages (e.g. run-workout.html's custom-workout builder) may render the
+  // drop target as the ∞ glyph instead of the word "AMRAP"; either spelling
+  // normalizes to the same internal 'AMRAP' keyword below, so the Log Sets
+  // placeholder always shows literal "AMRAP" (the functional log-it cue)
+  // regardless of which glyph the page displays.
   function parseDrop(name, sets) {
     var hay = (name || '') + ' ' + (sets || '');
-    // Tokens must immediately follow "drop": one or more of set/AMRAP/number,
-    // comma-separated — "drop set", "drop 15", "drop 8,12", "drop AMRAP,AMRAP".
-    var m = hay.match(/\bdrop\b\s*((?:set|amrap|\d+)(?:\s*,\s*(?:set|amrap|\d+))*)/i);
-    if (!m) return { is: false, drops: [] };
-    var drops = [], tok = /(\d+)|set|amrap/gi, t;
-    while ((t = tok.exec(m[1]))) drops.push(t[1] ? t[1] : 'AMRAP');
-    if (!drops.length) return { is: false, drops: [] };
-    return { is: true, drops: drops };
+    function tokensFrom(str) {
+      var drops = [], tok = /(\d+)|set|amrap|∞/gi, t;
+      while ((t = tok.exec(str))) drops.push(t[1] ? t[1] : 'AMRAP');
+      return drops;
+    }
+    function finish(tokenStr, mult) {
+      var drops = tokensFrom(tokenStr);
+      if (!drops.length) return { is: false, drops: [] };
+      // A leading "N× " multiplier on a SINGLE-token drop clause repeats that
+      // token N times ("2× Drop AMRAP" == two successive AMRAP drops).
+      if (mult && drops.length === 1) {
+        var one = drops[0]; drops = [];
+        for (var i = 0; i < mult; i++) drops.push(one);
+      }
+      return { is: true, drops: drops };
+    }
+    var m;
+    // arrow: "12, 10, 8, 8 → AMRAP, AMRAP" (trailing, end of string)
+    m = hay.match(/→\s*((?:amrap|∞|\d+)(?:\s*,\s*(?:amrap|∞|\d+))*)\s*$/i);
+    if (m) return finish(m[1], 0);
+    // plus-multiplier, no "drop" word: "…, + 2×AMRAP"
+    m = hay.match(/\+\s*(\d+)\s*[x×]\s*(?:amrap\b|∞)\s*$/i);
+    if (m) return finish('AMRAP', parseInt(m[1], 10));
+    // "…, then AMRAP"
+    m = hay.match(/\bthen\b\s*((?:amrap|∞|\d+)(?:\s*,\s*(?:amrap|∞|\d+))*)\s*$/i);
+    if (m) return finish(m[1], 0);
+    // word "drop", optionally "N× drop …" — tokens must immediately follow
+    // "drop": one or more of set/AMRAP/∞/number, comma-separated.
+    m = hay.match(/(?:(\d+)\s*[x×]\s*)?\bdrop\b\s*((?:set|amrap|∞|\d+)(?:\s*,\s*(?:set|amrap|∞|\d+))*)/i);
+    if (m) return finish(m[2], m[1] ? parseInt(m[1], 10) : 0);
+    return { is: false, drops: [] };
   }
-  // Strip the trailing "drop …" clause so the WORKING sets parse cleanly
-  // ("12,10,8,8 drop 15" → "12,10,8,8"; no more garbled "815" rep target).
-  function stripDrop(s) { return (s || '').replace(/[, ]*\bdrop\b.*$/i, '').trim(); }
+  // Strip the trailing drop clause (whichever of the four notations matched)
+  // so the WORKING sets parse cleanly ("12,10,8,8 drop 15" → "12,10,8,8";
+  // "12, 10, 8, 8 → AMRAP, AMRAP" → "12, 10, 8, 8"; no more garbled targets).
+  function stripDrop(s) {
+    return (s || '')
+      .replace(/\s*→\s*(?:amrap|∞|\d+)(?:\s*,\s*(?:amrap|∞|\d+))*\s*$/i, '')
+      .replace(/[,+ ]*\+\s*\d+\s*[x×]\s*(?:amrap\b|∞)\s*$/i, '')
+      .replace(/[, ]*\bthen\b\s*(?:amrap|∞|\d+)(?:\s*,\s*(?:amrap|∞|\d+))*\s*$/i, '')
+      .replace(/[,+ ]*(?:\d+\s*[x×]\s*)?\bdrop\b.*$/i, '')
+      .trim();
+  }
 
   // ---- rest seconds from the card's rest timer ---------------------------
   function restSecs(card) {
