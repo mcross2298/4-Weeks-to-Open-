@@ -23,16 +23,22 @@
 
   // Equipment coefficient: Cable/Machine estimates get ×0.85 to offset machine-assisted leverage.
   function equipCat(name) {
-    if (window.EXERCISES) {
+    if (typeof window !== 'undefined' && window.EXERCISES) {
       var nl = (name || '').toLowerCase();
-      for (var i = 0; i < EXERCISES.length; i++) {
-        if (EXERCISES[i].name.toLowerCase() === nl) return EXERCISES[i].equipment || '';
+      for (var i = 0; i < window.EXERCISES.length; i++) {
+        if (window.EXERCISES[i].name.toLowerCase() === nl) return window.EXERCISES[i].equipment || '';
       }
     }
     var s = ' ' + (name || '').toLowerCase() + ' ';
     if (/\bcable\b|pulldown|push-?down|rope |lat pull|face pull/.test(s)) return 'Cable';
     if (/\bmachine\b|leg press|leg extension|leg curl|pec deck|abductor|adductor/.test(s)) return 'Machine';
     return 'Barbell';
+  }
+
+  // Cable/Machine e1RM estimates get discounted ×0.85 to offset machine-assisted
+  // leverage; Smith and everything else (including Barbell) is unchanged.
+  function applyEquipCoeff(e1, equip) {
+    return (equip === 'Cable' || equip === 'Machine') ? Math.round(e1 * 0.85) : e1;
   }
 
   function logs() {
@@ -82,7 +88,17 @@
       .sort(function (a, b) { return b.sessions - a.sessions || b.e1 - a.e1; });
   }
 
+  // Node-side hook so CI can regression-test the real max-out math (see
+  // tools/test-mc-maxout.js) instead of a duplicated inline copy.
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { equipCat: equipCat, applyEquipCoeff: applyEquipCoeff, round5: round5 };
+  }
+
   // ---- picker ---------------------------------------------------------------
+  // Everything below is DOM-driven UI wiring — skipped outside a browser (e.g.
+  // when this file is required from Node for the exports above).
+  if (typeof document === 'undefined') return;
+
   var lifts = liftIndex();
   function renderPick() {
     var q = ($('mxSearch').value || '').toLowerCase().trim();
@@ -112,7 +128,7 @@
   function start(l) {
     lift = l;
     var equip = equipCat(l.name);
-    var t = (equip === 'Cable' || equip === 'Machine') ? Math.round(l.e1 * 0.85) : l.e1;
+    var t = applyEquipCoeff(l.e1, equip);
     plan = [
       { lbl: 'Warm-up 1', w: BAR, r: '× 10', note: 'Empty bar. Groove the pattern.' },
       { lbl: 'Warm-up 2', w: round5(t * 0.4), r: '× 5', note: 'Fast and crisp.' },
