@@ -259,6 +259,21 @@ let activeWeek = "w1";
 
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
+// A drop/burnout AMRAP set renders as a bare "∞" (one per AMRAP set), never
+// a "2×∞" shorthand. "Drop AMRAP" and "+ N×AMRAP" always convert (the word
+// "Drop" or a leading "+" signals an added set after real working sets,
+// regardless of context). A BARE "N×AMRAP"/"AMRAP" with neither marker only
+// converts when it's one leg of a multi-exercise superset (a burnout round
+// paired against a partner leg's real working sets, e.g. "8, 8 / 2× AMRAP")
+// — never when it's a standalone exercise's entire prescription (a
+// finisher, e.g. a solo "3× AMRAP" with no partner leg).
+function amrapToInfinity(s,isMultiLeg){
+  s=String(s).replace(/(\+\s*)?(\d+)\s*[x×]\s*(drop\s*)?amrap\b/gi,(m,plus,n,dropWord)=>(!plus&&!dropWord&&!isMultiLeg)?m:(plus||'')+Array(parseInt(n,10)).fill('∞').join(' '));
+  s=s.replace(/\bdrop\s+amrap\b/gi,'∞');
+  if(isMultiLeg)s=s.replace(/^\s*amrap\s*$/i,'∞');
+  return s;
+}
+
 function renderReps(sets){
   if(!sets||sets==="—")return '<span style="color:#9ca3af;font-style:italic">—</span>';
   const parts=sets.split("/").map(s=>s.trim());
@@ -286,7 +301,7 @@ function renderExercise(ex,dIdx,eIdx){
       const special=rep.toUpperCase().includes("AMRAP")||rep.includes("Drop")||rep.includes("×");
       const cls=special?"a-rep special":(ri===0?"a-rep live":"a-rep");
       const sep=ri<reps.length-1?'<span class="a-sep">·</span>':"";
-      return `<span class="${cls}">${escapeHtml(rep)}</span>${sep}`;
+      return `<span class="${cls}">${escapeHtml(amrapToInfinity(rep,legsArr.length>1))}</span>${sep}`;
     }).join("");
     return `<div class="a-leg">${legTag}${chips}</div>`;
   }).join("");

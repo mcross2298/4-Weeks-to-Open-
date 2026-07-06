@@ -110,12 +110,15 @@
 
   // --- intensifier rendering (same contract as run-workout.html) ----------
   function dropsOf(ex) { if (ex.drops && ex.drops.length) return ex.drops.slice(); if (ex.drop) return [ex.drop]; return []; }
-  function dropClause(drops) { if (!drops.length) return ''; return ' drop ' + drops.map(function (d) { return d === 'AMRAP' ? 'AMRAP' : d; }).join(','); }
+  // An AMRAP drop target displays as a bare "∞" (one per AMRAP drop, never a
+  // "2×∞" shorthand) — mc-setlog.js's parseDrop accepts "∞" as a synonym for
+  // the word "AMRAP", so this stays fully parseable (the Log Sets row still
+  // shows literal "AMRAP" in the reps box either way).
+  function dropClause(drops) { if (!drops.length) return ''; return ' drop ' + drops.map(function (d) { return d === 'AMRAP' ? '∞' : d; }).join(','); }
   function dropBadge(drops) {
     if (!drops.length) return '';
-    if (drops.length === 1) { var d = drops[0]; return '<span class="type-badge tb-drop">↘️ Drop' + (d !== 'AMRAP' ? ' ' + esc(d) : ' set') + '</span>'; }
-    var allAmrap = drops.every(function (d) { return d === 'AMRAP'; });
-    var txt = allAmrap ? ('↘️ Drop ×' + drops.length) : ('↘️ Drop ' + drops.map(function (d) { return d === 'AMRAP' ? '∞' : esc(d); }).join('→'));
+    if (drops.length === 1) { var d = drops[0]; return '<span class="type-badge tb-drop">↘️ Drop' + (d === 'AMRAP' ? ' ∞' : ' ' + esc(d)) + '</span>'; }
+    var txt = '↘️ Drop ' + drops.map(function (d) { return d === 'AMRAP' ? '∞' : esc(d); }).join('→');
     return '<span class="type-badge tb-drop">' + txt + '</span>';
   }
   function clusterBadge(ex) { if (!ex.cluster) return ''; return '<span class="type-badge tb-cluster">🧩 Cluster ' + esc(ex.cluster) + '</span>'; }

@@ -333,17 +333,22 @@ function cardClass(tag){
   return'';
 }
 
+// A drop set's AMRAP target renders as a bare "∞" (one per AMRAP set) —
+// never a "2×∞" shorthand. Only swaps the word itself; numeric drop targets
+// (e.g. "drop 15") and standalone AMRAP prescriptions (no drop) are untouched.
+function amrapToInfinity(s){ return String(s).replace(/\bamrap\b/gi,'∞'); }
+
 function renderReps(sets){
   if(!sets||sets==='—')return'<span style="color:#9ca3af;font-style:italic">—</span>';
-  const lower=sets.toLowerCase();
-  if(lower.includes('amrap')){
-    return`<div style="font-size:13px;color:#c084fc;font-weight:800">${escapeHtml(sets)}</div>`;
-  }
   if(sets.includes('→')){
     const parts=sets.split('→');
     const baseHtml=renderChips(parts[0].trim(),'#fbbf24');
-    const extHtml=`<span style="font-size:11px;font-weight:900;color:#94a3b8;margin:0 4px">→</span>`+renderChips(parts[1].trim(),'#f87171');
+    const extHtml=`<span style="font-size:11px;font-weight:900;color:#94a3b8;margin:0 4px">→</span>`+renderChips(amrapToInfinity(parts[1].trim()),'#f87171');
     return`<div class="a-leg">${baseHtml}${extHtml}</div>`;
+  }
+  const lower=sets.toLowerCase();
+  if(lower.includes('amrap')){
+    return`<div style="font-size:13px;color:#c084fc;font-weight:800">${escapeHtml(sets)}</div>`;
   }
   const chips=sets.split(',').map((rep,i)=>{
     const r=rep.trim();

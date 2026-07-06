@@ -298,16 +298,17 @@ const SLIDES = [
     title:"Log your sets + rest timer",
     tagline:"This is the heartbeat of the app. Every exercise card has a Log Sets dropdown — weight, reps, check it off, rest auto-starts.",
     scene:{glyph:'✅',caption:'Log Sets → enter weight & reps → tap ✓ → rest timer fires',color:'rgba(52,211,153,0.35)',glow:'rgba(52,211,153,0.12)'},
-    narration:"On any workout, tap “Log Sets” under an exercise. Punch in your weight and reps, then tap the check. Two things happen: the set locks in, and your prescribed rest timer kicks off automatically. Last time's top weight shows right on the card, so you always know what to beat. Drop sets and AMRAP rows are built in too.",
+    narration:"On any workout, tap “Log Sets” under an exercise. Punch in your weight and reps, then tap the check. Two things happen: the set locks in, and your prescribed rest timer kicks off automatically. Last time's top weight shows right on the card, so you always know what to beat. Drop sets and AMRAP rows are built in too — look for the ∞ symbol.",
     steps:[
       {tx:"On an exercise card, tap <span class='tap'>Log Sets</span> to open the logger."},
       {tx:"Type your <b>Weight</b> and <b>Reps</b> for the set."},
       {tx:"Tap the <span class='tap'>✓</span> checkbox — the set saves and the <b>rest timer auto-starts</b>."},
       {tx:"A <b>“+ DROP”</b> or <b>“+ AMRAP”</b> row appears automatically when the program calls for it."},
+      {tx:"On the card's rep scheme, a <b>∞ symbol</b> marks a drop set or burnout round taken to failure — one ∞ per AMRAP set, so <b>“12 · 10 · 8 · ∞ ∞”</b> means two back-to-back AMRAP drops after the working sets. In the Log Sets table itself, that row's Reps box still says <b>“AMRAP”</b> — type in exactly how many reps you completed."},
       {tx:"Tap <span class='tap'>🎬</span> on the rest timer to switch to <b>Video view</b> — a full-screen countdown with an <b>Up Next</b> card showing what's coming. Tap <span class='tap'>☰ List view</span> to switch back; the app remembers whichever you picked last."},
       {tx:"Prefer one exercise at a time? Tap <span class='tap'>🎯 Start Guided Mode</span> above your first exercise — it dims everything but the exercise you're on and auto-advances the moment you finish its sets."}
     ],
-    tip:"The card shows <b>“Last: X lb · date”</b> — your built-in cue to progressively overload."
+    tip:"The card shows <b>“Last: X lb · date”</b> — your built-in cue to progressively overload. And remember: ∞ in the rep scheme is just shorthand for AMRAP — always log your real rep count in the Log Sets box."
   },
   {
     eyebrow:'Module 5 · Customize',
