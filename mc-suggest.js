@@ -14,8 +14,11 @@
      • no logged history / bodyweight-style entries → no hint
    ========================================================================== */
 (function () {
-  if (window.__mcSuggest) return;
-  window.__mcSuggest = true;
+  var isBrowser = typeof window !== 'undefined';
+  if (isBrowser) {
+    if (window.__mcSuggest) return;
+    window.__mcSuggest = true;
+  }
 
   var SK = 'mc_setlog_v1';
 
@@ -27,12 +30,23 @@
   // big compound movements progress in 10 lb jumps; everything else 5 lb
   var BIG = /squat|deadlift|leg press|bench|overhead press|ohp|barbell press|military/i;
 
+  // Equipment-aware progression step: Cable/Machine get a smaller 2.5 lb jump
+  // (mirrors mc-maxout.js's e1RM discount for the same equipment types).
+  // Smith intentionally behaves like Barbell — full 10/5 lb jumps, no discount
+  // — it's a distinct catalog equipment value but not leverage-assisted the
+  // way Cable/Machine are.
+  function computeIncrement(name, equip) {
+    var inc = BIG.test(name || '') ? 10 : 5;
+    if (equip === 'Cable' || equip === 'Machine') inc = 2.5;
+    return inc;
+  }
+
   // Resolve equipment type for an exercise: catalog lookup first, then keyword fallback.
   function equipCat(name) {
-    if (window.EXERCISES) {
+    if (typeof window !== 'undefined' && window.EXERCISES) {
       var nl = (name || '').toLowerCase();
-      for (var i = 0; i < EXERCISES.length; i++) {
-        if (EXERCISES[i].name.toLowerCase() === nl) return EXERCISES[i].equipment || '';
+      for (var i = 0; i < window.EXERCISES.length; i++) {
+        if (window.EXERCISES[i].name.toLowerCase() === nl) return window.EXERCISES[i].equipment || '';
       }
     }
     var s = ' ' + (name || '').toLowerCase() + ' ';
@@ -89,9 +103,8 @@
       var anyLogged = sets.some(function (s) { return !isNaN(parseInt(s.r, 10)); });
       if (anyLogged && !allHit) return { w: W, why: 'repeat — chase the rep target' };
       if (anyLogged && allHit) {
-        var inc = BIG.test(name || '') ? 10 : 5;
         var eq = equipCat(name || '');
-        if (eq === 'Cable' || eq === 'Machine') inc = 2.5;
+        var inc = computeIncrement(name, eq);
         return { w: W + inc, why: 'all reps hit last time — move up' };
       }
     }
@@ -158,6 +171,14 @@
     render();
     [400, 1000, 2000, 3000].forEach(function (d) { setTimeout(render, d); });
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
+  if (isBrowser) {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+  }
+
+  // Node-side hook so CI can regression-test the real progression math
+  // (see tools/test-mc-suggest.js) instead of a duplicated inline copy.
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { computeIncrement: computeIncrement, topRep: topRep, equipCat: equipCat };
+  }
 })();
