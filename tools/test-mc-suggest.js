@@ -42,8 +42,76 @@ check('equipCat resolves Cable from the catalog', suggest.equipCat('Cable Row'),
 check('equipCat falls back to keyword match for Dumbbell', suggest.equipCat('DB Bench Press'), 'Dumbbell');
 delete global.window;
 
+// ---- classifySession / detectPlateau (Phase 2: plateau/deload detection) ----
+global.location = { pathname: '/test-page.html' };
+global.window = { MCSetlogUtil: undefined };
+// mc-suggest.js's store() always reads the single 'mc_setlog_v1' key, which
+// holds an object keyed by "<page>|<exerciseId>" — mirror that shape here.
+var setlogData = {};
+global.localStorage = {
+  getItem: function () { return JSON.stringify(setlogData); },
+  setItem: function () {}
+};
+
+function session(d, sets) { return { d: d, sets: sets }; }
+function loggedSet(w, r, rpe) { return { w: w, r: r, rpe: rpe }; }
+
+check('classifySession: hold when 2+ sets are RPE>=9.5/F',
+  suggest.classifySession(session('Jan 1', { 0: loggedSet(135, 8, 'F'), 1: loggedSet(135, 8, 'F'), 2: loggedSet(135, 8, 8) }), '3x8').status,
+  'hold');
+check('classifySession: repeat when reps fall short of target',
+  suggest.classifySession(session('Jan 1', { 0: loggedSet(135, 6, 8), 1: loggedSet(135, 6, 8) }), '2x8').status,
+  'repeat');
+check('classifySession: progress when every logged set hits the target',
+  suggest.classifySession(session('Jan 1', { 0: loggedSet(135, 8, 8), 1: loggedSet(135, 8, 8) }), '2x8').status,
+  'progress');
+check('classifySession: null for bodyweight/unweighted sets',
+  suggest.classifySession(session('Jan 1', { 0: loggedSet(0, 12, 8) }), '1x12'),
+  null);
+
+// 4 non-progressing sessions in a row (newest first) → deload, not just a hold
+setlogData['test-page|bench'] = [
+  session('Jan 4', { 0: loggedSet(135, 6, 8), 1: loggedSet(135, 6, 8) }),
+  session('Jan 3', { 0: loggedSet(135, 8, 'F'), 1: loggedSet(135, 8, 'F') }),
+  session('Jan 2', { 0: loggedSet(135, 6, 8), 1: loggedSet(135, 6, 8) }),
+  session('Jan 1', { 0: loggedSet(135, 6, 8), 1: loggedSet(135, 6, 8) })
+];
+var deload = suggest.detectPlateau('bench', '2x8');
+check('detectPlateau: 4 non-progressing sessions in a row -> deload', deload && deload.level, 'deload');
+check('detectPlateau: streak counted correctly', deload && deload.streak, 4);
+
+// exactly 3 in a row → plateau (not yet escalated to deload)
+setlogData['test-page|squat'] = [
+  session('Jan 3', { 0: loggedSet(225, 6, 8) }),
+  session('Jan 2', { 0: loggedSet(225, 6, 8) }),
+  session('Jan 1', { 0: loggedSet(225, 6, 8) })
+];
+var plateau = suggest.detectPlateau('squat', '1x8');
+check('detectPlateau: exactly 3 non-progressing sessions -> plateau, not deload', plateau && plateau.level, 'plateau');
+
+// below the 3-session threshold → no flag at all
+setlogData['test-page|row'] = [
+  session('Jan 2', { 0: loggedSet(95, 6, 8) }),
+  session('Jan 1', { 0: loggedSet(95, 6, 8) })
+];
+check('detectPlateau: below the 3-session threshold -> no flag', suggest.detectPlateau('row', '1x8'), null);
+
+// a progress session anywhere in the streak (even the 2nd-most-recent) breaks it —
+// only a continuous run counting back from the most recent session counts
+setlogData['test-page|curl'] = [
+  session('Jan 4', { 0: loggedSet(45, 6, 8) }),
+  session('Jan 3', { 0: loggedSet(45, 12, 8) }),
+  session('Jan 2', { 0: loggedSet(45, 6, 8) }),
+  session('Jan 1', { 0: loggedSet(45, 6, 8) })
+];
+check('detectPlateau: a progress session breaks the streak', suggest.detectPlateau('curl', '1x12'), null);
+
+delete global.window;
+delete global.location;
+delete global.localStorage;
+
 if (fail) {
-  console.error('\nFix: mc-suggest.js\'s computeIncrement/equipCat no longer match expected progression-step behavior.');
+  console.error('\nFix: mc-suggest.js\'s computeIncrement/equipCat/classifySession/detectPlateau no longer match expected progression behavior.');
   process.exit(1);
 }
 console.log('mc-suggest.js progression-math regression tests passed');
