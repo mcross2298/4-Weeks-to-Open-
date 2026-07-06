@@ -1101,38 +1101,9 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
     <div class="prog-rail-title">Programs</div>
     <div class="prog-rail-link" onclick="switchTab('programs')">Browse all</div>
   </div>
-  <div class="prog-rail">
-    <a href="cat-strength.html" class="rail-card ss">
-      <div class="rail-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#e8828b" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg></div>
-      <div class="rail-name">Strength &amp; Supersets</div>
-      <div class="rail-meta">6-Week Cycle · 5 Days</div>
-    </a>
-    <a href="cat-pmc.html" class="rail-card pmc">
-      <div class="rail-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#b3aaf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></div>
-      <div class="rail-name">Project Muscle Confusion</div>
-      <div class="rail-meta">7 Splits · 2 Weeks Each</div>
-    </a>
-    <a href="cat-mc.html" class="rail-card mc">
-      <div class="rail-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#e6c579" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l3.5 2.5L12 4l4.5 6.5L20 8l-1.5 10h-13z"/></svg></div>
-      <div class="rail-name">Mike Cross' Favorite Splits</div>
-      <div class="rail-meta">5 Splits · 23 Workouts</div>
-    </a>
-    <a href="cat-ks.html" class="rail-card ks">
-      <div class="rail-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#f6c177" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1.6 3 4 4.2 4 7.5A4 4 0 0 1 8 11c0-1 .3-1.7.8-2.4C8 9 7 10.3 7 12.5A5 5 0 0 0 17 12.5C17 8 13.5 6 12 3z"/></svg></div>
-      <div class="rail-name">Everything Under the Kitchen Sink</div>
-      <div class="rail-meta">6 Splits · Station-Anchored</div>
-    </a>
-    <a href="cat-mm.html" class="rail-card mm">
-      <div class="rail-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#a9aef2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/></svg></div>
-      <div class="rail-name">The Modality Matrix</div>
-      <div class="rail-meta">15 Weeks · 3 Phases · 4-Day Split</div>
-    </a>
-    <a href="cat-hv.html" class="rail-card hv">
-      <div class="rail-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#c3e08a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></div>
-      <div class="rail-name">High-Volume Training Template</div>
-      <div class="rail-meta">4-Week Block · 5–6 Sets · 15–25 Reps</div>
-    </a>
-  </div>
+  <!-- filled at runtime by renderProgramCards() in the inline script below,
+       from MC_PM_DATA.programs (mc-pm-data.js) -->
+  <div class="prog-rail"></div>
 
   <!-- Training Tools -->
   <div class="sec-header">
@@ -1186,72 +1157,9 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 
     <div class="tier-label flag">★ Flagship Programs</div>
 
-    <div class="prog-cards lay-stack" id="flagGrid">
-    <a href="cat-strength.html" class="cat-card ss">
-      <svg class="cat-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-      <span class="cat-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e8828b" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>
-      </span>
-      <div class="cat-tag">Flagship</div>
-      <div class="cat-name">Strength &amp; Supersets</div>
-      <div class="cat-meta">Heavy low-rep compounds paired with high-volume supersets and AMRAP finishers for raw strength and size.</div>
-      <div class="cat-count">6-Week Cycle · 5 Days</div>
-    </a>
-
-    <a href="cat-pmc.html" class="cat-card pmc">
-      <svg class="cat-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-      <span class="cat-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b3aaf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
-      </span>
-      <div class="cat-tag">Flagship</div>
-      <div class="cat-name">Project Muscle Confusion</div>
-      <div class="cat-meta">Constantly varied supersets, pyramids, drop sets, AMRAP and tempo work that never lets your muscles adapt.</div>
-      <div class="cat-count">7 Splits · 2 Weeks Each</div>
-    </a>
-
-    <a href="cat-mc.html" class="cat-card mc">
-      <svg class="cat-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-      <span class="cat-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e6c579" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l3.5 2.5L12 4l4.5 6.5L20 8l-1.5 10h-13z"/></svg>
-      </span>
-      <div class="cat-tag">Flagship</div>
-      <div class="cat-name">Mike Cross' Favorite Splits</div>
-      <div class="cat-meta">Mike's five personal splits spanning every major training style — the way he actually trains.</div>
-      <div class="cat-count">5 Splits · 23 Workouts</div>
-    </a>
-
-    <a href="cat-ks.html" class="cat-card ks">
-      <svg class="cat-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-      <span class="cat-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3c1.6 3 4 4.2 4 7.5A4 4 0 0 1 8 11c0-1 .3-1.7.8-2.4C8 9 7 10.3 7 12.5A5 5 0 0 0 17 12.5C17 8 13.5 6 12 3z" fill="#f0c078"/></svg>
-      </span>
-      <div class="cat-tag">Flagship</div>
-      <div class="cat-name">Everything Under the Kitchen Sink</div>
-      <div class="cat-meta">Six distinct training splits under one roof — the complete MC arsenal, station-anchored for commercial gym efficiency.</div>
-      <div class="cat-count">6 Splits · Station-Anchored</div>
-    </a>
-
-    <a href="cat-mm.html" class="cat-card mm">
-      <svg class="cat-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-      <span class="cat-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a3a8f2" stroke-width="2" stroke-linejoin="round"><path d="M12 2.5 20 7v10l-8 4.5L4 17V7z"/></svg>
-      </span>
-      <div class="cat-tag">Flagship</div>
-      <div class="cat-name">The Modality Matrix</div>
-      <div class="cat-meta">Three phases, three modalities — dumbbell isolation, barbell strength, cable conditioning — one complete system.</div>
-      <div class="cat-count">15 Weeks · 3 Phases · 4-Day Split</div>
-    </a>
-    <a href="cat-hv.html" class="cat-card hv">
-      <svg class="cat-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-      <span class="cat-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c3dc8f" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
-      </span>
-      <div class="cat-tag">Flagship</div>
-      <div class="cat-name">High-Volume Training Template</div>
-      <div class="cat-meta">Compound-dominant into full supersets, into high-set pyramids, into bodyweight &amp; accessory density — trisets banned throughout.</div>
-      <div class="cat-count">4-Week Block · 5–6 Sets · 15–25 Reps</div>
-    </a>
-    </div><!-- /#flagGrid -->
+    <!-- filled at runtime by renderProgramCards() in the inline script below,
+         from MC_PM_DATA.programs (mc-pm-data.js) -->
+    <div class="prog-cards lay-stack" id="flagGrid"></div><!-- /#flagGrid -->
 
     <!-- Bonus Workouts — auto-collected standalone workouts (rendered by mc-bonus-routing.js when ≥1 exists) -->
     <div id="bonusCardSlot"></div>
@@ -1262,52 +1170,9 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
     <!-- MARKET:STRIP influencer-programs START — licensed content, see content-manifest.json -->
     <div class="tier-label influencer">Influencer Programs</div>
 
-    <div class="influencer-grid">
-
-    <a href="cat-stndr.html" class="cat-card stndr">
-      <span class="cat-icon">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6bd9b3" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>
-      </span>
-      <div class="cat-tag">Partner</div>
-      <div class="cat-name">STNDR</div>
-      <div class="cat-meta">CBUM-style structured lifting built on progressive overload, supersets and smart periodization.</div>
-      <div class="cat-count">5 Programs</div>
-    </a>
-
-    <a href="cat-pump-new4.html" class="cat-card pump">
-      <span class="cat-icon">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f0a583" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
-      </span>
-      <div class="cat-tag">Partner</div>
-      <div class="cat-name">Daily Pump</div>
-      <div class="cat-meta">Fast, high-rep isolation work that chases maximum pump and muscle fullness.</div>
-      <div class="cat-count">10 Workouts</div>
-    </a>
-
-    <a href="cat-gainz.html" class="cat-card gainz" id="gainzCard">
-      <span class="cat-icon">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8fbdec" stroke-width="2" stroke-linecap="round"><path d="M7 12h10M4 9v6M8 6v12M16 6v12M20 9v6"/></svg>
-      </span>
-      <div class="cat-tag">Partner</div>
-      <div class="cat-name">Daily Gainz</div>
-      <div class="cat-meta">Bradley Martyn volume training — daily builders engineered for steady, consistent size.</div>
-      <div class="gz-live" id="gzLive" style="display:none;">
-        <div class="gz-streak" id="gzStreak"></div>
-      </div>
-      <div class="cat-count">8 Programs</div>
-    </a>
-
-    <a href="cat-psu.html" class="cat-card psu">
-      <span class="cat-icon">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b2d97f" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2"/></svg>
-      </span>
-      <div class="cat-tag">Partner</div>
-      <div class="cat-name">PSU Football</div>
-      <div class="cat-meta">Penn State's strength and conditioning system, built for real athletic performance.</div>
-      <div class="cat-count">1 Program</div>
-    </a>
-
-    </div>
+    <!-- filled at runtime by renderProgramCards() in the inline script below,
+         from MC_PM_DATA.programs (mc-pm-data.js) -->
+    <div class="influencer-grid"></div>
     <!-- MARKET:STRIP influencer-programs END -->
 
     <div class="tier-label influencer" id="pubTier" style="display:none;">📣 Published Programs</div>
@@ -1435,6 +1300,84 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 <script src="mc-barcode.js"></script>
 <script src="mc-macros.js"></script>
 <script>
+// ── PROGRAM CARDS (Home rail + Programs tab grid) ──
+// Both lists render at runtime from MC_PM_DATA.programs so a program only
+// ever needs to be added in mc-pm-data.js — see CLAUDE.md's former "known
+// gap" note on #flagGrid/.prog-rail duplication. Bespoke per-program icon
+// markup (previously hand-typed twice, and already slightly out of sync
+// between the two copies) now lives in one map and is shared by both sizes.
+// Runs first in this script, before anything that reads the rendered DOM
+// (flagCount, the influencer live-streak strip below).
+(function () {
+  var PROGRAM_ICONS = {
+    ss:    { stroke: '#e8828b', sw: 2, cap: 'round', path: 'M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11' },
+    pmc:   { stroke: '#b3aaf7', sw: 2, cap: 'round', join: 'round', path: 'M13 2 4 14h6l-1 8 9-12h-6z' },
+    mc:    { stroke: '#e6c579', sw: 2, cap: 'round', join: 'round', path: 'M4 8l3.5 2.5L12 4l4.5 6.5L20 8l-1.5 10h-13z' },
+    ks:    { pathFill: '#f0c078', path: 'M12 3c1.6 3 4 4.2 4 7.5A4 4 0 0 1 8 11c0-1 .3-1.7.8-2.4C8 9 7 10.3 7 12.5A5 5 0 0 0 17 12.5C17 8 13.5 6 12 3z' },
+    mm:    { stroke: '#a3a8f2', sw: 2, join: 'round', path: 'M12 2.5 20 7v10l-8 4.5L4 17V7z' },
+    hv:    { stroke: '#c3dc8f', sw: 2, cap: 'round', path: 'M4 20V10M10 20V4M16 20v-7M22 20H2' }
+    /* MARKET:STRIP influencer-icons START */
+    ,
+    stndr: { stroke: '#6bd9b3', sw: 2, cap: 'round', path: 'M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11' },
+    pump:  { stroke: '#f0a583', sw: 2, cap: 'round', join: 'round', path: 'M13 2 4 14h6l-1 8 9-12h-6z' },
+    gainz: { stroke: '#8fbdec', sw: 2, cap: 'round', path: 'M7 12h10M4 9v6M8 6v12M16 6v12M20 9v6' },
+    psu:   { stroke: '#b2d97f', sw: 2, circles: [{ cx: 12, cy: 12, r: 8 }, { cx: 12, cy: 12, r: 3.2 }] }
+    /* MARKET:STRIP influencer-icons END */
+  };
+
+  function iconSVG(id, size) {
+    var ic = PROGRAM_ICONS[id];
+    if (!ic) return '';
+    var attrs = 'width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none"'
+      + (ic.stroke ? ' stroke="' + ic.stroke + '"' : '')
+      + (ic.sw ? ' stroke-width="' + ic.sw + '"' : '')
+      + (ic.cap ? ' stroke-linecap="' + ic.cap + '"' : '')
+      + (ic.join ? ' stroke-linejoin="' + ic.join + '"' : '');
+    var inner = ic.circles
+      ? ic.circles.map(function (c) { return '<circle cx="' + c.cx + '" cy="' + c.cy + '" r="' + c.r + '"/>'; }).join('')
+      : '<path d="' + ic.path + '"' + (ic.pathFill ? ' fill="' + ic.pathFill + '"' : '') + '/>';
+    return '<svg ' + attrs + '>' + inner + '</svg>';
+  }
+
+  function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  var CHEVRON = '<svg class="cat-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+
+  function catCardHTML(p, tagLabel, chevron) {
+    return '<a href="' + p.href + '" class="cat-card ' + p.id + '">'
+      + (chevron ? CHEVRON : '')
+      + '<span class="cat-icon">' + iconSVG(p.id, chevron ? 18 : 15) + '</span>'
+      + '<div class="cat-tag">' + tagLabel + '</div>'
+      + '<div class="cat-name">' + escHtml(p.name) + '</div>'
+      + '<div class="cat-meta">' + escHtml(p.desc) + '</div>'
+      + (p.liveBadge ? '<div class="gz-live" id="gzLive" style="display:none;"><div class="gz-streak" id="gzStreak"></div></div>' : '')
+      + '<div class="cat-count">' + escHtml(p.meta) + '</div>'
+      + '</a>';
+  }
+
+  function railCardHTML(p) {
+    return '<a href="' + p.href + '" class="rail-card ' + p.id + '">'
+      + '<div class="rail-icon">' + iconSVG(p.id, 19) + '</div>'
+      + '<div class="rail-name">' + escHtml(p.name) + '</div>'
+      + '<div class="rail-meta">' + escHtml(p.meta) + '</div>'
+      + '</a>';
+  }
+
+  if (!window.MC_PM_DATA) return;
+  var all = window.MC_PM_DATA.programs;
+  var flagship = all.filter(function (p) { return p.tier === 'flagship'; });
+  var influencer = all.filter(function (p) { return p.tier === 'influencer'; });
+
+  var rail = document.querySelector('#scr-dashboard .prog-rail');
+  if (rail) rail.innerHTML = flagship.map(railCardHTML).join('');
+
+  var flagGrid = document.getElementById('flagGrid');
+  if (flagGrid) flagGrid.innerHTML = flagship.map(function (p) { return catCardHTML(p, 'Flagship', true); }).join('');
+
+  var infGrid = document.querySelector('#scr-programs .influencer-grid');
+  if (infGrid) infGrid.innerHTML = influencer.map(function (p) { return catCardHTML(p, 'Partner', false); }).join('');
+})();
+
 // ── DATE ──
 const d=new Date();
 document.getElementById('todayDate').textContent=d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
