@@ -27,37 +27,37 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
    array (before the `MARKET:STRIP` block) unless the program uses licensed
    influencer content, in which case place it inside the MARKET:STRIP section.
    Required fields: `id`, `icon`, `name`, `meta`, `color`, `desc`, `href`, `splits`.
-4. **Add card to `dashboard.html`** — this needs updates in TWO places, both
-   currently hand-maintained (not data-driven from `mc-pm-data.js` — a known gap,
-   see the "Dashboard rail / Programs grid duplication" note below):
-   - Insert a `.cat-card` block at the end of `#flagGrid`, after the last existing
-     flagship card. Add matching `.cat-card.<id>` CSS (background gradient,
-     border-top, `.cat-tag` color) after the last existing `.cat-card.<id>` block.
-     Do **not** add a `.cat-designer` color rule — `#scr-programs .cat-designer`
+4. **Add the program's bespoke look to `dashboard.html`** — `#flagGrid`, the
+   Home screen's `.prog-rail`, and `.influencer-grid` all render their markup
+   automatically at runtime from `MC_PM_DATA.programs` (`renderProgramCards()`,
+   top of the big inline `<script>` in `dashboard.html`) — a new entry in
+   `mc-pm-data.js` with `tier: 'flagship'` or `tier: 'influencer'` is enough to
+   make the card and (for flagship) its rail tile appear with no HTML to hand-write.
+   Two things still need a matching hand-added block per new `id`, since they're
+   bespoke per program and not derivable from data alone:
+   - **CSS** — add `.cat-card.<id>` / `.rail-card.<id>` (background gradient,
+     border-top, `.cat-tag` color) inside the `#scr-programs` / `#scr-dashboard`
+     scoped rule groups, next to the existing per-id blocks. `border-top`'s hex
+     is what `tools/check-program-colors.js` enforces against `mc-pm-data.js`'s
+     `color` field for *both* the grid and rail blocks — keep it in sync. Do
+     **not** add a `.cat-designer` color rule — `#scr-programs .cat-designer`
      is set to `display:none`, so flagship/influencer cards never show it; only
      the separate "Your Programs" / "Published Programs" tiers render that line.
-   - Insert a matching `.rail-card.<id>` into the Home screen's `.prog-rail`
-     (`#scr-dashboard`) — this is the "Continue where you left off" strip, and a
-     program only added to `#flagGrid` stays invisible there. Give it the same
-     icon/name/meta as the `.cat-card`.
+   - **Icon** — add an entry to the `PROGRAM_ICONS` map inside `renderProgramCards()`
+     (stroke/fill/path or circles) keyed by the new `id`; it's shared by the
+     rail (19px) and grid (18px/15px) renders, so there's exactly one icon
+     definition per program, not two. For an **influencer** program, add the
+     entry inside the map's existing `MARKET:STRIP influencer-icons` comment
+     block, alongside the other influencer ids, not above it with the
+     flagship entries — anything outside that block ships in the public
+     Rolodex build. A per-program dynamic UI hook (like the live-streak badge
+     on one of the influencer cards) belongs on the *data* object as a plain
+     boolean flag (see `liveBadge` in `mc-pm-data.js`) rather than an
+     `if (p.id === '<name>')` check in `dashboard.html` — a literal influencer
+     name/id comparison in shared, unwrapped code is exactly what
+     `tools/build-market.py --check`'s brand-term scan is there to catch.
    The `.topbar-sub` program count is computed from the rendered `#flagGrid`
    cards at runtime — no manual count to update.
-
-   > **Known gap:** `.prog-rail` and `#flagGrid` are two independently
-   > hand-duplicated lists — neither is generated from `MC_PM_DATA.programs` at
-   > runtime, even though that data exists. Making them data-driven is a real
-   > improvement but a bigger lift than it looks: `mc-pm-data.js`'s `icon` field
-   > is a plain emoji today, while both hardcoded lists use bespoke per-program
-   > SVG icons, and the `desc` field text has already drifted from the copy
-   > shown in `#flagGrid`'s `.cat-meta`. Until that's tackled as its own phase,
-   > follow the two-place manual update above and don't skip the rail.
-   >
-   > `color` is the one field CI actually enforces: `tools/check-program-colors.js`
-   > fails the build if `MC_PM_DATA.programs[].color` doesn't exactly match the
-   > `.cat-card.<id>` border-top color in `dashboard.html`, so a hand-edit that
-   > drifts one without the other is caught before deploy (it does not check
-   > `.rail-card.<id>`, which intentionally uses a muted variant of the same hue,
-   > not the literal color).
 5. **Commit and push to a feature branch in `4-Weeks-to-Open-`.**
 6. **Create a draft PR targeting `main` of `4-Weeks-to-Open-`.**
 7. **Merge to main** → the deploy pipeline auto-propagates all changes to

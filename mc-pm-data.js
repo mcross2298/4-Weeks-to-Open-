@@ -18,21 +18,32 @@
 (function () {
   if (window.MC_PM_DATA) return;
 
-  // Full program objects (id, icon, name, meta, color, desc, href, splits) —
+  // Full program objects (id, tier, icon, name, meta, color, desc, href, splits) —
   // the dashboard uses every field; PM Mode uses name/icon/desc/splits.
+  //
+  // `tier` drives which runtime list a program renders into on dashboard.html
+  // (renderProgramCards(): 'flagship' -> #flagGrid + the Home-screen .prog-rail,
+  // 'influencer' -> .influencer-grid only). `color` is each program's muted
+  // brand hue as it actually renders in .cat-card/.rail-card today (confirmed
+  // against dashboard.html's #scr-programs/#scr-dashboard CSS) — six flagship
+  // entries below were still holding an older, more saturated value that had
+  // drifted from the live render; this brings the data back in sync with
+  // reality instead of the other way around. `desc` for seven entries below
+  // was similarly a shorter, stale draft of the copy the card has actually
+  // shown for a while — updated to match what's on screen.
   var programs = [
-    { id: 'ss',   icon: '🏋️', name: 'Strength & Supersets',      meta: '6-Week Cycle · 5 Days', color: '#e11d48', desc: 'Heavy compounds paired with high-volume supersets + AMRAP finishers', href: 'cat-strength.html', splits: ['Legs', 'Chest', 'Back & Shoulders', 'Arms & Forearms', 'Cardio & Calves'] },
-    { id: 'pmc',  icon: '⚡', name: 'Project Muscle Confusion',   meta: '7 Splits · 2 Weeks Each', color: '#7F77DD', desc: 'Supersets, pyramids, drop sets, AMRAP, and tempo', href: 'cat-pmc.html', splits: ['Split 1', 'Split 2', 'Split 3', 'Split 4', 'Split 5', 'Split 6', 'Split 7'] },
-    { id: 'mc',   icon: '👑', name: "Mike Cross' Favorite Splits", meta: '5 Splits · 23 Workouts', color: '#d4af37', desc: '5 personal splits across every major training style', href: 'cat-mc.html', splits: ['Split 1', 'Split 2', 'Split 3', 'Split 4', 'Split 5'] },
-    { id: 'ks',   icon: '🔥', name: 'Everything Under the Kitchen Sink', meta: '6 Splits · Station-Anchored', color: '#f59e0b', desc: 'Six distinct training splits under one roof — the complete MC arsenal, station-anchored for commercial gym efficiency.', href: 'cat-ks.html', splits: ['Everything Under the Kitchen Sink', 'Iron Engine', 'Split 3', 'Split 4', 'Split 5', 'Split 6'] },
-    { id: 'mm',   icon: '⬡',  name: 'The Modality Matrix',            meta: '15 Weeks · 3 Phases · 4-Day Split',   color: '#6366f1', desc: 'Three phases, three modalities — dumbbell isolation, barbell strength, cable conditioning — one complete system.', href: 'cat-mm.html', splits: ['Phase 1 · Dumbbell', 'Phase 2 · Barbell', 'Phase 3 · Cable'] },
-    { id: 'hv',   icon: '💥', name: 'High-Volume Training Template',  meta: '4-Week Block · 5–6 Sets · 15–25 Reps', color: '#84cc16', desc: 'Compound-dominant into full supersets, into high-set pyramids, into bodyweight & accessory density — trisets banned throughout.', href: 'cat-hv.html', splits: ['Week 1 · Compound Dominant', 'Week 2 · Fully Supersetted', 'Week 3 · High-Volume Pyramids', 'Week 4 · Bodyweight & Accessory'] }
+    { id: 'ss',   tier: 'flagship', icon: '🏋️', name: 'Strength & Supersets',      meta: '6-Week Cycle · 5 Days', color: '#c9505a', desc: 'Heavy low-rep compounds paired with high-volume supersets and AMRAP finishers for raw strength and size.', href: 'cat-strength.html', splits: ['Legs', 'Chest', 'Back & Shoulders', 'Arms & Forearms', 'Cardio & Calves'] },
+    { id: 'pmc',  tier: 'flagship', icon: '⚡', name: 'Project Muscle Confusion',   meta: '7 Splits · 2 Weeks Each', color: '#8b7ff0', desc: 'Constantly varied supersets, pyramids, drop sets, AMRAP and tempo work that never lets your muscles adapt.', href: 'cat-pmc.html', splits: ['Split 1', 'Split 2', 'Split 3', 'Split 4', 'Split 5', 'Split 6', 'Split 7'] },
+    { id: 'mc',   tier: 'flagship', icon: '👑', name: "Mike Cross' Favorite Splits", meta: '5 Splits · 23 Workouts', color: '#d8b463', desc: "Mike's five personal splits spanning every major training style — the way he actually trains.", href: 'cat-mc.html', splits: ['Split 1', 'Split 2', 'Split 3', 'Split 4', 'Split 5'] },
+    { id: 'ks',   tier: 'flagship', icon: '🔥', name: 'Everything Under the Kitchen Sink', meta: '6 Splits · Station-Anchored', color: '#e0a03c', desc: 'Six distinct training splits under one roof — the complete MC arsenal, station-anchored for commercial gym efficiency.', href: 'cat-ks.html', splits: ['Everything Under the Kitchen Sink', 'Iron Engine', 'Split 3', 'Split 4', 'Split 5', 'Split 6'] },
+    { id: 'mm',   tier: 'flagship', icon: '⬡',  name: 'The Modality Matrix',            meta: '15 Weeks · 3 Phases · 4-Day Split',   color: '#6f77e0', desc: 'Three phases, three modalities — dumbbell isolation, barbell strength, cable conditioning — one complete system.', href: 'cat-mm.html', splits: ['Phase 1 · Dumbbell', 'Phase 2 · Barbell', 'Phase 3 · Cable'] },
+    { id: 'hv',   tier: 'flagship', icon: '💥', name: 'High-Volume Training Template',  meta: '4-Week Block · 5–6 Sets · 15–25 Reps', color: '#9fbf4a', desc: 'Compound-dominant into full supersets, into high-set pyramids, into bodyweight & accessory density — trisets banned throughout.', href: 'cat-hv.html', splits: ['Week 1 · Compound Dominant', 'Week 2 · Fully Supersetted', 'Week 3 · High-Volume Pyramids', 'Week 4 · Bodyweight & Accessory'] }
     /* MARKET:STRIP influencer-progs START */
     ,
-    { id: 'stndr', icon: '🏋️', name: 'STNDR',         meta: '4 Programs',      color: '#1D9E75', desc: 'Structured progressive overload — CBUM method', href: 'cat-stndr.html', splits: ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4'] },
-    { id: 'pump',  icon: '⚡', name: 'Daily Pump',     meta: '10 Workouts',     color: '#D85A30', desc: 'Julian Smith pump protocols — in and out fast', href: 'cat-pump-new4.html', splits: ['Back', 'Chest', 'Shoulders', 'Arms', 'Legs'] },
-    { id: 'gainz', icon: '💪', name: 'Daily Gainz',    meta: '8 Programs',      color: '#378ADD', desc: 'Bradley Martyn volume — built for size', href: 'cat-gainz.html', splits: ['Bro Split', 'Push/Pull', '5 On 2 Off', '3 On 1 Off'] },
-    { id: 'psu',   icon: '🏈', name: 'PSU Football',   meta: 'Strength Program', color: '#639922', desc: 'Penn State strength and conditioning', href: 'cat-psu.html', splits: ['Phase 1', 'Phase 2', 'Phase 3'] }
+    { id: 'stndr', tier: 'influencer', icon: '🏋️', name: 'STNDR',         meta: '4 Programs',      color: '#1D9E75', desc: 'CBUM-style structured lifting built on progressive overload, supersets and smart periodization.', href: 'cat-stndr.html', splits: ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4'] },
+    { id: 'pump',  tier: 'influencer', icon: '⚡', name: 'Daily Pump',     meta: '10 Workouts',     color: '#D85A30', desc: 'Fast, high-rep isolation work that chases maximum pump and muscle fullness.', href: 'cat-pump-new4.html', splits: ['Back', 'Chest', 'Shoulders', 'Arms', 'Legs'] },
+    { id: 'gainz', tier: 'influencer', icon: '💪', name: 'Daily Gainz',    meta: '8 Programs',      color: '#378ADD', desc: 'Bradley Martyn volume training — daily builders engineered for steady, consistent size.', href: 'cat-gainz.html', splits: ['Bro Split', 'Push/Pull', '5 On 2 Off', '3 On 1 Off'], liveBadge: true },
+    { id: 'psu',   tier: 'influencer', icon: '🏈', name: 'PSU Football',   meta: 'Strength Program', color: '#639922', desc: "Penn State's strength and conditioning system, built for real athletic performance.", href: 'cat-psu.html', splits: ['Phase 1', 'Phase 2', 'Phase 3'] }
     /* MARKET:STRIP influencer-progs END */
   ];
 
