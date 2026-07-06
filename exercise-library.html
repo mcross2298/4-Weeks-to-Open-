@@ -309,6 +309,8 @@ document.getElementById("totalCount").textContent=EXERCISES.filter(function(e){r
 buildFilters();
 renderReplaceBanner();
 var _urlMuscle = _params.get('muscle');
+var _urlQuery = _params.get('q');
+if (_urlQuery) document.getElementById("searchBox").value = _urlQuery;
 if (_urlMuscle) setFilter(_urlMuscle); else filterExercises();
 
 </script>
