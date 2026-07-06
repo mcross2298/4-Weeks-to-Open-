@@ -65,9 +65,33 @@ function parseSelectorColors(src, selector, scopePrefix) {
   return Object.assign({}, unscoped, scoped); // scoped wins where both exist
 }
 
+// Every id in MC_PM_DATA.programs needs an entry in renderProgramCards()'s
+// PROGRAM_ICONS map, or that program's card silently renders with no icon at
+// all (iconSVG() returns '' rather than erroring) — the same kind of quiet
+// per-id drift the color check above exists to catch, just for icons instead
+// of color. Extracted by brace-depth (an entry's own value can nest braces,
+// e.g. psu's `circles: [{...}]`), then top-level `id: {` keys within it.
+function parseIconIds(src) {
+  const start = src.indexOf('var PROGRAM_ICONS');
+  if (start < 0) return null;
+  const braceStart = src.indexOf('{', start);
+  let depth = 0, i = braceStart;
+  for (; i < src.length; i++) {
+    if (src[i] === '{') depth++;
+    else if (src[i] === '}') { depth--; if (depth === 0) break; }
+  }
+  const block = src.slice(braceStart, i + 1);
+  const ids = [];
+  const re = /([a-z0-9-]+):\s*\{/g;
+  let m;
+  while ((m = re.exec(block))) ids.push(m[1]);
+  return new Set(ids);
+}
+
 const dataColors = parseProgramColors(pmData);
 const gridColors = parseSelectorColors(dash, '.cat-card', '#scr-programs');
 const railColors = parseSelectorColors(dash, '.rail-card', '#scr-dashboard');
+const iconIds = parseIconIds(dash);
 
 let fail = false;
 const skip = new Set(['faint', 'bonus']); // Conditioning Corner / bonus cards aren't MC_PM_DATA programs
@@ -92,10 +116,14 @@ Object.keys(dataColors).forEach((id) => {
     console.error(`::error::Program '${id}' color mismatch — mc-pm-data.js=${dataColor} vs dashboard.html .rail-card.${id}=${railColor}`);
     fail = true;
   }
+  if (iconIds && !iconIds.has(id)) {
+    console.error(`::error::Program '${id}' has no entry in dashboard.html's PROGRAM_ICONS map — its card will render with no icon`);
+    fail = true;
+  }
 });
 
 if (fail) {
-  console.error('\nFix: update dashboard.html\'s .cat-card.<id> / .rail-card.<id> (and matching .cat-tag color) to match mc-pm-data.js, or vice versa.');
+  console.error('\nFix: update dashboard.html\'s .cat-card.<id> / .rail-card.<id> (and matching .cat-tag color) or PROGRAM_ICONS entry to match mc-pm-data.js, or vice versa.');
   process.exit(1);
 }
-console.log(`Program colors OK — ${Object.keys(dataColors).length} programs checked against dashboard.html's #flagGrid and .prog-rail.`);
+console.log(`Program colors OK — ${Object.keys(dataColors).length} programs checked against dashboard.html's #flagGrid, .prog-rail, and PROGRAM_ICONS.`);
