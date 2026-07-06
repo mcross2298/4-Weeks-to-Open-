@@ -10,7 +10,7 @@ const MC_PREFS = {
   get() {
     let p = {};
     try { p = JSON.parse(localStorage.getItem(this.KEY) || '{}') || {}; } catch (e) {}
-    return { sound: p.sound !== false, haptics: p.haptics !== false, cue10s: p.cue10s !== false };
+    return { sound: p.sound !== false, haptics: p.haptics !== false, cue10s: p.cue10s !== false, restView: p.restView === 'video' ? 'video' : 'list' };
   },
   set(k, v) {
     const p = this.get(); p[k] = v;
@@ -29,6 +29,40 @@ function _tmrPrime() {
   } catch (e) { _tmrCtx = null; }
 }
 document.addEventListener('pointerdown', _tmrPrime, { passive: true });
+
+// Looks at the DOM from the rest-timer's own card outward to find the next
+// exercise, so "Up Next" works on every page/mode without any page wiring —
+// no dependency on Guided Mode's step tracking.
+function getUpNext(el) {
+  try {
+    const card = el && el.closest && el.closest('.ex-card, .ss-card');
+    if (!card) return null;
+    let next = card.nextElementSibling;
+    while (next && !(next.classList && (next.classList.contains('ex-card') || next.classList.contains('ss-card')))) {
+      next = next.nextElementSibling;
+    }
+    if (!next) return null;
+    const nameEl = next.querySelector('.ex-name, .ss-name');
+    const name = nameEl ? nameEl.textContent.trim() : '';
+    if (!name) return null;
+    const repsEl = next.querySelector('.a-reps, .a-ss-reps');
+    return { name: name, reps: repsEl ? repsEl.textContent.trim() : '' };
+  } catch (e) { return null; }
+}
+
+// Single source of truth for which rest surface is on screen: List (compact
+// float) or Video (full-screen). Both surfaces' text/time stay updated every
+// tick regardless of which is shown, so switching mid-rest is instant.
+function applyRestView() {
+  const pref = MC_PREFS.get().restView;
+  const running = TMR.startTime != null;
+  const float = document.getElementById('timerFloat');
+  const video = document.getElementById('timerVideo');
+  const overlay = document.getElementById('timerOverlay');
+  if (float) float.classList.toggle('visible', running && pref === 'list');
+  if (video) video.classList.toggle('visible', running && pref === 'video');
+  if (overlay) overlay.style.display = (running && pref === 'list') ? 'block' : 'none';
+}
 
 const TMR = {
   interval: null,
@@ -113,25 +147,43 @@ const TMR = {
     this.activeEl = el;
     this.activeName = exerciseName;
     this._cued10 = false;
+    this.upNext = getUpNext(el);
 
     el.className = 'rest-timer running';
     el.querySelector('.rest-timer-label').textContent = this.formatTime(durationSecs);
 
-    const float = document.getElementById('timerFloat');
     const floatTime = document.getElementById('timerFloatTime');
     const floatProgress = document.getElementById('timerFloatProgress');
     const floatEx = document.getElementById('timerFloatEx');
     const floatLabel = document.getElementById('timerFloatLabel');
+    const tvTime = document.getElementById('tvTime');
+    const tvEx = document.getElementById('tvEx');
+    const tvLabel = document.getElementById('tvLabel');
+    const tvUpNext = document.getElementById('tvUpNext');
+    const tvUpNextName = document.getElementById('tvUpNextName');
+    const tvUpNextReps = document.getElementById('tvUpNextReps');
 
-    float.classList.add('visible');
-    const _sov=document.getElementById('timerOverlay');if(_sov)_sov.style.display='block';
     // Header reads "REST · <exercise>". Suppress a generic "Rest" name so it
     // doesn't render as the redundant "REST Rest".
-    floatEx.textContent = (exerciseName && !/^rest$/i.test(exerciseName.trim())) ? exerciseName : '';
+    const exLabel = (exerciseName && !/^rest$/i.test(exerciseName.trim())) ? exerciseName : '';
+    floatEx.textContent = exLabel;
     floatLabel.textContent = 'REST';
     floatTime.className = 'timer-float-time';
     floatProgress.className = 'timer-float-progress';
     floatProgress.style.width = '100%';
+    if (tvEx) tvEx.textContent = exLabel;
+    if (tvLabel) tvLabel.textContent = 'REST';
+    if (tvTime) tvTime.className = 'tv-time';
+    if (tvUpNext) {
+      if (this.upNext && this.upNext.name) {
+        if (tvUpNextName) tvUpNextName.textContent = this.upNext.name;
+        if (tvUpNextReps) tvUpNextReps.textContent = this.upNext.reps || '';
+        tvUpNext.classList.add('show');
+      } else {
+        tvUpNext.classList.remove('show');
+      }
+    }
+    applyRestView();
 
     this.interval = setInterval(() => {
       const elapsed = (Date.now() - this.startTime) / 1000;
@@ -142,8 +194,9 @@ const TMR = {
         el.querySelector('.rest-timer-label').textContent = this.formatTime(remaining);
       }
 
-      // Update float
+      // Update float + video
       floatTime.textContent = this.formatTime(remaining);
+      if (tvTime) tvTime.textContent = this.formatTime(remaining);
 
       if (remaining > 0) {
         // exactly-10 check means a tick missed while backgrounded skips the
@@ -156,6 +209,7 @@ const TMR = {
         floatProgress.style.width = pct + '%';
         floatTime.className = 'timer-float-time';
         floatProgress.className = 'timer-float-progress';
+        if (tvTime) tvTime.className = 'tv-time';
         if (el) el.className = 'rest-timer running';
       } else if (remaining === 0 || remaining === -0) {
         this.buzz();
@@ -163,6 +217,8 @@ const TMR = {
         floatProgress.className = 'timer-float-progress done';
         floatProgress.style.width = '100%';
         floatLabel.textContent = 'DONE!';
+        if (tvTime) tvTime.className = 'tv-time done';
+        if (tvLabel) tvLabel.textContent = 'DONE!';
         if (el) el.className = 'rest-timer done';
         if(!this._autoDismiss)this._autoDismiss=setTimeout(()=>this.stop(),4000);
       } else {
@@ -171,6 +227,9 @@ const TMR = {
         floatTime.className = 'timer-float-time overtime';
         floatProgress.className = 'timer-float-progress overtime';
         floatLabel.textContent = 'OVERTIME';
+        if (tvTime) tvTime.textContent = '+' + this.formatTime(-remaining);
+        if (tvTime) tvTime.className = 'tv-time overtime';
+        if (tvLabel) tvLabel.textContent = 'OVERTIME';
         if (el) el.className = 'rest-timer overtime';
       }
     }, 1000);
@@ -185,9 +244,9 @@ const TMR = {
       this.activeEl.className = 'rest-timer idle';
       this.activeEl = null;
     }
-    const float = document.getElementById('timerFloat');
-    if (float) float.classList.remove('visible');
-    const _ov=document.getElementById('timerOverlay');if(_ov)_ov.style.display='none';
+    this.upNext = null;
+    this.startTime = null;
+    applyRestView();
     if(this._autoDismiss){clearTimeout(this._autoDismiss);this._autoDismiss=null;}
   },
 
@@ -213,8 +272,17 @@ const TMR = {
       ft.textContent = this.formatTime(remaining);
       ft.className = 'timer-float-time' + (remaining <= 0 ? ' overtime' : '');
     }
+    const tv = document.getElementById('tvTime');
+    if (tv) {
+      tv.textContent = this.formatTime(remaining);
+      tv.className = 'tv-time' + (remaining <= 0 ? ' overtime' : '');
+    }
     const p = MC_PREFS.get();   // light tick so the tap registers
     if (p.haptics && navigator.vibrate) navigator.vibrate(10);
+  },
+  setRestView(view) {
+    MC_PREFS.set('restView', view === 'video' ? 'video' : 'list');
+    applyRestView();
   },
   setTime(secs,label){
     this.stop();
@@ -226,17 +294,24 @@ const TMR = {
       if(tl)tl.textContent=label||(secs+"s");
       if(tt){tt.textContent=secs+"s";tt.className="timer-float-time";}
       if(tp){tp.style.width="100%";tp.className="timer-float-progress";}
-      ft.classList.add("visible");
     }
+    const tvLabel0=document.getElementById('tvLabel'),tvTime0=document.getElementById('tvTime'),tvEx0=document.getElementById('tvEx'),tvUpNext0=document.getElementById('tvUpNext');
+    if(tvLabel0)tvLabel0.textContent=label||(secs+"s");
+    if(tvTime0){tvTime0.textContent=secs+"s";tvTime0.className="tv-time";}
+    if(tvEx0)tvEx0.textContent='';
+    if(tvUpNext0)tvUpNext0.classList.remove('show');
     this.activeEl=null;
+    this.upNext=null;
     this._cued10=false;
+    applyRestView();
     this.interval=setInterval(()=>{
       const rem=Math.ceil(this.duration-(Date.now()-this.startTime)/1000);
       const ft2=document.getElementById("timerFloat");if(!ft2)return;
       const tt2=ft2.querySelector(".timer-float-time"),tp2=ft2.querySelector(".timer-float-progress"),tl2=ft2.querySelector(".timer-float-label");
-      if(rem>0){if(rem===10&&this.duration>15&&!this._cued10){this._cued10=true;this.cue10();}if(tt2){tt2.textContent=rem+"s";tt2.className="timer-float-time";}if(tp2){tp2.style.width=Math.round((rem/this.duration)*100)+"%";tp2.className="timer-float-progress";}}
-      else if(rem===0){if(tt2){tt2.textContent="DONE!";tt2.className="timer-float-time done";}if(tp2){tp2.style.width="100%";tp2.className="timer-float-progress done";}if(tl2)tl2.textContent="DONE ✓";this.buzz();if(!TMR._autoDismiss)TMR._autoDismiss=setTimeout(()=>TMR.stop(),4000);}
-      else{if(tt2){tt2.textContent="+"+Math.abs(rem)+"s";tt2.className="timer-float-time overtime";}if(tp2)tp2.className="timer-float-progress overtime";}
+      const tv2=document.getElementById('tvTime'),tvl2=document.getElementById('tvLabel');
+      if(rem>0){if(rem===10&&this.duration>15&&!this._cued10){this._cued10=true;this.cue10();}if(tt2){tt2.textContent=rem+"s";tt2.className="timer-float-time";}if(tp2){tp2.style.width=Math.round((rem/this.duration)*100)+"%";tp2.className="timer-float-progress";}if(tv2){tv2.textContent=rem+"s";tv2.className="tv-time";}}
+      else if(rem===0){if(tt2){tt2.textContent="DONE!";tt2.className="timer-float-time done";}if(tp2){tp2.style.width="100%";tp2.className="timer-float-progress done";}if(tl2)tl2.textContent="DONE ✓";if(tv2){tv2.textContent="DONE!";tv2.className="tv-time done";}if(tvl2)tvl2.textContent="DONE ✓";this.buzz();if(!TMR._autoDismiss)TMR._autoDismiss=setTimeout(()=>TMR.stop(),4000);}
+      else{if(tt2){tt2.textContent="+"+Math.abs(rem)+"s";tt2.className="timer-float-time overtime";}if(tp2)tp2.className="timer-float-progress overtime";if(tv2){tv2.textContent="+"+Math.abs(rem)+"s";tv2.className="tv-time overtime";}}
     },1000);
   }
 };
@@ -270,6 +345,39 @@ function injectTimerEnhCss() {
       'background:rgba(255,255,255,0.05);color:#94a3b8;font-size:15px;cursor:pointer;display:flex;' +
       'align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:transform .2s;}' +
     '.tf-gear.on{color:#fbbf24;border-color:rgba(212,175,55,0.4);background:rgba(212,175,55,0.12);transform:rotate(60deg);}' +
+    // ── List↔Video view toggle, same footprint as the gear ──
+    '.tf-video-btn{flex-shrink:0;width:34px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,0.12);' +
+      'background:rgba(255,255,255,0.05);color:#94a3b8;font-size:15px;cursor:pointer;display:flex;' +
+      'align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}' +
+    // ── full-screen Video view: big countdown + Up Next, above the float and any scrim ──
+    '.timer-video{display:none;position:fixed;inset:0;z-index:150;background:#0a0a0b;' +
+      'flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;}' +
+    '.timer-video.visible{display:flex;}' +
+    '.tv-list-btn{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));right:16px;' +
+      'padding:8px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);' +
+      'color:#cbd5e1;font-size:12px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
+    '.tv-label{font-size:13px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:#64748b;}' +
+    '.tv-ex{font-size:15px;color:#94a3b8;max-width:320px;}' +
+    '.tv-time{font-size:112px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;color:#fbbf24;transition:color .25s ease;}' +
+    '.tv-time.done{color:#34d399;}' +
+    '.tv-time.overtime{color:#f87171;}' +
+    '.tv-unit{font-size:12px;font-weight:800;letter-spacing:0.18em;color:#475569;margin-top:-10px;}' +
+    '.tv-adjust{display:flex;gap:12px;}' +
+    '.tv-adj{padding:10px 18px;border-radius:10px;border:1px solid rgba(255,255,255,0.14);' +
+      'background:rgba(255,255,255,0.05);color:#cbd5e1;font-size:14px;font-weight:800;cursor:pointer;' +
+      'font-family:inherit;-webkit-tap-highlight-color:transparent;}' +
+    '.tv-adj:active{background:rgba(212,175,55,0.16);color:#fbbf24;border-color:rgba(212,175,55,0.4);}' +
+    '.tv-upnext{display:none;margin-top:18px;padding:14px 22px;border-radius:14px;' +
+      'background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);max-width:340px;}' +
+    '.tv-upnext.show{display:block;}' +
+    '.tv-upnext-label{font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#a3e635;margin-bottom:6px;}' +
+    '.tv-upnext-name{font-size:17px;font-weight:800;color:#e2e8f0;}' +
+    '.tv-upnext-reps{font-size:13px;color:#64748b;margin-top:2px;}' +
+    '.tv-actions{display:flex;gap:10px;margin-top:20px;}' +
+    '.tv-btn{padding:11px 20px;border-radius:10px;border:none;font-size:13px;font-weight:800;' +
+      'letter-spacing:0.04em;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}' +
+    '.tv-done{background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3);}' +
+    '.tv-cancel{background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.2);}' +
     // ── big glanceable numerals + full-width progress ──
     '.timer-float-time{font-size:54px!important;text-align:center;width:100%;line-height:1;margin:2px 0;transition:color .25s ease;}' +
     '.timer-float-bar{width:100%!important;margin:0!important;}' +
@@ -308,6 +416,7 @@ function buildTimerFloat() {
         <span id="timerFloatLabel" class="timer-float-label">REST</span>
         <span id="timerFloatEx" class="timer-float-ex"></span>
       </div>
+      <button class="tf-video-btn" id="tfVideoBtn" onclick="TMR.setRestView('video')" aria-label="Video view">🎬</button>
       <button class="tf-gear" id="tfGear" aria-label="Timer settings">⚙️</button>
     </div>
     <div id="timerFloatTime" class="timer-float-time">0s</div>
@@ -337,6 +446,37 @@ function buildTimerFloat() {
     });
   }
   if(!document.getElementById('timerOverlay')){const _tov=document.createElement('div');_tov.id='timerOverlay';_tov.style.cssText='position:fixed;inset:0;z-index:99;display:none;cursor:pointer;';_tov.addEventListener('click',function(){TMR.stop();});document.body.insertBefore(_tov,div);}
+}
+
+// Full-screen "Video view" — same TMR state as the float (adjust/stop share
+// the exact calls), just a different, more immersive presentation with the
+// Up Next card front and center. Toggled via TMR.setRestView().
+function buildTimerVideo() {
+  if (document.getElementById('timerVideo')) return;
+  injectTimerEnhCss();
+  const div = document.createElement('div');
+  div.id = 'timerVideo';
+  div.className = 'timer-video';
+  div.innerHTML = `
+    <button class="tv-list-btn" onclick="TMR.setRestView('list')">☰ List view</button>
+    <div class="tv-label" id="tvLabel">REST</div>
+    <div class="tv-ex" id="tvEx"></div>
+    <div id="tvTime" class="tv-time">0s</div>
+    <div class="tv-unit">SEC</div>
+    <div class="tv-adjust">
+      <button class="tv-adj" onclick="TMR.adjust(-15)">−15s</button>
+      <button class="tv-adj" onclick="TMR.adjust(15)">+15s</button>
+    </div>
+    <div class="tv-upnext" id="tvUpNext">
+      <div class="tv-upnext-label">⚡ Up Next</div>
+      <div class="tv-upnext-name" id="tvUpNextName"></div>
+      <div class="tv-upnext-reps" id="tvUpNextReps"></div>
+    </div>
+    <div class="tv-actions">
+      <button class="tv-btn tv-done" onclick="TMR.stop()">✓ Done</button>
+      <button class="tv-btn tv-cancel" onclick="TMR.stop()" aria-label="Cancel rest">✕ Cancel</button>
+    </div>`;
+  document.body.appendChild(div);
 }
 // ── cue preference toggles inside the timer float ──
 function renderTimerPrefs() {
@@ -375,6 +515,7 @@ function renderTimerPrefs() {
 }
 
 buildTimerFloat();
+buildTimerVideo();
 
 // ── SESSION PROGRESS BAR ──
 function updateProgress() {
