@@ -521,3 +521,15 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
+
+// Tier 4 Phase 5 — guided linear workout mode (mc-guided.js) is a separate
+// opt-in script that attaches wherever this file's .ex-card/.ss-card +
+// mcl-count contract exists. Loading it here, rather than hand-adding a
+// <script> tag to every program page, gives every page that already does
+// set-logging guided-mode capability for free. This file's own behavior is
+// unchanged by the addition.
+if (typeof document !== 'undefined' && !document.querySelector('script[src="mc-guided.js"]')) {
+  var _mcGuidedLoader = document.createElement('script');
+  _mcGuidedLoader.src = 'mc-guided.js';
+  document.head.appendChild(_mcGuidedLoader);
+}
