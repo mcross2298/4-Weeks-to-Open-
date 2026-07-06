@@ -1032,6 +1032,41 @@ html[data-theme="light"] .tab.active{color:#a9762f;}
 html[data-theme="light"] .theme-icon-dark{display:none;}
 html[data-theme="light"] .theme-icon-light{display:block!important;}
 
+/* Page-level tokens (:root's --text/--muted/--surface/--border family,
+   distinct from the Onyx --o-* system) are declared once globally,
+   not per-screen — they're consumed both by "not yet migrated to Onyx"
+   sections on every screen (Coach Note, custom workouts, Conditioning's
+   .cond-card/.cond-ex-item) AND by two bottom sheets that mc-macros.js /
+   the Program Select flow append straight to <body> rather than nesting
+   inside any #scr-* screen, so a screen-scoped override would never
+   reach them at all. */
+html[data-theme="light"]{
+  --bg:#f5f2ec;
+  --surface:#efe9db;
+  --surface2:rgba(28,26,23,.06);
+  --border:rgba(28,26,23,.08);
+  --border2:rgba(28,26,23,.12);
+  --text:#1c1a17;
+  --muted:#8a8377;
+  --muted2:#6b6459;
+}
+/* Body-appended sheets: a few backgrounds/inputs are hardcoded hex
+   tuned for the dark canvas and don't route through any token. */
+html[data-theme="light"] .ps-sheet,
+html[data-theme="light"] .nt-sheet,
+html[data-theme="light"] .nt-fav-bar{background:#efe9db;}
+html[data-theme="light"] .ps-sheet{border-top-color:rgba(28,26,23,.1);}
+html[data-theme="light"] .ps-handle,
+html[data-theme="light"] .nt-handle{background:rgba(28,26,23,.15);}
+html[data-theme="light"] .ps-card{border-color:rgba(28,26,23,.08);}
+html[data-theme="light"] .ps-check{border-color:rgba(28,26,23,.14);}
+html[data-theme="light"] .ntx-met-track{background:rgba(28,26,23,.1);}
+html[data-theme="light"] .nt-field input,
+html[data-theme="light"] .nt-field select,
+html[data-theme="light"] .nt-input,
+html[data-theme="light"] .nt-seg button,
+html[data-theme="light"] .nt-uom button{background:rgba(28,26,23,.05);}
+
 /* ══════════════════════════════════════════════════════════════
    SAND LIGHT MODE — PHASE 6a: Home tab (#scr-dashboard).
    Mirrors every Onyx token this screen redeclares (see the
@@ -1049,15 +1084,6 @@ html[data-theme="light"] #scr-dashboard{
   --o-faint:#a39c8f;
   --o-surface:rgba(28,26,23,.035);
   --o-surface-border:rgba(28,26,23,.08);
-  /* Pre-Onyx page-level tokens: a few Home tab sections (Coach Note,
-     the custom-workouts "Build Your Own" list) were never migrated to
-     the --o-* system and still read --text/--muted/--surface2/--border2
-     from :root, which is why they need a light counterpart here too. */
-  --text:#1c1a17;
-  --muted:#8a8377;
-  --muted2:#6b6459;
-  --surface2:rgba(28,26,23,.06);
-  --border2:rgba(28,26,23,.12);
   background:#f5f2ec;
 }
 html[data-theme="light"] #scr-dashboard .hero-card{
@@ -1083,6 +1109,87 @@ html[data-theme="light"] #scr-dashboard .rail-card.hv{background:linear-gradient
 html[data-theme="light"] #scr-dashboard .tool-icon-wrap svg *{stroke:#8a7256;}
 html[data-theme="light"] #scr-dashboard .tool-icon-wrap svg [fill]:not([fill="none"]){fill:#8a7256;}
 html[data-theme="light"] .topbar-icon svg *{stroke:#6b6459;}
+
+/* ══════════════════════════════════════════════════════════════
+   SAND LIGHT MODE — PHASE 6b: Programs tab (#scr-programs).
+   Same approach as 6a: light counterpart for every --o-* token,
+   flat Sand background, and each program's cat-card gradient (10
+   flagship + influencer variants) gets the same pale-tint treatment
+   as the Home tab's rail cards. Per-program .cat-tag text was pale
+   (tuned for a dark tag chip) so it gets a darker shade of that same
+   identity hue instead — background/border tints are left alone since
+   translucent color tints read fine over either canvas.
+   ══════════════════════════════════════════════════════════════ */
+html[data-theme="light"] #scr-programs{
+  --o-gold:#a9762f;
+  --o-text:#1c1a17;
+  --o-text-2:#1c1a17;
+  --o-muted:#6b6459;
+  --o-muted-2:#8a8377;
+  --o-muted-3:#8a8377;
+  --o-faint:#a39c8f;
+  background:#f5f2ec;
+}
+html[data-theme="light"] #scr-programs .tier-label::after{background:rgba(28,26,23,.1);}
+html[data-theme="light"] #scr-programs .cat-card.ss{background:linear-gradient(160deg,rgba(201,80,90,.14),rgba(245,242,236,.92));}
+html[data-theme="light"] #scr-programs .cat-card.ss .cat-tag{color:#a13c46;}
+html[data-theme="light"] #scr-programs .cat-card.pmc{background:linear-gradient(160deg,rgba(139,127,240,.14),rgba(245,242,236,.92));}
+html[data-theme="light"] #scr-programs .cat-card.pmc .cat-tag{color:#5b4fc7;}
+html[data-theme="light"] #scr-programs .cat-card.mc{background:linear-gradient(160deg,rgba(216,180,99,.14),rgba(245,242,236,.92));}
+html[data-theme="light"] #scr-programs .cat-card.ks{background:linear-gradient(160deg,rgba(224,160,60,.14),rgba(245,242,236,.92));}
+html[data-theme="light"] #scr-programs .cat-card.ks .cat-tag{color:#a3701f;}
+html[data-theme="light"] #scr-programs .cat-card.mm{background:linear-gradient(160deg,rgba(111,119,224,.14),rgba(245,242,236,.92));}
+html[data-theme="light"] #scr-programs .cat-card.mm .cat-tag{color:#454dc4;}
+html[data-theme="light"] #scr-programs .cat-card.hv{background:linear-gradient(160deg,rgba(159,191,74,.14),rgba(245,242,236,.92));}
+html[data-theme="light"] #scr-programs .cat-card.hv .cat-tag{color:#6b8a2a;}
+html[data-theme="light"] #scr-programs .cat-card.stndr{background:linear-gradient(160deg,rgba(29,158,117,.13),rgba(245,242,236,.92));}
+html[data-theme="light"] #scr-programs .cat-card.stndr .cat-tag{color:#157a56;}
+html[data-theme="light"] #scr-programs .cat-card.pump{background:linear-gradient(160deg,rgba(216,90,48,.13),rgba(245,242,236,.92));}
+html[data-theme="light"] #scr-programs .cat-card.pump .cat-tag{color:#a8431f;}
+html[data-theme="light"] #scr-programs .cat-card.gainz{background:linear-gradient(160deg,rgba(55,138,221,.13),rgba(245,242,236,.92));}
+html[data-theme="light"] #scr-programs .cat-card.gainz .cat-tag{color:#1f5fa8;}
+html[data-theme="light"] #scr-programs .cat-card.psu{background:linear-gradient(160deg,rgba(99,153,34,.13),rgba(245,242,236,.92));}
+html[data-theme="light"] #scr-programs .cat-card.psu .cat-tag{color:#4d7a1a;}
+
+/* ══════════════════════════════════════════════════════════════
+   SAND LIGHT MODE — PHASE 6c: Conditioning tab
+   (#scr-conditioning / #condBody).
+   ══════════════════════════════════════════════════════════════ */
+html[data-theme="light"] #scr-conditioning{background:#f5f2ec;}
+html[data-theme="light"] #scr-conditioning .topbar-title,
+html[data-theme="light"] #scr-conditioning .prog-title{color:#1c1a17;}
+html[data-theme="light"] #scr-conditioning .topbar-sub,
+html[data-theme="light"] #scr-conditioning .prog-eyebrow,
+html[data-theme="light"] #scr-conditioning .prog-sub{color:#6b6459;}
+html[data-theme="light"] #condBody{
+  --o-gold:#a9762f;
+  --o-text:#1c1a17;
+  --o-text-2:#1c1a17;
+  --o-muted:#6b6459;
+  --o-muted-2:#8a8377;
+  --o-muted-3:#8a8377;
+  --o-faint:#a39c8f;
+}
+/* .cond-card/.cond-ex-item already retheme via the global --surface/
+   --border tokens above; these are the remaining hardcoded (non-token)
+   white overlays and pale text tuned for the dark canvas. */
+html[data-theme="light"] #condBody .cond-sub-icon{background:rgba(28,26,23,.05);border-color:rgba(28,26,23,.1);}
+html[data-theme="light"] #condBody .cond-stat{background:rgba(28,26,23,.05);border-color:rgba(28,26,23,.1);}
+html[data-theme="light"] #condBody .cond-arrow{color:#1c1a17;}
+html[data-theme="light"] #condBody .cond-ex-item{color:#6b6459;}
+html[data-theme="light"] #condBody input[placeholder="Search exercises…"]{background:rgba(28,26,23,.05);border-color:rgba(28,26,23,.12);}
+
+/* ══════════════════════════════════════════════════════════════
+   SAND LIGHT MODE — PHASE 6d: Nutrition tab (#scr-nutrition).
+   mc-macros.js renders #nutritionBody's content using the same
+   global --text/--muted/--surface/--border tokens overridden above
+   (plus the .nt- and .ntx- hardcoded-hex exceptions already covered in
+   the shared block, since its sheets are body-appended like the
+   Program Select sheet) — so only the screen shell needs its own rule.
+   ══════════════════════════════════════════════════════════════ */
+html[data-theme="light"] #scr-nutrition{background:#f5f2ec;}
+html[data-theme="light"] #scr-nutrition .topbar-title{color:#1c1a17;}
+html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
 </style>
 <script src="mc-theme.js"></script>
 <script src="mc-appearance.js"></script>
