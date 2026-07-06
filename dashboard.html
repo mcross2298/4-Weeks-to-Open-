@@ -1006,17 +1006,14 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 .tab.active{color:#e6c579;}
 
 /* ══════════════════════════════════════════════════════════════
-   SAND LIGHT MODE (Tier 4 Phase 3) — toggle + shared chrome ONLY.
-   Scope is deliberately just the topbar and tab bar — every screen's
-   own content canvas (#scr-dashboard/#scr-programs/#scr-conditioning/
-   #scr-nutrition and everything inside them) is untouched and stays
-   on its existing dark Onyx styling. An earlier draft of this block
-   also flipped each screen's page background, which broke legibility:
-   most of the Home tab's text (section titles, eyebrow labels, etc.)
+   SAND LIGHT MODE (Tier 4 Phase 3) — toggle + shared chrome.
+   Topbar and tab bar go Sand here; each screen's own content canvas
+   is retheme'd separately below, screen by screen (Phase 6), since
+   an earlier draft that flipped page background without touching
+   the Onyx tokens broke legibility — most of the Home tab's text
    shares the same light-colored Onyx tokens as its cards, so it went
-   near-invisible against a light canvas. Keeping the content canvas
-   dark avoids that entirely; deriving a real light Onyx palette for
-   page content is its own follow-up, not part of this phase.
+   near-invisible against a light canvas. Phase 6 fixes that properly
+   by deriving a light counterpart for every --o-* token per screen.
    Toggle: mc-appearance.js sets/removes data-theme on <html>.
    ══════════════════════════════════════════════════════════════ */
 html[data-theme="light"] .topbar{background:linear-gradient(to bottom, #f5f2ec 80%, transparent);}
@@ -1034,6 +1031,58 @@ html[data-theme="light"] .tab{color:#8a8377;}
 html[data-theme="light"] .tab.active{color:#a9762f;}
 html[data-theme="light"] .theme-icon-dark{display:none;}
 html[data-theme="light"] .theme-icon-light{display:block!important;}
+
+/* ══════════════════════════════════════════════════════════════
+   SAND LIGHT MODE — PHASE 6a: Home tab (#scr-dashboard).
+   Mirrors every Onyx token this screen redeclares (see the
+   #scr-dashboard block above) with a light-mode counterpart, plus
+   the handful of hardcoded white-overlay/dark-canvas colors inside
+   it that don't route through those tokens. --o-gold-grad and the
+   shared --gold/--gold-glow focus-ring tokens are intentionally
+   left as-is — both already read fine against a light card.
+   ══════════════════════════════════════════════════════════════ */
+html[data-theme="light"] #scr-dashboard{
+  --o-gold:#a9762f;
+  --o-text:#1c1a17;
+  --o-muted:#6b6459;
+  --o-muted-2:#8a8377;
+  --o-faint:#a39c8f;
+  --o-surface:rgba(28,26,23,.035);
+  --o-surface-border:rgba(28,26,23,.08);
+  /* Pre-Onyx page-level tokens: a few Home tab sections (Coach Note,
+     the custom-workouts "Build Your Own" list) were never migrated to
+     the --o-* system and still read --text/--muted/--surface2/--border2
+     from :root, which is why they need a light counterpart here too. */
+  --text:#1c1a17;
+  --muted:#8a8377;
+  --muted2:#6b6459;
+  --surface2:rgba(28,26,23,.06);
+  --border2:rgba(28,26,23,.12);
+  background:#f5f2ec;
+}
+html[data-theme="light"] #scr-dashboard .hero-card{
+  background:linear-gradient(158deg,#fbf9f4 0%,#efe9db 68%);
+  border-color:rgba(169,118,47,.22);
+}
+html[data-theme="light"] #scr-dashboard .hero-sheen{background:linear-gradient(90deg,rgba(28,26,23,.1),transparent);}
+html[data-theme="light"] #scr-dashboard .hero-name{color:#1c1a17;}
+html[data-theme="light"] #scr-dashboard .phase-pill{background:rgba(28,26,23,.05);border-color:rgba(28,26,23,.1);}
+html[data-theme="light"] #scr-dashboard .tool-icon-wrap{background:rgba(28,26,23,.05);border-color:rgba(28,26,23,.08);}
+html[data-theme="light"] #scr-dashboard .tool-card.gold .tool-icon-wrap{background:rgba(169,118,47,.1);border-color:rgba(169,118,47,.2);}
+/* Rail cards keep each program's identity hue but swap the dark
+   canvas gradient stop for a pale sand tint, same formula for all 6. */
+html[data-theme="light"] #scr-dashboard .rail-card.ss{background:linear-gradient(160deg,rgba(201,80,90,.14),rgba(245,242,236,.9));}
+html[data-theme="light"] #scr-dashboard .rail-card.pmc{background:linear-gradient(160deg,rgba(139,127,240,.14),rgba(245,242,236,.9));}
+html[data-theme="light"] #scr-dashboard .rail-card.mc{background:linear-gradient(160deg,rgba(216,180,99,.14),rgba(245,242,236,.9));}
+html[data-theme="light"] #scr-dashboard .rail-card.ks{background:linear-gradient(160deg,rgba(224,160,60,.14),rgba(245,242,236,.9));}
+html[data-theme="light"] #scr-dashboard .rail-card.mm{background:linear-gradient(160deg,rgba(111,119,224,.14),rgba(245,242,236,.9));}
+html[data-theme="light"] #scr-dashboard .rail-card.hv{background:linear-gradient(160deg,rgba(159,191,74,.14),rgba(245,242,236,.9));}
+/* Icon glyphs are inline SVG stroke/fill attributes tuned for a dark
+   canvas (pale gray / pale gold); both read as near-invisible on the
+   new light tool-card chips, so give them a darker bronze/slate ink. */
+html[data-theme="light"] #scr-dashboard .tool-icon-wrap svg *{stroke:#8a7256;}
+html[data-theme="light"] #scr-dashboard .tool-icon-wrap svg [fill]:not([fill="none"]){fill:#8a7256;}
+html[data-theme="light"] .topbar-icon svg *{stroke:#6b6459;}
 </style>
 <script src="mc-theme.js"></script>
 <script src="mc-appearance.js"></script>
