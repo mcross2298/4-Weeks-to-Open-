@@ -202,6 +202,9 @@
 .mc-eq-machine,.mc-eq-plateloaded,.mc-eq-smith{background:rgba(251,146,60,0.14);color:#fdba74;border-color:rgba(251,146,60,0.3);}
 .mc-eq-bodyweight{background:rgba(134,239,172,0.14);color:#86efac;border-color:rgba(134,239,172,0.3);}
 .mc-sub-wt{font-size:12px;font-weight:800;color:#22d3ee;flex-shrink:0;}
+.mc-sub-wt-real{display:flex;flex-direction:column;align-items:flex-end;line-height:1.25;}
+.mc-sub-wt-real em{font-style:normal;font-size:10px;font-weight:700;color:#5eead4;text-transform:uppercase;letter-spacing:0.03em;}
+.mc-sub-used{font-size:10px;font-weight:800;letter-spacing:0.03em;color:#e6c579;flex-shrink:0;white-space:nowrap;}
 .mc-sub-empty{padding:18px 14px;font-size:13px;font-weight:600;color:#94a3b8;text-align:center;}
 .mc-sub-lib{justify-content:flex-start;color:#94a3b8;margin-top:4px;}
 .mc-sub-done{justify-content:center;background:#22d3ee;color:#04222a;font-weight:800;margin-top:6px;}

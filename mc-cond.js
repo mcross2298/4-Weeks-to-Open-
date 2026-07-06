@@ -27,6 +27,24 @@
   }
   function write(a) { try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} }
 
+  // Same 'mc_activity' shape/format mc-live-tracker.js reads for the dashboard's
+  // streak strip — duplicated in full rather than imported, since this module
+  // is documented to work standalone and mc-live-tracker.js isn't loaded on
+  // conditioning routine pages at all. Conditioning routines have no shared
+  // '.ex-card'-style DOM for mc-live-tracker.js to detect anyway (each routine
+  // page is its own bespoke layout), so completing one here was previously
+  // invisible to the streak even on the standard 5-on-2-off Conditioning day.
+  function markActivityDay() {
+    try {
+      var d = new Date();
+      var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      var a = JSON.parse(localStorage.getItem('mc_activity') || '{}') || {};
+      a.days = a.days || {};
+      a.days[key] = true;
+      localStorage.setItem('mc_activity', JSON.stringify(a));
+    } catch (e) {}
+  }
+
   function fmt(s) {
     s = Math.max(0, Math.round(s));
     return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
@@ -75,6 +93,7 @@
       try { sessionStorage.removeItem('mc_cond_src_prog'); } catch (e) {}
     } catch (e) {}
 
+    markActivityDay();
     try { if (window.MC_SYNC && MC_SYNC.push) MC_SYNC.push(); } catch (e) {}
     return entry;
   }
