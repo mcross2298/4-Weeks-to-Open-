@@ -69,21 +69,28 @@
     return m ? parseInt(m[1], 10) : 0;
   }
 
-  function suggestFor(exId, name, setsStr) {
+  function historyKey(exId) {
     var u = window.MCSetlogUtil;
-    var key = u && u.histKey ? u.histKey(exId)
+    return u && u.histKey ? u.histKey(exId)
       : (location.pathname.split('/').pop().replace('.html', '') + '|' + exId);
-    var hist = store()[key] || [];
+  }
 
-    // most recent COMPLETED session — skip today's in-progress one
+  // All logged sessions for an exercise (newest first), excluding today's
+  // still-in-progress one.
+  function completedSessions(exId) {
+    var hist = store()[historyKey(exId)] || [];
     var today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    var sess = null;
-    for (var i = 0; i < hist.length; i++) {
-      if (hist[i] && hist[i].d !== today) { sess = hist[i]; break; }
-    }
-    if (!sess) sess = hist[0];
-    if (!sess || !sess.sets) return null;
+    return hist.filter(function (s) { return s && s.d !== today; });
+  }
 
+  // Classify one logged session against the day's prescribed rep target:
+  //   'hold'     — 2+ sets at RPE ≥ 9.5 / failure
+  //   'repeat'   — reps fell short of the target
+  //   'progress' — every logged set hit the target, no near-max sets
+  //   'match'    — weight logged but no rep target to compare against
+  //   null       — bodyweight/unweighted or no sets logged
+  function classifySession(sess, setsStr) {
+    if (!sess || !sess.sets) return null;
     var sets = Object.keys(sess.sets).map(function (k) { return sess.sets[k]; });
     var weights = sets.map(function (s) { return parseFloat(s.w) || 0; }).filter(Boolean);
     if (!weights.length) return null;                 // bodyweight / unweighted
@@ -92,7 +99,7 @@
     var hardSets = sets.filter(function (s) {
       return s.rpe === 'F' || parseFloat(s.rpe) >= 9.5;
     }).length;
-    if (hardSets >= 2) return { w: W, why: 'hold — last session was near max' };
+    if (hardSets >= 2) return { status: 'hold', w: W };
 
     var target = topRep(setsStr);
     if (target > 0) {
@@ -101,14 +108,52 @@
         return !s.w || isNaN(r) || r >= target;   // unlogged reps don't block
       });
       var anyLogged = sets.some(function (s) { return !isNaN(parseInt(s.r, 10)); });
-      if (anyLogged && !allHit) return { w: W, why: 'repeat — chase the rep target' };
-      if (anyLogged && allHit) {
-        var eq = equipCat(name || '');
-        var inc = computeIncrement(name, eq);
-        return { w: W + inc, why: 'all reps hit last time — move up' };
-      }
+      if (anyLogged && !allHit) return { status: 'repeat', w: W };
+      if (anyLogged && allHit) return { status: 'progress', w: W };
     }
-    return { w: W, why: 'match your last session' };
+    return { status: 'match', w: W };
+  }
+
+  function suggestFor(exId, name, setsStr) {
+    var sessions = completedSessions(exId);
+    var sess = sessions.length ? sessions[0] : (store()[historyKey(exId)] || [])[0];
+    var cls = classifySession(sess, setsStr);
+    if (!cls) return null;
+
+    if (cls.status === 'hold') return { w: cls.w, why: 'hold — last session was near max' };
+    if (cls.status === 'repeat') return { w: cls.w, why: 'repeat — chase the rep target' };
+    if (cls.status === 'progress') {
+      var eq = equipCat(name || '');
+      var inc = computeIncrement(name, eq);
+      return { w: cls.w + inc, why: 'all reps hit last time — move up' };
+    }
+    return { w: cls.w, why: 'match your last session' };
+  }
+
+  // Plateau/deload signal: walk the completed-session history newest-first
+  // and count a streak of sessions that never progressed (held or repeated).
+  // A 'match'/null session (no rep target to judge, or no data) breaks the
+  // streak rather than counting against it — there's nothing to judge there.
+  var PLATEAU_STREAK = 3;   // 3 non-progressing sessions in a row → plateau
+  var DELOAD_STREAK = 4;    // 4 in a row → suggest a deload, not just a hold
+
+  function detectPlateau(exId, setsStr) {
+    var sessions = completedSessions(exId);
+    if (sessions.length < PLATEAU_STREAK) return null;
+
+    var streak = 0;
+    for (var i = 0; i < sessions.length; i++) {
+      var cls = classifySession(sessions[i], setsStr);
+      if (cls && (cls.status === 'hold' || cls.status === 'repeat')) streak++;
+      else break;
+    }
+    if (streak >= DELOAD_STREAK) {
+      return { level: 'deload', streak: streak, why: streak + ' sessions without progress — consider a deload (~10% off) next time' };
+    }
+    if (streak >= PLATEAU_STREAK) {
+      return { level: 'plateau', streak: streak, why: streak + ' sessions without progress' };
+    }
+    return null;
   }
 
   function render() {
@@ -128,7 +173,8 @@
       var exId = (card.dataset && card.dataset.id) || cls.slice('mcl-hist-'.length);
 
       var nmStr = nmEl ? nmEl.textContent : '';
-      var s = suggestFor(exId, nmStr, seEl ? seEl.textContent.trim() : '');
+      var setsStr = seEl ? seEl.textContent.trim() : '';
+      var s = suggestFor(exId, nmStr, setsStr);
       if (!s || !s.w) return;
 
       var hint = document.createElement('span');
@@ -137,6 +183,15 @@
       var perHand = equipCat(nmStr) === 'Dumbbell' ? ' per hand' : '';
       hint.textContent = 'Suggested: ' + s.w + ' lb' + perHand;
       tgl.insertBefore(hint, hist);
+
+      var plateau = detectPlateau(exId, setsStr);
+      if (plateau) {
+        var flag = document.createElement('span');
+        flag.className = 'mcl-plateau mcl-plateau-' + plateau.level;
+        flag.title = plateau.why;
+        flag.textContent = plateau.level === 'deload' ? '⚠ Deload?' : '⏸ Plateau';
+        tgl.insertBefore(flag, hist);
+      }
 
       // Wire into mc-setlog.js's existing tap-to-fill convention (focusing an
       // empty weight input applies its data-fill value) instead of leaving
@@ -160,9 +215,14 @@
     st.textContent =
       '.mcl-suggest{font-size:11px;font-weight:800;color:#34d399;margin-left:auto;' +
         'white-space:nowrap;text-transform:none;letter-spacing:0;}' +
-      // hist normally pushes itself right with margin-left:auto; when the hint
-      // is present the hint takes that role and hist sits beside it
-      '.mcl-suggest + .mcl-hist{margin-left:0;}';
+      // hist normally pushes itself right with margin-left:auto; whichever of
+      // suggest/plateau ends up immediately before it takes over that role
+      '.mcl-suggest + .mcl-hist{margin-left:0;}' +
+      '.mcl-plateau{font-size:11px;font-weight:800;margin-left:8px;' +
+        'white-space:nowrap;text-transform:none;letter-spacing:0;}' +
+      '.mcl-plateau-plateau{color:#f59e0b;}' +
+      '.mcl-plateau-deload{color:#f87171;}' +
+      '.mcl-plateau + .mcl-hist{margin-left:0;}';
     document.head.appendChild(st);
   }
 
@@ -179,6 +239,9 @@
   // Node-side hook so CI can regression-test the real progression math
   // (see tools/test-mc-suggest.js) instead of a duplicated inline copy.
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { computeIncrement: computeIncrement, topRep: topRep, equipCat: equipCat };
+    module.exports = {
+      computeIncrement: computeIncrement, topRep: topRep, equipCat: equipCat,
+      classifySession: classifySession, detectPlateau: detectPlateau, suggestFor: suggestFor
+    };
   }
 })();
