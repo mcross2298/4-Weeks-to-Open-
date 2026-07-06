@@ -11,6 +11,7 @@ body{background:var(--body-bg,#0a0a0a);}
 .back{font-size:20px;color:var(--accent);text-decoration:none;-webkit-tap-highlight-color:transparent;}
 .topbar-title{font-size:15px;font-weight:900;color:#e2e8f0;}
 .topbar-sub{font-size:11px;color:#64748b;font-weight:600;}
+.topbar-icon{margin-left:auto;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;}
 .hero{padding:10px 18px 18px;}
 .hero-eyebrow{font-size:11px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
 .hero-title{font-size:26px;font-weight:900;color:#fff;letter-spacing:-0.02em;margin:0 0 6px;}
@@ -39,8 +40,35 @@ body{background:var(--body-bg,#0a0a0a);}
 .stat-cell{background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 8px;text-align:center;}
 .stat-num{font-size:20px;font-weight:900;color:var(--accent);}
 .stat-lbl{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;margin-top:4px;}
+
+/* Sand light mode (Phase 6, Stats page). Flat hardcoded hex here (no
+   Onyx token system on this page), so each dark value gets a direct
+   light counterpart. --accent (#d4af37 gold) is left as-is — it
+   already reads fine against a light card. */
+html[data-theme="light"] body{background:#f5f2ec;}
+html[data-theme="light"] .topbar-title{color:#1c1a17;}
+html[data-theme="light"] .topbar-sub,
+html[data-theme="light"] .hero-sub,
+html[data-theme="light"] .muted,
+html[data-theme="light"] .empty,
+html[data-theme="light"] .mg-val,
+html[data-theme="light"] .pr-date,
+html[data-theme="light"] .sec-title,
+html[data-theme="light"] .stat-lbl{color:#6b6459;}
+html[data-theme="light"] .hero-title,
+html[data-theme="light"] .mg-name,
+html[data-theme="light"] .pr-name{color:#1c1a17;}
+html[data-theme="light"] .card,
+html[data-theme="light"] .stat-cell{background:#efe9db;border-color:rgba(28,26,23,.08);}
+html[data-theme="light"] .mg-bar-wrap{background:rgba(28,26,23,.08);}
+html[data-theme="light"] .pr-row{border-bottom-color:rgba(28,26,23,.08);}
+html[data-theme="light"] .topbar-icon{background:rgba(28,26,23,.05);border-color:rgba(28,26,23,.12);}
+html[data-theme="light"] .topbar-icon svg *{stroke:#6b6459;}
+html[data-theme="light"] .theme-icon-dark{display:none;}
+html[data-theme="light"] .theme-icon-light{display:block!important;}
 </style>
 <script src="mc-theme.js"></script>
+<script src="mc-appearance.js"></script>
 </head><body>
 
 <div class="topbar">
@@ -48,6 +76,10 @@ body{background:var(--body-bg,#0a0a0a);}
   <div>
     <div class="topbar-title">Stats</div>
     <div class="topbar-sub">Your training, charted</div>
+  </div>
+  <div class="topbar-icon mc-theme-toggle" onclick="if(window.MC_APPEARANCE)MC_APPEARANCE.toggle();" style="cursor:pointer;display:flex;align-items:center;justify-content:center;width:40px;height:40px;" title="Toggle light/dark mode" role="button" tabindex="0" aria-label="Toggle light/dark mode" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+    <svg class="theme-icon-dark" width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" stroke="#c9c9cf" stroke-width="2" stroke-linejoin="round"/></svg>
+    <svg class="theme-icon-light" width="17" height="17" viewBox="0 0 24 24" fill="none" style="display:none;"><circle cx="12" cy="12" r="4.5" stroke="#c9c9cf" stroke-width="2"/><path d="M12 2.5v2.5M12 19v2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12H5M19 12h2.5M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8" stroke="#c9c9cf" stroke-width="2" stroke-linecap="round"/></svg>
   </div>
 </div>
 
