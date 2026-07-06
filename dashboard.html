@@ -290,6 +290,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 /* Reuse exact cat-card styles from index.html */
 .cat-card{display:block;text-decoration:none;color:inherit;border-radius:18px;padding:15px 18px;margin-bottom:11px;position:relative;overflow:hidden;transition:box-shadow 0.15s;border:1px solid rgba(255,255,255,0.06);}
 .cat-card:active{box-shadow:0 0 0 2px var(--gold),0 0 18px var(--gold-glow);opacity:0.9;}
+.cat-card:focus-visible{outline:none;box-shadow:0 0 0 2px var(--gold),0 0 18px var(--gold-glow);}
 .cat-card.faint{background:linear-gradient(135deg,#7f1d1d,#0a0000);box-shadow:0 4px 20px rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.3);border-top:3px solid #E24B4A;}
 /* MARKET:STRIP influencer-css START */
 .cat-card.stndr{background:linear-gradient(135deg,#1e3a5f,#0f172a);box-shadow:0 4px 20px rgba(59,130,246,0.15);border-top:3px solid #1D9E75;}
@@ -692,6 +693,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 #scr-dashboard .prog-rail::-webkit-scrollbar{display:none;}
 #scr-dashboard .rail-card{flex:0 0 156px;border-radius:18px;padding:15px;text-decoration:none;transition:transform .12s ease,box-shadow .15s;display:block;animation:flagBreathe 4.6s ease-in-out infinite;}
 #scr-dashboard .rail-card:active{transform:scale(.98);}
+#scr-dashboard .rail-card:focus-visible{outline:none;box-shadow:0 0 0 2px var(--gold),0 0 18px var(--gold-glow);}
 @keyframes flagBreathe{0%,100%{box-shadow:var(--fs-rest);}50%{box-shadow:var(--fs-peak),var(--fs-ring);}}
 @media (prefers-reduced-motion:reduce){#scr-dashboard .rail-card,#scr-programs #flagGrid .cat-card{animation:none;}}
 #scr-dashboard .rail-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:26px;}
@@ -1776,8 +1778,8 @@ function renderCondLib(q){ var el=document.getElementById('condLib'); if(el&&win
 function renderConditioning(){
   var body=document.getElementById('condBody');
   if(!body||typeof CONDITIONING==='undefined'){return;}
-  var tgBtn=function(id,label){return '<button onclick="setCondSubTab(\''+id+'\')" class="cond-toggle-btn'+(condSubTab===id?' active':'')+'" style="flex:1;padding:10px;border-radius:11px;border:none;cursor:pointer;font-family:\'Archivo\',inherit;font-size:13px;font-weight:800;letter-spacing:0.02em;'+(condSubTab===id?'background:linear-gradient(135deg,#e9cb7d,#c79c4f);color:#1a1409;':'background:transparent;color:#8b8b92;')+'">'+label+'</button>';};
-  var toggle='<div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:13px;padding:4px;margin-bottom:18px;">'+tgBtn('workouts','🔥 Workouts')+tgBtn('exercises','🏃 Exercises')+'</div>';
+  var tgBtn=function(id,label){var sel=condSubTab===id;return '<button onclick="setCondSubTab(\''+id+'\')" class="cond-toggle-btn'+(sel?' active':'')+'" role="tab" aria-selected="'+sel+'" tabindex="'+(sel?'0':'-1')+'" style="flex:1;padding:10px;border-radius:11px;border:none;cursor:pointer;font-family:\'Archivo\',inherit;font-size:13px;font-weight:800;letter-spacing:0.02em;'+(sel?'background:linear-gradient(135deg,#e9cb7d,#c79c4f);color:#1a1409;':'background:transparent;color:#8b8b92;')+'">'+label+'</button>';};
+  var toggle='<div role="tablist" aria-label="Conditioning view" style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:13px;padding:4px;margin-bottom:18px;">'+tgBtn('workouts','🔥 Workouts')+tgBtn('exercises','🏃 Exercises')+'</div>';
 
   var html='';
   if(condSubTab==='workouts'){
