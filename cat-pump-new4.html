@@ -169,6 +169,7 @@
 <link rel="stylesheet" href="mc-nav.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="mc-program-landing.css"/>
+<link rel="stylesheet" href="mc-surprise.css"/>
 </head>
 <body>
 <div class="wrap">
@@ -180,7 +181,8 @@
   </div>
 
   <div style="text-align:center;">
-    <a href="pump-instructions.html" class="inst-link">📋 Program Guide & Instructions</a>
+    <a href="pump-instructions.html" class="inst-link">📋 Program Guide & Instructions</a><br/>
+    <button type="button" class="mc-surprise-btn" data-mc-surprise style="--sp-accent:#D85A30"><span class="mc-surprise-ico">🎲</span>Surprise Me</button>
   </div>
 
   <div id="programStatus"></div>
@@ -383,18 +385,8 @@
 })();
 </script>
 <script src="mc-nav.js"></script>
-<script>
-/* Surprise Me — open a random pump workout from the drill lists. */
-(function(){
-  var b=document.getElementById('pumpSurprise'); if(!b) return;
-  b.addEventListener('click',function(){
-    var links=Array.prototype.slice.call(document.querySelectorAll('a.workout-row[href$=".html"]'));
-    if(!links.length) return;
-    var h=links[Math.floor(Math.random()*links.length)].getAttribute('href');
-    if(h) location.href=h;
-  });
-})();
-</script>
+<script>window.MC_SURPRISE = { sel: 'a.workout-row' };</script>
+<script src="mc-surprise.js"></script>
 <script>window.MC_PROG={id:'pump',icon:'⚡',name:'Daily Pump',meta:'10 Workouts',color:'#D85A30',desc:'Julian Smith pump protocols — in and out fast',href:'cat-pump-new4.html',splits:['Back','Chest','Shoulders','Arms','Legs']};</script>
 <script src="mc-pin-bar.js"></script>
 <script src="mc-program-status.js"></script>
