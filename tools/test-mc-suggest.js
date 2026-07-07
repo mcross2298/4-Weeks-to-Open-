@@ -106,6 +106,27 @@ setlogData['test-page|curl'] = [
 ];
 check('detectPlateau: a progress session breaks the streak', suggest.detectPlateau('curl', '1x12'), null);
 
+// ---- carry-forward planned loads (Phase 0 item 0.2) ----
+setlogData['test-page|press'] = [
+  session('Jan 2', { 0: loggedSet(135, 8, 8), 1: loggedSet(135, 8, 8) })
+];
+var prog = suggest.suggestFor('press', 'Overhead Press', '2x8');
+check('suggestFor: progress carries its status', prog && prog.status, 'progress');
+check('suggestFor: progress adds the BIG increment', prog && prog.w, 145);
+check('suggestFor: base preserves last top weight for pyramid-safe prefill', prog && prog.base, 135);
+
+var kv = {};
+global.localStorage = {
+  getItem: function (k) { return k === 'mc_setlog_v1' ? JSON.stringify(setlogData) : (kv[k] || null); },
+  setItem: function (k, v) { kv[k] = v; }
+};
+suggest.writeTarget('press', prog);
+var targets = JSON.parse(kv['mc_plan_targets_v1'] || '{}');
+check('writeTarget persists the planned load to mc_plan_targets_v1',
+  targets['test-page|press'] && targets['test-page|press'].w, 145);
+check('writeTarget records the status alongside the load',
+  targets['test-page|press'] && targets['test-page|press'].status, 'progress');
+
 delete global.window;
 delete global.location;
 delete global.localStorage;

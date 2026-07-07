@@ -35,8 +35,8 @@
 .ex-item > .mcl-wrap{flex:0 0 100%;width:100%;}
 .ex-item > .mcl-toggle{margin-top:8px;}
 
-.mcl-hdr,.mcl-row{display:grid;grid-template-columns:30px 1fr 1fr 34px 40px;gap:7px;align-items:center;}
-.mcl-rpe{height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;
+.mcl-hdr,.mcl-row{display:grid;grid-template-columns:30px 1fr 1fr 44px 44px;gap:7px;align-items:center;}
+.mcl-rpe{height:44px;display:flex;align-items:center;justify-content:center;border-radius:8px;
   border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#475569;
   font-size:11px;font-weight:800;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;}
 .mcl-rpe.set{color:#fbbf24;border-color:rgba(212,175,55,0.4);background:rgba(212,175,55,0.1);}
@@ -46,7 +46,7 @@
 .mcl-row:last-child{border-bottom:none;}
 .mcl-num{font-size:12px;font-weight:900;color:#64748b;text-align:center;}
 .mcl-inp{
-  width:100%;padding:8px 4px;
+  width:100%;min-height:44px;padding:8px 4px;
   background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
   /* 16px (not smaller) so iOS Safari does NOT auto-zoom the page when a weight/
      reps field is focused mid-set — the single biggest in-gym annoyance. */
@@ -56,7 +56,7 @@
 .mcl-inp:focus{border-color:rgba(212,175,55,0.5);background:rgba(212,175,55,0.07);}
 .mcl-inp::placeholder{color:#475569;font-size:12px;font-weight:600;}
 .mcl-ck{
-  width:40px;height:40px;border-radius:9px;   /* bigger sweaty-finger tap target */
+  width:44px;height:44px;border-radius:9px;   /* 44px a11y floor for sweaty-finger taps */
   border:1.5px solid rgba(255,255,255,0.18);background:transparent;
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;font-size:15px;color:#94a3b8;transition:all .15s;

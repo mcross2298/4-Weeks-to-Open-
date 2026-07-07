@@ -36,13 +36,11 @@ INCLUDE_FILES = {"manifest.json",
                  "program-overrides.json", "icon.svg",
                  "icon-192.png", "icon-512.png"}
 
-# Scratch/concept pages and superseded data files — exist in the repo but
-# should not be shipped to every device.
+# Scratch/concept pages — exist in the repo but should not be shipped to
+# every device. (The superseded exercisedata-phase8*.json datasets and other
+# orphans were deleted outright rather than deny-listed.)
 DENY_FILES = {
-    "index-v4.html",
     "stndr-card-concepts.html",
-    "exercisedata-phase8.json",
-    "exercisedata-phase8_1.json",
 }
 DENY_DIRS = {"tools", "supabase", "templates", ".github", ".git"}
 

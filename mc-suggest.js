@@ -1,9 +1,11 @@
 /* ==========================================================================
-   mc-suggest.js — "Suggested: 185 lb" progression hints (Phase 2.3)
+   mc-suggest.js — progression hints + carry-forward planned loads
    --------------------------------------------------------------------------
-   Suggest, don't fill: renders a small hint next to the "Last: 180 lb" cue on
-   each exercise's Log Sets toggle. NEVER touches the weight/reps inputs — the
-   lifter always types their own numbers.
+   Renders a "Suggested: 185 lb" hint next to the "Last: 180 lb" cue on each
+   exercise's Log Sets toggle, persists that suggestion as next session's
+   planned target (mc_plan_targets_v1), and feeds it into mc-setlog.js's
+   tap-to-fill convention so the prescribed load is one tap away — never
+   auto-typed over anything the lifter entered themselves.
 
    Rules (read from mc_setlog_v1 via the same PID namespacing as mc-setlog.js):
      • last session hit the prescribed top reps at weight W on every logged
@@ -12,6 +14,10 @@
      • two or more sets rated RPE ≥ 9.5 or to-failure → hold W
      • reps fell short of prescription → repeat W
      • no logged history / bodyweight-style entries → no hint
+
+   On a 'progress' suggestion the planned load replaces the last-logged-weight
+   prefill on the sets that were at last session's top weight; lighter pyramid
+   sets keep their own last weights.
    ========================================================================== */
 (function () {
   var isBrowser = typeof window !== 'undefined';
@@ -21,10 +27,25 @@
   }
 
   var SK = 'mc_setlog_v1';
+  var PK = 'mc_plan_targets_v1';   // carry-forward planned loads, keyed like SK
 
   function store() {
     try { return JSON.parse(localStorage.getItem(SK) || '{}') || {}; }
     catch (e) { return {}; }
+  }
+
+  // Persist the current suggestion as next session's planned target so the
+  // prescription survives page loads, rides the sync whitelist, and is
+  // readable by other engines (recap, quick-pump, future deload insertion).
+  function writeTarget(exId, s) {
+    try {
+      var all = JSON.parse(localStorage.getItem(PK) || '{}') || {};
+      var k = historyKey(exId);
+      var prev = all[k];
+      if (prev && prev.w === s.w && prev.status === s.status) return;
+      all[k] = { w: s.w, status: s.status, why: s.why, ts: Date.now() };
+      localStorage.setItem(PK, JSON.stringify(all));
+    } catch (e) {}
   }
 
   // big compound movements progress in 10 lb jumps; everything else 5 lb
@@ -120,14 +141,14 @@
     var cls = classifySession(sess, setsStr);
     if (!cls) return null;
 
-    if (cls.status === 'hold') return { w: cls.w, why: 'hold — last session was near max' };
-    if (cls.status === 'repeat') return { w: cls.w, why: 'repeat — chase the rep target' };
+    if (cls.status === 'hold') return { w: cls.w, base: cls.w, status: 'hold', why: 'hold — last session was near max' };
+    if (cls.status === 'repeat') return { w: cls.w, base: cls.w, status: 'repeat', why: 'repeat — chase the rep target' };
     if (cls.status === 'progress') {
       var eq = equipCat(name || '');
       var inc = computeIncrement(name, eq);
-      return { w: cls.w + inc, why: 'all reps hit last time — move up' };
+      return { w: cls.w + inc, base: cls.w, status: 'progress', why: 'all reps hit last time — move up' };
     }
-    return { w: cls.w, why: 'match your last session' };
+    return { w: cls.w, base: cls.w, status: 'match', why: 'match your last session' };
   }
 
   // Plateau/deload signal: walk the completed-session history newest-first
@@ -176,6 +197,7 @@
       var setsStr = seEl ? seEl.textContent.trim() : '';
       var s = suggestFor(exId, nmStr, setsStr);
       if (!s || !s.w) return;
+      writeTarget(exId, s);
 
       var hint = document.createElement('span');
       hint.className = 'mcl-suggest';
@@ -196,11 +218,16 @@
       // Wire into mc-setlog.js's existing tap-to-fill convention (focusing an
       // empty weight input applies its data-fill value) instead of leaving
       // this as text the lifter has to retype into the logger by hand.
-      // Whichever prefill claims an input first wins — never overwrite one
-      // mc-setlog.js (last logged weight) already set.
+      // Carry-forward rule: on a 'progress' suggestion the planned load takes
+      // over the prefill of sets that were at last session's top weight (the
+      // ones the suggestion was computed from); lighter pyramid sets keep the
+      // last-logged prefill mc-setlog.js already set. Typed values are never
+      // overwritten.
       var wInputs = card.querySelectorAll('.mcl-w');
       Array.prototype.forEach.call(wInputs, function (inp) {
-        if (!inp.value.trim() && !inp.dataset.fill) {
+        if (inp.value.trim()) return;
+        var cur = parseFloat(inp.dataset.fill);
+        if (!inp.dataset.fill || (s.status === 'progress' && cur === s.base)) {
           inp.placeholder = s.w + ' lb' + perHand;
           inp.dataset.fill = String(s.w);
         }
@@ -241,7 +268,8 @@
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
       computeIncrement: computeIncrement, topRep: topRep, equipCat: equipCat,
-      classifySession: classifySession, detectPlateau: detectPlateau, suggestFor: suggestFor
+      classifySession: classifySession, detectPlateau: detectPlateau, suggestFor: suggestFor,
+      writeTarget: writeTarget
     };
   }
 })();
