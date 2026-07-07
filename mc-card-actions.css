@@ -66,6 +66,27 @@
 .mc-tempo-desc{font-size:12px;font-weight:600;color:#94a3b8;}
 .mc-tempo-remove{justify-content:center;color:#f87171;}
 
+/* ── Quick-actions pill row (Replace / Reorder / Notes on the card face) ── */
+/* Prepended above the card's own content — see injectQuickActions() for why
+   (no reliable "under the name" anchor across every program page's markup). */
+.mc-quick-actions{
+  display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  margin-bottom:10px;scrollbar-width:none;
+}
+.mc-quick-actions::-webkit-scrollbar{display:none;}
+.mc-qa-btn{
+  display:inline-flex;align-items:center;gap:5px;flex-shrink:0;
+  padding:7px 12px;border-radius:20px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);
+  color:#cbd5e1;font-size:12px;font-weight:700;font-family:inherit;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.mc-qa-btn:active{background:rgba(255,255,255,0.11);}
+.mc-qa-btn .mc-qa-ico{font-size:13px;line-height:1;}
+.mc-qa-btn.mc-qa-on{
+  background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.35);color:#fcd34d;
+}
+
 /* ── Inline saved note shown under a card ── */
 .mc-note{
   margin:8px 14px 12px;padding:8px 10px;border-radius:8px;

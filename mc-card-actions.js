@@ -521,7 +521,7 @@
         var b = e.target.closest('.mc-btn'); if (!b) return;
         if (b.dataset.act === 'save') {
           setNote(cardName(noteCard), noteTA.value);
-          withoutObserver(function () { renderNote(noteCard); });
+          withoutObserver(function () { renderNote(noteCard); renderQuickActions(noteCard); });
         }
         noteOverlay.classList.remove('open');
       });
@@ -763,6 +763,41 @@
   }
 
   // ====================================================================== //
+  //  QUICK ACTIONS  (Replace / Reorder / Notes surfaced on the card face)   //
+  //  Same handlers as the meatball menu's corresponding items — this is a   //
+  //  second entry point, not new logic. Prepended (rather than inserted     //
+  //  after the name) because card markup varies per program page (.a-top/  //
+  //  .a-head vs .ss-content vs bespoke layouts) with no single reliable     //
+  //  "right under the name" anchor across all of them.                     //
+  // ====================================================================== //
+  function injectQuickActions(card) {
+    var host = card.querySelector(BODY_SEL) || card;
+    if (host.querySelector(':scope > .mc-quick-actions')) return;
+    var row = document.createElement('div');
+    row.className = 'mc-quick-actions';
+    row.innerHTML =
+      '<button type="button" class="mc-qa-btn" data-qa="replace"><span class="mc-qa-ico">🔁</span>Replace</button>' +
+      '<button type="button" class="mc-qa-btn" data-qa="reorder"><span class="mc-qa-ico">↕️</span>Reorder</button>' +
+      '<button type="button" class="mc-qa-btn mc-qa-notes" data-qa="notes"><span class="mc-qa-ico">📝</span>Notes</button>';
+    row.addEventListener('click', function (e) {
+      e.stopPropagation(); e.preventDefault();
+      var btn = e.target.closest('.mc-qa-btn'); if (!btn) return;
+      var act = btn.dataset.qa;
+      if (act === 'replace') doReplace(card);
+      else if (act === 'reorder') startReorder(card);
+      else if (act === 'notes') openNote(card);
+    });
+    host.insertBefore(row, host.firstChild);
+  }
+
+  // paint (or clear) the Notes pill's "has a saved note" highlight
+  function renderQuickActions(card) {
+    var btn = card.querySelector(':scope > .mc-quick-actions .mc-qa-notes') ||
+              card.querySelector('.mc-quick-actions .mc-qa-notes');
+    if (btn) btn.classList.toggle('mc-qa-on', !!getNote(cardName(card)));
+  }
+
+  // ====================================================================== //
   //  INJECTION + HYDRATION                                                 //
   // ====================================================================== //
   function injectMeatball(card) {
@@ -792,6 +827,7 @@
     // Re-entrant withoutObserver keeps applyOrder's internal suppression safe.
     withoutObserver(function () {
       Array.prototype.forEach.call(cards, injectMeatball);
+      Array.prototype.forEach.call(cards, injectQuickActions);
       var containers = [];
       Array.prototype.forEach.call(cards, function (c) {
         var p = c.parentElement;
@@ -799,6 +835,7 @@
       });
       containers.forEach(applyOrder);
       Array.prototype.forEach.call(document.querySelectorAll(CARD_SEL), renderNote);
+      Array.prototype.forEach.call(document.querySelectorAll(CARD_SEL), renderQuickActions);
       if (tempoEnabled()) Array.prototype.forEach.call(document.querySelectorAll(CARD_SEL), renderTempo);
       Array.prototype.forEach.call(document.querySelectorAll(CARD_SEL), renderSwapPill);
     });
