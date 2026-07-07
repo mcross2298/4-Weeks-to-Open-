@@ -289,7 +289,8 @@ const SLIDES = [
         " (e.g. Daily Pump)"+
         /* MARKET:STRIP influencer-tour END */
         " to see its splits."},
-      {tx:"Pick a <b>split / day</b> to open that workout, ready to log."}
+      {tx:"Pick a <b>split / day</b> to open that workout, ready to log."},
+      {tx:"Can't decide? Most category pages have a <span class='tap'>🎲 Surprise Me</span> button near the top — tap it to jump straight into a random split or workout from that program."}
     ],
     cta:{ico:'🏋️',label:'Try it now',name:'Browse all the programs',href:'dashboard.html?tab=programs'}
   },
@@ -312,16 +313,15 @@ const SLIDES = [
   },
   {
     eyebrow:'Module 5 · Customize',
-    title:"The ⋮ menu — make any exercise yours",
-    tagline:"Every exercise card has a meatball menu (⋮) in its top-right corner. One tap lets you swap the movement, reorder, add tempo, or leave a note.",
-    scene:{glyph:'⋮',caption:'Replace · Reorder · Add Tempo · Notes — saved per workout',color:'rgba(212,175,55,0.32)',glow:'rgba(212,175,55,0.14)'},
-    narration:"See the three dots in the corner of every exercise? That's your control panel. Tap it and you can swap an exercise you can't or don't want to do, reorder your lineup, dial in a lifting tempo, or jot a note to your future self. Every change saves to that workout automatically.",
+    title:"Replace, Reorder & Notes — right on the card",
+    tagline:"The three moves you'll reach for most — swap the movement, reorder, or leave a note — sit as one-tap buttons right on every exercise card. The ⋮ menu still has those plus tempo, progress, and intensifiers.",
+    scene:{glyph:'⋮',caption:'Replace · Reorder · Notes on the card — Add Tempo & more in ⋮',color:'rgba(212,175,55,0.32)',glow:'rgba(212,175,55,0.14)'},
+    narration:"Look above the name on any exercise card and you'll see three small buttons: Replace, Reorder, and Notes. No menu-diving required — tap Replace to swap the movement, Reorder to shuffle your lineup, or Notes to jot something down. Need tempo, your progress history, or an intensifier like a drop or cluster set? Tap the ⋮ in the corner for those.",
     steps:[
-      {tx:"On any exercise card, tap the <span class='tap'>⋮</span> in the top-right corner."},
-      {tx:"<b>🔁 Replace exercise</b> — shows your top 3 closest matches (same muscle + movement first), each tagged with its equipment and a weight to start at. Pick one and the card swaps in place."},
-      {tx:"<b>↕️ Reorder exercises</b> — use the <span class='tap'>▲ ▼</span> arrows; your order sticks."},
-      {tx:"<b>⏱️ Add Tempo</b> — pick an eccentric:pause:concentric:pause cadence; it shows as a pill."},
-      {tx:"<b>📝 Notes</b> — leave a per-exercise note that saves right onto the card."}
+      {tx:"<b>🔁 Replace</b> — right on the card. Shows your top 3 closest matches (same muscle + movement first), each tagged with its equipment and a weight to start at. Pick one and the card swaps in place."},
+      {tx:"<b>↕️ Reorder</b> — right on the card. Use the <span class='tap'>▲ ▼</span> arrows; your order sticks."},
+      {tx:"<b>📝 Notes</b> — right on the card. Leave a per-exercise note that saves right onto it; the button lights up gold once a note is saved."},
+      {tx:"Still tap the <span class='tap'>⋮</span> in the top-right corner for <b>⏱️ Add Tempo</b>, <b>📈 progress history</b>, and drop/cluster/superset controls."}
     ],
     tip:"A weight tagged <b>“from your log”</b> is a real number you've lifted before; <b>“≈”</b> is a starting estimate — trust the real one, treat the estimate as set-1 only. Pick the same swap again later and it moves to the top, marked <b>“Used before.”</b> Every active substitution — and an <b>Revert</b> for each — lives under <b>Stats → My Substitutions</b>."
   },
@@ -366,7 +366,22 @@ const SLIDES = [
     cta:{ico:'🔧',label:'Try it now',name:'Build a custom workout',href:'build-workout.html'}
   },
   {
-    eyebrow:'Module 9 · Reference tools',
+    eyebrow:'Module 9 · ⭐ Make it yours',
+    title:"Quick Pump — 30 or 45 minutes, no planning",
+    tagline:"Short on time? Quick Pump builds a fresh, station-anchored session sized to exactly how many minutes you've got — or trims the workout you're already on.",
+    scene:{glyph:'⚡',caption:'Pick 30/45 min → Generate → Start Workout',color:'rgba(249,115,22,0.32)',glow:'rgba(220,38,38,0.12)'},
+    narration:"Tap Quick Pump from the dashboard. Choose 30 or 45 minutes, optionally a focus like Push, Pull, Legs, or Core, then hit Generate — it pulls a fresh mix of exercises from every program's library, paired into station-anchored supersets so you're never walking across the gym. Don't like the mix? Regenerate. Happy with it? Start Workout logs sets and PRs exactly like any other session. Already mid-workout and running short on time? Look for the ⏱ Short on time? button — it trims the workout you're already on down to fit, instead of building a new one.",
+    steps:[
+      {tx:"Dashboard → <span class='tap'>⚡ Quick Pump</span> tile."},
+      {tx:"Pick <b>30 or 45 minutes</b>, and an optional <b>focus</b> (Full Body, Push, Pull, Legs, Core)."},
+      {tx:"Tap <span class='tap'>🎲 Generate Workout</span> — review the preview, tap <span class='tap'>🔄 Regenerate</span> for a different mix, or <span class='tap'>▶ Start Workout</span> to go."},
+      {tx:"Already on a workout page and short on time? Tap <span class='tap'>⏱ Short on time?</span> near the bottom, pick 30 or 45 minutes, and it trims that same workout down instead."}
+    ],
+    tip:"If a session that short still won't fit, Quick Pump will suggest a fast Conditioning Corner routine instead — sometimes a quick circuit beats rushing through a lift.",
+    cta:{ico:'⚡',label:'Try it now',name:'Generate a Quick Pump session',href:'quick-pump.html'}
+  },
+  {
+    eyebrow:'Module 10 · Reference tools',
     title:"Library, Guide & Conditioning",
     tagline:"Three more tools round out your toolkit — browse exercises, read the rules, and finish with conditioning.",
     scene:{glyph:'📚',caption:'Exercise Library · Program Guide · Conditioning tab',color:'rgba(212,175,55,0.3)',glow:'rgba(212,175,55,0.12)'},
@@ -379,7 +394,7 @@ const SLIDES = [
     cta:{ico:'📚',label:'Try it now',name:'Open the Exercise Library',href:'exercise-library.html'}
   },
   {
-    eyebrow:'Module 10 · Fuel the work',
+    eyebrow:'Module 11 · Fuel the work',
     title:"Track macros in the Nutrition tab",
     tagline:"Lifting is half the job — the 🍎 Nutrition tab tracks calories, protein, fat and carbs against your goals, day by day.",
     scene:{glyph:'🍎',caption:'Daily kcal · P/F/C rings · day calendar · food search + barcode',color:'rgba(239,68,68,0.32)',glow:'rgba(239,68,68,0.12)'},
@@ -394,7 +409,7 @@ const SLIDES = [
     cta:{ico:'🍎',label:'Try it now',name:'Open the Nutrition tracker',href:'dashboard.html?tab=nutrition'}
   },
   {
-    eyebrow:'Module 11 · Dial in the details',
+    eyebrow:'Module 12 · Dial in the details',
     title:"Nutrition facts, your serving size",
     tagline:"Every food opens a tappable nutrition-facts sheet — flip between grams and oz, key in your exact amount, and the macros recalc live.",
     scene:{glyph:'🔢',caption:'Tap a food → UOM toggle (g / oz) → keypad qty → Log Food',color:'rgba(52,211,153,0.32)',glow:'rgba(52,211,153,0.12)'},
@@ -408,7 +423,7 @@ const SLIDES = [
     tip:"Calories, protein, fat and carbs all update <b>live</b> as you change the unit or quantity — what you see is what gets logged."
   },
   {
-    eyebrow:'Module 12 · Your go-to foods',
+    eyebrow:'Module 13 · Your go-to foods',
     title:"Favorites — log your staples fast",
     tagline:"The foods you eat every day shouldn't need a search every time. Star them once and quick-log from your Favorites library.",
     scene:{glyph:'⭐',caption:'☆ on any food → Favorites library → tap → Log Food',color:'rgba(212,175,55,0.32)',glow:'rgba(212,175,55,0.14)'},
@@ -422,7 +437,7 @@ const SLIDES = [
     cta:{ico:'⭐',label:'Try it now',name:'Open your food Favorites',href:'dashboard.html?tab=nutrition'}
   },
   {
-    eyebrow:'Module 13 · Take it anywhere',
+    eyebrow:'Module 14 · Take it anywhere',
     title:"Install & train offline",
     tagline:"MC Training is a PWA — add it to your home screen and it works in the gym with zero signal.",
     scene:{glyph:'📲',caption:'Add to Home Screen → launches full-screen → works offline',color:'rgba(212,175,55,0.3)',glow:'rgba(212,175,55,0.14)'},
