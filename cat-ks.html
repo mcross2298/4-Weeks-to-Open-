@@ -139,6 +139,7 @@
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="mc-program-landing.css"/>
+<link rel="stylesheet" href="mc-surprise.css"/>
 </head>
 <body>
 <div class="page-wrap">
@@ -160,6 +161,7 @@
     </div>
     <div class="designer-credit">✍️ Designed by Mike Cross</div>
     <a class="guide-link" href="ks-instructions.html">📋 Program Guide &amp; Instructions →</a>
+    <button type="button" class="mc-surprise-btn" data-mc-surprise style="--sp-accent:#e0a03c"><span class="mc-surprise-ico">🎲</span>Surprise Me</button>
   </div>
 
   <!-- Split 1 -->
@@ -308,6 +310,8 @@
 
 </div>
 
+<script>window.MC_SURPRISE = { sel: '.hub-card' };</script>
+<script src="mc-surprise.js"></script>
 <script src="mc-nav.js"></script>
 <script src="mc-program-status.js"></script>
 <script>

@@ -1,0 +1,16 @@
+/* ==========================================================================
+   mc-surprise.css — "Surprise Me" button, shared across program pages.
+   Each page sets --sp-accent inline to match its own program color
+   (see mc-pm-data.js's `color` field for that program).
+   ========================================================================== */
+.mc-surprise-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  margin-top:10px;padding:9px 16px;border-radius:12px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid var(--sp-accent,rgba(255,255,255,0.3));
+  color:var(--sp-accent,#e6c579);
+  font-size:13px;font-weight:800;letter-spacing:0.02em;font-family:inherit;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.mc-surprise-btn:active{background:rgba(255,255,255,0.13);}
+.mc-surprise-btn .mc-surprise-ico{font-size:15px;line-height:1;}
