@@ -96,6 +96,19 @@
 }
 .mc-note::before{content:'📝 ';opacity:0.85;}
 
+/* ── Quick Pump trigger (page-level "abbreviate this workout" button) ── */
+.mc-qp-trigger{
+  position:fixed;left:16px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:1180;
+  display:flex;align-items:center;gap:6px;
+  padding:10px 14px;border-radius:24px;
+  background:#0e0e0e;border:1px solid rgba(251,191,36,0.35);
+  color:#fcd34d;font-size:13px;font-weight:800;font-family:inherit;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  box-shadow:0 6px 20px rgba(0,0,0,0.4);
+}
+.mc-qp-trigger:active{background:#161616;}
+.mc-qp-legend{font-size:12px;line-height:1.5;color:#94a3b8;padding:0 14px 10px;}
+
 /* ── Bottom-sheet action menu ── */
 .mc-menu-overlay{
   position:fixed;inset:0;z-index:1350;display:none;

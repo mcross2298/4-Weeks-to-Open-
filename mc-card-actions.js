@@ -798,6 +798,62 @@
   }
 
   // ====================================================================== //
+  //  QUICK PUMP TRIGGER  (page-level "short on time?" abbreviate action)    //
+  //  Piggybacks on this module's scan() — already loaded on every workout   //
+  //  page — so abbreviate mode needs no per-page wiring. Only mounts once   //
+  //  there are enough cards on the page to be worth trimming.               //
+  // ====================================================================== //
+  var qpOverlay = null;
+  var QP_MIN_CARDS = 3;
+
+  function injectQuickPumpTrigger() {
+    if (document.querySelector('.mc-qp-trigger')) return;
+    if (document.querySelectorAll(CARD_SEL).length < QP_MIN_CARDS) return;
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mc-qp-trigger';
+    btn.innerHTML = '⏱ <span>Short on time?</span>';
+    btn.addEventListener('click', openQuickPumpSheet);
+    document.body.appendChild(btn);
+  }
+
+  function loadQuickPump(cb) {
+    if (window.MCQuickPump) { cb(); return; }
+    var s = document.createElement('script');
+    s.src = 'mc-quick-pump.js';
+    s.onload = cb;
+    document.head.appendChild(s);
+  }
+
+  function openQuickPumpSheet() {
+    if (!qpOverlay) {
+      qpOverlay = document.createElement('div');
+      qpOverlay.className = 'mc-menu-overlay';
+      qpOverlay.innerHTML =
+        '<div class="mc-sheet" role="menu">' +
+          '<div class="mc-sheet-title">Abbreviate this workout</div>' +
+          '<div class="mc-qp-legend">Trim it down to fit your time, keeping station-anchored pairs together.</div>' +
+          '<button class="mc-item" data-qp="30"><span class="mc-ico">⏱</span>30 minutes</button>' +
+          '<button class="mc-item" data-qp="45"><span class="mc-ico">⏱</span>45 minutes</button>' +
+          '<button class="mc-item mc-item-cancel" data-qp="cancel">Cancel</button>' +
+        '</div>';
+      document.body.appendChild(qpOverlay);
+      qpOverlay.addEventListener('click', function (e) {
+        if (e.target === qpOverlay) { qpOverlay.classList.remove('open'); return; }
+        var btn = e.target.closest('[data-qp]'); if (!btn) return;
+        var v = btn.dataset.qp;
+        qpOverlay.classList.remove('open');
+        if (v === 'cancel') return;
+        loadQuickPump(function () {
+          var built = MCQuickPump.abbreviateCurrentPage(parseInt(v, 10));
+          MCQuickPump.saveAndStart(built);
+        });
+      });
+    }
+    qpOverlay.classList.add('open');
+  }
+
+  // ====================================================================== //
   //  INJECTION + HYDRATION                                                 //
   // ====================================================================== //
   function injectMeatball(card) {
@@ -828,6 +884,7 @@
     withoutObserver(function () {
       Array.prototype.forEach.call(cards, injectMeatball);
       Array.prototype.forEach.call(cards, injectQuickActions);
+      injectQuickPumpTrigger();
       var containers = [];
       Array.prototype.forEach.call(cards, function (c) {
         var p = c.parentElement;
