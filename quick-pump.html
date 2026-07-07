@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Quick Pump — MC Training</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:"Segoe UI",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
+body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
+.header{background:linear-gradient(90deg,#3f0a0a,#1a0f1a);padding:60px 20px 22px;border-bottom:1px solid rgba(255,255,255,0.08);position:relative;}
+.back-link{position:absolute;top:18px;left:18px;color:#fca5a5;text-decoration:none;font-size:13px;font-weight:700;background:rgba(220,38,38,0.16);padding:6px 14px;border-radius:20px;border:1px solid rgba(248,113,113,0.35);}
+.header-inner{max-width:680px;margin:0 auto;}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.22em;color:#fca5a5;text-transform:uppercase;margin-bottom:8px;}
+.title{font-size:26px;font-weight:900;color:#fff;margin-bottom:8px;}
+.subtitle{font-size:13px;color:#94a3b8;font-weight:600;line-height:1.5;}
+.content{max-width:680px;margin:0 auto;padding:20px 16px 0;}
+.sec-label{font-size:11px;font-weight:900;letter-spacing:0.16em;text-transform:uppercase;color:#fb923c;margin:0 0 10px;}
+.row{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;}
+.opt-btn{flex:1;min-width:96px;padding:14px 10px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:#cbd5e1;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;text-align:center;}
+.opt-btn.sel{border-color:#f97316;background:rgba(249,115,22,0.14);color:#fdba74;}
+.chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;}
+.chip{padding:9px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:#94a3b8;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;}
+.chip.sel{border-color:#f97316;background:rgba(249,115,22,0.14);color:#fdba74;}
+.gen-btn{width:100%;padding:16px;border-radius:14px;border:none;font-size:15px;font-weight:900;letter-spacing:0.03em;font-family:inherit;cursor:pointer;background:linear-gradient(135deg,#f97316,#dc2626);color:#fff;box-shadow:0 8px 24px rgba(220,38,38,0.35);margin-bottom:8px;}
+.gen-btn:active{transform:scale(0.99);}
+#preview{margin-top:22px;display:none;}
+.pv-card{background:linear-gradient(155deg,#111a2b,#0c1320);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:13px 14px;margin-bottom:8px;}
+.pv-card.pair{border-left:3px solid #22d3ee;}
+.pv-top{display:flex;align-items:center;gap:8px;}
+.pv-name{flex:1;font-size:14px;font-weight:800;color:#f1f5f9;}
+.pv-tag{font-size:10px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:#94a3b8;background:rgba(148,163,184,0.14);border-radius:6px;padding:3px 7px;}
+.pv-sub{font-size:12px;color:#64748b;font-weight:600;margin-top:4px;}
+.pv-ss{font-size:10.5px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:#22d3ee;margin-bottom:5px;}
+.pv-actions{display:flex;gap:8px;margin-top:14px;}
+.pv-btn{flex:1;padding:13px;border-radius:12px;border:none;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:800;}
+.pv-regen{background:rgba(255,255,255,0.07);color:#cbd5e1;}
+.pv-start{background:linear-gradient(135deg,#22d3ee,#0891b2);color:#04222a;}
+.cond-card{margin-top:16px;padding:14px;border-radius:14px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);display:none;}
+.cond-title{font-size:12px;font-weight:800;color:#fcd34d;margin-bottom:4px;}
+.cond-name{font-size:14px;font-weight:800;color:#fff;}
+.cond-link{display:inline-block;margin-top:8px;font-size:12.5px;font-weight:800;color:#fcd34d;text-decoration:none;}
+</style>
+<link rel="stylesheet" href="base.css?v=66"/>
+<link rel="stylesheet" href="mc-nav.css"/>
+</head>
+<body>
+<div class="header">
+  <a href="dashboard.html" class="back-link">← Dashboard</a>
+  <div class="header-inner">
+    <div class="eyebrow">⚡ Quick Pump</div>
+    <div class="title">30 or 45 minutes. Let's go.</div>
+    <div class="subtitle">A fresh, station-anchored session pulled from every program's exercise library — sized to exactly how much time you've got.</div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="sec-label">How much time?</div>
+  <div class="row" id="timeRow">
+    <button type="button" class="opt-btn sel" data-min="30">30 min</button>
+    <button type="button" class="opt-btn" data-min="45">45 min</button>
+  </div>
+
+  <div class="sec-label">Focus <span style="color:#475569;text-transform:none;letter-spacing:0;">— optional</span></div>
+  <div class="chip-row" id="focusRow">
+    <button type="button" class="chip sel" data-focus="Full Body">Full Body</button>
+    <button type="button" class="chip" data-focus="Push">Push</button>
+    <button type="button" class="chip" data-focus="Pull">Pull</button>
+    <button type="button" class="chip" data-focus="Legs">Legs</button>
+    <button type="button" class="chip" data-focus="Core">Core</button>
+  </div>
+
+  <button type="button" class="gen-btn" id="genBtn">🎲 Generate Workout</button>
+
+  <div class="cond-card" id="condCard">
+    <div class="cond-title">⏱️ Even shorter on time?</div>
+    <div class="cond-name" id="condName"></div>
+    <a class="cond-link" id="condLink" href="#">Try this Conditioning Corner routine instead →</a>
+  </div>
+
+  <div id="preview"></div>
+</div>
+
+<script src="exercise-catalog.js"></script>
+<script src="conditioning-data.js"></script>
+<script src="mc-quick-pump.js"></script>
+<script>
+var minutes = 30, focus = 'Full Body', built = null;
+
+document.getElementById('timeRow').addEventListener('click', function (e) {
+  var b = e.target.closest('.opt-btn'); if (!b) return;
+  minutes = parseInt(b.dataset.min, 10);
+  this.querySelectorAll('.opt-btn').forEach(function (x) { x.classList.toggle('sel', x === b); });
+  renderConditioningPick();
+}.bind(document.getElementById('timeRow')));
+
+document.getElementById('focusRow').addEventListener('click', function (e) {
+  var b = e.target.closest('.chip'); if (!b) return;
+  focus = b.dataset.focus;
+  this.querySelectorAll('.chip').forEach(function (x) { x.classList.toggle('sel', x === b); });
+}.bind(document.getElementById('focusRow')));
+
+function renderConditioningPick() {
+  var pick = window.MCQuickPump ? MCQuickPump.conditioningPick(minutes) : null;
+  var card = document.getElementById('condCard');
+  if (!pick) { card.style.display = 'none'; return; }
+  document.getElementById('condName').textContent = pick.name;
+  document.getElementById('condLink').href = pick.href;
+  card.style.display = 'block';
+}
+
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+function renderPreview() {
+  var wrap = document.getElementById('preview');
+  if (!built || !built.exercises.length) { wrap.style.display = 'none'; return; }
+  var rows = '', i = 0;
+  while (i < built.exercises.length) {
+    var ex = built.exercises[i];
+    var next = built.exercises[i + 1];
+    if (next && next.superset) {
+      rows += '<div class="pv-card pair">' +
+        '<div class="pv-ss">⚡ Superset — same station</div>' +
+        '<div class="pv-top"><div class="pv-name">' + esc(ex.name) + '</div><div class="pv-tag">' + esc(ex.muscle) + '</div></div>' +
+        '<div class="pv-sub">' + ex.sets + ' × ' + esc(ex.reps) + '</div>' +
+        '<div class="pv-top" style="margin-top:8px;"><div class="pv-name">' + esc(next.name) + '</div><div class="pv-tag">' + esc(next.muscle) + '</div></div>' +
+        '<div class="pv-sub">' + next.sets + ' × ' + esc(next.reps) + '</div>' +
+      '</div>';
+      i += 2;
+    } else {
+      rows += '<div class="pv-card">' +
+        '<div class="pv-top"><div class="pv-name">' + esc(ex.name) + '</div><div class="pv-tag">' + esc(ex.muscle) + '</div></div>' +
+        '<div class="pv-sub">' + ex.sets + ' × ' + esc(ex.reps) + '</div>' +
+      '</div>';
+      i += 1;
+    }
+  }
+  rows += '<div class="pv-actions">' +
+    '<button type="button" class="pv-btn pv-regen" id="regenBtn">🔄 Regenerate</button>' +
+    '<button type="button" class="pv-btn pv-start" id="startBtn">▶ Start Workout</button>' +
+  '</div>';
+  wrap.innerHTML = rows;
+  wrap.style.display = 'block';
+  document.getElementById('regenBtn').addEventListener('click', doGenerate);
+  document.getElementById('startBtn').addEventListener('click', function () { MCQuickPump.saveAndStart(built); });
+}
+
+function doGenerate() {
+  built = MCQuickPump.generate({ minutes: minutes, focus: focus });
+  renderPreview();
+}
+
+document.getElementById('genBtn').addEventListener('click', doGenerate);
+renderConditioningPick();
+</script>
+<script src="mc-nav.js"></script>
+</body>
+</html>
