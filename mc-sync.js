@@ -28,8 +28,8 @@
     'mc_setlog_v1':          'setlog',
     'mc_history':            'arrayById',
     'mc_replace_log':        'arrayById',
-    'mc_custom_workouts_v1': 'arrayById',
-    'mc_custom_programs_v1': 'arrayById',
+    'mc_custom_workouts_v1': 'arrayByIdTs',
+    'mc_custom_programs_v1': 'arrayByIdTs',
     'mc_collections_v1':     'arrayById',
     'mc_workout_log_v1':     'workoutLog',
     'mc_cond_log_v1':        'arrayById',
@@ -37,6 +37,7 @@
     'mc_max_v1':             'arrayById',
     'mc_activity':           'activity',
     'mc_daily_v1':           'dictByTs',
+    'mc_plan_targets_v1':    'dictByTs',
     'mc_macros_v1':          'macros'
   };
   var PUSH_MS = 30000;
@@ -78,6 +79,32 @@
       var id = e && e.id;
       if (id == null) { out.push(e); return; }
       if (!seen[id]) { seen[id] = 1; out.push(e); }
+    });
+    return out;
+  }
+
+  // Arrays of {id,...} whose entries carry an edit timestamp (updatedAt ISO,
+  // numeric ts, or created ISO). Union by id; on an id conflict the NEWER
+  // entry wins — including {deleted:true} tombstones, so edits and deletes
+  // both propagate across devices (plain arrayById kept whichever copy
+  // happened to be local, so edits never converged). Entries without any
+  // timestamp fall back to the old first-occurrence-wins behavior.
+  function entryTs(e) {
+    if (!e) return 0;
+    if (e.updatedAt) { var t = Date.parse(e.updatedAt); if (!isNaN(t)) return t; }
+    if (typeof e.ts === 'number') return e.ts;
+    if (e.created) { var c = Date.parse(e.created); if (!isNaN(c)) return c; }
+    return 0;
+  }
+  function mergeArrayByIdTs(local, remote) {
+    local = Array.isArray(local) ? local : [];
+    remote = Array.isArray(remote) ? remote : [];
+    var idx = {}, out = [];
+    local.concat(remote).forEach(function (e) {
+      var id = e && e.id;
+      if (id == null) { out.push(e); return; }
+      if (idx[id] == null) { idx[id] = out.length; out.push(e); }
+      else if (entryTs(e) > entryTs(out[idx[id]])) out[idx[id]] = e;
     });
     return out;
   }
@@ -173,6 +200,7 @@
 
   function mergeStore(strategy, local, remote) {
     if (strategy === 'arrayById') return mergeArrayById(local, remote);
+    if (strategy === 'arrayByIdTs') return mergeArrayByIdTs(local, remote);
     if (strategy === 'workoutLog') return mergeWorkoutLog(local, remote);
     if (strategy === 'setlog')    return mergeSetlog(local, remote);
     if (strategy === 'activity')  return mergeActivity(local, remote);

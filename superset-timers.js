@@ -72,6 +72,23 @@
   // One active timer at a time globally — tapping another cancels current
   let activeTimer = null;
 
+  // Polite live region for screen readers — state changes only, never the
+  // per-second tick. Shares the #mcTimerLive node with mc-timer.js when both
+  // are on the page (create-if-missing keeps it idempotent).
+  function announce(msg) {
+    let n = document.getElementById('mcTimerLive');
+    if (!n) {
+      n = document.createElement('div');
+      n.id = 'mcTimerLive';
+      n.setAttribute('role', 'status');
+      n.setAttribute('aria-live', 'polite');
+      n.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;';
+      document.body.appendChild(n);
+    }
+    n.textContent = '';
+    n.textContent = msg;
+  }
+
   function cancelActive() {
     if (activeTimer) {
       clearInterval(activeTimer.interval);
@@ -113,6 +130,7 @@
       let remaining = parseInt(btn.dataset.seconds, 10);
       btn.classList.add('timer-running');
       btn.textContent = `⏱ ${remaining}s`;
+      announce(`${timerDef.label} timer started — ${remaining} seconds`);
 
       const interval = setInterval(function () {
         remaining -= 1;
@@ -121,6 +139,7 @@
           btn.classList.remove('timer-running');
           btn.classList.add('timer-done');
           btn.textContent = '✓ Done';
+          announce(`${timerDef.label} done`);
           // Vibrate on mobile if supported
           if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
           // Auto-dismiss after 4s

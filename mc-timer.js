@@ -64,6 +64,29 @@ function applyRestView() {
   if (overlay) overlay.style.display = (running && pref === 'list') ? 'block' : 'none';
 }
 
+// Screen-reader announcer — a visually-hidden polite live region. Announces
+// timer STATE changes only (started / 10 s warning / done); never the 1 Hz
+// tick, which would make the countdown unbearable on a screen reader.
+function mcTimerAnnounce(msg) {
+  let n = document.getElementById('mcTimerLive');
+  if (!n) {
+    n = document.createElement('div');
+    n.id = 'mcTimerLive';
+    n.setAttribute('role', 'status');
+    n.setAttribute('aria-live', 'polite');
+    n.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;';
+    document.body.appendChild(n);
+  }
+  n.textContent = '';
+  n.textContent = msg;
+}
+function mcTimerSpeakSecs(secs) {
+  const m = Math.floor(Math.abs(secs) / 60), s = Math.abs(secs) % 60;
+  if (m && s) return m + (m === 1 ? ' minute ' : ' minutes ') + s + ' seconds';
+  if (m) return m + (m === 1 ? ' minute' : ' minutes');
+  return s + ' seconds';
+}
+
 const TMR = {
   interval: null,
   startTime: null,
@@ -168,6 +191,9 @@ const TMR = {
     const exLabel = (exerciseName && !/^rest$/i.test(exerciseName.trim())) ? exerciseName : '';
     floatEx.textContent = exLabel;
     floatLabel.textContent = 'REST';
+    floatTime.setAttribute('role', 'timer');
+    floatTime.setAttribute('aria-label', 'Rest countdown');
+    mcTimerAnnounce('Rest timer started — ' + mcTimerSpeakSecs(durationSecs) + (exLabel ? ', after ' + exLabel : ''));
     floatTime.className = 'timer-float-time';
     floatProgress.className = 'timer-float-progress';
     floatProgress.style.width = '100%';
@@ -204,6 +230,7 @@ const TMR = {
         if (remaining === 10 && this.duration > 15 && !this._cued10) {
           this._cued10 = true;
           this.cue10();
+          mcTimerAnnounce('10 seconds left');
         }
         const pct = (remaining / this.duration) * 100;
         floatProgress.style.width = pct + '%';
@@ -213,6 +240,7 @@ const TMR = {
         if (el) el.className = 'rest-timer running';
       } else if (remaining === 0 || remaining === -0) {
         this.buzz();
+        mcTimerAnnounce('Rest done' + (this.upNext && this.upNext.name ? '. Up next: ' + this.upNext.name : ''));
         floatTime.className = 'timer-float-time done';
         floatProgress.className = 'timer-float-progress done';
         floatProgress.style.width = '100%';

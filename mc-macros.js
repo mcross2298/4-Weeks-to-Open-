@@ -38,6 +38,10 @@
   var COL = { kcal: 'var(--macro-kcal)', p: 'var(--macro-protein)', f: 'var(--macro-fat)', c: 'var(--macro-carb)' };
   var WD = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
+  // Companion cookbook (reverse of its "Log to tracker" handoff): the Recipes
+  // screen consumes ?mkcal=&mp= and answers with recipes that fit the day.
+  var COOKBOOK_URL = 'https://mcross2298.github.io/Mikes-Cookbook/index.html';
+
   // ---- tiny helpers --------------------------------------------------------
   function $(sel, root) { return (root || document).querySelector(sel); }
   function el(tag, cls, html) { var n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
@@ -186,6 +190,8 @@
     root.appendChild(renderTrend());
     var recentEl = renderRecent();
     if (recentEl) root.appendChild(recentEl);
+    var cookEl = renderCookbookLink(totals, goals);
+    if (cookEl) root.appendChild(cookEl);
     root.appendChild(renderFind());
     root.appendChild(renderTimeline(entries));
     host.appendChild(root);
@@ -257,6 +263,24 @@
       '</div>' +
       '<div class="ntx-met-track"><div class="ntx-met-fill" style="width:' + pct + '%;background:' + (over ? '#f87171' : color) + '"></div></div>';
     return m;
+  }
+
+  // "Cook to hit your remaining macros" — deep-links today's remaining
+  // kcal/protein into the cookbook's Recipes screen. Today only (remaining
+  // macros mean nothing on a past/future day) and only while ≥100 kcal is
+  // still unlogged, so a finished day doesn't nag.
+  function renderCookbookLink(totals, goals) {
+    if (!goals || !goals.kcal || selKey !== todayKey()) return null;
+    var kcalLeft = Math.round(goals.kcal - totals.kcal);
+    if (kcalLeft < 100) return null;
+    var pLeft = Math.max(0, Math.round(num(goals.p) - totals.p));
+    var a = el('a', 'ntx-cook',
+      '<span class="ntx-cook-ic">🍳</span>' +
+      '<span class="ntx-cook-txt"><b>Cook to hit your remaining macros</b>' +
+      '<span>' + kcalLeft + ' kcal' + (pLeft ? ' · ' + pLeft + ' g protein' : '') + ' left — find a recipe in the cookbook</span></span>' +
+      '<span class="ntx-cook-arr">›</span>');
+    a.href = COOKBOOK_URL + '?mkcal=' + kcalLeft + '&mp=' + pLeft + '#recipes';
+    return a;
   }
 
   function renderTrend() {
@@ -1111,6 +1135,14 @@
         'border-radius:12px;padding:9px 12px;text-align:left;cursor:pointer;font-family:inherit;}' +
       '.ntx-recent-name{font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
       '.ntx-recent-kcal{font-size:11px;font-weight:700;color:var(--muted);margin-top:3px;}' +
+      /* cookbook remaining-macros handoff */
+      '.ntx-cook{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid rgba(var(--accent-rgb),0.35);' +
+        'border-radius:13px;padding:11px 12px;margin-bottom:14px;text-decoration:none;min-height:44px;}' +
+      '.ntx-cook-ic{font-size:17px;flex:0 0 auto;}' +
+      '.ntx-cook-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}' +
+      '.ntx-cook-txt b{font-size:13px;font-weight:800;color:var(--text);}' +
+      '.ntx-cook-txt span{font-size:11.5px;font-weight:700;color:var(--muted);}' +
+      '.ntx-cook-arr{flex:0 0 auto;color:var(--muted2);font-size:18px;font-weight:800;}' +
       /* find bar */
       '.ntx-find{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--border2);' +
         'border-radius:13px;padding:10px 12px;margin-bottom:16px;}' +
