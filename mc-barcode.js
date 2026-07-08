@@ -129,6 +129,10 @@
         catch (e) { detector = new window.BarcodeDetector(); }
         var tick = function () {
           if (done) return;
+          // Wait for real frames — detecting on a 0×0 / not-yet-playing video is
+          // why scans never "registered": detect() on an empty frame yields
+          // nothing and (pre-guard) could even reject. Spin cheaply until ready.
+          if (video.readyState < 2 || !video.videoWidth) { raf = requestAnimationFrame(tick); return; }
           detector.detect(video).then(function (codes) {
             if (done) return;
             if (codes && codes.length && codes[0].rawValue) { finish(String(codes[0].rawValue).replace(/\D/g, '')); return; }
