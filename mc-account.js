@@ -78,6 +78,35 @@
       body.querySelector('#acctSignin').addEventListener('click', doSignIn);
       body.querySelector('#acctPw').addEventListener('keydown', function (e) { if (e.key === 'Enter') doSignIn(); });
     }
+    appendBackupSection(body);
+  }
+
+  // Manual backup — available whether signed in or not. Symmetric with
+  // Mikes-Cookbook's mc-account.js (Phase 1.3 durability).
+  function appendBackupSection(body) {
+    if (!window.MCExport) return;
+    var wrap = document.createElement('div');
+    wrap.innerHTML =
+      '<div style="border-top:1px solid rgba(255,255,255,0.1);margin:18px 0 14px;"></div>' +
+      '<div class="acct-sub">Back up your data as a file, or restore from one — works whether you’re signed in or not.</div>' +
+      '<button class="acct-btn acct-secondary" id="acctExport" style="margin-top:8px;">Export data</button>' +
+      '<button class="acct-btn acct-secondary" id="acctImport" style="margin-top:8px;">Import data</button>' +
+      '<input type="file" id="acctImportFile" accept="application/json" style="display:none">' +
+      '<div class="acct-err" id="acctBackupMsg"></div>';
+    body.appendChild(wrap);
+    wrap.querySelector('#acctExport').addEventListener('click', function () { MCExport.exportJSON(); });
+    var fileInput = wrap.querySelector('#acctImportFile');
+    wrap.querySelector('#acctImport').addEventListener('click', function () { fileInput.click(); });
+    fileInput.addEventListener('change', function () {
+      var file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      var msg = wrap.querySelector('#acctBackupMsg');
+      MCExport.importJSON(file).then(function () {
+        location.reload();
+      }).catch(function (e) {
+        msg.textContent = (e && e.message) || 'Import failed.';
+      });
+    });
   }
 
   function openSheet() {
