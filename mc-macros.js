@@ -167,6 +167,112 @@
     return t;
   }
 
+  // ---- Adaptive macro control loop (Phase 2.3) ------------------------------
+  // Weekly, deterministic reconcile of the stored goal against what actually
+  // happened: logged intake (via mc_macros_v1's own days — only ever created
+  // once ≥1 entry is logged, so this can't be thrown off by days the tracker
+  // just wasn't opened) vs. a smoothed bodyweight trend (MC_BODY.trend7d())
+  // vs. the profile's goal direction. Never silent — always a one-tap
+  // Apply/Not now suggestion, same as the plateau/deload and activity hints.
+  var NUDGE_KEY = 'mc_macro_nudge_v1';
+  var NUDGE_INTERVAL_MS = 7 * 24 * 3600 * 1000;
+  var NUDGE_KCAL_STEP = 100;
+  var MIN_LOGGED_DAYS = 4;      // of the trailing 7, need at least this many kcal-logged days
+  var FLAT_LB = 0.5;            // a cut/bulk week smaller than this (lb) counts as "flat"
+  var MAINTAIN_DRIFT_LB = 1.5;  // maintenance drift big enough to flag (more forgiving than a cut/bulk)
+
+  function readNudgeState() {
+    try { return JSON.parse(localStorage.getItem(NUDGE_KEY) || '{}') || {}; }
+    catch (e) { return {}; }
+  }
+  function writeNudgeState(s) { try { localStorage.setItem(NUDGE_KEY, JSON.stringify(s)); } catch (e) {} }
+
+  // Average kcal actually logged per day over the trailing 7 days, counting
+  // only days present in `days` (see the note above — that's a real "the
+  // tracker was used" signal, not a coincidental zero).
+  function loggedKcalTrend() {
+    var data = read();
+    var tk = todayKey();
+    var sum = 0, n = 0;
+    for (var i = 0; i < 7; i++) {
+      var k = addDays(tk, -i);
+      var day = data.days && data.days[k];
+      if (day && day.entries && day.entries.length) { sum += totalsOf(day.entries).kcal; n++; }
+    }
+    if (n < MIN_LOGGED_DAYS) return null;
+    return { avgKcal: Math.round(sum / n), days: n };
+  }
+
+  // Returns { delta, why } or null (insufficient data, or reality already
+  // matches the goal — nothing worth suggesting).
+  function computeMacroNudge(goals, profile) {
+    if (!goals || !goals.kcal) return null;
+    var kcalTrend = loggedKcalTrend();
+    var wTrend = (window.MC_BODY && MC_BODY.trend7d) ? MC_BODY.trend7d() : null;
+    if (!kcalTrend || !wTrend) return null;
+
+    var goal = (profile && profile.goal) || 'maintain';
+    var compliant = Math.abs(kcalTrend.avgKcal - goals.kcal) <= goals.kcal * 0.1;
+    var d = wTrend.deltaLb;
+
+    if (goal === 'cut' && compliant && d >= -FLAT_LB) {
+      return { delta: -NUDGE_KCAL_STEP, why: 'Weight has been flat this week even though you’ve been hitting your target.' };
+    }
+    if (goal === 'bulk' && compliant && d <= FLAT_LB) {
+      return { delta: NUDGE_KCAL_STEP, why: 'Weight hasn’t moved this week even though you’ve been hitting your target.' };
+    }
+    if (goal !== 'cut' && goal !== 'bulk' && compliant && Math.abs(d) >= MAINTAIN_DRIFT_LB) {
+      return {
+        delta: d > 0 ? -NUDGE_KCAL_STEP : NUDGE_KCAL_STEP,
+        why: 'Weight has drifted ' + (d > 0 ? 'up' : 'down') + ' this week on your maintenance target.'
+      };
+    }
+    return null;
+  }
+
+  function renderMacroNudge(goals, profile) {
+    if (!goals || !goals.kcal || selKey !== todayKey()) return null;
+    var state = readNudgeState();
+    var now = Date.now();
+    var due = !state.lastCheckTs || (now - state.lastCheckTs) >= NUDGE_INTERVAL_MS;
+    var suggestion = state.pending || null;
+
+    if (due) {
+      suggestion = computeMacroNudge(goals, profile);
+      state.lastCheckTs = now;
+      state.pending = suggestion;
+      writeNudgeState(state);
+    }
+    if (!suggestion) return null;
+
+    var newKcal = goals.kcal + suggestion.delta;
+    var card = el('div', 'ntx-nudge');
+    card.innerHTML =
+      '<div class="ntx-nudge-txt"><b>Adjust your calorie target?</b>' +
+      '<span>' + esc(suggestion.why) + ' Try ' + newKcal + ' kcal (' +
+        (suggestion.delta > 0 ? '+' : '') + suggestion.delta + ').</span></div>' +
+      '<div class="ntx-nudge-actions">' +
+        '<button type="button" class="ntx-nudge-apply">Apply</button>' +
+        '<button type="button" class="ntx-nudge-dismiss">Not now</button>' +
+      '</div>';
+    card.querySelector('.ntx-nudge-apply').onclick = function () {
+      var obj = read();
+      obj.goals = obj.goals || {};
+      obj.goals.kcal = newKcal;
+      obj.ts = Date.now();
+      write(obj);
+      state.pending = null;
+      writeNudgeState(state);
+      render();
+    };
+    card.querySelector('.ntx-nudge-dismiss').onclick = function () {
+      state.pending = null;
+      writeNudgeState(state);
+      render();
+    };
+    return card;
+  }
+
   // most-logged foods first, ties broken by most recent; for quick re-add
   function recentFoods(limit) {
     var days = read().days || {};
@@ -208,6 +314,8 @@
     root.appendChild(renderHead());
     root.appendChild(renderCalendar());
     root.appendChild(renderSummary(totals, goals, trainBonusApplied));
+    var nudgeEl = renderMacroNudge(data.goals, data.profile);
+    if (nudgeEl) root.appendChild(nudgeEl);
     root.appendChild(renderTrend());
     var recentEl = renderRecent();
     if (recentEl) root.appendChild(recentEl);
@@ -1155,6 +1263,17 @@
       '.ntx-met-track{height:3px;border-radius:2px;background:rgba(255,255,255,0.1);margin-top:6px;overflow:hidden;}' +
       '.ntx-met-fill{height:100%;border-radius:2px;transition:width 0.3s ease;}' +
       '.ntx-sum-exp{flex:0 0 auto;color:var(--muted2);font-size:20px;font-weight:800;line-height:1;}' +
+      /* adaptive macro nudge */
+      '.ntx-nudge{background:var(--surface);border:1px solid rgba(52,211,153,0.35);border-radius:16px;' +
+        'padding:12px 14px;margin-bottom:14px;}' +
+      '.ntx-nudge-txt{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;}' +
+      '.ntx-nudge-txt b{font-size:13px;font-weight:800;color:var(--text);}' +
+      '.ntx-nudge-txt span{font-size:11.5px;font-weight:700;color:var(--muted);line-height:1.4;}' +
+      '.ntx-nudge-actions{display:flex;gap:8px;}' +
+      '.ntx-nudge-actions button{flex:1;border:none;border-radius:10px;padding:9px;font-size:12px;' +
+        'font-weight:800;cursor:pointer;font-family:inherit;}' +
+      '.ntx-nudge-apply{background:#34d399;color:#04231a;}' +
+      '.ntx-nudge-dismiss{background:rgba(255,255,255,0.07);color:var(--muted);}' +
       /* 7-day trend */
       '.ntx-trend{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:12px 14px;margin-bottom:14px;}' +
       '.ntx-trend-h{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted2);margin-bottom:8px;}' +
