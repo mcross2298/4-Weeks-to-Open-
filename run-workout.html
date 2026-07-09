@@ -117,7 +117,8 @@ function renderSingle(ex, i){
   badges += clusterBadge(ex);
   if(ex.tempo) badges += '<span class="type-badge tb-tempo">⏱ '+esc(ex.tempo)+'</span>';
   var did = 'cw' + i + '-' + slug(ex.name);
-  return '<div class="ex-card a-card" data-id="'+did+'" data-type="single">'
+  return '<div class="ex-card a-card" data-id="'+did+'" data-type="single"'
+    + (ex.seedWeight?' data-mc-seed-weight="'+esc(ex.seedWeight)+'"':'')+'>'
     + '<div class="ex-body"><div class="ex-content">'
     +   '<div class="a-top"><div class="a-idx">'+(i+1)+'</div>'
     +   '<div class="a-head"><div class="ex-name a-name">'+esc(ex.name)+'</div>'
@@ -145,7 +146,8 @@ function renderSuperset(g){
     if(ex.rest) badges += '<span class="type-badge tb-rest">⏲ '+esc(restLabel(ex.rest))+' rest</span>';
     var did = 'cw' + i + '-' + slug(ex.name);
     var letter = String.fromCharCode(65 + k);   // A, B, C…
-    return '<div class="ss-ex" data-id="'+did+'" data-type="ssex">'
+    return '<div class="ss-ex" data-id="'+did+'" data-type="ssex"'
+      + (ex.seedWeight?' data-mc-seed-weight="'+esc(ex.seedWeight)+'"':'')+'>'
       + '<div class="ss-num">'+letter+'</div>'
       + '<div class="ss-content">'
       +   '<div class="ss-name">'+esc(ex.name)+'</div>'
