@@ -5,11 +5,13 @@
    synced via mc-sync.js 'arrayById'. One entry per log; the chart uses the
    latest entry per day. Renders into #bodyCard on the Stats hub: current
    weight, 30-day delta, trend line (mc-chart.js), and a Log button.
+
+   window.MC_BODY.trend7d() exposes a smoothed trailing-7-day trend,
+   independent of #bodyCard existing on the page — mc-macros.js (Phase 2.3,
+   adaptive macro control loop) reads it to reconcile the calorie goal
+   against a real bodyweight signal instead of guessing.
    ========================================================================== */
 (function () {
-  var host = document.getElementById('bodyCard');
-  if (!host) return;
-
   var KEY = 'mc_body_v1';
   var DAY = 24 * 3600 * 1000;
 
@@ -38,6 +40,24 @@
       return { x: d.slice(5), y: parseFloat(byDay[d].w) || 0, date: byDay[d].date };
     }).filter(function (p) { return p.y > 0; });
   }
+
+  // Smoothed trailing-7-day trend: average of the older half of the window's
+  // points vs. the newer half, rather than a noisy two-point diff (a single
+  // high/low weigh-in shouldn't swing a control-loop decision). Needs at
+  // least 3 distinct calendar-day entries in the window to say anything.
+  function trend7d() {
+    var pts = series().filter(function (p) { return Date.now() - new Date(p.date).getTime() <= 7 * DAY; });
+    if (pts.length < 3) return null;
+    var mid = Math.ceil(pts.length / 2);
+    var older = pts.slice(0, mid), newer = pts.slice(pts.length - mid);
+    var avg = function (a) { return a.reduce(function (s, p) { return s + p.y; }, 0) / a.length; };
+    return { deltaLb: Math.round((avg(newer) - avg(older)) * 10) / 10, count: pts.length };
+  }
+
+  window.MC_BODY = { trend7d: trend7d };
+
+  var host = document.getElementById('bodyCard');
+  if (!host) return;
 
   function render() {
     var pts = series();

@@ -122,28 +122,40 @@
     return 0;
   }
 
-  // Real training frequency (last 7 calendar days) from mc-live-tracker.js's
-  // 'mc_activity' day-streak map, so the macro calculator's Activity level
-  // isn't just a one-time guess disconnected from what the user actually did.
-  function trainedDaysLast7() {
-    try {
-      var act = JSON.parse(localStorage.getItem('mc_activity') || '{}');
-      var days = act.days || {};
-      var n = 0;
-      for (var i = 0; i < 7; i++) {
-        var d = new Date(); d.setDate(d.getDate() - i);
-        var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-        if (days[key]) n++;
-      }
-      return n;
-    } catch (e) { return null; }
+  // Real training load (trailing 7 days) from mc-recap.js's MC_RECAP —
+  // mc_workout_log_v1-derived sessions + tonnage, not just a day-count ping —
+  // so the macro calculator's Activity level reflects actual training stress,
+  // not a one-time guess disconnected from what the user did.
+  function weeklyLoadStats() {
+    try { return (window.MC_RECAP && MC_RECAP.weeklyStats) ? MC_RECAP.weeklyStats() : null; }
+    catch (e) { return null; }
   }
-  function suggestActivityFromLoad(n) {
-    if (n == null) return null;
+  // A heavy trailing-7-day tonnage is the one signal that can push the
+  // suggestion to 'athlete' — a tier the old day-count-only heuristic could
+  // never reach, since showing up 6+ days doesn't distinguish a light week
+  // from a genuinely brutal one.
+  var ATHLETE_TONNAGE_LB = 50000;
+  function suggestActivityFromLoad(stats) {
+    if (!stats) return null;
+    var n = stats.sessions || 0;
     if (n <= 1) return 'sedentary';
     if (n <= 3) return 'light';
     if (n <= 5) return 'moderate';
+    if (n >= 6 && stats.tonnage >= ATHLETE_TONNAGE_LB) return 'athlete';
     return 'active';
+  }
+
+  // Train-day calorie bonus (Phase 2.2): a flat kcal add-on applied only when
+  // rendering *today* and today has a finished, logged workout — the stored
+  // mc_macros_v1.goals.kcal itself never changes, so nothing else that reads
+  // goals (the calculator, sync, other days' views) needs to know about this.
+  var TRAIN_DAY_BONUS_KCAL = 200;
+  function trainedToday() {
+    try {
+      var log = JSON.parse(localStorage.getItem('mc_workout_log_v1') || '[]') || [];
+      var tk = todayKey();
+      return log.some(function (e) { return e.date && keyFromDate(new Date(e.date)) === tk; });
+    } catch (e) { return false; }
   }
   function totalsOf(entries) {
     var t = { kcal: 0, p: 0, f: 0, c: 0 };
@@ -153,6 +165,112 @@
     });
     t.kcal = Math.round(t.kcal); t.p = Math.round(t.p); t.f = Math.round(t.f); t.c = Math.round(t.c);
     return t;
+  }
+
+  // ---- Adaptive macro control loop (Phase 2.3) ------------------------------
+  // Weekly, deterministic reconcile of the stored goal against what actually
+  // happened: logged intake (via mc_macros_v1's own days — only ever created
+  // once ≥1 entry is logged, so this can't be thrown off by days the tracker
+  // just wasn't opened) vs. a smoothed bodyweight trend (MC_BODY.trend7d())
+  // vs. the profile's goal direction. Never silent — always a one-tap
+  // Apply/Not now suggestion, same as the plateau/deload and activity hints.
+  var NUDGE_KEY = 'mc_macro_nudge_v1';
+  var NUDGE_INTERVAL_MS = 7 * 24 * 3600 * 1000;
+  var NUDGE_KCAL_STEP = 100;
+  var MIN_LOGGED_DAYS = 4;      // of the trailing 7, need at least this many kcal-logged days
+  var FLAT_LB = 0.5;            // a cut/bulk week smaller than this (lb) counts as "flat"
+  var MAINTAIN_DRIFT_LB = 1.5;  // maintenance drift big enough to flag (more forgiving than a cut/bulk)
+
+  function readNudgeState() {
+    try { return JSON.parse(localStorage.getItem(NUDGE_KEY) || '{}') || {}; }
+    catch (e) { return {}; }
+  }
+  function writeNudgeState(s) { try { localStorage.setItem(NUDGE_KEY, JSON.stringify(s)); } catch (e) {} }
+
+  // Average kcal actually logged per day over the trailing 7 days, counting
+  // only days present in `days` (see the note above — that's a real "the
+  // tracker was used" signal, not a coincidental zero).
+  function loggedKcalTrend() {
+    var data = read();
+    var tk = todayKey();
+    var sum = 0, n = 0;
+    for (var i = 0; i < 7; i++) {
+      var k = addDays(tk, -i);
+      var day = data.days && data.days[k];
+      if (day && day.entries && day.entries.length) { sum += totalsOf(day.entries).kcal; n++; }
+    }
+    if (n < MIN_LOGGED_DAYS) return null;
+    return { avgKcal: Math.round(sum / n), days: n };
+  }
+
+  // Returns { delta, why } or null (insufficient data, or reality already
+  // matches the goal — nothing worth suggesting).
+  function computeMacroNudge(goals, profile) {
+    if (!goals || !goals.kcal) return null;
+    var kcalTrend = loggedKcalTrend();
+    var wTrend = (window.MC_BODY && MC_BODY.trend7d) ? MC_BODY.trend7d() : null;
+    if (!kcalTrend || !wTrend) return null;
+
+    var goal = (profile && profile.goal) || 'maintain';
+    var compliant = Math.abs(kcalTrend.avgKcal - goals.kcal) <= goals.kcal * 0.1;
+    var d = wTrend.deltaLb;
+
+    if (goal === 'cut' && compliant && d >= -FLAT_LB) {
+      return { delta: -NUDGE_KCAL_STEP, why: 'Weight has been flat this week even though you’ve been hitting your target.' };
+    }
+    if (goal === 'bulk' && compliant && d <= FLAT_LB) {
+      return { delta: NUDGE_KCAL_STEP, why: 'Weight hasn’t moved this week even though you’ve been hitting your target.' };
+    }
+    if (goal !== 'cut' && goal !== 'bulk' && compliant && Math.abs(d) >= MAINTAIN_DRIFT_LB) {
+      return {
+        delta: d > 0 ? -NUDGE_KCAL_STEP : NUDGE_KCAL_STEP,
+        why: 'Weight has drifted ' + (d > 0 ? 'up' : 'down') + ' this week on your maintenance target.'
+      };
+    }
+    return null;
+  }
+
+  function renderMacroNudge(goals, profile) {
+    if (!goals || !goals.kcal || selKey !== todayKey()) return null;
+    var state = readNudgeState();
+    var now = Date.now();
+    var due = !state.lastCheckTs || (now - state.lastCheckTs) >= NUDGE_INTERVAL_MS;
+    var suggestion = state.pending || null;
+
+    if (due) {
+      suggestion = computeMacroNudge(goals, profile);
+      state.lastCheckTs = now;
+      state.pending = suggestion;
+      writeNudgeState(state);
+    }
+    if (!suggestion) return null;
+
+    var newKcal = goals.kcal + suggestion.delta;
+    var card = el('div', 'ntx-nudge');
+    card.innerHTML =
+      '<div class="ntx-nudge-txt"><b>Adjust your calorie target?</b>' +
+      '<span>' + esc(suggestion.why) + ' Try ' + newKcal + ' kcal (' +
+        (suggestion.delta > 0 ? '+' : '') + suggestion.delta + ').</span></div>' +
+      '<div class="ntx-nudge-actions">' +
+        '<button type="button" class="ntx-nudge-apply">Apply</button>' +
+        '<button type="button" class="ntx-nudge-dismiss">Not now</button>' +
+      '</div>';
+    card.querySelector('.ntx-nudge-apply').onclick = function () {
+      var obj = read();
+      obj.goals = obj.goals || {};
+      obj.goals.kcal = newKcal;
+      obj.ts = Date.now();
+      write(obj);
+      state.pending = null;
+      writeNudgeState(state);
+      render();
+    };
+    card.querySelector('.ntx-nudge-dismiss').onclick = function () {
+      state.pending = null;
+      writeNudgeState(state);
+      render();
+    };
+    return card;
   }
 
   // most-logged foods first, ties broken by most recent; for quick re-add
@@ -182,11 +300,22 @@
     var entries = getDay(data, selKey).entries;
     var totals = totalsOf(entries);
 
+    // Train-day bonus only ever applies to today's rendered target — the
+    // stored goal is untouched, so yesterday/tomorrow's views, the
+    // calculator, and sync all still see the plain baseline.
+    var trainBonusApplied = false;
+    if (goals && goals.kcal && selKey === todayKey() && trainedToday()) {
+      goals = Object.assign({}, goals, { kcal: goals.kcal + TRAIN_DAY_BONUS_KCAL });
+      trainBonusApplied = true;
+    }
+
     host.innerHTML = '';
     var root = el('div', 'ntx');
     root.appendChild(renderHead());
     root.appendChild(renderCalendar());
-    root.appendChild(renderSummary(totals, goals));
+    root.appendChild(renderSummary(totals, goals, trainBonusApplied));
+    var nudgeEl = renderMacroNudge(data.goals, data.profile);
+    if (nudgeEl) root.appendChild(nudgeEl);
     root.appendChild(renderTrend());
     var recentEl = renderRecent();
     if (recentEl) root.appendChild(recentEl);
@@ -237,16 +366,21 @@
     return cal;
   }
 
-  function renderSummary(totals, goals) {
+  function renderSummary(totals, goals, trainBonusApplied) {
     var sum = el('div', 'ntx-sum');
     sum.title = 'Edit goals';
+    var row = el('div', 'ntx-sum-row');
     var metrics = el('div', 'ntx-sum-metrics');
     metrics.appendChild(metric('🔥', totals.kcal, goals && goals.kcal, COL.kcal, true));
     metrics.appendChild(metric('P', totals.p, goals && goals.p, COL.p, false));
     metrics.appendChild(metric('F', totals.f, goals && goals.f, COL.f, false));
     metrics.appendChild(metric('C', totals.c, goals && goals.c, COL.c, false));
-    sum.appendChild(metrics);
-    sum.appendChild(el('div', 'ntx-sum-exp', '›'));
+    row.appendChild(metrics);
+    row.appendChild(el('div', 'ntx-sum-exp', '›'));
+    sum.appendChild(row);
+    if (trainBonusApplied) {
+      sum.appendChild(el('div', 'ntx-train-bonus', '💪 +' + TRAIN_DAY_BONUS_KCAL + ' kcal today — you trained'));
+    }
     sum.onclick = openCalculator;
     return sum;
   }
@@ -528,23 +662,25 @@
     s.sh.appendChild(form);
 
     // Nudge the Activity field toward what the user actually trained this
-    // week (mc_activity streak data) instead of leaving it a static guess.
+    // week (real sessions + tonnage from mc-recap.js) instead of leaving it
+    // a static guess.
     (function () {
-      var trainedDays = trainedDaysLast7();
-      var suggested = suggestActivityFromLoad(trainedDays);
+      var stats = weeklyLoadStats();
+      var suggested = suggestActivityFromLoad(stats);
       var hintEl = $('#ntActHint', s.sh);
-      if (!hintEl || trainedDays == null) return;
+      if (!hintEl || !stats) return;
+      var n = stats.sessions;
       var current = p.activity || 'sedentary';
       if (suggested && suggested !== current) {
         var label = MCMacroCalc.ACTIVITY.filter(function (a) { return a.id === suggested; })[0];
-        hintEl.innerHTML = 'Trained ' + trainedDays + ' of the last 7 days — ' +
+        hintEl.innerHTML = 'Logged ' + n + ' session' + (n === 1 ? '' : 's') + ' this week — ' +
           '<button type="button" class="nt-act-apply" id="ntActApply">use "' + (label ? label.label : suggested) + '"</button>';
         $('#ntActApply', hintEl).onclick = function () {
           $('#ntAct', s.sh).value = suggested;
-          hintEl.textContent = 'Set to match your last 7 days of training (' + trainedDays + ' days).';
+          hintEl.textContent = 'Set to match your last 7 days of training (' + n + ' session' + (n === 1 ? '' : 's') + ').';
         };
       } else {
-        hintEl.textContent = 'Matches your last 7 days of training (' + trainedDays + ' day' + (trainedDays === 1 ? '' : 's') + ').';
+        hintEl.textContent = 'Matches your last 7 days of training (' + n + ' session' + (n === 1 ? '' : 's') + ').';
       }
     }());
 
@@ -1113,8 +1249,11 @@
       '.ntx-day.sel{border-color:var(--gold);background:rgba(212,175,55,0.08);}' +
       '.ntx-day.sel .ntx-day-num{color:var(--gold);}' +
       /* macro summary */
-      '.ntx-sum{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border2);' +
+      '.ntx-sum{background:var(--surface);border:1px solid var(--border2);' +
         'border-radius:16px;padding:12px;margin-bottom:14px;cursor:pointer;}' +
+      '.ntx-sum-row{display:flex;align-items:center;gap:8px;}' +
+      '.ntx-train-bonus{margin-top:8px;padding-top:8px;border-top:1px solid var(--border2);' +
+        'font-size:11px;font-weight:800;color:#34d399;text-align:center;}' +
       '.ntx-sum-metrics{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:9px;min-width:0;}' +
       '.ntx-met{min-width:0;}' +
       '.ntx-met-top{display:flex;align-items:baseline;gap:2px;white-space:nowrap;overflow:hidden;}' +
@@ -1124,6 +1263,17 @@
       '.ntx-met-track{height:3px;border-radius:2px;background:rgba(255,255,255,0.1);margin-top:6px;overflow:hidden;}' +
       '.ntx-met-fill{height:100%;border-radius:2px;transition:width 0.3s ease;}' +
       '.ntx-sum-exp{flex:0 0 auto;color:var(--muted2);font-size:20px;font-weight:800;line-height:1;}' +
+      /* adaptive macro nudge */
+      '.ntx-nudge{background:var(--surface);border:1px solid rgba(52,211,153,0.35);border-radius:16px;' +
+        'padding:12px 14px;margin-bottom:14px;}' +
+      '.ntx-nudge-txt{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;}' +
+      '.ntx-nudge-txt b{font-size:13px;font-weight:800;color:var(--text);}' +
+      '.ntx-nudge-txt span{font-size:11.5px;font-weight:700;color:var(--muted);line-height:1.4;}' +
+      '.ntx-nudge-actions{display:flex;gap:8px;}' +
+      '.ntx-nudge-actions button{flex:1;border:none;border-radius:10px;padding:9px;font-size:12px;' +
+        'font-weight:800;cursor:pointer;font-family:inherit;}' +
+      '.ntx-nudge-apply{background:#34d399;color:#04231a;}' +
+      '.ntx-nudge-dismiss{background:rgba(255,255,255,0.07);color:var(--muted);}' +
       /* 7-day trend */
       '.ntx-trend{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:12px 14px;margin-bottom:14px;}' +
       '.ntx-trend-h{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted2);margin-bottom:8px;}' +

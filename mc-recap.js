@@ -6,11 +6,13 @@
    sessions, sets, tonnage (Σ weight×reps), PRs, and a 7-day spark bar.
    Hidden until there is at least one finished workout in the window.
    Requires mc-chart.js.
+
+   window.MC_RECAP.weeklyStats() exposes the trailing-7-day summarize() this
+   card already computes, independent of #recapCard existing on the page —
+   mc-macros.js (Phase 2.2, training-load-aware calorie targets) reads it to
+   replace a day-count-only activity heuristic with a real volume signal.
    ========================================================================== */
 (function () {
-  var host = document.getElementById('recapCard');
-  if (!host) return;
-
   var WL_KEY = 'mc_workout_log_v1';
   var DAY = 24 * 3600 * 1000;
 
@@ -34,6 +36,20 @@
     });
     return s;
   }
+
+  // Trailing-7-day { sessions, sets, tonnage, prs } — same window/math render()
+  // uses for "This Week," callable from anywhere regardless of #recapCard.
+  function weeklyStats() {
+    var now = Date.now();
+    var weekStart = startOfDay(new Date(now - 6 * DAY)).getTime();
+    var thisWeek = logs().filter(function (e) { return new Date(e.date || 0).getTime() >= weekStart; });
+    return summarize(thisWeek);
+  }
+
+  window.MC_RECAP = { weeklyStats: weeklyStats };
+
+  var host = document.getElementById('recapCard');
+  if (!host) return;
 
   function fmtTons(n) {
     if (n >= 1000) return (Math.round(n / 100) / 10) + 'k';

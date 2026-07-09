@@ -156,7 +156,16 @@
   // A 'match'/null session (no rep target to judge, or no data) breaks the
   // streak rather than counting against it — there's nothing to judge there.
   var PLATEAU_STREAK = 3;   // 3 non-progressing sessions in a row → plateau
-  var DELOAD_STREAK = 4;    // 4 in a row → suggest a deload, not just a hold
+  var DELOAD_STREAK = 4;    // 4 in a row → apply a deload, not just a hold
+
+  // −10% off the last top weight, rounded to the exercise's usable plate
+  // increment (2.5 lb for Cable/Machine, 5 lb otherwise — the smallest step
+  // those stacks/plates actually move in, not the BIG-lift progression jump).
+  function deloadWeight(base, name) {
+    var eq = equipCat(name || '');
+    var step = (eq === 'Cable' || eq === 'Machine') ? 2.5 : 5;
+    return Math.round((base * 0.9) / step) * step;
+  }
 
   function detectPlateau(exId, setsStr) {
     var sessions = completedSessions(exId);
@@ -197,7 +206,6 @@
       var setsStr = seEl ? seEl.textContent.trim() : '';
       var s = suggestFor(exId, nmStr, setsStr);
       if (!s || !s.w) return;
-      writeTarget(exId, s);
 
       var hint = document.createElement('span');
       hint.className = 'mcl-suggest';
@@ -206,30 +214,41 @@
       hint.textContent = 'Suggested: ' + s.w + ' lb' + perHand;
       tgl.insertBefore(hint, hist);
 
+      // A deload takes over the actual carried-forward target — 4 straight
+      // non-progressing sessions means "less weight," not "same weight"
+      // (which is all a plain 'hold'/'repeat' suggestion would carry forward).
       var plateau = detectPlateau(exId, setsStr);
+      var target = s;
+      if (plateau && plateau.level === 'deload') {
+        target = { w: deloadWeight(s.base, nmStr), base: s.base, status: 'deload', why: plateau.why };
+      }
+      writeTarget(exId, target);
+
       if (plateau) {
         var flag = document.createElement('span');
         flag.className = 'mcl-plateau mcl-plateau-' + plateau.level;
         flag.title = plateau.why;
-        flag.textContent = plateau.level === 'deload' ? '⚠ Deload?' : '⏸ Plateau';
+        flag.textContent = plateau.level === 'deload'
+          ? '↓ Deload applied — ' + target.w + ' lb' + perHand + ' next time'
+          : '⏸ Plateau';
         tgl.insertBefore(flag, hist);
       }
 
       // Wire into mc-setlog.js's existing tap-to-fill convention (focusing an
       // empty weight input applies its data-fill value) instead of leaving
       // this as text the lifter has to retype into the logger by hand.
-      // Carry-forward rule: on a 'progress' suggestion the planned load takes
-      // over the prefill of sets that were at last session's top weight (the
-      // ones the suggestion was computed from); lighter pyramid sets keep the
-      // last-logged prefill mc-setlog.js already set. Typed values are never
-      // overwritten.
+      // Carry-forward rule: on a 'progress' suggestion — or an applied
+      // 'deload' — the planned load takes over the prefill of sets that were
+      // at last session's top weight (the ones it was computed from); lighter
+      // pyramid sets keep the last-logged prefill mc-setlog.js already set.
+      // Typed values are never overwritten.
       var wInputs = card.querySelectorAll('.mcl-w');
       Array.prototype.forEach.call(wInputs, function (inp) {
         if (inp.value.trim()) return;
         var cur = parseFloat(inp.dataset.fill);
-        if (!inp.dataset.fill || (s.status === 'progress' && cur === s.base)) {
-          inp.placeholder = s.w + ' lb' + perHand;
-          inp.dataset.fill = String(s.w);
+        if (!inp.dataset.fill || ((target.status === 'progress' || target.status === 'deload') && cur === target.base)) {
+          inp.placeholder = target.w + ' lb' + perHand;
+          inp.dataset.fill = String(target.w);
         }
       });
     });
@@ -269,7 +288,7 @@
     module.exports = {
       computeIncrement: computeIncrement, topRep: topRep, equipCat: equipCat,
       classifySession: classifySession, detectPlateau: detectPlateau, suggestFor: suggestFor,
-      writeTarget: writeTarget
+      writeTarget: writeTarget, deloadWeight: deloadWeight
     };
   }
 })();

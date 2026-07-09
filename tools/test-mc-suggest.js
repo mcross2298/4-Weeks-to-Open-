@@ -127,6 +127,12 @@ check('writeTarget persists the planned load to mc_plan_targets_v1',
 check('writeTarget records the status alongside the load',
   targets['test-page|press'] && targets['test-page|press'].status, 'progress');
 
+// ---- deloadWeight (Phase 2.1: auto-deload) ----
+check('deloadWeight: -10% off 200 lb barbell rounds to nearest 5 lb', suggest.deloadWeight(200, 'Barbell Squat'), 180);
+check('deloadWeight: -10% off 135 lb barbell rounds to nearest 5 lb', suggest.deloadWeight(135, 'Barbell Row'), 120);
+check('deloadWeight: Cable/Machine rounds to nearest 2.5 lb', suggest.deloadWeight(100, 'Leg Press'), 90);
+check('deloadWeight: Cable/Machine rounds a non-round result to nearest 2.5 lb', suggest.deloadWeight(95, 'Cable Row'), 85);
+
 delete global.window;
 delete global.location;
 delete global.localStorage;
