@@ -325,13 +325,18 @@
       var isDropRow = drop.is && dropIdx >= 0;
       var dropTarget = isDropRow ? drop.drops[dropIdx] : '';
       var pr = isDropRow ? '' : repFor(work, i);
-      var wPh = (last && last.w) ? (last.w + ' lb') : 'lb';
+      // Quick Pump's history-aware weight seed (Phase 2.4): a fresh Quick
+      // Pump session has no mc_setlog_v1 history of its own (new id every
+      // generation), so `last` is always empty there — this is local-only
+      // (mc_workout_log_v1), set-1-only, and never overrides real history.
+      var seedWeight = (i === 0 && !last) ? parseFloat(card.dataset && card.dataset.mcSeedWeight) : 0;
+      var wPh = (last && last.w) ? (last.w + ' lb') : (seedWeight ? (seedWeight + ' lb') : 'lb');
       var rPh = isDropRow ? (dropTarget === 'AMRAP' ? 'AMRAP' : dropTarget) : (pr || (last && last.r ? last.r : 'reps'));
       var rpe = (last && last.rpe) || '';
       // One-tap fill values: focusing an empty field drops in last session's
       // weight (and the prescribed / last reps) so the athlete confirms instead
       // of retyping. Carry-down (below) keeps later sets' fill in sync with set 1.
-      var wFill = (last && last.w) ? last.w : '';
+      var wFill = (last && last.w) ? last.w : (seedWeight || '');
       var rFill = isDropRow ? (dropTarget === 'AMRAP' ? '' : dropTarget)
                             : (pr || (last && last.r) || '');
       html += '<div class="mcl-row' + (isDropRow ? ' mcl-row-amrap' : '') + '" id="mclr-' + cid + '-' + sn + '">' +

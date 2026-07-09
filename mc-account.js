@@ -49,7 +49,14 @@
       '.acct-info{font-size:13px;color:#86efac;background:rgba(34,197,94,0.08);' +
         'border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:11px 12px;margin-bottom:16px;line-height:1.5;}' +
       '.acct-err{font-size:13px;color:#fca5a5;margin-top:10px;min-height:18px;text-align:center;}' +
-      '.avatar.acct-on{box-shadow:0 0 0 2px rgba(34,197,94,0.6);}';
+      '.avatar.acct-on{box-shadow:0 0 0 2px rgba(34,197,94,0.6);}' +
+      '.acct-swatches{display:flex;gap:10px;margin-bottom:12px;}' +
+      '.acct-swatch{width:32px;height:32px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;}' +
+      '.acct-swatch.on{border-color:#e2e8f0;}' +
+      '.acct-density{display:flex;gap:8px;margin-bottom:4px;}' +
+      '.acct-density-opt{flex:1;border:1px solid rgba(255,255,255,0.14);border-radius:10px;padding:9px;' +
+        'background:rgba(255,255,255,0.04);color:#94a3b8;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;}' +
+      '.acct-density-opt.on{background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.5);color:#e2e8f0;}';
     var st = document.createElement('style');
     st.textContent = css;
     document.head.appendChild(st);
@@ -78,7 +85,46 @@
       body.querySelector('#acctSignin').addEventListener('click', doSignIn);
       body.querySelector('#acctPw').addEventListener('keydown', function (e) { if (e.key === 'Enter') doSignIn(); });
     }
+    appendAppearanceSection(body);
     appendBackupSection(body);
+  }
+
+  // Personal accent + density (Phase 2.5) — device-local, no PM/owner unlock
+  // needed, layered ahead of the owner's published theme via MC_THEME.personal.
+  function appendAppearanceSection(body) {
+    if (!window.MC_THEME || !MC_THEME.personal) return;
+    var personal = MC_THEME.personal.get() || {};
+    var swatches = Object.keys(MC_THEME.presets).map(function (k) {
+      var p = MC_THEME.presets[k];
+      var on = personal.accent === p.accent;
+      return '<button type="button" class="acct-swatch' + (on ? ' on' : '') + '" data-accent="' + p.accent +
+        '" style="background:' + p.accent + '" title="' + p.name + '" aria-label="' + p.name + '"></button>';
+    }).join('');
+    var densities = [{ id: '', label: 'Default' }, { id: 'compact', label: 'Compact' }, { id: 'spacious', label: 'Spacious' }]
+      .map(function (d) {
+        var on = (personal.density || '') === d.id;
+        return '<button type="button" class="acct-density-opt' + (on ? ' on' : '') + '" data-density="' + d.id + '">' + d.label + '</button>';
+      }).join('');
+
+    var wrap = document.createElement('div');
+    wrap.innerHTML =
+      '<div style="border-top:1px solid rgba(255,255,255,0.1);margin:18px 0 14px;"></div>' +
+      '<div class="acct-sub">Appearance — your own accent color and layout density, just on this device.</div>' +
+      '<div class="acct-swatches">' + swatches + '</div>' +
+      '<div class="acct-density">' + densities + '</div>' +
+      '<button type="button" class="acct-btn acct-secondary" id="acctApptReset" style="margin-top:8px;">Reset to app default</button>';
+    body.appendChild(wrap);
+
+    Array.prototype.forEach.call(wrap.querySelectorAll('.acct-swatch'), function (btn) {
+      btn.addEventListener('click', function () { MC_THEME.personal.set({ accent: btn.dataset.accent }); render(); });
+    });
+    Array.prototype.forEach.call(wrap.querySelectorAll('.acct-density-opt'), function (btn) {
+      btn.addEventListener('click', function () { MC_THEME.personal.set({ density: btn.dataset.density || null }); render(); });
+    });
+    wrap.querySelector('#acctApptReset').addEventListener('click', function () {
+      MC_THEME.personal.set({ accent: null, density: null });
+      render();
+    });
   }
 
   // Manual backup — available whether signed in or not. Symmetric with

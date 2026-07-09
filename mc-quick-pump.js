@@ -47,6 +47,101 @@
     return a;
   }
 
+  // ---- history-aware selection (Phase 2.4) ---------------------------------
+  // Catalog lookup by exercise name — the same technique mc-suggest.js's
+  // equipCat() uses. Reading e.muscle here (not a separate classifier) keeps
+  // this in the exact taxonomy MUSCLE_GROUPS already keys on, so nothing
+  // needs reconciling against mc-recap.js/mc-stats.js's different muscle
+  // grouping or mc-setlog.js's own classifier.
+  function catalogEntry(name) {
+    if (!window.EXERCISES) return null;
+    var nl = (name || '').toLowerCase();
+    for (var i = 0; i < window.EXERCISES.length; i++) {
+      if (window.EXERCISES[i].name.toLowerCase() === nl) return window.EXERCISES[i];
+    }
+    return null;
+  }
+
+  function workoutLog() {
+    try { return JSON.parse(localStorage.getItem('mc_workout_log_v1') || '[]') || []; }
+    catch (e) { return []; }
+  }
+
+  // Muscles trained within the trailing `hours` — a set is over the whole
+  // window's real logs, not just today, so a Monday/Wednesday split still
+  // gets it right.
+  function recentlyTrainedMuscles(hours) {
+    var cutoff = Date.now() - (hours || 48) * 3600 * 1000;
+    var trained = {};
+    workoutLog().forEach(function (e) {
+      if (new Date(e.date || 0).getTime() < cutoff) return;
+      (e.sets || []).forEach(function (s) {
+        var cat = catalogEntry(s.name);
+        if (cat && cat.muscle) trained[cat.muscle] = true;
+      });
+    });
+    return trained;
+  }
+
+  // Sets logged per muscle over the trailing 7 days — for biasing a Full
+  // Body pump toward whatever's seen the least volume this week, instead of
+  // uniformly random across every muscle the focus spans.
+  function weeklySetsByMuscle() {
+    var cutoff = Date.now() - 7 * 24 * 3600 * 1000;
+    var counts = {};
+    workoutLog().forEach(function (e) {
+      if (new Date(e.date || 0).getTime() < cutoff) return;
+      (e.sets || []).forEach(function (s) {
+        var cat = catalogEntry(s.name);
+        if (cat && cat.muscle) counts[cat.muscle] = (counts[cat.muscle] || 0) + 1;
+      });
+    });
+    return counts;
+  }
+
+  // Bias away from muscles trained <48h — prefer candidates whose muscle
+  // wasn't recently hit, but never narrow the pool so far a workout can't be
+  // built (a Push day still needs chest+shoulders+triceps even if one of
+  // those was trained yesterday).
+  function preferFresh(candidates, recent) {
+    if (!Object.keys(recent).length) return candidates;
+    var fresh = candidates.filter(function (e) { return !recent[e.muscle]; });
+    return fresh.length >= 4 ? fresh : candidates;
+  }
+
+  // Full Body spans several muscle groups — bias toward whichever have seen
+  // the least volume this week, so a "just give me a workout" pump fills
+  // gaps instead of reinforcing whatever's already been trained most.
+  function balanceFullBody(candidates, muscleList) {
+    var counts = weeklySetsByMuscle();
+    var sorted = muscleList.slice().sort(function (a, b) { return (counts[a] || 0) - (counts[b] || 0); });
+    var under = {};
+    sorted.slice(0, Math.ceil(sorted.length / 2)).forEach(function (m) { under[m] = true; });
+    var prioritized = candidates.filter(function (e) { return under[e.muscle]; });
+    return prioritized.length >= 4 ? prioritized : candidates;
+  }
+
+  // Most recent logged weight for this exercise name, local-only (no
+  // sign-in needed) — mc_setlog_v1 can't be used here (a fresh Quick Pump
+  // session gets a new id every generation, so it's siloed with no history
+  // to read), but mc_workout_log_v1 is timestamped and keyed by exercise
+  // name regardless of which page/session logged it. When there's no local
+  // match, this returns null and leaves the exercise's data-fill unset —
+  // mc-setlog.js's existing trySupabasePrefill() already fills that gap for
+  // signed-in users generically, page-agnostic, no extra call needed here.
+  function lastWeightFor(name) {
+    var nl = (name || '').toLowerCase();
+    var log = workoutLog();
+    for (var i = 0; i < log.length; i++) {
+      var sets = log[i].sets || [];
+      for (var j = 0; j < sets.length; j++) {
+        var s = sets[j];
+        if ((s.name || '').toLowerCase() === nl && parseFloat(s.weight) > 0) return parseFloat(s.weight);
+      }
+    }
+    return null;
+  }
+
   function blockCounts(minutes) {
     var avail = Math.max(minutes - OVERHEAD_MIN, 10);
     var pairs = Math.max(1, Math.floor((avail - MIN_PER_SINGLE) / MIN_PER_PAIR));
@@ -83,11 +178,14 @@
   }
 
   function toExercise(e, opts) {
-    return {
+    var ex = {
       name: e.name, muscle: e.muscle,
       sets: opts.sets, reps: opts.reps, tempo: '', rest: opts.rest,
       drops: [], superset: !!opts.superset, cluster: '', clusterRest: ''
     };
+    var w = lastWeightFor(e.name);
+    if (w) ex.seedWeight = w;
+    return ex;
   }
 
   function generate(cfg) {
@@ -96,6 +194,12 @@
     var focus = MUSCLE_GROUPS[cfg.focus] ? cfg.focus : 'Full Body';
     var candidates = pool(MUSCLE_GROUPS[focus]);
     if (!candidates.length) return { name: 'Quick Pump', exercises: [] };
+
+    // History-aware selection (Phase 2.4): fill weekly volume gaps first
+    // (Full Body only — a single-focus pump has no gaps to balance within
+    // itself), then bias away from whatever's already sore from <48h ago.
+    if (focus === 'Full Body') candidates = balanceFullBody(candidates, MUSCLE_GROUPS[focus]);
+    candidates = preferFresh(candidates, recentlyTrainedMuscles(48));
 
     var counts = blockCounts(minutes);
     var used = {};
@@ -204,4 +308,18 @@
     conditioningPick: conditioningPick,
     saveAndStart: saveAndStart
   };
+
+  // Node-side hook so CI can regression-test the history-aware selection
+  // math (see tools/test-mc-quick-pump.js) against the real source file.
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      MUSCLE_GROUPS: MUSCLE_GROUPS,
+      generate: generate,
+      preferFresh: preferFresh,
+      balanceFullBody: balanceFullBody,
+      recentlyTrainedMuscles: recentlyTrainedMuscles,
+      weeklySetsByMuscle: weeklySetsByMuscle,
+      lastWeightFor: lastWeightFor
+    };
+  }
 })();

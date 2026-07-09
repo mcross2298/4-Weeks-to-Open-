@@ -57,15 +57,36 @@
     } catch (e) {}
     return null;
   }
+
+  // Personal layer (Phase 2.5) — device-local, unsynced, same "for non-PM
+  // users" pattern as program-overrides.js's mc_personal_intensifiers. Only
+  // accent + density are personalizable; typography/motion/backgrounds stay
+  // owner-controlled. Wins over the owner's published/local ThemeConfig and
+  // any preset, since it's a deliberate per-device choice, not a fallback.
+  var PERSONAL_KEY = 'mc_personal_theme_v1';
+  function personalConfig() {
+    try { return JSON.parse(localStorage.getItem(PERSONAL_KEY) || '{}') || {}; }
+    catch (e) { return {}; }
+  }
+  function setPersonalConfig(patch) {
+    var next = personalConfig();
+    Object.keys(patch || {}).forEach(function (k) {
+      if (patch[k] == null || patch[k] === '') delete next[k]; else next[k] = patch[k];
+    });
+    try { localStorage.setItem(PERSONAL_KEY, JSON.stringify(next)); } catch (e) {}
+    apply();
+  }
+
   function resolveConfig() {
     var cfg = rawConfig() || {};
     var base = (cfg.preset && PRESETS[cfg.preset]) ? PRESETS[cfg.preset] : {};
+    var personal = personalConfig();
     return {
       primaryBg:  cfg.primaryBg  || base.primaryBg  || null,
       cardBg:     cfg.cardBg     || base.cardBg     || null,
-      accent:     cfg.accent     || base.accent     || null,
+      accent:     personal.accent || cfg.accent     || base.accent || null,
       typography: cfg.typography || base.typography || null,
-      density:    cfg.density    || null,
+      density:    personal.density || cfg.density    || null,
       motion:     cfg.motion     || null
     };
   }
@@ -133,14 +154,16 @@
       } catch (e) {}
       apply();
     },
-    apply: apply
+    apply: apply,
+    // trainee-facing personal layer — no PM/owner unlock needed
+    personal: { get: personalConfig, set: setPersonalConfig }
   };
 
   apply();
   // re-apply when the pinned program changes (same tab via custom event from
   // the dashboard, other tabs via the storage event)
   window.addEventListener('storage', function (e) {
-    if (e.key === 'mc_active_prog' || e.key === 'mc_pm_overrides') apply();
+    if (e.key === 'mc_active_prog' || e.key === 'mc_pm_overrides' || e.key === PERSONAL_KEY) apply();
   });
   document.addEventListener('mc:program-changed', apply);
   document.addEventListener('mc:layout-changed', apply);
