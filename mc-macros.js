@@ -157,6 +157,48 @@
       return log.some(function (e) { return e.date && keyFromDate(new Date(e.date)) === tk; });
     } catch (e) { return false; }
   }
+
+  // Coarse day-type for today (Phase 2.6 cross-wiring), derived from what was
+  // actually logged today — not a schedule prediction. No program here tracks
+  // a machine-readable day-of-week -> day-type mapping (the CLAUDE.md
+  // archetype table is authoring content, not runtime data), so this reads
+  // the majority muscle group among today's *finished* sets instead, via the
+  // same catalog-name-lookup technique mc-quick-pump.js uses for its <48h
+  // bias — collapsing the catalog's granular muscle strings ('Legs - Quads',
+  // 'Legs - Hamstrings', ...) into the coarse push/pull/legs/core buckets the
+  // cookbook handoff actually needs.
+  var DAY_TYPE_GROUPS = {
+    'Chest': 'push', 'Shoulders': 'push', 'Triceps': 'push',
+    'Back': 'pull', 'Biceps': 'pull', 'Forearms': 'pull',
+    'Legs - Quads': 'legs', 'Legs - Hamstrings': 'legs', 'Legs - Glutes': 'legs', 'Calves': 'legs', 'Adductors': 'legs',
+    'Core': 'core'
+  };
+  function catalogMuscle(name) {
+    if (!window.EXERCISES) return null;
+    var nl = (name || '').toLowerCase();
+    for (var i = 0; i < window.EXERCISES.length; i++) {
+      if (window.EXERCISES[i].name.toLowerCase() === nl) return window.EXERCISES[i].muscle;
+    }
+    return null;
+  }
+  function todaysDayType() {
+    var log;
+    try { log = JSON.parse(localStorage.getItem('mc_workout_log_v1') || '[]') || []; } catch (e) { log = []; }
+    var tk = todayKey();
+    var counts = {};
+    log.forEach(function (e) {
+      if (!e.date || keyFromDate(new Date(e.date)) !== tk) return;
+      (e.sets || []).forEach(function (s) {
+        var group = DAY_TYPE_GROUPS[catalogMuscle(s.name)];
+        if (group) counts[group] = (counts[group] || 0) + 1;
+      });
+    });
+    var best = null, bestN = 0;
+    Object.keys(counts).forEach(function (g) { if (counts[g] > bestN) { best = g; bestN = counts[g]; } });
+    // require a real majority (3+ sets), not one stray isolation set, before
+    // confidently labeling the whole day
+    return bestN >= 3 ? best : null;
+  }
   function totalsOf(entries) {
     var t = { kcal: 0, p: 0, f: 0, c: 0 };
     (entries || []).forEach(function (e) {
@@ -408,12 +450,13 @@
     var kcalLeft = Math.round(goals.kcal - totals.kcal);
     if (kcalLeft < 100) return null;
     var pLeft = Math.max(0, Math.round(num(goals.p) - totals.p));
+    var dt = todaysDayType();
     var a = el('a', 'ntx-cook',
       '<span class="ntx-cook-ic">🍳</span>' +
       '<span class="ntx-cook-txt"><b>Cook to hit your remaining macros</b>' +
       '<span>' + kcalLeft + ' kcal' + (pLeft ? ' · ' + pLeft + ' g protein' : '') + ' left — find a recipe in the cookbook</span></span>' +
       '<span class="ntx-cook-arr">›</span>');
-    a.href = COOKBOOK_URL + '?mkcal=' + kcalLeft + '&mp=' + pLeft + '#recipes';
+    a.href = COOKBOOK_URL + '?mkcal=' + kcalLeft + '&mp=' + pLeft + (dt ? '&dt=' + dt : '') + '#recipes';
     return a;
   }
 
