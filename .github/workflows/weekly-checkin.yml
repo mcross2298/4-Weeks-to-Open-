@@ -1,0 +1,41 @@
+name: Weekly check-in push
+
+# Roadmap 4.6 — fires the weekly-checkin Edge Function on a schedule so it
+# reaches trainees who never opened the app that day. The function itself
+# does the real work (compute + send); this workflow is just the clock.
+#
+# Requires a repo secret WEEKLY_CHECKIN_SECRET whose value matches the
+# CRON_SECRET set on the Supabase project (`supabase secrets set
+# CRON_SECRET=...`) — add both after this workflow merges; until then the
+# scheduled run will fail with 401 from the function, which is the safe
+# default (no secret configured, no accidental sends).
+
+on:
+  schedule:
+    # Sunday 14:00 UTC (~morning/mid-day across US time zones).
+    - cron: '0 14 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call weekly-checkin Edge Function
+        run: |
+          if [ -z "${{ secrets.WEEKLY_CHECKIN_SECRET }}" ]; then
+            echo "::error::WEEKLY_CHECKIN_SECRET repo secret is not set — see workflow header."
+            exit 1
+          fi
+          status=$(curl -s -o response.json -w "%{http_code}" -X POST \
+            "https://dhlxmoyjfxohbeiexwnr.supabase.co/functions/v1/weekly-checkin" \
+            -H "x-cron-secret: ${{ secrets.WEEKLY_CHECKIN_SECRET }}" \
+            -H "Content-Type: application/json")
+          echo "HTTP status: $status"
+          cat response.json
+          if [ "$status" -ge 300 ]; then
+            echo "::error::weekly-checkin call failed"
+            exit 1
+          fi
