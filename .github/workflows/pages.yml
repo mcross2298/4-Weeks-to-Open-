@@ -36,6 +36,8 @@ jobs:
           node tools/test-mc-maxout.js
       - name: Program color-sync check (mc-pm-data.js vs dashboard.html)
         run: node tools/check-program-colors.js
+      - name: Multi-week program intensifier-coverage check (mm-p1/p2/p3.html)
+        run: node tools/validate-programs.js
       - name: Generate service worker (auto version + precache list)
         run: python3 tools/build-sw.py --version "ci-${{ github.run_number }}"
       - name: Market-extraction leak check (content-manifest.json)
