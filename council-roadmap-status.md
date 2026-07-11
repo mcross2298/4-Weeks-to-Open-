@@ -5,90 +5,205 @@
 > `mcross2298/Mikes-Cookbook`. Full report artifact:
 > https://claude.ai/code/artifact/7513f897-3bb6-4de8-93ca-e6d31514c962
 >
-> Phase 0 is **shipped and merged to main in both repos**. Phases 1–4 are outstanding.
+> **Phases 0–3 are shipped and merged to main in both repos.** Phase 3.5 is
+> explicitly deferred (see below). Phase 4 is scoped but not started — this
+> doc exists to hand it to a fresh session cleanly.
 
 ---
 
-## Council findings (context for any future session)
+## Original council findings (historical context)
 
-1. **The intelligence is open-loop.** Engines suggest but don't act — `mc-suggest.js` detects plateaus/deloads but never applies them; the `coach-claude` Supabase edge function returns prose no engine consumes.
-2. **The two apps are one product forked by copy-paste.** `mc-foodapi.js` ≡ `tracker-foodapi.js` (byte-identical, same edge function, same cache key); same for the macro calculators and barcode modules. But they write to **two macro stores that never reconcile** — the workout app's `mc_macros_v1` is Supabase-synced; the cookbook's `mc-cookbook:tracker:v1` is stranded in one browser's localStorage, along with Mike's user-authored recipes (`mc-cookbook:userrecipes`). **Headline risk: one browser wipe loses the cookbook's user data.**
-3. **Polish never reached the fleet.** The flagship multi-week program pages (`mm-p1/p2/p3.html`, `iron-engine.html`, `the-500.html`, `hv-block.html`, `kitchen-sink*.html`) are hand-cloned HTML with inline `DAYS`/`renderExercise` logic (622/846 lines diverge between siblings), validated only by the human checklist in CLAUDE.md.
-4. **"Full control" already exists, locked away.** `mc-layout.js` resolves user-selectable layouts (stack/grid/carousel · list/swipe/grouped) but the editor (`mc-pm-layout-editor.js`) is owner-only.
+1. **The intelligence is open-loop.** *(Addressed by Phase 2 — deloads now
+   apply, calorie targets read real training load, macros self-adjust.)*
+2. **The two apps are one product forked by copy-paste.** *(Addressed by
+   Phase 1 — shared nutrition modules, one macro store, cross-app sync.)*
+3. **Polish never reached the fleet.** *(Partially addressed — the 3
+   `mm-p*.html` pages are now data-driven with a CI checklist gate, Phase
+   3.1/3.2. The much larger `mc-s*`/`pmc-s*` fleet is Phase 3.5, deferred —
+   see below.)*
+4. **"Full control" already exists, locked away.** *(Addressed by Phase
+   2.5 — personal accent/density layer over `mc-layout.js`, no PM unlock
+   required.)*
 
-**LLM placement (council unanimous):** deterministic logic owns progression, deloads, macro control, scheduling. An LLM earns its keep in exactly three places — structured coaching synthesis, natural-language food logging, semantic fallback when strict matchers return <3 results. The infra (`coach-claude`, server-side key, RLS) already exists.
-
----
-
-## ✅ Phase 0 — COMPLETE (merged 2026-07-07)
-
-PRs: [4-Weeks-to-Open- #168](https://github.com/mcross2298/4-Weeks-to-Open-/pull/168) · [Mikes-Cookbook #93](https://github.com/mcross2298/Mikes-Cookbook/pull/93). All deploys green, including the Rolodex clean-build (leak gate passed) and the cookbook Pages deploy (which also healed the previously-failed deploy of PR #92 — production had been stale for a day).
-
-| Item | What shipped | Files |
-|---|---|---|
-| 0.1 A11y floor | Global `:focus-visible` ring, blanket `prefers-reduced-motion` guard, 44px touch targets on set-logging inputs/checkboxes/RPE chips — lifts all ~150 program pages | `base.css`, `mc-setlog.css` |
-| 0.2 Carry-forward planned loads | Suggestions persist as next session's targets in new **`mc_plan_targets_v1`** store (sync-whitelisted) and prefill the weight inputs for the sets they apply to (pyramid-safe via `base` weight; typed values never overwritten). Tests extended. | `mc-suggest.js`, `tools/test-mc-suggest.js` |
-| 0.3 Live-region timers | Polite `aria-live` announcements for timer start / 10s warning / done (shared `#mcTimerLive` node), and Cooking Mode step/done announcements (`#cookLive`) | `mc-timer.js`, `superset-timers.js`, cookbook `cookbook.js` |
-| 0.5 Dead files retired | Deleted byte-identical `exercisedata-phase8.json`/`_8_1.json`, `mcsplitsupdate.bundle`, `index-v4.html` (~14.8k lines); manifest + `build-sw.py` deny-list entries removed; SW → v119 | `content-manifest.json`, `tools/build-sw.py`, `sw.js` |
-| 0.6 Sync merge fix | New `arrayByIdTs` merge (newest `updatedAt`/`ts` wins) for `mc_custom_programs_v1` + `mc_custom_workouts_v1` → **edits now converge across devices**. Custom-**program** deletes leave synced tombstones (`{id, deleted:true, updatedAt}`, pruned after 90 days); `MCPrograms.getAll/get` filter them | `mc-sync.js`, `mc-program-store.js` |
-| 0.7 Bidirectional deep links | Workout nutrition tab (today, goals set, ≥100 kcal left) shows **"Cook to hit your remaining macros"** → `Mikes-Cookbook/index.html?mkcal=&mp=#recipes`. Cookbook Recipes screen consumes it: dismissible **"🎯 Fits your day"** banner, ≤ remaining kcal (+25 tolerance), protein-first, params stripped after consumption. Reverse of the existing `tracker-recipe.js` handoff. Smoke-tested headless. | `mc-macros.js`, cookbook `cookbook-home.js`, `cookbook.css` |
-| 0.8 Quick Tours in nav | **Already shipped pre-audit** (workout dashboard tool card w/ NEW badge; cookbook first-launch banner + Home module). Council finding was stale — no change needed. | — |
-| Docs | Quick Tours updated for the prefilled loads + both handoff surfaces (documentation-currency rule) | both `quick-tour.html` |
-
-### ⚠️ Left over from Phase 0
-- **0.4 — Branch-protect `MC-Training-Rolodex` `main` (MANUAL, owner-only).** Repo Settings → Branches → protect `main`, restrict pushes to the deploy bot (`mc-market-bot` / `ROLODEX_DEPLOY_TOKEN` actor). Needs repo admin; the one change that would have prevented the past licensed-content leak (roadmap item G6 in `pm-improvement-roadmap.md`).
-- **Custom-workout delete tombstones deferred.** `mc_custom_workouts_v1` has ~6 direct readers (`build-workout.html`, `run-workout.html`, `mc-bonus-routing.js`, `mc-collections.js`, `mc-quick-pump.js`, `import.html`) that would surface tombstones. Either centralize reads behind one store module first, or teach each reader to filter `deleted`. Workout *edits* do converge now.
+**LLM placement (council unanimous, still the guiding principle for Phase
+4):** deterministic logic owns progression, deloads, macro control,
+scheduling. An LLM earns its keep in exactly three places — structured
+coaching synthesis, natural-language food logging, semantic fallback when
+strict matchers return <3 results. The infra (`coach-claude` edge function,
+server-side key, RLS) reportedly already exists per the original audit but
+**has not been touched or re-verified in any phase since** — confirm its
+current state before scoping Phase 4 work against it.
 
 ---
 
-## 🔲 Phase 1 — One nutrition brain (NEXT, the strategic commitment)
+## ✅ Phases 0–3 — COMPLETE
 
-Prerequisite for everything in Phases 2–4 that crosses the two apps.
+Full PR-by-PR detail lives in each PR's description (all follow the same
+executive-summary → approval → implement → verify → draft-PR pattern). This
+section is deliberately a compact index, not a re-summary.
 
-| # | Item | Effort | Notes |
+### Phase 0 — merged 2026-07-07
+`4-Weeks-to-Open-` [#168](https://github.com/mcross2298/4-Weeks-to-Open-/pull/168) ·
+`Mikes-Cookbook` [#93](https://github.com/mcross2298/Mikes-Cookbook/pull/93)
+A11y floor, carry-forward planned loads (`mc_plan_targets_v1`), live-region
+timers, dead-file retirement, sync merge fix, bidirectional
+workout↔cookbook macro-fit deep links.
+**Left open (manual, owner-only):** branch-protect `MC-Training-Rolodex`
+`main` (repo admin action, item 0.4 — never automatable from a session).
+
+### Phase 1 — One nutrition brain
+| # | Item | `4-Weeks-to-Open-` | `Mikes-Cookbook` |
 |---|---|---|---|
-| 1.1 | Extract shared nutrition modules (foodapi / macrocalc / barcode) to one versioned source both apps consume | S | `tools/extract-shared-modules.py` exists for exactly this; zero behavior change |
-| 1.2 | Unify the macro store: point the cookbook tracker at `mc_macros_v1` + existing Supabase sync (`mc-supabase.js`/`mc-sync.js`); retire `mc-cookbook:tracker:v1` | M | Cookbook gains login + multi-device for free; migrate existing tracker data on first run |
-| 1.3 | Cookbook durability: sync/export remaining `mc-cookbook:*` state (meal plans, macro history, **user recipes**) via the `user_sync` pattern; plus logged-out JSON export in both apps | M | Kills the report's headline data-loss risk |
+| 1.1 | Shared nutrition modules (foodapi/macrocalc/barcode), `tools/sync-nutrition-modules.py` | [#170](https://github.com/mcross2298/4-Weeks-to-Open-/pull/170) | [#94](https://github.com/mcross2298/Mikes-Cookbook/pull/94) |
+| 1.2 | Unified macro store (`mc_macros_v1` + Supabase sync in the cookbook) | — | [#95](https://github.com/mcross2298/Mikes-Cookbook/pull/95) |
+| 1.3 | Cookbook durability (meal-plan/recipe sync + manual export/import both apps) | [#171](https://github.com/mcross2298/4-Weeks-to-Open-/pull/171) | [#96](https://github.com/mcross2298/Mikes-Cookbook/pull/96) |
 
-## 🔲 Phase 2 — Close the loops
-
-| # | Item | Effort |
+### Phase 2 — Close the loops (`4-Weeks-to-Open-`, + one cookbook companion)
+| # | Item | PR |
 |---|---|---|
-| 2.1 | Auto-deload insertion — when `detectPlateau()` returns `deload`, generate the −10% week (detection already shipped; `mc-schedule.js` mutates instances cleanly) | S |
-| 2.2 | Training-load-aware calorie targets — derive activity multiplier + train/rest-day split from logged volume (`mc-recap`/`mc_workout_log_v1` → macro goals). *Needs Phase 1.* | M |
-| 2.3 | Adaptive macro control loop — weekly reconcile goals vs. logged intake vs. 7-day bodyweight trend (`mc_body_v1`), nudge ±100 kcal. Deterministic, not LLM. | M |
-| 2.4 | History-aware Quick Pump — bias away from muscles trained <48h, seed weights from `mc_setlog_v1`/`mc_plan_targets_v1`, balance weekly volume | M |
-| 2.5 | Unlock the layout engine for trainees — personal localStorage layer over `mc-layout.js` (currently owner-only); personal accent/density picker | M |
-| 2.6 | Meal-plan ↔ training-calendar cross-wiring — carb-forward recipes on leg days; cook-log as adherence signal | M |
+| 2.1–2.3 | Auto-deload, training-load-aware calories, adaptive macro control loop | [#172](https://github.com/mcross2298/4-Weeks-to-Open-/pull/172) |
+| 2.4–2.5 | History-aware Quick Pump, personal accent/density picker | [#173](https://github.com/mcross2298/4-Weeks-to-Open-/pull/173) |
+| 2.6 | Day-type derivation → cookbook carb-forward handoff | [#174](https://github.com/mcross2298/4-Weeks-to-Open-/pull/174) + cookbook [#97](https://github.com/mcross2298/Mikes-Cookbook/pull/97) |
 
-## 🔲 Phase 3 — Automation-grade foundations
-
-| # | Item | Effort |
+### Phase 3 — Automation-grade foundations (`4-Weeks-to-Open-` only, scope-locked)
+| # | Item | PR |
 |---|---|---|
-| 3.1 | Turn CLAUDE.md's pre-merge program checklist into CI — `tools/validate-programs.js` parsing every page's `DAYS`, asserting intensifier coverage / 2-4-4 set mix / visible week themes | M |
-| 3.2 | Data-drive the flagship multi-week pages — extract inline `DAYS`/`WEEK_THEMES`/`renderExercise`/W5 logic into one shared engine + per-program data files (pattern proof: `pmc-data.js`, data-driven dashboard) | L |
-| 3.3 | Single source of truth for program/split/badge/page maps (roadmap C1) — generated at build time; shrinks the `MARKET:STRIP` surface | M |
-| 3.4 | Headless render smoke test in CI for sampled program pages + cookbook screens (a working local pattern exists from Phase 0 verification — Playwright, global install, `NODE_PATH=/opt/node22/lib/node_modules`) | M |
-| 3.5 | Data-drive the `mc-s*`/`pmc-s*` fleet — day-card exercise rows become data; all ~117 pages generated, not authored | L |
+| 3.1 | CI-enforced intensifier-coverage checklist — `tools/validate-programs.js` | [#175](https://github.com/mcross2298/4-Weeks-to-Open-/pull/175) |
+| 3.2 | Data-drive the Modality Matrix trio — `mm-data.js` + `mm-engine.js` | [#176](https://github.com/mcross2298/4-Weeks-to-Open-/pull/176) |
+| 3.3 | Consolidate badge labels / split map / program-guide.html onto `mc-pm-data.js` | [#177](https://github.com/mcross2298/4-Weeks-to-Open-/pull/177) |
+| 3.4 | Headless render smoke test in CI (report-only) — `tools/smoke-test-pages.js` | [#178](https://github.com/mcross2298/4-Weeks-to-Open-/pull/178) |
 
-## 🔲 Phase 4 — The next level
+**New tools/patterns Phase 3 leaves behind** (reusable in Phase 3.5 / Phase 4):
+- `tools/validate-programs.js` — balanced-bracket array-literal extraction
+  from a data module, no `vm` sandbox needed since the data lives in an
+  IIFE-attached global, not scraped from inline `<script>` text anymore.
+- `mm-data.js` + `mm-engine.js` — the reference data/engine split pattern:
+  one shared render engine parametrized by per-program metadata, one data
+  module per set of programs. `pmc-s7-data.js` is the older, single-program
+  version of the same idea. **Both are the pattern proof for Phase 3.5.**
+- `tools/smoke-test-pages.js` — CI-only Playwright, installed into a scratch
+  prefix (`/tmp/pw-ci`), no `package.json` added to the repo. Currently
+  samples 18 pages; extending the list is cheap (append to `PAGES`).
+- The `navigator.serviceWorker` truthy-vs-`in`-operator bug class (fixed in
+  `mc-sw-update.js` + `exercise-library.html`) — worth a quick
+  `grep -rn "'serviceWorker' in navigator"` sweep if touching more pages,
+  since `mc-push.js:30` still has the same pattern (not yet triggered by
+  anything the smoke test exercises, so left alone — see PR #178).
 
-| # | Item | Effort |
-|---|---|---|
-| 4.1 | Structured coach-claude — edge function returns JSON (per-lift flags, volume warnings, swaps) rendered as actionable chips, not prose | M |
-| 4.2 | Natural-language food logging — "two eggs and a bagel" → parsed macros, matched to Open Food Facts | M |
-| 4.3 | LLM substitution fallback — when `mc-biomech`/recipe matchers return <3 results | M |
-| 4.4 | Voice control — opt-in `SpeechRecognition`: "log 10 reps / start timer" (gym), "next step / read ingredients" (Cooking Mode) | L |
-| 4.5 | Client roster in PM Mode — assign program + macro profile per client on existing Supabase identity | L |
-| 4.6 | Automated weekly check-ins — bodyweight trend + training + nutrition adherence → coach recap via `mc-push.js` | M |
-| 4.7 | Unified market — recipes/collections ride `content-manifest.json` + `build-market.py` into the Rolodex | L |
+---
+
+## 🔲 Phase 3.5 — Data-drive the `mc-s*`/`pmc-s*` fleet (DEFERRED)
+
+**Status: explicitly deferred by owner decision** (AskUserQuestion during
+Phase 3 planning, "Defer entirely"). Re-scope from scratch if revisited —
+don't assume the original roadmap wording still holds; it didn't survive
+first contact with the actual fleet.
+
+### What research already found (don't re-derive this)
+- **Page count corrected:** the roadmap's original "~117 pages" estimate is
+  wrong. Actual count is **48 day-detail pages** after excluding 12
+  split-index/landing pages (which aren't day-detail content and don't fit
+  the `DAYS`/`renderExercise` shape anyway).
+- **Structural divergence is real, not cosmetic:** unlike the Modality
+  Matrix trio (which turned out to be byte-identical render logic once
+  compared directly), the `mc-s*`/`pmc-s*` fleet has **different
+  function/variable names, different badge taxonomies, inconsistent week
+  counts, and no existing regression net** across pages. A single
+  mechanical `mm-engine.js`-style extraction will not work as-is — this
+  fleet needs page-by-page reconciliation *before* any shared engine can be
+  written, or several smaller sub-engines for genuinely different families
+  of pages rather than one universal one.
+- **Two data/engine pattern proofs now exist** to model from:
+  `pmc-s7-data.js` (single program, pre-existing) and `mm-data.js` +
+  `mm-engine.js` (three programs, built in Phase 3.2). Neither has had to
+  handle real structural divergence between siblings — Phase 3.5's hard
+  part is exactly the part neither proof covers.
+
+### If picked back up, suggested first steps (not yet executed)
+1. Re-verify the 48-page count and pull a fresh diff matrix (which pages are
+   actually identical vs. genuinely divergent, and in what way — function
+   names? data shape? badge taxonomy? week count?). Don't trust the Phase 3
+   count without a re-check; new pages may have shipped since.
+2. Group pages into families by structural similarity rather than assuming
+   one universal engine. Likely 2–4 families, not 1 or 48.
+3. Pick the *most* homogeneous family first and prove the pattern on it
+   (small blast radius), verified byte-for-byte against the original data
+   the same way Phase 3.2 did (`JSON.stringify` deep-equal check before
+   ever touching the live pages).
+4. Only after one family is proven should `tools/validate-programs.js` be
+   generalized to cover it (it's currently hardcoded to `mm-data.js`'s
+   3-program shape).
+5. Executive summary + explicit approval required before writing any code
+   (CLAUDE.md's planning rule) — this is unambiguously a "multi-file
+   refactor."
+
+---
+
+## 🔲 Phase 4 — The next level (NOT STARTED)
+
+Every item below is LLM/automation-facing, matching the council's "LLM earns
+its keep in exactly three places" framing. **First action for a future
+session: verify the `coach-claude` Supabase edge function's actual current
+state** (endpoint, auth, response shape) — the original audit said the infra
+"already exists," but nothing in Phases 0–3 touched or re-confirmed it, so
+treat that claim as unverified until checked.
+
+| # | Item | Effort | Builds on |
+|---|---|---|---|
+| 4.1 | Structured coach-claude — edge function returns JSON (per-lift flags, volume warnings, swaps) rendered as actionable chips, not prose | M | `coach-claude` edge function (unverified — check first) |
+| 4.2 | Natural-language food logging — "two eggs and a bagel" → parsed macros, matched to Open Food Facts | M | `mc-foodapi.js`/`tracker-foodapi.js` (synced identically since Phase 1.1) |
+| 4.3 | LLM substitution fallback — when `mc-biomech`/recipe matchers return <3 results | M | `mc-biomech.js`'s `alternatives()` (deterministic tier, built pre-Phase-1 per dev-plan Task 3.1) — this adds a fallback tier on top, doesn't replace it |
+| 4.4 | Voice control — opt-in `SpeechRecognition`: "log 10 reps / start timer" (gym), "next step / read ingredients" (Cooking Mode) | L | — new surface, no existing infra |
+| 4.5 | Client roster in PM Mode — assign program + macro profile per client on existing Supabase identity | L | `mc-supabase.js`/`mc-sync.js` auth + RLS pattern, `mc-account.js` sign-in sheet |
+| 4.6 | Automated weekly check-ins — bodyweight trend + training + nutrition adherence → coach recap via `mc-push.js` | M | `mc-push.js` (Web Push manager, exists — confirmed present during Phase 3.4 but unaudited beyond that) |
+| 4.7 | Unified market — recipes/collections ride `content-manifest.json` + `build-market.py` into the Rolodex | L | `tools/build-market.py`'s existing `MARKET:STRIP`/leak-scan pattern — this phase extends it to a second repo's content, which it wasn't designed for yet |
+
+### Sequencing notes for a future session
+- **4.1–4.3 are the true "LLM earns its keep" items** per the council's own
+  placement principle — natural candidates to scope first, and 4.1 in
+  particular gates on the infra-verification step above.
+- **4.5 and 4.7 are cross-cutting/infrastructure-heavy**, not LLM features
+  per se — closer in spirit to Phase 3's foundation work than Phase
+  4's stated theme. Worth flagging to the owner if they're prioritized
+  early, since they don't share Phase 4's "LLM" throughline.
+- **4.4 (voice control) has zero existing infra** to build on, unlike every
+  other Phase 4 item — likely the largest true "new surface" effort in this
+  phase.
+- No item in Phase 4 has been scoped in AskUserQuestion-level detail the way
+  Phase 3.3's four sub-items were — expect the same pattern (research each
+  item's actual current-state assumptions before committing to an executive
+  summary) to surface real surprises here too, the way it did in 3.3
+  (orphaned `faint` program) and 3.5 (page-count correction).
 
 ---
 
 ## Working notes for the next session
 
-- **Workflow:** all work in `4-Weeks-to-Open-` (master); never push to `MC-Training-Rolodex` (generated build, auto-deployed on merge to main). Cookbook pushes to `main` are production deploys — run `node --check` over all JS + `tools/validate-recipes.js` + `tools/build-sw.py --check` (bump version when assets/JS change) before pushing.
-- **Workout repo local gates:** `node --check` all JS · `tools/test-mc-suggest.js` · `tools/test-mc-maxout.js` · `tools/test-naming.js` · `tools/check-program-colors.js` · `python3 tools/build-market.py --check` · `python3 tools/build-sw.py --check`.
-- **New store shipped in Phase 0:** `mc_plan_targets_v1` (`{ "pid|exId": { w, status, why, ts } }`, dictByTs-synced) — Phase 2 items 2.1/2.4 should read from it.
-- Deploy URLs: workout `https://mcross2298.github.io/4-Weeks-to-Open-/` · cookbook `https://mcross2298.github.io/Mikes-Cookbook/`.
+- **Workflow:** all work in `4-Weeks-to-Open-` (master); never push to
+  `MC-Training-Rolodex` (generated build, auto-deployed on merge to main).
+  Cookbook pushes to `main` are production deploys — run `node --check` over
+  all JS + `tools/validate-recipes.js` + `tools/build-sw.py --check` (bump
+  version when assets/JS change) before pushing.
+- **Workout repo local gates** (current, post-Phase-3): `node --check` all
+  JS · `tools/test-mc-suggest.js` · `tools/test-mc-maxout.js` ·
+  `tools/test-naming.js` · `tools/check-program-colors.js` ·
+  `tools/validate-programs.js` · `python3 tools/build-market.py --check` ·
+  `python3 tools/build-sw.py --check`. Optionally
+  `tools/smoke-test-pages.js <baseUrl>` against a local static server (needs
+  Playwright installed to a scratch prefix — see PR #178's CI step for the
+  exact commands).
+- **Branch pattern:** shared branch `claude/council-review-rswfod` per repo.
+  After each PR merges: `git fetch origin main && git checkout -B
+  claude/council-review-rswfod origin/main` before starting the next item —
+  don't keep stacking on the pre-merge branch state.
+- **Stores introduced across Phases 0–3** (all sync-whitelisted where
+  relevant): `mc_plan_targets_v1` (Phase 0), `mc_macros_v1` unification
+  (Phase 1.2), `mc-cookbook:cooked` sync (Phase 2.6/cookbook #97).
+- Deploy URLs: workout `https://mcross2298.github.io/4-Weeks-to-Open-/` ·
+  cookbook `https://mcross2298.github.io/Mikes-Cookbook/`.
+- **Planning rule reminder:** both repos' CLAUDE.md require an executive
+  summary + explicit approval before writing/editing any file for anything
+  beyond an isolated 1–2 file bug fix. Phase 3.5 and every Phase 4 item
+  qualify — don't skip the gate even if this doc makes the scope feel
+  pre-approved. This doc is a *briefing*, not a substitute for that
+  approval step.
