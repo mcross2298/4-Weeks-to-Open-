@@ -17,16 +17,28 @@ What extract does:
   2. Strips MARKET:STRIP-marked regions from text files (dashboard influencer
      cards/CSS/PROGS entries, program-guide cards, quick-tour narration,
      mc-theme colors, engine comments).
-  3. Filters the licensed program names out of every "programs":[...] array
+  3. Materializes MARKET:ADD-marked regions in text files — the inverse of
+     MARKET:STRIP: content that is HTML-commented-out (inert) in this repo's
+     own source and only uncommented in the market build. Used for surfaces
+     (like the Recipes nav tile) that only make sense once roadmap 4.7's
+     cookbook merge (below) has actually mounted that content.
+  4. Filters the licensed program names out of every "programs":[...] array
      in exercise-catalog.js (the exercises themselves are original and stay).
-  4. Rewrites manifest.json's description for the market app (the master
+  5. Rewrites manifest.json's description for the market app (the master
      description names the licensed programs).
-  5. Writes a market README.md and regenerates sw.js for --base.
-  6. Leak-scans the result: references to licensed files are HARD failures;
-     any brand-term mention in a shipped file is also a failure in --check.
+  6. Writes a market README.md and regenerates sw.js for --base.
+  7. Roadmap 4.7 — unified market: if --cookbook-root is given (a checkout of
+     mcross2298/Mikes-Cookbook, driven by content-manifest.json's "cookbook"
+     block), recursively copies it under out/cookbook/ and regenerates that
+     mount's own sw.js via the cookbook repo's own tools/build-sw.py --root.
+     Omitted entirely when not passed — local/CI runs of this repo alone
+     don't need a second checkout just to validate their own leak-safety.
+  8. Leak-scans the result (including any cookbook/ mount): references to
+     licensed files are HARD failures; any brand-term mention in a shipped
+     file is also a failure in --check.
 
 Usage:
-  python3 tools/build-market.py --extract DIR [--base URL]
+  python3 tools/build-market.py --extract DIR [--base URL] [--cookbook-root DIR]
   python3 tools/build-market.py --check          # CI guard (dry extract)
 """
 
@@ -47,7 +59,19 @@ STRIP_RE = re.compile(
     r"[ \t]*(?:<!--|/\*) MARKET:STRIP (\S+) START.*?MARKET:STRIP \1 END (?:-->|\*/)\n?",
     re.S)
 
+# Inverse of STRIP_RE: content commented out in master, uncommented in market.
+# Supports both HTML and JS comment syntax, same as STRIP_RE.
+ADD_RE = re.compile(
+    r"[ \t]*(?:<!--|/\*) MARKET:ADD (\S+) START\n(.*?)"
+    r"[ \t]*MARKET:ADD \1 END (?:-->|\*/)\n?",
+    re.S)
+
 TEXT_EXT = {".html", ".js", ".css", ".json", ".md", ".txt", ".yml", ".svg"}
+
+# Roadmap 4.7 — files/dirs that never leave the Mikes-Cookbook checkout, dev
+# docs mirroring this repo's own "scratch" list (README/CLAUDE/roadmap docs).
+COOKBOOK_SKIP_DIRS = {"tools", ".github", ".git"}
+COOKBOOK_SKIP_FILES = {"CLAUDE.md", "README.txt", "ROADMAP.md"}
 
 # Files whose "programs":[...] arrays carry per-program tags that must be
 # filtered down to the original (non-licensed) programs.
@@ -78,7 +102,8 @@ def load_manifest():
         sys.exit("content-manifest.json lists files that don't exist: %s" % missing)
     programs = sorted({src["program"] for src in m["licensed"].values()
                        if "program" in src})
-    return m, set(licensed), set(m["scratch"]), m.get("brand_terms", []), programs
+    return (m, set(licensed), set(m["scratch"]), m.get("brand_terms", []),
+            programs, m.get("cookbook", {}))
 
 
 def filter_program_tags(src, programs):
@@ -103,7 +128,37 @@ def patch_pwa_manifest(out):
     mf.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
 
-def extract(out, base, manifest, licensed, scratch, programs, sw_version="market-v1"):
+def copy_cookbook_tree(cookbook_root, mount, exclude):
+    """Roadmap 4.7 — recursively copy a Mikes-Cookbook checkout into `mount`
+    (out/cookbook), applying the same MARKET:STRIP/MARKET:ADD text rules as
+    the main copy loop. Unlike the main loop this DOES walk subdirectories
+    (e.g. images/recipes/), since the cookbook repo isn't flat."""
+    copied = []
+    for p in sorted(cookbook_root.rglob("*")):
+        rel = p.relative_to(cookbook_root)
+        if rel.parts[0] in COOKBOOK_SKIP_DIRS or rel.parts[0].startswith("."):
+            continue
+        if p.is_dir():
+            continue
+        if p.name in COOKBOOK_SKIP_FILES or str(rel) in exclude:
+            continue
+        if p.suffix == ".py":
+            continue
+        dest = mount / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if p.suffix in TEXT_EXT:
+            src = p.read_text(encoding="utf-8")
+            src = STRIP_RE.sub("", src)
+            src = ADD_RE.sub(lambda m: m.group(2), src)
+            dest.write_text(src, encoding="utf-8")
+        else:
+            shutil.copy2(p, dest)
+        copied.append(str(Path("cookbook") / rel))
+    return copied
+
+
+def extract(out, base, manifest, licensed, scratch, programs, sw_version="market-v1",
+            cookbook_root=None):
     out.mkdir(parents=True, exist_ok=True)
     skip_names = licensed | scratch | {MANIFEST.name}
     copied = []
@@ -117,6 +172,7 @@ def extract(out, base, manifest, licensed, scratch, programs, sw_version="market
         if p.suffix in TEXT_EXT:
             src = p.read_text(encoding="utf-8")
             src = STRIP_RE.sub("", src)
+            src = ADD_RE.sub(lambda m: m.group(2), src)
             if p.name in PROGRAM_TAG_FILES:
                 src = filter_program_tags(src, programs)
             (out / p.name).write_text(src, encoding="utf-8")
@@ -136,6 +192,19 @@ def extract(out, base, manifest, licensed, scratch, programs, sw_version="market
         [sys.executable, str(ROOT / "tools" / "build-sw.py"),
          "--version", sw_version, "--root", str(out), "--base", base],
         check=True)
+
+    if cookbook_root is not None:
+        cb_conf = manifest.get("cookbook", {})
+        mount_name = cb_conf.get("mount", "cookbook")
+        mount = out / mount_name
+        cb_copied = copy_cookbook_tree(cookbook_root, mount, set(cb_conf.get("exclude", [])))
+        copied += cb_copied
+        cb_sw = mount / "sw.js"
+        if cb_sw.exists():
+            subprocess.run(
+                [sys.executable, str(cookbook_root / "tools" / "build-sw.py"),
+                 "--version", sw_version, "--root", str(mount)],
+                check=True)
     return copied
 
 
@@ -171,15 +240,26 @@ def main():
     ap.add_argument("--sw-version", default="market-v1",
                     help="cache version baked into the market service worker; "
                          "pass a unique value per deploy so the cache always busts")
+    ap.add_argument("--cookbook-root", metavar="DIR",
+                    help="roadmap 4.7: a checkout of mcross2298/Mikes-Cookbook "
+                         "to merge under out/cookbook/. Omit to skip the merge "
+                         "entirely (this repo's own leak-check doesn't need it).")
     args = ap.parse_args()
 
-    manifest, licensed, scratch, brand_terms, programs = load_manifest()
+    manifest, licensed, scratch, brand_terms, programs, cb_conf = load_manifest()
+    cookbook_root = None
+    if args.cookbook_root:
+        cookbook_root = Path(args.cookbook_root).resolve()
+        if not (cookbook_root / "sw.js").exists():
+            sys.exit("--cookbook-root %s doesn't look like a Mikes-Cookbook checkout "
+                     "(no sw.js)" % cookbook_root)
+        brand_terms = list(brand_terms) + list(cb_conf.get("brand_terms", []))
 
     if args.check:
         tmp = Path(tempfile.mkdtemp(prefix="mc-market-"))
         try:
             extract(tmp, args.base, manifest, licensed, scratch, programs,
-                    args.sw_version)
+                    args.sw_version, cookbook_root)
             hard, soft = leak_scan(tmp, licensed, brand_terms)
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
@@ -188,7 +268,7 @@ def main():
         if ROOT in out.parents or out == ROOT:
             sys.exit("--extract target must be outside the repo")
         copied = extract(out, args.base, manifest, licensed, scratch, programs,
-                         args.sw_version)
+                         args.sw_version, cookbook_root)
         hard, soft = leak_scan(out, licensed, brand_terms)
         print("market tree: %d files -> %s" % (len(copied), out))
 

@@ -8,6 +8,14 @@
     "and to CI-check that no licensed content leaks into it.",
     "When adding a new influencer page/asset, list it here in the same change."
   ],
+  "cookbook": {
+    "_comment": "Roadmap 4.7 \u2014 unified market. build-market.py's --cookbook-root checks out this repo and mounts it under cookbook/ inside the Rolodex build (deploy-time merge only; the master 4-Weeks-to-Open- site itself never carries cookbook content \u2014 see MARKET:ADD in dashboard.html). Everything in Mikes-Cookbook is original content today, so 'exclude' is empty.",
+    "repo": "mcross2298/Mikes-Cookbook",
+    "mount": "cookbook",
+    "exclude": [],
+    "brand_terms": [],
+    "watch": "Mikes-Cookbook's COLLECTIONS lists \"Kelli Cross' Recipes\" (Heritage) as status:coming-soon \u2014 no files exist for it yet. If it goes live and is licensed (non-original) content, add its files to 'exclude' and its brand terms to the array above before the next deploy."
+  },
   "licensed": {
     "stndr": {
       "owner": "STNDR / CBUM",

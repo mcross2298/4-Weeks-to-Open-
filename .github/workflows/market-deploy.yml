@@ -4,6 +4,13 @@ name: Deploy clean build to MC-Training-Rolodex
 # licensed/influencer content — see content-manifest.json) and force-push it
 # to mcross2298/MC-Training-Rolodex as a single fresh commit.
 #
+# Roadmap 4.7 (unified market): also checks out mcross2298/Mikes-Cookbook
+# (public repo, no token needed to read) and merges it under cookbook/ in the
+# extracted tree — see content-manifest.json's "cookbook" block and
+# tools/build-market.py's --cookbook-root. The two master repos stay
+# independent; this merge only ever happens at deploy time, never committed
+# to either source repo.
+#
 # Requires the repo secret ROLODEX_DEPLOY_TOKEN: a fine-grained PAT scoped to
 # mcross2298/MC-Training-Rolodex with "Contents: read & write" permission.
 
@@ -27,6 +34,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout Mikes-Cookbook
+        uses: actions/checkout@v4
+        with:
+          repository: mcross2298/Mikes-Cookbook
+          path: cookbook-src
+
       - name: Verify deploy token is configured
         env:
           TOKEN: ${{ secrets.ROLODEX_DEPLOY_TOKEN }}
@@ -42,10 +55,13 @@ jobs:
           for f in $(git ls-files '*.js'); do
             node --check "$f" || { echo "::error file=$f::JavaScript syntax error"; fail=1; }
           done
+          for f in cookbook-src/*.js; do
+            node --check "$f" || { echo "::error file=$f::JavaScript syntax error"; fail=1; }
+          done
           exit $fail
 
       - name: Leak check (hard gate)
-        run: python3 tools/build-market.py --check
+        run: python3 tools/build-market.py --check --cookbook-root cookbook-src
 
       - name: Resolver / precedence unit tests (hard gate)
         run: node tools/test-naming.js
@@ -55,7 +71,8 @@ jobs:
           python3 tools/build-market.py \
             --extract "$RUNNER_TEMP/market" \
             --base "https://mcross2298.github.io/MC-Training-Rolodex/" \
-            --sw-version "market-ci-${{ github.run_number }}"
+            --sw-version "market-ci-${{ github.run_number }}" \
+            --cookbook-root cookbook-src
 
       - name: Push to MC-Training-Rolodex
         env:
