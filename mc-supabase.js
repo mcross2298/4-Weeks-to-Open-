@@ -322,6 +322,99 @@
     });
   }
 
+  // ---- pm_clients (Client roster in PM Mode, roadmap 4.5) -------------------
+  // "Assign" here is a suggestion, never a remote-control write into another
+  // user's own data — see phase11-pm-clients.sql's header for why. The PM-side
+  // functions manage the roster; getMyAssignment() is what a CLIENT's own
+  // device calls to see whether a coach has suggested something for them.
+
+  // Resolves an email to an existing account via the pm-lookup-client Edge
+  // Function (server-side, admin-gated — RLS can't expose auth.users to the
+  // client directly). Throws with .notFound = true when no account matches.
+  function lookupClientByEmail(email) {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return c.auth.getSession().then(function (r) {
+        var session = r && r.data && r.data.session;
+        if (!session) return null;
+        return fetch(SUPABASE_URL + '/functions/v1/pm-lookup-client', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + session.access_token
+          },
+          body: JSON.stringify({ email: email })
+        }).then(function (res) {
+          return res.json().then(function (data) {
+            if (!res.ok) {
+              var err = new Error((data && data.error) || ('Lookup failed: ' + res.status));
+              err.notFound = res.status === 404;
+              throw err;
+            }
+            return data; // { user_id, email }
+          });
+        });
+      });
+    });
+  }
+  function listClients() {
+    return ready.then(function (c) {
+      if (!c) return [];
+      return currentUser().then(function (u) {
+        if (!u) return [];
+        return c.from('pm_clients').select('*').eq('pm_user_id', u.id)
+          .order('created_at', { ascending: false })
+          .then(function (r) { if (r.error) throw r.error; return r.data || []; });
+      });
+    });
+  }
+  function addClient(client) {
+    return ready.then(function (c) {
+      if (!c) throw new Error('Supabase not configured');
+      return currentUser().then(function (u) {
+        if (!u) throw new Error('Not signed in');
+        return c.from('pm_clients').insert({
+          pm_user_id: u.id,
+          client_user_id: client.client_user_id,
+          client_email: client.client_email,
+          client_label: client.client_label || null
+        }).then(function (r) { if (r.error) throw r.error; return r; });
+      });
+    });
+  }
+  function updateClientAssignment(id, patch) {
+    return ready.then(function (c) {
+      if (!c) throw new Error('Supabase not configured');
+      var row = { updated_at: new Date().toISOString() };
+      if ('assigned_program_id' in patch) row.assigned_program_id = patch.assigned_program_id;
+      if ('assigned_program_name' in patch) row.assigned_program_name = patch.assigned_program_name;
+      if ('assigned_macro_goals' in patch) row.assigned_macro_goals = patch.assigned_macro_goals;
+      if ('notes' in patch) row.notes = patch.notes;
+      return c.from('pm_clients').update(row).eq('id', id)
+        .then(function (r) { if (r.error) throw r.error; return r; });
+    });
+  }
+  function removeClient(id) {
+    return ready.then(function (c) {
+      if (!c) throw new Error('Supabase not configured');
+      return c.from('pm_clients').delete().eq('id', id)
+        .then(function (r) { if (r.error) throw r.error; return r; });
+    });
+  }
+  // Called by a CLIENT's own device — RLS only ever returns row(s) where
+  // client_user_id = them, regardless of whose roster it lives in.
+  function getMyAssignment() {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return currentUser().then(function (u) {
+        if (!u) return null;
+        return c.from('pm_clients').select('*').eq('client_user_id', u.id)
+          .order('updated_at', { ascending: false }).limit(1)
+          .then(function (r) { if (r.error) throw r.error; return (r.data && r.data[0]) || null; });
+      });
+    });
+  }
+
   // ---- naming_overrides_canary + testers (Staged rollout R2) ---------------
   // Same shape as getNaming(); RLS returns rows only for testers/admins, so for
   // a normal user this resolves to an empty overlay.
@@ -641,6 +734,12 @@
     listDrafts: listDrafts,
     getDraft: getDraft,
     deleteDraft: deleteDraft,
+    lookupClientByEmail: lookupClientByEmail,
+    listClients: listClients,
+    addClient: addClient,
+    updateClientAssignment: updateClientAssignment,
+    removeClient: removeClient,
+    getMyAssignment: getMyAssignment,
     getCanaryNaming: getCanaryNaming,
     listCanary: listCanary,
     upsertCanaryNaming: upsertCanaryNaming,
