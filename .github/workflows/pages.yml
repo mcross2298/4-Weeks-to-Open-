@@ -42,6 +42,22 @@ jobs:
         run: python3 tools/build-sw.py --version "ci-${{ github.run_number }}"
       - name: Market-extraction leak check (content-manifest.json)
         run: python3 tools/build-market.py --check
+      - name: Headless render smoke test (report-only)
+        # CI-only tooling, installed into a scratch prefix outside the repo —
+        # no package.json here, deliberately (see CLAUDE.md). Report-only
+        # (continue-on-error) until it's proven stable across a few real CI
+        # runs, per the Phase 3.4 plan; promote to blocking after that.
+        continue-on-error: true
+        run: |
+          npm install --no-save --prefix /tmp/pw-ci playwright@latest
+          /tmp/pw-ci/node_modules/.bin/playwright install --with-deps chromium
+          python3 -m http.server 8080 &
+          SERVER_PID=$!
+          for i in $(seq 1 20); do curl -sf http://localhost:8080/index.html >/dev/null && break; sleep 0.5; done
+          NODE_PATH=/tmp/pw-ci/node_modules node tools/smoke-test-pages.js http://localhost:8080
+          EXIT=$?
+          kill "$SERVER_PID" 2>/dev/null || true
+          exit $EXIT
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

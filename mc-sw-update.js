@@ -16,7 +16,7 @@
    Include it (cache-busted) near the end of every page that should self-update.
    ========================================================================== */
 (function () {
-  if (!('serviceWorker' in navigator)) return;
+  if (!navigator.serviceWorker) return;
   if (window.__mcSwUpdate) return;
   window.__mcSwUpdate = true;
 

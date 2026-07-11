@@ -316,7 +316,7 @@ if (_urlMuscle) setFilter(_urlMuscle); else filterExercises();
 </script>
 
 <script>
-if('serviceWorker' in navigator){
+if(navigator.serviceWorker){
   navigator.serviceWorker.getRegistrations().then(function(regs){
     regs.forEach(function(reg){
       // Tell any waiting worker to skip waiting and take over immediately
