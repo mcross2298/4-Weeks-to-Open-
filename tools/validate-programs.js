@@ -6,15 +6,15 @@
    Modality Matrix multi-week programs (mm-p1/p2/p3.html — the only pages
    with a WEEK_THEMES + per-exercise w[] structure today).
    --------------------------------------------------------------------------
-   Pulls each page's inline <script>, syntax-checks the whole thing with
-   `new Function()`, then extracts just the WEEK_THEMES/DAYS array literals
-   (balanced-bracket matching, same technique tools/check-program-colors.js
-   uses for PROGRAM_ICONS) and evaluates each standalone — top-level `const`
-   doesn't attach to a vm sandbox's global object, so running the whole
-   script the way tools/test-naming.js does for plain .js modules doesn't
-   expose these declarations; this sidesteps that entirely, and also skips
-   the render()/DOM calls at the bottom of the script that would throw in
-   a headless context anyway.
+   Since Phase 3.2, WEEK_THEMES and each program's DAYS live in mm-data.js
+   (mm-p1/p2/p3.html just call MM.init('p1'|'p2'|'p3') against the shared
+   mm-engine.js) rather than inline per-page — this reads that module
+   directly instead of scraping the pages. mm-data.js wraps everything in an
+   IIFE exposing window.MM_DATA, so evaluating the whole file against a
+   `window` stub and reading MM_DATA back off it works fine here (unlike the
+   old per-page inline <script>, this file has no top-level `const`/`let`
+   that need vm-sandbox workarounds — everything's inside the IIFE and
+   reachable through the one attached global).
 
    Checks, per training day × per week (per CLAUDE.md's fixed 10-position
    blueprint — position encodes intensifier role, so tag-per-position IS the
@@ -36,7 +36,8 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const PAGES = ['mm-p1.html', 'mm-p2.html', 'mm-p3.html'];
+const DATA_FILE = 'mm-data.js';
+const PROGRAM_IDS = ['p1', 'p2', 'p3'];
 
 // blueprint: 0-indexed position -> expected tag (null = untagged compound)
 const EXPECTED_TAGS = [null, null, 'TRI-SET', 'TRI-SET', 'TRI-SET', 'SUPERSET', 'SUPERSET', 'CLUSTER', 'DROP', 'FINISHER'];
@@ -55,47 +56,28 @@ const SUPERSET_WEEK_FEATURE_POS = [1, 5, 7];
 let fail = false;
 function err(msg) { console.error('::error::' + msg); fail = true; }
 
-function extractScript(src, file) {
-  const start = src.indexOf('<script>');
-  const end = src.indexOf('</script>', start);
-  if (start < 0 || end < 0) { err(file + ': could not find an inline <script> block'); return null; }
-  return src.slice(start + '<script>'.length, end);
-}
+function loadProgramData() {
+  const code = fs.readFileSync(path.join(ROOT, DATA_FILE), 'utf8');
 
-// Balanced-bracket array-literal extraction (same brace-depth-matching
-// technique tools/check-program-colors.js uses for PROGRAM_ICONS) — top-level
-// `const` declarations don't attach to a vm sandbox's global object, so the
-// whole-script vm approach test-naming.js uses for plain .js modules doesn't
-// work here; pulling just the array literal and evaluating it standalone
-// (via `new Function('return ' + text)`) sidesteps that entirely.
-function extractArrayLiteral(code, constName, file) {
-  const marker = 'const ' + constName + ' = [';
-  const start = code.indexOf(marker);
-  if (start < 0) { err(file + ': "' + marker + '" not found'); return null; }
-  let i = start + marker.length - 1;   // sit on the opening '['
-  let depth = 0;
-  for (; i < code.length; i++) {
-    if (code[i] === '[') depth++;
-    else if (code[i] === ']') { depth--; if (depth === 0) { i++; break; } }
-  }
-  const text = code.slice(start + marker.length - 1, i);
-  try { return new Function('return ' + text)(); }
-  catch (e) { err(file + ': ' + constName + ' failed to evaluate — ' + e.message); return null; }
-}
-
-function loadPage(file) {
-  const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
-  const code = extractScript(src, file);
-  if (code == null) return null;
-
-  // item 4's own first step: syntax-check the whole inline script
+  // item 4's own first step: syntax-check the whole file
   try { new Function(code); }
-  catch (e) { err(file + ': inline <script> failed to parse — ' + e.message); return null; }
+  catch (e) { err(DATA_FILE + ': failed to parse — ' + e.message); return null; }
 
-  const weekThemes = extractArrayLiteral(code, 'WEEK_THEMES', file);
-  const days = extractArrayLiteral(code, 'DAYS', file);
-  if (!Array.isArray(weekThemes) || !Array.isArray(days)) return null;
-  return { weekThemes: weekThemes, days: days };
+  // mm-data.js is a self-invoking IIFE that assigns window.MM_DATA — give it
+  // a minimal window stub and run it for real (no `const`-doesn't-attach
+  // vm-sandbox problem here since everything is reached through that one
+  // attached global, not scraped as separate top-level declarations).
+  const sandboxWindow = {};
+  const fn = new Function('window', code);
+  try { fn(sandboxWindow); }
+  catch (e) { err(DATA_FILE + ': threw while evaluating — ' + e.message); return null; }
+
+  const data = sandboxWindow.MM_DATA;
+  if (!data || !Array.isArray(data.WEEK_THEMES) || !data.PROGRAMS) {
+    err(DATA_FILE + ': window.MM_DATA missing WEEK_THEMES/PROGRAMS after evaluation');
+    return null;
+  }
+  return data;
 }
 
 function setCountOf(setsStr) {
@@ -121,14 +103,12 @@ function themeVisible(setsStr, weekIdx, weekCount) {
   return true;                                // Low-Rep/High-Rep weeks — covered by the set-count/tag checks, not a text pattern
 }
 
-function validatePage(file) {
-  const data = loadPage(file);
-  if (!data) return;
-  const weekCount = data.weekThemes.length;
-  const trainingDays = data.days.filter(function (d) { return d.type === 'training'; });
+function validateProgram(programId, weekThemes, days) {
+  const weekCount = weekThemes.length;
+  const trainingDays = days.filter(function (d) { return d.type === 'training'; });
 
   trainingDays.forEach(function (day) {
-    const label = file + ' ' + (day.label || '?') + ' (' + (day.session || '') + ')';
+    const label = programId + ' ' + (day.label || '?') + ' (' + (day.session || '') + ')';
     if (!Array.isArray(day.exercises) || day.exercises.length !== 10) {
       err(label + ': expected exactly 10 exercises, got ' + (day.exercises ? day.exercises.length : 0));
       return;
@@ -157,10 +137,17 @@ function validatePage(file) {
     });
   });
 
-  if (!fail) console.log(file + ': OK — ' + trainingDays.length + ' training days × ' + weekCount + ' weeks checked');
+  if (!fail) console.log(programId + ': OK — ' + trainingDays.length + ' training days × ' + weekCount + ' weeks checked');
 }
 
-PAGES.forEach(validatePage);
+const mmData = loadProgramData();
+if (mmData) {
+  PROGRAM_IDS.forEach(function (id) {
+    const program = mmData.PROGRAMS[id];
+    if (!program) { err(DATA_FILE + ': PROGRAMS.' + id + ' not found'); return; }
+    validateProgram(id, mmData.WEEK_THEMES, program.days);
+  });
+}
 
 if (fail) {
   console.error('\nFix: see CLAUDE.md\'s "Per-Day Intensifier Coverage" Shipping Checklist.');
