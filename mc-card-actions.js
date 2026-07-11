@@ -972,6 +972,13 @@
       cs.src = 'exercise-catalog.js'; cs.async = true;
       document.head.appendChild(cs);
     }
+    // 4.4: lazy-load opt-in voice control (mounts a small floating toggle;
+    // stays silent/off until the trainee taps it — see mc-voice.js header).
+    if (!window.MCVoice) {
+      var vs = document.createElement('script');
+      vs.src = 'mc-voice.js'; vs.async = true;
+      document.head.appendChild(vs);
+    }
     // C2: subscribe to the shared engine observer when available; else run our own
     if (window.MC_SCAN) {
       window.MC_SCAN.subscribe(scan);
