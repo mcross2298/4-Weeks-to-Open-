@@ -194,7 +194,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;p
     <p class="sec-lede">Invisible to everyone but you. Enter from a dashboard module, work from a clean tools hub, and publish from a pill that follows you everywhere.</p>
     <ul class="ticks">
       <li><span class="chk">✓</span><span><b>Owner unlock</b> — sign in with your owner account, then <b>Face ID / Touch ID</b> gates entry on your device. Normal users never see a trace of any of this.</span></li>
-      <li><span class="chk">✓</span><span><b>The “PM Mode” dashboard module</b> — an owner-only card on your dashboard, and the single entry to every tool. Tap it to unlock and open the <b>tools hub</b>: a tidy sheet of every action — <span class="gold">Edit Layout · Rename Center · ＋ Create · Find · Publish · Preview · History · Drafts · Export · Import · Guide · Discard · Lock</span>.</span></li>
+      <li><span class="chk">✓</span><span><b>The “PM Mode” dashboard module</b> — an owner-only card on your dashboard, and the single entry to every tool. Tap it to unlock and open the <b>tools hub</b>: a tidy sheet of every action — <span class="gold">Edit Layout · Rename Center · ＋ Create · Find · Publish · Preview · History · Drafts · Client Roster · Export · Import · Guide · Discard · Lock</span>.</span></li>
       <li><span class="chk">✓</span><span><b>A persistent Publish pill</b> — a compact <span class="gold">🛠️ PM · N edits · Publish</span> pill sits at the top of every screen while you're unlocked. It's <b>Publish-only</b>, so you can push changes live from anywhere; everything else lives in the hub, one tap away from the dashboard module.</span></li>
       <li><span class="chk">✓</span><span><b>Preview as user</b> — flip to exactly what your users see (published only), with your in-progress edits hidden. Lock when you're done and the app is a normal app again.</span></li>
     </ul>
@@ -314,6 +314,19 @@ body{background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;p
       <li><span class="chk">✓</span><span><b>Owner-locked end to end</b> — writes are owner-only and enforced server-side, so only you can change what users see.</span></li>
     </ul>
     <div class="coach"><p>That's the whole machine — a hidden toolbar that lets you restructure, re-skin, create and group, all previewed live and shipped (or thrown away) with one tap. Nothing breaks, nothing leaks, and every change can be walked back.</p></div>
+  </div>
+
+  <!-- ── 10 · CLIENT ROSTER ── -->
+  <div class="sec">
+    <div class="sec-head"><div class="sec-num">10</div><div class="sec-title">Client Roster — suggest, don't remote-control</div></div>
+    <p class="sec-lede">Assign a program and macro goals to a trainee who already has an account. It's coaching by suggestion, not by force.</p>
+    <ul class="ticks">
+      <li><span class="chk">✓</span><span><b>Add by email</b> — the client needs to have signed into the app at least once already; ＋ Add client looks up their account by email (server-side — you can't browse the user list, and nobody's private data is ever exposed to you beyond their email/id).</span></li>
+      <li><span class="chk">✓</span><span><b>Assign a program + macro goals</b> — tap <b>Assign</b> on any client to pick a program from the same list your dashboard uses, and set optional calorie/protein/fat/carb targets.</span></li>
+      <li><span class="chk">✓</span><span><b>Suggestion, not a push</b> — the assignment lands on the client's own dashboard as a dismissible card. They tap <b>Accept program</b> / <b>Apply goals</b> themselves — nothing on their device changes until they do. There is no way for PM Mode to write into a client's own program pin or macro goals directly.</span></li>
+      <li><span class="chk">✓</span><span><b>Remove anytime</b> — taking a client off your roster only removes your assignment record; their own account, logs, and data are never touched.</span></li>
+    </ul>
+    <div class="coach"><p>This is the one place PM Mode reaches past your own account — and it's built to only ever suggest, never overwrite. A client's data stays theirs to change, always with their own tap.</p></div>
   </div>
 
   <!-- ── FOOT ── -->

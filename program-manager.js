@@ -37,7 +37,8 @@
   var OWNER_SEEN_KEY = 'mc_pm_owner_seen'; // localStorage: '1' once this device confirmed owner
   var NAME_SEL   = '.ex-name, .lift-name, .var-name, .ss-name';
 
-  var bar = null, editorOverlay = null, editorCard = null, rcOverlay = null, hOverlay = null, dOverlay = null;
+  var bar = null, editorOverlay = null, editorCard = null, rcOverlay = null, hOverlay = null, dOverlay = null, cliOverlay = null;
+  var clientRowsCache = [];
   var hubOv = null;                 // tools hub bottom sheet
   var openHubAfterUnlock = false;   // open the hub once unlock completes
 
@@ -277,6 +278,7 @@
     else if (act === 'import') doImport();
     else if (act === 'history') openHistory();
     else if (act === 'drafts') openDrafts();
+    else if (act === 'clients') openClients();
     else if (act === 'guide') location.href = 'pm-mode-overview.html';
     else if (act === 'discard') doDiscard();
     else if (act === 'lock') setActive(false);
@@ -317,6 +319,8 @@
     { t: 'Review & publish', items: [
       ['publish', '☁️', 'Publish'],    ['preview', '👁️', 'Preview as user'],
       ['history', '🕘', 'History'],     ['drafts', '🗂️', 'Drafts'] ] },
+    { t: 'Coaching', items: [
+      ['clients', '👥', 'Client Roster'] ] },
     { t: 'Data & help', items: [
       ['export', '⬇️', 'Export'],       ['import', '⬆️', 'Import'],
       ['guide', '📖', 'PM Guide'] ] },
@@ -1499,6 +1503,161 @@
         msg('Delete failed', (e && e.message) ? e.message : 'unknown error');
       });
     }, 'Delete');
+  }
+
+  // ====================================================================== //
+  //  CLIENT ROSTER  (roadmap 4.5)                                          //
+  //  Assign a program + macro goals to an existing app user. This is a     //
+  //  SUGGESTION, never a remote-control write — pm_clients.sql's header    //
+  //  explains why. The client's own device (dashboard.html) reads its own  //
+  //  row and applies it (or not) as an ordinary same-user write.           //
+  // ====================================================================== //
+  function clientMacroSummary(g) {
+    if (!g || !g.kcal) return 'No goals set';
+    return g.kcal + ' kcal · ' + (g.p || 0) + 'p / ' + (g.f || 0) + 'f / ' + (g.c || 0) + 'c';
+  }
+  function buildClients() {
+    cliOverlay = document.createElement('div');
+    cliOverlay.className = 'mc-pm-overlay';
+    cliOverlay.innerHTML =
+      '<div class="mc-pm-modal">' +
+        '<div class="mc-pm-title">👥 Client Roster</div>' +
+        '<div class="mc-pm-orig">Assign a program and macro goals to a trainee who already has an account. It lands as a suggestion on their dashboard — they choose to accept it, nothing changes on their device automatically.</div>' +
+        '<button class="mc-rc-add" data-act="cli-add">＋ Add client by email</button>' +
+        '<div class="mc-pp-list" id="mcClientBody"></div>' +
+        '<div class="mc-pm-btns"><span style="flex:1"></span>' +
+          '<button class="mc-pm-save" data-act="cli-done">Done</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(cliOverlay);
+    cliOverlay.addEventListener('click', function (e) {
+      if (e.target === cliOverlay) { cliOverlay.classList.remove('open'); return; }
+      if (e.target.closest('[data-act="cli-done"]')) { cliOverlay.classList.remove('open'); return; }
+      if (e.target.closest('[data-act="cli-add"]')) { addClientFlow(); return; }
+      var b, id;
+      if ((b = e.target.closest('.mc-cli-assign'))) { id = +b.getAttribute('data-id'); assignClientFlow(id); return; }
+      if ((b = e.target.closest('.mc-cli-remove'))) { id = +b.getAttribute('data-id'); removeClientRow(id); return; }
+    });
+  }
+  function openClients() {
+    if (!window.MC_SB || !MC_SB.configured) { msg('No backend', 'Client roster needs Supabase.'); return; }
+    if (typeof MC_SB.listClients !== 'function') { msg('Unavailable', 'This build has no client-roster support.'); return; }
+    if (!cliOverlay) buildClients();
+    refreshClientList();
+    cliOverlay.classList.add('open');
+  }
+  function refreshClientList() {
+    var body = cliOverlay.querySelector('#mcClientBody');
+    body.innerHTML = '<div class="mc-pm-empty">Loading…</div>';
+    MC_SB.listClients().then(function (rows) {
+      clientRowsCache = rows || [];
+      if (!rows || !rows.length) { body.innerHTML = '<div class="mc-pm-empty">No clients yet — add one by email above.</div>'; return; }
+      body.innerHTML = rows.map(function (r) {
+        var prog = r.assigned_program_name || 'No program assigned';
+        return '<div class="mc-draft-row">' +
+          '<div class="mc-draft-main"><span class="mc-hist-key">' + esc(r.client_label || r.client_email) + '</span>' +
+            '<div class="mc-hist-meta">' + esc(prog) + ' · ' + esc(clientMacroSummary(r.assigned_macro_goals)) + '</div></div>' +
+          '<button class="mc-draft-load mc-cli-assign" data-id="' + r.id + '">Assign</button>' +
+          '<button class="mc-draft-del mc-rc-reset sm mc-cli-remove" data-id="' + r.id + '" title="Remove">🗑</button>' +
+        '</div>';
+      }).join('');
+    }).catch(function (e) {
+      body.innerHTML = '<div class="mc-pm-empty">Could not load clients' + (e && e.message ? ': ' + esc(e.message) : '') + '.</div>';
+    });
+  }
+
+  function addClientFlow() {
+    showModal({
+      title: 'Add client',
+      body: 'Enter the email they used to sign into the app. They must have signed in at least once already.',
+      fields: [
+        { id: 'email', label: 'Client email', type: 'email' },
+        { id: 'label', label: 'Display name (optional)', type: 'text' }
+      ],
+      buttons: [
+        { label: 'Cancel', cb: function () {} },
+        { label: 'Add', primary: true, cb: function (v) {
+          var email = (v.email || '').trim();
+          if (!email) return;
+          MC_SB.lookupClientByEmail(email).then(function (found) {
+            return MC_SB.addClient({
+              client_user_id: found.user_id,
+              client_email: found.email || email,
+              client_label: (v.label || '').trim()
+            });
+          }).then(function () {
+            refreshClientList();
+          }).catch(function (e) {
+            if (e && e.notFound) {
+              msg('No account found', 'Nobody has signed into the app with that email yet. Ask them to sign in once, then try again.');
+            } else if (e && /duplicate|unique/i.test(e.message || '')) {
+              msg('Already added', 'That client is already on your roster.');
+            } else {
+              msg('Add failed', (e && e.message) ? e.message : 'unknown error');
+            }
+          });
+        } }
+      ]
+    });
+  }
+
+  function assignClientFlow(id) {
+    var client = clientRowsCache.filter(function (r) { return r.id === id; })[0];
+    if (!client) return;
+    var programs = (window.MC_PM_DATA && MC_PM_DATA.programs) || [];
+    var g = client.assigned_macro_goals || {};
+    var progOptions = '<option value="">— No program —</option>' + programs.map(function (p) {
+      return '<option value="' + esc(p.id) + '"' + (p.id === client.assigned_program_id ? ' selected' : '') + '>' + esc(p.name) + '</option>';
+    }).join('');
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+    ov.innerHTML =
+      '<div style="background:#1a1a1a;border:1px solid #333;border-radius:16px;padding:24px;width:100%;max-width:340px;font-family:sans-serif;">' +
+        '<div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:4px;">Assign — ' + esc(client.client_label || client.client_email) + '</div>' +
+        '<div style="font-size:12px;color:#888;margin-bottom:16px;">Lands as a suggestion on their dashboard.</div>' +
+        '<label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Program</label>' +
+        '<select id="cliProg" style="width:100%;box-sizing:border-box;background:#0d0d0d;border:1px solid #444;border-radius:8px;padding:10px 12px;color:#fff;font-size:15px;margin-bottom:14px;">' + progOptions + '</select>' +
+        '<label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Macro goals (optional)</label>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">' +
+          '<input id="cliKcal" type="number" inputmode="numeric" placeholder="Calories" value="' + (g.kcal || '') + '" style="background:#0d0d0d;border:1px solid #444;border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;">' +
+          '<input id="cliP" type="number" inputmode="numeric" placeholder="Protein g" value="' + (g.p || '') + '" style="background:#0d0d0d;border:1px solid #444;border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;">' +
+          '<input id="cliF" type="number" inputmode="numeric" placeholder="Fat g" value="' + (g.f || '') + '" style="background:#0d0d0d;border:1px solid #444;border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;">' +
+          '<input id="cliC" type="number" inputmode="numeric" placeholder="Carbs g" value="' + (g.c || '') + '" style="background:#0d0d0d;border:1px solid #444;border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;">' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button id="cliCancel" style="flex:1;padding:11px;border-radius:10px;border:none;font-size:14px;font-weight:600;cursor:pointer;background:#2a2a2a;color:#fff;">Cancel</button>' +
+          '<button id="cliSave" style="flex:1;padding:11px;border-radius:10px;border:none;font-size:14px;font-weight:600;cursor:pointer;background:#d4af37;color:#000;">Save</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(ov);
+    ov.querySelector('#cliCancel').addEventListener('click', function () { document.body.removeChild(ov); });
+    ov.querySelector('#cliSave').addEventListener('click', function () {
+      var progId = ov.querySelector('#cliProg').value;
+      var progName = progId ? (MC_PM_DATA.program(progId) || {}).name || progId : null;
+      var kcal = +ov.querySelector('#cliKcal').value || 0;
+      var goals = kcal ? {
+        kcal: kcal,
+        p: +ov.querySelector('#cliP').value || 0,
+        f: +ov.querySelector('#cliF').value || 0,
+        c: +ov.querySelector('#cliC').value || 0
+      } : null;
+      document.body.removeChild(ov);
+      MC_SB.updateClientAssignment(id, {
+        assigned_program_id: progId || null,
+        assigned_program_name: progName,
+        assigned_macro_goals: goals
+      }).then(refreshClientList).catch(function (e) {
+        msg('Save failed', (e && e.message) ? e.message : 'unknown error');
+      });
+    });
+  }
+
+  function removeClientRow(id) {
+    confirmModal('Remove client?', 'Remove this client from your roster? Their own account and data are unaffected.', function () {
+      MC_SB.removeClient(id).then(refreshClientList).catch(function (e) {
+        msg('Remove failed', (e && e.message) ? e.message : 'unknown error');
+      });
+    }, 'Remove');
   }
 
   // ---- styles ---------------------------------------------------------------

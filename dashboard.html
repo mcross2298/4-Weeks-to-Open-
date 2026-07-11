@@ -225,6 +225,23 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 }
 .wrapped-muscle-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 0.5s;}
 
+/* ── CLIENT ASSIGNMENT CARD (roadmap 4.5) ── */
+.client-assign-card{
+  background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(30,30,40,0));
+  border:1px solid rgba(212,175,55,0.28);border-radius:18px;margin:0 18px 16px;padding:16px 16px 14px;
+}
+.cac-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.cac-icon{font-size:16px;}
+.cac-title{flex:1;font-size:13px;font-weight:800;color:var(--gold);}
+.cac-x{background:none;border:none;color:var(--muted2);font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;}
+.cac-body{font-size:13px;color:var(--text2,var(--text));line-height:1.5;margin-bottom:12px;}
+.cac-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.cac-btn{
+  flex:1;min-width:120px;padding:10px 12px;border-radius:11px;border:1px solid var(--border2);
+  background:var(--surface2);color:var(--text);font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;
+}
+.cac-btn.primary{background:var(--gold);border-color:var(--gold);color:#000;}
+
 /* ── COACH SECTION ── */
 .coach-section{
   background:var(--surface);border:1px solid var(--border2);
@@ -1292,6 +1309,10 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
 
   </div>
 
+  <!-- Client assignment banner (roadmap 4.5) — only appears when a PM has
+       suggested a program/macro goals; hidden the rest of the time -->
+  <div class="client-assign-card" id="clientAssignCard" style="display:none;"></div>
+
   <!-- Coach Claude (collapsed by default; fetches once per day) -->
   <div class="coach-section" id="coachSection">
     <button class="coach-toggle" id="coachToggle" onclick="toggleCoach()" aria-expanded="false">
@@ -2145,6 +2166,83 @@ function loadCoachNote(){
     }).catch(function(){el.textContent='Coach unavailable right now — check back later.';});
   }catch(e){el.textContent='Coach unavailable right now — check back later.';}
 }
+
+// ── Client assignment banner (roadmap 4.5) ──────────────────────────────────
+// A PM's roster assignment is a SUGGESTION only (pm_clients RLS only ever
+// lets a user read their OWN row) — this always ends in a same-user write
+// the trainee triggers themselves (saveActiveProgram / their own macro
+// goals), exactly like every other write already in this app.
+(function(){
+  function dismissKey(row){ return 'mc_client_assign_dismissed|'+row.id+'|'+row.updated_at; }
+  function macroSummary(g){
+    if(!g||!g.kcal) return '';
+    return g.kcal+' kcal · '+(g.p||0)+'p / '+(g.f||0)+'f / '+(g.c||0)+'c';
+  }
+  function renderAssignCard(row){
+    var el=document.getElementById('clientAssignCard');
+    if(!el) return;
+    var progName=row.assigned_program_name;
+    var goals=row.assigned_macro_goals;
+    if(!progName&&!goals) return; // nothing actually assigned yet
+    var bodyParts=[];
+    if(progName) bodyParts.push('a program — <b>'+esc(progName)+'</b>');
+    if(goals) bodyParts.push('macro goals — <b>'+esc(macroSummary(goals))+'</b>');
+    var btns='';
+    if(progName) btns+='<button class="cac-btn primary" onclick="acceptClientProgram(\''+row.id+'\')">Accept program</button>';
+    if(goals) btns+='<button class="cac-btn" onclick="acceptClientGoals(\''+row.id+'\')">Apply goals</button>';
+    el.innerHTML=
+      '<div class="cac-head"><span class="cac-icon">🎯</span><span class="cac-title">Your coach has a suggestion</span>'+
+        '<button class="cac-x" aria-label="Dismiss" onclick="dismissClientAssign(\''+row.id+'\',\''+row.updated_at+'\')">✕</button></div>'+
+      '<div class="cac-body">Your coach assigned you '+bodyParts.join(' and ')+'. Nothing changes until you tap to accept.</div>'+
+      '<div class="cac-btns">'+btns+'</div>';
+    el.style.display='block';
+    el.dataset.row=JSON.stringify(row);
+  }
+  window.dismissClientAssign=function(id,updatedAt){
+    try{localStorage.setItem('mc_client_assign_dismissed|'+id+'|'+updatedAt,'1');}catch(e){}
+    var el=document.getElementById('clientAssignCard');
+    if(el) el.style.display='none';
+  };
+  window.acceptClientProgram=function(id){
+    var el=document.getElementById('clientAssignCard');
+    var row=el&&el.dataset.row?JSON.parse(el.dataset.row):null;
+    if(!row||!row.assigned_program_id) return;
+    var sel=allProgs().find(function(p){return p.id===row.assigned_program_id;});
+    if(!sel){ alert('That program is no longer available.'); return; }
+    sel.startedAt=new Date().toISOString();
+    activeProg=sel;
+    try{localStorage.setItem(STORE,JSON.stringify(activeProg));}catch(e){}
+    renderHero();
+    try{document.dispatchEvent(new CustomEvent('mc:program-changed'));}catch(e){}
+    try{if(window.MC_SB&&MC_SB.configured)MC_SB.saveActiveProgram(activeProg).catch(function(){});}catch(e){}
+    window.dismissClientAssign(id,row.updated_at);
+  };
+  window.acceptClientGoals=function(id){
+    var el=document.getElementById('clientAssignCard');
+    var row=el&&el.dataset.row?JSON.parse(el.dataset.row):null;
+    if(!row||!row.assigned_macro_goals) return;
+    try{
+      var obj=JSON.parse(localStorage.getItem('mc_macros_v1')||'{}');
+      obj.goals=Object.assign({},obj.goals,row.assigned_macro_goals);
+      localStorage.setItem('mc_macros_v1',JSON.stringify(obj));
+    }catch(e){}
+    window.dismissClientAssign(id,row.updated_at);
+  };
+  function initClientAssign(){
+    if(!window.MC_SB||!MC_SB.configured||typeof MC_SB.getMyAssignment!=='function') return;
+    MC_SB.isOwner().then(function(owner){
+      if(owner) return null; // the PM's own account never sees its own roster as a suggestion
+      return MC_SB.getMyAssignment();
+    }).then(function(row){
+      if(!row) return;
+      try{ if(localStorage.getItem(dismissKey(row))) return; }catch(e){}
+      renderAssignCard(row);
+    }).catch(function(){});
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',initClientAssign);
+  } else { setTimeout(initClientAssign,300); }
+})();
 
 // ── Push notification chip (appears when supported + not yet granted) ────────
 (function(){
