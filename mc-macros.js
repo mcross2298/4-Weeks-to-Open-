@@ -669,6 +669,9 @@
     b3.onclick = function () { s.close(); openManual(); };
     row.appendChild(b2); row.appendChild(b3);
     w.appendChild(row);
+    var b4 = el('button', 'nt-btn nt-btn-describe', '💬 Describe what you ate');
+    b4.onclick = function () { s.close(); openDescribe(); };
+    w.appendChild(b4);
     s.sh.appendChild(w);
   }
 
@@ -918,6 +921,107 @@
       if (!input.value.trim()) { showEmpty(); return; }
       timer = setTimeout(run, 350);
     });
+    setTimeout(function () { input.focus(); }, 250);
+  }
+
+  // ---- natural-language describe flow (roadmap 4.2) -------------------------
+  // Free text -> parse-food (extracts {query,qty,unit} only, no macros) ->
+  // each query runs through the same search() used everywhere else, so the
+  // logged macros are always real database numbers, never LLM-invented ones.
+  function openDescribe() {
+    var s = sheet('Describe what you ate', 'e.g. "two eggs and a slice of toast with butter"');
+    var wrap = el('div', 'nt-describe-wrap');
+    var input = el('textarea', 'nt-input nt-describe-input');
+    input.placeholder = 'Type naturally — I’ll find the foods.';
+    input.rows = 2;
+    wrap.appendChild(input);
+    var go = el('button', 'nt-btn nt-btn-gold', 'Find foods');
+    wrap.appendChild(go);
+    var results = el('div', 'nt-describe-results');
+    wrap.appendChild(results);
+    s.sh.appendChild(wrap);
+
+    function matchAndRender(items) {
+      results.innerHTML = '<div class="nt-results-msg">Matching foods…</div>';
+      Promise.all(items.map(function (it) {
+        return MCFoodAPI.search(it.query).then(function (matches) { return { parsed: it, match: (matches && matches[0]) || null }; });
+      })).then(renderRows);
+    }
+
+    function renderRows(rows) {
+      results.innerHTML = '';
+      var rowState = [];
+      rows.forEach(function (r) {
+        var row = el('div', 'nt-describe-row');
+        if (!r.match) {
+          row.innerHTML =
+            '<div class="nt-describe-main">' +
+              '<div class="nt-describe-name">' + esc(r.parsed.query) + '</div>' +
+              '<div class="nt-describe-sub">No match found</div>' +
+            '</div>';
+          var manualBtn = el('button', 'nt-btn nt-describe-manual', 'Add manually');
+          manualBtn.onclick = function () { s.close(); openManual({ name: r.parsed.query }); };
+          row.appendChild(manualBtn);
+          results.appendChild(row);
+          return;
+        }
+        var qty = r.parsed.qty || 1;
+        var check = el('input', 'nt-describe-check');
+        check.type = 'checkbox'; check.checked = true;
+        check.setAttribute('aria-label', 'Include ' + r.match.name);
+        var main = el('div', 'nt-describe-main');
+        function subText() { return qty + ' ' + r.parsed.unit + ' · ' + Math.round(r.match.kcal * qty) + ' kcal'; }
+        main.innerHTML = '<div class="nt-describe-name">' + esc(r.match.name) + '</div>' +
+          '<div class="nt-describe-sub">' + esc(subText()) + '</div>';
+        row.appendChild(check);
+        row.appendChild(main);
+        var ctl = el('div', 'nt-describe-ctl');
+        var minus = el('button', 'nt-describe-ctlbtn', '−'); minus.setAttribute('aria-label', 'Decrease quantity');
+        var val = el('div', 'nt-describe-ctlval', String(qty));
+        var plus = el('button', 'nt-describe-ctlbtn', '+'); plus.setAttribute('aria-label', 'Increase quantity');
+        function setQty(v) {
+          qty = Math.max(1, Math.round(v));
+          val.textContent = String(qty);
+          var sub = $('.nt-describe-sub', main);
+          if (sub) sub.textContent = subText();
+        }
+        minus.onclick = function () { setQty(qty - 1); };
+        plus.onclick = function () { setQty(qty + 1); };
+        ctl.appendChild(minus); ctl.appendChild(val); ctl.appendChild(plus);
+        row.appendChild(ctl);
+        results.appendChild(row);
+        rowState.push({ check: check, match: r.match, getQty: function () { return qty; } });
+      });
+      if (rowState.length) {
+        var addBtn = el('button', 'nt-btn nt-btn-gold nt-describe-add', 'Log checked foods');
+        addBtn.onclick = function () {
+          rowState.forEach(function (rs) {
+            if (!rs.check.checked) return;
+            var food = foodFromItem(rs.match);
+            addEntry({ name: food.name, source: 'nl', unit: food.basis, qty: rs.getQty(),
+              per: food.per, nutr: food.nutr, grams: food.grams, code: food.code });
+          });
+          s.close(); render();
+        };
+        results.appendChild(addBtn);
+      }
+    }
+
+    go.onclick = function () {
+      var text = input.value.trim();
+      if (!text) return;
+      go.disabled = true; go.textContent = 'Finding…';
+      results.innerHTML = '';
+      var parseFn = (window.MCFoodAPI && MCFoodAPI.parse) ? MCFoodAPI.parse(text) : Promise.resolve([]);
+      parseFn.then(function (items) {
+        go.disabled = false; go.textContent = 'Find foods';
+        if (!items.length) {
+          results.innerHTML = '<div class="nt-results-msg">Couldn’t make sense of that — try Search or Manual instead.</div>';
+          return;
+        }
+        matchAndRender(items);
+      });
+    };
     setTimeout(function () { input.focus(); }, 250);
   }
 
@@ -1405,6 +1509,23 @@
       '.nt-result-sub{font-size:11px;color:var(--muted2);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
       '.nt-result-kcal{font-size:15px;font-weight:900;color:var(--text);flex-shrink:0;text-align:center;}' +
       '.nt-result-kcal span{display:block;font-size:9px;color:var(--muted2);font-weight:700;}' +
+      /* natural-language describe flow (4.2) */
+      '.nt-btn-describe{background:rgba(192,132,252,0.1);border-color:rgba(192,132,252,0.35);color:#e9d5ff;}' +
+      '.nt-describe-wrap{display:flex;flex-direction:column;gap:12px;}' +
+      '.nt-describe-input{resize:vertical;min-height:52px;font-family:inherit;margin-bottom:0;}' +
+      '.nt-describe-results{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto;}' +
+      '.nt-describe-row{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);' +
+        'border-radius:12px;padding:11px 13px;}' +
+      '.nt-describe-check{width:20px;height:20px;flex-shrink:0;accent-color:var(--gold);}' +
+      '.nt-describe-main{flex:1;min-width:0;}' +
+      '.nt-describe-name{font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+      '.nt-describe-sub{font-size:11px;color:var(--muted2);font-weight:600;margin-top:2px;}' +
+      '.nt-describe-manual{width:auto;flex-shrink:0;padding:8px 12px;font-size:12px;}' +
+      '.nt-describe-ctl{display:flex;align-items:center;gap:6px;flex-shrink:0;}' +
+      '.nt-describe-ctlbtn{width:26px;height:26px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);' +
+        'color:var(--text);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;line-height:1;padding:0;}' +
+      '.nt-describe-ctlval{min-width:18px;text-align:center;font-size:13px;font-weight:800;color:var(--text);}' +
+      '.nt-describe-add{margin-top:4px;}' +
       '.nt-adjust{margin-top:8px;}' +
       '.nt-adjust-head{font-size:12px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted2);margin-bottom:10px;}' +
       '.nt-calsum{display:flex;align-items:baseline;gap:10px;margin-bottom:14px;}' +

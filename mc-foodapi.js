@@ -7,6 +7,7 @@
 
      MCFoodAPI.search(query)   -> Promise<[item]>   (text search)
      MCFoodAPI.lookup(barcode) -> Promise<item|null> (barcode → product)
+     MCFoodAPI.parse(text)     -> Promise<[{query,qty,unit}]> (NL description → search-ready items)
 
    A normalized `item` is:
      { code, name, brand, basis:'serving'|'100g', servingLabel, grams,
@@ -191,5 +192,22 @@
     }).catch(function () { return cached || null; });
   }
 
-  window.MCFoodAPI = { search: search, lookup: lookup };
+  // ---- public: natural-language parse (roadmap 4.2) ------------------------
+  // "two eggs and a slice of toast" -> [{query, qty, unit}, ...]. The model
+  // only extracts what was said, never nutrition numbers — callers still run
+  // each `query` through search() above for real, grounded macro data.
+  var PARSE_URL = 'https://dhlxmoyjfxohbeiexwnr.supabase.co/functions/v1/parse-food';
+  function parse(text) {
+    text = (text || '').trim();
+    if (!text) return Promise.resolve([]);
+    return fetch(PARSE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: FN_KEY, Authorization: 'Bearer ' + FN_KEY },
+      body: JSON.stringify({ text: text })
+    }).then(function (r) { if (!r.ok) throw new Error('parse ' + r.status); return r.json(); })
+      .then(function (data) { return (data && Array.isArray(data.items)) ? data.items : []; })
+      .catch(function () { return []; });
+  }
+
+  window.MCFoodAPI = { search: search, lookup: lookup, parse: parse };
 })();
