@@ -900,6 +900,7 @@ const PMC_SPLIT_META = {
 };
 </script>
 <script src="mc-reps.js"></script>
+<script src="mc-pm-data.js"></script>
 <script>
 // ── TIMER ENGINE ──────────────────────────────────────────────────
 const TMR={
@@ -947,14 +948,8 @@ let currentWorkoutId = null;
 const checkState = {};
 const roundState = {};
 
-// ── BADGE LABELS ──────────────────────────────────────────────────
-const BADGE_LABELS = {
-  'tb-pyramid':'📈 Pyramid','tb-lowrep':'🏋️ Low Rep','tb-tempo':'⏱️ Tempo',
-  'tb-highrep12':'🔥 12–15 Reps','tb-highrep20':'🔥 20–30 Reps','tb-drop':'↘️ Drop Set',
-  'tb-amrap':'💀 AMRAP','tb-minrest':'⚡ 20s Rest','tb-optional':'⭐ Optional',
-  'tb-finisher':'🏁 Finisher','tb-superset':'⚡ Superset','tb-dumbbell':'🏋️ Dumbbell',
-  'tb-cable':'🔗 Cable',
-};
+// ── BADGE LABELS (mc-pm-data.js — see Phase 3.3 consolidation) ──────
+const BADGE_LABELS = window.MC_PM_DATA.badges.card;
 function badges(arr){
   return (arr||[]).map(b=>`<span class="type-badge ${b}">${BADGE_LABELS[b]||b}</span>`).join('');
 }

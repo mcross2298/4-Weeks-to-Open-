@@ -62,23 +62,35 @@
 
   // ---- page → canonical split label (from PROGS.splits) -------------------
   // Split hub pages only — provides the PROGS-matching key for split renames.
-  var PAGE_SPLIT_MAP = {
-    'pmc-split1.html': { progId: 'pmc', split: 'Split 1' },
-    'pmc-split2.html': { progId: 'pmc', split: 'Split 2' },
-    'pmc-split3.html': { progId: 'pmc', split: 'Split 3' },
-    'pmc-split4.html': { progId: 'pmc', split: 'Split 4' },
-    'pmc-split5.html': { progId: 'pmc', split: 'Split 5' },
-    'pmc-split6.html': { progId: 'pmc', split: 'Split 6' },
-    'pmc-split7.html': { progId: 'pmc', split: 'Split 7' },
-    'mc-split1.html':  { progId: 'mc',  split: 'Split 1' },
-    'mc-split2.html':  { progId: 'mc',  split: 'Split 2' },
-    'mc-split3.html':  { progId: 'mc',  split: 'Split 3' },
-    'mc-split4.html':  { progId: 'mc',  split: 'Split 4' },
-    'mc-split5.html':  { progId: 'mc',  split: 'Split 5' }
-  };
+  // 'pmc' and 'mc' are the only two programs whose split hubs follow a fixed
+  // <progId>-split<N>.html naming convention, so this derives their entries
+  // from mc-pm-data.js's programs[].splits instead of hand-duplicating the
+  // list here — a split rename/reorder only needs to change once, in
+  // mc-pm-data.js. Built lazily (not at module load): mc-naming.js and
+  // mc-pm-data.js are loaded as two independent dynamically-inserted
+  // <script> tags with no guaranteed load-completion order (see
+  // program-overrides.js's init()), so window.MC_PM_DATA may not exist yet
+  // the moment this file first runs.
+  var SPLIT_HUB_PROG_IDS = ['pmc', 'mc'];
+  var _pageSplitMap = null;
+  function pageSplitMap() {
+    if (_pageSplitMap) return _pageSplitMap;
+    var progs = (window.MC_PM_DATA && window.MC_PM_DATA.programs) || [];
+    if (!progs.length) return {}; // not loaded yet — don't cache an empty result
+    var map = {};
+    SPLIT_HUB_PROG_IDS.forEach(function (progId) {
+      var prog = progs.filter(function (p) { return p.id === progId; })[0];
+      if (!prog) return;
+      prog.splits.forEach(function (split, i) {
+        map[progId + '-split' + (i + 1) + '.html'] = { progId: progId, split: split };
+      });
+    });
+    _pageSplitMap = map;
+    return map;
+  }
 
   function splitOf(pageId) {
-    var e = PAGE_SPLIT_MAP[pageId];
+    var e = pageSplitMap()[pageId];
     return e ? e.split : null;
   }
 

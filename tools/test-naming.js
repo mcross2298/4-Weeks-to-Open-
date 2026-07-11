@@ -65,6 +65,12 @@ global.window = global;
 function load(file) { vm.runInThisContext(fs.readFileSync(path.join(ROOT, file), 'utf8'), { filename: file }); }
 load('program-overrides.js');
 load('mc-naming.js');
+// mc-pm-data.js loads before mc-naming.js's own tests run (not just before
+// section K's) since splitOf()'s PAGE_SPLIT_MAP is now derived from it (see
+// Phase 3.3) — in a real page these are two independently dynamically-
+// inserted <script> tags with no guaranteed order, but by the time anything
+// actually calls splitOf() both have long since finished loading.
+load('mc-pm-data.js');
 const PO = global.window.MC_PO;
 const N = global.window.MC_NAMES;
 ok(PO && N, 'modules loaded (MC_PO + MC_NAMES present)');
@@ -179,7 +185,6 @@ eq(nameEl.textContent, 'Pronated DB Chest Flies', 'J3 reverts to original when b
 cardList = [];
 
 // ---- K: shared program/badge data (mc-pm-data.js, single source) ----------
-load('mc-pm-data.js');
 const D = global.window.MC_PM_DATA;
 ok(D, 'K0 MC_PM_DATA loaded');
 eq(D.programs.length, 10, 'K1 master build lists all 10 programs');
