@@ -338,11 +338,14 @@
   function closeSub() { if (subOverlay) subOverlay.classList.remove('open'); subCard = null; }
 
   function renderSub() {
-    var name = cardName(subCard);
+    var card = subCard;
+    var name = cardName(card);
     var info = MCBiomech.classify(name);
-    var alts = MCBiomech.alternatives(name, { lastWeight: lastLoggedWeight(subCard) }).slice(0, 3);
+    var lastWeight = lastLoggedWeight(card);
+    var alts = MCBiomech.alternatives(name, { lastWeight: lastWeight }).slice(0, 3);
+    var needMore = 3 - alts.length;
     var rows = alts.length ? alts.map(subRow).join('')
-      : '<div class="mc-sub-empty">No exact matches — try fewer keywords</div>';
+      : (needMore > 0 ? '' : '<div class="mc-sub-empty">No exact matches — try fewer keywords</div>');
     var patt = String(info.pattern || '').replace(/-/g, ' ');
     subOverlay.innerHTML =
       '<div class="mc-sheet mc-sub-sheet" role="menu">' +
@@ -350,10 +353,60 @@
           '<div class="mc-sub-title">Substitute exercise</div>' +
           '<div class="mc-sub-sub">' + subEsc(name) + ' &middot; <span class="mc-sub-tag">' + subEsc(info.muscle) + ' &middot; ' + subEsc(patt) + '</span></div>' +
         '</div>' +
-        '<div class="mc-sub-list">' + rows + '</div>' +
+        '<div class="mc-sub-list" id="mcSubList">' + rows +
+          (needMore > 0 ? '<div class="mc-sub-loading" id="mcSubLoading">🔎 Looking for more options…</div>' : '') +
+        '</div>' +
         '<button class="mc-item mc-sub-lib" data-sub="library"><span class="mc-ico">📚</span>Browse all for ' + subEsc(info.muscle) + '…</button>' +
         '<button class="mc-item mc-item-cancel" data-sub="cancel">Cancel</button>' +
       '</div>';
+    if (needMore > 0) loadSubFallback(card, name, info, lastWeight, needMore);
+  }
+
+  // LLM fallback (roadmap 4.3): only fires when the deterministic tiers in
+  // mc-biomech.js's alternatives() come up short. Signed-out or offline users
+  // just keep today's behavior — the loading row is removed with nothing to
+  // show, never a dead spinner. Guards against the sheet being closed or
+  // reopened for a different card before the response lands.
+  function loadSubFallback(card, name, info, lastWeight, need) {
+    if (!window.MCBiomech || !MCBiomech.fallbackCandidates || !window.MC_SB || !MC_SB.callSubstitute) {
+      removeSubLoading(card);
+      return;
+    }
+    var pool = MCBiomech.fallbackCandidates(name, { muscle: info.muscle });
+    if (!pool.length) { removeSubLoading(card); return; }
+    MC_SB.callSubstitute({
+      name: name, muscle: info.muscle, pattern: info.pattern, equipment: info.equipment,
+      need: need, candidates: pool
+    }).then(function (picks) {
+      if (subCard !== card) return; // sheet moved on — discard this response
+      if (!picks || !picks.length) { removeSubLoading(card); return; }
+      var rowsHtml = picks.map(function (i) {
+        var c = pool[i]; if (!c) return '';
+        var w = MCBiomech.convertWeight(name, c.name, lastWeight);
+        return subRow({
+          name: c.name, equipment: c.equipment, pattern: c.pattern, muscle: c.muscle,
+          weight: w, weightSource: w ? 'estimate' : 'none', acceptCount: 0, aiSuggested: true
+        });
+      }).join('');
+      var loading = document.getElementById('mcSubLoading');
+      if (loading) loading.outerHTML = rowsHtml;
+      if (!rowsHtml) {
+        var list = document.getElementById('mcSubList');
+        if (list && !list.querySelector('.mc-sub-row')) {
+          list.innerHTML = '<div class="mc-sub-empty">No exact matches — try fewer keywords</div>';
+        }
+      }
+    }).catch(function () { if (subCard === card) removeSubLoading(card); });
+  }
+  function removeSubLoading(card) {
+    if (subCard !== card) return;
+    var loading = document.getElementById('mcSubLoading');
+    if (!loading) return;
+    var list = document.getElementById('mcSubList');
+    loading.remove();
+    if (list && !list.querySelector('.mc-sub-row')) {
+      list.innerHTML = '<div class="mc-sub-empty">No exact matches — try fewer keywords</div>';
+    }
   }
 
   // No gym-profile UI exists to ever set a piece of equipment unavailable
@@ -369,10 +422,11 @@
       : a.weightSource === 'estimate' ? '<span class="mc-sub-wt">≈ ' + a.weight + ' lb</span>'
       : '';
     var used = a.acceptCount > 0 ? '<span class="mc-sub-used">↻ Used before</span>' : '';
-    return '<button class="mc-sub-row" data-pick="' + subEsc(a.name) + '" data-w="' + (a.weight || '') + '">' +
+    var ai = a.aiSuggested ? '<span class="mc-sub-ai" title="AI-suggested — outside the usual muscle/pattern match">✨ AI</span>' : '';
+    return '<button class="mc-sub-row' + (a.aiSuggested ? ' mc-sub-row-ai' : '') + '" data-pick="' + subEsc(a.name) + '" data-w="' + (a.weight || '') + '">' +
              '<span class="mc-sub-eq mc-eq-' + a.equipment.toLowerCase().replace(/[^a-z]/g, '') + '">' + subEsc(a.equipment) + '</span>' +
              '<span class="mc-sub-name">' + subEsc(a.name) + '</span>' +
-             used + wt +
+             ai + used + wt +
            '</button>';
   }
 

@@ -13,6 +13,11 @@
      classify(name)                     -> { pattern, equipment, muscle }
      alternatives(name, opts)           -> ranked [{ name, equipment, pattern,
                                                      muscle, weight }]
+     fallbackCandidates(name, opts)     -> leftover pool [{ name, equipment,
+                                                     pattern, muscle }] beyond
+                                            what alternatives() already used —
+                                            grounded candidate list for the
+                                            coach-substitute LLM fallback
      convertWeight(fromName, toName, w) -> predicted target weight (lb, /5)
      EQUIP                              -> ordered equipment list
 
@@ -238,22 +243,33 @@
   // tier 1 is thin) is same muscle, any pattern. Within each tier, exercises
   // the user has previously picked as a substitute for this exact original
   // sort first (most-accepted first); the rest stay alphabetical.
-  function alternatives(name, opts) {
-    opts = opts || {};
+  // Shared by alternatives() and fallbackCandidates(): splits the pool (minus
+  // self) into tier1 (same pattern + muscle), tier2 (same muscle, other
+  // pattern), and rest (everything else) so the LLM fallback can be handed
+  // exactly what the deterministic matcher didn't already use.
+  function tieredCandidates(name, opts) {
     var src = classify(name, opts.muscle);
     var selfKey = String(name || '').trim().toLowerCase();
-    var counts = acceptCounts(name);
     var candidates = pool().filter(function (e) {
       return e.name.toLowerCase() !== selfKey;
     });
     var tier1 = candidates.filter(function (e) {
       return e.pattern === src.pattern && e.muscle === src.muscle;
     });
-    var tier1Keys = {};
-    tier1.forEach(function (e) { tier1Keys[e.name.toLowerCase()] = 1; });
+    var usedKeys = {};
+    tier1.forEach(function (e) { usedKeys[e.name.toLowerCase()] = 1; });
     var tier2 = candidates.filter(function (e) {
-      return e.muscle === src.muscle && e.pattern !== src.pattern && !tier1Keys[e.name.toLowerCase()];
+      return e.muscle === src.muscle && e.pattern !== src.pattern && !usedKeys[e.name.toLowerCase()];
     });
+    tier2.forEach(function (e) { usedKeys[e.name.toLowerCase()] = 1; });
+    var rest = candidates.filter(function (e) { return !usedKeys[e.name.toLowerCase()]; });
+    return { tier1: tier1, tier2: tier2, rest: rest };
+  }
+
+  function alternatives(name, opts) {
+    opts = opts || {};
+    var tiers = tieredCandidates(name, opts);
+    var counts = acceptCounts(name);
     function toRow(e) {
       var w = convertWeight(name, e.name, opts.lastWeight);
       return {
@@ -267,7 +283,21 @@
       if (a.acceptCount !== b.acceptCount) return b.acceptCount - a.acceptCount;
       return a.name.localeCompare(b.name);
     }
-    return tier1.map(toRow).sort(byAcceptThenName).concat(tier2.map(toRow).sort(byAcceptThenName));
+    return tiers.tier1.map(toRow).sort(byAcceptThenName).concat(tiers.tier2.map(toRow).sort(byAcceptThenName));
+  }
+
+  // ---- LLM fallback candidate pool -----------------------------------------
+  // Everything alternatives() didn't already surface (tier1+tier2), for the
+  // coach-substitute Edge Function to rank when the deterministic tiers come
+  // up short (<3 total). Purely catalog-driven — never includes an exercise
+  // outside this pool, so the LLM can only pick among real, known movements;
+  // it cannot invent one. Capped to bound the request payload/prompt size.
+  function fallbackCandidates(name, opts) {
+    opts = opts || {};
+    var rest = tieredCandidates(name, opts).rest;
+    return rest.slice(0, 200).map(function (e) {
+      return { name: e.name, equipment: e.equipment, pattern: e.pattern, muscle: e.muscle };
+    });
   }
 
   // ---- weight conversion --------------------------------------------------
@@ -309,6 +339,7 @@
   window.MCBiomech = {
     classify: classify,
     alternatives: alternatives,
+    fallbackCandidates: fallbackCandidates,
     convertWeight: convertWeight,
     EQUIP: EQUIP
   };

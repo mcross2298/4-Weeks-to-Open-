@@ -523,11 +523,12 @@
     });
   }
 
-  // ---- coach-claude Edge Function (AI coaching note, server-side Anthropic) -
+  // ---- coach-claude Edge Function (AI coaching report, server-side Anthropic)
   // Sends the user's access token to the Edge Function, which reads 30 days of
   // workout_logs and calls the Anthropic API (key never touches the browser).
-  // Resolves with a coaching note string, or null if the user is not signed in
-  // or the function is unavailable.
+  // Resolves with a structured report { summary, flags[], volumeWarnings[],
+  // swaps[] }, or null if the user is not signed in or the function is
+  // unavailable.
   function callCoach() {
     return ready.then(function (c) {
       if (!c) return null;
@@ -543,7 +544,35 @@
         }).then(function (res) {
           if (!res.ok) throw new Error('Coach call failed: ' + res.status);
           return res.json();
-        }).then(function (data) { return data.note || null; });
+        }).then(function (data) { return (data && data.summary) ? data : null; });
+      });
+    });
+  }
+
+  // ---- coach-substitute Edge Function (LLM exercise-swap fallback) ---------
+  // Used by mc-card-actions.js when the deterministic mc-biomech.js matcher
+  // returns fewer than 3 alternatives. Sends the source exercise plus a
+  // client-computed candidate pool (already catalog-grounded); the function
+  // only picks INDICES into that pool — it can never introduce an exercise
+  // name that isn't already in the caller's own catalog. Resolves with
+  // { picks: number[] }, or null if signed out or unavailable.
+  function callSubstitute(payload) {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return c.auth.getSession().then(function (r) {
+        var session = r && r.data && r.data.session;
+        if (!session) return null;
+        return fetch(SUPABASE_URL + '/functions/v1/coach-substitute', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + session.access_token
+          },
+          body: JSON.stringify(payload)
+        }).then(function (res) {
+          if (!res.ok) throw new Error('Substitute call failed: ' + res.status);
+          return res.json();
+        }).then(function (data) { return (data && Array.isArray(data.picks)) ? data.picks : null; });
       });
     });
   }
@@ -624,6 +653,7 @@
     getWeeklyVolume: getWeeklyVolume,
     getMaxWeight: getMaxWeight,
     callCoach: callCoach,
+    callSubstitute: callSubstitute,
     savePushSubscription: savePushSubscription,
     deletePushSubscription: deletePushSubscription,
     sendPush: sendPush

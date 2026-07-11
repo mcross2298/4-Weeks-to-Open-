@@ -244,9 +244,20 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 .coach-body{display:none;padding:0 16px 16px;}
 .coach-section.open .coach-body{display:block;}
 .coach-note{
-  font-size:14px;line-height:1.65;color:var(--text2,var(--text));
   border-top:1px solid var(--border2);padding-top:12px;
 }
+.coach-summary{font-size:14px;line-height:1.65;color:var(--text2,var(--text));}
+.coach-chip-label{font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted2);margin:12px 0 6px;}
+.coach-chip-row{display:flex;flex-wrap:wrap;gap:6px;}
+.coach-chip{
+  font-size:12px;line-height:1.4;font-weight:600;color:var(--text2,var(--text));
+  background:var(--surface2,rgba(255,255,255,0.04));border:1px solid var(--border2);
+  border-radius:10px;padding:6px 10px;
+}
+.coach-chip b{font-weight:800;}
+.coach-chip-warn{border-color:rgba(248,113,113,0.35);background:rgba(248,113,113,0.08);}
+.coach-chip-info{border-color:rgba(96,165,250,0.3);background:rgba(96,165,250,0.06);}
+.coach-chip-swap{border-color:rgba(212,175,55,0.3);background:rgba(212,175,55,0.06);}
 
 /* ── TOOLS GRID ── */
 .tools-wrap{padding:0 18px;margin-bottom:28px;}
@@ -2093,21 +2104,44 @@ function toggleCoach(){
   if(btn) btn.setAttribute('aria-expanded',opening?'true':'false');
   if(opening) loadCoachNote();
 }
+function coachEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function renderCoachReport(el,report){
+  el.innerHTML=
+    '<div class="coach-summary">'+coachEsc(report.summary)+'</div>'+
+    (report.flags&&report.flags.length?(
+      '<div class="coach-chip-label">Flags</div><div class="coach-chip-row">'+
+      report.flags.map(function(f){
+        return '<span class="coach-chip coach-chip-'+(f.severity==='warn'?'warn':'info')+'"><b>'+coachEsc(f.exercise)+':</b> '+coachEsc(f.message)+'</span>';
+      }).join('')+'</div>'
+    ):'')+
+    (report.volumeWarnings&&report.volumeWarnings.length?(
+      '<div class="coach-chip-label">Volume</div><div class="coach-chip-row">'+
+      report.volumeWarnings.map(function(v){
+        return '<span class="coach-chip coach-chip-warn"><b>'+coachEsc(v.muscle)+':</b> '+coachEsc(v.message)+'</span>';
+      }).join('')+'</div>'
+    ):'')+
+    (report.swaps&&report.swaps.length?(
+      '<div class="coach-chip-label">Swap ideas</div><div class="coach-chip-row">'+
+      report.swaps.map(function(s){
+        return '<span class="coach-chip coach-chip-swap"><b>'+coachEsc(s.exercise)+' → '+coachEsc(s.suggestion)+':</b> '+coachEsc(s.reason)+'</span>';
+      }).join('')+'</div>'
+    ):'');
+}
 function loadCoachNote(){
   var el=document.getElementById('coachNote');
   if(!el) return;
   var today=new Date().toISOString().slice(0,10);
   try{
-    var cached=JSON.parse(localStorage.getItem('mc_coach_note_v1')||'null');
-    if(cached&&cached.date===today&&cached.note){el.textContent=cached.note;return;}
+    var cached=JSON.parse(localStorage.getItem('mc_coach_report_v1')||'null');
+    if(cached&&cached.date===today&&cached.report){renderCoachReport(el,cached.report);return;}
   }catch(e){}
   el.textContent='Analyzing your training…';
   try{
     if(!window.MC_SB||!MC_SB.callCoach){el.textContent='Sign in to unlock your coaching note.';return;}
-    MC_SB.callCoach().then(function(note){
-      if(!note){el.textContent='Log some workouts and check back for personalized insights.';return;}
-      el.textContent=note;
-      try{localStorage.setItem('mc_coach_note_v1',JSON.stringify({date:today,note:note}));}catch(e){}
+    MC_SB.callCoach().then(function(report){
+      if(!report){el.textContent='Log some workouts and check back for personalized insights.';return;}
+      renderCoachReport(el,report);
+      try{localStorage.setItem('mc_coach_report_v1',JSON.stringify({date:today,report:report}));}catch(e){}
     }).catch(function(){el.textContent='Coach unavailable right now — check back later.';});
   }catch(e){el.textContent='Coach unavailable right now — check back later.';}
 }
