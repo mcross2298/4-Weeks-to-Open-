@@ -186,7 +186,30 @@
   .week-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .week-name { font-weight: 700; color: #e2e8f0; }
   .week-tag { font-size: 10.5px; color: var(--muted); margin-left: auto; letter-spacing: 0.04em; }
+
+  /* ── SAND LIGHT MODE (Phase 7) ────────────────────────────────────── */
+  html[data-theme="light"] {
+    --bg: #f5f2ec;
+    --surface: #efe9db;
+    --border: rgba(28,26,23,0.12);
+    --text: #1c1a17;
+    --muted: #6b6459;
+    --accent-dim: rgba(249,115,22,0.16);
+    --accent-glow: rgba(249,115,22,0.32);
+  }
+  html[data-theme="light"] .program-header { background: linear-gradient(135deg, rgba(249,115,22,0.14), #faf7f0); }
+  html[data-theme="light"] .program-header h1,
+  html[data-theme="light"] .hub-title,
+  html[data-theme="light"] .mod-title,
+  html[data-theme="light"] .week-name { color: #1c1a17; }
+  html[data-theme="light"] .mod-badge.cond-badge { color: #92400e; }
+  html[data-theme="light"] .split-pill { color: #9a3412; }
+  html[data-theme="light"] .split-pill.pull { color: #0369a1; }
+  html[data-theme="light"] .split-pill.legs { color: #15803d; }
+  html[data-theme="light"] .cond-title { color: #92400e; }
+  html[data-theme="light"] .week-row { border-bottom-color: rgba(28,26,23,0.06); }
 </style>
+<link rel="stylesheet" href="mc-nav.css"/>
 </head>
 <body>
 <div class="page-wrap">
