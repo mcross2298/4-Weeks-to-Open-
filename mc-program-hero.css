@@ -91,3 +91,29 @@ a.pl-inside-row:active{background:rgba(255,255,255,.06);}
 }
 .pl-cta:active{transform:scale(.99);}
 .pl-cta-hint{display:block;width:100%;background:none;border:none;text-align:center;font-size:12px;font-weight:700;color:#8b8b92;margin-top:11px;cursor:pointer;font-family:inherit;padding:4px;}
+
+/* ── SAND LIGHT MODE (Phase 7) ─────────────────────────────────────────── */
+html[data-theme="light"] .pl-hero{
+  background:radial-gradient(120% 60% at 50% -6%, rgba(var(--pl-accent-rgb),0.18) 0%, #f5f2ec 60%);
+  color:#1c1a17;
+}
+html[data-theme="light"] .pl-icon-btn{background:rgba(28,26,23,0.05);border-color:rgba(28,26,23,0.1);}
+html[data-theme="light"] .pl-tier-label{color:#6b6459;}
+html[data-theme="light"] .pl-imgband{
+  background:repeating-linear-gradient(135deg, rgba(var(--pl-accent-rgb),0.16) 0px, rgba(var(--pl-accent-rgb),0.16) 2px, #efe9db 2px, #efe9db 14px);
+}
+html[data-theme="light"] .pl-imgband-scrim{background:linear-gradient(0deg,#f5f2ec 0%,rgba(245,242,236,0.15) 55%,rgba(245,242,236,0.55) 100%);}
+html[data-theme="light"] .pl-name{color:#1c1a17;}
+html[data-theme="light"] .pl-tagline{color:#6b6459;}
+html[data-theme="light"] .pl-stat{background:rgba(28,26,23,0.03);border-color:rgba(28,26,23,0.08);}
+html[data-theme="light"] .pl-stat-v{color:#1c1a17;}
+html[data-theme="light"] .pl-stat-l{color:#8a8377;}
+html[data-theme="light"] .pl-sched-title{color:#1c1a17;}
+html[data-theme="light"] .pl-day.off .pl-day-swatch{background:rgba(28,26,23,0.03);border-color:rgba(28,26,23,0.08);}
+html[data-theme="light"] .pl-day-label{color:#8a8377;}
+html[data-theme="light"] .pl-inside-title-h{color:#1c1a17;}
+html[data-theme="light"] .pl-inside-row{background:rgba(28,26,23,0.03);border-color:rgba(28,26,23,0.08);}
+html[data-theme="light"] a.pl-inside-row:active{background:rgba(28,26,23,0.06);}
+html[data-theme="light"] .pl-inside-title{color:#1c1a17;}
+html[data-theme="light"] .pl-inside-body{color:#6b6459;}
+html[data-theme="light"] .pl-cta-hint{color:#6b6459;}
