@@ -14,3 +14,6 @@
 }
 .mc-surprise-btn:active{background:rgba(255,255,255,0.13);}
 .mc-surprise-btn .mc-surprise-ico{font-size:15px;line-height:1;}
+
+html[data-theme="light"] .mc-surprise-btn{background:rgba(28,26,23,0.05);}
+html[data-theme="light"] .mc-surprise-btn:active{background:rgba(28,26,23,0.1);}

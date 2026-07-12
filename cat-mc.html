@@ -240,6 +240,20 @@
     text-decoration: none;
   }
   .bottom-back a:hover { color: var(--accent); }
+
+  /* ── SAND LIGHT MODE (Phase 7) ─────────────────────────────────────── */
+  html[data-theme="light"] {
+    --bg: #f5f2ec;
+    --surface: #efe9db;
+    --border: rgba(28,26,23,0.12);
+    --text: #1c1a17;
+    --muted: #6b6459;
+    --accent-dim: rgba(212,175,55,0.16);
+    --accent-glow: rgba(212,175,55,0.32);
+  }
+  html[data-theme="light"] .program-header h1 { color: #1c1a17; }
+  html[data-theme="light"] .split-name { color: #1c1a17; }
+  html[data-theme="light"] .split-card:hover { background: #e9e2d0; }
 </style>
 <link rel="stylesheet" href="base.css?v=66"/>
 <link rel="stylesheet" href="mc-nav.css"/>
