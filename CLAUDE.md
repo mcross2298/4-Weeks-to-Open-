@@ -104,7 +104,18 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
   by the deploy pipeline). Manually overwriting Rolodex `main` would be
   destructive and is never the right move.
 
-## Active Development Plan — workout_cookbook_dev_plan_v2
+## Active Development Plan — launch-roadmap.md
+
+> **The governing plan is now [`launch-roadmap.md`](launch-roadmap.md)**
+> (approved 2026-07-12): a phased launch-readiness roadmap (L0–L6) driving
+> the app to a finished product — installable PWA + commercial layer, with
+> L6 as the definition of done. Each phase requires its own executive
+> summary + approval before code, and an AskUserQuestion gate before the
+> next phase. The section below is the previous plan, kept as a historical
+> record; its two open closeout items (Task 3.2, `exercisedata.json`
+> retirement) are absorbed into roadmap Phase L0.
+
+## Previous plan (historical) — workout_cookbook_dev_plan_v2
 
 ### Decisions locked in (via AskUserQuestion, session 2026-06-27)
 - **Catalog scope (Task 3.1):** Full catalog — add `equipment` + `movement` fields to ALL 539+ exercises
