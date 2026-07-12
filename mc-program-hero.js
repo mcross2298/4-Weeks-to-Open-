@@ -171,6 +171,18 @@
     var hint = hero.querySelector('#plCtaHint');
     if (btn) btn.addEventListener('click', go);
     if (hint) hint.addEventListener('click', go);
+    if (typeof cfg.onBadgeTap === 'function') {
+      var badges = hero.querySelectorAll('.pl-tier-label, .pl-tier-pill');
+      for (var i = 0; i < badges.length; i++) {
+        badges[i].classList.add('pl-tier-tappable');
+        badges[i].setAttribute('role', 'button');
+        badges[i].setAttribute('tabindex', '0');
+        badges[i].addEventListener('click', cfg.onBadgeTap);
+        badges[i].addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cfg.onBadgeTap(); }
+        });
+      }
+    }
     return hero;
   }
 

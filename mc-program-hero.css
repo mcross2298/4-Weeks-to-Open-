@@ -22,6 +22,9 @@
 .pl-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 4px;position:relative;z-index:1;}
 .pl-icon-btn{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;}
 .pl-tier-label{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8b8b92;}
+.pl-tier-tappable{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .12s ease;}
+.pl-tier-tappable:active{opacity:.6;}
+.pl-tier-tappable::after{content:'\203A';display:inline-block;margin-left:4px;font-weight:800;opacity:.7;}
 
 /* hero image band */
 .pl-imgband{position:relative;margin:14px 18px 0;border-radius:22px;overflow:hidden;height:190px;

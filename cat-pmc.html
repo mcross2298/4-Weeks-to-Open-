@@ -1852,7 +1852,14 @@ MCProgramHero.mount(document.getElementById('programHero'), {
     { icon: 'bars', title: 'Supersets, pyramids, drop sets, tempo and AMRAP rotate through all 7 splits.' }
   ],
   ctaLabel: 'Browse splits',
-  backHref: 'index.html'
+  backHref: 'index.html',
+  onBadgeTap: function () {
+    if (localStorage.getItem(LAST_WORKOUT_KEY)) { resumeLastWorkout(); }
+    else {
+      var strip = document.getElementById('splitStrip');
+      if (strip && strip.scrollIntoView) strip.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 });
 </script>
 </body>

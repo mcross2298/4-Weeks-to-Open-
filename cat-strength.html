@@ -1260,7 +1260,14 @@ MCProgramHero.mount(document.getElementById('programHero'), {
     { icon: 'chevron', title: 'Heavy compound lifts every session' },
     { icon: 'bars', title: 'Supersets and AMRAP finishers push volume at the end, not the start.' }
   ],
-  backHref: 'dashboard.html'
+  backHref: 'dashboard.html',
+  onBadgeTap: function () {
+    if (localStorage.getItem(LAST_WORKOUT_KEY)) { resumeLastWorkout(); }
+    else {
+      var strip = document.getElementById('splitStrip');
+      if (strip && strip.scrollIntoView) strip.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 });
 </script>
 </body>
