@@ -27,6 +27,26 @@
   } catch (e) {}
 })();
 
+// ── THEME EARLY-APPLY (Phase 7) ───────────────────────────────────────────────
+// Pages that don't already load mc-appearance.js in <head> (only dashboard.html
+// and stats.html do today) need data-theme set before first paint, or a
+// returning light-mode user sees a flash of dark before it flips. Duplicates
+// mc-appearance.js's own read/apply logic inline so it runs the instant this
+// script tag is parsed (same timing as the PWA guard above) instead of
+// waiting on a second script's network fetch, then loads mc-appearance.js
+// itself so window.MC_APPEARANCE is ready for the toggle button below.
+(function () {
+  try {
+    var mode = localStorage.getItem('mc_theme_mode') === 'light' ? 'light' : 'dark';
+    if (mode === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  } catch (e) {}
+  if (!document.querySelector('script[src="mc-appearance.js"]')) {
+    var s = document.createElement('script');
+    s.src = 'mc-appearance.js';
+    (document.head || document.documentElement).appendChild(s);
+  }
+})();
+
 // ── SAFE-AREA / NOTCH ────────────────────────────────────────────────────────
 // Activate iOS safe-area insets (viewport-fit=cover) so the fixed bottom chrome
 // — nav, Finish bar, rest-timer float, all already padded with
@@ -93,6 +113,34 @@
     if (document.querySelector('.fw-bar')) document.body.classList.add('mc-has-fw');
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build);
-  else build();
+  // Toggle button — identical markup/behavior to the one hand-placed in
+  // dashboard.html's topbar. Pages here have no topbar icon rail to slot
+  // into, so it renders as its own fixed circular button (mc-nav.css
+  // positions it top-right, mirroring .back-link's top-left placement).
+  // Skips dashboard.html/stats.html, which already ship their own.
+  function buildThemeToggle() {
+    if (document.querySelector('.mc-theme-toggle')) return;
+    var btn = document.createElement('div');
+    btn.className = 'mc-theme-toggle mc-theme-toggle-float';
+    btn.setAttribute('role', 'button');
+    btn.setAttribute('tabindex', '0');
+    btn.setAttribute('title', 'Toggle light/dark mode');
+    btn.setAttribute('aria-label', 'Toggle light/dark mode');
+    btn.innerHTML =
+      '<svg class="theme-icon-dark" width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" stroke="#c9c9cf" stroke-width="2" stroke-linejoin="round"/></svg>' +
+      '<svg class="theme-icon-light" width="17" height="17" viewBox="0 0 24 24" fill="none" style="display:none;"><circle cx="12" cy="12" r="4.5" stroke="#c9c9cf" stroke-width="2"/><path d="M12 2.5v2.5M12 19v2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12H5M19 12h2.5M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8" stroke="#c9c9cf" stroke-width="2" stroke-linecap="round"/></svg>';
+    btn.addEventListener('click', function () { if (window.MC_APPEARANCE) MC_APPEARANCE.toggle(); });
+    btn.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }
+    });
+    document.body.appendChild(btn);
+  }
+
+  function init() {
+    build();
+    buildThemeToggle();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();
