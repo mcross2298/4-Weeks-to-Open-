@@ -230,3 +230,44 @@ body.mcs-stat-active .summary-section.mcs-open{
 .sum-section .sum-tv{font-size:14px;font-weight:900;letter-spacing:-0.01em;}
 .sum-section .sum-tl{font-size:11px;font-weight:700;letter-spacing:0.1em;
   text-transform:uppercase;margin-top:3px;opacity:0.75;}
+
+/* ── SAND LIGHT MODE (Phase 7) ─────────────────────────────────────────
+   Stat text here is accent-tinted via inline style per program (a program's
+   --accent can be anything from amber to purple to red), so a fixed neutral
+   override is used instead of trying to darken every possible accent —
+   consistent and always legible regardless of which program renders it. */
+html[data-theme="light"] .fw-recap-overlay{background:rgba(28,26,23,0.4);}
+html[data-theme="light"] .fw-recap-sheet{background:#f5f2ec;border-top-color:rgba(28,26,23,0.1);}
+html[data-theme="light"] .fw-recap-handle{background:rgba(28,26,23,0.15);}
+html[data-theme="light"] .fw-recap-title{color:#1c1a17;}
+html[data-theme="light"] .fw-recap-hero{border-top-color:rgba(28,26,23,0.08);border-bottom-color:rgba(28,26,23,0.08);}
+html[data-theme="light"] .fw-recap-hero-time{color:#1c1a17;}
+html[data-theme="light"] .fw-recap-stat{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.1);}
+html[data-theme="light"] .fw-recap-rows{border-color:rgba(28,26,23,0.1);}
+html[data-theme="light"] .fw-recap-row{background:rgba(28,26,23,0.02);border-bottom-color:rgba(28,26,23,0.07);}
+html[data-theme="light"] .fw-recap-row-name{color:#1c1a17;}
+html[data-theme="light"] .fw-recap-cancel{border-color:rgba(28,26,23,0.12);}
+
+html[data-theme="light"] .prog-bar-wrap.mcs-stat{background:rgba(245,242,236,0.97);border-bottom-color:rgba(28,26,23,0.08);}
+html[data-theme="light"] .mcs-timer{color:#1c1a17;}
+html[data-theme="light"] .mcs-sumbtn{background:rgba(28,26,23,0.05);border-color:rgba(28,26,23,0.12);color:#6b6459;}
+html[data-theme="light"] .mcs-sumbtn:active{background:rgba(28,26,23,0.1);}
+html[data-theme="light"] .mcs-sumbtn.mcs-btn-open{
+  background:rgba(var(--accent-rgb,212,175,55),0.15);
+  border-color:rgba(var(--accent-rgb,212,175,55),0.4);
+  color:var(--accent,#d4af37);
+}
+html[data-theme="light"] .mcs-progress-track{background:rgba(28,26,23,0.08);}
+html[data-theme="light"] .mcs-progress-pct{color:#047857!important;}
+html[data-theme="light"] .mcs-today{border-top-color:rgba(28,26,23,0.08);}
+
+html[data-theme="light"] .sum-section .sum-card{background:#efe9db!important;border-color:rgba(28,26,23,0.15)!important;}
+html[data-theme="light"] .sum-section .sum-hd{color:#6b6459!important;}
+html[data-theme="light"] .sum-section .sum-sub{color:#6b6459;}
+html[data-theme="light"] .sum-section .sum-row{border-bottom-color:rgba(28,26,23,0.08)!important;}
+html[data-theme="light"] .sum-section .sum-nm{color:#1c1a17;}
+html[data-theme="light"] .sum-section .sum-st,
+html[data-theme="light"] .sum-section .sum-rp{color:#6b6459!important;}
+html[data-theme="light"] .sum-section .sum-tot{background:rgba(28,26,23,0.04)!important;border-color:rgba(28,26,23,0.1)!important;}
+html[data-theme="light"] .sum-section .sum-tv{color:#1c1a17!important;}
+html[data-theme="light"] .sum-section .sum-tl{color:#6b6459!important;}

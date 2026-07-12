@@ -136,10 +136,32 @@
   .split-pill.cond  { border-color: rgba(217,119,6,0.25);  color: #fbbf24; background: rgba(217,119,6,0.08); }
   .split-pill.push  { border-color: rgba(225,29,72,0.25);  color: #fb7185; background: rgba(225,29,72,0.08); }
   .split-pill.pull  { border-color: rgba(8,145,178,0.25);  color: #38bdf8; background: rgba(8,145,178,0.08); }
+
+  /* ── SAND LIGHT MODE (Phase 7) ────────────────────────────────────── */
+  html[data-theme="light"] {
+    --bg: #f5f2ec;
+    --surface: #efe9db;
+    --border: rgba(28,26,23,0.12);
+    --text: #1c1a17;
+    --muted: #6b6459;
+    --accent-dim: rgba(245,158,11,0.16);
+    --accent-glow: rgba(245,158,11,0.32);
+  }
+  html[data-theme="light"] .program-header { background: linear-gradient(135deg, rgba(245,158,11,0.14), #faf7f0); }
+  html[data-theme="light"] .program-header h1,
+  html[data-theme="light"] .hub-title { color: #1c1a17; }
+  html[data-theme="light"] .split-pill { color: #8a6d1a; }
+  html[data-theme="light"] .split-pill.shldr { color: #7c3aed; }
+  html[data-theme="light"] .split-pill.back,
+  html[data-theme="light"] .split-pill.pull { color: #0369a1; }
+  html[data-theme="light"] .split-pill.legs { color: #15803d; }
+  html[data-theme="light"] .split-pill.cond { color: #8a6d1a; }
+  html[data-theme="light"] .split-pill.push { color: #be123c; }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="mc-program-landing.css"/>
 <link rel="stylesheet" href="mc-surprise.css"/>
+<link rel="stylesheet" href="mc-nav.css"/>
 </head>
 <body>
 <div class="page-wrap">
