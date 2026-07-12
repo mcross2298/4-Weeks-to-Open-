@@ -35,3 +35,36 @@ body.mc-has-nav .fw-btn{
 body.mc-has-nav.mc-has-fw{padding-bottom:132px !important;}
 body.mc-has-nav.mc-has-fw .timer-float{bottom:140px;}
 
+/* Theme toggle — injected by mc-nav.js (Phase 7) on pages with no topbar
+   icon rail. Fixed circular button, top-right, mirrors .back-link's
+   top-left placement in base.css. */
+.mc-theme-toggle-float{
+  position:fixed;top:18px;right:18px;z-index:141;
+  width:40px;height:40px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+@supports (top: env(safe-area-inset-top)) {
+  .mc-theme-toggle-float{top:calc(18px + env(safe-area-inset-top));}
+}
+.mc-theme-toggle-float:active{transform:scale(0.94);}
+
+/* ── SAND LIGHT MODE (Phase 7) ─────────────────────────────────────────── */
+html[data-theme="light"] .mc-nav{
+  background:rgba(245,242,236,0.94);
+  border-top:1px solid rgba(28,26,23,0.08);
+}
+html[data-theme="light"] .mc-nav-tab{color:#8a8377;}
+html[data-theme="light"] .mc-nav-tab:active{color:#1c1a17;}
+html[data-theme="light"] .mc-theme-toggle-float{
+  background:rgba(28,26,23,0.05);border-color:rgba(28,26,23,0.12);
+}
+html[data-theme="light"] .mc-theme-toggle-float .theme-icon-dark path,
+html[data-theme="light"] .mc-theme-toggle-float .theme-icon-light circle,
+html[data-theme="light"] .mc-theme-toggle-float .theme-icon-light path{
+  stroke:#6b6459;
+}
+html[data-theme="light"] .theme-icon-dark{display:none;}
+html[data-theme="light"] .theme-icon-light{display:block!important;}
+
