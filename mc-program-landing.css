@@ -54,3 +54,16 @@
 .mc-split-picker-other[open] > summary::after{ transform:rotate(180deg); }
 .mc-split-picker-other > summary:hover{ color:var(--accent, #d4af37); }
 .mc-split-picker-other-body{ padding-top:4px; }
+
+/* ── SAND LIGHT MODE (Phase 7) ─────────────────────────────────────────── */
+html[data-theme="light"] .mps-main{
+  background:linear-gradient(135deg, rgba(var(--mps-accent-rgb),0.16), rgba(245,242,236,0.4));
+  border-color:rgba(var(--mps-accent-rgb),0.4);
+}
+html[data-theme="light"] .mps-lbl{color:#1c1a17;}
+html[data-theme="light"] .mps-sub{color:#6b6459;}
+html[data-theme="light"] .mps-dismiss{
+  border-color:rgba(28,26,23,0.12);background:rgba(28,26,23,0.04);color:#6b6459;
+}
+html[data-theme="light"] .mps-dismiss:active{background:rgba(28,26,23,0.08);color:#1c1a17;}
+html[data-theme="light"] .mc-split-picker-other > summary{color:#8a8377;}

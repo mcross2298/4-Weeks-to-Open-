@@ -29,6 +29,20 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:0 0 60px;}
 .week-tab{flex:1;padding:10px 0;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:0.04em;background:rgba(255,255,255,0.06);color:#64748b;transition:all 0.15s;}
 .week-tab.active{background:rgba(245,200,66,0.15);color:#f5c842;border:1px solid rgba(245,200,66,0.3);}
 </style>
+<style>
+html[data-theme="light"] body{background:#f5f2ec;color:#1c1a17;}
+html[data-theme="light"] .hero{background:linear-gradient(135deg,rgba(52,211,153,0.16),rgba(245,242,236,0.5));border-bottom-color:rgba(52,211,153,0.22);}
+html[data-theme="light"] .title{color:#1c1a17;}
+html[data-theme="light"] .subtitle{color:#6b6459;}
+html[data-theme="light"] .note-box{background:rgba(52,211,153,0.08);color:#047857;}
+html[data-theme="light"] .wcard{background:linear-gradient(135deg,rgba(52,211,153,0.09),#faf7f0);border-color:rgba(52,211,153,0.24);}
+html[data-theme="light"] .wcard-tag{color:#047857;}
+html[data-theme="light"] .wcard-name{color:#1c1a17;}
+html[data-theme="light"] .wcard-meta{color:#6b6459;}
+html[data-theme="light"] .wcard-arrow{color:#1c1a17;}
+html[data-theme="light"] .week-tab{background:rgba(28,26,23,0.05);color:#8a8377;}
+html[data-theme="light"] .week-tab.active{background:rgba(52,211,153,0.16);border-color:rgba(52,211,153,0.35);color:#f5c842;}
+</style>
 <script>
 (function(){
   var w=parseInt(new URLSearchParams(location.search).get('w'))||1;
