@@ -263,7 +263,7 @@ html[data-theme="light"] .mcs-today{border-top-color:rgba(28,26,23,0.08);}
 
 html[data-theme="light"] .sum-section .sum-card{background:#efe9db!important;border-color:rgba(28,26,23,0.15)!important;}
 html[data-theme="light"] .sum-section .sum-hd{color:#6b6459!important;}
-html[data-theme="light"] .sum-section .sum-sub{color:#6b6459;}
+html[data-theme="light"] .sum-section .sum-sub{color:#6b6459!important;}
 html[data-theme="light"] .sum-section .sum-row{border-bottom-color:rgba(28,26,23,0.08)!important;}
 html[data-theme="light"] .sum-section .sum-nm{color:#1c1a17;}
 html[data-theme="light"] .sum-section .sum-st,
