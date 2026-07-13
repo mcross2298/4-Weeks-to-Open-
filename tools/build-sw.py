@@ -34,7 +34,9 @@ END = "/* AUTOGEN:URLS END */"
 INCLUDE_EXT = {".html", ".js", ".css"}
 INCLUDE_FILES = {"manifest.json",
                  "program-overrides.json", "icon.svg",
-                 "icon-192.png", "icon-512.png"}
+                 "icon-192.png", "icon-512.png",
+                 "icon-192-maskable.png", "icon-512-maskable.png",
+                 "apple-touch-icon.png"}
 
 # Scratch/concept pages — exist in the repo but should not be shipped to
 # every device. (The superseded exercisedata-phase8*.json datasets and other

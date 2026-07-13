@@ -771,3 +771,36 @@ html[data-theme="light"] .fw-summary-row{border-bottom-color:rgba(28,26,23,0.06)
 html[data-theme="light"] .fw-summary-label{color:#6b6459;}
 html[data-theme="light"] .fw-summary-val{color:#1c1a17;}
 html[data-theme="light"] .fw-cancel{border-color:rgba(28,26,23,0.12);color:#6b6459;}
+
+/* ── PWA STANDALONE SAFE-AREA (Phase L2, findings M1/M3) ──────────────────
+   The L2 head sweep turned on `viewport-fit=cover` fleet-wide, so on notched /
+   home-indicator devices in standalone mode the layout viewport now fills the
+   whole screen. Pad the shared program-page top furniture down from under the
+   notch and lift the fixed bottom furniture above the home indicator. The
+   bottom nav (`.mc-nav`), its lifted `.fw-bar`, and the theme toggle already
+   carry their own insets in mc-nav.css; the dashboard's Onyx `.topbar` carries
+   its own — none are touched here, so the dashboard shell can't double-inset.
+   `env()` resolves to 0 in a normal browser tab and drops to the base value
+   where unsupported, so every rule below is inert until it's actually needed. */
+
+/* Top-left floating back button — mirror the theme-toggle inset in mc-nav.css */
+@supports (top: env(safe-area-inset-top)) {
+  .back-link{top:calc(18px + env(safe-area-inset-top));}
+}
+/* Shared page headers grow their top room so the title clears the notch and
+   stays below the shifted back-link */
+@supports (padding: env(safe-area-inset-top)) {
+  .header{padding-top:calc(76px + env(safe-area-inset-top));}
+  .back-link + .hero{padding-top:calc(64px + env(safe-area-inset-top));}
+  /* Sticky week-tabs pin below the notch, not under it */
+  .week-tabs{top:env(safe-area-inset-top);}
+  /* Fixed top furniture */
+  .prog-bar-wrap{top:env(safe-area-inset-top);}
+  .fw-auto-banner{padding-top:calc(12px + env(safe-area-inset-top));}
+}
+/* Fixed bottom furniture that isn't already inset. The floating rest timer is
+   lifted clear of the nav when one is present (mc-nav.css), so only the
+   nav-less bottom:0 case needs the inset; neutralize it under the nav. */
+.timer-float{height:calc(64px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);}
+body.mc-has-nav .timer-float{height:64px;padding-bottom:0;}
+.fw-modal-overlay{padding:16px 16px calc(16px + env(safe-area-inset-bottom));}
