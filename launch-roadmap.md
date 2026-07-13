@@ -74,7 +74,8 @@ type, spacing, and states everywhere.
 Tasks (to be finalized from the L0 audit):
 1. **One token system** — reconcile `base.css` with the `onyx-*` token/style
    sheets; every page consumes shared tokens, no per-page drift.
-   **⏳ OPEN — deferred as its own ticket (see below).**
+   **✅ shipped** — the dashboard's inline Onyx `#scr-*` type now references the
+   shared `--fs-*` scale on every clean match; see closed ticket below.
 2. **Finish the Sand light-mode rollout fleet-wide** — Phase 7 batches have
    covered MC, Kitchen Sink, Strength & Supersets, PMC, Modality Matrix;
    complete the remaining program families and shared surfaces so light mode
@@ -100,18 +101,34 @@ for this phase closed.
 
 ### Open ticket — L1 task 1: base.css ↔ dashboard onyx token reconciliation
 
-> **Status: OPEN** (logged 2026-07-13; deferred by design during L1/L1.5).
+> **Status: CLOSED** (logged 2026-07-13; resolved 2026-07-13).
 > Originally to be filed as a GitHub issue — recorded here instead because
 > the GitHub connection was unavailable at logging time.
 
-`dashboard.html` runs a **layered onyx type system** (`onyx-tokens-and-styles.css`,
-`onyx-programs-tokens-and-styles.css`, `onyx-conditioning-tokens-and-styles.css`).
-Its `#scr-*`-scoped rules **win by ID specificity** over the base component
-classes and carry their own font stack (`--font-display` Archivo / `--font-ui`
-Manrope) plus hardcoded pixel sizes, so the L1 Phase B `--fs-*` scale does **not**
-currently reach the dashboard. This was left alone deliberately — it's a design
-decision, not a mechanical swap, and a blind refactor risks the intentional
-dashboard look.
+`dashboard.html` runs a **layered onyx type system**. Its `#scr-*`-scoped rules
+**win by ID specificity** over the base component classes and carry their own
+font stack (`--font-display` Archivo / `--font-ui` Manrope) plus hardcoded pixel
+sizes, so the L1 Phase B `--fs-*` scale did **not** previously reach the
+dashboard. This was left alone deliberately — it's a design decision, not a
+mechanical swap, and a blind refactor risks the intentional dashboard look.
+
+**Finding (correction to the original note):** the three `onyx-*-tokens-and-styles.css`
+files are **paste-ready handoff artifacts that no HTML page `<link>`s** (they're
+only precached by `sw.js` / listed in `content-manifest.json`). The Onyx styling
+that actually renders lives **inline in `dashboard.html`'s `<style>` block** — so
+that inline block was the real reconciliation target, not the standalone sheets.
+
+**Resolution:** the inline Onyx `#scr-*` type now references the shared `--fs-*`
+scale on every exact match (124 declarations tokenized, **zero pixel change** —
+`--fs-*` has a single definition in `base.css` and is not overridden in Sand
+mode, so both dark and Sand render identically). No `--o-*` / `--font-display` /
+`--font-ui` name collisions with `base.css` (confirmed). The fractional /
+between-step / glyph-only sizes (8.5, 9.5, 10.5, 11.5, 12.5, 13.5, 15.5, 16.5,
+17, 19, 22, 23, 26, 28px) were **kept bespoke and documented as intentional
+exceptions** (comment block at the top of the `<style>`), rather than snapped —
+snapping would visibly shift the Onyx layout on the exact `#scr-*` screens the
+acceptance says must not regress. The unreferenced `onyx-*.css` handoff files are
+a separate dead-file cleanup candidate (out of scope here).
 
 **Approach when picked up:**
 1. Map the exact-match sizes onto the scale (zero pixel change): 18→`--fs-2xl`,
