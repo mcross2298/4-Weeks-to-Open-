@@ -36,7 +36,8 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;padding-bottom:120px;}
 .row-detail{font-size:11px;font-weight:500;margin-top:2px;color:#94a3b8;}
 .row-badge{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(168,85,247,0.18);color:#d8b4fe;border:1px solid rgba(168,85,247,0.35);}
 .row-arrow{font-size:13px;color:#64748b;}
-.bonus-empty{text-align:center;color:#64748b;font-size:13px;font-weight:600;line-height:1.6;padding:50px 20px;}
+/* .bonus-empty retired — collections now uses the shared .empty-state
+   vocabulary from base.css (L1 Phase C · U5). */
 .bonus-cta{display:inline-block;margin-top:6px;padding:11px 20px;border-radius:12px;background:linear-gradient(90deg,#c084fc,#a855f7);color:#1a0533;font-size:14px;font-weight:900;text-decoration:none;}
 /* collection cards (list mode) */
 .col-card{display:flex;align-items:center;gap:14px;padding:16px;border-radius:14px;margin-bottom:10px;text-decoration:none;color:inherit;background:#160a26;border:1px solid rgba(168,85,247,0.2);}
@@ -114,7 +115,7 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;padding-bottom:120px;}
   function renderList(){
     var el=document.getElementById('colList');
     var cols=MC_COLLECTIONS.getAll();
-    if(!cols.length){ el.innerHTML='<div class="bonus-empty" style="padding:24px 10px;">No collections yet — create your first below. 👇</div>'; return; }
+    if(!cols.length){ el.innerHTML='<div class="empty-state"><div class="empty-icon">📂</div><div class="empty-text">No collections yet — create your first below. 👇</div></div>'; return; }
     el.innerHTML=cols.map(function(c){
       var n=MC_COLLECTIONS.workoutsIn(c.id).length;
       return '<a class="col-card" href="collections.html?id='+encodeURIComponent(c.id)+'">'+
