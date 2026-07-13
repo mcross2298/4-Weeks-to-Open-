@@ -271,8 +271,8 @@ html[data-theme="light"] .wk-btn{background:rgba(28,26,23,0.04);border-color:rgb
 
 /* ── collections (purple accent kept) ─────────────────────────────────
    Only the rendered .col-card row is converted. .module-* / .row-* are dead
-   CSS here but live (on dark cards) in bonus-workouts.html and
-   cat-pump-new4.html, so they must NOT be touched by this shared sheet. */
+   CSS here but live (on dark cards) on a couple of other list pages, so they
+   must NOT be touched by this shared sheet. */
 html[data-theme="light"] .col-card .cnm{color:var(--text);}
 html[data-theme="light"] .col-card .cmeta,
 html[data-theme="light"] .col-card .carr{color:var(--muted);}
