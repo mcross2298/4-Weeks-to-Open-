@@ -1,0 +1,158 @@
+/* ═══════════════════════════════════════════════════════════════════
+   mc-light.css — MC Training · Fleet-wide Sand light-mode (L1 Phase 2)
+   ───────────────────────────────────────────────────────────────────
+   Single shared source of truth for Sand light mode on pages whose
+   bespoke inline <style> chrome isn't reached by base.css's own
+   html[data-theme="light"] block.
+
+   base.css already light-handles the shared component vocabulary
+   (.header, .ex-card, .ss-card, .day-card, .rest-timer, .timer-float*,
+   .sl-*, .fw-*, .wtab, .tb-*, .next-workout, .title) — its
+   `html[data-theme="light"] .foo` rules (0,1,1) beat a page's inline
+   `.foo{}` (0,1,0). This sheet covers only the BESPOKE classes base
+   doesn't know about, and is linked LAST on each page so it wins by
+   source order.
+
+   Rules are ALL scoped to html[data-theme="light"] — dark mode (the
+   default) is never touched. Surfaces/text use the canonical Sand
+   palette (bg #f5f2ec · card #faf7f0/#efe9db · text #1c1a17 · muted
+   #6b6459 / #8a8377); per-program accent TINTS (rgba(var(--accent-rgb)))
+   are preserved so each program keeps its hue on light.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── shell / page chrome ─────────────────────────────────────────── */
+html[data-theme="light"] body{background:var(--body-bg,#f5f2ec);color:var(--text,#1c1a17);}
+html[data-theme="light"] .app{background:#f5f2ec;}
+html[data-theme="light"] .header,
+html[data-theme="light"] .header-inner{background:transparent;}
+html[data-theme="light"] .content{color:#1c1a17;}
+html[data-theme="light"] .back-link{
+  background:rgba(var(--accent-rgb,212,175,55),0.12);
+  border-color:rgba(var(--accent-rgb,212,175,55),0.3);color:var(--accent,#8a6d1a);}
+
+/* ── titles & captions ───────────────────────────────────────────── */
+html[data-theme="light"] .title,
+html[data-theme="light"] .workout-title,
+html[data-theme="light"] .plan-name,
+html[data-theme="light"] .day-title,
+html[data-theme="light"] .day-session,
+html[data-theme="light"] .step-title{color:#1c1a17;}
+html[data-theme="light"] .subtitle,
+html[data-theme="light"] .designer,
+html[data-theme="light"] .plan-meta,
+html[data-theme="light"] .day-meta,
+html[data-theme="light"] .workout-note,
+html[data-theme="light"] .section-label,
+html[data-theme="light"] .hint,
+html[data-theme="light"] .pstep,
+html[data-theme="light"] .cd-label{color:#6b6459;}
+
+/* ── section headings / eyebrows (accent-tinted, kept on hue) ─────── */
+html[data-theme="light"] .eyebrow,
+html[data-theme="light"] .sec-head{color:var(--accent,#8a6d1a);}
+
+/* ── generic cards / panels (dark surfaces → Sand) ───────────────── */
+html[data-theme="light"] .plan-card,
+html[data-theme="light"] .workout-card,
+html[data-theme="light"] .sum-drawer,
+html[data-theme="light"] .set-row,
+html[data-theme="light"] .cd-btn{
+  background:linear-gradient(135deg,rgba(var(--accent-rgb,212,175,55),0.06),#faf7f0);
+  border-color:rgba(var(--accent-rgb,212,175,55),0.22);color:#1c1a17;}
+html[data-theme="light"] .plan-arrow{color:#1c1a17;background:rgba(var(--accent-rgb,212,175,55),0.12);border-color:rgba(var(--accent-rgb,212,175,55),0.2);}
+
+/* ── tabs (week / split selectors) ───────────────────────────────── */
+html[data-theme="light"] .tabs,
+html[data-theme="light"] .tabs-bar,
+html[data-theme="light"] .tab{color:#8a8377;}
+html[data-theme="light"] .tab.active{color:var(--accent,#8a6d1a);background:rgba(28,26,23,0.05);}
+
+/* ── pills / badges / chips (accent-tinted; keep hue, ensure contrast) */
+html[data-theme="light"] .schedule,
+html[data-theme="light"] .badge,
+html[data-theme="light"] .plan-tag,
+html[data-theme="light"] .rest-pill,
+html[data-theme="light"] .ex-tag,
+html[data-theme="light"] .ex-sets-row,
+html[data-theme="light"] .section-tag{
+  background:rgba(var(--accent-rgb,212,175,55),0.12);
+  border-color:rgba(var(--accent-rgb,212,175,55),0.28);color:var(--accent,#8a6d1a);}
+html[data-theme="light"] .ex-tempo{color:var(--accent,#8a6d1a);}
+
+/* ── done / completion banners ───────────────────────────────────── */
+html[data-theme="light"] .done-banner{
+  background:rgba(52,211,153,0.14);border-color:rgba(5,150,105,0.3);color:#047857;}
+
+/* ── bespoke setlog variants (.set-* — base handles .sl-* already) ── */
+html[data-theme="light"] .set-input{
+  background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);color:#1c1a17;}
+html[data-theme="light"] .set-input::placeholder{color:#b7b0a3;}
+html[data-theme="light"] .set-num,
+html[data-theme="light"] .setlog-hl{color:#8a8377;}
+html[data-theme="light"] .set-check{border-color:rgba(28,26,23,0.16);}
+
+/* ── timer-float bespoke aliases (.tf-* — base covers .timer-float*) ─ */
+html[data-theme="light"] .tf{background:rgba(245,242,236,0.97);border-top-color:rgba(28,26,23,0.1);}
+html[data-theme="light"] .tf-prog{background:rgba(28,26,23,0.08);}
+
+/* ── conditioning live-engine (body.cond-elite; conditioning-elite.css) ──
+   That sheet is var-driven (c-surface, c-card-top/bot, c-text, c-muted) and
+   its trailing rules do not parse reliably, so its light override lives here
+   instead (mc-light.css loads after it). Flipping the tokens light-modes the
+   whole engine; !important beats the sheet per-concept token re-declares.
+   Rose c-accent / c-ember are kept — they read on Sand. */
+html[data-theme="light"] body.cond-elite{
+  --c-surface:#f5f2ec !important;
+  --c-card-top:#faf7f0 !important;
+  --c-card-bot:#efe9db !important;
+  --c-text:#1c1a17 !important;
+  --c-muted:#6b6459 !important;
+  --c-line:rgba(28,26,23,0.08) !important;
+}
+html[data-theme="light"] body.cond-elite .header{
+  background:linear-gradient(135deg,rgba(var(--c-accent-rgb),0.14),rgba(245,242,236,0.5));
+  border-bottom-color:rgba(var(--c-accent-rgb),0.22);}
+html[data-theme="light"] body.cond-elite .title,
+html[data-theme="light"] body.cond-elite .counter-num,
+html[data-theme="light"] body.cond-elite .counter-num:focus,
+html[data-theme="light"] body.cond-elite .total-value{color:#1c1a17;}
+/* conditioning pages' own inline dark cards (shared cfg / pstep / rn vocab) */
+html[data-theme="light"] body.cond-elite .cfg-card,
+html[data-theme="light"] body.cond-elite .pstep{
+  background:linear-gradient(155deg,#faf7f0,#efe9db);
+  border-color:rgba(28,26,23,0.12);box-shadow:0 8px 26px rgba(28,26,23,0.08);}
+html[data-theme="light"] body.cond-elite .cfg-opt,
+html[data-theme="light"] body.cond-elite .rn-count-btn{
+  background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);color:#1c1a17;}
+html[data-theme="light"] body.cond-elite .cfg-help,
+html[data-theme="light"] body.cond-elite .cfg-opt-desc{color:#6b6459;}
+html[data-theme="light"] body.cond-elite .cfg-label,
+html[data-theme="light"] body.cond-elite .cfg-opt-title{color:#1c1a17;}
+/* the crimson "warning/intro" strip: light-red tint w/ pale text → readable */
+html[data-theme="light"] body.cond-elite .intro-warn{color:#9f1239;}
+html[data-theme="light"] body.cond-elite .intro-warn strong{color:#1c1a17;}
+
+/* ── program-landing hero family (shared by cat-* landings cloned from the
+      cat-mc template: .program-header / .prog-banner / .start-card) ─────── */
+html[data-theme="light"] .program-header{
+  background:linear-gradient(135deg,rgba(var(--accent-rgb,212,175,55),0.12),#faf7f0);
+  border-color:rgba(var(--accent-rgb,212,175,55),0.3);}
+html[data-theme="light"] .program-header h1{color:#1c1a17;}
+html[data-theme="light"] .program-tagline{color:#6b6459;}
+html[data-theme="light"] .prog-banner{
+  background:rgba(var(--accent-rgb,212,175,55),0.08);border-color:rgba(var(--accent-rgb,212,175,55),0.25);}
+html[data-theme="light"] .prog-banner-text{color:var(--accent,#8a6d1a);}
+html[data-theme="light"] .start-card{
+  background:linear-gradient(135deg,rgba(var(--accent-rgb,212,175,55),0.06),#faf7f0);
+  border-color:rgba(var(--accent-rgb,212,175,55),0.3);}
+html[data-theme="light"] .start-name{color:#1c1a17;}
+html[data-theme="light"] .start-desc,
+html[data-theme="light"] .start-arrow{color:#6b6459;}
+html[data-theme="light"] .split-card{background:#faf7f0;border-color:rgba(28,26,23,0.1);}
+html[data-theme="light"] .split-name{color:#1c1a17;}
+
+/* ── bespoke callout boxes (light-tinted bg but pale/white text) ───────── */
+html[data-theme="light"] .cond-name,
+html[data-theme="light"] .note-name{color:#1c1a17;}
+html[data-theme="light"] .cond-title,
+html[data-theme="light"] .cond-link{color:var(--accent,#8a6d1a);}

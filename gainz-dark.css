@@ -141,3 +141,63 @@ body{ background:var(--surf-0); }
   width:calc(100% + 32px);
   margin-right:-32px;
 }
+
+/* ── SAND LIGHT MODE (L1 Phase 2) ─────────────────────────────────────────
+   Shared across all 8 Daily Gainz pages (they load this sheet after their
+   inline <style>, so this is the single light source of truth for their
+   chrome). Neutral dark surfaces → Sand; lime stays the brand/active accent
+   but is deepened to --gz-deep where it's used as text on a light bg (the
+   bright lime fails contrast on Sand). Purely additive — dark is untouched. */
+html[data-theme="light"]{
+  --surf-0:#f5f2ec;              /* page   */
+  --surf-1:#faf7f0;              /* card   */
+  --hair:rgba(28,26,23,0.10);
+}
+html[data-theme="light"] .app{
+  background:radial-gradient(120% 70% at 50% -10%, rgba(132,204,22,0.10), transparent 60%), var(--surf-0);
+}
+html[data-theme="light"] .header{
+  background:linear-gradient(180deg, rgba(132,204,22,0.10), rgba(245,242,236,0) 90%), #f0f4ec;
+  border-bottom-color:var(--hair);
+}
+html[data-theme="light"] .eyebrow{ color:var(--gz-deep); }
+html[data-theme="light"] .title{ color:#1c1a17; }
+html[data-theme="light"] .hint{ color:#6b6459; }
+html[data-theme="light"] .schedule{
+  background:rgba(132,204,22,0.12);
+  border-color:rgba(77,124,15,0.35);
+  color:var(--gz-deep);
+}
+html[data-theme="light"] .back-link{
+  background:rgba(28,26,23,0.05);
+  border-color:var(--hair);
+  color:#1c1a17;
+}
+html[data-theme="light"] .day-card{
+  background:var(--surf-1);
+  border-color:var(--hair);
+  box-shadow:0 2px 14px rgba(28,26,23,0.08);
+}
+html[data-theme="light"] .day-card.open{
+  border-color:rgba(77,124,15,0.45);
+  box-shadow:0 10px 34px rgba(28,26,23,0.10), 0 0 0 1px rgba(132,204,22,0.20);
+}
+html[data-theme="light"] .day-card.open .day-header{ background:rgba(132,204,22,0.10); }
+html[data-theme="light"] .day-session{ color:#1c1a17; }
+html[data-theme="light"] .day-meta{ color:#6b6459; }
+html[data-theme="light"] .day-toggle{ background:rgba(28,26,23,0.06); color:#6b6459; }
+html[data-theme="light"] .day-card.open .day-toggle{ background:var(--gz); color:#08130a; }
+html[data-theme="light"] .exercises{ border-top-color:var(--hair); }
+html[data-theme="light"] .ex-item{
+  background:rgba(28,26,23,0.03);
+  border-color:rgba(28,26,23,0.08);
+}
+html[data-theme="light"] .ex-item:active{ background:rgba(132,204,22,0.12); }
+html[data-theme="light"] .ex-name{ color:#1c1a17; }
+html[data-theme="light"] .ex-item.checked .ex-name{ color:var(--gz-deep); }
+html[data-theme="light"] .ex-sets{
+  background:rgba(132,204,22,0.12);
+  color:var(--gz-deep);
+  border-color:rgba(77,124,15,0.30);
+}
+html[data-theme="light"] .mcs-progress-pct{ color:var(--gz-deep); }
