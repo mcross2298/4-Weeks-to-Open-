@@ -33,11 +33,12 @@
       const replacement = replacements[origName.toLowerCase()];
       if (replacement) {
         nameEl.textContent = replacement;
-        nameEl.style.color = '#22d3ee';
+        // Cyan tint + badge styling both come from base.css's --replaced token
+        // and .replaced-badge rule (single source of truth; see U4 note there).
+        nameEl.style.color = 'var(--replaced)';
         if (!card.querySelector('.replaced-badge')) {
           const badge = document.createElement('span');
           badge.className = 'replaced-badge';
-          badge.style.cssText = 'font-size:11px;font-weight:900;color:#22d3ee;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.25);border-radius:4px;padding:2px 5px;margin-left:6px;letter-spacing:0.06em;vertical-align:middle;';
           badge.textContent = 'REPLACED';
           nameEl.parentNode.insertBefore(badge, nameEl.nextSibling);
         }
