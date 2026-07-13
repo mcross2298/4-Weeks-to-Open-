@@ -33,6 +33,42 @@
      identically in mc-replace.js and mc-card-actions.js (U2/U4). */
   --replaced:     #22d3ee;
   --replaced-rgb: 34,211,238;
+
+  /* ── TYPE SCALE (L1 Phase B) ────────────────────────────────────────
+     One documented ramp for the whole app so page titles, card names,
+     labels and body text stop drifting page-to-page. Values match the
+     dominant existing sizes so adoption is a 1:1 var() swap (no reflow);
+     the rare oddballs (17/19/23px) fold to their nearest step on
+     adoption. The giant tabular stat numerals (42–56px, e.g. max-out's
+     .mx-weight) stay bespoke on purpose — they're feature readouts, not
+     part of the text hierarchy. */
+  --fs-3xs:   10px;  /* micro labels / legal */
+  --fs-2xs:   11px;  /* eyebrows, tags, meta (most common) */
+  --fs-xs:    12px;  /* small meta / captions */
+  --fs-sm:    13px;  /* secondary body */
+  --fs-md:    14px;  /* body default */
+  --fs-lg:    15px;  /* emphasised body / card names */
+  --fs-xl:    16px;  /* lead body / list headings */
+  --fs-2xl:   18px;  /* sub-section headings */
+  --fs-3xl:   20px;  /* section headings */
+  --fs-title: 24px;  /* page title — single source for all .title */
+  --fs-hero:  30px;  /* hero / display heading */
+
+  /* ── WEIGHT SCALE (L1 Phase B) — the 4 weights actually in use ─────── */
+  --fw-medium: 600;  /* muted meta */
+  --fw-semi:   700;  /* body emphasis */
+  --fw-bold:   800;  /* card names / labels */
+  --fw-black:  900;  /* titles / numerals */
+
+  /* ── SPACING RHYTHM (L1 Phase B) — 4px base step ──────────────────── */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 32px;
+  --sp-8: 40px;
 }
 
 /* ── PM Phase 2 — ThemeConfig knobs (set by mc-theme.js on <html>) ──── */
@@ -129,8 +165,8 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 /* ── HEADER ─────────────────────────────────────────────────────── */
 .header{padding:76px 20px 22px;position:relative;}
 .header-inner{max-width:680px;margin:0 auto;}
-.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.25em;text-transform:uppercase;margin-bottom:8px;color:var(--accent);}
-.title{font-size:24px;font-weight:900;color:#fff;margin-bottom:8px;letter-spacing:-0.02em;}
+.eyebrow{font-size:var(--fs-2xs);font-weight:var(--fw-bold);letter-spacing:0.25em;text-transform:uppercase;margin-bottom:var(--sp-2);color:var(--accent);}
+.title{font-size:var(--fs-title);font-weight:var(--fw-black);color:#fff;margin-bottom:var(--sp-2);letter-spacing:-0.02em;}
 .week-badge{
   display:inline-block;border-radius:6px;padding:5px 14px;
   font-size:12px;font-weight:700;
@@ -212,7 +248,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
   border:1px solid rgba(var(--accent-rgb),0.28);
 }
 .ex-content{flex:1;min-width:0;}
-.ex-name{font-weight:800;font-size:14px;letter-spacing:-0.01em;color:var(--text);line-height:1.3;margin-bottom:7px;overflow-wrap:break-word;word-break:break-word;}
+.ex-name{font-weight:var(--fw-bold);font-size:var(--fs-md);letter-spacing:-0.01em;color:var(--text);line-height:1.3;margin-bottom:7px;overflow-wrap:break-word;word-break:break-word;}
 .ex-tags{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
 .ex-sets{
   display:inline-block;font-size:12px;font-weight:900;padding:3px 10px;border-radius:6px;letter-spacing:0.01em;
@@ -253,7 +289,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
   border:1px solid rgba(168,85,247,0.28);margin-top:1px;flex-shrink:0;
 }
 .ss-content{flex:1;min-width:0;}
-.ss-name{font-weight:800;font-size:14px;letter-spacing:-0.01em;color:var(--text);line-height:1.3;margin-bottom:6px;overflow-wrap:break-word;word-break:break-word;}
+.ss-name{font-weight:var(--fw-bold);font-size:var(--fs-md);letter-spacing:-0.01em;color:var(--text);line-height:1.3;margin-bottom:6px;overflow-wrap:break-word;word-break:break-word;}
 .ss-divider{display:flex;align-items:center;justify-content:center;padding:4px 0;background:rgba(168,85,247,0.06);}
 .ss-x{font-size:11px;font-weight:900;color:#a855f7;letter-spacing:0.12em;}
 /* Tri-set variant — amber structural grammar (parallels the premier .a-card.is-tri) */
@@ -537,7 +573,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
   display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;
   background:rgba(168,85,247,0.16);color:#c084fc;border:1px solid rgba(168,85,247,0.4);}
 .ss-card.a-ss .ss-content{flex:1;min-width:0;padding-right:30px;}
-.ss-card.a-ss .ss-name{font-size:15px;font-weight:800;line-height:1.25;letter-spacing:-0.01em;color:var(--text);}
+.ss-card.a-ss .ss-name{font-size:var(--fs-lg);font-weight:var(--fw-bold);line-height:1.25;letter-spacing:-0.01em;color:var(--text);}
 .ss-card.a-ss .a-ss-reps{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:8px;}
 .ss-card.a-ss .a-ss-sets-hidden{display:none;}
 .ss-card.a-ss .a-rep.live{text-shadow:0 0 18px rgba(168,85,247,0.6);}
