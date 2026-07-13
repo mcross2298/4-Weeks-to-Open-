@@ -53,7 +53,35 @@ const PAGES = [
   // mm-engine.js / mm-data.js pages (Phase 3.2)
   'mm-p1.html',
   'mm-p2.html',
-  'mm-p3.html'
+  'mm-p3.html',
+  // --- Phase L0.3: widen coverage to the remaining distinct page families ---
+  // Standard 7-day 5-on-2-off layout page
+  '5on-2off.html',
+  // Program home hubs
+  'mc-home.html',
+  // mc-s* split day-detail family
+  'mc-s1-back.html',
+  // pmc-s* split-index + day-detail families
+  'pmc-split1.html',
+  'pmc-back.html',
+  // Daily-pump family
+  'chest-tri-pump.html',
+  // Conditioning workout family
+  'battle-ropes.html',
+  // Progress / history surfaces (see launch-audit-findings.md F1)
+  'workout-logs.html',
+  'wrapped.html',
+  // Max-out calculator
+  'max-out.html',
+  // Builder family
+  'build-workout.html',
+  // Collections
+  'collections.html',
+  // Additional cat-* render families not covered above
+  'cat-gainz.html',
+  'cat-stndr.html',
+  // Runner shell
+  'run-workout.html'
 ];
 
 async function checkPage(context, path) {
