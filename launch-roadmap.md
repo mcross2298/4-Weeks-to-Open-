@@ -74,21 +74,59 @@ type, spacing, and states everywhere.
 Tasks (to be finalized from the L0 audit):
 1. **One token system** — reconcile `base.css` with the `onyx-*` token/style
    sheets; every page consumes shared tokens, no per-page drift.
+   **⏳ OPEN — deferred as its own ticket (see below).**
 2. **Finish the Sand light-mode rollout fleet-wide** — Phase 7 batches have
    covered MC, Kitchen Sink, Strength & Supersets, PMC, Modality Matrix;
    complete the remaining program families and shared surfaces so light mode
-   is a first-class theme, not a partial one.
+   is a first-class theme, not a partial one. **✅ shipped** — Phase A title
+   contrast (PR #197) + the L1.5 Sand-completeness sweep of every bespoke
+   tool-page dark card (PR #200), both via the shared `mc-light.css`.
 3. **Typography & spacing pass** — consistent scale, weights, and rhythm
-   across dashboard, program pages, and tools.
+   across dashboard, program pages, and tools. **✅ shipped (PR #198)** —
+   `--fs-*` / `--fw-*` / `--sp-*` scale in `base.css`, adopted on the shared
+   hierarchy (reaches all day pages) + tool page titles consolidated.
 4. **Empty/loading/error states** — every list, chart, and sheet has a
    designed empty state (no blank panels), consistent with the
-   `showEmpty()` pattern already in `mc-macros.js`.
+   `showEmpty()` pattern already in `mc-macros.js`. **✅ shipped (PR #199)** —
+   shared `.empty-state` vocabulary in `base.css`; the three drifting variants
+   (collections, exercise-library, stats) converged onto it.
 5. **Motion & transition polish** — consistent card/sheet/tab transitions;
-   respect `prefers-reduced-motion`.
+   respect `prefers-reduced-motion`. **✅ shipped (PR #199)** — global
+   `@media (prefers-reduced-motion: reduce)` guard in `base.css`.
 
 Exit criteria: token audit shows zero hardcoded one-off colors on shared
 surfaces · Sand mode complete on all user-facing pages · audit-list UI items
 for this phase closed.
+
+### Open ticket — L1 task 1: base.css ↔ dashboard onyx token reconciliation
+
+> **Status: OPEN** (logged 2026-07-13; deferred by design during L1/L1.5).
+> Originally to be filed as a GitHub issue — recorded here instead because
+> the GitHub connection was unavailable at logging time.
+
+`dashboard.html` runs a **layered onyx type system** (`onyx-tokens-and-styles.css`,
+`onyx-programs-tokens-and-styles.css`, `onyx-conditioning-tokens-and-styles.css`).
+Its `#scr-*`-scoped rules **win by ID specificity** over the base component
+classes and carry their own font stack (`--font-display` Archivo / `--font-ui`
+Manrope) plus hardcoded pixel sizes, so the L1 Phase B `--fs-*` scale does **not**
+currently reach the dashboard. This was left alone deliberately — it's a design
+decision, not a mechanical swap, and a blind refactor risks the intentional
+dashboard look.
+
+**Approach when picked up:**
+1. Map the exact-match sizes onto the scale (zero pixel change): 18→`--fs-2xl`,
+   20→`--fs-3xl`, 16→`--fs-xl`, 15→`--fs-lg`, 14→`--fs-md`, 13→`--fs-sm`,
+   12→`--fs-xs`, 11→`--fs-2xs`, 24→`--fs-title`, 30→`--fs-hero`.
+2. Surface the fractional / oddball sizes (13.5, 15.5, 19, 23px) for an
+   explicit decision — snap to nearest step (e.g. 23→24, 19→20) or keep as an
+   intentional bespoke value — rather than silently normalizing.
+3. Confirm no `--o-*` token-name collisions with `base.css`; keep
+   `--font-display` / `--font-ui` as the dashboard's fonts.
+
+**Acceptance:** dashboard type references the shared scale wherever a clean
+match exists; oddballs snapped-with-signoff or documented as exceptions; no
+visual regression on any `#scr-*` screen (dashboard / programs / conditioning /
+nutrition) in dark **and** Sand mode.
 
 ## Phase L2 — Mobile experience & PWA installability
 
