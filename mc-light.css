@@ -171,3 +171,115 @@ html[data-theme="light"] .cond-name,
 html[data-theme="light"] .note-name{color:#1c1a17;}
 html[data-theme="light"] .cond-title,
 html[data-theme="light"] .cond-link{color:var(--accent,#8a6d1a);}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SAND-COMPLETENESS SWEEP (L1.5) — bespoke tool-page dark cards
+   ───────────────────────────────────────────────────────────────────
+   Phase A fixed only the titles that sat on the (light) body; the dark
+   bespoke CARDS on these tool pages were left dark, so light mode showed
+   dark islands and, inside them, invisible slate/white body text. This
+   block converts those surfaces + their inner text together so the tool
+   pages are fully Sand. Values come off the light-mode token cascade
+   (var(--text)=#1c1a17, --muted=#6b6459, --muted2=#8a8377); per-program
+   accent tints are preserved. stats.html self-manages its own Sand and
+   .day-card is handled by base.css, so neither appears here.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* shared helpers for this block */
+html[data-theme="light"] .mx-stage,
+html[data-theme="light"] .wr-card,
+html[data-theme="light"] #ivStage,
+html[data-theme="light"] .iv-plan-row,
+html[data-theme="light"] .imp-card,
+html[data-theme="light"] .imp-day,
+html[data-theme="light"] .saved-card,
+html[data-theme="light"] .ex-row,
+html[data-theme="light"] .sel-item,
+html[data-theme="light"] .dx-item,
+html[data-theme="light"] .col-card{
+  background:linear-gradient(135deg,rgba(var(--accent-rgb,212,175,55),0.05),#faf7f0);
+  border-color:rgba(28,26,23,0.1);}
+
+/* dark inputs / selects → light fields */
+html[data-theme="light"] .mx-search,
+html[data-theme="light"] .name-input,
+html[data-theme="light"] .search-box,
+html[data-theme="light"] .sel-inp,
+html[data-theme="light"] .sel-sel,
+html[data-theme="light"] .dx-input,
+html[data-theme="light"] .dx-sel,
+html[data-theme="light"] .day-name,
+html[data-theme="light"] .inp{
+  background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);color:var(--text);}
+html[data-theme="light"] .mx-search::placeholder,
+html[data-theme="light"] .name-input::placeholder,
+html[data-theme="light"] .search-box::placeholder,
+html[data-theme="light"] .inp::placeholder{color:#b7b0a3;}
+
+/* ── max-out ──────────────────────────────────────────────────────── */
+/* .search-wrap is a sticky bar (build-workout / exercise-library) — keep it
+   opaque with the Sand body colour so content doesn't show through it. */
+html[data-theme="light"] .search-wrap{background:var(--body-bg,#f5f2ec);}
+html[data-theme="light"] .mx-ex,
+html[data-theme="light"] .mx-nm{color:var(--text);}
+html[data-theme="light"] .mx-step-lbl,
+html[data-theme="light"] .mx-reps,
+html[data-theme="light"] .mx-note,
+html[data-theme="light"] .mx-lrow,
+html[data-theme="light"] .mx-arrow,
+html[data-theme="light"] .sec-lbl{color:var(--muted);}
+html[data-theme="light"] .mx-row{border-bottom-color:rgba(28,26,23,0.08);}
+html[data-theme="light"] .mx-end{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.12);color:var(--muted);}
+
+/* ── wrapped ──────────────────────────────────────────────────────── */
+html[data-theme="light"] .wr-title,
+html[data-theme="light"] .wr-main{color:var(--text);}
+html[data-theme="light"] .wr-sub{color:var(--muted);}
+html[data-theme="light"] .wr-tab{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.12);color:var(--muted2);}
+
+/* ── conditioning-timer ───────────────────────────────────────────── */
+html[data-theme="light"] #ivStep{color:var(--text);}
+html[data-theme="light"] .iv-intro-meta,
+html[data-theme="light"] #ivNext,
+html[data-theme="light"] .iv-dot-lbl,
+html[data-theme="light"] #ivStepN,
+html[data-theme="light"] .iv-total{color:var(--muted);}
+html[data-theme="light"] .iv-total b{color:var(--text);}
+html[data-theme="light"] .iv-btn{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);color:var(--text);}
+
+/* ── build-workout (navy sub-theme → Sand) ────────────────────────────
+   .header and .subtitle are shared across ~80/12 program pages and are
+   already light-handled by base.css / the titles block above, so they are
+   deliberately NOT re-declared here. */
+html[data-theme="light"] .results-count,
+html[data-theme="light"] .ex-progs,
+html[data-theme="light"] .sel-hint,
+html[data-theme="light"] .sel-lbl,
+html[data-theme="light"] .tray-clear{color:var(--muted);}
+html[data-theme="light"] .ex-nm,
+html[data-theme="light"] .sel-nm{color:var(--text);}
+html[data-theme="light"] .filter-btn{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.12);color:var(--muted);}
+html[data-theme="light"] .tray{background:linear-gradient(180deg,rgba(245,242,236,0.4),#faf7f0 30%);border-top-color:rgba(5,150,105,0.25);}
+
+/* ── build-program ────────────────────────────────────────────────── */
+html[data-theme="light"] .dx-name{color:var(--text);}
+html[data-theme="light"] .dx-hdr,
+html[data-theme="light"] .dx-lbl,
+html[data-theme="light"] .dx-del,
+html[data-theme="light"] .dx-sshint{color:var(--muted);}
+html[data-theme="light"] .wk-btn{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.12);color:var(--muted2);}
+
+/* ── collections (purple accent kept) ─────────────────────────────────
+   Only the rendered .col-card row is converted. .module-* / .row-* are dead
+   CSS here but live (on dark cards) in bonus-workouts.html and
+   cat-pump-new4.html, so they must NOT be touched by this shared sheet. */
+html[data-theme="light"] .col-card .cnm{color:var(--text);}
+html[data-theme="light"] .col-card .cmeta,
+html[data-theme="light"] .col-card .carr{color:var(--muted);}
+
+/* ── import ───────────────────────────────────────────────────────── */
+html[data-theme="light"] .imp-name,
+html[data-theme="light"] .imp-day-name{color:var(--text);}
+html[data-theme="light"] .imp-meta,
+html[data-theme="light"] .imp-day-ex,
+html[data-theme="light"] .imp-bad{color:var(--muted);}
