@@ -300,7 +300,7 @@ in writing in this document. That is the definition of "finished product."**
 |-------|-------|--------|
 | L0 | Debt closeout & audit baseline | ✅ Complete |
 | L1 | UI/UX & design-system unification | 🔲 Not started |
-| L2 | Mobile experience & PWA installability | 🔲 Not started |
+| L2 | Mobile experience & PWA installability | 🔄 In progress (Sub-Phase A) |
 | L3 | Onboarding & ease of use | 🔲 Not started |
 | L4 | Functionality completion | 🔲 Not started |
 | L5 | Commercial layer | 🔲 Not started |
@@ -311,6 +311,26 @@ each phase merges. Statuses: 🔲 Not started · 🔄 In progress · ✅ Complet
 ⏸ Waived/deferred (owner decision, link it).
 
 ### Shipped notes
+
+**L2 Sub-Phase A — installability blockers** (2026-07-13, in progress): Closed
+the four 🔴 findings (M1–M4). Generated a real raster icon set from `icon.svg`
+(`icon-192/512.png` + `-maskable` variants + `apple-touch-icon.png`, rendered
+via headless Chromium) and wired them into `manifest.json` and the SW precache
+(`build-sw.py` INCLUDE_FILES). Added `tools/add-pwa-meta.py` — an idempotent
+head sweep that propagated `viewport-fit=cover` + the `apple-mobile-web-app-*`
+metas + the `apple-touch-icon` link across all 144 pages (now 144/144; doubles
+as the coverage gate via `--check`). Added real `env(safe-area-inset-*)`
+handling to `base.css` for the shared program-page furniture (`.header`,
+`.back-link`, `.hero`, `.week-tabs`, fixed top banners, floating rest timer,
+FW modal) — targeted, not a global `body` pad, so the dashboard's own Onyx
+`.topbar`/`.mc-nav` insets can't double up. Bumped `base.css?v=66→67`
+fleet-wide and SW `v129→v130`. All local gates green (`build-sw --check`,
+`build-market --check` leak-clean, program/naming/suggest/maxout tests, plus a
+headless-Chromium render smoke of a page-family sample). **Owner acceptance
+items (can't run in CI):** install on a real iPhone + Android and confirm
+icon/standalone/safe-area; capture the Lighthouse PWA baseline. Sub-Phase B
+(SW offline strategy, install-prompt UX, gym ergonomics, perf budget) is the
+next gated slice; `screenshots: []` (M5) deferred to it once L1 visuals settle.
 
 **L0 — Debt closeout & audit baseline** (2026-07-13): Fixed the last
 `navigator.serviceWorker` truthy check (`exercise-library.html`); verified
