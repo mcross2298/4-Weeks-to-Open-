@@ -512,15 +512,16 @@
     if (badge) badge.remove();
   }
 
-  // mirror mc-replace.js's applyReplacements paint (cyan name + REPLACED badge)
+  // Cyan name + REPLACED badge. Styling is shared with mc-replace.js's
+  // applyReplacements via base.css (--replaced token + .replaced-badge rule),
+  // so the two paint sites can no longer drift (L1 U4).
   function paintReplaced(card, newName) {
     var nameEl = card.querySelector(NAME_SEL); if (!nameEl) return;
     nameEl.textContent = newName;
-    nameEl.style.color = '#22d3ee';
+    nameEl.style.color = 'var(--replaced)';
     if (!card.querySelector('.replaced-badge')) {
       var badge = document.createElement('span');
       badge.className = 'replaced-badge';
-      badge.style.cssText = 'font-size:11px;font-weight:900;color:#22d3ee;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.25);border-radius:4px;padding:2px 5px;margin-left:6px;letter-spacing:0.06em;vertical-align:middle;';
       badge.textContent = 'REPLACED';
       nameEl.parentNode.insertBefore(badge, nameEl.nextSibling);
     }
