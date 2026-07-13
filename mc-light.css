@@ -47,6 +47,21 @@ html[data-theme="light"] .hint,
 html[data-theme="light"] .pstep,
 html[data-theme="light"] .cd-label{color:#6b6459;}
 
+/* ── bespoke tool-page titles on the (now-Sand) body / transparent chrome ──
+   max-out / wrapped / conditioning-timer / build-program / import flip their
+   inline `body{background:#0a0a0a}` to Sand via the body rule at the top of
+   this sheet, but hardcode these title classes to #fff — leaving them
+   white-on-Sand (invisible). They sit on transparent top-bar chrome or the
+   bare completion screen, i.e. directly on the light body, so they must go
+   dark. Titles that live INSIDE a still-dark bespoke card (.mx-ex on
+   .mx-stage, .wr-title/.wr-main on .wr-card, #ivStep on #ivStage, .imp-name
+   on .imp-card, .saved-name on .saved-card, .col-card .cnm) are deliberately
+   omitted — those cards stay dark, so their white text is correct. */
+html[data-theme="light"] .topbar-title,
+html[data-theme="light"] .mx-done-title,
+html[data-theme="light"] .iv-name,
+html[data-theme="light"] .iv-done-title{color:#1c1a17;}
+
 /* ── section headings / eyebrows (accent-tinted, kept on hue) ─────── */
 html[data-theme="light"] .eyebrow,
 html[data-theme="light"] .sec-head{color:var(--accent,#8a6d1a);}
