@@ -42,6 +42,10 @@ INCLUDE_FILES = {"manifest.json",
 DENY_FILES = {
     "stndr-card-concepts.html",
 }
+# Suffix deny-list — design comps (`*.dc.html`, the Dashboard/Programs/Program
+# Landing/Conditioning Redesign mockups) live in the repo for reference but must
+# never ship in the precache to every device (L1 Phase C / U6).
+DENY_SUFFIXES = (".dc.html",)
 DENY_DIRS = {"tools", "supabase", "templates", ".github", ".git"}
 
 
@@ -53,7 +57,7 @@ def collect_urls(root, base):
     for p in sorted(root.iterdir()):
         if p.is_dir():
             continue
-        if p.name in DENY_FILES:
+        if p.name in DENY_FILES or p.name.endswith(DENY_SUFFIXES):
             continue
         if p.suffix in INCLUDE_EXT or p.name in INCLUDE_FILES:
             urls.append("./" + p.name)

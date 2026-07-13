@@ -620,6 +620,43 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
   background:rgba(var(--replaced-rgb),0.12);border:1px solid rgba(var(--replaced-rgb),0.25);
   border-radius:4px;padding:2px 5px;margin-left:6px;letter-spacing:0.06em;vertical-align:middle;}
 
+/* ── EMPTY / LOADING / ERROR STATES (L1 Phase C · U5) ──────────────────────
+   One shared placeholder vocabulary so lists, charts and sheets never render
+   a blank panel, and so the ~three drifting bespoke variants (.bonus-empty,
+   stats' .empty, exercise-library's .empty-state) converge on a single look.
+   Mirrors mc-macros.js's showEmpty() (icon + line). Token-driven, so it
+   auto-adapts to Sand light mode via the cascade — no per-theme rule needed.
+   Markup:
+     <div class="empty-state">
+       <div class="empty-icon">🔍</div>
+       <div class="empty-text">No exercises found</div>
+       <div class="empty-sub">Try fewer keywords</div>   (optional)
+     </div>
+   Modifiers: .empty-state.loading pulses the icon; .empty-state.error tints
+   the message with --danger for failed loads. */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:var(--sp-2);padding:var(--sp-8) var(--sp-5);min-height:120px;}
+.empty-icon{font-size:var(--fs-hero);line-height:1;opacity:0.85;}
+.empty-text{font-size:var(--fs-sm);font-weight:var(--fw-semi);color:var(--muted);line-height:1.5;max-width:34ch;}
+.empty-sub{font-size:var(--fs-xs);font-weight:var(--fw-medium);color:var(--muted2);line-height:1.5;}
+.empty-state.error .empty-text{color:var(--danger);}
+.empty-state.loading .empty-icon{animation:empty-pulse 1.2s ease-in-out infinite;}
+@keyframes empty-pulse{0%,100%{opacity:0.35;}50%{opacity:0.95;}}
+
+/* ── MOTION (L1 Phase C) — honour prefers-reduced-motion globally ──────────
+   Users who ask the OS to reduce motion get transitions/animations collapsed
+   to a near-instant duration everywhere (cards, sheets, tabs, the empty-state
+   pulse above, rest-timer flourishes). Kept as one global guard rather than
+   per-component opt-ins so no future animation can regress accessibility. */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:0.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.001ms !important;
+    scroll-behavior:auto !important;
+  }
+}
+
 /* ── SAND LIGHT MODE (Phase 7) ─────────────────────────────────────────────
    Shared program-page components. Toggle is applied by mc-nav.js (Phase 7
    THEME EARLY-APPLY block) + mc-appearance.js; this file only supplies the
