@@ -243,7 +243,7 @@ in writing in this document. That is the definition of "finished product."**
 
 | Phase | Theme | Status |
 |-------|-------|--------|
-| L0 | Debt closeout & audit baseline | 🔲 Not started |
+| L0 | Debt closeout & audit baseline | ✅ Complete |
 | L1 | UI/UX & design-system unification | 🔲 Not started |
 | L2 | Mobile experience & PWA installability | 🔲 Not started |
 | L3 | Onboarding & ease of use | 🔲 Not started |
@@ -254,3 +254,16 @@ in writing in this document. That is the definition of "finished product."**
 Update this table (and append a short "shipped" note under the phase) as
 each phase merges. Statuses: 🔲 Not started · 🔄 In progress · ✅ Complete ·
 ⏸ Waived/deferred (owner decision, link it).
+
+### Shipped notes
+
+**L0 — Debt closeout & audit baseline** (2026-07-13): Fixed the last
+`navigator.serviceWorker` truthy check (`exercise-library.html`); verified
+Task 3.2 closed (swap flow coherent, live tracker reads `mc_setlog_v1`+DOM —
+no fix needed) and `exercisedata.json` fully retired; bumped SW cache
+v125→v126. Produced [`launch-audit-findings.md`](launch-audit-findings.md) —
+a grounded page-family audit feeding L1–L5, with two 🔴 clusters (PWA
+installability/safe-area → L2, and the absent first-run experience → L3)
+anchoring the next phases. Widened `tools/smoke-test-pages.js` from 18 to 33
+pages across all distinct render families. Scratch-listed the planning docs
+so they never ship to the public Rolodex.
