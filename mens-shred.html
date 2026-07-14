@@ -47,7 +47,7 @@ body .day-card{background:var(--card-bg);border-radius:14px;border:2px solid var
 .rest-pill{display:inline-flex;align-items:center;gap:5px;cursor:pointer;user-select:none;
   padding:3px 9px;border-radius:7px;font-size:11px;font-weight:800;
   background:rgba(100,116,139,0.12);border:1px solid rgba(100,116,139,0.2);
-  color:#64748b;transition:all 0.15s;vertical-align:middle;}
+  color:var(--muted);transition:all 0.15s;vertical-align:middle;}
 .rest-pill:active{transform:scale(0.95);}
 .rest-pill.running{background:rgba(251,191,36,0.15);border-color:rgba(251,191,36,0.35);color:#fbbf24;animation:rp 1s ease-in-out infinite;}
 .rest-pill.done{background:rgba(52,211,153,0.15);border-color:rgba(52,211,153,0.35);color:#34d399;}
@@ -62,7 +62,7 @@ body .day-card{background:var(--card-bg);border-radius:14px;border:2px solid var
 .tf-lbl{font-size:11px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;color:#475569;}
 .tf-time{font-size:42px;font-weight:900;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:#fbbf24;}
 .tf-time.done{color:#34d399;}.tf-time.over{color:#f87171;}
-.tf-ex{font-size:11px;color:#64748b;text-align:center;max-width:180px;line-height:1.4;}
+.tf-ex{font-size:11px;color:var(--muted);text-align:center;max-width:180px;line-height:1.4;}
 .tf-bar{width:100%;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:4px;overflow:hidden;}
 .tf-prog{height:100%;background:#fbbf24;border-radius:2px;transition:width 0.5s linear;}
 .tf-prog.done{background:#34d399;}.tf-prog.over{background:#f87171;}
@@ -85,7 +85,7 @@ body .day-card{background:var(--card-bg);border-radius:14px;border:2px solid var
 @keyframes timerPulse{0%,100%{opacity:1;}50%{opacity:0.7;}}
 .rest-timer-icon{font-size:13px;}
 .rest-timer-label{font-size:11px;font-weight:800;letter-spacing:0.04em;}
-.rest-timer.idle .rest-timer-label{color:#64748b;}
+.rest-timer.idle .rest-timer-label{color:var(--muted);}
 .rest-timer.running .rest-timer-label{color:#fbbf24;}
 .rest-timer.done .rest-timer-label{color:#34d399;}
 .rest-timer.overtime .rest-timer-label{color:#f87171;}
@@ -98,7 +98,7 @@ body .day-card{background:var(--card-bg);border-radius:14px;border:2px solid var
 .timer-float-time{font-size:42px;font-weight:900;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:#fbbf24;}
 .timer-float-time.done{color:#34d399;}
 .timer-float-time.overtime{color:#f87171;}
-.timer-float-ex{font-size:11px;color:#64748b;text-align:center;max-width:180px;line-height:1.4;}
+.timer-float-ex{font-size:11px;color:var(--muted);text-align:center;max-width:180px;line-height:1.4;}
 .timer-float-bar{width:100%;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:4px;overflow:hidden;}
 .timer-float-progress{height:100%;background:#fbbf24;border-radius:2px;transition:width 0.5s linear;width:100%;}
 .timer-float-progress.done{background:#34d399;}
@@ -165,14 +165,14 @@ body .day-card{background:var(--card-bg);border-radius:14px;border:2px solid var
   padding:24px 20px 20px;
 }
 .fw-modal-title{font-size:20px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;}
-.fw-modal-sub{font-size:13px;color:#64748b;margin-bottom:18px;line-height:1.5;}
+.fw-modal-sub{font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.5;}
 .fw-summary{background:#111;border-radius:12px;padding:14px;margin-bottom:16px;}
 .fw-summary-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;}
 .fw-summary-row:last-child{border-bottom:none;}
-.fw-summary-label{color:#64748b;font-weight:600;}
+.fw-summary-label{color:var(--muted);font-weight:600;}
 .fw-summary-val{color:#fff;font-weight:800;}
 .fw-modal-btns{display:flex;gap:10px;}
-.fw-cancel{flex:1;padding:12px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.fw-cancel{flex:1;padding:12px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
 .fw-confirm{flex:2;padding:12px;background:#d4af37;border:none;border-radius:12px;color:#000;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.02em;}
 .fw-auto-banner{
   position:fixed;top:0;left:0;right:0;
