@@ -16,7 +16,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:60px;}
 .header-inner{max-width:680px;margin:0 auto;}
 .eyebrow{font-size:11px;font-weight:800;letter-spacing:0.25em;color:#d4af37;text-transform:uppercase;margin-bottom:8px;}
 .title{font-size:var(--fs-title);font-weight:var(--fw-black);color:#fff;margin-bottom:10px;}
-.subtitle{font-size:13px;color:#64748b;font-weight:600;}
+.subtitle{font-size:13px;color:var(--muted);font-weight:600;}
 .content{max-width:680px;margin:0 auto;padding:0 16px;}
 .search-wrap{position:sticky;top:0;z-index:10;background:#050d1a;padding:14px 0 10px;border-bottom:1px solid rgba(255,255,255,0.06);}
 .search-box{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 16px 12px 40px;color:#e2e8f0;font-size:16px;font-weight:600;outline:none;}/* 16px: no iOS focus-zoom */
@@ -25,7 +25,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:60px;}
 .search-rel{position:relative;}
 .filter-wrap{display:flex;gap:6px;overflow-x:auto;padding:10px 0 6px;-webkit-overflow-scrolling:touch;}
 .filter-wrap::-webkit-scrollbar{display:none;}
-.filter-btn{flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#64748b;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;letter-spacing:0.04em;transition:all 0.15s;}
+.filter-btn{flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:var(--muted);font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;letter-spacing:0.04em;transition:all 0.15s;}
 .filter-btn.active{background:rgba(212,175,55,0.2);border-color:rgba(212,175,55,0.5);color:#fbbf24;}
 .results-count{font-size:11px;color:#475569;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:14px 0 8px;}
 .ex-list{display:flex;flex-direction:column;gap:6px;}
@@ -194,7 +194,7 @@ function toggleGroup(el){
 }
 
 function buildMasterGroup(masterName,variations,muscle){
-  var col=MUSCLE_COLORS[muscle]||"#64748b";
+  var col=MUSCLE_COLORS[muscle]||"var(--muted)";
   var varRows="";
   for(var i=0;i<variations.length;i++){
     var ex=variations[i];
@@ -225,7 +225,7 @@ function buildMasterGroup(masterName,variations,muscle){
 }
 
 function exItemHTML(ex){
-  var col=MUSCLE_COLORS[ex.muscle]||"#64748b";
+  var col=MUSCLE_COLORS[ex.muscle]||"var(--muted)";
   var isCustom=ex.custom||((ex.programs||[]).indexOf('Custom')!==-1);
   var isPub=(ex.programs||[]).indexOf('Published')!==-1;
   var badge=isCustom?'<span style="font-size:10px;font-weight:800;letter-spacing:0.08em;padding:2px 7px;border-radius:5px;background:rgba(212,175,55,0.12);color:#d4af37;border:1px solid rgba(212,175,55,0.3);margin-left:6px;vertical-align:middle;">YOUR EXERCISE</span>'

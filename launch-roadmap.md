@@ -1,6 +1,6 @@
 # MC Training — Launch Roadmap (governing plan)
 
-Status: **ACTIVE — L0/L3/L4 complete, L2 code-complete (owner acceptance pending), L1/L5/L6 not started**
+Status: **ACTIVE — L0/L1/L3/L4 complete, L2 code-complete (owner acceptance pending), L5/L6 not started**
 Approved: 2026-07-12 (executive summary approved by owner)
 Goal: drive the app from its current state to a **finished, launch-ready
 product** — an installable PWA with a commercial layer.
@@ -98,6 +98,36 @@ Tasks (to be finalized from the L0 audit):
 Exit criteria: token audit shows zero hardcoded one-off colors on shared
 surfaces · Sand mode complete on all user-facing pages · audit-list UI items
 for this phase closed.
+**✅ All met (2026-07-14) — Phase L1 complete.**
+
+### Locked decisions (owner, AskUserQuestion alignment, 2026-07-14)
+
+- **Status-board correction:** before scoping this phase, found all 5 tasks
+  above already marked shipped in this doc (PRs #197–#200 + the onyx-
+  reconciliation commit, all verified as merged to `main`), while the status
+  board still said "🔲 Not started" — a stale-bookkeeping gap, same pattern
+  as L4's Phase-4 discovery. Owner chose a quick verification pass over the
+  exit criteria (rather than blindly flipping the status board, or a full
+  fresh re-audit of the whole app) before declaring the phase closed.
+- **Verification found a real, live gap:** a token audit of `base.css` found
+  `--success`/`--danger` are identical hex in both themes (hardcoding them
+  page-side is a harmless hygiene nit, not a bug), but `--muted` changes for
+  Sand mode (`#64748b` → `#6b6459`) and **57 pages** linking `mc-light.css`
+  still hardcoded the literal dark-mode `#64748b` instead of `var(--muted)`
+  — meaning secondary/meta text rendered in the wrong color in Sand mode on
+  those pages, undermining PR #200's "Sand mode complete" claim. Owner chose
+  to fix this now (mechanical, zero-risk swap) rather than log-and-defer.
+
+### L1.6 — muted-text Sand-mode fix (2026-07-14)
+
+Swapped all 191 raw `#64748b` occurrences across the 57 affected pages to
+`var(--muted)`. Zero visual change in dark mode (`--muted` is already
+`#64748b` there); Sand mode now correctly renders `#6b6459` instead of the
+stale dark-mode gray. Verified with a live headless-Chromium screenshot pass
+of `2on-1off.html` in both themes — clean, no regressions. `sw.js` bumped
+v137→v138 for the asset change. `--success`/`--danger` hardcoding left as-is
+(identical value in both themes — no live bug, pure hygiene, not worth the
+churn).
 
 ### Open ticket — L1 task 1: base.css ↔ dashboard onyx token reconciliation
 
@@ -371,7 +401,7 @@ in writing in this document. That is the definition of "finished product."**
 | Phase | Theme | Status |
 |-------|-------|--------|
 | L0 | Debt closeout & audit baseline | ✅ Complete |
-| L1 | UI/UX & design-system unification | 🔲 Not started |
+| L1 | UI/UX & design-system unification | ✅ Complete |
 | L2 | Mobile experience & PWA installability | 🔄 In progress (code complete, owner acceptance pending) |
 | L3 | Onboarding & ease of use | ✅ Complete |
 | L4 | Functionality completion | ✅ Complete |
@@ -383,6 +413,18 @@ each phase merges. Statuses: 🔲 Not started · 🔄 In progress · ✅ Complet
 ⏸ Waived/deferred (owner decision, link it).
 
 ### Shipped notes
+
+**L1 — UI/UX & design-system unification** (2026-07-14): Closed out a phase
+whose 5 tasks had already shipped across earlier PRs (#197–#200 + the onyx
+token-reconciliation commit) but whose status board and exit criteria were
+never checked off — a verification pass (rather than a blind doc flip)
+turned up one real, live gap: 191 raw `#64748b` hardcodes across 57
+Sand-mode pages that didn't respect the theme's muted-text override. Fixed
+mechanically (`#64748b` → `var(--muted)`, zero dark-mode visual change,
+verified live in both themes via headless Chromium). `--success`/`--danger`
+hardcodes left alone — identical value in both themes, no live bug. `sw.js`
+bumped v137→v138. This closes out L1: exit criteria genuinely met, not just
+marked.
 
 **L4 — Functionality completion** (2026-07-14): Closed all three exit-criteria
 items. **F1:** added a "Workout History" link card to `stats.html` (mirrors the

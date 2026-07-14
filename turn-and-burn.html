@@ -53,7 +53,7 @@ body{background:#070a12;min-height:100vh;padding-bottom:240px;color:#e2e8f0;}
 
 /* ── EMBEDDED COUNTDOWN (matches the main app stopwatch styling) ── */
 .cd-box{background:rgba(0,0,0,0.28);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:13px;margin-top:11px;text-align:center;}
-.cd-mini-label{font-size:11px;font-weight:900;letter-spacing:0.2em;color:#64748b;text-transform:uppercase;margin-bottom:8px;}
+.cd-mini-label{font-size:11px;font-weight:900;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
 .cd-disp{font-size:42px;font-weight:900;color:#e2e8f0;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;line-height:1;margin-bottom:6px;}
 .cd-disp.running{color:#fb923c;}
 .cd-disp.done{color:#34d399;}
@@ -64,7 +64,7 @@ body{background:#070a12;min-height:100vh;padding-bottom:240px;color:#e2e8f0;}
 .cd-btn{padding:10px 22px;border-radius:10px;border:none;cursor:pointer;font-size:12px;font-weight:800;letter-spacing:0.06em;font-family:inherit;}
 .cd-btn.go{background:rgba(52,211,153,0.16);color:#34d399;border:1px solid rgba(52,211,153,0.35);}
 .cd-btn.pause{background:rgba(251,146,60,0.16);color:#fb923c;border:1px solid rgba(251,146,60,0.35);}
-.cd-btn.ghost{background:transparent;color:#64748b;border:1px solid rgba(255,255,255,0.12);}
+.cd-btn.ghost{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.12);}
 
 /* ── SPLIT PICKER ── */
 .split-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
@@ -106,7 +106,7 @@ body{background:#070a12;min-height:100vh;padding-bottom:240px;color:#e2e8f0;}
 .bp-disp.work{color:#f87171;}
 .bp-disp.rest{color:#38bdf8;}
 .bp-disp.done{color:#34d399;}
-.bp-phaselabel{text-align:center;font-size:12px;font-weight:900;letter-spacing:0.22em;text-transform:uppercase;color:#64748b;margin-bottom:14px;}
+.bp-phaselabel{text-align:center;font-size:12px;font-weight:900;letter-spacing:0.22em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
 
 /* counter (work phase) */
 .bp-counter{display:none;}
@@ -136,12 +136,12 @@ body{background:#070a12;min-height:100vh;padding-bottom:240px;color:#e2e8f0;}
 .bp-ctrl.go{background:linear-gradient(135deg,#f97316,#dc2626);color:#fff;box-shadow:0 4px 16px rgba(220,38,38,0.35);}
 .bp-ctrl.pause{background:rgba(251,146,60,0.16);color:#fb923c;border:1px solid rgba(251,146,60,0.35);}
 .bp-ctrl.skip{background:rgba(14,165,233,0.14);color:#7dd3fc;border:1px solid rgba(14,165,233,0.3);}
-.bp-ctrl.reset{background:rgba(255,255,255,0.05);color:#64748b;border:1px solid rgba(255,255,255,0.12);}
+.bp-ctrl.reset{background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid rgba(255,255,255,0.12);}
 
 .bp-scores{margin-top:16px;border-top:1px solid rgba(255,255,255,0.07);padding-top:12px;}
 .bp-scores-lbl{font-size:11px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#94a3b8;margin-bottom:8px;}
 .bp-chips{display:flex;flex-wrap:wrap;gap:6px;}
-.bp-chip{font-size:11px;font-weight:800;padding:5px 9px;border-radius:8px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);color:#64748b;font-variant-numeric:tabular-nums;}
+.bp-chip{font-size:11px;font-weight:800;padding:5px 9px;border-radius:8px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);color:var(--muted);font-variant-numeric:tabular-nums;}
 .bp-chip.filled{border-color:rgba(249,115,22,0.45);background:rgba(249,115,22,0.1);color:#fdba74;}
 .bp-chip.current{border-color:#f87171;background:rgba(220,38,38,0.18);color:#fff;}
 
@@ -153,7 +153,7 @@ body{background:#070a12;min-height:100vh;padding-bottom:240px;color:#e2e8f0;}
 .burn-head-main{flex:1;min-width:0;}
 .burn-name{font-size:15px;font-weight:900;color:#fff;}
 .burn-opt-tag{font-size:10px;font-weight:900;letter-spacing:0.14em;color:#fdba74;text-transform:uppercase;}
-.burn-chev{font-size:13px;color:#64748b;transition:transform 0.25s;}
+.burn-chev{font-size:13px;color:var(--muted);transition:transform 0.25s;}
 .burn-card.open .burn-chev{transform:rotate(180deg);}
 .burn-body{max-height:0;overflow:hidden;transition:max-height 0.3s ease;}
 .burn-card.open .burn-body{max-height:680px;}
@@ -189,7 +189,7 @@ body{background:#070a12;min-height:100vh;padding-bottom:240px;color:#e2e8f0;}
 .sum-quick-item{text-align:right;}
 .sum-quick-v{font-size:17px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums;line-height:1;}
 .sum-quick-l{font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#94a3b8;margin-top:2px;}
-.sum-chev{font-size:12px;color:#64748b;transition:transform 0.25s;}
+.sum-chev{font-size:12px;color:var(--muted);transition:transform 0.25s;}
 .sum-drawer.open .sum-chev{transform:rotate(180deg);}
 .sum-detail{max-height:0;overflow:hidden;transition:max-height 0.3s ease;}
 .sum-drawer.open .sum-detail{max-height:340px;}
@@ -200,7 +200,7 @@ body{background:#070a12;min-height:100vh;padding-bottom:240px;color:#e2e8f0;}
 .sum-line-nm{font-size:13px;font-weight:700;color:#cbd5e1;flex:1;}
 .sum-line-v{font-size:14px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums;}
 .sum-line-v small{font-size:11px;color:#94a3b8;font-weight:700;}
-.sum-reset{width:100%;margin-top:12px;padding:11px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#64748b;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;}
+.sum-reset{width:100%;margin-top:12px;padding:11px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:var(--muted);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;}
 
 /* top progress bar */
 .prog-bar-wrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:999;background:rgba(255,255,255,0.06);}
