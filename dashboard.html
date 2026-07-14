@@ -552,6 +552,14 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 }
 .ps-confirm:active{opacity:0.85;}
 
+/* ── First-run onboarding sheet (reuses .ps-* from Program Select above) ── */
+.ob-back,.ob-skip{
+  width:100%;padding:12px;background:none;border:none;
+  color:var(--muted2);font-size:var(--fs-sm);font-weight:700;
+  cursor:pointer;font-family:inherit;margin-top:4px;
+}
+.ob-back:active,.ob-skip:active{opacity:0.7;}
+
 /* ── Conditioning tab (Phase 1) — accent colors applied inline by JS ── */
 .cond-sub{margin-bottom:26px;}
 .cond-sub-head{display:flex;align-items:center;gap:10px;margin:18px 0 12px;}
@@ -1571,6 +1579,29 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
   </div>
 </div>
 
+<!-- ══════════════════════════════════════
+     FIRST-RUN ONBOARDING SHEET
+══════════════════════════════════════ -->
+<div class="ps-overlay" id="obOverlay" onclick="MC_ONBOARD.closeOutside(event)">
+  <div class="ps-sheet" role="dialog" aria-modal="true" aria-labelledby="obTitle">
+    <div class="ps-handle"></div>
+    <div id="obStepPick">
+      <div class="ps-title" id="obTitle">Pick your program</div>
+      <div class="ps-sub">Choose one to see this week, then start Day 1.</div>
+      <div id="obCards" role="listbox" aria-label="Choose a program"></div>
+      <button class="ob-skip" onclick="MC_ONBOARD.skip()">Skip for now</button>
+    </div>
+    <div id="obStepWeek" style="display:none;">
+      <div class="ps-title">This week</div>
+      <div class="ps-sub" id="obWeekSub"></div>
+      <div id="obWeekCard"></div>
+      <button class="ps-confirm" onclick="MC_ONBOARD.start()">Start Day 1 →</button>
+      <button class="ob-back" onclick="MC_ONBOARD.back()">← Choose a different program</button>
+      <button class="ob-skip" onclick="MC_ONBOARD.skip()">Skip for now</button>
+    </div>
+  </div>
+</div>
+
 <script src="custom-workouts-store.js"></script>
 <script src="conditioning-data.js"></script>
 <script src="mc-cond.js"></script>
@@ -2030,6 +2061,19 @@ function confirmProg(){
   try{if(window.MC_SB&&MC_SB.configured)MC_SB.saveActiveProgram(activeProg).catch(function(){});}catch(e){}
 }
 
+// First-run onboarding hook (mc-onboarding.js): pin the chosen program and
+// jump straight to it in one step, instead of pin-then-separately-tap-hero.
+function startOnboardProgram(id){
+  const sel=allProgs().find(p=>p.id===id);
+  if(!sel)return;
+  sel.startedAt=new Date().toISOString();
+  activeProg=sel;
+  try{localStorage.setItem(STORE,JSON.stringify(activeProg));}catch(e){}
+  try{document.dispatchEvent(new CustomEvent('mc:program-changed'));}catch(e){}
+  try{if(window.MC_SB&&MC_SB.configured)MC_SB.saveActiveProgram(activeProg).catch(function(){});}catch(e){}
+  openActiveProgram();
+}
+
 // ── OFFLINE ──
 window.addEventListener('online',()=>document.getElementById('offlineBar').classList.remove('show'));
 window.addEventListener('offline',()=>document.getElementById('offlineBar').classList.add('show'));
@@ -2364,6 +2408,7 @@ function loadWrapped(){
 // Render on load after scripts settle
 setTimeout(loadWrapped,1500);
 </script>
+<script src="mc-onboarding.js"></script>
 <script src="mc-supabase.js"></script>
 <script src="mc-push.js"></script>
 <script src="mc-sync.js"></script>

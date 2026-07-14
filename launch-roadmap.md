@@ -192,6 +192,15 @@ taps, and every major feature is discoverable without being told.
 - **Feature discoverability (Task 4):** add contextual entry points for all
   five buried features this phase — substitute picker, conditioning corner,
   macros, max-out, wrapped.
+- **Day-1 hand-off scope (mid-Phase-1 gate, 2026-07-14):** the guided flow's
+  final step ends at the chosen program's own landing page (today's
+  hero-tap target), not literally inside its Day-1 exercise list — each
+  `cat-*.html` runs its own bespoke split/day view logic with no shared
+  engine to hook into from `dashboard.html` alone. Reaching the *program
+  page* in ≤3 taps (verified: 2 taps — pick a card, then "Start Day 1") is
+  Phase 1's scope; a generic per-program auto-start hook that lands
+  literally on the Day-1 exercise list was explicitly descoped to keep
+  Phase 1 to `dashboard.html` + one new file, not all 10 program pages.
 
 Tasks:
 1. **First-run experience** — detect first visit; short guided path:
@@ -314,7 +323,7 @@ in writing in this document. That is the definition of "finished product."**
 | L0 | Debt closeout & audit baseline | ✅ Complete |
 | L1 | UI/UX & design-system unification | 🔲 Not started |
 | L2 | Mobile experience & PWA installability | 🔄 In progress (code complete, owner acceptance pending) |
-| L3 | Onboarding & ease of use | 🔲 Not started |
+| L3 | Onboarding & ease of use | 🔄 In progress (Phase 1 of 4 shipped) |
 | L4 | Functionality completion | 🔲 Not started |
 | L5 | Commercial layer | 🔲 Not started |
 | L6 | Launch hardening (Definition of Done) | 🔲 Not started |
@@ -324,6 +333,27 @@ each phase merges. Statuses: 🔲 Not started · 🔄 In progress · ✅ Complet
 ⏸ Waived/deferred (owner decision, link it).
 
 ### Shipped notes
+
+**L3 Phase 1 — first-run flow & tap-count redesign** (2026-07-14): New
+`mc-onboarding.js` shows a skippable 2-step sheet ("Pick your program" →
+"This week" summary + "Start Day 1") the first time `dashboard.html` loads
+with no `mc_onboarded` flag and no pinned `mc_active_prog` — gated on both,
+so it never re-shows to a returning user and auto-marks itself done for
+any user who already had a program pinned before this shipped (no forced
+re-onboarding). Reuses the existing `.ps-*` Program Select sheet styling
+(no new visual language) plus a new `startOnboardProgram(id)` hook in
+`dashboard.html` that pins the chosen program and navigates straight to it
+in one step — collapsing the old pick→confirm→hero-tap sequence. Verified
+via a real headless-Chromium run (4 scenarios: new user, reload-after-
+onboarding, skip, pre-existing user) — new-user path is **2 taps** (pick a
+program card, tap "Start Day 1") to the program's landing page, down from
+~6 for the previous cold-start path through the empty hero card. Per the
+mid-phase gate above, this lands on the program page, not literally the
+Day-1 exercise list — a generic per-program auto-start hook was descoped
+to keep this phase to 2 files. `sw.js` bumped v132→v133 for the new asset;
+`test-naming.js`, `check-program-colors.js`, `validate-programs.js`,
+`test-mc-suggest.js`, `test-mc-maxout.js`, `build-market.py --check`, and
+`build-sw.py --check` all green.
 
 **L2 Sub-Phase B — app-feel, offline strategy & ergonomics** (2026-07-14):
 Closed M6–M8 and the remaining roadmap tasks. **SW payload (M6/M7):** the
