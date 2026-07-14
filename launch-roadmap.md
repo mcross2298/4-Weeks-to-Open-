@@ -300,7 +300,7 @@ in writing in this document. That is the definition of "finished product."**
 |-------|-------|--------|
 | L0 | Debt closeout & audit baseline | ✅ Complete |
 | L1 | UI/UX & design-system unification | 🔲 Not started |
-| L2 | Mobile experience & PWA installability | 🔄 In progress (Sub-Phase A) |
+| L2 | Mobile experience & PWA installability | 🔄 In progress (code complete, owner acceptance pending) |
 | L3 | Onboarding & ease of use | 🔲 Not started |
 | L4 | Functionality completion | 🔲 Not started |
 | L5 | Commercial layer | 🔲 Not started |
@@ -311,6 +311,48 @@ each phase merges. Statuses: 🔲 Not started · 🔄 In progress · ✅ Complet
 ⏸ Waived/deferred (owner decision, link it).
 
 ### Shipped notes
+
+**L2 Sub-Phase B — app-feel, offline strategy & ergonomics** (2026-07-14):
+Closed M6–M8 and the remaining roadmap tasks. **SW payload (M6/M7):** the
+`.dc.html` design comps were already excluded from precache (confirmed —
+`DENY_SUFFIXES` in `build-sw.py` already handled it, so M7 needed no change).
+The real M6 fix was an eager/lazy split in `collect_urls()`: install-time
+precache now covers only the app shell (`index.html`, `dashboard.html`, and
+every shared JS/CSS/manifest/icon) — **243 → 106 URLs, 4.46MB → 1.84MB**. The
+~137 remaining program/day/tool pages are no longer front-loaded, but nothing
+loses offline support once opened: `sw.js`'s fetch handler was already
+network-first-with-cache-fallback for every request regardless of precache
+membership, so a page is cached the instant it's visited, same as before.
+Bumped SW `v130→v131`. **Install UX:** new `mc-install.js` captures
+`beforeinstallprompt` at dashboard load (it fires once per session and only
+reaches a listener already attached) and exposes `MC_INSTALL` for
+`mc-account.js`'s new Install section (`appendInstallSection`, following the
+existing Appearance/Backup pattern) — native one-tap install on Android,
+numbered Share→Add to Home Screen steps on iOS, an "Already installed" state
+via the same `display-mode: standalone` check `mc-nav.js` uses. Also fixed an
+unrelated pre-existing bug noticed in passing: `dashboard.html`'s
+`apple-touch-icon` link pointed at `icon-192.png` (dead until Sub-Phase A
+created that file, and inconsistent with the `apple-touch-icon.png` every
+other page now links) — repointed to match. **Touch targets (M8):** checking
+every gym-critical control found `.mcl-ck` (set-log check) already at 44px
+with a documented comment, and `.mc-meatball` deliberately kept at 36px
+(documented crowding reason) — left alone. The two real gaps were
+`.timer-float-btn` (rest-timer Skip/Reset, ~35px) and `.timer-preset`
+(15s/30s/60s/2min, ~30px); both bumped to 44px min-height, verified with a
+live headless-Chromium screenshot of the running rest timer on a current-gen
+program page (`mc-s1-back.html`) — clean fit, no clipping. **Perf budget:**
+Lighthouse itself can't run in this container (no throttled real device, no
+CDP-to-Lighthouse bridge this sandbox exposes) — captured a CPU-throttled
+(4×) + network-shaped (150ms/1.6Mbps) headless-Chromium timing pass instead as
+a **rough, non-Lighthouse directional baseline**: dashboard.html FCP ≈2.4s,
+program-page (`mc-s1-back.html`) FCP ≈3.2s, both with this sandbox's external
+font fetch excluded (blocking it dropped dashboard's number from 13.2s to
+2.4s, showing this container's own network path skews raw numbers too much to
+trust in absolute terms). **A real Lighthouse run stays an owner acceptance
+item**, alongside Sub-Phase A's on-device install check — L2's code-side work
+is complete; the roadmap's Lighthouse + real-device exit criteria remain open
+until the owner runs them. Docs: `quick-tour.html`/`quick-tour-overview.html`
+updated to point at the new account-sheet Install section.
 
 **L2 Sub-Phase A — installability blockers** (2026-07-13, in progress): Closed
 the four 🔴 findings (M1–M4). Generated a real raster icon set from `icon.svg`

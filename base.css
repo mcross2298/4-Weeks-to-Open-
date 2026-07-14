@@ -387,13 +387,13 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .timer-float-progress.done{background:#34d399;}
 .timer-float-progress.overtime{background:#f87171;}
 .timer-float-actions{display:flex;gap:8px;margin-top:6px;}
-.timer-float-btn{padding:6px 14px;border-radius:8px;border:none;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:0.06em;}
+.timer-float-btn{padding:6px 14px;min-height:44px;border-radius:8px;border:none;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:0.06em;display:inline-flex;align-items:center;justify-content:center;}
 .timer-float-skip{background:rgba(52,211,153,0.15);color:var(--success);border:1px solid rgba(52,211,153,0.3);}
 .timer-float-reset{background:rgba(239,68,68,0.12);color:var(--danger);border:1px solid rgba(239,68,68,0.2);}
 
 /* ── TIMER PRESETS ──────────────────────────────────────────────── */
 .timer-presets{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;justify-content:center;}
-.timer-preset{padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.07);color:#94a3b8;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:0.05em;}
+.timer-preset{padding:5px 12px;min-height:44px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.07);color:#94a3b8;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:0.05em;display:inline-flex;align-items:center;justify-content:center;}
 .timer-preset:active{background:rgba(var(--accent-rgb),0.2);color:var(--accent);border-color:rgba(var(--accent-rgb),0.4);}
 
 /* ── PROGRESS BAR ───────────────────────────────────────────────── */

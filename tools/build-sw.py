@@ -9,6 +9,16 @@ in place:
      deployable files (no more hand-maintained list, no dead entries).
   2. The CACHE_NAME version.
 
+App-shell / lazy split (L2 Sub-Phase B, finding M6): the `install` event only
+needs to precache the app shell — shared JS/CSS/manifest/icons plus the two
+entry pages (`index.html`, `dashboard.html`) — not every one of the ~140
+program/day/tool pages a user may never open. Everything else still becomes
+offline-available the instant it's opened once, because sw.js's fetch handler
+is network-first-with-cache-fallback for every request regardless of whether
+it was precached. Trimming the AUTOGEN list therefore only shrinks the
+first-install payload; it does not remove any page's offline support once
+visited. Do not "fix" this back to listing every HTML page.
+
 Usage:
   python3 tools/build-sw.py --bump                 # local: v76 -> v77
   python3 tools/build-sw.py --version ci-123       # CI: deterministic per run
@@ -50,6 +60,12 @@ DENY_FILES = {
 DENY_SUFFIXES = (".dc.html",)
 DENY_DIRS = {"tools", "supabase", "templates", ".github", ".git"}
 
+# App-shell HTML entry points — precached eagerly at install alongside every
+# shared JS/CSS/manifest/icon asset. Every other .html page is "lazy": not
+# precached, but cached on first visit by the fetch handler's normal
+# network-first-with-cache-fallback strategy (see module docstring).
+EAGER_HTML = {"index.html", "dashboard.html"}
+
 
 def collect_urls(root, base):
     # RELATIVE URLs ('./x') resolve against the SW's own location, so the same
@@ -61,6 +77,8 @@ def collect_urls(root, base):
             continue
         if p.name in DENY_FILES or p.name.endswith(DENY_SUFFIXES):
             continue
+        if p.suffix == ".html" and p.name not in EAGER_HTML:
+            continue  # lazy page — not precached at install (M6)
         if p.suffix in INCLUDE_EXT or p.name in INCLUDE_FILES:
             urls.append("./" + p.name)
     return urls
