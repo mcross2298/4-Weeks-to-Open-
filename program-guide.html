@@ -29,6 +29,8 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 .prog-info{flex:1;min-width:0;}
 .prog-name{font-size:15px;font-weight:800;color:#fff;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .prog-meta{font-size:11px;color:#64748b;font-weight:600;}
+.prog-forwho{font-size:11px;color:#94a3b8;font-weight:500;margin-top:4px;line-height:1.4;}
+.prog-forwho b{color:#d4af37;font-weight:700;}
 .prog-arrow{font-size:14px;color:#334155;flex-shrink:0;}
 .no-guide{display:flex;align-items:center;gap:14px;padding:16px;border-radius:16px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.04);background:#0d0d0d;opacity:0.5;position:relative;overflow:hidden;}
 .no-guide::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#334155;border-radius:0 2px 2px 0;}
@@ -47,7 +49,7 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 <div class="hero">
   <div class="hero-eyebrow">📋 Training Reference</div>
   <h1 class="hero-title">Program Guide</h1>
-  <p class="hero-sub">Rules, set styles, rep ranges, and methodology for all 7 programs. Tap any program to open its full guide.</p>
+  <p class="hero-sub" id="heroSub">Rules, set styles, rep ranges, and methodology for every program. Tap any program to open its full guide.</p>
 </div>
 <div class="section">
   <div class="section-label">All Programs</div>
@@ -80,14 +82,19 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
         '<div class="prog-meta" style="margin-top:4px;"><span class="no-guide-tag">Guide coming soon</span></div></div>' +
       '</div>';
     }
+    var forWho = p.forWho ? '<div class="prog-forwho"><b>Best for:</b> ' + escHtml(p.forWho) + '</div>' : '';
     return '<a href="' + p.id + '-instructions.html" class="prog-card" style="--c:' + p.color + ';">' +
       '<div class="prog-icon">' + p.icon + '</div>' +
-      '<div class="prog-info"><div class="prog-name">' + escHtml(p.name) + '</div><div class="prog-meta">' + escHtml(p.desc) + '</div></div>' +
+      '<div class="prog-info"><div class="prog-name">' + escHtml(p.name) + '</div><div class="prog-meta">' + escHtml(p.desc) + '</div>' + forWho + '</div>' +
       '<div class="prog-arrow">→</div>' +
     '</a>';
   }).join('');
   var list = document.getElementById('progGuideList');
   if (list) list.innerHTML = html;
+  // program count is computed at runtime from the rendered list, not
+  // hardcoded, so it never drifts as programs are added/removed/stripped.
+  var heroSub = document.getElementById('heroSub');
+  if (heroSub) heroSub.textContent = 'Rules, set styles, rep ranges, and methodology for all ' + programs.length + ' programs. Tap any program to open its full guide.';
 })();
 </script>
 <script>
