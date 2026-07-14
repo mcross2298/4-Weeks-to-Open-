@@ -171,13 +171,20 @@ redesigning the entry flow.
 → *Evidence:* no metric captured; dashboard → programs → program → split → day
 is the apparent path (needs live confirmation).
 
-**O5 · Feature discoverability relies on the tour, not context.** 🟡
-Powerful features (substitute picker via the meatball menu, max-out calculator,
-wrapped, conditioning corner) are reachable but not contextually surfaced. L3
-should add in-context entry points rather than depending on users finding the
-tour.
-→ *Evidence:* substitute picker lives behind the ⋮ menu (`mc-card-actions.js`);
-no first-use hint.
+**O5 · Feature discoverability relies on the tour, not context.** 🟡 — Closed
+(L3 Phase 2, 2026-07-14). **Correction to the original evidence line:** the
+substitute picker is not behind the ⋮ menu — `mc-card-actions.js` surfaces a
+one-tap 🔁 Replace button directly on every exercise card face; only progress
+history / Add Tempo / intensifier toggles remain in ⋮. Conditioning Corner was
+already one tap away via the shared `mc-nav.js` bottom-nav 🔥 tab. The two
+genuinely buried features were **Max-Out** and **Wrapped** — each had exactly
+one inbound link in the whole app (`stats.html`), 2 taps deep. Fixed by adding
+both as `.tool-card` entries in the dashboard's existing "Training Tools" grid
+(`dashboard.html`) — 1 tap from Home, same pattern as Exercise Library/Quick
+Pump/Program Guide. Also added Nutrition to the shared `mc-nav.js` bottom bar
+(it was dashboard-only before, missing from the bar every other page injects),
+closing the one real cross-page inconsistency this finding's investigation
+turned up.
 
 ---
 
