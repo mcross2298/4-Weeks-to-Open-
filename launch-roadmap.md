@@ -323,7 +323,7 @@ in writing in this document. That is the definition of "finished product."**
 | L0 | Debt closeout & audit baseline | ✅ Complete |
 | L1 | UI/UX & design-system unification | 🔲 Not started |
 | L2 | Mobile experience & PWA installability | 🔄 In progress (code complete, owner acceptance pending) |
-| L3 | Onboarding & ease of use | 🔄 In progress (Phases 1–2 of 4 shipped) |
+| L3 | Onboarding & ease of use | 🔄 In progress (Phases 1–3 of 4 shipped) |
 | L4 | Functionality completion | 🔲 Not started |
 | L5 | Commercial layer | 🔲 Not started |
 | L6 | Launch hardening (Definition of Done) | 🔲 Not started |
@@ -333,6 +333,16 @@ each phase merges. Statuses: 🔲 Not started · 🔄 In progress · ✅ Complet
 ⏸ Waived/deferred (owner decision, link it).
 
 ### Shipped notes
+
+**L3 Phase 3 — program-guide clarity** (2026-07-14): Added a `forWho` field to
+every program in `mc-pm-data.js` (6 flagship + 4 influencer) — a short
+plain-language "who is this for" line, additive to the existing marketing
+`desc`. `program-guide.html` renders it as a "Best for:" line on each card,
+turning the guide from a pure router (icon + name + marketing tagline) into
+an actual decision aid. Also fixed the hero subtitle's hardcoded "all 7
+programs," which had drifted from the real 10-program roster — it now counts
+the rendered list at runtime, the same pattern the dashboard's `.topbar-sub`
+already uses, so it can't drift again.
 
 **L3 Phase 2 — feature discoverability** (2026-07-14): Added Nutrition to the
 shared `mc-nav.js` bottom-nav bar (🍎, deep-links `dashboard.html?tab=nutrition`,
