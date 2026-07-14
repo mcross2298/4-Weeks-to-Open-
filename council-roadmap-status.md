@@ -139,7 +139,13 @@ first contact with the actual fleet.
 
 ---
 
-## 🔲 Phase 4 — The next level (NOT STARTED)
+## ✅ Phase 4 — The next level (SHIPPED)
+
+> **Status correction (2026-07-14, from launch-roadmap.md Phase L4):** every
+> item below (4.1–4.7) is merged to `main` under `roadmap 4.x`-tagged commits.
+> This section's "not started"/"unverified" framing below is historical —
+> kept as the original scoping record, not a current-state claim. See
+> `launch-roadmap.md`'s Phase L4 shipped notes for the closure detail.
 
 Every item below is LLM/automation-facing, matching the council's "LLM earns
 its keep in exactly three places" framing. **First action for a future

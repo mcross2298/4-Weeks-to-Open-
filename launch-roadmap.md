@@ -1,6 +1,6 @@
 # MC Training — Launch Roadmap (governing plan)
 
-Status: **ACTIVE — L0 not started**
+Status: **ACTIVE — L0/L3/L4 complete, L2 code-complete (owner acceptance pending), L1/L5/L6 not started**
 Approved: 2026-07-12 (executive summary approved by owner)
 Goal: drive the app from its current state to a **finished, launch-ready
 product** — an installable PWA with a commercial layer.
@@ -240,29 +240,65 @@ current against the live feature set · audit-list onboarding items closed.
 **Goal:** the feature set is *complete* for launch — nothing a paying user
 would immediately ask "where is…?" about.
 
+### Locked decisions (owner, AskUserQuestion alignment, 2026-07-14)
+
+- **Council items 4.1–4.7 re-scope:** before drafting this phase's plan, a
+  git-log/grep check found all seven promoted council Phase-4 items
+  already merged to `main` under `roadmap 4.x`-tagged commits (structured
+  coach-claude chips, NL food logging, LLM substitution fallback, voice
+  control, PM client roster, automated weekly check-ins, unified
+  market/cookbook) — contradicting this doc's and
+  `council-roadmap-status.md`'s "not started"/"unverified" framing. Owner
+  decided: take the commit history at face value rather than re-auditing
+  each feature live; mark them shipped and close finding F2.
+- **F1 (Progress/history unification) approach:** light hub, not a full
+  merge/refactor — `stats.html` already functions as the single nav entry
+  point (bottom nav + dashboard's History tab both route here) and already
+  links out to Wrapped and Max-Out; the only missing link is Workout Logs,
+  so F1 closes by adding that one card rather than consolidating
+  `mc-stats.js`/`mc-exercise-trends.js`/`mc-chart.js`/`mc-wrapped.js` into a
+  single page.
+- **F4 (resume-workout affordance):** confirmed adequate as-is
+  (`dashboard.html`'s `heroNextLift()` computes a live in-progress-workout
+  resume target on the hero card; `mc-resume.js` covers the program
+  pages) — closed with no new UI work, same pattern as F3 in L0.
+
 Tasks:
-1. **Unify progress & history** — `mc-stats.js`, `mc-exercise-trends.js`,
-   `mc-chart.js`, `wrapped.html`, `workout-logs.html` exist as separate
-   surfaces; unify into one coherent Progress area (history, PRs, trends,
-   volume) reachable from the dashboard.
-2. **Promoted council Phase-4 items** (owner to confirm at phase gate;
-   candidates in priority order):
-   - **4.6 Automated weekly check-ins** — infra partially exists
-     (`mc-push.js`, `supabase/functions/weekly-checkin`, `phase10-push.sql`);
-     verify actual state, then finish.
-   - **4.2 Natural-language food logging** — builds on the shared
-     `mc-foodapi.js` modules.
-   - **4.1 Structured coach-claude chips** — gates on first verifying the
-     `coach-claude` edge function's real state (unverified since the
-     original audit; see council doc).
-3. **Audit-driven gaps** — whatever L0's findings list surfaces as missing
-   table-stakes functionality.
+1. **Unify progress & history (F1).** **✅ shipped** — `stats.html` gains a
+   "Workout History" link card (same pattern as the existing "MC Wrapped"
+   card) pointing to `workout-logs.html`. PRs/trends/volume/consistency
+   already lived on this page; this closes the one missing cross-link so
+   history, PRs, trends, volume, and Wrapped are all one hop from the Stats
+   hub.
+2. **Promoted council Phase-4 items (F2).** **✅ closed — already shipped,
+   pre-dating this phase.** Verified via `git log`/`grep` for `roadmap 4.x`
+   commit tags and in-code comments, all merged to `main`:
+   - **4.1** Structured coach-claude report — `coach-claude` edge function
+     returns `{summary, flags[], volumeWarnings[], swaps[]}`; rendered as
+     chips by `dashboard.html`'s `renderCoachReport()`/`loadCoachNote()`.
+   - **4.2** Natural-language food logging — `mc-foodapi.js`'s parse
+     function, wired into `mc-macros.js`'s describe flow.
+   - **4.3** LLM substitution fallback — `coach-substitute` edge function,
+     called from `mc-card-actions.js` when `mc-biomech.js` returns <3
+     alternatives.
+   - **4.4** Voice control — `mc-voice.js`, opt-in `SpeechRecognition` for
+     gym pages.
+   - **4.5** Client roster in PM Mode — `pm_clients` table
+     (`mc-supabase.js`), roster UI in `program-manager.js`, assignment
+     banner in `dashboard.html`.
+   - **4.6** Automated weekly check-ins — `supabase/functions/weekly-checkin`
+     + `mc-push.js` push delivery.
+   - **4.7** Unified market — Mikes-Cookbook merged into the Rolodex build
+     via `build-market.py`'s existing strip/leak-scan machinery.
+3. **Audit-driven gaps (F4).** **✅ closed — confirmed adequate, no action.**
+   See locked decision above.
 4. **Explicitly NOT in scope:** council Phase 3.5 (the `mc-s*`/`pmc-s*`
    data-drive refactor) stays deferred — it's internal code health, not
    launch-gating; and PM-mode backlog items ride their own roadmap.
 
 Exit criteria: Progress area shipped · promoted items shipped or explicitly
 descoped by owner decision · no open "table-stakes" findings from L0.
+**✅ All met (2026-07-14) — Phase L4 complete.**
 
 ## Phase L5 — Commercial layer
 
@@ -338,7 +374,7 @@ in writing in this document. That is the definition of "finished product."**
 | L1 | UI/UX & design-system unification | 🔲 Not started |
 | L2 | Mobile experience & PWA installability | 🔄 In progress (code complete, owner acceptance pending) |
 | L3 | Onboarding & ease of use | ✅ Complete |
-| L4 | Functionality completion | 🔲 Not started |
+| L4 | Functionality completion | ✅ Complete |
 | L5 | Commercial layer | 🔲 Not started |
 | L6 | Launch hardening (Definition of Done) | 🔲 Not started |
 
@@ -347,6 +383,23 @@ each phase merges. Statuses: 🔲 Not started · 🔄 In progress · ✅ Complet
 ⏸ Waived/deferred (owner decision, link it).
 
 ### Shipped notes
+
+**L4 — Functionality completion** (2026-07-14): Closed all three exit-criteria
+items. **F1:** added a "Workout History" link card to `stats.html` (mirrors the
+existing "MC Wrapped" card) pointing at `workout-logs.html` — the Stats page
+was already the de facto Progress hub (single nav entry point, already linking
+to Wrapped and Max-Out with PRs/trends/volume/consistency sections built in),
+so this closes the one real gap rather than requiring a page merge. **F2:**
+discovered — via `git log`/grep for `roadmap 4.x` commit tags — that all seven
+promoted council Phase-4 items (4.1 structured coach-claude chips, 4.2 NL food
+logging, 4.3 LLM substitution fallback, 4.4 voice control, 4.5 PM client
+roster, 4.6 automated weekly check-ins, 4.7 unified market/cookbook) were
+already merged to `main`, contradicting this doc's and
+`council-roadmap-status.md`'s stale "not started"/"unverified" status; both
+docs corrected. **F4:** confirmed `dashboard.html`'s `heroNextLift()` +
+`mc-resume.js` already provide an adequate live resume-workout affordance —
+closed with no new UI. `sw.js` bumped v136→v137 for the `stats.html` change.
+This closes out L4: exit criteria met, no open table-stakes findings from L0.
 
 **L3 Phase 4 — quick-tour refresh** (2026-07-14) — Phase L3 complete: Both
 `quick-tour.html` and `quick-tour-overview.html` described a flagship roster
