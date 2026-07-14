@@ -85,6 +85,7 @@
     { label: 'Dashboard',    ico: '⚡',  href: HUB },
     { label: 'Programs',     ico: '🏋️', href: HUB + '?tab=programs' },
     { label: 'Conditioning', ico: '🔥', href: HUB + '?tab=conditioning' },
+    { label: 'Nutrition',    ico: '🍎', href: HUB + '?tab=nutrition' },
     { label: 'Stats',        ico: '📈', href: 'stats.html' }
   ];
 

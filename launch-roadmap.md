@@ -323,7 +323,7 @@ in writing in this document. That is the definition of "finished product."**
 | L0 | Debt closeout & audit baseline | ✅ Complete |
 | L1 | UI/UX & design-system unification | 🔲 Not started |
 | L2 | Mobile experience & PWA installability | 🔄 In progress (code complete, owner acceptance pending) |
-| L3 | Onboarding & ease of use | 🔄 In progress (Phase 1 of 4 shipped) |
+| L3 | Onboarding & ease of use | 🔄 In progress (Phases 1–2 of 4 shipped) |
 | L4 | Functionality completion | 🔲 Not started |
 | L5 | Commercial layer | 🔲 Not started |
 | L6 | Launch hardening (Definition of Done) | 🔲 Not started |
@@ -333,6 +333,19 @@ each phase merges. Statuses: 🔲 Not started · 🔄 In progress · ✅ Complet
 ⏸ Waived/deferred (owner decision, link it).
 
 ### Shipped notes
+
+**L3 Phase 2 — feature discoverability** (2026-07-14): Added Nutrition to the
+shared `mc-nav.js` bottom-nav bar (🍎, deep-links `dashboard.html?tab=nutrition`,
+already handled generically by the existing `?tab=` reader) — it was previously
+dashboard-only, missing from the bar every other page injects. Added Max-Out
+Calculator and MC Wrapped as two new `.tool-card` entries in the dashboard's
+existing "Training Tools" grid — each previously had exactly one inbound link
+in the whole app (`stats.html`, 2 taps deep); now 1 tap from Home, same pattern
+as the other five tool cards. Verified substitute picker and Conditioning
+Corner need no new work — `launch-audit-findings.md`'s O5 evidence line
+("substitute picker lives behind the ⋮ menu") was itself stale: Replace is a
+one-tap button on the card face, and Conditioning is already a bottom-nav tab.
+O5 marked closed with a correction note.
 
 **L3 Phase 1 — first-run flow & tap-count redesign** (2026-07-14): New
 `mc-onboarding.js` shows a skippable 2-step sheet ("Pick your program" →
