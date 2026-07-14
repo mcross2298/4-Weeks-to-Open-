@@ -180,6 +180,19 @@ on a real iPhone and Android device · core workout flow fully usable offline
 **Goal:** a brand-new trainee reaches their first logged set in minimal
 taps, and every major feature is discoverable without being told.
 
+### Locked decisions (owner, AskUserQuestion alignment, 2026-07-14)
+
+- **L2 gate:** L2 code is complete; its owner-acceptance items (real-device
+  install check, real Lighthouse run) stay open as a tracked follow-up and do
+  **not** block starting L3.
+- **First-run experience (Task 1):** skippable guided path — pick a program →
+  see this week → start Day 1, with a visible "Skip" at every step.
+- **Taps-to-first-workout target (Task 3):** keep ≤3 taps from open to the
+  Day-1 exercise list, as originally scoped.
+- **Feature discoverability (Task 4):** add contextual entry points for all
+  five buried features this phase — substitute picker, conditioning corner,
+  macros, max-out, wrapped.
+
 Tasks:
 1. **First-run experience** — detect first visit; short guided path:
    pick a program → see this week → start Day 1. No wall of choices.
