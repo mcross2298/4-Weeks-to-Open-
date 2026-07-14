@@ -205,21 +205,35 @@ taps, and every major feature is discoverable without being told.
 Tasks:
 1. **First-run experience** — detect first visit; short guided path:
    pick a program → see this week → start Day 1. No wall of choices.
+   **✅ shipped (Phase 1)** — `mc-onboarding.js` + `dashboard.html`, skippable,
+   gated on no onboarding flag and no pinned program.
 2. **Quick-tour refresh** — bring `quick-tour.html` /
    `quick-tour-overview.html` current with everything shipped since they
    were written (documentation-currency rule says they must track features;
    verify they actually do), and make the tour reachable from onboarding.
+   **✅ shipped (Phase 4)** — stale flagship roster and program count fixed;
+   Max-Out and Wrapped documented for the first time. Already reachable from
+   onboarding via the dashboard's Training Tools grid (pre-existing).
 3. **Taps-to-first-workout metric** — count today's path, set a target
    (≤3 taps from open to Day-1 exercise list), and redesign the home/
    dashboard entry flow to hit it.
+   **✅ shipped (Phase 1)** — baseline measured at ~6 taps; new guided flow
+   hits 2 taps to the program's landing page (see mid-phase scope note above
+   for why "page" rather than "exercise list").
 4. **Feature discoverability** — the audit will flag buried features
    (substitute picker, conditioning corner, macros, max-out, wrapped);
    add contextual entry points instead of relying on the tour.
+   **✅ shipped (Phase 2)** — Nutrition added to the shared nav bar; Max-Out
+   and Wrapped added to the dashboard's Training Tools grid. Substitute
+   picker and Conditioning Corner verified already well-discoverable.
 5. **Program guide clarity** — `program-guide.html` as the "which program is
    for me" front door, with plain-language descriptions per program.
+   **✅ shipped (Phase 3)** — `forWho` field added per program, rendered as a
+   "Best for:" line on every guide card.
 
 Exit criteria: first-run flow ships · taps target met · tours verified
 current against the live feature set · audit-list onboarding items closed.
+**✅ All met (2026-07-14) — Phase L3 complete.**
 
 ## Phase L4 — Functionality completion
 
@@ -323,7 +337,7 @@ in writing in this document. That is the definition of "finished product."**
 | L0 | Debt closeout & audit baseline | ✅ Complete |
 | L1 | UI/UX & design-system unification | 🔲 Not started |
 | L2 | Mobile experience & PWA installability | 🔄 In progress (code complete, owner acceptance pending) |
-| L3 | Onboarding & ease of use | 🔄 In progress (Phases 1–3 of 4 shipped) |
+| L3 | Onboarding & ease of use | ✅ Complete |
 | L4 | Functionality completion | 🔲 Not started |
 | L5 | Commercial layer | 🔲 Not started |
 | L6 | Launch hardening (Definition of Done) | 🔲 Not started |
@@ -333,6 +347,21 @@ each phase merges. Statuses: 🔲 Not started · 🔄 In progress · ✅ Complet
 ⏸ Waived/deferred (owner decision, link it).
 
 ### Shipped notes
+
+**L3 Phase 4 — quick-tour refresh** (2026-07-14) — Phase L3 complete: Both
+`quick-tour.html` and `quick-tour-overview.html` described a flagship roster
+that no longer exists ("Best of Both Worlds," "Iron & Engine") and omitted
+three real programs (Everything Under the Kitchen Sink, The Modality Matrix,
+High-Volume Training Template), plus a wrong program count (claimed 9/7,
+actually 10) and a stale "18 workouts" figure for Mike Cross' Favorite
+Splits — all corrected in the welcome slide, Module 3's narration, and the
+overview's hero/programs section. Max-Out Calculator and MC Wrapped, absent
+from both files, are now documented alongside Workout Logs/rep progression
+(overview's logging-engine section) and in the guided tour's Module 7 —
+both already reachable from onboarding via the pre-existing dashboard
+Training Tools grid, so no separate "reachable from onboarding" wiring was
+needed beyond Phase 2's entry-point work. This closes out L3: all 5 tasks
+shipped, exit criteria met.
 
 **L3 Phase 3 — program-guide clarity** (2026-07-14): Added a `forWho` field to
 every program in `mc-pm-data.js` (6 flagship + 4 influencer) — a short
