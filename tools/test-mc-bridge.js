@@ -77,18 +77,23 @@ eq('legacy entry title null off-cookbook', meals[0].title, null);
 eq('legacy entry macros null off-cookbook', meals[0].macros, null);
 
 // 2. Cookbook falls back to a live window.RECIPES lookup for a legacy entry
-// that has no denormalized snapshot yet (pre-B1 plan data).
+// that has no denormalized snapshot yet (pre-B1 plan data). The RECIPES
+// fixture uses recipes-data.js's REAL field names (calories/protein_g/
+// fat_g/carbs_g) — using the bridge's own normalized names here would let a
+// mismatched-field-name bug pass silently, which is exactly what happened
+// pre-fix (perServingMacros returned the raw tier object unnormalized).
 B = loadBridge({
   'mc-cookbook:mealplan': JSON.stringify({ meals: [
     { uid: 'a', id: 'greek-bowl', serving: 2, day: today, slot: 'Lunch', completed: true }
   ] })
 }, [
   { recipe_id: 'greek-bowl', title: 'Greek Bowl', icon: '🥙',
-    macro_profiles: { serving_2: { kcal: 520, p: 42, f: 20, c: 30 }, serving_4: { kcal: 520, p: 42, f: 20, c: 30 } } }
+    macro_profiles: { serving_2: { calories: 520, protein_g: 42, fat_g: 20, carbs_g: 30 },
+                       serving_4: { calories: 520, protein_g: 42, fat_g: 20, carbs_g: 30 } } }
 ]);
 meals = B.todaysMeals();
 eq('title falls back to live RECIPES lookup', meals[0].title, 'Greek Bowl');
-eq('macros fall back to live RECIPES lookup', meals[0].macros, { kcal: 520, p: 42, f: 20, c: 30 });
+eq('macros normalized from raw recipe fields', meals[0].macros, { kcal: 520, p: 42, f: 20, c: 30 });
 eq('completed flag carried', meals[0].completed, true);
 
 // 3. Cookbook reads workout activity + finished-session log + shared targets.
@@ -118,6 +123,37 @@ eq('todaysMeals -> []', B.todaysMeals(), []);
 eq('macroTargets -> null', B.macroTargets(), null);
 eq('recentWorkouts -> []', B.recentWorkouts(), []);
 eq('today() shape intact', B.today(), { meals: [], workout: { trainedToday: false, streak: 0, last: null }, targets: null });
+eq('likelyTrainingDays -> {} with no log', B.likelyTrainingDays(), {});
+
+// 5. likelyTrainingDays() — real historical weekday pattern (roadmap B2), not
+// a fabricated schedule. Build 8 weeks of sessions on Mon/Wed/Fri only.
+function buildTrainingLog() {
+  var trainDays = { Mon: 1, Wed: 1, Fri: 1 };
+  var log = [], base = new Date();
+  for (var i = 0; i < 8 * 7; i++) {
+    var d = new Date(base); d.setDate(d.getDate() - i);
+    var code = DAYS[(d.getDay() + 6) % 7];
+    if (trainDays[code]) log.push({ id: 's' + i, pageId: 'p', workoutName: 'T', date: d.toISOString(), prs: 0 });
+  }
+  return log;
+}
+B = loadBridge({ 'mc_workout_log_v1': JSON.stringify(buildTrainingLog()) }, undefined);
+var pattern = B.likelyTrainingDays();
+eq('Mon detected as a likely training day', pattern.Mon, true);
+eq('Wed detected as a likely training day', pattern.Wed, true);
+eq('Fri detected as a likely training day', pattern.Fri, true);
+eq('Tue correctly NOT a training day', pattern.Tue, false);
+eq('Sun correctly NOT a training day', pattern.Sun, false);
+
+// A single one-off session shouldn't read as an established pattern (below
+// the minimum-sessions threshold that guards against noise) — every weekday
+// comes back false, not a fabricated true from one data point.
+B = loadBridge({ 'mc_workout_log_v1': JSON.stringify([
+  { id: 'x', pageId: 'p', workoutName: 'T', date: new Date().toISOString(), prs: 0 }
+]) }, undefined);
+var onePattern = B.likelyTrainingDays();
+ok('one-off session -> no weekday reaches the threshold',
+  DAYS.every(function (d) { return onePattern[d] === false; }));
 
 if (fail) { console.error(`\ntest-mc-bridge: ${pass} passed, ${fail} FAILED`); process.exit(1); }
 console.log(`test-mc-bridge: all ${pass} assertions passed`);

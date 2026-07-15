@@ -53,10 +53,18 @@
   }
   // macro_profiles are per single serving and identical across authored tiers,
   // so the first present tier is representative.
+  // recipes-data.js's macro_profiles fields are calories/protein_g/fat_g/carbs_g
+  // (see Mikes-Cookbook/recipes-data.js) — normalized here to {kcal,p,f,c}, the
+  // shape mc_macros_v1 entries already use natively, so a caller can pass this
+  // straight into an addEntry() `per:` field with no further translation. This
+  // mirrors the normalization cookbook-home.js's mealSnapshot() does when it
+  // denormalizes macros directly onto a meal entry (the primary path); this is
+  // only the fallback for legacy entries that predate that snapshot.
   function perServingMacros(r) {
     if (!r || !r.macro_profiles) return null;
-    for (var k in r.macro_profiles) if (r.macro_profiles[k]) return r.macro_profiles[k];
-    return null;
+    var m = null;
+    for (var k in r.macro_profiles) if (r.macro_profiles[k]) { m = r.macro_profiles[k]; break; }
+    return m ? { kcal: m.calories || 0, p: m.protein_g || 0, f: m.fat_g || 0, c: m.carbs_g || 0 } : null;
   }
 
   // consecutive-day streak counting back from today; matches mc-live-tracker.js.
@@ -71,6 +79,30 @@
     var d = new Date(); d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // back to Monday
     return d.getTime();
+  }
+
+  // Historical per-weekday training pattern (roadmap B2) — NOT a predicted
+  // future schedule (neither app tracks one); the trainee's own established
+  // rhythm from real finished-workout dates over a trailing window. Powers
+  // Smart Week's day-aware meal bias without inventing certainty the data
+  // doesn't have. Returns {} (no pattern) until enough real history exists.
+  var TRAIN_PATTERN_LOOKBACK_DAYS = 56; // ~8 weeks
+  var TRAIN_PATTERN_MIN_SESSIONS = 3;   // trained that weekday on ~half the weeks in the window
+  function likelyTrainingDays() {
+    var log = read(WLOG_KEY);
+    if (!Array.isArray(log)) return {};
+    var cutoff = Date.now() - TRAIN_PATTERN_LOOKBACK_DAYS * 86400000;
+    var counts = {};
+    log.forEach(function (e) {
+      if (!e || !e.date) return;
+      var t = +new Date(e.date);
+      if (isNaN(t) || t < cutoff) return;
+      var code = DAYS[(new Date(t).getDay() + 6) % 7];
+      counts[code] = (counts[code] || 0) + 1;
+    });
+    var out = {};
+    DAYS.forEach(function (code) { out[code] = (counts[code] || 0) >= TRAIN_PATTERN_MIN_SESSIONS; });
+    return out;
   }
 
   // ---- public reads (all safe when signed out / data absent) ---------------
@@ -159,6 +191,7 @@
     recentWorkouts: recentWorkouts,
     workoutsSince: workoutsSince,
     recentActivity: recentActivity,
+    likelyTrainingDays: likelyTrainingDays,
     today: today,
     _todayCode: todayCode // exposed for tests
   };
