@@ -5,6 +5,13 @@ Approved: 2026-07-12 (executive summary approved by owner)
 Goal: drive the app from its current state to a **finished, launch-ready
 product** — an installable PWA with a commercial layer.
 
+> **Companion plan:** [`cookbook-bridge-roadmap.md`](cookbook-bridge-roadmap.md)
+> (approved 2026-07-15) governs the *cross-app* work — the two-way data bridge
+> between this app and Mike's Cookbook, toward a **joint launch as two linked
+> PWAs**. It runs alongside this roadmap; its final phase (B5, joint launch
+> hardening) folds into **L6** below, so the Definition of Done means **both
+> apps launched together**, not this app alone.
+
 > **This is the governing development plan.** It supersedes (but links, and
 > does not duplicate) the open threads in:
 > - `council-roadmap-status.md` — Phases 0–3 shipped; Phase 3.5 deferred;
@@ -391,8 +398,13 @@ Tasks & checklist:
 7. **Launch checklist review** — owner walk-through of this list; anything
    unchecked either gets fixed or gets an explicit owner waiver noted here.
 
-Exit criteria: **every item above checked or explicitly waived by the owner
-in writing in this document. That is the definition of "finished product."**
+8. **Joint-launch gate** — `cookbook-bridge-roadmap.md`'s Phase B5 (cross-app
+   QA matrix, sync-conflict/offline, bridge data-safety) passes or is waived.
+   Launch is a **suite** launch: this list *and* B5 must both be green.
+
+Exit criteria: **every item above (including the B5 joint-launch gate) checked
+or explicitly waived by the owner in writing in this document. That is the
+definition of "finished product" — both apps launched together.**
 
 ---
 
