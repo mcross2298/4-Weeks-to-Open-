@@ -129,6 +129,15 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > **byte-identical to the copy in Mikes-Cookbook** and gated by
 > `tools/test-mc-bridge.js`. Macro targets come from the already-shared
 > `mc_macros_v1.goals`, not a workout-only store.
+>
+> **B1 shipped (2026-07-15):** `mc-macros.js` (dashboard's Nutrition tab)
+> gained a "Today's Planned Meals" card built on `mc-bridge.js` — lists today's
+> cookbook-planned meals (title/icon/macros denormalized onto each meal entry
+> by the cookbook, since this app never loads `recipes-data.js`), a one-tap
+> **Log** button that writes into the shared `mc_macros_v1` (never back into
+> the cookbook-owned plan store), and a plan-vs-target readout. `mc-bridge.js`
+> now loads immediately before `mc-macros.js` (not near `mc-sync.js`) so
+> `window.MCBridge` exists at first render.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 

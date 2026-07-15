@@ -44,11 +44,16 @@ const other = DAYS[(DAYS.indexOf(today) + 1) % 7];
 const now = new Date();
 const ykey = dayKey(new Date(Date.now() - 86400000));
 
-// 1. Workout app reads cookbook meal plan (no recipe metadata on this page).
+// 1a. Workout app reads cookbook meal plan — REAL shape post-B1: the cookbook
+// denormalizes {title,icon,macros} onto each meal entry at write time
+// (cookbook-home.js's mealSnapshot()), since the workout app never loads
+// recipes-data.js and has no other way to resolve a bare recipe id.
 let B = loadBridge({
   'mc-cookbook:mealplan': JSON.stringify({ meals: [
-    { uid: 'a', id: 'jalapeno-chicken-bake', serving: 4, day: today, slot: 'Dinner', completed: false },
-    { uid: 'b', id: 'greek-bowl', serving: 2, day: other, slot: 'Lunch', completed: false },
+    { uid: 'a', id: 'jalapeno-chicken-bake', serving: 4, day: today, slot: 'Dinner', completed: false,
+      title: 'Jalapeño Chicken Bake', icon: '🌶️', macros: { kcal: 610, p: 48, f: 30, c: 22 } },
+    { uid: 'b', id: 'greek-bowl', serving: 2, day: other, slot: 'Lunch', completed: false,
+      title: 'Greek Bowl', icon: '🥙', macros: { kcal: 520, p: 42, f: 20, c: 30 } },
     { uid: 'c', id: 'unscheduled', serving: 2, day: null, slot: null, completed: false }
   ] })
 }, undefined);
@@ -56,10 +61,23 @@ let meals = B.todaysMeals();
 eq('only today’s scheduled meal', meals.length, 1);
 eq('right recipe ref', meals[0].recipeId, 'jalapeno-chicken-bake');
 eq('serving carried', meals[0].serving, 4);
-eq('title null off-cookbook', meals[0].title, null);
-eq('macros null off-cookbook', meals[0].macros, null);
+eq('title from denormalized snapshot', meals[0].title, 'Jalapeño Chicken Bake');
+eq('icon from denormalized snapshot', meals[0].icon, '🌶️');
+eq('macros from denormalized snapshot', meals[0].macros, { kcal: 610, p: 48, f: 30, c: 22 });
 
-// 2. Cookbook enriches meals from window.RECIPES.
+// 1b. Legacy entry with no snapshot (pre-B1 data) + no window.RECIPES:
+// degrades to null rather than throwing, same as before B1.
+B = loadBridge({
+  'mc-cookbook:mealplan': JSON.stringify({ meals: [
+    { uid: 'z', id: 'legacy-recipe', serving: 2, day: today, slot: 'Lunch', completed: false }
+  ] })
+}, undefined);
+meals = B.todaysMeals();
+eq('legacy entry title null off-cookbook', meals[0].title, null);
+eq('legacy entry macros null off-cookbook', meals[0].macros, null);
+
+// 2. Cookbook falls back to a live window.RECIPES lookup for a legacy entry
+// that has no denormalized snapshot yet (pre-B1 plan data).
 B = loadBridge({
   'mc-cookbook:mealplan': JSON.stringify({ meals: [
     { uid: 'a', id: 'greek-bowl', serving: 2, day: today, slot: 'Lunch', completed: true }
@@ -69,8 +87,8 @@ B = loadBridge({
     macro_profiles: { serving_2: { kcal: 520, p: 42, f: 20, c: 30 }, serving_4: { kcal: 520, p: 42, f: 20, c: 30 } } }
 ]);
 meals = B.todaysMeals();
-eq('title enriched', meals[0].title, 'Greek Bowl');
-eq('per-serving macros enriched', meals[0].macros, { kcal: 520, p: 42, f: 20, c: 30 });
+eq('title falls back to live RECIPES lookup', meals[0].title, 'Greek Bowl');
+eq('macros fall back to live RECIPES lookup', meals[0].macros, { kcal: 520, p: 42, f: 20, c: 30 });
 eq('completed flag carried', meals[0].completed, true);
 
 // 3. Cookbook reads workout activity + finished-session log + shared targets.

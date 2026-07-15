@@ -77,6 +77,13 @@
 
   // Today's planned meals (cookbook meal plan), scoped to today's weekday code.
   // Meals with day === null are unscheduled and excluded from "today".
+  //
+  // The cookbook denormalizes {title,icon,macros} directly onto each meal
+  // entry when it's added (see cookbook-home.js's mealSnapshot()) — that
+  // snapshot is what makes rendering possible here on the workout side, which
+  // never loads recipes-data.js and so has no other way to resolve a bare
+  // recipe id. Prefer the snapshot; fall back to a live window.RECIPES lookup
+  // (used on the cookbook itself, and for any pre-snapshot legacy entries).
   function todaysMeals() {
     var plan = read(MEALPLAN_KEY);
     var meals = (plan && Array.isArray(plan.meals)) ? plan.meals : [];
@@ -86,9 +93,9 @@
       return {
         uid: m.uid, recipeId: m.id, serving: m.serving || null,
         slot: m.slot || null, completed: !!m.completed,
-        title: r ? r.title : null,
-        icon: r ? r.icon : null,
-        macros: r ? perServingMacros(r) : null // per single serving; null off-cookbook
+        title: m.title || (r ? r.title : null),
+        icon: m.icon || (r ? r.icon : null),
+        macros: m.macros || (r ? perServingMacros(r) : null) // per single serving
       };
     });
   }

@@ -5,7 +5,12 @@
 
      1. a live WEEK CALENDAR strip to move between past / future days,
      2. the MACRO TRACKER bar (calories + P/F/C vs. goals) for the picked day,
-     3. an HOUR-BY-HOUR TIMELINE where foods are logged into the hour they
+     3. (today only) a PLANNED MEALS card — roadmap B1 cookbook->workout
+        bridge: today's meal-plan entries from Mike's Cookbook (read via
+        mc-bridge.js's MCBridge.todaysMeals(), pulled read-only by mc-sync.js),
+        each with a one-tap Log button that writes a normal entry into THIS
+        store — never back into the cookbook's plan,
+     4. an HOUR-BY-HOUR TIMELINE where foods are logged into the hour they
         were eaten (tap the + on any hour, or the search bar / scan).
 
    Single localStorage store:
@@ -356,6 +361,8 @@
     root.appendChild(renderHead());
     root.appendChild(renderCalendar());
     root.appendChild(renderSummary(totals, goals, trainBonusApplied));
+    var planEl = renderPlannedMeals();
+    if (planEl) root.appendChild(planEl);
     var nudgeEl = renderMacroNudge(data.goals, data.profile);
     if (nudgeEl) root.appendChild(nudgeEl);
     root.appendChild(renderTrend());
@@ -458,6 +465,98 @@
       '<span class="ntx-cook-arr">›</span>');
     a.href = COOKBOOK_URL + '?mkcal=' + kcalLeft + '&mp=' + pLeft + (dt ? '&dt=' + dt : '') + '#recipes';
     return a;
+  }
+
+  // ---- planned meals (cookbook->workout bridge, roadmap B1) ----------------
+  // Reads MCBridge.todaysMeals() — meals the trainee planned in Mike's
+  // Cookbook for today, pulled read-only via mc-sync.js. Only shown while
+  // viewing today (selKey === todayKey()): the bridge always answers for the
+  // real calendar day, so showing it under a past/future selKey would mismatch
+  // what's on screen. Never writes to mc-cookbook:mealplan (cookbook-owned) —
+  // logging a meal only ever writes a normal entry into THIS store.
+  function plannedLoggedEntry(dayObj, uid) {
+    var entries = dayObj.entries || [];
+    for (var i = 0; i < entries.length; i++) if (entries[i].planUid === uid) return entries[i];
+    return null;
+  }
+  function renderPlannedMealRow(m, dayObj) {
+    var row = el('div', 'ntx-plan-row');
+    row.appendChild(el('span', 'ntx-plan-ic', esc(m.icon || '🍽')));
+    var info = el('div', 'ntx-plan-info');
+    info.appendChild(el('div', 'ntx-plan-name', esc(m.title || 'Planned meal')));
+    var mac = m.macros;
+    var subParts = [];
+    if (m.slot) subParts.push(m.slot);
+    if (mac && mac.kcal) subParts.push(Math.round(mac.kcal) + ' kcal' + (mac.p ? ' · ' + Math.round(mac.p) + 'g protein' : ''));
+    info.appendChild(el('div', 'ntx-plan-sub', esc(subParts.join(' · '))));
+    row.appendChild(info);
+
+    var logged = plannedLoggedEntry(dayObj, m.uid);
+    var btn = el('button', 'ntx-plan-log' + (logged ? ' done' : ''), logged ? '✓ Logged' : 'Log');
+    btn.type = 'button';
+    if (logged) { btn.disabled = true; }
+    else if (!mac || !mac.kcal) { btn.disabled = true; btn.title = 'No macro data for this recipe yet'; }
+    else {
+      btn.onclick = function () {
+        addSlotMs = defaultSlot();
+        addEntry({
+          name: m.title || 'Planned meal', source: 'plannedMeal', unit: 'serving', qty: 1,
+          per: { kcal: mac.kcal, p: mac.p, f: mac.f, c: mac.c }, planUid: m.uid
+        });
+        render();
+        toast((m.title || 'Meal') + ' logged', 'Undo', function () {
+          var obj = read(), d = getDay(obj, todayKey());
+          d.entries = d.entries.filter(function (e) { return e.planUid !== m.uid; });
+          write(obj); render();
+        });
+      };
+    }
+    row.appendChild(btn);
+    return row;
+  }
+  function renderPlannedMeals() {
+    if (selKey !== todayKey() || !window.MCBridge) return null;
+    var meals = MCBridge.todaysMeals();
+    var signedIn = false;
+    try { signedIn = !!(window.MC_SYNC && MC_SYNC.status().signedIn); } catch (e) {}
+
+    var card = el('div', 'ntx-plan');
+    var head = el('div', 'ntx-plan-h');
+    head.appendChild(el('span', 'ntx-plan-h-ic', '🍽'));
+    head.appendChild(el('span', null, "Today's Planned Meals"));
+    card.appendChild(head);
+
+    if (!meals.length) {
+      var empty = el('div', 'empty-state');
+      empty.appendChild(el('div', 'empty-icon', '🍽'));
+      if (signedIn) {
+        empty.appendChild(el('div', 'empty-text', 'No meals planned for today'));
+        empty.appendChild(el('div', 'empty-sub', "Build your week in Mike's Cookbook and it'll show up here"));
+      } else {
+        empty.appendChild(el('div', 'empty-text', "Sign in to see today's planned meals"));
+        empty.appendChild(el('div', 'empty-sub', "Plan your week in Mike's Cookbook, then sign in here to link them"));
+      }
+      card.appendChild(empty);
+      return card;
+    }
+
+    var goals = read().goals;
+    if (goals && goals.kcal) {
+      var totals = meals.reduce(function (acc, m) {
+        var mac = m.macros || {};
+        acc.kcal += num(mac.kcal); acc.p += num(mac.p);
+        return acc;
+      }, { kcal: 0, p: 0 });
+      card.appendChild(el('div', 'ntx-plan-target',
+        'Planned: ' + Math.round(totals.kcal) + ' / ' + goals.kcal + ' kcal' +
+        (goals.p ? ' · ' + Math.round(totals.p) + ' / ' + goals.p + 'g protein' : '')));
+    }
+
+    var dayObj = getDay(read(), todayKey());
+    var list = el('div', 'ntx-plan-list');
+    meals.forEach(function (m) { list.appendChild(renderPlannedMealRow(m, dayObj)); });
+    card.appendChild(list);
+    return card;
   }
 
   function renderTrend() {
@@ -1447,6 +1546,27 @@
       '.ntx-cook-txt b{font-size:13px;font-weight:800;color:var(--text);}' +
       '.ntx-cook-txt span{font-size:11.5px;font-weight:700;color:var(--muted);}' +
       '.ntx-cook-arr{flex:0 0 auto;color:var(--muted2);font-size:18px;font-weight:800;}' +
+      /* planned meals (cookbook->workout bridge, roadmap B1) */
+      '.ntx-plan{background:var(--surface);border:1px solid var(--border2);border-radius:16px;' +
+        'padding:12px 14px;margin-bottom:14px;}' +
+      '.ntx-plan-h{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;' +
+        'letter-spacing:0.08em;text-transform:uppercase;color:var(--muted2);margin-bottom:10px;}' +
+      '.ntx-plan-h-ic{font-size:13px;}' +
+      '.ntx-plan-target{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px;' +
+        'padding-bottom:10px;border-bottom:1px solid var(--border2);}' +
+      '.ntx-plan-list{display:flex;flex-direction:column;gap:8px;}' +
+      '.ntx-plan-row{display:flex;align-items:center;gap:10px;}' +
+      '.ntx-plan-ic{font-size:19px;flex:0 0 auto;width:30px;text-align:center;}' +
+      '.ntx-plan-info{flex:1;min-width:0;}' +
+      '.ntx-plan-name{font-size:13px;font-weight:800;color:var(--text);white-space:nowrap;' +
+        'overflow:hidden;text-overflow:ellipsis;}' +
+      '.ntx-plan-sub{font-size:11px;font-weight:700;color:var(--muted);margin-top:1px;' +
+        'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+      '.ntx-plan-log{flex:0 0 auto;min-height:32px;padding:0 12px;border-radius:9px;border:1px solid rgba(var(--accent-rgb),0.4);' +
+        'background:rgba(var(--accent-rgb),0.12);color:var(--gold);font-size:12px;font-weight:800;' +
+        'cursor:pointer;font-family:inherit;}' +
+      '.ntx-plan-log:disabled{opacity:0.4;cursor:default;}' +
+      '.ntx-plan-log.done{background:rgba(52,211,153,0.12);border-color:rgba(52,211,153,0.4);color:#34d399;cursor:default;}' +
       /* find bar */
       '.ntx-find{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--border2);' +
         'border-radius:13px;padding:10px 12px;margin-bottom:16px;}' +
@@ -1606,7 +1726,9 @@
   })();
 
   // re-render when another tab/device changes the store (sync pull)
-  window.addEventListener('storage', function (ev) { if (ev.key === KEY) render(); });
+  window.addEventListener('storage', function (ev) {
+    if (ev.key === KEY || ev.key === 'mc-cookbook:mealplan') render();
+  });
 
   // land near "now" (or the first logged food) instead of always at 12 AM
   function scrollToRelevant() {
