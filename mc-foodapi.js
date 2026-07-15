@@ -37,7 +37,7 @@
   var FN_URL = 'https://dhlxmoyjfxohbeiexwnr.supabase.co/functions/v1/food';
   var FN_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRobHhtb3lqZnhvaGJlaWV4d25yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMjgwNDAsImV4cCI6MjA5NjcwNDA0MH0.G9XpWjEqaGhY7mdLjz8yAaQBFl5EXvYFfAkJMivG38E';
   function fnJSON(qs) {
-    return fetch(FN_URL + '?' + qs, { headers: { apikey: FN_KEY, Authorization: 'Bearer ' + FN_KEY } })
+    return fetchWithTimeout(FN_URL + '?' + qs, { headers: { apikey: FN_KEY, Authorization: 'Bearer ' + FN_KEY } })
       .then(function (r) { if (!r.ok) throw new Error('fn ' + r.status); return r.json(); });
   }
 
@@ -62,18 +62,32 @@
   function cacheGet(key) { var c = readCache(); return c[key] ? c[key].v : null; }
   function cacheSet(key, val) { var c = readCache(); c[key] = { t: Date.now(), v: val }; writeCache(c); }
 
-  // ---- fetch with timeout --------------------------------------------------
-  function fetchJSON(url) {
+  // ---- fetch with timeout — shared by every network call in this module.
+  // Every caller (fnJSON, fetchJSON, parse) already falls back gracefully
+  // (a direct-OFF retry, or an empty result) when the returned promise
+  // rejects, so an abort here always lands somewhere useful rather than
+  // hanging the caller. fnJSON previously used a bare fetch() with no
+  // timeout at all — on a stalled connection (captive portal, one-bar gym
+  // Wi-Fi) that left search spinning until the browser's own multi-minute
+  // ceiling, well past the point a trainee would give up and assume the
+  // app was frozen. ------------------------------------------------------
+  function fetchWithTimeout(url, opts) {
+    opts = opts || {};
     var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
     var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, TIMEOUT_MS) : null;
-    var opts = ctrl ? { signal: ctrl.signal } : {};
+    if (ctrl) opts.signal = ctrl.signal;
     return fetch(url, opts).then(function (r) {
       if (timer) clearTimeout(timer);
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
+      return r;
     }).catch(function (e) {
       if (timer) clearTimeout(timer);
       throw e;
+    });
+  }
+  function fetchJSON(url) {
+    return fetchWithTimeout(url).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
     });
   }
 
@@ -163,7 +177,16 @@
       }
       if (items.length) cacheSet(ckey, items);
       return items;
-    }).catch(function () { return cached || []; });
+    }).catch(function () {
+      // Both the aggregator and this direct-OFF retry failed — genuinely
+      // unreachable, not just "no matches for this term". search() only
+      // reaches this catch when there was no cache hit (it returns early
+      // above otherwise), so `cached` is always falsy here; flag the empty
+      // result so callers can tell "no matches" from "couldn't check".
+      var fallback = cached || [];
+      fallback.networkError = true;
+      return fallback;
+    });
   }
 
   // ---- public: barcode lookup ---------------------------------------------
@@ -200,7 +223,7 @@
   function parse(text) {
     text = (text || '').trim();
     if (!text) return Promise.resolve([]);
-    return fetch(PARSE_URL, {
+    return fetchWithTimeout(PARSE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: FN_KEY, Authorization: 'Bearer ' + FN_KEY },
       body: JSON.stringify({ text: text })
