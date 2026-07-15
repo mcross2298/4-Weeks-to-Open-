@@ -69,17 +69,27 @@ them. Every store keeps **exactly one writing app**; the other side is a
 both apps write and which already has a field-level merge in each app's
 `mc-sync.js`.
 
-### Shared-store ownership map (the B0 contract, in brief)
+### Shared-store ownership map (the B0 contract — as shipped)
 
-| Store key | Writer (owner) | Consumer (read-only) | Merge on conflict |
-|-----------|----------------|----------------------|-------------------|
-| `mc_macros_v1` | **both** (tracker) | both | field-level (already shipped) |
-| `mc-cookbook:mealplan` | Cookbook | → Workout | by `uid` |
-| `mc-cookbook:cooked` | Cookbook | → Workout | by recipe |
-| `mc-cookbook:mealplan:macrohistory` | Cookbook | → Workout | by `uid` |
-| `mc_activity` | Workout | → Cookbook | activity merge |
-| `mc_workout_log_v1` | Workout | → Cookbook | workout-log merge |
-| `mc_plan_targets_v1` | Workout | → Cookbook | dict-by-ts |
+Finalized against the real code in B0. Two first-draft assumptions were
+corrected: **macro targets are NOT a workout-only store** — they live in
+`mc_macros_v1.goals`, which both apps already share, so `mc_plan_targets_v1`
+(which is workout *load* carry-forward, not nutrition) is **not** bridged; and
+`mc-cookbook:cooked` / `:macrohistory` stay **cookbook-internal** (the fused
+recap reads them locally in the cookbook), so they are not cross-consumed.
+Result: the minimal correct set — each side pulls only what it actually renders.
+
+| Store key | Writer (owner) | Consumer (read-only) | Consumer merge |
+|-----------|----------------|----------------------|----------------|
+| `mc_macros_v1` (incl. `goals` targets) | **both** (tracker) | both | field-level *(already shipped)* |
+| `mc-cookbook:mealplan` | Cookbook | → Workout | `replace` (owner authoritative) |
+| `mc_activity` | Workout | → Cookbook | `replace` (owner authoritative) |
+| `mc_workout_log_v1` | Workout | → Cookbook | `replace` (owner authoritative) |
+
+A consumer **pulls but never pushes** a store it doesn't own — `push()` iterates
+owned stores only, which is what keeps the widened whitelist from ever creating
+a second writer. The owning app's copy is authoritative, so the consumer-side
+merge is a plain `replace`.
 
 Consumers never write a store they don't own — that's what keeps the widened
 sync whitelist from creating two-writer conflicts.
@@ -92,20 +102,19 @@ sync whitelist from creating two-writer conflicts.
 read layer, so later phases build on solid ground instead of guessing at the
 two-origin reality.
 
-Tasks:
-1. **Data-contract doc** — finalize the ownership map above (writer / consumers /
-   merge / cross-origin path) as the canonical reference both repos link to.
-2. **Widen the sync whitelists** — in each app's `mc-sync.js`, add the other
-   app's needed stores as **pull-only** consumers (workout pulls the three
-   `mc-cookbook:*` planning stores; cookbook pulls `mc_activity`,
-   `mc_workout_log_v1`, `mc_plan_targets_v1`). No store gains a second writer.
-3. **`mc-bridge.js` — a shared read module** in both repos exposing a small,
+Tasks (✅ **all shipped** — see the shipped note below):
+1. **Data-contract doc** — ✅ the ownership map above, finalized against the real
+   code (with the two corrections noted there).
+2. **Widen the sync whitelists** — ✅ each `mc-sync.js` gained a `CONSUME` map of
+   **pull-only** stores (workout pulls `mc-cookbook:mealplan`; cookbook pulls
+   `mc_activity` + `mc_workout_log_v1`). `push()` still iterates owned stores
+   only, so no store gains a second writer.
+3. **`mc-bridge.js` — a shared read module** — ✅ byte-identical in both repos,
    deployment-agnostic API: `todaysMeals()`, `todaysWorkout()`, `macroTargets()`,
-   `recentActivity()`. It reads local `localStorage` on the same-origin Rolodex
-   mount and the synced mirror when standalone. **Reads only — never writes.**
-4. **Round-trip verification** — signed in, confirm a store written in one app
-   appears (read-only) in the other, both directions, and that a signed-out user
-   sees exactly today's behavior (bridge is a no-op).
+   `recentActivity()`, `today()`. Reads `localStorage` only — never writes.
+4. **Round-trip verification** — ✅ `tools/test-mc-bridge.js` loads the real
+   module in a mocked window and asserts both read directions, cookbook
+   enrichment, and clean signed-out degradation (18 assertions).
 
 Exit criteria: contract doc merged in both repos · whitelists widened with no
 two-writer store (except `mc_macros_v1`) · `mc-bridge.js` reads verified both
@@ -225,7 +234,7 @@ definition of "finished product, launched together."**
 
 | Phase | Theme | Direction | Status |
 |-------|-------|-----------|--------|
-| B0 | Bridge foundation & data contract | ⇄ both | 🔲 Not started |
+| B0 | Bridge foundation & data contract | ⇄ both | ✅ Complete |
 | B1 | Cookbook → Workout (meals inform training) | 🍎 → 🏋️ | 🔲 Not started |
 | B2 | Workout → Cookbook (training informs meals) | 🏋️ → 🍎 | 🔲 Not started |
 | B3 | Unified "Today" view & reciprocal nav | ⇄ both | 🔲 Not started |
@@ -238,5 +247,25 @@ phase merges. Statuses: 🔲 Not started · 🔄 In progress · ✅ Complete ·
 
 ### Shipped notes
 
-_(none yet — B0 is the next gated slice; it needs its own executive summary and
-owner approval before any code is written.)_
+**B0 — Bridge foundation & data contract** (2026-07-15): Laid the plumbing and
+settled the contract against the real code. **Sync whitelists:** both
+`mc-sync.js` files gained a `CONSUME` map of pull-only stores, pulled into local
+`localStorage` and merged `replace` (owner authoritative) but never pushed —
+`push()` still iterates owned `STORES` only, so no store gets a second writer.
+Workout consumes `mc-cookbook:mealplan`; cookbook consumes `mc_activity` +
+`mc_workout_log_v1`. **`mc-bridge.js`:** a new, byte-identical shared read module
+in both repos (`todaysMeals` / `todaysWorkout` / `macroTargets` /
+`recentActivity` / `today`) that reads `localStorage` only and enriches meals
+from `window.RECIPES` where it's loaded (the cookbook), returning bare refs
+elsewhere (the workout dashboard). Wired into `dashboard.html` (workout) and
+`index.html` (cookbook) and both SW precaches (workout `v141`, cookbook `v20`).
+**Two contract corrections vs. the first-draft map:** (1) macro targets live in
+the already-shared `mc_macros_v1.goals`, so `mc_plan_targets_v1` (workout *load*
+carry-forward, not nutrition) is **not** bridged; (2) `mc-cookbook:cooked` /
+`:macrohistory` stay cookbook-internal (the recap reads them locally), so
+they're not cross-consumed — each side pulls only what it renders. **Verify:**
+`tools/test-mc-bridge.js` (18 assertions — both directions, enrichment,
+signed-out degradation) green; `node --check` on all touched JS,
+`build-sw.py --check` (both repos), and `build-market.py --check` (leak-clean)
+all pass. Signed-out behavior is unchanged — the bridge is a no-op with no
+cross-app keys present.
