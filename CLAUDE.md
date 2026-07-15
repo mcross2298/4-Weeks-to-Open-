@@ -115,6 +115,13 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > record; its two open closeout items (Task 3.2, `exercisedata.json`
 > retirement) are absorbed into roadmap Phase L0.
 
+> **Companion cross-app plan:** [`cookbook-bridge-roadmap.md`](cookbook-bridge-roadmap.md)
+> (approved 2026-07-15) governs the two-way data bridge between this app and
+> Mike's Cookbook, toward a joint launch as two linked PWAs (B0–B5). Its final
+> phase folds into launch-roadmap.md L6. Same gate discipline: each phase needs
+> its own executive summary + approval before code. Scratch-listed
+> (`content-manifest.json`), so it never ships to the public Rolodex build.
+
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 
 ### Decisions locked in (via AskUserQuestion, session 2026-06-27)
