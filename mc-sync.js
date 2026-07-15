@@ -40,6 +40,16 @@
     'mc_plan_targets_v1':    'dictByTs',
     'mc_macros_v1':          'macros'
   };
+  // Roadmap B0 (cookbook↔workout bridge) — stores this app CONSUMES read-only
+  // from Mike's Cookbook via the shared user_sync table. PULLED into local
+  // localStorage (so mc-bridge.js can read today's planned meals) but NEVER
+  // pushed: this app is not their writer, and one-writer-per-store is exactly
+  // what keeps the widened whitelist from creating cross-app conflicts. Merge
+  // is 'replace' — the owning app (cookbook) is authoritative. Macro targets
+  // are NOT here: they live in mc_macros_v1.goals, which both apps already share.
+  var CONSUME = {
+    'mc-cookbook:mealplan': 'replace'
+  };
   var PUSH_MS = 30000;
 
   var client = null, user = null;
@@ -206,6 +216,7 @@
     if (strategy === 'activity')  return mergeActivity(local, remote);
     if (strategy === 'dictByTs')  return mergeDictByTs(local, remote);
     if (strategy === 'macros')    return mergeMacros(local, remote);
+    if (strategy === 'replace')   return remote != null ? remote : local; // consumer store: owner is authoritative
     return remote != null ? remote : local;
   }
 
@@ -216,21 +227,23 @@
         if (r.error) throw r.error;
         var remoteByKey = {};
         (r.data || []).forEach(function (row) { remoteByKey[row.store_key] = row.data; });
-        Object.keys(STORES).forEach(function (key) {
+        // Owned stores (STORES) are pulled+merged and later pushed; consumed
+        // stores (CONSUME) are pulled read-only and never pushed. Only an
+        // owned-store change arms the one-shot reload — cookbook data arriving
+        // here has no rendered surface to refresh yet (that lands in B1).
+        // snapshot = what the SERVER currently holds. If a merge added any
+        // local-only data, the local value now differs, so push() uploads the
+        // merged result instead of treating it as in-sync (owned stores only).
+        function pullKey(key, strategy, owned) {
           var local = parse(readRaw(key));
           var remote = remoteByKey[key];
           var before = readRaw(key);
-          if (remote != null) {
-            var merged = mergeStore(STORES[key], local, remote);
-            writeVal(key, merged);
-          }
-          var after = readRaw(key);
-          if (after !== before) pulledChange = true;
-          // snapshot = what the SERVER currently holds. If the merge added any
-          // local-only data, the local value now differs from this, so push()
-          // will upload the merged result instead of treating it as in-sync.
+          if (remote != null) writeVal(key, mergeStore(strategy, local, remote));
+          if (owned && readRaw(key) !== before) pulledChange = true;
           snapshot[key] = remote != null ? JSON.stringify(remote) : null;
-        });
+        }
+        Object.keys(STORES).forEach(function (key) { pullKey(key, STORES[key], true); });
+        Object.keys(CONSUME).forEach(function (key) { pullKey(key, CONSUME[key], false); });
         status.lastPull = Date.now();
       });
   }

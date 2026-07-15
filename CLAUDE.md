@@ -121,6 +121,14 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > phase folds into launch-roadmap.md L6. Same gate discipline: each phase needs
 > its own executive summary + approval before code. Scratch-listed
 > (`content-manifest.json`), so it never ships to the public Rolodex build.
+>
+> **B0 shipped (2026-07-15):** `mc-sync.js` gained a `CONSUME` map that pulls
+> `mc-cookbook:mealplan` read-only from Mike's Cookbook (never pushed — one
+> writer per store); `mc-bridge.js` is the shared, read-only cross-app view
+> (`todaysMeals`/`todaysWorkout`/`macroTargets`/`recentActivity`/`today`),
+> **byte-identical to the copy in Mikes-Cookbook** and gated by
+> `tools/test-mc-bridge.js`. Macro targets come from the already-shared
+> `mc_macros_v1.goals`, not a workout-only store.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 
