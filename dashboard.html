@@ -1612,15 +1612,12 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
   </div>
 </div>
 
-<script src="custom-workouts-store.js"></script>
 <script src="conditioning-data.js"></script>
 <script src="mc-cond.js"></script>
 <script src="mc-program-store.js"></script>
 <script src="mc-bonus-routing.js"></script>
 <script src="mc-collections.js"></script>
 <script src="mc-program-pub.js"></script>
-<script>window.MC_SUBS_NO_BUTTON=true;</script>
-<script src="mc-subs.js"></script>
 <script src="mc-live-tracker.js"></script>
 <script src="mc-resume.js"></script>
 <script src="mc-chart.js"></script>
@@ -2105,8 +2102,6 @@ function tintLight(hex){
   var mix=function(c){return Math.round(c+(255-c)*0.35);};
   return 'rgb('+mix(r)+','+mix(g)+','+mix(b)+')';
 }
-var condSubTab='workouts';
-function setCondSubTab(t){ condSubTab=t; renderConditioning(); }
 // resolved owner override for a conditioning routine (published+local, via
 // the shared page-override layer). Returns {name?,tag?,meta?} or null.
 function condOverride(id){
@@ -2118,44 +2113,34 @@ function condOverride(id){
   }catch(e){}
   return null;
 }
-function renderCondLib(q){ var el=document.getElementById('condLib'); if(el&&window.MCSubs) el.innerHTML=MCSubs.libGroupsHTML(q,false); }
 function renderConditioning(){
   var body=document.getElementById('condBody');
   if(!body||typeof CONDITIONING==='undefined'){return;}
-  var tgBtn=function(id,label){var sel=condSubTab===id;return '<button onclick="setCondSubTab(\''+id+'\')" class="cond-toggle-btn'+(sel?' active':'')+'" role="tab" aria-selected="'+sel+'" tabindex="'+(sel?'0':'-1')+'" style="flex:1;padding:10px;border-radius:11px;border:none;cursor:pointer;font-family:\'Archivo\',inherit;font-size:13px;font-weight:800;letter-spacing:0.02em;'+(sel?'background:linear-gradient(135deg,#e9cb7d,#c79c4f);color:#1a1409;':'background:transparent;color:#8b8b92;')+'">'+label+'</button>';};
-  var toggle='<div role="tablist" aria-label="Conditioning view" style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:13px;padding:4px;margin-bottom:18px;">'+tgBtn('workouts','🔥 Workouts')+tgBtn('exercises','🏃 Exercises')+'</div>';
-
   var html='';
-  if(condSubTab==='workouts'){
-    CONDITIONING.subcategories.forEach(function(sub){
-      if(sub.type!=='routines') return;
-      var col=sub.color||'#E24B4A';
-      html+='<div class="cond-sub"><div class="cond-sub-head">'
-        +'<div class="cond-sub-icon" style="background:'+hexA(col,0.14)+';border:1px solid '+hexA(col,0.35)+'">'+(sub.icon||'🔥')+'</div>'
-        +'<div><div class="cond-sub-name">'+esc(sub.name)+'</div>'
-        +(sub.blurb?'<div class="cond-sub-blurb">'+esc(sub.blurb)+'</div>':'')+'</div></div>';
-      (sub.routines||[]).forEach(function(r){
-        // resolve owner inline-text overrides (mc-pm-inline.js, 'cond' page).
-        var ov=condOverride(r.id);
-        var nm=(ov&&ov.name)||r.name, tg=(ov&&ov.tag!=null&&ov.tag!=='')?ov.tag:r.tag, mt=(ov&&ov.meta)||r.meta;
-        html+='<a href="'+r.href+'" class="cond-card" data-cond-id="'+esc(r.id)+'"'
-            +' data-mc-orig-name="'+esc(r.name)+'" data-mc-orig-tag="'+esc(r.tag||'')+'" data-mc-orig-meta="'+esc(r.meta||'')+'"'
-            +' style="background:linear-gradient(135deg,'+hexA(col,0.1)+',rgba(20,20,22,.5));border:1px solid '+hexA(col,0.28)+'">'
-            +'<svg class="cond-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>'
-            +(tg?'<div class="cond-tag" style="color:'+tintLight(col)+'">'+esc(tg)+'</div>':'')
-            +'<div class="cond-name">'+esc(nm)+'</div>'
-            +(mt?'<div class="cond-meta">'+esc(mt)+'</div>':'')
-            +((r.stats&&r.stats.length)?'<div class="cond-stats">'+r.stats.map(function(s){return '<span class="cond-stat">'+esc(s)+'</span>';}).join('')+'</div>':'')
-            +'</a>';
-      });
-      html+='</div>';
+  CONDITIONING.subcategories.forEach(function(sub){
+    if(sub.type!=='routines') return;
+    var col=sub.color||'#E24B4A';
+    html+='<div class="cond-sub"><div class="cond-sub-head">'
+      +'<div class="cond-sub-icon" style="background:'+hexA(col,0.14)+';border:1px solid '+hexA(col,0.35)+'">'+(sub.icon||'🔥')+'</div>'
+      +'<div><div class="cond-sub-name">'+esc(sub.name)+'</div>'
+      +(sub.blurb?'<div class="cond-sub-blurb">'+esc(sub.blurb)+'</div>':'')+'</div></div>';
+    (sub.routines||[]).forEach(function(r){
+      // resolve owner inline-text overrides (mc-pm-inline.js, 'cond' page).
+      var ov=condOverride(r.id);
+      var nm=(ov&&ov.name)||r.name, tg=(ov&&ov.tag!=null&&ov.tag!=='')?ov.tag:r.tag, mt=(ov&&ov.meta)||r.meta;
+      html+='<a href="'+r.href+'" class="cond-card" data-cond-id="'+esc(r.id)+'"'
+          +' data-mc-orig-name="'+esc(r.name)+'" data-mc-orig-tag="'+esc(r.tag||'')+'" data-mc-orig-meta="'+esc(r.meta||'')+'"'
+          +' style="background:linear-gradient(135deg,'+hexA(col,0.1)+',rgba(20,20,22,.5));border:1px solid '+hexA(col,0.28)+'">'
+          +'<svg class="cond-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b8b92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>'
+          +(tg?'<div class="cond-tag" style="color:'+tintLight(col)+'">'+esc(tg)+'</div>':'')
+          +'<div class="cond-name">'+esc(nm)+'</div>'
+          +(mt?'<div class="cond-meta">'+esc(mt)+'</div>':'')
+          +((r.stats&&r.stats.length)?'<div class="cond-stats">'+r.stats.map(function(s){return '<span class="cond-stat">'+esc(s)+'</span>';}).join('')+'</div>':'')
+          +'</a>';
     });
-  } else {
-    html='<div style="font-size:12px;color:#a6a6ad;line-height:1.5;margin-bottom:12px;">Cardio &amp; conditioning exercise library. On any conditioning workout, tap <b style="color:#e6c579;">🔁 Swap</b> to live-replace a movement with one of these.</div>'
-      +'<input placeholder="Search exercises…" oninput="renderCondLib(this.value)" style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#f4f3f1;font-size:14px;font-family:inherit;outline:none;margin-bottom:14px;">'
-      +'<div id="condLib">'+(window.MCSubs?MCSubs.libGroupsHTML('',false):'')+'</div>';
-  }
-  body.innerHTML=toggle+html;
+    html+='</div>';
+  });
+  body.innerHTML=html;
 }
 
 // ── QUICK TOUR — show a "NEW" badge until the tour has been completed ──

@@ -55,7 +55,11 @@ function makeRestTimer(r, n) {
 }
 
 
-const EXERCISES = [
+// Renamed from EXERCISES to avoid colliding with the shared exercise-catalog.js
+// global (var EXERCISES), which lazy-loads via mc-card-actions.js after this
+// script runs — the name clash threw "Identifier 'EXERCISES' has already been
+// declared" and left the substitute catalog unregistered on this page.
+const PAGE_EXERCISES = [
   {name:"Slight Incline DB Press", sets:"5×8", tempo:"4:0:1:0"},
   {name:"Decline Cable Flies", sets:"5×20"},
   {name:"Incline DB Row", sets:"4×8", tempo:"4:0:1:0"},
@@ -119,7 +123,7 @@ function render() {
     <div class="content" style="margin-top:24px;">
       <div class="workout-title">Upper Body — Strength + High Rep Pairs</div>
       <div class="tap-hint">Tap any exercise to check off</div>
-      ${EXERCISES.map((e,i) => renderEx(e,i)).join("")}
+      ${PAGE_EXERCISES.map((e,i) => renderEx(e,i)).join("")}
     </div>`;
   document.querySelectorAll(".ex-card").forEach(c => c.addEventListener("click", () => {
     const id = c.dataset.id; checkState[id]=!checkState[id]; c.classList.toggle("checked");

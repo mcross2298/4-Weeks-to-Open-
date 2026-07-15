@@ -959,7 +959,22 @@
     hydrateTimer = setTimeout(scan, 60);
   }
 
+  // Guard: this engine's chrome (bottom-sheet menu, reorder bar, quick-action
+  // pills) is unusable without mc-card-actions.css. If a page loads the script
+  // but forgot the stylesheet, the menu/reorder bar render as raw inline text
+  // in the page flow (and reorder has no visible Done bar). Self-inject the CSS
+  // so the engine can never mount unstyled — matches how it lazy-loads its JS
+  // deps below.
+  function ensureStylesheet() {
+    if (document.querySelector('link[href*="mc-card-actions.css"]')) return;
+    var l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = 'mc-card-actions.css';
+    document.head.appendChild(l);
+  }
+
   function init() {
+    ensureStylesheet();
     buildChrome();
     // Phase 1: lazy-load the biomech substitution engine (pages don't include
     // it directly). Precached by the SW, so it's available offline too.
