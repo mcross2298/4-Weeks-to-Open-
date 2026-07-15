@@ -79,24 +79,15 @@ function render(){
     '<div class="header"><a href="cat-pump-new4.html" class="back-link">← Back</a><div class="header-inner"><div class="eyebrow">🦵 Daily Pump · Split #3 · Legs</div><div class="title">Quads / Hamstrings / Glutes</div></div></div>'+
     '<div class="tabs-bar"><div class="tabs">'+tabs+'</div></div>'+
     '<div class="content"><div style="font-size:17px;font-weight:900;color:#fff;margin-bottom:6px;">'+w.title+'</div>'+noteHtml+'<div class="tap-hint">Tap any exercise to check off</div>'+body+'</div>';
-  document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{activeIdx=parseInt(b.dataset.i);render();updateProgress();setTimeout(initNotes,200);}));
+  document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{activeIdx=parseInt(b.dataset.i);render();updateProgress();}));
   document.querySelectorAll('.ex-card').forEach(c=>c.addEventListener('click',()=>{const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');updateProgress();}));
-  updateProgress();setTimeout(initNotes,200);
+  updateProgress();
 }
 render();
-
-const NOTES_KEY='mc_notes_legs-s3-pump';
-function getNotes(){try{return JSON.parse(localStorage.getItem(NOTES_KEY)||'{}');}catch(e){return{};}}
-function saveNote(id,val){const n=getNotes();if(val.trim())n[id]=val.trim();else delete n[id];localStorage.setItem(NOTES_KEY,JSON.stringify(n));}
-function initNotes(){
-  const notes=getNotes();
-  document.querySelectorAll('.ex-card[data-id]').forEach(card=>{
-    const id=card.dataset.id;
-    if(!id||card.querySelector(');
-    const ta=wrap.querySelector('textarea');ta.addEventListener('input',()=>{saveNote(id,ta.value);tog.innerHTML=ta.value.trim()?'✏️ '+ta.value.trim().substring(0,20):'✚ Add weight/notes';});
-    const cont=card.querySelector('.ex-content');if(cont){cont.appendChild(tog);cont.appendChild(wrap);}
-  });
-}
+// Per-card notes are provided by the shared mc-card-actions.js engine (the 📝
+// Notes quick-action on every .ex-card), matching the sibling Daily-Pump pages
+// (e.g. s3-chest-biceps.html). The old page-local notes block was removed — it
+// had a truncated line that broke the whole inline script and never worked.
 </script>
 
 
