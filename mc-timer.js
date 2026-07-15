@@ -1,8 +1,8 @@
 /* ==========================================================================
    mc-timer.js — shared rest-timer engine (extracted from the per-page copy)
    Globals kept: TMR, buildTimerFloat, makeRestTimer stays per-page,
-   updateProgress, addTimerPresets — mc-setlog.js / superset-timers.js /
-   inline onclick handlers all keep working unmodified.
+   updateProgress, addTimerPresets — mc-setlog.js / inline onclick handlers
+   all keep working unmodified.
    ========================================================================== */
 // ── cue preferences (mc_prefs_v1) ──
 const MC_PREFS = {

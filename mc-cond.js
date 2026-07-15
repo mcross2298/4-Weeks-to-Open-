@@ -152,20 +152,27 @@
     liftAboveFw();
     [400, 1200, 2500].forEach(function (d) { setTimeout(liftAboveFw, d); });
 
-    bar.querySelector('.mcc-log').addEventListener('click', function () {
-      var v = prompt('Finish time for "' + r.name + '" (mm:ss):', '');
-      if (!v) return;
+    function parseTime(v) {
       var m = v.trim().match(/^(\d+):([0-5]?\d)$/);
-      var secs = m ? (parseInt(m[1], 10) * 60 + parseInt(m[2], 10)) : parseInt(v, 10) * 60;
-      if (!(secs > 0)) { alert('Use mm:ss — e.g. 41:32'); return; }
-      var prev = best(r.id);
-      log(r.id, secs);
-      alert(prev && secs < prev.timeSec
-        ? '🏆 NEW PERSONAL BEST — previous: ' + fmt(prev.timeSec)
-        : '🏁 Logged ' + fmt(secs) + (prev ? ' · PB stays ' + fmt(prev.timeSec) : ' — first one in the books.'));
-      var el = bar.querySelector('.mcc-best');
-      var nb = best(r.id);
-      if (el && nb) el.textContent = '🏆 PB ' + fmt(nb.timeSec);
+      return m ? (parseInt(m[1], 10) * 60 + parseInt(m[2], 10)) : parseInt(v, 10) * 60;
+    }
+    bar.querySelector('.mcc-log').addEventListener('click', function () {
+      MCInputSheet.prompt({
+        title: 'Log result',
+        label: 'Finish time for "' + r.name + '"',
+        placeholder: 'mm:ss, e.g. 41:32',
+        validate: function (v) { return (parseTime(v) > 0) ? null : 'Use mm:ss — e.g. 41:32'; }
+      }).then(function (v) {
+        var secs = parseTime(v);
+        var prev = best(r.id);
+        log(r.id, secs);
+        toast(prev && secs < prev.timeSec
+          ? '🏆 NEW PERSONAL BEST — previous: ' + fmt(prev.timeSec)
+          : '🏁 Logged ' + fmt(secs) + (prev ? ' · PB stays ' + fmt(prev.timeSec) : ' — first one in the books.'));
+        var el = bar.querySelector('.mcc-best');
+        var nb = best(r.id);
+        if (el && nb) el.textContent = '🏆 PB ' + fmt(nb.timeSec);
+      }, function () {});
     });
   }
 
@@ -187,8 +194,28 @@
         'text-decoration:none;border:none;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}' +
       '.mcc-go{background:#E24B4A;color:#fff;box-shadow:0 2px 14px rgba(226,75,74,0.4);}' +
       '.mcc-log{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);color:#e2e8f0;}' +
-      '.mcc-best{margin-left:auto;font-size:12px;font-weight:800;color:#fbbf24;white-space:nowrap;}';
+      '.mcc-best{margin-left:auto;font-size:12px;font-weight:800;color:#fbbf24;white-space:nowrap;}' +
+      // result toast (replaces a blocking alert() for the post-log PB message)
+      '.mcc-toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));z-index:1360;' +
+        'transform:translate(-50%,16px);max-width:calc(100vw - 32px);text-align:center;' +
+        'padding:12px 16px;background:#0e0e0e;color:#e2e8f0;' +
+        'border:1px solid rgba(255,255,255,0.1);border-radius:14px;' +
+        'box-shadow:0 8px 28px rgba(0,0,0,0.55);font-size:13.5px;font-weight:700;' +
+        'opacity:0;pointer-events:none;transition:opacity 200ms ease,transform 200ms ease;}' +
+      '.mcc-toast.show{opacity:1;transform:translate(-50%,0);}';
     document.head.appendChild(st);
+  }
+
+  function toast(msg) {
+    var t = document.createElement('div');
+    t.className = 'mcc-toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(function () { t.classList.add('show'); });
+    setTimeout(function () {
+      t.classList.remove('show');
+      setTimeout(function () { t.remove(); }, 300);
+    }, 3200);
   }
 
   function init() {

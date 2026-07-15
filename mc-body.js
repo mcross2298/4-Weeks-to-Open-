@@ -82,11 +82,19 @@
           : '<div class="empty" style="padding:10px 0;">One entry logged — two make a trend.</div>');
     }
     document.getElementById('bwLog').addEventListener('click', function () {
-      var v = prompt('Bodyweight (lb):', '');
-      var w = parseFloat(v);
-      if (!(w > 0) || w > 1500) { if (v) alert('Enter a weight in pounds, e.g. 184.6'); return; }
-      log(Math.round(w * 10) / 10);
-      render();
+      MCInputSheet.prompt({
+        title: 'Bodyweight',
+        label: 'Weight in pounds',
+        placeholder: 'e.g. 184.6',
+        inputMode: 'decimal',
+        validate: function (v) {
+          var w = parseFloat(v);
+          return (w > 0 && w <= 1500) ? null : 'Enter a weight in pounds, e.g. 184.6';
+        }
+      }).then(function (v) {
+        log(Math.round(parseFloat(v) * 10) / 10);
+        render();
+      }, function () {});
     });
 
     if (!document.getElementById('mcBodyCss')) {
