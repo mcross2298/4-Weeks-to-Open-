@@ -356,7 +356,7 @@ function render(){
   const tabs=DATA.weeks.map(w=>`<button class="tab ${w.id===activeWeek?"active":""}" data-week="${w.id}">${w.label}</button>`).join("");
   const days=week.days.map((d,i)=>renderDay(d,i)).join("");
   document.getElementById("app").innerHTML=`
-    <div class="header"><a href="index.html" class="back-link">← Plans</a><div class="header-inner">
+    <div class="header"><a href="dashboard.html" class="back-link">← Plans</a><div class="header-inner">
       <div class="eyebrow">Weeks to Open</div>
       <div class="title">Training Program</div>
       <div class="schedule">${DATA.schedule}</div>

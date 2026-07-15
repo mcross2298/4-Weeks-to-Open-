@@ -34,6 +34,14 @@ body.mc-has-nav .fw-btn{
 }
 body.mc-has-nav.mc-has-fw{padding-bottom:132px !important;}
 body.mc-has-nav.mc-has-fw .timer-float{bottom:140px;}
+/* The "Short on time?" trigger (mc-card-actions.js, baseline bottom:84px) and
+   the voice mic button (mc-voice.js, baseline bottom:90px) are both tuned for
+   the nav-only case. When a Finish bar is also present it occupies the same
+   52px band .timer-float already lifts for above (88px -> 140px) — apply the
+   identical +52px so neither pill sits on top of the Finish bar's Summary /
+   Finish Workout buttons. */
+body.mc-has-nav.mc-has-fw .mc-qp-trigger{bottom:calc(136px + env(safe-area-inset-bottom));}
+body.mc-has-nav.mc-has-fw .mc-voice-btn{bottom:calc(142px + env(safe-area-inset-bottom));}
 
 /* Theme toggle — injected by mc-nav.js (Phase 7) on pages with no topbar
    icon rail. Fixed circular button, top-right, mirrors .back-link's
