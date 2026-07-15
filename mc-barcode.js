@@ -101,8 +101,13 @@
 
       ov.querySelector('.bc-close').onclick = function () { finish(null); };
       ov.querySelector('.bc-manual').onclick = function () {
-        var v = prompt('Enter the barcode number:');
-        if (v && v.replace(/\D/g, '')) finish(v.replace(/\D/g, ''));
+        MCInputSheet.prompt({
+          title: 'Enter barcode',
+          label: 'The UPC/EAN number printed under the barcode',
+          placeholder: 'Barcode number',
+          inputMode: 'numeric',
+          validate: function (v) { return v.replace(/\D/g, '') ? null : 'Enter the barcode’s digits.'; }
+        }).then(function (v) { finish(v.replace(/\D/g, '')); }, function () {});
       };
 
       // start the camera, then attach whichever engine is available

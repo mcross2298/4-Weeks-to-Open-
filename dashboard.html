@@ -6,7 +6,8 @@
 <title>MC Training</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/></noscript>
 <link rel="stylesheet" href="base.css?v=68"/>
 <link rel="manifest" href="manifest.json"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -500,6 +501,18 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
    never run into each other on narrow phones. */
 .tab>div:last-child{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}
 .tab.active{color:var(--gold);}
+/* "Conditioning" — the longest of the 5 labels — clips to "CONDITION…" at
+   the ~74px column width a 390px phone gives each tab. Drop a font step on
+   narrow phones only; wider viewports (tablets) already have room. The
+   Onyx redesign block further down re-declares font-size on the equally-
+   specific `.tab>div:last-child` selector *after* this one in source order,
+   so an equal-specificity override here would silently lose the cascade —
+   nesting under `.tab-bar` raises specificity enough to win regardless of
+   where in the file that block sits. */
+@media (max-width:400px){
+  .tab-bar .tab,
+  .tab-bar .tab>div:last-child{font-size:8.5px;}
+}
 .tab-icon{font-size:var(--fs-3xl);line-height:1;}
 /* History is the one tab that's a real page navigation, not an in-shell
    panel switch like the other four — a small mark says so at a glance. */
@@ -559,6 +572,19 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
   cursor:pointer;font-family:inherit;margin-top:4px;
 }
 .ob-back:active,.ob-skip:active{opacity:0.7;}
+/* The first step's card list (#obCards, ~9 programs) routinely exceeds the
+   sheet's 85vh scroll area, leaving "Skip for now" reachable only by
+   scrolling past the whole list — the only labeled way out of a first-run
+   sheet was effectively hidden. Pin it to the bottom of .ps-sheet's own
+   scrollport (sticky, not fixed, so it still scrolls away with the sheet
+   itself if the sheet is dismissed/replaced) with an opaque backing so
+   scrolled cards don't show through underneath it. */
+.ob-skip{
+  position:sticky;bottom:0;z-index:1;
+  background:#0e0e0e;border-top:1px solid rgba(255,255,255,0.08);
+  margin:8px -18px -40px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));
+  width:calc(100% + 36px);
+}
 
 /* ── Conditioning tab (Phase 1) — accent colors applied inline by JS ── */
 .cond-sub{margin-bottom:26px;}
@@ -1122,6 +1148,7 @@ html[data-theme="light"] .ps-handle,
 html[data-theme="light"] .nt-handle{background:rgba(28,26,23,.15);}
 html[data-theme="light"] .ps-card{border-color:rgba(28,26,23,.08);}
 html[data-theme="light"] .ps-check{border-color:rgba(28,26,23,.14);}
+html[data-theme="light"] .ob-skip{background:#efe9db;border-top-color:rgba(28,26,23,.1);}
 html[data-theme="light"] .ntx-met-track{background:rgba(28,26,23,.1);}
 html[data-theme="light"] .nt-field input,
 html[data-theme="light"] .nt-field select,
@@ -1624,6 +1651,7 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
 <script src="mc-calendar.js"></script>
 <script src="mc-pm-data.js"></script>
 <script src="mc-recap.js"></script>
+<script src="mc-input-sheet.js"></script>
 <script src="mc-body.js"></script>
 <script src="mc-macrocalc.js"></script>
 <script src="mc-foodapi.js"></script>

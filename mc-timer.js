@@ -1,8 +1,8 @@
 /* ==========================================================================
    mc-timer.js — shared rest-timer engine (extracted from the per-page copy)
    Globals kept: TMR, buildTimerFloat, makeRestTimer stays per-page,
-   updateProgress, addTimerPresets — mc-setlog.js / superset-timers.js /
-   inline onclick handlers all keep working unmodified.
+   updateProgress, addTimerPresets — mc-setlog.js / inline onclick handlers
+   all keep working unmodified.
    ========================================================================== */
 // ── cue preferences (mc_prefs_v1) ──
 const MC_PREFS = {
@@ -95,6 +95,7 @@ const TMR = {
   activeName: '',
   _autoDismiss: null,
   _cued10: false,
+  _done: false,
 
   parseSeconds(str) {
     if (!str || str === '—') return 0;
@@ -170,6 +171,7 @@ const TMR = {
     this.activeEl = el;
     this.activeName = exerciseName;
     this._cued10 = false;
+    this._done = false;
     this.upNext = getUpNext(el);
 
     el.className = 'rest-timer running';
@@ -238,7 +240,16 @@ const TMR = {
         floatProgress.className = 'timer-float-progress';
         if (tvTime) tvTime.className = 'tv-time';
         if (el) el.className = 'rest-timer running';
-      } else if (remaining === 0 || remaining === -0) {
+      } else if (!this._done) {
+        // First tick where remaining has reached zero. Using a latch (rather
+        // than an exact remaining===0 match) matters because a backgrounded/
+        // locked tab throttles or skips ticks — remaining is recomputed from
+        // Date.now() each tick, so on resume it can jump straight from +3 to
+        // -87 and never equal exactly 0. That single overshoot tick used to
+        // fall through to the Overtime branch below with no DONE handling
+        // ever firing: no buzz, no auto-dismiss scheduled — stuck in
+        // overtime until the trainee manually stopped it.
+        this._done = true;
         this.buzz();
         mcTimerAnnounce('Rest done' + (this.upNext && this.upNext.name ? '. Up next: ' + this.upNext.name : ''));
         floatTime.className = 'timer-float-time done';
@@ -295,6 +306,7 @@ const TMR = {
     if (this._autoDismiss) { clearTimeout(this._autoDismiss); this._autoDismiss = null; }
     const remaining = Math.ceil(this.duration - (Date.now() - this.startTime) / 1000);
     if (remaining > 10) this._cued10 = false;   // re-arm the 10s cue if we bought time back
+    if (remaining > 0) this._done = false;      // re-arm the DONE latch too — +15s can pull it back out of overtime
     const ft = document.getElementById('timerFloatTime');   // snappy immediate repaint
     if (ft) {
       ft.textContent = this.formatTime(remaining);
@@ -331,6 +343,7 @@ const TMR = {
     this.activeEl=null;
     this.upNext=null;
     this._cued10=false;
+    this._done=false;
     applyRestView();
     this.interval=setInterval(()=>{
       const rem=Math.ceil(this.duration-(Date.now()-this.startTime)/1000);
@@ -338,7 +351,7 @@ const TMR = {
       const tt2=ft2.querySelector(".timer-float-time"),tp2=ft2.querySelector(".timer-float-progress"),tl2=ft2.querySelector(".timer-float-label");
       const tv2=document.getElementById('tvTime'),tvl2=document.getElementById('tvLabel');
       if(rem>0){if(rem===10&&this.duration>15&&!this._cued10){this._cued10=true;this.cue10();}if(tt2){tt2.textContent=rem+"s";tt2.className="timer-float-time";}if(tp2){tp2.style.width=Math.round((rem/this.duration)*100)+"%";tp2.className="timer-float-progress";}if(tv2){tv2.textContent=rem+"s";tv2.className="tv-time";}}
-      else if(rem===0){if(tt2){tt2.textContent="DONE!";tt2.className="timer-float-time done";}if(tp2){tp2.style.width="100%";tp2.className="timer-float-progress done";}if(tl2)tl2.textContent="DONE ✓";if(tv2){tv2.textContent="DONE!";tv2.className="tv-time done";}if(tvl2)tvl2.textContent="DONE ✓";this.buzz();if(!TMR._autoDismiss)TMR._autoDismiss=setTimeout(()=>TMR.stop(),4000);}
+      else if(!this._done){this._done=true;if(tt2){tt2.textContent="DONE!";tt2.className="timer-float-time done";}if(tp2){tp2.style.width="100%";tp2.className="timer-float-progress done";}if(tl2)tl2.textContent="DONE ✓";if(tv2){tv2.textContent="DONE!";tv2.className="tv-time done";}if(tvl2)tvl2.textContent="DONE ✓";this.buzz();if(!TMR._autoDismiss)TMR._autoDismiss=setTimeout(()=>TMR.stop(),4000);}
       else{if(tt2){tt2.textContent="+"+Math.abs(rem)+"s";tt2.className="timer-float-time overtime";}if(tp2)tp2.className="timer-float-progress overtime";if(tv2){tv2.textContent="+"+Math.abs(rem)+"s";tv2.className="tv-time overtime";}}
     },1000);
   }

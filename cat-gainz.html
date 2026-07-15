@@ -140,7 +140,8 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 <!-- This page lays out the back-link in normal flow (no .header wrapper),
      so keep it static — base.css's absolute back-link would overlap the title. -->
 <style>.back-link{position:static;}</style>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/></noscript>
 <link rel="stylesheet" href="mc-program-landing.css"/>
 <link rel="stylesheet" href="mc-surprise.css"/>
   <link rel="stylesheet" href="mc-light.css">

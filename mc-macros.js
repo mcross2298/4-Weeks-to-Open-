@@ -896,9 +896,16 @@
           filtered = fuzzyFilter(items, tokens);
         }
         if (!filtered.length) {
-          var msg = items.length && tokens.length > 1
-            ? 'No exact matches — try fewer keywords.'
-            : 'No matches. Try a different term or add it manually.';
+          // items.networkError (set by mc-foodapi.js when both the
+          // aggregator and the direct-OFF retry failed) means this is a
+          // connectivity problem, not a real zero-match search — a
+          // "no matches" message is actively misleading on flaky gym/
+          // kitchen Wi-Fi, since the food may well exist.
+          var msg = items.networkError
+            ? "Can't reach the food database — check your connection or add it manually."
+            : (items.length && tokens.length > 1
+                ? 'No exact matches — try fewer keywords.'
+                : 'No matches. Try a different term or add it manually.');
           results.innerHTML = '<div class="nt-results-msg">' + esc(msg) + '</div>';
           return;
         }

@@ -170,7 +170,8 @@
   html[data-theme="light"] .prog-banner-text strong { color: #312e81; }
   html[data-theme="light"] .cond-title { color: #92400e; }
 </style>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/></noscript>
 <link rel="stylesheet" href="mc-program-landing.css"/>
 <link rel="stylesheet" href="mc-surprise.css"/>
 <link rel="stylesheet" href="mc-nav.css"/>
@@ -288,6 +289,7 @@ MCProgramStatus.mount(document.getElementById('programStatus'), {
 });
 </script>
 <script src="conditioning-data.js"></script>
+<script src="mc-input-sheet.js"></script>
 <script src="mc-cond.js"></script>
 <script src="mc-cond-suggest.js"></script>
 </body>
