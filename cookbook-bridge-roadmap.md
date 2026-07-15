@@ -125,21 +125,26 @@ directions · signed-out behavior unchanged.
 **Goal:** a signed-in trainee sees today's planned meals and macro plan inside
 the workout app, without leaving it.
 
-Tasks:
-1. **Planned meals in the Nutrition tab** — `dashboard.html?tab=nutrition` reads
-   `mc-bridge.js::todaysMeals()` and lists today's planned meals with their
-   per-serving macros.
-2. **One-tap "log planned meal"** — tapping a planned meal writes it into
-   `mc_macros_v1` (the store both apps already share), so it counts toward the
-   day exactly like a manually-logged food.
-3. **Plan-vs-target readout** — surface planned-meal macros against the day's
-   `mc_plan_targets_v1` targets on the dashboard/nutrition surface.
-4. **Empty & signed-out states** — a designed empty state when there's no plan or
-   no sign-in (reuse the `showEmpty()` vocabulary), never a blank panel.
+Tasks (✅ **all shipped** — see the shipped note below):
+1. **Planned meals in the Nutrition tab** — ✅ a "Today's Planned Meals" card on
+   `dashboard.html?tab=nutrition` reads `MCBridge.todaysMeals()` and lists
+   today's planned meals with their per-serving macros.
+2. **One-tap "log planned meal"** — ✅ tapping **Log** writes a normal entry into
+   `mc_macros_v1` (the store both apps already share), counting toward the day
+   exactly like a manually-logged food — never writes back to the
+   cookbook-owned `mc-cookbook:mealplan`.
+3. **Plan-vs-target readout** — ✅ surfaces planned-meal macro totals against the
+   day's targets from the already-shared `mc_macros_v1.goals` (not
+   `mc_plan_targets_v1` — that reference in the original draft was corrected in
+   B0; see the ownership map above).
+4. **Empty & signed-out states** — ✅ a designed empty state (`.empty-state`,
+   the same shared vocabulary the rest of the app uses) for no-plan-today and
+   for signed-out, with distinct copy for each.
 
 Exit criteria: planned meals visible and loggable in the workout app for a
 signed-in user · degrades cleanly signed-out · Quick Tour updated
 (`quick-tour.html`).
+**✅ All met (2026-07-15) — Phase B1 complete.**
 
 ## Phase B2 — Workout → Cookbook (training informs meals)
 
@@ -235,7 +240,7 @@ definition of "finished product, launched together."**
 | Phase | Theme | Direction | Status |
 |-------|-------|-----------|--------|
 | B0 | Bridge foundation & data contract | ⇄ both | ✅ Complete |
-| B1 | Cookbook → Workout (meals inform training) | 🍎 → 🏋️ | 🔲 Not started |
+| B1 | Cookbook → Workout (meals inform training) | 🍎 → 🏋️ | ✅ Complete |
 | B2 | Workout → Cookbook (training informs meals) | 🏋️ → 🍎 | 🔲 Not started |
 | B3 | Unified "Today" view & reciprocal nav | ⇄ both | 🔲 Not started |
 | B4 | Suite UI/UX & design unification | ⇄ both | 🔲 Not started |
@@ -246,6 +251,48 @@ phase merges. Statuses: 🔲 Not started · 🔄 In progress · ✅ Complete ·
 ⏸ Waived/deferred (owner decision, link it).
 
 ### Shipped notes
+
+**B1 — Cookbook → Workout (meals inform training)** (2026-07-15): A "Today's
+Planned Meals" card on `dashboard.html`'s Nutrition tab (`mc-macros.js`), built
+on B0's `mc-bridge.js`. Shown only while viewing today (the bridge always
+answers for the real calendar day, so a past/future `selKey` would mismatch).
+**A real cross-app rendering gap surfaced and was fixed along the way:** the
+workout app never loads `recipes-data.js`, so a bare `recipe_id` pulled from
+the cookbook's plan had no title, icon, or macros to show. Fixed by having the
+cookbook **denormalize a `{title,icon,macros}` snapshot directly onto each meal
+entry** at write time (`cookbook-home.js`'s new `mealSnapshot()`, used by all
+three meal-creation paths — `addMeal`, `commitSmartWeek`, and the plan-history
+"Reuse" flow) — `macro_profiles` are per single serving and identical across
+every authored tier, so the snapshot never goes stale even if a meal's serving
+count changes later. `mc-bridge.js` now prefers this snapshot, falling back to
+a live `window.RECIPES` lookup for any pre-existing legacy plan entries (still
+byte-identical across both repos). **Logging:** tapping **Log** on a meal
+writes a normal entry into the shared `mc_macros_v1` (never back into the
+cookbook-owned `mc-cookbook:mealplan` — the meal's `completed` flag there is
+untouched), tagged `planUid` so the row flips to a disabled "✓ Logged" state
+and can't double-log; a toast **Undo** removes that specific entry. **Plan-vs-
+target:** a summary line totals planned kcal/protein against the day's targets
+from the already-shared `mc_macros_v1.goals` (the roadmap's original draft
+referenced `mc_plan_targets_v1` for this — corrected here to match B0's actual
+contract). **Empty/signed-out states** reuse the shared `.empty-state`
+vocabulary with distinct copy for "no plan today" vs. "not signed in."
+**A real script-order bug was caught by live verification, not left to be
+found later:** `mc-bridge.js` loaded near `mc-sync.js`, well after
+`mc-macros.js` had already run its first `render()` — so `window.MCBridge`
+was undefined at first paint. Fixed by loading `mc-bridge.js` immediately
+before `mc-macros.js` instead (it has no dependency on `mc-sync`/`mc-supabase`
+being loaded first) and removing the now-duplicate later `<script>` tag.
+**Verify:** `tools/test-mc-bridge.js` extended to 21 assertions (denormalized-
+snapshot-preferred path + legacy-fallback path); a live headless-Chromium pass
+drove the actual `dashboard.html` end-to-end — signed-out empty copy, seeded
+plan rendering, the plan-vs-target line, one-tap logging updating the shared
+macro totals live, the cookbook's plan store confirmed untouched
+(`completed` flags stay `false`), and Undo cleanly reversing the log — all
+green with zero real console/page errors. `sw.js` bumped (workout + cookbook).
+Docs: `quick-tour.html` (new step + tip sentence) and
+`quick-tour-overview.html` (new bullet) updated per the documentation-currency
+rule; no cookbook-side Quick Tour change needed (the snapshot addition is
+purely internal — no cookbook UI changed).
 
 **B0 — Bridge foundation & data contract** (2026-07-15): Laid the plumbing and
 settled the contract against the real code. **Sync whitelists:** both
