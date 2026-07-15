@@ -137,9 +137,46 @@
     document.body.appendChild(btn);
   }
 
+  // ── SMART BACK (history trail fix) ──────────────────────────────────────
+  // Every "← Back" is a plain forward <a href> pointing at the page's known
+  // parent (its category page), so tapping it — like tapping any other
+  // link — pushes a NEW history entry instead of popping the one already
+  // there. A real gym session (cat page -> workout -> Back -> another
+  // workout -> ...) then leaves a long trail behind it, and an iOS
+  // back-swipe replays that whole trail hop by hop instead of retracing one
+  // step at a time.
+  //
+  // Fix: when this page's referrer is exactly the back-link's target (true
+  // for the overwhelming majority of real taps — you arrived here BY
+  // clicking a link on that page), call history.back() instead of
+  // navigating forward, so Back actually pops the stack. If there's no
+  // referrer or it doesn't match (deep link, PWA cold launch, direct URL),
+  // the link falls back to normal forward navigation — never broken, just
+  // not optimized in that edge case.
+  function fileName(path) {
+    return (path || '').split('/').pop().split('?')[0].split('#')[0];
+  }
+  function initSmartBack() {
+    var links = document.querySelectorAll('.back-link, .back');
+    if (!links.length || history.length <= 1) return;
+    var ref;
+    try { ref = document.referrer ? new URL(document.referrer) : null; } catch (e) { ref = null; }
+    if (!ref || ref.origin !== location.origin) return;
+    var refFile = fileName(ref.pathname);
+    Array.prototype.forEach.call(links, function (a) {
+      if (fileName(a.getAttribute('href')) === refFile) {
+        a.addEventListener('click', function (e) {
+          e.preventDefault();
+          history.back();
+        });
+      }
+    });
+  }
+
   function init() {
     build();
     buildThemeToggle();
+    initSmartBack();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

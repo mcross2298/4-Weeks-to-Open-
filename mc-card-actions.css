@@ -162,6 +162,11 @@
 
 /* ── Reorder mode ── */
 .mc-reordering{outline:2px dashed rgba(251,191,36,0.35);outline-offset:3px;border-radius:14px;}
+/* Reordering is a distinct mode — Replace/Reorder/Notes don't apply mid-drag,
+   and the pill row sits exactly where the ▲▼ arrows are positioned (both
+   anchor off the card's top-right). Hide the row so the arrows get the
+   corner to themselves instead of stacking on top of "Notes". */
+.mc-reordering .mc-quick-actions{display:none;}
 /* right:50px (was 42px) clears the wider 36px .mc-meatball with an 8px gap
    instead of ~6px; gap:6px (was 4px) does the same between the two arrows. */
 .mc-reorder-ctrls{
