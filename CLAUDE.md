@@ -138,6 +138,17 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > the cookbook-owned plan store), and a plan-vs-target readout. `mc-bridge.js`
 > now loads immediately before `mc-macros.js` (not near `mc-sync.js`) so
 > `window.MCBridge` exists at first render.
+>
+> **B2 shipped (2026-07-15):** `mc-bridge.js` gained `likelyTrainingDays()` — a
+> real historical weekday-training pattern from `mc_workout_log_v1` (this app's
+> own store), consumed by the cookbook to bias its Smart Week / Macro Smart
+> Generator toward higher protein on likely training days. Also fixed a real
+> bug from B0/B1: `perServingMacros()`'s fallback used the wrong macro field
+> names (`kcal/p/f/c` instead of the cookbook's real `calories/protein_g/
+> fat_g/carbs_g`), which would have logged zero macros for any real planned
+> meal — now normalizes correctly. Also: any pulled `CONSUME`-store change now
+> arms `mc-sync.js`'s one-shot reload (previously only owned-store pulls did),
+> since consumer stores have real rendered surfaces now.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 

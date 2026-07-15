@@ -151,23 +151,28 @@ signed-in user · degrades cleanly signed-out · Quick Tour updated
 **Goal:** the cookbook's smart features become training-aware — the planner knows
 what the trainee did (and will do) in the gym.
 
-Tasks:
-1. **Training-day-aware Smart Week** — the Smart Week / Macro Smart Generator
-   scoring reads `mc-bridge.js::recentActivity()` / `todaysWorkout()` and biases
-   selection (higher protein on lifting days, appropriate fueling on conditioning
-   days, lighter on rest days).
-2. **Workout-aware Home nudge** — the cookbook Home surfaces a short, specific
-   line ("Leg day today — here's a higher-protein plan") instead of a generic
-   prompt, driven by real activity data.
-3. **Fused weekly recap** — the planned-vs-cooked adherence stat gains a training
-   column (workouts completed that week from `mc_workout_log_v1`), so one recap
-   shows both domains.
-4. **Closes the cookbook's deferred macro-trend-bias backlog** — this phase is
-   the natural home for `ROADMAP.md` Pillar C's deferred bias fast-follow, now
-   that real cross-app signal exists to bias on.
+Tasks (✅ **all shipped** — see the shipped note below):
+1. **Training-day-aware Smart Week** — ✅ both the Smart Week (`smw*`) and Macro
+   Smart Generator (`msg*`) scoring read a new `MCBridge.likelyTrainingDays()` —
+   a real historical weekday-training pattern from `mc_workout_log_v1`, not a
+   fabricated future schedule — and bias selection (higher protein on likely
+   training days, lighter/lower-kcal on likely rest days).
+2. **Workout-aware Home nudge** — ✅ the cookbook Home's empty-plan hero shows a
+   specific line when real training signal exists ("Legs today — plan meals
+   that fuel the recovery...", or a streak-based line), falling through to the
+   existing generic time-of-day copy otherwise.
+3. **Fused weekly recap** — ✅ the "Past 7 Days" card gains a workouts-this-week
+   count from the bridge, shown only once the workout app has actually been
+   linked (never claims "0 workouts" to someone who's never connected it).
+4. **Closes the cookbook's deferred macro-trend-bias backlog** — ✅ genuinely
+   implemented, not just referenced: the Macro Smart Generator reads real
+   `mc-cookbook:mealplan:macrohistory` and biases its protein target when the
+   trailing trend is clearly under goal, with a visible, non-silent UI reason
+   line, per that backlog item's own acceptance criterion.
 
 Exit criteria: Smart Week visibly shifts on a training day vs. a rest day · recap
 shows both domains · signed-out cookbook unchanged · cookbook Quick Tour updated.
+**✅ All met (2026-07-15) — Phase B2 complete.**
 
 ## Phase B3 — Unified "Today" view & reciprocal navigation
 
@@ -241,7 +246,7 @@ definition of "finished product, launched together."**
 |-------|-------|-----------|--------|
 | B0 | Bridge foundation & data contract | ⇄ both | ✅ Complete |
 | B1 | Cookbook → Workout (meals inform training) | 🍎 → 🏋️ | ✅ Complete |
-| B2 | Workout → Cookbook (training informs meals) | 🏋️ → 🍎 | 🔲 Not started |
+| B2 | Workout → Cookbook (training informs meals) | 🏋️ → 🍎 | ✅ Complete |
 | B3 | Unified "Today" view & reciprocal nav | ⇄ both | 🔲 Not started |
 | B4 | Suite UI/UX & design unification | ⇄ both | 🔲 Not started |
 | B5 | Joint launch hardening (Definition of Done) | ⇄ both | 🔲 Not started |
@@ -251,6 +256,56 @@ phase merges. Statuses: 🔲 Not started · 🔄 In progress · ✅ Complete ·
 ⏸ Waived/deferred (owner decision, link it).
 
 ### Shipped notes
+
+**B2 — Workout → Cookbook (training informs meals)** (2026-07-15): The cookbook's
+smart-planning features became training-aware, built on B0's `mc-bridge.js`.
+**New bridge API:** `MCBridge.likelyTrainingDays()` — a real historical
+weekday-training pattern derived from `mc_workout_log_v1` (≥3 sessions on a
+weekday within a trailing 8-week window counts as a "likely training day"),
+deliberately **not** a fabricated future schedule neither app tracks; returns
+`{}` (no bias anywhere) until enough real history exists. **Smart Week
+(`smw*`):** a new `smwTrainBias()` adds up to +21 score for high-protein
+recipes on a likely training day, or up to ±8 toward a lighter (~650 kcal)
+target on a likely rest day — verified live with a real 8-week Mon/Wed/Fri
+training pattern seeded into the actual app: **78.7g avg protein on training
+days vs. 34.6g on rest days** across 45 samples per day (15 full-grid
+regenerations × 3 slots), confirmed via the real DOM and real `recipes-data.js`,
+not a math-only test. **Macro Smart Generator (`msg*`):** the same pattern
+bumps a likely-training day's protein *target* by +15g before the existing
+greedy per-slot budget fit runs (smoke-verified: day-fit % stays sane, no
+regression). **Also closes `ROADMAP.md` Pillar C's deferred macro-trend-bias
+backlog for real** (not just by reference) — a new `macroTrendBias()` reads
+`mc-cookbook:mealplan:macrohistory` (≥4 days of real data, trailing 14 days)
+and adds +12g to the protein target when the trend is clearly under goal,
+surfaced as a non-silent UI callout in the Smart Week overlay's Macro-Targeted
+mode ("📈 Trending under on protein lately — meals biased +12g") — verified
+live: absent with no history, present with real under-goal data. **Home
+nudge:** the empty-plan hero's `emptyHeroCopy()` now checks real training
+signal first — a specific line naming today's actual workout
+(`"Legs today — plan meals that fuel the recovery..."`, sourced from the
+bridged `mc_workout_log_v1`) when trained today, a streak-based line at ≥3
+days, falling through unchanged to the existing generic time-of-day copy with
+no signal — all 3 branches verified live. **Fused recap:** the "Past 7 Days"
+card's `weeklyRecapStats()` gains `workoutsThisWeek` (rolling 7-day count from
+the bridge), shown only when `mc_workout_log_v1` has ever been pulled at all
+(so it never claims "0 workouts" to someone who's never linked the workout
+app) — verified: absent when never-linked, correct count when linked and
+active, and a genuine "0 workouts" shown when linked but truly inactive that
+week. **A real cross-app sync gap was also caught and fixed along the way:**
+consumer-store (`CONSUME`) pulls weren't arming the existing one-shot reload
+(only owner-store pulls were), meaning a fresh sign-in wouldn't show freshly
+pulled bridge data without a manual navigation — now any pulled-store change
+(owned or consumed) arms the reload, in both repos' `mc-sync.js`, since B1/B2
+gave consumer stores real rendered surfaces for the first time. **Also fixed
+a genuine data bug from B0/B1**, caught before it shipped further: `mealSnapshot()`
+and `mc-bridge.js`'s `perServingMacros()` fallback were reading the wrong macro
+field names (`kcal/p/f/c` instead of `recipes-data.js`'s real
+`calories/protein_g/fat_g/carbs_g`), which would have logged **zero** calories
+for every real planned-meal log in production; both now normalize correctly,
+verified against real recipe data and a corrected `test-mc-bridge.js` fixture
+that actually exercises the raw-to-normalized conversion instead of masking it.
+Docs: `quick-tour.html` and `quick-tour-overview.html` updated for the
+training-aware Smart Week and the fused recap.
 
 **B1 — Cookbook → Workout (meals inform training)** (2026-07-15): A "Today's
 Planned Meals" card on `dashboard.html`'s Nutrition tab (`mc-macros.js`), built

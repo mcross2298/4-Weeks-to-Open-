@@ -228,22 +228,26 @@
         var remoteByKey = {};
         (r.data || []).forEach(function (row) { remoteByKey[row.store_key] = row.data; });
         // Owned stores (STORES) are pulled+merged and later pushed; consumed
-        // stores (CONSUME) are pulled read-only and never pushed. Only an
-        // owned-store change arms the one-shot reload — cookbook data arriving
-        // here has no rendered surface to refresh yet (that lands in B1).
+        // stores (CONSUME) are pulled read-only and never pushed (push() below
+        // only ever iterates STORES). Both kinds now have real rendered
+        // surfaces (roadmap B1/B2's bridge-driven cards/nudges read the pulled
+        // CONSUME data), so a change in either arms the one-shot reload — a
+        // fresh sign-in shouldn't need a manual navigation to show cross-app
+        // data that just arrived.
         // snapshot = what the SERVER currently holds. If a merge added any
         // local-only data, the local value now differs, so push() uploads the
-        // merged result instead of treating it as in-sync (owned stores only).
-        function pullKey(key, strategy, owned) {
+        // merged result instead of treating it as in-sync (owned stores only —
+        // push() never touches CONSUME keys regardless of this snapshot).
+        function pullKey(key, strategy) {
           var local = parse(readRaw(key));
           var remote = remoteByKey[key];
           var before = readRaw(key);
           if (remote != null) writeVal(key, mergeStore(strategy, local, remote));
-          if (owned && readRaw(key) !== before) pulledChange = true;
+          if (readRaw(key) !== before) pulledChange = true;
           snapshot[key] = remote != null ? JSON.stringify(remote) : null;
         }
-        Object.keys(STORES).forEach(function (key) { pullKey(key, STORES[key], true); });
-        Object.keys(CONSUME).forEach(function (key) { pullKey(key, CONSUME[key], false); });
+        Object.keys(STORES).forEach(function (key) { pullKey(key, STORES[key]); });
+        Object.keys(CONSUME).forEach(function (key) { pullKey(key, CONSUME[key]); });
         status.lastPull = Date.now();
       });
   }
