@@ -139,7 +139,7 @@
 
   // ── SMART BACK (history trail fix) ──────────────────────────────────────
   // Every "← Back" is a plain forward <a href> pointing at the page's known
-  // parent (e.g. cat-gainz.html), so tapping it — like tapping any other
+  // parent (its category page), so tapping it — like tapping any other
   // link — pushes a NEW history entry instead of popping the one already
   // there. A real gym session (cat page -> workout -> Back -> another
   // workout -> ...) then leaves a long trail behind it, and an iOS
