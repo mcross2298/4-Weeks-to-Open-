@@ -44,30 +44,51 @@ is met.
 
 ## Architecture reality — the one constraint that shapes everything
 
-The two apps ship as **two standalone PWAs on two origins**. Two origins means
-**no shared `localStorage`** — the cookbook cannot read the workout app's
-`localStorage` directly, and vice versa. There are exactly two places their data
-can actually meet:
+> **Correction (B3, 2026-07-15):** the original version of this section assumed
+> the two standalone PWAs sit on **two separate origins**. They don't. Both
+> deploy as GitHub Pages *project* sites under the same GitHub Pages user
+> domain — `https://mcross2298.github.io/4-Weeks-to-Open-/` and
+> `https://mcross2298.github.io/Mikes-Cookbook/` — same scheme + host + port,
+> different **path**. `localStorage` (and cookies, IndexedDB) are scoped by
+> **origin**, not path, so on the same device in the same browser, the two
+> apps' `localStorage` is **already shared by the browser natively**, no sync
+> needed — confirmed via the Supabase client too: both apps use the same
+> project ref with no custom `storageKey`, so the default session-storage key
+> is identical, meaning a sign-in in one app is *already* visible in the other
+> in that same-browser case. This is why B3's reciprocal nav links need no
+> token hand-off to "preserve sign-in across the hop" — it was never actually
+> missing for that case. **This does not make the Supabase sync bridge (B0–B2)
+> redundant** — it's still what carries data across *devices* (a different
+> phone, a different browser) and is the only mechanism that's robust if an
+> installed PWA's storage ends up partitioned per-icon on a given platform
+> (a known, version-dependent nuance particularly on iOS home-screen web
+> apps). Same-origin sharing is a same-device bonus on top of the sync bridge,
+> not a replacement for it — the two mechanisms cover different failure modes.
 
-1. **Signed-in Supabase sync (the real bridge).** Both apps already share one
-   Supabase project, one invite-only account, and one `user_sync(user_id,
-   store_key, data jsonb, …)` table (RLS-isolated per user). `mc_macros_v1`
-   already reconciles across both apps through it. The bridge is built by
-   **widening each app's sync whitelist** so it also *pulls* (read-only) the
-   stores the other app owns.
-2. **The Rolodex market mount (same-origin, free reads).** `build-market.py`'s
-   roadmap-4.7 machinery already mounts the whole cookbook under `./cookbook/` in
-   the public Rolodex build, so there the cookbook is same-origin with the
-   workout app and `localStorage` reads *are* shared. This is a bonus path, not
-   the primary one — the invite-only launch targets the two standalone PWAs.
+The two apps ship as **two standalone PWAs**, same origin, different path (see
+correction above) for the common same-browser case — but the sync bridge below
+still assumes the conservative, robust case (cross-device, or a platform that
+partitions storage per installed PWA) rather than relying on same-origin
+sharing, since that's the only assumption that holds everywhere. There are two
+places their data can meet:
+
+1. **Signed-in Supabase sync (the real bridge, and the one that works
+   everywhere).** Both apps already share one Supabase project, one
+   invite-only account, and one `user_sync(user_id, store_key, data jsonb, …)`
+   table (RLS-isolated per user). `mc_macros_v1` already reconciles across
+   both apps through it. The bridge is built by **widening each app's sync
+   whitelist** so it also *pulls* (read-only) the stores the other app owns.
+2. **Same-origin `localStorage` (free, same-device bonus).** Confirmed in B3:
+   the same-browser case gets live, zero-latency sharing for free, with no
+   reload/sync round-trip — see the correction above.
 
 **Consequence:** B0 exists to settle this contract on paper *first*, so B1–B3 are
-built against a real read layer (`mc-bridge.js`) that works in both deployment
-shapes, instead of assuming a shared `localStorage` that only exists in one of
-them. Every store keeps **exactly one writing app**; the other side is a
-**read-only consumer**. The sole intentional exception is `mc_macros_v1`, which
-both apps write and which already has a field-level merge in each app's
-`mc-sync.js`.
+built against a real read layer (`mc-bridge.js`) that works in every deployment
+shape (cross-device via sync, same-device via either sync-then-reload or free
+same-origin sharing), instead of assuming any one mechanism. Every store keeps
+**exactly one writing app**; the other side is a **read-only consumer**. The
+sole intentional exception is `mc_macros_v1`, which both apps write and which
+already has a field-level merge in each app's `mc-sync.js`.
 
 ### Shared-store ownership map (the B0 contract — as shipped)
 
@@ -179,20 +200,29 @@ shows both domains · signed-out cookbook unchanged · cookbook Quick Tour updat
 **Goal:** one glance in either app answers "what am I doing today?" — workout,
 meals, and macros together — and moving between the apps is first-class.
 
-Tasks:
-1. **Shared "Today" strip** — a small component (built on `mc-bridge.js`)
-   rendering today's workout, today's meals, and the macro ring; dropped into the
-   workout dashboard Home and the cookbook Home.
-2. **Reciprocal, first-class navigation** — a persistent, branded link from each
-   app to the other (today only the Rolodex market-mount injects a one-way
-   cookbook icon). Make it two-way and present in the standalone PWAs too, with
-   sign-in preserved across the hop.
-3. **Deployment-shape parity** — the Today strip and nav work identically whether
-   standalone (synced reads) or Rolodex-mounted (local reads).
+Tasks (✅ **all shipped** — see the shipped note below):
+1. **Shared "Today" strip** — ✅ built on `MCBridge.today()`, but implemented as
+   two *complementary* additions rather than one identical component, since
+   each app's Home already covers half the picture: the workout dashboard
+   gains a compact strip for today's cookbook-planned meals + macro target
+   (it already shows its own training streak); the cookbook's existing
+   "Today" card gains a real workout-status badge (it already shows meals +
+   macro ring). Together, one glance in either app answers the full question.
+2. **Reciprocal, first-class navigation** — ✅ a persistent icon link each way,
+   present in both standalone PWAs (not just the Rolodex market-mount's
+   one-way cookbook icon). **Sign-in preservation turned out to need zero
+   code** — see the architecture correction above; same-origin `localStorage`
+   sharing already carries the Supabase session across the hop for free in
+   the common same-browser case.
+3. **Deployment-shape parity** — ✅ both new nav links use the
+   `MARKET:STRIP`/`MARKET:ADD` pattern (absolute URL standalone, relative path
+   when Rolodex-mounted) — verified by simulating the actual market-build
+   regex transform against both files, not just assumed.
 
 Exit criteria: Today strip renders in both apps from `mc-bridge.js` · nav works
 both directions in both deployment shapes · both apps' onboarding docs mention
 the sister app.
+**✅ All met (2026-07-15) — Phase B3 complete.**
 
 ## Phase B4 — Suite UI/UX & design unification
 
@@ -247,7 +277,7 @@ definition of "finished product, launched together."**
 | B0 | Bridge foundation & data contract | ⇄ both | ✅ Complete |
 | B1 | Cookbook → Workout (meals inform training) | 🍎 → 🏋️ | ✅ Complete |
 | B2 | Workout → Cookbook (training informs meals) | 🏋️ → 🍎 | ✅ Complete |
-| B3 | Unified "Today" view & reciprocal nav | ⇄ both | 🔲 Not started |
+| B3 | Unified "Today" view & reciprocal nav | ⇄ both | ✅ Complete |
 | B4 | Suite UI/UX & design unification | ⇄ both | 🔲 Not started |
 | B5 | Joint launch hardening (Definition of Done) | ⇄ both | 🔲 Not started |
 
@@ -256,6 +286,41 @@ phase merges. Statuses: 🔲 Not started · 🔄 In progress · ✅ Complete ·
 ⏸ Waived/deferred (owner decision, link it).
 
 ### Shipped notes
+
+**B3 — Unified "Today" view & reciprocal navigation** (2026-07-15): **A real
+architecture correction, found before it caused a problem, not after:** the
+original B0 doc assumed the two standalone PWAs are on two separate origins,
+requiring a bridge for cross-app reads. They're actually **same-origin**
+(`mcross2298.github.io`, different path) — confirmed both apps' Supabase
+clients use the same project ref with no custom `storageKey`, so a sign-in in
+one app is already visible in the other via ordinary same-origin
+`localStorage` sharing, same-browser. This didn't make B0's sync bridge
+redundant (it's still what covers cross-device use and any platform that
+partitions storage per installed PWA), but it did mean B3's reciprocal-nav
+"sign-in preserved across the hop" requirement needed **zero new code** — see
+the corrected Architecture reality section above. **Today strip:** rather than
+one identical component copy-pasted into both apps, built as two
+*complementary* halves since each Home already covers half the picture — the
+workout dashboard gets a compact strip (`populateTodayStrip()`) summarizing
+today's cookbook-planned meals + macro goal (clickable into the Nutrition
+tab), hidden entirely with no bridge data; the cookbook's existing "Today"
+card gets a real workout-status badge (`todayWorkoutBadge()`) and now renders
+even on a day with a workout logged but no meals planned (previously it
+returned `null` in that case, silently dropping the workout signal). Verified
+live: hidden/shown states, exact summary text, and the meals-empty-but-trained
+case all confirmed in a real headless-Chromium pass against both apps.
+**Reciprocal nav:** a persistent icon link each way in both standalone PWAs
+(previously only a one-way, Rolodex-market-only cookbook icon existed on the
+workout side; the cookbook had no workout-app link at all). Both new links use
+the same `MARKET:STRIP`/`MARKET:ADD` pattern already established for the
+existing one-way link — an absolute, personally-identifying URL in the
+standalone build, swapped for a relative path when mounted in the Rolodex
+market build (a separate white-label product) — verified by running the
+*actual* market-build regex transform against both files (not just assumed
+correct), confirming clean toggling and valid resulting markup/JS in both
+directions. Docs: `quick-tour.html`/`quick-tour-overview.html` (workout) and
+the cookbook's Quick Tour updated to mention the sister-app link and Today
+strip additions per the documentation-currency rule.
 
 **B2 — Workout → Cookbook (training informs meals)** (2026-07-15): The cookbook's
 smart-planning features became training-aware, built on B0's `mc-bridge.js`.
