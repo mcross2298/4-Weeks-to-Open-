@@ -70,13 +70,13 @@
       body.innerHTML =
         '<div class="acct-title">Account</div>' +
         '<div class="acct-sub">Signed in as <b>' + (currentUserObj.email || 'your account') + '</b></div>' +
-        '<div class="acct-info">✓ Your workouts, set logs and streak sync across your devices. You’ll stay signed in on this device.</div>' +
+        '<div class="acct-info">✓ Your workouts, set logs and streak sync across your devices — and your macro tracker reconciles with Mike’s Cookbook if you use both. You’ll stay signed in on this device.</div>' +
         '<button class="acct-btn acct-secondary" id="acctSignout">Sign out</button>';
       body.querySelector('#acctSignout').addEventListener('click', doSignOut);
     } else {
       body.innerHTML =
         '<div class="acct-title">Sign in</div>' +
-        '<div class="acct-sub">Sign in to sync your workouts, set logs and streak across all your devices.</div>' +
+        '<div class="acct-sub">Sign in to sync your workouts, set logs and streak across all your devices — the same account works in Mike’s Cookbook too.</div>' +
         '<input id="acctEmail" type="email" autocomplete="email" placeholder="Email"/>' +
         '<input id="acctPw" type="password" autocomplete="current-password" placeholder="Password"/>' +
         '<button class="acct-btn acct-primary" id="acctSignin">Sign in</button>' +

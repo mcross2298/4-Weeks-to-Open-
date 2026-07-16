@@ -1,6 +1,11 @@
 /* ==========================================================================
-   mc-install.js  —  shared "Add to Home Screen" capture (L2 Sub-Phase B)
+   mc-install.js  —  shared "Add to Home Screen" capture
    --------------------------------------------------------------------------
+   Roadmap B4 (cookbook<->workout bridge) — byte-identical shared module in
+   both repos, same convention as mc-bridge.js: edit in one, copy to the
+   other. Fully app-agnostic (no MC_SB/tracker/workout dependency), so this
+   is a straight port, not a bridge-data read.
+
    Android/Chromium fires `beforeinstallprompt` at most once per session and
    only if a listener was already attached when it fires — so this has to run
    as an early page-load script (before the account sheet is ever opened),
