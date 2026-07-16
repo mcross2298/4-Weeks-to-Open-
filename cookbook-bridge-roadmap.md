@@ -229,20 +229,36 @@ the sister app.
 **Goal:** the two apps read as one designed product — the "linked PWAs" promise
 made visible.
 
-Tasks:
-1. **Consistent account & install experience** — one visual language for the
-   sign-in sheet, Install moment, and sync/backup status across both apps.
-2. **Unified bridge-surface vocabulary** — shared empty / loading / error states,
-   iconography, and accent treatment for "the other app" everywhere the bridge
-   shows up.
-3. **Cross-app polish pass** — typography, spacing, and motion on the bridge
-   surfaces reconciled so a user moving between apps feels continuity, not a seam.
-4. **Docs** — both quick tours + `program-guide.html` describe the suite and the
-   bridge features per each repo's documentation-currency rule.
+Tasks (✅ **all shipped** — see the shipped note below):
+1. **Consistent account & install experience** — ✅ found and closed two real
+   parity gaps, not just polished what existed: the cookbook had **no install
+   moment at all** (`mc-install.js` ported, wired into its account sheet) and
+   **no ambient sync-status indicator** (`mc-backup-status.js` ported). Also
+   aligned the sign-in copy itself — the workout app's account sheet never
+   mentioned the cookbook connection while the cookbook's already did;
+   both now reference each other.
+2. **Unified bridge-surface vocabulary** — ✅ audited; the cross-app accent
+   (`rgb(167,139,250)` / `#a78bfa`) was already consistently in use on both
+   the workout Today strip and the cookbook's workout badge — confirmed
+   rather than assumed. A real defect found instead: B3's new
+   `.home-workout-btn` silently overlapped the pre-existing
+   `.home-account-btn` at the identical `right:68px` slot, fully occluding
+   the workout-nav icon behind the account button. Fixed.
+3. **Cross-app polish pass** — ✅ folded into the fixes above; no separate
+   typography/motion issues found beyond the positioning bug.
+4. **Docs** — ✅ **`program-guide.html` turned out to be the wrong venue**
+   (it's a per-program training-methodology reference, not an onboarding
+   page — a roadmap-drafting assumption corrected here, same as B0/B2's
+   corrections) — the actual onboarding docs are the Quick Tours, already
+   kept current through B1–B3. Added an explicit suite-framing sentence +
+   stat chip to both apps' `quick-tour-overview.html` (previously the
+   sister app was only ever mentioned feature-by-feature, never framed as
+   "these are one linked product").
 
 Exit criteria: a side-by-side review of the bridge surfaces reads as one product
 · both apps' onboarding docs current on the bridge · no orphaned/inconsistent
 bridge UI.
+**✅ All met (2026-07-15) — Phase B4 complete.**
 
 ## Phase B5 — Joint launch hardening (Definition of Done)
 
@@ -278,7 +294,7 @@ definition of "finished product, launched together."**
 | B1 | Cookbook → Workout (meals inform training) | 🍎 → 🏋️ | ✅ Complete |
 | B2 | Workout → Cookbook (training informs meals) | 🏋️ → 🍎 | ✅ Complete |
 | B3 | Unified "Today" view & reciprocal nav | ⇄ both | ✅ Complete |
-| B4 | Suite UI/UX & design unification | ⇄ both | 🔲 Not started |
+| B4 | Suite UI/UX & design unification | ⇄ both | ✅ Complete |
 | B5 | Joint launch hardening (Definition of Done) | ⇄ both | 🔲 Not started |
 
 Update this table (and append a short "shipped" note under the phase) as each
@@ -286,6 +302,49 @@ phase merges. Statuses: 🔲 Not started · 🔄 In progress · ✅ Complete ·
 ⏸ Waived/deferred (owner decision, link it).
 
 ### Shipped notes
+
+**B4 — Suite UI/UX & design unification** (2026-07-15): The audit-first phase
+— checked what actually existed before deciding what to build, and found two
+real parity gaps plus one real defect, rather than a purely cosmetic pass.
+**Install moment ported:** the cookbook had zero "Add to Home Screen"
+mechanism — `mc-install.js` (fully app-agnostic, no workout-specific
+dependency) copied byte-identical into the cookbook and wired into its
+account sheet's new Install section, matching the workout app's copy/UX
+pattern with the app name swapped. **Sync-status indicator ported:**
+likewise the cookbook had no ambient "☁️ Backed up · Nm ago" signal at all —
+`mc-backup-status.js` ported, but **not** byte-identical as-is: the original
+cached its `#backupStatus` element reference once at script-load time, which
+works fine against the workout dashboard's stable DOM but would have gone
+stale after the very first Home render in the cookbook's hub-and-spoke SPA
+(`cookbook-home.js` rebuilds Home's entire DOM — `innerHTML = ""` then
+re-append — on every visit). Fixed at the shared-module level (re-queries
+`document.getElementById` fresh on every `render()` call) so the same file
+is correct in both architectures, plus a new `MC_BACKUP_STATUS.refresh()`
+hook the cookbook calls immediately after each Home re-render instead of
+waiting up to 15s for the next interval tick. **A real defect found and
+fixed:** B3's `.home-workout-btn` and the pre-existing `.home-account-btn`
+both sat at `right:68px` — since the account button mounts after the workout
+button in Home's render order, it silently and fully occluded the workout-nav
+icon behind it (same z-index, same slot). Moved the workout button to
+`right:116px`, verified via a real bounding-rect overlap check in headless
+Chromium, not just eyeballed. **Account-copy symmetry:** the cookbook's
+sign-in copy already referenced the workout app ("the same account works in
+the workout app"); the workout app's own copy never mentioned the cookbook at
+all — both directions now do. **Accent audit:** confirmed (not assumed) that
+the cross-app violet accent (`rgb(167,139,250)`) was already consistently
+applied on both the workout Today strip and the cookbook's workout badge — no
+change needed there. **Docs:** `program-guide.html`, named in the original
+roadmap draft, turned out to be the wrong venue once actually opened — it's a
+per-program training-methodology reference, not an onboarding page (a
+roadmap-drafting assumption corrected here, same class of fix as B0/B2's
+corrections). The real onboarding docs — both apps' Quick Tours — were
+already kept current through B1–B3; added an explicit suite-framing sentence
+and a stat chip to both `quick-tour-overview.html` files (previously the
+sister app was only ever mentioned feature-by-feature, never framed as "these
+are one linked product"), and fixed a stale recipe count (144 → 318) noticed
+in the same paragraph. All verified live in headless Chromium: button
+positions/overlap, install-section render + copy, `MC_BACKUP_STATUS` API
+presence, and no regressions to B0–B3's existing nav/bridge features.
 
 **B3 — Unified "Today" view & reciprocal navigation** (2026-07-15): **A real
 architecture correction, found before it caused a problem, not after:** the

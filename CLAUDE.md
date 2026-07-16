@@ -163,6 +163,16 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > standalone-build link (absolute URL, `MARKET:STRIP`-gated so the Rolodex
 > build still gets its own relative-path version) — first persistent,
 > two-way nav between the apps.
+>
+> **B4 shipped (2026-07-15):** `mc-account.js`'s sign-in copy now mentions
+> Mike's Cookbook (the cookbook's already mentioned the workout app). A real
+> defect from B3 was found and fixed here too, on the cookbook side: its new
+> workout-nav button silently overlapped the pre-existing account button at
+> the same position slot. `mc-install.js` and `mc-backup-status.js` (this
+> repo's originals) are now shared, byte-identical modules with the cookbook
+> — `mc-backup-status.js` was adjusted to re-query its DOM element on every
+> render rather than cache it once, since the cookbook's SPA rebuilds Home's
+> DOM on every visit and a cached reference would go stale there.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 
