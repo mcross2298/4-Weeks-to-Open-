@@ -1,6 +1,8 @@
 # Cookbook ↔ Workout — Data-Bridge & Joint-Launch Roadmap
 
-Status: **ACTIVE — plan approved 2026-07-15; B0–B5 not started, each phase gated**
+Status: **ACTIVE — plan approved 2026-07-15; B0–B4 shipped, B5's
+session-verifiable work complete (owner-only sign-off — real-device matrix +
+production Supabase reconciliation — is the one remaining gate)**
 Approved: 2026-07-15 (executive summary approved by owner; delivered also as a
 shareable Artifact roadmap)
 Goal: drive **Mike's Cookbook** and **4 Weeks to Open** to a **joint launch as
@@ -266,23 +268,53 @@ bridge UI.
 into `launch-roadmap.md` L6 — both must be green to call the product finished.
 
 Tasks & checklist:
-1. **Cross-app QA matrix** — the full loop on iOS Safari + Android Chrome, each
-   installed and in-browser: sign in → plan a meal in the cookbook → see & log it
-   in the workout app → train → see it reflected in the cookbook recap → confirm
-   macros reconcile across both.
-2. **Sync-conflict & offline behavior** — edit the same day in both apps
-   offline, reconnect, confirm the documented merge wins; core flows usable
-   offline in each app.
-3. **Data safety across the bridge** — export/import in each app round-trips the
-   bridge stores; Supabase backups confirmed.
-4. **Version & regression** — both service workers bumped; each repo's gates
-   green in CI; smoke coverage includes the bridge surfaces.
-5. **Launch checklist review** — owner walk-through; anything unchecked is fixed
-   or explicitly waived in writing here **and** in `launch-roadmap.md` L6.
+1. **Cross-app QA matrix** — ⚠️ **owner action required.** Session-verified: the
+   full loop (plan a meal → see & log it in the workout app → train → see it
+   reflected in the cookbook recap → macros reconcile) simulated headlessly
+   end-to-end across both real app codebases (not a mockup) — see the B5.3
+   shipped note below. **Not verified** (cannot be, from this environment): real
+   iOS Safari / Android Chrome, installed-PWA mode, or physical-device behavior.
+   The owner must run this matrix on real hardware before launch.
+2. **Sync-conflict & offline behavior** — ✅ session-verified. `mc-sync.js`'s
+   seven (workout) / six (cookbook) real merge functions now have dedicated
+   regression suites run against the actual source (not a duplicated copy) —
+   see B5.2. Offline reload verified live in headless Chromium for the
+   cookbook app (real SW cache serves the shell + bridge modules with the
+   network killed); the workout app's SW registration/precache verified the
+   same way, but its fetch handler's `fetch` event only intercepts requests on
+   `https://mcross2298.github.io` (a pre-existing guard, predates this
+   roadmap) — so live offline-reload for that app is only observable on the
+   real production origin, not localhost. See B5.4 shipped note.
+3. **Data safety across the bridge** — ✅ session-verified. Both apps'
+   `mc-export.js`/import already correctly exclude the other app's
+   CONSUME-only stores from export and import (confirmed by reading both
+   implementations, not assumed) — one-writer-per-store holds even through a
+   manual backup round-trip, no code change needed. ⚠️ **Owner action
+   required:** confirming real Supabase row reconciliation across two actual
+   signed-in devices — not simulable locally against a real project.
+4. **Version & regression** — ✅ done. Both repos' `sw.js` precache lists
+   confirmed current (`mc-bridge.js`/`mc-sync.js` already precached from B0);
+   no top-level asset was added/removed this phase so no manual version bump
+   was needed (CI bumps to `ci-<run_number>` on every deploy regardless). A
+   real gap was found and closed: **neither repo's CI actually ran the
+   bridge/sync regression tests before this phase**, and the cookbook repo
+   didn't even have its own copy of `test-mc-bridge.js` despite owning a
+   byte-identical copy of `mc-bridge.js` itself. Fixed: copied the test into
+   `Mikes-Cookbook/tools/`, and wired `test-mc-bridge.js` +
+   `test-mc-sync-merge.js` into both repos' `pages.yml` as a blocking step.
+5. **Launch checklist review** — ⚠️ **owner action required.** Everything a
+   headless session can verify is done (B5.1–B5.4 below); the items flagged
+   ⚠️ above are real gaps that only the owner can close (physical devices,
+   production Supabase, final go/no-go). This document and `launch-roadmap.md`
+   L6 are both updated to reflect exactly this split — nothing is marked
+   "done" that wasn't actually checked.
 
 Exit criteria: **every matrix row and checklist item above passes or is waived in
 writing by the owner, in this document and in `launch-roadmap.md` L6. That is the
-definition of "finished product, launched together."**
+definition of "finished product, launched together."** As of this phase, the
+**session-verifiable half is green**; the **owner-only half (real-device QA,
+production Supabase reconciliation, final sign-off) is the one remaining gate**
+before either roadmap can call L6/B5 truly complete.
 
 ---
 
@@ -295,13 +327,73 @@ definition of "finished product, launched together."**
 | B2 | Workout → Cookbook (training informs meals) | 🏋️ → 🍎 | ✅ Complete |
 | B3 | Unified "Today" view & reciprocal nav | ⇄ both | ✅ Complete |
 | B4 | Suite UI/UX & design unification | ⇄ both | ✅ Complete |
-| B5 | Joint launch hardening (Definition of Done) | ⇄ both | 🔲 Not started |
+| B5 | Joint launch hardening (Definition of Done) | ⇄ both | 🔄 Session work complete — owner sign-off (real-device matrix, production Supabase reconciliation) pending |
 
 Update this table (and append a short "shipped" note under the phase) as each
 phase merges. Statuses: 🔲 Not started · 🔄 In progress · ✅ Complete ·
 ⏸ Waived/deferred (owner decision, link it).
 
 ### Shipped notes
+
+**B5 — Joint launch hardening** (2026-07-16): The hardening pass, split
+cleanly between what a headless session can actually verify and what
+genuinely needs the owner (real devices, production Supabase, final
+sign-off) — nothing below is claimed as "done" beyond what was truly checked.
+**B5.2 (sync-conflict merges, real logic not a copy):** `mc-sync.js` in both
+repos is a browser-only IIFE guarded by `if (window.__mcSync) return;` etc.,
+so its merge functions couldn't be `require()`'d directly. Added a
+`module.exports` hook as the literal first statement inside the IIFE, before
+those guards — since the merge functions are `function` declarations further
+down the same closure, they're hoisted and already defined regardless of
+whether the guards return early (verified this hoisting behavior with a
+throwaway Node snippet before relying on it). Test harnesses
+(`tools/test-mc-sync-merge.js`, new in both repos) sandbox the real file with
+`vm.createContext`/`vm.runInContext` (same technique as `test-mc-bridge.js`),
+supplying a fake `window`/`MC_SB` so the guards resolve to their early return
+after `module.exports` is already set. 24 assertions (workout: 7 merge
+strategies) / 12 assertions (cookbook: 6 strategies) against real conflicting
+local/remote fixtures — newest-wins tombstones, day/session unions, macro
+scalar-vs-per-entry timestamp resolution, etc. **B5.3 (full cross-app QA loop,
+headless):** every prior phase (B0–B4) was verified in isolation; this ran
+the whole loop together for the first time — seeded a cookbook-planned meal
+into the workout app exactly as `mc-sync.js`'s CONSUME pull would, confirmed
+the Today strip/Nutrition-tab planned-meal card/Log button/mc_macros_v1 write
+all agree end-to-end (live-regression-guarding the exact B2 macro-field-name
+bug), then seeded workout activity into the cookbook app and confirmed the
+Today card's workout-badge-with-zero-planned-meals path (the exact B3 bug)
+renders correctly and the reciprocal nav link is correct — 7 checkpoints,
+zero console/page errors, both directions. Caught two seeding mistakes of its
+own along the way (conflating `mc-cookbook:mealplan`'s weekday-code `day`
+field with `mc_activity`'s calendar-date `dayKey` field) — worth noting since
+it shows the two stores' key formats are easy to confuse even for someone who
+just wrote the bridge. **B5.4 (offline/SW):** both repos' precache lists
+confirmed current and already include `mc-bridge.js`/`mc-sync.js`. Live
+offline-reload (kill the network, reload, confirm the shell **and** the
+bridge modules still work from cache) verified for real in headless Chromium
+for the cookbook app. The workout app's SW registers/activates/precaches
+correctly locally, but its fetch handler has a pre-existing (2026-07-06,
+predates this roadmap) hardcoded `url.startsWith('https://mcross2298.github.io')`
+guard — correct in production, but it means the SW never intercepts anything
+on `localhost`, so true offline-reload for that app is only observable on the
+real deployed origin. Documented as a known environment limitation, not a
+bridge regression — flagged for the owner's real-device pass rather than
+silently left unverified. **B5.1/CI gap (real, found and closed):** neither
+repo's CI actually ran `test-mc-bridge.js` (or the new sync-merge test)
+before this phase — `pages.yml` in both repos only ran unrelated regression
+suites. Worse, the cookbook repo never had its own copy of
+`test-mc-bridge.js` at all, despite owning a byte-identical copy of
+`mc-bridge.js` — meaning a silent drift in the cookbook's copy would never
+have been caught by its own CI. Fixed: copied the test file over, wired both
+bridge test files into both repos' `pages.yml` as blocking steps. Also
+reconfirmed (not re-assumed) both apps' `mc-export.js`/import already exclude
+CONSUME-only stores correctly, both directions, zero code changes required —
+one-writer-per-store holds even through a manual backup round-trip. **What
+remains, and can only be the owner's:** the real-device QA matrix (iOS
+Safari, Android Chrome, installed-PWA mode), confirming actual Supabase row
+reconciliation across two signed-in physical devices, and the final
+go/no-go walkthrough. `launch-roadmap.md` L6 item 8 and this phase's own exit
+criteria are both updated to name these explicitly rather than mark B5
+"Complete" outright.
 
 **B4 — Suite UI/UX & design unification** (2026-07-15): The audit-first phase
 — checked what actually existed before deciding what to build, and found two

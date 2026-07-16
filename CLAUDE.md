@@ -173,6 +173,28 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > — `mc-backup-status.js` was adjusted to re-query its DOM element on every
 > render rather than cache it once, since the cookbook's SPA rebuilds Home's
 > DOM on every visit and a cached reference would go stale there.
+>
+> **B5 shipped (2026-07-16) — session-verifiable half only; owner sign-off is
+> the remaining gate:** `mc-sync.js`'s merge functions (browser-only IIFE, not
+> `require()`-able) now have a `module.exports` hook exploiting function-decl
+> hoisting, tested against the real source via `tools/test-mc-sync-merge.js`
+> (vm-sandboxed, same technique as `test-mc-bridge.js`) — 24 real
+> conflicting-fixture assertions. A real CI gap was found and closed: neither
+> repo's `pages.yml` ran the bridge/sync tests before now, and Mikes-Cookbook
+> had no copy of `test-mc-bridge.js` at all despite owning a byte-identical
+> `mc-bridge.js` — both fixed. A full cross-app QA loop was verified
+> headlessly end-to-end for the first time (prior phases only tested in
+> isolation) — 7 checkpoints, zero console errors. Offline/SW verified live
+> where the environment allows; this app's `sw.js` has a pre-existing
+> (predates this roadmap) hardcoded production-origin guard in its fetch
+> handler, so true offline-reload is only observable on the real deployed
+> origin, not localhost — documented, not silently skipped. `mc-export.js`
+> reconfirmed to already exclude CONSUME-only stores correctly. **Not done,
+> and can't be from this environment:** the real-device QA matrix (iOS
+> Safari, Android Chrome, installed-PWA), and confirming actual Supabase
+> reconciliation across two signed-in physical devices — both are the
+> owner's to close before B5/L6 can be called truly complete. Full
+> breakdown in `cookbook-bridge-roadmap.md`'s B5 section.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 
