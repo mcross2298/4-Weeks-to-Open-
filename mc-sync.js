@@ -18,6 +18,24 @@
    fresh device), it does a single guarded reload so the UI reflects it.
    ========================================================================== */
 (function () {
+  // Roadmap B5 — Node-side hook so CI can regression-test the real
+  // sync-conflict merge functions (same convention as mc-suggest.js), instead
+  // of a duplicated inline copy that could silently drift from the real
+  // logic. Placed before the early-return guards below on purpose: the merge
+  // functions are `function` declarations further down this same closure, so
+  // they're hoisted and already defined at this point regardless of whether
+  // MC_SB ends up configured — see tools/test-mc-sync-merge.js.
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      mergeArrayById: function () { return mergeArrayById.apply(null, arguments); },
+      mergeArrayByIdTs: function () { return mergeArrayByIdTs.apply(null, arguments); },
+      mergeWorkoutLog: function () { return mergeWorkoutLog.apply(null, arguments); },
+      mergeSetlog: function () { return mergeSetlog.apply(null, arguments); },
+      mergeActivity: function () { return mergeActivity.apply(null, arguments); },
+      mergeDictByTs: function () { return mergeDictByTs.apply(null, arguments); },
+      mergeMacros: function () { return mergeMacros.apply(null, arguments); }
+    };
+  }
   if (window.__mcSync) return;
   window.__mcSync = true;
   if (!window.MC_SB || !MC_SB.configured) return;

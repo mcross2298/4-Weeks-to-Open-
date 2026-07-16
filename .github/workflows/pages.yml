@@ -34,6 +34,10 @@ jobs:
         run: |
           node tools/test-mc-suggest.js
           node tools/test-mc-maxout.js
+      - name: Cross-app bridge regression tests (mc-bridge.js read layer + mc-sync.js merge logic)
+        run: |
+          node tools/test-mc-bridge.js
+          node tools/test-mc-sync-merge.js
       - name: Program color-sync check (mc-pm-data.js vs dashboard.html)
         run: node tools/check-program-colors.js
       - name: Multi-week program intensifier-coverage check (mm-p1/p2/p3.html)

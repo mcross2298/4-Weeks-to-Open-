@@ -401,6 +401,16 @@ Tasks & checklist:
 8. **Joint-launch gate** — `cookbook-bridge-roadmap.md`'s Phase B5 (cross-app
    QA matrix, sync-conflict/offline, bridge data-safety) passes or is waived.
    Launch is a **suite** launch: this list *and* B5 must both be green.
+   **Status (2026-07-16):** B5's session-verifiable work is done — real
+   sync-conflict merge tests now CI-gated in both repos (previously untested
+   in CI at all), a full cross-app QA loop verified headlessly end-to-end,
+   offline/SW behavior verified live where the environment allows it, and a
+   real CI gap closed (the cookbook repo had no regression coverage at all
+   for its own copy of `mc-bridge.js`). **Not yet closed:** the real-device QA
+   matrix (iOS Safari, Android Chrome, installed-PWA mode) and confirming
+   actual Supabase reconciliation across two signed-in physical devices —
+   neither is simulable from this environment and both need the owner. See
+   `cookbook-bridge-roadmap.md`'s B5 section for the full breakdown.
 
 Exit criteria: **every item above (including the B5 joint-launch gate) checked
 or explicitly waived by the owner in writing in this document. That is the
