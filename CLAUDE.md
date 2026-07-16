@@ -149,6 +149,20 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > meal — now normalizes correctly. Also: any pulled `CONSUME`-store change now
 > arms `mc-sync.js`'s one-shot reload (previously only owned-store pulls did),
 > since consumer stores have real rendered surfaces now.
+>
+> **B3 shipped (2026-07-15):** a real architecture correction — the two apps
+> are actually **same-origin** (`mcross2298.github.io`, different path, not
+> two separate origins as B0 assumed), so same-device `localStorage` (and the
+> Supabase session, since both apps use the same project ref/default storage
+> key) is already shared by the browser; the sync bridge remains the
+> cross-device/partitioned-storage safety net, not made redundant by this.
+> `dashboard.html` gained a compact cross-app "Today" strip
+> (`populateTodayStrip()`, near the momentum strip) summarizing today's
+> cookbook-planned meals + macro goal, hidden with no bridge data. The
+> Rolodex-only one-way cookbook nav icon is now paired with an always-visible
+> standalone-build link (absolute URL, `MARKET:STRIP`-gated so the Rolodex
+> build still gets its own relative-path version) — first persistent,
+> two-way nav between the apps.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 
