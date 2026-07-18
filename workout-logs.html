@@ -65,6 +65,57 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
   cursor:pointer;font-family:inherit;margin-top:16px;letter-spacing:0.03em;
 }
 .clear-btn:active{background:rgba(239,68,68,0.15);}
+
+/* Sessions / Programs tabs */
+.wl-tabs{display:flex;gap:8px;padding:14px 18px 0;}
+.wl-tab{flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);
+  background:#111;color:var(--muted);font-size:13px;font-weight:800;text-align:center;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;font-family:inherit;}
+.wl-tab.active{background:rgba(212,175,55,0.12);border-color:rgba(212,175,55,0.4);color:#d4af37;}
+
+/* every history card is tappable now */
+.log-card{cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.log-card:active{background:#161616;}
+
+/* Programs view */
+.prog-card{background:#111;border:1px solid rgba(255,255,255,0.07);border-radius:16px;
+  padding:16px;margin-bottom:10px;position:relative;overflow:hidden;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.prog-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--prog-color,#d4af37);border-radius:0 2px 2px 0;}
+.prog-header{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.prog-name{font-size:15px;font-weight:800;color:#fff;}
+.prog-meta{font-size:11px;color:#475569;font-weight:600;margin-top:4px;}
+.prog-chev{font-size:12px;color:#475569;transition:transform 0.2s;flex-shrink:0;}
+.prog-card.open .prog-chev{transform:rotate(180deg);}
+.prog-sessions{display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);}
+.prog-card.open .prog-sessions{display:block;}
+.prog-sessions .log-card{margin-bottom:8px;}
+.prog-sessions .log-card:last-child{margin-bottom:0;}
+
+/* detail bottom sheet — same slide-up/backdrop pattern as build-workout.html's
+   Review sheet and mc-macros.js's sheet(), so history detail behaves like
+   every other sheet in the app. */
+.wl-overlay{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.85);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.wl-overlay.open{opacity:1;pointer-events:auto;}
+.wl-sheet{width:100%;max-width:560px;background:#111;border-top:1px solid rgba(212,175,55,0.25);
+  border-radius:22px 22px 0 0;padding:8px 18px calc(20px + env(safe-area-inset-bottom,0px));
+  max-height:88vh;overflow-y:auto;transform:translateY(16px);transition:transform 0.2s;}
+.wl-overlay.open .wl-sheet{transform:translateY(0);}
+.wl-handle{width:36px;height:4px;background:rgba(255,255,255,0.18);border-radius:2px;
+  margin:0 auto 12px;padding:12px 0;box-sizing:content-box;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;}
+.wl-sheet-title{font-size:19px;font-weight:900;color:#fff;letter-spacing:-0.01em;margin-bottom:2px;}
+.wl-sheet-sub{font-size:12px;color:#475569;font-weight:600;margin-bottom:14px;}
+.wl-sheet-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.wl-empty-note{font-size:12px;color:#475569;line-height:1.6;background:#0d0d0d;
+  border-radius:10px;padding:12px;margin-bottom:6px;}
+.wl-resume-btn{display:block;width:100%;text-align:center;padding:13px;border-radius:12px;
+  background:linear-gradient(90deg,#22d3ee,#34d399);color:#04121f;font-weight:900;
+  font-size:14px;text-decoration:none;margin-top:14px;}
 </style>
 <link rel="stylesheet" href="base.css?v=68"/>
 <link rel="stylesheet" href="mc-nav.css"/>
@@ -96,10 +147,24 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 </div>
 <div id="backupStatus" style="display:none;"></div>
 
+<div class="wl-tabs">
+  <button class="wl-tab active" id="wlTabSessions" onclick="switchTab('sessions')">📅 Sessions</button>
+  <button class="wl-tab" id="wlTabPrograms" onclick="switchTab('programs')">🏋️ Programs</button>
+</div>
+
 <div class="content">
   <div id="logContent"></div>
 </div>
 
+<!-- session detail bottom sheet -->
+<div class="wl-overlay" id="wlOverlay" onclick="if(event.target===this)closeDetail();">
+  <div class="wl-sheet" id="wlSheet">
+    <div class="wl-handle" id="wlHandle"></div>
+    <div id="wlSheetBody"></div>
+  </div>
+</div>
+
+<script src="mc-pm-data.js"></script>
 <script>
 const WL_KEY = 'mc_workout_log_v1';
 const SL_KEY = 'mc_setlog_v1';
@@ -117,49 +182,37 @@ function getDaily(){
   try{ return JSON.parse(localStorage.getItem(DAILY_KEY)||'{}'); }catch(e){ return {}; }
 }
 // Live per-day session tracking written by mc-summary.js as the lifter checks
-// off exercises (even before "Finish Workout" is tapped).
-function dailyHtml(){
-  const entries = Object.values(getDaily()).sort((a,b)=>(b.ts||0)-(a.ts||0));
-  if(!entries.length) return '';
-  const byDate = {};
-  entries.forEach(e=>{ (byDate[e.date]=byDate[e.date]||[]).push(e); });
-  let h = '<div class="section-label">📅 Daily Sessions (live)</div>';
-  Object.keys(byDate).sort().reverse().forEach(date=>{
-    byDate[date].forEach(e=>{
-      h += `
-        <div class="log-card" style="--prog-color:#34d399">
-          <div class="log-header">
-            <div class="log-name">${e.program||e.pid}</div>
-            <div class="log-date">${e.date}</div>
-          </div>
-          <div class="log-meta-row">
-            <span class="log-tag">${e.doneSets} sets</span>
-            <span class="log-tag">${e.doneReps} reps</span>
-            <span class="log-tag gold">${e.pct}% complete</span>
-          </div>
-        </div>`;
-    });
-  });
-  return h;
+// off exercises (even before "Finish Workout" is tapped). Only ever carries
+// aggregate counts (doneSets/doneReps/exTotal/exDone/pct) — no per-exercise
+// breakdown, unlike a finished mc_workout_log_v1 entry.
+function dailyEntries(){
+  return Object.values(getDaily()).sort((a,b)=>(b.ts||0)-(a.ts||0));
 }
 
-const PROG_COLORS = {
-  mc:'#d4af37', pmc:'#7F77DD', faint:'#E24B4A',
-  /* MARKET:STRIP influencer-logs START */
-  stndr:'#1D9E75', pump:'#D85A30', gainz:'#378ADD', psu:'#639922',
-  /* MARKET:STRIP influencer-logs END */
-};
-
-function detectProgram(pageId){
-  if(pageId.startsWith('mc-s')) return {name:'MC Splits',color:'#d4af37'};
-  if(pageId.startsWith('pmc-s')) return {name:'PMC',color:'#7F77DD'};
-  /* MARKET:STRIP influencer-logs START */
-  if(pageId.includes('pump')) return {name:'Daily Pump',color:'#D85A30'};
-  if(pageId.includes('gainz')||pageId.includes('lean-bulk')||pageId.includes('shred')||pageId.includes('bro-split')||pageId.includes('push-pull')) return {name:'Daily Gainz',color:'#378ADD'};
-  if(pageId.includes('stndr')||pageId.includes('legacy')||pageId.includes('lets-get')) return {name:'STNDR',color:'#1D9E75'};
-  if(pageId.includes('psu')) return {name:'PSU Football',color:'#639922'};
-  /* MARKET:STRIP influencer-logs END */
-  return {name:'Workout',color:'#d4af37'};
+// ---- program resolution ---------------------------------------------------
+// Was a ~7-program hardcoded substring list that silently missed every newer
+// program (Modality Matrix, Kitchen Sink, High-Volume, etc.) — this is why
+// unrelated one-off day pages used to show up looking like their own
+// unrelated entries instead of grouping sanely. Resolves against
+// mc-pm-data.js (the same source of truth the rest of the app uses for
+// program id/name/color) via each program's own file-naming prefix, so a new
+// flagship program groups correctly with zero changes here. A handful of
+// legacy day pages predate that naming convention and don't carry a
+// program-id prefix at all — they fall through to the Bonus/Custom bucket
+// below rather than being guessed at (this file ships to the public market
+// build too, so it deliberately never hardcodes a licensed program's own
+// filenames to special-case them — see tools/build-market.py's leak scan).
+const BONUS_PROG = {id:'bonus', name:'🎁 Bonus / Custom', color:'#94a3b8'};
+function resolveProgram(pageId){
+  pageId = (pageId||'').replace(/\.html$/,'');
+  if(!pageId) return BONUS_PROG;
+  const progs = (window.MC_PM_DATA && MC_PM_DATA.programs) || [];
+  for(const p of progs){
+    if(pageId===p.id || pageId.indexOf(p.id+'-')===0 || pageId.indexOf('cat-'+p.id)===0){
+      return {id:p.id, name:p.name, color:p.color};
+    }
+  }
+  return BONUS_PROG;
 }
 
 function formatDate(iso){
@@ -167,25 +220,114 @@ function formatDate(iso){
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 }
 
-function render(){
-  const logs = getLogs();
-  const setLogs = getSetLogs();
-  const content = document.getElementById('logContent');
+// ---- shared card renderer (both tabs, both entry kinds) --------------------
+// One rendering + one detail path for every history card, so the flat
+// Sessions list and the Programs tab's nested session lists can never drift
+// out of sync with each other.
+function renderSessionCard(kind, idx, prog){
+  if(kind==='daily'){
+    const e = DAILY[idx];
+    return `
+      <div class="log-card" style="--prog-color:${prog.color}" onclick="event.stopPropagation();openDetail('daily',${idx})">
+        <div class="log-header">
+          <div class="log-name">${e.program||e.pid}</div>
+          <div class="log-date">${e.date}</div>
+        </div>
+        <div class="log-meta-row">
+          <span class="log-tag">${e.doneSets} sets</span>
+          <span class="log-tag">${e.doneReps} reps</span>
+          <span class="log-tag gold">${e.pct}% complete</span>
+        </div>
+      </div>`;
+  }
+  const log = LOGS[idx];
+  const setsHtml = (log.sets||[]).slice(0,4).map(s=>`
+    <div class="set-row">
+      <span class="set-ex">${s.name}</span>
+      <span class="set-data">${s.weight?s.weight+' lb':'—'} × ${s.reps||'—'}</span>
+      ${s.pr?'<span class="set-pr">PR</span>':''}
+    </div>`).join('');
+  const moreSets = (log.sets||[]).length > 4 ? `<div style="font-size:11px;color:#475569;padding:6px 10px;">+${log.sets.length-4} more sets</div>` : '';
+  return `
+    <div class="log-card" style="--prog-color:${prog.color}" onclick="event.stopPropagation();openDetail('finished',${idx})">
+      <div class="log-header">
+        <div class="log-name">${log.workoutName||'Workout'}</div>
+        <div class="log-date">${log.time||''}</div>
+      </div>
+      <div class="log-meta-row">
+        <span class="log-tag gold">${prog.name}</span>
+        <span class="log-tag">${(log.sets||[]).length} set${(log.sets||[]).length!==1?'s':''}</span>
+        ${log.duration?`<span class="log-tag">⏱ ${log.duration}</span>`:''}
+        ${log.prs?`<span class="log-tag gold">🏆 ${log.prs} PR${log.prs>1?'s':''}</span>`:''}
+      </div>
+      <div class="log-sets">${setsHtml}${moreSets}</div>
+    </div>`;
+}
 
-  // Stats
-  let totalSets = 0;
-  let totalPRs = 0;
-  logs.forEach(log=>{
-    if(log.sets) totalSets += log.sets.length;
-    if(log.prs) totalPRs += log.prs;
+// ---- detail bottom sheet ----------------------------------------------------
+function closeDetail(){
+  document.getElementById('wlOverlay').classList.remove('open');
+}
+function openDetail(kind, idx){
+  const body = document.getElementById('wlSheetBody');
+  if(kind==='finished'){
+    const log = LOGS[idx];
+    const prog = resolveProgram(log.pageId||'');
+    const allSets = (log.sets||[]).map(s=>`
+      <div class="set-row">
+        <span class="set-ex">${s.name}</span>
+        <span class="set-data">${s.weight?s.weight+' lb':'—'} × ${s.reps||'—'}</span>
+        ${s.pr?'<span class="set-pr">PR</span>':''}
+      </div>`).join('') || '<div class="wl-empty-note">No individual sets recorded for this session.</div>';
+    body.innerHTML = `
+      <div class="wl-sheet-title">${log.workoutName||'Workout'}</div>
+      <div class="wl-sheet-sub">${formatDate(log.date)}${log.time?' · '+log.time:''}</div>
+      <div class="wl-sheet-tags">
+        <span class="log-tag gold">${prog.name}</span>
+        <span class="log-tag">${(log.sets||[]).length} set${(log.sets||[]).length!==1?'s':''}</span>
+        ${log.duration?`<span class="log-tag">⏱ ${log.duration}</span>`:''}
+        ${log.prs?`<span class="log-tag gold">🏆 ${log.prs} PR${log.prs>1?'s':''}</span>`:''}
+      </div>
+      <div class="log-sets">${allSets}</div>`;
+  } else {
+    const e = DAILY[idx];
+    const prog = resolveProgram(e.pid||'');
+    body.innerHTML = `
+      <div class="wl-sheet-title">${e.program||e.pid}</div>
+      <div class="wl-sheet-sub">${e.date} · session in progress</div>
+      <div class="wl-sheet-tags">
+        <span class="log-tag gold">${prog.name}</span>
+        <span class="log-tag">${e.exDone}/${e.exTotal} exercises</span>
+        <span class="log-tag">${e.doneSets} sets</span>
+        <span class="log-tag">${e.doneReps} reps</span>
+        <span class="log-tag gold">${e.pct}% complete</span>
+      </div>
+      <div class="wl-empty-note">This session only tracks aggregate progress until "Finish Workout" is tapped — resume it to see (and complete) the full exercise-by-exercise breakdown.</div>
+      <a class="wl-resume-btn" href="${e.pid}.html">▶ Resume workout</a>`;
+  }
+  document.getElementById('wlOverlay').classList.add('open');
+}
+(function(){
+  const handle = document.getElementById('wlHandle');
+  const sheet = document.getElementById('wlSheet');
+  let startY = 0;
+  handle.addEventListener('touchstart', e=>{ startY=e.touches[0].clientY; sheet.style.transition='none'; }, {passive:true});
+  handle.addEventListener('touchmove', e=>{
+    const delta = e.touches[0].clientY - startY;
+    if(delta>0 && sheet.scrollTop===0) sheet.style.transform = `translateY(${delta}px)`;
+  }, {passive:true});
+  handle.addEventListener('touchend', e=>{
+    const delta = e.changedTouches[0].clientY - startY;
+    sheet.style.transition = '';
+    if(delta>=50) closeDetail(); else sheet.style.transform = '';
   });
-  document.getElementById('statTotal').textContent = logs.length;
-  document.getElementById('statSets').textContent = totalSets;
-  document.getElementById('statPRs').textContent = totalPRs;
+  handle.addEventListener('click', closeDetail);
+})();
 
-  const daily = dailyHtml();
-
-  if(logs.length === 0 && !daily){
+// ---- Sessions tab (flat, most-recent-first) --------------------------------
+function renderSessionsTab(){
+  const content = document.getElementById('logContent');
+  if(!LOGS.length && !DAILY.length){
     content.innerHTML = `
       <div class="empty">
         <div class="empty-icon">📋</div>
@@ -196,45 +338,120 @@ function render(){
     return;
   }
 
-  // Group by date
-  const byDate = {};
-  logs.forEach(log=>{
-    const d = formatDate(log.date);
-    if(!byDate[d]) byDate[d] = [];
-    byDate[d].push(log);
-  });
+  let html = '';
+  if(DAILY.length){
+    html += '<div class="section-label">📅 Daily Sessions (live)</div>';
+    const byDate = {};
+    DAILY.forEach((e,i)=>{ (byDate[e.date]=byDate[e.date]||[]).push(i); });
+    Object.keys(byDate).sort().reverse().forEach(date=>{
+      byDate[date].forEach(i=>{ html += renderSessionCard('daily', i, resolveProgram(DAILY[i].pid||'')); });
+    });
+  }
 
-  let html = daily;
+  const byDate = {};
+  LOGS.forEach((log,i)=>{
+    const d = formatDate(log.date);
+    (byDate[d]=byDate[d]||[]).push(i);
+  });
   Object.keys(byDate).reverse().forEach(date=>{
     html += `<div class="section-label">${date}</div>`;
-    byDate[date].forEach(log=>{
-      const prog = detectProgram(log.pageId||'');
-      const setsHtml = (log.sets||[]).slice(0,4).map(s=>`
-        <div class="set-row">
-          <span class="set-ex">${s.name}</span>
-          <span class="set-data">${s.weight?s.weight+' lb':'—'} × ${s.reps||'—'}</span>
-          ${s.pr?'<span class="set-pr">PR</span>':''}
-        </div>`).join('');
-      const moreSets = (log.sets||[]).length > 4 ? `<div style="font-size:11px;color:#475569;padding:6px 10px;">+${log.sets.length-4} more sets</div>` : '';
-      html += `
-        <div class="log-card" style="--prog-color:${prog.color}">
-          <div class="log-header">
-            <div class="log-name">${log.workoutName||'Workout'}</div>
-            <div class="log-date">${log.time||''}</div>
-          </div>
-          <div class="log-meta-row">
-            <span class="log-tag gold">${prog.name}</span>
-            <span class="log-tag">${(log.sets||[]).length} sets</span>
-            ${log.duration?`<span class="log-tag">⏱ ${log.duration}</span>`:''}
-            ${log.prs?`<span class="log-tag gold">🏆 ${log.prs} PR${log.prs>1?'s':''}</span>`:''}
-          </div>
-          <div class="log-sets">${setsHtml}${moreSets}</div>
-        </div>`;
-    });
+    byDate[date].forEach(i=>{ html += renderSessionCard('finished', i, resolveProgram(LOGS[i].pageId||'')); });
   });
 
-  if(logs.length) html += `<button class="clear-btn" onclick="clearLogs()">🗑 Clear All Workout Logs</button>`;
+  if(LOGS.length) html += `<button class="clear-btn" onclick="clearLogs()">🗑 Clear All Workout Logs</button>`;
   content.innerHTML = html;
+}
+
+// ---- Programs tab (aggregate per program, expand for nested sessions) -----
+// The data model only ever tracked per-page-visit session % — it has no
+// concept of "day 12 of a 15-week program" — so this deliberately shows real
+// aggregate counts (sessions/sets/last-trained) rather than fabricating a
+// week/day progress bar the app can't actually back up.
+let progOpen = {};   // progId -> bool, persists across re-renders in this tab
+function renderProgramsTab(){
+  const content = document.getElementById('logContent');
+  const groups = {};   // progId -> {prog, items:[{kind,idx,ts}]}
+  DAILY.forEach((e,i)=>{
+    const prog = resolveProgram(e.pid||'');
+    (groups[prog.id]=groups[prog.id]||{prog,items:[]}).items.push({kind:'daily', idx:i, ts:e.ts||0});
+  });
+  LOGS.forEach((log,i)=>{
+    const prog = resolveProgram(log.pageId||'');
+    const ts = new Date(log.date).getTime()||0;
+    (groups[prog.id]=groups[prog.id]||{prog,items:[]}).items.push({kind:'finished', idx:i, ts});
+  });
+
+  const progIds = Object.keys(groups);
+  if(!progIds.length){
+    content.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🏋️</div>
+        <div class="empty-title">No program activity yet</div>
+        <div class="empty-sub">Log a session under any program and it'll group here automatically.</div>
+        <a href="dashboard.html?tab=programs" class="empty-btn">← Browse Programs</a>
+      </div>`;
+    return;
+  }
+
+  const rows = progIds.map(id=>groups[id]).sort((a,b)=>{
+    const am = Math.max(...a.items.map(it=>it.ts)), bm = Math.max(...b.items.map(it=>it.ts));
+    return bm - am;
+  });
+
+  content.innerHTML = rows.map(g=>{
+    g.items.sort((a,b)=>b.ts-a.ts);
+    let totalSets = 0;
+    g.items.forEach(it=>{
+      if(it.kind==='daily') totalSets += DAILY[it.idx].doneSets||0;
+      else totalSets += (LOGS[it.idx].sets||[]).length;
+    });
+    const lastTs = g.items[0].ts;
+    const lastLabel = lastTs ? formatDate(new Date(lastTs).toISOString()) : '—';
+    const isOpen = !!progOpen[g.prog.id];
+    const sessionsHtml = g.items.map(it=>renderSessionCard(it.kind, it.idx, g.prog)).join('');
+    return `
+      <div class="prog-card${isOpen?' open':''}" style="--prog-color:${g.prog.color}" onclick="toggleProgram('${g.prog.id}')">
+        <div class="prog-header">
+          <div>
+            <div class="prog-name">${g.prog.name}</div>
+            <div class="prog-meta">${g.items.length} session${g.items.length!==1?'s':''} · ${totalSets} set${totalSets!==1?'s':''} · last ${lastLabel}</div>
+          </div>
+          <div class="prog-chev">▾</div>
+        </div>
+        <div class="prog-sessions">${sessionsHtml}</div>
+      </div>`;
+  }).join('');
+}
+function toggleProgram(id){
+  progOpen[id] = !progOpen[id];
+  renderProgramsTab();
+}
+
+// ---- tab switching ----------------------------------------------------------
+let activeTab = 'sessions';
+function switchTab(tab){
+  activeTab = tab;
+  document.getElementById('wlTabSessions').classList.toggle('active', tab==='sessions');
+  document.getElementById('wlTabPrograms').classList.toggle('active', tab==='programs');
+  if(tab==='sessions') renderSessionsTab(); else renderProgramsTab();
+}
+
+// ---- top-level render ---------------------------------------------------
+let LOGS = [], DAILY = [];
+function render(){
+  LOGS = getLogs();
+  DAILY = dailyEntries();
+
+  let totalSets = 0, totalPRs = 0;
+  LOGS.forEach(log=>{
+    if(log.sets) totalSets += log.sets.length;
+    if(log.prs) totalPRs += log.prs;
+  });
+  document.getElementById('statTotal').textContent = LOGS.length;
+  document.getElementById('statSets').textContent = totalSets;
+  document.getElementById('statPRs').textContent = totalPRs;
+
+  if(activeTab==='sessions') renderSessionsTab(); else renderProgramsTab();
 }
 
 function clearLogs(){
