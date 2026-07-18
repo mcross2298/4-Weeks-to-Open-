@@ -35,8 +35,24 @@ document.addEventListener('pointerdown', _tmrPrime, { passive: true });
 // no dependency on Guided Mode's step tracking.
 function getUpNext(el) {
   try {
+    const unit = el && el.closest && el.closest('.ex-card, .ss-ex');
     const card = el && el.closest && el.closest('.ex-card, .ss-card');
     if (!card) return null;
+
+    // Same exercise, sets remaining: this rest is just between sets of the
+    // SAME movement, not a new one — say so instead of naming the next
+    // exercise on the card (mc-setlog.js's mcl-count-<id> "done/total" badge
+    // is already updated by the time the rest timer starts, since onCheck
+    // calls updateCount() before TMR.start()).
+    if (unit) {
+      const countEl = unit.querySelector('[class*="mcl-count-"]');
+      const m = countEl && countEl.textContent.match(/^(\d+)\/(\d+)$/);
+      if (m) {
+        const done = parseInt(m[1], 10), total = parseInt(m[2], 10);
+        if (total > 0 && done < total) return { name: 'Set ' + (done + 1) + ' of ' + total, reps: '' };
+      }
+    }
+
     let next = card.nextElementSibling;
     while (next && !(next.classList && (next.classList.contains('ex-card') || next.classList.contains('ss-card')))) {
       next = next.nextElementSibling;
