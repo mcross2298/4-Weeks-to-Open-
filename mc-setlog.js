@@ -101,6 +101,15 @@
     var n = s.match(/(\d+)/); return n ? n[1] : '';
   }
 
+  // ---- cluster-set detection ----------------------------------------------
+  // A cluster set (e.g. "5+5+5") breaks EVERY working set of the exercise into
+  // mini-sets with a short intra-set rest. Producers (run-workout.html,
+  // program-overrides.js) stamp the scheme onto the card as data-mc-cluster /
+  // data-mc-cluster-rest; when absent, rows render exactly as before.
+  function parseClusterAttr(s) {
+    return s ? s.split('+').map(function (p) { return p.trim(); }).filter(Boolean) : [];
+  }
+
   // ---- drop-set detection -------------------------------------------------
   // A drop set is an EXTRA set tacked onto the working sets — it must not be
   // folded into the working-set count. FOUR notations appear across programs:
@@ -181,11 +190,22 @@
   }
 
   // ---- check handler -----------------------------------------------------
+  // A cluster working set (see build()'s clusterParts handling) carries
+  // SEVERAL .mcl-r reps inputs in one row — one bubble per mini-set — instead
+  // of the usual single reps box, so the athlete can log what they actually
+  // hit on each mini-set (e.g. "5+5+6" when the last one came up short). Read
+  // them all and join with '+' into the same rVal string a plain row would
+  // produce; every downstream consumer (save/history/Supabase) just sees text.
+  function clusterRVal(row) {
+    var mini = row.querySelectorAll('.mcl-r');
+    if (mini.length <= 1) return mini.length ? mini[0].value.trim() : '';
+    return Array.prototype.map.call(mini, function (m) { return m.value.trim() || m.placeholder || ''; }).join('+');
+  }
   function onCheck(card, exId, sn, rs) {
     var row = card.querySelector('#mclr-' + cssId(exId) + '-' + sn);
     if (!row) return;
     var ck = row.querySelector('.mcl-ck');
-    var w = row.querySelector('.mcl-w'), r = row.querySelector('.mcl-r');
+    var w = row.querySelector('.mcl-w');
     if (ck.classList.contains('done')) {
       ck.classList.remove('done'); ck.textContent = '☐'; row.classList.remove('done-row');
       updateCount(card, exId);
@@ -193,7 +213,7 @@
     }
     var rpeEl = row.querySelector('.mcl-rpe');
     var wVal = w ? w.value.trim() : '';
-    var rVal = r ? r.value.trim() : '';
+    var rVal = clusterRVal(row);
     var rpeVal = rpeEl ? (rpeEl.dataset.rpe || '') : '';
     save(exId, sn, wVal, rVal, rpeVal);
     // Best-effort Supabase write — builds durable per-set history for the
@@ -206,13 +226,18 @@
         var muscle = '';
         try { if (window.MC_EXCATALOG) muscle = MC_EXCATALOG.classify(exName); } catch (me) {}
         var wNum = wVal ? (parseFloat(wVal) || null) : null;
+        // A cluster row's rVal is "5+5+6" — sum the mini-sets for a meaningful
+        // total rep count rather than parseInt-ing just the first number.
+        var repsNum = rVal
+          ? rVal.split('+').reduce(function (sum, p) { return sum + (parseInt(p, 10) || 0); }, 0) || null
+          : null;
         var logEntry = {
           session_id:   SESSION_ID,
           exercise:     exName,
           muscle:       muscle,
           set_number:   sn,
           weight_lbs:   wNum,
-          reps:         rVal ? (parseInt(rVal, 10) || null) : null,
+          reps:         repsNum,
           rpe:          rpeVal || null,
           workout_name: document.title || '',
           program_id:   (window.activeProg && activeProg.id) || ''
@@ -299,6 +324,8 @@
     var nd = drop.is ? drop.drops.length : 0;   // number of appended drop rows
     var total = n + nd;
     var dropAmrap = nd === 1 && drop.drops[0] === 'AMRAP';
+    var clusterParts = parseClusterAttr(card.dataset.mcCluster);
+    var clusterRestLabel = card.dataset.mcClusterRest || '';
 
     var dropTag = '', dropTitle = '';
     if (drop.is) {
@@ -339,13 +366,37 @@
       var wFill = (last && last.w) ? last.w : (seedWeight || '');
       var rFill = isDropRow ? (dropTarget === 'AMRAP' ? '' : dropTarget)
                             : (pr || (last && last.r) || '');
+
+      // A cluster working set (not a drop row) gets N reps bubbles — one per
+      // mini-set — pre-populated with what was actually logged last time, or
+      // the prescribed target when there's no history, instead of one plain
+      // reps box. Everything else about the row (weight, RPE, checkbox, the
+      // rest-timer it triggers) is identical to a normal working set.
+      var isClusterRow = !isDropRow && clusterParts.length > 0;
+      var repsCellHtml, clusterRowHtml = '';
+      if (isClusterRow) {
+        var lastParts = (last && last.r && last.r.indexOf('+') !== -1) ? last.r.split('+') : null;
+        repsCellHtml = '<div class="mcl-rcell"></div>';
+        var bubbles = clusterParts.map(function (target, k) {
+          var v = (lastParts && lastParts[k] !== undefined) ? lastParts[k].trim() : target;
+          return '<input class="mcl-inp mcl-r mcl-rmini" type="number" inputmode="numeric" value="' + v + '" title="Mini-set ' + (k + 1) + ' reps">';
+        }).join('<span class="mcl-cluster-plus">+</span>');
+        clusterRowHtml = '<div class="mcl-cluster-row">' +
+          '<span class="mcl-cluster-lbl">🧩 Cluster' + (clusterRestLabel ? ' · ' + clusterRestLabel : '') + '</span>' +
+          '<div class="mcl-cluster-bubbles">' + bubbles + '</div>' +
+        '</div>';
+      } else {
+        repsCellHtml = '<input class="mcl-inp mcl-r" type="number" inputmode="numeric" placeholder="' + rPh + '"' + (rFill !== '' ? ' data-fill="' + rFill + '"' : '') + '>';
+      }
+
       html += '<div class="mcl-row' + (isDropRow ? ' mcl-row-amrap' : '') + '" id="mclr-' + cid + '-' + sn + '">' +
                 '<div class="mcl-num">' + (isDropRow ? '↓' : sn) + '</div>' +
                 '<input class="mcl-inp mcl-w" type="number" inputmode="decimal" placeholder="' + wPh + '"' + (wFill !== '' ? ' data-fill="' + wFill + '"' : '') + '>' +
-                '<input class="mcl-inp mcl-r" type="number" inputmode="numeric" placeholder="' + rPh + '"' + (rFill !== '' ? ' data-fill="' + rFill + '"' : '') + '>' +
+                repsCellHtml +
                 '<div class="mcl-rpe' + (rpe ? ' set' : '') + '" data-rpe="' + rpe + '" ' +
                   'title="Rate of Perceived Exertion — tap to cycle, F = to failure">' + (rpe || '–') + '</div>' +
                 '<div class="mcl-ck set-check" data-sn="' + sn + '">☐</div>' +
+                clusterRowHtml +
               '</div>';
     }
     wrap.innerHTML = html;
@@ -378,8 +429,8 @@
         var row = chip.closest('.mcl-row');
         var ck = row && row.querySelector('.mcl-ck');
         if (ck && ck.classList.contains('done')) {
-          var w = row.querySelector('.mcl-w'), r = row.querySelector('.mcl-r');
-          save(exId, parseInt(ck.dataset.sn, 10), w ? w.value.trim() : '', r ? r.value.trim() : '', next);
+          var w = row.querySelector('.mcl-w');
+          save(exId, parseInt(ck.dataset.sn, 10), w ? w.value.trim() : '', clusterRVal(row), next);
           updateHist(card, exId);
         }
       });

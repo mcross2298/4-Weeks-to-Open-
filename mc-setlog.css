@@ -66,6 +66,25 @@
 .mcl-row.done-row{background:rgba(52,211,153,0.06);border-radius:7px;}
 .mcl-row.done-row .mcl-inp{opacity:0.55;text-decoration:line-through;border-color:rgba(52,211,153,0.18);}
 
+/* ── Cluster-set mini-set bubbles ────────────────────────────────────────
+   A cluster working set (data-mc-cluster on the card) keeps the row's usual
+   Set/Weight/RPE/Check cells, but its Reps cell is empty (.mcl-rcell) and a
+   full-width strip below carries N small reps inputs — one per mini-set —
+   pre-filled with the target (or last time's actual reps), so a short mini-
+   set (e.g. 5+5+6) logs exactly what happened instead of one combined number. */
+.mcl-rcell{min-height:1px;}
+.mcl-cluster-row{
+  grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  margin-top:4px;padding-top:6px;border-top:1px dashed rgba(255,255,255,0.08);
+}
+.mcl-cluster-lbl{
+  font-size:10px;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;
+  color:#22d3ee;flex-shrink:0;
+}
+.mcl-cluster-bubbles{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.mcl-cluster-plus{font-size:12px;font-weight:800;color:#22d3ee;}
+.mcl-rmini{width:38px;min-width:38px;padding:6px 2px;min-height:38px;}
+
 /* ── Drop-set AMRAP tag — the final drop is taken to failure (as-many-reps-as-
    possible). Warm amber stands apart from the cool logger so it reads as an
    intensity cue, not just another row. */

@@ -11,8 +11,24 @@
 <style>
 :root{--accent:#34d399;--accent-rgb:52,211,153;}
 .header{background:linear-gradient(90deg,#0d1f3c,#050d1a);}
-.tb-cluster{background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.28);}
+.tb-cluster{background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.28);cursor:pointer;}
 .tb-rest{background:rgba(34,211,238,0.15);color:#67e8f9;border:1px solid rgba(34,211,238,0.28);}
+/* live cluster-edit popover — anchored under whichever badge/note was tapped */
+.cluster-pop{position:fixed;z-index:400;width:min(280px,calc(100vw - 24px));
+  background:#0d1f3c;border:1px solid rgba(34,211,238,0.3);border-radius:14px;
+  padding:12px 14px;box-shadow:0 10px 32px rgba(0,0,0,0.5);}
+.cluster-pop-hd{font-size:12px;font-weight:900;letter-spacing:0.04em;color:#67e8f9;margin-bottom:8px;}
+.cluster-pop-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.cluster-pop-count,.cluster-pop-rest{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);
+  border-radius:8px;padding:8px;color:#e2e8f0;font-size:12px;font-weight:700;font-family:inherit;}
+.cluster-pop-inp{width:42px;min-height:38px;text-align:center;background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.14);border-radius:8px;color:#e2e8f0;font-size:14px;font-weight:800;font-family:inherit;}
+.cluster-pop-lbl{font-size:11px;color:var(--muted);font-weight:700;}
+.cluster-plus{font-size:13px;font-weight:800;color:#22d3ee;}
+.cluster-pop-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.cluster-pop-remove{background:none;border:none;color:#f87171;font-size:12px;font-weight:700;cursor:pointer;padding:6px 0;font-family:inherit;}
+.cluster-pop-done{background:linear-gradient(90deg,#22d3ee,#34d399);color:#04121f;border:none;
+  border-radius:8px;padding:8px 16px;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit;}
 </style>
 <link rel="stylesheet" href="base.css?v=68"/>
 <link rel="stylesheet" href="mc-nav.css"/>
@@ -87,15 +103,110 @@ function dropBadge(drops){
   return '<span class="type-badge tb-drop">'+txt+'</span>';
 }
 // Cluster set: each working set is split into mini-sets with a short intra-set
-// rest. Shown as a badge plus an explanatory note line.
-function clusterBadge(ex){
+// rest. Shown as a badge plus an explanatory note line — both tappable to
+// adjust the rep breakdown mid-session (e.g. drop 5+5+5 to 5+5+4 if the last
+// mini-set isn't happening today), via openClusterEdit() below.
+function clusterBadge(ex, i){
   if(!ex.cluster) return '';
-  return '<span class="type-badge tb-cluster">🧩 Cluster '+esc(ex.cluster)+'</span>';
+  return '<span class="type-badge tb-cluster" onclick="event.stopPropagation();openClusterEdit(this,'+i+')" title="Tap to adjust the rep breakdown">🧩 Cluster '+esc(ex.cluster)+' ✎</span>';
 }
-function clusterNote(ex){
+function clusterNote(ex, i){
   if(!ex.cluster) return '';
   var rest = ex.clusterRest ? (' · '+esc(ex.clusterRest)+' intra-set rest') : '';
-  return '<div class="a-notes">🧩 Cluster set — '+esc(ex.cluster)+' per working set'+rest+'</div>';
+  return '<div class="a-notes" onclick="event.stopPropagation();openClusterEdit(this,'+i+')">🧩 Cluster set — '+esc(ex.cluster)+' per working set'+rest+'</div>';
+}
+
+// ---- live cluster editing (mid-session) -----------------------------------
+// Reuses the same toggle/count-selector/per-mini-input pattern build-workout.html's
+// clusterEditor() already has — just surfaced as a small popover anchored to
+// whatever badge/note was tapped, instead of a builder form field.
+var CLUSTER_REST_OPTS = ['10s','15s','20s','30s'];
+function parseClusterStr(val){ return val ? val.split('+').map(function(p){ return p.trim(); }) : []; }
+function buildClusterStr(parts){ return parts.filter(function(p){ return p; }).join('+'); }
+function closeClusterEdit(){
+  var pop = document.getElementById('clusterPop');
+  if(pop) pop.remove();
+}
+function openClusterEdit(anchor, i){
+  closeClusterEdit();
+  var wk = getWorkout();
+  var ex = wk && wk.exercises[i];
+  if(!ex) return;
+  var parts = parseClusterStr(ex.cluster);
+  if(parts.length < 3) parts = ['5','5','5'];
+  var pop = document.createElement('div');
+  pop.id = 'clusterPop';
+  pop.className = 'cluster-pop';
+  var repsHtml = parts.map(function(p, k){
+    return (k>0?'<span class="cluster-plus">+</span>':'') +
+      '<input class="cluster-pop-inp" type="text" value="'+esc(p)+'" data-k="'+k+'">';
+  }).join('');
+  var restOpts = CLUSTER_REST_OPTS.map(function(r){
+    return '<option value="'+r+'"'+(r===(ex.clusterRest||'15s')?' selected':'')+'>⏲ '+r+' intra-rest</option>';
+  }).join('');
+  pop.innerHTML =
+    '<div class="cluster-pop-hd">Adjust cluster reps</div>' +
+    '<div class="cluster-pop-row">' +
+      '<select class="cluster-pop-count">' +
+        [3,4].map(function(n){ return '<option value="'+n+'"'+(parts.length===n?' selected':'')+'>'+n+' mini-sets</option>'; }).join('') +
+      '</select>' +
+    '</div>' +
+    '<div class="cluster-pop-row cluster-pop-reps">'+repsHtml+'<span class="cluster-pop-lbl">reps</span></div>' +
+    '<div class="cluster-pop-row"><select class="cluster-pop-rest">'+restOpts+'</select></div>' +
+    '<div class="cluster-pop-actions">' +
+      '<button type="button" class="cluster-pop-remove">Remove cluster</button>' +
+      '<button type="button" class="cluster-pop-done">Done</button>' +
+    '</div>';
+  document.body.appendChild(pop);
+  var r = anchor.getBoundingClientRect();
+  var top = Math.min(r.bottom + 6, window.innerHeight - pop.offsetHeight - 12);
+  var left = Math.max(12, Math.min(r.left, window.innerWidth - pop.offsetWidth - 12));
+  pop.style.top = (top + window.scrollY) + 'px';
+  pop.style.left = left + 'px';
+
+  function currentParts(){
+    return Array.prototype.map.call(pop.querySelectorAll('.cluster-pop-inp'), function(inp){ return (inp.value||'5').trim(); });
+  }
+  pop.querySelector('.cluster-pop-count').addEventListener('change', function(){
+    var n = parseInt(this.value, 10);
+    var p2 = currentParts();
+    var last = p2[p2.length-1] || '5';
+    while(p2.length < n) p2.push(last);
+    p2 = p2.slice(0, n);
+    ex.cluster = buildClusterStr(p2);
+    saveWorkoutClusterEdit(wk);
+    openClusterEdit(anchor, i);   // re-render popover with the new count
+  });
+  pop.querySelector('.cluster-pop-remove').addEventListener('click', function(){
+    ex.cluster = ''; ex.clusterRest = '';
+    saveWorkoutClusterEdit(wk);
+    closeClusterEdit();
+    render();
+  });
+  pop.querySelector('.cluster-pop-done').addEventListener('click', function(){
+    ex.cluster = buildClusterStr(currentParts());
+    ex.clusterRest = pop.querySelector('.cluster-pop-rest').value;
+    saveWorkoutClusterEdit(wk);
+    closeClusterEdit();
+    render();
+  });
+  setTimeout(function(){
+    document.addEventListener('click', function onDoc(e){
+      if(pop.contains(e.target)) return;
+      document.removeEventListener('click', onDoc);
+      closeClusterEdit();
+    });
+  }, 0);
+}
+// Persist the edited cluster scheme back into the saved custom workout, then
+// re-stamp the live card's data attributes + drop its existing Log Sets
+// panel so mc-setlog.js's MutationObserver rebuilds it with the new reps —
+// not-yet-logged mini-sets pick up the new targets; already-checked sets keep
+// whatever was actually logged (mc-setlog.js never touches saved history).
+function saveWorkoutClusterEdit(wk){
+  var all; try{ all = JSON.parse(localStorage.getItem(CW_KEY)||'[]'); }catch(e){ all = []; }
+  var idx = all.findIndex(function(w){ return w.id===wk.id; });
+  if(idx>=0){ all[idx] = wk; try{ localStorage.setItem(CW_KEY, JSON.stringify(all)); }catch(e){} }
 }
 
 // --- prescribed rest ------------------------------------------------------
@@ -120,11 +231,12 @@ function renderSingle(ex, i){
   var badges = '';
   if(ex.muscle) badges += '<span class="type-badge tb-midset">'+esc(ex.muscle)+'</span>';
   badges += dropBadge(drops);
-  badges += clusterBadge(ex);
+  badges += clusterBadge(ex, i);
   if(ex.tempo) badges += '<span class="type-badge tb-tempo">⏱ '+esc(ex.tempo)+'</span>';
   var did = 'cw' + i + '-' + slug(ex.name);
   return '<div class="ex-card a-card" data-id="'+did+'" data-type="single"'
-    + (ex.seedWeight?' data-mc-seed-weight="'+esc(ex.seedWeight)+'"':'')+'>'
+    + (ex.seedWeight?' data-mc-seed-weight="'+esc(ex.seedWeight)+'"':'')
+    + (ex.cluster?' data-mc-cluster="'+esc(ex.cluster)+'" data-mc-cluster-rest="'+esc(ex.clusterRest||'')+'"':'')+'>'
     + '<div class="ex-body"><div class="ex-content">'
     +   '<div class="a-top"><div class="a-idx">'+(i+1)+'</div>'
     +   '<div class="a-head"><div class="ex-name a-name">'+esc(ex.name)+'</div>'
@@ -133,7 +245,7 @@ function renderSingle(ex, i){
     +   '<div class="a-strip"><div class="a-cell"><span class="k">Sets</span><span class="v"><span class="ex-sets" data-field="sets">'+esc(scheme)+'</span></span></div>'
     +   '<div class="a-cell"><span class="k">Rest</span><span class="v">'+(ex.rest?esc(restLabel(ex.rest)):'—')+'</span></div></div>'
     +   (ex.rest?'<div class="a-timerbar">'+restTimer(ex.rest, ex.name)+'</div>':'')
-    +   clusterNote(ex)
+    +   clusterNote(ex, i)
     + '</div></div></div>';
 }
 
@@ -147,20 +259,21 @@ function renderSuperset(g){
     var badges = '';
     if(ex.muscle) badges += '<span class="type-badge tb-midset">'+esc(ex.muscle)+'</span>';
     badges += dropBadge(drops);
-    badges += clusterBadge(ex);
+    badges += clusterBadge(ex, i);
     if(ex.tempo) badges += '<span class="type-badge tb-tempo">⏱ '+esc(ex.tempo)+'</span>';
     if(ex.rest) badges += '<span class="type-badge tb-rest">⏲ '+esc(restLabel(ex.rest))+' rest</span>';
     var did = 'cw' + i + '-' + slug(ex.name);
     var letter = String.fromCharCode(65 + k);   // A, B, C…
     return '<div class="ss-ex" data-id="'+did+'" data-type="ssex"'
-      + (ex.seedWeight?' data-mc-seed-weight="'+esc(ex.seedWeight)+'"':'')+'>'
+      + (ex.seedWeight?' data-mc-seed-weight="'+esc(ex.seedWeight)+'"':'')
+      + (ex.cluster?' data-mc-cluster="'+esc(ex.cluster)+'" data-mc-cluster-rest="'+esc(ex.clusterRest||'')+'"':'')+'>'
       + '<div class="ss-num">'+letter+'</div>'
       + '<div class="ss-content">'
       +   '<div class="ss-name">'+esc(ex.name)+'</div>'
       +   '<div class="a-ss-reps"><span style="font-size:12px;font-weight:800;color:#c084fc;">'+esc(scheme)+'</span></div>'
       +   '<span class="ex-sets a-ss-sets-hidden">'+esc(scheme)+'</span>'
       +   (badges?'<div class="a-badges">'+badges+'</div>':'')
-      +   clusterNote(ex)
+      +   clusterNote(ex, i)
       + '</div></div>';
   });
   // 2 = superset, 3 = tri-set, 4+ = giant set; tri+ get the amber .is-tri skin.

@@ -131,6 +131,9 @@ html[data-theme="light"] .mcl-row.done-row .mcl-inp{border-color:rgba(5,150,105,
 html[data-theme="light"] .mcl-amrap{background:rgba(251,146,60,0.14);color:#c2410c;border-color:rgba(251,146,60,0.4);}
 html[data-theme="light"] .mcl-row-amrap{background:rgba(251,146,60,0.06);}
 html[data-theme="light"] .mcl-row-amrap .mcl-r::placeholder{color:#c2410c;opacity:0.85;}
+html[data-theme="light"] .mcl-cluster-row{border-top-color:rgba(28,26,23,0.1);}
+html[data-theme="light"] .mcl-cluster-lbl{color:var(--accent,#8a6d1a);}
+html[data-theme="light"] .mcl-cluster-plus{color:var(--accent,#8a6d1a);}
 
 /* ── timer-float bespoke aliases (.tf-* — base covers .timer-float*) ─ */
 html[data-theme="light"] .tf{background:rgba(245,242,236,0.97);border-top-color:rgba(28,26,23,0.1);}

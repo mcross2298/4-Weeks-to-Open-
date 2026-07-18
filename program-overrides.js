@@ -287,8 +287,12 @@
     return '🧩 Cluster set' + (bits.length ? ' — ' + bits.join(' · ') : '');
   }
   // paint (or clear) one intensifier's badge + note on a card. Reversible: when
-  // `o` is null we remove anything we previously injected.
-  function applyIntensifier(card, kind, o) {
+  // `o` is null we remove anything we previously injected. A cluster carries
+  // its rep scheme onto data-mc-cluster/-rest so mc-setlog.js's Log Sets panel
+  // can render the matching mini-set bubbles; the badge/note become tappable
+  // so any user can adjust the breakdown mid-session (openClusterPersonalEdit
+  // below) — always written to the PERSONAL store, never the PM-published one.
+  function applyIntensifier(card, kind, o, baseKey) {
     var badgeText = kind === 'drop' ? '↘️ Drop Set' : '🧩 Cluster';
     var noteText  = !o ? '' : (kind === 'drop' ? dropLine(o) : clusterLine(o));
     var noteCls   = 'mcpo-int mcpo-int-' + kind;
@@ -296,14 +300,32 @@
     var body = card.querySelector(BODY_SEL) || card;
     var existingNote  = card.querySelector('.mcpo-int-' + kind);
     var existingBadge = card.querySelector('.mcpo-ibadge-' + kind);
+    if (kind === 'cluster') {
+      // setAttribute/removeAttribute (not .dataset) to match this file's
+      // existing convention (see data-mc-orig-name above) and stay portable
+      // to the plain-object card mocks tools/test-naming.js exercises this
+      // module against.
+      if (o && o.reps) { card.setAttribute('data-mc-cluster', o.reps); card.setAttribute('data-mc-cluster-rest', o.rest || ''); }
+      else { card.removeAttribute('data-mc-cluster'); card.removeAttribute('data-mc-cluster-rest'); }
+    }
     if (o) {
       var badges = card.querySelector('.a-badges');
       if (badges) {
         if (!existingBadge) { existingBadge = document.createElement('span'); existingBadge.className = badgeCls; badges.appendChild(existingBadge); }
-        if (existingBadge.textContent !== badgeText) existingBadge.textContent = badgeText;
+        var shownBadgeText = kind === 'cluster' ? badgeText + ' ✎' : badgeText;
+        if (existingBadge.textContent !== shownBadgeText) existingBadge.textContent = shownBadgeText;
       } else if (existingBadge) { existingBadge.remove(); }
       if (!existingNote) { existingNote = document.createElement('div'); existingNote.className = noteCls; body.appendChild(existingNote); }
       if (existingNote.textContent !== noteText) existingNote.textContent = noteText;
+      if (kind === 'cluster') {
+        [existingBadge, existingNote].forEach(function (el) {
+          if (!el || el.getAttribute('data-mcpo-click-wired')) return;
+          el.setAttribute('data-mcpo-click-wired', '1');
+          el.style.cursor = 'pointer';
+          el.title = 'Tap to adjust your cluster reps (personal — never changes the published program)';
+          el.addEventListener('click', function (e) { e.stopPropagation(); openClusterPersonalEdit(el, card, baseKey); });
+        });
+      }
     } else {
       if (existingNote)  existingNote.remove();
       if (existingBadge) existingBadge.remove();
@@ -312,8 +334,87 @@
   // applied for EVERY scanned card, independent of whether the card carries a
   // name/sets override — a card may have only an intensifier.
   function applyIntensifiers(card, baseKey) {
-    applyIntensifier(card, 'drop', intensifierFor(baseKey, 'drop'));
-    applyIntensifier(card, 'cluster', intensifierFor(baseKey, 'cluster'));
+    applyIntensifier(card, 'drop', intensifierFor(baseKey, 'drop'), baseKey);
+    applyIntensifier(card, 'cluster', intensifierFor(baseKey, 'cluster'), baseKey);
+  }
+
+  // ---- live personal cluster editing (mid-session, any user) --------------
+  function closeClusterPop() { var p = document.getElementById('mcpoClusterPop'); if (p) p.remove(); }
+  function openClusterPersonalEdit(anchor, card, baseKey) {
+    closeClusterPop();
+    var current = intensifierFor(baseKey, 'cluster') || {};
+    var parts = current.reps ? current.reps.split('+').map(function (p) { return p.trim(); }) : ['5', '5', '5'];
+    if (parts.length < 3) parts = ['5', '5', '5'];
+    var CLUSTER_RESTS = ['10s', '15s', '20s', '30s'];
+    var pop = document.createElement('div');
+    pop.id = 'mcpoClusterPop';
+    pop.className = 'mcpo-cluster-pop';
+    var repsHtml = parts.map(function (p, k) {
+      return (k > 0 ? '<span class="mcpo-cp-plus">+</span>' : '') +
+        '<input class="mcpo-cp-inp" type="text" value="' + p.replace(/"/g, '&quot;') + '">';
+    }).join('');
+    var restOpts = CLUSTER_RESTS.map(function (r) {
+      return '<option value="' + r + '"' + (r === (current.rest || '15s') ? ' selected' : '') + '>⏲ ' + r + ' intra-rest</option>';
+    }).join('');
+    pop.innerHTML =
+      '<div class="mcpo-cp-hd">Your cluster reps <span class="mcpo-cp-sub">(personal — not published)</span></div>' +
+      '<div class="mcpo-cp-row"><select class="mcpo-cp-count">' +
+        [3, 4].map(function (n) { return '<option value="' + n + '"' + (parts.length === n ? ' selected' : '') + '>' + n + ' mini-sets</option>'; }).join('') +
+      '</select></div>' +
+      '<div class="mcpo-cp-row mcpo-cp-reps">' + repsHtml + '<span class="mcpo-cp-lbl">reps</span></div>' +
+      '<div class="mcpo-cp-row"><select class="mcpo-cp-rest">' + restOpts + '</select></div>' +
+      '<div class="mcpo-cp-actions">' +
+        '<button type="button" class="mcpo-cp-remove">Remove</button>' +
+        '<button type="button" class="mcpo-cp-done">Done</button>' +
+      '</div>';
+    document.body.appendChild(pop);
+    var r = anchor.getBoundingClientRect();
+    var top = Math.min(r.bottom + 6, window.innerHeight - pop.offsetHeight - 12);
+    var left = Math.max(12, Math.min(r.left, window.innerWidth - pop.offsetWidth - 12));
+    pop.style.top = (top + window.scrollY) + 'px';
+    pop.style.left = left + 'px';
+
+    function currentParts() {
+      return Array.prototype.map.call(pop.querySelectorAll('.mcpo-cp-inp'), function (inp) { return (inp.value || '5').trim(); });
+    }
+    function savePersonalCluster(patch) {
+      var store = readPersonal(), pk = pagesKey();
+      store[pk] = store[pk] || {};
+      store[pk][baseKey] = store[pk][baseKey] || {};
+      store[pk][baseKey].cluster = patch;
+      writePersonal(store);
+      applyToCard(card);   // repaint badge/note + data-mc-cluster immediately
+      // drop this card's existing Log Sets panel so mc-setlog.js's own
+      // MutationObserver rebuilds it against the new scheme — not-yet-logged
+      // sets pick up the new targets, already-checked sets keep their history.
+      var w = card.querySelector('.mcl-wrap'), t = card.querySelector('.mcl-toggle');
+      if (w) w.remove();
+      if (t) t.remove();
+    }
+    pop.querySelector('.mcpo-cp-count').addEventListener('change', function () {
+      var n = parseInt(this.value, 10);
+      var p2 = currentParts();
+      var last = p2[p2.length - 1] || '5';
+      while (p2.length < n) p2.push(last);
+      p2 = p2.slice(0, n);
+      savePersonalCluster({ on: 1, reps: p2.filter(Boolean).join('+'), rest: pop.querySelector('.mcpo-cp-rest').value });
+      openClusterPersonalEdit(anchor, card, baseKey);   // re-render with the new count
+    });
+    pop.querySelector('.mcpo-cp-remove').addEventListener('click', function () {
+      savePersonalCluster(null);
+      closeClusterPop();
+    });
+    pop.querySelector('.mcpo-cp-done').addEventListener('click', function () {
+      savePersonalCluster({ on: 1, reps: currentParts().filter(Boolean).join('+'), rest: pop.querySelector('.mcpo-cp-rest').value });
+      closeClusterPop();
+    });
+    setTimeout(function () {
+      document.addEventListener('click', function onDoc(e) {
+        if (pop.contains(e.target)) return;
+        document.removeEventListener('click', onDoc);
+        closeClusterPop();
+      });
+    }, 0);
   }
 
   // ---- supersets (true two-exercise pairing) ------------------------------
@@ -518,7 +619,24 @@
         'padding:3px 0;opacity:0.75;}' +
       '.mcpo-ss-leg{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;' +
         'margin-right:7px;padding:0 5px;border-radius:6px;background:#a855f7;color:#fff;font-size:11px;font-weight:900;' +
-        'vertical-align:middle;}';
+        'vertical-align:middle;}' +
+      // live personal cluster-edit popover (openClusterPersonalEdit)
+      '.mcpo-cluster-pop{position:fixed;z-index:400;width:min(280px,calc(100vw - 24px));' +
+        'background:#0d1f3c;border:1px solid rgba(245,158,11,0.35);border-radius:14px;padding:12px 14px;' +
+        'box-shadow:0 10px 32px rgba(0,0,0,0.5);}' +
+      '.mcpo-cp-hd{font-size:12px;font-weight:900;letter-spacing:0.02em;color:#fbbf24;margin-bottom:8px;}' +
+      '.mcpo-cp-sub{font-size:10px;font-weight:600;color:#94a3b8;text-transform:none;letter-spacing:0;}' +
+      '.mcpo-cp-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;}' +
+      '.mcpo-cp-count,.mcpo-cp-rest{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);' +
+        'border-radius:8px;padding:8px;color:#e2e8f0;font-size:12px;font-weight:700;font-family:inherit;}' +
+      '.mcpo-cp-inp{width:42px;min-height:38px;text-align:center;background:rgba(255,255,255,0.06);' +
+        'border:1px solid rgba(255,255,255,0.14);border-radius:8px;color:#e2e8f0;font-size:14px;font-weight:800;font-family:inherit;}' +
+      '.mcpo-cp-lbl{font-size:11px;color:#94a3b8;font-weight:700;}' +
+      '.mcpo-cp-plus{font-size:13px;font-weight:800;color:#fbbf24;}' +
+      '.mcpo-cp-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;}' +
+      '.mcpo-cp-remove{background:none;border:none;color:#f87171;font-size:12px;font-weight:700;cursor:pointer;padding:6px 0;font-family:inherit;}' +
+      '.mcpo-cp-done{background:linear-gradient(90deg,#fbbf24,#f59e0b);color:#1c1400;border:none;' +
+        'border-radius:8px;padding:8px 16px;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit;}';
     var st = document.createElement('style');
     st.textContent = css;
     document.head.appendChild(st);
