@@ -255,6 +255,19 @@
       syncLock();
       window.addEventListener('pagehide', logSession);
       document.addEventListener('visibilitychange', function () { document.hidden ? onHide() : onShow(); });
+
+      // Record progress the instant a set is checked off, not only when the
+      // tab is hidden/left — otherwise the dashboard's completion % (and any
+      // other mc_activity reader) sits stale until the athlete backgrounds
+      // the page. Mirrors mc-rep-progress.js's debounced .set-check observer.
+      var _logDbt = null;
+      function debounceLog() { clearTimeout(_logDbt); _logDbt = setTimeout(logSession, 200); }
+      new MutationObserver(function (muts) {
+        for (var i = 0; i < muts.length; i++) {
+          var t = muts[i].target;
+          if (t.classList && t.classList.contains('set-check')) { debounceLog(); return; }
+        }
+      }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
     }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

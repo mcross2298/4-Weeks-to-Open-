@@ -41,11 +41,29 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 .ex-add{font-size:18px;font-weight:900;color:#34d399;width:24px;text-align:center;flex-shrink:0;}
 .ex-row.added .ex-add{color:#34d399;}
 .empty-state{text-align:center;padding:40px 20px;color:#334155;}
-/* selected tray */
-/* z-index 150 keeps the tray (and its Create button) above the fixed bottom
-   nav (z-index 140); its bottom offset is set in JS to the live nav height so
-   it rests directly on top of the nav instead of being hidden behind it. */
-.tray{position:fixed;left:0;right:0;bottom:0;z-index:150;background:linear-gradient(180deg,rgba(5,13,26,0.4),#050d1a 30%);border-top:1px solid rgba(52,211,153,0.25);padding:12px 16px 14px;box-shadow:0 -8px 30px rgba(0,0,0,0.5);}
+/* selected tray — a small "Review (N)" pill (always visible once something is
+   selected, sits above the fixed bottom nav) opens a full bottom-sheet modal
+   holding the actual config UI, instead of a config panel permanently fighting
+   the exercise search list for scroll space. */
+.review-pill{position:fixed;left:50%;transform:translateX(-50%);z-index:150;
+  display:flex;align-items:center;gap:8px;padding:12px 20px;border-radius:26px;
+  background:linear-gradient(90deg,#22d3ee,#34d399);color:#04121f;
+  font-size:14px;font-weight:900;letter-spacing:0.02em;border:none;cursor:pointer;
+  box-shadow:0 6px 22px rgba(0,0,0,0.45);-webkit-tap-highlight-color:transparent;}
+.review-pill:active{transform:translateX(-50%) scale(0.97);}
+.bw-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,0.85);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.bw-overlay.open{opacity:1;pointer-events:auto;}
+.tray{width:100%;max-width:680px;background:#050d1a;border-top:1px solid rgba(52,211,153,0.25);
+  border-radius:22px 22px 0 0;padding:8px 16px calc(16px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 -8px 30px rgba(0,0,0,0.5);max-height:88vh;overflow-y:auto;
+  transform:translateY(16px);transition:transform 0.2s;}
+.bw-overlay.open .tray{transform:translateY(0);}
+.bw-handle{width:36px;height:4px;background:rgba(255,255,255,0.18);border-radius:2px;
+  margin:0 auto 10px;padding:12px 0;box-sizing:content-box;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;}
 .tray-inner{max-width:680px;margin:0 auto;}
 .tray-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
 .tray-title{font-size:12px;font-weight:900;letter-spacing:0.06em;color:#34d399;text-transform:uppercase;}
@@ -151,16 +169,26 @@ select.name-input option{background:#0d1f3c;color:#e2e8f0;}
   <div id="traySpace" style="height:0;"></div>
 </div>
 
-<!-- selected tray -->
-<div class="tray" id="tray" style="display:none;">
-  <div class="tray-inner">
-    <div class="tray-hd">
-      <div class="tray-title" id="trayTitle">0 exercises selected</div>
-      <button class="tray-clear" onclick="clearSelected()">Clear</button>
+<!-- "Review (N) →" pill: always visible once something is selected, opens the
+     bottom-sheet below instead of a config panel permanently docked on
+     screen and fighting the exercise search list for scroll space. -->
+<button class="review-pill" id="reviewPill" style="display:none;" onclick="openReviewSheet()">
+  Review <span id="pillCount">0</span> <span aria-hidden="true">→</span>
+</button>
+
+<!-- selected-exercises bottom sheet -->
+<div class="bw-overlay" id="trayOverlay" onclick="if(event.target===this)closeReviewSheet();">
+  <div class="tray" id="tray">
+    <div class="bw-handle" id="trayHandle"></div>
+    <div class="tray-inner">
+      <div class="tray-hd">
+        <div class="tray-title" id="trayTitle">0 exercises selected</div>
+        <button class="tray-clear" onclick="clearSelected()">Clear</button>
+      </div>
+      <div class="sel-list" id="selList"></div>
+      <div class="sel-hint" id="selHint" style="display:none;">Tip: use <b>▲▼</b> to reorder, then <b>🔗 Make superset</b> to link <i>any</i> two exercises into a superset / tri-set.</div>
+      <button class="create-btn" id="createBtn" onclick="createWorkout()">✅ Create Workout</button>
     </div>
-    <div class="sel-list" id="selList"></div>
-    <div class="sel-hint" id="selHint" style="display:none;">Tip: use <b>▲▼</b> to reorder, then <b>🔗 Make superset</b> to link <i>any</i> two exercises into a superset / tri-set.</div>
-    <button class="create-btn" id="createBtn" onclick="createWorkout()">✅ Create Workout</button>
   </div>
 </div>
 
@@ -454,27 +482,65 @@ function clearSelected(){ selected = []; renderList(); renderTray(); }
 function removeSel(i){ selected.splice(i,1); renderList(); renderTray(); }
 function updSel(i, field, val){ if(selected[i]) selected[i][field] = val; }
 
-// Height of the fixed bottom nav (added late by mc-nav.js), so the tray can
-// rest on top of it rather than being hidden behind it.
+// Height of the fixed bottom nav (added late by mc-nav.js), so the review
+// pill can rest on top of it rather than being hidden behind it.
 function navHeight(){ var n = document.querySelector('.mc-nav'); return n ? n.offsetHeight : 0; }
 
+// The bottom sheet is an overlay (not in page flow), so the search list only
+// needs to clear the small "Review (N)" pill, not a variable-height panel —
+// a fixed spacer replaces the old tray-height measurement.
 function syncTraySpace(){
-  var tray = document.getElementById('tray');
+  var pill = document.getElementById('reviewPill');
   var space = document.getElementById('traySpace');
   if(!space) return;
-  if(tray.style.display === 'none' || !selected.length){ space.style.height = '0'; return; }
-  tray.style.bottom = navHeight() + 'px';
-  // pad the scroll area so the last exercise rows can sit clear of the tray
-  space.style.height = (tray.offsetHeight + 16) + 'px';
+  if(!selected.length){ space.style.height = '0'; return; }
+  pill.style.bottom = (navHeight() + 14) + 'px';
+  space.style.height = '72px';
 }
 
+// ---- bottom sheet open/close (swipe-down-to-dismiss, same pattern as
+// mc-macros.js's nt-sheet) --------------------------------------------------
+function openReviewSheet(){
+  if(!selected.length) return;
+  document.getElementById('trayOverlay').classList.add('open');
+}
+function closeReviewSheet(){
+  document.getElementById('trayOverlay').classList.remove('open');
+}
+(function(){
+  var handle = document.getElementById('trayHandle');
+  var sheet = document.getElementById('tray');
+  var startY = 0;
+  handle.addEventListener('touchstart', function(e){
+    startY = e.touches[0].clientY;
+    sheet.style.transition = 'none';
+  }, { passive:true });
+  handle.addEventListener('touchmove', function(e){
+    var delta = e.touches[0].clientY - startY;
+    if(delta > 0 && sheet.scrollTop === 0) sheet.style.transform = 'translateY('+delta+'px)';
+  }, { passive:true });
+  handle.addEventListener('touchend', function(e){
+    var delta = e.changedTouches[0].clientY - startY;
+    sheet.style.transition = '';
+    if(delta >= 50) closeReviewSheet(); else sheet.style.transform = '';
+  });
+  handle.addEventListener('click', closeReviewSheet);
+})();
+
 function renderTray(){
-  var tray = document.getElementById('tray');
+  var pill = document.getElementById('reviewPill');
+  var pillCount = document.getElementById('pillCount');
   var title = document.getElementById('trayTitle');
   var selList = document.getElementById('selList');
   var btn = document.getElementById('createBtn');
-  if(!selected.length){ tray.style.display = 'none'; syncTraySpace(); return; }
-  tray.style.display = 'block';
+  if(!selected.length){
+    pill.style.display = 'none';
+    closeReviewSheet();
+    syncTraySpace();
+    return;
+  }
+  pill.style.display = 'flex';
+  pillCount.textContent = selected.length;
   title.textContent = selected.length + ' exercise' + (selected.length!==1?'s':'') + ' selected';
   // group consecutive superset-linked items so we can label each chain by size
   // (superset / tri-set / giant set) and tag where each group starts.

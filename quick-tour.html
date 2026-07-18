@@ -312,6 +312,7 @@ const SLIDES = [
       {tx:"Tap the <span class='tap'>✓</span> checkbox — the set saves and the <b>rest timer auto-starts</b>."},
       {tx:"A <b>“+ DROP”</b> or <b>“+ AMRAP”</b> row appears automatically when the program calls for it."},
       {tx:"On the card's rep scheme, a <b>∞ symbol</b> marks a drop set or burnout round taken to failure — one ∞ per AMRAP set, so <b>“12 · 10 · 8 · ∞ ∞”</b> means two back-to-back AMRAP drops after the working sets. In the Log Sets table itself, that row's Reps box still says <b>“AMRAP”</b> — type in exactly how many reps you completed."},
+      {tx:"A <b>🧩 Cluster</b> exercise breaks each working set into mini-sets — the Log Sets row shows a rep bubble per mini-set (e.g. <b>5 + 5 + 5</b>) instead of one box, prefilled with the target so you only edit the ones that came up short (like a <b>5 + 5 + 3</b> last mini-set). Tap the <b>🧩 Cluster</b> badge or note on the card itself to adjust the whole breakdown mid-session — it's your own personal adjustment and never changes what the program publishes."},
       {tx:"Tap <span class='tap'>🎬</span> on the rest timer to switch to <b>Video view</b> — a full-screen countdown with an <b>Up Next</b> card showing what's coming. Tap <span class='tap'>☰ List view</span> to switch back; the app remembers whichever you picked last."},
       {tx:"Prefer one exercise at a time? Tap <span class='tap'>🎯 Start Guided Mode</span> above your first exercise — it dims everything but the exercise you're on and auto-advances the moment you finish its sets."},
       {tx:"Hands full loading a bar? Tap the <span class='tap'>🎙️</span> button (bottom-right on any workout page) to turn on <b>voice control</b>, then just say it: <b>“log 10 reps”</b> checks off your next set, <b>“start timer”</b> starts the rest clock, <b>“skip rest”</b> ends it early. Opt-in only — off until you tap it, and it stays off across sessions until you turn it back on."}
@@ -364,12 +365,12 @@ const SLIDES = [
     eyebrow:'Module 8 · ⭐ Make it yours',
     title:"Build Your Own workout",
     tagline:"Want a custom session? Search the library, pick exercises, set your reps, save — and run it like any program.",
-    scene:{glyph:'🔧',caption:'Search → add exercises → set sets/reps → Create → Start',color:'rgba(52,211,153,0.32)',glow:'rgba(34,211,238,0.12)'},
-    narration:"Tap Build Your Own. Name your workout, then search or filter 500+ exercises by muscle group. Tap to add each one — they drop into a tray at the bottom where you set sets and reps. Hit Create Workout, and it's saved under My Custom Workouts. Press Start, and it logs sets exactly like every built-in program.",
+    scene:{glyph:'🔧',caption:'Search → add exercises → Review (N) → set sets/reps → Create → Start',color:'rgba(52,211,153,0.32)',glow:'rgba(34,211,238,0.12)'},
+    narration:"Tap Build Your Own. Name your workout, then search or filter 500+ exercises by muscle group. Tap to add each one — they check off right in the list, no separate panel fighting you for scroll room. When you're ready, tap the “Review (N)” pill at the bottom to pull up your picks, set sets/reps/tempo (and drop, superset, or cluster if you want them) for each, then hit Create Workout. It's saved under My Custom Workouts, and Start logs sets exactly like every built-in program.",
     steps:[
       {tx:"Dashboard → <span class='tap'>🔧 Build Your Own</span> tile."},
-      {tx:"Name it, then <b>search or filter by muscle</b> and tap exercises to add."},
-      {tx:"In the tray, set <b>sets & reps</b> per exercise, then tap <span class='tap'>✅ Create Workout</span>."},
+      {tx:"Name it, then <b>search or filter by muscle</b> and tap exercises to add — added ones get a ✓."},
+      {tx:"Tap the <span class='tap'>Review (N) →</span> pill to open your picks, set <b>sets, reps & intensifiers</b> per exercise, then tap <span class='tap'>✅ Create Workout</span>."},
       {tx:"Tap <span class='tap'>▶ Start Workout</span> — full set logging & PRs, just like the rest."}
     ],
     cta:{ico:'🔧',label:'Try it now',name:'Build a custom workout',href:'build-workout.html'}

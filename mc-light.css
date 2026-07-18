@@ -106,6 +106,35 @@ html[data-theme="light"] .set-num,
 html[data-theme="light"] .setlog-hl{color:#8a8377;}
 html[data-theme="light"] .set-check{border-color:rgba(28,26,23,0.16);}
 
+/* ── mc-setlog.js logger (.mcl-* — shared Log Sets panel on every workout
+   page) — same near-white-on-dark palette as .set-*/.tf above with no light
+   override, so weight/reps/RPE values and headers were unreadable on the
+   cream background. */
+html[data-theme="light"] .mcl-toggle{color:#8a8377;}
+html[data-theme="light"] .mcl-hist{color:var(--accent,#8a6d1a);}
+html[data-theme="light"] .mcl-count{color:#6b6459;background:rgba(28,26,23,0.05);}
+html[data-theme="light"] .mcl-count.done{color:#047857;background:rgba(52,211,153,0.16);}
+html[data-theme="light"] .mcl-wrap{border-top-color:rgba(28,26,23,0.1);}
+html[data-theme="light"] .mcl-hl{color:#8a8377;}
+html[data-theme="light"] .mcl-num{color:#6b6459;}
+html[data-theme="light"] .mcl-row{border-bottom-color:rgba(28,26,23,0.08);}
+html[data-theme="light"] .mcl-inp{
+  background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);color:#1c1a17;}
+html[data-theme="light"] .mcl-inp:focus{border-color:rgba(var(--accent-rgb,212,175,55),0.5);background:rgba(var(--accent-rgb,212,175,55),0.08);}
+html[data-theme="light"] .mcl-inp::placeholder{color:#b7b0a3;}
+html[data-theme="light"] .mcl-rpe{border-color:rgba(28,26,23,0.14);background:rgba(28,26,23,0.04);color:#8a8377;}
+html[data-theme="light"] .mcl-rpe.set{color:var(--accent,#8a6d1a);border-color:rgba(var(--accent-rgb,212,175,55),0.4);background:rgba(var(--accent-rgb,212,175,55),0.12);}
+html[data-theme="light"] .mcl-ck{border-color:rgba(28,26,23,0.18);color:#8a8377;}
+html[data-theme="light"] .mcl-ck.done{background:rgba(52,211,153,0.16);border-color:rgba(5,150,105,0.4);color:#047857;}
+html[data-theme="light"] .mcl-row.done-row{background:rgba(52,211,153,0.08);}
+html[data-theme="light"] .mcl-row.done-row .mcl-inp{border-color:rgba(5,150,105,0.22);}
+html[data-theme="light"] .mcl-amrap{background:rgba(251,146,60,0.14);color:#c2410c;border-color:rgba(251,146,60,0.4);}
+html[data-theme="light"] .mcl-row-amrap{background:rgba(251,146,60,0.06);}
+html[data-theme="light"] .mcl-row-amrap .mcl-r::placeholder{color:#c2410c;opacity:0.85;}
+html[data-theme="light"] .mcl-cluster-row{border-top-color:rgba(28,26,23,0.1);}
+html[data-theme="light"] .mcl-cluster-lbl{color:var(--accent,#8a6d1a);}
+html[data-theme="light"] .mcl-cluster-plus{color:var(--accent,#8a6d1a);}
+
 /* ── timer-float bespoke aliases (.tf-* — base covers .timer-float*) ─ */
 html[data-theme="light"] .tf{background:rgba(245,242,236,0.97);border-top-color:rgba(28,26,23,0.1);}
 html[data-theme="light"] .tf-prog{background:rgba(28,26,23,0.08);}
