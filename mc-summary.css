@@ -4,7 +4,12 @@
 .fw-recap-overlay{
   position:fixed;inset:0;
   background:rgba(0,0,0,0.92);backdrop-filter:blur(10px);
-  z-index:80;display:none;align-items:flex-end;
+  /* Above .timer-float/#timerOverlay (z-index 99/100, base.css + mc-timer.js):
+     the auto-trigger (mc-finish.js) can open this the instant the LAST set is
+     checked, which is exactly the moment that same check also starts a rest
+     timer — the finished-workout summary must win that race, not get buried
+     under a now-pointless "rest before the next set" countdown. */
+  z-index:110;display:none;align-items:flex-end;
 }
 .fw-recap-overlay.open{display:flex;}
 .fw-recap-sheet{
@@ -176,19 +181,21 @@ body.mcs-stat-active .summary-section.mcs-open{
   display:block;
 }
 
-/* ── SUMMARY BUTTON ACTIVE STATE ─────────────────────────────────── */
+/* ── SUMMARY BUTTON ─────────────────────────────────────────────────
+   Secondary action, stacked directly underneath the primary Finish
+   Workout button (appended into .fw-bar by injectSummaryButton() — see
+   base.css's .fw-bar flex-direction:column). Full-width but visually
+   subordinate: no fill, no border, just a quiet link-style row. */
 .mcs-sumbtn{
-  flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;
-  padding:9px 12px;border-radius:10px;
-  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);
-  color:#cbd5e1;font-family:inherit;font-size:12px;font-weight:800;letter-spacing:0.03em;
+  width:100%;display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:8px;border-radius:10px;
+  background:transparent;border:none;
+  color:#94a3b8;font-family:inherit;font-size:12px;font-weight:800;letter-spacing:0.03em;
   cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap;
   transition:all 0.15s;
 }
-.mcs-sumbtn:active{transform:scale(0.96);background:rgba(255,255,255,0.12);}
+.mcs-sumbtn:active{transform:scale(0.97);color:#cbd5e1;}
 .mcs-sumbtn.mcs-btn-open{
-  background:rgba(var(--accent-rgb,212,175,55),0.15);
-  border-color:rgba(var(--accent-rgb,212,175,55),0.4);
   color:var(--accent,#d4af37);
 }
 
@@ -255,11 +262,9 @@ html[data-theme="light"] .fw-recap-cancel{border-color:rgba(28,26,23,0.12);}
 
 html[data-theme="light"] .prog-bar-wrap.mcs-stat{background:rgba(245,242,236,0.97);border-bottom-color:rgba(28,26,23,0.08);}
 html[data-theme="light"] .mcs-timer{color:#1c1a17;}
-html[data-theme="light"] .mcs-sumbtn{background:rgba(28,26,23,0.05);border-color:rgba(28,26,23,0.12);color:#6b6459;}
-html[data-theme="light"] .mcs-sumbtn:active{background:rgba(28,26,23,0.1);}
+html[data-theme="light"] .mcs-sumbtn{color:#6b6459;}
+html[data-theme="light"] .mcs-sumbtn:active{color:#1c1a17;}
 html[data-theme="light"] .mcs-sumbtn.mcs-btn-open{
-  background:rgba(var(--accent-rgb,212,175,55),0.15);
-  border-color:rgba(var(--accent-rgb,212,175,55),0.4);
   color:var(--accent,#d4af37);
 }
 html[data-theme="light"] .mcs-progress-track{background:rgba(28,26,23,0.08);}

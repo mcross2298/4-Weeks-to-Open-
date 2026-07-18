@@ -127,26 +127,36 @@
     return entry;
   }
 
-  // Update progress display
+  // Update progress display + auto-trigger the Finish flow the moment every
+  // set is logged. Guarded on the done<total -> done>=total TRANSITION only
+  // (wasComplete), so this fires once — not on every render pass while the
+  // workout stays complete, and never again after the workout is saved.
+  var wasComplete=false;
   function updateProgress(){
     var done=getCheckedSets();
     var total=getTotalSets();
     var el=document.getElementById('fwProgress');
     if(el)el.textContent=done+' / '+total+' sets';
-    // Auto-detect all sets done
-    if(total>0&&done>=total){
-      var banner=document.getElementById('fwAutoBanner');
-      if(banner)banner.classList.add('show');
+    var isComplete=total>0&&done>=total;
+    if(isComplete&&!wasComplete&&!window._FW.finished){
+      var modal=document.getElementById('fwModal');
+      var already=modal&&modal.classList.contains('open');
+      if(!already)window._FW.open();
     }
+    wasComplete=isComplete;
   }
 
-  // Build the bottom bar HTML
+  // Build the bottom bar HTML — Finish Workout is the primary action;
+  // Workout Summary lives directly underneath it as the secondary one
+  // (mc-summary.js appends its button into this bar right after fw-btn).
   var barHTML='<div class="fw-bar" id="fwBar">'+
-    '<span class="fw-progress" id="fwProgress">0 / 0 sets</span>'+
     '<button class="fw-btn" onclick="_FW.open()">Finish Workout ✓</button>'+
+    '<span class="fw-progress" id="fwProgress">0 / 0 sets</span>'+
     '</div>';
 
-  // Build modal HTML
+  // Build modal HTML — this IS the "Workout Summary" pull-up: opening it
+  // (whether by tapping the bar button or via the auto-trigger above)
+  // already populates #fwSummary with the full recap below.
   var modalHTML='<div class="fw-modal-overlay" id="fwModal">'+
     '<div class="fw-modal">'+
       '<div class="fw-modal-title">🏆 Finish Workout?</div>'+
@@ -154,15 +164,12 @@
       '<div class="fw-summary" id="fwSummary"></div>'+
       '<div class="fw-modal-btns">'+
         '<button class="fw-cancel" onclick="_FW.close()">Cancel</button>'+
-        '<button class="fw-confirm" onclick="_FW.confirm()">Save & Finish</button>'+
+        '<button class="fw-confirm" onclick="_FW.confirm()">Log Workout</button>'+
       '</div>'+
     '</div>'+
   '</div>';
 
-  var autoBanner='<div class="fw-auto-banner" id="fwAutoBanner" onclick="_FW.open()">'+
-    '🏆 All sets complete — tap to finish workout</div>';
-
-  // Celebratory "Session Complete" recap shown after Save & Finish.
+  // Celebratory "Session Complete" recap shown after Log Workout.
   var doneHTML='<div class="fw-modal-overlay" id="fwDone">'+
     '<div class="fw-modal fw-done-card">'+
       '<div class="fw-done-emoji" id="fwDoneEmoji">💪</div>'+
@@ -229,15 +236,26 @@
   // Inject UI
   function inject(){
     injectDoneCss();
-    document.body.insertAdjacentHTML('beforeend',barHTML+modalHTML+autoBanner+doneHTML);
-    // Watch for set check changes
-    document.addEventListener('click',function(e){
-      if(e.target.classList.contains('sl-ck')||
-         e.target.classList.contains('set-check')||
-         e.target.id==='fwAutoBanner'){
-        setTimeout(updateProgress,100);
+    document.body.insertAdjacentHTML('beforeend',barHTML+modalHTML+doneHTML);
+    // Watch for set check changes. NOT a document click-delegation listener —
+    // mc-setlog.js's checkbox handler calls stopPropagation() (so does its
+    // .mcl-wrap click guard), so a click on .set-check never bubbles to
+    // document and a delegated listener here would silently never fire.
+    // A class-attribute MutationObserver (same pattern mc-rep-progress.js and
+    // mc-live-tracker.js already use for the identical problem) sees the
+    // .done toggle directly, regardless of where the click originated or
+    // whether it bubbles.
+    var _upDbt=null;
+    function debounceUpdate(){ clearTimeout(_upDbt); _upDbt=setTimeout(updateProgress,100); }
+    new MutationObserver(function(muts){
+      for(var i=0;i<muts.length;i++){
+        var t=muts[i].target;
+        if(t.classList&&(t.classList.contains('set-check')||t.classList.contains('sl-ck'))){
+          debounceUpdate();
+          return;
+        }
       }
-    });
+    }).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
     updateProgress();
   }
 
@@ -250,6 +268,7 @@
     return sk;
   }
   window._FW={
+    finished:false,   // once true, updateProgress()'s auto-trigger stops firing
     open:function(){
       var sets=getSessionSets();
       var prList=prSpotlight(sets);
@@ -276,6 +295,7 @@
       if(m)m.classList.remove('open');
     },
     confirm:function(){
+      window._FW.finished=true;
       var entry=saveWorkout();
       try{if(window.MCActivity&&MCActivity.releaseSessionLock)MCActivity.releaseSessionLock();}catch(e){}
       // back up the finished session right away (no-op when signed out)
@@ -286,8 +306,6 @@
       // Flash confirmation on the bar too
       var btn=document.querySelector('.fw-btn');
       if(btn){btn.textContent='✓ Saved!';btn.style.background='#34d399';}
-      var banner=document.getElementById('fwAutoBanner');
-      if(banner)banner.classList.remove('show');
       setTimeout(function(){
         if(btn){btn.textContent='Finish Workout ✓';btn.style.background='';}
       },2000);

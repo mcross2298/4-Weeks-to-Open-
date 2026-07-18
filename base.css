@@ -426,12 +426,19 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .sl-hdr{display:grid;grid-template-columns:24px 1fr 1fr 44px;gap:5px;padding:3px 2px 1px;}
 .sl-hl{font-size:11px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#2d3748;text-align:center;}
 
-/* ── FINISH WORKOUT BAR & MODAL ─────────────────────────────────── */
-.fw-bar{position:fixed;bottom:0;left:0;right:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(10,10,10,0.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,0.07);z-index:40;display:flex;gap:10px;align-items:center;}
-.fw-btn{flex:1;padding:13px;background:var(--accent);border:none;border-radius:12px;color:#000;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.03em;-webkit-tap-highlight-color:transparent;}
+/* ── FINISH WORKOUT BAR & MODAL ─────────────────────────────────────────
+   Stacked layout: Finish Workout is the primary action (full-width button,
+   on top); the progress readout sits as a small status line underneath it;
+   Workout Summary (appended by mc-summary.js's injectSummaryButton()) is
+   the secondary action, last in the stack. */
+.fw-bar{position:fixed;bottom:0;left:0;right:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(10,10,10,0.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,0.07);z-index:40;display:flex;flex-direction:column;gap:6px;}
+.fw-btn{width:100%;padding:14px;background:var(--accent);border:none;border-radius:12px;color:#000;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.03em;-webkit-tap-highlight-color:transparent;}
 .fw-btn:active{opacity:0.85;transform:scale(0.98);}
-.fw-progress{font-size:11px;font-weight:700;color:var(--muted2);white-space:nowrap;letter-spacing:0.04em;}
-.fw-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-end;padding:16px;z-index:60;}
+.fw-progress{font-size:11px;font-weight:700;color:var(--muted2);white-space:nowrap;letter-spacing:0.04em;text-align:center;}
+/* z-index above .timer-float/#timerOverlay (99/100) for the same reason as
+   .fw-recap-overlay in mc-summary.css — the auto-trigger can fire the instant
+   the same check that starts a rest timer completes the workout. */
+.fw-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-end;padding:16px;z-index:110;}
 .fw-modal-overlay.open{display:flex;}
 .fw-modal{width:100%;background:#0e0e0e;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:24px 20px 20px;}
 .fw-modal-title{font-size:20px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;}

@@ -227,13 +227,16 @@
   }
 
   /* ── SUMMARY TOGGLE ──────────────────────────────────────────────── */
+  // Appended (not inserted first) so it lands as the secondary row UNDER
+  // the primary Finish Workout button in the bar's stacked layout — see
+  // base.css's .fw-bar (flex-direction:column) and mc-finish.js's barHTML.
   function injectSummaryButton(){
     var fwbar=document.querySelector('.fw-bar');
     if(!fwbar||fwbar.querySelector('.mcs-sumbtn'))return;
     var btn=document.createElement('button');
     btn.type='button';
     btn.className='mcs-sumbtn';
-    btn.innerHTML='📊<span>Summary</span>';
+    btn.innerHTML='📊<span>Workout Summary</span>';
     btn.addEventListener('click',function(e){
       e.preventDefault();e.stopPropagation();
       var host=document.querySelector(SUMSEC_SEL);
@@ -242,7 +245,7 @@
       btn.classList.toggle('mcs-btn-open',isOpen);
       if(isOpen) host.scrollIntoView({behavior:'smooth',block:'start'});
     });
-    fwbar.insertBefore(btn,fwbar.firstChild);
+    fwbar.appendChild(btn);
   }
 
   /* =========================================================================
@@ -445,7 +448,7 @@
         buildRecapRows(t,acc)+
         '<div class="fw-recap-actions">'+
           '<button class="fw-recap-cancel" id="fwRecapCancel">← Keep Training</button>'+
-          '<button class="fw-recap-save" id="fwRecapSave" style="background:'+rgb(acc)+';">Save & Exit →</button>'+
+          '<button class="fw-recap-save" id="fwRecapSave" style="background:'+rgb(acc)+';">Log Workout</button>'+
         '</div>'+
       '</div>';
 
@@ -460,17 +463,22 @@
       setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},350);
     });
 
-    // Save & Exit — save workout then go to dashboard
+    // Log Workout — actually finalize and save. Was calling window._FW._save /
+    // window.saveWorkout, neither of which was EVER defined anywhere in the
+    // codebase (verified by search) — so on every page where this recap sheet
+    // is the active flow (patchFWOpen() below makes it so on 70 of 74 workout
+    // pages), tapping this button never wrote the real mc_workout_log_v1 entry
+    // (sets/weights/PRs/volume); it only bumped the lightweight daily-progress
+    // tracker and navigated away, silently discarding the session's actual
+    // logged data. _FW.confirm() is mc-finish.js's real, already-correct save
+    // path (writes the log entry, releases the session lock, backs up via
+    // sync, shows the Session Complete recap) — call that instead of
+    // duplicating/re-guessing save logic here.
     document.getElementById('fwRecapSave').addEventListener('click',function(){
-      // Run the page's own save if available
-      if(window._FW&&window._FW._save) window._FW._save();
-      else if(window.saveWorkout) window.saveWorkout();
-      // Also persist via daily session store
-      saveDaily(t, t.exTotal?Math.round((t.exDone/t.exTotal)*100):0);
-      // Stop the session timer
+      el.classList.remove('open');
+      setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},350);
       if(_timerInterval){clearInterval(_timerInterval);_timerInterval=null;}
-      // Navigate to dashboard
-      window.location.href='dashboard.html';
+      if(window._FW&&window._FW.confirm) window._FW.confirm();
     });
   }
 
@@ -478,8 +486,6 @@
     if(!window._FW){setTimeout(patchFWOpen,100);return;}
     // Store original for fallback
     window._FW._origOpen=window._FW.open;
-    // Also expose save hook if the page has saveWorkout defined
-    if(window.saveWorkout) window._FW._save=window.saveWorkout;
     // Replace open with recap
     window._FW.open=function(){ showRecap(); };
   }
