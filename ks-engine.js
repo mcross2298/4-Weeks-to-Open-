@@ -129,6 +129,88 @@ function groupBanner(tag){
   return`<div class="group-banner ${cls}">${escapeHtml(text)}</div>`;
 }
 
+// ── TRI-SET / SUPERSET station grouping ──
+// TRI-SET (3 members) and SUPERSET (2 members) exercises used to render as
+// flat, independent .ex-cards with only a text banner above them — so none of
+// the app's grouped-exercise tooling (mc-superset-hop.js's A→B→A→B hop,
+// mc-guided.js treating the whole block as one step, mc-setlog.js's rest-timer
+// consolidation onto the final member) ever engaged, even though the banner
+// text promised "no rest between, rest after the full round." This wraps a
+// same-tag run in the same .ss-card/.ss-ex structure every other program's
+// grouped exercises use (Concept-A styling via .a-ss, per base.css) so that
+// tooling actually applies. The per-exercise DATA is unchanged — only the
+// rendered markup shape changes, same as mc-group-split.js does for its
+// combined-name cards.
+const GROUP_SIZE = { 'TRI-SET': 3, 'SUPERSET': 2 };
+function letter(i){ return String.fromCharCode(65+i); }
+
+function renderSSMember(ex,dIdx,eIdx,idx,isLast){
+  const badges=[];
+  if(ex.tempo)badges.push(`<span class="a-pill tempo">⏱ ${escapeHtml(ex.tempo)}</span>`);
+  if(ex.notes&&ex.notes.includes('REVERSE PYRAMID'))badges.push(`<span class="a-pill rp">▼ REV PYRAMID</span>`);
+  if(ex.notes&&ex.notes.includes('MECHANICAL DROP'))badges.push(`<span class="a-pill rp">⚡ MECH DROP</span>`);
+  const badgeHtml=badges.length?`<div class="a-badges">${badges.join('')}</div>`:'';
+  const notesHtml=ex.notes?`<div class="a-notes">📝 ${escapeHtml(ex.notes)}</div>`:'';
+  // One rest timer, on the final member only — carries the real "after the
+  // full round" rest (the DATA already puts '—' on every member but the
+  // last, so this just doesn't render a badge for the '—' members at all,
+  // same as makeRestTimer already does for a non-interactive '—' string).
+  const restHtml=isLast?`<div class="ex-rest">${makeRestTimer(ex.rest||'90 sec',ex.name)}</div>`:'';
+  return`<div class="ss-ex" data-id="ssex-${dIdx}-${eIdx}">
+    <div class="ss-num">${letter(idx)}</div>
+    <div class="ss-content">
+      <div class="ss-name"><span class="editable" data-field="name" data-d="${dIdx}" data-e="${eIdx}">${escapeHtml(ex.name)}</span></div>
+      ${badgeHtml}
+      <div class="a-ss-reps">${renderReps(ex.sets)}</div>
+      <div class="a-ss-sets-hidden"><span class="ex-sets"><span class="editable" data-field="sets" data-d="${dIdx}" data-e="${eIdx}">${escapeHtml(ex.sets)}</span></span></div>
+      ${notesHtml}
+      ${restHtml}
+    </div>
+  </div>`;
+}
+
+function renderSSCard(members,dIdx,startEIdx,tag){
+  const tri=tag==='TRI-SET';
+  const label=tri?'⚡ Tri-Set':'⚡ Superset';
+  const rowsHtml=members.map((ex,i)=>{
+    const eIdx=startEIdx+i;
+    const isLast=i===members.length-1;
+    const divider=isLast?'':`<div class="ss-divider"><span class="ss-x">${tri?'× TRI-SET ×':'× SUPERSET ×'}</span></div>`;
+    return renderSSMember(ex,dIdx,eIdx,i,isLast)+divider;
+  }).join('');
+  return`<div class="ss-card a-ss${tri?' is-tri':''}">
+    <div class="ss-header"><span class="ss-label">${label}</span></div>
+    ${rowsHtml}
+  </div>`;
+}
+
+// Walks a day's exercises, grouping consecutive same-tag TRI-SET/SUPERSET
+// runs into a single .ss-card block; everything else (compounds, CLUSTER,
+// DROP SET, FINISHER — all single-station, single-exercise intensifiers, not
+// multi-exercise groups) stays a flat .ex-card exactly as before. A run
+// shorter than its tag's group size (irregular data) falls through to flat
+// rendering rather than forcing a broken group.
+function renderExerciseBlocks(exercises,dIdx){
+  const blocks=[];
+  let lastBannerTag=null;
+  let i=0;
+  while(i<exercises.length){
+    const tag=exercises[i].tag;
+    const size=GROUP_SIZE[tag];
+    const run=size && exercises.slice(i,i+size).every(e=>e.tag===tag) && (exercises.length-i)>=size;
+    const banner=tag!==lastBannerTag?groupBanner(tag):'';
+    lastBannerTag=tag;
+    if(run){
+      blocks.push(banner+renderSSCard(exercises.slice(i,i+size),dIdx,i,tag));
+      i+=size;
+    }else{
+      blocks.push(banner+renderExercise(exercises[i],dIdx,i));
+      i+=1;
+    }
+  }
+  return blocks.join('');
+}
+
 function renderDay(day,dIdx){
   if(day.type==='conditioning'){
     const rgb='217,119,6';
@@ -203,12 +285,7 @@ function renderDay(day,dIdx){
       </div>
     </div>`;
   }
-  let lastTag=null;
-  const exHtml=day.exercises.map((ex,eIdx)=>{
-    let banner='';
-    if(ex.tag!==lastTag){banner=groupBanner(ex.tag);lastTag=ex.tag;}
-    return banner+renderExercise(ex,dIdx,eIdx);
-  }).join('');
+  const exHtml=renderExerciseBlocks(day.exercises,dIdx);
   const rgb=hexToRgb(day.color);
   return`<div class="day-card" data-d="${dIdx}" style="--day-rgb:${rgb}">
     <div class="day-header">

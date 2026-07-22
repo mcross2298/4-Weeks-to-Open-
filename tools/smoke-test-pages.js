@@ -55,8 +55,17 @@ const PAGES = [
   'mm-p2.html',
   'mm-p3.html',
   // ks-engine.js shared render engine (audit LS-5) — covers the consolidated
-  // Kitchen Sink family so a break in the shared engine fails CI
+  // Kitchen Sink family so a break in the shared engine fails CI. All 5 are
+  // sampled (not just kitchen-sink.html) because the family's actual bug
+  // class was per-page script-tag drift (s3-s6 silently missing modules
+  // kitchen-sink.html had), which a shared-engine-only sample can't catch —
+  // check-script-manifest.py's "kitchen-sink" family guards the manifest
+  // shape, this catches an actual runtime/console break on each page.
   'kitchen-sink.html',
+  'kitchen-sink-s3.html',
+  'kitchen-sink-s4.html',
+  'kitchen-sink-s5.html',
+  'kitchen-sink-s6.html',
   // --- Phase L0.3: widen coverage to the remaining distinct page families ---
   // Standard 7-day 5-on-2-off layout page
   '5on-2off.html',
