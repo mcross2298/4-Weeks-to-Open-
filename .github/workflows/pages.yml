@@ -38,6 +38,8 @@ jobs:
         run: |
           node tools/test-mc-bridge.js
           node tools/test-mc-sync-merge.js
+      - name: Service-worker strategy test (stale-while-revalidate — audit LS-4)
+        run: node tools/test-mc-sw.js
       - name: Shared-module drift check (Mikes-Cookbook copies vs canonical — audit LS-1)
         # Downloads the cookbook's current copies and fails if any drifted from
         # this repo's canonical files. Landing order for a shared-module change:

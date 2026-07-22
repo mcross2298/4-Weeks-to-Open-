@@ -154,3 +154,24 @@ params (`?v=45`/`?v=46` on ~90 pages, a manual version that was already
 drifting and is moot under the SW's network-first JS strategy) were dropped
 fleet-wide (W-21 part). Verified end-to-end: an injected stray param is caught
 with an exact diff; all 33 smoke-test pages still render clean.
+
+**LS-4 shipped (session-verifiable half; on-device offline check is the
+owner's gate).** W-12: both apps' service workers now use
+**stale-while-revalidate** — the cached page/asset is served instantly and the
+cache refreshes behind it, so repeat navigations (and the ~25 module loads per
+workout page) feel instant on flaky gym/kitchen Wi-Fi instead of waiting up to
+2.5–3 s on the network. Cache-first is provably correct here because content
+only changes on a deploy, which bumps `CACHE_NAME` (its `activate` purges the
+old cache and the page reloads on `controllerchange`), so a new build still
+reaches the user via the SW-version path. The strategy logic is unit-tested
+against the real `sw.js` in both repos via vm sandbox (`tools/test-mc-sw.js`,
+`tools/test-sw-strategy.js` — 4 cases each: cache hit, miss+net-ok,
+miss+net-fail→offline, hit+net-fail), now blocking CI steps. **Still the
+owner's to close:** true offline-reload behavior on the real deployed origin
+(the workout `sw.js` has a pre-existing production-origin guard, so SWR can't
+be exercised on localhost) and the real-device QA matrix — same gate B5 left
+open. W-13: the cookbook's 1 MB `recipes-data.js` was **measured, not split** —
+it's 142 KB gzipped (what mobile downloads) and parses+evals in ~3.5 ms in V8
+(~20–35 ms even scaled to a mid-range phone), far under the audit's 150 ms
+split threshold, and the SWR change now serves it instantly on repeat visits.
+Splitting it would have been effort spent on a non-problem.
