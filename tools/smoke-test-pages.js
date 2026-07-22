@@ -57,7 +57,8 @@ const PAGES = [
   // --- Phase L0.3: widen coverage to the remaining distinct page families ---
   // Standard 7-day 5-on-2-off layout page
   '5on-2off.html',
-  // Program home hubs
+  // Program landing hubs (cat-mc.html covers the MC family; the legacy
+  // mc-home.html / pmc-home.html are now redirect stubs — audit LS-2 W-04)
   'mc-home.html',
   // mc-s* split day-detail family
   'mc-s1-back.html',

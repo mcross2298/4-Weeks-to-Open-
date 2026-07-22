@@ -75,6 +75,14 @@ jobs:
           EXIT=$?
           kill "$SERVER_PID" 2>/dev/null || true
           exit $EXIT
+      - name: Strip design comps + scratch pages from deploy artifact (audit LS-2 W-08)
+        # These design mockups live in the repo for reference but must never be
+        # guessable URLs on the production origin. Removed from the working tree
+        # AFTER all checks/tests run and BEFORE the artifact is packed — git
+        # history keeps them; only the deploy is trimmed. (The Rolodex market
+        # build already excludes them via content-manifest.json + *.dc.html.)
+        run: |
+          rm -f ./*.dc.html stndr-card-concepts.html
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

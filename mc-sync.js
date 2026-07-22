@@ -44,8 +44,6 @@
   // store_key -> merge strategy
   var STORES = {
     'mc_setlog_v1':          'setlog',
-    'mc_history':            'arrayById',
-    'mc_replace_log':        'arrayById',
     'mc_custom_workouts_v1': 'arrayByIdTs',
     'mc_custom_programs_v1': 'arrayByIdTs',
     'mc_collections_v1':     'arrayById',

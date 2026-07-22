@@ -19,7 +19,7 @@
   // exported STORES) when Supabase isn't configured — export/import must
   // work regardless of that.
   var KEYS = [
-    'mc_setlog_v1', 'mc_history', 'mc_replace_log', 'mc_custom_workouts_v1',
+    'mc_setlog_v1', 'mc_custom_workouts_v1',
     'mc_custom_programs_v1', 'mc_collections_v1', 'mc_workout_log_v1',
     'mc_cond_log_v1', 'mc_body_v1', 'mc_max_v1', 'mc_activity',
     'mc_daily_v1', 'mc_plan_targets_v1', 'mc_macros_v1'
