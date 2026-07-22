@@ -51,6 +51,8 @@ jobs:
             curl -fsSL --retry 3 "$base/$f" -o "/tmp/cookbook-mirror/$f"
           done
           python3 tools/sync-shared-modules.py --check --cookbook-dir /tmp/cookbook-mirror
+      - name: Script-manifest drift check (clone pages load identical module lists — audit LS-3)
+        run: python3 tools/check-script-manifest.py --check
       - name: Program color-sync check (mc-pm-data.js vs dashboard.html)
         run: node tools/check-program-colors.js
       - name: Multi-week program intensifier-coverage check (mm-p1/p2/p3.html)
