@@ -54,6 +54,9 @@ const PAGES = [
   'mm-p1.html',
   'mm-p2.html',
   'mm-p3.html',
+  // ks-engine.js shared render engine (audit LS-5) — covers the consolidated
+  // Kitchen Sink family so a break in the shared engine fails CI
+  'kitchen-sink.html',
   // --- Phase L0.3: widen coverage to the remaining distinct page families ---
   // Standard 7-day 5-on-2-off layout page
   '5on-2off.html',
