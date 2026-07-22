@@ -115,3 +115,26 @@ mc-naming*, PM editors — all deliberate, not dead) · 1-tap hero resume +
 36 h resume banner · denormalized meal snapshots · manifest-driven market
 extraction · the no-build-step rule (every fix above is generate-and-verify,
 never bundle).
+
+## Implementation status
+
+**LS-1 shipped (merged to main).** `tools/sync-shared-modules.py` (all 7
+cross-repo copies) + blocking drift check in both repos' CI (W-01/W-02/W-15);
+smoke test promoted to blocking after fixing `exercise-library.html`'s legacy
+inline SW updater (W-19). Guards immediately caught real drift in
+`tracker-barcode.js` (canonical `mc-barcode.js` now capability-checks
+`MCInputSheet` with a `window.prompt` fallback).
+
+**LS-2 shipped.** Dead stock cleared: `mcdb.js` deleted + its `mc_history`/
+`mc_replace_log` removed from `mc-sync.js` and `mc-export.js` (W-03); 3
+orphaned `onyx-*.css` deleted (W-06); all 20 split/day/instructions/cardio
+pages repointed from legacy `mc-home.html`/`pmc-home.html` to
+`cat-mc.html`/`cat-pmc.html`, the two legacy hubs converted to redirect stubs
+so bookmarks survive (W-04); design comps (`*.dc.html`, `stndr-card-concepts`)
+stripped from the Pages deploy artifact while kept in-repo (W-08); icon PNGs
+losslessly optimized via oxipng, 133 KB → 41 KB (W-23); `faint-instructions.html`
+surfaced with a guide link on `cat-faint.html` (W-07 FAINT). **W-07 Iron
+Engine resolved to no-change:** owner confirmed it was folded from a standalone
+program into a Kitchen Sink split — it is wired into `cat-ks.html` as "Split 2"
+in two places, so it is reachable by design, not orphaned. SW precache 109 → 105
+entries; net −784 lines.
