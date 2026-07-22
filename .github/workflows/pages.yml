@@ -38,6 +38,19 @@ jobs:
         run: |
           node tools/test-mc-bridge.js
           node tools/test-mc-sync-merge.js
+      - name: Shared-module drift check (Mikes-Cookbook copies vs canonical — audit LS-1)
+        # Downloads the cookbook's current copies and fails if any drifted from
+        # this repo's canonical files. Landing order for a shared-module change:
+        # merge this repo's PR first, then the cookbook's — the deploy run in
+        # between fails here by design; re-run it after the cookbook PR merges.
+        run: |
+          mkdir -p /tmp/cookbook-mirror/tools
+          base="https://raw.githubusercontent.com/mcross2298/Mikes-Cookbook/main"
+          for f in tracker-foodapi.js tracker-calc.js tracker-barcode.js \
+                   mc-bridge.js mc-install.js mc-backup-status.js tools/test-mc-bridge.js; do
+            curl -fsSL --retry 3 "$base/$f" -o "/tmp/cookbook-mirror/$f"
+          done
+          python3 tools/sync-shared-modules.py --check --cookbook-dir /tmp/cookbook-mirror
       - name: Program color-sync check (mc-pm-data.js vs dashboard.html)
         run: node tools/check-program-colors.js
       - name: Multi-week program intensifier-coverage check (mm-p1/p2/p3.html)
@@ -46,12 +59,12 @@ jobs:
         run: python3 tools/build-sw.py --version "ci-${{ github.run_number }}"
       - name: Market-extraction leak check (content-manifest.json)
         run: python3 tools/build-market.py --check
-      - name: Headless render smoke test (report-only)
+      - name: Headless render smoke test (blocking)
         # CI-only tooling, installed into a scratch prefix outside the repo —
-        # no package.json here, deliberately (see CLAUDE.md). Report-only
-        # (continue-on-error) until it's proven stable across a few real CI
-        # runs, per the Phase 3.4 plan; promote to blocking after that.
-        continue-on-error: true
+        # no package.json here, deliberately (see CLAUDE.md). Promoted from
+        # report-only to blocking in audit LS-1 (finding W-19) after fixing
+        # the one real failure it had been silently reporting
+        # (exercise-library.html's legacy inline SW updater).
         run: |
           npm install --no-save --prefix /tmp/pw-ci playwright@latest
           /tmp/pw-ci/node_modules/.bin/playwright install --with-deps chromium
