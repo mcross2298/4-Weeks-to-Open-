@@ -45,6 +45,7 @@
 })();
 </script>
   <link rel="stylesheet" href="mc-light.css">
+<script src="mc-reps.js"></script>
 </head>
 <body>
 <div class="header">
@@ -224,10 +225,22 @@ function restTimer(rest, name){
     + '<span class="rest-timer-icon">⏱️</span><span class="rest-timer-label">'+label+'</span></span>';
 }
 
+// The "sets" string mc-setlog.js parses (repFor/setCount) and aReps() renders
+// as chips. A pyramid rep list (e.g. "15,12,10") already carries its own set
+// count in the comma segments — prefixing it with "N×" corrupts both readers
+// (mc-setlog.js's comma-split sees "3×15" as segment 1 and strips the "×",
+// producing "315"; aReps() doesn't understand a leading multiplier at all).
+// Only a single uniform rep target needs the "N×reps" form.
+function schemeOf(ex, drops){
+  var reps = (''+(ex.reps||'10')).trim();
+  var base = (reps.indexOf(',') !== -1) ? reps : ((ex.sets||3) + '×' + reps);
+  return base + dropClause(drops);
+}
+
 // A single (non-superset) exercise card — the original .a-card layout.
 function renderSingle(ex, i){
   var drops = dropsOf(ex);
-  var scheme = (ex.sets||3) + '×' + (ex.reps||'10') + dropClause(drops);
+  var scheme = schemeOf(ex, drops);
   var badges = '';
   if(ex.muscle) badges += '<span class="type-badge tb-midset">'+esc(ex.muscle)+'</span>';
   badges += dropBadge(drops);
@@ -242,6 +255,7 @@ function renderSingle(ex, i){
     +   '<div class="a-head"><div class="ex-name a-name">'+esc(ex.name)+'</div>'
     +   (badges?'<div class="a-badges">'+badges+'</div>':'')
     +   '</div></div>'
+    +   '<div class="a-reps">'+aReps(ex.reps||'10')+'</div>'
     +   '<div class="a-strip"><div class="a-cell"><span class="k">Sets</span><span class="v"><span class="ex-sets" data-field="sets">'+esc(scheme)+'</span></span></div>'
     +   '<div class="a-cell"><span class="k">Rest</span><span class="v">'+(ex.rest?esc(restLabel(ex.rest)):'—')+'</span></div></div>'
     +   (ex.rest?'<div class="a-timerbar">'+restTimer(ex.rest, ex.name)+'</div>':'')
@@ -255,25 +269,30 @@ function renderSuperset(g){
   var legs = g.map(function(ex, k){
     var i = ex._i;
     var drops = dropsOf(ex);
-    var scheme = (ex.sets||3) + '×' + (ex.reps||'10') + dropClause(drops);
+    var scheme = schemeOf(ex, drops);
     var badges = '';
     if(ex.muscle) badges += '<span class="type-badge tb-midset">'+esc(ex.muscle)+'</span>';
     badges += dropBadge(drops);
     badges += clusterBadge(ex, i);
     if(ex.tempo) badges += '<span class="type-badge tb-tempo">⏱ '+esc(ex.tempo)+'</span>';
-    if(ex.rest) badges += '<span class="type-badge tb-rest">⏲ '+esc(restLabel(ex.rest))+' rest</span>';
     var did = 'cw' + i + '-' + slug(ex.name);
     var letter = String.fromCharCode(65 + k);   // A, B, C…
+    // A real .rest-timer per leg (not just an info badge) — mc-setlog.js's
+    // normalizeSupersetTimers() consolidates these down to a single timer on
+    // the FINAL leg (the superset's actual rest, after all stations), the same
+    // contract every program page's superset markup already relies on.
+    var restEl = ex.rest ? '<div class="ex-rest">'+restTimer(ex.rest, ex.name)+'</div>' : '';
     return '<div class="ss-ex" data-id="'+did+'" data-type="ssex"'
       + (ex.seedWeight?' data-mc-seed-weight="'+esc(ex.seedWeight)+'"':'')
       + (ex.cluster?' data-mc-cluster="'+esc(ex.cluster)+'" data-mc-cluster-rest="'+esc(ex.clusterRest||'')+'"':'')+'>'
       + '<div class="ss-num">'+letter+'</div>'
       + '<div class="ss-content">'
       +   '<div class="ss-name">'+esc(ex.name)+'</div>'
-      +   '<div class="a-ss-reps"><span style="font-size:12px;font-weight:800;color:#c084fc;">'+esc(scheme)+'</span></div>'
+      +   '<div class="a-ss-reps">'+aReps(ex.reps||'10')+'</div>'
       +   '<span class="ex-sets a-ss-sets-hidden">'+esc(scheme)+'</span>'
       +   (badges?'<div class="a-badges">'+badges+'</div>':'')
       +   clusterNote(ex, i)
+      +   restEl
       + '</div></div>';
   });
   // 2 = superset, 3 = tri-set, 4+ = giant set; tri+ get the amber .is-tri skin.
@@ -360,6 +379,7 @@ render();
 <script src="program-overrides.js"></script>
 <script src="mc-card-actions.js"></script>
 <script src="mc-setlog.js"></script>
+<script src="mc-superset-hop.js"></script>
 <script src="mc-session.js"></script>
 <script src="mc-suggest.js"></script>
 <script src="mc-chart.js"></script>

@@ -464,7 +464,7 @@ function addNewExercise() {
   if (!q) return;
   var entry = MC_EXCATALOG.add(q);
   if (!selected.some(function(s){ return s.name === entry.name; })) {
-    selected.push({ name: entry.name, muscle: entry.muscle, sets: 3, reps: '10', tempo: '', rest: '', drops: [], superset: false, cluster: '', clusterRest: '' });
+    selected.push({ name: entry.name, muscle: entry.muscle, sets: 3, reps: '10', tempo: '', rest: 60, drops: [], superset: false, cluster: '', clusterRest: '' });
   }
   buildFilters();
   renderList();
@@ -475,7 +475,7 @@ function toggleEx(i){
   var e = EXERCISES[i];
   var idx = selected.findIndex(function(s){ return s.name===e.name; });
   if(idx>=0) selected.splice(idx,1);
-  else selected.push({ name:e.name, muscle:e.muscle, sets:3, reps:'10', tempo:'', rest:'', drops:[], superset:false, cluster:'', clusterRest:'' });
+  else selected.push({ name:e.name, muscle:e.muscle, sets:3, reps:'10', tempo:'', rest:60, drops:[], superset:false, cluster:'', clusterRest:'' });
   renderList(); renderTray();
 }
 function clearSelected(){ selected = []; renderList(); renderTray(); }
