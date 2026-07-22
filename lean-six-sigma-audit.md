@@ -175,3 +175,21 @@ it's 142 KB gzipped (what mobile downloads) and parses+evals in ~3.5 ms in V8
 (~20–35 ms even scaled to a mid-range phone), far under the audit's 150 ms
 split threshold, and the SWR change now serves it instantly on repeat visits.
 Splitting it would have been effort spent on a non-problem.
+
+**LS-5 in progress (Kitchen Sink family consolidated; other engine targets
+deferred).** W-09: the 5 `kitchen-sink*.html` pages each carried their own
+inline render engine (~18 KB each) that had **drifted at every layer** — timer,
+renderer, badge keywords (`REVERSE PYRAMID` vs `MECHANICAL DROP`), the
+conditioning-day branch, and hardcoded-vs-parameterized schedule/eyebrow config
+— exactly the "fix it five times" waste W-09 names. All five now load one shared
+`ks-engine.js` (a superset built on the most-parameterized variant: schedule +
+eyebrow come from a per-page `window.KS_CFG`, both badge keywords are handled,
+and the conditioning branch is dormant where a page's data doesn't use it), each
+page keeping only its `window.DATA`. **Proven safe, not assumed:** a DOM-parity
+harness (`tools/ks-parity.js`) captured each page's rendered `#app` before the
+change; after the change all five are **byte-identical** to that baseline. The
+smoke test now includes `kitchen-sink.html` so a future break in the shared
+engine fails CI. Remaining LS-5 targets — the `iron-engine`/`hv-block` inline
+engines, the `cat-pmc`/`pmc-workout` pair, CSS-from-`mc-pm-data.js` generation
+(W-18), and the two-tracker-UI dedup (W-10) — are deferred to their own
+sub-phases, each to be gated the same way by `tools/ks-parity.js`.
