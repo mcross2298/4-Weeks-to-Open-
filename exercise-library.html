@@ -319,34 +319,7 @@ if (_urlMuscle) setFilter(_urlMuscle); else filterExercises();
 
 </script>
 
-<script>
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.getRegistrations().then(function(regs){
-    regs.forEach(function(reg){
-      // Tell any waiting worker to skip waiting and take over immediately
-      if(reg.waiting) reg.waiting.postMessage('skipWaiting');
-      // Check for updates
-      reg.update();
-    });
-  });
-  // Re-register with the current sw.js
-  navigator.serviceWorker.register('./sw.js').then(function(reg){
-    reg.addEventListener('updatefound', function(){
-      var newWorker = reg.installing;
-      newWorker.addEventListener('statechange', function(){
-        if(newWorker.state === 'installed' && navigator.serviceWorker.controller){
-          newWorker.postMessage('skipWaiting');
-        }
-      });
-    });
-  });
-  // Reload once when new SW takes control
-  var refreshing = false;
-  navigator.serviceWorker.addEventListener('controllerchange', function(){
-    if(!refreshing){ refreshing = true; window.location.reload(); }
-  });
-}
-</script>
+<script src="mc-sw-update.js?v=45"></script><!-- replaced legacy inline SW updater: unguarded navigator.serviceWorker crash + force-reload without the mid-workout guard -->
 <script>
 /* ── SMART BACK NAV ── */
 (function(){
