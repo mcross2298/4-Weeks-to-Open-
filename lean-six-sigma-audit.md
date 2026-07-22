@@ -138,3 +138,19 @@ Engine resolved to no-change:** owner confirmed it was folded from a standalone
 program into a Kitchen Sink split — it is wired into `cat-ks.html` as "Split 2"
 in two places, so it is reachable by design, not orphaned. SW precache 109 → 105
 entries; net −784 lines.
+
+**LS-3 shipped.** `tools/check-script-manifest.py` (W-05): a CI gate that keys
+clone pages by filename role (4 declared families — mc-day ×23, pmc/s3/s4-day
+×11, split-index ×12, instructions ×10 = 56 pages) and fails the build if any
+family member's ordered `<script src>` list drifts from its siblings — the same
+generate-and-verify pattern as `build-sw.py --check`. Grouping is by filename,
+not by module set (which would be circular and would wrongly rope in pages like
+`cat-pump-new4.html` that only coincidentally share a set while legitimately
+interleaving inline config between tags). Real drift fixed to make the gate
+green: the 11-page pmc/s3/s4-day family had accidentally shuffled its tail
+script block into 3 orders (independent IIFEs, so it drifted invisibly) — all
+normalized to one canonical order. The redundant per-file `?v=` cache-bust
+params (`?v=45`/`?v=46` on ~90 pages, a manual version that was already
+drifting and is moot under the SW's network-first JS strategy) were dropped
+fleet-wide (W-21 part). Verified end-to-end: an injected stray param is caught
+with an exact diff; all 33 smoke-test pages still render clean.
