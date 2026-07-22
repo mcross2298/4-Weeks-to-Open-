@@ -305,8 +305,20 @@
       // existing convention (see data-mc-orig-name above) and stay portable
       // to the plain-object card mocks tools/test-naming.js exercises this
       // module against.
-      if (o && o.reps) { card.setAttribute('data-mc-cluster', o.reps); card.setAttribute('data-mc-cluster-rest', o.rest || ''); }
-      else { card.removeAttribute('data-mc-cluster'); card.removeAttribute('data-mc-cluster-rest'); }
+      if (o && o.reps) {
+        card.setAttribute('data-mc-cluster', o.reps);
+        card.setAttribute('data-mc-cluster-rest', o.rest || '');
+        card.setAttribute('data-mcpo-cluster-owned', '1');
+      } else if (card.getAttribute('data-mcpo-cluster-owned')) {
+        // Only clear what THIS module previously set. A card can carry a
+        // native data-mc-cluster with no PM/personal override at all (e.g.
+        // custom workouts stamp it directly at render time) — that one isn't
+        // ours to remove, or mc-setlog.js's Log Sets panel loses the cluster
+        // mini-set bubbles and silently falls back to a plain reps row.
+        card.removeAttribute('data-mc-cluster');
+        card.removeAttribute('data-mc-cluster-rest');
+        card.removeAttribute('data-mcpo-cluster-owned');
+      }
     }
     if (o) {
       var badges = card.querySelector('.a-badges');

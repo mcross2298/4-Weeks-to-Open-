@@ -293,7 +293,13 @@
       if (r.querySelector('.mcl-ck.done')) done++;
     });
     el.textContent = done + '/' + rows.length;
-    el.classList.toggle('done', done > 0 && done === rows.length);
+    var allDone = done > 0 && done === rows.length;
+    el.classList.toggle('done', allDone);
+    // Logging every set is itself completion — mirror it onto the card's
+    // .checked class so every consumer that already reads .checked (session
+    // progress bar, live-summary %, activity log) picks it up without the
+    // athlete also needing to tap the whole card as a separate gesture.
+    card.classList.toggle('checked', allDone);
   }
   function cssId(id) { return String(id).replace(/[^a-zA-Z0-9_-]/g, '_'); }
 
