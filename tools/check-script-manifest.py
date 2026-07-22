@@ -55,6 +55,7 @@ FAMILIES = {
                      r"|s4-(pull|push))\.html$",
     "split-index":   r"^(mc|pmc)-split\d+\.html$",
     "instructions":  r"^[a-z0-9]+-instructions\.html$",
+    "kitchen-sink":  r"^kitchen-sink(-s\d+)?\.html$",
 }
 
 

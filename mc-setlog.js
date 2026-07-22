@@ -112,7 +112,7 @@
 
   // ---- drop-set detection -------------------------------------------------
   // A drop set is an EXTRA set tacked onto the working sets — it must not be
-  // folded into the working-set count. FOUR notations appear across programs:
+  // folded into the working-set count. Several notations appear across programs:
   /* MARKET:STRIP influencer-refs START */
   //   • open-ended "drop set"  (Daily Gainz "3×8–12, drop set" / "(drop set)")
   /* MARKET:STRIP influencer-refs END */
@@ -124,6 +124,11 @@
   //       AMRAP token that many times (one row per drop)
   //   • arrow, trailing           "12, 10, 8, 8 → AMRAP, AMRAP"
   //       (Iron Engine/Kitchen Sink family)
+  //   • arrow + repeat×target, trailing   "15, 12, 12 → 3×10"
+  //       (Kitchen Sink cluster-round notation: N additional numeric-target
+  //       rows tacked on after the base pyramid, e.g. "3 base sets, then 3
+  //       cluster micro-sets of 10" — reuses the drop-row machinery below
+  //       since a numeric-target extra row is exactly what a drop already is)
   //   • plus-multiplier, no "drop" word   "8, 6, 4, 4, + 2×AMRAP"
   //       (Modality Matrix superset/tri-set burnout rounds)
   //   • "then"                    "12,10,8,8 then AMRAP"
@@ -157,6 +162,10 @@
     // arrow: "12, 10, 8, 8 → AMRAP, AMRAP" (trailing, end of string)
     m = hay.match(/→\s*((?:amrap|∞|\d+)(?:\s*,\s*(?:amrap|∞|\d+))*)\s*$/i);
     if (m) return finish(m[1], 0);
+    // arrow + repeat×target: "15, 12, 12 → 3×10" (Kitchen Sink cluster round) —
+    // N additional rows, each targeting the same numeric rep count.
+    m = hay.match(/→\s*(\d+)\s*[x×]\s*(\d+)\s*$/i);
+    if (m) return finish(m[2], parseInt(m[1], 10));
     // plus-multiplier, no "drop" word: "…, + 2×AMRAP"
     m = hay.match(/\+\s*(\d+)\s*[x×]\s*(?:amrap\b|∞)\s*$/i);
     if (m) return finish('AMRAP', parseInt(m[1], 10));
@@ -175,6 +184,7 @@
   function stripDrop(s) {
     return (s || '')
       .replace(/\s*→\s*(?:amrap|∞|\d+)(?:\s*,\s*(?:amrap|∞|\d+))*\s*$/i, '')
+      .replace(/\s*→\s*\d+\s*[x×]\s*\d+\s*$/i, '')
       .replace(/[,+ ]*\+\s*\d+\s*[x×]\s*(?:amrap\b|∞)\s*$/i, '')
       .replace(/[, ]*\bthen\b\s*(?:amrap|∞|\d+)(?:\s*,\s*(?:amrap|∞|\d+))*\s*$/i, '')
       .replace(/[,+ ]*(?:\d+\s*[x×]\s*)?\bdrop\b.*$/i, '')
