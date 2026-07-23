@@ -93,6 +93,14 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 .prog-sessions .log-card{margin-bottom:8px;}
 .prog-sessions .log-card:last-child{margin-bottom:0;}
 
+.prog-progress{margin-top:10px;}
+.prog-progress-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;}
+.prog-progress-count{font-size:12px;font-weight:800;color:#e2e8f0;}
+.prog-progress-pct{font-size:12px;font-weight:900;color:var(--prog-color,#d4af37);}
+.prog-bar-track{height:6px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden;}
+.prog-bar-fill{height:100%;border-radius:3px;background:var(--prog-color,#d4af37);transition:width 0.3s;}
+.prog-complete-chip{display:inline-block;margin-top:8px;font-size:11px;font-weight:900;color:#34d399;letter-spacing:0.04em;}
+
 /* detail bottom sheet — same slide-up/backdrop pattern as build-workout.html's
    Review sheet and mc-macros.js's sheet(), so history detail behaves like
    every other sheet in the app. */
@@ -165,6 +173,8 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 </div>
 
 <script src="mc-pm-data.js"></script>
+<script src="mc-program-store.js"></script>
+<script src="mc-program-pub.js"></script>
 <script>
 const WL_KEY = 'mc_workout_log_v1';
 const SL_KEY = 'mc_setlog_v1';
@@ -198,21 +208,35 @@ function dailyEntries(){
 // program id/name/color) via each program's own file-naming prefix, so a new
 // flagship program groups correctly with zero changes here. A handful of
 // legacy day pages predate that naming convention and don't carry a
-// program-id prefix at all — they fall through to the Bonus/Custom bucket
-// below rather than being guessed at (this file ships to the public market
-// build too, so it deliberately never hardcodes a licensed program's own
-// filenames to special-case them — see tools/build-market.py's leak scan).
-const BONUS_PROG = {id:'bonus', name:'🎁 Bonus / Custom', color:'#94a3b8'};
+// program-id prefix at all — they fall through to the Individual/Standalone
+// bucket below rather than being guessed at (this file ships to the public
+// market build too, so it deliberately never hardcodes a licensed program's
+// own filenames to special-case them — see tools/build-market.py's leak scan).
+const STANDALONE_PROG = {id:'bonus', name:'📋 Individual / Standalone', color:'#94a3b8'};
 function resolveProgram(pageId){
   pageId = (pageId||'').replace(/\.html$/,'');
-  if(!pageId) return BONUS_PROG;
+  if(!pageId) return STANDALONE_PROG;
+  // run-program.html's custom multi-day programs (cprog-<id>-d<n> /
+  // cprog-<id>-cons<n>-cd<n>, see resumeHref() below) are real user-built
+  // PROGRAMS, not one-off workouts — they used to fall through to the same
+  // bucket as truly standalone sessions just because they don't live in
+  // mc-pm-data.js. Look the real record up (local first, then the owner's
+  // published mirror) so they group and badge by their own name/color, with
+  // `total` (day count) available for the Programs tab's progress bar.
+  let m = pageId.match(/^cprog-(.+)-cons\d+-d\d+$/) || pageId.match(/^cprog-(.+)-d\d+$/);
+  if(m){
+    const cid = m[1];
+    const cp = (window.MCPrograms && MCPrograms.get(cid)) || (window.MCPub && MCPub.get(cid));
+    if(cp) return {id:'cprog-'+cid, name:'🧩 '+cp.name, color:cp.color||'#34d399', total:(cp.days||[]).length};
+    return {id:'cprog-'+cid, name:'🧩 Custom Program', color:'#34d399'};
+  }
   const progs = (window.MC_PM_DATA && MC_PM_DATA.programs) || [];
   for(const p of progs){
     if(pageId===p.id || pageId.indexOf(p.id+'-')===0 || pageId.indexOf('cat-'+p.id)===0){
-      return {id:p.id, name:p.name, color:p.color};
+      return {id:p.id, name:p.name, color:p.color, total:(p.splits||[]).length};
     }
   }
-  return BONUS_PROG;
+  return STANDALONE_PROG;
 }
 
 // ---- resume link decoding ---------------------------------------------------
@@ -269,8 +293,11 @@ function renderSessionCard(kind, idx, prog){
       ${s.pr?'<span class="set-pr">PR</span>':''}
     </div>`).join('');
   const moreSets = (log.sets||[]).length > 4 ? `<div style="font-size:11px;color:#475569;padding:6px 10px;">+${log.sets.length-4} more sets</div>` : '';
+  // Completed sessions open the real read-only Completed Workout page
+  // (the exact workout card that was completed, not a list-summary sheet) —
+  // only 'daily' (in-progress) entries still use the bottom-sheet path below.
   return `
-    <div class="log-card" style="--prog-color:${prog.color}" onclick="event.stopPropagation();openDetail('finished',${idx})">
+    <div class="log-card" style="--prog-color:${prog.color}" onclick="event.stopPropagation();location.href='workout-detail.html?id='+encodeURIComponent('${log.id||''}')">
       <div class="log-header">
         <div class="log-name">${log.workoutName||'Workout'}</div>
         <div class="log-date">${log.time||''}</div>
@@ -289,54 +316,35 @@ function renderSessionCard(kind, idx, prog){
 function closeDetail(){
   document.getElementById('wlOverlay').classList.remove('open');
 }
+// Only live ('daily') sessions still use this sheet — completed ('finished')
+// sessions navigate straight to workout-detail.html (see renderSessionCard).
 function openDetail(kind, idx){
   const body = document.getElementById('wlSheetBody');
-  if(kind==='finished'){
-    const log = LOGS[idx];
-    const prog = resolveProgram(log.pageId||'');
-    const allSets = (log.sets||[]).map(s=>`
-      <div class="set-row">
-        <span class="set-ex">${s.name}</span>
-        <span class="set-data">${s.weight?s.weight+' lb':'—'} × ${s.reps||'—'}</span>
-        ${s.pr?'<span class="set-pr">PR</span>':''}
-      </div>`).join('') || '<div class="wl-empty-note">No individual sets recorded for this session.</div>';
-    body.innerHTML = `
-      <div class="wl-sheet-title">${log.workoutName||'Workout'}</div>
-      <div class="wl-sheet-sub">${formatDate(log.date)}${log.time?' · '+log.time:''}</div>
-      <div class="wl-sheet-tags">
-        <span class="log-tag gold">${prog.name}</span>
-        <span class="log-tag">${(log.sets||[]).length} set${(log.sets||[]).length!==1?'s':''}</span>
-        ${log.duration?`<span class="log-tag">⏱ ${log.duration}</span>`:''}
-        ${log.prs?`<span class="log-tag gold">🏆 ${log.prs} PR${log.prs>1?'s':''}</span>`:''}
-      </div>
-      <div class="log-sets">${allSets}</div>`;
-  } else {
-    const e = DAILY[idx];
-    const prog = resolveProgram(e.pid||'');
-    // All sets logged but "Finish Workout" was never tapped — PRs and the
-    // permanent history entry only get written at Finish, so this is still
-    // technically a live/unsaved session, not a completed one. Keep routing
-    // to the same resume destination (it's the only way to bank it), just
-    // stop calling it "in progress" once there's nothing left to do but save.
-    const isDone = e.pct>=100;
-    const statusLine = isDone ? 'all sets logged — not yet saved' : 'session in progress';
-    const note = isDone
-      ? 'Every set is logged, but this session isn\'t saved to your history yet — PRs are only calculated when you tap "Finish Workout." Resume it to finish and save.'
-      : 'This session only tracks aggregate progress until "Finish Workout" is tapped — resume it to see (and complete) the full exercise-by-exercise breakdown.';
-    const btnLabel = isDone ? '✓ Finish & save workout' : '▶ Resume workout';
-    body.innerHTML = `
-      <div class="wl-sheet-title">${e.program||e.pid}</div>
-      <div class="wl-sheet-sub">${e.date} · ${statusLine}</div>
-      <div class="wl-sheet-tags">
-        <span class="log-tag gold">${prog.name}</span>
-        <span class="log-tag">${e.exDone}/${e.exTotal} exercises</span>
-        <span class="log-tag">${e.doneSets} sets</span>
-        <span class="log-tag">${e.doneReps} reps</span>
-        <span class="log-tag gold">${e.pct}% complete</span>
-      </div>
-      <div class="wl-empty-note">${note}</div>
-      <a class="wl-resume-btn" href="${resumeHref(e.pid)}">${btnLabel}</a>`;
-  }
+  const e = DAILY[idx];
+  const prog = resolveProgram(e.pid||'');
+  // All sets logged but "Finish Workout" was never tapped — PRs and the
+  // permanent history entry only get written at Finish, so this is still
+  // technically a live/unsaved session, not a completed one. Keep routing
+  // to the same resume destination (it's the only way to bank it), just
+  // stop calling it "in progress" once there's nothing left to do but save.
+  const isDone = e.pct>=100;
+  const statusLine = isDone ? 'all sets logged — not yet saved' : 'session in progress';
+  const note = isDone
+    ? 'Every set is logged, but this session isn\'t saved to your history yet — PRs are only calculated when you tap "Finish Workout." Resume it to finish and save.'
+    : 'This session only tracks aggregate progress until "Finish Workout" is tapped — resume it to see (and complete) the full exercise-by-exercise breakdown.';
+  const btnLabel = isDone ? '✓ Finish & save workout' : '▶ Resume workout';
+  body.innerHTML = `
+    <div class="wl-sheet-title">${e.program||e.pid}</div>
+    <div class="wl-sheet-sub">${e.date} · ${statusLine}</div>
+    <div class="wl-sheet-tags">
+      <span class="log-tag gold">${prog.name}</span>
+      <span class="log-tag">${e.exDone}/${e.exTotal} exercises</span>
+      <span class="log-tag">${e.doneSets} sets</span>
+      <span class="log-tag">${e.doneReps} reps</span>
+      <span class="log-tag gold">${e.pct}% complete</span>
+    </div>
+    <div class="wl-empty-note">${note}</div>
+    <a class="wl-resume-btn" href="${resumeHref(e.pid)}">${btnLabel}</a>`;
   document.getElementById('wlOverlay').classList.add('open');
 }
 (function(){
@@ -370,13 +378,15 @@ function renderSessionsTab(){
     return;
   }
 
-  // Split into Program Workouts vs Standalone Sessions (Bug: these used to
-  // render interleaved in one flat list with no visual way to tell them
-  // apart). Bucket boundary reuses resolveProgram()'s own id==='bonus' check
-  // — the same test the Programs tab already uses to label this bucket
-  // "🎁 Bonus / Custom" — so the two tabs can never disagree about what
-  // counts as a real program. Each bucket is sorted newest-first across both
-  // live ('daily') and banked ('finished') entries.
+  // Split into Program Workouts vs Individual/Standalone Sessions (Bug: these
+  // used to render interleaved in one flat list with no visual way to tell
+  // them apart, and user-built custom programs — cprog-* — used to get
+  // lumped in with true one-off workouts here since resolveProgram() didn't
+  // recognize them yet). Bucket boundary reuses resolveProgram()'s own
+  // id==='bonus' check — the same test the Programs tab uses — so the two
+  // tabs can never disagree about what counts as a real program. Each bucket
+  // is sorted newest-first across both live ('daily') and banked
+  // ('finished') entries.
   const buckets = { program: [], standalone: [] };
   DAILY.forEach((e,i)=>{
     const prog = resolveProgram(e.pid||'');
@@ -395,27 +405,29 @@ function renderSessionsTab(){
   }
 
   let html = renderBucket('🏋️ Program Workouts', buckets.program) +
-             renderBucket('📋 Standalone Sessions', buckets.standalone);
+             renderBucket('📋 Individual / Standalone', buckets.standalone);
 
   if(LOGS.length) html += `<button class="clear-btn" onclick="clearLogs()">🗑 Clear All Workout Logs</button>`;
   content.innerHTML = html;
 }
 
 // ---- Programs tab (aggregate per program, expand for nested sessions) -----
-// The data model only ever tracked per-page-visit session % — it has no
-// concept of "day 12 of a 15-week program" — so this deliberately shows real
-// aggregate counts (sessions/sets/last-trained) rather than fabricating a
-// week/day progress bar the app can't actually back up.
+// Only real programs (flagship, matched via mc-pm-data.js, or user-built
+// cprog-* programs resolved above) render here — the Individual/Standalone
+// bucket is a pile of unrelated one-offs, not a program, and showing it as
+// a fake "program" card was part of what made this tab feel mixed-up.
 let progOpen = {};   // progId -> bool, persists across re-renders in this tab
 function renderProgramsTab(){
   const content = document.getElementById('logContent');
   const groups = {};   // progId -> {prog, items:[{kind,idx,ts}]}
   DAILY.forEach((e,i)=>{
     const prog = resolveProgram(e.pid||'');
+    if(prog.id==='bonus') return;
     (groups[prog.id]=groups[prog.id]||{prog,items:[]}).items.push({kind:'daily', idx:i, ts:e.ts||0});
   });
   LOGS.forEach((log,i)=>{
     const prog = resolveProgram(log.pageId||'');
+    if(prog.id==='bonus') return;
     const ts = new Date(log.date).getTime()||0;
     (groups[prog.id]=groups[prog.id]||{prog,items:[]}).items.push({kind:'finished', idx:i, ts});
   });
@@ -440,20 +452,54 @@ function renderProgramsTab(){
   content.innerHTML = rows.map(g=>{
     g.items.sort((a,b)=>b.ts-a.ts);
     let totalSets = 0;
+    // Completion (X) = distinct calendar dates with at least one *finished*
+    // (banked) session under this program, capped at the program's total
+    // (Y = splits.length / custom-program day count). Matching against exact
+    // split names isn't reliable (page titles don't consistently mirror
+    // mc-pm-data.js's splits[] strings), so distinct-days-trained is the
+    // closest honest metric the saved data actually supports.
+    const finishedDates = new Set();
     g.items.forEach(it=>{
-      if(it.kind==='daily') totalSets += DAILY[it.idx].doneSets||0;
-      else totalSets += (LOGS[it.idx].sets||[]).length;
+      if(it.kind==='daily'){
+        totalSets += DAILY[it.idx].doneSets||0;
+      } else {
+        const log = LOGS[it.idx];
+        totalSets += (log.sets||[]).length;
+        finishedDates.add(formatDate(log.date));
+      }
     });
     const lastTs = g.items[0].ts;
     const lastLabel = lastTs ? formatDate(new Date(lastTs).toISOString()) : '—';
     const isOpen = !!progOpen[g.prog.id];
     const sessionsHtml = g.items.map(it=>renderSessionCard(it.kind, it.idx, g.prog)).join('');
+
+    const Y = g.prog.total;
+    let progressHtml;
+    if(Y){
+      const X = Math.min(finishedDates.size, Y);
+      const pct = Math.round((X/Y)*100);
+      progressHtml = `
+        <div class="prog-progress">
+          <div class="prog-progress-row">
+            <span class="prog-progress-count">${X} completed of ${Y}</span>
+            <span class="prog-progress-pct">${pct}%</span>
+          </div>
+          <div class="prog-bar-track"><div class="prog-bar-fill" style="width:${pct}%"></div></div>
+          ${X>=Y?'<div class="prog-complete-chip">✓ Completed</div>':''}
+        </div>`;
+    } else {
+      // No known total for this program (e.g. a custom program whose local
+      // record was deleted) — fall back to the plain aggregate line rather
+      // than showing a progress bar we can't actually back up.
+      progressHtml = `<div class="prog-meta">${g.items.length} session${g.items.length!==1?'s':''} · ${totalSets} set${totalSets!==1?'s':''} · last ${lastLabel}</div>`;
+    }
+
     return `
       <div class="prog-card${isOpen?' open':''}" style="--prog-color:${g.prog.color}" onclick="toggleProgram('${g.prog.id}')">
         <div class="prog-header">
-          <div>
+          <div style="flex:1;">
             <div class="prog-name">${g.prog.name}</div>
-            <div class="prog-meta">${g.items.length} session${g.items.length!==1?'s':''} · ${totalSets} set${totalSets!==1?'s':''} · last ${lastLabel}</div>
+            ${progressHtml}
           </div>
           <div class="prog-chev">▾</div>
         </div>

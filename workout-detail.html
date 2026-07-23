@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MC Training">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Completed Workout — MC Training</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
+body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
+
+.topbar{display:flex;align-items:center;gap:12px;padding:20px 18px 14px;position:sticky;top:0;z-index:20;background:linear-gradient(to bottom,#0a0a0a 80%,transparent);}
+.back{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:#111;border:1px solid rgba(255,255,255,0.1);color:#d4af37;font-size:16px;text-decoration:none;flex-shrink:0;}
+.topbar-info{flex:1;}
+.topbar-title{font-size:18px;font-weight:900;letter-spacing:-0.02em;}
+.topbar-sub{font-size:12px;color:var(--muted);margin-top:1px;}
+
+.hero{background:linear-gradient(135deg,#0a1628,#020b18);border-bottom:1px solid rgba(212,175,55,0.15);padding:20px 18px 22px;margin-bottom:0;}
+.hero-eyebrow{font-size:11px;font-weight:900;letter-spacing:0.25em;color:#34d399;text-transform:uppercase;margin-bottom:8px;}
+.hero-title{font-size:24px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;word-break:break-word;}
+.hero-sub{font-size:13px;color:#6b7280;line-height:1.5;}
+.hero-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.hero-tag{font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,0.06);color:#94a3b8;border:1px solid rgba(255,255,255,0.08);letter-spacing:0.05em;}
+.hero-tag.gold{background:rgba(212,175,55,0.12);color:#d4af37;border-color:rgba(212,175,55,0.28);}
+
+/* Stats strip — same shape as mc-finish.js's fw-done recap grid */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);}
+.stat{background:#0a0a0a;padding:14px 8px;text-align:center;}
+.stat-num{font-size:18px;font-weight:900;color:#d4af37;letter-spacing:-0.02em;}
+.stat-label{font-size:10px;font-weight:700;color:#475569;letter-spacing:0.06em;text-transform:uppercase;margin-top:2px;}
+
+.content{padding:20px 18px 0;}
+.readonly-note{font-size:12px;color:#475569;line-height:1.5;background:#0d0d0d;border:1px solid rgba(255,255,255,0.06);
+  border-radius:10px;padding:10px 12px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+
+/* Exercise cards — grouped from the flat saved sets array, one card per
+   exercise (see NOTE in the script: superset/tri-set grouping and per-set
+   notes aren't in the saved data, so each exercise renders standalone). */
+.ex-card{background:#111;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:16px;margin-bottom:10px;position:relative;overflow:hidden;}
+.ex-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#34d399;border-radius:0 2px 2px 0;}
+.ex-card-name{font-size:15px;font-weight:800;color:#fff;margin-bottom:10px;line-height:1.3;}
+.ex-set-rows{display:flex;flex-direction:column;gap:6px;}
+.ex-set-row{display:flex;align-items:center;gap:10px;padding:7px 10px;background:#0d0d0d;border-radius:8px;}
+.ex-set-num{font-size:10px;font-weight:800;color:#475569;letter-spacing:0.05em;width:40px;flex-shrink:0;}
+.ex-set-data{font-size:13px;color:#e2e8f0;font-weight:700;flex:1;}
+.ex-set-pr{font-size:11px;font-weight:900;background:rgba(212,175,55,0.15);color:#d4af37;border-radius:4px;padding:1px 5px;letter-spacing:0.06em;border:1px solid rgba(212,175,55,0.25);}
+
+.empty{text-align:center;padding:48px 24px;}
+.empty-icon{font-size:40px;margin-bottom:14px;}
+.empty-title{font-size:18px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-0.01em;}
+.empty-sub{font-size:13px;color:#475569;line-height:1.6;margin-bottom:20px;}
+.empty-btn{display:inline-block;padding:12px 24px;background:#d4af37;color:#000;border-radius:12px;font-size:14px;font-weight:900;text-decoration:none;letter-spacing:0.03em;}
+</style>
+<link rel="stylesheet" href="base.css?v=68"/>
+<link rel="stylesheet" href="mc-nav.css"/>
+<script src="mc-theme.js"></script>
+  <link rel="stylesheet" href="mc-light.css">
+</head>
+<body>
+
+<div class="topbar">
+  <a href="workout-logs.html" class="back">←</a>
+  <div class="topbar-info">
+    <div class="topbar-title">Completed Workout</div>
+    <div class="topbar-sub">Read-only session summary</div>
+  </div>
+</div>
+
+<div id="page"></div>
+
+<script src="mc-pm-data.js"></script>
+<script src="mc-program-store.js"></script>
+<script src="mc-program-pub.js"></script>
+<script>
+const WL_KEY = 'mc_workout_log_v1';
+
+function getLogs(){
+  try{ return JSON.parse(localStorage.getItem(WL_KEY)||'[]'); }catch(e){ return []; }
+}
+
+// Same resolution as workout-logs.html (kept in sync deliberately — see that
+// file's resolveProgram for the full rationale on each branch).
+const STANDALONE_PROG = {id:'bonus', name:'📋 Individual / Standalone', color:'#94a3b8'};
+function resolveProgram(pageId){
+  pageId = (pageId||'').replace(/\.html$/,'');
+  if(!pageId) return STANDALONE_PROG;
+  let m = pageId.match(/^cprog-(.+)-cons\d+-d\d+$/) || pageId.match(/^cprog-(.+)-d\d+$/);
+  if(m){
+    const cid = m[1];
+    const cp = (window.MCPrograms && MCPrograms.get(cid)) || (window.MCPub && MCPub.get(cid));
+    if(cp) return {id:'cprog-'+cid, name:'🧩 '+cp.name, color:cp.color||'#34d399'};
+    return {id:'cprog-'+cid, name:'🧩 Custom Program', color:'#34d399'};
+  }
+  const progs = (window.MC_PM_DATA && MC_PM_DATA.programs) || [];
+  for(const p of progs){
+    if(pageId===p.id || pageId.indexOf(p.id+'-')===0 || pageId.indexOf('cat-'+p.id)===0){
+      return {id:p.id, name:p.name, color:p.color};
+    }
+  }
+  return STANDALONE_PROG;
+}
+
+function formatDate(iso){
+  const d=new Date(iso);
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function fmtLb(n){ return Math.round(n).toLocaleString('en-US'); }
+
+// Flat log.sets is one entry per SET, not per exercise (mc-finish.js never
+// captured superset/tri-set grouping or notes) — group by exercise name in
+// first-seen order so each exercise renders as its own read-only card,
+// closest to "the exact workout card that was completed" the data supports.
+function groupByExercise(sets){
+  const order = [], byName = {};
+  (sets||[]).forEach(s=>{
+    if(!byName[s.name]){ byName[s.name] = []; order.push(s.name); }
+    byName[s.name].push(s);
+  });
+  return order.map(name=>({name, sets:byName[name]}));
+}
+
+function render(){
+  const id = new URLSearchParams(location.search).get('id') || '';
+  const log = getLogs().filter(l=>l.id===id)[0];
+  const page = document.getElementById('page');
+
+  if(!log){
+    page.innerHTML = `
+      <div class="content">
+        <div class="empty">
+          <div class="empty-icon">🔍</div>
+          <div class="empty-title">Session not found</div>
+          <div class="empty-sub">This completed workout may have been cleared from your history.</div>
+          <a href="workout-logs.html" class="empty-btn">← Back to Workout Logs</a>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const prog = resolveProgram(log.pageId||'');
+  const sets = log.sets||[];
+  const exercises = groupByExercise(sets);
+  const tonnage = sets.reduce((t,s)=>t+((parseFloat(s.weight)||0)*(parseInt(s.reps,10)||0)),0);
+
+  document.getElementById('page').innerHTML = `
+    <div class="hero" style="border-bottom-color:${prog.color}33;">
+      <div class="hero-eyebrow">✅ Completed Workout</div>
+      <h1 class="hero-title">${esc(log.workoutName||'Workout')}</h1>
+      <p class="hero-sub">${formatDate(log.date)}${log.time?' · '+esc(log.time):''}</p>
+      <div class="hero-tags">
+        <span class="hero-tag gold">${esc(prog.name)}</span>
+        ${log.prs?`<span class="hero-tag gold">🏆 ${log.prs} PR${log.prs>1?'s':''}</span>`:''}
+      </div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-num">${esc(log.duration||'—')}</div><div class="stat-label">Duration</div></div>
+      <div class="stat"><div class="stat-num">${sets.length}</div><div class="stat-label">Sets</div></div>
+      <div class="stat"><div class="stat-num">${fmtLb(tonnage)}</div><div class="stat-label">Volume (lb)</div></div>
+      <div class="stat"><div class="stat-num">${log.prs?'🏆 '+log.prs:'—'}</div><div class="stat-label">PRs</div></div>
+    </div>
+    <div class="content">
+      <div class="readonly-note">🔒 This is a completed session — read-only. Exercises are grouped from what was actually logged; original superset/tri-set groupings aren't stored in your history.</div>
+      ${exercises.length ? exercises.map(ex=>`
+        <div class="ex-card">
+          <div class="ex-card-name">${esc(ex.name)}</div>
+          <div class="ex-set-rows">
+            ${ex.sets.map((s,i)=>`
+              <div class="ex-set-row">
+                <span class="ex-set-num">SET ${i+1}</span>
+                <span class="ex-set-data">${s.weight?s.weight+' lb':'—'} × ${s.reps||'—'}</span>
+                ${s.pr?'<span class="ex-set-pr">PR</span>':''}
+              </div>`).join('')}
+          </div>
+        </div>`).join('')
+      : '<div class="readonly-note">No individual sets were recorded for this session.</div>'}
+    </div>`;
+}
+
+render();
+</script>
+<script src="mc-nav.js"></script>
+<script src="mc-supabase.js"></script>
+<script src="mc-sync.js"></script>
+</body>
+</html>
