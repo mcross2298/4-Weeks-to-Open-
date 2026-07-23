@@ -215,6 +215,26 @@ function resolveProgram(pageId){
   return BONUS_PROG;
 }
 
+// ---- resume link decoding ---------------------------------------------------
+// run-workout.html and run-program.html are single dynamic pages, not real
+// per-workout files — they set window.MC_PID_OVERRIDE to a synthetic id
+// (custom-<id> / cprog-<prog>-d<day> / cprog-<prog>-cons<n>-d<cd>, see the
+// override blocks in run-workout.html and run-program.html, and the matching
+// href builder in mc-schedule.js) instead of a real filename, so a naive
+// `${pid}.html` 404s for every custom workout/program. Decode those three
+// known formats back to the real runner URL; anything else is an ordinary
+// static program page and `${pid}.html` is correct as-is.
+function resumeHref(pid){
+  pid = pid||'';
+  let m = pid.match(/^custom-(.+)$/);
+  if(m) return 'run-workout.html?id='+encodeURIComponent(m[1]);
+  m = pid.match(/^cprog-(.+)-cons(\d+)-d(\d+)$/);
+  if(m) return 'run-program.html?prog='+encodeURIComponent(m[1])+'&cons='+m[2]+'&cd='+m[3];
+  m = pid.match(/^cprog-(.+)-d(\d+)$/);
+  if(m) return 'run-program.html?prog='+encodeURIComponent(m[1])+'&d='+m[2];
+  return pid+'.html';
+}
+
 function formatDate(iso){
   const d=new Date(iso);
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
@@ -234,6 +254,7 @@ function renderSessionCard(kind, idx, prog){
           <div class="log-date">${e.date}</div>
         </div>
         <div class="log-meta-row">
+          <span class="log-tag gold">${prog.name}</span>
           <span class="log-tag">${e.doneSets} sets</span>
           <span class="log-tag">${e.doneReps} reps</span>
           <span class="log-tag gold">${e.pct}% complete</span>
@@ -292,9 +313,20 @@ function openDetail(kind, idx){
   } else {
     const e = DAILY[idx];
     const prog = resolveProgram(e.pid||'');
+    // All sets logged but "Finish Workout" was never tapped — PRs and the
+    // permanent history entry only get written at Finish, so this is still
+    // technically a live/unsaved session, not a completed one. Keep routing
+    // to the same resume destination (it's the only way to bank it), just
+    // stop calling it "in progress" once there's nothing left to do but save.
+    const isDone = e.pct>=100;
+    const statusLine = isDone ? 'all sets logged — not yet saved' : 'session in progress';
+    const note = isDone
+      ? 'Every set is logged, but this session isn\'t saved to your history yet — PRs are only calculated when you tap "Finish Workout." Resume it to finish and save.'
+      : 'This session only tracks aggregate progress until "Finish Workout" is tapped — resume it to see (and complete) the full exercise-by-exercise breakdown.';
+    const btnLabel = isDone ? '✓ Finish & save workout' : '▶ Resume workout';
     body.innerHTML = `
       <div class="wl-sheet-title">${e.program||e.pid}</div>
-      <div class="wl-sheet-sub">${e.date} · session in progress</div>
+      <div class="wl-sheet-sub">${e.date} · ${statusLine}</div>
       <div class="wl-sheet-tags">
         <span class="log-tag gold">${prog.name}</span>
         <span class="log-tag">${e.exDone}/${e.exTotal} exercises</span>
@@ -302,8 +334,8 @@ function openDetail(kind, idx){
         <span class="log-tag">${e.doneReps} reps</span>
         <span class="log-tag gold">${e.pct}% complete</span>
       </div>
-      <div class="wl-empty-note">This session only tracks aggregate progress until "Finish Workout" is tapped — resume it to see (and complete) the full exercise-by-exercise breakdown.</div>
-      <a class="wl-resume-btn" href="${e.pid}.html">▶ Resume workout</a>`;
+      <div class="wl-empty-note">${note}</div>
+      <a class="wl-resume-btn" href="${resumeHref(e.pid)}">${btnLabel}</a>`;
   }
   document.getElementById('wlOverlay').classList.add('open');
 }
@@ -338,25 +370,32 @@ function renderSessionsTab(){
     return;
   }
 
-  let html = '';
-  if(DAILY.length){
-    html += '<div class="section-label">📅 Daily Sessions (live)</div>';
-    const byDate = {};
-    DAILY.forEach((e,i)=>{ (byDate[e.date]=byDate[e.date]||[]).push(i); });
-    Object.keys(byDate).sort().reverse().forEach(date=>{
-      byDate[date].forEach(i=>{ html += renderSessionCard('daily', i, resolveProgram(DAILY[i].pid||'')); });
-    });
+  // Split into Program Workouts vs Standalone Sessions (Bug: these used to
+  // render interleaved in one flat list with no visual way to tell them
+  // apart). Bucket boundary reuses resolveProgram()'s own id==='bonus' check
+  // — the same test the Programs tab already uses to label this bucket
+  // "🎁 Bonus / Custom" — so the two tabs can never disagree about what
+  // counts as a real program. Each bucket is sorted newest-first across both
+  // live ('daily') and banked ('finished') entries.
+  const buckets = { program: [], standalone: [] };
+  DAILY.forEach((e,i)=>{
+    const prog = resolveProgram(e.pid||'');
+    (prog.id==='bonus' ? buckets.standalone : buckets.program).push({kind:'daily', idx:i, ts:e.ts||0, prog});
+  });
+  LOGS.forEach((log,i)=>{
+    const prog = resolveProgram(log.pageId||'');
+    (prog.id==='bonus' ? buckets.standalone : buckets.program).push({kind:'finished', idx:i, ts:new Date(log.date).getTime()||0, prog});
+  });
+
+  function renderBucket(label, items){
+    if(!items.length) return '';
+    items.sort((a,b)=>b.ts-a.ts);
+    return `<div class="section-label">${label}</div>` +
+      items.map(it=>renderSessionCard(it.kind, it.idx, it.prog)).join('');
   }
 
-  const byDate = {};
-  LOGS.forEach((log,i)=>{
-    const d = formatDate(log.date);
-    (byDate[d]=byDate[d]||[]).push(i);
-  });
-  Object.keys(byDate).reverse().forEach(date=>{
-    html += `<div class="section-label">${date}</div>`;
-    byDate[date].forEach(i=>{ html += renderSessionCard('finished', i, resolveProgram(LOGS[i].pageId||'')); });
-  });
+  let html = renderBucket('🏋️ Program Workouts', buckets.program) +
+             renderBucket('📋 Standalone Sessions', buckets.standalone);
 
   if(LOGS.length) html += `<button class="clear-btn" onclick="clearLogs()">🗑 Clear All Workout Logs</button>`;
   content.innerHTML = html;
