@@ -102,6 +102,25 @@
     return Object.keys(best).map(function(nm){return {name:nm,weight:best[nm]};});
   }
 
+  // Bug: mc-summary.js's live 'daily' snapshot (mc_daily_v1, todayKey()+'|'+PID)
+  // was never cleared once a workout was actually Finished and banked here,
+  // so the same session could show up twice in Workout Logs — a real
+  // finished card plus a stale "in progress" ghost for the same day that
+  // never goes away on its own. Clear today's entry for this page the
+  // moment it's superseded by a real banked log.
+  var DAILY_KEY='mc_daily_v1';
+  function todayKey(){
+    var d=new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function clearTodaysDailyEntry(){
+    try{
+      var store=JSON.parse(localStorage.getItem(DAILY_KEY)||'{}');
+      var k=todayKey()+'|'+pageId;
+      if(k in store){ delete store[k]; localStorage.setItem(DAILY_KEY,JSON.stringify(store)); }
+    }catch(e){}
+  }
+
   // Save to workout log
   function saveWorkout(){
     var sets=getSessionSets();
@@ -124,6 +143,7 @@
       logs=logs.slice(0,200);// keep last 200 workouts
       localStorage.setItem(WL_KEY,JSON.stringify(logs));
     }catch(e){}
+    clearTodaysDailyEntry();
     return entry;
   }
 
