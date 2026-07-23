@@ -65,6 +65,7 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
   cursor:pointer;font-family:inherit;margin-top:16px;letter-spacing:0.03em;
 }
 .clear-btn:active{background:rgba(239,68,68,0.15);}
+.lp-hint{font-size:11px;color:#475569;font-weight:600;margin-bottom:12px;}
 
 /* Sessions / Programs tabs */
 .wl-tabs{display:flex;gap:8px;padding:14px 18px 0;}
@@ -213,23 +214,50 @@ function dailyEntries(){
 // market build too, so it deliberately never hardcodes a licensed program's
 // own filenames to special-case them — see tools/build-market.py's leak scan).
 const STANDALONE_PROG = {id:'bonus', name:'📋 Individual / Standalone', color:'#94a3b8'};
+const CW_KEY = 'mc_custom_workouts_v1';
+function getCustomWorkout(id){
+  try{
+    const all = JSON.parse(localStorage.getItem(CW_KEY)||'[]');
+    return all.filter(w=>w && w.id===id)[0] || null;
+  }catch(e){ return null; }
+}
+// A custom multi-day program's own pid (from run-program.html's
+// MC_PID_OVERRIDE, e.g. cprog-<id>-d<n> / cprog-<id>-cons<n>-d<n>) OR the
+// bare 'cprog-<id>' a custom single workout can be assigned to via
+// build-workout.html's "Assign to Program" field (wk.program) — same lookup
+// either way, just a different pid shape to strip down to the raw id.
+function resolveCprog(pageId){
+  const cid = pageId.slice('cprog-'.length).replace(/-cons\d+-d\d+$/,'').replace(/-d\d+$/,'');
+  const cp = (window.MCPrograms && MCPrograms.get(cid)) || (window.MCPub && MCPub.get(cid));
+  if(cp) return {id:'cprog-'+cid, name:'🧩 '+cp.name, color:cp.color||'#34d399', total:(cp.days||[]).length};
+  return {id:'cprog-'+cid, name:'🧩 Custom Program', color:'#34d399'};
+}
 function resolveProgram(pageId){
   pageId = (pageId||'').replace(/\.html$/,'');
   if(!pageId) return STANDALONE_PROG;
-  // run-program.html's custom multi-day programs (cprog-<id>-d<n> /
-  // cprog-<id>-cons<n>-cd<n>, see resumeHref() below) are real user-built
-  // PROGRAMS, not one-off workouts — they used to fall through to the same
-  // bucket as truly standalone sessions just because they don't live in
-  // mc-pm-data.js. Look the real record up (local first, then the owner's
-  // published mirror) so they group and badge by their own name/color, with
-  // `total` (day count) available for the Programs tab's progress bar.
-  let m = pageId.match(/^cprog-(.+)-cons\d+-d\d+$/) || pageId.match(/^cprog-(.+)-d\d+$/);
+  // Custom single workouts (build-workout.html -> run-workout.html, pid
+  // 'custom-<id>') can be explicitly assigned to a real program via
+  // build-workout.html's "Assign to Program" field (saved as wk.program —
+  // a flagship id like 'ss', or 'cprog-<id>' for one of the owner's own
+  // custom programs). That assignment was being ignored entirely — every
+  // custom workout resolved purely off its pid, which is always
+  // 'custom-<id>' regardless of assignment, so an assigned workout still
+  // fell into Individual/Standalone. Honor it first.
+  let m = pageId.match(/^custom-(.+)$/);
   if(m){
-    const cid = m[1];
-    const cp = (window.MCPrograms && MCPrograms.get(cid)) || (window.MCPub && MCPub.get(cid));
-    if(cp) return {id:'cprog-'+cid, name:'🧩 '+cp.name, color:cp.color||'#34d399', total:(cp.days||[]).length};
-    return {id:'cprog-'+cid, name:'🧩 Custom Program', color:'#34d399'};
+    const wk = getCustomWorkout(m[1]);
+    if(wk && wk.program) return resolveProgram(wk.program);
+    // Unassigned ("Bonus") — still group by the workout's own saved
+    // template rather than a shared catch-all, so repeat sessions of the
+    // same named workout aggregate together under the Programs tab too.
+    if(wk) return {id:'customwk-'+wk.id, name:'🔧 '+(wk.name||'Custom Workout'), color:'#34d399'};
+    return STANDALONE_PROG;
   }
+  // run-program.html's custom multi-day programs (cprog-<id>-d<n> /
+  // cprog-<id>-cons<n>-d<n>) are real user-built PROGRAMS, not one-off
+  // workouts — they used to fall through to the same bucket as truly
+  // standalone sessions just because they don't live in mc-pm-data.js.
+  if(pageId.indexOf('cprog-')===0) return resolveCprog(pageId);
   const progs = (window.MC_PM_DATA && MC_PM_DATA.programs) || [];
   for(const p of progs){
     if(pageId===p.id || pageId.indexOf(p.id+'-')===0 || pageId.indexOf('cat-'+p.id)===0){
@@ -268,11 +296,16 @@ function formatDate(iso){
 // One rendering + one detail path for every history card, so the flat
 // Sessions list and the Programs tab's nested session lists can never drift
 // out of sync with each other.
+// Every card ignores its own click once if a long-press just fired on it
+// (see the delegated pointer handlers below) — set on the element itself so
+// a cancelled delete confirm() can't be immediately followed by an
+// accidental open/navigate from the same gesture's trailing click.
+const LP_GUARD = "if(this.dataset.lp){delete this.dataset.lp;return;}";
 function renderSessionCard(kind, idx, prog){
   if(kind==='daily'){
     const e = DAILY[idx];
     return `
-      <div class="log-card" style="--prog-color:${prog.color}" onclick="event.stopPropagation();openDetail('daily',${idx})">
+      <div class="log-card" data-kind="daily" data-date="${e.date}" data-pid="${e.pid||''}" style="--prog-color:${prog.color}" onclick="${LP_GUARD}event.stopPropagation();openDetail('daily',${idx})">
         <div class="log-header">
           <div class="log-name">${e.program||e.pid}</div>
           <div class="log-date">${e.date}</div>
@@ -297,7 +330,7 @@ function renderSessionCard(kind, idx, prog){
   // (the exact workout card that was completed, not a list-summary sheet) —
   // only 'daily' (in-progress) entries still use the bottom-sheet path below.
   return `
-    <div class="log-card" style="--prog-color:${prog.color}" onclick="event.stopPropagation();location.href='workout-detail.html?id='+encodeURIComponent('${log.id||''}')">
+    <div class="log-card" data-kind="finished" data-logid="${log.id||''}" style="--prog-color:${prog.color}" onclick="${LP_GUARD}event.stopPropagation();location.href='workout-detail.html?id='+encodeURIComponent('${log.id||''}')">
       <div class="log-header">
         <div class="log-name">${log.workoutName||'Workout'}</div>
         <div class="log-date">${log.time||''}</div>
@@ -364,6 +397,50 @@ function openDetail(kind, idx){
   handle.addEventListener('click', closeDetail);
 })();
 
+// ---- per-card delete (long-press) ------------------------------------------
+function deleteFinished(logId){
+  if(!confirm('Delete this workout from your history? This cannot be undone.')) return;
+  localStorage.setItem(WL_KEY, JSON.stringify(getLogs().filter(l=>l.id!==logId)));
+  render();
+}
+function deleteDaily(date, pid){
+  if(!confirm('Delete this session from your history? This cannot be undone.')) return;
+  const store = getDaily();
+  delete store[date+'|'+pid];
+  localStorage.setItem(DAILY_KEY, JSON.stringify(store));
+  render();
+}
+// Long-press (not swipe) so it can't fight vertical page scroll or the
+// card's existing tap-to-open handler. Pointer Events cover touch + mouse.
+// A small move-tolerance cancels the timer on a real scroll/drag; the
+// LP_GUARD flag set on the element (above) swallows the trailing click that
+// follows pointerup even if the confirm() above was cancelled.
+(function(){
+  const LONG_PRESS_MS = 550, MOVE_TOLERANCE = 10;
+  let timer=null, card=null, startX=0, startY=0;
+  function clearPress(){ if(timer){clearTimeout(timer);timer=null;} card=null; }
+  document.addEventListener('pointerdown', e=>{
+    const c = e.target.closest && e.target.closest('.log-card[data-kind]');
+    if(!c) return;
+    card = c; startX = e.clientX; startY = e.clientY;
+    timer = setTimeout(()=>{
+      timer = null;
+      const c2 = card; card = null;
+      if(!c2) return;
+      c2.dataset.lp = '1';
+      try{ if(navigator.vibrate) navigator.vibrate(40); }catch(err){}
+      if(c2.dataset.kind==='finished') deleteFinished(c2.dataset.logid);
+      else deleteDaily(c2.dataset.date, c2.dataset.pid);
+    }, LONG_PRESS_MS);
+  });
+  document.addEventListener('pointermove', e=>{
+    if(!card) return;
+    if(Math.abs(e.clientX-startX)>MOVE_TOLERANCE || Math.abs(e.clientY-startY)>MOVE_TOLERANCE) clearPress();
+  });
+  document.addEventListener('pointerup', clearPress);
+  document.addEventListener('pointercancel', clearPress);
+})();
+
 // ---- Sessions tab (flat, most-recent-first) --------------------------------
 function renderSessionsTab(){
   const content = document.getElementById('logContent');
@@ -404,10 +481,15 @@ function renderSessionsTab(){
       items.map(it=>renderSessionCard(it.kind, it.idx, it.prog)).join('');
   }
 
-  let html = renderBucket('🏋️ Program Workouts', buckets.program) +
+  let html = `<div class="lp-hint">Tip: long-press any card to delete it</div>` +
+             renderBucket('🏋️ Program Workouts', buckets.program) +
              renderBucket('📋 Individual / Standalone', buckets.standalone);
 
-  if(LOGS.length) html += `<button class="clear-btn" onclick="clearLogs()">🗑 Clear All Workout Logs</button>`;
+  // Bug: this used to only ever appear when LOGS had entries and only ever
+  // cleared WL_KEY — a session tracked live but never explicitly Finished
+  // (mc_daily_v1) stuck around forever with no way to clear it at all once
+  // LOGS was already empty.
+  if(LOGS.length || DAILY.length) html += `<button class="clear-btn" onclick="clearLogs()">🗑 Clear All Workout Logs</button>`;
   content.innerHTML = html;
 }
 
@@ -449,7 +531,7 @@ function renderProgramsTab(){
     return bm - am;
   });
 
-  content.innerHTML = rows.map(g=>{
+  content.innerHTML = `<div class="lp-hint">Tip: expand a program and long-press any session to delete it</div>` + rows.map(g=>{
     g.items.sort((a,b)=>b.ts-a.ts);
     let totalSets = 0;
     // Completion (X) = distinct calendar dates with at least one *finished*
@@ -540,8 +622,14 @@ function render(){
 }
 
 function clearLogs(){
-  if(confirm('Clear all workout logs? This cannot be undone.')){
+  // Bug: this only ever removed WL_KEY (banked/finished logs) — mc_daily_v1
+  // (live sessions tracked before "Finish Workout," including ones that
+  // never got finished and just sat there indefinitely) was never touched,
+  // so "Clear All" visibly did nothing whenever ghost daily entries were
+  // what the user was actually trying to clear.
+  if(confirm('Clear all workout logs, including in-progress sessions? This cannot be undone.')){
     localStorage.removeItem(WL_KEY);
+    localStorage.removeItem(DAILY_KEY);
     render();
   }
 }

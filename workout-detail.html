@@ -84,16 +84,30 @@ function getLogs(){
 // Same resolution as workout-logs.html (kept in sync deliberately — see that
 // file's resolveProgram for the full rationale on each branch).
 const STANDALONE_PROG = {id:'bonus', name:'📋 Individual / Standalone', color:'#94a3b8'};
+const CW_KEY = 'mc_custom_workouts_v1';
+function getCustomWorkout(id){
+  try{
+    const all = JSON.parse(localStorage.getItem(CW_KEY)||'[]');
+    return all.filter(w=>w && w.id===id)[0] || null;
+  }catch(e){ return null; }
+}
+function resolveCprog(pageId){
+  const cid = pageId.slice('cprog-'.length).replace(/-cons\d+-d\d+$/,'').replace(/-d\d+$/,'');
+  const cp = (window.MCPrograms && MCPrograms.get(cid)) || (window.MCPub && MCPub.get(cid));
+  if(cp) return {id:'cprog-'+cid, name:'🧩 '+cp.name, color:cp.color||'#34d399'};
+  return {id:'cprog-'+cid, name:'🧩 Custom Program', color:'#34d399'};
+}
 function resolveProgram(pageId){
   pageId = (pageId||'').replace(/\.html$/,'');
   if(!pageId) return STANDALONE_PROG;
-  let m = pageId.match(/^cprog-(.+)-cons\d+-d\d+$/) || pageId.match(/^cprog-(.+)-d\d+$/);
+  let m = pageId.match(/^custom-(.+)$/);
   if(m){
-    const cid = m[1];
-    const cp = (window.MCPrograms && MCPrograms.get(cid)) || (window.MCPub && MCPub.get(cid));
-    if(cp) return {id:'cprog-'+cid, name:'🧩 '+cp.name, color:cp.color||'#34d399'};
-    return {id:'cprog-'+cid, name:'🧩 Custom Program', color:'#34d399'};
+    const wk = getCustomWorkout(m[1]);
+    if(wk && wk.program) return resolveProgram(wk.program);
+    if(wk) return {id:'customwk-'+wk.id, name:'🔧 '+(wk.name||'Custom Workout'), color:'#34d399'};
+    return STANDALONE_PROG;
   }
+  if(pageId.indexOf('cprog-')===0) return resolveCprog(pageId);
   const progs = (window.MC_PM_DATA && MC_PM_DATA.programs) || [];
   for(const p of progs){
     if(pageId===p.id || pageId.indexOf(p.id+'-')===0 || pageId.indexOf('cat-'+p.id)===0){
