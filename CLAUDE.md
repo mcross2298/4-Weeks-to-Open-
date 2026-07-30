@@ -49,7 +49,14 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
    explicit approval before writing any file.
 2. **Build the program HTML page** — follow the 7-day layout standard and
    station-anchoring constraints documented below. All new programs use
-   `5-on 2-off` and the 7-card day structure.
+   `5-on 2-off` and the 7-card day structure. **Then run
+   `python3 tools/apply-head-contract.py`** so the new page picks up the
+   canonical `<head>` block (manifest link, install meta, theme-color, the
+   before-first-paint theme + PWA cold-launch boot) and the `mc-sw-update.js`
+   tail tag. Never hand-write those tags — `--check` runs in CI and the block
+   is regenerated, so a hand-added copy is drift, not a contribution. The page
+   still needs `<html lang>`, `<meta charset>` and a `viewport-fit=cover`
+   viewport of its own; the tool verifies those but won't write them.
 3. **Register in `mc-pm-data.js`** — add a new entry to the flagship programs
    array (before the `MARKET:STRIP` block) unless the program uses licensed
    influencer content, in which case place it inside the MARKET:STRIP section.
@@ -66,7 +73,11 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
      border-top, `.cat-tag` color) inside the `#scr-programs` / `#scr-dashboard`
      scoped rule groups, next to the existing per-id blocks. `border-top`'s hex
      is what `tools/check-program-colors.js` enforces against `mc-pm-data.js`'s
-     `color` field for *both* the grid and rail blocks — keep it in sync. Do
+     `color` field for *both* the grid and rail blocks — keep it in sync. That
+     same gate also enforces `mc-theme.js`'s `FALLBACK` map, so a new program
+     needs an entry there too — it is the only copy of the color used on pages
+     that never load `mc-pm-data.js`; everywhere else `mc-theme.js` derives the
+     palette from the data file at call time (audit G-01). Do
      **not** add a `.cat-designer` color rule — `#scr-programs .cat-designer`
      is set to `display:none`, so flagship/influencer cards never show it; only
      the separate "Your Programs" / "Published Programs" tiers render that line.

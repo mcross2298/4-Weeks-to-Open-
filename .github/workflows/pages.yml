@@ -55,6 +55,12 @@ jobs:
           python3 tools/sync-shared-modules.py --check --cookbook-dir /tmp/cookbook-mirror
       - name: Script-manifest drift check (clone pages load identical module lists — audit LS-3)
         run: python3 tools/check-script-manifest.py --check
+      - name: Page head-contract check (install meta + theme boot on every page — audit G-02/G-03)
+        # Owns the <head> block and the mc-sw-update.js tail tag on all 140
+        # deployable pages. Before this gate, `rel="manifest"` had reached only
+        # 7 pages and `theme-color` only 5, because both were hand-added per
+        # page. Regenerate with: python3 tools/apply-head-contract.py
+        run: python3 tools/apply-head-contract.py --check
       - name: Program color-sync check (mc-pm-data.js vs dashboard.html)
         run: node tools/check-program-colors.js
       - name: Multi-week program intensifier-coverage check (mm-p1/p2/p3.html)

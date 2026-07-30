@@ -10,26 +10,58 @@
    guide). Workout and category pages keep their own intentional program
    colors — they are NOT overridden.
 
-   window.MC_THEME is also the single source for the program palette
-   (previously only inside dashboard.html's PROGS array).
+   Program colors are NOT authored here. mc-pm-data.js's `color` field is the
+   single source of truth (audit G-01); this module derives from it at call
+   time, because every page that loads mc-theme.js loads mc-pm-data.js AFTER
+   it (or not at all), so a load-time read would see nothing.
    ========================================================================== */
 (function () {
   if (window.MC_THEME) return;
 
-  var PALETTE = {
-    ss:    '#e11d48',   // Strength & Supersets — crimson
-    pmc:   '#7F77DD',   // Project Muscle Confusion — violet
-    mc:    '#d4af37',   // Mike Cross' Favorites — gold (brand default)
-    ie:    '#f97316',   // Iron & Engine — orange
+  // Brand gold — the app's default accent, matching base.css's `--accent`.
+  // Deliberately NOT the `mc` program's color: they were conflated before
+  // (DEFAULT = PALETTE.mc), which is what let the MC program render #d4af37
+  // while its card rendered #d8b463.
+  var DEFAULT = '#d4af37';
+
+  // Non-program accents. Conditioning is a surface, not a registered program,
+  // so it has no mc-pm-data.js entry to derive from.
+  var EXTRA = { cond: '#E24B4A' };
+
+  // Last-resort copies of each program's color, used only on pages that never
+  // load mc-pm-data.js. tools/check-program-colors.js asserts these stay equal
+  // to mc-pm-data.js and that every registered program appears here, so this
+  // map cannot silently drift the way the old hand-kept PALETTE did.
+  var FALLBACK = {
+    ss:    '#c9505a',   // Strength & Supersets
+    pmc:   '#8b7ff0',   // Project Muscle Confusion
+    mc:    '#d8b463',   // Mike Cross' Favorite Splits
+    ks:    '#e0a03c',   // Everything Under the Kitchen Sink
+    mm:    '#6f77e0',   // The Modality Matrix
+    hv:    '#9fbf4a',   // High-Volume Training Template
     /* MARKET:STRIP influencer-theme START */
-    stndr: '#1D9E75',   // STNDR — green
-    pump:  '#D85A30',   // Daily Pump — deep orange
-    gainz: '#378ADD',   // Daily Gainz — blue
-    psu:   '#639922',   // PSU Football — olive
+    stndr: '#1D9E75',   // STNDR
+    pump:  '#D85A30',   // Daily Pump
+    gainz: '#378ADD',   // Daily Gainz
+    psu:   '#639922',   // PSU Football
     /* MARKET:STRIP influencer-theme END */
-    cond:  '#E24B4A'    // Conditioning — red
   };
-  var DEFAULT = PALETTE.mc;
+
+  // Derived at call time, never cached at load: mc-pm-data.js may not have
+  // parsed yet when this IIFE runs, but it always has by the time a user
+  // action or a re-apply event reaches us.
+  function palette() {
+    var out = {}, k;
+    for (k in FALLBACK) if (FALLBACK.hasOwnProperty(k)) out[k] = FALLBACK[k];
+    try {
+      var progs = (window.MC_PM_DATA && MC_PM_DATA.programs) || [];
+      for (var i = 0; i < progs.length; i++) {
+        if (progs[i] && progs[i].id && progs[i].color) out[progs[i].id] = progs[i].color;
+      }
+    } catch (e) {}
+    for (k in EXTRA) if (EXTRA.hasOwnProperty(k)) out[k] = EXTRA[k];
+    return out;
+  }
 
   // PM Phase 2 — named ThemeConfig presets. Each bundles the four spec fields
   // (PrimaryBgColor, CardBgColor, AccentThemeColor, TypographyStyle). Original
@@ -99,8 +131,13 @@
   function activeColor() {
     try {
       var p = JSON.parse(localStorage.getItem('mc_active_prog') || 'null');
-      if (p && p.id && PALETTE[p.id]) return PALETTE[p.id];
-      if (p && p.color) return p.color;          // custom programs carry their own
+      if (!p) return DEFAULT;
+      // The pinned card is a copy of the MC_PM_DATA entry (dashboard.html's
+      // PROGS), so its own `color` is authoritative — custom and published
+      // programs carry theirs the same way. Checking the palette first is what
+      // let a stale hand-kept hex override the real one (audit G-01).
+      if (p.color) return p.color;
+      if (p.id) { var pal = palette(); if (pal[p.id]) return pal[p.id]; }
     } catch (e) {}
     return DEFAULT;
   }
@@ -132,14 +169,22 @@
     if (cfg.density)    html.setAttribute('data-density', cfg.density);       else html.removeAttribute('data-density');
     if (cfg.motion)     html.setAttribute('data-motion', cfg.motion);         else html.removeAttribute('data-motion');
 
+    // Keep the browser/standalone chrome in step with the resolved theme. An
+    // owner ThemeConfig wins; otherwise follow light/dark, matching the value
+    // the head block (tools/apply-head-contract.py) already set before paint —
+    // without the light branch this would stamp the dark ground back over it.
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', cfg.primaryBg || '#0a0a0a');
+    if (meta) {
+      var isLight = html.getAttribute('data-theme') === 'light';
+      meta.setAttribute('content', cfg.primaryBg || (isLight ? '#f5f2ec' : '#0a0a0a'));
+    }
   }
 
   window.MC_THEME = {
-    palette: PALETTE,
+    // Resolved fresh on each access — mc-pm-data.js may load after this module.
+    get palette() { return palette(); },
     presets: PRESETS,
-    colorFor: function (id) { return PALETTE[id] || DEFAULT; },
+    colorFor: function (id) { return palette()[id] || DEFAULT; },
     config: resolveConfig,
     // owner writer — persists the global ThemeConfig to the override layer's
     // local working copy (instant preview; Publish path unchanged). Falls back
