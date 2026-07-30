@@ -1,0 +1,26 @@
+name: PR checks
+
+# Runs the canonical check list (verify.yml) on every pull request, so a PR is
+# reviewed against the same gates the deploy will apply. Replaces the old
+# market-check.yml, which ran a four-step subset and left eight checks to run
+# only after merge.
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Unlike the deploy, superseded PR runs are worth cancelling — pushing twice
+  # in quick succession should not queue two full Playwright installs.
+  group: pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    uses: ./.github/workflows/verify.yml
+    # cross-repo-drift stays false here on purpose — see the step's comment in
+    # verify.yml. It fails by design between a shared-module PR merging here and
+    # the matching cookbook PR merging there.

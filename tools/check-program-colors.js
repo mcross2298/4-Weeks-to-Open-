@@ -88,13 +88,41 @@ function parseIconIds(src) {
   return new Set(ids);
 }
 
+// mc-theme.js's FALLBACK map — the third color source (audit G-01). It is only
+// consulted on pages that never load mc-pm-data.js, which is exactly why it
+// drifted unnoticed for six of ten programs: nothing compared it to anything.
+// Every registered program must appear here, with the same hex.
+function parseThemeFallback(src) {
+  const start = src.indexOf('var FALLBACK');
+  if (start < 0) return null;
+  const braceStart = src.indexOf('{', start);
+  let depth = 0, i = braceStart;
+  for (; i < src.length; i++) {
+    if (src[i] === '{') depth++;
+    else if (src[i] === '}') { depth--; if (depth === 0) break; }
+  }
+  const block = src.slice(braceStart, i + 1);
+  const out = {};
+  const re = /([a-z0-9-]+):\s*'(#[0-9a-fA-F]{3,8})'/g;
+  let m;
+  while ((m = re.exec(block))) out[m[1]] = m[2];
+  return out;
+}
+
 const dataColors = parseProgramColors(pmData);
 const gridColors = parseSelectorColors(dash, '.cat-card', '#scr-programs');
 const railColors = parseSelectorColors(dash, '.rail-card', '#scr-dashboard');
 const iconIds = parseIconIds(dash);
+const themeSrc = fs.readFileSync(path.join(ROOT, 'mc-theme.js'), 'utf8');
+const themeColors = parseThemeFallback(themeSrc);
 
 let fail = false;
 const skip = new Set(['faint', 'bonus']); // Conditioning Corner / bonus cards aren't MC_PM_DATA programs
+
+if (!themeColors) {
+  console.error("::error::mc-theme.js has no `var FALLBACK` map — check-program-colors.js can no longer verify it");
+  fail = true;
+}
 
 Object.keys(dataColors).forEach((id) => {
   if (skip.has(id)) return;
@@ -120,10 +148,32 @@ Object.keys(dataColors).forEach((id) => {
     console.error(`::error::Program '${id}' has no entry in dashboard.html's PROGRAM_ICONS map — its card will render with no icon`);
     fail = true;
   }
+  if (themeColors) {
+    const themeColor = themeColors[id];
+    if (!themeColor) {
+      console.error(`::error::Program '${id}' is missing from mc-theme.js's FALLBACK map — on pages that don't load mc-pm-data.js its chrome falls back to brand gold instead of ${dataColor}`);
+      fail = true;
+    } else if (themeColor.toLowerCase() !== dataColor.toLowerCase()) {
+      console.error(`::error::Program '${id}' color mismatch — mc-pm-data.js=${dataColor} vs mc-theme.js FALLBACK=${themeColor}`);
+      fail = true;
+    }
+  }
 });
 
+// The reverse direction: a FALLBACK entry for a program that no longer exists
+// is dead weight that outlives the program it named (this is how `ie` survived
+// the Iron Engine retirement).
+if (themeColors) {
+  Object.keys(themeColors).forEach((id) => {
+    if (!(id in dataColors)) {
+      console.error(`::error::mc-theme.js's FALLBACK map has an entry for '${id}', which is not a registered program in mc-pm-data.js — remove it`);
+      fail = true;
+    }
+  });
+}
+
 if (fail) {
-  console.error('\nFix: update dashboard.html\'s .cat-card.<id> / .rail-card.<id> (and matching .cat-tag color) or PROGRAM_ICONS entry to match mc-pm-data.js, or vice versa.');
+  console.error('\nFix: update dashboard.html\'s .cat-card.<id> / .rail-card.<id> (and matching .cat-tag color), its PROGRAM_ICONS entry, or mc-theme.js\'s FALLBACK map to match mc-pm-data.js, or vice versa.');
   process.exit(1);
 }
-console.log(`Program colors OK — ${Object.keys(dataColors).length} programs checked against dashboard.html's #flagGrid, .prog-rail, and PROGRAM_ICONS.`);
+console.log(`Program colors OK — ${Object.keys(dataColors).length} programs checked against dashboard.html's #flagGrid, .prog-rail, PROGRAM_ICONS, and mc-theme.js's FALLBACK map.`);

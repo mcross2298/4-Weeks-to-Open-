@@ -8,38 +8,21 @@
    Self-contained IIFE; portable; no per-page wiring.
    ========================================================================== */
 
-// ── PWA COLD-LAUNCH GUARD (Phase 4) ──────────────────────────────────────────
-// When the app is opened as an installed PWA / standalone home-screen shell,
-// force the Dashboard as the landing page — iOS captures the install-time URL
-// and ignores the manifest start_url, so a stale bookmark can otherwise open a
-// deep page (e.g. the old programs screen) with no way back. Fires at most once
-// per launch via a session flag, so in-app navigation is never disturbed.
+// ── PWA COLD-LAUNCH GUARD + THEME EARLY-APPLY — MOVED (audit G-02/G-03) ───────
+// Both used to live here. This file is loaded from the END of <body> on 132 of
+// the 133 pages that carry it, so neither could do its job: a returning
+// light-mode user saw a flash of dark before the theme flipped, and an
+// installed-app cold launch rendered a whole deep page before bouncing to the
+// dashboard. They now live in the generated head block that every deployable
+// page carries (tools/apply-head-contract.py), which runs before first paint.
+// Do not re-add them here — tools/apply-head-contract.py --check owns them, and
+// a second copy would silently diverge, which is the defect that motivated the
+// move in the first place.
+//
+// mc-appearance.js is still loaded from here: the head block only needs to set
+// data-theme before paint, while window.MC_APPEARANCE is what the theme toggle
+// button below binds to, and that isn't needed until the nav renders.
 (function () {
-  try {
-    var standalone = window.navigator.standalone === true ||
-      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-    if (!standalone) return;
-    if (sessionStorage.getItem('mc_launched')) return;   // already past the cold launch
-    sessionStorage.setItem('mc_launched', '1');
-    var page = (location.pathname.split('/').pop() || '').toLowerCase();
-    var onHub = page === '' || page === 'index.html' || page === 'dashboard.html';
-    if (!onHub) location.replace('dashboard.html');
-  } catch (e) {}
-})();
-
-// ── THEME EARLY-APPLY (Phase 7) ───────────────────────────────────────────────
-// Pages that don't already load mc-appearance.js in <head> (only dashboard.html
-// and stats.html do today) need data-theme set before first paint, or a
-// returning light-mode user sees a flash of dark before it flips. Duplicates
-// mc-appearance.js's own read/apply logic inline so it runs the instant this
-// script tag is parsed (same timing as the PWA guard above) instead of
-// waiting on a second script's network fetch, then loads mc-appearance.js
-// itself so window.MC_APPEARANCE is ready for the toggle button below.
-(function () {
-  try {
-    var mode = localStorage.getItem('mc_theme_mode') === 'light' ? 'light' : 'dark';
-    if (mode === 'light') document.documentElement.setAttribute('data-theme', 'light');
-  } catch (e) {}
   if (!document.querySelector('script[src="mc-appearance.js"]')) {
     var s = document.createElement('script');
     s.src = 'mc-appearance.js';
