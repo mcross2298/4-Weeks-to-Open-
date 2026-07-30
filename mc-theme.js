@@ -128,6 +128,78 @@
     return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : null;
   }
 
+  // ── light-mode accent adaptation (audit G-04) ──────────────────────────────
+  // Every accent in this app was picked against the near-black ground. On the
+  // Sand light ground they collapse: brand gold reads 1.88:1, and four of the
+  // ten program colors fail outright. Rather than hand-maintain a second
+  // palette (the exact duplication G-01 was about), darken the SAME hue until
+  // it clears WCAG AA. Hue is preserved to within a degree, so each program
+  // still reads as itself.
+  var LIGHT_GROUND = [245, 242, 236];   // #f5f2ec, base.css's --body-bg on light
+  var AA = 4.5;
+
+  function relLum(rgb) {
+    var c = rgb.map(function (v) {
+      v /= 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function contrast(a, b) {
+    var l1 = relLum(a), l2 = relLum(b);
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+  }
+  function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), h, s, l = (mx + mn) / 2;
+    if (mx === mn) { h = s = 0; }
+    else {
+      var d = mx - mn;
+      s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+      if (mx === r) h = (g - b) / d + (g < b ? 6 : 0);
+      else if (mx === g) h = (b - r) / d + 2;
+      else h = (r - g) / d + 4;
+      h /= 6;
+    }
+    return [h, s, l];
+  }
+  function hslToRgb(h, s, l) {
+    if (s === 0) { var v = l * 255; return [v, v, v]; }
+    function hue(p, q, t) {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    }
+    var q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+    return [hue(p, q, h + 1 / 3) * 255, hue(p, q, h) * 255, hue(p, q, h - 1 / 3) * 255];
+  }
+  function toHex(rgb) {
+    return '#' + rgb.map(function (v) {
+      return Math.round(Math.max(0, Math.min(255, v))).toString(16).replace(/^(.)$/, '0$1');
+    }).join('');
+  }
+
+  // Returns [hex, rgbArray] adapted to the ground currently in play. Dark mode
+  // is returned untouched — those values are already correct there.
+  function adaptToGround(hex) {
+    var rgb = hexToRgb(hex);
+    if (!rgb) return null;
+    if (document.documentElement.getAttribute('data-theme') !== 'light') return [hex, rgb];
+    if (contrast(rgb, LIGHT_GROUND) >= AA) return [hex, rgb];
+    var hsl = rgbToHsl(rgb[0], rgb[1], rgb[2]);
+    var h = hsl[0], s = Math.min(1, hsl[1] * 1.05), l = hsl[2];
+    for (var i = 0; i < 100 && l > 0; i++) {
+      var out = hslToRgb(h, s, l);
+      if (contrast(out, LIGHT_GROUND) >= AA) return [toHex(out), out.map(Math.round)];
+      l -= 0.01;
+    }
+    var floor = hslToRgb(h, s, 0);
+    return [toHex(floor), floor.map(Math.round)];
+  }
+
   function activeColor() {
     try {
       var p = JSON.parse(localStorage.getItem('mc_active_prog') || 'null');
@@ -147,8 +219,13 @@
     // accent: explicit ThemeConfig wins; otherwise the program-adaptive color
     // (unchanged legacy behavior — nothing moves until a theme is set).
     var hex = cfg.accent || activeColor();
-    var rgb = hexToRgb(hex);
-    if (!rgb) return;
+    // Darken for the Sand ground when light mode is on (audit G-04). This runs
+    // on the resolved accent, so an owner ThemeConfig accent gets the same
+    // treatment as a program color. No-op in dark mode.
+    var adapted = adaptToGround(hex);
+    if (!adapted) return;
+    hex = adapted[0];
+    var rgb = adapted[1];
     var root = document.documentElement.style;
     var rgbStr = rgb.join(',');
     root.setProperty('--accent', hex);
@@ -208,8 +285,10 @@
   // re-apply when the pinned program changes (same tab via custom event from
   // the dashboard, other tabs via the storage event)
   window.addEventListener('storage', function (e) {
-    if (e.key === 'mc_active_prog' || e.key === 'mc_pm_overrides' || e.key === PERSONAL_KEY) apply();
+    if (e.key === 'mc_active_prog' || e.key === 'mc_pm_overrides' ||
+        e.key === PERSONAL_KEY || e.key === 'mc_theme_mode') apply();
   });
+  document.addEventListener('mc:theme-changed', apply);
   document.addEventListener('mc:program-changed', apply);
   document.addEventListener('mc:layout-changed', apply);
   document.addEventListener('mc:names-changed', apply);

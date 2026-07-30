@@ -30,6 +30,12 @@
     mode = mode === 'light' ? 'light' : 'dark';
     try { localStorage.setItem(KEY, mode); } catch (e) {}
     apply(mode);
+    // Same-tab listeners need an explicit signal — the storage event only
+    // reaches OTHER tabs. mc-theme.js re-derives the accent from this, because
+    // an accent that clears contrast on the dark ground can fail on the light
+    // one and vice versa (audit G-04).
+    try { document.dispatchEvent(new CustomEvent('mc:theme-changed', { detail: { mode: mode } })); }
+    catch (e) {}
   }
 
   window.MC_APPEARANCE = {

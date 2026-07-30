@@ -683,6 +683,18 @@ html[data-theme="light"]{
   --border-faint:rgba(28,26,23,0.06);
   --border-dim:rgba(28,26,23,0.1);
   --surface-bg:#efe9db;
+  /* Accent had no light value until audit G-04. The brand gold above is tuned
+     for the near-black ground (9.42:1) and collapses to 1.88:1 on Sand, so
+     every var(--accent) consumer — back links, eyebrows, section heads, active
+     tabs, pills — rendered barely-legible gold-on-cream. This is the same hue
+     darkened until it clears WCAG AA (4.72:1); mc-light.css's per-class
+     `var(--accent,#8a6d1a)` fallbacks were never reached, because :root always
+     defines --accent, so a fallback could not fire.
+     Pages that load mc-theme.js get a program-adaptive accent set as an inline
+     style on <html>, which outranks this rule — that module does the same
+     darkening itself (see adaptToGround()). */
+  --accent:#826919;
+  --accent-rgb:130,105,25;
 }
 
 html[data-theme="light"] .title{color:#1c1a17;}

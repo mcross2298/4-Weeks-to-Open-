@@ -312,3 +312,69 @@ html[data-theme="light"] .imp-day-name{color:var(--text);}
 html[data-theme="light"] .imp-meta,
 html[data-theme="light"] .imp-day-ex,
 html[data-theme="light"] .imp-bad{color:var(--muted);}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Shared-module contrast pass (audit G-04)
+   ───────────────────────────────────────────────────────────────────
+   Every colour in this app was picked against the near-black ground.
+   Measured in light mode, 112 of 140 pages carried at least one text
+   element below 3:1, and the worst offenders came from a handful of
+   SHARED modules — so they failed on 47 pages each rather than one.
+
+   Each value below is the SAME HUE darkened until it clears WCAG AA
+   (4.5:1 on the Sand ground #f5f2ec), so a live-set readout still reads
+   teal and a drop arrow still reads rose. Deliberately de-emphasised
+   states (a pending rep, a collapsed-section chevron) are held to the
+   3:1 large-text floor instead of 4.5:1 — they are meant to recede, but
+   not to vanish, and at their dark-mode values they were vanishing.
+
+   These live here rather than in each module because `html[data-theme=
+   "light"] .foo` (0,2,1) outranks a module's own `.foo` (0,1,0)
+   regardless of injection order — several of these modules append their
+   CSS at runtime, after this sheet has loaded.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* live set counter — mc-summary.css (47 pages) */
+html[data-theme="light"] .mcs-sets-live{color:#0d7968;}
+
+/* guided-mode entry link — mc-guided.js (47 pages) */
+html[data-theme="light"] .mcgd-entry{color:#826919;}
+
+/* set-log toggle row — mc-setlog.css / mc-superset-hop.js (47 pages) */
+html[data-theme="light"] .mcl-lbl,
+html[data-theme="light"] .mcl-chev{color:#5b6f8b;}
+html[data-theme="light"] .mcl-hist{color:#826919;}
+
+/* rep tracker — base.css already had a light .a-rep value (#d3cbb9), but at
+   1.44:1 it was invisible rather than de-emphasised. Pending reps sit at the
+   3:1 floor; the live and completed states keep their existing treatment. */
+html[data-theme="light"] .a-rep{color:#9d8a60;}
+html[data-theme="light"] .a-drop-arrow{color:#e0243f;}
+
+/* conditioning suggestion card — mc-cond-suggest.js (11 pages) */
+html[data-theme="light"] .mc-cond-suggest-lbl,
+html[data-theme="light"] .mc-cond-suggest-ico{color:#906800;}
+html[data-theme="light"] .mc-cond-suggest-name{color:var(--text,#1c1a17);}
+
+/* surprise-me button — mc-surprise.js / cat pages */
+html[data-theme="light"] .mc-surprise-btn,
+html[data-theme="light"] .mc-surprise-ico{color:#88681f;}
+
+/* program-status strip — mc-program-status.js */
+html[data-theme="light"] .mps-arrow{color:#4c770a;}
+
+/* summary rows — mc-summary.css */
+html[data-theme="light"] .sum-hd,
+html[data-theme="light"] .sum-sub{color:#dc0121;}
+html[data-theme="light"] .sum-nm{color:var(--text,#1c1a17);}
+
+/* split/day list chrome carried by several program pages */
+html[data-theme="light"] .week-tab.active{color:#8b6904;}
+html[data-theme="light"] .wcard-tag{color:#0276aa;}
+html[data-theme="light"] .pill{color:#187a56;}
+html[data-theme="light"] .section-label{color:#836900;}
+html[data-theme="light"] .stat{color:#527093;}
+html[data-theme="light"] .pl-tier-pill{color:#4f46a8;}
+html[data-theme="light"] .inst-link{color:#906800;}
+html[data-theme="light"] .program-eyebrow,
+html[data-theme="light"] .meta-badge{color:#4c770a;}
