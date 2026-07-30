@@ -47,6 +47,21 @@ TAIL_TAG = '<script src="%s"></script>' % TAIL_MODULE
 TAIL_RE = re.compile(r'<script[^>]*\bsrc="' + re.escape(TAIL_MODULE) + r'"[^>]*>\s*</script>', re.I)
 BODY_CLOSE_RE = re.compile(r'</body>', re.I)
 
+# Sand light mode (audit G-04). Required on every page that loads base.css:
+# mc-light.css covers the BESPOKE classes base.css's own
+# html[data-theme="light"] block doesn't know about, so the two are a pair —
+# a page with base.css but not this one renders half-themed in light mode.
+# It was on 100 of 132 such pages, missing from the dashboard, the category
+# landings, stats, and every split index and instructions guide.
+#
+# Position matters and is enforced, not just presence: it must be the LAST
+# stylesheet in <head>, after base.css and after any inline <style>, because
+# it wins by source order rather than specificity.
+LIGHT_SHEET = 'mc-light.css'
+LIGHT_TAG = '<link rel="stylesheet" href="%s">' % LIGHT_SHEET
+LIGHT_RE = re.compile(r'[ \t]*<link[^>]*\bhref="' + re.escape(LIGHT_SHEET) + r'"[^>]*>' + r'[ \t]*\r?\n?', re.I)
+BASE_RE = re.compile(r'<link[^>]*\bhref="base\.css', re.I)
+
 
 def excluded(name):
     return name.endswith('.dc.html') or name in EXCLUDE
@@ -175,6 +190,17 @@ def build(src, name=''):
         at = vp2.end()
 
     head = head[:at] + '\n' + BLOCK + head[at:]
+
+    # Light-mode sheet: strip any existing copy, then re-add it last in <head>
+    # so its position is normalised as well as its presence. Pages that don't
+    # load base.css are left alone either way — three of them are fully
+    # self-styled and opted in on their own, and adding it to the rest would
+    # link a sheet whose selectors they never use.
+    had_light = bool(LIGHT_RE.search(head))
+    if had_light or BASE_RE.search(head):
+        head = LIGHT_RE.sub('', head)
+        head = head.rstrip() + '\n' + LIGHT_TAG + '\n'
+
     out = rest_before + head + rest_after
 
     # Tail contract: exactly one mc-sw-update.js, last in the body. Appending

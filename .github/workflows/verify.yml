@@ -77,6 +77,12 @@ jobs:
       - name: Program color-sync check (mc-pm-data.js vs dashboard.html vs mc-theme.js)
         run: node tools/check-program-colors.js
 
+      - name: Day-card palette check (governed training colours — audit G-05)
+        # Training days had 18 ad-hoc hexes with five near-duplicate clusters and
+        # one reserved-recovery collision. Fold a new colour in with:
+        # node tools/check-day-colors.js --fix
+        run: node tools/check-day-colors.js
+
       - name: Multi-week program intensifier-coverage check (mm-p1/p2/p3.html)
         run: node tools/validate-programs.js
 

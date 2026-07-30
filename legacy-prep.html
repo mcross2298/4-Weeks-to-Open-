@@ -65,7 +65,7 @@
 .editable{cursor:text;border-bottom:1px dashed rgba(var(--accent-rgb),0.4);padding-bottom:1px;display:inline-block;color:#e2e8f0;}
 .editable:hover{background:rgba(var(--accent-rgb),0.08);border-radius:3px;}
 </style>
-  <link rel="stylesheet" href="mc-light.css">
+<link rel="stylesheet" href="mc-light.css">
 </head>
 <body>
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
@@ -90,7 +90,7 @@ buildTimerFloat();
 const DATA = {
   schedule: "Bodybuilding Prep · Cluster & Drop Set Heavy",
   days: [
-    {type:"training",label:"Day 1",session:"Chest & Triceps",color:"#a855f7",icon:"💎",exercises:[
+    {type:"training",label:"Day 1",session:"Chest & Triceps",color:"#7c3aed",icon:"💎",exercises:[
       {name:"Decline Cable Flies",sets:"15, 15, 12, 2× Drop AMRAP",rest:"45, 45, 0, 0, 45 sec",tag:null},
       {name:"Barbell or Smith Machine Bench",sets:"12, 12, 10, 8, 2× Drop AMRAP",rest:"60, 60, 60, 0, 0, 60 sec",tag:null},
       {name:"Hammer Strength Incline Press",sets:"10, 10, 8, 2× Drop AMRAP",rest:"60, 60, 15, 15, 60 sec",tag:null},
@@ -100,7 +100,7 @@ const DATA = {
       {name:"Single Arm Pushdown",sets:"15, 12, 12",rest:"45, 45, 45 sec",tag:null},
       {name:"High Pull Cable Crunch",sets:"15, 15, 15",rest:"45, 45, 45 sec",tag:null},
     ]},
-    {type:"training",label:"Day 2",session:"Quads & Calves",color:"#fbbf24",icon:"⚡",exercises:[
+    {type:"training",label:"Day 2",session:"Quads & Calves",color:"#f97316",icon:"⚡",exercises:[
       {name:"Leg Extensions (Cluster)",sets:"20, 15, 15, 12, 2× Cluster",rest:"60, 60, 60, 15, 15, 60 sec",tag:"CLUSTER"},
       {name:"DB Goblet Squat",sets:"15, 15, 12",rest:"60, 60, 60 sec",tag:null},
       {name:"Hack Squat (medium-low foot placement)",sets:"15, 12, 10, 8, 6",rest:"90 sec",tag:null},
@@ -119,7 +119,7 @@ const DATA = {
       {name:"Reverse Barbell Curl",sets:"15, 15, 12",rest:"60, 60, 60 sec",tag:null},
     ]},
     {type:"rest",label:"Rest Day"},
-    {type:"training",label:"Day 5",session:"Shoulders & Chest",color:"#a855f7",icon:"💎",exercises:[
+    {type:"training",label:"Day 5",session:"Shoulders & Chest",color:"#7c3aed",icon:"💎",exercises:[
       {name:"Seated Rear Delt Flies × Banded Pull Apart",sets:"15, 15, 12",rest:"60, 60, 60 sec",tag:"SUPERSET"},
       {name:"Seated Barbell/Smith Shoulder Press",sets:"15, 12, 10, 8, 1× Drop AMRAP",rest:"60, 60, 60, 15, 60 sec",tag:null},
       {name:"Single Arm Cable Raises",sets:"12, 12, 10, 2× Drop AMRAP",rest:"60, 60, 60, 0, 0, 60 sec",tag:null},
@@ -128,7 +128,7 @@ const DATA = {
       {name:"Dips",sets:"3× AMRAP",rest:"60, 60, 60 sec",tag:null},
       {name:"Decline Machine Press",sets:"8, 8, 6, 1× Drop AMRAP",rest:"60, 60, 0, 60 sec",tag:null},
     ]},
-    {type:"training",label:"Day 6",session:"Hamstrings & Quads",color:"#fbbf24",icon:"⚡",exercises:[
+    {type:"training",label:"Day 6",session:"Hamstrings & Quads",color:"#f97316",icon:"⚡",exercises:[
       {name:"DB Walking Lunges × Lying Hamstring Curl",sets:"20, 20, 20, 20 / 15, 12, 20",rest:"60, 60, 60 sec",tag:"SUPERSET"},
       {name:"Barbell RDL",sets:"15, 15, 12, 10",rest:"90 sec",tag:null},
       {name:"DB Walking Lunges",sets:"12, 12, 10, 8",rest:"60, 60, 60, 60 sec",tag:null},
@@ -147,7 +147,7 @@ const DATA = {
       {name:"Straight Bar Cable Curl (Cluster)",sets:"12 + 6× Cluster at 12 reps",rest:"60, 30, 30, 30, 30, 30, 30 sec",tag:"CLUSTER"},
     ]},
     {type:"rest",label:"Rest Day"},
-    {type:"training",label:"Day 9",session:"Chest, Triceps & Biceps",color:"#a855f7",icon:"💎",exercises:[
+    {type:"training",label:"Day 9",session:"Chest, Triceps & Biceps",color:"#7c3aed",icon:"💎",exercises:[
       {name:"Pec Deck",sets:"15, 15, 12, 12, 1× Drop AMRAP",rest:"60, 60, 60, 0, 60 sec",tag:null},
       {name:"Hammer Strength Incline Press (Cluster)",sets:"12, 10, 8, 3× Cluster at 6 reps",rest:"60, 60, 60, 10, 10, 60 sec",tag:"CLUSTER"},
       {name:"Hammer Strength Decline Press",sets:"12, 10, 10, 2× Drop AMRAP",rest:"60, 60, 0, 0, 60 sec",tag:null},
@@ -155,7 +155,7 @@ const DATA = {
       {name:"Seated Dip Machine",sets:"10, 10, 8, 1× Drop AMRAP",rest:"60, 60, 0, 60 sec",tag:null},
       {name:"Machine Preacher Curl",sets:"12, 12, 10, 2× Drop AMRAP",rest:"60, 60, 0, 0, 60 sec",tag:null},
     ]},
-    {type:"training",label:"Day 10",session:"Legs",color:"#fbbf24",icon:"⚡",exercises:[
+    {type:"training",label:"Day 10",session:"Legs",color:"#f97316",icon:"⚡",exercises:[
       {name:"Lying Leg Curl × Walking DB Lunges",sets:"15, 12, 12 / 12, 12, 10",rest:"60, 60, 60 sec",tag:"SUPERSET"},
       {name:"DB RDLs",sets:"12, 12, 10, 8",rest:"60, 60, 60, 60 sec",tag:null},
       {name:"Lying Leg Curl",sets:"12, 10, 8, 2× Drop (15 sec break)",rest:"60, 60, 0, 0, 60 sec",tag:null},
@@ -175,7 +175,7 @@ const DATA = {
       {name:"Straight Arm Rope Pulldown",sets:"10, 10, 8",rest:"60 sec",tag:null},
     ]},
     {type:"rest",label:"Rest Day"},
-    {type:"training",label:"Day 13",session:"Hamstrings & Back",color:"#fbbf24",icon:"⚡",exercises:[
+    {type:"training",label:"Day 13",session:"Hamstrings & Back",color:"#f97316",icon:"⚡",exercises:[
       {name:"Barbell Deadlift",sets:"12, 12, 10, 8, 6",rest:"90 sec",tag:null},
       {name:"Lying Leg Curl",sets:"15, 12, 10, 8, 1× Drop AMRAP",rest:"60 sec",tag:null},
       {name:"Medium Stance Leg Press",sets:"15, 12, 10, 10, 1× Drop AMRAP",rest:"60 sec",tag:null},
@@ -184,7 +184,7 @@ const DATA = {
       {name:"Underhand Lat Pulldown (Cluster)",sets:"15, 12, 3× Cluster at 8 reps",rest:"60 sec / 10 sec b/t",tag:"CLUSTER"},
       {name:"Straight Arm Lat Pulldowns",sets:"12, 12, 10",rest:"60 sec",tag:null},
     ]},
-    {type:"training",label:"Day 14",session:"Shoulder & Chest",color:"#a855f7",icon:"💎",exercises:[
+    {type:"training",label:"Day 14",session:"Shoulder & Chest",color:"#7c3aed",icon:"💎",exercises:[
       {name:"Single Arm Cable Rear Delt Flies × Banded Pull Apart",sets:"15, 15, 12, 10",rest:"60 sec",tag:"SUPERSET"},
       {name:"Machine Shoulder Press (Cluster)",sets:"12, 10, 10, 2× Cluster at 8 reps",rest:"60 sec / 10 b/t",tag:"CLUSTER"},
       {name:"Underhand Barbell Front Raises",sets:"12, 10, 8",rest:"60 sec",tag:null},
@@ -203,7 +203,7 @@ const DATA = {
       {name:"Plank",sets:"90, 90, 90 sec",rest:"—",tag:null},
     ]},
     {type:"rest",label:"Rest Day"},
-    {type:"training",label:"Day 17",session:"Chest & Triceps",color:"#a855f7",icon:"💎",exercises:[
+    {type:"training",label:"Day 17",session:"Chest & Triceps",color:"#7c3aed",icon:"💎",exercises:[
       {name:"Hammer Strength Flat Chest Press",sets:"12, 12, 10, 8, 8, 1× Drop",rest:"60 sec",tag:null},
       {name:"Hammer Strength Incline Press (Cluster)",sets:"15, 12, 10, 3× Cluster at 6 reps",rest:"60 sec / 10 b/t",tag:"CLUSTER"},
       {name:"Incline Barbell Press",sets:"12, 12, 10, 8",rest:"60 sec",tag:null},
@@ -211,7 +211,7 @@ const DATA = {
       {name:"Incline Barbell Skullcrushers",sets:"10, 8, 6",rest:"60 sec",tag:null},
       {name:"Tricep Pushdown",sets:"15, 12, 10",rest:"60 sec",tag:null},
     ]},
-    {type:"training",label:"Day 18",session:"Legs",color:"#fbbf24",icon:"⚡",exercises:[
+    {type:"training",label:"Day 18",session:"Legs",color:"#f97316",icon:"⚡",exercises:[
       {name:"Leg Extension (Cluster)",sets:"15, 12, 10, 3× Cluster at 8 reps",rest:"60 sec",tag:"CLUSTER"},
       {name:"Hack Squat",sets:"15, 12, 10, 10, 8, 1× Drop AMRAP",rest:"60 sec",tag:null},
       {name:"Medium Stance Leg Press",sets:"15, 12, 10, 1× Drop AMRAP",rest:"60 sec",tag:null},
@@ -228,7 +228,7 @@ const DATA = {
       {name:"DB 21's",sets:"21, 21, 21",rest:"60 sec",tag:null},
     ]},
     {type:"rest",label:"Rest Day"},
-    {type:"training",label:"Day 21",session:"Shoulder & Biceps",color:"#a855f7",icon:"💎",exercises:[
+    {type:"training",label:"Day 21",session:"Shoulder & Biceps",color:"#7c3aed",icon:"💎",exercises:[
       {name:"Smith Machine Shoulder Press",sets:"12, 12, 10, 8",rest:"60 sec",tag:null},
       {name:"Standing Side Lateral Raises",sets:"15, 12, 10, 10, 1× Drop AMRAP",rest:"60 sec",tag:null},
       {name:"Cable Rope Front Raises",sets:"12, 10, 8",rest:"60 sec",tag:null},
@@ -237,7 +237,7 @@ const DATA = {
       {name:"Machine Preacher Curl",sets:"10, 8, 6, 2× Drop AMRAP",rest:"60 sec",tag:null},
       {name:"EZ Bar Spider Curl",sets:"12, 10, 8",rest:"60 sec",tag:null},
     ]},
-    {type:"training",label:"Day 22",session:"Legs",color:"#fbbf24",icon:"⚡",exercises:[
+    {type:"training",label:"Day 22",session:"Legs",color:"#f97316",icon:"⚡",exercises:[
       {name:"Lying Leg Curl (Cluster)",sets:"15, 12, 10, 8, 3× Cluster at 6 reps",rest:"60 sec / 10 b/t",tag:"CLUSTER"},
       {name:"Barbell or Smith Machine Squat",sets:"12, 12, 10, 8",rest:"60 sec",tag:null},
       {name:"DB RDLs",sets:"15, 12, 10",rest:"60 sec",tag:null},
@@ -255,7 +255,7 @@ const DATA = {
       {name:"Cable Rope Overhead Extension × Diamond Pushups",sets:"15, 12, 10 / 3× AMRAP",rest:"60 sec after",tag:"SUPERSET"},
     ]},
     {type:"rest",label:"Rest Day"},
-    {type:"training",label:"Day 25",session:"Chest & Triceps",color:"#a855f7",icon:"💎",exercises:[
+    {type:"training",label:"Day 25",session:"Chest & Triceps",color:"#7c3aed",icon:"💎",exercises:[
       {name:"Seated Cable Chest Flies",sets:"15, 12, 10, 8, 6, 2× Drop AMRAP",rest:"60 sec",tag:null},
       {name:"Flat Hammer DB Press",sets:"12, 12, 10, 8",rest:"60 sec",tag:null},
       {name:"Hammer Strength Chest Press",sets:"12, 12, 10",rest:"90 sec",tag:null},
@@ -274,7 +274,7 @@ const DATA = {
       {name:"Cable Rope Hammer Curl",sets:"12, 10, 8",rest:"45 sec",tag:null},
       {name:"Incline Double Arm DB Curl",sets:"12, 10, 8",rest:"45 sec",tag:null},
     ]},
-    {type:"training",label:"Day 27",session:"Quads & Calves",color:"#fbbf24",icon:"⚡",exercises:[
+    {type:"training",label:"Day 27",session:"Quads & Calves",color:"#f97316",icon:"⚡",exercises:[
       {name:"Single Leg Lying Leg Curl",sets:"15, 15, 12, 10",rest:"45 sec",tag:null},
       {name:"Leg Extensions",sets:"12, 12, 10, 8, 8, 1× Drop AMRAP",rest:"60 sec",tag:null},
       {name:"Smith Machine or Barbell Back Squat",sets:"12, 10, 8",rest:"60 sec",tag:null},
@@ -284,7 +284,7 @@ const DATA = {
       {name:"Seated Calf Raises",sets:"25, 20, 15",rest:"30 sec",tag:null},
     ]},
     {type:"rest",label:"Rest Day"},
-    {type:"training",label:"Day 29",session:"Shoulders & Chest",color:"#a855f7",icon:"💎",exercises:[
+    {type:"training",label:"Day 29",session:"Shoulders & Chest",color:"#7c3aed",icon:"💎",exercises:[
       {name:"Standing DB Lateral Raises",sets:"20, 15, 12, 10",rest:"60 sec",tag:null},
       {name:"Standing Overhead Press",sets:"12, 12, 10, 8",rest:"60 sec",tag:null},
       {name:"Seated Hammer Strength Shoulder Press",sets:"15, 12, 10, 8, 1× Drop AMRAP",rest:"90 sec",tag:null},
@@ -294,7 +294,7 @@ const DATA = {
       {name:"Seated Cable Flies",sets:"15, 15, 12",rest:"60 sec",tag:null},
       {name:"Hanging Leg Raises",sets:"25, 20, 15",rest:"45 sec",tag:null},
     ]},
-    {type:"training",label:"Day 30",session:"Hamstrings & Back",color:"#fbbf24",icon:"⚡",exercises:[
+    {type:"training",label:"Day 30",session:"Hamstrings & Back",color:"#f97316",icon:"⚡",exercises:[
       {name:"Lying Leg Curl",sets:"15, 12, 10, 10",rest:"60 sec",tag:null},
       {name:"Barbell Back Squat",sets:"12, 12, 10, 8",rest:"60 sec",tag:null},
       {name:"Leg Press (Cluster)",sets:"20, 15, 3× Cluster at 8 reps",rest:"60 sec / 15 b/t",tag:"CLUSTER"},
@@ -313,7 +313,7 @@ const DATA = {
       {name:"EZ Bar Spider Curl",sets:"12, 10, 8",rest:"45 sec",tag:null},
     ]},
     {type:"rest",label:"Rest Day"},
-    {type:"training",label:"Day 33",session:"Chest & Triceps",color:"#a855f7",icon:"💎",exercises:[
+    {type:"training",label:"Day 33",session:"Chest & Triceps",color:"#7c3aed",icon:"💎",exercises:[
       {name:"Decline Chest Press",sets:"15, 12, 10, 8, 2× Drop",rest:"60 sec",tag:null},
       {name:"Hammer Grip DB Flat Bench",sets:"12, 12, 10, 8",rest:"60 sec",tag:null},
       {name:"Flat Chest Press",sets:"12, 12, 8, 6",rest:"60 sec",tag:null},
@@ -323,7 +323,7 @@ const DATA = {
       {name:"Cable Rope Pushdown × Cable Rope Extension",sets:"15, 12, 10 / 12, 10, 8",rest:"45 sec",tag:"SUPERSET"},
       {name:"Hanging Leg Raises",sets:"25, 20, 15",rest:"—",tag:null},
     ]},
-    {type:"training",label:"Day 34",session:"Quads & Calves",color:"#fbbf24",icon:"⚡",exercises:[
+    {type:"training",label:"Day 34",session:"Quads & Calves",color:"#f97316",icon:"⚡",exercises:[
       {name:"Leg Extensions",sets:"15, 15, 12, 10, 8, 2× Drop",rest:"60 sec",tag:null},
       {name:"Medium Stance Leg Press",sets:"20, 15, 12, 10",rest:"60 sec",tag:null},
       {name:"Goblet Squats",sets:"15, 15, 12, 10",rest:"60 sec",tag:null},

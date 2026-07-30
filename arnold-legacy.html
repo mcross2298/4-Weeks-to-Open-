@@ -67,7 +67,7 @@
 .editable{cursor:text;border-bottom:1px dashed rgba(var(--accent-rgb),0.4);padding-bottom:1px;display:inline-block;color:#e2e8f0;}
 .editable:hover{background:rgba(var(--accent-rgb),0.08);border-radius:3px;}
 </style>
-  <link rel="stylesheet" href="mc-light.css">
+<link rel="stylesheet" href="mc-light.css">
 </head>
 <body>
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
@@ -92,7 +92,7 @@ buildTimerFloat();
 const DATA = {
   schedule: "4-Week Block · 3 On / 1 Off · Rolling Split",
   days: [
-      {type:"training",label:"Day 1",session:"Chest & Back",color:"#ef4444",icon:"🏋️",exercises:[
+      {type:"training",label:"Day 1",session:"Chest & Back",color:"#e11d48",icon:"🏋️",exercises:[
         {name:"Seated Close Grip Cable Row",sets:"15, 15, 12, 10, Drop AMRAP",rest:"60 sec",tempo:null,tag:null},
         {name:"Incline DB Bench",sets:"12, 12, 10, 8",rest:"90 sec",tempo:null,tag:null},
         {name:"Hammer Strength Flat Press",sets:"10, 10, 8, Drop AMRAP",rest:"—",tempo:null,tag:null},
@@ -101,7 +101,7 @@ const DATA = {
         {name:"Barbell Deadlift",sets:"12, 12, 8, 6",rest:"—",tempo:null,tag:null},
         {name:"Lying Leg Raises",sets:"15, 15, 15",rest:"—",tempo:null,tag:null,notes:"Core"},
       ]},
-      {type:"training",label:"Day 2",session:"Shoulders & Arms",color:"#8b5cf6",icon:"💪",exercises:[
+      {type:"training",label:"Day 2",session:"Shoulders & Arms",color:"#7c3aed",icon:"💪",exercises:[
         {name:"Standing Bench-Supported Side Lateral Raises",sets:"12, 12, 10",rest:"90 sec",tempo:null,tag:null},
         {name:"Seated DB Shoulder Press",sets:"12, 12, 10, 8",rest:"90 sec",tempo:null,tag:null},
         {name:"Cable Upright Row × Cable Front Raises",sets:"12, 12, 10 / 10, 10, 8",rest:"60 sec after superset",tempo:null,tag:"SUPERSET"},
@@ -110,7 +110,7 @@ const DATA = {
         {name:"Straight Bar Underhand Tricep Pushdown × Straight Bar Tricep Pushdown",sets:"10, 10, 8 / 12, 12, 10",rest:"60 sec after superset",tempo:null,tag:"SUPERSET"},
         {name:"Barbell Concentration Curl × Seated Double-Arm DB Curls",sets:"12, 12, 10 / 10, 10, 8",rest:"60 sec after superset",tempo:null,tag:"SUPERSET"},
       ]},
-      {type:"training",label:"Day 3",session:"Legs",color:"#10b981",icon:"🦵",exercises:[
+      {type:"training",label:"Day 3",session:"Legs",color:"#16a34a",icon:"🦵",exercises:[
         {name:"Quad Extension × Lying Leg Curl",sets:"12, 12, 10 / 10, 10, 8",rest:"10 sec between · 60 sec after",tempo:null,tag:"SUPERSET"},
         {name:"Barbell Squat",sets:"8, 8, 5, 3",rest:"90 sec",tempo:null,tag:null},
         {name:"Leg Press (High & Wide)",sets:"15, 12, 10, 3× Cluster 8-6-4 reps",rest:"90 sec / 15 b/t clusters",tempo:null,tag:"CLUSTER"},
@@ -119,7 +119,7 @@ const DATA = {
         {name:"Barbell Walking Lunges",sets:"10, 10, 8",rest:"60 sec",tempo:null,tag:null},
       ]},
       {type:"rest",label:"Rest Day"},
-      {type:"training",label:"Day 5",session:"Chest & Back",color:"#ef4444",icon:"🏋️",exercises:[
+      {type:"training",label:"Day 5",session:"Chest & Back",color:"#e11d48",icon:"🏋️",exercises:[
         {name:"T-Bar Rows",sets:"12, 12, 10, 8, 2× Drop AMRAP",rest:"90 sec / 10 b/t drops",tempo:null,tag:null},
         {name:"Flat DB Bench",sets:"10, 10, 8, 2× Cluster 8 reps",rest:"90 sec / 15 b/t clusters",tempo:null,tag:"CLUSTER"},
         {name:"DB Floor Press",sets:"12, 12, 10, 8",rest:"90 sec",tempo:null,tag:null},
@@ -127,7 +127,7 @@ const DATA = {
         {name:"Incline DB Rows",sets:"10, 10, 3× Cluster 8-6-6 reps",rest:"60 sec / 15 b/t clusters",tempo:null,tag:"CLUSTER"},
         {name:"Underhand Lat Pulldown",sets:"12, 12, 10, 2× Drop AMRAP",rest:"60 sec / 10 b/t drops",tempo:null,tag:null},
       ]},
-      {type:"training",label:"Day 6",session:"Shoulders & Arms",color:"#8b5cf6",icon:"💪",exercises:[
+      {type:"training",label:"Day 6",session:"Shoulders & Arms",color:"#7c3aed",icon:"💪",exercises:[
         {name:"Standing Side Lateral Raises × Seated Behind-the-Neck Barbell Shoulder Press",sets:"12, 10, 10, 10 / 10, 10, 8, 8",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
         {name:"Barbell Pin Press",sets:"12, 12, 10, 8",rest:"90 sec",tempo:null,tag:null},
         {name:"Barbell Front Raise × Wide Grip Barbell Upright Row",sets:"12, 12, 10 / 10, 10, 8",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
@@ -136,7 +136,7 @@ const DATA = {
         {name:"Rope Cable Pushdowns",sets:"15, 12, 10",rest:"60 sec",tempo:null,tag:null},
         {name:"Standing Alternating DB Hammer Curls × Machine or Barbell Preacher Curls",sets:"12, 12, 10 / 10, 10, 8",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
       ]},
-      {type:"training",label:"Day 7",session:"Legs",color:"#10b981",icon:"🦵",exercises:[
+      {type:"training",label:"Day 7",session:"Legs",color:"#16a34a",icon:"🦵",exercises:[
         {name:"Adduction Machine × Abduction Machine",sets:"15, 15, 12 / 12, 12, 10",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
         {name:"Quad Extensions",sets:"10, 12, 15, 20, Drop AMRAP",rest:"60 sec / 10 b/t drop",tempo:null,tag:null},
         {name:"Hack Squat",sets:"12, 12, 10, 8, 2× Drops",rest:"120 sec",tempo:null,tag:null},
@@ -145,7 +145,7 @@ const DATA = {
         {name:"Lying Leg Curl × Sumo DB Goblet Squat",sets:"10, 10, 8 / 12, 12, 10",rest:"10 sec between · 90 sec after superset",tempo:null,tag:"SUPERSET"},
       ]},
       {type:"rest",label:"Rest Day"},
-      {type:"training",label:"Day 9",session:"Chest & Back",color:"#ef4444",icon:"🏋️",exercises:[
+      {type:"training",label:"Day 9",session:"Chest & Back",color:"#e11d48",icon:"🏋️",exercises:[
         {name:"DB Pullovers",sets:"15, 12, 12, 10, Drop AMRAP",rest:"60 sec",tempo:null,tag:null},
         {name:"Incline DB Bench × Incline Pronated Chest Flies",sets:"10, 10, 8 / 10, 10, 8",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
         {name:"Incline Smith Machine Bench",sets:"15, 12, 10, 10, 2× Drop AMRAP",rest:"—",tempo:null,tag:null},
@@ -153,7 +153,7 @@ const DATA = {
         {name:"Barbell Pendlay Rows",sets:"12, 12, 8, 6",rest:"90 sec",tempo:null,tag:null,notes:"90 sec rest after last set"},
         {name:"Seated Cable Row (Wide Grip)",sets:"12, 12, 10, 2× Drop AMRAP",rest:"90 sec / 10 b/t drops",tempo:null,tag:null,notes:"90 sec between working sets · 10 sec after last working set and between drop sets"},
       ]},
-      {type:"training",label:"Day 10",session:"Shoulders & Arms",color:"#8b5cf6",icon:"💪",exercises:[
+      {type:"training",label:"Day 10",session:"Shoulders & Arms",color:"#7c3aed",icon:"💪",exercises:[
         {name:"DB Shoulder Press × Standing DB Side Lateral Raises",sets:"10, 10, 8 / 15, 15, 12",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
         {name:"Seated Smith Machine Shoulder Press",sets:"12, 12, 10, 8",rest:"90 sec",tempo:null,tag:null},
         {name:"Incline Bench Supported Underhand Barbell Raises × Arnold Press",sets:"12, 12, 10 / 8, 8, 6",rest:"10 sec between · 90 sec after superset",tempo:null,tag:"SUPERSET"},
@@ -163,7 +163,7 @@ const DATA = {
         {name:"Single Arm DB Overhead Tricep Extension",sets:"12, 12, 10",rest:"10 sec",tempo:null,tag:null},
         {name:"DB Concentration Curl",sets:"10, 10, 8",rest:"60 sec",tempo:null,tag:null},
       ]},
-      {type:"training",label:"Day 11",session:"Legs",color:"#10b981",icon:"🦵",exercises:[
+      {type:"training",label:"Day 11",session:"Legs",color:"#16a34a",icon:"🦵",exercises:[
         {name:"Barbell Deadlift - Clean Grip",sets:"12, 10, 8, 6",rest:"120 sec",tempo:null,tag:null},
         {name:"Single Leg Curl - Neutral (Dorsiflexed)",sets:"15, 12, 10, 8, 2× Drop AMRAP",rest:"60 sec / 0 b/t drops",tempo:null,tag:null,notes:"Final two sets are back-to-back drop AMRAPs"},
         {name:"Barbell Cannonball Squat",sets:"12, 12, 10",rest:"90 sec",tempo:null,tag:null},
@@ -172,7 +172,7 @@ const DATA = {
         {name:"Plank",sets:"60s, 90s, 90s",rest:"60 sec",tempo:null,tag:null,notes:"Core — hold for time"},
       ]},
       {type:"rest",label:"Rest Day"},
-      {type:"training",label:"Day 13",session:"Chest & Back",color:"#ef4444",icon:"🏋️",exercises:[
+      {type:"training",label:"Day 13",session:"Chest & Back",color:"#e11d48",icon:"🏋️",exercises:[
         {name:"Close Grip Lat Pulldown",sets:"12, 12, 10, 2× Drop AMRAP",rest:"90 sec / 0 b/t drops",tempo:null,tag:null},
         {name:"Smith Machine Incline Bench Press",sets:"12, 12, 10, 8, 2× Drop AMRAP",rest:"90 sec / 0 b/t drops",tempo:null,tag:null},
         {name:"Barbell Floor Press",sets:"10, 10, 8, Drop AMRAP",rest:"90 sec / 0 b/t drop",tempo:null,tag:null},
@@ -180,7 +180,7 @@ const DATA = {
         {name:"Chest Supported T-Bar Row",sets:"12, 12, 10, 2× Drop AMRAP",rest:"90 sec / 0 b/t drops",tempo:null,tag:null},
         {name:"Single Arm DB Row",sets:"12, 10, 8",rest:"90 sec",tempo:null,tag:null},
       ]},
-      {type:"training",label:"Day 14",session:"Shoulders & Arms",color:"#8b5cf6",icon:"💪",exercises:[
+      {type:"training",label:"Day 14",session:"Shoulders & Arms",color:"#7c3aed",icon:"💪",exercises:[
         {name:"Seated Rear Delt Flys",sets:"15, 15, 12, 12",rest:"60 sec",tempo:null,tag:null},
         {name:"Smith Machine Seated Shoulder Press",sets:"12, 12, 10, 8, 2× Drop AMRAP",rest:"90 sec / 0 b/t drops",tempo:null,tag:null},
         {name:"Standing DB Side Lateral Raises",sets:"12, 12, 10, 2× Drop AMRAP",rest:"90 sec / 0 b/t drops",tempo:null,tag:null},
@@ -189,7 +189,7 @@ const DATA = {
         {name:"Floor EZ-Bar Skull Crushers",sets:"10, 10, 8, Drop AMRAP",rest:"90 sec / 0 b/t drop",tempo:null,tag:null},
         {name:"DB 21s",sets:"21, 21, 21",rest:"60 sec",tempo:null,tag:null},
       ]},
-      {type:"training",label:"Day 15",session:"Legs",color:"#10b981",icon:"🦵",exercises:[
+      {type:"training",label:"Day 15",session:"Legs",color:"#16a34a",icon:"🦵",exercises:[
         {name:"Single Leg Extensions",sets:"15, 15, 12, Drop AMRAP",rest:"60 sec / 0 b/t drop",tempo:null,tag:null},
         {name:"Smith Machine Box Squat",sets:"10, 10, 8, 5",rest:"90 sec",tempo:null,tag:null},
         {name:"Leg Press Wide Stance",sets:"20, 15, 3× Cluster 10 reps",rest:"90 sec / 10 b/t clusters",tempo:null,tag:"CLUSTER"},
@@ -198,7 +198,7 @@ const DATA = {
         {name:"Barbell Walking Lunges",sets:"10, 10, 8",rest:"60 sec",tempo:null,tag:null},
       ]},
       {type:"rest",label:"Rest Day"},
-      {type:"training",label:"Day 17",session:"Chest & Back",color:"#ef4444",icon:"🏋️",exercises:[
+      {type:"training",label:"Day 17",session:"Chest & Back",color:"#e11d48",icon:"🏋️",exercises:[
         {name:"Underhand Lat Pulldown",sets:"12, 12, 10, 2× Drop AMRAP",rest:"90 sec / 0 b/t drops",tempo:null,tag:null},
         {name:"Incline Pronated DB Bench Press",sets:"12, 12, 10, 8, Drop AMRAP",rest:"90 sec / 0 b/t drop",tempo:null,tag:null},
         {name:"Flat Neutral DB Bench Press × Push Ups",sets:"10, 10, 8 / AMRAP, AMRAP, AMRAP",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
@@ -207,7 +207,7 @@ const DATA = {
         {name:"Single Arm Seated Cable Row",sets:"12, 12, 3× Cluster 6 reps",rest:"90 sec / 10 b/t clusters",tempo:null,tag:"CLUSTER"},
         {name:"Hyperextensions",sets:"15, 15, 12",rest:"60 sec",tempo:null,tag:null},
       ]},
-      {type:"training",label:"Day 18",session:"Shoulders & Arms",color:"#8b5cf6",icon:"💪",exercises:[
+      {type:"training",label:"Day 18",session:"Shoulders & Arms",color:"#7c3aed",icon:"💪",exercises:[
         {name:"Single Arm Leaning Cable Side Lateral Raises × Standing DB Side Lateral Raises",sets:"15, 15, 12 / 10, 10, 8",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
         {name:"Seated DB Shoulder Press",sets:"12, 12, 10, 8",rest:"90 sec",tempo:null,tag:null},
         {name:"Barbell Rear Delt Row × Band Pull Aparts",sets:"12, 12, 10 / 15, 15, 12",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
@@ -216,7 +216,7 @@ const DATA = {
         {name:"Straight Bar Cable Curl × Straight Bar Cable Drag Curl",sets:"12, 12, 10 / 10, 10, 8",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
         {name:"Alternating Standing DB Hammer Curls",sets:"12, 10, 8, Drop AMRAP",rest:"60 sec / 0 b/t drop",tempo:null,tag:null},
       ]},
-      {type:"training",label:"Day 19",session:"Legs",color:"#10b981",icon:"🦵",exercises:[
+      {type:"training",label:"Day 19",session:"Legs",color:"#16a34a",icon:"🦵",exercises:[
         {name:"Barbell Walking Lunges",sets:"10, 10, 8",rest:"60 sec",tempo:null,tag:null},
         {name:"Barbell Back Squat",sets:"12, 12, 10, 8",rest:"90 sec",tempo:null,tag:null},
         {name:"Barbell Hip Thrust",sets:"12, 12, 10",rest:"90 sec",tempo:null,tag:null},
@@ -226,7 +226,7 @@ const DATA = {
         {name:"Standing Calf Raise Machine - Medium Stance × Seated Calf Raise Machine",sets:"10, 10, 10 / 20, 20, 15",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
       ]},
       {type:"rest",label:"Rest Day"},
-      {type:"training",label:"Day 21",session:"Chest & Back",color:"#ef4444",icon:"🏋️",exercises:[
+      {type:"training",label:"Day 21",session:"Chest & Back",color:"#e11d48",icon:"🏋️",exercises:[
         {name:"Neutral Grip Chin Up",sets:"AMRAP, AMRAP, AMRAP, AMRAP",rest:"30 sec",tempo:null,tag:null},
         {name:"Incline Pronated DB Bench Press",sets:"12, 12, 10, 8",rest:"120 sec",tempo:null,tag:null},
         {name:"Hammer Strength Decline Chest Press",sets:"12, 10, 8, 3× Cluster 6 reps",rest:"90 sec / 10 b/t clusters",tempo:null,tag:"CLUSTER"},
@@ -235,7 +235,7 @@ const DATA = {
         {name:"Bent Over Barbell Row × Rack Pull - Below Knee",sets:"12, 10, 10 / 10, 8, 8",rest:"10 sec between · 120 sec after superset",tempo:null,tag:"SUPERSET"},
         {name:"Barbell Shrug",sets:"10, 10, 10",rest:"120 sec",tempo:null,tag:null},
       ]},
-      {type:"training",label:"Day 22",session:"Shoulders & Arms",color:"#8b5cf6",icon:"💪",exercises:[
+      {type:"training",label:"Day 22",session:"Shoulders & Arms",color:"#7c3aed",icon:"💪",exercises:[
         {name:"Chest Supported Incline Pronated Row",sets:"15, 12, 10, 2× Drop AMRAP",rest:"90 sec / 0 b/t drops",tempo:null,tag:null},
         {name:"Barbell Medium Grip Military Press",sets:"12, 12, 10, 8, Drop AMRAP",rest:"120 sec / 0 b/t drop",tempo:null,tag:null},
         {name:"Single Arm Leaning Cable Side Lateral Raises × Straight Bar Wide Cable Upright Row",sets:"15, 12, 10 / 10, 8, 8",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
@@ -244,7 +244,7 @@ const DATA = {
         {name:"Incline DB Skull Crushers",sets:"12, 10, 8, 2× Drop AMRAP",rest:"90 sec / 0 b/t drops",tempo:null,tag:null},
         {name:"Machine Preacher Curl × Alternating Seated DB Curls",sets:"12, 10, 8 / 10, 8, 6",rest:"10 sec between · 90 sec after superset",tempo:null,tag:"SUPERSET"},
       ]},
-      {type:"training",label:"Day 23",session:"Legs",color:"#10b981",icon:"🦵",exercises:[
+      {type:"training",label:"Day 23",session:"Legs",color:"#16a34a",icon:"🦵",exercises:[
         {name:"Leg Extensions",sets:"15, 12, 12, 10",rest:"120 sec",tempo:null,tag:null},
         {name:"Smith Machine Front Squat",sets:"12, 12, 8, 6",rest:"120 sec",tempo:null,tag:null},
         {name:"Hack Squat Medium Stance",sets:"10, 8, 8, Drop AMRAP",rest:"120 sec / 0 b/t drop",tempo:null,tag:null},
@@ -253,7 +253,7 @@ const DATA = {
         {name:"Sissy Squat Machine",sets:"12, 12, 12",rest:"60 sec",tempo:null,tag:null},
       ]},
       {type:"rest",label:"Rest Day"},
-      {type:"training",label:"Day 25",session:"Chest & Back",color:"#ef4444",icon:"🏋️",exercises:[
+      {type:"training",label:"Day 25",session:"Chest & Back",color:"#e11d48",icon:"🏋️",exercises:[
         {name:"Single Arm Seated Cable Row",sets:"12, 12, 10, Drop AMRAP",rest:"90 sec / 0 b/t drop",tempo:null,tag:null},
         {name:"Flat Neutral DB Bench Press",sets:"12, 12, 10, 8, Drop AMRAP",rest:"120 sec / 0 b/t drop",tempo:null,tag:null},
         {name:"Hammer Strength Incline Chest Press",sets:"12, 10, 8, 2× Drop AMRAP",rest:"90 sec / 0 b/t drops",tempo:null,tag:null},
@@ -262,7 +262,7 @@ const DATA = {
         {name:"Seated Wide Grip Cable Row",sets:"12, 12, 10, 2× Drop AMRAP",rest:"90 sec / 0 b/t drops",tempo:null,tag:null},
         {name:"Hyperextensions",sets:"15, 15, 12",rest:"60 sec",tempo:null,tag:null},
       ]},
-      {type:"training",label:"Day 26",session:"Shoulders & Arms",color:"#8b5cf6",icon:"💪",exercises:[
+      {type:"training",label:"Day 26",session:"Shoulders & Arms",color:"#7c3aed",icon:"💪",exercises:[
         {name:"Standing DB Side Lateral Raises",sets:"15, 12, 10",rest:"60 sec",tempo:null,tag:null},
         {name:"Hammer Strength Seated Shoulder Press",sets:"10, 10, 8, 6, 2× Drop AMRAP",rest:"90 sec / 0 b/t drops",tempo:null,tag:null},
         {name:"Seated Rear Delt Flys",sets:"12, 10, 8",rest:"60 sec",tempo:null,tag:null},
@@ -271,7 +271,7 @@ const DATA = {
         {name:"Seated Barbell Curl × Barbell Curl Medium Grip",sets:"10, 8, 6 / 12, 10, 8",rest:"10 sec between · 90 sec after superset",tempo:null,tag:"SUPERSET"},
         {name:"Single Arm Machine Preacher Curl × Alternating Standing DB Hammer Curls",sets:"12, 10, 8 / 10, 8, 6",rest:"10 sec between · 60 sec after superset",tempo:null,tag:"SUPERSET"},
       ]},
-      {type:"training",label:"Day 27",session:"Legs",color:"#10b981",icon:"🦵",exercises:[
+      {type:"training",label:"Day 27",session:"Legs",color:"#16a34a",icon:"🦵",exercises:[
         {name:"DB Walking Lunges",sets:"12, 10, 10",rest:"60 sec",tempo:null,tag:null},
         {name:"Leg Press Wide Stance",sets:"20, 20, 15, 12, 2× Drop AMRAP",rest:"120 sec / 0 b/t drops",tempo:null,tag:null},
         {name:"Barbell Back Squat",sets:"12, 12, 10, 8",rest:"120 sec",tempo:null,tag:null},
