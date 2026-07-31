@@ -203,7 +203,7 @@ function renderExercise(ex,dIdx,eIdx){
   if(ex.tag)badges.push(`<span class="a-pill grp">${escapeHtml(ex.tag)}</span>`);
   if(ex.tempo)ex.tempo.split("/").forEach(t=>badges.push(`<span class="a-pill tempo">⏱ ${escapeHtml(t.trim())}</span>`));
   const badgeHtml=badges.length?`<div class="a-badges">${badges.join("")}</div>`:"";
-  const notesHtml=ex.notes?`<div class="a-notes">📝 ${escapeHtml(ex.notes)}</div>`:"";
+  const notesHtml=ex.note?`<div class="a-notes">📝 ${escapeHtml(ex.note)}</div>`:"";
   return `<div class="ex-card a-card${ssCls}"><div class="ex-body">
     <div class="a-top">
       <div class="a-idx">${eIdx+1}</div>
