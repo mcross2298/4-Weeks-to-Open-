@@ -86,6 +86,12 @@ jobs:
       - name: Multi-week program intensifier-coverage check (mm-p1/p2/p3.html)
         run: node tools/validate-programs.js
 
+      - name: Global-namespace check (no NEW export conventions — audit G-09)
+        # Grandfathers the existing MC_SNAKE / MCPascal split rather than
+        # migrating 261 references of working code; fails only on a NEW export
+        # outside MC_UPPER_SNAKE, or a baseline export that vanished.
+        run: node tools/check-exports.js
+
       - name: Program-data conventions (note field + day taxonomy — audit G-07/G-10)
         # Fleet-wide where validate-programs.js only reaches 3 pages: one name
         # for exercise coaching text with readers that match it, a known day-type
@@ -133,5 +139,14 @@ jobs:
           for i in $(seq 1 20); do curl -sf http://localhost:8080/index.html >/dev/null && break; sleep 0.5; done
           NODE_PATH=/tmp/pw-ci/node_modules node tools/smoke-test-pages.js http://localhost:8080
           EXIT=$?
+          # Light-mode contrast ratchet (audit G-04/G-3.1). Shares this job
+          # because it needs the same Playwright install. Per-page budgets in
+          # tools/contrast-budgets.json can only shrink; re-baseline with
+          # `node tools/check-contrast.js <url> --update` if a change is
+          # deliberate.
+          if [ "$EXIT" -eq 0 ]; then
+            NODE_PATH=/tmp/pw-ci/node_modules node tools/check-contrast.js http://localhost:8080
+            EXIT=$?
+          fi
           kill "$SERVER_PID" 2>/dev/null || true
           exit $EXIT

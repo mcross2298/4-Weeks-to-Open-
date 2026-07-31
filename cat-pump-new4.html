@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="MC Training"/>
 <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
 <meta name="theme-color" content="#0a0a0a"/>
-<script>/* MC head boot (audit G-02/G-03) — PWA cold-launch guard + theme, before first paint */try{if((window.navigator.standalone===true||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches))&&!sessionStorage.getItem('mc_launched')){sessionStorage.setItem('mc_launched','1');var _p=(location.pathname.split('/').pop()||'').toLowerCase();if(_p!==''&&_p!=='index.html'&&_p!=='dashboard.html'){location.replace('dashboard.html');}}}catch(e){}try{var _l=localStorage.getItem('mc_theme_mode')==='light';if(_l)document.documentElement.setAttribute('data-theme','light');var _m=document.querySelector('meta[name="theme-color"]');if(_m)_m.setAttribute('content',_l?'#f5f2ec':'#0a0a0a');}catch(e){}</script>
+<script>/* MC head boot (audit G-02/G-03) — PWA cold-launch guard + theme, before first paint */try{if((window.navigator.standalone===true||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches))&&!sessionStorage.getItem('mc_launched')){sessionStorage.setItem('mc_launched','1');var _p=(location.pathname.split('/').pop()||'').toLowerCase();if(_p!==''&&_p!=='index.html'&&_p!=='dashboard.html'){location.replace('dashboard.html');}}}catch(e){}try{var _lk=document.documentElement.getAttribute('data-theme-lock');var _l=!_lk&&localStorage.getItem('mc_theme_mode')==='light';if(_l)document.documentElement.setAttribute('data-theme','light');var _m=document.querySelector('meta[name="theme-color"]');if(_m)_m.setAttribute('content',_l?'#f5f2ec':'#0a0a0a');}catch(e){}</script>
 <!-- MC:HEAD END -->
 <!-- Was a blocking @import inside the <style> block below (an @import blocks
      the containing stylesheet's parse, and inline <style> itself blocks
@@ -305,7 +305,7 @@
         <div class="module-label">
           <div class="module-tag">Split #3</div>
           <div class="module-name">Upper Body Rotation</div>
-          <div class="module-count">5 workouts · 20 total variations</div>
+          <div class="module-count">6 workouts · 26 total variations</div>
         </div>
         <div class="chevron">›</div>
       </div>
@@ -335,6 +335,11 @@
           <div class="row-emoji">🦵</div>
           <div class="row-text"><div class="row-name">Quads, Calves & Adductors</div><div class="row-detail">Classic strength · Tempo/TUT · Drop sets · Pause & isometric · Pyramid supersets</div></div>
           <div class="row-badge">8 var</div><div class="row-arrow">›</div>
+        </a>
+        <a href="legs-s3-pump.html" class="workout-row">
+          <div class="row-emoji">🦵</div>
+          <div class="row-text"><div class="row-name">Legs — Quads/Hams/Glutes</div><div class="row-detail">Heavy base · Deadlift &amp; hack focus · Drop sets · Pause &amp; isometric · Pyramid supersets</div></div>
+          <div class="row-badge">6 var</div><div class="row-arrow">›</div>
         </a>
       </div></div>
     </div>
@@ -424,6 +429,7 @@ MCProgramStatus.mount(document.getElementById('programStatus'), {
     { title: 'Shoulders & Triceps', href: 's3-shoulders-triceps.html' },
     { title: 'Full Upper Body', href: 's3-upper-body.html' },
     { title: 'Quads, Calves & Adductors', href: 'quads-pump.html' },
+    { title: 'Legs — Quads/Hams/Glutes', href: 'legs-s3-pump.html' },
     { title: 'Pull — Lats/Traps/Biceps', href: 's4-pull.html' },
     { title: 'Push — Chest/Shoulders/Triceps', href: 's4-push.html' },
     { title: 'Legs — Quads/Hamstrings/Calves', href: 's4-legs.html' }

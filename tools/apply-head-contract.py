@@ -97,7 +97,14 @@ THEME_BOOT = (
     "if(_p!==''&&_p!=='index.html'&&_p!=='dashboard.html'){location.replace('dashboard.html');}}"
     '}catch(e){}'
     'try{'
-    "var _l=localStorage.getItem('mc_theme_mode')==='light';"
+    # A page may opt out of light mode with <html data-theme-lock="dark">. Used
+    # by the nine conditioning pages, whose conditioning-elite.css is an
+    # explicitly dark "premium" design with no light grammar — letting the shell
+    # go Sand while those cards stayed dark stranded white text on cream
+    # (audit G-3.1). Locking here rather than fighting mc-light.css on
+    # specificity means the light sheet simply never engages on them.
+    "var _lk=document.documentElement.getAttribute('data-theme-lock');"
+    "var _l=!_lk&&localStorage.getItem('mc_theme_mode')==='light';"
     "if(_l)document.documentElement.setAttribute('data-theme','light');"
     "var _m=document.querySelector('meta[name=\"theme-color\"]');"
     "if(_m)_m.setAttribute('content',_l?'" + LIGHT_BG + "':'" + DARK_BG + "');"
