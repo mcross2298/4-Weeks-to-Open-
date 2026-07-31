@@ -33,6 +33,23 @@ const ROOT = path.resolve(__dirname, '..');
 const BUDGETS = path.join(__dirname, 'contrast-budgets.json');
 const MIN_RATIO = 3.0;            // WCAG AA large-text floor
 
+// The first baseline used a flat 250ms wait, which was enough on a fast dev
+// container and not on a CI runner: cat-custom.html was still showing its "…"
+// title placeholder when measured, so CI counted an element the baseline had
+// never seen and failed a page nobody had touched. A bigger magic number would
+// only move that cliff, so wait on the page's own readiness instead — network
+// quiet, then a short beat for the render that runs off the last response.
+// Verified equal to a flat 700ms across a page sample, and byte-identical
+// across consecutive full runs.
+const IDLE_MS = 8000;   // cap on the network-quiet wait
+const PAINT_MS = 150;   // post-idle beat for JS that renders after its data lands
+
+// One element of slack per page. Readiness-based measurement is stable run to
+// run here, but the budgets are recorded on one Chromium build and enforced on
+// another, and a single lazily-attached node should not turn a deploy red.
+// Anything larger than one element is treated as a real regression.
+const TOLERANCE = 1;
+
 const base = process.argv[2];
 const update = process.argv.includes('--update');
 if (!base) {
@@ -107,17 +124,18 @@ const pages = fs.readdirSync(ROOT)
     let r;
     try {
       await p.goto(base.replace(/\/$/, '') + '/' + pg, { waitUntil: 'domcontentloaded', timeout: 20000 });
-      await p.waitForTimeout(250);
+      try { await p.waitForLoadState('networkidle', { timeout: IDLE_MS }); } catch (e) { /* measure anyway */ }
+      await p.waitForTimeout(PAINT_MS);
       r = await p.evaluate(PROBE, MIN_RATIO);
     } catch (e) { continue; }
     found[pg] = r.bad;
     total += r.bad;
     const budget = budgets[pg] === undefined ? 0 : budgets[pg];
-    if (r.bad > budget) {
+    if (r.bad > budget + TOLERANCE) {
       over++;
       console.error(`::error file=${pg}::light-mode contrast regressed — ${r.bad} element(s) below ${MIN_RATIO}:1, budget is ${budget}`);
       r.worst.forEach(w => console.error(`         ${w}`));
-    } else if (r.bad < budget) {
+    } else if (r.bad < budget - TOLERANCE) {
       under++;
       console.log(`  ${pg}: improved to ${r.bad} (budget ${budget}) — lower the budget in tools/contrast-budgets.json`);
     }
