@@ -139,5 +139,14 @@ jobs:
           for i in $(seq 1 20); do curl -sf http://localhost:8080/index.html >/dev/null && break; sleep 0.5; done
           NODE_PATH=/tmp/pw-ci/node_modules node tools/smoke-test-pages.js http://localhost:8080
           EXIT=$?
+          # Light-mode contrast ratchet (audit G-04/G-3.1). Shares this job
+          # because it needs the same Playwright install. Per-page budgets in
+          # tools/contrast-budgets.json can only shrink; re-baseline with
+          # `node tools/check-contrast.js <url> --update` if a change is
+          # deliberate.
+          if [ "$EXIT" -eq 0 ]; then
+            NODE_PATH=/tmp/pw-ci/node_modules node tools/check-contrast.js http://localhost:8080
+            EXIT=$?
+          fi
           kill "$SERVER_PID" 2>/dev/null || true
           exit $EXIT

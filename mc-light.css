@@ -378,3 +378,93 @@ html[data-theme="light"] .pl-tier-pill{color:#4f46a8;}
 html[data-theme="light"] .inst-link{color:#906800;}
 html[data-theme="light"] .program-eyebrow,
 html[data-theme="light"] .meta-badge{color:#4c770a;}
+
+/* ═══════════════════════════════════════════════════════════════════
+   G3.1 — the remaining light-mode contrast tail
+   ───────────────────────────────────────────────────────────────────
+   After the G-04 pass, 69 pages still carried sub-3:1 text. Aggregating
+   by CLASS made that look like a flat 145-way tail; aggregating by PAGE
+   showed the truth — four pages held 72% of every finding, because one
+   bad rule repeated across hundreds of rows. Fixing rules, not classes.
+
+   Same method as the G-04 block: the SAME hue darkened until it clears
+   WCAG AA on the Sand ground (#f5f2ec), so each surface keeps its
+   identity.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── exercise-library.html (749 findings) ─────────────────────────────
+   The inverse of the usual failure: base.css lightened the TEXT to Sand
+   ink, but .ex-item / .master-group hardcode a dark navy #0d1f3c that no
+   light rule ever touched — so dark-on-dark, 675 rows of it. The surface
+   has to lighten with the text. */
+html[data-theme="light"] .ex-item,
+html[data-theme="light"] .master-group{
+  background:#faf7f0;border-color:rgba(28,26,23,0.10);}
+html[data-theme="light"] .header{
+  background:linear-gradient(90deg,#efe9db,#f5f2ec);
+  border-bottom-color:rgba(130,105,25,0.25);}
+html[data-theme="light"] .ex-muscle-tag{color:#5b6f8b;}
+html[data-theme="light"] .fav-btn{color:#6b6459;}
+
+/* ── build-workout.html (548 findings) ────────────────────────────────
+   One class, 539 instances: the add-exercise affordance on every row. */
+html[data-theme="light"] .ex-add,
+html[data-theme="light"] .sec-label{color:#187a56;}
+html[data-theme="light"] .create-btn{color:#f5f2ec;}
+
+/* ── quick-tour-overview.html + pm-mode-overview.html (365 findings) ──
+   Structurally identical pages — same class names, different accent
+   (gold vs cyan), so one block covers both. The bold runs are white text
+   that only ever worked because the ground was near-black. */
+html[data-theme="light"] .sec-body b,
+html[data-theme="light"] .sec-body strong,
+html[data-theme="light"] .step-body b{color:var(--text,#1c1a17);}
+html[data-theme="light"] .chk,
+html[data-theme="light"] .sec-num,
+html[data-theme="light"] .stat-chip,
+html[data-theme="light"] .gold{color:#826919;}
+html[data-theme="light"] .sec-lede,
+html[data-theme="light"] .topbar-sub{color:#666f7f;}
+
+/* ── round 2: overview pages + per-module accent rows ─────────────────
+   quick-tour-overview / pm-mode-overview put white bold runs inside
+   `.sec b` and `.ticks b`, and slate body copy in `.card-tx` — all
+   written against the near-black ground. */
+html[data-theme="light"] .sec b,
+html[data-theme="light"] .ticks b,
+html[data-theme="light"] .card-tx b{color:var(--text,#1c1a17);}
+html[data-theme="light"] .card-tx,
+html[data-theme="light"] .sec p,
+html[data-theme="light"] .tier{color:#4a5464;}
+html[data-theme="light"] .tier.flag{color:#826919;}
+
+/* cat-pump-new4's module rows tint by class (.m-gold/.m-green/…), with
+   the NAME a pale tint and the DETAIL the saturated hue — both tuned for
+   a dark card. On Sand the pale name is the worse of the two, so name and
+   detail converge on one AA-clearing value per family. */
+html[data-theme="light"] .m-gold .row-name,
+html[data-theme="light"] .m-gold .row-detail,
+html[data-theme="light"] .m-gold .row-badge{color:#836900;}
+html[data-theme="light"] .m-green .row-name,
+html[data-theme="light"] .m-green .row-detail,
+html[data-theme="light"] .m-green .row-badge{color:#187a56;}
+html[data-theme="light"] .m-slate .row-name,
+html[data-theme="light"] .m-slate .row-detail,
+html[data-theme="light"] .m-slate .row-badge{color:#2b6cb0;}
+html[data-theme="light"] .m-orange .row-name,
+html[data-theme="light"] .m-orange .row-detail,
+html[data-theme="light"] .m-orange .row-badge{color:#b1500b;}
+html[data-theme="light"] .m-crimson .row-name,
+html[data-theme="light"] .m-crimson .row-detail,
+html[data-theme="light"] .m-crimson .row-badge{color:#c0392b;}
+html[data-theme="light"] .row-detail{opacity:0.85;}
+
+/* exercise-library master-group headers — gold on the newly lightened card */
+html[data-theme="light"] .master-label,
+html[data-theme="light"] .master-chevron,
+html[data-theme="light"] .phase8-badge{color:#826919;}
+
+/* pmc-workout's split picker tints its arrow/name per split; same story */
+html[data-theme="light"] .picker-arrow,
+html[data-theme="light"] .picker-split-name,
+html[data-theme="light"] .picker-split-label{color:#3d4756;}

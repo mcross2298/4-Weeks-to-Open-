@@ -20,9 +20,17 @@
     catch (e) { return 'dark'; }
   }
 
+  // A page can opt out of light mode entirely with <html data-theme-lock="dark">
+  // — see tools/apply-head-contract.py. The conditioning pages use it because
+  // their stylesheet is a deliberate dark design with no light grammar, and a
+  // half-lightened hybrid is worse than either theme (audit G-3.1).
+  function locked() {
+    return !!document.documentElement.getAttribute('data-theme-lock');
+  }
+
   function apply(mode) {
     var html = document.documentElement;
-    if (mode === 'light') html.setAttribute('data-theme', 'light');
+    if (mode === 'light' && !locked()) html.setAttribute('data-theme', 'light');
     else html.removeAttribute('data-theme');
   }
 
