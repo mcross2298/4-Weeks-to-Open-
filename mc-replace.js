@@ -45,10 +45,28 @@
       }
     });
   }
-  // Run after render
+  // Run after render.
+  //
+  // This is an ORDERING CONTRACT, not just a feature check (audit G-09): the
+  // page's own engine must have defined a global `render` BEFORE this script
+  // tag. If it hasn't, the wrapper below is never installed and saved
+  // replacements stop re-painting when the page re-renders (switching week
+  // tabs, toggling a day) — silently, with no error. The audit verified the
+  // ordering holds on all 64 pages that load this module today, but nothing
+  // enforced it, so a future page that loads its engine after mc-replace.js
+  // would lose the behaviour with no signal.
+  //
+  // The DOMContentLoaded pass below still paints replacements once, so the
+  // failure is partial rather than total — which is exactly what makes it easy
+  // to miss. Say so out loud instead.
   if (typeof render === 'function') {
     const origRender = render;
     window.render = function() { origRender.apply(this, arguments); setTimeout(applyReplacements, 100); };
+  } else if (document.querySelector('.ex-card, .ss-card')) {
+    // Only a page that actually renders exercise cards is expected to have a
+    // render(); a static list page (exercise-library.html) legitimately has none.
+    console.warn('[mc-replace] no global render() at load time — replacement badges ' +
+      'will paint once but not survive a re-render. Load the page engine before mc-replace.js.');
   }
   document.addEventListener('DOMContentLoaded', function() { setTimeout(applyReplacements, 400); });
   // NOTE: "Replace exercise" is now triggered from the meatball (⋮) menu in

@@ -86,6 +86,12 @@ jobs:
       - name: Multi-week program intensifier-coverage check (mm-p1/p2/p3.html)
         run: node tools/validate-programs.js
 
+      - name: Global-namespace check (no NEW export conventions — audit G-09)
+        # Grandfathers the existing MC_SNAKE / MCPascal split rather than
+        # migrating 261 references of working code; fails only on a NEW export
+        # outside MC_UPPER_SNAKE, or a baseline export that vanished.
+        run: node tools/check-exports.js
+
       - name: Program-data conventions (note field + day taxonomy — audit G-07/G-10)
         # Fleet-wide where validate-programs.js only reaches 3 pages: one name
         # for exercise coaching text with readers that match it, a known day-type
