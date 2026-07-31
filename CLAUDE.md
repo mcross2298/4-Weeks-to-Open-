@@ -232,6 +232,27 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 
 ---
 
+## One rest timer — `TMR` in `mc-timer.js` (audit G5.0)
+
+**Permanent rule.** The app has exactly one rest-timer implementation: `TMR`
+from `mc-timer.js`, surfaced on a page via `makeRestTimer(rest, name)` (which
+emits a `.rest-timer` span) and the `#timerFloat` element `buildTimerFloat()`
+builds. Never hand-roll a second one on a page.
+
+Twenty-seven pages used to carry a complete duplicate — a `_T` controller,
+`_rp()` emitting a `.rest-pill`, `_restFor()`, `_initTF()` and a static
+`<div id="_tf">`. **None of it ever ran**: `_rp()` was declared and never
+called, so nothing reached `_T`. `.rest-pill` rendered zero times on all 27
+pages while `.rest-timer` rendered 8–39. Removing all of it changed the
+rendered DOM on zero pages.
+
+That is the trap worth remembering: a dead timer reads exactly like a working
+one in source, so it survives review indefinitely.
+`tools/check-dead-timer.js` runs in CI and fails on any of those identifiers
+reappearing.
+
+---
+
 ## Conditioning Corner
 
 The "Conditioning Corner" is the **Conditioning tab** on `dashboard.html`

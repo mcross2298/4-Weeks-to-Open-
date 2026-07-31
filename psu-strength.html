@@ -59,14 +59,6 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:40px;}
 .legend{background:rgba(255,255,255,0.06);border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:11px;color:#cbd5e1;line-height:1.6;}
 .legend strong{color:#fff;}
 
-.rest-pill{display:inline-flex;align-items:center;gap:5px;cursor:pointer;user-select:none;
-  padding:3px 9px;border-radius:7px;font-size:11px;font-weight:800;
-  background:rgba(100,116,139,0.12);border:1px solid rgba(100,116,139,0.2);
-  color:var(--muted);transition:all 0.15s;vertical-align:middle;}
-.rest-pill:active{transform:scale(0.95);}
-.rest-pill.running{background:rgba(251,191,36,0.15);border-color:rgba(251,191,36,0.35);color:#fbbf24;animation:rp 1s ease-in-out infinite;}
-.rest-pill.done{background:rgba(52,211,153,0.15);border-color:rgba(52,211,153,0.35);color:#34d399;}
-.rest-pill.over{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.35);color:#f87171;}
 @keyframes rp{0%,100%{opacity:1;}50%{opacity:0.65;}}
 .tf{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
   background:rgba(10,10,16,0.96);backdrop-filter:blur(16px);
@@ -556,13 +548,6 @@ const checkState = {};
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 
-function _restFor(name){
-  const compounds=['squat','deadlift','bench','clean','pull','press','rdl','romanian',
-    'row','lunge','high pull','hang','trap bar','split squat'];
-  const n=(name||'').toLowerCase();
-  for(const c of compounds){if(n.includes(c))return {secs:105,lbl:'90-120 sec'};}
-  return {secs:60,lbl:'60 sec'};
-}
 function render(){
   const phase = PROGRAM[activePhase];
   const day = phase.days[activeDay];
@@ -656,60 +641,10 @@ function render(){
 render();
 if(typeof updateProgress!=="undefined")updateProgress();
 
-const _T={iv:null,st:null,dur:0,el:null,nm:'',
-  fmt(s){const n=s<0,a=Math.abs(s),m=Math.floor(a/60),sc=a%60;return(n?'+':'')+(m>0?m+':'+String(sc).padStart(2,'0'):sc+'s');},
-  parse(s){if(!s||s==='—')return 0;s=s.toLowerCase();
-    let r=0;const mm=s.match(/(\d+)\s*min/),ss=s.match(/(\d+)\s*sec/);
-    if(mm)r+=parseInt(mm[1])*60;if(ss)r+=parseInt(ss[1]);
-    if(!r){const p=s.match(/^(\d+)/);if(p)r=parseInt(p[1]);}return r;},
-  buzz(){try{navigator.vibrate&&navigator.vibrate([200,100,200,100,400]);
-    const c=new(window.AudioContext||window.webkitAudioContext)();
-    [0,0.3,0.6].forEach((t,i)=>{const o=c.createOscillator(),g=c.createGain();
-      o.connect(g);g.connect(c.destination);o.frequency.value=i===2?880:660;
-      g.gain.setValueAtTime(0.4,c.currentTime+t);
-      g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+t+0.25);
-      o.start(c.currentTime+t);o.stop(c.currentTime+t+0.25);});}catch(e){}},
-  stop(){clearInterval(this.iv);this.iv=null;
-    if(this.el){this.el.className='rest-pill';this.el.querySelector('span').textContent=this.el.dataset.lbl;this.el=null;}
-    const f=document.getElementById('_tf');if(f)f.classList.remove('on');},
-  start(el,secs,nm){this.stop();this.dur=secs;this.st=Date.now();this.el=el;this.nm=nm;
-    el.className='rest-pill running';
-    const f=document.getElementById('_tf');
-    if(f){f.querySelector('._tf_lbl').textContent='REST';
-      f.querySelector('._tf_ex').textContent=nm;
-      f.querySelector('._tf_time').className='tf-time';
-      f.querySelector('._tf_prog').className='tf-prog';
-      f.querySelector('._tf_prog').style.width='100%';
-      f.classList.add('on');}
-    this.iv=setInterval(()=>{
-      const rem=Math.ceil(this.dur-(Date.now()-this.st)/1000);
-      if(el)el.querySelector('span').textContent=this.fmt(rem);
-      const ft=document.querySelector('._tf_time'),fp=document.querySelector('._tf_prog'),fl=document.querySelector('._tf_lbl');
-      if(ft)ft.textContent=this.fmt(rem);
-      if(rem>0){const p=(rem/this.dur)*100;if(fp)fp.style.width=p+'%';
-        if(ft)ft.className='tf-time';if(fp)fp.className='tf-prog';if(el)el.className='rest-pill running';}
-      else if(rem===0){this.buzz();if(ft)ft.className='tf-time done';if(fp)fp.className='tf-prog done';
-        if(fp)fp.style.width='100%';if(fl)fl.textContent='DONE!';if(el)el.className='rest-pill done';}
-      else{if(ft){ft.textContent='+'+this.fmt(-rem);ft.className='tf-time over';}
-        if(fp)fp.className='tf-prog over';if(fl)fl.textContent='OVERTIME';if(el)el.className='rest-pill over';}
-    },1000);},
-  toggle(el,secs,nm){this.el===el&&this.iv?this.stop():this.start(el,secs,nm);}};
 
-function _initTF(){if(document.getElementById('_tf'))return;
-  const d=document.createElement('div');d.id='_tf';d.className='tf';
-  d.innerHTML='<div class="_tf_lbl tf-lbl">REST</div><div class="_tf_time tf-time">0s</div>'+
-    '<div class="_tf_ex tf-ex"></div><div class="tf-bar"><div class="_tf_prog tf-prog"></div></div>'+
-    '<div class="tf-btns"><button class="tf-btn tf-done" onclick="_T.stop()">✓ Done</button>'+
-    '<button class="tf-btn tf-cancel" onclick="_T.stop()">✕ Cancel</button></div>';
-  document.body.appendChild(d);}
 
-function _rp(secs,label,name){
-  return '<span class="rest-pill" data-lbl="'+label+'" '+
-    'onclick="_initTF();_T.toggle(this,'+secs+',\''+name.replace(/'/g,"\'").substring(0,25)+'\')" '+
-    'title="Tap to start rest timer">⏱ <span>'+label+'</span></span>';}
 
 </script>
-<div id="_tf" class="tf"></div>
 <div id="timerFloat" class="timer-float"></div>
 
 
