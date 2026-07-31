@@ -93,10 +93,10 @@ function renderExercise(ex,dIdx,eIdx){
   const badges=[];
   if(ex.tag)badges.push(`<span class="a-pill ${tc}">${escapeHtml(ex.tag)}</span>`);
   if(ex.tempo)badges.push(`<span class="a-pill tempo">⏱ ${escapeHtml(ex.tempo)}</span>`);
-  if(ex.notes&&ex.notes.includes('REVERSE PYRAMID'))badges.push(`<span class="a-pill rp">▼ REV PYRAMID</span>`);
-  if(ex.notes&&ex.notes.includes('MECHANICAL DROP'))badges.push(`<span class="a-pill rp">⚡ MECH DROP</span>`);
+  if(ex.note&&ex.note.includes('REVERSE PYRAMID'))badges.push(`<span class="a-pill rp">▼ REV PYRAMID</span>`);
+  if(ex.note&&ex.note.includes('MECHANICAL DROP'))badges.push(`<span class="a-pill rp">⚡ MECH DROP</span>`);
   const badgeHtml=badges.length?`<div class="a-badges">${badges.join('')}</div>`:'';
-  const notesHtml=ex.notes?`<div class="a-notes">📝 ${escapeHtml(ex.notes)}</div>`:'';
+  const notesHtml=ex.note?`<div class="a-notes">📝 ${escapeHtml(ex.note)}</div>`:'';
   const repsHtml=renderReps(ex.sets);
   return`<div class="ex-card a-card${cc}"><div class="ex-body">
     <div class="a-top">
@@ -147,10 +147,10 @@ function letter(i){ return String.fromCharCode(65+i); }
 function renderSSMember(ex,dIdx,eIdx,idx,isLast){
   const badges=[];
   if(ex.tempo)badges.push(`<span class="a-pill tempo">⏱ ${escapeHtml(ex.tempo)}</span>`);
-  if(ex.notes&&ex.notes.includes('REVERSE PYRAMID'))badges.push(`<span class="a-pill rp">▼ REV PYRAMID</span>`);
-  if(ex.notes&&ex.notes.includes('MECHANICAL DROP'))badges.push(`<span class="a-pill rp">⚡ MECH DROP</span>`);
+  if(ex.note&&ex.note.includes('REVERSE PYRAMID'))badges.push(`<span class="a-pill rp">▼ REV PYRAMID</span>`);
+  if(ex.note&&ex.note.includes('MECHANICAL DROP'))badges.push(`<span class="a-pill rp">⚡ MECH DROP</span>`);
   const badgeHtml=badges.length?`<div class="a-badges">${badges.join('')}</div>`:'';
-  const notesHtml=ex.notes?`<div class="a-notes">📝 ${escapeHtml(ex.notes)}</div>`:'';
+  const notesHtml=ex.note?`<div class="a-notes">📝 ${escapeHtml(ex.note)}</div>`:'';
   // One rest timer, on the final member only — carries the real "after the
   // full round" rest (the DATA already puts '—' on every member but the
   // last, so this just doesn't render a badge for the '—' members at all,
