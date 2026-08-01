@@ -41,19 +41,12 @@
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
 <div class="app" id="app"></div>
 <script src="mc-timer.js"></script>
+<script src="mc-workout-engine.js"></script>
+<script src="mc-s3-engine.js"></script>
 <script src="mc-reps.js"></script>
 <script>// ── TIMER ENGINE ──
 buildTimerFloat();
 
-function makeRestTimer(r, n) {
-  var s = TMR.parseSeconds(r);
-  if (!s) return '<span style="opacity:0.5">' + r + '</span>';
-  var nm = (n||'').substring(0,25).replace(/['"/\\]/g,'');
-  return '<span class="rest-timer idle" data-rest="' + r + '" ' +
-    'onclick="buildTimerFloat();TMR.toggle(this,' + s + ',&quot;' + nm + '&quot;)" ' +
-    'title="Tap to start">' +
-    '<span class="rest-timer-label">' + r + '</span></span>';
-}
 
 
 const WORKOUTS = [
@@ -95,35 +88,8 @@ const WORKOUTS = [
 
 let activeIdx = 0;
 const checkState = {};
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 
-function esc(s){return escapeHtml(s);}
-function renderEx(ex, prefix, idx) {
-  const id = `${activeIdx}-${prefix}-${idx}`;
-  const checked = checkState[id] ? "checked" : "";
-  const rest = ex.rest || "60 sec";
-  const badgeHtml = ex.tempo ? `<div class="a-badges"><span class="ex-tempo">${esc(ex.tempo)}</span></div>` : "";
-  const noteHtml = ex.note ? `<div class="a-notes">📝 ${esc(ex.note)}</div>` : "";
-  return `<div class="ex-card a-card ${checked}" data-id="${id}" data-type="single">
-    <div class="ex-body">
-      <div class="a-top">
-        <div class="a-idx">${idx+1}</div>
-        <div class="a-head">
-          <div class="ex-name a-name">${esc(ex.name)}</div>
-          ${badgeHtml}
-        </div>
-      </div>
-      <div class="a-reps">${aReps(ex.sets)}</div>
-      <div class="a-strip">
-        <div class="a-cell"><span class="k">Sets</span><span class="v"><span data-field="sets">${esc(ex.sets)}</span></span></div>
-        <div class="a-cell"><span class="k">Rest</span><span class="v">${esc(rest)}</span></div>
-      </div>
-      <div class="a-timerbar">${makeRestTimer(rest, ex.name)}</div>
-      ${noteHtml}
-    </div>
-  </div>`;
-}
 
 
 function render() {

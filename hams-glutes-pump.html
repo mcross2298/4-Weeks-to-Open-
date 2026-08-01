@@ -41,18 +41,11 @@
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
 <div class="app" id="app"></div>
 <script src="mc-timer.js"></script>
+<script src="mc-workout-engine.js"></script>
+<script src="mc-pump-engine.js"></script>
 <script>// ── TIMER ENGINE ──
 buildTimerFloat();
 
-function makeRestTimer(r, n) {
-  var s = TMR.parseSeconds(r);
-  if (!s) return '<span style="opacity:0.5">' + r + '</span>';
-  var nm = (n||'').substring(0,25).replace(/['"/\\]/g,'');
-  return '<span class="rest-timer idle" data-rest="' + r + '" ' +
-    'onclick="buildTimerFloat();TMR.toggle(this,' + s + ',&quot;' + nm + '&quot;)" ' +
-    'title="Tap to start">' +
-    '<span class="rest-timer-label">' + r + '</span></span>';
-}
 
 
 const WORKOUTS = [
@@ -130,31 +123,7 @@ const WORKOUTS = [
 let activeIdx=0;
 const checkState={};
 
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-function renderExercise(ex, idx, prefix, mod) {
-  // prefix: section key for pages whose day is split into groups, so two
-  // sections cannot collide on the same checkState id. mod: extra card class.
-  const id = prefix ? `${activeIdx}-${prefix}-${idx}` : `${activeIdx}-${idx}`;
-  const checked = checkState[id] ? "checked" : "";
-  const cls = ["ex-card", mod, checked].filter(Boolean).join(" ");
-  const tempoHtml = ex.tempo ? `<span class="ex-tempo">${escapeHtml(ex.tempo)}</span>` : "";
-  const noteHtml = ex.note ? `<div class="ex-note">${escapeHtml(ex.note)}</div>` : "";
-  return `<div class="${cls}" data-id="${id}">
-    <div class="ex-row">
-      <div class="ex-num">${idx+1}</div>
-      <div class="ex-content">
-        <div class="ex-name">${escapeHtml(ex.name)}</div>
-        <div class="ex-sets-row">
-          <span class="ex-sets">${escapeHtml(ex.sets)}</span>
-          ${tempoHtml}
-        </div>
-        <div style="margin-top:6px;">${makeRestTimer(ex.rest||"60 sec",ex.name)}</div>
-        ${noteHtml}
-      </div>
-    </div>
-  </div>`;
-}
 
 
 function render(){

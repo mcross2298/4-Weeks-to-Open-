@@ -50,9 +50,22 @@ ROOT = Path(__file__).resolve().parent.parent
 # appears; add a page to an existing family just by naming it to match.
 FAMILIES = {
     "mc-day":        r"^mc-s\d+-.+\.html$",
-    "pmc-s3-s4-day": r"^(pmc-(back|bis-tris|chest-shoulders|legs-hams|legs-quad)"
-                     r"|s3-(back-traps|chest-biceps|shoulders-triceps|upper-body)"
-                     r"|s4-(pull|push))\.html$",
+    # `pmc-s3-s4-day` used to cover all three of the groups below at once: they
+    # loaded the same module list, so one family was enough. G5 gave the pmc
+    # pages and the three Split-3 day pages their own render engines, which
+    # means those groups now legitimately load different modules. Splitting the
+    # family keeps the check strict inside each real clone group instead of
+    # loosening it to accommodate a difference that is intentional.
+    "pmc-day":       r"^pmc-(back|bis-tris|chest-shoulders|legs-hams|legs-quad)\.html$",
+    "s3-day":        r"^s3-(back-traps|chest-biceps|shoulders-triceps)\.html$",
+    "s3-s4-day":     r"^(s3-upper-body|s4-(pull|push))\.html$",
+    # New coverage: these two were clone families all along but had no filename
+    # signal tying them together until G5 gave each a shared engine to load.
+    "pump-day":      r"^((back-traps|bis-tris|chest-tri|hams-glutes|legs"
+                     r"|shoulders-back|shoulders-bis-forearms)-pump"
+                     r"|bonus-pump-(cst|lats))\.html$",
+    "freq-split":    r"^(2on-1off|3on-1off-high-freq|5on-2off|every-(arms|chest)-day"
+                     r"|lets-get-shredded|mens-(lean-bulk|shred))\.html$",
     "split-index":   r"^(mc|pmc)-split\d+\.html$",
     "instructions":  r"^[a-z0-9]+-instructions\.html$",
     "kitchen-sink":  r"^kitchen-sink(-s\d+)?\.html$",

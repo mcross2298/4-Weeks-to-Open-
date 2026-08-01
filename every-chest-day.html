@@ -195,50 +195,18 @@ body .day-card{background:var(--card-bg);border-radius:14px;border:2px solid var
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
 <div class="app" id="app"></div>
 <script src="mc-timer.js"></script>
+<script src="mc-workout-engine.js"></script>
+<script src="mc-freq-engine.js"></script>
 <script>// ── TIMER ENGINE ──
 buildTimerFloat();
 
-function makeRestTimer(r, n) {
-  var s = TMR.parseSeconds(r);
-  if (!s) return '<span style="opacity:0.5">' + r + '</span>';
-  var nm = (n||'').substring(0,25).replace(/['"/\\]/g,'');
-  return '<span class="rest-timer idle" data-rest="' + r + '" ' +
-    'onclick="buildTimerFloat();TMR.toggle(this,' + s + ',&quot;' + nm + '&quot;)" ' +
-    'title="Tap to start">' +
-    '<span class="rest-timer-label">' + r + '</span></span>';
-}
 
 
 const DATA = {"days": [{"name": "Day 1 — Chest & Back", "icon": "💚", "exercises": [{"name": "Pec Deck / Reverse Pec Deck", "sets": "3 × 12–15"}, {"name": "Flat Bench", "sets": "4 × 8–12"}, {"name": "DB Incline", "sets": "4 × 8–12"}, {"name": "Decline Machine Press (drop set)", "sets": "4 × 8–12"}, {"name": "Wide Grip Lat Pulldowns", "sets": "4 × 12–15"}, {"name": "Single Arm DB Row", "sets": "3 × 8–12"}, {"name": "Wide Neutral Grip Cable Rows", "sets": "4 × 12–15"}, {"name": "Hyperextensions", "sets": "3 × 12–15"}]}, {"name": "Day 2 — Chest & Shoulders", "icon": "🟢", "exercises": [{"name": "Cable Crossover / Reverse Cable Crossover", "sets": "3 × 12–15"}, {"name": "DB Fly Press", "sets": "4 × 8–12"}, {"name": "Machine Incline Press", "sets": "4 × 8–12"}, {"name": "Decline DB Fly", "sets": "4 × 12–15"}, {"name": "Arnold Press × DB Side Laterals", "sets": "4 × 8–12 superset"}, {"name": "Barbell Front Raise × Upright Row", "sets": "4 × 12–15 superset"}, {"name": "Barbell Shrugs", "sets": "5 × 12–15"}]}, {"name": "Day 3 — Chest Mobility & Arms", "icon": "💪", "exercises": [{"name": "Pushups to Failure", "sets": "3 × failure"}, {"name": "Dips to Failure", "sets": "3 × failure"}, {"name": "Barbell Curl", "sets": "4 × 8–12"}, {"name": "V Grip Pressdown (drop set)", "sets": "4 × 8–12"}, {"name": "Double Arm Hammer Curl", "sets": "4 × 8–12"}, {"name": "Cable Kickback", "sets": "3 × 12–15"}, {"name": "DB Preacher Curl", "sets": "3 × 8–12"}, {"name": "Hanging Leg Raises / Incline Sit-ups", "sets": "50 / 50"}]}, {"name": "Day 4 — Chest Mobility & Legs", "icon": "🦵", "exercises": [{"name": "Pushups to Failure", "sets": "3 × failure"}, {"name": "Broomstick Stretch", "sets": "5 × 10"}, {"name": "DB Fly Static Hold (10 sec contraction)", "sets": "3 × 10"}, {"name": "Leg Extensions", "sets": "3 × 20–25"}, {"name": "Barbell Squat or Deadlift", "sets": "5 × 5–8"}, {"name": "Leg Press or Hack Squat", "sets": "4 × 8–12"}, {"name": "Stiff Legged Deadlift", "sets": "4 × 8–12"}, {"name": "Leg Curl", "sets": "3 × 20–25"}, {"name": "Calf Raises", "sets": "5 × 8–12"}]}, {"name": "Day 5 — Active Cardio or Rest", "icon": "😴", "exercises": [{"name": "Active cardio session", "sets": "20–30 min"}, {"name": "Or full rest day", "sets": "—"}]}]};
 let openDayIdx = null;
 const checkState = {};
 
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-function renderDay(day,dIdx){
-  const isOpen=openDayIdx===dIdx;
-  const exHtml=day.exercises.map((ex,eIdx)=>{
-    const id=`d${dIdx}e${eIdx}`;
-    const checked=checkState[id]?"checked":"";
-    return `<div class="ex-item ${checked}" data-id="${id}">
-      <div class="checkbox"></div>
-      <span class="ex-name">${escapeHtml(ex.name)}</span>
-      <span class="ex-sets">${escapeHtml(ex.sets)}</span>
-    <div style="margin-top:4px;">${makeRestTimer(ex.rest||"60 sec",ex.name)}</div>
-    </div>`;
-  }).join("");
-  return `<div class="day-card ${isOpen?'open':''}" data-d="${dIdx}">
-    <div class="day-header">
-      <div class="day-icon">${day.icon}</div>
-      <div class="day-info">
-        <div class="day-session">${escapeHtml(day.name)}</div>
-        <div class="day-meta">${day.exercises.length} exercises</div>
-      </div>
-      <div class="day-toggle">${isOpen?'▲':'▼'}</div>
-    </div>
-    <div class="exercises">${exHtml}</div>
-  </div>`;
-}
 
 
 function render(){
@@ -259,25 +227,6 @@ function render(){
   bindEvents();
 }
 
-function bindEvents(){
-  document.querySelectorAll(".day-card").forEach(card=>{
-    const header=card.querySelector(".day-header");
-    header.addEventListener("click",e=>{
-      if(e.target.classList.contains("ex-item")||e.target.closest(".ex-item"))return;
-      const dIdx=parseInt(card.dataset.d);
-      openDayIdx=openDayIdx===dIdx?null:dIdx;
-      render();
-    });
-  });
-  document.querySelectorAll(".ex-item").forEach(item=>{
-    item.addEventListener("click",e=>{
-      e.stopPropagation();
-      const id=item.dataset.id;
-      checkState[id]=!checkState[id];
-      item.classList.toggle("checked");
-    });
-  });
-}
 
 render();
 if(typeof updateProgress!=="undefined")updateProgress();
