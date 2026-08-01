@@ -1,16 +1,116 @@
 # Project notes for Claude
 
-## Planning rule — executive summary required
+## Planning rule — artifact/roadmap authorizes implementation
 
-**Invoke the `executive-summary` skill** (`.claude/skills/executive-summary/SKILL.md`)
-for: new features or UI additions, development phases, multi-file refactors,
-schema/pipeline changes, new HTML pages, and exercise-data structural changes.
-Produce a Word-style executive summary and wait for explicit approval ("approved" / "go")
-before writing or editing any file.
+**The executive-summary wait-for-approval gate is deprecated.** For new
+features or UI additions, development phases, multi-file refactors,
+schema/pipeline changes, new HTML pages, and exercise-data structural
+changes: produce a discovery artifact and/or a roadmap entry covering the
+objective, scope, and phases of the change before writing code. **Creating
+that artifact/roadmap is itself sufficient evidence and direction to proceed
+directly to implementation** — no separate "approved" / "go" reply is
+required before writing or editing any file.
 
-**Skip the summary for:** isolated bug fixes contained to 1–2 files, single-line
-corrections, copy/wording tweaks, and trivial CSS adjustments. See the skill for
-full scope guidance.
+This replaces the old rule ("draft an executive summary and wait for
+explicit approval before writing or editing any file"), including step 1 of
+the New Program Creation Workflow below and the planning-gate language in the
+Active Development Plan section. Historical "shipped" log entries elsewhere
+in this file that describe approvals granted under the old rule are a record
+of what already happened and are left as-is.
+
+**Skip the artifact/roadmap for:** isolated bug fixes contained to 1–2 files,
+single-line corrections, copy/wording tweaks, and trivial CSS adjustments —
+same scope guidance as before, just without the approval wait.
+
+For **multi-phase work**, still pause between phases with `AskUserQuestion`
+to confirm the owner wants to continue before starting the next one — that
+mid-project check-in is a separate mechanism from the deprecated pre-code
+approval gate and stays in place.
+
+---
+
+## Architecture & tech stack
+
+Deliberately no framework and no build step:
+
+- **Frontend:** plain multi-page HTML + `base.css` + a shared set of
+  `mc-*.js` vanilla-JS modules (~90 files, one page per workout/split/tool).
+  No bundler, no `package.json` — CI installs Playwright into a scratch
+  prefix outside the repo (`/tmp/pw-ci`) only when a job needs a headless
+  browser.
+- **Data:** `mc-pm-data.js` (10 programs — 6 flagship, 4 licensed-influencer)
+  and `exercise-catalog.js` (577 deduplicated exercises, each tagged
+  `equipment` + `movement`) are the two catalog sources of truth.
+- **Backend:** Supabase — accounts/auth, PM-mode publish + inline edits
+  (`mc-pm-inline.js`, `mc-program-pub.js`), backup status
+  (`mc-backup-status.js`), food-macro lookups (`mc-foodapi.js`), and a
+  scheduled Edge Function (`weekly-checkin`, fired by
+  `.github/workflows/weekly-checkin.yml` every Sunday 14:00 UTC) that pushes
+  a check-in to trainees who haven't opened the app that day.
+- **PWA/offline:** `manifest.json` + a single versioned service worker
+  (`sw.js`, stale-while-revalidate) — precaches the app shell, caches every
+  other page network-first-with-fallback on first visit.
+- **Cross-app bridge:** `mc-bridge.js` is a read-only, byte-identical-with-
+  Mikes-Cookbook view (`todaysMeals`/`todaysWorkout`/`macroTargets`/
+  `recentActivity`/`today`) consumed by `mc-macros.js`'s "Today's Planned
+  Meals" card. See the Active Development Plan section below
+  (`cookbook-bridge-roadmap.md`) for the full cross-app history.
+
+---
+
+## Build, test & CI
+
+No test framework — every check is a plain `node`/`python3` script run
+against the real source. Local gates before every PR (all of these also run
+in CI — see below):
+
+```bash
+# JS syntax (every tracked .js file)
+for f in $(git ls-files '*.js'); do node --check "$f"; done
+
+node tools/test-naming.js              # resolver/precedence unit tests
+python3 tools/validate-overrides.py    # program-overrides.json shape
+node tools/test-mc-suggest.js          # weight-suggestion math
+node tools/test-mc-maxout.js           # 1RM/Epley math
+node tools/test-mc-bridge.js           # cross-app bridge read layer
+node tools/test-mc-sync-merge.js       # mc-sync.js merge logic
+node tools/test-mc-sw.js               # service-worker fetch strategy
+python3 tools/build-sw.py --check      # committed sw.js matches the tree
+python3 tools/check-script-manifest.py --check   # clone pages load identical module lists
+python3 tools/apply-head-contract.py --check     # canonical <head> block + PWA tags on every page
+node tools/check-program-colors.js     # mc-pm-data.js vs dashboard.html vs mc-theme.js
+node tools/check-day-colors.js         # governed training-day palette
+node tools/validate-programs.js        # multi-week intensifier coverage (mm-p1/p2/p3.html)
+node tools/check-exports.js            # global-namespace convention (MC_SNAKE / MCPascal)
+node tools/check-program-data.js       # note-field + day-type vocabulary, fleet-wide
+node tools/check-dead-timer.js         # no orphan second rest-timer implementation
+python3 tools/build-market.py --check  # no licensed content leaks into the Rolodex build
+```
+
+`tools/dom-parity.js`, `tools/ks-parity.js`, `tools/test-mc-quick-pump.js`,
+`tools/extract-shared-modules.py`, and `tools/add-pwa-meta.py` are manual /
+one-off tools — not wired into any workflow below, so a green CI run does not
+exercise them.
+
+**Workflows** (`.github/workflows/`):
+- **`verify.yml`** — the canonical gate list (everything above, plus a
+  headless-Chromium render smoke test and a light-mode contrast ratchet).
+  Called by both `pr.yml` and `pages.yml` so a PR runs exactly what the
+  deploy runs. `cross-repo-drift` (the Mikes-Cookbook shared-module
+  byte-identity check) is deploy-only by design — it fails by construction
+  between a shared-module PR merging here and the matching cookbook PR
+  landing there, so it must not gate pull requests.
+- **`pr.yml`** — runs `verify.yml` on every pull request.
+- **`pages.yml`** — on push to `main`: runs `verify.yml` (with
+  `cross-repo-drift: true`), regenerates `sw.js` with a run-scoped cache
+  version, strips `*.dc.html` design comps from the deploy artifact, and
+  publishes to GitHub Pages.
+- **`market-deploy.yml`** — on push to `main`: extracts the licensed-
+  content-free tree (`tools/build-market.py`, driven by
+  `content-manifest.json`) and force-pushes it to `MC-Training-Rolodex` as a
+  single fresh commit.
+- **`weekly-checkin.yml`** — Sunday 14:00 UTC cron that calls the
+  `weekly-checkin` Supabase Edge Function.
 
 ---
 
@@ -35,9 +135,9 @@ Purely internal changes (refactors, data-only additions with no user-visible
 behavior change, bug fixes restoring already-documented behavior, CSS/copy
 tweaks) don't require a doc update. If a feature is removed or changed enough
 that existing guide copy is now wrong, update or remove that section rather
-than leaving stale copy. This is independent of the executive-summary gate
-above — even a change small enough to skip the executive summary still needs
-its guide entry if it's user-facing.
+than leaving stale copy. This is independent of the planning rule above —
+even a change small enough to skip the artifact/roadmap still needs its
+guide entry if it's user-facing.
 
 ---
 
@@ -45,8 +145,9 @@ its guide entry if it's user-facing.
 
 Whenever asked to **create a new program**, follow this pipeline exactly:
 
-1. **Executive summary first** — invoke the `executive-summary` skill and wait for
-   explicit approval before writing any file.
+1. **Plan first** — produce an artifact/roadmap entry covering the objective,
+   scope, and phases; creating it is sufficient to proceed directly to code
+   (see the Planning rule above) — no separate approval wait required.
 2. **Build the program HTML page** — follow the 7-day layout standard and
    station-anchoring constraints documented below. All new programs use
    `5-on 2-off` and the 7-card day structure. **Then run
@@ -120,17 +221,21 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > **The governing plan is now [`launch-roadmap.md`](launch-roadmap.md)**
 > (approved 2026-07-12): a phased launch-readiness roadmap (L0–L6) driving
 > the app to a finished product — installable PWA + commercial layer, with
-> L6 as the definition of done. Each phase requires its own executive
-> summary + approval before code, and an AskUserQuestion gate before the
-> next phase. The section below is the previous plan, kept as a historical
+> L6 as the definition of done. Each phase gets its own artifact/roadmap
+> entry before code (per the Planning rule above — phases through L4 were
+> gated by the now-deprecated executive-summary approval instead, since they
+> predate this rule change), and an AskUserQuestion gate before the next
+> phase. The section below is the previous plan, kept as a historical
 > record; its two open closeout items (Task 3.2, `exercisedata.json`
 > retirement) are absorbed into roadmap Phase L0.
 
 > **Companion cross-app plan:** [`cookbook-bridge-roadmap.md`](cookbook-bridge-roadmap.md)
 > (approved 2026-07-15) governs the two-way data bridge between this app and
 > Mike's Cookbook, toward a joint launch as two linked PWAs (B0–B5). Its final
-> phase folds into launch-roadmap.md L6. Same gate discipline: each phase needs
-> its own executive summary + approval before code. Scratch-listed
+> phase folds into launch-roadmap.md L6. Same gate discipline: each phase
+> needs its own artifact/roadmap entry before code (see the Planning rule
+> above — B0–B5 were gated by the now-deprecated executive-summary approval
+> instead, since they predate this rule change). Scratch-listed
 > (`content-manifest.json`), so it never ships to the public Rolodex build.
 >
 > **B0 shipped (2026-07-15):** `mc-sync.js` gained a `CONSUME` map that pulls
