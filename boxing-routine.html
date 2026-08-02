@@ -168,7 +168,7 @@ body{background:#070a12;min-height:100vh;padding-bottom:210px;color:#e2e8f0;}
 <script>
 function fmt(sec){ sec=Math.max(0,Math.round(sec)); var m=Math.floor(sec/60),s=sec%60; return m+':'+String(s).padStart(2,'0'); }
 function buzz(p){
-  try{ if(navigator.vibrate) navigator.vibrate(p||[200,100,200]); }catch(e){}
+  MC_HAPTICS.pattern(p||[200,100,200]);
   try{ var ctx=new (window.AudioContext||window.webkitAudioContext)();[0,0.18,0.36].forEach(function(t,i){var o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=i===2?880:660;g.gain.setValueAtTime(0.32,ctx.currentTime+t);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+t+0.22);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+0.22);});}catch(e){}
 }
 function Countdown(totalSec,hooks){ this.total=totalSec;this.remaining=totalSec;this.running=false;this.endAt=0;this.iv=null;this.onTick=hooks.onTick||function(){};this.onDone=hooks.onDone||function(){}; }
@@ -372,6 +372,7 @@ setInterval(updateSummary,1000);
 
 BOX.build(); BOX.render(); updateSummary();
 </script>
+<script src="mc-haptics.js"></script>
 <script src="mc-nav.js"></script>
 <script src="conditioning-data.js"></script>
 <script src="mc-input-sheet.js"></script>

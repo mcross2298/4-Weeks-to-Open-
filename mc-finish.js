@@ -245,10 +245,7 @@
           prList.map(function(p){return '<div class="fw-pr-chip">🏆 '+esc(p.name)+' · '+p.weight+' lb</div>';}).join(''))
         :'';
     }
-    try{
-      var hp=(typeof MC_PREFS!=='undefined')?MC_PREFS.get().haptics:true;
-      if(hp&&navigator.vibrate)navigator.vibrate(prList.length?[60,40,120]:30);
-    }catch(e){}
+    if(prList.length)MC_HAPTICS.pr();else MC_HAPTICS.confirm();
     var ov=document.getElementById('fwDone');
     if(ov)ov.classList.add('open');
   }

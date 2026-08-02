@@ -270,11 +270,8 @@
       }
     } catch (e) {}
     ck.classList.add('done'); ck.textContent = '✓'; row.classList.add('done-row');
-    // Light confirming tap on check (respects the timer's haptics pref if loaded).
-    try {
-      var hp = (typeof MC_PREFS !== 'undefined') ? MC_PREFS.get().haptics : true;
-      if (hp && navigator.vibrate) navigator.vibrate(15);
-    } catch (e) {}
+    // Light confirming tap on check.
+    MC_HAPTICS.tap();
     updateHist(card, exId);
     updateCount(card, exId);
     if (rs > 0 && typeof TMR !== 'undefined' && TMR.start) {

@@ -71,7 +71,7 @@
     } catch (e) {}
   }
   function buzz() {
-    try { if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]); } catch (e) {}
+    MC_HAPTICS.complete();
     beep();
   }
 
