@@ -99,11 +99,12 @@ jobs:
         # label actually implementing that label's 7-day spec.
         run: node tools/check-program-data.js
 
-      - name: Single rest-timer check (no orphan second implementation — audit G5.0)
-        # 27 pages carried a complete second rest timer that never ran. A dead
-        # timer is indistinguishable from a working one in source, so this is
-        # gated rather than left to review.
-        run: node tools/check-dead-timer.js
+      - name: Single rest-timer check (no orphan/duplicate/missing implementation — audit G5.0)
+        # 27 pages once carried a dead second rest timer that never ran; 7 more
+        # carried a LIVE second one (no mc-timer.js at all). Both are
+        # indistinguishable from a working timer in source, so this is gated
+        # rather than left to review.
+        run: node tools/check-one-timer.js
 
       - name: Market-extraction leak check (content-manifest.json)
         run: python3 tools/build-market.py --check

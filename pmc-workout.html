@@ -911,41 +911,12 @@ const PMC_SPLIT_META = {
   'split7': { name: 'UGEE SETS', color: '#fb923c', workouts: ['split7_ugee'] },
 };
 </script>
+<script src="mc-timer.js"></script>
+<script src="mc-haptics.js"></script>
 <script src="mc-reps.js"></script>
 <script src="mc-pm-data.js"></script>
 <script>
-// ── TIMER ENGINE ──────────────────────────────────────────────────
-const TMR={
-  interval:null,startTime:null,duration:0,activeEl:null,
-  parseSeconds(str){if(!str||str==='—')return 0;str=str.toLowerCase().trim();const mn=str.match(/(\d+)\s*min/),sc=str.match(/(\d+)\s*sec/);let s=0;if(mn)s+=parseInt(mn[1])*60;if(sc)s+=parseInt(sc[1]);if(!s){const p=str.match(/^(\d+)/);if(p)s=parseInt(p[1]);}return s;},
-  formatTime(secs){const neg=secs<0,abs=Math.abs(secs),m=Math.floor(abs/60),s=abs%60;return(neg?'+':'')+(m>0?m+':'+String(s).padStart(2,'0'):String(s)+'s');},
-  buzz(){if(navigator.vibrate)navigator.vibrate([200,100,200,100,400]);try{const ctx=new(window.AudioContext||window.webkitAudioContext)();[0,0.3,0.6].forEach((t,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=i===2?880:660;o.type='sine';g.gain.setValueAtTime(0.4,ctx.currentTime+t);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+t+0.25);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+0.25);});}catch(e){}},
-  start(el,dur,name){
-    this.stop();this.duration=dur;this.startTime=Date.now();this.activeEl=el;
-    el.className='rest-timer running';el.querySelector('.rest-timer-label').textContent=this.formatTime(dur);
-    const fl=document.getElementById('timerFloat'),ft=document.getElementById('timerFloatTime'),fp=document.getElementById('timerFloatProgress'),fe=document.getElementById('timerFloatEx'),fla=document.getElementById('timerFloatLabel');
-    fl.classList.add('visible');fe.textContent=name;fla.textContent='REST';ft.className='timer-float-time';fp.className='timer-float-progress';fp.style.width='100%';
-    this.interval=setInterval(()=>{
-      const rem=Math.ceil(this.duration-(Date.now()-this.startTime)/1000);
-      if(el)el.querySelector('.rest-timer-label').textContent=this.formatTime(rem);
-      ft.textContent=this.formatTime(rem);
-      if(rem>0){fp.style.width=((rem/this.duration)*100)+'%';ft.className='timer-float-time';fp.className='timer-float-progress';if(el)el.className='rest-timer running';}
-      else if(rem===0){this.buzz();ft.className='timer-float-time done';fp.className='timer-float-progress done';fp.style.width='100%';fla.textContent='DONE!';if(el)el.className='rest-timer done';}
-      else{ft.textContent='+'+this.formatTime(-rem);ft.className='timer-float-time overtime';fp.className='timer-float-progress overtime';fla.textContent='OVERTIME';if(el)el.className='rest-timer overtime';}
-    },1000);
-  },
-  stop(){if(this.interval)clearInterval(this.interval);this.interval=null;if(this.activeEl){this.activeEl.querySelector('.rest-timer-label').textContent=this.activeEl.dataset.label;this.activeEl.className='rest-timer idle';this.activeEl=null;}const fl=document.getElementById('timerFloat');if(fl)fl.classList.remove('visible');},
-  toggle(el,dur,name){if(this.activeEl===el&&this.interval)this.stop();else this.start(el,dur,name);},
-  setTime(secs,label){if(this.interval){clearInterval(this.interval);this.interval=null;}this.duration=secs;this.startTime=Date.now();const ft=document.getElementById('timerFloat');if(ft){const tl=ft.querySelector('.timer-float-label'),tt=ft.querySelector('.timer-float-time'),tp=ft.querySelector('.timer-float-progress');if(tl)tl.textContent=label||(secs+'s');if(tt){tt.textContent=secs+'s';tt.className='timer-float-time';}if(tp){tp.style.width='100%';tp.className='timer-float-progress';}ft.classList.add('visible');}this.activeEl=null;this.interval=setInterval(()=>{const rem=Math.ceil(this.duration-(Date.now()-this.startTime)/1000);const ft2=document.getElementById('timerFloat');if(!ft2)return;const tt2=ft2.querySelector('.timer-float-time'),tp2=ft2.querySelector('.timer-float-progress'),tl2=ft2.querySelector('.timer-float-label');if(rem>0){if(tt2){tt2.textContent=rem+'s';tt2.className='timer-float-time';}if(tp2){tp2.style.width=Math.round((rem/this.duration)*100)+'%';tp2.className='timer-float-progress';}}else if(rem===0){if(tt2){tt2.textContent='DONE!';tt2.className='timer-float-time done';}if(tp2){tp2.style.width='100%';tp2.className='timer-float-progress done';}if(tl2)tl2.textContent='DONE ✓';try{navigator.vibrate&&navigator.vibrate([200,100,200,100,400]);}catch(e){}}else{if(tt2){tt2.textContent='+'+Math.abs(rem)+'s';tt2.className='timer-float-time overtime';}if(tp2)tp2.className='timer-float-progress overtime';}},500);}
-};
-
-// Build floating timer DOM once
-(function(){
-  const div=document.createElement('div');div.id='timerFloat';div.className='timer-float';
-  div.innerHTML=`<div id="timerFloatLabel" class="timer-float-label">REST</div><div id="timerFloatTime" class="timer-float-time">0s</div><div id="timerFloatEx" class="timer-float-ex"></div><div class="timer-float-bar"><div id="timerFloatProgress" class="timer-float-progress"></div></div><div class="timer-float-actions"><button class="timer-float-btn timer-float-skip" onclick="TMR.stop()">✓ Done</button><button class="timer-float-btn timer-float-reset" onclick="TMR.stop()">✕ Cancel</button></div><div class="timer-presets"></div>`;
-  document.body.appendChild(div);
-  ['45s','60s','90s','2min'].forEach(l=>{const s=l==='2min'?120:parseInt(l);const b=document.createElement('button');b.className='timer-preset';b.textContent=l;b.onclick=()=>TMR.setTime(s,l);div.querySelector('.timer-presets').appendChild(b);});
-})();
+buildTimerFloat();
 
 function makeRestTimer(r,n){
   const s=TMR.parseSeconds(r);

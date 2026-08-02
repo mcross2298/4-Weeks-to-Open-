@@ -83,7 +83,7 @@ node tools/check-day-colors.js         # governed training-day palette
 node tools/validate-programs.js        # multi-week intensifier coverage (mm-p1/p2/p3.html)
 node tools/check-exports.js            # global-namespace convention (MC_SNAKE / MCPascal)
 node tools/check-program-data.js       # note-field + day-type vocabulary, fleet-wide
-node tools/check-dead-timer.js         # no orphan second rest-timer implementation
+node tools/check-one-timer.js          # no orphan/duplicate/missing rest-timer implementation
 python3 tools/build-market.py --check  # no licensed content leaks into the Rolodex build
 ```
 
@@ -353,8 +353,26 @@ rendered DOM on zero pages.
 
 That is the trap worth remembering: a dead timer reads exactly like a working
 one in source, so it survives review indefinitely.
-`tools/check-dead-timer.js` runs in CI and fails on any of those identifiers
-reappearing.
+
+A second, live variant of the same trap showed up later (CI initiative audit,
+2026-08-01): seven pages, spanning both flagship and licensed-influencer
+program content, carried a full, *working* page-local `const TMR = {...}`
+because they never loaded `mc-timer.js` at all. Not dead code this time —
+each one ran fine in isolation — but it meant those seven pages got no
+`MC_PREFS` haptics/sound/cue prefs, no Up Next cue, and no screen-reader
+timer announcements, silently out of step with the other ~130 pages. All
+seven were migrated onto the shared engine; one of them also carried its own
+local `updateProgress`/`_progObs`/`addTimerPresets` trio duplicating
+functions `mc-timer.js` already provides — same fix, same reasoning.
+
+`tools/check-one-timer.js` (renamed from `check-dead-timer.js`) runs in CI
+and fails on: the original dead-subsystem identifiers reappearing, a page
+loading `mc-timer.js` while also declaring its own local `TMR` (the two
+`const TMR` declarations would throw a SyntaxError the instant the second
+one parses — classic `<script>` tags share one global lexical environment),
+or a page whose own `makeRestTimer()`/`makeRT()` emits an
+`onclick="...TMR.toggle(...)"` chip while loading neither `mc-timer.js` nor
+a local `TMR` (every tap would throw `TMR is not defined`).
 
 ---
 
