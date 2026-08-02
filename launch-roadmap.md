@@ -342,14 +342,48 @@ descoped by owner decision · no open "table-stakes" findings from L0.
 **Goal:** the app can take money and gate content, legally and safely, on a
 static GitHub Pages host.
 
+### Locked decisions (owner, AskUserQuestion alignment, 2026-08-02)
+
+- **Device QA sequencing:** the currently-blocking part of the L6/B5 gate —
+  install/onboard/sync on real iOS Safari and Android Chrome, both apps, plus
+  confirming real Supabase `user_sync` reconciliation across two physically
+  signed-in devices — happens for real, on hardware, **before** this phase
+  starts, not waived. (The rest of L6's checklist, including the purchase
+  flow, necessarily still runs after L5 ships — this only pulls the
+  install/sync half forward as a prerequisite, it doesn't reorder the whole
+  checklist.)
+- **Payment provider:** Stripe Checkout — hosted redirect flow, no PCI
+  surface, webhook → edge-function → entitlement-write pattern.
+- **Which app is the paid product — corrects this phase's original framing.**
+  **MC-Training-Rolodex** (the flagship-only, licensed-content-stripped
+  build) is the commercial product going forward. This app's own live
+  deployment carries the licensed influencer programs and **cannot be
+  monetized**. Task 6 below originally assumed the opposite — Rolodex as the
+  free/demo tier, this app as the paid one — that framing is superseded, not
+  just answered differently.
+- **The real open question this creates:** Rolodex is currently a one-way,
+  force-pushed deploy target with no code of its own — `market-deploy.yml`
+  overwrites its `main` with a single fresh commit on every push here, and
+  CLAUDE.md is explicit that nothing is ever hand-edited there directly. If
+  Rolodex is the paid product, its entitlement/payment code has to survive
+  that overwrite somehow: either `build-market.py`'s strip step becomes an
+  *add* step too (inject payment/entitlement code during the build, not just
+  remove influencer content), or Rolodex stops being a pure downstream
+  deploy target. **This — not the payment provider — is the architecture
+  spike's central question now**, and it's unresolved.
+- **Gating scope (what's actually behind the paywall):** not decided.
+  Deliberately left open until the deploy-pipeline question above has a real
+  answer — deciding what to gate is premature while it's unclear how gating
+  code would even ship to the app that needs it. **L5 implementation has not
+  started** and shouldn't until both of the above are resolved.
+
 > ⚠️ **Architecture spike required first.** Payments on a static host means
 > the trust boundary lives in Supabase (edge functions + RLS), not the
-> pages. The spike must settle: payment provider (Stripe Checkout is the
-> likely fit — redirect flow, no PCI surface, webhooks into an edge
-> function), what exactly is gated (programs? PM features? the whole app?),
-> and how entitlements map onto the existing Supabase auth
-> (`mc-account.js`, `mc-supabase.js`, RLS patterns). No commitment until the
-> spike's exec summary is approved.
+> pages. The spike must settle: the Rolodex deploy-pipeline question above
+> (now the hard part — payment provider is already locked), what exactly is
+> gated (programs? PM features? the whole app?), and how entitlements map
+> onto the existing Supabase auth (`mc-account.js`, `mc-supabase.js`, RLS
+> patterns). No commitment until the spike's exec summary is approved.
 
 Tasks:
 1. **Entitlement model** — Supabase table + RLS: user → plan → gated
@@ -365,13 +399,16 @@ Tasks:
 5. **Public landing page** — the marketing front door (`index.html` today
    goes straight to the app); what the product is, screenshots, install
    instructions, pricing.
-6. **Rolodex interplay** — decide what the free public Rolodex build is
-   post-launch (demo tier? separate free app?); `build-market.py` already
-   provides the strip/leak-scan machinery.
+6. **Rolodex-as-paid-product mechanism** — the product decision is made
+   (Rolodex is the paid app; this app's influencer-content build stays
+   free — see the locked decisions above), but the delivery mechanism isn't:
+   figure out how entitlement/payment code reaches Rolodex's output despite
+   it being a force-pushed, never-hand-edited deploy target. `build-market.py`
+   already provides the strip/leak-scan machinery this would extend.
 
 Exit criteria: test-mode purchase → entitlement → gated content unlock works
-end-to-end · legal pages live · landing page live · Rolodex positioning
-decided and documented.
+end-to-end, **in Rolodex, not this app** · legal pages live · landing page
+live · the Rolodex deploy-pipeline mechanism resolved and documented.
 
 ## Phase L6 — Launch hardening (Definition of Done)
 
