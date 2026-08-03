@@ -177,8 +177,17 @@
               window.ZXing.BarcodeFormat.UPC_A, window.ZXing.BarcodeFormat.UPC_E
             ]);
           } catch (e) {}
+          // decodeFromVideoElement(source) — no callback param — does ONE
+          // decode attempt tied to the video's 'loadedmetadata'/'playing'
+          // event and returns a Promise that this code never awaited, so the
+          // single result (successful or not) was silently discarded and no
+          // further attempts ever ran: on any device that reaches this engine
+          // (iOS/Safari, which lacks BarcodeDetector), the scanner never
+          // registered a barcode, full stop. decodeFromVideoElementContinuously
+          // is the actual callback-driven API — it loops decode attempts on a
+          // timer until reset() is called.
           zxingReader = new window.ZXing.BrowserMultiFormatReader(hints);
-          zxingReader.decodeFromVideoElement(video, function (result, err) {
+          zxingReader.decodeFromVideoElementContinuously(video, function (result, err) {
             if (done) return;
             if (result && result.getText) finish(String(result.getText()).replace(/\D/g, ''));
           });
