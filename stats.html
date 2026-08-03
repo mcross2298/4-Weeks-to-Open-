@@ -51,6 +51,25 @@ body{background:var(--body-bg,#0a0a0a);}
 .stat-num{font-size:20px;font-weight:900;color:var(--accent);}
 .stat-lbl{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;margin-top:4px;}
 
+/* Weekly Review (readiness-stats-roadmap.md, 2026-08-03) */
+.week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.week-nav button{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:var(--accent);
+  font-size:18px;font-weight:900;width:32px;height:32px;border-radius:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.week-nav button:disabled{opacity:0.3;cursor:default;}
+.week-label{font-size:13px;font-weight:800;color:#e2e8f0;}
+.wk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+.wk-cell{text-align:center;}
+.wk-val{font-size:17px;font-weight:900;color:#e2e8f0;}
+.wk-lbl{font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#64748b;margin-top:3px;}
+.wk-spark{margin:4px 2px 0;}
+.ready-board{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.ready-chip{background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px 6px 0;
+  text-align:center;overflow:hidden;}
+.ready-icon{display:block;font-size:16px;line-height:1;}
+.ready-lbl{display:block;font-size:10px;font-weight:800;letter-spacing:0.02em;color:#e2e8f0;margin-top:5px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ready-bar{display:block;height:3px;margin-top:9px;border-radius:0;}
+
 /* Sand light mode (Phase 6, Stats page). Flat hardcoded hex here (no
    Onyx token system on this page), so each dark value gets a direct
    light counterpart. --accent (#d4af37 gold) is left as-is — it
@@ -64,12 +83,18 @@ html[data-theme="light"] .empty,
 html[data-theme="light"] .mg-val,
 html[data-theme="light"] .pr-date,
 html[data-theme="light"] .sec-title,
-html[data-theme="light"] .stat-lbl{color:#6b6459;}
+html[data-theme="light"] .stat-lbl,
+html[data-theme="light"] .wk-lbl{color:#6b6459;}
 html[data-theme="light"] .hero-title,
 html[data-theme="light"] .mg-name,
-html[data-theme="light"] .pr-name{color:#1c1a17;}
+html[data-theme="light"] .pr-name,
+html[data-theme="light"] .week-label,
+html[data-theme="light"] .wk-val,
+html[data-theme="light"] .ready-lbl{color:#1c1a17;}
 html[data-theme="light"] .card,
-html[data-theme="light"] .stat-cell{background:#efe9db;border-color:rgba(28,26,23,.08);}
+html[data-theme="light"] .stat-cell,
+html[data-theme="light"] .ready-chip{background:#efe9db;border-color:rgba(28,26,23,.08);}
+html[data-theme="light"] .week-nav button{background:rgba(28,26,23,.05);border-color:rgba(28,26,23,.12);}
 html[data-theme="light"] .mg-bar-wrap{background:rgba(28,26,23,.08);}
 html[data-theme="light"] .pr-row{border-bottom-color:rgba(28,26,23,.08);}
 html[data-theme="light"] .topbar-icon{background:rgba(28,26,23,.05);border-color:rgba(28,26,23,.12);}
@@ -126,6 +151,24 @@ html[data-theme="light"] .theme-icon-light{display:block!important;}
   </a>
 
   <div class="sec">
+    <div class="sec-title">📅 Weekly Review</div>
+    <div class="card" id="weekReviewCard">
+      <div class="week-nav">
+        <button id="weekPrev" aria-label="Previous week">‹</button>
+        <div class="week-label" id="weekLabel">This Week</div>
+        <button id="weekNext" aria-label="Next week" disabled>›</button>
+      </div>
+      <div class="wk-grid" id="weekStatsGrid"></div>
+      <div class="wk-spark" id="weekSpark"></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title" id="weekMuscleTitle">💪 This Week's Readiness</div>
+    <div class="card" id="weekMuscleCard"><div class="empty">Loading…</div></div>
+  </div>
+
+  <div class="sec">
     <div class="sec-title">🗓️ Consistency</div>
     <div class="card" id="heatmapCard"><div class="empty">Loading…</div></div>
   </div>
@@ -166,6 +209,8 @@ html[data-theme="light"] .theme-icon-light{display:block!important;}
 <script src="mc-nav.js"></script>
 <script src="mc-chart.js"></script>
 <script src="mc-muscle-map.js"></script>
+<script src="mc-recap.js"></script>
+<script src="mc-readiness.js"></script>
 <script src="mc-stats.js"></script>
 <script src="mc-input-sheet.js"></script>
 <script src="mc-body.js"></script>

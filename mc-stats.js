@@ -165,6 +165,109 @@
     }).join('');
   }
 
+  // ---- Weekly Review (readiness-stats-roadmap.md, 2026-08-03) --------------
+  // A prev/next calendar-week picker over MC_RECAP.statsForWeek(offset).
+  // The muscle panel underneath swaps meaning by week: offset 0 (this week)
+  // shows the live 9-chip Readiness grid (MC_READY.byMuscle()) since
+  // recovery % is only ever a right-now figure; any past week instead shows
+  // that week's actual volume-by-muscle split (fully reconstructable from
+  // the dated log — same classify-and-sum approach renderMuscles() above
+  // uses for its 30-day window, just scoped to the picked week's bounds).
+  function weekLabel(offset, start, end) {
+    if (offset === 0) return 'This Week';
+    if (offset === 1) return 'Last Week';
+    var fmt = function (t) { return new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
+    return 'Week of ' + fmt(start) + ' – ' + fmt(end - DAY);
+  }
+
+  function renderWeekMuscles(all, start, end) {
+    var byGroup = {};
+    all.forEach(function (e) {
+      var t = new Date(e.date || 0).getTime();
+      if (t < start || t >= end) return;
+      (e.sets || []).forEach(function (s) {
+        var g = MC_MUSCLES.classify(s.name);
+        var b = byGroup[g.id] || (byGroup[g.id] = { g: g, sets: 0 });
+        b.sets++;
+      });
+    });
+    var rows = Object.keys(byGroup).map(function (k) { return byGroup[k]; })
+      .sort(function (a, b) { return b.sets - a.sets; });
+    if (!rows.length) return '<div class="empty">No sets logged that week.</div>';
+    var max = rows[0].sets;
+    return rows.map(function (r) {
+      return '<div class="mg-row">' +
+        '<span class="mg-ico">' + r.g.icon + '</span>' +
+        '<span class="mg-name">' + r.g.label + '</span>' +
+        '<div class="mg-bar-wrap"><div class="mg-bar" style="width:' + Math.round((r.sets / max) * 100) + '%"></div></div>' +
+        '<span class="mg-val">' + r.sets + ' sets</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  function renderCurrentReadiness() {
+    if (!window.MC_READY || !window.MC_MUSCLES) {
+      return '<div class="empty">Log a session or two to see your recovery by muscle group.</div>';
+    }
+    var groups = MC_MUSCLES.groups.filter(function (g) { return g.id !== 'other'; });
+    var data = MC_READY.byMuscle();
+    var STATUS_COLOR = { fresh: '#34d399', accumulating: '#f59e0b', overreached: '#f87171' };
+    return '<div class="ready-board">' + groups.map(function (g) {
+      var r = data[g.id] || { pct: 100, status: 'fresh' };
+      return '<div class="ready-chip" title="' + g.label + ' — ' + r.pct + '% recovered (' + r.status + ')">' +
+        '<span class="ready-icon">' + g.icon + '</span>' +
+        '<span class="ready-lbl">' + g.label + '</span>' +
+        '<span class="ready-bar" style="background:' + STATUS_COLOR[r.status] + '"></span>' +
+      '</div>';
+    }).join('') + '</div>';
+  }
+
+  function renderWeekReview(all) {
+    if (!window.MC_RECAP) return;
+    var prevBtn = document.getElementById('weekPrev'), nextBtn = document.getElementById('weekNext');
+    var labelEl = document.getElementById('weekLabel');
+    var gridEl = document.getElementById('weekStatsGrid');
+    var sparkEl = document.getElementById('weekSpark');
+    var muscleTitleEl = document.getElementById('weekMuscleTitle');
+    var muscleCardEl = document.getElementById('weekMuscleCard');
+    if (!prevBtn || !nextBtn || !labelEl || !gridEl) return;
+
+    var earliest = all.reduce(function (min, e) {
+      var t = new Date(e.date || 0).getTime();
+      return (t && (min == null || t < min)) ? t : min;
+    }, null);
+
+    var weekOffset = 0;
+
+    function paint() {
+      var wk = MC_RECAP.statsForWeek(weekOffset);
+      labelEl.textContent = weekLabel(weekOffset, wk.start, wk.end);
+      gridEl.innerHTML =
+        '<div class="wk-cell"><div class="wk-val">' + wk.sessions + '</div><div class="wk-lbl">Workouts</div></div>' +
+        '<div class="wk-cell"><div class="wk-val">' + wk.sets + '</div><div class="wk-lbl">Sets</div></div>' +
+        '<div class="wk-cell"><div class="wk-val">' + fmtTons(wk.tonnage) + '</div><div class="wk-lbl">Tonnage (lb)</div></div>' +
+        '<div class="wk-cell"><div class="wk-val">' + (wk.prs ? '🏆 ' + wk.prs : '—') + '</div><div class="wk-lbl">PRs</div></div>';
+      sparkEl.innerHTML = (window.MC_CHART && wk.perDay.some(function (p) { return p.value > 0; }))
+        ? MC_CHART.bars(wk.perDay, { labels: true, height: 64 })
+        : '';
+
+      if (weekOffset === 0) {
+        muscleTitleEl.textContent = "💪 This Week's Readiness";
+        muscleCardEl.innerHTML = renderCurrentReadiness();
+      } else {
+        muscleTitleEl.textContent = '💪 Volume by Muscle — ' + weekLabel(weekOffset, wk.start, wk.end);
+        muscleCardEl.innerHTML = renderWeekMuscles(all, wk.start, wk.end);
+      }
+
+      nextBtn.disabled = weekOffset === 0;
+      prevBtn.disabled = (earliest == null) || (earliest >= wk.start);
+    }
+
+    prevBtn.onclick = function () { weekOffset++; paint(); };
+    nextBtn.onclick = function () { if (weekOffset > 0) { weekOffset--; paint(); } };
+    paint();
+  }
+
   function init() {
     var all = logs();
     renderTop(all);
@@ -173,6 +276,7 @@
     renderTonnage(all);
     renderPRs(all);
     renderMaxes();
+    renderWeekReview(all);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
