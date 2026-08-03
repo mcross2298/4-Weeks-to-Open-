@@ -95,6 +95,38 @@ check('lastWeightFor: returns the most recent logged weight (newest-first log)',
 check('lastWeightFor: case-insensitive match', qp.lastWeightFor('bench press'), 195);
 check('lastWeightFor: null when never logged', qp.lastWeightFor('Skull Crusher'), null);
 
+// ---- preferReadiness (Phase 2 / Initiative 02 integration) ----------------
+// No-op when mc-readiness.js/mc-muscle-map.js aren't loaded — this is what
+// keeps every assertion above unaffected by this addition.
+check('preferReadiness: no-op when MC_READY/MC_MUSCLES are not loaded',
+  qp.preferReadiness(CATALOG).length, CATALOG.length);
+
+// classifies by the CANDIDATE'S OWN NAME (not the catalog .muscle field —
+// see the module comment for why), so a minimal name-matching mock is
+// enough without needing the real classifier's full regex taxonomy.
+global.window.MC_MUSCLES = {
+  classify: function (name) {
+    return /bench|incline|cable fly/i.test(name) ? { id: 'chest' } : { id: 'other' };
+  }
+};
+global.window.MC_READY = {
+  byMuscle: function () { return { chest: { pct: 12 } }; } // freshly hammered, well under the 40% floor
+};
+var readinessResult = qp.preferReadiness(CATALOG);
+check('preferReadiness: excludes candidates classified to a low-recovery muscle',
+  readinessResult.some(function (e) { return /bench|incline|cable fly/i.test(e.name); }), false);
+check('preferReadiness: keeps candidates classified elsewhere',
+  readinessResult.some(function (e) { return e.name === 'Barbell Row'; }), true);
+
+// narrow pool where filtering would leave < 4 -> falls back to the full list,
+// same floor preferFresh() uses
+var narrowPool = CATALOG.filter(function (e) { return /bench|incline|cable fly/i.test(e.name); });
+check('preferReadiness: falls back to the full pool when filtering would leave <4',
+  qp.preferReadiness(narrowPool).length, narrowPool.length);
+
+delete global.window.MC_READY;
+delete global.window.MC_MUSCLES;
+
 // ---- generate() end-to-end: a seeded weight rides through to the exercise --
 localStorageData['mc_workout_log_v1'] = JSON.stringify([
   { date: new Date(now - 2 * 3600 * 1000).toISOString(), sets: [{ name: 'Bench Press', weight: 195, reps: 5 }] }

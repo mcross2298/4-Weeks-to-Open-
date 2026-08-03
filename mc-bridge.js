@@ -179,9 +179,41 @@
     };
   }
 
+  // Today's session energy/strain (CI roadmap Phase 2 / Initiative 01) — a
+  // real MET-based kcal estimate plus the 0-21 daily strain score, both from
+  // mc-strain.js. Only present where mc-strain.js is loaded (today, just
+  // dashboard.html); degrades to nulls everywhere else the same way every
+  // other bridge getter degrades when its source store/module is absent.
+  function energyToday() {
+    try {
+      if (window.MC_STRAIN && window.MC_STRAIN.today) {
+        var e = window.MC_STRAIN.today();
+        return { kcal: e.kcal || 0, strain: e.strain };
+      }
+    } catch (e) {}
+    return { kcal: 0, strain: null };
+  }
+
+  // Per-muscle recovery snapshot (CI roadmap Phase 2 / Initiative 02) — the
+  // same {pct, status, hoursSince, sets} map the dashboard readiness board
+  // renders, exposed so the cookbook can bias protein timing/meal weighting
+  // against real muscle-group fatigue instead of a weekday guess. {} (not
+  // null) when mc-readiness.js isn't loaded, so a consumer can iterate the
+  // result unconditionally either way.
+  function recovery() {
+    try {
+      if (window.MC_READY && window.MC_READY.byMuscle) return window.MC_READY.byMuscle();
+    } catch (e) {}
+    return {};
+  }
+
   // One call for a unified "Today" strip (B3).
   function today() {
-    return { meals: todaysMeals(), workout: todaysWorkout(), targets: macroTargets() };
+    var energy = energyToday();
+    return {
+      meals: todaysMeals(), workout: todaysWorkout(), targets: macroTargets(),
+      expenditure: energy.kcal, strain: energy.strain
+    };
   }
 
   window.MCBridge = {
@@ -192,6 +224,8 @@
     workoutsSince: workoutsSince,
     recentActivity: recentActivity,
     likelyTrainingDays: likelyTrainingDays,
+    energyToday: energyToday,
+    recovery: recovery,
     today: today,
     _todayCode: todayCode // exposed for tests
   };

@@ -72,6 +72,9 @@ node tools/test-naming.js              # resolver/precedence unit tests
 python3 tools/validate-overrides.py    # program-overrides.json shape
 node tools/test-mc-suggest.js          # weight-suggestion math
 node tools/test-mc-maxout.js           # 1RM/Epley math
+node tools/test-mc-strain.js           # session-kcal + 0-21 daily-strain math
+node tools/test-mc-readiness.js        # per-muscle recovery-curve math
+node tools/test-mc-quick-pump.js       # history-aware selection incl. mc-readiness.js integration
 node tools/test-mc-bridge.js           # cross-app bridge read layer
 node tools/test-mc-sync-merge.js       # mc-sync.js merge logic
 node tools/test-mc-sw.js               # service-worker fetch strategy
@@ -87,10 +90,9 @@ node tools/check-one-timer.js          # no orphan/duplicate/missing rest-timer 
 python3 tools/build-market.py --check  # no licensed content leaks into the Rolodex build
 ```
 
-`tools/dom-parity.js`, `tools/ks-parity.js`, `tools/test-mc-quick-pump.js`,
-`tools/extract-shared-modules.py`, and `tools/add-pwa-meta.py` are manual /
-one-off tools — not wired into any workflow below, so a green CI run does not
-exercise them.
+`tools/dom-parity.js`, `tools/ks-parity.js`, `tools/extract-shared-modules.py`,
+and `tools/add-pwa-meta.py` are manual / one-off tools — not wired into any
+workflow below, so a green CI run does not exercise them.
 
 **Workflows** (`.github/workflows/`):
 - **`verify.yml`** — the canonical gate list (everything above, plus a

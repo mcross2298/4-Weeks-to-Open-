@@ -52,6 +52,18 @@ jobs:
           node tools/test-mc-suggest.js
           node tools/test-mc-maxout.js
 
+      - name: Session energy/strain math regression tests (real source, not a duplicated copy)
+        run: node tools/test-mc-strain.js
+
+      - name: Muscle readiness math regression tests (real source, not a duplicated copy)
+        run: node tools/test-mc-readiness.js
+
+      - name: Quick Pump history-aware selection tests (real source, not a duplicated copy)
+        # Promoted from manual-only (Phase 2 / Initiative 02): now that
+        # mc-quick-pump.js's preferReadiness() calls into mc-readiness.js,
+        # this is real integration surface, not just a Phase 2.4 leftover.
+        run: node tools/test-mc-quick-pump.js
+
       - name: Cross-app bridge regression tests (mc-bridge.js read layer + mc-sync.js merge logic)
         run: |
           node tools/test-mc-bridge.js
