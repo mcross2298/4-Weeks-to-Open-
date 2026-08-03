@@ -105,6 +105,22 @@ setLog([{ date: iso(24 * 10), sets: [setOf('Bench Press')] }]);
 check('stale(): trained 10 days ago, default 7-day window -> stale', ready.stale('chest'), true);
 check('stale(): trained 10 days ago, explicit 14-day window -> not stale', ready.stale('chest', 14), false);
 
+// ---- overall(): aggregate mean across real muscle groups only -------------
+setLog([]);
+check('overall(): fully untrained fleet -> 100% fresh', ready.overall().pct, 100);
+check('overall(): fully untrained fleet -> fresh status', ready.overall().status, 'fresh');
+
+setLog([{ date: iso(1), sets: [setOf('Bench Press'), setOf('Bench Press'), setOf('Bench Press'), setOf('Bench Press'), setOf('Bench Press'), setOf('Bench Press')] }]);
+var chestOnly = ready.score('chest');
+var agg = ready.overall();
+var expectedAgg = Math.round((chestOnly + 100 + 100) / 3);
+check('overall(): averages byMuscle() pct across the real groups (chest/back/legs in this fixture)', agg.pct, expectedAgg);
+if (!(agg.pct < 100)) { console.error('::error::overall(): one just-hit, overreached muscle should pull the aggregate below 100'); fail = true; }
+
+// a set classified to 'other' must never factor into the mean
+setLog([{ date: iso(1), sets: [setOf('Random Machine Thing')] }]); // matches none of the mock's patterns -> 'other'
+check("overall(): a set classified to 'other' does not drag the aggregate down", ready.overall().pct, 100);
+
 delete global.localStorage;
 delete global.window;
 

@@ -107,10 +107,16 @@
     return 2 * Math.PI * ((size / 2) - stroke);
   }
 
-  // pct: 0-100 (clamped here). opts: {size, stroke, color, track}
+  // pct: 0-100 (clamped here). opts: {size, stroke, trackStroke, color, track}
+  // trackStroke defaults to stroke (all existing callers keep a uniform ring
+  // width, and the radius math below is UNCHANGED from before trackStroke
+  // existed) — pass a smaller trackStroke for a thinner background track
+  // under a bolder progress arc (e.g. The Readout's paired Strain/Readiness
+  // rings); it must stay <= stroke or the track will overflow the arc's edge.
   function ring(pct, opts) {
     opts = opts || {};
     var size = opts.size || 36, stroke = opts.stroke || 3.5;
+    var trackStroke = opts.trackStroke || stroke;
     var r = (size / 2) - stroke;
     var c = 2 * Math.PI * r;
     var p = Math.max(0, Math.min(100, pct || 0));
@@ -119,7 +125,7 @@
     var track = opts.track || 'rgba(255,255,255,0.12)';
     var cx = size / 2, cy = size / 2;
     return '<svg class="mcchart-ring" viewBox="0 0 ' + size + ' ' + size + '" width="' + size + '" height="' + size + '">' +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + track + '" stroke-width="' + stroke + '"/>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + track + '" stroke-width="' + trackStroke + '"/>' +
       '<circle class="mcchart-ring-arc" cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + col + '" stroke-width="' + stroke +
         '" stroke-linecap="round" stroke-dasharray="' + dash.toFixed(2) + ' ' + c.toFixed(2) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>' +
       '</svg>';

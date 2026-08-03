@@ -115,6 +115,27 @@ if (new Date(series[0].date).getTime() > new Date(series[series.length - 1].date
   fail = true;
 }
 
+// ---- proteinTarget(): post-workout single-feeding protein grams -----------
+resetLog([]); // no session today -> strain is null, so no strain bonus applies
+check('proteinTarget(): 180lb bodyweight, no strain bonus -> 30g (0.18 g/lb, nearest 5)', strain.proteinTarget(180), 30);
+check('proteinTarget(): clamps to the 20g floor for a very light bodyweight', strain.proteinTarget(80), 20);
+check('proteinTarget(): clamps to the 60g ceiling for a very heavy bodyweight', strain.proteinTarget(400), 60);
+check('proteinTarget(): falls back to stored bodyweight (mc_body_v1) when no override passed', strain.proteinTarget(), 30);
+
+// strain bonus: the same bodyweight on a real hard-strain day should target
+// MORE protein than the no-baseline case above (hardLog built above reads
+// strain in (13.3, 21)).
+resetLog(hardLog);
+var withStrain = strain.proteinTarget(180);
+if (!(withStrain > 30)) {
+  console.error(`::error::proteinTarget(): a high-strain day should target more protein than the no-strain-bonus case — got ${withStrain} vs 30`);
+  fail = true;
+}
+if (!(withStrain <= 30 + 15)) {
+  console.error(`::error::proteinTarget(): the strain bonus must stay bounded by PROTEIN_STRAIN_BONUS_MAX_G — got ${withStrain}`);
+  fail = true;
+}
+
 delete global.localStorage;
 
 if (fail) {

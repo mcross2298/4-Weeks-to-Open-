@@ -154,7 +154,21 @@ body{background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;p
    Scoped to this page's own stylesheet rather than the shared mc-light.css,
    because these panel classes (.card/.jump/.swatch/.coach) are generic names
    also used by the instructions family with different ground assumptions —
-   a shared override measurably regressed those pages. */
+   a shared override measurably regressed those pages.
+
+   CI initiative roadmap Phase 3 finding: this page's :root above defines
+   --text/--muted/--muted2 UNCONDITIONALLY (line ~23), never re-scoped for
+   light mode — unlike base.css, which this page doesn't load. mc-light.css's
+   own "round 2" fix for this exact page (its `.sec b`/`.ticks b`/`.card-tx b`
+   block, "the bold runs are white text that only ever worked because the
+   ground was near-black") reads `var(--text, #1c1a17)`, and that fallback
+   only ever engages when --text is UNDEFINED — since this page always
+   defines it (just to the wrong, dark value), the fallback silently never
+   fired and every var(--text)/var(--muted) consumer mc-light.css ships for
+   this page stayed dark-mode-colored on a light ground. Re-scoping the
+   tokens here, matching base.css's own html[data-theme="light"] convention,
+   fixes it at the source instead of chasing it selector by selector. */
+html[data-theme="light"]{--text:#1c1a17;--muted:#6b6459;--muted2:#8a8377;}
 html[data-theme="light"] .card,
 html[data-theme="light"] .jump,
 html[data-theme="light"] .swatch,
@@ -227,6 +241,7 @@ html[data-theme="light"] .ticks span{color:#3d4756;}
       <li><span class="chk">✓</span><span><b>🍳 Recipes link</b> — the utensils icon next to the theme toggle opens Mike's Cookbook without leaving your workout flow; one sign-in works in both apps.</span></li>
       <li><span class="chk">✓</span><span><b>Today strip</b> — signed in with your week planned in Mike's Cookbook, a compact strip above Current Program shows today's planned meals and calorie goal in one glance — tap it to jump into Nutrition.</span></li>
       <li><span class="chk">✓</span><span><b>Readiness board</b> — nine muscle-group chips with a color bar (green fresh, amber recovering, red just hammered), built from your real logged sets and time-since-trained. The same dot shows up next to an exercise name on any workout page. Appears after a session or two of history — nothing to set up.</span></li>
+      <li><span class="chk">✓</span><span><b>The Readout</b> — the This Week card gains a paired ring readout above its usual Workouts/Sets/Tonnage/PRs grid: a gold <b>Strain</b> ring (today's 0–21 effort score) beside a colored <b>Readiness</b> ring (your overall recovery, averaged across every muscle group), plus a 7-day strain sparkline underneath. Fills in once there's real strain/readiness history.</span></li>
     </ul>
   </div>
 
@@ -312,6 +327,7 @@ html[data-theme="light"] .ticks span{color:#3d4756;}
       <li><span class="chk">✓</span><span><b>🎙️ Voice control</b> — opt-in, off by default. Tap the floating mic button on any workout page and just say "log 10 reps," "start timer," or "skip rest" — hands stay on the bar.</span></li>
       <li><span class="chk">✓</span><span><b>Finish Workout</b> — saves the session and <b>auto-detects personal records</b>. Beat a previous best and it's tagged with a gold 🏆 PR. No manual tracking, ever.</span></li>
       <li><span class="chk">✓</span><span><b>Strain ring & calories</b> — the Session Complete screen adds a gold ring with your estimated calories burned in the center, based on the weight you actually moved, your logged bodyweight, and session length. The ring reads today's strain (0–21) against your own recent training — quiet until you've logged a few sessions to compare against.</span></li>
+      <li><span class="chk">✓</span><span><b>Refuel card</b> — right below the Strain ring, a gold card recommends a single-feeding <b>protein target</b> plus the session's calories, scaled up on harder sessions. Tap <b>Find a recipe →</b> to jump into Mike's Cookbook with a search already sized to hit it.</span></li>
       <li><span class="chk">✓</span><span><b>Workout Logs</b> — three running totals up top (Workouts · Sets Logged · PRs Set) over your full history, split into 🏋️ Program Workouts and 📋 Individual / Standalone (custom multi-day programs and named custom workouts you built yourself count as Program Workouts, not standalone). Tap a completed card and it opens that exact workout, set by set — not a generic recap; sessions still in progress open a Resume sheet instead. Long-press any card to delete just that one. Switch to the <b>Programs</b> tab to see the same history grouped by program with a real completion bar — X completed of Y — tap to expand a program's nested sessions. Proof of work, and your roadmap for next time.</span></li>
       <li><span class="chk">✓</span><span><b>Rep progression</b> — per-exercise history across sessions, so you can see the line going up.</span></li>
       <li><span class="chk">✓</span><span><b>🥇 Max-Out Calculator</b> — test a real 1-rep max on any lift; the app Epley-estimates it from a heavy set so you don't have to actually load up to failure. One tap from the dashboard's Training Tools grid.</span></li>
