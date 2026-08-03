@@ -135,7 +135,14 @@
 
       // ---- engine: native BarcodeDetector ----
       function runNative() {
-        var formats = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'];
+        // Retail product barcodes only. code_128/code_39 are logistics/shelf-tag
+        // symbologies with no built-in checksum matching a retail code — on
+        // packaging that carries one (a lot code, a price-gun label) the
+        // detector would lock onto it instead, hand back digits that don't
+        // match anything in a food database, and read to the user as "it
+        // scans but never finds the food." EAN/UPC formats carry a real check
+        // digit, so restricting to them is itself most of the false-read fix.
+        var formats = ['ean_13', 'ean_8', 'upc_a', 'upc_e'];
         var detector;
         try { detector = new window.BarcodeDetector({ formats: formats }); }
         catch (e) { detector = new window.BarcodeDetector(); }
@@ -157,7 +164,20 @@
       // ---- engine: ZXing fallback ----
       function runZXing() {
         try {
-          zxingReader = new window.ZXing.BrowserMultiFormatReader();
+          // Same restriction as the native engine above, and for the same
+          // reason: an unhinted BrowserMultiFormatReader decodes *any*
+          // symbology in frame (QR, code_128/39, PDF417…), so on iOS — where
+          // this is the only engine, since Safari lacks BarcodeDetector — an
+          // unrelated code on the packaging could win the race and hand back
+          // digits no food database has ever heard of.
+          var hints = new Map();
+          try {
+            hints.set(window.ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+              window.ZXing.BarcodeFormat.EAN_13, window.ZXing.BarcodeFormat.EAN_8,
+              window.ZXing.BarcodeFormat.UPC_A, window.ZXing.BarcodeFormat.UPC_E
+            ]);
+          } catch (e) {}
+          zxingReader = new window.ZXing.BrowserMultiFormatReader(hints);
           zxingReader.decodeFromVideoElement(video, function (result, err) {
             if (done) return;
             if (result && result.getText) finish(String(result.getText()).replace(/\D/g, ''));
