@@ -179,6 +179,51 @@
     };
   }
 
+  // Coarse day-type for today (formerly a private helper in mc-macros.js,
+  // moved here in the CI initiative roadmap Phase 3 / Initiative 03 so both
+  // mc-macros.js's cookbook deep-link AND mc-finish.js's session-summary
+  // store share one implementation instead of drifting copies), derived from
+  // what was actually logged today — not a schedule prediction. No program
+  // tracks a machine-readable day-of-week -> day-type mapping (the CLAUDE.md
+  // archetype table is authoring content, not runtime data), so this reads
+  // the majority muscle group among today's *finished* sets instead, via the
+  // same catalog-name-lookup technique mc-quick-pump.js uses for its <48h
+  // bias — collapsing the catalog's granular muscle strings ('Legs - Quads',
+  // 'Legs - Hamstrings', ...) into the coarse push/pull/legs/core buckets the
+  // cookbook handoff actually needs.
+  var DAY_TYPE_GROUPS = {
+    'Chest': 'push', 'Shoulders': 'push', 'Triceps': 'push',
+    'Back': 'pull', 'Biceps': 'pull', 'Forearms': 'pull',
+    'Legs - Quads': 'legs', 'Legs - Hamstrings': 'legs', 'Legs - Glutes': 'legs', 'Calves': 'legs', 'Adductors': 'legs',
+    'Core': 'core'
+  };
+  function catalogMuscle(name) {
+    if (!window.EXERCISES) return null;
+    var nl = (name || '').toLowerCase();
+    for (var i = 0; i < window.EXERCISES.length; i++) {
+      if (window.EXERCISES[i].name.toLowerCase() === nl) return window.EXERCISES[i].muscle;
+    }
+    return null;
+  }
+  function todaysDayType() {
+    var log = read(WLOG_KEY);
+    if (!Array.isArray(log)) return null;
+    var tk = dayKey();
+    var counts = {};
+    log.forEach(function (e) {
+      if (!e.date || dayKey(new Date(e.date)) !== tk) return;
+      (e.sets || []).forEach(function (s) {
+        var group = DAY_TYPE_GROUPS[catalogMuscle(s.name)];
+        if (group) counts[group] = (counts[group] || 0) + 1;
+      });
+    });
+    var best = null, bestN = 0;
+    Object.keys(counts).forEach(function (g) { if (counts[g] > bestN) { best = g; bestN = counts[g]; } });
+    // require a real majority (3+ sets), not one stray isolation set, before
+    // confidently labeling the whole day
+    return bestN >= 3 ? best : null;
+  }
+
   // Today's session energy/strain (CI roadmap Phase 2 / Initiative 01) — a
   // real MET-based kcal estimate plus the 0-21 daily strain score, both from
   // mc-strain.js. Only present where mc-strain.js is loaded (today, just
@@ -226,6 +271,7 @@
     likelyTrainingDays: likelyTrainingDays,
     energyToday: energyToday,
     recovery: recovery,
+    todaysDayType: todaysDayType,
     today: today,
     _todayCode: todayCode // exposed for tests
   };

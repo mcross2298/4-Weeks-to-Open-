@@ -54,6 +54,7 @@
     'mc_activity':           'activity',
     'mc_daily_v1':           'dictByTs',
     'mc_plan_targets_v1':    'dictByTs',
+    'mc_session_summary_v1': 'dictByTs',
     'mc_macros_v1':          'macros'
   };
   // Roadmap B0 (cookbook↔workout bridge) — stores this app CONSUMES read-only

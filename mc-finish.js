@@ -4,6 +4,13 @@
 (function(){
   var WL_KEY='mc_workout_log_v1';
   var SL_KEY='mc_setlog_v1';
+  var SS_KEY='mc_session_summary_v1';
+  // Same absolute cross-app URL mc-macros.js's Nutrition tab already deep-links
+  // to (roadmap B3) — this file is loaded on ~75 workout pages, not just
+  // dashboard.html, so the relative-path MARKET:STRIP swap that dashboard.html's
+  // nav icon uses isn't practical here; the absolute URL works unchanged in
+  // both the standalone build and the Rolodex market mount.
+  var COOKBOOK_URL='https://mcross2298.github.io/Mikes-Cookbook/index.html';
   var startTime=Date.now();
   // MC_PID_OVERRIDE namespaces custom program/workout runners (run-program.html)
   // so each saved day keeps its own history instead of colliding on the filename
@@ -147,6 +154,72 @@
     return entry;
   }
 
+  // ── CI initiative roadmap Phase 3 / Initiative 03 ("The Refuel Handoff")
+  // — mc_session_summary_v1: { "<entry.id>": {date,dayType,kcal,strain,
+  // proteinTarget,muscles,ts} }, one record per finished session, registered
+  // in mc-sync.js under the same 'dictByTs' strategy as mc_daily_v1/
+  // mc_plan_targets_v1 (union keys, greater ts wins on conflict). Keyed by
+  // entry.id (pageId+'|'+iso, the same dedupe key mc_workout_log_v1 already
+  // uses) rather than date|pageId, since a real two-a-day should keep two
+  // distinct summaries — unlike mc-strain.js's daily aggregate, this is a
+  // per-SESSION record.
+  //
+  // dayType reuses mc-macros.js's push/pull/legs/core buckets, but classifies
+  // via mc-muscle-map.js's MC_MUSCLES (already loaded on every page that
+  // loads this file, since mc-setlog.js — a hard dependency of getSessionSets()
+  // above — pulls it in fleet-wide) rather than mc-bridge.js's catalog-name
+  // lookup, which is dashboard-only. Two different classifiers landing in the
+  // same 4-bucket vocabulary is intentional here: mc-bridge.js's version
+  // answers "what's today's AGGREGATE day type across every session logged
+  // today," which needs the catalog-driven, page-independent view; this
+  // answers "what was THIS session," which only needs the sets already on
+  // the page.
+  var DAY_TYPE_BUCKET = {
+    chest:'push', shoulders:'push', triceps:'push',
+    back:'pull', biceps:'pull', forearms:'pull',
+    legs:'legs', calves:'legs',
+    core:'core'
+  };
+  function sessionMuscles(sets){
+    var seen={}, out=[];
+    (sets||[]).forEach(function(s){
+      if(!window.MC_MUSCLES)return;
+      var id=MC_MUSCLES.classify(s.name).id;
+      if(id==='other'||seen[id])return;
+      seen[id]=1;out.push(id);
+    });
+    return out;
+  }
+  function sessionDayType(sets){
+    if(!window.MC_MUSCLES)return null;
+    var counts={};
+    (sets||[]).forEach(function(s){
+      var bucket=DAY_TYPE_BUCKET[MC_MUSCLES.classify(s.name).id];
+      if(bucket)counts[bucket]=(counts[bucket]||0)+1;
+    });
+    var best=null,bestN=0;
+    Object.keys(counts).forEach(function(b){if(counts[b]>bestN){best=b;bestN=counts[b];}});
+    // same 3-set majority floor mc-bridge.js's todaysDayType() uses, so a
+    // stray isolation set can't mislabel the whole session
+    return bestN>=3?best:null;
+  }
+  function saveSessionSummary(entry){
+    try{
+      var summary={
+        date:entry.date,
+        dayType:sessionDayType(entry.sets),
+        kcal:(window.MC_STRAIN&&MC_STRAIN.session)?MC_STRAIN.session(entry).kcal:0,
+        strain:(window.MC_STRAIN&&MC_STRAIN.today)?MC_STRAIN.today().strain:null,
+        proteinTarget:(window.MC_STRAIN&&MC_STRAIN.proteinTarget)?MC_STRAIN.proteinTarget():null,
+        muscles:sessionMuscles(entry.sets),
+        ts:Date.now()
+      };
+      var store=JSON.parse(localStorage.getItem(SS_KEY)||'{}');
+      store[entry.id]=summary;
+      localStorage.setItem(SS_KEY,JSON.stringify(store));
+    }catch(e){}
+  }
+
   // Update progress display + auto-trigger the Finish flow the moment every
   // set is logged. Guarded on the done<total -> done>=total TRANSITION only
   // (wasComplete), so this fires once — not on every render pass while the
@@ -198,6 +271,7 @@
       '<div class="fw-strain-wrap" id="fwStrainWrap"></div>'+
       '<div class="fw-done-grid" id="fwDoneGrid"></div>'+
       '<div class="fw-done-prs" id="fwDonePRs"></div>'+
+      '<div class="fw-refuel-wrap" id="fwRefuelWrap"></div>'+
       '<button class="fw-confirm" style="flex:none;width:100%;" onclick="_FW.doneClose()">Done</button>'+
     '</div>'+
   '</div>';
@@ -223,7 +297,11 @@
       '.fw-done-lbl{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;margin-top:4px;}'+
       '.fw-done-prs:not(:empty){margin-bottom:16px;}'+
       '.fw-done-prs-title{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#d4af37;margin-bottom:8px;}'+
-      '.fw-pr-chip{display:inline-block;margin:3px;padding:7px 12px;border-radius:10px;background:rgba(212,175,55,0.14);border:1px solid rgba(212,175,55,0.35);color:#f5d76e;font-size:12px;font-weight:800;}';
+      '.fw-pr-chip{display:inline-block;margin:3px;padding:7px 12px;border-radius:10px;background:rgba(212,175,55,0.14);border:1px solid rgba(212,175,55,0.35);color:#f5d76e;font-size:12px;font-weight:800;}'+
+      '.fw-refuel-wrap:not(:empty){margin-bottom:16px;padding:14px;border-radius:14px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);text-align:left;}'+
+      '.fw-refuel-title{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#d4af37;}'+
+      '.fw-refuel-sub{font-size:13px;font-weight:700;color:#e2e8f0;margin-top:4px;}'+
+      '.fw-refuel-btn{display:block;margin-top:10px;padding:11px;border-radius:10px;background:#d4af37;color:#0a0a0a;text-align:center;text-decoration:none;font-size:13px;font-weight:800;}';
     document.head.appendChild(st);
   }
 
@@ -255,10 +333,36 @@
         '<div class="fw-strain-lbl">'+lbl+'</div>';
     }catch(e){wrap.innerHTML='';}
   }
+  // "The Refuel Handoff" (Phase 3 / Initiative 03) — a one-tap deep link from
+  // the Session Complete screen straight into a recipe search sized to what
+  // this specific session calls for, reusing the same ?mkcal=&mp=&dt= query
+  // contract mc-macros.js's "Cook to hit your remaining macros" link already
+  // established (roadmap B3) so the cookbook-side consumer needs no new
+  // parsing. proteinTarget() is a single-feeding number (not the day's
+  // remaining macros mc-macros.js's version passes), which is exactly what a
+  // post-workout refuel search should filter for.
+  function renderRefuel(entry){
+    var wrap=document.getElementById('fwRefuelWrap');
+    if(!wrap)return;
+    wrap.innerHTML='';
+    if(!window.MC_STRAIN||!MC_STRAIN.proteinTarget)return;
+    try{
+      var protein=MC_STRAIN.proteinTarget();
+      if(!protein)return;
+      var kcal=MC_STRAIN.session?MC_STRAIN.session(entry).kcal:0;
+      var dt=sessionDayType(entry.sets);
+      var href=COOKBOOK_URL+'?mp='+protein+(kcal?'&mkcal='+kcal:'')+(dt?'&dt='+dt:'')+'#recipes';
+      wrap.innerHTML=
+        '<div class="fw-refuel-title">🍽️ Refuel</div>'+
+        '<div class="fw-refuel-sub">'+protein+'g protein'+(kcal?' · '+kcal+' kcal':'')+' to recover from this session</div>'+
+        '<a class="fw-refuel-btn" href="'+href+'" target="_blank" rel="noopener">Find a recipe →</a>';
+    }catch(e){wrap.innerHTML='';}
+  }
   function showDone(entry){
     var sets=entry.sets||[];
     var prList=prSpotlight(sets);
     renderStrain(entry);
+    renderRefuel(entry);
     var grid=document.getElementById('fwDoneGrid');
     if(grid){
       grid.innerHTML=
@@ -347,6 +451,7 @@
     confirm:function(){
       window._FW.finished=true;
       var entry=saveWorkout();
+      saveSessionSummary(entry);
       try{if(window.MCActivity&&MCActivity.releaseSessionLock)MCActivity.releaseSessionLock();}catch(e){}
       // back up the finished session right away (no-op when signed out)
       try{if(window.MC_SYNC&&MC_SYNC.push)MC_SYNC.push();}catch(e){}

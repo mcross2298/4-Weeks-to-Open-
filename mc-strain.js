@@ -39,9 +39,15 @@
    window.MC_STRAIN.trailing(n) — last n finished sessions, oldest→newest,
      each as {date, kcal, strain}, for a future sparkline — strain per
      entry uses the baseline as of THAT session's own date, not today's.
+   window.MC_STRAIN.proteinTarget(bodyweightLb?) — recommended post-workout
+     SINGLE-FEEDING protein grams (not a daily total), from bodyweight ×
+     a per-meal-MPS-threshold multiplier plus a bonus scaled by today's
+     strain, clamped to a plausible per-meal range. See Phase 3 / Initiative
+     03 ("The Refuel Handoff") below for the full rationale.
 
    mc-macros.js (train-day calorie bonus) and mc-bridge.js (today()'s
    expenditure/strain fields, consumed by the cookbook) both read this.
+   mc-finish.js's Refuel row (Phase 3 / Initiative 03) reads proteinTarget().
    ========================================================================== */
 (function () {
   var isBrowser = typeof window !== 'undefined';
@@ -58,6 +64,21 @@
   var BASELINE_LOOKBACK_DAYS = 28;
   var BASELINE_MIN_SESSIONS = 3; // fewer than this and there's nothing real to self-reference against
   var STRAIN_MAX = 21;
+
+  // Post-workout refuel target (Phase 3 / Initiative 03 — "The Refuel
+  // Handoff"): a SINGLE-FEEDING protein number, not a daily total. 0.18 g/lb
+  // sits at the high end of the widely-cited 0.25-0.4 g/kg (~0.11-0.18 g/lb)
+  // per-meal threshold for maximal muscle protein synthesis, since this is
+  // the day's biggest feeding, not a snack. Scaled up further on harder days
+  // (today's 0-21 strain, same self-referential score as above) since more
+  // total muscle protein breakdown needs more to resynthesize — up to +15 g
+  // on the hardest days. Same hardcoded-multiplier philosophy as
+  // mc-suggest.js's equipment increments and this file's own MET table:
+  // directionally correct, not a clinical macro prescription.
+  var PROTEIN_G_PER_LB = 0.18;
+  var PROTEIN_STRAIN_BONUS_MAX_G = 15;
+  var PROTEIN_MIN_G = 20; // below the per-meal MPS threshold, not worth targeting
+  var PROTEIN_MAX_G = 60; // past this a single feeding stops mattering more; spread it out instead
 
   function readJSON(key, fallback) {
     try { return JSON.parse(localStorage.getItem(key) || 'null') || fallback; }
@@ -202,7 +223,21 @@
     });
   }
 
-  var API = { session: session, today: today, trailing: trailing };
+  // Recommended post-workout single-feeding protein target, in grams,
+  // rounded to the nearest 5 (a gym-floor-friendly number, same rounding
+  // spirit as mc-suggest.js's weight increments). Pure over its inputs — a
+  // bodyweight override skips the localStorage read for callers (mc-finish.js)
+  // that already have it, matching session()'s own convention.
+  function proteinTarget(bodyweightLb) {
+    var bw = bodyweightLb || latestBodyweightLb();
+    var strain = today().strain;
+    var base = bw * PROTEIN_G_PER_LB;
+    var bonus = strain != null ? (strain / STRAIN_MAX) * PROTEIN_STRAIN_BONUS_MAX_G : 0;
+    var clamped = Math.max(PROTEIN_MIN_G, Math.min(PROTEIN_MAX_G, base + bonus));
+    return Math.round(clamped / 5) * 5;
+  }
+
+  var API = { session: session, today: today, trailing: trailing, proteinTarget: proteinTarget };
   if (isBrowser) window.MC_STRAIN = API;
 
   // Node-side hook so CI can regression-test the real kcal/strain math (see

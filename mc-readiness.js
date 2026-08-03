@@ -30,6 +30,9 @@
      4 days ago, tau cleared quickly) or recovered AND stale (untouched for
      two weeks). Consumed by mc-quick-pump.js's Full Body balancing in place
      of its old weekly-set-count-only heuristic.
+   window.MC_READY.overall() — {pct, status}, a plain mean of byMuscle()'s
+     pct across the 9 real groups (excludes 'other'). Phase 3 / Initiative 05
+     ("The Readout") — the dashboard recap's paired Strain/Readiness rings.
    ========================================================================== */
 (function () {
   var isBrowser = typeof window !== 'undefined';
@@ -113,13 +116,29 @@
     return recoveryFor(muscleId).pct;
   }
 
+  // Single aggregate readiness figure (Phase 3 / Initiative 05 — "The
+  // Readout"), a plain mean across the 9 real muscle groups. 'other' is
+  // excluded — same reasoning renderBoard() already applies to the chip
+  // grid: it's a catch-all bucket for unclassified exercise names, not a
+  // real trained muscle, so folding it in would silently drag the aggregate
+  // toward its permanent 100%-fresh reading whenever a page's exercise names
+  // don't match any of the 9 real patterns.
+  function overall() {
+    var ids = muscleIds().filter(function (id) { return id !== 'other'; });
+    if (!ids.length) return { pct: 100, status: 'fresh' };
+    var data = byMuscle();
+    var sum = ids.reduce(function (s, id) { return s + (data[id] ? data[id].pct : 100); }, 0);
+    var pct = Math.round(sum / ids.length);
+    return { pct: pct, status: statusFor(pct) };
+  }
+
   function stale(muscleId, days) {
     var stim = lastStimulus(muscleId);
     if (!stim) return true;
     return stim.hoursSince >= (days || 7) * 24;
   }
 
-  var API = { byMuscle: byMuscle, score: score, stale: stale };
+  var API = { byMuscle: byMuscle, score: score, stale: stale, overall: overall };
   if (isBrowser) window.MC_READY = API;
 
   // Node-side hook so CI can regression-test the real recovery math (see

@@ -7,6 +7,14 @@
    Hidden until there is at least one finished workout in the window.
    Requires mc-chart.js.
 
+   CI initiative roadmap Phase 3 / Initiative 05 finding: #recapCard never
+   actually existed on dashboard.html (or anywhere else) despite this file
+   describing it as a placeholder to fill — the whole card, this comment
+   included, predates any page actually carrying the div, so it had never
+   rendered. Added to dashboard.html in the same piece of work that wired up
+   The Readout below, since there is no point animating rings into a host
+   that was never reachable.
+
    window.MC_RECAP.weeklyStats() exposes the trailing-7-day summarize() this
    card already computes, independent of #recapCard existing on the page —
    mc-macros.js (Phase 2.2, training-load-aware calorie targets) reads it to
@@ -56,6 +64,65 @@
     return String(Math.round(n));
   }
 
+  // "The Readout" (Phase 3 / Initiative 05) — paired Strain/Readiness rings
+  // plus a 7-day strain sparkline, above the existing This Week grid. Reads
+  // mc-strain.js / mc-readiness.js, both optional on any given page — the
+  // whole block degrades to '' (no gap left in the card) when neither has
+  // anything real to show yet, same "hidden until earned" rule as
+  // #readinessBoard/#momentumStrip.
+  var READY_COLOR = { fresh: '#34d399', accumulating: '#f59e0b', overreached: '#f87171' };
+  function ringCell(pct, val, label, color) {
+    var svg = MC_CHART.ring(pct, { size: 96, stroke: 8, trackStroke: 4, track: 'rgba(255,255,255,0.06)', color: color });
+    return '<div class="readout-ring-wrap"><div class="readout-ring-circle">' + svg +
+      '<div class="readout-ring-center"><span class="readout-ring-val">' + val + '</span></div></div>' +
+      '<div class="readout-ring-lbl">' + label + '</div></div>';
+  }
+  // Runs the ring arcs' stroke-dashoffset from 0% to their real value over
+  // 600ms — MC_CHART.ring() itself renders the final stroke-dasharray
+  // straight away (no animation), so this is opt-in on top of it. Skipped
+  // entirely under prefers-reduced-motion, which leaves ring()'s own static
+  // final-state render untouched — the reduced-motion case needs no separate
+  // code path, it's just what happens when this function does nothing.
+  function animateRingsIn(container) {
+    try {
+      if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      container.querySelectorAll('.mcchart-ring-arc').forEach(function (arc) {
+        var parts = (arc.getAttribute('stroke-dasharray') || '').split(' ');
+        var dash = parseFloat(parts[0]) || 0, c = parseFloat(parts[1]) || 0;
+        if (!c) return;
+        arc.style.transition = 'none';
+        arc.setAttribute('stroke-dasharray', c + ' ' + c);
+        arc.style.strokeDashoffset = c;
+        arc.getBoundingClientRect(); // force reflow so the transition below actually animates
+        arc.style.transition = 'stroke-dashoffset 600ms cubic-bezier(.22,1,.36,1)';
+        arc.style.strokeDashoffset = String(c - dash);
+      });
+    } catch (e) {}
+  }
+  function renderReadout() {
+    if (!window.MC_CHART) return '';
+    var hasStrain = window.MC_STRAIN && MC_STRAIN.today;
+    var hasReady = window.MC_READY && MC_READY.overall;
+    if (!hasStrain && !hasReady) return '';
+    var day = hasStrain ? MC_STRAIN.today() : { kcal: 0, strain: null };
+    var ov = hasReady ? MC_READY.overall() : { pct: null, status: null };
+    if (day.strain == null && ov.pct == null) return ''; // nothing real to show yet
+    var strainPct = day.strain == null ? 0 : Math.round((day.strain / 21) * 100);
+    var rings = ringCell(strainPct, day.strain == null ? '—' : day.strain, 'Strain', '#d4af37');
+    if (ov.pct != null) rings += ringCell(ov.pct, ov.pct + '%', 'Readiness', READY_COLOR[ov.status] || '#34d399');
+
+    var sparkHtml = '';
+    if (hasStrain && MC_STRAIN.trailing) {
+      var series = MC_STRAIN.trailing(7).map(function (e) {
+        return { label: new Date(e.date).toLocaleDateString('en-US', { weekday: 'narrow' }), value: e.strain || 0 };
+      });
+      if (series.some(function (p) { return p.value > 0; })) {
+        sparkHtml = '<div class="readout-spark">' + MC_CHART.bars(series, { labels: true, height: 56, color: '#d4af37' }) + '</div>';
+      }
+    }
+    return '<div class="readout-rings">' + rings + '</div>' + sparkHtml;
+  }
+
   function delta(cur, prev) {
     if (!prev) return '';
     var pct = Math.round(((cur - prev) / prev) * 100);
@@ -98,10 +165,13 @@
     var streak = 0;
     try { if (window.MCActivity) streak = MCActivity.get().streak || 0; } catch (e) {}
 
+    var readoutHtml = renderReadout();
+
     host.innerHTML =
       '<div class="sec-header"><div class="sec-title">This Week</div>' +
       '<a class="sec-link" href="stats.html">Stats →</a></div>' +
       '<div class="recap-card">' +
+        readoutHtml +
         '<div class="recap-grid">' +
           '<div class="recap-cell"><div class="recap-val">' + cur.sessions + delta(cur.sessions, prev.sessions) + '</div><div class="recap-lbl">Workouts</div></div>' +
           '<div class="recap-cell"><div class="recap-val">' + cur.sets + delta(cur.sets, prev.sets) + '</div><div class="recap-lbl">Sets</div></div>' +
@@ -111,6 +181,8 @@
         (window.MC_CHART ? '<div class="recap-spark">' + MC_CHART.bars(perDay, { labels: true, height: 64 }) + '</div>' : '') +
         (streak > 1 ? '<div class="recap-streak">🔥 ' + streak + '-day streak</div>' : '') +
       '</div>';
+
+    if (readoutHtml) animateRingsIn(host);
 
     if (!document.getElementById('mcRecapCss')) {
       var st = document.createElement('style');
@@ -124,7 +196,14 @@
         '.recap-val{font-size:17px;font-weight:900;color:var(--text,#e2e8f0);}' +
         '.recap-lbl{font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#64748b;margin-top:3px;}' +
         '.recap-spark{margin:4px 2px 0;}' +
-        '.recap-streak{margin-top:10px;text-align:center;font-size:12px;font-weight:800;color:#a3e635;}';
+        '.recap-streak{margin-top:10px;text-align:center;font-size:12px;font-weight:800;color:#a3e635;}' +
+        '.readout-rings{display:flex;justify-content:center;gap:28px;margin-bottom:14px;}' +
+        '.readout-ring-wrap{display:flex;flex-direction:column;align-items:center;}' +
+        '.readout-ring-circle{position:relative;width:96px;height:96px;}' +
+        '.readout-ring-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}' +
+        '.readout-ring-val{font-size:34px;font-weight:900;color:var(--text,#e2e8f0);line-height:1;font-variant-numeric:tabular-nums;}' +
+        '.readout-ring-lbl{font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;margin-top:8px;}' +
+        '.readout-spark{margin:0 2px 14px;}';
       document.head.appendChild(st);
     }
   }

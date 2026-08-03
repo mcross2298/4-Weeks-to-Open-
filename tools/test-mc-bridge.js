@@ -24,10 +24,10 @@ function dayKey(d) { return d.getFullYear() + '-' + d2(d.getMonth() + 1) + '-' +
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 function todayCode() { return DAYS[(new Date().getDay() + 6) % 7]; }
 
-function loadBridge(seed, recipes, strainMock, readyMock) {
+function loadBridge(seed, recipes, strainMock, readyMock, exercises) {
   const store = Object.assign({}, seed);
   const sandbox = {
-    window: { RECIPES: recipes, MC_STRAIN: strainMock, MC_READY: readyMock },
+    window: { RECIPES: recipes, MC_STRAIN: strainMock, MC_READY: readyMock, EXERCISES: exercises },
     localStorage: {
       getItem: k => (k in store ? store[k] : null),
       setItem: (k, v) => { store[k] = String(v); },
@@ -171,6 +171,32 @@ B = loadBridge({ 'mc_workout_log_v1': JSON.stringify([
 var onePattern = B.likelyTrainingDays();
 ok('one-off session -> no weekday reaches the threshold',
   DAYS.every(function (d) { return onePattern[d] === false; }));
+
+// 6. todaysDayType() (moved from mc-macros.js, roadmap Phase 3 / Initiative
+// 03) — majority muscle group among today's finished sets, via a catalog
+// name lookup against window.EXERCISES.
+const CATALOG = [
+  { name: 'Bench Press', muscle: 'Chest' },
+  { name: 'Overhead Press', muscle: 'Shoulders' },
+  { name: 'Lateral Raise', muscle: 'Shoulders' },
+  { name: 'Barbell Row', muscle: 'Back' },
+  { name: 'Leg Press', muscle: 'Legs - Quads' },
+  { name: 'Plank', muscle: 'Core' }
+];
+function pushDayLog(setNames) {
+  return [{ id: 'x', pageId: 'p', workoutName: 'T', date: new Date().toISOString(),
+    sets: setNames.map(n => ({ name: n, weight: 100, reps: 8 })) }];
+}
+B = loadBridge({ mc_workout_log_v1: JSON.stringify(
+  pushDayLog(['Bench Press', 'Overhead Press', 'Overhead Press', 'Lateral Raise'])
+) }, undefined, undefined, undefined, CATALOG);
+eq('push day majority detected', B.todaysDayType(), 'push');
+
+B = loadBridge({ mc_workout_log_v1: JSON.stringify(pushDayLog(['Bench Press', 'Barbell Row'])) }, undefined, undefined, undefined, CATALOG);
+eq('below 3-set majority threshold -> null', B.todaysDayType(), null);
+
+B = loadBridge({}, undefined, undefined, undefined, CATALOG);
+eq('no log today -> null', B.todaysDayType(), null);
 
 if (fail) { console.error(`\ntest-mc-bridge: ${pass} passed, ${fail} FAILED`); process.exit(1); }
 console.log(`test-mc-bridge: all ${pass} assertions passed`);
