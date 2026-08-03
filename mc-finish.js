@@ -195,6 +195,7 @@
       '<div class="fw-done-emoji" id="fwDoneEmoji">💪</div>'+
       '<div class="fw-done-title">Session Complete</div>'+
       '<div class="fw-done-sub" id="fwDoneSub"></div>'+
+      '<div class="fw-strain-wrap" id="fwStrainWrap"></div>'+
       '<div class="fw-done-grid" id="fwDoneGrid"></div>'+
       '<div class="fw-done-prs" id="fwDonePRs"></div>'+
       '<button class="fw-confirm" style="flex:none;width:100%;" onclick="_FW.doneClose()">Done</button>'+
@@ -210,6 +211,12 @@
       '@keyframes fwPop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1)}}'+
       '.fw-done-title{font-size:22px;font-weight:900;letter-spacing:-0.02em;color:#fff;}'+
       '.fw-done-sub{font-size:13px;color:#64748b;font-weight:700;margin:2px 0 16px;}'+
+      '.fw-strain-wrap:not(:empty){display:flex;flex-direction:column;align-items:center;margin-bottom:16px;}'+
+      '.fw-strain-circle{position:relative;width:76px;height:76px;}'+
+      '.fw-strain-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}'+
+      '.fw-strain-val{font-size:19px;font-weight:900;color:#d4af37;line-height:1.1;text-align:center;}'+
+      '.fw-strain-val span{display:block;font-size:9px;font-weight:800;color:#64748b;margin-top:2px;letter-spacing:0.02em;}'+
+      '.fw-strain-lbl{font-size:11px;font-weight:700;color:#94a3b8;margin-top:8px;}'+
       '.fw-done-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}'+
       '.fw-done-cell{background:#141414;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 8px;}'+
       '.fw-done-num{font-size:22px;font-weight:900;color:var(--accent,#d4af37);letter-spacing:-0.01em;}'+
@@ -223,9 +230,35 @@
   function cell(val,lbl){
     return '<div class="fw-done-cell"><div class="fw-done-num">'+val+'</div><div class="fw-done-lbl">'+lbl+'</div></div>';
   }
+  // CI roadmap Phase 2 / Initiative 01 — session kcal (mc-strain.js's
+  // session(), a pure function over the entry just saved) plus today's
+  // aggregate 0-21 strain score (today(), which already includes this
+  // session — saveWorkout() persisted it to mc_workout_log_v1 before
+  // showDone() runs). No-op (leaves the host empty) on any page that hasn't
+  // loaded mc-strain.js, or when there's nothing to estimate from yet.
+  function renderStrain(entry){
+    var wrap=document.getElementById('fwStrainWrap');
+    if(!wrap)return;
+    wrap.innerHTML='';
+    if(!window.MC_STRAIN)return;
+    try{
+      var s=MC_STRAIN.session(entry);
+      if(!s.kcal)return;
+      var day=MC_STRAIN.today();
+      var pct=day.strain==null?0:Math.round((day.strain/21)*100);
+      var ringSvg=window.MC_CHART?MC_CHART.ring(pct,{size:76,stroke:6,color:'#d4af37'}):'';
+      var lbl=day.strain==null?'Building your strain baseline':"Today's Strain: "+day.strain+' / 21';
+      wrap.innerHTML=
+        '<div class="fw-strain-circle">'+ringSvg+
+          '<div class="fw-strain-center"><span class="fw-strain-val">'+s.kcal+'<span>kcal</span></span></div>'+
+        '</div>'+
+        '<div class="fw-strain-lbl">'+lbl+'</div>';
+    }catch(e){wrap.innerHTML='';}
+  }
   function showDone(entry){
     var sets=entry.sets||[];
     var prList=prSpotlight(sets);
+    renderStrain(entry);
     var grid=document.getElementById('fwDoneGrid');
     if(grid){
       grid.innerHTML=

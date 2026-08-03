@@ -150,11 +150,26 @@
     return 'active';
   }
 
-  // Train-day calorie bonus (Phase 2.2): a flat kcal add-on applied only when
+  // Train-day calorie bonus (Phase 2.2, replaced by real per-session data in
+  // the CI-initiative roadmap Phase 2 / Initiative 01): applied only when
   // rendering *today* and today has a finished, logged workout — the stored
   // mc_macros_v1.goals.kcal itself never changes, so nothing else that reads
   // goals (the calculator, sync, other days' views) needs to know about this.
+  // mc-strain.js's MC_STRAIN.today().kcal (a real MET-based estimate from
+  // today's actual tonnage/duration/bodyweight, not a one-size-fits-all
+  // guess) is the real source now; the flat constant only survives as the
+  // fallback for a page that hasn't loaded mc-strain.js, or a first-ever
+  // session with no logged sets yet to estimate from.
   var TRAIN_DAY_BONUS_KCAL = 200;
+  function trainDayBonusKcal() {
+    try {
+      if (window.MC_STRAIN && MC_STRAIN.today) {
+        var kcal = MC_STRAIN.today().kcal;
+        if (kcal > 0) return kcal;
+      }
+    } catch (e) {}
+    return TRAIN_DAY_BONUS_KCAL;
+  }
   function trainedToday() {
     try {
       var log = JSON.parse(localStorage.getItem('mc_workout_log_v1') || '[]') || [];
@@ -351,8 +366,10 @@
     // stored goal is untouched, so yesterday/tomorrow's views, the
     // calculator, and sync all still see the plain baseline.
     var trainBonusApplied = false;
+    var trainBonusKcal = 0;
     if (goals && goals.kcal && selKey === todayKey() && trainedToday()) {
-      goals = Object.assign({}, goals, { kcal: goals.kcal + TRAIN_DAY_BONUS_KCAL });
+      trainBonusKcal = trainDayBonusKcal();
+      goals = Object.assign({}, goals, { kcal: goals.kcal + trainBonusKcal });
       trainBonusApplied = true;
     }
 
@@ -360,7 +377,7 @@
     var root = el('div', 'ntx');
     root.appendChild(renderHead());
     root.appendChild(renderCalendar());
-    root.appendChild(renderSummary(totals, goals, trainBonusApplied));
+    root.appendChild(renderSummary(totals, goals, trainBonusApplied, trainBonusKcal));
     var planEl = renderPlannedMeals();
     if (planEl) root.appendChild(planEl);
     var nudgeEl = renderMacroNudge(data.goals, data.profile);
@@ -415,7 +432,7 @@
     return cal;
   }
 
-  function renderSummary(totals, goals, trainBonusApplied) {
+  function renderSummary(totals, goals, trainBonusApplied, trainBonusKcal) {
     var sum = el('div', 'ntx-sum');
     sum.title = 'Edit goals';
     var row = el('div', 'ntx-sum-row');
@@ -428,7 +445,7 @@
     row.appendChild(el('div', 'ntx-sum-exp', '›'));
     sum.appendChild(row);
     if (trainBonusApplied) {
-      sum.appendChild(el('div', 'ntx-train-bonus', '💪 +' + TRAIN_DAY_BONUS_KCAL + ' kcal today — you trained'));
+      sum.appendChild(el('div', 'ntx-train-bonus', '💪 +' + trainBonusKcal + ' kcal today — you trained'));
     }
     sum.onclick = openCalculator;
     return sum;

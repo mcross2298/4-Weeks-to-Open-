@@ -121,6 +121,30 @@
     return prioritized.length >= 4 ? prioritized : candidates;
   }
 
+  // Additional freshness pass using mc-readiness.js's real recovery-curve
+  // model (CI roadmap Phase 2 / Initiative 02) when it's loaded, layered ON
+  // TOP of the catalog-muscle-field-keyed preferFresh()/balanceFullBody()
+  // above rather than replacing them: exercise-catalog.js's e.muscle values
+  // (e.g. "Legs - Quads") are a finer-grained taxonomy than
+  // MC_MUSCLES.classify()'s 9-10 groups, and reconciling the two would need
+  // a real translation table this module has no business owning. Classifying
+  // each CANDIDATE'S OWN NAME via MC_MUSCLES.classify() sidesteps that
+  // mismatch entirely — same classifier mc-readiness.js itself already uses,
+  // no translation table. A no-op (returns candidates unchanged) on any page
+  // that hasn't loaded mc-readiness.js/mc-muscle-map.js — including this
+  // module's own test harness, which is why the existing preferFresh() /
+  // balanceFullBody() tests needed no changes for this to land.
+  function preferReadiness(candidates) {
+    if (!window.MC_READY || !window.MC_MUSCLES) return candidates;
+    var byId = window.MC_READY.byMuscle();
+    var ready = candidates.filter(function (e) {
+      var id = window.MC_MUSCLES.classify(e.name).id;
+      var r = byId[id];
+      return !r || r.pct >= 40; // no data for that id -> don't penalize it
+    });
+    return ready.length >= 4 ? ready : candidates;
+  }
+
   // Most recent logged weight for this exercise name, local-only (no
   // sign-in needed) — mc_setlog_v1 can't be used here (a fresh Quick Pump
   // session gets a new id every generation, so it's siloed with no history
@@ -200,6 +224,7 @@
     // itself), then bias away from whatever's already sore from <48h ago.
     if (focus === 'Full Body') candidates = balanceFullBody(candidates, MUSCLE_GROUPS[focus]);
     candidates = preferFresh(candidates, recentlyTrainedMuscles(48));
+    candidates = preferReadiness(candidates);
 
     var counts = blockCounts(minutes);
     var used = {};
@@ -317,6 +342,7 @@
       generate: generate,
       preferFresh: preferFresh,
       balanceFullBody: balanceFullBody,
+      preferReadiness: preferReadiness,
       recentlyTrainedMuscles: recentlyTrainedMuscles,
       weeklySetsByMuscle: weeklySetsByMuscle,
       lastWeightFor: lastWeightFor

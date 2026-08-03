@@ -24,10 +24,10 @@ function dayKey(d) { return d.getFullYear() + '-' + d2(d.getMonth() + 1) + '-' +
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 function todayCode() { return DAYS[(new Date().getDay() + 6) % 7]; }
 
-function loadBridge(seed, recipes) {
+function loadBridge(seed, recipes, strainMock, readyMock) {
   const store = Object.assign({}, seed);
   const sandbox = {
-    window: { RECIPES: recipes },
+    window: { RECIPES: recipes, MC_STRAIN: strainMock, MC_READY: readyMock },
     localStorage: {
       getItem: k => (k in store ? store[k] : null),
       setItem: (k, v) => { store[k] = String(v); },
@@ -122,8 +122,25 @@ B = loadBridge({}, undefined);
 eq('todaysMeals -> []', B.todaysMeals(), []);
 eq('macroTargets -> null', B.macroTargets(), null);
 eq('recentWorkouts -> []', B.recentWorkouts(), []);
-eq('today() shape intact', B.today(), { meals: [], workout: { trainedToday: false, streak: 0, last: null }, targets: null });
+eq('today() shape intact', B.today(),
+  { meals: [], workout: { trainedToday: false, streak: 0, last: null }, targets: null, expenditure: 0, strain: null });
+eq('energyToday() with no MC_STRAIN loaded -> zeroed/null, not a throw', B.energyToday(), { kcal: 0, strain: null });
 eq('likelyTrainingDays -> {} with no log', B.likelyTrainingDays(), {});
+
+// 4b. energyToday()/today() read through window.MC_STRAIN when it's loaded
+// (dashboard.html only, today) — a mocked MC_STRAIN stands in for the real
+// module here; the real module's own math is covered by test-mc-strain.js.
+B = loadBridge({}, undefined, { today: function () { return { kcal: 512, strain: 14.2 }; } });
+eq('energyToday() reads through window.MC_STRAIN.today()', B.energyToday(), { kcal: 512, strain: 14.2 });
+eq('today() folds expenditure/strain in from MC_STRAIN', B.today().expenditure, 512);
+eq('today() folds strain in from MC_STRAIN', B.today().strain, 14.2);
+
+// 4c. recovery() — per-muscle snapshot passthrough from window.MC_READY
+B = loadBridge({}, undefined);
+eq('recovery() with no MC_READY loaded -> {}, not a throw', B.recovery(), {});
+var readyMock = { byMuscle: function () { return { chest: { pct: 42, status: 'accumulating' } }; } };
+B = loadBridge({}, undefined, undefined, readyMock);
+eq('recovery() reads through window.MC_READY.byMuscle()', B.recovery(), { chest: { pct: 42, status: 'accumulating' } });
 
 // 5. likelyTrainingDays() — real historical weekday pattern (roadmap B2), not
 // a fabricated schedule. Build 8 weeks of sessions on Mon/Wed/Fri only.
