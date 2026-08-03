@@ -31,8 +31,10 @@
      two weeks). Consumed by mc-quick-pump.js's Full Body balancing in place
      of its old weekly-set-count-only heuristic.
    window.MC_READY.overall() — {pct, status}, a plain mean of byMuscle()'s
-     pct across the 9 real groups (excludes 'other'). Phase 3 / Initiative 05
-     ("The Readout") — the dashboard recap's paired Strain/Readiness rings.
+     pct across the 9 real groups (excludes 'other'). Consumed by the
+     dashboard's compact weekly pulse strip (mc-recap.js's
+     renderPulseStrip()) and the Stats page's Weekly Review muscle panel
+     for the current week (mc-stats.js) — see readiness-stats-roadmap.md.
    ========================================================================== */
 (function () {
   var isBrowser = typeof window !== 'undefined';
@@ -158,45 +160,8 @@
     var st = document.createElement('style');
     st.id = 'mcReadyCss';
     st.textContent =
-      '#readinessBoard:empty{display:none;}' +
-      '.ready-board{margin:0 18px 28px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}' +
-      '.ready-chip{background:var(--card-bg,#0f0f0f);border:1px solid rgba(255,255,255,0.07);border-radius:12px;' +
-        'padding:10px 6px 0;text-align:center;overflow:hidden;}' +
-      '.ready-icon{display:block;font-size:16px;line-height:1;}' +
-      '.ready-lbl{display:block;font-size:10px;font-weight:800;letter-spacing:0.02em;color:var(--text,#e2e8f0);' +
-        'margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
-      '.ready-bar{display:block;height:3px;margin-top:9px;border-radius:0;}' +
       '.ready-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:6px;vertical-align:middle;}';
     document.head.appendChild(st);
-  }
-
-  // ---- dashboard readiness board (#readinessBoard) -------------------------
-  // Same "empty host, hidden until earned" convention as #todayStrip/
-  // #momentumStrip on dashboard.html — a brand-new trainee with zero logged
-  // history sees nothing here rather than nine chips reading 100% fresh,
-  // which would just be noise before there's any real signal to show.
-  function renderBoard() {
-    var host = document.getElementById('readinessBoard');
-    if (!host) return;
-    if (!workoutLog().length) { host.innerHTML = ''; return; }
-    var groups = (window.MC_MUSCLES ? window.MC_MUSCLES.groups : []).filter(function (g) { return g.id !== 'other'; });
-    if (!groups.length) { host.innerHTML = ''; return; }
-    var data = byMuscle();
-
-    injectCss();
-    host.innerHTML =
-      '<div class="sec-header"><div class="sec-title">Readiness</div>' +
-      '<a class="sec-link" href="stats.html">Stats →</a></div>' +
-      '<div class="ready-board">' +
-      groups.map(function (g) {
-        var r = data[g.id] || { pct: 100, status: 'fresh' };
-        return '<div class="ready-chip" title="' + g.label + ' — ' + r.pct + '% recovered (' + r.status + ')">' +
-          '<span class="ready-icon">' + g.icon + '</span>' +
-          '<span class="ready-lbl">' + g.label + '</span>' +
-          '<span class="ready-bar" style="background:' + STATUS_COLOR[r.status] + '"></span>' +
-          '</div>';
-      }).join('') +
-      '</div>';
   }
 
   // ---- exercise-card freshness dot (.ex-name / .ss-name) --------------------
@@ -230,7 +195,6 @@
   }
 
   function init() {
-    renderBoard();
     decorateCards();
     var obs = new MutationObserver(function () { decorateCards(); });
     obs.observe(document.body, { childList: true, subtree: true });
