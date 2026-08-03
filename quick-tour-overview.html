@@ -154,7 +154,21 @@ body{background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;p
    Scoped to this page's own stylesheet rather than the shared mc-light.css,
    because these panel classes (.card/.jump/.swatch/.coach) are generic names
    also used by the instructions family with different ground assumptions —
-   a shared override measurably regressed those pages. */
+   a shared override measurably regressed those pages.
+
+   CI initiative roadmap Phase 3 finding: this page's :root above defines
+   --text/--muted/--muted2 UNCONDITIONALLY (line ~23), never re-scoped for
+   light mode — unlike base.css, which this page doesn't load. mc-light.css's
+   own "round 2" fix for this exact page (its `.sec b`/`.ticks b`/`.card-tx b`
+   block, "the bold runs are white text that only ever worked because the
+   ground was near-black") reads `var(--text, #1c1a17)`, and that fallback
+   only ever engages when --text is UNDEFINED — since this page always
+   defines it (just to the wrong, dark value), the fallback silently never
+   fired and every var(--text)/var(--muted) consumer mc-light.css ships for
+   this page stayed dark-mode-colored on a light ground. Re-scoping the
+   tokens here, matching base.css's own html[data-theme="light"] convention,
+   fixes it at the source instead of chasing it selector by selector. */
+html[data-theme="light"]{--text:#1c1a17;--muted:#6b6459;--muted2:#8a8377;}
 html[data-theme="light"] .card,
 html[data-theme="light"] .jump,
 html[data-theme="light"] .swatch,
