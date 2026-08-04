@@ -39,6 +39,26 @@ const json = (body: unknown, status = 200) =>
 const n = (v: unknown) => { const x = parseFloat(String(v)); return isFinite(x) ? x : 0; };
 const r0 = (v: number) => Math.round(v);
 
+// Every outbound call to OFF/USDA below used a bare fetch() with no timeout —
+// on a slow or stalled upstream connection that just hangs instead of
+// erroring, nothing here ever aborts it, so the function rides it out to the
+// platform's own wall-clock limit. Real production logs showed exactly that:
+// text searches consistently taking ~60-62s. The client already gives up on
+// this function after 8s and falls back to a direct OFF call, so those
+// invocations were technically harmless to the user but wasted a full
+// platform timeout of compute on every occurrence. 6s keeps us safely under
+// the client's own budget so a slow single source still leaves time for the
+// other (parallel, via Promise.all) source's result to come back and get used.
+async function fetchWithTimeout(url: string, opts: RequestInit = {}, ms = 6000): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...opts, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 type Item = {
   code: string; name: string; brand: string;
   basis: "serving" | "100g"; servingLabel: string;
@@ -87,14 +107,14 @@ function offNormalize(prod: any): Item | null {
 async function offSearch(q: string): Promise<Item[]> {
   const url = "https://world.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1&page_size=12"
     + "&fields=code,product_name,brands,nutriments,serving_size&search_terms=" + encodeURIComponent(q);
-  const res = await fetch(url); if (!res.ok) return [];
+  const res = await fetchWithTimeout(url); if (!res.ok) return [];
   const data = await res.json();
   return (data.products || []).map(offNormalize).filter(Boolean) as Item[];
 }
 async function offLookup(code: string): Promise<Item | null> {
   const url = "https://world.openfoodfacts.org/api/v2/product/" + encodeURIComponent(code)
     + ".json?fields=code,product_name,brands,nutriments,serving_size";
-  const res = await fetch(url); if (!res.ok) return null;
+  const res = await fetchWithTimeout(url); if (!res.ok) return null;
   const data = await res.json();
   return data && data.product ? offNormalize(data.product) : null;
 }
@@ -123,7 +143,7 @@ function usdaNormalize(food: any): Item | null {
 }
 async function usdaSearch(q: string): Promise<Item[]> {
   if (!USDA_KEY) return [];
-  const res = await fetch("https://api.nal.usda.gov/fdc/v1/foods/search?api_key=" + USDA_KEY, {
+  const res = await fetchWithTimeout("https://api.nal.usda.gov/fdc/v1/foods/search?api_key=" + USDA_KEY, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query: q, pageSize: 10, dataType: ["Foundation", "SR Legacy", "Branded"] }),
@@ -205,14 +225,14 @@ async function offBrandSearch(brand: string, term: string): Promise<Item[]> {
     + "&fields=code,product_name,brands,nutriments,serving_size"
     + "&tagtype_0=brands&tag_contains_0=contains&tag_0=" + encodeURIComponent(brand)
     + "&search_terms=" + encodeURIComponent(term);
-  const res = await fetch(url); if (!res.ok) return [];
+  const res = await fetchWithTimeout(url); if (!res.ok) return [];
   const data = await res.json();
   return (data.products || []).map(offNormalize).filter(Boolean) as Item[];
 }
 async function usdaBrandSearch(brand: string, term: string): Promise<Item[]> {
   if (!USDA_KEY) return [];
   const query = (brand + " " + term).trim();
-  const res = await fetch("https://api.nal.usda.gov/fdc/v1/foods/search?api_key=" + USDA_KEY, {
+  const res = await fetchWithTimeout("https://api.nal.usda.gov/fdc/v1/foods/search?api_key=" + USDA_KEY, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query, pageSize: 20, dataType: ["Branded"] }),
