@@ -373,9 +373,25 @@ and fails on: the original dead-subsystem identifiers reappearing, a page
 loading `mc-timer.js` while also declaring its own local `TMR` (the two
 `const TMR` declarations would throw a SyntaxError the instant the second
 one parses — classic `<script>` tags share one global lexical environment),
-or a page whose own `makeRestTimer()`/`makeRT()` emits an
-`onclick="...TMR.toggle(...)"` chip while loading neither `mc-timer.js` nor
-a local `TMR` (every tap would throw `TMR is not defined`).
+or a page whose own `makeRestTimer()`/`makeRT()`/`restTimer()` clone emits
+the `.rest-timer` chip markup while not loading `mc-timer.js`.
+
+**Volume II Phase 6 ("Operable by Everyone") rewrote the chip itself.** Every
+`.rest-timer` (and `mc-setlog.js`'s `.mcl-ck` set-checkbox) used to be a
+non-semantic `<div>`/`<span>` with an inline `onclick="...TMR.toggle(...)"`
+attribute — unreachable by keyboard, and the exact mechanism behind the D-3
+apostrophe bug above. Both are now real `<button>`s carrying `data-secs`/
+`data-name` (rest-timer) or `role="checkbox"`/`aria-checked`/`aria-label`
+(set-check), with a SINGLE delegated `document.addEventListener('click', ...)`
+in `mc-timer.js` doing the `TMR.toggle()` call for every `.rest-timer[data-secs]`
+on the page, however it was rendered. A native `<button>` is keyboard-focusable
+and fires `click` on both Space and Enter for free — no custom keydown handling
+needed. This closes a real escape hatch the old `check-one-timer.js` orphan
+check used to allow: a page-local `const TMR` no longer substitutes for
+loading `mc-timer.js`, because the delegated listener only exists if
+`mc-timer.js`'s own script ran — skip it now and every rest-timer button on
+the page is silently inert (no error) rather than throwing "TMR is not
+defined".
 
 ---
 

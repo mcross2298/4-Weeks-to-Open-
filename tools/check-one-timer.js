@@ -26,18 +26,27 @@
       throw a SyntaxError the instant the second one parses — this is
       exactly the crash `s4-legs.html`'s local `const _progObs` collided on
       during the Volume I migration, just for the TMR identifier itself.
-   3. ORPHAN TOGGLE — a page whose own makeRestTimer()/makeRT() emits
-      `onclick="...TMR.toggle(...)"` markup (every variant of that function
-      does — it's the one call every rest-timer chip fleet-wide shares) must
-      load mc-timer.js or declare a local `const/var TMR` itself. Skipping
-      both means every rest-timer chip on the page throws
-      "TMR is not defined" the first time a trainee taps one.
+   3. ORPHAN CHIP — a page whose own makeRestTimer()/makeRT()/restTimer()
+      clone emits the `.rest-timer` button markup (every variant embeds the
+      literal class string `rest-timer idle` in its own inline script — the
+      one signature every rest-timer chip fleet-wide shares) must load
+      mc-timer.js. Volume II Phase 6 ("Operable by Everyone") moved click
+      handling off a per-chip `onclick="...TMR.toggle(...)"` attribute onto
+      ONE delegated `document.addEventListener('click', ...)` registered
+      inside mc-timer.js itself — so a local `const/var TMR` no longer saves
+      a page the way it used to (that escape hatch is gone: before, the
+      onclick called `TMR.toggle()` against whatever TMR was in lexical
+      scope, local or shared; now the listener that reaches `TMR.toggle()`
+      at all only exists if mc-timer.js's own script ran). Skipping
+      mc-timer.js now means every rest-timer button on the page is inert —
+      no error, no console warning, just a tap that silently does nothing,
+      which is a worse failure mode than the old "TMR is not defined" crash
+      this check used to catch.
 
-   Note what this deliberately does NOT flag: a page-local `TMR.` reference
-   guarded by `typeof TMR !== 'undefined'` (cat-gainz.html has two — dead in
-   practice, never crashes) is not the same risk class as an unconditional
-   onclick call, and is left alone rather than forcing an unrelated fix into
-   this gate.
+   Note what this deliberately does NOT flag: the-500.html declares its own
+   local `const TMR` for an unrelated jump-rope/pushup-ladder buzzer
+   (`TMR.buzz()`) — a different API, no `.rest-timer` chip markup anywhere
+   on the page, so it never matches ORPHAN CHIP and is left alone.
 
      node tools/check-one-timer.js
    ========================================================================== */
@@ -59,7 +68,7 @@ const LEGACY_BANNED = [
 
 const HAS_MC_TIMER = /<script\s+src="mc-timer\.js"><\/script>/;
 const LOCAL_TMR_DECL = /^[ \t]*(?:const|var)\s+TMR\s*=/m;
-const ORPHAN_TOGGLE = /TMR\.toggle\(/;
+const ORPHAN_CHIP = /rest-timer idle/;
 
 const pages = fs.readdirSync(ROOT)
   .filter(f => f.endsWith('.html') && !f.endsWith('.dc.html'))
@@ -88,11 +97,13 @@ for (const p of pages) {
       `see tools/check-one-timer.js.`);
   }
 
-  if (ORPHAN_TOGGLE.test(src) && !hasSharedTimer && !hasLocalTmr) {
+  if (ORPHAN_CHIP.test(src) && !hasSharedTimer) {
     bad++;
-    console.error(`::error file=${p}::renders a rest-timer chip whose onclick calls ` +
-      `TMR.toggle(), but the page loads neither mc-timer.js nor a local TMR — every ` +
-      `tap throws "TMR is not defined". Add <script src="mc-timer.js"></script>; ` +
+    console.error(`::error file=${p}::renders a .rest-timer chip (local makeRT()/` +
+      `restTimer() clone) but does not load mc-timer.js — the delegated click ` +
+      `listener that makes any .rest-timer button interactive lives only inside ` +
+      `mc-timer.js, so every tap on this page silently does nothing. A local TMR ` +
+      `declaration does not substitute; add <script src="mc-timer.js"></script>; ` +
       `see tools/check-one-timer.js.`);
   }
 }

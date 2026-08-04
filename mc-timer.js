@@ -15,7 +15,13 @@
    entity is decoded back to a raw `'` by the browser BEFORE the onclick
    string is parsed as JS, so the string literal still breaks. Only a real
    backslash-escaped JS string literal survives that decode step correctly.
-   See _mcEscRestTimerJsArg() below.
+   Phase 4 fixed the escape; Volume II Phase 6 / Initiative 08 ("Operable by
+   Everyone") went further and removed the onclick string-literal argument
+   entirely — the rest-timer chip is a real `<button>` now (also closes D-5:
+   it used to be a `<span>` with a click handler, unreachable by keyboard and
+   announced as nothing in particular by a screen reader), and the exercise
+   name travels as a data-* attribute read by one delegated click listener
+   instead. See makeRestTimer() below.
    ========================================================================== */
 // ── cue preferences (mc_prefs_v1) ──
 const MC_PREFS = {
@@ -116,46 +122,61 @@ function mcTimerSpeakSecs(secs) {
   return s + ' seconds';
 }
 
-// Safe for HTML text/attribute content (data-rest, data-label, the visible
-// label span) — this content is only ever read back via the DOM (which
-// auto-decodes entities), never re-parsed as JS, so a full HTML-entity
-// escape is both correct and sufficient here.
+// Safe for HTML text/attribute content (data-rest, data-label, data-name,
+// the visible label span) — this content is only ever read back via the DOM
+// (which auto-decodes entities), never re-parsed as JS. Volume II Phase 6 /
+// Initiative 08 ("Operable by Everyone") removed the JS-string-literal path
+// entirely — the exercise name used to be embedded inside an
+// onclick="...TMR.toggle(this,secs,'name')" attribute, which is exactly what
+// made D-3 possible in the first place (see below). It now travels only as a
+// data-* attribute read by the delegated listener, so a single HTML-entity
+// escape is both correct and sufficient for everything this function emits;
+// the separate JS-string escape function this comment used to describe
+// (_mcEscRestTimerJsArg) no longer has anything to escape for and is gone.
 function _mcEscRestTimerAttr(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
   });
 }
-// Safe to embed inside the single-quoted JS string literal argument passed
-// to TMR.toggle() within an onclick="..." (double-quoted) HTML attribute —
-// see the file header for why HTML-entity-escaping the apostrophe here does
-// NOT work. A real backslash-escaped apostrophe survives HTML-attribute
-// decoding correctly, since a decoded `\'` is still a valid escaped
-// apostrophe inside the resulting JS string. `&`/`<`/`>`/`"` are harmless
-// either way inside a single-quoted JS string, but still HTML-escaped here
-// so a name containing `"` can't prematurely close the outer onclick
-// attribute (which is double-quoted).
-function _mcEscRestTimerJsArg(s) {
-  return String(s == null ? '' : s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-    .replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-}
-// Renders a tappable rest-timer chip: `<span class="rest-timer idle" ...>`
-// wired to TMR.toggle(). Always ensures #timerFloat exists first
-// (buildTimerFloat() is idempotent) — three pages' former local copies
-// omitted that call, which meant the float those pages depend on might
-// never get constructed (D-4).
+// Renders a tappable rest-timer chip: a real `<button>` (D-5 — was a `<span>`
+// with an onclick, keyboard-unreachable and announced as nothing in
+// particular by a screen reader). secs/name travel as data-* attributes for
+// the delegated listener below, not embedded in an inline handler string —
+// D-3's whole bug class (an apostrophe breaking the emitted onclick's JS
+// string literal) is now structurally impossible, not just correctly
+// escaped. Always ensures #timerFloat exists first (buildTimerFloat() is
+// idempotent) — three pages' former local copies omitted that call, which
+// meant the float those pages depend on might never get constructed (D-4).
 function makeRestTimer(restStr, exerciseName) {
   var secs = TMR.parseSeconds(restStr);
   var label = _mcEscRestTimerAttr(restStr);
   if (!secs) return '<span class="ex-sets" style="opacity:0.5">⏱️ ' + label + '</span>';
-  var jsName = _mcEscRestTimerJsArg(String(exerciseName || '').substring(0, 30));
-  return '<span class="rest-timer idle" data-rest="' + label + '" data-label="' + label + '" ' +
-    'onclick="buildTimerFloat();TMR.toggle(this,' + secs + ',\'' + jsName + '...\')" ' +
+  var name = _mcEscRestTimerAttr(String(exerciseName || ''));
+  return '<button type="button" class="rest-timer idle" data-rest="' + label + '" data-label="' + label + '" ' +
+    'data-secs="' + secs + '" data-name="' + name + '" ' +
     'title="Tap to start rest timer">' +
     '<span class="rest-timer-icon">⏱️</span>' +
     '<span class="rest-timer-label">' + label + '</span>' +
-    '</span>';
+    '</button>';
 }
+// Delegated click handling (Volume II Phase 6 / Initiative 08) for every
+// .rest-timer button on the page, however it was rendered — makeRestTimer()
+// above, or one of a few page-local chip-builder clones sharing the same
+// data-secs/data-name contract (different call signatures — some take a
+// pre-computed seconds count instead of a duration string — so left as
+// separate functions rather than folded into this one, but all now emit
+// this same button shape). A single listener here survives every re-render
+// for free: a freshly
+// rendered card's new button already matches '.rest-timer[data-secs]', no
+// rebinding required — this is exactly the class of problem the
+// MutationObserver retry passes elsewhere in the fleet exist to work around
+// for OTHER reasons, avoided here from the start.
+document.addEventListener('click', function (e) {
+  var btn = e.target.closest && e.target.closest('.rest-timer[data-secs]');
+  if (!btn) return;
+  buildTimerFloat();
+  TMR.toggle(btn, parseInt(btn.dataset.secs, 10) || 0, btn.dataset.name || '');
+});
 
 const TMR = {
   interval: null,
