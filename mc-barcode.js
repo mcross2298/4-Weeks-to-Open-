@@ -60,6 +60,9 @@
         'color:#fff;font-size:14px;font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,0.8);padding:0 24px;}' +
       '.bc-manual{margin-top:12px;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.3);' +
         'color:#fff;padding:10px 18px;border-radius:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;}' +
+      '.bc-diag{position:absolute;left:0;right:0;top:calc(64px + env(safe-area-inset-top));text-align:center;' +
+        'color:rgba(255,255,255,0.5);font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;' +
+        'text-shadow:0 1px 2px rgba(0,0,0,0.8);pointer-events:none;}' +
       '@media (prefers-reduced-motion: reduce){.bc-laser{animation:none;}}';
     var st = document.createElement('style');
     st.id = 'bc-styles'; st.textContent = css;
@@ -85,9 +88,19 @@
         '<div class="bc-frame"><div class="bc-laser"></div></div>' +
         '<div class="bc-top"><div class="bc-title">Scan barcode</div>' +
           '<button class="bc-close" aria-label="Close">×</button></div>' +
+        '<div class="bc-diag" id="bcDiag"></div>' +
         '<div class="bc-hint">Line up the product barcode inside the box' +
           '<br><button class="bc-manual">Enter code manually</button></div>');
       document.body.appendChild(ov);
+
+      // Live status line (audit: "scans but never registers" reports on
+      // real devices, with nothing on-screen distinguishing "no camera
+      // frame yet" from "camera's reading frames but nothing decodes" from
+      // "the engine never actually started" — this makes that visible
+      // without needing devtools on a phone).
+      var diagEl = ov.querySelector('#bcDiag');
+      function setDiag(text) { if (diagEl) diagEl.textContent = text; }
+      setDiag('requesting camera…');
 
       function cleanup() {
         if (done) return; done = true;
@@ -125,7 +138,11 @@
         })
         .then(function () {
           if ('BarcodeDetector' in window) return runNative();
-          return loadZXing().then(runZXing);
+          setDiag('loading zxing fallback…');
+          return loadZXing().then(runZXing, function (err) {
+            setDiag('zxing library failed to load: ' + (err && err.message || err));
+            throw err;
+          });
         })
         .catch(function (err) {
           fail(new Error(err && err.name === 'NotAllowedError'
@@ -143,20 +160,28 @@
         // scans but never finds the food." EAN/UPC formats carry a real check
         // digit, so restricting to them is itself most of the false-read fix.
         var formats = ['ean_13', 'ean_8', 'upc_a', 'upc_e'];
-        var detector;
+        var detector, restricted = true;
         try { detector = new window.BarcodeDetector({ formats: formats }); }
-        catch (e) { detector = new window.BarcodeDetector(); }
+        catch (e) { detector = new window.BarcodeDetector(); restricted = false; }
+        var frames = 0, misses = 0;
+        setDiag('native · ' + (restricted ? 'ean/upc only' : 'unrestricted (formats rejected)'));
         var tick = function () {
           if (done) return;
           // Wait for real frames — detecting on a 0×0 / not-yet-playing video is
           // why scans never "registered": detect() on an empty frame yields
           // nothing and (pre-guard) could even reject. Spin cheaply until ready.
           if (video.readyState < 2 || !video.videoWidth) { raf = requestAnimationFrame(tick); return; }
+          frames++;
           detector.detect(video).then(function (codes) {
             if (done) return;
             if (codes && codes.length && codes[0].rawValue) { finish(String(codes[0].rawValue).replace(/\D/g, '')); return; }
+            misses++;
+            if (misses % 15 === 0) setDiag('native · ' + frames + ' frames · no code found yet');
             raf = requestAnimationFrame(tick);
-          }).catch(function () { if (!done) raf = requestAnimationFrame(tick); });
+          }).catch(function (e) {
+            setDiag('native · detect() error: ' + (e && e.name || e));
+            if (!done) raf = requestAnimationFrame(tick);
+          });
         };
         raf = requestAnimationFrame(tick);
       }
@@ -170,13 +195,15 @@
           // this is the only engine, since Safari lacks BarcodeDetector — an
           // unrelated code on the packaging could win the race and hand back
           // digits no food database has ever heard of.
-          var hints = new Map();
+          var hints = new Map(), restricted = true;
           try {
             hints.set(window.ZXing.DecodeHintType.POSSIBLE_FORMATS, [
               window.ZXing.BarcodeFormat.EAN_13, window.ZXing.BarcodeFormat.EAN_8,
               window.ZXing.BarcodeFormat.UPC_A, window.ZXing.BarcodeFormat.UPC_E
             ]);
-          } catch (e) {}
+          } catch (e) { restricted = false; }
+          var frames = 0, misses = 0;
+          setDiag('zxing · ' + (restricted ? 'ean/upc only' : 'unrestricted (hint setup failed)'));
           // decodeFromVideoElement(source) — no callback param — does ONE
           // decode attempt tied to the video's 'loadedmetadata'/'playing'
           // event and returns a Promise that this code never awaited, so the
@@ -189,9 +216,15 @@
           zxingReader = new window.ZXing.BrowserMultiFormatReader(hints);
           zxingReader.decodeFromVideoElementContinuously(video, function (result, err) {
             if (done) return;
-            if (result && result.getText) finish(String(result.getText()).replace(/\D/g, ''));
+            frames++;
+            if (result && result.getText) { finish(String(result.getText()).replace(/\D/g, '')); return; }
+            misses++;
+            if (misses % 15 === 0) {
+              setDiag('zxing · ' + frames + ' frames · ' + ((err && err.name) || 'no code found yet'));
+            }
           });
         } catch (e) {
+          setDiag('zxing · failed to start: ' + (e && e.message || e));
           fail(new Error('Scanner could not start.'));
         }
       }
