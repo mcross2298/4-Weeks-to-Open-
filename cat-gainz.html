@@ -401,6 +401,15 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 <script src="mc-card-actions.js"></script>
 <script src="program-manager.js"></script>
 <script src="mc-nav.js"></script>
+<!-- Volume II Phase 5 / Initiative 07 -- mc-resume.js's own header says it
+     belongs on every cat-*.html page; was only on 3 of 13. This is the only
+     Phase 5 parity addition on this page: cat-gainz.html is a pure link-out
+     index (every card is a <a class="plan-card"> to a different page, e.g.
+     mens-lean-bulk.html) with no exercise cards of its own to render, so
+     it's excluded from the mc-setlog.js-triggered module contract in
+     tools/check-script-manifest.py (NOT_ACTUALLY_WORKOUT_PAGES) rather than
+     given nine modules with nothing to attach to. -->
+<script src="mc-resume.js"></script>
 <script src="mc-haptics.js"></script>
 <script src="mc-muscle-map.js"></script>
 <script src="mc-readiness.js"></script>

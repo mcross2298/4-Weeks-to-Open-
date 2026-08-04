@@ -31,6 +31,28 @@ Usage:
   python3 tools/check-script-manifest.py            # human report
   python3 tools/check-script-manifest.py --check    # CI: exit 1 on any drift
   python3 tools/check-script-manifest.py --list      # show families + members
+
+--------------------------------------------------------------------------
+CAPABILITY CONTRACT (Volume II Phase 5 / Initiative 07 — "Module Parity")
+
+The FAMILIES check above only ever compares a page against its own filename
+clones — a page that's unique by design (cat-pmc.html, run-workout.html, ...)
+is exempt from every check in the whole suite. That exemption is the audit's
+own stated root cause of D-1: the substitute picker (mc-card-actions.js) was
+on 8 such pages with NO repaint implementation reachable at all (neither
+inline nor via mc-replace.js) — a trainee would swap an exercise, see it
+apply, reload, and lose it silently, while it sat correctly in localStorage
+the whole time. Coverage of the ten modules below ranged 39-78 of 79 pages,
+decided entirely by which page a trainee happened to open, not by any
+declared requirement.
+
+REQUIRED_MODULES below is that declared requirement: any page that loads
+mc-setlog.js (the working definition of "this is a workout page" — it's
+the module that renders the per-set weight/reps logger under every exercise
+card) MUST also load every module in the list. No exemption for "unique by
+design" — capability grouping has none, which is the point; a page that
+needs its own exemption from a real requirement needs the requirement
+questioned, not the page quietly carved out.
 """
 
 import argparse
@@ -70,6 +92,77 @@ FAMILIES = {
     "instructions":  r"^[a-z0-9]+-instructions\.html$",
     "kitchen-sink":  r"^kitchen-sink(-s\d+)?\.html$",
 }
+
+
+# The capability contract itself: any page loading mc-setlog.js must load
+# every one of these too. mc-setlog.js is the trigger, not a member of the
+# list — it's the "is this a workout page" test, not part of what parity
+# means once that test passes.
+#
+# mc-rep-progress.js shipped fleet-wide in this same phase (Volume II Phase
+# 5, owner decision via AskUserQuestion) rather than staying an accepted
+# 39/79 inconsistency — it degrades safely wherever it was missing (no
+# error, just no trend line), so bringing it to parity here is a real,
+# deliberate product call, not a silent bundle-in.
+REQUIRED_MODULES = [
+    "mc-suggest.js",
+    "mc-summary.js",
+    "mc-card-actions.js",
+    "mc-cues.js",
+    "mc-superset-hop.js",
+    "mc-finish.js",
+    "mc-live-tracker.js",
+    "mc-timer.js",
+    "mc-replace.js",
+    "mc-rep-progress.js",
+]
+CAPABILITY_TRIGGER = "mc-setlog.js"
+
+# Three pages load mc-setlog.js without being workout pages in any sense the
+# contract cares about — verified, not assumed: none renders a single
+# .ex-card/.ss-card, and none calls mc-setlog.js's own exported API
+# (window.MCSetlogUtil never appears in any of the three). workout-logs.html
+# reads the mc_setlog_v1 localStorage KEY directly for its own history
+# display — it needs the STORE mc-setlog.js writes to, not the RENDERING
+# code mc-setlog.js loads to provide; mc-cardio.html doesn't reference
+# setlog/mcl anything at all. cat-gainz.html is a pure link-out index page
+# (every card is a <a class="plan-card"> to a DIFFERENT page, e.g.
+# mens-lean-bulk.html) carrying a full dead "WAVE3-SETLOG MODULE" script
+# block — a page-local, hand-rolled duplicate of mc-setlog.js's own
+# set-logging (its own saveSet/checkSet/buildRows, keyed on the identical
+# mc_setlog_v1 store) that operates on '.ex-card[data-id]' selectors that
+# never exist anywhere in this page's DOM, since it never renders exercise
+# cards at all — confirmed a separate, real finding (a third duplicate-
+# implementation defect, this time for set-logging, not scoped to Phase 5)
+# and left alone rather than silently absorbed into this phase's declared
+# scope. Loading the other nine required modules on any of these three pages
+# would find no matching DOM and do nothing — nine more script requests
+# with nothing to attach to, working against this same phase's sibling
+# Initiative 09 ("Offline Diet") cost-consciousness for no real behavior.
+# This is NOT the family-based blanket exemption D-1's root cause describes
+# (a page that DOES render exercise cards, wrongly carved out of every check
+# by matching no clone family) — it's three pages verified to not render
+# exercise cards at all, correctly out of scope for a contract about
+# exercise-card modules.
+NOT_ACTUALLY_WORKOUT_PAGES = {"workout-logs.html", "mc-cardio.html", "cat-gainz.html"}
+
+
+def check_capability_contract():
+    problems = []
+    pages = sorted(glob.glob("*.html"))
+    workout_pages = [
+        f for f in pages
+        if CAPABILITY_TRIGGER in manifest(ROOT / f) and f not in NOT_ACTUALLY_WORKOUT_PAGES
+    ]
+    for f in workout_pages:
+        loaded = set(manifest(ROOT / f))
+        missing = [m for m in REQUIRED_MODULES if m not in loaded]
+        if missing:
+            problems.append(
+                f"[capability] {f} loads {CAPABILITY_TRIGGER} (a workout page) but is "
+                f"missing: {', '.join(missing)}"
+            )
+    return problems, len(workout_pages)
 
 
 def manifest(path):
@@ -145,13 +238,24 @@ def main():
     print("Script-manifest families:")
     print("\n".join(summary))
 
+    cap_problems, cap_count = check_capability_contract()
+    print(f"\nCapability contract: {cap_count} page(s) load {CAPABILITY_TRIGGER} "
+          f"(workout pages), checked against {len(REQUIRED_MODULES)} required module(s).")
+
     if problems:
         print("\nSCRIPT-MANIFEST DRIFT:\n")
         print("\n\n".join(problems))
-        if args.check:
-            sys.exit(1)
     else:
         print("\nAll declared clone families share one manifest — no drift.")
+
+    if cap_problems:
+        print("\nCAPABILITY CONTRACT VIOLATIONS:\n")
+        print("\n".join(cap_problems))
+    else:
+        print("Every workout page carries the full required module set — no gaps.")
+
+    if (problems or cap_problems) and args.check:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
