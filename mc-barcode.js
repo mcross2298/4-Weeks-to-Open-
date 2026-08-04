@@ -134,10 +134,18 @@
       navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
         .then(function (s) {
           stream = s; video.srcObject = s;
-          return video.play().catch(function () {});
-        })
-        .then(function () {
-          if ('BarcodeDetector' in window) return runNative();
+          if ('BarcodeDetector' in window) return video.play().catch(function () {}).then(runNative);
+          // ZXing's decodeFromVideoElementContinuously() internally waits for
+          // the video element's native 'playing' event before it ever enters
+          // its decode loop (playVideoOnLoad -> tryPlayVideo). If *we* already
+          // called and awaited video.play() before handing the element off —
+          // which the native-engine branch above needs — that event already
+          // fired in the past; ZXing's own play attempt then sees the video
+          // already playing, no-ops, and no new 'playing' event ever comes.
+          // The wait promise just hangs forever and decodeContinuously() is
+          // never reached, no matter how long the camera points at a code.
+          // Leaving the video unplayed here lets ZXing's own play call be the
+          // one that actually fires the event it's listening for.
           setDiag('loading zxing fallback…');
           return loadZXing().then(runZXing, function (err) {
             setDiag('zxing library failed to load: ' + (err && err.message || err));
