@@ -66,6 +66,18 @@ DENY_DIRS = {"tools", "supabase", "templates", ".github", ".git"}
 # network-first-with-cache-fallback strategy (see module docstring).
 EAGER_HTML = {"index.html", "dashboard.html"}
 
+# The M6 eager/lazy split above only ever applied to .html — every top-level
+# .css/.js file was swept into the eager precache unconditionally, with no
+# equivalent "only some pages need this" escape hatch (Volume II Phase 4 /
+# Initiative 09 finding). conditioning-elite.css is a real ~120 KB asset
+# used by exactly the 9 conditioning workout pages (each links it directly;
+# nothing else references it), so every OTHER install was force-downloading
+# it at install time for a page it would very possibly never open. Same fix
+# as EAGER_HTML, just for a non-HTML asset: still a real deployed file
+# (fetched and cached on first visit like any lazy page), just not shipped
+# to every device on day one.
+LAZY_ASSETS = {"conditioning-elite.css"}
+
 
 def collect_urls(root, base):
     # RELATIVE URLs ('./x') resolve against the SW's own location, so the same
@@ -79,6 +91,8 @@ def collect_urls(root, base):
             continue
         if p.suffix == ".html" and p.name not in EAGER_HTML:
             continue  # lazy page — not precached at install (M6)
+        if p.name in LAZY_ASSETS:
+            continue  # lazy asset — same idea as M6, for a non-HTML file
         if p.suffix in INCLUDE_EXT or p.name in INCLUDE_FILES:
             urls.append("./" + p.name)
     return urls

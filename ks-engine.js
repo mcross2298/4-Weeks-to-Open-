@@ -13,7 +13,6 @@
    no 10s warning cue). makeRestTimer stays per-page/per-engine by convention
    (see mc-timer.js's own header comment). */
 
-function makeRestTimer(restStr,exerciseName){const secs=TMR.parseSeconds(restStr);if(!secs)return'<span class="ex-sets" style="opacity:0.5">⏱️ '+restStr+'</span>';const label=restStr;return'<span class="rest-timer idle" data-rest="'+restStr+'" data-label="'+label+'" onclick="buildTimerFloat();TMR.toggle(this,'+secs+',\''+exerciseName.replace(/'/g,"\'").substring(0,30)+'...\')" title="Tap to start rest timer"><span class="rest-timer-icon">⏱️</span><span class="rest-timer-label">'+label+'</span></span>';}
 buildTimerFloat();
 
 // ── PROGRAM DATA + CONFIG (per page, via window.DATA / window.KS_CFG) ──

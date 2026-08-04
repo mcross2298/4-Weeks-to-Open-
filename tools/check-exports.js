@@ -118,7 +118,6 @@ const BASELINE = {
   'mc-wrapped.js': [],
   'mm-data.js': ['MM_DATA'],
   'mm-engine.js': ['MM'],
-  'pmc-data.js': [],
   'pmc-s7-data.js': ['PMC_S7'],
   'program-manager.js': ['MC_PM', 'MC_PM_PUBLISH', '__mcProgramManager'],
   'program-overrides.js': ['MC_PO', 'MC_SCAN', '__mcProgOverrides'],

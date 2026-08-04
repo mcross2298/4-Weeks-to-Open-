@@ -163,6 +163,10 @@ html[data-theme="light"] .wtb-label{color:#b91c1c;}
 <script src="mc-haptics.js"></script>
 <script src="mm-data.js"></script>
 <script src="mm-engine.js"></script>
+<!-- CI initiative roadmap Volume II Phase 4 / Initiative 06 — mc-replace.js
+     re-paints saved exercise swaps; mm-engine.js's render() calls its
+     MC_REPLACE.apply() hook directly (see mc-replace.js's own comment). -->
+<script src="mc-replace.js"></script>
 <script>MM.init('p2');</script>
 
 <div style="max-width:680px;margin:0 auto;" id="programSummary"></div>

@@ -58,15 +58,6 @@
     return s;
   }
 
-  function makeRestTimer(restStr, exName){
-    var secs = TMR.parseSeconds(restStr);
-    if(!secs) return '<span class="ex-sets" style="opacity:0.5">⏱️ '+esc(restStr)+'</span>';
-    return '<span class="rest-timer idle" data-rest="'+esc(restStr)+'" data-label="'+esc(restStr)+'" '+
-      'onclick="buildTimerFloat();TMR.toggle(this,'+secs+',\''+esc(exName).substring(0,30)+'...\')" '+
-      'title="Tap to start rest timer">'+
-      '<span class="rest-timer-icon">⏱️</span>'+
-      '<span class="rest-timer-label">'+esc(restStr)+'</span></span>';
-  }
 
   /* ─────────────────────────────────────────────────
      RENDER EXERCISE CARD
@@ -229,7 +220,11 @@
 
     bindEditable();
     buildTimerFloat();
-    applyReplacements();
+    // MC_REPLACE.apply() (mc-replace.js), not a local render()-wrap: this
+    // render() is IIFE-scoped, not global, so mc-replace.js's usual
+    // "wrap window.render" trick can't find it — see mc-replace.js's own
+    // comment on window.MC_REPLACE.
+    if (window.MC_REPLACE) MC_REPLACE.apply();
   }
 
   /* ─────────────────────────────────────────────────
@@ -258,33 +253,6 @@
         input.addEventListener("blur",save);
         input.addEventListener("keydown",function(ev){ if(ev.key==="Enter") input.blur(); });
       });
-    });
-  }
-
-  /* ─────────────────────────────────────────────────
-     REPLACEMENT BADGE (existing mc-replace.js compat)
-  ───────────────────────────────────────────────── */
-  function applyReplacements(){
-    var _PAGE_ID = location.pathname.split('/').pop().split('?')[0];
-    var KEY = 'mc_replacements|'+_PAGE_ID;
-    var replacements = JSON.parse(localStorage.getItem(KEY)||'{}');
-    if(!Object.keys(replacements).length) return;
-    document.querySelectorAll('.ex-card').forEach(function(card){
-      var nameEl = card.querySelector('.ex-name');
-      if(!nameEl) return;
-      var orig = nameEl.textContent.trim();
-      var rep = replacements[orig.toLowerCase()];
-      if(rep){
-        nameEl.textContent = rep;
-        nameEl.style.color = '#22d3ee';
-        if(!card.querySelector('.replaced-badge')){
-          var b = document.createElement('span');
-          b.className='replaced-badge';
-          b.style.cssText='font-size:11px;font-weight:900;color:#22d3ee;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.25);border-radius:4px;padding:2px 5px;margin-left:6px;letter-spacing:0.06em;vertical-align:middle;';
-          b.textContent='REPLACED';
-          nameEl.parentNode.insertBefore(b, nameEl.nextSibling);
-        }
-      }
     });
   }
 
