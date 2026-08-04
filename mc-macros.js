@@ -1127,7 +1127,7 @@
         if (it) {
           openFacts(foodFromItem({ name: it.name, brand: it.brand, basis: it.basis, servingLabel: it.servingLabel, grams: it.grams, kcal: it.kcal, p: it.p, f: it.f, c: it.c, nutr: it.nutr, source: 'barcode', code: it.code }), {});
         } else {
-          openManual({ source: 'barcode', note: 'No match for barcode ' + code + '. Enter its macros manually.' });
+          openManual({ source: 'barcode', barcode: code, note: 'No match for barcode ' + code + '. Enter its macros manually.' });
         }
       }).catch(function () { s.close(); openManual({ source: 'barcode', note: 'Lookup failed (offline?). Enter macros manually.' }); });
     }).catch(function (err) {
@@ -1142,6 +1142,17 @@
   function openManual(prefill) {
     prefill = prefill || {};
     var s = sheet('Manual entry', prefill.note || ('Adding to ' + prettyDay(selKey) + ' · ' + timeLabel(addSlotMs || defaultSlot())));
+    // A scanned barcode with no database match is exactly the gap Open Food
+    // Facts' own crowdsourced model is built to close — send the trainee to
+    // OFF's own add-product flow (pre-filled with the barcode) rather than us
+    // holding OFF write credentials and submitting on a shared account.
+    if (prefill.source === 'barcode' && prefill.barcode) {
+      var offRow = el('div', 'nt-off-add');
+      offRow.innerHTML = 'Not in the database yet? ' +
+        '<a href="https://world.openfoodfacts.org/cgi/product.pl?type=add&code=' + encodeURIComponent(prefill.barcode) +
+        '" target="_blank" rel="noopener">Add it to Open Food Facts →</a>';
+      s.sh.appendChild(offRow);
+    }
     var form = el('div', 'nt-form');
     form.innerHTML =
       '<label class="nt-field"><span>Food name</span><input id="mName" type="text" value="' + esc(prefill.name || '') + '" placeholder="Ribeye steak"></label>' +
@@ -1614,6 +1625,9 @@
         'text-decoration:underline;cursor:pointer;font-family:inherit;}' +
       '.nt-results{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto;}' +
       '.nt-results-msg{font-size:13px;color:var(--muted2);text-align:center;padding:18px;}' +
+      '.nt-off-add{font-size:13px;color:var(--muted2);background:var(--surface);border:1px solid var(--border);' +
+        'border-radius:12px;padding:11px 13px;margin-bottom:14px;}' +
+      '.nt-off-add a{color:var(--gold);font-weight:800;text-decoration:none;}' +
       '.nt-result{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);' +
         'border-radius:12px;padding:11px 13px;cursor:pointer;}' +
       '.nt-result-main{flex:1;min-width:0;}' +
