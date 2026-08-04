@@ -118,6 +118,13 @@ jobs:
         # rather than left to review.
         run: node tools/check-one-timer.js
 
+      - name: Single-implementation check (shared functions must exist exactly once — Volume II Phase 4)
+        # makeRestTimer had 6 behaviorally distinct bodies across 21 sites,
+        # applyReplacements had 5, before Volume II Phase 4 collapsed them
+        # onto mc-timer.js/mc-replace.js. This is the gate that stops a new
+        # page-local copy of either from being reintroduced silently.
+        run: node tools/check-single-impl.js
+
       - name: Market-extraction leak check (content-manifest.json)
         run: python3 tools/build-market.py --check
 

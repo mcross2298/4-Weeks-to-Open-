@@ -875,12 +875,6 @@ function renderSplitDetail(){
 
 buildTimerFloat();
 
-function makeRestTimer(r,n){
-  const s=TMR.parseSeconds(r);
-  if(!s)return `<span class="ex-sets" style="opacity:0.5">⏱️ ${r}</span>`;
-  const safe=n.replace(/'/g,"\\'").substring(0,30);
-  return `<span class="rest-timer idle" data-rest="${r}" data-label="${r}" onclick="TMR.toggle(this,${s},'${safe}')" title="Tap to start rest timer"><span class="rest-timer-icon">⏱️</span><span class="rest-timer-label">${r}</span></span>`;
-}
 
 // ── STATE: vars declared in dashboard section above ──
 

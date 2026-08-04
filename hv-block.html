@@ -386,15 +386,6 @@ function amrapToInfinity(s){
   return s;
 }
 
-function makeRestTimer(restStr, exName){
-  const secs = TMR.parseSeconds(restStr);
-  if(!secs) return '<span class="ex-sets" style="opacity:0.5">⏱️ '+esc(restStr)+'</span>';
-  return '<span class="rest-timer idle" data-rest="'+esc(restStr)+'" data-label="'+esc(restStr)+'" '+
-    'onclick="buildTimerFloat();TMR.toggle(this,'+secs+',\''+esc(exName).substring(0,30)+'...\')" '+
-    'title="Tap to start rest timer">'+
-    '<span class="rest-timer-icon">⏱️</span>'+
-    '<span class="rest-timer-label">'+esc(restStr)+'</span></span>';
-}
 
 /* ─────────────────────────────────────────────────
    RENDER EXERCISE CARD
@@ -522,7 +513,6 @@ function render(){
 
   bindEditable();
   buildTimerFloat();
-  applyReplacements();
 }
 
 /* ─────────────────────────────────────────────────
@@ -552,32 +542,6 @@ function bindEditable(){
   });
 }
 
-/* ─────────────────────────────────────────────────
-   REPLACEMENT BADGE (existing mc-replace.js compat)
-───────────────────────────────────────────────── */
-function applyReplacements(){
-  const _PAGE_ID = location.pathname.split('/').pop().split('?')[0];
-  const KEY = 'mc_replacements|'+_PAGE_ID;
-  const replacements = JSON.parse(localStorage.getItem(KEY)||'{}');
-  if(!Object.keys(replacements).length) return;
-  document.querySelectorAll('.ex-card').forEach(card=>{
-    const nameEl = card.querySelector('.ex-name');
-    if(!nameEl) return;
-    const orig = nameEl.textContent.trim();
-    const rep = replacements[orig.toLowerCase()];
-    if(rep){
-      nameEl.textContent = rep;
-      nameEl.style.color = '#22d3ee';
-      if(!card.querySelector('.replaced-badge')){
-        const b = document.createElement('span');
-        b.className='replaced-badge';
-        b.style.cssText='font-size:11px;font-weight:900;color:#22d3ee;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.25);border-radius:4px;padding:2px 5px;margin-left:6px;letter-spacing:0.06em;vertical-align:middle;';
-        b.textContent='REPLACED';
-        nameEl.parentNode.insertBefore(b, nameEl.nextSibling);
-      }
-    }
-  });
-}
 
 buildTimerFloat();
 render();
@@ -585,6 +549,13 @@ if(typeof updateProgress!=="undefined") updateProgress();
 
 </script>
 
+<!-- Replace-exercise re-paint (CI initiative roadmap Volume II Phase 4 /
+     Initiative 06 — collapsed the page-local applyReplacements() copy onto
+     mc-replace.js, which self-wires the same render()-wrap +
+     DOMContentLoaded repaint pattern the removed copy used, PLUS also
+     merges mc_replacements_global and the .ex-item/.lift-card/.lift-name
+     selectors the removed copy didn't support. -->
+<script src="mc-replace.js"></script>
 <script src="mc-strain.js"></script>
 <script src="mc-finish.js"></script>
 <script src="mc-supabase.js"></script>

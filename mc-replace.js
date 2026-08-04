@@ -72,4 +72,11 @@
   // NOTE: "Replace exercise" is now triggered from the meatball (⋮) menu in
   // mc-card-actions.js (Phase 1 consolidation). applyReplacements() above is
   // kept so previously saved replacements still render with their badge.
+
+  // Public hook (Volume II Phase 4 / Initiative 06) for an engine whose own
+  // `render` is IIFE-scoped rather than global (mm-engine.js — window.MM.init
+  // is the only export) — the wrap above can't find that render to hook, so
+  // such an engine calls MC_REPLACE.apply() directly from inside its own
+  // render() instead, same as this page's own DOMContentLoaded pass does.
+  window.MC_REPLACE = { apply: applyReplacements };
 })();

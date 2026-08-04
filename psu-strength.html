@@ -218,15 +218,6 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:40px;}
 <script>// ── TIMER ENGINE ──
 buildTimerFloat();
 
-function makeRestTimer(r, n) {
-  var s = TMR.parseSeconds(r);
-  if (!s) return '<span style="opacity:0.5">' + r + '</span>';
-  var nm = (n||'').substring(0,25).replace(/['"/\\]/g,'');
-  return '<span class="rest-timer idle" data-rest="' + r + '" ' +
-    'onclick="buildTimerFloat();TMR.toggle(this,' + s + ',&quot;' + nm + '&quot;)" ' +
-    'title="Tap to start">' +
-    '<span class="rest-timer-label">' + r + '</span></span>';
-}
 
 
 const PROGRAM = {

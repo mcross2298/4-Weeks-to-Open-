@@ -304,7 +304,12 @@ html[data-theme="light"] .workout-back-btn{color:#7c3aed;}
 // ══════════════════════════════════════════════════════════════
 
 /**
- * pmc-data.js — Single source of truth for all PMC workout data
+ * PMC workout data, inline. Formerly duplicated the header of pmc-data.js
+ * (a 918-line file loaded by zero pages, and shipped in the precache
+ * anyway) — that file was dead weight, not a real second copy anything
+ * read from; retired in the CI initiative roadmap Volume II Phase 4 /
+ * Initiative 06 audit. This page's own inline data below is what actually
+ * renders.
  * 7 splits · 30 workouts · Weeks 1–2 original · Weeks 3–4 confusion swaps
  */
 
@@ -1394,12 +1399,6 @@ function renderSplitDetail(){
 
 buildTimerFloat();
 
-function makeRestTimer(r,n){
-  const s=TMR.parseSeconds(r);
-  if(!s)return `<span class="ex-sets" style="opacity:0.5">⏱️ ${r}</span>`;
-  const safe=n.replace(/'/g,"\\'").substring(0,30);
-  return `<span class="rest-timer idle" data-rest="${r}" data-label="${r}" onclick="TMR.toggle(this,${s},'${safe}')" title="Tap to start rest timer"><span class="rest-timer-icon">⏱️</span><span class="rest-timer-label">${r}</span></span>`;
-}
 
 // ── STATE: vars declared in dashboard section above ──
 

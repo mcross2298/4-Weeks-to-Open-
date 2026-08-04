@@ -87,6 +87,7 @@ node tools/validate-programs.js        # multi-week intensifier coverage (mm-p1/
 node tools/check-exports.js            # global-namespace convention (MC_SNAKE / MCPascal)
 node tools/check-program-data.js       # note-field + day-type vocabulary, fleet-wide
 node tools/check-one-timer.js          # no orphan/duplicate/missing rest-timer implementation
+node tools/check-single-impl.js        # declared shared functions exist exactly once tree-wide
 python3 tools/build-market.py --check  # no licensed content leaks into the Rolodex build
 ```
 
@@ -375,6 +376,38 @@ one parses — classic `<script>` tags share one global lexical environment),
 or a page whose own `makeRestTimer()`/`makeRT()` emits an
 `onclick="...TMR.toggle(...)"` chip while loading neither `mc-timer.js` nor
 a local `TMR` (every tap would throw `TMR is not defined`).
+
+---
+
+## Single-implementation functions (`tools/check-single-impl.js`)
+
+**Permanent rule.** `TMR` itself isn't the only function that drifted into
+per-page clones — `makeRestTimer` (the helper that renders a `.rest-timer`
+chip) had **6 behaviorally distinct bodies across 21 sites**, and
+`applyReplacements` (re-paints saved exercise swaps) had **5**, before the
+CI initiative roadmap Volume II Phase 4 audit collapsed both onto
+`mc-timer.js` / `mc-replace.js`. Two of the `applyReplacements` copies never
+read `mc_replacements_global` at all — a swap made from the meatball menu
+(which defaults to that key) silently never repainted on those pages. Every
+`makeRestTimer` copy's apostrophe handling was broken (D-3): the plain
+`.replace(/'/g,"\'")` sites were a no-op in a double-quoted JS string, and
+the two `esc()`-based sites *looked* safer but had the identical live bug
+through a different door — verified by execution — an HTML attribute's
+`&#39;` entity decodes back to a raw `'` before the `onclick` string is
+parsed as JS, so the string literal still breaks. Only a real
+backslash-escaped JS string literal survives that decode step correctly;
+see `_mcEscRestTimerJsArg()` in `mc-timer.js`.
+
+`tools/check-single-impl.js` declares a list of function names
+(`makeRestTimer`, `applyReplacements`) that must exist **exactly once**
+tree-wide and fails CI the moment a second declaration of any of them
+appears anywhere — including a byte-identical one, since a duplicate that
+matches today is exactly how six divergent variants came to exist in the
+first place. An engine whose own `render()` is IIFE-scoped rather than
+global (`mm-engine.js`) can't rely on `mc-replace.js`'s usual "wrap
+`window.render`" trick, so it calls `mc-replace.js`'s exposed
+`window.MC_REPLACE.apply()` hook directly instead — see that file's own
+comment for when to use which.
 
 ---
 

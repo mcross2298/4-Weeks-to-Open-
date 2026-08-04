@@ -1,8 +1,21 @@
 /* ==========================================================================
    mc-timer.js — shared rest-timer engine (extracted from the per-page copy)
-   Globals kept: TMR, buildTimerFloat, makeRestTimer stays per-page,
-   updateProgress, addTimerPresets — mc-setlog.js / inline onclick handlers
-   all keep working unmodified.
+   Globals kept: TMR, buildTimerFloat, makeRestTimer, updateProgress,
+   addTimerPresets — mc-setlog.js / inline onclick handlers all keep
+   working unmodified.
+
+   CI initiative roadmap Volume II Phase 4 / Initiative 06 ("The Render
+   Contract") — makeRestTimer USED to be per-page by explicit convention
+   (this comment used to say so). Six behaviorally distinct copies existed
+   across 21 sites, and every copy's apostrophe handling was actually broken
+   (D-3): the plain sites used `.replace(/'/g,"\'")`, a no-op in a
+   double-quoted JS string; the two esc()-based sites (former hv-block.html /
+   mm-engine.js copies) looked safer but had the SAME live bug through a
+   different door — verified by execution — an HTML attribute's `&#39;`
+   entity is decoded back to a raw `'` by the browser BEFORE the onclick
+   string is parsed as JS, so the string literal still breaks. Only a real
+   backslash-escaped JS string literal survives that decode step correctly.
+   See _mcEscRestTimerJsArg() below.
    ========================================================================== */
 // ── cue preferences (mc_prefs_v1) ──
 const MC_PREFS = {
@@ -101,6 +114,47 @@ function mcTimerSpeakSecs(secs) {
   if (m && s) return m + (m === 1 ? ' minute ' : ' minutes ') + s + ' seconds';
   if (m) return m + (m === 1 ? ' minute' : ' minutes');
   return s + ' seconds';
+}
+
+// Safe for HTML text/attribute content (data-rest, data-label, the visible
+// label span) — this content is only ever read back via the DOM (which
+// auto-decodes entities), never re-parsed as JS, so a full HTML-entity
+// escape is both correct and sufficient here.
+function _mcEscRestTimerAttr(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+// Safe to embed inside the single-quoted JS string literal argument passed
+// to TMR.toggle() within an onclick="..." (double-quoted) HTML attribute —
+// see the file header for why HTML-entity-escaping the apostrophe here does
+// NOT work. A real backslash-escaped apostrophe survives HTML-attribute
+// decoding correctly, since a decoded `\'` is still a valid escaped
+// apostrophe inside the resulting JS string. `&`/`<`/`>`/`"` are harmless
+// either way inside a single-quoted JS string, but still HTML-escaped here
+// so a name containing `"` can't prematurely close the outer onclick
+// attribute (which is double-quoted).
+function _mcEscRestTimerJsArg(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    .replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+// Renders a tappable rest-timer chip: `<span class="rest-timer idle" ...>`
+// wired to TMR.toggle(). Always ensures #timerFloat exists first
+// (buildTimerFloat() is idempotent) — three pages' former local copies
+// omitted that call, which meant the float those pages depend on might
+// never get constructed (D-4).
+function makeRestTimer(restStr, exerciseName) {
+  var secs = TMR.parseSeconds(restStr);
+  var label = _mcEscRestTimerAttr(restStr);
+  if (!secs) return '<span class="ex-sets" style="opacity:0.5">⏱️ ' + label + '</span>';
+  var jsName = _mcEscRestTimerJsArg(String(exerciseName || '').substring(0, 30));
+  return '<span class="rest-timer idle" data-rest="' + label + '" data-label="' + label + '" ' +
+    'onclick="buildTimerFloat();TMR.toggle(this,' + secs + ',\'' + jsName + '...\')" ' +
+    'title="Tap to start rest timer">' +
+    '<span class="rest-timer-icon">⏱️</span>' +
+    '<span class="rest-timer-label">' + label + '</span>' +
+    '</span>';
 }
 
 const TMR = {
