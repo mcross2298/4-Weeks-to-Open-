@@ -112,7 +112,14 @@
   // ---- render -------------------------------------------------------------
   function render() {
     // Never show on an active workout view that happens to be a cat- page.
-    if (document.querySelector('.fw-bar')) return;
+    // Checks for real exercise cards, not '.fw-bar' (Volume II Phase 5 /
+    // Initiative 07 fix): mc-finish.js now loads on every cat-*.html page
+    // for capability-contract parity, and it injects '#fwBar' unconditionally
+    // on load regardless of whether the page has any exercise cards to
+    // finish — a split-picker LANDING view (no cards yet) always had a
+    // '.fw-bar' in the DOM once mc-finish.js loaded there, which silently
+    // suppressed this banner on every such page.
+    if (document.querySelector('.ex-card, .ss-card')) return;
 
     var a = readAct(), L = a.last;
     if (!isResumable(L)) return;
