@@ -114,10 +114,10 @@
     var secs = parseInt(rest, 10) || 0;
     if (!secs) return '';
     var label = secs >= 60 && secs % 60 === 0 ? (secs / 60) + ' min' : secs + ' sec';
-    return '<span class="rest-timer idle" data-rest="' + label + '" data-label="' + label + '" ' +
-      'onclick="buildTimerFloat();TMR.toggle(this,' + secs + ',\'' + esc(name).replace(/'/g, '') + '\')" ' +
+    return '<button type="button" class="rest-timer idle" data-rest="' + label + '" data-label="' + label + '" ' +
+      'data-secs="' + secs + '" data-name="' + esc(name) + '" ' +
       'title="Tap to start rest timer">' +
-      '<span class="rest-timer-icon">⏱️</span><span class="rest-timer-label">' + label + '</span></span>';
+      '<span class="rest-timer-icon">⏱️</span><span class="rest-timer-label">' + label + '</span></button>';
   }
 
   // --- intensifier rendering (same contract as run-workout.html) ----------

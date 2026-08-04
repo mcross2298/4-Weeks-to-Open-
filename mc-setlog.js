@@ -217,7 +217,8 @@
     var ck = row.querySelector('.mcl-ck');
     var w = row.querySelector('.mcl-w');
     if (ck.classList.contains('done')) {
-      ck.classList.remove('done'); ck.textContent = '☐'; row.classList.remove('done-row');
+      ck.classList.remove('done'); ck.textContent = '☐'; ck.setAttribute('aria-checked', 'false');
+      row.classList.remove('done-row');
       updateCount(card, exId);
       return;
     }
@@ -269,7 +270,8 @@
         });
       }
     } catch (e) {}
-    ck.classList.add('done'); ck.textContent = '✓'; row.classList.add('done-row');
+    ck.classList.add('done'); ck.textContent = '✓'; ck.setAttribute('aria-checked', 'true');
+    row.classList.add('done-row');
     // Light confirming tap on check.
     MC_HAPTICS.tap();
     updateHist(card, exId);
@@ -408,7 +410,8 @@
                 repsCellHtml +
                 '<div class="mcl-rpe' + (rpe ? ' set' : '') + '" data-rpe="' + rpe + '" ' +
                   'title="Rate of Perceived Exertion — tap to cycle, F = to failure">' + (rpe || '–') + '</div>' +
-                '<div class="mcl-ck set-check" data-sn="' + sn + '">☐</div>' +
+                '<button type="button" class="mcl-ck set-check" role="checkbox" aria-checked="false" ' +
+                  'aria-label="Set ' + sn + '" data-sn="' + sn + '">☐</button>' +
                 clusterRowHtml +
               '</div>';
     }
