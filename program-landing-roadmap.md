@@ -1,92 +1,58 @@
-# Program Landing & Split Alignment — roadmap (PL0–PL8)
+# Split-Page Alignment — roadmap (SP0–SP4)
 
-> **This is not a new design.** The design was settled in
-> [`program-landing-handoff.md`](program-landing-handoff.md) (2026-08-01, "Onyx"),
-> and the component that implements it — `mc-program-hero.js` /
-> `mc-program-hero.css` — is already built and shipping on two pages. This
-> roadmap covers **finishing the stalled rollout** and extending the same
-> two-section structure down to the split pages.
+> **Scope decision (2026-08-10): split pages only.** The 13 `cat-*.html`
+> program landing pages are **out of scope** and keep their current UI
+> untouched. An earlier revision of this file covered them as "Volume 1"
+> (PL0–PL4); that work is dropped, not deferred-with-a-date. The findings it
+> recorded are preserved below under *Landing-page findings (not being acted
+> on)* so they aren't lost if the decision is revisited.
 >
-> `program-landing-handoff.md` remains the design spec of record.
-> `Program Landing.dc.html` is the interactive comp it was written from.
-> Neither is superseded by this file.
+> Design reference: [`program-landing-handoff.md`](program-landing-handoff.md)
+> (2026-08-01, "Onyx"). `mc-program-hero.js` / `mc-program-hero.css` already
+> implement its hero; this roadmap adds a `split` variant rather than a new
+> visual language. Nothing visual is reopened.
 
 ---
 
 ## Objective
 
-Every program page in the app carries the same two sections, in the same
-order, rendered by the same components from the same data source:
+Every split page carries the same two sections in the same order, rendered by
+the same components from the same data:
 
 1. **Overview** — what this is, how long, how hard, who it's for
 2. **A list** — what it contains
 
-What "a list" means depends on the tier, and the tiers are real: a single
-workout does not contain days, so its list is its exercises.
+What "a list" means depends on the page's shape, and the shapes are real.
 
-| Tier | Pages | Section 1 | Section 2 |
-|---|---|---|---|
-| **Program landing** (`cat-*.html`) | 13 | Overview | the program's **splits** |
-| **Multi-day split** | 28 | Overview | the split's **days** |
-| **Single-session workout** | 29 | Overview | the session's **exercises** |
+| Tier | Pages | Section 2 lists |
+|---|---|---|
+| **Multi-day split** | 28 | the split's **days** |
+| **Single-session workout** | 29 | the session's **exercises** |
 
-**70 pages total.**
+**57 pages total.** Zero currently load `mc-program-hero.js`; zero carry a
+"Who this is for" block.
 
 ---
 
-## Fleet state (surveyed 2026-08-10)
+## Why the landing pages still matter even though they're out of scope
 
-### Tier 1 — program landings, 13 pages
+A split does not declare its parent program's identity — it **resolves** it.
+Name, tier label and accent all come from the parent's `mc-pm-data.js` entry,
+looked up via the split's `program` field. That is the mechanism preventing 57
+new copies of a colour from existing.
 
-| State | Pages | Count |
-|---|---|---|
-| **Onyx hero** — loads `mc-program-hero.js` | `cat-pmc`, `cat-strength` | 2 |
-| **Status strip only** — loads `mc-program-status.js` | `cat-gainz`, `cat-hv`, `cat-ks`, `cat-mc`, `cat-mm`, `cat-psu`, `cat-pump-new4`, `cat-stndr` | 8 |
-| **Neither** | `cat-custom`, `cat-faint`, `cat-ie` | 3 |
+So `mc-pm-data.js` remains a hard dependency. What's dropped is the work on
+the landing *pages*, not the program *data*.
 
-`mc-program-hero.js`'s own header already asserts the target state —
-"Consumed by every `cat-*.html` program entry page."
-
-### Tier 2/3 — split pages, 57 pages
-
-- **0 of 57** load `mc-program-hero.js`
-- **0 of 57** have a "Who this is for" block
-- **28** have day cards and/or week tabs (multi-day)
-- **29** have no day structure (single-session)
-
-The `mc-split1..5.html` pages carry week tabs but no day cards; they count as
-multi-day.
-
-### Drift the hand-passed config has already produced
-
-`cat-strength.html:1287` passes `accent: '#e11d48'`. `mc-pm-data.js` records
-`color: '#c9505a'` for the same program (`ss`). The hero therefore renders a
-different accent than the dashboard card for the same program.
-`tools/check-program-colors.js` holds `mc-pm-data.js`, `dashboard.html` and
-`mc-theme.js` in agreement but does not reach the `cat-*.html` hero mounts, so
-nothing caught it. The hand-passed `tagline` on the same page has likewise
-drifted from that program's `desc`.
-
-Splits are declared in **three** places per program — `mc-pm-data.js`, the
-page's own program-card anchors, and `MCProgramStatus.mount({splits:[…]})`:
-
-| Page | `mc-pm-data.js` | Page actually has |
-|---|---|---|
-| `cat-stndr.html` | `meta: '4 Programs'` | 5 program cards |
-| `cat-mc.html` | `meta: '5 Splits · 23 Workouts'` | 6 program links |
-| `cat-gainz.html` | `splits[]` — 4 entries | 8 cards, `mount()` lists 8 |
-
-`cat-stndr.html` is confirmed by reading: Weeks to Open, Push / Pull / Legs,
-Arnold Legacy, Legacy Prep, The Bro Split. Five, against a dashboard card
-reading four. The other two rows are flagged by the same check and must be
-confirmed individually — `splits` and `meta` may legitimately count phases
-rather than programs on some entries.
+One consequence worth stating plainly: the three confirmed accent drifts
+(below) stay live. Splits will render the correct data-file accent while their
+parent landing pages continue rendering a hand-typed one, so a program's
+landing and its splits may not match until the landings are addressed.
 
 ---
 
 ## The governing constraint: copy, not code
 
-The Overview section needs per-split metadata that mostly does not exist.
 Harvest survey across the 57 split pages:
 
 | Field | Harvestable today | Must be authored |
@@ -97,195 +63,208 @@ Harvest survey across the 57 split pages:
 | Tagline / subtitle | 8 | **49** |
 | "Who this is for" | 0 | **57** |
 
-That is ~106 pieces of copy carrying real programming judgment about who
-should run a given workout. It is the owner's to write, and it must not gate
-the structural work.
+~106 pieces of copy carrying real programming judgment about who should run a
+given workout. Owner-authored, and it must not gate the structural work.
 
-**Therefore: every section degrades gracefully.** A block whose data is
-absent does not render — no placeholder, no empty state, no "TBD". Structure
-ships in one pass; copy backfills per split at any pace and lights up
-automatically as it lands. This is a hard requirement on every component
-below, not a nicety.
+**Therefore: everything degrades gracefully**, with one carve-out found while
+building the samples:
 
-Program-level copy is in better shape: all 10 `mc-pm-data.js` entries already
-carry `desc` and `forWho`, so tier 1's Overview has real content on day one.
+- **Blocks omit.** A section whose data is absent does not render — no
+  placeholder, no empty state, no "TBD".
+- **Stat cells dash.** A three-cell stat strip cannot drop a cell without
+  leaving a 2-up grid that reads as a layout bug, and a strip whose cell count
+  varies per split would flicker. Missing stat values render an em dash in a
+  full-width strip.
+
+Copy backfills per split at any pace and lights up automatically.
 
 ---
 
 ## Architecture
 
-### Derived vs authored data
+### Derived vs authored
 
-The drift documented above happened because config was hand-typed on pages.
-The split registry must not repeat it, so its fields split in two:
+Hand-typed config is what produced every drift documented in this file, so the
+registry splits its fields in two:
 
-- **Derived** — `days`, `exerciseCount`, `kind`, `scheduleLabel`, `program`
-  (parent, from which `cat-*.html` links to it). Generated by a tool from the
-  real pages, never hand-edited, `--check`ed in CI.
+- **Derived** — `program`, `kind`, `cycles`, `days`, `trainingDays`,
+  `scheduleLabel`, `exerciseCount`, `variants[]`. Generated by
+  `tools/build-split-data.py` from the real pages, `--check`ed in CI, never
+  hand-edited. A value that disagrees with its page fails the build.
 - **Authored** — `tagline`, `forWho`, `level`, `duration`. Hand-written,
-  optional, absent by default.
+  optional, `null` by default, invisible while null.
 
-A generated field that disagrees with the page fails CI. An authored field
-that is missing renders nothing.
+### Schema corrections found while sampling
+
+Three changes against the first draft of this roadmap, all found by building
+real samples rather than reasoning about the schema:
+
+1. **`scheduleLabel` is per split, not per program.** Kitchen Sink's six splits
+   run six different schedules — `5-on 2-off`, `3-on 1-off 2-on`,
+   `5 Training + 2 Recovery`, `3-on 2-off`, `4-on 1-off 2-on`. A program-level
+   field cannot represent that.
+2. **`cycles` and `trainingDays` are per split too.** `kitchen-sink.html` runs
+   4 cycles / 5 training days; `kitchen-sink-s5.html` runs 5 cycles / 3
+   training days, in the same program.
+3. **Tier 3 needs `variants[]`.** `s3-chest-biceps.html` holds two workout
+   variants ("Drop Set Strength", "Volume Pairing"), each with its own
+   `chest` and `biceps` arrays — 18 exercises total, 9 per variant. A
+   single-session page is not always one list.
+
+### Page architectures the registry must absorb
+
+Four distinct shapes exist among the 57:
+
+- **Shared engine + per-page data** — the five `kitchen-sink*.html` pages
+  define `window.DATA` and `window.KS_CFG`, then load `ks-engine.js`. This is
+  already the target shape and the cheapest family to migrate; its `DATA`
+  schema is a good starting point for the registry.
+- **Inline day cards** — 23 pages with hand-written `.day-card` markup.
+- **Week-tab engines** — `mm-p1/p2/p3.html`, `mc-split1..5.html`.
+- **Self-contained program pages** — `cat-pmc.html` holds its splits and 30
+  workouts inline as `SPLITS` / `PMC_SPLITS` and renders swapped views, so its
+  split tier is a view rather than a file. `MCSplitList` must accept a passed
+  data array, not only a page scrape.
 
 ### Components
 
-- `mc-program-hero.js` — already exists. Gains an `id` form and a `split` variant.
-- `mc-split-list.js` — new. Renders section 2 for a split page: day cards for
-  `kind: 'multiday'`, exercise rows for `kind: 'session'`.
-- `mc-pm-data.js` — gains the five hero fields (PL0).
+- `mc-program-hero.js` — gains a `split` variant. Existing behaviour untouched.
+- `mc-split-list.js` — new. `multiday` mode renders day rows; `session` mode
+  renders exercise rows grouped by muscle with a variant selector.
 - `mc-split-data.js` — new registry keyed by page filename.
 - `tools/build-split-data.py` — generates the derived half; `--check` in CI.
 
 ---
 
-## Volume 1 — Program landings (tier 1, 13 pages)
+## Phases
 
-### PL0 — Extend the program schema
-Add `weeks`, `daysPerWeek`, `level`, `scheduleLabel`, `whatsInside[]` to every
-`mc-pm-data.js` entry. Values come from each program's existing page —
-`cat-strength.html` and `cat-pmc.html` already carry real ones in their mount
-calls and are lifted verbatim.
-
-Existing fields cover the rest: `color` → `accent`, `name` → `name`,
-`desc` → `tagline`, `forWho` → the Overview's qualification copy,
-`tier` → `tierLabel`, `id` → `iconKey`.
-
-Influencer entries stay inside `MARKET:STRIP influencer-progs`.
-
-*Gate:* `check-program-data.js`, `build-market.py --check`.
-
-### PL1 — Hero reads from the data file
-Give `MCProgramHero.mount()` an `id` form — `mount(el, { id: 'stndr' })`
-derives every field from `MC_PM_DATA`. The explicit-config form stays for
-`cat-custom.html`, which has no data entry.
-
-Migrate `cat-pmc.html` and `cat-strength.html` first. This is what corrects
-the accent drift, because the accent stops being typed on the page at all.
-
-*Gate:* both pages render unchanged but for the corrected accent.
-
-### PL2 — Roll out to the remaining 11 landings
-`<div id="programHero">` plus a one-line `mount({id})` per page. On the 8
-pages running `mc-program-status.js`, the hero's own Start/Resume CTA
-supersedes the strip — remove it rather than stacking two start affordances.
-`cat-custom`, `cat-faint`, `cat-ie` get the hero for the first time.
-
-Per-page inline `<style>` blocks (2,021–16,210 bytes each) are left alone;
-deduping them in the same pass makes the diff unreviewable.
-
-*Gate:* `check-script-manifest.py --check`, `apply-head-contract.py --check`, render smoke.
-
-### PL3 — CI gate for tier 1
-New `tools/check-program-landing.js` in `verify.yml`:
-1. every `cat-*.html` mounts `MCProgramHero` (allowlist for deliberate exceptions),
-2. no page hand-passes `accent`/`name`/`tagline` when an `id` is available,
-3. split counts agree across `mc-pm-data.js`, the page's cards, and any `mount({splits})`.
-
-Check 3 is what would have caught `cat-stndr`.
-
-*Gate:* fails on the pre-PL0 tree, passes on the post-PL2 tree.
-
-### PL4 — Correct the counts
-Fix what PL3 flags, once each is confirmed by reading its page.
-`cat-stndr.html` is confirmed: `'4 Programs'` → `'5 Programs'`.
-
-Two unrelated defects found during the survey, folded in here as they touch
-the same files:
-- `cat-stndr.html`'s `<title>` is mojibake — `STNDR â Programs`, a mangled em-dash.
-- 10 of 13 `cat-*.html` pages load Archivo/Manrope from `fonts.googleapis.com`. For an offline-first PWA whose service worker precaches the app shell, a blocking third-party font request is a cold-start risk. Self-host or accept the system fallback.
-
----
-
-## Volume 2 — Split pages (tiers 2 and 3, 57 pages)
-
-### PL5 — Split data layer
+### SP0 — Split data layer
 Create `mc-split-data.js` and `tools/build-split-data.py`.
 
 ```js
 window.MC_SPLIT_DATA = {
-  'bro-split.html': {
+  'kitchen-sink.html': {
     /* derived — generated, --check'd, never hand-edited */
-    program: 'stndr', kind: 'multiday', days: 6, exerciseCount: 0,
-    scheduleLabel: '5-on 2-off',
+    program:'ks', kind:'multiday', cycles:4, days:7, trainingDays:5,
+    scheduleLabel:'5-on 2-off', exerciseCount:null, variants:null,
     /* authored — optional, absent until written */
-    tagline: null, forWho: null, level: null, duration: null
+    tagline:null, forWho:null, level:null, duration:null
   }
 };
 ```
 
-`program` is resolved from which `cat-*.html` links to the page, so a split's
-accent and tier come from its parent's `mc-pm-data.js` entry — no per-split
-color is ever typed.
+`program` resolves from which `cat-*.html` links to the page, so accent and
+tier come from the parent's `mc-pm-data.js` entry — no per-split colour is
+ever typed.
 
 *Gate:* `build-split-data.py --check` reproduces the committed derived half byte-for-byte.
 
-### PL6 — Overview + day list on the 28 multi-day splits
-Mount `MCProgramHero` in its `split` variant, then `MCSplitList` in `multiday`
-mode. The 23 pages with existing `.day-card` markup keep their day cards —
-`MCSplitList` renders the section header, count and schedule label above what
-is already there rather than replacing working markup.
+### SP1 — Overview + day list · 28 multi-day pages
+Mount the hero's `split` variant, then `MCSplitList` in `multiday` mode. The
+23 pages with working `.day-card` markup keep their cards — the component
+renders the section header, count and schedule label above what already
+exists rather than replacing working markup.
 
-Every Overview block renders only the fields present. On day one most pages
-show name, day count and schedule label, and nothing else. That is the
-intended state, not an unfinished one.
+Most Overviews will show a name, a day count and a schedule label and nothing
+else on day one. That is the intended state.
 
-*Gate:* `check-script-manifest.py --check`, `apply-head-contract.py --check`, render smoke, `check-one-timer.js` (these pages carry rest timers).
+*Gate:* `check-script-manifest.py --check`, `apply-head-contract.py --check`, render smoke, `check-one-timer.js`.
 
-### PL7 — Overview + exercise list on the 29 single-session pages
-Same Overview. `MCSplitList` in `session` mode renders the exercise list
-instead of days — the honest analogue of a program list for a page that is
-itself one item in a program.
+### SP2 — Overview + exercise list · 29 single-session pages
+Same Overview. `MCSplitList` in `session` mode renders exercises grouped by
+muscle, with a variant selector where `variants.length > 1`.
 
-*Gate:* as PL6.
+*Gate:* as SP1.
 
-### PL8 — Extend the CI gate to all 70 pages
-`check-program-landing.js` grows to assert every program-tier page mounts the
-right components for its `kind`, that no page hand-passes derivable fields,
-and that `mc-split-data.js`'s derived half matches the tree.
+### SP3 — CI gate
+New `tools/check-split-pages.js` in `verify.yml`:
+1. every split page mounts the components matching its `kind`,
+2. no page hand-passes a field the registry can derive,
+3. `mc-split-data.js`'s derived half matches the tree.
 
-*Gate:* fails on the pre-PL5 tree, passes on the post-PL7 tree.
+*Gate:* fails on the pre-SP0 tree, passes on the post-SP2 tree.
+
+### SP4 — Content-integrity findings
+Surface what the alignment made visible, for an owner decision each:
+- `kitchen-sink-s5.html` runs 5 days, not the 7 the Weekly Layout Standard requires.
+- `kitchen-sink-s6.html` runs 6 training days against 1 rest, with no Active Rest day.
+- `kitchen-sink.html`'s `<title>` and `window.DATA.name` read "Everything **But** The Kitchen Sink" against the program's "Everything **Under** the Kitchen Sink".
+
+These are programming and copy calls, not code fixes. The Program list section
+makes each visible on the page for the first time.
 
 ---
 
 ## Out of scope
 
-- **Per-page inline `<style>` dedupe.** Real (95KB across 13 landings) but a separate concern; bundling it here makes every diff unreviewable.
-- **Authoring the ~106 copy fields.** Tracked separately; the graceful-degradation requirement exists so it never blocks a phase.
-- **Any visual decision.** Onyx as specified in `program-landing-handoff.md` is implemented as-is.
+- **The 13 `cat-*.html` landing pages.** Dropped by decision, 2026-08-10.
+- **Per-page inline `<style>` dedupe.** Real, but bundling it makes diffs unreviewable.
+- **Authoring the ~106 copy fields.** Graceful degradation exists so it never blocks a phase.
+- **Any visual decision.** Onyx as specified is implemented as-is.
+
+---
+
+## Landing-page findings (not being acted on)
+
+Recorded during the 2026-08-10 survey, preserved in case the scope decision is
+revisited. **No phase in this roadmap addresses these.**
+
+**Every page that hand-passes an accent has drifted from `mc-pm-data.js` — three for three:**
+
+| Page | Hand-passed | `mc-pm-data.js` |
+|---|---|---|
+| `cat-strength.html:1287` | `#e11d48` | `#c9505a` |
+| `cat-pmc.html:1884` | `#7F77DD` | `#8b7ff0` |
+| `cat-ks.html:356` | `#f59e0b` | `#e0a03c` |
+
+`tools/check-program-colors.js` holds `mc-pm-data.js`, `dashboard.html` and
+`mc-theme.js` in agreement but does not reach the `cat-*.html` mounts.
+
+**Split counts disagree across their three declaration sites** (`mc-pm-data.js`,
+the page's own cards, `MCProgramStatus.mount({splits})`): `cat-stndr.html`'s
+`meta` reads `'4 Programs'` against five actual cards (confirmed by reading);
+`cat-mc.html` and `cat-gainz.html` are flagged by the same check but
+unconfirmed — `splits` and `meta` may legitimately count phases.
+
+**`cat-ks.html` lists a program as one of its splits** —
+`{ title: 'Iron Engine', href: 'cat-ie.html' }` points at a tier-1 landing
+page, so split 2 of Kitchen Sink navigates to a different program's landing.
+This one does touch split scope: SP0 must decide whether the registry
+represents it as a deliberate cross-program reference or skips it.
+
+**Fleet state:** 2 pages on the Onyx hero (`cat-pmc`, `cat-strength`), 8 on the
+older `mc-program-status.js` strip, 3 on neither (`cat-custom`, `cat-faint`,
+`cat-ie`).
+
+**Two unrelated defects:** `cat-stndr.html`'s `<title>` is mojibake
+(`STNDR â Programs`); 10 of 13 `cat-*.html` pages load Archivo/Manrope from
+`fonts.googleapis.com`, a cold-start risk for an offline-first PWA.
 
 ---
 
 ## After this roadmap: STNDRD6: SHIFT
 
-SHIFT is a **workout split under the existing `stndr` program**, not a new
-program category. Once the roadmap lands it requires:
+SHIFT is a **workout split under the existing `stndr` program**. With landings
+out of scope it needs:
 
 1. the split's own workout page, per the 7-day and station-anchoring standards in `CLAUDE.md`,
 2. `python3 tools/apply-head-contract.py` to fit the canonical `<head>`,
-3. one program card on `cat-stndr.html`,
-4. `meta` `'5 Programs'` → `'6 Programs'` (after PL4's correction to 5),
-5. a `mc-split-data.js` entry — derived half generated by the tool, authored half optional.
+3. one program card on `cat-stndr.html` (a content edit, not a redesign),
+4. an `mc-split-data.js` entry — derived half generated, authored half optional.
 
-No `mc-pm-data.js` entry, no `dashboard.html` CSS block, no `PROGRAM_ICONS`
-entry — those are per-*program* and `stndr` already has all three. `stndr` is
-`tier: 'influencer'` inside `MARKET:STRIP influencer-progs`, and
+`stndr` is `tier: 'influencer'` inside `MARKET:STRIP influencer-progs`, and
 `cat-stndr.html` / `stndr-instructions.html` / `stndr-checkoff.js` are already
 in `content-manifest.json`'s `licensed` set, so SHIFT inherits the licensed-
 content gating without new markers. Any new page it adds must join that set.
 
-Because SHIFT lands after PL5–PL8, it gets the Overview and day list from the
-shared components with no bespoke page work — which is the point of doing the
-alignment first.
+Because SHIFT lands after SP0–SP2, it gets its Overview and day list from the
+shared components with no bespoke page work.
 
 ---
 
 ## Sequencing
 
-PL0 and PL1 precede PL2 deliberately: rolling out first and componentizing
-after is exactly how `cat-strength.html`'s accent drifted. PL3 lands with or
-before PL2 so the rollout is gated as it happens rather than audited
-afterward. Volume 2 depends on Volume 1 only for the hero's `id` form (PL1);
-PL5 can be built in parallel with PL2–PL4.
-
-Per `CLAUDE.md`, an `AskUserQuestion` gate precedes each volume.
+SP0 precedes SP1/SP2 — the registry is what stops the rollout from creating 57
+new hand-typed config sites. SP3 lands with or before SP2 so the rollout is
+gated as it happens. Per `CLAUDE.md`, an `AskUserQuestion` gate precedes each
+phase.
