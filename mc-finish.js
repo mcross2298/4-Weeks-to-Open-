@@ -98,6 +98,18 @@
     return t;
   }
   function fmtLb(n){ return Math.round(n).toLocaleString('en-US'); }
+  // Dynamic "1 sec" / "45 sec" / "1h 12m" duration text for the exit-dialog
+  // stats row — distinct from getDuration() above, whose coarser "<1 min"/"N
+  // min" format is a stored field on the mc_workout_log_v1 entry and must
+  // stay byte-stable for existing history readers.
+  function fmtElapsed(ms){
+    var s=Math.max(0,Math.round(ms/1000));
+    if(s<60)return s+' sec';
+    var m=Math.floor(s/60);
+    if(m<60)return m+' min';
+    var h=Math.floor(m/60);
+    return h+'h '+(m%60)+'m';
+  }
   // PR'd exercises with the best (heaviest) PR weight each.
   function prSpotlight(sets){
     var best={};
@@ -243,21 +255,24 @@
   // Workout Summary lives directly underneath it as the secondary one
   // (mc-summary.js appends its button into this bar right after fw-btn).
   var barHTML='<div class="fw-bar" id="fwBar">'+
-    '<button class="fw-btn" onclick="_FW.open()">Finish Workout ✓</button>'+
+    '<button class="fw-btn" onclick="_FW.open()">Finish / Exit</button>'+
     '<span class="fw-progress" id="fwProgress">0 / 0 sets</span>'+
     '</div>';
 
-  // Build modal HTML — this IS the "Workout Summary" pull-up: opening it
+  // Build modal HTML — this IS the exit-confirmation pull-up: opening it
   // (whether by tapping the bar button or via the auto-trigger above)
-  // already populates #fwSummary with the full recap below.
+  // already populates the Total time / Total sets stats below.
   var modalHTML='<div class="fw-modal-overlay" id="fwModal">'+
     '<div class="fw-modal">'+
-      '<div class="fw-modal-title">🏆 Finish Workout?</div>'+
-      '<div class="fw-modal-sub">This will save your session to Workout Logs.</div>'+
-      '<div class="fw-summary" id="fwSummary"></div>'+
-      '<div class="fw-modal-btns">'+
-        '<button class="fw-cancel" onclick="_FW.close()">Cancel</button>'+
-        '<button class="fw-confirm" onclick="_FW.confirm()">Log Workout</button>'+
+      '<div class="fw-modal-title">Finish and log workout?</div>'+
+      "<div class=\"fw-modal-sub\">Log your workout to complete it and track your progress. If you exit, your workout won't be recorded.</div>"+
+      '<div class="fw-stats-row">'+
+        '<div class="fw-stat-cell"><div class="fw-stat-val" id="fwStatTime">0 sec</div><div class="fw-stat-lbl">Total time</div></div>'+
+        '<div class="fw-stat-cell"><div class="fw-stat-val" id="fwStatSets">0 sets</div><div class="fw-stat-lbl">Total sets</div></div>'+
+      '</div>'+
+      '<div class="fw-modal-btns" id="fwModalBtns">'+
+        '<button class="fw-cancel" onclick="_FW.discard()">Exit &amp; discard</button>'+
+        '<button class="fw-confirm" onclick="_FW.confirm()">Log workout</button>'+
       '</div>'+
     '</div>'+
   '</div>';
@@ -414,39 +429,64 @@
   }
 
 
-  function getSkippedExercises(){
-    var sk=[];
-    document.querySelectorAll('.ex-card:not(.checked),.ss-ex:not(.checked)').forEach(function(c){
-      var nm=c.querySelector('.ex-name,.ss-name');if(nm)sk.push(nm.textContent.trim());
-    });
-    return sk;
-  }
   window._FW={
     finished:false,   // once true, updateProgress()'s auto-trigger stops firing
     open:function(){
-      var sets=getSessionSets();
-      var prList=prSpotlight(sets);
-      var tonnage=sessionTonnage(sets);
-      var summary=document.getElementById('fwSummary');
-      if(summary){
-        summary.innerHTML=
-          '<div class="fw-summary-row"><span class="fw-summary-label">Workout</span><span class="fw-summary-val">'+esc(getWorkoutName())+'</span></div>'+
-          '<div class="fw-summary-row"><span class="fw-summary-label">Duration</span><span class="fw-summary-val">'+getDuration()+'</span></div>'+
-          '<div class="fw-summary-row"><span class="fw-summary-label">Sets checked</span><span class="fw-summary-val">'+getCheckedSets()+' / '+getTotalSets()+'</span></div>'+
-          '<div class="fw-summary-row"><span class="fw-summary-label">Sets logged</span><span class="fw-summary-val">'+sets.length+'</span></div>'+
-          '<div class="fw-summary-row"><span class="fw-summary-label">Volume</span><span class="fw-summary-val">'+fmtLb(tonnage)+' lb</span></div>'+
-          (prList.length?prList.map(function(p){
-            return '<div class="fw-summary-row"><span class="fw-summary-label" style="color:#d4af37;">🏆 PR</span>'+
-                   '<span class="fw-summary-val" style="color:#d4af37;">'+esc(p.name)+' — '+p.weight+' lb</span></div>';
-          }).join(''):'')+
-          (function(){var sk=getSkippedExercises();return sk.length?'<div class="fw-summary-row"><span class="fw-summary-label" style="color:#f87171;">Skipped</span><span class="fw-summary-val" style="color:#f87171;font-size:11px;">'+esc(sk.join(', '))+'</span></div>':'';}());
-      }
+      var elapsed=Date.now()-startTime;
+      var checked=getCheckedSets();
+      var timeEl=document.getElementById('fwStatTime');
+      if(timeEl)timeEl.textContent=fmtElapsed(elapsed);
+      var setsEl=document.getElementById('fwStatSets');
+      if(setsEl)setsEl.textContent=checked+' set'+(checked===1?'':'s');
+      // Zero-set / <30s accidental-open guard: nudge the default action
+      // toward discard instead of logging a blank session.
+      var btns=document.getElementById('fwModalBtns');
+      if(btns)btns.classList.toggle('fw-emph',checked===0&&elapsed<30000);
       var m=document.getElementById('fwModal');
       if(m)m.classList.add('open');
     },
     close:function(){
       var m=document.getElementById('fwModal');
       if(m)m.classList.remove('open');
+    },
+    // Fully purges this attempt's draft state (no history entry is ever
+    // written — saveWorkout()/saveSessionSummary()/MC_SYNC.push() are simply
+    // never called) and returns to the dashboard. Resets DOM check state
+    // first so mc-live-tracker.js's pagehide-triggered logSession() (which
+    // reads live .checked/.done DOM state, not localStorage) can't resurrect
+    // a "Resume last workout" pointer at this now-discarded session.
+    discard:function(){
+      document.querySelectorAll('.ex-card.checked,.ss-ex.checked,.lift-card.checked,.ex-item.checked').forEach(function(c){c.classList.remove('checked');});
+      document.querySelectorAll('.sl-ck.done,.set-check.done').forEach(function(c){c.classList.remove('done');});
+      try{
+        var sess=JSON.parse(localStorage.getItem('mc_session_v1')||'{}');
+        if(sess[pageId]){delete sess[pageId];localStorage.setItem('mc_session_v1',JSON.stringify(sess));}
+      }catch(e){}
+      try{
+        var sl=JSON.parse(localStorage.getItem(SL_KEY)||'{}');
+        var today=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        var changed=false;
+        Object.keys(sl).forEach(function(k){
+          if(k.indexOf(pageId+'|')!==0)return;
+          if(sl[k][0]&&sl[k][0].d===today){sl[k].shift();changed=true;}
+          if(!sl[k].length){delete sl[k];changed=true;}
+        });
+        if(changed)localStorage.setItem(SL_KEY,JSON.stringify(sl));
+      }catch(e){}
+      try{
+        // mc-live-tracker.js's own PAGE_ID keeps the ".html" suffix (unlike
+        // this file's pageId, which strips it for the setlog/log-entry keys)
+        // — match either form so a resume pointer written mid-session (e.g.
+        // by a normal tab-switch triggering its visibilitychange listener)
+        // still gets cleared here.
+        var act=JSON.parse(localStorage.getItem('mc_activity')||'{}');
+        if(act.last&&(act.last.pageId===pageId||act.last.pageId===pageId+'.html')){delete act.last;localStorage.setItem('mc_activity',JSON.stringify(act));}
+      }catch(e){}
+      clearTodaysDailyEntry();
+      try{if(window.MCActivity&&MCActivity.releaseSessionLock)MCActivity.releaseSessionLock();}catch(e){}
+      window._FW.finished=true;
+      window._FW.close();
+      location.href='dashboard.html';
     },
     confirm:function(){
       window._FW.finished=true;
@@ -462,7 +502,7 @@
       var btn=document.querySelector('.fw-btn');
       if(btn){btn.textContent='✓ Saved!';btn.style.background='#34d399';}
       setTimeout(function(){
-        if(btn){btn.textContent='Finish Workout ✓';btn.style.background='';}
+        if(btn){btn.textContent='Finish / Exit';btn.style.background='';}
       },2000);
     },
     doneClose:function(){

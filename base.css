@@ -448,9 +448,32 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .fw-summary-row:last-child{border-bottom:none;}
 .fw-summary-label{color:var(--muted);font-weight:600;}
 .fw-summary-val{color:#fff;font-weight:800;}
+/* Exit-dialog summary metrics (Total time / Total sets) — shared by
+   mc-finish.js's own modal and mc-summary.js's showRecap() sheet, so both
+   pre-save confirmation surfaces render one identical design. */
+.fw-stats-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+.fw-stat-cell{background:#111;border-radius:12px;padding:14px 8px;text-align:center;}
+.fw-stat-val{font-size:20px;font-weight:900;color:#fff;letter-spacing:-0.01em;}
+.fw-stat-lbl{font-size:11px;font-weight:700;color:var(--muted);margin-top:4px;}
 .fw-modal-btns{display:flex;gap:10px;}
 .fw-cancel{flex:1;padding:12px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
 .fw-confirm{flex:2;padding:12px;background:var(--accent);border:none;border-radius:12px;color:#000;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.02em;}
+/* Exit-dialog button styling — scoped to the two pre-save confirmation
+   containers (mc-finish.js's #fwModalBtns, mc-summary.js showRecap()'s
+   #fwRecapBtns) rather than the bare .fw-cancel/.fw-confirm classes, since
+   those classes are also reused by mc-finish.js's unrelated post-save
+   "Done" button and by several bespoke pages' own page-local finish-modal
+   CSS (the-500.html, hell-week.html, driveway-demolition.html, etc.) —
+   recoloring the shared class globally would have silently reskinned all
+   of those too. */
+#fwModalBtns .fw-cancel,#fwRecapBtns .fw-cancel{padding:14px;background:#2C2C2E;border:none;color:#fff;font-size:14px;font-weight:800;-webkit-tap-highlight-color:transparent;}
+#fwModalBtns .fw-cancel:active,#fwRecapBtns .fw-cancel:active{opacity:0.85;transform:scale(0.98);}
+#fwModalBtns .fw-confirm,#fwRecapBtns .fw-confirm{padding:14px;background:#FFFFFF;color:#000000;-webkit-tap-highlight-color:transparent;}
+#fwModalBtns .fw-confirm:active,#fwRecapBtns .fw-confirm:active{opacity:0.85;transform:scale(0.98);}
+/* Zero-set / <30s accidental-open guard: swap visual weight so Exit &
+   discard reads as the default action instead of Log workout. */
+#fwModalBtns.fw-emph .fw-cancel,#fwRecapBtns.fw-emph .fw-cancel{flex:2;background:#FFFFFF;color:#000000;}
+#fwModalBtns.fw-emph .fw-confirm,#fwRecapBtns.fw-emph .fw-confirm{flex:1;background:#2C2C2E;color:#fff;}
 .fw-auto-banner{position:fixed;top:0;left:0;right:0;background:rgba(52,211,153,0.12);border-bottom:1px solid rgba(52,211,153,0.3);padding:12px 16px;text-align:center;font-size:13px;font-weight:800;color:var(--success);z-index:50;display:none;letter-spacing:0.02em;cursor:pointer;}
 .fw-auto-banner.show{display:block;}
 
@@ -789,7 +812,11 @@ html[data-theme="light"] .fw-summary{background:rgba(28,26,23,0.03);}
 html[data-theme="light"] .fw-summary-row{border-bottom-color:rgba(28,26,23,0.06);}
 html[data-theme="light"] .fw-summary-label{color:#6b6459;}
 html[data-theme="light"] .fw-summary-val{color:#1c1a17;}
-html[data-theme="light"] .fw-cancel{border-color:rgba(28,26,23,0.12);color:#6b6459;}
+html[data-theme="light"] .fw-stat-cell{background:rgba(28,26,23,0.04);}
+html[data-theme="light"] .fw-stat-val{color:#1c1a17;}
+html[data-theme="light"] .fw-stat-lbl{color:#6b6459;}
+html[data-theme="light"] #fwModalBtns .fw-confirm,html[data-theme="light"] #fwRecapBtns .fw-confirm{border:1px solid rgba(28,26,23,0.15);}
+html[data-theme="light"] #fwModalBtns.fw-emph .fw-cancel,html[data-theme="light"] #fwRecapBtns.fw-emph .fw-cancel{border:1px solid rgba(28,26,23,0.15);}
 
 /* ── PWA STANDALONE SAFE-AREA (Phase L2, findings M1/M3) ──────────────────
    The L2 head sweep turned on `viewport-fit=cover` fleet-wide, so on notched /

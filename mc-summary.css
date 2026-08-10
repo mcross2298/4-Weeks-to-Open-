@@ -32,95 +32,12 @@
   margin:0 auto 22px;
 }
 
-/* header */
-.fw-recap-header{text-align:center;margin-bottom:22px;}
-.fw-recap-badge{font-size:36px;margin-bottom:10px;line-height:1;}
-.fw-recap-title{
-  font-size:22px;font-weight:900;color:#fff;
-  letter-spacing:-0.02em;margin-bottom:4px;
-}
-.fw-recap-sub{font-size:13px;color:#475569;letter-spacing:0.02em;}
-
-/* hero timer */
-.fw-recap-hero{
-  text-align:center;
-  padding:18px 0 16px;
-  border-top:1px solid rgba(255,255,255,0.06);
-  border-bottom:1px solid rgba(255,255,255,0.06);
-  margin-bottom:18px;
-}
-.fw-recap-hero-time{
-  font-size:52px;font-weight:900;color:#fff;
-  font-variant-numeric:tabular-nums;letter-spacing:-0.03em;line-height:1;
-}
-.fw-recap-hero-label{
-  font-size:11px;font-weight:800;letter-spacing:0.18em;
-  text-transform:uppercase;color:#475569;margin-top:6px;
-}
-
-/* 3 stat tiles */
-.fw-recap-stats{
-  display:grid;grid-template-columns:repeat(3,1fr);
-  gap:8px;margin-bottom:22px;
-}
-.fw-recap-stat{
-  border-radius:12px;padding:14px 8px;text-align:center;
-  background:rgba(255,255,255,0.04);
-  border:1px solid rgba(255,255,255,0.07);
-}
-.fw-recap-stat-val{
-  font-size:20px;font-weight:900;letter-spacing:-0.02em;
-  line-height:1;margin-bottom:5px;
-}
-.fw-recap-stat-label{
-  font-size:10px;font-weight:800;letter-spacing:0.12em;
-  text-transform:uppercase;color:#475569;
-}
-
-/* per-exercise rows */
-.fw-recap-rows{
-  border-radius:14px;overflow:hidden;
-  border:1px solid rgba(255,255,255,0.07);
-  margin-bottom:22px;
-}
-.fw-recap-row{
-  display:flex;align-items:center;gap:10px;
-  padding:11px 14px;
-  border-bottom:1px solid rgba(255,255,255,0.05);
-  background:rgba(255,255,255,0.02);
-}
-.fw-recap-row:last-child{border-bottom:none;}
-.fw-recap-row.fw-recap-done .fw-recap-row-name{
-  text-decoration:line-through;opacity:0.55;
-}
-.fw-recap-row-ico{font-size:16px;flex-shrink:0;width:22px;text-align:center;}
-.fw-recap-row-name{
-  flex:1;font-size:13px;font-weight:600;
-  color:#e2e8f0;line-height:1.3;
-}
-.fw-recap-row-sets{
-  font-size:12px;font-weight:800;text-align:right;flex-shrink:0;
-}
-
-/* actions */
-.fw-recap-actions{display:flex;gap:10px;}
-.fw-recap-cancel{
-  flex:1;padding:14px;
-  background:transparent;
-  border:1px solid rgba(255,255,255,0.1);
-  border-radius:14px;color:#64748b;
-  font-size:14px;font-weight:700;
-  cursor:pointer;font-family:inherit;
-  -webkit-tap-highlight-color:transparent;
-}
-.fw-recap-save{
-  flex:2;padding:14px;
-  border:none;border-radius:14px;
-  color:#000;font-size:15px;font-weight:900;
-  cursor:pointer;font-family:inherit;letter-spacing:0.02em;
-  -webkit-tap-highlight-color:transparent;
-}
-.fw-recap-save:active{opacity:0.85;transform:scale(0.98);}
+/* Header text, stats row, and action buttons reuse the shared
+   .fw-modal-title/.fw-modal-sub/.fw-stats-row/.fw-cancel/.fw-confirm
+   classes from base.css (scoped via #fwRecapBtns there) — see
+   mc-summary.js's showRecap() — rather than a second, diverging set of
+   .fw-recap-* rules, so this sheet and mc-finish.js's own #fwModal render
+   one identical exit-dialog design. */
 
 /* ── STAT BAR (sticky top — timer + sets counter) ─────────────────── */
 .prog-bar-wrap.mcs-stat{
@@ -251,14 +168,6 @@ body.mcs-stat-active .summary-section.mcs-open{
 html[data-theme="light"] .fw-recap-overlay{background:rgba(28,26,23,0.4);}
 html[data-theme="light"] .fw-recap-sheet{background:#f5f2ec;border-top-color:rgba(28,26,23,0.1);}
 html[data-theme="light"] .fw-recap-handle{background:rgba(28,26,23,0.15);}
-html[data-theme="light"] .fw-recap-title{color:#1c1a17;}
-html[data-theme="light"] .fw-recap-hero{border-top-color:rgba(28,26,23,0.08);border-bottom-color:rgba(28,26,23,0.08);}
-html[data-theme="light"] .fw-recap-hero-time{color:#1c1a17;}
-html[data-theme="light"] .fw-recap-stat{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.1);}
-html[data-theme="light"] .fw-recap-rows{border-color:rgba(28,26,23,0.1);}
-html[data-theme="light"] .fw-recap-row{background:rgba(28,26,23,0.02);border-bottom-color:rgba(28,26,23,0.07);}
-html[data-theme="light"] .fw-recap-row-name{color:#1c1a17;}
-html[data-theme="light"] .fw-recap-cancel{border-color:rgba(28,26,23,0.12);}
 
 html[data-theme="light"] .prog-bar-wrap.mcs-stat{background:rgba(245,242,236,0.97);border-bottom-color:rgba(28,26,23,0.08);}
 html[data-theme="light"] .mcs-timer{color:#1c1a17;}
