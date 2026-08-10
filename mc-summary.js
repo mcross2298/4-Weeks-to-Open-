@@ -377,44 +377,31 @@
   }
 
   /* ── FINISH WORKOUT RECAP ────────────────────────────────────────── */
-  function workoutName(){
-    var el=document.querySelector('.title,.workout-title,h1');
-    return (el?el.textContent:'').replace(/\s*[—-]\s*MC Training.*$/i,'').trim()||'Workout';
-  }
-  function todayLabel(){
-    var d=new Date();
-    return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-  }
-
-  function buildRecapRows(t,acc){
-    var html='<div class="fw-recap-rows">';
-    cards().forEach(function(c){
-      var nm=cardName(c); if(!nm)return;
-      var setsTxt=cardSetsText(c);
-      var sr=parseSetsReps(setsTxt);
-      var done=c.classList.contains('checked');
-      var setLabel=sr.sets?(sr.sets+' set'+(sr.sets>1?'s':'')):'—';
-      html+='<div class="fw-recap-row'+(done?' fw-recap-done':'')+'">'+
-              '<span class="fw-recap-row-ico">'+iconFor(nm,setsTxt)+'</span>'+
-              '<span class="fw-recap-row-name">'+esc(nm)+'</span>'+
-              '<span class="fw-recap-row-sets" style="color:'+rgb(acc)+';">'+setLabel+'</span>'+
-            '</div>';
-    });
-    html+='</div>';
-    return html;
+  // Dynamic "1 sec" / "45 sec" / "1h 12m" text — mirrors mc-finish.js's
+  // fmtElapsed(ms), just fed from this file's own whole-seconds _elapsedSecs
+  // instead of a millisecond Date.now() delta.
+  function fmtElapsedWords(s){
+    if(s<60)return s+' sec';
+    var m=Math.floor(s/60);
+    if(m<60)return m+' min';
+    var h=Math.floor(m/60);
+    return h+'h '+(m%60)+'m';
   }
 
+  // Pre-save exit-confirmation sheet — this OVERRIDES mc-finish.js's own
+  // #fwModal on every page that loads this file (patchFWOpen() below), so it
+  // renders the identical title/subtitle/stats-row/buttons design (same
+  // .fw-modal-title/.fw-modal-sub/.fw-stats-row/.fw-cancel/.fw-confirm
+  // classes, base.css) rather than a second, diverging implementation. The
+  // per-exercise breakdown this sheet used to show pre-save is gone — the
+  // exit dialog's job is just "log or discard," not a workout review.
   function showRecap(){
     var existing=document.getElementById('fwRecap');
     if(existing)existing.parentNode.removeChild(existing);
 
     var t=totals();
-    var acc=accentOf();
-    var timeStr=fmtTime(_elapsedSecs);
-    var prs=[];
-    try{
-      if(window._FW&&window._FW._getPRs)prs=window._FW._getPRs();
-    }catch(e){}
+    var timeStr=fmtElapsedWords(_elapsedSecs);
+    var emphasizeDiscard=t.doneSets===0&&_elapsedSecs<30;
 
     var el=document.createElement('div');
     el.className='fw-recap-overlay';
@@ -422,33 +409,15 @@
     el.innerHTML=
       '<div class="fw-recap-sheet">'+
         '<div class="fw-recap-handle"></div>'+
-        '<div class="fw-recap-header">'+
-          '<div class="fw-recap-badge">🏆</div>'+
-          '<div class="fw-recap-title">Workout Complete</div>'+
-          '<div class="fw-recap-sub">'+esc(workoutName())+' · '+todayLabel()+'</div>'+
+        '<div class="fw-modal-title">Finish and log workout?</div>'+
+        "<div class=\"fw-modal-sub\">Log your workout to complete it and track your progress. If you exit, your workout won't be recorded.</div>"+
+        '<div class="fw-stats-row">'+
+          '<div class="fw-stat-cell"><div class="fw-stat-val">'+esc(timeStr)+'</div><div class="fw-stat-lbl">Total time</div></div>'+
+          '<div class="fw-stat-cell"><div class="fw-stat-val">'+t.doneSets+' set'+(t.doneSets===1?'':'s')+'</div><div class="fw-stat-lbl">Total sets</div></div>'+
         '</div>'+
-        '<div class="fw-recap-hero">'+
-          '<div class="fw-recap-hero-time">'+esc(timeStr)+'</div>'+
-          '<div class="fw-recap-hero-label">Total Time</div>'+
-        '</div>'+
-        '<div class="fw-recap-stats">'+
-          '<div class="fw-recap-stat">'+
-            '<div class="fw-recap-stat-val" style="color:'+rgb(acc)+';">'+t.exDone+' <span style="font-size:13px;opacity:0.55;">/ '+t.exTotal+'</span></div>'+
-            '<div class="fw-recap-stat-label">Exercises</div>'+
-          '</div>'+
-          '<div class="fw-recap-stat">'+
-            '<div class="fw-recap-stat-val" style="color:'+rgb(acc)+';">'+t.doneSets+'</div>'+
-            '<div class="fw-recap-stat-label">Sets Done</div>'+
-          '</div>'+
-          '<div class="fw-recap-stat">'+
-            '<div class="fw-recap-stat-val" style="color:'+rgb(acc)+';">'+t.doneReps+'</div>'+
-            '<div class="fw-recap-stat-label">Reps Done</div>'+
-          '</div>'+
-        '</div>'+
-        buildRecapRows(t,acc)+
-        '<div class="fw-recap-actions">'+
-          '<button class="fw-recap-cancel" id="fwRecapCancel">← Keep Training</button>'+
-          '<button class="fw-recap-save" id="fwRecapSave" style="background:'+rgb(acc)+';">Log Workout</button>'+
+        '<div class="fw-modal-btns'+(emphasizeDiscard?' fw-emph':'')+'" id="fwRecapBtns">'+
+          '<button class="fw-cancel" id="fwRecapCancel">Exit &amp; discard</button>'+
+          '<button class="fw-confirm" id="fwRecapSave">Log workout</button>'+
         '</div>'+
       '</div>';
 
@@ -457,10 +426,18 @@
     // Animate open next frame
     requestAnimationFrame(function(){el.classList.add('open');});
 
-    // Cancel — close sheet
-    document.getElementById('fwRecapCancel').addEventListener('click',function(){
+    function closeSheet(){
       el.classList.remove('open');
       setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},350);
+    }
+
+    // Exit & discard — mc-finish.js's _FW.discard() owns the real purge
+    // (session state, today's setlog draft, activity resume pointer); this
+    // sheet only stops its own timer and gets out of the way.
+    document.getElementById('fwRecapCancel').addEventListener('click',function(){
+      if(_timerInterval){clearInterval(_timerInterval);_timerInterval=null;}
+      closeSheet();
+      if(window._FW&&window._FW.discard) window._FW.discard();
     });
 
     // Log Workout — actually finalize and save. Was calling window._FW._save /
@@ -475,8 +452,7 @@
     // sync, shows the Session Complete recap) — call that instead of
     // duplicating/re-guessing save logic here.
     document.getElementById('fwRecapSave').addEventListener('click',function(){
-      el.classList.remove('open');
-      setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},350);
+      closeSheet();
       if(_timerInterval){clearInterval(_timerInterval);_timerInterval=null;}
       if(window._FW&&window._FW.confirm) window._FW.confirm();
     });
