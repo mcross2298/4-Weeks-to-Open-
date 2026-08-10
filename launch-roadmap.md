@@ -517,6 +517,52 @@ Training Tools grid, so no separate "reachable from onboarding" wiring was
 needed beyond Phase 2's entry-point work. This closes out L3: all 5 tasks
 shipped, exit criteria met.
 
+---
+
+## Post-L4 addendum — Exercise Card Auto-Collapse (2026-08-10)
+
+**Objective:** Once every set on an exercise card is logged, collapse the
+card to a compact one-line strip (name + status dot + set count) so a
+trainee scrolling a long day can see progress at a glance without wading
+through finished cards. Tapping the strip re-expands it for edits; a
+manual collapse control is available in the expanded header once the
+exercise is done; unchecking a set re-expands automatically.
+
+**Scope:** `mc-setlog.js` is the single shared set-logger (per the
+Single-implementation rule above) — it already renders the per-set logger
+and computes `done === total` in `updateCount()` for every `.ex-card`,
+each `.ss-ex` superset leg, and every `.ex-item`, across the whole ~130+
+page fleet. The auto-collapse state and both collapsed/expanded views are
+implemented once, inside that module, rather than per page/engine — no
+page template or per-page inline script needs to change. `base.css` gets
+the new `.mcl-collapsed` strip + collapse-button styles.
+
+**Locked decisions (owner, AskUserQuestion alignment, 2026-08-10):**
+- Applies uniformly to all three card types `mc-setlog.js` manages
+  (`.ex-card`, `.ss-ex`, `.ex-item`).
+- Collapse fires ~600ms after the last set is checked (not instant), so
+  the athlete sees the final checkmark land before the card shrinks.
+- The collapsed strip fully replaces the card body — name/badges/reps
+  chip/rest-timer bar/notes/logger are all hidden. The floating
+  `#timerFloat` bar (from `mc-timer.js`) is unaffected, so an in-progress
+  rest countdown is never actually lost.
+
+**Phases:**
+1. Implement `isCollapsed` state per card + collapse/expand render logic
+   in `mc-setlog.js`, wired off the existing `updateCount()`/`allDone`
+   check. Unchecking a set (allDone → false) clears `isCollapsed`.
+2. Add `.mcl-collapsed` strip markup + manual collapse button in the
+   expanded `.mcl-toggle` header (shown only once all sets are done).
+3. CSS in `base.css`: strip layout, status dot, collapse button — 48px
+   touch target, no layout jump, WCAG AA contrast in both themes.
+4. Verify headlessly on representative pages covering all three card
+   types; run the full local CI gate list; PR to `main`.
+
+This is a single-file-scoped UI addition to an existing shared module
+(no new HTML page, no schema/data change), so it does not require its own
+L-phase in the Status board above — logged here per the Planning rule
+instead.
+
 **L3 Phase 3 — program-guide clarity** (2026-07-14): Added a `forWho` field to
 every program in `mc-pm-data.js` (6 flagship + 4 influencer) — a short
 plain-language "who is this for" line, additive to the existing marketing

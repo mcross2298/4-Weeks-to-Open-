@@ -98,6 +98,57 @@
 .mcl-row-amrap{background:rgba(251,146,60,0.05);border-radius:6px;}
 .mcl-row-amrap .mcl-r::placeholder{color:#fb923c;opacity:0.8;}
 
+/* ── Auto-collapse (once every set is logged) ───────────────────────────────
+   The card shrinks to a single tappable strip (name + done dot + set count).
+   Fires ~600ms after the last set is checked (mc-setlog.js updateCount());
+   tapping the strip, unchecking a set, or reopening it re-expands the card.
+   One rule handles every template this file renders onto (.ex-card's single
+   .ex-body wrapper, bare .ss-ex/.ex-item children, ...): hide every direct
+   child of the collapsed card except .mcl-strip. */
+.mcl-strip{display:none;}
+.ex-card.mcl-collapsed > :not(.mcl-strip),
+.ss-ex.mcl-collapsed > :not(.mcl-strip),
+.ex-item.mcl-collapsed > :not(.mcl-strip){display:none!important;}
+.ex-card.mcl-collapsed > .mcl-strip,
+.ss-ex.mcl-collapsed > .mcl-strip,
+.ex-item.mcl-collapsed > .mcl-strip{display:flex!important;}
+.mcl-strip{
+  width:100%;align-items:center;gap:10px;
+  min-height:48px;padding:12px 14px;
+  background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);
+  border-radius:12px;cursor:pointer;font-family:inherit;text-align:left;
+  transition:transform .1s ease,opacity .1s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.mcl-strip:active{transform:scale(0.98);opacity:0.85;}
+.mcl-strip-dot{
+  flex-shrink:0;width:22px;height:22px;border-radius:50%;
+  background:#34d399;color:#04120c;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:900;
+}
+.mcl-strip-name{
+  flex:1;min-width:0;font-size:14px;font-weight:700;color:#e2e8f0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.mcl-strip-count{flex-shrink:0;font-size:12px;font-weight:800;color:#34d399;white-space:nowrap;}
+.mcl-strip-chev{flex-shrink:0;font-size:16px;font-weight:700;color:#64748b;}
+
+/* Manual "Collapse" chip in the Log Sets header — only shown once every set
+   on the card is logged (.mcl-toggle.mcl-alldone, set in updateCount()), so
+   an athlete who reopened an already-finished card (e.g. to tweak an RPE)
+   can shrink it back down themselves rather than editing another set. */
+.mcl-collapse-btn{
+  display:none;appearance:none;-webkit-appearance:none;
+  font:inherit;font-size:10px;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;
+  padding:4px 9px;margin-left:6px;flex-shrink:0;
+  background:rgba(52,211,153,0.14);color:#34d399;
+  border:1px solid rgba(52,211,153,0.35);border-radius:6px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.mcl-toggle.mcl-alldone .mcl-collapse-btn{display:inline-flex;align-items:center;}
+.mcl-collapse-btn:active{opacity:0.7;}
+
 /* ── Superset rest timer (Phase 3) ──────────────────────────────────────────
    A single rest timer lives on the SECOND superset exercise, parked directly
    under its "Log Sets" dropdown. Give it room and a clear "rest after superset"

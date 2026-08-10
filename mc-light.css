@@ -134,6 +134,12 @@ html[data-theme="light"] .mcl-row-amrap .mcl-r::placeholder{color:#c2410c;opacit
 html[data-theme="light"] .mcl-cluster-row{border-top-color:rgba(28,26,23,0.1);}
 html[data-theme="light"] .mcl-cluster-lbl{color:var(--accent,#8a6d1a);}
 html[data-theme="light"] .mcl-cluster-plus{color:var(--accent,#8a6d1a);}
+html[data-theme="light"] .mcl-strip{background:rgba(5,150,105,0.08);border-color:rgba(5,150,105,0.28);}
+html[data-theme="light"] .mcl-strip-dot{background:#047857;color:#fff;}
+html[data-theme="light"] .mcl-strip-name{color:#1c1a17;}
+html[data-theme="light"] .mcl-strip-count{color:#047857;}
+html[data-theme="light"] .mcl-strip-chev{color:#8a8377;}
+html[data-theme="light"] .mcl-collapse-btn{background:rgba(5,150,105,0.12);color:#047857;border-color:rgba(5,150,105,0.32);}
 
 /* ── timer-float bespoke aliases (.tf-* — base covers .timer-float*) ─ */
 html[data-theme="light"] .tf{background:rgba(245,242,236,0.97);border-top-color:rgba(28,26,23,0.1);}

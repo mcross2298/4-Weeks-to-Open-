@@ -309,8 +309,37 @@
     // progress bar, live-summary %, activity log) picks it up without the
     // athlete also needing to tap the whole card as a separate gesture.
     card.classList.toggle('checked', allDone);
+
+    var stripCount = card.querySelector('.mcl-strip-count-' + cid);
+    if (stripCount) stripCount.textContent = done + '/' + rows.length + ' Sets';
+    var toggleEl = card.querySelector('.mcl-toggle');
+    if (toggleEl) toggleEl.classList.toggle('mcl-alldone', allDone);
+
+    var wasDone = !!card.__mclDone;
+    card.__mclDone = allDone;
+    if (allDone && !wasDone) {
+      clearTimeout(card.__mclCollapseTimer);
+      card.__mclCollapseTimer = setTimeout(function () { setCollapsed(card, true); }, 600);
+    } else if (!allDone) {
+      clearTimeout(card.__mclCollapseTimer);
+      setCollapsed(card, false);
+    }
   }
   function cssId(id) { return String(id).replace(/[^a-zA-Z0-9_-]/g, '_'); }
+  function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  // ---- auto-collapse to a compact strip once every set is done -----------
+  // Fires only on the false->true transition of "all sets done" (tracked via
+  // card.__mclDone), never on every updateCount() pass — so an athlete who
+  // reopens an already-finished card to tweak an RPE isn't fought by the
+  // timer re-collapsing it out from under them. Unchecking a set (allDone
+  // flips back to false) force-expands immediately and cancels any pending
+  // auto-collapse, since the checkboxes have to be visible to uncheck one.
+  function setCollapsed(card, val) {
+    card.classList.toggle('mcl-collapsed', val);
+    var strip = card.querySelector('.mcl-strip');
+    if (strip) strip.setAttribute('aria-expanded', String(!val));
+  }
 
   // ---- render the logger onto a host element -----------------------------
   function build(host, card, exId, setsStr, rs) {
@@ -333,6 +362,7 @@
     // Separate the WORKING sets from any appended drop set so the drop is never
     // folded into (and garbling) the working-set rows. See parseDrop/stripDrop.
     var nmEl = card.querySelector('.ex-name, .ss-name, .lift-name, .var-name');
+    var exNameText = nmEl ? nmEl.textContent.trim() : 'Exercise';
     var drop = parseDrop(nmEl ? nmEl.textContent : '', setsStr);
     var work = drop.is ? stripDrop(setsStr) : setsStr;
     var n = setCount(work);
@@ -356,6 +386,23 @@
                        '<span class="mcl-count mcl-count-' + cid + '">0/' + total + '</span>' +
                        (drop.is ? '<span class="mcl-amrap" title="' + dropTitle + '">' + dropTag + '</span>' : '') +
                        '<span class="mcl-hist mcl-hist-' + cid + '">' + histText(exId) + '</span>';
+
+    // Manual collapse control — only visible once mcl-alldone is set on this
+    // toggle (updateCount()), i.e. after every set is logged. Lets an athlete
+    // who reopened a finished card (e.g. to tweak an RPE) shrink it back down
+    // themselves instead of waiting for the auto-collapse, which only fires
+    // once, on the moment the LAST set gets checked.
+    var collapseBtn = document.createElement('button');
+    collapseBtn.type = 'button';
+    collapseBtn.className = 'mcl-collapse-btn';
+    collapseBtn.setAttribute('aria-label', 'Collapse ' + exNameText);
+    collapseBtn.textContent = 'Collapse';
+    collapseBtn.addEventListener('click', function (e) {
+      e.stopPropagation(); e.preventDefault();
+      clearTimeout(card.__mclCollapseTimer);
+      setCollapsed(card, true);
+    });
+    toggle.appendChild(collapseBtn);
 
     var wrap = document.createElement('div');
     wrap.className = 'mcl-wrap';
@@ -481,6 +528,33 @@
 
     host.appendChild(toggle);
     host.appendChild(wrap);
+
+    // ---- collapsed-strip view ---------------------------------------------
+    // Appended as a sibling of `host` (i.e. a direct child of `card` itself,
+    // whether or not host === card) rather than inside it, so a single CSS
+    // rule keyed off `card` — "hide every direct child except .mcl-strip" —
+    // hides the ENTIRE original card content (name/badges/reps/timer/notes/
+    // logger) in one shot, on every template shape this file renders onto
+    // (single .ex-body wrapper, bare .ss-ex/.ex-item children, etc.) with no
+    // per-page markup change required. See mc-setlog.css .mcl-collapsed.
+    if (!card.querySelector('.mcl-strip')) {
+      var strip = document.createElement('button');
+      strip.type = 'button';
+      strip.className = 'mcl-strip';
+      strip.setAttribute('aria-expanded', 'false');
+      strip.setAttribute('aria-label', 'Expand ' + exNameText + ', all sets logged');
+      strip.innerHTML =
+        '<span class="mcl-strip-dot" aria-hidden="true">✓</span>' +
+        '<span class="mcl-strip-name">' + escHtml(exNameText) + '</span>' +
+        '<span class="mcl-strip-count mcl-strip-count-' + cid + '">0/' + total + ' Sets</span>' +
+        '<span class="mcl-strip-chev" aria-hidden="true">›</span>';
+      strip.addEventListener('click', function (e) {
+        e.stopPropagation(); e.preventDefault();
+        clearTimeout(card.__mclCollapseTimer);
+        setCollapsed(card, false);
+      });
+      card.appendChild(strip);
+    }
   }
 
   // ---- attach to every exercise card -------------------------------------
