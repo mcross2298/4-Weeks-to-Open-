@@ -138,6 +138,23 @@ function _mcEscRestTimerAttr(s) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
   });
 }
+
+// ---- write-on-change helpers -------------------------------------------
+// The countdown ticks once a second for the length of every rest period, and
+// the DOM queues a mutation record for an attribute write whether or not the
+// value actually changed. Of the writes the tick used to make, only the
+// countdown TEXT genuinely changes each second — the four className strings
+// hold the same value for the whole rest, and the OVERTIME labels for the
+// whole overtime. Those unchanged writes were the metronome: every one of them
+// woke all eleven body-scoped observers, which is what kept the re-scan storm
+// running for as long as a timer was up. Guarding them here removes the churn
+// at its source rather than downstream of it.
+function _mcSetText(node, text) {
+  if (node && node.textContent !== text) node.textContent = text;
+}
+function _mcSetCls(node, cls) {
+  if (node && node.className !== cls) node.className = cls;
+}
 // Renders a tappable rest-timer chip: a real `<button>` (D-5 — was a `<span>`
 // with an onclick, keyboard-unreachable and announced as nothing in
 // particular by a screen reader). secs/name travel as data-* attributes for
@@ -310,12 +327,12 @@ const TMR = {
 
       // Update card badge
       if (el) {
-        el.querySelector('.rest-timer-label').textContent = this.formatTime(remaining);
+        _mcSetText(el.querySelector('.rest-timer-label'), this.formatTime(remaining));
       }
 
       // Update float + video
-      floatTime.textContent = this.formatTime(remaining);
-      if (tvTime) tvTime.textContent = this.formatTime(remaining);
+      _mcSetText(floatTime, this.formatTime(remaining));
+      if (tvTime) _mcSetText(tvTime, this.formatTime(remaining));
 
       if (remaining > 0) {
         // exactly-10 check means a tick missed while backgrounded skips the
@@ -327,10 +344,10 @@ const TMR = {
         }
         const pct = (remaining / this.duration) * 100;
         floatProgress.style.width = pct + '%';
-        floatTime.className = 'timer-float-time';
-        floatProgress.className = 'timer-float-progress';
-        if (tvTime) tvTime.className = 'tv-time';
-        if (el) el.className = 'rest-timer running';
+        _mcSetCls(floatTime, 'timer-float-time');
+        _mcSetCls(floatProgress, 'timer-float-progress');
+        if (tvTime) _mcSetCls(tvTime, 'tv-time');
+        if (el) _mcSetCls(el, 'rest-timer running');
       } else if (!this._done) {
         // First tick where remaining has reached zero. Using a latch (rather
         // than an exact remaining===0 match) matters because a backgrounded/
@@ -343,24 +360,24 @@ const TMR = {
         this._done = true;
         this.buzz();
         mcTimerAnnounce('Rest done' + (this.upNext && this.upNext.name ? '. Up next: ' + this.upNext.name : ''));
-        floatTime.className = 'timer-float-time done';
-        floatProgress.className = 'timer-float-progress done';
+        _mcSetCls(floatTime, 'timer-float-time done');
+        _mcSetCls(floatProgress, 'timer-float-progress done');
         floatProgress.style.width = '100%';
-        floatLabel.textContent = 'DONE!';
-        if (tvTime) tvTime.className = 'tv-time done';
-        if (tvLabel) tvLabel.textContent = 'DONE!';
-        if (el) el.className = 'rest-timer done';
+        _mcSetText(floatLabel, 'DONE!');
+        if (tvTime) _mcSetCls(tvTime, 'tv-time done');
+        if (tvLabel) _mcSetText(tvLabel, 'DONE!');
+        if (el) _mcSetCls(el, 'rest-timer done');
         if(!this._autoDismiss)this._autoDismiss=setTimeout(()=>this.stop(),4000);
       } else {
         // Overtime
-        floatTime.textContent = '+' + this.formatTime(-remaining);
-        floatTime.className = 'timer-float-time overtime';
-        floatProgress.className = 'timer-float-progress overtime';
-        floatLabel.textContent = 'OVERTIME';
-        if (tvTime) tvTime.textContent = '+' + this.formatTime(-remaining);
-        if (tvTime) tvTime.className = 'tv-time overtime';
-        if (tvLabel) tvLabel.textContent = 'OVERTIME';
-        if (el) el.className = 'rest-timer overtime';
+        _mcSetText(floatTime, '+' + this.formatTime(-remaining));
+        _mcSetCls(floatTime, 'timer-float-time overtime');
+        _mcSetCls(floatProgress, 'timer-float-progress overtime');
+        _mcSetText(floatLabel, 'OVERTIME');
+        if (tvTime) _mcSetText(tvTime, '+' + this.formatTime(-remaining));
+        if (tvTime) _mcSetCls(tvTime, 'tv-time overtime');
+        if (tvLabel) _mcSetText(tvLabel, 'OVERTIME');
+        if (el) _mcSetCls(el, 'rest-timer overtime');
       }
     }, 1000);
   },

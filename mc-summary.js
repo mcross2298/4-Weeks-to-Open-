@@ -53,10 +53,20 @@
           Math.floor((Date.now() - MCSession.startedTs) / 1000));
     } catch (e) {}
     try { if (window.MCActivity && MCActivity.enableSessionLock) MCActivity.enableSessionLock(); } catch (e) {}
+    // Derive from wall time, never by counting ticks. A backgrounded tab is
+    // throttled to roughly one setInterval callback per minute, so `_elapsedSecs++`
+    // silently under-counted every pocket break — and this number feeds
+    // mc-strain.js's session-kcal and daily-strain maths, so the error
+    // propagated into the training log. TMR already recomputes from Date.now()
+    // every tick for exactly this reason; this now matches it.
+    var _clockBase = Date.now() - _elapsedSecs * 1000;
     _timerInterval = setInterval(function () {
-      _elapsedSecs++;
+      _elapsedSecs = Math.floor((Date.now() - _clockBase) / 1000);
       var el = document.getElementById('mcsTimerVal');
-      if (el) el.textContent = fmtTime(_elapsedSecs);
+      if (el) {
+        var t = fmtTime(_elapsedSecs);
+        if (el.textContent !== t) el.textContent = t;
+      }
     }, 1000);
   }
 

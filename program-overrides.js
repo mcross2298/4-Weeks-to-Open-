@@ -109,6 +109,7 @@
     catch (e) { return emptyDoc(); }
   }
   function writeLocal(obj) {
+    invalidatePassMemo();
     try { localStorage.setItem(LOCAL_KEY, JSON.stringify(obj)); } catch (e) {}
   }
 
@@ -171,7 +172,23 @@
   }
   // paint/resolver view — honors preview mode (preview = pure published, the
   // normal-user view: no local, no canary). Otherwise overlays canary + local.
-  function effective() { return buildEffective(!previewPublishedOnly, !previewPublishedOnly); }
+  // Pass-scoped memo (A-4). effective() rebuilds the whole merged override doc
+  // — a localStorage read, a JSON.parse and a multi-layer merge — and both it
+  // and readPersonal() were called once per card, per scan. Over a rest period
+  // that was thousands of synchronous main-thread reads of five keys whose
+  // contents cannot change mid-pass. Armed only inside scan(); every writer
+  // clears it, so a read-after-write within a pass still sees the write.
+  var _passMemo = null;
+  function beginReadPass() { _passMemo = {}; }
+  function endReadPass() { _passMemo = null; }
+  function invalidatePassMemo() { if (_passMemo) _passMemo = {}; }
+
+  function effective() {
+    if (_passMemo && _passMemo.eff) return _passMemo.eff;
+    var v = buildEffective(!previewPublishedOnly, !previewPublishedOnly);
+    if (_passMemo) _passMemo.eff = v;
+    return v;
+  }
 
   // global exercise name from v2 exercises section (no page-level check — caller must do that)
   function globalExerciseName(origName) {
@@ -201,16 +218,34 @@
   // by plain name keep applying unchanged (backward compatible). Without this,
   // two cards sharing an original name resolve to one key and edits to one
   // paint both.
+  // Per-pass occurrence index — the same O(n²)-to-O(n) fix applied to
+  // mc-setlog.js#nameId(), for the same reason: this ran a document-wide
+  // querySelectorAll (and origNameOfCard on every result) once per card, on
+  // every scan. Invalidated at the top of scan().
+  var _keyIdx = null;
+  function buildKeyIdx() {
+    var map = new Map(), counts = Object.create(null);
+    var cards = document.querySelectorAll(CARD_SEL);
+    for (var i = 0; i < cards.length; i++) {
+      var base = origNameOfCard(cards[i]);
+      if (!base) { map.set(cards[i], ''); continue; }
+      var want = base.trim().toLowerCase();
+      var occ = counts[want] || 0;
+      counts[want] = occ + 1;
+      map.set(cards[i], occ ? base + '#' + occ : base);
+    }
+    return { map: map, counts: counts };
+  }
   function cardKey(card) {
     var base = origNameOfCard(card);
     if (!base) return '';
-    var want = base.trim().toLowerCase();
-    var cards = document.querySelectorAll(CARD_SEL), occ = 0;
-    for (var i = 0; i < cards.length; i++) {
-      if (cards[i] === card) break;
-      if (origNameOfCard(cards[i]).trim().toLowerCase() === want) occ++;
-    }
-    return occ ? base + '#' + occ : base;
+    if (!_keyIdx) _keyIdx = buildKeyIdx();
+    var hit = _keyIdx.map.get(card);
+    if (hit !== undefined) return hit;
+    // Card is not in the document — the old loop never broke and counted every
+    // matching card, so reproduce that rather than change a persisted key.
+    var n = _keyIdx.counts[base.trim().toLowerCase()] || 0;
+    return n ? base + '#' + n : base;
   }
 
   function overrideFor(origName) {
@@ -267,8 +302,14 @@
   //     own supersets / tri-sets).
   // Patch shapes: drop { on:1, detail? }  cluster { on:1, reps?, rest?, detail? }
   var PERSONAL_KEY = 'mc_personal_intensifiers';
-  function readPersonal() { try { return JSON.parse(localStorage.getItem(PERSONAL_KEY)) || {}; } catch (e) { return {}; } }
-  function writePersonal(o) { try { localStorage.setItem(PERSONAL_KEY, JSON.stringify(o || {})); } catch (e) {} }
+  function readPersonal() {
+    if (_passMemo && _passMemo.personal) return _passMemo.personal;
+    var v;
+    try { v = JSON.parse(localStorage.getItem(PERSONAL_KEY)) || {}; } catch (e) { v = {}; }
+    if (_passMemo) _passMemo.personal = v;
+    return v;
+  }
+  function writePersonal(o) { invalidatePassMemo(); try { localStorage.setItem(PERSONAL_KEY, JSON.stringify(o || {})); } catch (e) {} }
   function personalCard(baseKey) { var pg = readPersonal()[pagesKey()]; return (pg && pg[baseKey]) || null; }
 
   function intensifierFor(baseKey, kind) {
@@ -592,10 +633,17 @@
   function scan() {
     var cards = document.querySelectorAll(CARD_SEL);
     if (!cards.length) return;
-    withoutObserver(function () {
-      Array.prototype.forEach.call(cards, applyToCard);
-      applySupersets();
-    });
+    // The occurrence index is only valid for the duration of one synchronous
+    // pass. Clearing it on the way out means the rare call from an event
+    // handler rebuilds it, exactly as the old per-call loop did.
+    _keyIdx = null;
+    beginReadPass();
+    try {
+      withoutObserver(function () {
+        Array.prototype.forEach.call(cards, applyToCard);
+        applySupersets();
+      });
+    } finally { _keyIdx = null; endReadPass(); }
   }
   function scheduleScan() { MC_SCAN.schedule(); }
 

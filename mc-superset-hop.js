@@ -249,10 +249,16 @@
     ringFg.style.transition = 'stroke-dashoffset 1s linear';
     buffer.classList.add('show');
     clearInterval(timer);
+    // Wall-clock, not tick-counting — same reason as mc-summary.js and TMR: a
+    // throttled tab drops ticks, and a hop buffer that under-counts leaves the
+    // athlete standing at the next station waiting on a countdown that stalled.
+    var endTs = Date.now() + activeSecs * 1000;
     timer = setInterval(function () {
-      remaining--;
-      countEl.textContent = fmtCount(Math.max(remaining, 0));
-      ringFg.style.strokeDashoffset = (C * ((activeSecs - remaining) / activeSecs)).toFixed(2);
+      remaining = Math.ceil((endTs - Date.now()) / 1000);
+      var txt = fmtCount(Math.max(remaining, 0));
+      if (countEl.textContent !== txt) countEl.textContent = txt;
+      ringFg.style.strokeDashoffset =
+        (C * ((activeSecs - Math.max(remaining, 0)) / activeSecs)).toFixed(2);
       if (remaining <= 0) finishBuffer();
     }, 1000);
   }

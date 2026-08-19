@@ -68,8 +68,27 @@
   function hashStr(s) { var h = 5381, i = s.length; while (i) h = (h * 33) ^ s.charCodeAt(--i); return (h >>> 0).toString(36); }
 
   // ---- storage helpers ----------------------------------------------------
-  function readJSON(key) { try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { return {}; } }
-  function writeJSON(key, obj) { try { localStorage.setItem(key, JSON.stringify(obj)); } catch (e) {} }
+  // Pass-scoped read memo. localStorage.getItem is synchronous and main-thread,
+  // and JSON.parse on top of it is not free — yet a scan re-read and re-parsed
+  // the SAME handful of keys once per card (notes, tempo, order, swap
+  // suggestions), thousands of times over a rest period. The cache is armed
+  // only for the duration of one synchronous scan, so nothing else can write
+  // the store underneath it; writeJSON drops the entry anyway, which keeps a
+  // read-after-write inside a pass correct.
+  var _readCache = null;
+  function beginReadPass() { _readCache = new Map(); }
+  function endReadPass() { _readCache = null; }
+  function readJSON(key) {
+    if (_readCache && _readCache.has(key)) return _readCache.get(key);
+    var v;
+    try { v = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { v = {}; }
+    if (_readCache) _readCache.set(key, v);
+    return v;
+  }
+  function writeJSON(key, obj) {
+    if (_readCache) _readCache.delete(key);
+    try { localStorage.setItem(key, JSON.stringify(obj)); } catch (e) {}
+  }
 
   // auto-dismissing confirmation with an optional undo action
   function toast(msg, actionLabel, onAction) {
@@ -576,7 +595,7 @@
         var b = e.target.closest('.mc-btn'); if (!b) return;
         if (b.dataset.act === 'save') {
           setNote(cardName(noteCard), noteTA.value);
-          withoutObserver(function () { renderNote(noteCard); renderQuickActions(noteCard); });
+          withoutObserver(function () { renderNote(noteCard); });
         }
         noteOverlay.classList.remove('open');
       });
@@ -818,41 +837,6 @@
   }
 
   // ====================================================================== //
-  //  QUICK ACTIONS  (Replace / Reorder / Notes surfaced on the card face)   //
-  //  Same handlers as the meatball menu's corresponding items — this is a   //
-  //  second entry point, not new logic. Prepended (rather than inserted     //
-  //  after the name) because card markup varies per program page (.a-top/  //
-  //  .a-head vs .ss-content vs bespoke layouts) with no single reliable     //
-  //  "right under the name" anchor across all of them.                     //
-  // ====================================================================== //
-  function injectQuickActions(card) {
-    var host = card.querySelector(BODY_SEL) || card;
-    if (host.querySelector(':scope > .mc-quick-actions')) return;
-    var row = document.createElement('div');
-    row.className = 'mc-quick-actions';
-    row.innerHTML =
-      '<button type="button" class="mc-qa-btn" data-qa="replace"><span class="mc-qa-ico">🔁</span>Replace</button>' +
-      '<button type="button" class="mc-qa-btn" data-qa="reorder"><span class="mc-qa-ico">↕️</span>Reorder</button>' +
-      '<button type="button" class="mc-qa-btn mc-qa-notes" data-qa="notes"><span class="mc-qa-ico">📝</span>Notes</button>';
-    row.addEventListener('click', function (e) {
-      e.stopPropagation(); e.preventDefault();
-      var btn = e.target.closest('.mc-qa-btn'); if (!btn) return;
-      var act = btn.dataset.qa;
-      if (act === 'replace') doReplace(card);
-      else if (act === 'reorder') startReorder(card);
-      else if (act === 'notes') openNote(card);
-    });
-    host.insertBefore(row, host.firstChild);
-  }
-
-  // paint (or clear) the Notes pill's "has a saved note" highlight
-  function renderQuickActions(card) {
-    var btn = card.querySelector(':scope > .mc-quick-actions .mc-qa-notes') ||
-              card.querySelector('.mc-quick-actions .mc-qa-notes');
-    if (btn) btn.classList.toggle('mc-qa-on', !!getNote(cardName(card)));
-  }
-
-  // ====================================================================== //
   //  QUICK PUMP TRIGGER  (page-level "short on time?" abbreviate action)    //
   //  Piggybacks on this module's scan() — already loaded on every workout   //
   //  page — so abbreviate mode needs no per-page wiring. Only mounts once   //
@@ -936,9 +920,10 @@
     if (!cards.length) return;
     // One suppressed unit: inject buttons, re-apply saved order, then notes.
     // Re-entrant withoutObserver keeps applyOrder's internal suppression safe.
-    withoutObserver(function () {
+    beginReadPass();
+    try {
+      withoutObserver(function () {
       Array.prototype.forEach.call(cards, injectMeatball);
-      Array.prototype.forEach.call(cards, injectQuickActions);
       injectQuickPumpTrigger();
       var containers = [];
       Array.prototype.forEach.call(cards, function (c) {
@@ -947,10 +932,10 @@
       });
       containers.forEach(applyOrder);
       Array.prototype.forEach.call(document.querySelectorAll(CARD_SEL), renderNote);
-      Array.prototype.forEach.call(document.querySelectorAll(CARD_SEL), renderQuickActions);
       if (tempoEnabled()) Array.prototype.forEach.call(document.querySelectorAll(CARD_SEL), renderTempo);
       Array.prototype.forEach.call(document.querySelectorAll(CARD_SEL), renderSwapPill);
     });
+    } finally { endReadPass(); }
   }
 
   function scheduleScan() {

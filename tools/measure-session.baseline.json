@@ -1,0 +1,172 @@
+{
+  "page": "mm-p1.html",
+  "url": "http://localhost:8080/mm-p1.html",
+  "takenAt": "2026-08-19T22:01:36.773Z",
+  "windowSeconds": 10,
+  "domAtLoad": {
+    "elements": 3327,
+    "exCards": 40,
+    "exCardsVisible": 0,
+    "setLoggers": 40,
+    "setRows": 172,
+    "inputs": 344,
+    "repMarkers": 84,
+    "quickActionRows": 0
+  },
+  "runtime": {
+    "idle": {
+      "seconds": 10,
+      "total": {
+        "qsa": 0,
+        "getItem": 0,
+        "setItem": 0,
+        "obsCallbacks": 0,
+        "records": 0
+      },
+      "perSecond": {
+        "querySelectorAll": 0,
+        "storageReads": 0,
+        "storageWrites": 0,
+        "observerCallbacks": 0,
+        "mutationRecords": 0
+      }
+    },
+    "rest": {
+      "seconds": 10,
+      "total": {
+        "qsa": 2900,
+        "getItem": 260,
+        "setItem": 0,
+        "obsCallbacks": 140,
+        "records": 350
+      },
+      "perSecond": {
+        "querySelectorAll": 289.9,
+        "storageReads": 26,
+        "storageWrites": 0,
+        "observerCallbacks": 14,
+        "mutationRecords": 35
+      }
+    },
+    "timerConfirmedRunning": true
+  },
+  "domInSession": {
+    "elements": 3341,
+    "exCards": 40,
+    "exCardsVisible": 10,
+    "setLoggers": 40,
+    "setRows": 172,
+    "inputs": 344,
+    "repMarkers": 84,
+    "quickActionRows": 0
+  },
+  "consoleErrors": [
+    "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+    "Failed to load resource: the server responded with a status of 404 (File not found)",
+    "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ],
+  "layout": {
+    "390x844": {
+      "activeCardHeight": 624,
+      "inactiveCardHeightAvg": 341.6,
+      "inactiveCardsMeasured": 9,
+      "trainingDayScrollHeight": 3941,
+      "viewportShare": "74%",
+      "controls": [
+        {
+          "selector": ".rest-timer",
+          "width": 282,
+          "height": 52,
+          "meets44": true
+        },
+        {
+          "selector": ".mcl-toggle",
+          "width": 330,
+          "height": 44,
+          "meets44": true
+        },
+        {
+          "selector": ".a-notes",
+          "width": 296,
+          "height": 44,
+          "meets44": true
+        },
+        {
+          "selector": ".mc-meatball",
+          "width": 44,
+          "height": 44,
+          "meets44": true
+        },
+        {
+          "selector": ".mcl-inp",
+          "width": 90,
+          "height": 44,
+          "meets44": true
+        },
+        {
+          "selector": ".mcl-rpe",
+          "width": 44,
+          "height": 44,
+          "meets44": true
+        },
+        {
+          "selector": ".mcl-ck",
+          "width": 44,
+          "height": 44,
+          "meets44": true
+        }
+      ]
+    },
+    "375x667": {
+      "activeCardHeight": 624,
+      "inactiveCardHeightAvg": 345.8,
+      "inactiveCardsMeasured": 9,
+      "trainingDayScrollHeight": 3978,
+      "viewportShare": "94%",
+      "controls": [
+        {
+          "selector": ".rest-timer",
+          "width": 267,
+          "height": 52,
+          "meets44": true
+        },
+        {
+          "selector": ".mcl-toggle",
+          "width": 315,
+          "height": 44,
+          "meets44": true
+        },
+        {
+          "selector": ".a-notes",
+          "width": 281,
+          "height": 44,
+          "meets44": true
+        },
+        {
+          "selector": ".mc-meatball",
+          "width": 44,
+          "height": 44,
+          "meets44": true
+        },
+        {
+          "selector": ".mcl-inp",
+          "width": 82.5,
+          "height": 44,
+          "meets44": true
+        },
+        {
+          "selector": ".mcl-rpe",
+          "width": 44,
+          "height": 44,
+          "meets44": true
+        },
+        {
+          "selector": ".mcl-ck",
+          "width": 44,
+          "height": 44,
+          "meets44": true
+        }
+      ]
+    }
+  }
+}

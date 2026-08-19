@@ -315,6 +315,31 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > owner's to close before B5/L6 can be called truly complete. Full
 > breakdown in `cookbook-bridge-roadmap.md`'s B5 section.
 
+> **Companion card-layer plan:** [`card-integration-roadmap.md`](card-integration-roadmap.md)
+> (opened 2026-08-19) merges two audits taken the same day against the same
+> page — a TIMWOODS runtime waste audit (`A-1…A-17`) and a card UX council
+> report (`R1…R5`) — into one dependency-ordered sequence `S0–S6`. They are the
+> same subject on two axes (work per second vs pixels per exercise) and seven
+> of their proposals collide, so they cannot be shipped independently. Four
+> decisions are locked there; `mc-setlog.js` is edited in five of the six code
+> steps, so it runs as one serial chain, one PR at a time. S4 carries an
+> `AskUserQuestion` gate and S5 needs explicit sign-off (it reverses
+> `base.css`'s recorded no-accordion decision). Scratch-listed
+> (`content-manifest.json`), so it never ships to the public Rolodex build.
+>
+> **S0 + S1 shipped (2026-08-19):** `tools/measure-session.js` is the committed
+> replacement for the two throwaway harnesses the audits used — runtime
+> counters and layout metrics in one tool, counting mutation records *as
+> delivered to the app's own observers*. Then the storm itself: with a rest
+> timer running, mutation records fell 2983.8/s → 35/s (−99%),
+> `querySelectorAll` 1061.6 → 289.9 (−73%), `localStorage` reads 1927.3 → 26
+> (−99%), and all five sub-44pt controls now clear the touch floor.
+> `mc-rep-progress.js`'s "clean slate then re-apply" was the amplifier — it was
+> landed and measured alone first (−98% on its own) rather than assumed.
+> `A-3` rewrote two persistence-key functions and was verified byte-identical
+> against the old algorithm on 216 cards across 9 pages before landing. The
+> active card grew 24 px, which `R5` spends by design and later steps repay.
+
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 
 ### Decisions locked in (via AskUserQuestion, session 2026-06-27)

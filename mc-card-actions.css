@@ -10,9 +10,10 @@
    this against two .mc-arrow buttons in the same corner, so there isn't room
    for a full 44px target on every control; this narrows the gap without
    pushing them into each other (see .mc-reorder-ctrls below). */
+/* 44×44 — 44pt touch floor (R5); was 36×36. */
 .mc-meatball{
   position:absolute;top:6px;right:6px;z-index:4;
-  width:36px;height:36px;border-radius:8px;
+  width:44px;height:44px;border-radius:8px;
   display:flex;align-items:center;justify-content:center;
   background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
   color:#cbd5e1;font-size:17px;line-height:1;cursor:pointer;
@@ -65,27 +66,6 @@
 }
 .mc-tempo-desc{font-size:12px;font-weight:600;color:#94a3b8;}
 .mc-tempo-remove{justify-content:center;color:#f87171;}
-
-/* ── Quick-actions pill row (Replace / Reorder / Notes on the card face) ── */
-/* Prepended above the card's own content — see injectQuickActions() for why
-   (no reliable "under the name" anchor across every program page's markup). */
-.mc-quick-actions{
-  display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;
-  margin-bottom:10px;scrollbar-width:none;
-}
-.mc-quick-actions::-webkit-scrollbar{display:none;}
-.mc-qa-btn{
-  display:inline-flex;align-items:center;gap:5px;flex-shrink:0;
-  padding:7px 12px;border-radius:20px;
-  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);
-  color:#cbd5e1;font-size:12px;font-weight:700;font-family:inherit;
-  cursor:pointer;-webkit-tap-highlight-color:transparent;
-}
-.mc-qa-btn:active{background:rgba(255,255,255,0.11);}
-.mc-qa-btn .mc-qa-ico{font-size:13px;line-height:1;}
-.mc-qa-btn.mc-qa-on{
-  background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.35);color:#fcd34d;
-}
 
 /* ── Inline saved note shown under a card ── */
 .mc-note{
@@ -166,11 +146,10 @@
    and the pill row sits exactly where the ▲▼ arrows are positioned (both
    anchor off the card's top-right). Hide the row so the arrows get the
    corner to themselves instead of stacking on top of "Notes". */
-.mc-reordering .mc-quick-actions{display:none;}
-/* right:50px (was 42px) clears the wider 36px .mc-meatball with an 8px gap
-   instead of ~6px; gap:6px (was 4px) does the same between the two arrows. */
+/* right:58px clears the 44px .mc-meatball (R5 raised it from 36px) with the
+   same 8px gap; gap:6px does the same between the two arrows. */
 .mc-reorder-ctrls{
-  position:absolute;top:6px;right:50px;z-index:5;display:flex;gap:6px;
+  position:absolute;top:6px;right:58px;z-index:5;display:flex;gap:6px;
 }
 .mc-arrow{
   width:36px;height:36px;border-radius:8px;
@@ -313,9 +292,6 @@ html[data-theme="light"] .mc-tempo-val{color:#1c1a17;}
 html[data-theme="light"] .mc-tempo-desc{color:#6b6459;}
 html[data-theme="light"] .mc-tempo-remove{color:#b91c1c;}
 
-html[data-theme="light"] .mc-qa-btn{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.12);color:#6b6459;}
-html[data-theme="light"] .mc-qa-btn:active{background:rgba(28,26,23,0.09);}
-html[data-theme="light"] .mc-qa-btn.mc-qa-on{background:rgba(217,119,6,0.12);border-color:rgba(217,119,6,0.3);color:#8a6d1a;}
 
 html[data-theme="light"] .mc-note{color:#8a6d1a;}
 

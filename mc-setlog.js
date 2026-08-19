@@ -590,21 +590,44 @@
   function slugOf(el) {
     return origNameOf(el).trim().replace(/\s+/g, '-').toLowerCase().slice(0, 24) || 'ex';
   }
+  // Per-pass occurrence index. nameId() used to issue a document-wide
+  // querySelectorAll — and then slugOf() every result — once PER CARD, purely
+  // to learn how many earlier cards share this card's slug. That is O(n²) over
+  // the page, re-run on every observer pass, and it was one of the two biggest
+  // consumers of main-thread time during a rest period. The answer is identical
+  // for every card in a single pass, so compute it once and look it up.
+  // Invalidated at the top of run(); nothing else can change the DOM mid-pass.
+  var _nameIdx = null;
+  function buildNameIdx() {
+    var map = new Map(), counts = Object.create(null);
+    var all = document.querySelectorAll('.ex-name, .ss-name, .lift-name');
+    for (var i = 0; i < all.length; i++) {
+      var base = slugOf(all[i]);
+      var occ = counts[base] || 0;
+      counts[base] = occ + 1;
+      map.set(all[i], 'x-' + base + (occ ? '-' + occ : ''));
+    }
+    return { map: map, counts: counts };
+  }
   // Deterministic id from the original exercise name (NO random fallback — that
   // would change every pass, breaking persistence and re-rendering forever).
   // Duplicate names are disambiguated by their occurrence order in the DOM.
   function nameId(card) {
     var mine = card.querySelector('.ex-name, .ss-name, .lift-name');
+    if (!_nameIdx) _nameIdx = buildNameIdx();
+    var hit = _nameIdx.map.get(mine);
+    if (hit) return hit;
+    // Name element is not in the document (detached card, or one added since
+    // the index was built). The old loop never hit its break in that case and
+    // fell through with occ === the total count of matching slugs; preserve
+    // that exactly rather than quietly changing an id that may be persisted.
     var base = slugOf(mine);
-    var all = document.querySelectorAll('.ex-name, .ss-name, .lift-name');
-    var occ = 0;
-    for (var i = 0; i < all.length; i++) {
-      if (slugOf(all[i]) === base) { if (all[i] === mine) break; occ++; }
-    }
-    return 'x-' + base + (occ ? '-' + occ : '');
+    var n = _nameIdx.counts[base] || 0;
+    return 'x-' + base + (n ? '-' + n : '');
   }
 
   function run() {
+    _nameIdx = null;                            // one index per pass
     // Match cards WITH OR WITHOUT data-id. Older templates
     /* MARKET:STRIP influencer-refs START */
     // (STNDR push-pull-legs, PSU psu-strength, weeks-to-open, legacy-prep,
@@ -635,6 +658,7 @@
     /* MARKET:STRIP influencer-refs END */
     normalizeSupersetTimers();
     collapseNotes();
+    _nameIdx = null;                            // index is pass-scoped only
   }
 
   // ---- superset rest-timer normalization ---------------------------------
