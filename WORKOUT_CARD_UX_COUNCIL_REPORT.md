@@ -84,9 +84,16 @@ actions, wired to the same handlers**. This is not inference — it is stated in
 > `// second entry point, not new logic.`
 > — `mc-card-actions.js:820`
 
-Cost: **76 px per card × 10 cards = 760 px per training day**, spent on a second door to a
-room the athlete is already standing in. And both doors fail the touch-target floor
-(quick-action pills 30 px tall; meatball 36×36).
+Both are injected over the same card collection, unconditionally, two lines apart:
+
+> `Array.prototype.forEach.call(cards, injectMeatball);`
+> `Array.prototype.forEach.call(cards, injectQuickActions);`
+> — `mc-card-actions.js:940`
+
+So this is not one page's quirk — it is **every one of the 80 pages that load
+`mc-card-actions.js`**. Cost: **76 px per card × 10 cards = 760 px per training day**,
+spent on a second door to a room the athlete is already standing in. And both doors fail
+the touch-target floor (quick-action pills 30 px tall; meatball 36×36).
 
 ### 1.4 The hero rep number restates what the panel below already says
 
