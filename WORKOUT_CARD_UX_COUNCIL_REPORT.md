@@ -284,6 +284,26 @@ Same pixels, spent only where the athlete is actually resting.
 Grid: `36px 1fr 1fr 52px` (was `30px 1fr 1fr 44px 44px` — the RPE column is what pays for
 the wider fields and the 52 pt check).
 
+#### Two refinements found by building it
+
+The working prototype (`workout-card-redesign-demo.dc.html`) surfaced a defect in the header
+spec above, and the fix is now part of it:
+
+1. **Controls are scoped to the state they apply to.** The first build put index, name,
+   prescription, ⓘ, ⋯ *and* a chevron in one row, and "Barbell Bench Press" truncated to
+   "Barbell …" at 390 px. Exercise-name legibility outranks every other element on the card,
+   so: **ⓘ and ⋯ render only on the active card** (they act on the exercise you are
+   performing), and **the chevron only on collapsed cards** (an expanded card's state is
+   self-evident, and its header already collapses on tap). That reclaims ~70 px of header
+   width and is better behavior on its own terms.
+2. **Long names wrap to two lines rather than ellipsize** (`-webkit-line-clamp:2`), with the
+   header at `min-height:52px` growing only when a name actually needs it. At a true 390 px
+   viewport every name in Day 1 fits on one line and the header measures **54 px**.
+
+Measured on the prototype at 390×844: collapsed card **54 px** (62 px with margin, against
+the 64 px budgeted); 5-set active card **359 px**, against the 358 px budgeted. The budget
+in §3.2 holds.
+
 ### 3.2 Vertical budget
 
 | Element | Now | Proposed | Δ |
