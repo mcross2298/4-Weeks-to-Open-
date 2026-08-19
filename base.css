@@ -359,7 +359,13 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .wu-sub{font-size:11px;opacity:0.8;margin-top:3px;}
 
 /* ── REST TIMER ─────────────────────────────────────────────────── */
-.rest-timer{appearance:none;-webkit-appearance:none;margin:0;font:inherit;color:inherit;border:none;display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none;padding:4px 10px;border-radius:8px;transition:all 0.15s;position:relative;}
+/* 44pt touch floor (R5). The rest timer is the most-tapped control in a gym
+   session — between heavy sets, with chalky hands — and it was 26px tall,
+   59% of the minimum safe size. That is an interaction defect, not a
+   styling preference. The active card gets the fuller 52px band, since
+   that is the card the athlete is actually resting on. */
+.rest-timer{appearance:none;-webkit-appearance:none;margin:0;font:inherit;color:inherit;border:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;user-select:none;padding:4px 12px;min-height:44px;border-radius:8px;transition:all 0.15s;position:relative;}
+.ex-card.active .rest-timer,.ss-ex.active .rest-timer{min-height:52px;}
 .rest-timer:active{transform:scale(0.96);}
 .rest-timer.idle{background:rgba(100,116,139,0.12);border:1px solid rgba(100,116,139,0.2);}
 .rest-timer.running{background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.35);animation:timerPulse 1s ease-in-out infinite;}
@@ -568,8 +574,13 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
   border-left:3px solid rgba(var(--accent-rgb),0.5);border-radius:4px;font-size:11px;color:var(--text);line-height:1.5;}
 /* Collapsed to one line by default (mc-setlog.js adds the class + tap
    handler); tap toggles .a-notes-open to read the full cue. */
+/* 44pt touch floor (R5) — this is a tap target (tap to expand the cue), so it
+   has to clear the floor like any other. Kept as a block, not a flex box:
+   text-overflow:ellipsis does not apply to an anonymous flex item, and the
+   one-line truncation is the whole point of the collapsed state. */
 .a-notes.a-notes-collapsible{cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  position:relative;padding-right:24px;}
+  position:relative;padding-right:24px;min-height:44px;
+  padding-top:calc(13px * var(--density));padding-bottom:calc(13px * var(--density));}
 .a-notes.a-notes-collapsible::after{content:'⌄';position:absolute;right:8px;top:50%;
   transform:translateY(-50%);opacity:0.55;font-size:11px;}
 .a-notes.a-notes-collapsible.a-notes-open{white-space:normal;overflow:visible;text-overflow:clip;}

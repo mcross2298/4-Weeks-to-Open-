@@ -28,6 +28,30 @@
     return el.closest ? el.closest(UNIT_SEL) : null;
   }
 
+  // Put one rep marker into its target state WITHOUT writing when it is already
+  // there. classList.add()/remove() queue a mutation record on every call, even
+  // when the value does not change — and this runs across every rep span of
+  // every card on each observer pass. The old "clear the slate, then re-apply"
+  // form below was therefore the app's single largest source of DOM churn: with
+  // a rest timer ticking, ~372 of every 399 mutation records per 3 s were these
+  // no-op class writes, each one waking all eleven body-scoped observers again,
+  // which scheduled the next pass, which wrote them again. Same output, same
+  // idempotence, no write when nothing moved.
+  function setRepState(r, state) {
+    var isLive = r.classList.contains('live');
+    var isDone = r.classList.contains('rep-done');
+    if (state === 'live') {
+      if (isDone) r.classList.remove('rep-done');
+      if (!isLive) r.classList.add('live');
+    } else if (state === 'rep-done') {
+      if (isLive) r.classList.remove('live');
+      if (!isDone) r.classList.add('rep-done');
+    } else {
+      if (isLive) r.classList.remove('live');
+      if (isDone) r.classList.remove('rep-done');
+    }
+  }
+
   // Set the live/done classes for a single logging unit from its checkbox state.
   function update(unit) {
     var repsAll = unit.querySelectorAll('.a-rep');
@@ -40,12 +64,9 @@
     });
     if (!seq.length) seq = Array.prototype.slice.call(repsAll);
 
-    // Always start from a clean slate so re-evaluation is idempotent.
-    seq.forEach(function (r) { r.classList.remove('live', 'rep-done'); });
-
     var allChecks = unit.querySelectorAll('.set-check');
     if (!allChecks.length) {                    // logger not built yet → static default
-      seq[0].classList.add('live');
+      seq.forEach(function (r, i) { setRepState(r, i === 0 ? 'live' : ''); });
       return;
     }
 
@@ -65,13 +86,13 @@
     if (seq.length >= workChecks.length && workChecks.length > 0) {
       // 1:1 — advance the glow set by set.
       seq.forEach(function (r, i) {
-        if (allDone || i < doneWork) r.classList.add('rep-done');
-        else if (i === doneWork) r.classList.add('live');
+        setRepState(r, (allDone || i < doneWork) ? 'rep-done'
+                     : (i === doneWork ? 'live' : ''));
       });
     } else {
       // Collapsed "N× reps" chip, or reps spanning multiple superset legs:
       // the spans share one state — lit while sets remain, done when finished.
-      seq.forEach(function (r) { r.classList.add(allDone ? 'rep-done' : 'live'); });
+      seq.forEach(function (r) { setRepState(r, allDone ? 'rep-done' : 'live'); });
     }
   }
 
