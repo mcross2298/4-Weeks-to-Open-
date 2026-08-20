@@ -1,3 +1,187 @@
+# 📊 Lean Six Sigma Codebase & UX Roadmap Artifact
+
+**Executive Gemba Walk — 2026-08-20** · Walked by the combined CTO / Director of
+UI-UX / VP of CX audit team, against the real source on `main` (post-S5c-0,
+commit `5dc53cc`). Scratch-listed in `content-manifest.json` — never ships to
+the public Rolodex build.
+
+**Standing on prior work, not repeating it.** This walk was taken *after* the
+card-integration chain S0–S5c landed. The runtime-waste storm those steps
+closed (mutation records 2983.8/s → 15/s, `querySelectorAll` −73%, storage
+reads −99%, resting card −74% height, full day −57%) is treated here as the
+new baseline — findings below are what is **still open on top of it**, each
+verified against source this session, with file:line evidence. Finding IDs are
+`G-##` (Gemba) to stay distinct from the earlier `A-*`/`R*`/`D-*`/`W-*` series.
+
+---
+
+## Section 1 — Executive Gemba Findings & User Interview Matrix
+
+The demo session was walked end to end in source: cold boot →
+`dashboard.html` → program card → `mm-p1.html` → open Day 1 → ghost-filled
+weight → check set (`onCheck`, `mc-setlog.js:386`) → auto rest timer
+(`mc-setlog.js:466-474`) → superset leg handoff (`mc-superset-hop.js`) →
+finish bar → recap (`mc-finish.js`) → history (`workout-logs.html`).
+
+| Lens | **User A — Efficiency Weightlifter** | **User B — Structured Program Follower** | **User C — Dynamic / Hybrid Athlete** |
+|---|---|---|---|
+| **What works (verified)** | One tap on a set-check saves, fires haptic, and auto-starts the *prescribed* rest via `TMR.parseSeconds(t.dataset.rest)` (`mc-setlog.js:466-474`); S3's handoff promotes the next unfinished exercise unprompted; superset legs promote correctly (S3 fix). | Ghosted suggested weight solidifies on first keystroke or check (S2); `histText()` shows "Last: 225 lb @8 · date" per exercise (`mc-setlog.js:103-112`); `mm-p1/2/3` week tabs derive from `WEEK_THEMES`; finish bar now counts the open day only (S5c-0). | Discard is confirmed, snapshotted to `mc_discard_snapshot_v1`, and restorable from the dashboard banner (S2); swap flow has an Undo toast; custom exercises dedup on entry (`mc-exercise-catalog.js`). |
+| **Code-base friction (CTO)** | First visit to a program page on gym Wi-Fi = **33 script files, ~712KB of JS** (`mm-p1.html`; measured). All loggers still build eagerly — `A-14` (lazy build) remains open — so 172 set rows exist in DOM at boot on `mm-p1.html`. | `program-manager.js` (**100,663 bytes**) — an owner-only PM editing module — is parsed by every trainee on every program page (`mm-p1.html` script list). `A-17` (`defer` sweep) is blocked on 53 pages' bare inline bootstrap calls. | **G-01 (defect):** `mc_custom_exercises_v1` is documented in its own header as "synced across the user's own devices via mc-sync.js" (`mc-exercise-catalog.js:7`) but is in **neither** `mc-sync.js`'s `STORES` map (lines 45–58) **nor** `mc-export.js`'s backup list (lines 22–25). A hybrid athlete's custom exercise library silently does not follow them to a new phone and is absent from their own backup file. |
+| **UI/UX friction (Design)** | "🏆 New PR" push fires on the **first-ever logged set of every exercise** — `prevMax === null \|\|` short-circuit at `mc-setlog.js:447` — so a new signed-in user's first session yields ~10 "your best lift ever" notifications. Notification fatigue teaches users to disable push. | `psu-strength.html` keeps its native `.set-row` logger which `mc-finish.js` has never counted — the finish bar reads **0 / 0** for the entire session (recorded in `card-integration-roadmap.md` S5b scope notes; still true). One licensed page delivers a visibly broken completion surface. | `.sl-ck` is dead markup (renders zero elements on every page probed) yet its CSS survives on ~20 pages and stays in live selectors — inventory that reads like a working feature in source. |
+| **CX friction (VP CX)** | Cold gym dead-zone: `sw.js` precaches the app shell + all JS (`sw.js:7-122`) but **none of the 145 workout pages** — each caches only on first visit. Day 3's page never opened at home = "You are offline" mid-week at the squat rack. | Multi-week progression review is a page-jump (`stats.html` / `workout-logs.html`) rather than visible at the card where the decision to add weight is made — `mc-exercise-trends.js` exists and is loaded on program pages but its trend surface requires opening the meatball. | **G-02 (defect class):** training data that isn't sets doesn't travel: `mc_replacements` / `mc_replacements_global` (saved swaps), `mc_ex_notes`, `mc_ex_favs`, `mc_ex_tempo`, `mc_personal_intensifiers` are neither synced nor exported. `mc_session_summary_v1` is synced (`mc-sync.js:57`) but **not** exported — the backup file a user downloads is missing data the app itself considers worth syncing. |
+
+---
+
+## Section 2 — Lean Six Sigma Waste & Friction Audit
+
+### Waste register (8 Wastes of Muda)
+
+| # | Waste | Finding | Evidence | Severity |
+|---|---|---|---|---|
+| G-01 | **Defects** | `mc_custom_exercises_v1` documented as synced; absent from both `STORES` and the export list — data loss on device switch, silent backup gap | `mc-exercise-catalog.js:7` vs `mc-sync.js:45-58`, `mc-export.js:22-25` | **High** |
+| G-02 | **Defects** | Store-coverage drift across three hand-maintained lists: ~54 `mc_*` keys tree-wide; sync covers 13, export covers 12, and the two disagree (`mc_session_summary_v1` synced-not-exported; swaps/notes/favs/tempo in neither) | key inventory grep; `mc-sync.js`; `mc-export.js` | **High** |
+| G-03 | **Extra-processing** | First-set-of-exercise PR push (`prevMax === null \|\|`) — celebration debased to noise on session one | `mc-setlog.js:443-453` | Medium |
+| G-04 | **Defects** | `psu-strength.html` finish bar reads 0/0 all session (native `.set-row` logger never counted) | `card-integration-roadmap.md` S5b notes; unchanged on `main` | Medium |
+| G-05 | **Inventory / Waiting** | Offline gap: app shell precached, workout pages first-visit-only; no "take my program offline" action exists | `sw.js:7-122`, fetch handler `sw.js:210-223` | **High** (CX) |
+| G-06 | **Overproduction** | Owner-only PM tooling (`program-manager.js`, 100KB) parsed by every trainee on every program page; total program-page payload 33 files / ~712KB | `mm-p1.html` script manifest | Medium |
+| G-07 | **Waiting** | `A-14` open: every logger builds eagerly at boot (172 rows on `mm-p1.html`); `A-17` blocked: no `defer` on any module because 53 pages carry bare top-level inline calls | `card-integration-roadmap.md`; CLAUDE.md A-17 note | Medium |
+| G-08 | **Transportation** | Per-exercise multi-week trend lives behind meatball → trends sheet or a jump to `stats.html`, not at the point of the load decision | `mc-exercise-trends.js`, `stats.html` | Low-Med |
+| G-09 | **Inventory** | Dead `.sl-ck` selector + CSS residue on ~20 pages; `index.html` triple redirect mechanism (meta refresh + `location.replace` + canonical) | roadmap S5b notes; `index.html:6,28-31` | Low |
+| G-10 | **Motion** | *(Largely retired by S1/S3/S5b — touch floor, auto-handoff, one-expanded-card. Verified, not re-flagged.)* Remaining: out-of-order logging costs one strip tap; acceptable by design. | `mc-setlog.js:504-521` | Info |
+| G-11 | **Non-utilized talent** | Readiness, strain, cues, voice, wrapped, muscle-map modules all load on program pages, but the Quick Tour is the only discovery surface; no in-context "first time here" affordance ties them to the moment they'd matter | script manifests; `quick-tour.html` | Low-Med |
+
+### 5 Whys — the three operational root causes
+
+**RC-1: Custom training data doesn't travel (G-01/G-02).**
+1. Why did custom exercises fail to appear on the new phone? — `mc_custom_exercises_v1` is never pushed or pulled by `mc-sync.js`.
+2. Why isn't it in the sync map? — the `STORES` map is a hand-maintained list, edited when someone remembers.
+3. Why does it depend on remembering? — there is no single registry of stores; every consumer (sync, export, discard-snapshot, bridge) keeps a private list.
+4. Why do private lists persist in a repo with 15+ CI gates? — no gate compares store lists against the keys the code actually uses; the drift is invisible to CI.
+5. Why was no gate built? — stores accreted one feature at a time (~54 keys now) and the third consumer (`CONSUME`) only arrived with B0; the coordination cost was never re-paid. **Countermeasure:** a declared store registry + `tools/check-store-coverage.js` CI gate (the house pattern — same shape as `check-single-impl.js`).
+
+**RC-2: The gym dead-zone failure (G-05).**
+1. Why did Day 3 fail offline? — its HTML was never cached.
+2. Why not? — `sw.js` precaches only the shell; pages cache on first visit by design.
+3. Why first-visit-only? — precaching all 145 pages was (correctly) rejected as cache bloat.
+4. Why is there no middle path? — no signal connects "this trainee runs program X" (`mc_active_prog` exists!) to the SW cache.
+5. Why not? — the SW predates program-selection state. **Countermeasure:** on program selection, prefetch that program's split pages once (a `fetch()` loop is enough — the SW's fetch handler caches them); no SW change required.
+
+**RC-3: PR celebration debased on day one (G-03).**
+1. Why ten PR pushes in session one? — every first set has no historical max, and `null` counts as beaten.
+2. Why does `null` count? — the guard was written for the steady-state lifter with history.
+3. Why wasn't the cold-start path noticed? — PR push was added alongside the max-cache (A-9) and tested against accounts with history.
+4. Why no first-log distinction? — `getMaxWeight` can't distinguish "no history" from "new exercise"; both return null.
+5. Why does that matter? — the *first* log is a baseline, not a record. **Countermeasure:** suppress the push when `prevMax === null` (or send a one-time "baseline set" toast instead).
+
+---
+
+## Section 3 — SIPOC: Active Set-Logging Process
+
+| Stage | Content |
+|---|---|
+| **Suppliers** | Program data files (`mm-data.js`, inline `DAYS`, 5 card engines); `exercise-catalog.js` + `mc-exercise-catalog.js` (custom/published); Supabase (`program_overrides`, `workout_logs`, push); prior sessions (`mc_setlog_v1`); the athlete |
+| **Inputs** | Tap on set-check `<button role="checkbox">`; weight (`inputmode="decimal"`), reps (`numeric`), RPE; ghosted suggestion from `mc-suggest.js`; prescribed rest on `data-rest` |
+| **Process** | `onCheck()` (`mc-setlog.js:386`): read row → `save()` to `mc_setlog_v1` → clear `mc_setlog_pending_v1` draft → fire-and-forget `MC_SB.logSet()` (+cached PR check, `localMaxP`) → haptic → `updateHist()` / `updateCount()` (write-on-change) → `TMR.start()` at prescribed rest → on all-done: 600ms auto-collapse → `nextIncompleteUnit()` promote + scroll |
+| **Outputs** | Strip badge `n/m Sets` + rebuilt `aria-label`; day-scoped finish bar (`mc-finish.js`); running rest timer + float; on Finish: `mc_workout_log_v1` entry, `mc_session_summary_v1`, strain/refuel readouts, Supabase `workout_logs` rows |
+| **Customers** | The athlete mid-set (timer, next-card promotion); the athlete next week (`histText`, suggestions, trends); coach/PM (publish/override layer); Mike's Cookbook (`mc-bridge.js` `likelyTrainingDays()`); the athlete's other devices (`mc-sync.js` — **where G-01/G-02 currently break the chain**) |
+
+The process core is healthy post-S-chain: single write path, write-on-change
+discipline, no blocking network on the hot path. The defects cluster at the
+**output boundary** (what persists, syncs, and exports), not in the loop.
+
+---
+
+## Section 4 — Prioritization Matrix (Impact × Effort)
+
+| | **Low Effort** | **High Effort** |
+|---|---|---|
+| **High Impact** | **Quick Wins:** G-01 add `mc_custom_exercises_v1` to sync + export · G-02 store registry + `tools/check-store-coverage.js` CI gate; reconcile export vs sync (add `mc_session_summary_v1`, swaps, notes, favs, tempo where owner decides they're user data) · G-03 suppress first-log PR push · G-05 active-program page prefetch on selection | **Strategic Investments:** G-07a `A-14` lazy logger build + restore-on-build (S5c, already scoped) · G-07b inline-bootstrap `DOMContentLoaded` wrap on 53 pages, then the `A-17` defer sweep · G-04 migrate `psu-strength.html` onto `mc-setlog.js` · S6 items (`A-15` CI perf budget, `A-16` delta sync, `A-12` vendored SDKs) |
+| **Low Impact** | **Fill-ins:** G-09 `.sl-ck` CSS/selector sweep · `index.html` redirect consolidation · G-08 surface last-3-session micro-trend on the card header (data already local) | **Thankless Tasks (do not do):** consolidating 5 card engines into 1 (headers/strips already shared via `.a-hdr`/S4; full merge risks 39 pages for no visible gain) · any framework/bundler migration (recorded architecture decision; the no-build constraint is working) · G-06 splitting `program-manager.js` behind a dynamic import (SW cache + one-time parse make the real-world gain small; revisit only if `A-15`'s budget flags it on target hardware) |
+
+---
+
+## Section 5 — Phased Kaizen Implementation Roadmap
+
+Serial-chain discipline carries over from the card roadmap: anything touching
+`mc-setlog.js` / `mc-sync.js` lands one PR at a time, measured with
+`tools/measure-session.js` before/after (0% runtime-delta rule), gates green
+before push. Per the planning rule, this artifact authorizes implementation;
+the phase boundaries below still get their `AskUserQuestion` check-in.
+
+### Phase 1 — Immediate Stabilization & Defect Removal (Sprint 1–2)
+1. **K-1.1 (G-02/RC-1): Store registry + CI gate.** One declared map of every
+   `mc_*` store (key → owner module, synced?, exported?, device-local-by-design?).
+   `tools/check-store-coverage.js` fails CI when a key used in code is missing
+   from the registry or a registry flag disagrees with `mc-sync.js`/`mc-export.js`.
+   This is the countermeasure that keeps every later fix fixed.
+2. **K-1.2 (G-01): Custom exercises travel.** Add `mc_custom_exercises_v1` to
+   `STORES` (arrayById-family merge) and the export list; correct or honor the
+   header claim in `mc-exercise-catalog.js`. Verify with a
+   `tools/test-mc-sync-merge.js` fixture.
+3. **K-1.3 (G-02): Reconcile export vs sync.** Owner decision per key
+   (AskUserQuestion): which of swaps/notes/favs/tempo/personal-intensifiers are
+   user data (sync + export) vs device preference (registry-flagged local).
+   `mc_session_summary_v1` joins the export either way.
+4. **K-1.4 (G-03): First-log PR guard.** `prevMax === null` → no push.
+5. **K-1.5 (G-04): PSU finish bar.** Migrate `psu-strength.html`'s native
+   `.set-row` logger onto `mc-setlog.js`, retiring the last page `mc-finish.js`
+   cannot count (0/0 → real).
+
+### Phase 2 — Flow Optimization & Friction Elimination (Sprint 3–4)
+1. **K-2.1 (G-05/RC-2): Active-program offline prefetch.** On program
+   selection (and on `mc_active_prog` change), fetch that program's split pages
+   once so the SW caches them; a one-line "Available offline ✓" confirmation on
+   the program card. Quick Tour gains its entry (documentation currency rule —
+   this one is user-facing).
+2. **K-2.2 (G-07a): Land `A-14`** — lazy logger build gated on
+   `plannedSetCount()` totals (already proven in S5c-0) plus restore-on-build
+   for `restoreSets()`'s `getElementById` dependency.
+3. **K-2.3 (G-07b): Unblock and land `A-17`** — wrap the 53 bare inline
+   bootstrap calls in `DOMContentLoaded`, then the fleet-wide `defer` sweep,
+   measured on the three probe pages.
+4. **K-2.4 (G-09): Fill-ins batch.** `.sl-ck` sweep; `index.html` single
+   redirect path.
+
+### Phase 3 — Strategic Feature Enhancements & Value Creation (Sprint 5+)
+1. **K-3.1 (S6 / `A-15`): CI performance budget** — `measure-session.js`
+   thresholds enforced in `verify.yml` so the −99.5% runtime win can never
+   silently regress (the S5c-0 feedback-loop incident is the proof it can).
+2. **K-3.2 (S6 / `A-16`): Delta sync** — push changed keys, not whole stores,
+   now that the registry (K-1.1) knows every store's shape.
+3. **K-3.3 (G-08): Progression at the point of decision** — last-3-session
+   micro-trend (↑/→/↓ + weight) on the card header from data already in
+   `mc_setlog_v1`; the full sheet stays where it is.
+4. **K-3.4 (G-11): Contextual feature discovery** — one-time inline hints
+   tying readiness/strain/cues to their first natural moment of use.
+5. **K-3.5 (carried from B5):** the owner-side real-device QA matrix (iOS
+   Safari, Android Chrome, installed PWA, two-device Supabase reconciliation)
+   remains the standing gate before L6/launch can be called done.
+
+---
+
+### Walk verdict
+
+The production line is in the best shape it has ever been — the S-chain
+removed the runtime waste an order of magnitude harder than anything found
+today, and the logging loop itself is tight: one tap logs, times, and advances.
+What this walk found is that the waste has moved **downstream of the rep**:
+data that should follow the athlete doesn't (G-01/G-02), the offline promise
+breaks exactly where a gym app needs it (G-05), and the celebration layer
+cries wolf on day one (G-03). All three are cheap to fix and two of them are
+one CI gate away from being impossible to reintroduce. Phase 1 is a week of
+work that converts "the app tracked my workout" into "the app keeps my
+training history, everywhere, provably."
+
+
+---
+---
+
+# HISTORICAL RECORD — 2026-07-21 audit (W-series → LS-1…LS-5, closed)
+
+> Kept verbatim below as the record of the previous Lean Six Sigma pass.
+> Its LS-1–LS-5 phases shipped (see Implementation status inside); the
+> 2026-08-20 walk above is the current, governing audit.
+
 # Lean Six Sigma Waste Audit — MC Training × Mike's Cookbook
 
 **Date:** 2026-07-21 · **Method:** DOWNTIME 8-waste framework, full-repo static
