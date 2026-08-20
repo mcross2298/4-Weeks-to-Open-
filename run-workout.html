@@ -259,6 +259,7 @@ function renderSingle(ex, i){
     + '<div class="ex-body"><div class="ex-content">'
     +   '<div class="a-hdr"><div class="a-idx">'+(i+1)+'</div>'
     +   '<div class="a-head"><div class="ex-name a-name">'+esc(ex.name)+'</div></div>'
+    +   (ex.cluster?'<button type="button" class="a-info" aria-expanded="false" aria-label="Show coaching note">ⓘ</button>':'')
     +   '<div class="a-hdr-meta">'
     +   (badges?'<div class="a-badges">'+badges+'</div>':'')
     +   '<div class="a-reps">'+aReps(ex.reps||'10')+'</div>'

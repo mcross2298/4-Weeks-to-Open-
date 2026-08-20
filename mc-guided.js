@@ -166,10 +166,16 @@
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
-  // Program pages render their exercise cards from an inline script that may
-  // run after (or race with) this file — retry a few times, same pattern
-  // mc-suggest.js uses for the same reason.
-  [300, 900, 1800].forEach(function (d) { setTimeout(init, d); });
+  // A-13: program pages render their exercise cards from an inline script that
+  // may run after (or race with) this file. That used to be handled with a
+  // [300,900,1800] retry ladder guessing when the cards would appear; it now
+  // subscribes to the shared render signal instead, and re-inits only when the
+  // DOM actually changed.
+  if (window.MC_SCAN && MC_SCAN.subscribe) {
+    MC_SCAN.subscribe(init); MC_SCAN.start(); MC_SCAN.schedule();
+  } else {
+    setTimeout(init, 600);
+  }
 
   window.MC_GUIDED = { start: start, stop: stop, isActive: function () { return active; } };
 })();

@@ -66,7 +66,8 @@ serial chain, one PR at a time. The only contention-free items (`A-6`, `A-9`,
 | **S4a** | `R4` header, shared component + all 5 engines (39 pages) | `AskUserQuestion` | ✅ shipped |
 | **S4b** | `R4` on the 17 hand-written pages; old `.a-top` deleted | none — S4a's gate covers it | ✅ shipped |
 | **S4c** | `A-17` `defer` sweep — **blocked, see below** | needs a decision | blocked |
-| **S5** | `A-13` render signal → `A-14` lazy build → `R3` collapse | explicit sign-off | |
+| **S5a** | `A-13` render signal — migrate onto `MC_SCAN` | signed off | ✅ shipped |
+| **S5b** | `A-14` lazy build → `R3` collapse-by-default | signed off | next |
 | **S6** | `A-15` CI budget, `A-12` vendored SDKs, `A-16` delta sync | none | |
 
 ### Ordering rules this encodes
@@ -374,3 +375,86 @@ Recommendation: **(1), as its own step, after S5** — S5 deletes the nine
 retry ladders and rescopes the observers, which is likely to touch some of
 the same inline bootstrap code, so doing `A-17` first would mean editing it
 twice.
+
+
+## S5a shipped (2026-08-20)
+
+Owner signed off on S5 (decision 2 — reversing the no-accordion call). S5 runs
+strictly serially, so `A-13` landed and was verified alone before `A-14`/`R3`
+touch build timing — the same discipline that made `A-1`'s contribution
+measurable in S1.
+
+**`A-13` turned out not to need a new contract.** The audit proposed inventing
+`mc:cards-rendered`: engines dispatch it, consumers subscribe, the nine retry
+ladders get deleted. But `program-overrides.js` already publishes exactly that
+signal — `MC_SCAN`, one shared debounced body observer with `subscribe()` /
+`schedule()` / `withoutObserver()` — and three modules (`mc-layout`,
+`mc-pm-inline`, `mc-card-actions`) were already on it, each with a graceful
+fallback. So A-13 was a *migration onto existing infrastructure*, not new
+infrastructure: no new module, no fleet-wide `<script>` churn, no manifest
+change, and it removes observers rather than adding a seventeenth.
+`MC_SCAN.schedule()` **is** the explicit "cards just rendered" announcement
+`A-14` will make, so no redundant API was added either.
+
+Six card-dependent modules moved off (private body observer + retry ladder)
+and onto `MC_SCAN`: `mc-setlog`, `mc-rep-progress`, `mc-suggest`,
+`mc-readiness`, `mc-group-split`, `mc-guided`, plus a redundant ladder removed
+from `mc-pm-inline` (already subscribed). Seven of the nine ladders are gone;
+the two left (`mc-cond`, `mc-nav`) wait on the finish bar, not on cards, and
+were deliberately left alone.
+
+Two refinements the migration forced, both real:
+
+- **`mc-rep-progress`'s observer was doing two unrelated jobs** through one
+  subscription — "a `.set-check` toggled, re-evaluate that card instantly" and
+  "new cards appeared, rebuild". Only the second is the render signal. The
+  childList half moved to `MC_SCAN`; the attribute half stays local because it
+  must fire on the same frame as the tap, and is now narrowed to
+  attributes-only instead of watching both.
+- **`mc-readiness`'s observer had no debounce at all** (audit O-6) — every body
+  mutation recomputed `byMuscle()` over the whole workout log. Subscribing to
+  `MC_SCAN` fixes the missing debounce as a side effect of the migration.
+
+**Measured — boot cost, the thing the ladders were actually spending:**
+
+| page | before | after | |
+|---|---:|---:|---|
+| `mm-p1.html` | 1235 QSA | **722** | −42% |
+| `pmc-back.html` | 696 QSA | **567** | −19% |
+| `bro-split.html` | 1315 QSA | **845** | −36% |
+
+**And an unbudgeted steady-state win:** removing six private body observers
+means each mutation record is delivered to fewer subscribers, so rest-timer
+records fell 35/s → **15/s (−57%)** and observer callbacks 14/s → **6/s
+(−57%)**. Cumulative since the original baseline: **2983.8 → 15 records/s,
+−99.5%**.
+
+### A silent bug from S4b, found and fixed here
+
+`.a-hdr-card .a-notes{display:none}` hides the coaching cue so ⓘ can reveal
+it — but **five pages rendered `.a-notes` with no ⓘ at all**, making the cue
+permanently unreachable: `cat-pmc`, `cat-strength`, `pmc-workout`,
+`run-program`, `run-workout`. S4b's transformer detected the note by looking
+for a named `noteHtml`/`notesHtml` variable, and these five render it inline
+(`${ex.note?...}`) or via a `clusterNote(ex)` helper, so it reported "no note"
+and skipped the button. No error, no console warning — the content simply
+stopped existing on screen. Worse on `run-workout`, where the cluster note
+carries an `onclick` that opens the cluster editor, so an editing affordance
+went with it.
+
+Fixed on all five, gated on the same condition their note uses, and **verified
+live rather than by inspection**: on `run-workout.html` with a seeded cluster
+workout, the note computes `display:none` before the ⓘ tap and `display:block`
+after.
+
+The superset legs (`.ss-ex`) were never affected — the `.a-hdr-card` marker
+only lands on `.ex-card`, so `.ss-card` notes were never hidden. Checked
+rather than assumed.
+
+Also verified: **the `MC_SCAN`-absent fallback branch is real and works.**
+`run-program.html` renders exercise cards but does not load
+`program-overrides.js`, so `MC_SCAN` genuinely is undefined there. Seeded with
+a real custom program it renders 3 cards, 3 loggers, 3 headers, 10 set rows
+and its suggest hints, with zero console errors.
+
+S2's, S3's and S4a's full verification suites were re-run and stayed green.

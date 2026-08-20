@@ -194,11 +194,21 @@
     document.querySelectorAll('.ex-name, .ss-name').forEach(function (el) { decorateName(el, data); });
   }
 
+  // A-13: this observer had no debounce at all — every body mutation ran
+  // decorateCards(), which recomputes byMuscle() over the whole workout log
+  // before discovering every dot is already painted (audit O-6). MC_SCAN's
+  // shared observer is debounced at 80ms, so subscribing fixes the missing
+  // debounce and drops the retry ladder in the same change.
   function init() {
+    if (window.MC_SCAN && MC_SCAN.subscribe) {
+      MC_SCAN.subscribe(decorateCards); MC_SCAN.start(); MC_SCAN.schedule();
+    } else {
+      var t;
+      new MutationObserver(function () { clearTimeout(t); t = setTimeout(decorateCards, 120); })
+        .observe(document.body, { childList: true, subtree: true });
+      setTimeout(decorateCards, 600);
+    }
     decorateCards();
-    var obs = new MutationObserver(function () { decorateCards(); });
-    obs.observe(document.body, { childList: true, subtree: true });
-    [500, 1500, 3000].forEach(function (d) { setTimeout(decorateCards, d); });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

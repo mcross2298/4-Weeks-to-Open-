@@ -236,12 +236,17 @@
     Array.prototype.forEach.call(cards, transform);
   }
 
+  // A-13: shared render signal instead of a private observer + ladder.
   function init() {
+    if (window.MC_SCAN && MC_SCAN.subscribe) {
+      MC_SCAN.subscribe(run); MC_SCAN.start(); MC_SCAN.schedule();
+    } else {
+      var t;
+      new MutationObserver(function () { clearTimeout(t); t = setTimeout(run, 120); })
+        .observe(document.body, { childList: true, subtree: true });
+      setTimeout(run, 600);
+    }
     run();
-    [150, 500, 1200, 2500].forEach(function (d) { setTimeout(run, d); });
-    var t;
-    var mo = new MutationObserver(function () { clearTimeout(t); t = setTimeout(run, 120); });
-    mo.observe(document.body, { childList: true, subtree: true });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();

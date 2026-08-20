@@ -409,6 +409,26 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > a fixed-size element. Active card 551 → 470px, full day 3868 → 3165px,
 > runtime 0% delta.
 >
+> **S5a shipped (2026-08-20):** the owner signed off on S5, and `A-13` landed
+> alone before `A-14`/`R3` per the serial rule. `A-13` turned out **not to need
+> a new contract**: the audit proposed inventing `mc:cards-rendered`, but
+> `program-overrides.js` already publishes `MC_SCAN` — one shared debounced
+> body observer with `subscribe()`/`schedule()` — and three modules were
+> already on it. So A-13 became a migration onto existing infrastructure (no
+> new module, no manifest churn, removes observers rather than adding one),
+> and `MC_SCAN.schedule()` *is* the "cards just rendered" signal `A-14` needs.
+> Six modules moved off their private body observer + retry ladder;
+> 7 of 9 ladders gone (the two left wait on the finish bar, not cards).
+> `mc-rep-progress`'s observer was doing two unrelated jobs and is now split
+> correctly; `mc-readiness`'s observer had **no debounce at all** (audit O-6),
+> fixed as a side effect. Boot `querySelectorAll` fell 42%/19%/36% across three
+> probe pages, and removing six observers cut steady-state records a further
+> 57% (35 → 15/s) — cumulative **2983.8 → 15/s, −99.5%**. Also fixed a silent
+> bug S4b introduced: five pages rendered `.a-notes` with no ⓘ, so the
+> coaching cue was permanently unreachable (S4b's transformer keyed on a named
+> `noteHtml` variable; these five render it inline). Verified live, not by
+> inspection.
+>
 > **S4b shipped (2026-08-20):** all 17 hand-written pages migrated onto the
 > `.a-hdr` markup and the old `.a-top` rule deleted — one card header in the
 > tree now, not two. Five template syntaxes were involved, so 15 pages went

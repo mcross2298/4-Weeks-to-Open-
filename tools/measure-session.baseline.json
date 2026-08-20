@@ -1,7 +1,7 @@
 {
   "page": "mm-p1.html",
   "url": "http://localhost:8080/mm-p1.html",
-  "takenAt": "2026-08-20T16:43:55.002Z",
+  "takenAt": "2026-08-20T17:21:26.416Z",
   "windowSeconds": 10,
   "domAtLoad": {
     "elements": 3167,
@@ -34,18 +34,18 @@
     "rest": {
       "seconds": 10,
       "total": {
-        "qsa": 2900,
+        "qsa": 2920,
         "getItem": 260,
         "setItem": 0,
-        "obsCallbacks": 140,
-        "records": 350
+        "obsCallbacks": 60,
+        "records": 150
       },
       "perSecond": {
-        "querySelectorAll": 289.9,
+        "querySelectorAll": 291.9,
         "storageReads": 26,
         "storageWrites": 0,
-        "observerCallbacks": 14,
-        "mutationRecords": 35
+        "observerCallbacks": 6,
+        "mutationRecords": 15
       }
     },
     "timerConfirmedRunning": true
