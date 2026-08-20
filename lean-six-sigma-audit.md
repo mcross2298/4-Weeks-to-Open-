@@ -13,6 +13,13 @@ new baseline — findings below are what is **still open on top of it**, each
 verified against source this session, with file:line evidence. Finding IDs are
 `G-##` (Gemba) to stay distinct from the earlier `A-*`/`R*`/`D-*`/`W-*` series.
 
+**Three rounds live in this document.** §1–§5 are the operational walk
+(`G-01…G-11`). §6 adds the design-lens track (`DG-1…DG-10`, proposed). §7 is
+the Voice-of-the-Customer round taken by **driving a real demo session in a
+browser** (`VOC-A1…C2`). **§8 merges all three into one dependency-ordered
+execution sequence and is the list to work from** — the per-section phase
+lists are kept for their reasoning, but §8 is what supersedes them on order.
+
 ---
 
 ## Section 1 — Executive Gemba Findings & User Interview Matrix
@@ -102,6 +109,10 @@ discipline, no blocking network on the hot path. The defects cluster at the
 
 ## Section 5 — Phased Kaizen Implementation Roadmap
 
+> **Ordering superseded by §8.** The phases below hold their scope and
+> reasoning, but §8's integrated sequence is what accounts for the collisions
+> with §6 and §7 and is the order to execute in.
+
 Serial-chain discipline carries over from the card roadmap: anything touching
 `mc-setlog.js` / `mc-sync.js` lands one PR at a time, measured with
 `tools/measure-session.js` before/after (0% runtime-delta rule), gates green
@@ -171,6 +182,265 @@ cries wolf on day one (G-03). All three are cheap to fix and two of them are
 one CI gate away from being impossible to reintroduce. Phase 1 is a week of
 work that converts "the app tracked my workout" into "the app keeps my
 training history, everywhere, provably."
+
+
+---
+
+## Section 6 — Addendum: Design Continuous-Improvement Track (proposed, post-K-3)
+
+Second pass by the same executive team, this time through a **design mindset**:
+visual identity, layout system, theming, motion, and the build conventions
+that carry them. **Status: proposed — queued behind the K-phase trajectory.**
+Each D-phase gets its own roadmap entry when its turn comes, per the planning
+rule. Evidence standard unchanged: every finding verified in source.
+
+**Where the design system already stands.** `base.css` is further along than
+most no-build codebases: a real token block (accent, the L1-unified semantic
+state tokens, macro palette), a *documented type-scale ramp* (`--fs-3xs`…,
+written so adoption is a 1:1 `var()` swap), a density scale
+(`html[data-density="compact"]` → `--density:0.82`), and CI gates that already
+treat design as law (`check-program-colors.js`, `check-day-colors.js`, the
+light-mode contrast ratchet). The D-track finishes what that system started.
+
+| ID | Area | Finding | Evidence | Severity |
+|---|---|---|---|---|
+| DG-1 | Typography | **Silent display-face fallback in production.** The PM "athletic" typography theme sets `'Bebas Neue'`, but no page in the tree loads that font (no `@font-face`, no Google Fonts link for it) — every device silently renders Arial Narrow / system. The theme option never delivers its face | `base.css:78-82`; font-loader grep: zero | Medium |
+| DG-2 | Typography | **Two type identities in one app.** The `cat-*` program-landing pages load Archivo + Manrope from Google Fonts; dashboard and every workout page run `'Segoe UI', system-ui`. The brand face is also not precached, so an offline landing page loses its identity while the rest of the app keeps its (system) one | `cat-mc.html:270` et al. vs `base.css:141`; `sw.js` precache list | Medium |
+| DG-3 | Type scale | **The documented ramp is not yet adopted.** The `--fs-*` scale exists precisely so "page titles, card names, labels and body text stop drifting page-to-page" — the swap it was designed for has not been run, so the drift it names is still live | `base.css` type-scale comment block | Medium |
+| DG-4 | Theming | **Light theme is a 28 KB parallel rule file** (`mc-light.css`) rather than a token re-declaration — every new component must be styled twice, the drift class the contrast ratchet exists to catch | `mc-light.css` (28,347 B) | Medium |
+| DG-5 | Build | **Per-program card CSS is hand-written** — ~101 `.cat-card.<id>` / `.rail-card.<id>` references in `dashboard.html`, kept honest only by `check-program-colors.js`. Generating them from `mc-pm-data.js` `color` (generate-and-verify, house pattern) deletes the drift class the gate guards — revives W-18 | `dashboard.html`: 101 refs | Low-Med |
+| DG-6 | Motion | **No motion tokens.** Durations/easings are scattered literals; `prefers-reduced-motion` appears 4× in `base.css` and 0× in `mc-setlog.css` (the set-log's scroll respects it only via JS) | grep counts; `mc-setlog.js:540` | Low |
+| DG-7 | Offline UX | **The offline fallback page is unthemed** — hardcoded hex, inline styles, no light-mode variant, no brand type. The one screen a trainee sees at the worst moment is the least designed in the app | `sw.js:159-174` | Low-Med |
+| DG-8 | Process | **Four redesign comps sit dormant** — `Dashboard Redesign.dc.html`, `Programs Redesign.dc.html`, `Conditioning Redesign.dc.html`, `Program Landing.dc.html` (stripped from deploys, never shipped or killed). Un-decided design intent is inventory | `*.dc.html`; `pages.yml` strip step | Low-Med |
+| DG-9 | Governance | **The kitchen-sink family is a de-facto component gallery without teeth.** Promote it: a screenshot-diff visual ratchet in CI (the contrast ratchet's sibling) so an unintended visual change fails a PR the way a color mismatch already does | `kitchen-sink*.html`; `verify.yml` | Low-Med |
+| DG-10 | Layout | **No stacking contract for the fixed bottom layer.** `.timer-float` (64 px, z-100), `.fw-bar` (z-40) and `.fw-auto-banner` each pin themselves independently; only `.fw-bar` pads for `safe-area-inset-bottom`. Codify one spec: reserved heights, a z-index token scale, safe-area everywhere, co-visibility rules | `base.css:384,440,483` | Medium |
+
+**Three principles govern the track**, all extensions of what the repo already
+believes: **one identity** — a single type and color voice from install screen
+to offline page, loaded everywhere it claims to apply (DG-1/2/7); **tokens are
+law** — a value that matters is a named custom property, and a component that
+bypasses the token sheet is drift, not style (DG-3/4/6/10); **gates over
+vigilance** — every design rule worth keeping gets a generate-and-verify tool
+or a ratchet, because this repo's own history shows hand-maintained visual
+consistency decays (DG-5/9).
+
+**Phase D-1 — One Type Identity** (DG-1, DG-2, DG-3): decide the app's display
+face once (owner call: the Archivo/Manrope pair the landing pages already use,
+the athletic Bebas direction, or a committed system stack), self-host and
+precache it so offline keeps the brand, fix or retire the "athletic" option so
+the picker's promise matches the render, then run the 1:1 `--fs-*` swap and add
+a type-scale check beside the color gates.
+
+**Phase D-2 — Tokens & Themes Consolidated** (DG-4, DG-5, DG-7): collapse
+`mc-light.css` toward a token re-declaration with the contrast ratchet holding
+the line during migration; generate per-program card CSS from `mc-pm-data.js`
+(tool + `--check`) and delete the hand-written blocks; ship a themed, branded
+offline page from the SW.
+
+**Phase D-3 — Motion, Layers & Governance** (DG-6, DG-8, DG-9, DG-10): motion
+tokens plus a fleet-wide `prefers-reduced-motion` audit; the bottom-layer spec;
+a ship / fold-in / retire verdict on each of the four `.dc.html` comps; and the
+kitchen-sink visual ratchet in `verify.yml`.
+
+---
+
+## Section 7 — Voice of the Customer: live demo-session interviews
+
+The same three users, re-interviewed after a **real demo workout session driven
+in headless Chromium against the live source** (localhost, 390×844 mobile
+viewport): day opened, weights typed, sets checked, rest timers fired, session
+reloaded mid-workout, meatball tools enumerated, builder visited. Every claim
+below is from an executed interaction, not source-reading. Environment caveat:
+the sandbox proxy blocks the Supabase CDN, so cloud paths ran in their offline
+fallback; everything local-first was exercised for real. Console otherwise clean.
+
+**What the demo confirmed working, live.** The S-chain holds up under real
+hands: 3 taps from cold page to first logged set (day header → strip → check);
+checking a set with `135` typed auto-starts the prescribed rest and
+**ghost-carries 135 into set 2** (`value:"135", ghost:true`); the timer float
+carries a full control set (−15s/+15s/✓ Done/presets/sound/vibrate/10s cue); a
+mid-session reload restores the `2/5` badge, the `LAST: 185 LB · AUG 20`
+history line, re-opens the day, and the finish bar reads `2 / 43 sets` —
+day-scoped, exactly as S5c-0 promised; W1–W5 week tabs render from
+`WEEK_THEMES`; target reps sit in-row as placeholders with the `5×5`
+prescription on the card header.
+
+### User A — The Efficiency Weightlifter
+
+**VOC-A1 — "Don't kill my rest clock just because I touched the screen."**
+*The round's headline defect, and a new one.* While rest runs in the default
+List view, `#timerOverlay` (`mc-timer.js:608` — `position:fixed; inset:0;
+z-index:99`, invisible) covers the entire page and its only behavior is
+`TMR.stop()`. The experiment: rest running → real tap on set 2's weight field →
+**tap 1 stopped the timer and did not focus the field; tap 2 was required to
+type.** For a superset athlete — who is *supposed* to work during the other
+movement's rest — every mid-rest interaction costs a wasted tap and silently
+cancels the countdown. Fix: scope tap-to-dismiss to the timer float itself (or
+make the overlay `pointer-events:none` and keep dismissal on ✕/Done).
+Contained to `mc-timer.js`.
+
+**VOC-A2 — "Land me on today's first unfinished exercise, not on a closed
+day."** A fresh visit needs two structural taps (day header, then the R3 strip)
+before the first check is reachable. S3 already restores
+`mc_session_v1.activeCard` across reloads, so mid-session return is one-tap-zero
+— the gap is only the *fresh* session. Fix: extend the S3 restore path to cold
+starts, reusing `nextIncompleteUnit()` and the simulated-header-click mechanism.
+
+**VOC-A3 — "No ads for other programs while I'm under a bar."** The primary nav
+rendered a promo tile mid-session — `SUGGESTED — NEW FOR YOU · The 500 →` —
+between Programs and Conditioning, on an active workout page. Fix: suppress
+suggestion tiles while a session is live; resurface on dashboard and post-recap.
+
+### User B — The Structured Program Follower
+
+**VOC-B1 — "Show me my trend where I pick the weight."** Zero trend/sparkline
+elements visible on any card (probe count: 0); the 📈 Exercise-progress surface
+exists but only behind the ⋯ meatball, and the history line is one session deep.
+Validates **G-08 / K-3.3** exactly as scoped, upgrading its evidence from
+"page-jump friction" to "confirmed absent at the decision point."
+
+**VOC-B2 — "When I switch week tabs, tell me what actually changed."** The
+W1–W5 tabs switch schemes correctly, but nothing summarizes the delta — the
+athlete diffs `5×5` against last week's memory. Fix: a one-line "this week"
+note on the day header when the theme changes the 4 feature lifts (the data
+already knows which positions are themed).
+
+**VOC-B3 — "This reload continuity — I want it when I switch phones, too."**
+The same-device round trip is excellent; that experience is exactly what
+G-01/G-02 break *across* devices. No new work — this is the user's-voice case
+for K-1 staying first in the queue.
+
+### User C — The Dynamic / Hybrid Athlete
+
+**VOC-C1 — "I found eight power tools behind that ⋯ button."** The meatball menu
+carries 📈 progress, 🔁 replace, ↕️ reorder, ⏱️ tempo, 📝 notes, ↘️ drop set,
+🧩 cluster set, ⚡ make-superset — the whole hybrid toolkit, uniformly hidden
+behind one unlabeled control per card. Validates **G-11 / K-3.4** with a sharper
+shape: a one-time first-use hint, and consider promoting the two session-flow
+actions (⚡ superset, ↘️ drop set) to visible card affordances during a session.
+
+**VOC-C2 — "Let me bail to a different workout without fearing for my sets."**
+"Exit & discard" exists inside the finish flow (deliberate, with the S2
+snapshot/restore net behind it). What is missing is the complement: navigating
+away mid-session works and the session survives in stores, but nothing *says
+so*. Fix: a one-line "Session saved — resume from the dashboard" toast leaning
+on `mc-resume.js`'s existing banner. Copy plus one hook, no new state.
+
+### Round-2 register
+
+| ID | Type | Disposition | Severity |
+|---|---|---|---|
+| VOC-A1 | New defect (Motion / Extra-processing) | Insert as **K-2.0** — one-file `mc-timer.js` change, high felt impact | High (felt) |
+| VOC-A2 | New improvement | Extend S3 restore to cold starts — joins the card-build chain | Medium |
+| VOC-A3 | New improvement (CX) | Session-aware promo suppression | Low-Med |
+| VOC-B1 | Validates G-08 | Evidence upgraded; K-3.3 unchanged | Low-Med |
+| VOC-B2 | New improvement | Week-delta note on day header | Low |
+| VOC-B3 | Validates G-01/G-02 | User's-voice case for K-1 first | High |
+| VOC-C1 | Validates G-11 | K-3.4 sharpened: hint + promote 2 session actions | Low-Med |
+| VOC-C2 | New improvement (CX) | "Session saved" reassurance on mid-session nav | Low |
+
+Net of the round: the logging loop earned the users' trust under real hands.
+The asks cluster where the loop meets the **clock** (VOC-A1 — the one place a
+tap does something the athlete didn't intend) and where it meets **confidence**
+(B3, C2 — the data is safe, but only the code knows it).
+
+---
+
+## Section 8 — Integrated execution sequence (supersedes the per-section phase lists)
+
+Three finding series now exist against one codebase: `G-01…G-11` (§2),
+`DG-1…DG-10` (§6), `VOC-A1…C2` (§7). Shipped as three independent plans they
+would collide — **11 of the items touch a file another item also touches**, and
+two of those files (`mc-setlog.js`, `mc-sync.js`) are the repo's declared
+serial-chain files. This section is the merge: one order, derived from real
+dependencies rather than from which section found the item.
+
+### The collision map
+
+| Shared surface | Items that touch it | Consequence |
+|---|---|---|
+| `mc-setlog.js` | K-1.4, K-2.2 (`A-14`), VOC-A2, K-3.3 | **The binding constraint.** Four items, one file, one PR at a time — this chain sets the calendar for everything downstream of it |
+| `mc-sync.js` / `mc-export.js` | K-1.1, K-1.2, K-1.3, K-3.2 | Hard prerequisite: the registry (K-1.1) is what makes 1.2/1.3 verifiable **and** what delta sync (K-3.2) needs to know each store's shape |
+| The rest-clock / fixed-layer surface | VOC-A1 (`mc-timer.js`), DG-10 (`base.css`) | Same defect class at two altitudes: A-1 is the live bug, DG-10 is the contract that stops it recurring |
+| `sw.js` + offline | G-05 / K-2.1, DG-7 | One user-visible story: the program is *there* offline, and when something isn't cached the page still looks like the app |
+| `verify.yml` | K-1.1, K-3.1, DG-9, DG-5 | Four ratchets, one workflow file — batch them rather than editing it four times |
+| Card header (`.a-hdr`) | K-3.3 (trend), DG-3 (type scale) | Style the header once: the scale swap must land **before** the trend is added, or the new element is restyled immediately |
+| Fleet-wide page rewrites | K-2.3 (`A-17` defer), D-1/D-2 CSS work, DG-5 | Never concurrent — S4b's lesson is that a transformer over 15+ pages needs exclusive ownership of the tree |
+
+### Two lanes that can run in parallel
+
+The backlog splits cleanly into a **data/logic lane** (`mc-setlog.js`,
+`mc-sync.js`, `mc-export.js`, `sw.js`, `mc-timer.js`) and a **presentation
+lane** (`base.css`, `mc-light.css`, `dashboard.html`, fonts). They share
+exactly one seam — the card header (K-3.3 × DG-3) — so with one seam respected
+the two lanes can proceed independently. Everything inside a lane is serial.
+
+### The sequence
+
+**Wave 0 — Two one-file fixes, first** *(highest felt impact per line in the
+whole backlog; no dependencies at all)*
+1. **K-2.0 / VOC-A1** — scope the rest-timer overlay so a mid-rest tap reaches
+   the field instead of killing the clock. `mc-timer.js` only.
+2. **K-1.4 / G-03** — suppress the PR push when `prevMax === null`, so a new
+   user's first session doesn't fire ten "best lift ever" notifications.
+   `mc-setlog.js` — and it opens the serial chain, so it goes first there.
+
+**Wave 1 — Make the data provable** *(strict internal order; the whole reason
+K-1 leads the roadmap, and VOC-B3 is the user asking for it)*
+3. **K-1.1** store registry + `tools/check-store-coverage.js` — first, because
+   it is what makes the next two verifiable and permanent.
+4. **K-1.2** custom exercises into sync + export (fixture in
+   `test-mc-sync-merge.js`), then **K-1.3** reconcile export vs sync
+   (`AskUserQuestion` on which keys are user data vs device preference).
+
+**Wave 2 — Offline as one story** *(presentation-lane-independent; can run
+alongside Wave 1)*
+5. **K-2.1 + DG-7 together** — prefetch the active program's pages on selection
+   (no SW change needed; the fetch handler caches them) **and** ship the themed,
+   branded, both-theme offline page. Quick Tour entry per the documentation rule.
+
+**Wave 3 — The card-build chain** *(serial on `mc-setlog.js`, in this order)*
+6. **K-2.2 / `A-14`** lazy logger build + restore-on-build for `restoreSets()`.
+7. **VOC-A2** cold-start auto-open of today's first unfinished exercise —
+   **after** A-14, because lazy building changes what "the next card" even is.
+8. **K-1.5 / G-04** migrate `psu-strength.html` onto `mc-setlog.js` (0/0 → real)
+   — same chain, lands once the build path is settled.
+
+**Wave 4 — One visual identity** *(presentation lane, strict order; do not
+overlap Wave 5)*
+9. **DG-1 → DG-2 → DG-3** choose the face, load and precache it everywhere,
+   then run the `--fs-*` swap. **DG-4** (light theme onto tokens) follows the
+   scale, never precedes it — otherwise the same rules migrate twice.
+10. **DG-5** generate per-program card CSS; **DG-10** the bottom-layer stacking
+    contract, closing the surface VOC-A1 exposed at the point-fix level.
+
+**Wave 5 — Boot weight** *(needs exclusive ownership of the tree)*
+11. **K-2.3 / `A-17`** wrap the 53 bare inline bootstrap calls in
+    `DOMContentLoaded`, then the fleet-wide `defer` sweep, measured on the three
+    probe pages. **G-06** (the 100 KB PM module) is re-evaluated here, not
+    before — Wave 6's budget is what should decide it.
+
+**Wave 6 — Ratchets, then payoff features** *(the CI batch first, so everything
+after it is protected)*
+12. **One `verify.yml` PR:** K-3.1 perf budget + DG-9 kitchen-sink visual
+    ratchet + DG-5's `--check`, alongside the store gate already landed in W1.
+13. Then, in any order: **K-3.3** card-header micro-trend (after DG-3),
+    **K-3.2** delta sync (after K-1.1), **K-3.4 / VOC-C1** discovery hints,
+    **VOC-A3** promo suppression, **VOC-B2** week-delta note, **VOC-C2**
+    session-saved toast, **DG-6** motion tokens, **DG-8** comp triage,
+    **K-2.4** fill-ins (`.sl-ck` sweep, `index.html` redirect).
+
+**Standing gate, unchanged:** the owner-side real-device QA matrix (iOS Safari,
+Android Chrome, installed PWA, two-device Supabase reconciliation) carried from
+B5 — still the last thing between this app and calling L6 done.
+
+### If only one thing ships this week
+
+**Wave 0.** Two files, two small diffs, and they remove the only two moments in
+the demo where the app did something the athlete did not ask for: a tap that
+cancels their rest clock, and a celebration that means nothing. Everything else
+in this document is a system improvement; Wave 0 is the one the user feels on
+their next set.
 
 
 ---
