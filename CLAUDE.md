@@ -429,6 +429,33 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > `noteHtml` variable; these five render it inline). Verified live, not by
 > inspection.
 >
+> **S5b shipped (2026-08-20) — `R3` only; `A-14` split out to S5c.** Scoping
+> `A-14` first showed the two are not a sequence: `mc-finish.js` derives
+> completion from a **DOM count** (`getTotalSets()` counts `.sl-ck,.set-check`
+> in the document), so building loggers lazily collapses that denominator from
+> **172 to 5** on `mm-p1.html` — measured — and `done >= total` would fire the
+> Finish Workout modal one exercise into the session. `A-14` therefore needs
+> completion accounting moved onto the prescription data first (**S5c**), and
+> `R3` was not held behind it. `R3` makes `.mcl-strip` — the 48px summary row a
+> card already collapsed to when finished — the **resting state of every
+> card**, so a day reads as a list and exactly one exercise is expanded. That
+> inverts the strip's meaning, which is the whole change: it was green (it
+> only ever appeared on finished cards, so every unstarted exercise would have
+> read as logged — the green moved behind `.is-done`); its dot was a hard-coded
+> `✓` (now the exercise's position, swapped for `✓` on completion); and its
+> `aria-label` **overrode its own text**, so the `2/5 Sets` span inside the
+> button was never announced — the label is now rebuilt on every
+> `updateCount()` and carries the count. Two edges found by testing:
+> `setActiveCard()` collapses the others (so S3's automatic handoff is what
+> closes the previous card), and `updateCount()`'s "not all done → expand"
+> branch had to be narrowed to the **done→not-done transition** — unguarded it
+> re-expanded all ten cards on every pass, since "not finished" is now the
+> normal resting condition. Resting card 272.5 → **71.2px (−74%)**, full day
+> 3165 → **1353px (−57%)**, active card unchanged, runtime **0% delta**.
+> `totalSetsInDom` stays 172 through all five checkpoints — the assertion that
+> proves completion accounting is untouched, and the reason `R3` is safe while
+> `A-14` is not.
+>
 > **S4b shipped (2026-08-20):** all 17 hand-written pages migrated onto the
 > `.a-hdr` markup and the old `.a-top` rule deleted — one card header in the
 > tree now, not two. Five template syntaxes were involved, so 15 pages went

@@ -67,7 +67,8 @@ serial chain, one PR at a time. The only contention-free items (`A-6`, `A-9`,
 | **S4b** | `R4` on the 17 hand-written pages; old `.a-top` deleted | none — S4a's gate covers it | ✅ shipped |
 | **S4c** | `A-17` `defer` sweep — **blocked, see below** | needs a decision | blocked |
 | **S5a** | `A-13` render signal — migrate onto `MC_SCAN` | signed off | ✅ shipped |
-| **S5b** | `A-14` lazy build → `R3` collapse-by-default | signed off | next |
+| **S5b** | `R3` collapse-by-default (`A-14` split out) | signed off | ✅ shipped |
+| **S5c** | `A-14` lazy build — **blocked, see below** | needs the accounting fix | blocked |
 | **S6** | `A-15` CI budget, `A-12` vendored SDKs, `A-16` delta sync | none | |
 
 ### Ordering rules this encodes
@@ -458,3 +459,94 @@ a real custom program it renders 3 cards, 3 loggers, 3 headers, 10 set rows
 and its suggest hints, with zero console errors.
 
 S2's, S3's and S4a's full verification suites were re-run and stayed green.
+
+---
+
+## S5b shipped (2026-08-20) — `R3` only; `A-14` split out to S5c
+
+S5b was planned as `A-14` (build loggers lazily) *then* `R3` (collapse by
+default). Scoping `A-14` first showed the two are not a sequence — `A-14` is
+blocked and `R3` is not — so `R3` shipped alone.
+
+### `A-14` is blocked by DOM-derived completion accounting
+
+`mc-finish.js` decides whether the workout is finished by counting checkboxes
+**in the DOM**:
+
+```js
+function getTotalSets(){ return document.querySelectorAll('.sl-ck,.set-check').length; }
+var isComplete = total > 0 && done >= total;   // auto-opens the Finish modal
+```
+
+Build loggers lazily and that denominator stops describing the workout. On
+`mm-p1.html` the count collapses from **172 to 5** — measured, not inferred:
+removing the unbuilt loggers and re-reading `getTotalSets()` returns 5 while
+the day really contains 172 sets. (The first attempt at that measurement was
+undone by the observer rebuilding the loggers it had just removed — the
+`5 / 172` pair is what proves the rebuild happened.) The consequence follows
+from the source above: with `total` reading 5, the first exercise finished
+satisfies `done >= total` and the **Finish Workout modal fires one exercise
+into the session.**
+
+So `A-14` needs completion accounting moved off DOM counts and onto the
+prescription data first. That is its own step (**S5c**), not a line in this
+one, and it is why `R3` was not held behind it.
+
+### What `R3` actually changed
+
+`.mcl-strip` already existed — the 48px summary row a card collapsed to once
+every set was logged. `R3` makes it the **resting state of every card**, so a
+training day reads as a list of exercises and exactly one is expanded: the one
+being performed.
+
+That inverts the strip's meaning, and the three details that followed from it
+are the whole change:
+
+- **It was green.** The strip's palette said "done" because a strip only ever
+  appeared on a finished card. Left alone, every unstarted exercise would have
+  read as already logged. The green treatment moved behind `.is-done`, which
+  `updateCount()` toggles; the resting palette is neutral.
+- **Its dot was a hard-coded `✓`.** It now carries the exercise's position
+  (`1`, `2`, `3`…) and `updateCount()` swaps in the `✓` on completion.
+- **Its `aria-label` overrode its own text.** A label wins over element
+  content for assistive tech, so the `2/5 Sets` span inside the button was
+  never announced — harmless while the strip only meant "finished", but under
+  `R3` progress is the entire point of it. The label is now rebuilt on every
+  `updateCount()` and carries the count: *"Expand Flat DB Press, 2 of 5 sets
+  logged"*.
+
+Two behavioural edges, both found by testing rather than by reading:
+
+- `setActiveCard()` collapses every other unit, so promoting an exercise —
+  by tap, or by S3's automatic handoff — is what closes the previous one.
+- `updateCount()`'s existing "not all done → expand" branch had to be narrowed
+  to the **done → not-done transition** (`wasDone && !allDone`). Unguarded, it
+  re-expanded all ten collapsed cards on every pass, since under `R3` "not
+  finished" is now the normal resting condition rather than a signal. The
+  branch still exists for its real purpose: unchecking a set on a finished
+  card has to bring the checkboxes back.
+
+A freshly built card collapses behind a `__mclR3Init` guard — first build
+only, so a later re-render pass never folds a card the athlete is mid-set on.
+
+### Measured
+
+| | S4b | S5b | |
+|---|---:|---:|---|
+| resting card | 272.5px | **71.2px** | −74% |
+| full training day | 3165px | **1353px** | −57% |
+| active card | 470px | **470px** | unchanged |
+
+Runtime is **0% delta on all four counters** — `R3` is presentation-only, and
+every logger is still built, which is exactly the property that separates it
+from `A-14`.
+
+`totalSetsInDom` stays **172** through all five verification checkpoints (rest
+→ tap → re-tap → finish/handoff → uncheck). That is the assertion that proves
+completion accounting is untouched, and it is why `R3` was safe to ship while
+`A-14` is not.
+
+S2's, S3's and S4a's verification suites were re-run and stayed green;
+headers still measure 68–73px on every engine. Superset legs (`.ss-ex`) carry
+no `.a-hdr` — pre-existing since S4a, checked rather than assumed.
+

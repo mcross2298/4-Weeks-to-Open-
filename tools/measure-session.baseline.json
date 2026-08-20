@@ -1,7 +1,7 @@
 {
   "page": "mm-p1.html",
   "url": "http://localhost:8080/mm-p1.html",
-  "takenAt": "2026-08-20T17:21:26.416Z",
+  "takenAt": "2026-08-20T17:42:55.883Z",
   "windowSeconds": 10,
   "domAtLoad": {
     "elements": 3167,
@@ -41,7 +41,7 @@
         "records": 150
       },
       "perSecond": {
-        "querySelectorAll": 291.9,
+        "querySelectorAll": 291.7,
         "storageReads": 26,
         "storageWrites": 0,
         "observerCallbacks": 6,
@@ -61,16 +61,14 @@
     "quickActionRows": 0
   },
   "consoleErrors": [
-    "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
-    "Failed to load resource: the server responded with a status of 404 (File not found)",
     "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
   ],
   "layout": {
     "390x844": {
       "activeCardHeight": 470,
-      "inactiveCardHeightAvg": 272.5,
+      "inactiveCardHeightAvg": 71.2,
       "inactiveCardsMeasured": 9,
-      "trainingDayScrollHeight": 3165,
+      "trainingDayScrollHeight": 1353,
       "viewportShare": "56%",
       "controls": [
         {
@@ -113,9 +111,9 @@
     },
     "375x667": {
       "activeCardHeight": 486.5,
-      "inactiveCardHeightAvg": 278.5,
+      "inactiveCardHeightAvg": 71.2,
       "inactiveCardsMeasured": 9,
-      "trainingDayScrollHeight": 3235,
+      "trainingDayScrollHeight": 1369,
       "viewportShare": "73%",
       "controls": [
         {
