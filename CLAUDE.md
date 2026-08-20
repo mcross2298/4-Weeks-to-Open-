@@ -408,6 +408,29 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > exercise name by ~16px; both headers now use a fixed 54px, since they clear
 > a fixed-size element. Active card 551 → 470px, full day 3868 → 3165px,
 > runtime 0% delta.
+>
+> **S4b shipped (2026-08-20):** all 17 hand-written pages migrated onto the
+> `.a-hdr` markup and the old `.a-top` rule deleted — one card header in the
+> tree now, not two. Five template syntaxes were involved, so 15 pages went
+> through a structural transformer and the two string-concat pages were
+> hand-edited (in concat form the captured `.a-reps` fragment must be
+> re-entered into string context; the transformer got that wrong and would
+> have shipped a syntax error). Verified in a browser on **all 17**, not
+> sampled — five needed driving into a card-rendering state first
+> (`run-program`/`run-workout` want a seeded custom program/workout;
+> `cat-pmc`/`cat-strength`/`pmc-workout` are pickers). Headers 53–92px, zero
+> console errors, no meatball overlap, all 45 inline scripts re-parsed clean.
+>
+> **`A-17` (the `defer` sweep) is blocked and was pulled out of S4b.** Its
+> premise — "the modules all self-initialise on `DOMContentLoaded`, so
+> `defer` preserves order" — is true module-to-module and ignores inline
+> scripts, which are never deferred and jump ahead of every deferred module.
+> **53 pages carry a bare top-level call to a shared-module function in an
+> inline `<script>`** (typically `buildTimerFloat();` immediately after
+> `<script src="mc-timer.js">`), so deferring would throw a `ReferenceError`
+> on load. Verified against real source, not inferred. The fix is to wrap
+> those calls in `DOMContentLoaded` first — its own step, best done after S5,
+> which is likely to touch the same inline bootstrap code.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 

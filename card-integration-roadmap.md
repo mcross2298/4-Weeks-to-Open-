@@ -64,7 +64,8 @@ serial chain, one PR at a time. The only contention-free items (`A-6`, `A-9`,
 | **S2** | `A-7` `A-10`+§3.3 `A-5` `A-8` `A-9` | none — **gates S5** | ✅ shipped |
 | **S3** | `R2` + the self-opening logger (`A-11`/`M-1`/§3.4) | none | ✅ shipped |
 | **S4a** | `R4` header, shared component + all 5 engines (39 pages) | `AskUserQuestion` | ✅ shipped |
-| **S4b** | `R4` on the 17 hand-written pages + `A-17` `defer` sweep | none — S4a's gate covers it | next |
+| **S4b** | `R4` on the 17 hand-written pages; old `.a-top` deleted | none — S4a's gate covers it | ✅ shipped |
+| **S4c** | `A-17` `defer` sweep — **blocked, see below** | needs a decision | blocked |
 | **S5** | `A-13` render signal → `A-14` lazy build → `R3` collapse | explicit sign-off | |
 | **S6** | `A-15` CI budget, `A-12` vendored SDKs, `A-16` delta sync | none | |
 
@@ -310,3 +311,66 @@ S2's and S3's full verification suites were re-run against the new markup and
 stayed green, as did the four `program-overrides.js` PM inline-edit
 integration points (`.a-head`, `.a-reps`, and both `data-field` spans), which
 is why those class names were deliberately left unchanged.
+
+## S4b shipped (2026-08-20)
+
+All 17 hand-written pages migrated onto the `.a-hdr` markup S4a introduced,
+and the old `.a-top` rule deleted — there is now **one** card header in the
+tree, not two. Five distinct template syntaxes were involved (multiline
+template literal, compact template literal, two string-concat dialects, and
+single-line template literal), so the migration ran as a structural
+transformer over 15 pages with the two string-concat pages hand-edited: in
+concat form the captured `.a-reps` fragment has to be re-entered into string
+context, which the transformer got wrong, and shipping that would have
+produced a syntax error rather than a layout bug.
+
+Verified in a real browser on **all 17 pages**, not sampled. Five of them do
+not render cards on a bare load and needed driving into the state where they
+do — `run-program.html` and `run-workout.html` want a custom program/workout
+seeded into localStorage, and `cat-pmc.html`, `cat-strength.html` and
+`pmc-workout.html` are pickers that need a split and workout selected first.
+Headers measure **53–92px** across the set (`stndr-card-concepts.html` is
+120px, but it is a design-comp page carrying four concept variants, stripped
+from the deploy artifact). Zero console errors anywhere; no meatball overlap
+anywhere. All 45 inline scripts across the 17 pages re-parsed clean.
+
+Runtime holds at 0% delta; layout numbers are unchanged from S4a, since
+`mm-p1.html` is engine-rendered and was already migrated there.
+
+## `A-17` is blocked — the audit's premise does not hold here
+
+The plan paired the `defer` sweep with `R4` because both were "fleet-wide
+sweeps". That rationale dissolved once S4a showed `R4`'s hand-written surface
+is 17 pages while `A-17` touches **137**. They are not the same sweep, so
+`A-17` was pulled out — and then found to be unsafe as specified.
+
+`A-17` reasons that "the `mc-*.js` modules are order-dependent but all
+self-initialise on `DOMContentLoaded`, so `defer` preserves execution order
+while unblocking the parser." That is true of module-to-module ordering and
+**ignores inline scripts**, which are never deferred and therefore jump ahead
+of every deferred module. **53 pages carry a bare top-level call to a
+shared-module function inside an inline `<script>`** — the common shape being
+
+```html
+<script src="mc-timer.js"></script>
+<script>
+buildTimerFloat();          <!-- runs BEFORE a deferred mc-timer.js -->
+```
+
+Deferring `mc-timer.js` there throws `ReferenceError: buildTimerFloat is not
+defined` on load. Verified by reading the real source on `bro-split.html` and
+`5on-2off.html`, not inferred.
+
+Three ways forward, none of them a mechanical sweep:
+1. Wrap those 53 top-level calls in `DOMContentLoaded` handlers first, then
+   sweep — the largest change, and the only one that gets the full win.
+2. Defer only the modules no inline script calls at parse time — partial
+   win, and a rule that silently rots the next time someone adds an
+   inline call.
+3. Drop `A-17`. The service worker already makes repeat visits cheap, and
+   `I-4` was rated *medium*, the lowest severity in the audit.
+
+Recommendation: **(1), as its own step, after S5** — S5 deletes the nine
+retry ladders and rescopes the observers, which is likely to touch some of
+the same inline bootstrap code, so doing `A-17` first would mean editing it
+twice.

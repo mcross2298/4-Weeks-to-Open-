@@ -148,10 +148,10 @@
     badges += dropBadge(drops);
     badges += clusterBadge(ex);
     if (ex.tempo) badges += '<span class="type-badge tb-tempo">⏱ ' + esc(ex.tempo) + '</span>';
-    return '<div class="ex-card a-card" data-id="' + didOf(i) + '" data-type="single">' +
+    return '<div class="ex-card a-card a-hdr-card" data-id="' + didOf(i) + '" data-type="single">' +
       '<div class="ex-body"><div class="ex-content">' +
-        '<div class="a-top"><div class="a-idx">' + (i + 1) + '</div>' +
-        '<div class="a-head"><div class="ex-name a-name">' + esc(ex.name) + '</div>' +
+        '<div class="a-hdr"><div class="a-idx">' + (i + 1) + '</div>' +
+        '<div class="a-head"><div class="ex-name a-name">' + esc(ex.name) + '</div></div><div class="a-hdr-meta">' +
         (badges ? '<div class="a-badges">' + badges + '</div>' : '') +
         '</div></div>' +
         '<div class="a-strip"><div class="a-cell"><span class="k">Sets</span><span class="v"><span class="ex-sets" data-field="sets">' + esc(scheme) + '</span></span></div>' +
