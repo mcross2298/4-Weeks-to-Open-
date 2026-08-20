@@ -29,12 +29,61 @@
     return mins+' min';
   }
 
-  // Count checked sets
-  function getCheckedSets(){
-    return document.querySelectorAll('.sl-ck.done,.set-check.done').length;
+  // ---- what counts as "this workout" (S5c-0) ------------------------------
+  // A multi-day program page holds EVERY day of the block in the DOM at once,
+  // so a document-wide checkbox count sizes the whole block instead of the
+  // session. Finishing all 43 sets of Day 1 on mm-p1.html read "43 / 172", and
+  // done>=total (the auto-open Finish modal) needed all four days in one
+  // sitting. 23 of the 78 pages loading this module render more than one day;
+  // the worst page holds 767 set rows across 26 days.
+  //
+  // Scope is therefore the OPEN day(s) — summed, because most engines let two
+  // sit open at once, while a couple are true accordions). A page with no
+  // .day-card at all scopes to the document, which is what single-day pages
+  // were already doing correctly.
+  var UNIT_SEL_FW='.ex-card, .ss-ex, .ex-item';
+  function scopeRoots(){
+    if(!document.querySelector('.day-card'))return [document];
+    var open=[].slice.call(document.querySelectorAll('.day-card.open'));
+    if(open.length)return open;
+    // Every day closed but sets already logged (the athlete collapsed the day
+    // mid-session): stay on the day they actually worked rather than dropping
+    // the bar to "0 / 0" and appearing to lose their session.
+    return [].slice.call(document.querySelectorAll('.day-card')).filter(function(d){
+      return d.querySelector('.sl-ck.done,.set-check.done');
+    });
   }
+  function eachInScope(sel){
+    var out=[];
+    scopeRoots().forEach(function(root){
+      [].push.apply(out,[].slice.call(root.querySelectorAll(sel)));
+    });
+    return out;
+  }
+
+  // Count checked sets — DOM-derived, narrowed to the same scope. Deliberately
+  // NOT read from mc_setlog_v1: save() runs on check but is not cleared on
+  // uncheck, so a store-derived count would over-report every unchecked set.
+  function getCheckedSets(){
+    return eachInScope('.sl-ck.done,.set-check.done').length;
+  }
+  // Total comes from the PRESCRIPTION, not from rendered checkboxes, so it is
+  // right whether or not a card's logger has been built (which is what makes
+  // A-14's lazy build safe). Falls back to counting the DOM where mc-setlog.js
+  // isn't loaded or a page ships its own logger.
   function getTotalSets(){
-    return document.querySelectorAll('.sl-ck,.set-check').length;
+    var planned=window.MCSetlogUtil&&MCSetlogUtil.plannedSetCount;
+    if(!planned)return eachInScope('.sl-ck,.set-check').length;
+    var units=eachInScope(UNIT_SEL_FW);
+    if(!units.length)return eachInScope('.sl-ck,.set-check').length;
+    var n=0;
+    units.forEach(function(u){
+      var c=MCSetlogUtil.plannedSetCount(u);
+      // a unit mc-setlog.js doesn't build (page-native logger) still counts
+      // whatever checkboxes it did render
+      n+=c||u.querySelectorAll('.sl-ck,.set-check').length;
+    });
+    return n;
   }
 
   // Get all logged set data for this session
@@ -241,7 +290,14 @@
     var done=getCheckedSets();
     var total=getTotalSets();
     var el=document.getElementById('fwProgress');
-    if(el)el.textContent=done+' / '+total+' sets';
+    // Write ONLY on change (A-2's rule). This function is now also driven by
+    // MC_SCAN, whose observer watches childList on body — so an unconditional
+    // textContent write here queues a record, which schedules another scan,
+    // which writes again. Measured as a real feedback loop before this guard:
+    // steady-state mutation records 15 -> 53.9/s and querySelectorAll
+    // 291.7 -> 927.1/s. Same output, no write when the readout has not moved.
+    var txt=done+' / '+total+' sets';
+    if(el&&el.textContent!==txt)el.textContent=txt;
     var isComplete=total>0&&done>=total;
     if(isComplete&&!wasComplete&&!window._FW.finished){
       var modal=document.getElementById('fwModal');
@@ -423,8 +479,28 @@
           debounceUpdate();
           return;
         }
+        // S5c-0: the denominator is now the OPEN day, so opening or closing
+        // one resizes the workout — without this the bar sits at "0 / 0" from
+        // page load until the first set is checked. Day headers are tapped a
+        // handful of times a session, so this adds no meaningful churn.
+        if(t.classList&&t.classList.contains('day-card')){
+          debounceUpdate();
+          return;
+        }
       }
     }).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+    // ...but not every page opens a day by toggling a class on the SAME node.
+    // some pages re-render their day cards on open, so the card carrying
+    // .open is a brand-new element and no attribute mutation is ever delivered
+    // (measured: zero .day-card class records on such a page, one on
+    // mm-p1.html, which toggles the class in place). Pick
+    // that case up from MC_SCAN, the shared debounced body observer S5a moved
+    // six modules onto — it already publishes exactly this "the cards just
+    // re-rendered" signal, so this costs no new observer.
+    if(window.MC_SCAN&&MC_SCAN.subscribe){
+      MC_SCAN.subscribe(debounceUpdate);
+      MC_SCAN.start();
+    }
     updateProgress();
   }
 

@@ -335,6 +335,34 @@
       .trim();
   }
 
+  // ---- planned row count (S5c-0) -----------------------------------------
+  // The number of set rows build() WILL render for a card, derived from the
+  // prescription alone — no DOM required. build() calls it too, so the
+  // "planned" count and the "built" count are the same expression rather than
+  // two copies that can drift.
+  //
+  // mc-finish.js reads it to size a workout from the program data instead of
+  // counting rendered checkboxes. That was never a safe proxy: every day of a
+  // multi-day block lives in the DOM at once, so the document-wide count made
+  // a finished day on mm-p1.html read "43 / 172 sets" and put the auto-open
+  // Finish modal out of reach until all four days were done. It also stops
+  // being true at all once loggers are built lazily (A-14).
+  //
+  // A cluster scheme puts N reps bubbles INSIDE one row, so it never changes
+  // the row count — only working sets plus appended drop rows do.
+  function planFor(card, setsStr) {
+    if (setsStr == null) setsStr = setsOf(card);
+    var nmEl = card.querySelector('.ex-name, .ss-name, .lift-name, .var-name');
+    var drop = parseDrop(nmEl ? nmEl.textContent : '', setsStr);
+    var work = drop.is ? stripDrop(setsStr) : setsStr;
+    var n = setCount(work);
+    var nd = drop.is ? drop.drops.length : 0;   // number of appended drop rows
+    return { nmEl: nmEl, drop: drop, work: work, n: n, nd: nd, total: n + nd };
+  }
+  function plannedSetCount(card) {
+    try { return planFor(card).total; } catch (e) { return 0; }
+  }
+
   // ---- rest seconds from the card's rest timer ---------------------------
   function restSecs(card) {
     var t = card.querySelector('.rest-timer');
@@ -561,13 +589,14 @@
 
     // Separate the WORKING sets from any appended drop set so the drop is never
     // folded into (and garbling) the working-set rows. See parseDrop/stripDrop.
-    var nmEl = card.querySelector('.ex-name, .ss-name, .lift-name, .var-name');
+    var plan = planFor(card, setsStr);
+    var nmEl = plan.nmEl;
     var exNameText = nmEl ? nmEl.textContent.trim() : 'Exercise';
-    var drop = parseDrop(nmEl ? nmEl.textContent : '', setsStr);
-    var work = drop.is ? stripDrop(setsStr) : setsStr;
-    var n = setCount(work);
-    var nd = drop.is ? drop.drops.length : 0;   // number of appended drop rows
-    var total = n + nd;
+    var drop = plan.drop;
+    var work = plan.work;
+    var n = plan.n;
+    var nd = plan.nd;                           // number of appended drop rows
+    var total = plan.total;
     var dropAmrap = nd === 1 && drop.drops[0] === 'AMRAP';
     var clusterParts = parseClusterAttr(card.dataset.mcCluster);
     var clusterRestLabel = card.dataset.mcClusterRest || '';
@@ -994,8 +1023,11 @@
     updateCountByCard: updateCountByCard,
     sessionId: SESSION_ID,   // A-5: lets mc-finish.js purge exactly this
                               // page-load's Supabase workout_logs rows on discard
-    activateCard: setActiveCard   // §3.4: lets mc-session.js re-open the card
+    activateCard: setActiveCard,  // §3.4: lets mc-session.js re-open the card
                                     // the athlete was on when a session restores
+    plannedSetCount: plannedSetCount  // S5c-0: lets mc-finish.js size a workout
+                                    // from the prescription, not from rendered
+                                    // checkboxes (see planFor above)
   };
 
   // ---- cross-device pre-fill from Supabase ----------------------------------
