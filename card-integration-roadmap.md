@@ -62,8 +62,8 @@ serial chain, one PR at a time. The only contention-free items (`A-6`, `A-9`,
 | **S0** | `tools/measure-session.js` + committed baseline | none | ✅ shipped |
 | **S1** | `A-1` `A-2` `A-3` `A-4` `A-6` + `R1` `R5` | none | ✅ shipped |
 | **S2** | `A-7` `A-10`+§3.3 `A-5` `A-8` `A-9` | none — **gates S5** | ✅ shipped |
-| **S3** | `R2` + the self-opening logger (`A-11`/`M-1`/§3.4) | none | next |
-| **S4** | `R4` header consolidation + `A-17` `defer` sweep | `AskUserQuestion` | |
+| **S3** | `R2` + the self-opening logger (`A-11`/`M-1`/§3.4) | none | ✅ shipped |
+| **S4** | `R4` header consolidation + `A-17` `defer` sweep | `AskUserQuestion` | next |
 | **S5** | `A-13` render signal → `A-14` lazy build → `R3` collapse | explicit sign-off | |
 | **S6** | `A-15` CI budget, `A-12` vendored SDKs, `A-16` delta sync | none | |
 
@@ -194,3 +194,50 @@ fallback chain holds with no cached session.
 Runtime numbers hold at S1's post-fix level (0% delta on all four counters) —
 S2 is entirely a correctness/data-integrity step, touching none of the
 mutation/scan/storage paths S1 fixed.
+
+## S3 shipped (2026-08-20)
+
+R2 dropped `.mcl-row` padding 6px→1px and deleted the `.mcl-hdr` column-
+header row entirely (SET/WEIGHT/REPS/RPE — 23px on every card). Neither the
+44px inputs nor the checkbox shrank; the row numbers, the RPE chip's own
+title attribute, and the weight/reps inputs' own placeholder text already
+did the labeling job the header duplicated. **Measured:** active card
+624px → 551px (−73px, −12%); runtime holds at 0% delta on all four counters
+— this step touches presentation only.
+
+The self-opening logger fused A-11, M-1, R5's toggle-removal intent, and
+§3.4's card handoff into one mechanism, per interaction 06's spec:
+`setActiveCard()` now opens the card's own `.mcl-wrap` the moment it becomes
+active (every existing caller already implied an open wrap — focusing an
+input or tapping a checkbox requires seeing them first — so this only
+changes behavior for the one caller that doesn't: the handoff itself). The
+existing 600ms auto-collapse timer was extended to find the next
+not-yet-finished exercise and activate it — collapse, promote, scroll into
+view (`prefers-reduced-motion` respected), no tap required. The open card's
+id now persists in `mc_session_v1.activeCard`; on restore, since day-cards
+start collapsed on every one of the ~9 rendering engines and there is no
+single shared "open this day" function across them (some wire `onclick=`,
+some `addEventListener`), `mc-session.js` dispatches a real click on the
+day-header — works regardless of which mechanism a given page uses, because
+both listen for the same event a real tap produces.
+
+**A real bug was caught by live verification, not just written and trusted:**
+the first implementation of the handoff always walked straight to the next
+top-level exercise, skipping the check for whether the unit fromCard just
+finished had another leg of its own — so finishing leg A of a superset
+jumped straight past leg B instead of promoting it. Caught by testing the
+superset case specifically (not just the common single-exercise case),
+fixed by checking the current top-level unit's own legs before walking
+forward. Re-verified after the fix: leg A finishes → leg B auto-opens and
+scrolls in (still inside the same superset) → leg B finishes → the next
+*top-level* exercise auto-opens, only then leaving the superset. The
+single-card case, the reload-restore round trip, and S2's full A-5/A-7/A-8/
+A-9 verification suite were all re-run after this fix and stayed green —
+including one incidental confirmation that `activeCard` composes correctly
+through A-5's discard/restore snapshot with no extra code, since it just
+serializes as part of the same session object.
+
+Docs: `quick-tour.html` and `quick-tour-overview.html` both described only
+the manual "tap Log Sets" path; both gained a clause noting the logger now
+also opens itself when an exercise is finished, per the documentation
+currency rule.

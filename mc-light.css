@@ -115,7 +115,6 @@ html[data-theme="light"] .mcl-hist{color:var(--accent,#8a6d1a);}
 html[data-theme="light"] .mcl-count{color:#6b6459;background:rgba(28,26,23,0.05);}
 html[data-theme="light"] .mcl-count.done{color:#047857;background:rgba(52,211,153,0.16);}
 html[data-theme="light"] .mcl-wrap{border-top-color:rgba(28,26,23,0.1);}
-html[data-theme="light"] .mcl-hl{color:#8a8377;}
 html[data-theme="light"] .mcl-num{color:#6b6459;}
 html[data-theme="light"] .mcl-row{border-bottom-color:rgba(28,26,23,0.08);}
 html[data-theme="light"] .mcl-inp{

@@ -368,6 +368,22 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > after the first check of each exercise. Runtime numbers hold at S1's level
 > (0% delta on all four counters) — S2 touches none of the mutation/scan/
 > storage paths S1 fixed, by design.
+>
+> **S3 shipped (2026-08-20):** `.mcl-row` padding 6px → 1px and the
+> SET/WEIGHT/REPS/RPE column-header row deleted entirely — active card
+> 624px → 551px, no touch target shrinks. `setActiveCard()` now opens a
+> card's logger the moment it becomes active, and the existing 600ms
+> auto-collapse timer was extended to find and activate the next unfinished
+> exercise (collapse, promote, scroll into view) — the "Log Sets" tap is now
+> only needed to open a card out of order. The open card persists in
+> `mc_session_v1.activeCard` and restores across a reload, including
+> re-opening its day via a simulated header click (no single shared
+> "open this day" function exists across the ~9 rendering engines, so a
+> real click works regardless of which one wired it). A real bug surfaced
+> by testing the superset case specifically, not just the common one: the
+> first handoff implementation always skipped straight past a superset's
+> second leg instead of promoting it — fixed and re-verified before
+> shipping. Runtime holds at 0% delta; this step is presentation-only.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 
