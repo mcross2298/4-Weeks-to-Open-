@@ -163,8 +163,21 @@
     document.querySelectorAll('.ex-card.active, .ss-ex.active').forEach(function (c) {
       if (c !== card) c.classList.remove('active');
     });
-    if (card) { card.classList.add('active'); openLogger(card); }
+    // R3: one exercise expanded at a time — the one being performed. Every
+    // other card rests as its 48px .mcl-strip. This reverses base.css's
+    // recorded "no accordion" decision, which was made when a card was ~150px
+    // and is being revisited now that S1-S4 measured it at 272px collapsed.
+    // Signed off by the owner (roadmap decision 2).
+    if (card) {
+      document.querySelectorAll(UNIT_SEL_R3).forEach(function (c) {
+        if (c !== card && c.querySelector('.mcl-strip')) setCollapsed(c, true);
+      });
+      card.classList.add('active');
+      setCollapsed(card, false);
+      openLogger(card);
+    }
   }
+  var UNIT_SEL_R3 = '.ex-card, .ss-ex, .ex-item';
   function openLogger(card) {
     var wrap = card.querySelector('.mcl-wrap');
     var toggle = card.querySelector('.mcl-toggle');
@@ -458,6 +471,26 @@
 
     var stripCount = card.querySelector('.mcl-strip-count-' + cid);
     if (stripCount) stripCount.textContent = done + '/' + rows.length + ' Sets';
+    // R3: the strip is every card's resting state now, so it has to show
+    // whether this one is actually finished rather than always looking done.
+    var stripEl = card.querySelector('.mcl-strip');
+    if (stripEl) {
+      stripEl.classList.toggle('is-done', allDone);
+      var dotEl = stripEl.querySelector('.mcl-strip-dot');
+      if (dotEl) {
+        var idxEl2 = card.querySelector('.a-idx');
+        var want = allDone ? '✓' : ((idxEl2 && idxEl2.textContent.trim()) || '•');
+        if (dotEl.textContent !== want) dotEl.textContent = want;
+      }
+      // The strip carries an aria-label, and a label OVERRIDES the element's
+      // own text for assistive tech — so the '3/5 Sets' span inside it is not
+      // announced. Harmless while the strip only ever meant "finished"; under
+      // R3 it is the resting state of every card and progress is the whole
+      // point of it, so the label has to carry the count itself.
+      var wantLbl = 'Expand ' + (stripEl.querySelector('.mcl-strip-name') || {}).textContent
+                  + ', ' + done + ' of ' + rows.length + ' sets logged';
+      if (stripEl.getAttribute('aria-label') !== wantLbl) stripEl.setAttribute('aria-label', wantLbl);
+    }
     var toggleEl = card.querySelector('.mcl-toggle');
     if (toggleEl) toggleEl.classList.toggle('mcl-alldone', allDone);
 
@@ -480,9 +513,16 @@
           next.scrollIntoView(reduced ? { block: 'nearest' } : { behavior: 'smooth', block: 'nearest' });
         } catch (e) {}
       }, 600);
-    } else if (!allDone) {
+    } else if (wasDone && !allDone) {
+      // Unchecking a set on a FINISHED card re-expands it — the checkboxes
+      // have to be visible to uncheck another one. Guarded on the
+      // done->not-done transition (wasDone), not on !allDone alone: under R3
+      // every card is collapsed at rest, so the old unguarded form re-expanded
+      // all ten of them on every updateCount() pass.
       clearTimeout(card.__mclCollapseTimer);
       setCollapsed(card, false);
+    } else if (!allDone) {
+      clearTimeout(card.__mclCollapseTimer);
     }
   }
   function cssId(id) { return String(id).replace(/[^a-zA-Z0-9_-]/g, '_'); }
@@ -770,18 +810,33 @@
       strip.type = 'button';
       strip.className = 'mcl-strip';
       strip.setAttribute('aria-expanded', 'false');
-      strip.setAttribute('aria-label', 'Expand ' + exNameText + ', all sets logged');
+      strip.setAttribute('aria-label', 'Expand ' + exNameText + ', 0 of ' + total + ' sets logged');
+      // R3: the dot carries the exercise's position while the card is
+      // unstarted, and updateCount() swaps it for a ✓ once every set is
+      // logged. It used to be a hard-coded ✓ because the strip only ever
+      // appeared on finished cards.
+      var idxEl = card.querySelector('.a-idx');
+      var idxTxt = idxEl ? idxEl.textContent.trim() : '';
       strip.innerHTML =
-        '<span class="mcl-strip-dot" aria-hidden="true">✓</span>' +
+        '<span class="mcl-strip-dot" aria-hidden="true">' + escHtml(idxTxt || '•') + '</span>' +
         '<span class="mcl-strip-name">' + escHtml(exNameText) + '</span>' +
         '<span class="mcl-strip-count mcl-strip-count-' + cid + '">0/' + total + ' Sets</span>' +
         '<span class="mcl-strip-chev" aria-hidden="true">›</span>';
       strip.addEventListener('click', function (e) {
         e.stopPropagation(); e.preventDefault();
         clearTimeout(card.__mclCollapseTimer);
-        setCollapsed(card, false);
+        // Tapping a strip promotes that exercise — which collapses whichever
+        // card was expanded, so exactly one stays open (R3).
+        setActiveCard(card);
       });
       card.appendChild(strip);
+      // R3: a freshly built card rests collapsed unless it is the one the
+      // athlete is already on. Guarded on first build only (__mclR3Init) so a
+      // later re-render pass never re-collapses a card mid-set.
+      if (!card.__mclR3Init) {
+        card.__mclR3Init = true;
+        if (!card.classList.contains('active')) setCollapsed(card, true);
+      }
     }
   }
 

@@ -135,26 +135,35 @@
 .ex-card.mcl-collapsed > .mcl-strip,
 .ss-ex.mcl-collapsed > .mcl-strip,
 .ex-item.mcl-collapsed > .mcl-strip{display:flex!important;}
+/* R3: the strip is now the RESTING state of every card, not just a finished
+   one, so its palette is state-dependent. Neutral (accent rail, muted count)
+   until the card is complete; the original green treatment moves behind
+   .is-done, which updateCount() toggles. Without this every unstarted
+   exercise would read as already logged. */
 .mcl-strip{
   width:100%;align-items:center;gap:10px;
   min-height:48px;padding:12px 14px;
-  background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);
   border-radius:12px;cursor:pointer;font-family:inherit;text-align:left;
   transition:transform .1s ease,opacity .1s ease;
   -webkit-tap-highlight-color:transparent;
 }
+.mcl-strip.is-done{background:rgba(52,211,153,0.08);border-color:rgba(52,211,153,0.25);}
 .mcl-strip:active{transform:scale(0.98);opacity:0.85;}
 .mcl-strip-dot{
   flex-shrink:0;width:22px;height:22px;border-radius:50%;
-  background:#34d399;color:#04120c;
+  background:rgba(var(--accent-rgb),0.16);color:var(--accent);
+  border:1px solid rgba(var(--accent-rgb),0.32);
   display:flex;align-items:center;justify-content:center;
-  font-size:12px;font-weight:900;
+  font-size:11px;font-weight:900;
 }
+.mcl-strip.is-done .mcl-strip-dot{background:#34d399;color:#04120c;border-color:transparent;}
 .mcl-strip-name{
   flex:1;min-width:0;font-size:14px;font-weight:700;color:#e2e8f0;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
-.mcl-strip-count{flex-shrink:0;font-size:12px;font-weight:800;color:#34d399;white-space:nowrap;}
+.mcl-strip-count{flex-shrink:0;font-size:12px;font-weight:800;color:var(--muted);white-space:nowrap;}
+.mcl-strip.is-done .mcl-strip-count{color:#34d399;}
 .mcl-strip-chev{flex-shrink:0;font-size:16px;font-weight:700;color:#64748b;}
 
 /* Manual "Collapse" chip in the Log Sets header — only shown once every set
