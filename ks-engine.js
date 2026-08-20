@@ -97,15 +97,16 @@ function renderExercise(ex,dIdx,eIdx){
   const badgeHtml=badges.length?`<div class="a-badges">${badges.join('')}</div>`:'';
   const notesHtml=ex.note?`<div class="a-notes">📝 ${escapeHtml(ex.note)}</div>`:'';
   const repsHtml=renderReps(ex.sets);
-  return`<div class="ex-card a-card${cc}"><div class="ex-body">
-    <div class="a-top">
+  const infoHtml=ex.note?`<button type="button" class="a-info" aria-expanded="false" aria-label="Show coaching note">ⓘ</button>`:'';
+  return`<div class="ex-card a-card a-hdr-card${cc}"><div class="ex-body">
+    <div class="a-hdr">
       <div class="a-idx">${eIdx+1}</div>
       <div class="a-head">
         <div class="ex-name a-name"><span class="editable" data-field="name" data-d="${dIdx}" data-e="${eIdx}">${escapeHtml(ex.name)}</span></div>
-        ${badgeHtml}
       </div>
+      ${infoHtml}
+      <div class="a-hdr-meta">${badgeHtml}<div class="a-reps">${repsHtml}</div></div>
     </div>
-    <div class="a-reps">${repsHtml}</div>
     <div class="a-strip">
       <div class="a-cell"><span class="k">Sets</span><span class="v"><span class="editable" data-field="sets" data-d="${dIdx}" data-e="${eIdx}">${escapeHtml(ex.sets)}</span></span></div>
       <div class="a-cell"><span class="k">Rest</span><span class="v"><span class="editable" data-field="rest" data-d="${dIdx}" data-e="${eIdx}">${escapeHtml(ex.rest)}</span></span></div>

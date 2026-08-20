@@ -99,16 +99,18 @@
     var badgeHtml = tag ? '<div class="a-badges"><span class="a-pill '+pillCls+'">'+pillLabel+'</span></div>' : "";
     var noteHtml = note ? '<div class="a-notes">'+esc(note)+'</div>' : "";
 
-    return '<div class="ex-card a-card'+ssCls+'" data-d="'+dIdx+'" data-e="'+eIdx+'">' +
+    var infoHtml = note ? '<button type="button" class="a-info" aria-expanded="false" aria-label="Show coaching note">ⓘ</button>' : "";
+
+    return '<div class="ex-card a-card a-hdr-card'+ssCls+'" data-d="'+dIdx+'" data-e="'+eIdx+'">' +
       '<div class="ex-body">' +
-      '<div class="a-top">' +
+      '<div class="a-hdr">' +
         '<div class="a-idx">'+(eIdx+1)+'</div>' +
         '<div class="a-head">' +
           '<div class="ex-name a-name"><span class="editable" data-field="name" data-d="'+dIdx+'" data-e="'+eIdx+'">'+esc(ex.name)+'</span></div>' +
-          badgeHtml +
         '</div>' +
+        infoHtml +
+        '<div class="a-hdr-meta">'+badgeHtml+'<div class="a-reps">'+repsHtml+'</div></div>' +
       '</div>' +
-      '<div class="a-reps">'+repsHtml+'</div>' +
       '<div class="a-strip">' +
         '<div class="a-cell"><span class="k">Sets</span><span class="v"><span class="editable" data-field="sets" data-d="'+dIdx+'" data-e="'+eIdx+'">'+esc(wd.sets)+'</span></span></div>' +
         '<div class="a-cell"><span class="k">Rest</span><span class="v"><span class="editable" data-field="rest" data-d="'+dIdx+'" data-e="'+eIdx+'">'+esc(wd.rest)+'</span></span></div>' +

@@ -384,6 +384,30 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > first handoff implementation always skipped straight past a superset's
 > second leg instead of promoting it — fixed and re-verified before
 > shipping. Runtime holds at 0% delta; this step is presentation-only.
+>
+> **S4a shipped (2026-08-20):** S4 was gated and split — engines first, the
+> hand-written pages second. Scoping that split corrected a plan assumption:
+> there are **5** card engines, not 2 (`mm-`, `mc-pmc-`, `mc-`, `mc-s3-`,
+> `ks-`), covering **39 pages**, and only **17** pages hand-write `.a-top`,
+> with zero overlap — not the "~80" the roadmap carried (that was the count
+> of pages loading `mc-card-actions.js`, a larger and different set). S4a
+> ships the consolidated `.a-hdr` header as a shared component plus all five
+> engines; the old `.a-top` rules are untouched so unmigrated pages are
+> unaffected, and the new markup opts in via an `.a-hdr-card` marker.
+> **R4's wireframe did not survive the real data:** it put the prescription
+> inline as a compact `4×10` pill, but real prescriptions render as
+> `12·10·8·8→∞·∞` and a fixed right-hand column starved `.a-head` into a
+> **320px** header on kitchen-sink.html — caught by the harness, fixed by
+> giving the prescription its own row. A second bug from the same pass:
+> `.a-head` at `flex-basis:auto` pushed ⓘ onto a third line, since flexbox
+> breaks lines on hypothetical main size; fixed with `flex:1 1 0` plus
+> floating ⓘ beside the ⋯ meatball. Headers now measure 68–78px across every
+> engine. Also fixed a live regression **S1 introduced**: `.mc-meatball` went
+> 36→44px but `.a-top`'s `padding-right:calc(42px * var(--density))` was not
+> updated with it, so at `--density:0.82` the meatball overlapped the
+> exercise name by ~16px; both headers now use a fixed 54px, since they clear
+> a fixed-size element. Active card 551 → 470px, full day 3868 → 3165px,
+> runtime 0% delta.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 

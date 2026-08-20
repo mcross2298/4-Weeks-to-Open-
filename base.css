@@ -515,8 +515,13 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .ss-card.a-ss .ss-ex.active{background:rgba(168,85,247,0.09);}
 .ss-card.a-ss .ss-ex.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;z-index:1;
   background:#c084fc;box-shadow:0 0 10px rgba(168,85,247,0.6);}
+/* padding-right is NOT density-scaled: it clears the .mc-meatball, which is a
+   fixed 44px at right:6px (S1 raised it from 36px for the touch floor and this
+   value was not updated with it). At --density:0.82 the old
+   calc(42px * var(--density)) resolved to 34px and the meatball overlapped the
+   name by ~16px. */
 .a-top{display:flex;align-items:flex-start;gap:calc(11px * var(--density));
-  padding:calc(14px * var(--density)) calc(42px * var(--density)) calc(10px * var(--density)) calc(18px * var(--density));}
+  padding:calc(14px * var(--density)) 54px calc(10px * var(--density)) calc(18px * var(--density));}
 .a-idx{font-size:calc(13px * var(--density));font-weight:900;font-variant-numeric:tabular-nums;
   min-width:calc(30px * var(--density));height:calc(30px * var(--density));
   border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;
@@ -565,6 +570,77 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .a-card .a-cell .v .editable{border-bottom:1px dashed rgba(var(--accent-rgb),0.4);color:var(--muted);}
 .a-strip .a-cell:nth-child(1){display:none;}
 .a-card:has(.a-timerbar .rest-timer) .a-strip{display:none;}
+/* ── R4 consolidated card header (card-integration roadmap, S4) ───────────
+   Collapses the old three-band card top — .a-top, then a full-width .a-reps
+   hero, then a standalone .a-notes coaching cue — into one header block:
+
+     row 1   index · exercise name · ⓘ      (⋯ floats here, absolutely placed)
+     row 2   structural pill(s) · the prescription, at reading size
+
+   R4's wireframe put the prescription inline on row 1 as a compact pill
+   ("4x10"). That does not survive this app's real data: a Kitchen Sink
+   prescription renders as "12·10·8·8→∞·∞" (102px) and several programs carry
+   two structural pills, and reserving a fixed right-hand column for those
+   starved .a-head so badly that names and badges stacked into a 320px header.
+   Measured, not guessed. So the prescription keeps its own row instead —
+   still one header block, still far shorter than the three bands it replaces,
+   and robust to a long scheme or an extra pill.
+
+   .a-reps is KEPT and shrunk, not deleted. The UX report proposed removing it
+   as a restatement of the logger's numbered rows, but .a-rep is not static
+   text: mc-rep-progress.js advances a .live glow across those spans set by
+   set, and they carry their own reduced-motion rule and light-theme palette.
+   Deleting them would have removed a live progress indicator (decision 1).
+
+   Deliberately additive — every .a-top rule above is untouched, so the 17
+   pages still hand-writing that markup render exactly as before until S4b
+   migrates them. Class names inside the header (.a-idx, .a-head, .a-reps,
+   .a-badges) are unchanged too, because program-overrides.js resolves
+   .a-head and .a-reps by querySelector for PM inline-edit. */
+.a-hdr{position:relative;display:flex;flex-wrap:wrap;align-items:center;
+  column-gap:calc(10px * var(--density));row-gap:calc(6px * var(--density));
+  min-height:52px;
+  padding:calc(9px * var(--density)) 54px calc(7px * var(--density)) calc(18px * var(--density));}
+.a-hdr .a-idx{order:1;}
+/* flex-basis:0, not auto — flexbox breaks lines on HYPOTHETICAL main size, so
+   an auto-basis .a-head measured at its full content width filled row 1 by
+   itself and pushed ⓘ onto a line of its own (measured: a 3-row, 123px
+   header). Basis 0 lets it size from the space actually left over. */
+.a-hdr .a-head{order:2;flex:1 1 0;min-width:0;}
+/* Exercise-name legibility outranks every other element on the card, so a
+   long name wraps to a second line rather than ellipsizing something the
+   athlete has to recognise mid-set. The row grows only when one needs it. */
+.a-hdr .ex-name.a-name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+/* Row 2 — always its own line (flex-basis:100%), indented under the name. */
+.a-hdr .a-hdr-meta{order:4;flex:1 1 100%;display:flex;align-items:center;
+  flex-wrap:wrap;gap:calc(8px * var(--density));
+  padding-left:calc(30px * var(--density) + 10px * var(--density));}
+.a-hdr .a-badges{margin-top:0;}
+.a-hdr .a-reps{padding:0;margin-left:auto;}
+.a-hdr .a-leg{gap:5px;}
+.a-hdr .a-leg + .a-leg{margin-top:2px;padding-top:2px;}
+.a-hdr .a-rep{font-size:calc(15px * var(--density));}
+.a-hdr .a-rep.special{font-size:calc(12px * var(--density));}
+.a-hdr .a-sep{font-size:10px;}
+.a-hdr .a-legtag{font-size:9px;}
+/* ⓘ is rendered only when the exercise actually carries a coaching cue — an
+   empty info button on every card would be the band just removed, in a
+   smaller coat. 44x44 per the touch floor established in S1/R5. */
+/* Floated out of flow beside the ⋯ meatball (which is already absolute at
+   right:6px), so a 44px control does not set the height of a 30px row. */
+.a-hdr:has(.a-info){padding-right:98px;}
+.a-info{position:absolute;top:6px;right:54px;z-index:4;
+  appearance:none;-webkit-appearance:none;
+  width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+  background:none;border:none;padding:0;margin:0;font:inherit;font-size:17px;line-height:1;
+  color:var(--muted2);cursor:pointer;border-radius:10px;
+  -webkit-tap-highlight-color:transparent;transition:color .15s,background .15s;}
+.a-info:active{background:rgba(var(--accent-rgb),0.14);}
+.a-info[aria-expanded="true"]{color:var(--accent);background:rgba(var(--accent-rgb),0.12);}
+/* The cue itself — present in the DOM for PM inline-edit and mc-setlog.js's
+   collapseNotes(), shown only when ⓘ is pressed. */
+.a-hdr-card .a-notes{display:none;}
+.a-hdr-card.a-note-open .a-notes{display:block;}
 .a-timerbar{padding:calc(10px * var(--density)) calc(16px * var(--density)) calc(12px * var(--density)) calc(18px * var(--density));}
 .a-card .a-timerbar .rest-timer{width:100%;justify-content:center;}
 .a-card .a-timerbar .rest-timer.idle{background:rgba(var(--accent-rgb),0.1);border:1px solid rgba(var(--accent-rgb),0.26);}
