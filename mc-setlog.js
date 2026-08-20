@@ -971,12 +971,33 @@
     });
   }
 
-  // ---- init: run now + retry passes to win any race with native render ---
+  // ---- init (A-13) --------------------------------------------------------
+  // Was: run(), then a [250,700,1500,2600] retry ladder, then a PRIVATE
+  // body-scoped MutationObserver. Nine modules each carried their own copy of
+  // that belt-and-braces pair, because nothing told them when a page's cards
+  // were actually rendered — ~31 speculative whole-page passes at boot across
+  // the fleet, and nine observers waking on every DOM change forever after.
+  //
+  // program-overrides.js already publishes exactly the signal that was
+  // missing: MC_SCAN, ONE shared, debounced body observer with subscribe() /
+  // schedule() / withoutObserver(). Subscribing to it replaces both the
+  // ladder and the private observer, and MC_SCAN.schedule() is the explicit
+  // "cards just rendered" announcement a lazy build (A-14) makes rather than
+  // waiting on an observer round-trip.
+  //
+  // The fallback branch is real, not defensive boilerplate: run-program.html
+  // renders exercise cards but does not load program-overrides.js, so MC_SCAN
+  // genuinely is absent there. One deferred pass replaces the four-step
+  // ladder in that branch too.
   function init() {
+    if (window.MC_SCAN && MC_SCAN.subscribe) {
+      MC_SCAN.subscribe(run); MC_SCAN.start(); MC_SCAN.schedule();
+    } else {
+      var mo = new MutationObserver(function () { clearTimeout(init._t); init._t = setTimeout(run, 120); });
+      mo.observe(document.body, { childList: true, subtree: true });
+      setTimeout(run, 600);
+    }
     run();
-    [250, 700, 1500, 2600].forEach(function (d) { setTimeout(run, d); });
-    var mo = new MutationObserver(function () { clearTimeout(init._t); init._t = setTimeout(run, 120); });
-    mo.observe(document.body, { childList: true, subtree: true });
     // Supabase pre-fill: after initial render settles
     setTimeout(trySupabasePrefill, 2000);
   }

@@ -795,7 +795,10 @@
       ownObserver.observe(document.body, { childList: true, subtree: true });
     }
     scan();
-    [200, 600, 1400].forEach(function (d) { setTimeout(scan, d); });
+    // A-13: the [200,600,1400] ladder here was redundant — this module already
+    // subscribes to MC_SCAN above, so one primed pass covers the boot race.
+    if (window.MC_SCAN && MC_SCAN.schedule) MC_SCAN.schedule();
+    else setTimeout(scan, 600);
   }
 
   function disable() {

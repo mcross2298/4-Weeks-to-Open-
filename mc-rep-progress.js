@@ -100,32 +100,42 @@
     document.querySelectorAll(UNIT_SEL).forEach(update);
   }
 
-  // ---- wiring: event-driven, mirrors mc-setlog's render lifecycle ----------
+  // ---- wiring (A-13) ------------------------------------------------------
+  // This module's observer was doing two unrelated jobs through one
+  // subscription: "a .set-check toggled, re-evaluate THAT card instantly" and
+  // "new cards appeared, rebuild everything". Only the second is the render
+  // signal, and MC_SCAN already publishes it — so the childList half moves to
+  // MC_SCAN (shared, debounced) and the retry ladder goes with it.
+  //
+  // The attribute half stays local and deliberately so: it must fire on the
+  // same frame the athlete taps a checkbox, and it is what makes the glow
+  // advance instantly. Narrowing it to attributes-only (no childList) is the
+  // point — it now watches one thing instead of two.
   function init() {
-    run();
-    // Catch the logger's async render passes (mc-setlog retries on a schedule).
-    [250, 700, 1500, 2600].forEach(function (d) { setTimeout(run, d); });
+    if (window.MC_SCAN && MC_SCAN.subscribe) {
+      MC_SCAN.subscribe(run); MC_SCAN.start(); MC_SCAN.schedule();
+    } else {
+      var ct;
+      new MutationObserver(function () { clearTimeout(ct); ct = setTimeout(run, 120); })
+        .observe(document.body, { childList: true, subtree: true });
+      setTimeout(run, 600);
+    }
 
     var mo = new MutationObserver(function (muts) {
-      var rebuild = false;
       for (var i = 0; i < muts.length; i++) {
-        var m = muts[i];
-        if (m.type === 'attributes') {
-          var t = m.target;
-          // A checkbox toggled .done → re-evaluate just its card (cheap, instant).
-          if (t.classList && t.classList.contains('set-check')) {
-            var unit = closestUnit(t);
-            if (unit) update(unit);
-          }
-        } else if (m.type === 'childList' && (m.addedNodes.length || m.removedNodes.length)) {
-          rebuild = true;                        // new logger/cards appeared
+        var t = muts[i].target;
+        // A checkbox toggled .done → re-evaluate just its card (cheap, instant).
+        if (t.classList && t.classList.contains('set-check')) {
+          var unit = closestUnit(t);
+          if (unit) update(unit);
         }
       }
-      if (rebuild) { clearTimeout(mo._t); mo._t = setTimeout(run, 120); }
     });
     mo.observe(document.body, {
-      subtree: true, childList: true, attributes: true, attributeFilter: ['class']
+      subtree: true, attributes: true, attributeFilter: ['class']
     });
+
+    run();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

@@ -272,10 +272,19 @@
     document.head.appendChild(st);
   }
 
+  // A-13: subscribe to the shared render signal (MC_SCAN) instead of a
+  // [400,1000,2000,3000] retry ladder guessing when the cards will exist.
   function init() {
     injectCSS();
+    if (window.MC_SCAN && MC_SCAN.subscribe) {
+      MC_SCAN.subscribe(render); MC_SCAN.start(); MC_SCAN.schedule();
+    } else {
+      var t;
+      new MutationObserver(function () { clearTimeout(t); t = setTimeout(render, 120); })
+        .observe(document.body, { childList: true, subtree: true });
+      setTimeout(render, 600);
+    }
     render();
-    [400, 1000, 2000, 3000].forEach(function (d) { setTimeout(render, d); });
   }
   if (isBrowser) {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
