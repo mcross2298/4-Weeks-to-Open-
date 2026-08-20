@@ -468,6 +468,28 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > `cat-pmc`/`cat-strength`/`pmc-workout` are pickers). Headers 53–92px, zero
 > console errors, no meatball overlap, all 45 inline scripts re-parsed clean.
 >
+> **S5c-0 shipped (2026-08-20) — a live bug the audits had not found.**
+> Sizing `A-14` meant re-measuring `mc-finish.js`'s DOM-derived completion
+> count on `main`, which showed it is **already wrong today**: every day of a
+> multi-day block sits in the DOM at once, so `getTotalSets()` counted the
+> whole block. Finishing all 43 sets of a training day on `mm-p1.html` read
+> **`43 / 172 sets`**, and the auto-open completion recap — gated on
+> `done >= total` — could not fire without training all four days in one
+> sitting. **23 of the 78 pages** loading the module render more than one day;
+> the worst holds 767 set rows across 26. Single-day pages were always correct,
+> which is why it survived. The fix derives the denominator from the
+> prescription (`MCSetlogUtil.plannedSetCount()`, the same `planFor()` that
+> `build()` uses, so the two cannot drift — verified equal on 751 cards across
+> 14 pages) and scopes both counters to the open day(s). Two findings came from
+> measuring, not reading: some pages **re-render** their day cards on open, so
+> no attribute mutation is ever delivered and the day-change had to come from
+> `MC_SCAN`; and that subscription instantly re-created the write→observe→write
+> feedback loop this roadmap exists to remove (**15 → 53.9 records/s**,
+> `querySelectorAll` **291.7 → 927.1**) because `updateProgress()` wrote
+> `textContent` unconditionally — fixed with A-2's write-on-change rule, final
+> runtime delta 0%. `A-14` is unblocked on the total but still needs
+> restore-on-build, since `restoreSets()` finds rows by `getElementById`.
+>
 > **`A-17` (the `defer` sweep) is blocked and was pulled out of S4b.** Its
 > premise — "the modules all self-initialise on `DOMContentLoaded`, so
 > `defer` preserves order" — is true module-to-module and ignores inline

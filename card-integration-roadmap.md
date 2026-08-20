@@ -68,7 +68,8 @@ serial chain, one PR at a time. The only contention-free items (`A-6`, `A-9`,
 | **S4c** | `A-17` `defer` sweep — **blocked, see below** | needs a decision | blocked |
 | **S5a** | `A-13` render signal — migrate onto `MC_SCAN` | signed off | ✅ shipped |
 | **S5b** | `R3` collapse-by-default (`A-14` split out) | signed off | ✅ shipped |
-| **S5c** | `A-14` lazy build — **blocked, see below** | needs the accounting fix | blocked |
+| **S5c-0** | completion accounting off DOM counts — **live bug fix**, unblocks `A-14` | none | ✅ shipped |
+| **S5c** | `A-14` lazy build — blocked until S5c-0 lands | needs S5c-0 | blocked |
 | **S6** | `A-15` CI budget, `A-12` vendored SDKs, `A-16` delta sync | none | |
 
 ### Ordering rules this encodes
@@ -550,3 +551,122 @@ S2's, S3's and S4a's verification suites were re-run and stayed green;
 headers still measure 68–73px on every engine. Superset legs (`.ss-ex`) carry
 no `.a-hdr` — pre-existing since S4a, checked rather than assumed.
 
+
+---
+
+## S5c-0 — completion accounting off DOM counts (opened 2026-08-20)
+
+### Objective
+
+Derive the Finish bar's `done / total` from the **prescription data**, scoped
+to the day the athlete is actually training, instead of from a document-wide
+count of rendered checkboxes.
+
+### Why this is not just an `A-14` prerequisite
+
+Scoping `A-14` (S5b's shipped record) established that lazy-building loggers
+collapses `getTotalSets()` from 172 to 5 on `mm-p1.html`. Re-measuring that on
+`main` to size the fix surfaced something the audits had not: **the count is
+already wrong today, on every multi-day page.**
+
+`mc-finish.js` counts `.sl-ck,.set-check` across the whole document, and every
+day of a block is in the DOM at once. Measured on `mm-p1.html` — open Day 1,
+check all 43 of its sets:
+
+```
+[after checking ALL of day1]  {"fw":"43 / 172 sets","done":43,"total":172}
+finish modal open? false
+```
+
+A finished training day reads **25% complete**, and the auto-open Finish modal
+is unreachable without completing all four days in one session. Across the 78
+pages that load `mc-finish.js`, **23 render more than one day** and are
+affected. Worst cases: `legacy-prep.html` (26 days, 767 sets in the DOM — a
+finished 33-set day reads `33 / 767`) and `arnold-legacy.html` (649).
+
+Single-day pages compute correctly today, which is why this survived: the
+pages that get spot-checked are the ones that were never wrong.
+
+### Scope
+
+Two functions in `mc-finish.js`, plus one helper exported from `mc-setlog.js`.
+
+1. **`MCSetlogUtil.plannedSetCount(card)`** — the row count a logger *would*
+   build for a card, from `setsOf()` + `parseDrop`/`stripDrop`/`setCount`.
+   `build()` is refactored to call it, so the planned count and the built
+   count cannot drift apart. Cluster schemes add reps bubbles inside a row,
+   not extra rows, so they do not affect the count.
+2. **Scope = the open day(s)** — `.day-card.open`, summed (most engines allow
+   two days open at once; `legacy-prep` is a true accordion). A page with no
+   `.day-card` at all scopes to the document, which is what single-day pages
+   already do correctly.
+3. **`done` stays DOM-derived**, narrowed to the same scope.
+
+### Deliberately not in scope
+
+- **`done` from `mc_setlog_v1`.** Considered and rejected on contact with the
+  code: `save()` is called on check but *not* cleared on uncheck, so a
+  store-derived `done` would over-count every unchecked set. Making uncheck
+  delete the stored entry is a persistence-semantics change that would also
+  drop the set from suggestion history — its own decision, not a rider on a
+  bug fix.
+- **Restore-on-build.** Under `A-14`, a mid-session reload leaves unopened
+  cards unbuilt, so `mc-session.js`'s `restoreSets()` (which finds rows by
+  `getElementById`) silently drops their check-marks. That is real, but it is
+  `A-14`'s to solve in S5c and does not exist today.
+- **The discard/reset paths** stay document-wide — "exit & discard" means the
+  whole session, not the open day.
+- **PSU (`psu-strength.html`)** keeps its native `.set-row` logger, which
+  `mc-finish.js` has never counted; it reads `0 / 0` today and still will.
+  Pre-existing, separate, not made worse.
+- **`.sl-ck` is dead markup.** It renders zero elements on every page probed
+  (its CSS survives on ~20 pages); it stays in the selectors as a no-op rather
+  than being swept in this PR.
+
+### Gate
+
+None. Verified by measurement on the affected pages before and after, plus the
+standing local gate list.
+
+### S5c-0 shipped (2026-08-20)
+
+`MCSetlogUtil.plannedSetCount(card)` is the row count `build()` will render,
+from the prescription alone; `build()` was refactored onto the same `planFor()`
+so the planned and built counts are one expression. Verified equal on **751
+cards across 14 pages, zero mismatches**, before anything depended on it.
+
+`mc-finish.js` now scopes to the open day(s). Measured before → after on 13
+multi-day pages, all passing: a finished Day 1 on `mm-p1.html` goes
+`43 / 172` → `43 / 43`, and the completion recap — which **never fired
+before** — now opens. The four single-day pages are byte-for-byte unchanged in
+behavior.
+
+Two things were found by measuring rather than by reading:
+
+1. **Not every page opens a day by toggling a class.** The attribute observer
+   caught it on `mm-p1.html` and saw *nothing* on a page that re-renders its
+   day cards on open — the node carrying `.open` there is brand new, so no
+   attribute record is ever delivered and the bar sat at `0 / 0`. Picked up
+   from `MC_SCAN` instead, the shared debounced observer S5a moved six modules
+   onto; no new observer.
+2. **That subscription immediately re-created the feedback loop this whole
+   roadmap exists to remove.** `updateProgress()` wrote `textContent`
+   unconditionally; `MC_SCAN` watches `childList` on body; the write scheduled
+   the scan that caused the write. Steady-state went **15 → 53.9 records/s
+   (+259%)** and `querySelectorAll` **291.7 → 927.1 (+218%)** — caught by
+   `tools/measure-session.js`, not by review. Fixed with A-2's write-on-change
+   rule. Final delta vs the S5b baseline: records **0%**, observer callbacks
+   **0%**, storage reads **0%**, `querySelectorAll` **+3%**, layout unchanged.
+
+Also fixed while scoping: with every day collapsed but sets logged, the bar
+falls back to the days containing checked sets rather than reading `0 / 0` and
+appearing to have lost the session.
+
+A comment naming a licensed page inside shared `mc-finish.js` was caught by
+`tools/build-market.py --check` — reworded generically. That gate earning its
+keep on a comment is worth recording.
+
+**`A-14` (S5c) is now unblocked on the total.** It still needs restore-on-build
+before it is safe: `mc-session.js`'s `restoreSets()` finds rows by
+`getElementById`, so an unbuilt card's check-marks are silently dropped on a
+mid-session reload.
