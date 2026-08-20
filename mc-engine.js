@@ -25,12 +25,13 @@ function rS(ex,wk){
   const id=wk+'-s-'+ex.num,ck=checkState[id]?'checked':'';
   var rest=ex.rest||'60 sec';
   var bh=B(ex.b||[]);
-  return '<div class="ex-card a-card '+ck+'" data-id="'+id+'" data-type="single">'+
+  return '<div class="ex-card a-card a-hdr-card '+ck+'" data-id="'+id+'" data-type="single">'+
     '<div class="ex-body">'+
-    '<div class="a-top"><div class="a-idx">'+ex.num+'</div>'+
-    '<div class="a-head"><div class="ex-name a-name">'+ex.name+'</div>'+
-    (bh?'<div class="a-badges">'+bh+'</div>':'')+'</div></div>'+
-    '<div class="a-reps">'+aReps(ex.sets)+'</div>'+
+    '<div class="a-hdr"><div class="a-idx">'+ex.num+'</div>'+
+    '<div class="a-head"><div class="ex-name a-name">'+ex.name+'</div></div>'+
+    (ex.note?'<button type="button" class="a-info" aria-expanded="false" aria-label="Show coaching note">ⓘ</button>':'')+
+    '<div class="a-hdr-meta">'+(bh?'<div class="a-badges">'+bh+'</div>':'')+
+      '<div class="a-reps">'+aReps(ex.sets)+'</div></div>'+'</div>'+
     '<div class="a-strip"><div class="a-cell"><span class="k">Sets</span><span class="v"><span data-field="sets">'+ex.sets+'</span></span></div>'+
     '<div class="a-cell"><span class="k">Rest</span><span class="v">'+rest+'</span></div></div>'+
     '<div class="a-timerbar">'+makeRestTimer(rest,ex.name)+'</div>'+

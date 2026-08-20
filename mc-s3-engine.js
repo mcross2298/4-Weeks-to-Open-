@@ -20,16 +20,17 @@ function renderEx(ex, prefix, idx) {
   const rest = ex.rest || "60 sec";
   const badgeHtml = ex.tempo ? `<div class="a-badges"><span class="ex-tempo">${esc(ex.tempo)}</span></div>` : "";
   const noteHtml = ex.note ? `<div class="a-notes">📝 ${esc(ex.note)}</div>` : "";
-  return `<div class="ex-card a-card ${checked}" data-id="${id}" data-type="single">
+  const infoHtml = ex.note ? `<button type="button" class="a-info" aria-expanded="false" aria-label="Show coaching note">ⓘ</button>` : "";
+  return `<div class="ex-card a-card a-hdr-card ${checked}" data-id="${id}" data-type="single">
     <div class="ex-body">
-      <div class="a-top">
+      <div class="a-hdr">
         <div class="a-idx">${idx+1}</div>
         <div class="a-head">
           <div class="ex-name a-name">${esc(ex.name)}</div>
-          ${badgeHtml}
         </div>
+        ${infoHtml}
+        <div class="a-hdr-meta">${badgeHtml}<div class="a-reps">${aReps(ex.sets)}</div></div>
       </div>
-      <div class="a-reps">${aReps(ex.sets)}</div>
       <div class="a-strip">
         <div class="a-cell"><span class="k">Sets</span><span class="v"><span data-field="sets">${esc(ex.sets)}</span></span></div>
         <div class="a-cell"><span class="k">Rest</span><span class="v">${esc(rest)}</span></div>

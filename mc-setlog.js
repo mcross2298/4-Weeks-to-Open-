@@ -142,6 +142,23 @@
   // wrap (you can't focus a hidden input or tap a hidden checkbox); the one
   // caller that does NOT — the card-handoff promotion below — is exactly
   // the case this was missing for.
+  // R4: the program's coaching cue (.a-notes) moved behind the header's ⓘ
+  // button on cards using the consolidated header. ONE delegated listener for
+  // every such button on the page, however it was rendered — the same pattern
+  // mc-timer.js uses for .rest-timer, and the reason a per-engine copy of this
+  // handler would be the exact duplication check-single-impl.js exists to
+  // prevent. A real <button> is keyboard-focusable and fires click on both
+  // Space and Enter for free, so the cue stays reachable without a pointer.
+  document.addEventListener('click', function (e) {
+    var btn = e.target && e.target.closest && e.target.closest('.a-info');
+    if (!btn) return;
+    e.stopPropagation(); e.preventDefault();
+    var card = btn.closest('.ex-card, .ss-ex, .ex-item');
+    if (!card) return;
+    var open = card.classList.toggle('a-note-open');
+    btn.setAttribute('aria-expanded', String(open));
+  });
+
   function setActiveCard(card) {
     document.querySelectorAll('.ex-card.active, .ss-ex.active').forEach(function (c) {
       if (c !== card) c.classList.remove('active');
