@@ -165,6 +165,110 @@
     insertBanner(el);
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', render);
-  else render();
+  // ==========================================================================
+  //  A-5: "Restore discarded workout" — the recoverable half of the confirm
+  //  + undo pattern mc-finish.js's discard() needs but cannot hold itself,
+  //  since discard() ends by navigating to dashboard.html (there is no page
+  //  left afterward to run an in-memory Undo toast the way applySwap()'s
+  //  does). mc-finish.js writes the snapshot right before wiping; this reads
+  //  it back. Independent feature from the resume-in-progress banner above
+  //  — different trigger (a deliberate discard, not an unfinished session),
+  //  different store, dashboard-only.
+  // ==========================================================================
+  var DISCARD_KEY = 'mc_discard_snapshot_v1';
+  var DISCARD_EXPIRE_MS = 2 * 3600 * 1000;   // fat-thumb recovery window, not a history feature
+
+  function readDiscard() {
+    try { return JSON.parse(localStorage.getItem(DISCARD_KEY) || 'null'); }
+    catch (e) { return null; }
+  }
+  function clearDiscard() { try { localStorage.removeItem(DISCARD_KEY); } catch (e) {} }
+
+  function injectRestoreCSS() {
+    if (document.getElementById('mcrRestoreCss')) return;
+    var s = document.createElement('style');
+    s.id = 'mcrRestoreCss';
+    s.textContent =
+      '.mcr-banner.mcr-restore{background:rgba(234,179,8,0.12);border-color:rgba(234,179,8,0.32);}' +
+      '.mcr-banner.mcr-restore:active{background:rgba(234,179,8,0.22);}' +
+      '.mcr-restore .mcr-lbl{color:#eab308;}' +
+      '.mcr-restore .mcr-arrow{color:#fde68a;}';
+    document.head.appendChild(s);
+  }
+
+  function renderDiscardRestore() {
+    if (!onDashboard) return;                       // per the roadmap: dashboard-only
+    if (document.querySelector('.ex-card, .ss-card')) return;
+
+    var snap = readDiscard();
+    if (!snap || !snap.pageId) return;
+    if ((Date.now() - (snap.ts || 0)) > DISCARD_EXPIRE_MS) { clearDiscard(); return; }
+
+    // A newer session already exists for that page — the athlete started
+    // fresh since discarding. Restoring the old snapshot on top would
+    // clobber real, newer progress, so the stale snapshot is dropped instead
+    // of offered.
+    var sessAll = {};
+    try { sessAll = JSON.parse(localStorage.getItem('mc_session_v1') || '{}') || {}; } catch (e) {}
+    if (sessAll[snap.pageId]) { clearDiscard(); return; }
+
+    var setCount = 0;
+    Object.keys(snap.sets || {}).forEach(function (k) {
+      var sess = snap.sets[k];
+      if (sess && sess.sets) setCount += Object.keys(sess.sets).length;
+    });
+    if (!setCount && !snap.session) { clearDiscard(); return; }
+
+    injectCSS();
+    injectRestoreCSS();
+
+    var el = document.createElement('div');
+    el.className = 'mcr-banner mcr-restore';
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+    el.innerHTML =
+      '<span class="mcr-ico">🗑️</span>' +
+      '<div class="mcr-body">' +
+        '<div class="mcr-lbl">Discarded workout</div>' +
+        '<div class="mcr-name"></div>' +
+        '<div class="mcr-ago">Tap to restore</div>' +
+      '</div>' +
+      (setCount ? '<span class="mcr-prog">' + setCount + ' set' + (setCount === 1 ? '' : 's') + '</span>' : '') +
+      '<span class="mcr-arrow">↩️</span>' +
+      '<button class="mcr-dismiss" aria-label="Dismiss">✕</button>';
+    el.querySelector('.mcr-name').textContent = snap.workoutName || snap.pageId;
+
+    function restore() {
+      try {
+        if (snap.session) {
+          var s2 = JSON.parse(localStorage.getItem('mc_session_v1') || '{}') || {};
+          s2[snap.pageId] = snap.session;
+          localStorage.setItem('mc_session_v1', JSON.stringify(s2));
+        }
+        var sl = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}') || {};
+        Object.keys(snap.sets || {}).forEach(function (k) {
+          if (!sl[k]) sl[k] = [];
+          sl[k].unshift(snap.sets[k]);
+        });
+        localStorage.setItem('mc_setlog_v1', JSON.stringify(sl));
+      } catch (e) {}
+      clearDiscard();
+      location.href = snap.pageId + '.html';
+    }
+    el.addEventListener('click', restore);
+    el.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); restore(); }
+    });
+    el.querySelector('.mcr-dismiss').addEventListener('click', function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      clearDiscard();
+      if (el.parentNode) el.parentNode.removeChild(el);
+    });
+
+    insertBanner(el);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { render(); renderDiscardRestore(); });
+  } else { render(); renderDiscardRestore(); }
 })();

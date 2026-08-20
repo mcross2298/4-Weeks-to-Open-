@@ -90,9 +90,19 @@
       if (session.cards.indexOf(cardKey(c, all)) !== -1) c.classList.add('checked');
     });
   }
+  // A-7: restoring a set row here writes .done straight onto the DOM instead
+  // of going through mc-setlog.js's onCheck() — which is also the only path
+  // that runs updateCount() (the collapsed-strip badge, the .checked mirror,
+  // .mcl-alldone, the auto-collapse timer). Left alone, a reload mid-session
+  // showed the right checkmarks with every one of those readouts stuck at
+  // the pre-reload value (typically 0/N). Track which cards actually had a
+  // row restored on THIS pass and run the real derivation for each of them
+  // once retries settle, via the small surface mc-setlog.js exposes for
+  // exactly this (window.MCSetlogUtil.updateCountByCard).
   function restoreSets() {
     if (!session || !session.sets || !session.sets.length) return true;
     var done = true;
+    var touchedCards = [];
     session.sets.forEach(function (rowId) {
       var row = document.getElementById(rowId);
       if (!row) { done = false; return; }
@@ -100,8 +110,13 @@
       if (ck && !ck.classList.contains('done')) {
         ck.classList.add('done'); ck.textContent = '✓';
         row.classList.add('done-row');
+        var card = row.closest(CARD_SEL);
+        if (card && touchedCards.indexOf(card) === -1) touchedCards.push(card);
       }
     });
+    if (touchedCards.length && window.MCSetlogUtil && window.MCSetlogUtil.updateCountByCard) {
+      touchedCards.forEach(function (c) { window.MCSetlogUtil.updateCountByCard(c); });
+    }
     return done;
   }
   function restoreTimer() {

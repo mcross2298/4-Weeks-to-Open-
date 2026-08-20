@@ -60,6 +60,18 @@
 }
 .mcl-inp:focus{border-color:rgba(212,175,55,0.5);background:rgba(212,175,55,0.07);}
 .mcl-inp::placeholder{color:#475569;font-size:12px;font-weight:600;}
+/* A-10 + ghost prefill (§3.3): a value shown but not yet confirmed by the
+   athlete (last session's weight, or the prescribed reps). Muted color +
+   italic + a dashed border reads clearly as "suggested, tap to accept or
+   edit" without opacity — opacity would also fade the touch target itself,
+   fighting the 44pt-floor work in R5. Clears the instant the athlete types
+   (see mc-setlog.js) or checks the row (checking always counts as accepting
+   it, no edit required). */
+.mcl-inp.mcl-ghost{color:#94a3b8;font-style:italic;border-style:dashed;border-color:rgba(148,163,184,0.35);}
+.mcl-inp.mcl-ghost:focus{border-style:solid;}
+/* No light-theme override: .mcl-inp itself has none — this whole panel
+   already stays dark-styled regardless of html[data-theme], so a
+   light-mode-only .mcl-ghost rule would be unreachable dead code. */
 .mcl-ck{
   appearance:none;-webkit-appearance:none;padding:0;margin:0;font:inherit;
   width:44px;height:44px;border-radius:9px;   /* 44px a11y floor for sweaty-finger taps */

@@ -55,10 +55,22 @@
         return client;
       }).catch(function (e) { console.warn('[MC_SB]', e && e.message); return null; });
 
+  // A-9: getUser() validates the JWT against the server on every call — a
+  // real network round trip, paid by all ~17 call sites that used to route
+  // through this function, most of them on the hot path of a checked set.
+  // getSession() reads the already-verified session from local storage
+  // (supabase-js keeps it fresh via its own autoRefreshToken, so this is not
+  // a staleness trade) — four other call sites in this file already use it
+  // directly for exactly this reason. Fall back to the network call only
+  // when no session is cached yet (first paint, or truly signed out).
   function currentUser() {
     return ready.then(function (c) {
       if (!c) return null;
-      return c.auth.getUser().then(function (r) { return (r && r.data && r.data.user) || null; });
+      return c.auth.getSession().then(function (r) {
+        var u = r && r.data && r.data.session && r.data.session.user;
+        if (u) return u;
+        return c.auth.getUser().then(function (r2) { return (r2 && r2.data && r2.data.user) || null; });
+      });
     });
   }
 
@@ -478,6 +490,23 @@
       } catch (e) {}
     });
   }
+  // A-5: deletes every workout_logs row this page-load session wrote, so a
+  // discarded workout does not leave server-side rows for local history that
+  // no longer exists. RLS scopes deletes to auth.uid() regardless, but
+  // filtering by session_id here keeps this from ever touching any other
+  // session's rows even in principle. Best-effort — callers should .catch().
+  function deleteSessionLog(sessionId) {
+    if (!sessionId) return Promise.resolve(null);
+    return ready.then(function (c) {
+      if (!c) return null;
+      return currentUser().then(function (u) {
+        if (!u) return null;
+        return c.from('workout_logs').delete()
+          .eq('user_id', u.id).eq('session_id', sessionId)
+          .then(function (r) { if (r.error) throw r.error; return r; });
+      });
+    });
+  }
   // ---- workout_logs table (per-set history for suggestions + fatigue flag) -
   // logSet() is best-effort — callers should .catch() silently.
   function logSet(entry) {
@@ -748,6 +777,7 @@
     saveActiveProgram: saveActiveProgram,
     getActiveProgram: getActiveProgram,
     logSet: logSet,
+    deleteSessionLog: deleteSessionLog,
     getLastWeight: getLastWeight,
     getWeeklyVolume: getWeeklyVolume,
     getMaxWeight: getMaxWeight,

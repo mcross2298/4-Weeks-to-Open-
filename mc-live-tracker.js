@@ -80,9 +80,16 @@
   // ====================================================================== //
   var wakeLock = null, wantLock = false, acquiring = false, sessionActive = false;
 
+  // A-8: keyed on TMR's own state, not a DOM class. #timerFloat only ever
+  // gets .visible when the List rest view is the active preference
+  // (applyRestView() in mc-timer.js) — under restView:'video' this used to
+  // report false while a rest was genuinely running, so the wake lock was
+  // never requested and the catch-up alert's snapshot was never armed, in
+  // exactly the rest view built to be glanced at across the gym from a
+  // distance. TMR.isRunning() is true/false regardless of which surface (or
+  // neither) is currently shown.
   function timerRunning() {
-    var f = document.getElementById('timerFloat');
-    return !!(f && f.classList.contains('visible'));
+    return typeof TMR !== 'undefined' && !!TMR.isRunning && TMR.isRunning();
   }
   function acquire() {
     if (!('wakeLock' in navigator) || wakeLock || acquiring || document.hidden) return;
