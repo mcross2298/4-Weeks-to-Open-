@@ -61,8 +61,8 @@ serial chain, one PR at a time. The only contention-free items (`A-6`, `A-9`,
 |------|----------|------|-------|
 | **S0** | `tools/measure-session.js` + committed baseline | none | ✅ shipped |
 | **S1** | `A-1` `A-2` `A-3` `A-4` `A-6` + `R1` `R5` | none | ✅ shipped |
-| **S2** | `A-7` `A-10`+§3.3 `A-5` `A-8` `A-9` | none — **gates S5** | next |
-| **S3** | `R2` + the self-opening logger (`A-11`/`M-1`/§3.4) | none | |
+| **S2** | `A-7` `A-10`+§3.3 `A-5` `A-8` `A-9` | none — **gates S5** | ✅ shipped |
+| **S3** | `R2` + the self-opening logger (`A-11`/`M-1`/§3.4) | none | next |
 | **S4** | `R4` header consolidation + `A-17` `defer` sweep | `AskUserQuestion` | |
 | **S5** | `A-13` render signal → `A-14` lazy build → `R3` collapse | explicit sign-off | |
 | **S6** | `A-15` CI budget, `A-12` vendored SDKs, `A-16` delta sync | none | |
@@ -127,3 +127,70 @@ accessibility defect does not wait for a density win.
 
 **Still open, as expected at this stage:** typed weights remain volatile until
 the checkbox is tapped (`D-5`) — reproduced during verification, fixed in S2.
+
+## S2 shipped (2026-08-20)
+
+`restoreSets()` wrote `.done` classes directly and never called `updateCount()`
+— after a reload, checkmarks were right and every derived readout (badge,
+collapsed-strip count, the `.checked` mirror) was stuck at the pre-reload
+value. Fixed by exposing `window.MCSetlogUtil.updateCountByCard()` from
+`mc-setlog.js` and calling it per touched card from `restoreSets()`.
+**Verified live**, not just read: logged 2 of 5 sets, reloaded — badge read
+`2/5` (was `0/5` before the fix), rows and strip count all correct.
+
+`A-10` + the §3.3 ghost prefill shipped as one change, in the order the
+sequence specified — persistence before presentation, so the ghost state
+could be verified as never reaching the pending store. A typed-but-unchecked
+value now persists to a new `mc_setlog_pending_v1` store on blur and restores
+on reload as a real value; a suggested-but-untouched value renders as the
+input's actual value (not just a placeholder) styled `.mcl-ghost` — muted
+color, italic, dashed border, chosen over literal opacity because opacity
+would have refaded the touch target R5 just enlarged. Checking a still-
+ghosted row solidifies it without requiring a keystroke, per spec. Unchecking
+re-arms the pending snapshot from whatever is actually in the fields.
+**Verified live**: an untouched ghost blurs with zero pending writes; a typed
+edit clears the ghost class on the first keystroke and persists on blur;
+after a reload the typed value returns as a real, non-ghost value.
+
+`A-5` gave "Exit & discard" — previously zero-confirmation, no-undo, and the
+single most destructive control in the app (D-2) — a `confirm()` naming the
+exact set count, plus a recoverable path. The interaction register's call
+was correct: `discard()` ends by navigating to `dashboard.html`, so an
+in-memory Undo toast (`applySwap()`'s pattern) cannot survive it. Instead
+`mc-finish.js` snapshots the removed `mc_session_v1`/`mc_setlog_v1` slices to
+`mc_discard_snapshot_v1` before wiping, and `mc-resume.js` (already the
+dashboard's session-banner module) offers a "Restore discarded workout"
+banner from it — dropped silently if a newer session already exists for that
+page, so a stale snapshot can never clobber real progress. **Verified live,
+full round trip**: 3 sets logged → discard cancelled leaves everything
+untouched → discard confirmed wipes both stores and writes the snapshot →
+dashboard shows the banner with the right name and count → Restore navigates
+back and both stores return byte-identical to what was removed → the
+snapshot clears. The local/cloud divergence D-2 also named — checked sets
+write to Supabase `workout_logs` independently of Finish/discard, so a
+discarded workout used to leave server-side rows for local history that no
+longer existed — is closed with a new `MC_SB.deleteSessionLog()`, scoped to
+exactly the discarding page-load's session id.
+
+`A-8` rekeyed `mc-live-tracker.js`'s wake lock off a new `TMR.isRunning()`
+(`startTime != null`) instead of probing `#timerFloat`'s `.visible` CSS
+class — that class is only ever set under the List rest view
+(`applyRestView()`), so Video view's screen never stayed awake and its
+catch-up alert never armed, despite a rest genuinely running. **Verified
+live**: `TMR.isRunning()` now correctly reports true for the duration of a
+started timer regardless of which rest surface is shown.
+
+`A-9` pointed `currentUser()` at `auth.getSession()` (local, already used by
+four other call sites in the file) with a network-validating `getUser()`
+fallback only when no session is cached — benefiting all ~17 call sites that
+route through it without touching each one. `getMaxWeight()`'s PR check
+became a local high-water mark (`_prCache`, page-lifetime only, seeded once
+per exercise per page load): the first checked set of an exercise still
+consults the server once, every later checked set of the same exercise that
+session is a synchronous cache read. **Verified live**: `currentUser()`
+resolves cleanly to `null` when signed out with no throw, confirming the
+fallback chain holds with no cached session.
+
+Runtime numbers hold at S1's post-fix level (0% delta on all four counters) —
+S2 is entirely a correctness/data-integrity step, touching none of the
+mutation/scan/storage paths S1 fixed.

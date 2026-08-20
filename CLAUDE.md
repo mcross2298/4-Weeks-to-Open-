@@ -339,6 +339,35 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > `A-3` rewrote two persistence-key functions and was verified byte-identical
 > against the old algorithm on 216 cards across 9 pages before landing. The
 > active card grew 24 px, which `R5` spends by design and later steps repay.
+>
+> **S2 shipped (2026-08-20):** the reload-correctness step, and the gate for
+> `R3`/S5. `restoreSets()` now calls the same `updateCount()` derivation a
+> real check does (exposed as `window.MCSetlogUtil.updateCountByCard()`) —
+> verified live: log 2 of 5, reload, badge reads `2/5` (was `0/5`). A typed-
+> but-unchecked value now survives a reload too (`mc_setlog_pending_v1`), and
+> the suggested-fill mechanism became a visible, ghosted value (muted color +
+> italic + dashed border, not opacity, so R5's touch targets stay legible)
+> that solidifies on the first keystroke or on check — verified live end to
+> end including the untouched-ghost-never-persists case the ordering (A-10
+> before ghosting) exists to guarantee. "Exit & discard" (D-2, the app's most
+> destructive control, previously zero-confirmation and no-undo) now confirms
+> naming the exact set count and snapshots the removed session to
+> `mc_discard_snapshot_v1`; `mc-resume.js` (already the dashboard's session-
+> banner module) offers "Restore discarded workout" from it, dropped silently
+> if a newer session already exists for that page. Verified live as a full
+> round trip: discard → dashboard banner → Restore → both stores byte-
+> identical to what was removed. The local/cloud divergence D-2 also named is
+> closed with `MC_SB.deleteSessionLog()`, scoped to the discarding page-
+> load's session id. `mc-live-tracker.js`'s wake lock and catch-up alert now
+> key off a new `TMR.isRunning()` instead of a CSS class only ever set under
+> the List rest view, fixing Video view's screen-stays-asleep gap.
+> `currentUser()` now prefers the already-cached `auth.getSession()` (as four
+> other call sites already did) over a network-validating `auth.getUser()`,
+> and the PR check's max-weight lookup became a page-lifetime local cache —
+> together turning "4 round trips per checked set" into one insert per set
+> after the first check of each exercise. Runtime numbers hold at S1's level
+> (0% delta on all four counters) — S2 touches none of the mutation/scan/
+> storage paths S1 fixed, by design.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 

@@ -28,6 +28,28 @@
   // Unique id for this page-load session; groups all sets into one session row.
   var SESSION_ID = 'sess-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 
+  // A-9: PR-check local high-water mark. getMaxWeight() was called before
+  // EVERY checked set to learn the historical max for that exercise — a real
+  // network round trip on the hottest path in the app, to answer a question
+  // that only changes when THIS session sets a new PR. In-memory only (not
+  // persisted): a fresh page load re-seeds from the server once per exercise
+  // the first time it matters, which is correct — this cache exists to avoid
+  // repeat queries within one session, not to second-guess the server's
+  // cross-device truth. undefined = not yet seeded; null = seeded, no prior
+  // max; a number = seeded, known max.
+  var _prCache = {};
+  function prCacheKey(exName) { return String(exName || '').toLowerCase(); }
+  function localMaxP(exName) {
+    var k = prCacheKey(exName);
+    if (k in _prCache) return Promise.resolve(_prCache[k]);
+    if (!window.MC_SB || !MC_SB.getMaxWeight) return Promise.resolve(null);
+    return MC_SB.getMaxWeight(exName).then(function (v) { _prCache[k] = v; return v; });
+  }
+  function noteMax(exName, w) {
+    var k = prCacheKey(exName);
+    if (w && (!(k in _prCache) || _prCache[k] === null || w > _prCache[k])) _prCache[k] = w;
+  }
+
   // ---- storage (shape-compatible with the Finish-Workout module) ---------
   function st() { try { return JSON.parse(localStorage.getItem(SK) || '{}'); } catch (e) { return {}; } }
   function ek(id) { return PID + '|' + id; }
@@ -43,6 +65,41 @@
   }
   function lsess(exId) { var s = st(); return (s[ek(exId)] || [])[0] || null; }
   function lset(exId, sn) { var sess = lsess(exId); return sess ? sess.sets[sn] || null : null; }
+
+  // ---- A-10: typed-but-unchecked values survive a reload -------------------
+  // Nothing persisted a weight/reps field until the checkbox was tapped —
+  // onCheck() was the only path into storage. An interrupted set (a mid-
+  // session sign-in reload via mc-sync.js, the SW's forced deploy reload, a
+  // dropped phone) erased whatever the athlete had just typed, and worse:
+  // the next reload's carry-down would then repopulate the empty field with
+  // the PREVIOUS set's number, nudging the athlete toward the wrong load.
+  // Separate small store, not folded into mc_setlog_v1 — these are drafts,
+  // not committed sets, and must never appear in history/PR/Supabase logic.
+  // Pruned by age the same way mc_session_v1 is, since an abandoned exercise
+  // should not hold a stale pending value forever.
+  var PK = 'mc_setlog_pending_v1';
+  var PENDING_MAX_AGE = 12 * 3600 * 1000;
+  function readPending() {
+    var p; try { p = JSON.parse(localStorage.getItem(PK) || '{}') || {}; } catch (e) { p = {}; }
+    var now = Date.now(), changed = false;
+    Object.keys(p).forEach(function (k) {
+      if (!p[k] || (now - (p[k].ts || 0)) > PENDING_MAX_AGE) { delete p[k]; changed = true; }
+    });
+    if (changed) try { localStorage.setItem(PK, JSON.stringify(p)); } catch (e) {}
+    return p;
+  }
+  function pendingKey(exId, sn) { return PID + '|' + exId + '|' + sn; }
+  function getPending(exId, sn) { return readPending()[pendingKey(exId, sn)] || null; }
+  function setPending(exId, sn, w, r) {
+    var p = readPending(), k = pendingKey(exId, sn);
+    if (!w && !r) { delete p[k]; }
+    else { p[k] = { w: w || '', r: r || '', ts: Date.now() }; }
+    try { localStorage.setItem(PK, JSON.stringify(p)); } catch (e) {}
+  }
+  function clearPending(exId, sn) {
+    var p = readPending(), k = pendingKey(exId, sn);
+    if (p[k]) { delete p[k]; try { localStorage.setItem(PK, JSON.stringify(p)); } catch (e) {} }
+  }
   function histText(exId) {
     var sess = lsess(exId); if (!sess) return '';
     var top = null;
@@ -216,10 +273,15 @@
     if (!row) return;
     var ck = row.querySelector('.mcl-ck');
     var w = row.querySelector('.mcl-w');
+    var rEl = row.querySelector('.mcl-r:not(.mcl-rmini)');
     if (ck.classList.contains('done')) {
       ck.classList.remove('done'); ck.textContent = '☐'; ck.setAttribute('aria-checked', 'false');
       row.classList.remove('done-row');
       updateCount(card, exId);
+      // A-10: unchecking re-opens the row for edits, so it is typed-but-
+      // unconfirmed again — re-arm the pending snapshot from whatever is in
+      // the fields right now, same as if it had never been checked.
+      setPending(exId, sn, w ? w.value.trim() : '', rEl ? rEl.value.trim() : '');
       return;
     }
     var rpeEl = row.querySelector('.mcl-rpe');
@@ -227,6 +289,13 @@
     var rVal = clusterRVal(row);
     var rpeVal = rpeEl ? (rpeEl.dataset.rpe || '') : '';
     save(exId, sn, wVal, rVal, rpeVal);
+    // Now committed for real — checking always solidifies a ghosted
+    // suggestion (typing is not required), and the pending draft is
+    // superseded by the real entry mc_setlog_v1 now holds.
+    Array.prototype.forEach.call([w, rEl], function (inp) {
+      if (inp && inp.dataset.ghost) { inp.classList.remove('mcl-ghost'); delete inp.dataset.ghost; }
+    });
+    clearPending(exId, sn);
     // Best-effort Supabase write — builds durable per-set history for the
     // auto-weight pre-fill, fatigue flag, and PR milestone detection.
     // Never blocks the UI; all Supabase calls are fire-and-forget.
@@ -253,8 +322,10 @@
           workout_name: document.title || '',
           program_id:   (window.activeProg && activeProg.id) || ''
         };
-        // Get previous max weight BEFORE inserting, then check for PR
-        var prevMaxP = (wNum && MC_SB.getMaxWeight) ? MC_SB.getMaxWeight(exName) : Promise.resolve(null);
+        // Local high-water mark first (A-9) — a real network call only on
+        // this exercise's first checked set THIS page load; every later one
+        // this session is a synchronous cache read.
+        var prevMaxP = wNum ? localMaxP(exName) : Promise.resolve(null);
         prevMaxP.then(function (prevMax) {
           MC_SB.logSet(logEntry).then(function () {
             // PR detected: new weight exceeds historical max
@@ -264,6 +335,7 @@
                 body: wNum + ' lbs — your best lift ever. Keep pushing!'
               }).catch(function () {});
             }
+            noteMax(exName, wNum);
           }).catch(function () {});
         }).catch(function () {
           MC_SB.logSet(logEntry).catch(function () {});
@@ -429,6 +501,21 @@
       var rFill = isDropRow ? (dropTarget === 'AMRAP' ? '' : dropTarget)
                             : (pr || (last && last.r) || '');
 
+      // A-10 + ghost prefill (§3.3): a typed-but-unchecked value left over
+      // from before an interrupted reload is REAL and wins outright. Failing
+      // that, the suggested fill above (last session's weight / the
+      // prescribed-or-last reps) is shown AS the field's value rather than
+      // only as a placeholder, marked .mcl-ghost so it reads as "suggested,
+      // not yet confirmed" (see mc-setlog.css) — tapping ✓ commits it exactly
+      // as typed, same as any other value. Drop-row reps are a task label
+      // (AMRAP / a numeric target), not history, so they are never ghosted —
+      // ghosting a target as if it were "what you did last time" would lie.
+      var pend = getPending(exId, sn);
+      var wValue = (pend && pend.w) ? pend.w : wFill;
+      var wGhost = !(pend && pend.w) && wValue !== '';
+      var rValue = (pend && pend.r) ? pend.r : (isDropRow ? '' : rFill);
+      var rGhost = !(pend && pend.r) && !isDropRow && rValue !== '';
+
       // A cluster working set (not a drop row) gets N reps bubbles — one per
       // mini-set — pre-populated with what was actually logged last time, or
       // the prescribed target when there's no history, instead of one plain
@@ -448,12 +535,18 @@
           '<div class="mcl-cluster-bubbles">' + bubbles + '</div>' +
         '</div>';
       } else {
-        repsCellHtml = '<input class="mcl-inp mcl-r" type="number" inputmode="numeric" placeholder="' + rPh + '"' + (rFill !== '' ? ' data-fill="' + rFill + '"' : '') + '>';
+        repsCellHtml = '<input class="mcl-inp mcl-r' + (rGhost ? ' mcl-ghost' : '') + '" type="number" inputmode="numeric" placeholder="' + rPh + '"' +
+          (rValue !== '' ? ' value="' + rValue + '"' : '') +
+          (rFill !== '' ? ' data-fill="' + rFill + '"' : '') +
+          (rGhost ? ' data-ghost="1"' : '') + '>';
       }
 
       html += '<div class="mcl-row' + (isDropRow ? ' mcl-row-amrap' : '') + '" id="mclr-' + cid + '-' + sn + '">' +
                 '<div class="mcl-num">' + (isDropRow ? '↓' : sn) + '</div>' +
-                '<input class="mcl-inp mcl-w" type="number" inputmode="decimal" placeholder="' + wPh + '"' + (wFill !== '' ? ' data-fill="' + wFill + '"' : '') + '>' +
+                '<input class="mcl-inp mcl-w' + (wGhost ? ' mcl-ghost' : '') + '" type="number" inputmode="decimal" placeholder="' + wPh + '"' +
+                  (wValue !== '' ? ' value="' + wValue + '"' : '') +
+                  (wFill !== '' ? ' data-fill="' + wFill + '"' : '') +
+                  (wGhost ? ' data-ghost="1"' : '') + '>' +
                 repsCellHtml +
                 '<div class="mcl-rpe' + (rpe ? ' set' : '') + '" data-rpe="' + rpe + '" ' +
                   'title="Rate of Perceived Exertion — tap to cycle, F = to failure">' + (rpe || '–') + '</div>' +
@@ -502,6 +595,10 @@
     // Tap-to-fill: focusing an empty input drops in its suggested value (last
     // weight / prescribed reps) and selects it, so typing still overrides
     // instantly but a single tap-then-check accepts last time's number.
+    // A ghosted input already carries that value (as its real, visible
+    // value — see the row-build loop above), so this only fires for the
+    // legacy placeholder-only cases (cluster mini-set bubbles, or a row with
+    // no suggestion at all) — it never fights the ghost's own focus-select.
     Array.prototype.forEach.call(wrap.querySelectorAll('.mcl-inp'), function (inp) {
       inp.addEventListener('focus', function () {
         setActiveCard(card);
@@ -511,8 +608,42 @@
         }
       });
     });
+    // A-10 + ghost prefill wiring (§3.3). A ghost value is a SUGGESTION, not
+    // something the athlete typed: focusing it selects the text (one tap,
+    // then either type to override or just check to accept), and the first
+    // keystroke solidifies it — loses .mcl-ghost the instant it stops being
+    // exactly the suggested number. Persistence only ever touches real,
+    // athlete-confirmed text: a still-ghosted field is never written to the
+    // pending store, which is the whole point of doing this before A-10
+    // rather than after — a prefill the athlete never touched must not
+    // survive a reload disguised as something they typed.
+    Array.prototype.forEach.call(wrap.querySelectorAll('.mcl-w, .mcl-r:not(.mcl-rmini)'), function (inp) {
+      if (inp.dataset.ghost) {
+        inp.addEventListener('focus', function () { try { inp.select(); } catch (e) {} }, { once: true });
+      }
+      inp.addEventListener('input', function () {
+        if (inp.dataset.ghost) { inp.classList.remove('mcl-ghost'); delete inp.dataset.ghost; }
+      });
+      inp.addEventListener('blur', function () {
+        var row = inp.closest('.mcl-row');
+        if (!row) return;
+        var ckEl = row.querySelector('.mcl-ck');
+        if (ckEl && ckEl.classList.contains('done')) return;   // already committed via onCheck
+        var ckSn = parseInt(ckEl && ckEl.dataset.sn, 10);
+        if (!ckSn) return;
+        var wEl = row.querySelector('.mcl-w'), rEl2 = row.querySelector('.mcl-r:not(.mcl-rmini)');
+        var wv = (wEl && !wEl.dataset.ghost) ? wEl.value.trim() : '';
+        var rv = (rEl2 && !rEl2.dataset.ghost) ? rEl2.value.trim() : '';
+        setPending(exId, ckSn, wv, rv);
+      });
+    });
     // Carry-down: typing set 1's weight updates the fill/placeholder of every
     // later still-empty working set (drop rows excluded — weight is stripped).
+    // A ghosted later set is still just a suggestion the athlete has not
+    // touched, so it counts as "empty" here too — carry-down overwrites the
+    // stale ghost with today's number and keeps it ghosted, since it is
+    // still unconfirmed either way. A real (pending or already-typed) value
+    // is never touched.
     var wInputs = Array.prototype.slice.call(
       wrap.querySelectorAll('.mcl-row:not(.mcl-row-amrap) .mcl-w'));
     wInputs.forEach(function (inp, idx) {
@@ -521,7 +652,10 @@
         if (!v) return;
         for (var j = idx + 1; j < wInputs.length; j++) {
           var nxt = wInputs[j];
-          if (!nxt.value.trim()) { nxt.placeholder = v + ' lb'; nxt.dataset.fill = v; }
+          if (!nxt.value.trim() || nxt.dataset.ghost) {
+            nxt.placeholder = v + ' lb'; nxt.dataset.fill = v;
+            nxt.value = v; nxt.classList.add('mcl-ghost'); nxt.dataset.ghost = '1';
+          }
         }
       });
     });
@@ -692,9 +826,26 @@
     });
   }
 
+  // Derives exId the same way run() does (card.dataset.id || nameId(card)) and
+  // runs the full updateCount() derivation for that card — badge text, the
+  // .checked mirror, the collapsed-strip count, .mcl-alldone, and the
+  // auto-collapse timer. Exposed for mc-session.js#restoreSets() (A-7): a
+  // reload writes .done directly onto restored rows without going through
+  // onCheck(), so none of the above ever ran for a restored card without
+  // this being called afterward.
+  function updateCountByCard(card) {
+    if (!card) return;
+    updateCount(card, card.dataset.id || nameId(card));
+  }
+
   // shared parsing helpers for mc-suggest.js (and future analytics) — avoids
   // re-implementing the prescribed-scheme parser anywhere else
-  window.MCSetlogUtil = { setCount: setCount, repFor: repFor, pid: PID, histKey: ek };
+  window.MCSetlogUtil = {
+    setCount: setCount, repFor: repFor, pid: PID, histKey: ek,
+    updateCountByCard: updateCountByCard,
+    sessionId: SESSION_ID    // A-5: lets mc-finish.js purge exactly this
+                              // page-load's Supabase workout_logs rows on discard
+  };
 
   // ---- cross-device pre-fill from Supabase ----------------------------------
   // When localStorage has no history (e.g. new device), query Supabase for the

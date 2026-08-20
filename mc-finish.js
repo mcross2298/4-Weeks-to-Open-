@@ -455,7 +455,43 @@
     // first so mc-live-tracker.js's pagehide-triggered logSession() (which
     // reads live .checked/.done DOM state, not localStorage) can't resurrect
     // a "Resume last workout" pointer at this now-discarded session.
+    //
+    // A-5: this is the single most destructive control in the app — it ran
+    // with zero confirmation and no way back, next to "Log workout" in the
+    // same modal (D-2). Two changes: a confirm() naming exactly what is
+    // lost, matching the project's own convention for a destructive action
+    // (mc-card-actions.js's doReplace() uses the same pattern before
+    // navigating to the exercise library); and a snapshot written BEFORE the
+    // wipe, since discard() ends by navigating to dashboard.html — there is
+    // no page left afterward to hold an in-memory Undo toast the way
+    // applySwap()'s recoverable-swap pattern does. The dashboard offers
+    // "Restore discarded workout" from that snapshot on arrival.
     discard:function(){
+      var checked=getCheckedSets();
+      if(checked>0){
+        var noun=checked===1?'set':'sets';
+        if(!confirm('Discard '+checked+' logged '+noun+'? You can restore this from the dashboard right after, but it will be gone if you log a new workout first.'))return;
+      }
+      try{
+        var sessAll=JSON.parse(localStorage.getItem('mc_session_v1')||'{}');
+        var slAll=JSON.parse(localStorage.getItem(SL_KEY)||'{}');
+        var today=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        var removedSets={};
+        Object.keys(slAll).forEach(function(k){
+          if(k.indexOf(pageId+'|')!==0)return;
+          if(slAll[k][0]&&slAll[k][0].d===today)removedSets[k]=slAll[k][0];
+        });
+        var snapshot={
+          pageId:pageId,
+          workoutName:getWorkoutName(),
+          ts:Date.now(),
+          session:sessAll[pageId]||null,
+          sets:removedSets
+        };
+        if(checked>0||snapshot.session){
+          localStorage.setItem('mc_discard_snapshot_v1',JSON.stringify(snapshot));
+        }
+      }catch(e){}
       document.querySelectorAll('.ex-card.checked,.ss-ex.checked,.lift-card.checked,.ex-item.checked').forEach(function(c){c.classList.remove('checked');});
       document.querySelectorAll('.sl-ck.done,.set-check.done').forEach(function(c){c.classList.remove('done');});
       try{
@@ -464,11 +500,11 @@
       }catch(e){}
       try{
         var sl=JSON.parse(localStorage.getItem(SL_KEY)||'{}');
-        var today=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        var today2=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
         var changed=false;
         Object.keys(sl).forEach(function(k){
           if(k.indexOf(pageId+'|')!==0)return;
-          if(sl[k][0]&&sl[k][0].d===today){sl[k].shift();changed=true;}
+          if(sl[k][0]&&sl[k][0].d===today2){sl[k].shift();changed=true;}
           if(!sl[k].length){delete sl[k];changed=true;}
         });
         if(changed)localStorage.setItem(SL_KEY,JSON.stringify(sl));
@@ -483,6 +519,16 @@
         if(act.last&&(act.last.pageId===pageId||act.last.pageId===pageId+'.html')){delete act.last;localStorage.setItem('mc_activity',JSON.stringify(act));}
       }catch(e){}
       clearTodaysDailyEntry();
+      // Local and cloud used to diverge here: every checked set had already
+      // written a row to Supabase's workout_logs via mc-setlog.js's onCheck()
+      // (independent of Finish/discard), but discard() never called
+      // saveWorkout()/MC_SYNC.push() so nothing ever removed them again.
+      // Best-effort, scoped to exactly this page load's session id.
+      try{
+        if(window.MC_SB&&MC_SB.deleteSessionLog&&window.MCSetlogUtil&&MCSetlogUtil.sessionId){
+          MC_SB.deleteSessionLog(MCSetlogUtil.sessionId).catch(function(){});
+        }
+      }catch(e){}
       try{if(window.MCActivity&&MCActivity.releaseSessionLock)MCActivity.releaseSessionLock();}catch(e){}
       window._FW.finished=true;
       window._FW.close();

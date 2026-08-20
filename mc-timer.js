@@ -205,6 +205,17 @@ const TMR = {
   _cued10: false,
   _done: false,
 
+  // A-8: the source of truth for "is a rest actually running", for callers
+  // outside this file. mc-live-tracker.js's wake lock (and its catch-up
+  // alert) used to probe #timerFloat's .visible class instead — which
+  // applyRestView() only ever sets when the List rest view is the active
+  // preference, so under restView:'video' the wake lock was never requested
+  // and the screen slept through the one rest view built to be glanced at
+  // across the gym. startTime is set the instant start()/setTime() runs and
+  // cleared the instant stop() runs, independent of which surface (or
+  // neither) is currently shown.
+  isRunning() { return this.startTime != null; },
+
   parseSeconds(str) {
     if (!str || str === '—') return 0;
     str = str.toLowerCase().trim();
