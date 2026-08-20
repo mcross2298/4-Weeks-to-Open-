@@ -40,14 +40,20 @@
 .ex-item > .mcl-wrap{flex:0 0 100%;width:100%;}
 .ex-item > .mcl-toggle{margin-top:8px;}
 
-.mcl-hdr,.mcl-row{display:grid;grid-template-columns:30px 1fr 1fr 44px 44px;gap:7px;align-items:center;}
+.mcl-row{display:grid;grid-template-columns:30px 1fr 1fr 44px 44px;gap:7px;align-items:center;}
 .mcl-rpe{height:44px;display:flex;align-items:center;justify-content:center;border-radius:8px;
   border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#475569;
   font-size:11px;font-weight:800;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;}
 .mcl-rpe.set{color:#fbbf24;border-color:rgba(212,175,55,0.4);background:rgba(212,175,55,0.1);}
-.mcl-hdr{padding:4px 2px 6px;}
-.mcl-hl{font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#475569;text-align:center;}
-.mcl-row{padding:6px 2px;border-bottom:1px solid rgba(255,255,255,0.05);}
+/* R2: padding 6px -> 1px. Row was 57px against a 44px input floor — pure
+   surplus. The 44px inputs/checkbox are untouched, so no touch target
+   shrinks; this only removes the whitespace around them. 5-set exercise:
+   285px -> 230px of rows. .mcl-hdr (the SET/WEIGHT/REPS/RPE column-header
+   row, 23px) is gone entirely — the row numbers already read positionally
+   as "set", the RPE chip carries its own title attribute, and the weight/
+   reps inputs' own placeholder text does the labeling job the header row
+   was duplicating. */
+.mcl-row{padding:1px 2px;border-bottom:1px solid rgba(255,255,255,0.05);}
 .mcl-row:last-child{border-bottom:none;}
 .mcl-num{font-size:12px;font-weight:900;color:#64748b;text-align:center;}
 .mcl-inp{

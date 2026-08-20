@@ -134,11 +134,68 @@
     });
   }
 
+  // A-11 / M-1 / §3.4: the app already knows which card has the athlete's
+  // attention — becoming active now also opens that card's own logger, so
+  // the "Log Sets" tap (an information-free gesture repeated once per
+  // exercise, every session) is only ever needed to open a card out of
+  // order. Every existing caller of setActiveCard() already implied an open
+  // wrap (you can't focus a hidden input or tap a hidden checkbox); the one
+  // caller that does NOT — the card-handoff promotion below — is exactly
+  // the case this was missing for.
   function setActiveCard(card) {
     document.querySelectorAll('.ex-card.active, .ss-ex.active').forEach(function (c) {
       if (c !== card) c.classList.remove('active');
     });
-    if (card) card.classList.add('active');
+    if (card) { card.classList.add('active'); openLogger(card); }
+  }
+  function openLogger(card) {
+    var wrap = card.querySelector('.mcl-wrap');
+    var toggle = card.querySelector('.mcl-toggle');
+    if (!wrap || wrap.classList.contains('open')) return;
+    wrap.classList.add('open');
+    if (toggle) {
+      toggle.classList.add('open');
+      var lbl = toggle.querySelector('.mcl-lbl');
+      if (lbl) lbl.textContent = 'Hide';
+    }
+  }
+
+  // ---- §3.4 card handoff: find the next not-yet-finished exercise --------
+  // Mirrors mc-timer.js's getUpNext() sibling-walk, at the same top-level
+  // granularity (.ex-card / .ss-card) — a superset's two .ss-ex legs are
+  // nested inside one .ss-card, so promoting "the next exercise" out of a
+  // finished .ex-card has to climb out of and back into that structure
+  // rather than just walking .nextElementSibling on the logging unit itself.
+  function topUnitOf(unit) { return (unit.closest && unit.closest('.ex-card, .ss-card')) || unit; }
+  function firstIncompleteLeg(topEl) {
+    if (topEl.classList && topEl.classList.contains('ss-card')) {
+      var legs = topEl.querySelectorAll('.ss-ex'), i;
+      for (i = 0; i < legs.length; i++) { if (!legs[i].__mclDone) return legs[i]; }
+      return legs[0] || null;
+    }
+    return topEl;
+  }
+  function nextTopUnit(topEl) {
+    var n = topEl.nextElementSibling;
+    while (n && !(n.classList && (n.classList.contains('ex-card') || n.classList.contains('ss-card')))) {
+      n = n.nextElementSibling;
+    }
+    return n;
+  }
+  function nextIncompleteUnit(fromCard) {
+    var top = topUnitOf(fromCard);
+    // A superset's other leg lives inside the SAME top-level unit fromCard
+    // just finished — check there before walking to the next position, or
+    // finishing leg A always skips straight past leg B.
+    var here = firstIncompleteLeg(top);
+    if (here && here !== fromCard && !here.__mclDone) return here;
+    var next = nextTopUnit(top);
+    while (next) {
+      var candidate = firstIncompleteLeg(next);
+      if (candidate && !candidate.__mclDone) return candidate;
+      next = nextTopUnit(next);
+    }
+    return null;
   }
 
   // RPE chip cycle: – → 8 → 8.5 → 9 → 9.5 → 10 → F (to failure) → –
@@ -391,7 +448,21 @@
     card.__mclDone = allDone;
     if (allDone && !wasDone) {
       clearTimeout(card.__mclCollapseTimer);
-      card.__mclCollapseTimer = setTimeout(function () { setCollapsed(card, true); }, 600);
+      // §3.4 card handoff: collapse the just-finished card, then promote
+      // whichever exercise is next in the day so the athlete's next tap is
+      // already where they need it — the "auto-open" half of A-11 doing its
+      // real work for the first time, since every OTHER setActiveCard()
+      // caller only fires on a wrap the athlete already opened by hand.
+      card.__mclCollapseTimer = setTimeout(function () {
+        setCollapsed(card, true);
+        var next = nextIncompleteUnit(card);
+        if (!next) return;
+        setActiveCard(next);
+        try {
+          var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+          next.scrollIntoView(reduced ? { block: 'nearest' } : { behavior: 'smooth', block: 'nearest' });
+        } catch (e) {}
+      }, 600);
     } else if (!allDone) {
       clearTimeout(card.__mclCollapseTimer);
       setCollapsed(card, false);
@@ -478,8 +549,14 @@
 
     var wrap = document.createElement('div');
     wrap.className = 'mcl-wrap';
-    var html = '<div class="mcl-hdr"><div class="mcl-hl">Set</div><div class="mcl-hl">Weight</div>' +
-               '<div class="mcl-hl">Reps</div><div class="mcl-hl">RPE</div><div class="mcl-hl"></div></div>';
+    // R2: the column-header row (SET/WEIGHT/REPS/RPE) was deleted — 23px on
+    // every card, times every exercise on the page. The row-number divs
+    // (1, 2, 3…) already read as "set" positionally, the RPE chip carries
+    // its own descriptive title attribute, and the weight/reps inputs' own
+    // placeholder text ("lb" / "reps" when nothing else fills it) already
+    // does the labeling job the header row was duplicating — "the inputs'
+    // own placeholders, which is where a mobile form puts them anyway."
+    var html = '';
     for (var i = 0; i < total; i++) {
       var sn = i + 1, last = lset(exId, sn);
       var dropIdx = i - n;                          // ≥0 ⇒ this is a drop row
@@ -843,8 +920,10 @@
   window.MCSetlogUtil = {
     setCount: setCount, repFor: repFor, pid: PID, histKey: ek,
     updateCountByCard: updateCountByCard,
-    sessionId: SESSION_ID    // A-5: lets mc-finish.js purge exactly this
+    sessionId: SESSION_ID,   // A-5: lets mc-finish.js purge exactly this
                               // page-load's Supabase workout_logs rows on discard
+    activateCard: setActiveCard   // §3.4: lets mc-session.js re-open the card
+                                    // the athlete was on when a session restores
   };
 
   // ---- cross-device pre-fill from Supabase ----------------------------------

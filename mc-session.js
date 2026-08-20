@@ -55,7 +55,12 @@
       var row = ck.closest('.mcl-row');
       if (row && row.id) sets.push(row.id);
     });
-    return { cards: cards, sets: sets };
+    // §3.4: which card's logger the athlete had open, so a resume — or the
+    // SW's forced deploy reload — lands them back on it instead of a fully
+    // collapsed page they have to re-navigate.
+    var activeEl = document.querySelector('.ex-card.active, .ss-ex.active, .ex-item.active');
+    var activeCard = activeEl ? cardKey(activeEl, all) : null;
+    return { cards: cards, sets: sets, activeCard: activeCard };
   }
 
   var session = null;        // live state for this PID
@@ -75,6 +80,7 @@
       if (!session) session = { startedTs: Date.now() };
       session.cards = snap.cards;
       session.sets = snap.sets;
+      session.activeCard = snap.activeCard;
       session.lastTs = Date.now();
       var s = prune(readAll());
       s[PID] = session;
@@ -129,6 +135,29 @@
     } catch (e) {}
   }
 
+  // §3.4: re-open the exact card the athlete was on. window.MCSetlogUtil
+  // .activateCard() marks it active and opens its logger; day-cards start
+  // collapsed on every engine and there is no single shared "open this day"
+  // function across the ~9 page families (each engine wires its own, some
+  // inline-onclick, some addEventListener) — dispatching a real click on the
+  // day-header works regardless of which mechanism a given page uses,
+  // because both listen for the same event a real tap would produce.
+  function restoreActiveCard() {
+    if (!session || !session.activeCard) return;
+    if (!window.MCSetlogUtil || !MCSetlogUtil.activateCard) return;
+    var all = document.querySelectorAll(CARD_SEL), card = null;
+    Array.prototype.forEach.call(all, function (c) {
+      if (!card && cardKey(c, all) === session.activeCard) card = c;
+    });
+    if (!card) return;
+    var day = card.closest('.day-card');
+    if (day && !day.classList.contains('open')) {
+      var header = day.querySelector('.day-header');
+      if (header) header.click();
+    }
+    MCSetlogUtil.activateCard(card);
+  }
+
   // ---- record running rest timers (wall-clock, survives reload) -----------
   function wrapTimers() {
     if (typeof TMR === 'undefined') return;
@@ -168,7 +197,7 @@
       // logger rows render asynchronously (mc-setlog retries up to ~2.6s)
       var tries = 0;
       (function tryRestore() {
-        if (restoreSets() || ++tries > 12) return;
+        if (restoreSets() || ++tries > 12) { restoreActiveCard(); return; }
         setTimeout(tryRestore, 400);
       })();
       if (typeof TMR !== 'undefined') TMR.__mcsRestoring = true;
