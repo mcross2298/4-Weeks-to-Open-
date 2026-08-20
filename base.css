@@ -515,13 +515,6 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .ss-card.a-ss .ss-ex.active{background:rgba(168,85,247,0.09);}
 .ss-card.a-ss .ss-ex.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;z-index:1;
   background:#c084fc;box-shadow:0 0 10px rgba(168,85,247,0.6);}
-/* padding-right is NOT density-scaled: it clears the .mc-meatball, which is a
-   fixed 44px at right:6px (S1 raised it from 36px for the touch floor and this
-   value was not updated with it). At --density:0.82 the old
-   calc(42px * var(--density)) resolved to 34px and the meatball overlapped the
-   name by ~16px. */
-.a-top{display:flex;align-items:flex-start;gap:calc(11px * var(--density));
-  padding:calc(14px * var(--density)) 54px calc(10px * var(--density)) calc(18px * var(--density));}
 .a-idx{font-size:calc(13px * var(--density));font-weight:900;font-variant-numeric:tabular-nums;
   min-width:calc(30px * var(--density));height:calc(30px * var(--density));
   border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;
@@ -592,11 +585,11 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
    set, and they carry their own reduced-motion rule and light-theme palette.
    Deleting them would have removed a live progress indicator (decision 1).
 
-   Deliberately additive — every .a-top rule above is untouched, so the 17
-   pages still hand-writing that markup render exactly as before until S4b
-   migrates them. Class names inside the header (.a-idx, .a-head, .a-reps,
-   .a-badges) are unchanged too, because program-overrides.js resolves
-   .a-head and .a-reps by querySelector for PM inline-edit. */
+   S4b completed the migration: all 5 engines and all 17 hand-written pages
+   now emit this markup, and the old .a-top rule it replaced is deleted.
+   Class names inside the header (.a-idx, .a-head, .a-reps, .a-badges) are
+   deliberately unchanged, because program-overrides.js resolves .a-head and
+   .a-reps by querySelector for PM inline-edit. */
 .a-hdr{position:relative;display:flex;flex-wrap:wrap;align-items:center;
   column-gap:calc(10px * var(--density));row-gap:calc(6px * var(--density));
   min-height:52px;

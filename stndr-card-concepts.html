@@ -86,7 +86,6 @@ body{
   box-shadow:0 0 16px rgba(var(--accent-rgb),0.55);
 }
 .a-card.is-ss::before{background:linear-gradient(180deg,var(--violet),#6d28d9);box-shadow:0 0 16px rgba(168,85,247,0.5);}
-.a-top{display:flex;align-items:flex-start;gap:11px;padding:14px 16px 12px 18px;}
 .a-idx{
   font-size:13px;font-weight:900;font-variant-numeric:tabular-nums;
   min-width:30px;height:30px;border-radius:9px;flex-shrink:0;
@@ -324,13 +323,10 @@ function cardA(ex,i){
   if(ss) badges.push('<span class="a-pill ss">Superset</span>');
   tp.forEach(t=>badges.push(`<span class="a-pill tempo">⏱ ${esc(t)}</span>`));
   const badgeHtml=badges.length?`<div class="a-badges">${badges.join('')}</div>`:'';
-  return `<div class="a-card ${ss?'is-ss':''}">
-    <div class="a-top">
+  return `<div class="a-card a-hdr-card ${ss?'is-ss':''}">
+    <div class="a-hdr">
       <div class="a-idx">${i+1}</div>
-      <div class="a-head"><div class="a-name">${esc(ex.name)}</div>${badgeHtml}</div>
-      <button class="a-check" aria-label="complete"></button>
-    </div>
-    <div class="a-reps">${legHtml}</div>
+      <div class="a-head"><div class="a-name">${esc(ex.name)}</div></div><button class="a-check" aria-label="complete"></button><div class="a-hdr-meta">${badgeHtml}<div class="a-reps">${legHtml}</div></div></div>
     <div class="a-strip">
       <div class="a-cell"><span class="k">Sets</span><span class="v">${totalSets(ex.sets)} working</span></div>
       <div class="a-cell"><span class="k">Rest</span><span class="a-timer" data-rest="${esc(ex.rest)}">⏱ ${esc(ex.rest)}</span></div>

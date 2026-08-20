@@ -55,7 +55,6 @@
 .a-card.is-cluster{border-left:3px solid rgba(34,211,238,0.45);padding-left:10px;margin-left:6px;}
 .a-card.is-drop{border-left:3px solid rgba(244,63,94,0.45);padding-left:10px;margin-left:6px;}
 .a-card.is-circuit{border-left:3px solid rgba(249,115,22,0.45);padding-left:10px;margin-left:6px;}
-.a-top{display:flex;gap:10px;margin-bottom:8px;}
 .a-idx{min-width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#475569;flex-shrink:0;margin-top:1px;}
 .a-head{flex:1;min-width:0;}
 .a-name{font-size:14px;font-weight:800;color:#e2e8f0;line-height:1.3;margin-bottom:4px;}
@@ -411,16 +410,19 @@ function renderExercise(ex, wIdx, dIdx, eIdx){
   const badgeHtml = tag ? '<div class="a-badges"><span class="a-pill '+pillCls+'">'+pillLabel+'</span></div>' : "";
   const noteHtml = ex.note ? '<div class="a-notes">'+esc(ex.note)+'</div>' : "";
 
-  return '<div class="ex-card a-card'+ssCls+'" data-w="'+wIdx+'" data-d="'+dIdx+'" data-e="'+eIdx+'">' +
+  return '<div class="ex-card a-card a-hdr-card'+ssCls+'" data-w="'+wIdx+'" data-d="'+dIdx+'" data-e="'+eIdx+'">' +
     '<div class="ex-body">' +
-    '<div class="a-top">' +
+    '<div class="a-hdr">' +
       '<div class="a-idx">'+(eIdx+1)+'</div>' +
       '<div class="a-head">' +
         '<div class="ex-name a-name"><span class="editable" data-field="name" data-w="'+wIdx+'" data-d="'+dIdx+'" data-e="'+eIdx+'">'+esc(ex.name)+'</span></div>' +
+      '</div>' +
+      (noteHtml?'<button type="button" class="a-info" aria-expanded="false" aria-label="Show coaching note">ⓘ</button>':'') +
+      '<div class="a-hdr-meta">' +
         badgeHtml +
+        '<div class="a-reps">'+repsHtml+'</div>' +
       '</div>' +
     '</div>' +
-    '<div class="a-reps">'+repsHtml+'</div>' +
     '<div class="a-strip">' +
       '<div class="a-cell"><span class="k">Sets</span><span class="v"><span class="editable" data-field="sets" data-w="'+wIdx+'" data-d="'+dIdx+'" data-e="'+eIdx+'">'+esc(ex.sets)+'</span></span></div>' +
       '<div class="a-cell"><span class="k">Rest</span><span class="v"><span class="editable" data-field="rest" data-w="'+wIdx+'" data-d="'+dIdx+'" data-e="'+eIdx+'">'+esc(ex.rest)+'</span></span></div>' +

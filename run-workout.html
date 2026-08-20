@@ -253,15 +253,16 @@ function renderSingle(ex, i){
   badges += clusterBadge(ex, i);
   if(ex.tempo) badges += '<span class="type-badge tb-tempo">⏱ '+esc(ex.tempo)+'</span>';
   var did = 'cw' + i + '-' + slug(ex.name);
-  return '<div class="ex-card a-card" data-id="'+did+'" data-type="single"'
+  return '<div class="ex-card a-card a-hdr-card" data-id="'+did+'" data-type="single"'
     + (ex.seedWeight?' data-mc-seed-weight="'+esc(ex.seedWeight)+'"':'')
     + (ex.cluster?' data-mc-cluster="'+esc(ex.cluster)+'" data-mc-cluster-rest="'+esc(ex.clusterRest||'')+'"':'')+'>'
     + '<div class="ex-body"><div class="ex-content">'
-    +   '<div class="a-top"><div class="a-idx">'+(i+1)+'</div>'
-    +   '<div class="a-head"><div class="ex-name a-name">'+esc(ex.name)+'</div>'
+    +   '<div class="a-hdr"><div class="a-idx">'+(i+1)+'</div>'
+    +   '<div class="a-head"><div class="ex-name a-name">'+esc(ex.name)+'</div></div>'
+    +   '<div class="a-hdr-meta">'
     +   (badges?'<div class="a-badges">'+badges+'</div>':'')
-    +   '</div></div>'
     +   '<div class="a-reps">'+aReps(ex.reps||'10')+'</div>'
+    +   '</div></div>'
     +   '<div class="a-strip"><div class="a-cell"><span class="k">Sets</span><span class="v"><span class="ex-sets" data-field="sets">'+esc(scheme)+'</span></span></div>'
     +   '<div class="a-cell"><span class="k">Rest</span><span class="v">'+(ex.rest?esc(restLabel(ex.rest)):'—')+'</span></div></div>'
     +   (ex.rest?'<div class="a-timerbar">'+restTimer(ex.rest, ex.name)+'</div>':'')

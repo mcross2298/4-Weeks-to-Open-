@@ -1,10 +1,10 @@
 {
   "page": "mm-p1.html",
   "url": "http://localhost:8080/mm-p1.html",
-  "takenAt": "2026-08-20T10:18:15.326Z",
+  "takenAt": "2026-08-20T16:43:55.002Z",
   "windowSeconds": 10,
   "domAtLoad": {
-    "elements": 3087,
+    "elements": 3167,
     "exCards": 40,
     "exCardsVisible": 0,
     "setLoggers": 40,
@@ -51,7 +51,7 @@
     "timerConfirmedRunning": true
   },
   "domInSession": {
-    "elements": 3101,
+    "elements": 3181,
     "exCards": 40,
     "exCardsVisible": 10,
     "setLoggers": 40,
@@ -62,16 +62,16 @@
   },
   "consoleErrors": [
     "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
-    "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
-    "Failed to load resource: the server responded with a status of 404 (File not found)"
+    "Failed to load resource: the server responded with a status of 404 (File not found)",
+    "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
   ],
   "layout": {
     "390x844": {
-      "activeCardHeight": 551,
-      "inactiveCardHeightAvg": 341.6,
+      "activeCardHeight": 470,
+      "inactiveCardHeightAvg": 272.5,
       "inactiveCardsMeasured": 9,
-      "trainingDayScrollHeight": 3868,
-      "viewportShare": "65%",
+      "trainingDayScrollHeight": 3165,
+      "viewportShare": "56%",
       "controls": [
         {
           "selector": ".rest-timer",
@@ -82,12 +82,6 @@
         {
           "selector": ".mcl-toggle",
           "width": 330,
-          "height": 44,
-          "meets44": true
-        },
-        {
-          "selector": ".a-notes",
-          "width": 296,
           "height": 44,
           "meets44": true
         },
@@ -118,11 +112,11 @@
       ]
     },
     "375x667": {
-      "activeCardHeight": 551,
-      "inactiveCardHeightAvg": 345.8,
+      "activeCardHeight": 486.5,
+      "inactiveCardHeightAvg": 278.5,
       "inactiveCardsMeasured": 9,
-      "trainingDayScrollHeight": 3905,
-      "viewportShare": "83%",
+      "trainingDayScrollHeight": 3235,
+      "viewportShare": "73%",
       "controls": [
         {
           "selector": ".rest-timer",
@@ -133,12 +127,6 @@
         {
           "selector": ".mcl-toggle",
           "width": 315,
-          "height": 44,
-          "meets44": true
-        },
-        {
-          "selector": ".a-notes",
-          "width": 281,
           "height": 44,
           "meets44": true
         },
