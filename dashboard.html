@@ -209,6 +209,8 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
   background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.3);
   color:#f87171;border-radius:20px;padding:3px 9px;
 }
+.hero-offline{font-size:var(--fs-2xs);color:var(--success,#34d399);font-weight:600;letter-spacing:0.02em;margin-top:6px;display:none;}
+.hero-offline.show{display:block;}
 .hero-tap{font-size:var(--fs-2xs);color:var(--muted2);font-weight:600;letter-spacing:0.04em;margin-top:10px;}
 /* In-progress session: promote the muted CTA into an obvious green Resume pill
    so getting back into a half-finished workout is one clear tap. */
@@ -1404,6 +1406,7 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
         <div class="hero-desc" id="heroDesc"></div>
         <div class="hero-phases" id="heroPhases"></div>
         <div class="hero-fatigue" id="heroFatigue"></div>
+        <div class="hero-offline" id="heroOffline">Available offline ✓</div>
         <div class="hero-tap" id="heroTap">Open program →</div>
       </div>
     </div>
@@ -1694,6 +1697,7 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
 <script src="mc-chart.js"></script>
 <script src="mc-calendar.js"></script>
 <script src="mc-pm-data.js"></script>
+<script src="mc-offline-prefetch.js"></script>
 <script src="mc-recap.js"></script>
 <script src="mc-input-sheet.js"></script>
 <script src="mc-body.js"></script>
@@ -1959,6 +1963,7 @@ function renderHero(){
   if(!activeProg){empty.style.display='block';card.style.display='none';return;}
   empty.style.display='none';
   card.style.display='block';
+  updateHeroOffline();
   document.getElementById('heroName').textContent=activeProg.name;
   document.getElementById('heroDesc').textContent=activeProg.desc;
   const di=heroDayCount(activeProg);
@@ -1990,6 +1995,22 @@ function renderHero(){
     // In-progress session → promote the muted CTA into a green Resume pill.
     tap.classList.toggle('resume', !!nx.resumeHref);
   }
+}
+
+// Audit G-05/K-2.1 — paint the "Available offline" line the moment a prior
+// prefetch's result is already on this device (no wait), then kick off
+// mc-offline-prefetch.js for the CURRENT active program; ensure() itself
+// no-ops for custom/published programs and re-crawls, so this is safe to
+// call on every renderHero() pass rather than needing its own change-hook
+// across activeProg's several write sites.
+function updateHeroOffline(){
+  const el=document.getElementById('heroOffline');
+  if(!el||!activeProg||!window.MCOfflinePrefetch) return;
+  const paint=(rec)=>{ el.classList.toggle('show', !!(rec&&rec.count)); };
+  paint(MCOfflinePrefetch.status(activeProg.id));
+  MCOfflinePrefetch.ensure(activeProg).then((rec)=>{
+    if(activeProg && rec && rec.progId===activeProg.id) paint(rec);
+  });
 }
 
 // Count unique training days logged since the program's start date.
