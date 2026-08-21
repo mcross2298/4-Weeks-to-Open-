@@ -4,12 +4,13 @@
 .fw-recap-overlay{
   position:fixed;inset:0;
   background:rgba(0,0,0,0.92);backdrop-filter:blur(10px);
-  /* Above .timer-float (z-index 100, mc-timer.js):
-     the auto-trigger (mc-finish.js) can open this the instant the LAST set is
-     checked, which is exactly the moment that same check also starts a rest
-     timer — the finished-workout summary must win that race, not get buried
-     under a now-pointless "rest before the next set" countdown. */
-  z-index:110;display:none;align-items:flex-end;
+  /* --z-modal (base.css) — see the stacking-contract block there for why
+     this sits above --z-timer-float: the auto-trigger (mc-finish.js) can
+     open this the instant the LAST set is checked, which is exactly the
+     moment that same check also starts a rest timer — the finished-workout
+     summary must win that race, not get buried under a now-pointless
+     "rest before the next set" countdown. */
+  z-index:var(--z-modal);display:none;align-items:flex-end;
 }
 .fw-recap-overlay.open{display:flex;}
 .fw-recap-sheet{

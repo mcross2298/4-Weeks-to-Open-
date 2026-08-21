@@ -1,6 +1,6 @@
 /* mc-nav.css — shared bottom navigation (Phase 2.1) */
 .mc-nav{
-  position:fixed;left:0;right:0;bottom:0;z-index:140;
+  position:fixed;left:0;right:0;bottom:0;z-index:var(--z-nav);
   display:flex;
   background:rgba(8,10,16,0.96);
   -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
@@ -21,11 +21,11 @@
 body.mc-has-nav{padding-bottom:76px !important;}
 body.mc-has-nav .timer-float{bottom:88px;}
 
-/* Finish-Workout bar must sit ABOVE the nav bar (nav is z-index:140, bottom:0),
-   slimmed down so the bottom stays clean. mc-nav.js adds .mc-has-fw when a
-   .fw-bar is present. */
+/* Finish-Workout bar must sit ABOVE the nav bar (physically higher on
+   screen — nav is bottom:0, --z-nav), slimmed down so the bottom stays
+   clean. mc-nav.js adds .mc-has-fw when a .fw-bar is present. */
 body.mc-has-nav .fw-bar{
-  bottom:60px;z-index:120;
+  bottom:60px;z-index:var(--z-fw-bar-nav);
   padding:8px 14px calc(8px + env(safe-area-inset-bottom));
   gap:6px;
 }
@@ -51,7 +51,7 @@ body.mc-has-nav.mc-has-fw .mc-voice-btn{bottom:calc(199px + env(safe-area-inset-
    icon rail. Fixed circular button, top-right, mirrors .back-link's
    top-left placement in base.css. */
 .mc-theme-toggle-float{
-  position:fixed;top:18px;right:18px;z-index:141;
+  position:fixed;top:18px;right:18px;z-index:var(--z-nav-toggle);
   width:40px;height:40px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);

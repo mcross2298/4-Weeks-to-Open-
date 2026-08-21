@@ -78,6 +78,66 @@
   --sp-6: 24px;
   --sp-7: 32px;
   --sp-8: 40px;
+
+  /* ── FIXED/OVERLAY LAYER — stacking contract (DG-10, card-integration-
+     roadmap) ──────────────────────────────────────────────────────────
+     Before this, .timer-float/.fw-bar/.fw-auto-banner/mc-nav.css's bottom
+     nav each carried its own literal z-index with no shared scale, so a
+     new fixed element had nothing to check its number against — exactly
+     how mc-card-actions.css ended up in the unrelated 1180-1360 range
+     (its own internally-consistent "floating action" layer; not part of
+     this scale, and doesn't overlap it today, so left alone rather than
+     migrated for its own sake).
+
+     z-index, low to high — every value below is a real rule elsewhere
+     (base.css unless noted); read this list before adding a new one:
+       --z-fw-bar        Finish Workout bar, baseline (no bottom nav)
+       --z-banner        .fw-auto-banner (top-pinned "workout auto-saved")
+       --z-timer-float   Rest timer floating bar
+       --z-modal         .fw-modal-overlay, and mc-summary.css's
+                          .fw-recap-overlay at the same value — deliberately
+                          ABOVE the timer: mc-finish.js's auto-trigger can
+                          open one the instant the same check that starts a
+                          rest timer completes the workout, and the
+                          finished-workout summary must win that race, not
+                          get buried under a now-pointless countdown
+       --z-fw-bar-nav    .fw-bar when mc-nav.css's bottom nav is also
+                         present (body.mc-has-nav .fw-bar) — same value as
+                         conditioning-elite.css's .sum-drawer; the two never
+                         render together so this isn't a real collision
+       --z-nav           mc-nav.css's persistent bottom nav
+       --z-nav-toggle    mc-nav.css's floating theme-toggle button
+
+     Reserved heights (content only, before env(safe-area-inset-*) is added
+     on top by whichever rule positions each element — see below):
+       .timer-float      64px, fixed
+       mc-nav.css's bar  ~58px (44px tap targets + 6px top/bottom padding)
+       .fw-bar            52px single-row baseline, ~109px in its stacked
+                          layout (Finish button + progress line + Workout
+                          Summary link) — the 109px is a measured value
+                          (headless-browser screenshot), not calculated,
+                          since it depends on live font metrics; mc-nav.css's
+                          body.mc-has-nav.mc-has-fw block recomputes every
+                          dependent offset (.timer-float, mc-qp-trigger,
+                          mc-voice-btn) from that same measured number, so
+                          if .fw-bar's stacked layout ever changes height,
+                          re-measure and update all four together.
+
+     Co-visibility rule: every fixed-bottom element's own `bottom` offset
+     must be the sum of every OTHER fixed-bottom element's reserved height
+     that sits below it on screen, plus env(safe-area-inset-bottom) once,
+     at the outermost element of the stack — verified current for every
+     rule in this scale as of DG-10; the ones sitting on the safe-area
+     already (.timer-float, .fw-bar, mc-nav.css's bar, mc-qp-trigger,
+     mc-voice-btn) all account for it correctly today, so nothing below
+     changes rendering, only names the values that were already correct. */
+  --z-fw-bar:      40;
+  --z-banner:      50;
+  --z-timer-float: 100;
+  --z-modal:       110;
+  --z-fw-bar-nav:  120;
+  --z-nav:         140;
+  --z-nav-toggle:  141;
 }
 
 /* ── PM Phase 2 — ThemeConfig knobs (set by mc-theme.js on <html>) ──── */
@@ -389,7 +449,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .rest-timer-hint{font-size:var(--fs-2xs);color:var(--muted2);margin-top:2px;font-style:italic;}
 
 /* ── TIMER FLOAT — full-width bottom bar ────────────────────────── */
-.timer-float{position:fixed;bottom:0;left:0;right:0;width:100%;height:64px;background:rgba(10,10,10,0.97);backdrop-filter:blur(16px);display:none;flex-direction:row;align-items:center;justify-content:space-between;padding:0 20px;gap:12px;border-top:1px solid rgba(255,255,255,0.1);box-shadow:0 -4px 24px rgba(0,0,0,0.6);z-index:100;}
+.timer-float{position:fixed;bottom:0;left:0;right:0;width:100%;height:64px;background:rgba(10,10,10,0.97);backdrop-filter:blur(16px);display:none;flex-direction:row;align-items:center;justify-content:space-between;padding:0 20px;gap:12px;border-top:1px solid rgba(255,255,255,0.1);box-shadow:0 -4px 24px rgba(0,0,0,0.6);z-index:var(--z-timer-float);}
 .timer-float.visible{display:flex;}
 .timer-float-label{font-size:var(--fs-2xs);font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted2);}
 .timer-float-time{font-size:42px;font-weight:900;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:#fbbf24;}
@@ -445,14 +505,14 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
    on top); the progress readout sits as a small status line underneath it;
    Workout Summary (appended by mc-summary.js's injectSummaryButton()) is
    the secondary action, last in the stack. */
-.fw-bar{position:fixed;bottom:0;left:0;right:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(10,10,10,0.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,0.07);z-index:40;display:flex;flex-direction:column;gap:6px;}
+.fw-bar{position:fixed;bottom:0;left:0;right:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(10,10,10,0.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,0.07);z-index:var(--z-fw-bar);display:flex;flex-direction:column;gap:6px;}
 .fw-btn{width:100%;padding:14px;background:var(--accent);border:none;border-radius:12px;color:#000;font-size:var(--fs-lg);font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.03em;-webkit-tap-highlight-color:transparent;}
 .fw-btn:active{opacity:0.85;transform:scale(0.98);}
 .fw-progress{font-size:var(--fs-2xs);font-weight:700;color:var(--muted2);white-space:nowrap;letter-spacing:0.04em;text-align:center;}
-/* z-index above .timer-float (100) for the same reason as
-   .fw-recap-overlay in mc-summary.css — the auto-trigger can fire the instant
-   the same check that starts a rest timer completes the workout. */
-.fw-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-end;padding:16px;z-index:110;}
+/* --z-modal — see the stacking-contract block at the top of this file for
+   why this sits above --z-timer-float (mc-summary.css's .fw-recap-overlay
+   uses the same token, for the same reason). */
+.fw-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-end;padding:16px;z-index:var(--z-modal);}
 .fw-modal-overlay.open{display:flex;}
 .fw-modal{width:100%;background:#0e0e0e;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:24px 20px 20px;}
 .fw-modal-title{font-size:var(--fs-3xl);font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;}
@@ -488,7 +548,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
    discard reads as the default action instead of Log workout. */
 #fwModalBtns.fw-emph .fw-cancel,#fwRecapBtns.fw-emph .fw-cancel{flex:2;background:#FFFFFF;color:#000000;}
 #fwModalBtns.fw-emph .fw-confirm,#fwRecapBtns.fw-emph .fw-confirm{flex:1;background:#2C2C2E;color:#fff;}
-.fw-auto-banner{position:fixed;top:0;left:0;right:0;background:rgba(52,211,153,0.12);border-bottom:1px solid rgba(52,211,153,0.3);padding:12px 16px;text-align:center;font-size:var(--fs-sm);font-weight:800;color:var(--success);z-index:50;display:none;letter-spacing:0.02em;cursor:pointer;}
+.fw-auto-banner{position:fixed;top:0;left:0;right:0;background:rgba(52,211,153,0.12);border-bottom:1px solid rgba(52,211,153,0.3);padding:12px 16px;text-align:center;font-size:var(--fs-sm);font-weight:800;color:var(--success);z-index:var(--z-banner);display:none;letter-spacing:0.02em;cursor:pointer;}
 .fw-auto-banner.show{display:block;}
 
 /* MARKET:STRIP influencer-refs START */
