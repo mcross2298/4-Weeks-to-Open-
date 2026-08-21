@@ -25,13 +25,20 @@ html[data-theme="light"] body{background:var(--body-bg,#f5f2ec);color:var(--text
 html[data-theme="light"] .app{background:#f5f2ec;}
 html[data-theme="light"] .header,
 html[data-theme="light"] .header-inner{background:transparent;}
-html[data-theme="light"] .content{color:#1c1a17;}
+/* .content itself never sets its own color anywhere in the fleet — it's a
+   plain descendant of body, so it already inherits body's own (correctly
+   flipped) color above. A redundant .content{color:#1c1a17;} here changed
+   nothing and was removed. */
 html[data-theme="light"] .back-link{
   background:rgba(var(--accent-rgb,212,175,55),0.12);
   border-color:rgba(var(--accent-rgb,212,175,55),0.3);color:var(--accent,#8a6d1a);}
 
 /* ── titles & captions ───────────────────────────────────────────── */
-html[data-theme="light"] .title,
+/* .title itself is dropped from this group — base.css's own
+   html[data-theme="light"] .title{color:#1c1a17;} (line 811) is byte-
+   identical and already wins by base.css's explicit named coverage
+   (this file's own header comment), so re-declaring it here changed
+   nothing and was pure dead weight. */
 html[data-theme="light"] .workout-title,
 html[data-theme="light"] .plan-name,
 html[data-theme="light"] .day-title,
@@ -76,11 +83,18 @@ html[data-theme="light"] .cd-btn{
   border-color:rgba(var(--accent-rgb,212,175,55),0.22);color:#1c1a17;}
 html[data-theme="light"] .plan-arrow{color:#1c1a17;background:rgba(var(--accent-rgb,212,175,55),0.12);border-color:rgba(var(--accent-rgb,212,175,55),0.2);}
 
-/* ── tabs (week / split selectors) ───────────────────────────────── */
-html[data-theme="light"] .tabs,
-html[data-theme="light"] .tabs-bar,
-html[data-theme="light"] .tab{color:#8a8377;}
-html[data-theme="light"] .tab.active{color:var(--accent,#8a6d1a);background:rgba(28,26,23,0.05);}
+/* ── tabs (week / split selectors) ───────────────────────────────────
+   .tab / .tab.active's only real owner is body.cond-elite (conditioning-
+   elite.css) — a real bug was found and removed here: that engine's own
+   .tab.active already reads var(--c-accent) (deliberately NOT overridden
+   in this file's body.cond-elite token block, since its rose accent reads
+   fine on both grounds), but this bare .tab.active rule used the generic
+   var(--accent) instead and matched it in specificity (0,3,1 vs 0,3,1),
+   so loading last it silently repainted the active conditioning-tab
+   indicator olive/gold instead of its intended rose in light mode on
+   every Conditioning Corner page. .tabs/.tabs-bar never needed a color
+   override at all — they're plain flex containers; the .tab buttons
+   inside always set their own explicit color. */
 
 /* ── pills / badges / chips (accent-tinted; keep hue, ensure contrast) */
 html[data-theme="light"] .schedule,
@@ -99,10 +113,13 @@ html[data-theme="light"] .done-banner{
   background:rgba(52,211,153,0.14);border-color:rgba(5,150,105,0.3);color:#047857;}
 
 /* ── bespoke setlog variants (.set-* — base handles .sl-* already) ── */
+/* .set-num / .set-input retrofitted to var(--muted2)/var(--text) at their
+   sole owning page — both matched their token's dark value exactly, so
+   the swap changes nothing in dark mode and neither needs an override
+   here any more. */
 html[data-theme="light"] .set-input{
-  background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);color:#1c1a17;}
+  background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);}
 html[data-theme="light"] .set-input::placeholder{color:#b7b0a3;}
-html[data-theme="light"] .set-num,
 html[data-theme="light"] .setlog-hl{color:#8a8377;}
 html[data-theme="light"] .set-check{border-color:rgba(28,26,23,0.16);}
 
@@ -111,17 +128,15 @@ html[data-theme="light"] .set-check{border-color:rgba(28,26,23,0.16);}
    override, so weight/reps/RPE values and headers were unreadable on the
    cream background. */
 html[data-theme="light"] .mcl-toggle{color:#8a8377;}
-html[data-theme="light"] .mcl-hist{color:var(--accent,#8a6d1a);}
-html[data-theme="light"] .mcl-count{color:#6b6459;background:rgba(28,26,23,0.05);}
+html[data-theme="light"] .mcl-count{background:rgba(28,26,23,0.05);}
 html[data-theme="light"] .mcl-count.done{color:#047857;background:rgba(52,211,153,0.16);}
 html[data-theme="light"] .mcl-wrap{border-top-color:rgba(28,26,23,0.1);}
-html[data-theme="light"] .mcl-num{color:#6b6459;}
 html[data-theme="light"] .mcl-row{border-bottom-color:rgba(28,26,23,0.08);}
 html[data-theme="light"] .mcl-inp{
-  background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);color:#1c1a17;}
+  background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);}
 html[data-theme="light"] .mcl-inp:focus{border-color:rgba(var(--accent-rgb,212,175,55),0.5);background:rgba(var(--accent-rgb,212,175,55),0.08);}
 html[data-theme="light"] .mcl-inp::placeholder{color:#b7b0a3;}
-html[data-theme="light"] .mcl-rpe{border-color:rgba(28,26,23,0.14);background:rgba(28,26,23,0.04);color:#8a8377;}
+html[data-theme="light"] .mcl-rpe{border-color:rgba(28,26,23,0.14);background:rgba(28,26,23,0.04);}
 html[data-theme="light"] .mcl-rpe.set{color:var(--accent,#8a6d1a);border-color:rgba(var(--accent-rgb,212,175,55),0.4);background:rgba(var(--accent-rgb,212,175,55),0.12);}
 html[data-theme="light"] .mcl-ck{border-color:rgba(28,26,23,0.18);color:#8a8377;}
 html[data-theme="light"] .mcl-ck.done{background:rgba(52,211,153,0.16);border-color:rgba(5,150,105,0.4);color:#047857;}
@@ -133,10 +148,23 @@ html[data-theme="light"] .mcl-row-amrap .mcl-r::placeholder{color:#c2410c;opacit
 html[data-theme="light"] .mcl-cluster-row{border-top-color:rgba(28,26,23,0.1);}
 html[data-theme="light"] .mcl-cluster-lbl{color:var(--accent,#8a6d1a);}
 html[data-theme="light"] .mcl-cluster-plus{color:var(--accent,#8a6d1a);}
-html[data-theme="light"] .mcl-strip{background:rgba(5,150,105,0.08);border-color:rgba(5,150,105,0.28);}
-html[data-theme="light"] .mcl-strip-dot{background:#047857;color:#fff;}
-html[data-theme="light"] .mcl-strip-name{color:#1c1a17;}
-html[data-theme="light"] .mcl-strip-count{color:#047857;}
+/* Scoped to .is-done, matching dark mode's own scoping (mc-setlog.css) —
+   the bare (not-yet-done) state already reads var(--accent)/var(--muted)
+   and flips correctly on its own. Previously unscoped here, and the extra
+   `html[data-theme]` element selector gave these rules just enough
+   specificity to beat dark mode's `.mcl-strip.is-done` qualifier, so every
+   resting strip — not just finished ones — rendered the green done tint in
+   light mode (a real bug, contradicting S5b's "neutral until complete"
+   design). */
+/* Neutral resting state — was previously always masked by the buggy
+   unconditional green rule above, so it never got its own light treatment;
+   fixing the specificity bug exposed that gap. Matches .day-card's light
+   convention (rgba(28,26,23,x) — the light-mode inverse of this file's own
+   dark rgba(255,255,255,0.03)/0.09)). */
+html[data-theme="light"] .mcl-strip{background:rgba(28,26,23,0.03);border-color:rgba(28,26,23,0.09);}
+html[data-theme="light"] .mcl-strip.is-done{background:rgba(5,150,105,0.08);border-color:rgba(5,150,105,0.28);}
+html[data-theme="light"] .mcl-strip.is-done .mcl-strip-dot{background:#047857;color:#fff;}
+html[data-theme="light"] .mcl-strip.is-done .mcl-strip-count{color:#047857;}
 html[data-theme="light"] .mcl-strip-chev{color:#8a8377;}
 html[data-theme="light"] .mcl-collapse-btn{background:rgba(5,150,105,0.12);color:#047857;border-color:rgba(5,150,105,0.32);}
 
@@ -254,13 +282,12 @@ html[data-theme="light"] .inp::placeholder{color:#b7b0a3;}
 /* .search-wrap is a sticky bar (build-workout / exercise-library) — keep it
    opaque with the Sand body colour so content doesn't show through it. */
 html[data-theme="light"] .search-wrap{background:var(--body-bg,#f5f2ec);}
-html[data-theme="light"] .mx-ex,
-html[data-theme="light"] .mx-nm{color:var(--text);}
-html[data-theme="light"] .mx-step-lbl,
+html[data-theme="light"] .mx-ex{color:var(--text);}
+/* .mx-nm retrofitted to var(--text) at the source (max-out.html) — its
+   #e2e8f0 hardcode was already token-identical, so the flip is now
+   automatic. .mx-step-lbl/.mx-note/.mx-lrow/.mx-arrow were already
+   var(--muted) at the source and never needed an override at all. */
 html[data-theme="light"] .mx-reps,
-html[data-theme="light"] .mx-note,
-html[data-theme="light"] .mx-lrow,
-html[data-theme="light"] .mx-arrow,
 html[data-theme="light"] .sec-lbl{color:var(--muted);}
 html[data-theme="light"] .mx-row{border-bottom-color:rgba(28,26,23,0.08);}
 html[data-theme="light"] .mx-end{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.12);color:var(--muted);}
@@ -272,34 +299,31 @@ html[data-theme="light"] .wr-sub{color:var(--muted);}
 html[data-theme="light"] .wr-tab{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.12);color:var(--muted2);}
 
 /* ── conditioning-timer ───────────────────────────────────────────── */
+/* .iv-dot-lbl / #ivStepN / .iv-total / .iv-total b / .iv-btn's color were
+   already var(--muted)/var(--text) at the source (conditioning-timer.html)
+   or retrofitted there — no override needed, they flip automatically. */
 html[data-theme="light"] #ivStep{color:var(--text);}
 html[data-theme="light"] .iv-intro-meta,
-html[data-theme="light"] #ivNext,
-html[data-theme="light"] .iv-dot-lbl,
-html[data-theme="light"] #ivStepN,
-html[data-theme="light"] .iv-total{color:var(--muted);}
-html[data-theme="light"] .iv-total b{color:var(--text);}
-html[data-theme="light"] .iv-btn{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);color:var(--text);}
+html[data-theme="light"] #ivNext{color:var(--muted);}
+html[data-theme="light"] .iv-btn{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);}
 
 /* ── build-workout (navy sub-theme → Sand) ────────────────────────────
    .header and .subtitle are shared across ~80/12 program pages and are
    already light-handled by base.css / the titles block above, so they are
-   deliberately NOT re-declared here. */
+   deliberately NOT re-declared here. .ex-nm / .sel-nm retrofitted to
+   var(--text) at the source; .sel-hint / .tray-clear were already
+   var(--muted) there — none need an override any more. */
 html[data-theme="light"] .results-count,
 html[data-theme="light"] .ex-progs,
-html[data-theme="light"] .sel-hint,
-html[data-theme="light"] .sel-lbl,
-html[data-theme="light"] .tray-clear{color:var(--muted);}
-html[data-theme="light"] .ex-nm,
-html[data-theme="light"] .sel-nm{color:var(--text);}
+html[data-theme="light"] .sel-lbl{color:var(--muted);}
 html[data-theme="light"] .filter-btn{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.12);color:var(--muted);}
 html[data-theme="light"] .tray{background:linear-gradient(180deg,rgba(245,242,236,0.4),#faf7f0 30%);border-top-color:rgba(5,150,105,0.25);}
 
 /* ── build-program ────────────────────────────────────────────────── */
-html[data-theme="light"] .dx-name{color:var(--text);}
+/* .dx-name retrofitted to var(--text); .dx-del was already var(--muted)
+   at the source — neither needs an override here any more. */
 html[data-theme="light"] .dx-hdr,
 html[data-theme="light"] .dx-lbl,
-html[data-theme="light"] .dx-del,
 html[data-theme="light"] .dx-sshint{color:var(--muted);}
 html[data-theme="light"] .wk-btn{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.12);color:var(--muted2);}
 
@@ -308,14 +332,14 @@ html[data-theme="light"] .wk-btn{background:rgba(28,26,23,0.04);border-color:rgb
    CSS here but live (on dark cards) on a couple of other list pages, so they
    must NOT be touched by this shared sheet. */
 html[data-theme="light"] .col-card .cnm{color:var(--text);}
-html[data-theme="light"] .col-card .cmeta,
-html[data-theme="light"] .col-card .carr{color:var(--muted);}
+/* .carr was already var(--muted) at the source — no override needed. */
+html[data-theme="light"] .col-card .cmeta{color:var(--muted);}
 
 /* ── import ───────────────────────────────────────────────────────── */
-html[data-theme="light"] .imp-name,
-html[data-theme="light"] .imp-day-name{color:var(--text);}
+/* .imp-day-name retrofitted to var(--text); .imp-day-ex was already
+   var(--muted) at the source — neither needs an override here any more. */
+html[data-theme="light"] .imp-name{color:var(--text);}
 html[data-theme="light"] .imp-meta,
-html[data-theme="light"] .imp-day-ex,
 html[data-theme="light"] .imp-bad{color:var(--muted);}
 
 /* ═══════════════════════════════════════════════════════════════════
