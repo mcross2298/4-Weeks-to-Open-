@@ -125,6 +125,14 @@ jobs:
         # page-local copy of either from being reintroduced silently.
         run: node tools/check-single-impl.js
 
+      - name: Store coverage check (store-registry.json vs mc-sync.js / mc-export.js — audit G-01/G-02)
+        # Sync coverage, export coverage and the code's actual key usage were
+        # three hand-maintained lists with nothing comparing them. They had
+        # already drifted: mc_custom_exercises_v1 was documented as synced and
+        # was in neither, and mc_session_summary_v1 was synced but not exported.
+        # This is the gate that makes that class of drift impossible to reland.
+        run: node tools/check-store-coverage.js
+
       - name: Market-extraction leak check (content-manifest.json)
         run: python3 tools/build-market.py --check
 

@@ -41,6 +41,14 @@ Deliberately no framework and no build step:
 - **Data:** `mc-pm-data.js` (10 programs — 6 flagship, 4 licensed-influencer)
   and `exercise-catalog.js` (577 deduplicated exercises, each tagged
   `equipment` + `movement`) are the two catalog sources of truth.
+- **Browser storage:** `store-registry.json` declares every `mc_*` localStorage
+  /sessionStorage key once — its owning module, whether it syncs (and with
+  which `mc-sync.js` merge strategy) and whether it belongs in a manual
+  backup. `tools/check-store-coverage.js` enforces it against `mc-sync.js`'s
+  `STORES` and `mc-export.js`'s `KEYS`, and fails CI when code uses a key the
+  registry doesn't declare. **Adding a store means adding it there in the same
+  change.** A key may be export-only: backing one up costs nothing, while
+  syncing it needs a merge rule (audit G-01/G-02).
 - **Backend:** Supabase — accounts/auth, PM-mode publish + inline edits
   (`mc-pm-inline.js`, `mc-program-pub.js`), backup status
   (`mc-backup-status.js`), food-macro lookups (`mc-foodapi.js`), and a
@@ -88,6 +96,7 @@ node tools/check-exports.js            # global-namespace convention (MC_SNAKE /
 node tools/check-program-data.js       # note-field + day-type vocabulary, fleet-wide
 node tools/check-one-timer.js          # no orphan/duplicate/missing rest-timer implementation
 node tools/check-single-impl.js        # declared shared functions exist exactly once tree-wide
+node tools/check-store-coverage.js     # store-registry.json vs mc-sync.js STORES / mc-export.js KEYS
 python3 tools/build-market.py --check  # no licensed content leaks into the Rolodex build
 ```
 
