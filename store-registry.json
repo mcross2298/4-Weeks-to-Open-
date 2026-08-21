@@ -1,0 +1,385 @@
+{
+  "_comment": [
+    "Store registry \u2014 the declared source of truth for every mc_* browser-storage",
+    "key this app uses, and whether it syncs (mc-sync.js STORES) and/or is included",
+    "in a manual backup (mc-export.js KEYS).",
+    "",
+    "Why this file exists (audit G-01/G-02, roadmap K-1.1): sync coverage, export",
+    "coverage and the code's actual key usage were three hand-maintained lists that",
+    "had already drifted apart. mc_custom_exercises_v1 was documented as synced and",
+    "was in neither list; mc_session_summary_v1 was synced but not exported. Nothing",
+    "in CI could see it, because no gate compared the lists to each other.",
+    "",
+    "tools/check-store-coverage.js enforces this file against mc-sync.js and",
+    "mc-export.js, and fails when code uses a key that is not declared here.",
+    "Adding a store means adding it here in the same change.",
+    "",
+    "sync:   false, or the mc-sync.js merge strategy name.",
+    "export: true when the key belongs in a downloaded backup.",
+    "A key can be export-only: backing up costs nothing, syncing needs a merge rule."
+  ],
+  "stores": {
+    "mc_active_prog": {
+      "owner": "dashboard.html",
+      "storage": "local",
+      "sync": "scalarBase",
+      "export": true,
+      "note": "Which program is running. Owner-classified as training data (K-1.3), so it follows the user."
+    },
+    "mc_activity": {
+      "owner": "mc-finish.js",
+      "storage": "local",
+      "sync": "activity",
+      "export": true
+    },
+    "mc_back_to": {
+      "owner": "mc-nav.js",
+      "storage": "session",
+      "sync": false,
+      "export": false,
+      "note": "Back-navigation breadcrumb for this tab."
+    },
+    "mc_bio_cred": {
+      "owner": "mc-biometric.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Biometric unlock credential. NEVER synced or exported \u2014 a secret must not leave the device that holds it."
+    },
+    "mc_bio_optout": {
+      "owner": "mc-biometric.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Biometric opt-out flag. Pairs with mc_bio_cred; device-scoped security choice."
+    },
+    "mc_body_v1": {
+      "owner": "mc-body.js",
+      "storage": "local",
+      "sync": "arrayById",
+      "export": true
+    },
+    "mc_cal_collapsed": {
+      "owner": "mc-calendar.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Calendar collapsed/expanded. Pure UI state."
+    },
+    "mc_coach_report_v1": {
+      "owner": "dashboard.html",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Cached AI coach report. Derived from workout_logs, regenerated server-side."
+    },
+    "mc_collections_v1": {
+      "owner": "mc-collections.js",
+      "storage": "local",
+      "sync": "arrayById",
+      "export": true
+    },
+    "mc_cond_log_v1": {
+      "owner": "mc-cond.js",
+      "storage": "local",
+      "sync": "arrayById",
+      "export": true
+    },
+    "mc_cond_src_prog": {
+      "owner": "mc-cond.js",
+      "storage": "session",
+      "sync": false,
+      "export": false,
+      "note": "Conditioning entry-point breadcrumb for this tab."
+    },
+    "mc_custom_exercises_v1": {
+      "owner": "mc-exercise-catalog.js",
+      "storage": "local",
+      "sync": "exerciseByName",
+      "export": true,
+      "note": "User-created exercises. G-01: its own module header always claimed this synced; it did not."
+    },
+    "mc_custom_programs_v1": {
+      "owner": "mc-program-store.js",
+      "storage": "local",
+      "sync": "arrayByIdTs",
+      "export": true
+    },
+    "mc_custom_workouts_v1": {
+      "owner": "build-workout.html",
+      "storage": "local",
+      "sync": "arrayByIdTs",
+      "export": true
+    },
+    "mc_daily_v1": {
+      "owner": "mc-calendar.js",
+      "storage": "local",
+      "sync": "dictByTs",
+      "export": true
+    },
+    "mc_device_id": {
+      "owner": "mc-sync.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Identifies THIS device to the sync layer. Syncing it would defeat its purpose."
+    },
+    "mc_discard_snapshot_v1": {
+      "owner": "mc-finish.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Undo buffer for a discarded session. Deliberately short-lived and device-local."
+    },
+    "mc_ex_favs": {
+      "owner": "exercise-library.html",
+      "storage": "local",
+      "sync": false,
+      "export": true
+    },
+    "mc_ex_notes": {
+      "owner": "mc-card-actions.js",
+      "storage": "local",
+      "sync": false,
+      "export": true
+    },
+    "mc_ex_order": {
+      "owner": "mc-card-actions.js",
+      "storage": "local",
+      "sync": false,
+      "export": true
+    },
+    "mc_ex_tempo": {
+      "owner": "mc-card-actions.js",
+      "storage": "local",
+      "sync": false,
+      "export": true
+    },
+    "mc_foodapi_cache_v1": {
+      "owner": "mc-foodapi.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Food-lookup API response cache. Derived data, re-fetchable."
+    },
+    "mc_interval_snap": {
+      "owner": "mc-interval.js",
+      "storage": "session",
+      "sync": false,
+      "export": false,
+      "note": "Interval-timer snapshot for this tab."
+    },
+    "mc_launched": {
+      "owner": "apply-head-contract boot",
+      "storage": "session",
+      "sync": false,
+      "export": false,
+      "note": "PWA cold-launch guard for this tab."
+    },
+    "mc_macro_nudge_v1": {
+      "owner": "mc-macros.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Macro nudge dismissal. UI state."
+    },
+    "mc_macros_v1": {
+      "owner": "mc-macros.js",
+      "storage": "local",
+      "sync": "macros",
+      "export": true
+    },
+    "mc_max_v1": {
+      "owner": "mc-maxout.js",
+      "storage": "local",
+      "sync": "arrayById",
+      "export": true
+    },
+    "mc_onboarded": {
+      "owner": "mc-onboarding.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "First-run onboarding flag. Same reasoning as mc_tour_done_v1."
+    },
+    "mc_personal_intensifiers": {
+      "owner": "program-overrides.js",
+      "storage": "local",
+      "sync": false,
+      "export": true
+    },
+    "mc_personal_theme_v1": {
+      "owner": "mc-theme.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Custom theme values. Device preference, same rule as mc_theme_mode."
+    },
+    "mc_plan_targets_v1": {
+      "owner": "mc-suggest.js",
+      "storage": "local",
+      "sync": "dictByTs",
+      "export": true
+    },
+    "mc_pm_active": {
+      "owner": "program-manager.js",
+      "storage": "session",
+      "sync": false,
+      "export": false,
+      "note": "PM-mode unlock for this tab. sessionStorage by design."
+    },
+    "mc_pm_create_intent": {
+      "owner": "mc-pm-creator.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Transient PM create hand-off."
+    },
+    "mc_pm_overrides": {
+      "owner": "program-overrides.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Owner-only PM working copy; the published truth lives in Supabase."
+    },
+    "mc_pm_owner_seen": {
+      "owner": "program-manager.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Owner-device confirmation flag."
+    },
+    "mc_pm_pending_exercises": {
+      "owner": "mc-exercise-catalog.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "PM publish queue; drains to Supabase."
+    },
+    "mc_prefs_v1": {
+      "owner": "mc-timer.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Rest-timer haptics / sound / cue preferences. Device preference."
+    },
+    "mc_published_programs_v1": {
+      "owner": "mc-program-pub.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Cache of Supabase-published programs. Server is authoritative."
+    },
+    "mc_replacements": {
+      "owner": "mc-replace.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Base name of the per-page swap keys; see the mc_replacements| prefix."
+    },
+    "mc_replacements_global": {
+      "owner": "mc-card-actions.js",
+      "storage": "local",
+      "sync": false,
+      "export": true
+    },
+    "mc_session_summary_v1": {
+      "owner": "mc-finish.js",
+      "storage": "local",
+      "sync": "dictByTs",
+      "export": true,
+      "note": "Per-session summary. Was synced but not exported \u2014 the G-02 drift this registry exists to prevent."
+    },
+    "mc_session_v1": {
+      "owner": "mc-session.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "In-flight workout session state. Resuming a half-finished session on another device is a separate feature, not a backup concern."
+    },
+    "mc_setlog_pending_v1": {
+      "owner": "mc-setlog.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Typed-but-unchecked set values for the open session. Same in-flight reasoning as mc_session_v1."
+    },
+    "mc_setlog_v1": {
+      "owner": "mc-setlog.js",
+      "storage": "local",
+      "sync": "setlog",
+      "export": true
+    },
+    "mc_swap_accept_v1": {
+      "owner": "mc-card-actions.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Swap-suggestion acceptance bookkeeping. UI state."
+    },
+    "mc_sync_reloaded": {
+      "owner": "mc-sync.js",
+      "storage": "session",
+      "sync": false,
+      "export": false,
+      "note": "One-shot reload guard for this tab."
+    },
+    "mc_theme_mode": {
+      "owner": "mc-appearance.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Appearance. Owner-classified device preference (K-1.3): a phone and a tablet may reasonably differ."
+    },
+    "mc_tour_done_v1": {
+      "owner": "quick-tour.html",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Quick Tour completion flag. Device preference \u2014 re-seeing the tour once on a new device is minor."
+    },
+    "mc_voice_v1": {
+      "owner": "mc-voice.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Voice-cue preference. Device preference."
+    },
+    "mc_weekly_overrides_v1": {
+      "owner": "mc-schedule.js",
+      "storage": "local",
+      "sync": "dictBase",
+      "export": true,
+      "note": "Per-program schedule shifts. Training data (K-1.3)."
+    },
+    "mc_workout_log_v1": {
+      "owner": "mc-finish.js",
+      "storage": "local",
+      "sync": "workoutLog",
+      "export": true
+    }
+  },
+  "prefixes": {
+    "mc_replacements|": {
+      "owner": "mc-card-actions.js",
+      "storage": "local",
+      "sync": false,
+      "export": true,
+      "note": "Per-page exercise swaps. Dynamic key per page id, so only matchable by prefix."
+    },
+    "mc_streak_push_": {
+      "owner": "dashboard.html",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Per-streak push dedup marker. Device-scoped bookkeeping, meaningless on another device."
+    },
+    "mc_client_assign_dismissed|": {
+      "owner": "dashboard.html",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Per-client dismissal of an assignment banner. UI dismissal state."
+    }
+  }
+}
