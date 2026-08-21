@@ -82,6 +82,7 @@ const BASELINE = {
   'mc-naming-paint.js': ['__mcNamingPaint', 'allProgs'],
   'mc-naming.js': ['MC_NAMES'],
   'mc-nav.js': ['__mcNav'],
+  'mc-offline-prefetch.js': ['MCOfflinePrefetch'],
   'mc-onboarding.js': ['MC_ONBOARD'],
   'mc-pm-creator.js': ['MC_PM_CREATOR'],
   'mc-pm-data.js': ['MC_PM_DATA'],

@@ -195,6 +195,13 @@
       "sync": "arrayById",
       "export": true
     },
+    "mc_offline_prefetch_v1": {
+      "owner": "mc-offline-prefetch.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Which programs have been crawled+prefetched for offline, and when. Pure cache bookkeeping \u2014 regenerable from the network, meaningless on another device, and would make the export file balloon with URL lists no restore needs."
+    },
     "mc_onboarded": {
       "owner": "mc-onboarding.js",
       "storage": "local",
