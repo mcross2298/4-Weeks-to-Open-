@@ -441,7 +441,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .fw-btn{width:100%;padding:14px;background:var(--accent);border:none;border-radius:12px;color:#000;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.03em;-webkit-tap-highlight-color:transparent;}
 .fw-btn:active{opacity:0.85;transform:scale(0.98);}
 .fw-progress{font-size:11px;font-weight:700;color:var(--muted2);white-space:nowrap;letter-spacing:0.04em;text-align:center;}
-/* z-index above .timer-float/#timerOverlay (99/100) for the same reason as
+/* z-index above .timer-float (100) for the same reason as
    .fw-recap-overlay in mc-summary.css — the auto-trigger can fire the instant
    the same check that starts a rest timer completes the workout. */
 .fw-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-end;padding:16px;z-index:110;}
