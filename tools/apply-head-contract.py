@@ -111,8 +111,23 @@ THEME_BOOT = (
     '}catch(e){}</script>'
 )
 
+# DG-1/DG-2: the app's one type identity. Archivo (display) + Manrope (UI/body)
+# were already the brand face on 9 of 13 cat-*.html landing pages and on
+# dashboard.html — everywhere else silently rendered system-ui, since
+# base.css's own font-family reset never had a webfont link to draw from
+# (the "athletic" Bebas Neue PM theme option had the identical bug — see
+# base.css's html[data-typography="athletic"] block, now retired). One
+# canonical link, loaded and precached everywhere, rather than three
+# competing (and in two cases entirely undelivered) identities.
+FONT_HREF = ('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;'
+             '700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap')
+FONT_LINK = '<link href="%s" rel="stylesheet" media="print" onload="this.media=\'all\'"/>' % FONT_HREF
+FONT_NOSCRIPT = '<noscript><link href="%s" rel="stylesheet"/></noscript>' % FONT_HREF
+
 BLOCK = '\n'.join([
     START,
+    FONT_LINK,
+    FONT_NOSCRIPT,
     '<link rel="manifest" href="manifest.json"/>',
     '<meta name="apple-mobile-web-app-capable" content="yes"/>',
     '<meta name="mobile-web-app-capable" content="yes"/>',
@@ -138,6 +153,18 @@ MANAGED = [
     re.compile(r'[ \t]*<meta[^>]*\bname="apple-mobile-web-app-title"[^>]*>' + TAIL, re.I),
     re.compile(r'[ \t]*<meta[^>]*\bname="theme-color"[^>]*>' + TAIL, re.I),
     re.compile(r'[ \t]*<link[^>]*\brel="apple-touch-icon"[^>]*>' + TAIL, re.I),
+    # DG-1/DG-2: any pre-existing Google Fonts link — the 9 cat-*.html copies
+    # of the same Archivo+Manrope pair this block now owns, and
+    # cat-pump-new4.html's separate Bebas Neue+DM Sans pair being retired.
+    # Broad host match on purpose so a stray future addition gets normalized
+    # here too rather than becoming a second competing identity. The
+    # <noscript>-wrapped copy MUST be matched (and stripped) before the bare
+    # <link> pattern below — regex has no notion of HTML nesting, so if the
+    # bare pattern ran first it would eat the <link> living INSIDE the
+    # <noscript>, and the wrapper pattern would then find nothing left to
+    # match, leaving a stray empty <noscript></noscript> behind.
+    re.compile(r'[ \t]*<noscript>\s*<link[^>]*\bhref="https://fonts\.googleapis\.com/[^"]*"[^>]*>\s*</noscript>' + TAIL, re.I),
+    re.compile(r'[ \t]*<link[^>]*\bhref="https://fonts\.googleapis\.com/[^"]*"[^>]*>' + TAIL, re.I),
     # The hand-rolled theme snippets this block replaces (audit G-03).
     re.compile(r'[ \t]*<script>\s*try\s*\{\s*if\s*\(\s*localStorage\.getItem\(\s*[\'"]mc_theme_mode[\'"]\s*\)'
                r'.*?</script>' + TAIL, re.I | re.S),

@@ -68,10 +68,10 @@
   // strings only — leak-safe.
   var PRESETS = {
     midnight: { name: 'Midnight Gold', primaryBg: '#0a0a0a', cardBg: '#101010', accent: '#d4af37', typography: 'sans' },
-    crimson:  { name: 'Crimson Steel', primaryBg: '#0a0506', cardBg: '#16090c', accent: '#e11d48', typography: 'athletic' },
+    crimson:  { name: 'Crimson Steel', primaryBg: '#0a0506', cardBg: '#16090c', accent: '#e11d48', typography: 'sans' },
     violet:   { name: 'Violet Haze',   primaryBg: '#090712', cardBg: '#140d22', accent: '#7F77DD', typography: 'sans' },
     teal:     { name: 'Deep Teal',     primaryBg: '#04100e', cardBg: '#0a1c19', accent: '#14b8a6', typography: 'sans' },
-    ember:    { name: 'Ember',         primaryBg: '#0f0a06', cardBg: '#1a1206', accent: '#f97316', typography: 'athletic' }
+    ember:    { name: 'Ember',         primaryBg: '#0f0a06', cardBg: '#1a1206', accent: '#f97316', typography: 'sans' }
   };
 
   // Resolved ThemeConfig for the global app-chrome scope: published+local via
