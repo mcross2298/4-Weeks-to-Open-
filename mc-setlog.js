@@ -169,6 +169,10 @@
     // and is being revisited now that S1-S4 measured it at 272px collapsed.
     // Signed off by the owner (roadmap decision 2).
     if (card) {
+      // A-14: build this card's rows now if it's a plain unit that was only
+      // ever strip-built — openLogger() below assumes .mcl-wrap exists.
+      // Superset legs are already eager (see run()) so this is a no-op there.
+      ensureRowsBuilt(card);
       document.querySelectorAll(UNIT_SEL_R3).forEach(function (c) {
         if (c !== card && c.querySelector('.mcl-strip')) setCollapsed(c, true);
       });
@@ -176,6 +180,19 @@
       setCollapsed(card, false);
       openLogger(card);
     }
+  }
+
+  // A-14: build a specific card's rows on demand, from whatever setActiveCard()
+  // or a session restore hands it — resolves host/exId/setsStr/rs the same
+  // way run() does per unit type, so this reaches the identical DOM build()
+  // itself would have. Superset legs (.ss-ex) are already fully eager (run()
+  // calls build() for them directly), so this is a safe no-op there.
+  function ensureRowsBuilt(card) {
+    if (!card || card.classList.contains('ss-ex')) return;
+    var host = card.classList.contains('ex-card')
+      ? (card.querySelector('.ex-content') || card.querySelector('.ex-body') || card)
+      : card;
+    buildRows(host, card, card.dataset.id || nameId(card), setsOf(card), restSecs(card));
   }
   var UNIT_SEL_R3 = '.ex-card, .ss-ex, .ex-item';
   function openLogger(card) {
@@ -224,6 +241,25 @@
       var candidate = firstIncompleteLeg(next);
       if (candidate && !candidate.__mclDone) return candidate;
       next = nextTopUnit(next);
+    }
+    return null;
+  }
+  // VOC-A2: the cold-start counterpart of nextIncompleteUnit() — instead of
+  // walking forward from a just-finished card, find the very first
+  // incomplete top-level unit on the page at all, so a fresh visit (no
+  // mc_session_v1 record yet — see mc-session.js) can land the athlete on it
+  // directly. Reuses firstIncompleteLeg() so a superset's first leg is
+  // returned rather than its .ss-card wrapper, exactly as nextIncompleteUnit()
+  // already does. On a genuinely fresh page every unit's __mclDone is
+  // undefined (rows haven't been checked, so nothing has run updateCount()
+  // yet), so in practice this returns the first unit in DOM order — but it
+  // stays correct rather than assuming that, in case a future caller invokes
+  // it after some cards are already marked done.
+  function firstIncompleteUnit() {
+    var units = document.querySelectorAll('.ex-card, .ss-card, .ex-item');
+    for (var i = 0; i < units.length; i++) {
+      var candidate = firstIncompleteLeg(units[i]);
+      if (candidate && !candidate.__mclDone) return candidate;
     }
     return null;
   }
@@ -577,12 +613,25 @@
     if (strip) strip.setAttribute('aria-expanded', String(!val));
   }
 
-  // ---- render the logger onto a host element -----------------------------
-  function build(host, card, exId, setsStr, rs) {
+  // ---- A-14: split the collapsed strip from the expensive logger body ----
+  // build() used to do both in one pass, for every card on the page, even
+  // though R3 already collapses every card but one to a 71px strip — a
+  // multi-day page built the full per-set <input> markup (ghost-fill, two
+  // localStorage history reads per row, blur/input listeners) for cards
+  // nobody had opened yet. buildStrip() is the cheap part every card still
+  // gets eagerly (the 0/N badge has to read correctly at rest); buildRows()
+  // is the expensive part, now built only when a card is actually activated
+  // (see setActiveCard() and MCSetlogUtil.ensureRowsBuilt below). build()
+  // itself stays as a "do both" entry point, unchanged for callers that
+  // still want the old eager behavior — run() keeps using it for superset
+  // legs (see run(), and the note there on why supersets stay eager).
+  function buildStrip(host, card, exId, setsStr, rs) {
     if (!host) return;
     // Strip any OTHER wave3 logger / notes UI EVERY pass (before the early
     // return), so page-native scripts that re-add their UI after us (e.g.
-    // pmc-workout's .ex-notes) don't win the race.
+    // pmc-workout's .ex-notes) don't win the race. Runs here (not in
+    // buildRows) so it still happens for every card every pass, not just
+    // whichever one is currently active.
     /* MARKET:STRIP influencer-refs START */
     // NOTE: we deliberately do NOT strip .set-row — that is PSU's native
     // exercise content, not a stray logger.
@@ -591,6 +640,62 @@
       host.querySelectorAll('.setlog-toggle, .setlog-wrap, .note-btn, .note-area, .ex-notes-toggle, .ex-notes-wrap, .log-row'),
       function (n) { n.remove(); }
     );
+    if (card.querySelector('.mcl-strip')) return;   // ours already present
+
+    var cid = cssId(exId);
+    var plan = planFor(card, setsStr);
+    var nmEl = plan.nmEl;
+    var exNameText = nmEl ? nmEl.textContent.trim() : 'Exercise';
+    var total = plan.total;
+
+    // ---- collapsed-strip view ---------------------------------------------
+    // Appended as a sibling of `host` (i.e. a direct child of `card` itself,
+    // whether or not host === card) rather than inside it, so a single CSS
+    // rule keyed off `card` — "hide every direct child except .mcl-strip" —
+    // hides the ENTIRE original card content (name/badges/reps/timer/notes/
+    // logger) in one shot, on every template shape this file renders onto
+    // (single .ex-body wrapper, bare .ss-ex/.ex-item children, etc.) with no
+    // per-page markup change required. See mc-setlog.css .mcl-collapsed.
+    var strip = document.createElement('button');
+    strip.type = 'button';
+    strip.className = 'mcl-strip';
+    strip.setAttribute('aria-expanded', 'false');
+    strip.setAttribute('aria-label', 'Expand ' + exNameText + ', 0 of ' + total + ' sets logged');
+    // R3: the dot carries the exercise's position while the card is
+    // unstarted, and updateCount() swaps it for a ✓ once every set is
+    // logged. It used to be a hard-coded ✓ because the strip only ever
+    // appeared on finished cards.
+    var idxEl = card.querySelector('.a-idx');
+    var idxTxt = idxEl ? idxEl.textContent.trim() : '';
+    strip.innerHTML =
+      '<span class="mcl-strip-dot" aria-hidden="true">' + escHtml(idxTxt || '•') + '</span>' +
+      '<span class="mcl-strip-name">' + escHtml(exNameText) + '</span>' +
+      '<span class="mcl-strip-count mcl-strip-count-' + cid + '">0/' + total + ' Sets</span>' +
+      '<span class="mcl-strip-chev" aria-hidden="true">›</span>';
+    strip.addEventListener('click', function (e) {
+      e.stopPropagation(); e.preventDefault();
+      clearTimeout(card.__mclCollapseTimer);
+      // Tapping a strip promotes that exercise — which collapses whichever
+      // card was expanded (setActiveCard also builds its rows under A-14).
+      setActiveCard(card);
+    });
+    card.appendChild(strip);
+    // R3: a freshly built card rests collapsed unless it is the one the
+    // athlete is already on. Guarded on first build only (__mclR3Init) so a
+    // later re-render pass never re-collapses a card mid-set.
+    if (!card.__mclR3Init) {
+      card.__mclR3Init = true;
+      if (!card.classList.contains('active')) setCollapsed(card, true);
+    }
+  }
+
+  // ---- render the full per-set logger onto a host element ----------------
+  // The expensive half: history reads, ghost-fill, one <input> row per
+  // prescribed set. Idempotent (checks .mcl-wrap) and safe to call whether
+  // or not buildStrip() already ran for this card.
+  function buildRows(host, card, exId, setsStr, rs) {
+    if (!host) return;
+    buildStrip(host, card, exId, setsStr, rs);
     if (host.querySelector('.mcl-wrap')) return;   // ours already present
 
     var cid = cssId(exId);
@@ -833,48 +938,16 @@
 
     host.appendChild(toggle);
     host.appendChild(wrap);
+    // Strip creation lives in buildStrip() now, called at the top of this
+    // function — nothing left to do here once the rows are appended.
+  }
 
-    // ---- collapsed-strip view ---------------------------------------------
-    // Appended as a sibling of `host` (i.e. a direct child of `card` itself,
-    // whether or not host === card) rather than inside it, so a single CSS
-    // rule keyed off `card` — "hide every direct child except .mcl-strip" —
-    // hides the ENTIRE original card content (name/badges/reps/timer/notes/
-    // logger) in one shot, on every template shape this file renders onto
-    // (single .ex-body wrapper, bare .ss-ex/.ex-item children, etc.) with no
-    // per-page markup change required. See mc-setlog.css .mcl-collapsed.
-    if (!card.querySelector('.mcl-strip')) {
-      var strip = document.createElement('button');
-      strip.type = 'button';
-      strip.className = 'mcl-strip';
-      strip.setAttribute('aria-expanded', 'false');
-      strip.setAttribute('aria-label', 'Expand ' + exNameText + ', 0 of ' + total + ' sets logged');
-      // R3: the dot carries the exercise's position while the card is
-      // unstarted, and updateCount() swaps it for a ✓ once every set is
-      // logged. It used to be a hard-coded ✓ because the strip only ever
-      // appeared on finished cards.
-      var idxEl = card.querySelector('.a-idx');
-      var idxTxt = idxEl ? idxEl.textContent.trim() : '';
-      strip.innerHTML =
-        '<span class="mcl-strip-dot" aria-hidden="true">' + escHtml(idxTxt || '•') + '</span>' +
-        '<span class="mcl-strip-name">' + escHtml(exNameText) + '</span>' +
-        '<span class="mcl-strip-count mcl-strip-count-' + cid + '">0/' + total + ' Sets</span>' +
-        '<span class="mcl-strip-chev" aria-hidden="true">›</span>';
-      strip.addEventListener('click', function (e) {
-        e.stopPropagation(); e.preventDefault();
-        clearTimeout(card.__mclCollapseTimer);
-        // Tapping a strip promotes that exercise — which collapses whichever
-        // card was expanded, so exactly one stays open (R3).
-        setActiveCard(card);
-      });
-      card.appendChild(strip);
-      // R3: a freshly built card rests collapsed unless it is the one the
-      // athlete is already on. Guarded on first build only (__mclR3Init) so a
-      // later re-render pass never re-collapses a card mid-set.
-      if (!card.__mclR3Init) {
-        card.__mclR3Init = true;
-        if (!card.classList.contains('active')) setCollapsed(card, true);
-      }
-    }
+  // Combined "do both phases now" entry point — unchanged contract for any
+  // caller that wants the old fully-eager behavior (run() uses it for
+  // superset legs; see run() below for why they stay eager rather than lazy).
+  function build(host, card, exId, setsStr, rs) {
+    buildStrip(host, card, exId, setsStr, rs);
+    buildRows(host, card, exId, setsStr, rs);
   }
 
   // ---- attach to every exercise card -------------------------------------
@@ -955,12 +1028,32 @@
     /* MARKET:STRIP influencer-refs END */
     // render .ex-card/.lift-card with no data-id, so a data-id-only selector
     // silently skipped them. Fall back to a stable id derived from the name.
+    // A-14: plain units build their strip eagerly (cheap — the 0/N badge has
+    // to read right at rest) but their expensive per-set rows only when
+    // active — a fresh page starts with nothing active, so nothing beyond
+    // the strips gets built until the trainee (or a restored session, or
+    // VOC-A2's cold-start auto-open) actually opens one via setActiveCard(),
+    // which calls MCSetlogUtil.ensureRowsBuilt(). A card already marked
+    // .active from an earlier pass (e.g. this run() re-firing after a DOM
+    // mutation elsewhere on the page) keeps its rows built here too, rather
+    // than relying on setActiveCard() having been the one to trigger it.
     document.querySelectorAll('.ex-card').forEach(function (c) {
       /* MARKET:STRIP influencer-refs START */
       // host varies by template: .ex-content (PMC/MC), .ex-body (STNDR), else card
       /* MARKET:STRIP influencer-refs END */
-      build(c.querySelector('.ex-content') || c.querySelector('.ex-body') || c, c, c.dataset.id || nameId(c), setsOf(c), restSecs(c));
+      var host = c.querySelector('.ex-content') || c.querySelector('.ex-body') || c;
+      var exId = c.dataset.id || nameId(c), setsStr = setsOf(c), rs = restSecs(c);
+      buildStrip(host, c, exId, setsStr, rs);
+      if (c.classList.contains('active')) buildRows(host, c, exId, setsStr, rs);
     });
+    // Superset legs stay fully eager (build(), both phases) — excluded from
+    // A-14's lazy scope. mc-superset-hop.js's leg-cycling (hasUndoneSet())
+    // reads a leg's .mcl-ck directly to decide whether it still has work
+    // left; an unbuilt leg reads as "nothing left to do" and gets skipped,
+    // which is the exact "handoff skips the second leg" bug S3 already fixed
+    // once. Supersets are a small fraction of a page's cards, not the source
+    // of the multi-day boot-cost problem A-14 targets, so excluding them
+    // trades a small amount of the win for zero risk to that engine.
     document.querySelectorAll('.ss-ex').forEach(function (c) {
       // Read the prescribed rest from the exercise's own .rest-timer (data),
       // not a hardcoded value — fallback 90s. The superset normalizer below
@@ -968,7 +1061,9 @@
       build(c.querySelector('.ss-content') || c.querySelector('.ex-body') || c, c, c.dataset.id || nameId(c), setsOf(c), restSecs(c) || 90);
     });
     document.querySelectorAll('.ex-item').forEach(function (c) {
-      build(c, c, c.dataset.id || nameId(c), setsOf(c), restSecs(c));
+      var exId = c.dataset.id || nameId(c), setsStr = setsOf(c), rs = restSecs(c);
+      buildStrip(c, c, exId, setsStr, rs);
+      if (c.classList.contains('active')) buildRows(c, c, exId, setsStr, rs);
     });
     /* MARKET:STRIP influencer-refs START */
     // NOTE: .lift-card (PSU) is intentionally NOT handled here — PSU pages ship
@@ -1033,9 +1128,13 @@
                               // page-load's Supabase workout_logs rows on discard
     activateCard: setActiveCard,  // §3.4: lets mc-session.js re-open the card
                                     // the athlete was on when a session restores
-    plannedSetCount: plannedSetCount  // S5c-0: lets mc-finish.js size a workout
+    plannedSetCount: plannedSetCount,  // S5c-0: lets mc-finish.js size a workout
                                     // from the prescription, not from rendered
                                     // checkboxes (see planFor above)
+    ensureRowsBuilt: ensureRowsBuilt,  // A-14: lets mc-session.js build a specific
+                                    // card's rows before restoring checks onto it
+    firstIncompleteUnit: firstIncompleteUnit  // VOC-A2: lets mc-session.js find
+                                    // where to land a genuinely fresh visit
   };
 
   // ---- cross-device pre-fill from Supabase ----------------------------------

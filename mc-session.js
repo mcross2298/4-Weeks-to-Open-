@@ -50,10 +50,16 @@
     Array.prototype.forEach.call(all, function (c) {
       if (c.classList.contains('checked')) cards.push(cardKey(c, all));
     });
+    // A-14: each entry now carries the owning card's key alongside the row
+    // id, not just the id — a lazily-built card's rows don't exist in the
+    // DOM until it's activated, so restoreSets() needs to know WHICH card to
+    // build before it can look a row up by id. See restoreSets()/cardByKey().
     var sets = [];
     Array.prototype.forEach.call(document.querySelectorAll('.mcl-ck.done'), function (ck) {
       var row = ck.closest('.mcl-row');
-      if (row && row.id) sets.push(row.id);
+      if (!row || !row.id) return;
+      var owner = row.closest(CARD_SEL);
+      sets.push({ id: row.id, card: owner ? cardKey(owner, all) : null });
     });
     // §3.4: which card's logger the athlete had open, so a resume — or the
     // SW's forced deploy reload — lands them back on it instead of a fully
@@ -96,6 +102,17 @@
       if (session.cards.indexOf(cardKey(c, all)) !== -1) c.classList.add('checked');
     });
   }
+  // A-14: resolve a stored card key back to its live DOM element, the same
+  // way restoreCards()/restoreActiveCard() already match by key.
+  function cardByKey(key) {
+    if (key == null) return null;
+    var all = document.querySelectorAll(CARD_SEL), found = null;
+    Array.prototype.forEach.call(all, function (c) {
+      if (!found && cardKey(c, all) === key) found = c;
+    });
+    return found;
+  }
+
   // A-7: restoring a set row here writes .done straight onto the DOM instead
   // of going through mc-setlog.js's onCheck() — which is also the only path
   // that runs updateCount() (the collapsed-strip badge, the .checked mirror,
@@ -105,11 +122,27 @@
   // row restored on THIS pass and run the real derivation for each of them
   // once retries settle, via the small surface mc-setlog.js exposes for
   // exactly this (window.MCSetlogUtil.updateCountByCard).
+  //
+  // A-14: a lazily-built card's rows may not exist yet — getElementById would
+  // just never find them and the retry ladder in init() would blindly poll
+  // for 4.8s before giving up. Each entry now carries its owning card's key
+  // (see capture()), so the owning card gets built FIRST, synchronously,
+  // right here — the row is then found on the very same pass instead of
+  // however many retries it used to take. Old-shape records (a bare string,
+  // saved before this change) have no owner key and fall back to the
+  // original blind-retry behavior; mc_session_v1 prunes anything over 12h
+  // old, so that shape ages out on its own.
   function restoreSets() {
     if (!session || !session.sets || !session.sets.length) return true;
     var done = true;
     var touchedCards = [];
-    session.sets.forEach(function (rowId) {
+    session.sets.forEach(function (entry) {
+      var rowId = typeof entry === 'string' ? entry : entry.id;
+      var ownerKey = typeof entry === 'string' ? null : entry.card;
+      if (ownerKey != null && window.MCSetlogUtil && window.MCSetlogUtil.ensureRowsBuilt) {
+        var owner = cardByKey(ownerKey);
+        if (owner) window.MCSetlogUtil.ensureRowsBuilt(owner);
+      }
       var row = document.getElementById(rowId);
       if (!row) { done = false; return; }
       var ck = row.querySelector('.mcl-ck');
@@ -158,6 +191,39 @@
     MCSetlogUtil.activateCard(card);
   }
 
+  // VOC-A2: a genuinely fresh visit — no mc_session_v1 record for this page
+  // at all, not even an empty one — used to leave every day collapsed and
+  // every card resting at its 0/N strip, so reaching the very first loggable
+  // set took a day-header tap plus a strip tap. Lands the athlete on the
+  // first unfinished exercise directly instead, the same way
+  // restoreActiveCard() above already lands a RETURNING session back where
+  // it left off — same day-header-click mechanism, same
+  // MCSetlogUtil.activateCard() call, just seeded from
+  // MCSetlogUtil.firstIncompleteUnit() instead of a stored card key. Only
+  // runs when init() found no session record (see below); an in-progress or
+  // restored session's own activeCard always takes priority over this.
+  //
+  // mc-setlog.js's cards render synchronously on most pages but some engines
+  // build them asynchronously off MC_SCAN — poll like restoreSets() does
+  // rather than assuming the first pass already has them.
+  function autoOpenFirstUnfinished() {
+    if (!window.MCSetlogUtil || !MCSetlogUtil.activateCard || !MCSetlogUtil.firstIncompleteUnit) return;
+    var tries = 0;
+    (function tryOpen() {
+      var card = MCSetlogUtil.firstIncompleteUnit();
+      if (!card) {
+        if (++tries <= 12) setTimeout(tryOpen, 400);
+        return;
+      }
+      var day = card.closest('.day-card');
+      if (day && !day.classList.contains('open')) {
+        var header = day.querySelector('.day-header');
+        if (header) header.click();
+      }
+      MCSetlogUtil.activateCard(card);
+    })();
+  }
+
   // ---- record running rest timers (wall-clock, survives reload) -----------
   function wrapTimers() {
     if (typeof TMR === 'undefined') return;
@@ -203,6 +269,10 @@
       if (typeof TMR !== 'undefined') TMR.__mcsRestoring = true;
       restoreTimer();
       if (typeof TMR !== 'undefined') TMR.__mcsRestoring = false;
+    } else {
+      // VOC-A2: nothing to restore — this is a fresh visit, so land on the
+      // first unfinished exercise instead of leaving every day closed.
+      autoOpenFirstUnfinished();
     }
 
     // event-driven capture: any check/uncheck (cards or set rows) persists
