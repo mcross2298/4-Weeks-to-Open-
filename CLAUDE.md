@@ -90,6 +90,7 @@ python3 tools/build-sw.py --check      # committed sw.js matches the tree
 python3 tools/check-script-manifest.py --check   # clone pages load identical module lists
 python3 tools/apply-head-contract.py --check     # canonical <head> block + PWA tags on every page
 node tools/check-program-colors.js     # mc-pm-data.js vs dashboard.html vs mc-theme.js
+python3 tools/gen-program-css.py --check  # dashboard.html .cat-card/.rail-card CSS vs mc-pm-data.js
 node tools/check-day-colors.js         # governed training-day palette
 node tools/validate-programs.js        # multi-week intensifier coverage (mm-p1/p2/p3.html)
 node tools/check-exports.js            # global-namespace convention (MC_SNAKE / MCPascal)

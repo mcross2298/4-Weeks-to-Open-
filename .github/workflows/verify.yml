@@ -89,6 +89,11 @@ jobs:
       - name: Program color-sync check (mc-pm-data.js vs dashboard.html vs mc-theme.js)
         run: node tools/check-program-colors.js
 
+      - name: Program-card CSS generation check (dashboard.html .cat-card/.rail-card vs mc-pm-data.js — DG-5)
+        # Owns the four AUTOGEN:*-CARDS-* blocks in dashboard.html. Regenerate
+        # with: python3 tools/gen-program-css.py
+        run: python3 tools/gen-program-css.py --check
+
       - name: Day-card palette check (governed training colours — audit G-05)
         # Training days had 18 ad-hoc hexes with five near-duplicate clusters and
         # one reserved-recovery collision. Fold a new colour in with:
