@@ -443,8 +443,16 @@
         var prevMaxP = wNum ? localMaxP(exName) : Promise.resolve(null);
         prevMaxP.then(function (prevMax) {
           MC_SB.logSet(logEntry).then(function () {
-            // PR detected: new weight exceeds historical max
-            if (wNum && (prevMax === null || wNum > prevMax) && MC_SB.sendPush) {
+            // PR detected: new weight beats a REAL historical max (audit G-03).
+            // prevMax === null does not mean "no record to beat" — getMaxWeight()
+            // returns null for three different situations: no Supabase client,
+            // nobody signed in, and genuinely no history for this exercise. The
+            // old `prevMax === null ||` read all three as a PR, so every first
+            // logged set of every exercise fired "your best lift ever" — about
+            // ten of them in a new user's first session, which is how a
+            // celebration turns into noise people mute. A first log is a
+            // baseline, not a record: require a known previous max to beat.
+            if (wNum && prevMax !== null && wNum > prevMax && MC_SB.sendPush) {
               MC_SB.sendPush({
                 title: '🏆 New PR — ' + exName + '!',
                 body: wNum + ' lbs — your best lift ever. Keep pushing!'
