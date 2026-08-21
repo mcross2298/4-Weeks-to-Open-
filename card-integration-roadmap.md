@@ -65,7 +65,7 @@ serial chain, one PR at a time. The only contention-free items (`A-6`, `A-9`,
 | **S3** | `R2` + the self-opening logger (`A-11`/`M-1`/§3.4) | none | ✅ shipped |
 | **S4a** | `R4` header, shared component + all 5 engines (39 pages) | `AskUserQuestion` | ✅ shipped |
 | **S4b** | `R4` on the 17 hand-written pages; old `.a-top` deleted | none — S4a's gate covers it | ✅ shipped |
-| **S4c** | `A-17` `defer` sweep — **blocked, see below** | needs a decision | blocked |
+| **S4c** | `A-17` `defer` sweep — investigated in full, **DROPPED** | owner decision, 2026-08-21 | ❌ dropped |
 | **S5a** | `A-13` render signal — migrate onto `MC_SCAN` | signed off | ✅ shipped |
 | **S5b** | `R3` collapse-by-default (`A-14` split out) | signed off | ✅ shipped |
 | **S5c-0** | completion accounting off DOM counts — **live bug fix**, unblocks `A-14` | none | ✅ shipped |
@@ -340,7 +340,7 @@ anywhere. All 45 inline scripts across the 17 pages re-parsed clean.
 Runtime holds at 0% delta; layout numbers are unchanged from S4a, since
 `mm-p1.html` is engine-rendered and was already migrated there.
 
-## `A-17` is blocked — the audit's premise does not hold here
+## `A-17` — investigated in full (K-2.3, 2026-08-21) and DROPPED
 
 The plan paired the `defer` sweep with `R4` because both were "fleet-wide
 sweeps". That rationale dissolved once S4a showed `R4`'s hand-written surface
@@ -351,32 +351,77 @@ is 17 pages while `A-17` touches **137**. They are not the same sweep, so
 self-initialise on `DOMContentLoaded`, so `defer` preserves execution order
 while unblocking the parser." That is true of module-to-module ordering and
 **ignores inline scripts**, which are never deferred and therefore jump ahead
-of every deferred module. **53 pages carry a bare top-level call to a
-shared-module function inside an inline `<script>`** — the common shape being
+of every deferred module. The audit cited 53 pages carrying a bare top-level
+call as the shape to fix; the original "wrap those calls, then sweep" plan
+(option 1 below) was attempted in full at K-2.3 and the real surface turned
+out much larger and structurally harder than a bare-call count suggested —
+recorded here so a future attempt doesn't re-discover the same five traps
+from zero.
 
-```html
-<script src="mc-timer.js"></script>
-<script>
-buildTimerFloat();          <!-- runs BEFORE a deferred mc-timer.js -->
-```
+**What K-2.3 actually found, mechanically re-derived rather than
+estimated:** a corrected scanner (multi-owner map, namespace-call support,
+transitive-call resolution to a fixed point, paren/brace-depth-aware
+statement splitting — each fix landed only after live-testing caught a
+class of hazard the previous version silently missed) found **66 pages / 72
+bare top-level call-sites**, not 53 — both under-counted (multi-owner
+functions like `renderDay`, declared in both `ks-engine.js` and
+`mc-freq-engine.js`, were dropped by a naive "first file wins" ownership
+model) and over-the-audit's-frame (namespace calls like `MM.init('p1')`,
+`MC.init('s1-back')`, `MCProgramHero.mount(el,{...})` are exactly as unsafe
+as a bare function call but a different shape). Wrapping those calls in
+`DOMContentLoaded` was completed and verified safe (zero behavior change
+without `defer`). But three FURTHER hazard shapes surfaced only once the
+`defer` attribute itself was actually applied and every page live-tested,
+none of them a "bare call" at all:
 
-Deferring `mc-timer.js` there throws `ReferenceError: buildTimerFloat is not
-defined` on load. Verified by reading the real source on `bro-split.html` and
-`5on-2off.html`, not inferred.
+1. **Transitive calls** — `render();` is a safe, page-local, non-hazard
+   call by name, but its OWN body calls `makeRestTimer()` (mc-timer.js) deep
+   inside a template literal. Resolved via a fixed-point closure scan (any
+   page-local function whose body — at any depth — mentions a hazard name,
+   or calls another function already known to be hazardous, is itself
+   hazardous), but this class alone roughly doubled the true hazard count
+   the audit's "bare call" framing never anticipated.
+2. **Declaration reads** — `const BADGE_LABELS = window.MC_PM_DATA.badges.card;`
+   (cat-pmc.html, cat-strength.html, pmc-workout.html) and
+   `const PROGS = window.MC_PM_DATA.programs;` (dashboard.html) read a
+   deferred module's export into a top-level BINDING, not just a call.
+   Wrapping the whole declaration in `DOMContentLoaded` is unsafe — later
+   top-level code or a later-defined function could read that binding before
+   the wrapper ever runs — so each needs a hand-verified `let NAME;` +
+   deferred-assignment rewrite, not a mechanical sweep.
+3. **Config-overwrite ordering** — `window.MC_SURPRISE = { sel: '.plan-card' }`
+   (8 `cat-*.html` pages) REPLACES the object a shared module
+   (`mc-surprise.js`) also assigns to `window.MC_SURPRISE`. Today the page's
+   inline assignment runs after the module (classic scripts execute in
+   document order). Deferring the module would flip that: the module's
+   assignment — now the LATER one — would silently clobber the page's own
+   config on every load. Not a crash, not visible in a console-error sweep;
+   only caught by reading the ownership semantics of the assignment, not by
+   testing for exceptions. Likely not the last shape of its kind — a
+   from-scratch audit of every top-level statement touching a shared
+   global's namespace, not just the call-shaped ones, would be needed to
+   have real confidence there isn't a fourth.
 
-Three ways forward, none of them a mechanical sweep:
-1. Wrap those 53 top-level calls in `DOMContentLoaded` handlers first, then
-   sweep — the largest change, and the only one that gets the full win.
+**Decision (owner, 2026-08-21):** drop `A-17` per option 3 below rather than
+keep excavating. The service worker already makes repeat visits cheap, and
+the audit rated this item *medium* — its lowest severity — so the
+demonstrated cost (a fifth investigation pass turning up a new hazard shape
+each time, three of them found only after live-testing an actually-deferred
+page, not by static reading) outweighs the win. All exploratory HTML edits
+from the K-2.3 investigation were reverted; nothing partial or
+un-verified shipped. The detection tooling built along the way
+(multi-owner map, fixed-point transitive-call resolution, paren-aware
+statement splitter) was not committed — it existed to answer "how big is
+this, really", not as infrastructure for a sweep that isn't happening.
+
+The three original options, for the record:
+1. Wrap the top-level calls in `DOMContentLoaded` handlers first, then
+   sweep — attempted at K-2.3; the "then sweep" half is what turned out
+   unsafe, not the wrap half.
 2. Defer only the modules no inline script calls at parse time — partial
    win, and a rule that silently rots the next time someone adds an
    inline call.
-3. Drop `A-17`. The service worker already makes repeat visits cheap, and
-   `I-4` was rated *medium*, the lowest severity in the audit.
-
-Recommendation: **(1), as its own step, after S5** — S5 deletes the nine
-retry ladders and rescopes the observers, which is likely to touch some of
-the same inline bootstrap code, so doing `A-17` first would mean editing it
-twice.
+3. **Drop `A-17`.** ← chosen.
 
 
 ## S5a shipped (2026-08-20)

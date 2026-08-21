@@ -510,6 +510,31 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > on load. Verified against real source, not inferred. The fix is to wrap
 > those calls in `DOMContentLoaded` first — its own step, best done after S5,
 > which is likely to touch the same inline bootstrap code.
+>
+> **`A-17` investigated in full and DROPPED (2026-08-21, roadmap Wave 5 /
+> K-2.3).** The "wrap the 53 bare calls, then sweep" plan above was actually
+> attempted. The wrap half completed clean — but on the mechanically
+> re-derived, not estimated, real count: **66 pages / 72 call-sites**, wider
+> than 53 in two ways the original count missed (a "first file wins"
+> ownership model silently dropped multi-owner functions like `renderDay`,
+> declared separately in both `ks-engine.js` and `mc-freq-engine.js`; and
+> namespace calls like `MM.init('p1')` are exactly as unsafe as a bare
+> function call but a different shape entirely). The sweep half is what
+> broke: applying `defer` and live-testing every touched page surfaced THREE
+> further hazard shapes no static read of "bare calls" would find — a
+> page-local `render()` that's safe by name but transitively calls a hazard
+> function deep in its own body; a top-level `const X = window.NS.prop;`
+> declaration (wrapping it is unsafe — later code could read that binding
+> before a wrapper runs); and a page's `window.MC_SURPRISE = {...}`
+> config silently getting clobbered by its owning module's own same-named
+> assignment once the module's relative execution order shifts later than
+> the page's. None of the three is a `ReferenceError` a console-error sweep
+> catches by accident — each needed deliberate live verification to find.
+> Decision: drop `A-17` (roadmap's own option 3) rather than keep excavating
+> — service-worker caching already makes repeat visits cheap, and the audit
+> rated this item its lowest severity. All exploratory edits were reverted;
+> nothing partial shipped. Full writeup: `card-integration-roadmap.md`'s
+> "`A-17` — investigated in full ... and DROPPED" section.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 

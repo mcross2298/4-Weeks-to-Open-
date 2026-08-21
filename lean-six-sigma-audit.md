@@ -415,10 +415,22 @@ overlap Wave 5)*
     contract, closing the surface VOC-A1 exposed at the point-fix level.
 
 **Wave 5 — Boot weight** *(needs exclusive ownership of the tree)*
-11. **K-2.3 / `A-17`** wrap the 53 bare inline bootstrap calls in
-    `DOMContentLoaded`, then the fleet-wide `defer` sweep, measured on the three
-    probe pages. **G-06** (the 100 KB PM module) is re-evaluated here, not
-    before — Wave 6's budget is what should decide it.
+11. **K-2.3 / `A-17`** — **investigated in full and DROPPED (2026-08-21).**
+    The 53-page bare-call estimate undercounted the true hazard surface
+    (multi-owner functions, namespace calls: 66 pages / 72 sites, mechanically
+    re-derived) and, worse, the "wrap the bare calls, then sweep" plan turned
+    out to miss three further hazard shapes only visible once `defer` was
+    actually applied and pages live-tested: transitive calls through a
+    page-local wrapper function, top-level declarations that read a deferred
+    module's export into a binding, and config-overwrite ordering flips
+    (`window.MC_SURPRISE` reassigned by both a page and its owning module —
+    deferring the module would let it silently clobber the page's config on
+    every load). Full writeup, all five hazard shapes, and the decision
+    rationale: `card-integration-roadmap.md`'s "`A-17` — investigated in full
+    ... and DROPPED" section. All exploratory edits from the investigation
+    were reverted; nothing partial shipped. **G-06** (the 100 KB PM module)
+    is still open and gets re-evaluated in Wave 6 against its own budget,
+    independent of this decision.
 
 **Wave 6 — Ratchets, then payoff features** *(the CI batch first, so everything
 after it is protected)*
