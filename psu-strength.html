@@ -40,20 +40,14 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:40px;}
 .lift-header{background:linear-gradient(135deg,#041e42,#1e3a5f);color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
 .lift-name{font-size:16px;font-weight:900;letter-spacing:-0.01em;}
 .lift-meta{font-size:11px;color:#93c5fd;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
-.set-row{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-bottom:1px solid #f1f5f9;cursor:pointer;user-select:none;transition:background 0.1s;}
-.set-row:last-child{border-bottom:none;}
-.set-row:active{background:#f1f5f9;}
-.set-row.checked{background:#f0fdf4;}
-.set-row.checked .set-info{text-decoration:line-through;color:#16a34a;}
-.set-row.checked .checkbox{background:#16a34a;border-color:#16a34a;}
-.set-row.checked .checkbox::after{content:"✓";color:#fff;font-weight:900;font-size:13px;}
-.set-row.checked .set-weight{background:#dcfce7;color:#15803d;}
-.set-left{display:flex;align-items:center;gap:10px;}
-.checkbox{width:20px;height:20px;border:2px solid #041e42;border-radius:5px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.set-info{font-size:13px;font-weight:700;color:#1f2937;}
-.set-reps{display:inline-block;background:#1e3a5f;color:#fff;font-size:11px;font-weight:800;padding:3px 8px;border-radius:5px;letter-spacing:0.04em;margin-right:8px;min-width:38px;text-align:center;}
-.set-weight{background:#dbeafe;color:#1e3a5f;font-size:13px;font-weight:900;padding:4px 12px;border-radius:6px;min-width:60px;text-align:center;letter-spacing:-0.01em;}
-.set-weight.pick{background:#fef3c7;color:#92400e;font-size:11px;font-weight:800;letter-spacing:0.04em;}
+/* K-1.5/G-04: a loggable lift now carries the shared mc-setlog.js engine
+   (.mcl-strip/.mcl-wrap), which is styled fleet-wide for a dark card body —
+   override just the body background on migrated cards rather than the plain
+   .lift-card white body every other card type here still uses. */
+.lift-card.ex-card{background:#0b1526;border-color:rgba(212,175,55,0.28);}
+.lift-targets{display:flex;flex-wrap:wrap;gap:6px;padding:2px 18px 10px;}
+.lift-target{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);border-radius:7px;padding:4px 9px;font-size:12px;font-weight:700;color:#e2e8f0;}
+.lift-target-n{font-size:10px;font-weight:900;color:#0b1526;background:#93c5fd;border-radius:4px;padding:1px 5px;}
 .bicep-calf{background:#1e3a5f;color:#fff;padding:14px 18px;font-size:13px;font-weight:700;letter-spacing:0.04em;display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,0.1);}
 .you-pick-pill{background:#fbbf24;color:#1e3a5f;font-size:11px;font-weight:900;padding:4px 10px;border-radius:5px;letter-spacing:0.04em;text-transform:uppercase;}
 .legend{background:rgba(255,255,255,0.06);border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:11px;color:#cbd5e1;line-height:1.6;}
@@ -197,10 +191,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:40px;}
 .lift-card.checked::before,.lift-card.done::before{background:linear-gradient(180deg,#34d399,#059669);box-shadow:0 0 16px rgba(52,211,153,0.4);}
 .lift-header{padding:16px 18px;}
 .lift-name{font-weight:800;letter-spacing:-0.01em;color:#fff;}
-.set-row{padding:11px 18px;}
-.set-reps,.set-weight{text-shadow:0 0 10px rgba(212,175,55,0.45);}
 .sl-inp::placeholder,input::placeholder{color:var(--muted);opacity:1;}
-@media(prefers-reduced-motion:reduce){.set-reps,.set-weight{text-shadow:none;}}
 
 </style>
 <link rel="stylesheet" href="base.css?v=68"/>
@@ -535,7 +526,6 @@ const PROGRAM = {
 let activePhase = "p1";
 let activeDay = "d1";
 let activeWeek = 0;
-const checkState = {};
 
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
@@ -558,28 +548,63 @@ function render(){
         <div class="lift-header"><div class="lift-name">${escapeHtml(lift.name)}</div><div class="lift-meta">${escapeHtml(text)}</div></div>
       </div>`;
     }
-    const setsHtml = lift.sets.map((row, si) => {
-      const cellRaw = row[activeWeek] || "";
-      if (!cellRaw || cellRaw === "—") return "";
+    // K-1.5/G-04: this used to render its own interactive .set-row list with
+    // a checkState object that lived in memory only — never written to
+    // mc_setlog_v1, so mc-finish.js always counted PSU lifts as 0/0 and
+    // nothing here synced, backed up, or fed the weight-suggestion/PR
+    // engines the way every other page's logging does. Migrated onto the
+    // shared mc-setlog.js engine instead: adding .ex-card is enough for
+    // run() to build a real .mcl-strip/.mcl-wrap logger here (mc-setlog.js
+    // already special-cases PSU's no-data-id .lift-card markup via
+    // nameId() — see the comment at the top of run()), and .lift-name /
+    // .lift-meta are already selectors mc-setlog.js reads directly. The
+    // hidden [data-field="sets"] node feeds it a real per-week, per-set reps
+    // scheme (mc-setlog.js's existing comma-list grammar, e.g. "12,10,8,8" —
+    // the same notation the Modality Matrix's pyramid weeks already use) so
+    // each row's reps ghost the true prescribed target instead of a generic
+    // count parsed from "5 sets".
+    //
+    // mc-setlog.js has no concept of a per-set PRESCRIBED WEIGHT (only
+    // history-based ghosting) — per owner decision (AskUserQuestion, Wave 3)
+    // that exact number is kept visible in a small read-only "Coach's
+    // Targets" reference strip above the real logger, renumbered 1..N to
+    // match the logger's own rows one-to-one (a week with a "—" cell prints
+    // fewer targets that week, same as the original set-row list did).
+    const cells = lift.sets
+      .map((row) => row[activeWeek] || "")
+      .filter((c) => c && c !== "—");
+    if (!cells.length) {
+      // Nothing prescribed for this lift this week (e.g. a deload) — same
+      // informational-only treatment as a `header` lift above; no logger.
+      return `<div class="lift-card">
+        <div class="lift-header"><div class="lift-name">${escapeHtml(lift.name)}</div><div class="lift-meta">${escapeHtml(lift.scheme)}</div></div>
+      </div>`;
+    }
+    const targets = cells.map((cellRaw, i) => {
       // Parse "(5X) 135" format
       const match = cellRaw.match(/^\(([^)]+)\)\s*(.*)$/);
       const reps = match ? match[1] : cellRaw;
-      const weight = match ? (match[2].trim() || "—") : "";
-      const id = `${activePhase}-${activeDay}-l${li}-s${si}-w${activeWeek}`;
-      const checked = checkState[id] ? "checked" : "";
-      const weightHtml = weight === "—" || weight === "" ? '<span class="set-weight pick">—</span>' : `<span class="set-weight">${escapeHtml(weight)}</span>`;
-      return `<div class="set-row ${checked}" data-id="${id}">
-        <div class="set-left">
-          <div class="checkbox"></div>
-          <span class="set-info"><span class="set-reps">${escapeHtml(reps)}</span>Set ${si+1}</span>
-        </div>
-        ${weightHtml}
-      </div>`;
-    }).join("");
-    return `<div class="lift-card">
+      const weight = match ? (match[2].trim() || "—") : "—";
+      return { n: i + 1, reps, weight };
+    });
+    const repsCsv = targets.map((t) => t.reps.replace(/[^\d]/g, "") || "1").join(",");
+    const targetsHtml = `<div class="lift-targets">${targets.map((t) =>
+      `<span class="lift-target"><span class="lift-target-n">${t.n}</span>${escapeHtml(t.reps)}${t.weight !== "—" ? " · " + escapeHtml(t.weight) : ""}</span>`
+    ).join("")}</div>`;
+    // NOTE: [data-field="sets"] must come before .lift-meta in DOCUMENT ORDER
+    // — mc-setlog.js's setsOf() does card.querySelector('.ex-sets,
+    // [data-field="sets"], .notes-row, .lift-meta'), and a combined selector
+    // list resolves to whichever alternative appears FIRST IN THE DOM, not
+    // by priority in the selector list. Placed after .lift-meta (its natural
+    // spot, inside .lift-header, which renders first) it silently lost to
+    // .lift-meta's own text every time, ghosting every row with the same
+    // stray leading digit pulled out of the display string instead of that
+    // row's real per-week reps target.
+    return `<div class="lift-card ex-card">
+      <div data-field="sets" style="display:none">${escapeHtml(repsCsv)}</div>
       <div class="lift-header"><div class="lift-name">${escapeHtml(lift.name)}</div><div class="lift-meta">${escapeHtml(lift.scheme)}</div></div>
       <div style="padding:4px 0;">${makeRestTimer(lift.rest||"90-120 sec",lift.name)}</div>
-      ${setsHtml}
+      ${targetsHtml}
     </div>`;
   }).join("");
 
@@ -623,11 +648,9 @@ function render(){
   document.querySelectorAll("[data-week]").forEach(b => b.addEventListener("click", () => {
     activeWeek = parseInt(b.dataset.week); render();
   }));
-  document.querySelectorAll(".set-row").forEach(r => r.addEventListener("click", () => {
-    const id = r.dataset.id;
-    checkState[id] = !checkState[id];
-    r.classList.toggle("checked");
-  }));
+  // K-1.5/G-04: no .set-row click wiring here anymore — mc-setlog.js's
+  // shared MC_SCAN-driven observer sees this innerHTML rebuild and builds
+  // the real logger onto every .ex-card on its own.
 }
 
 render();

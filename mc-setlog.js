@@ -1066,10 +1066,18 @@
       if (c.classList.contains('active')) buildRows(c, c, exId, setsStr, rs);
     });
     /* MARKET:STRIP influencer-refs START */
-    // NOTE: .lift-card (PSU) is intentionally NOT handled here — PSU pages ship
-    // their own complete per-set logger (.set-row: Set 1/2/3 with reps+weight+
-    // checkbox). Rendering a second logger there caused duplicate rows and the
-    // stray strikethroughs. PSU keeps its native logger.
+    // NOTE: .lift-card (PSU) has no dedicated handler of its own here — it
+    // doesn't need one. K-1.5/G-04 migrated psu-strength.html's loggable
+    // lifts onto this engine by adding .ex-card alongside .lift-card, so
+    // they're already picked up by the .ex-card loop above; .lift-name /
+    // .lift-meta are pre-existing selectors this file reads directly
+    // (origNameOf/planFor/setsOf/trySupabasePrefill), and nameId()'s
+    // fallback for cards with no data-id already named PSU explicitly (see
+    // run()'s top comment) — this used to be a real native-logger page
+    // (.set-row: Set 1/2/3 with reps+weight+checkbox, kept deliberately
+    // unhandled here to avoid a duplicate logger) but that native UI is gone
+    // now; only its `header`/`pick`-type informational cards (no .ex-card
+    // class) still render with no logger, by design.
     /* MARKET:STRIP influencer-refs END */
     normalizeSupersetTimers();
     collapseNotes();
