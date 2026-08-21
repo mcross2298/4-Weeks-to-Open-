@@ -113,10 +113,13 @@ html[data-theme="light"] .done-banner{
   background:rgba(52,211,153,0.14);border-color:rgba(5,150,105,0.3);color:#047857;}
 
 /* ── bespoke setlog variants (.set-* — base handles .sl-* already) ── */
+/* .set-num / .set-input retrofitted to var(--muted2)/var(--text) at the
+   source (cat-gainz.html, .set-*'s only owner) — both matched their
+   token's dark value exactly, so the swap changes nothing in dark mode
+   and neither needs an override here any more. */
 html[data-theme="light"] .set-input{
-  background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);color:#1c1a17;}
+  background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);}
 html[data-theme="light"] .set-input::placeholder{color:#b7b0a3;}
-html[data-theme="light"] .set-num,
 html[data-theme="light"] .setlog-hl{color:#8a8377;}
 html[data-theme="light"] .set-check{border-color:rgba(28,26,23,0.16);}
 
