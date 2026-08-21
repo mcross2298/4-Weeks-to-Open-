@@ -6,6 +6,15 @@
 
 /* ── TOKEN DEFAULTS ─────────────────────────────────────────────── */
 :root {
+  /* DG-1/DG-2: the app's one type identity (audit lean-six-sigma-audit.md
+     §6). Archivo for display/headline roles, Manrope for UI/body — the same
+     split dashboard.html's own --font-display/--font-ui already used before
+     the rest of the app had a webfont at all. Loaded + precached fleet-wide
+     by tools/apply-head-contract.py's FONT_LINK; a page with no font link
+     (should be none after that tool runs) falls through to system-ui, same
+     failure mode this replaces rather than a blank render. */
+  --font-display: 'Archivo', system-ui, sans-serif;
+  --font-ui:      'Manrope', system-ui, sans-serif;
   --accent:       #d4af37;
   --accent-rgb:   212,175,55;
   --body-bg:      #0a0a0a;
@@ -72,14 +81,13 @@
 }
 
 /* ── PM Phase 2 — ThemeConfig knobs (set by mc-theme.js on <html>) ──── */
-/* Typography: High-Impact Athletic Bold vs Clean Sans (default). */
-html[data-typography="athletic"] body,
-html[data-typography="athletic"] .title,
-html[data-typography="athletic"] .cat-name,
-html[data-typography="athletic"] .prog-title{
-  font-family:'Bebas Neue','Arial Narrow',system-ui,sans-serif;letter-spacing:0.02em;}
-html[data-typography="athletic"] .cat-name,
-html[data-typography="athletic"] .title{font-weight:900;}
+/* Typography: the "Athletic Bold" option (Bebas Neue) is retired — audit
+   DG-1 found it referenced here but never loaded anywhere in the app, so it
+   silently rendered as Arial Narrow/system on every device that picked it.
+   A saved data-typography="athletic" from before this change is a harmless
+   no-op now (this selector no longer exists) rather than something needing
+   a data migration. See --font-display/--font-ui (DG-1/DG-2) for the one
+   identity the app actually delivers. */
 /* Density scale (components that opt in via var(--density)). */
 html[data-density="compact"]{--density:0.82;}
 html[data-density="spacious"]{--density:1.18;}
@@ -138,7 +146,7 @@ body[data-workout-layout="swipe"] [data-mc-cards] > .a-card{
   flex:0 0 86%;max-width:520px;scroll-snap-align:start;}
 
 /* ── RESET ──────────────────────────────────────────────────────── */
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
+*{box-sizing:border-box;margin:0;padding:0;font-family:var(--font-ui);-webkit-tap-highlight-color:transparent;}
 
 /* Keyboard focus must be visible on every page that loads base.css —
    tap-highlight suppression above otherwise leaves no focus cue at all. */
@@ -165,8 +173,8 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 /* ── HEADER ─────────────────────────────────────────────────────── */
 .header{padding:76px 20px 22px;position:relative;}
 .header-inner{max-width:680px;margin:0 auto;}
-.eyebrow{font-size:var(--fs-2xs);font-weight:var(--fw-bold);letter-spacing:0.25em;text-transform:uppercase;margin-bottom:var(--sp-2);color:var(--accent);}
-.title{font-size:var(--fs-title);font-weight:var(--fw-black);color:#fff;margin-bottom:var(--sp-2);letter-spacing:-0.02em;}
+.eyebrow{font-family:var(--font-display);font-size:var(--fs-2xs);font-weight:var(--fw-bold);letter-spacing:0.25em;text-transform:uppercase;margin-bottom:var(--sp-2);color:var(--accent);}
+.title{font-family:var(--font-display);font-size:var(--fs-title);font-weight:var(--fw-black);color:#fff;margin-bottom:var(--sp-2);letter-spacing:-0.02em;}
 .week-badge{
   display:inline-block;border-radius:6px;padding:5px 14px;
   font-size:12px;font-weight:700;

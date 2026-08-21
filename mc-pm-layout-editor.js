@@ -162,17 +162,12 @@
       aSec.appendChild(aRow);
       body.appendChild(aSec);
 
-      // 4) Typography
-      body.appendChild(group('Typography', [
-        { val: '', label: 'Clean Sans' }, { val: 'athletic', label: 'Athletic Bold' }
-      ], theme.typography || '', function (v) { theme.typography = v; writeTheme(theme); refreshBar(); }));
-
-      // 5) Density
+      // 4) Density
       body.appendChild(group('Density', [
         { val: '', label: 'Default' }, { val: 'compact', label: 'Compact' }, { val: 'spacious', label: 'Spacious' }
       ], theme.density || '', function (v) { theme.density = v; writeTheme(theme); refreshBar(); }));
 
-      // 6) Motion
+      // 5) Motion
       body.appendChild(group('Motion', [
         { val: '', label: 'Full' }, { val: 'subtle', label: 'Subtle' }, { val: 'off', label: 'Off' }
       ], theme.motion || '', function (v) { theme.motion = v; writeTheme(theme); refreshBar(); }));
