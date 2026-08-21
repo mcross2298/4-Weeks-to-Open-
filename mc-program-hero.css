@@ -21,7 +21,7 @@
 /* top bar */
 .pl-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 4px;position:relative;z-index:1;}
 .pl-icon-btn{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;}
-.pl-tier-label{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8b8b92;}
+.pl-tier-label{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:var(--fs-2xs);letter-spacing:.16em;text-transform:uppercase;color:#8b8b92;}
 .pl-tier-tappable{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .12s ease;}
 .pl-tier-tappable:active{opacity:.6;}
 .pl-tier-tappable::after{content:'\203A';display:inline-block;margin-left:4px;font-weight:800;opacity:.7;}
@@ -45,30 +45,30 @@
   color:var(--pl-accent-light);background:rgba(var(--pl-accent-rgb),.14);border:1px solid rgba(var(--pl-accent-rgb),.3);
   border-radius:20px;padding:4px 11px;margin-bottom:12px;
 }
-.pl-name{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:27px;line-height:1.08;letter-spacing:-.02em;color:#f6f5f2;}
+.pl-name{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:var(--fs-hero);line-height:1.08;letter-spacing:-.02em;color:#f6f5f2;}
 .pl-tagline{font-size:13.5px;font-weight:500;color:#a6a6ad;line-height:1.55;margin-top:9px;}
 
 /* stat strip */
 .pl-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:18px 20px 0;position:relative;z-index:1;}
 .pl-stat{border-radius:14px;padding:12px 6px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);text-align:center;}
-.pl-stat-v{font-family:'Archivo',system-ui,sans-serif;font-weight:900;font-size:17px;color:#f4f3f1;}
+.pl-stat-v{font-family:'Archivo',system-ui,sans-serif;font-weight:900;font-size:var(--fs-xl);color:#f4f3f1;}
 .pl-stat-l{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7d7d84;margin-top:3px;}
 
 /* "this week" schedule strip */
 .pl-sched{padding:24px 20px 0;position:relative;z-index:1;}
 .pl-sched-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;}
-.pl-sched-title{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:16px;letter-spacing:-.01em;color:#f4f3f1;}
-.pl-sched-tag{font-size:12px;font-weight:700;color:var(--pl-accent-light);}
+.pl-sched-title{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:var(--fs-xl);letter-spacing:-.01em;color:#f4f3f1;}
+.pl-sched-tag{font-size:var(--fs-xs);font-weight:700;color:var(--pl-accent-light);}
 .pl-sched-row{display:flex;gap:8px;}
 .pl-day{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;}
-.pl-day-swatch{width:100%;aspect-ratio:1;border-radius:11px;display:flex;align-items:center;justify-content:center;font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:11px;}
+.pl-day-swatch{width:100%;aspect-ratio:1;border-radius:11px;display:flex;align-items:center;justify-content:center;font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:var(--fs-2xs);}
 .pl-day.on .pl-day-swatch{background:rgba(var(--pl-accent-rgb),.16);border:1px solid rgba(var(--pl-accent-rgb),.4);color:var(--pl-accent);}
 .pl-day.off .pl-day-swatch{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);color:#4a4a50;}
 .pl-day-label{font-size:8.5px;font-weight:700;color:#7d7d84;letter-spacing:.02em;}
 
 /* what's inside */
 .pl-inside{padding:26px 20px 0;position:relative;z-index:1;}
-.pl-inside-title-h{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:16px;letter-spacing:-.01em;color:#f4f3f1;margin-bottom:10px;}
+.pl-inside-title-h{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:var(--fs-xl);letter-spacing:-.01em;color:#f4f3f1;margin-bottom:10px;}
 .pl-inside-list{display:flex;flex-direction:column;gap:9px;}
 .pl-inside-row{display:flex;align-items:flex-start;gap:11px;border-radius:15px;padding:13px 14px;
   background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);text-decoration:none;color:inherit;
@@ -77,7 +77,7 @@ a.pl-inside-row{transition:background .12s ease;}
 a.pl-inside-row:active{background:rgba(255,255,255,.06);}
 .pl-inside-icon{width:30px;height:30px;border-radius:9px;background:rgba(var(--pl-accent-rgb),.14);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .pl-inside-title{font-family:'Archivo',system-ui,sans-serif;font-weight:700;font-size:13.5px;color:#f4f3f1;}
-.pl-inside-body{font-size:12px;color:#8b8b92;margin-top:2px;line-height:1.45;}
+.pl-inside-body{font-size:var(--fs-xs);color:#8b8b92;margin-top:2px;line-height:1.45;}
 
 /* CTA — the design spec pins this to the viewport bottom, but this hero sits
    above a page's existing content (timers, nav bars, finish banners already
@@ -90,7 +90,7 @@ a.pl-inside-row:active{background:rgba(255,255,255,.06);}
   font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:15.5px;color:#14110b;letter-spacing:.01em;
 }
 .pl-cta:active{transform:scale(.99);}
-.pl-cta-hint{display:block;width:100%;background:none;border:none;text-align:center;font-size:12px;font-weight:700;color:#8b8b92;margin-top:11px;cursor:pointer;font-family:inherit;padding:4px;}
+.pl-cta-hint{display:block;width:100%;background:none;border:none;text-align:center;font-size:var(--fs-xs);font-weight:700;color:#8b8b92;margin-top:11px;cursor:pointer;font-family:inherit;padding:4px;}
 
 /* ── SAND LIGHT MODE (Phase 7) ─────────────────────────────────────────── */
 html[data-theme="light"] .pl-hero{

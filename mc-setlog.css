@@ -12,18 +12,18 @@
 .mcl-toggle{
   display:flex;align-items:center;gap:6px;margin-top:8px;min-height:44px;
   cursor:pointer;user-select:none;
-  font-size:11px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;
+  font-size:var(--fs-2xs);font-weight:900;letter-spacing:0.08em;text-transform:uppercase;
   color:#94a3b8;-webkit-tap-highlight-color:transparent;
 }
-.mcl-toggle .mcl-chev{transition:transform .2s;font-size:11px;}
+.mcl-toggle .mcl-chev{transition:transform .2s;font-size:var(--fs-2xs);}
 .mcl-toggle.open .mcl-chev{transform:rotate(180deg);}
 .mcl-hist{
-  font-size:11px;font-weight:700;color:rgba(212,175,55,0.6);
+  font-size:var(--fs-2xs);font-weight:700;color:rgba(212,175,55,0.6);
   margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;
 }
 /* collapsed-header set progress, e.g. "2/4" — greens out when all sets done */
 .mcl-count{
-  font-size:11px;font-weight:900;letter-spacing:0.04em;color:#64748b;
+  font-size:var(--fs-2xs);font-weight:900;letter-spacing:0.04em;color:#64748b;
   padding:1px 6px;border-radius:6px;background:rgba(255,255,255,0.05);
 }
 .mcl-count.done{color:#34d399;background:rgba(52,211,153,0.14);}
@@ -43,7 +43,7 @@
 .mcl-row{display:grid;grid-template-columns:30px 1fr 1fr 44px 44px;gap:7px;align-items:center;}
 .mcl-rpe{height:44px;display:flex;align-items:center;justify-content:center;border-radius:8px;
   border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#475569;
-  font-size:11px;font-weight:800;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;}
+  font-size:var(--fs-2xs);font-weight:800;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;}
 .mcl-rpe.set{color:#fbbf24;border-color:rgba(212,175,55,0.4);background:rgba(212,175,55,0.1);}
 /* R2: padding 6px -> 1px. Row was 57px against a 44px input floor — pure
    surplus. The 44px inputs/checkbox are untouched, so no touch target
@@ -55,7 +55,7 @@
    was duplicating. */
 .mcl-row{padding:1px 2px;border-bottom:1px solid rgba(255,255,255,0.05);}
 .mcl-row:last-child{border-bottom:none;}
-.mcl-num{font-size:12px;font-weight:900;color:#64748b;text-align:center;}
+.mcl-num{font-size:var(--fs-xs);font-weight:900;color:#64748b;text-align:center;}
 .mcl-inp{
   width:100%;min-height:44px;padding:8px 4px;
   background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
@@ -65,7 +65,7 @@
   font-family:inherit;outline:none;-webkit-tap-highlight-color:transparent;
 }
 .mcl-inp:focus{border-color:rgba(212,175,55,0.5);background:rgba(212,175,55,0.07);}
-.mcl-inp::placeholder{color:#475569;font-size:12px;font-weight:600;}
+.mcl-inp::placeholder{color:#475569;font-size:var(--fs-xs);font-weight:600;}
 /* A-10 + ghost prefill (§3.3): a value shown but not yet confirmed by the
    athlete (last session's weight, or the prescribed reps). Muted color +
    italic + a dashed border reads clearly as "suggested, tap to accept or
@@ -83,7 +83,7 @@
   width:44px;height:44px;border-radius:9px;   /* 44px a11y floor for sweaty-finger taps */
   border:1.5px solid rgba(255,255,255,0.18);background:transparent;
   display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:15px;color:#94a3b8;transition:all .15s;
+  cursor:pointer;font-size:var(--fs-lg);color:#94a3b8;transition:all .15s;
   -webkit-tap-highlight-color:transparent;
 }
 .mcl-ck.done{background:rgba(52,211,153,0.16);border-color:rgba(52,211,153,0.45);color:#34d399;}
@@ -102,11 +102,11 @@
   margin-top:4px;padding-top:6px;border-top:1px dashed rgba(255,255,255,0.08);
 }
 .mcl-cluster-lbl{
-  font-size:10px;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;
+  font-size:var(--fs-3xs);font-weight:900;letter-spacing:0.06em;text-transform:uppercase;
   color:#22d3ee;flex-shrink:0;
 }
 .mcl-cluster-bubbles{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
-.mcl-cluster-plus{font-size:12px;font-weight:800;color:#22d3ee;}
+.mcl-cluster-plus{font-size:var(--fs-xs);font-weight:800;color:#22d3ee;}
 .mcl-rmini{width:38px;min-width:38px;padding:6px 2px;min-height:38px;}
 
 /* ── Drop-set AMRAP tag — the final drop is taken to failure (as-many-reps-as-
@@ -155,16 +155,16 @@
   background:rgba(var(--accent-rgb),0.16);color:var(--accent);
   border:1px solid rgba(var(--accent-rgb),0.32);
   display:flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:900;
+  font-size:var(--fs-2xs);font-weight:900;
 }
 .mcl-strip.is-done .mcl-strip-dot{background:#34d399;color:#04120c;border-color:transparent;}
 .mcl-strip-name{
-  flex:1;min-width:0;font-size:14px;font-weight:700;color:#e2e8f0;
+  flex:1;min-width:0;font-size:var(--fs-md);font-weight:700;color:#e2e8f0;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
-.mcl-strip-count{flex-shrink:0;font-size:12px;font-weight:800;color:var(--muted);white-space:nowrap;}
+.mcl-strip-count{flex-shrink:0;font-size:var(--fs-xs);font-weight:800;color:var(--muted);white-space:nowrap;}
 .mcl-strip.is-done .mcl-strip-count{color:#34d399;}
-.mcl-strip-chev{flex-shrink:0;font-size:16px;font-weight:700;color:#64748b;}
+.mcl-strip-chev{flex-shrink:0;font-size:var(--fs-xl);font-weight:700;color:#64748b;}
 
 /* Manual "Collapse" chip in the Log Sets header — only shown once every set
    on the card is logged (.mcl-toggle.mcl-alldone, set in updateCount()), so
@@ -172,7 +172,7 @@
    can shrink it back down themselves rather than editing another set. */
 .mcl-collapse-btn{
   display:none;appearance:none;-webkit-appearance:none;
-  font:inherit;font-size:10px;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;
+  font:inherit;font-size:var(--fs-3xs);font-weight:900;letter-spacing:0.06em;text-transform:uppercase;
   padding:4px 9px;margin-left:6px;flex-shrink:0;
   background:rgba(52,211,153,0.14);color:#34d399;
   border:1px solid rgba(52,211,153,0.35);border-radius:6px;cursor:pointer;

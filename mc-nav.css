@@ -10,11 +10,11 @@
 .mc-nav-tab{
   flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
   text-decoration:none;color:#94a3b8;
-  font-family:inherit;font-size:11px;font-weight:800;letter-spacing:0.03em;
+  font-family:inherit;font-size:var(--fs-2xs);font-weight:800;letter-spacing:0.03em;
   padding:4px 0;-webkit-tap-highlight-color:transparent;
   transition:color 0.15s;
 }
-.mc-nav-tab .mc-nav-ico{font-size:19px;line-height:1;}
+.mc-nav-tab .mc-nav-ico{font-size:var(--fs-2xl);line-height:1;}
 .mc-nav-tab:active{color:#fff;transform:scale(0.94);}
 
 /* keep page content and the floating rest timer clear of the fixed bar */
@@ -30,7 +30,7 @@ body.mc-has-nav .fw-bar{
   gap:6px;
 }
 body.mc-has-nav .fw-btn{
-  padding:9px 14px;font-size:13px;border-radius:10px;
+  padding:9px 14px;font-size:var(--fs-sm);border-radius:10px;
 }
 /* Stacked bar (Finish Workout button / progress line / Workout Summary link)
    measures ~109px tall here vs. the old single-row bar's ~52px, so its top
