@@ -140,12 +140,29 @@ async function sample(page, seconds) {
    what an athlete does before their first set — the state every runtime
    number in the audits was taken in. */
 async function enterSession(page) {
+  // VOC-A2: a genuinely fresh visit now auto-opens the first day and
+  // auto-activates its first unfinished exercise on its own (see
+  // mc-session.js autoOpenFirstUnfinished()) — both clicks below would be
+  // redundant on that common path, and clicking an already-open day header
+  // would actually TOGGLE IT CLOSED. Only click what isn't already open.
   await page.evaluate(() => {
-    const h = document.querySelector('.day-card .day-header');
-    if (h) h.click();
+    const day = document.querySelector('.day-card');
+    if (day && !day.classList.contains('open')) {
+      const h = day.querySelector('.day-header');
+      if (h) h.click();
+    }
   });
   await page.waitForTimeout(1200);
+  // A-14: .mcl-toggle only exists once a card's rows are built, which no
+  // longer happens for every card just from opening the day — only the
+  // ACTIVE card gets built (see mc-setlog.js buildStrip()/buildRows()).
+  // .mcl-strip is the real, current open affordance (its click handler
+  // calls setActiveCard(), which builds the card's rows AND opens them in
+  // one step) — click that instead of hunting for an already-built toggle.
   await page.evaluate(() => {
+    if (document.querySelector('.ex-card.active .mcl-wrap.open, .ss-ex.active .mcl-wrap.open, .ex-item.active .mcl-wrap.open')) return;
+    const s = Array.from(document.querySelectorAll('.mcl-strip')).find((e) => e.offsetHeight > 0);
+    if (s) { s.click(); return; }
     const t = document.querySelector('.day-card.open .mcl-toggle, .mcl-toggle');
     if (t) t.click();
   });
