@@ -93,10 +93,8 @@ function applyRestView() {
   const running = TMR.startTime != null;
   const float = document.getElementById('timerFloat');
   const video = document.getElementById('timerVideo');
-  const overlay = document.getElementById('timerOverlay');
   if (float) float.classList.toggle('visible', running && pref === 'list');
   if (video) video.classList.toggle('visible', running && pref === 'video');
-  if (overlay) overlay.style.display = (running && pref === 'list') ? 'block' : 'none';
 }
 
 // Screen-reader announcer — a visually-hidden polite live region. Announces
@@ -605,7 +603,17 @@ function buildTimerFloat() {
       gear.classList.toggle('on', open);
     });
   }
-  if(!document.getElementById('timerOverlay')){const _tov=document.createElement('div');_tov.id='timerOverlay';_tov.style.cssText='position:fixed;inset:0;z-index:99;display:none;cursor:pointer;';_tov.addEventListener('click',function(){TMR.stop();});document.body.insertBefore(_tov,div);}
+  // Deliberately NO full-screen tap-to-dismiss overlay here (audit VOC-A1).
+  // One used to sit at z-index 99 across the whole page with a lone
+  // TMR.stop() handler, so during rest the FIRST tap on anything — the next
+  // set's weight field, its checkbox — was swallowed to kill the clock, and a
+  // second tap was needed to reach the control. Verified live: tap 1 stopped
+  // the timer and did not focus the field. That punished exactly the athlete
+  // rest timers exist for (supersets, any mid-rest logging), and the overlay
+  // was never a designed feature — it arrived incidentally in a commit about
+  // three unrelated fixes. Rest is dismissed from the float's "done"/"cancel"
+  // buttons, the .rest-timer chip toggle, or the 4s auto-dismiss at zero —
+  // four routes, none of which intercept a tap meant for the page.
 }
 
 // Full-screen "Video view" — same TMR state as the float (adjust/stop share

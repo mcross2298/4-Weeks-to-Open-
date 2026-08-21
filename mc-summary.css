@@ -4,7 +4,7 @@
 .fw-recap-overlay{
   position:fixed;inset:0;
   background:rgba(0,0,0,0.92);backdrop-filter:blur(10px);
-  /* Above .timer-float/#timerOverlay (z-index 99/100, base.css + mc-timer.js):
+  /* Above .timer-float (z-index 100, mc-timer.js):
      the auto-trigger (mc-finish.js) can open this the instant the LAST set is
      checked, which is exactly the moment that same check also starts a rest
      timer — the finished-workout summary must win that race, not get buried
