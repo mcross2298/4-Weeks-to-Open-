@@ -111,17 +111,15 @@ html[data-theme="light"] .set-check{border-color:rgba(28,26,23,0.16);}
    override, so weight/reps/RPE values and headers were unreadable on the
    cream background. */
 html[data-theme="light"] .mcl-toggle{color:#8a8377;}
-html[data-theme="light"] .mcl-hist{color:var(--accent,#8a6d1a);}
-html[data-theme="light"] .mcl-count{color:#6b6459;background:rgba(28,26,23,0.05);}
+html[data-theme="light"] .mcl-count{background:rgba(28,26,23,0.05);}
 html[data-theme="light"] .mcl-count.done{color:#047857;background:rgba(52,211,153,0.16);}
 html[data-theme="light"] .mcl-wrap{border-top-color:rgba(28,26,23,0.1);}
-html[data-theme="light"] .mcl-num{color:#6b6459;}
 html[data-theme="light"] .mcl-row{border-bottom-color:rgba(28,26,23,0.08);}
 html[data-theme="light"] .mcl-inp{
-  background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);color:#1c1a17;}
+  background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);}
 html[data-theme="light"] .mcl-inp:focus{border-color:rgba(var(--accent-rgb,212,175,55),0.5);background:rgba(var(--accent-rgb,212,175,55),0.08);}
 html[data-theme="light"] .mcl-inp::placeholder{color:#b7b0a3;}
-html[data-theme="light"] .mcl-rpe{border-color:rgba(28,26,23,0.14);background:rgba(28,26,23,0.04);color:#8a8377;}
+html[data-theme="light"] .mcl-rpe{border-color:rgba(28,26,23,0.14);background:rgba(28,26,23,0.04);}
 html[data-theme="light"] .mcl-rpe.set{color:var(--accent,#8a6d1a);border-color:rgba(var(--accent-rgb,212,175,55),0.4);background:rgba(var(--accent-rgb,212,175,55),0.12);}
 html[data-theme="light"] .mcl-ck{border-color:rgba(28,26,23,0.18);color:#8a8377;}
 html[data-theme="light"] .mcl-ck.done{background:rgba(52,211,153,0.16);border-color:rgba(5,150,105,0.4);color:#047857;}
@@ -133,10 +131,23 @@ html[data-theme="light"] .mcl-row-amrap .mcl-r::placeholder{color:#c2410c;opacit
 html[data-theme="light"] .mcl-cluster-row{border-top-color:rgba(28,26,23,0.1);}
 html[data-theme="light"] .mcl-cluster-lbl{color:var(--accent,#8a6d1a);}
 html[data-theme="light"] .mcl-cluster-plus{color:var(--accent,#8a6d1a);}
-html[data-theme="light"] .mcl-strip{background:rgba(5,150,105,0.08);border-color:rgba(5,150,105,0.28);}
-html[data-theme="light"] .mcl-strip-dot{background:#047857;color:#fff;}
-html[data-theme="light"] .mcl-strip-name{color:#1c1a17;}
-html[data-theme="light"] .mcl-strip-count{color:#047857;}
+/* Scoped to .is-done, matching dark mode's own scoping (mc-setlog.css) —
+   the bare (not-yet-done) state already reads var(--accent)/var(--muted)
+   and flips correctly on its own. Previously unscoped here, and the extra
+   `html[data-theme]` element selector gave these rules just enough
+   specificity to beat dark mode's `.mcl-strip.is-done` qualifier, so every
+   resting strip — not just finished ones — rendered the green done tint in
+   light mode (a real bug, contradicting S5b's "neutral until complete"
+   design). */
+/* Neutral resting state — was previously always masked by the buggy
+   unconditional green rule above, so it never got its own light treatment;
+   fixing the specificity bug exposed that gap. Matches .day-card's light
+   convention (rgba(28,26,23,x) — the light-mode inverse of this file's own
+   dark rgba(255,255,255,0.03)/0.09)). */
+html[data-theme="light"] .mcl-strip{background:rgba(28,26,23,0.03);border-color:rgba(28,26,23,0.09);}
+html[data-theme="light"] .mcl-strip.is-done{background:rgba(5,150,105,0.08);border-color:rgba(5,150,105,0.28);}
+html[data-theme="light"] .mcl-strip.is-done .mcl-strip-dot{background:#047857;color:#fff;}
+html[data-theme="light"] .mcl-strip.is-done .mcl-strip-count{color:#047857;}
 html[data-theme="light"] .mcl-strip-chev{color:#8a8377;}
 html[data-theme="light"] .mcl-collapse-btn{background:rgba(5,150,105,0.12);color:#047857;border-color:rgba(5,150,105,0.32);}
 

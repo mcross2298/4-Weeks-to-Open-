@@ -23,7 +23,7 @@
 }
 /* collapsed-header set progress, e.g. "2/4" — greens out when all sets done */
 .mcl-count{
-  font-size:var(--fs-2xs);font-weight:900;letter-spacing:0.04em;color:#64748b;
+  font-size:var(--fs-2xs);font-weight:900;letter-spacing:0.04em;color:var(--muted);
   padding:1px 6px;border-radius:6px;background:rgba(255,255,255,0.05);
 }
 .mcl-count.done{color:#34d399;background:rgba(52,211,153,0.14);}
@@ -42,7 +42,7 @@
 
 .mcl-row{display:grid;grid-template-columns:30px 1fr 1fr 44px 44px;gap:7px;align-items:center;}
 .mcl-rpe{height:44px;display:flex;align-items:center;justify-content:center;border-radius:8px;
-  border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#475569;
+  border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:var(--muted2);
   font-size:var(--fs-2xs);font-weight:800;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;}
 .mcl-rpe.set{color:#fbbf24;border-color:rgba(212,175,55,0.4);background:rgba(212,175,55,0.1);}
 /* R2: padding 6px -> 1px. Row was 57px against a 44px input floor — pure
@@ -55,13 +55,13 @@
    was duplicating. */
 .mcl-row{padding:1px 2px;border-bottom:1px solid rgba(255,255,255,0.05);}
 .mcl-row:last-child{border-bottom:none;}
-.mcl-num{font-size:var(--fs-xs);font-weight:900;color:#64748b;text-align:center;}
+.mcl-num{font-size:var(--fs-xs);font-weight:900;color:var(--muted);text-align:center;}
 .mcl-inp{
   width:100%;min-height:44px;padding:8px 4px;
   background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
   /* 16px (not smaller) so iOS Safari does NOT auto-zoom the page when a weight/
      reps field is focused mid-set — the single biggest in-gym annoyance. */
-  border-radius:8px;color:#e2e8f0;font-size:16px;font-weight:700;text-align:center;
+  border-radius:8px;color:var(--text);font-size:16px;font-weight:700;text-align:center;
   font-family:inherit;outline:none;-webkit-tap-highlight-color:transparent;
 }
 .mcl-inp:focus{border-color:rgba(212,175,55,0.5);background:rgba(212,175,55,0.07);}
@@ -159,7 +159,7 @@
 }
 .mcl-strip.is-done .mcl-strip-dot{background:#34d399;color:#04120c;border-color:transparent;}
 .mcl-strip-name{
-  flex:1;min-width:0;font-size:var(--fs-md);font-weight:700;color:#e2e8f0;
+  flex:1;min-width:0;font-size:var(--fs-md);font-weight:700;color:var(--text);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .mcl-strip-count{flex-shrink:0;font-size:var(--fs-xs);font-weight:800;color:var(--muted);white-space:nowrap;}

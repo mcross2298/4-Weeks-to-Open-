@@ -824,7 +824,10 @@ html[data-theme="light"] .ex-card.checked{background:#e8f8f0!important;border-co
 html[data-theme="light"] .ex-card.checked::after{color:var(--success);}
 html[data-theme="light"] .day-card{background:rgba(28,26,23,0.03);border-color:rgba(28,26,23,0.08);}
 
-html[data-theme="light"] .a-rep{color:#d3cbb9;}
+/* .a-rep's pending-state color is set by mc-light.css's later G-04 pass
+   (same selector/specificity, loads after this file, always wins) — a
+   #d3cbb9 value here was found to be fully unreachable dead code and was
+   removed rather than left to shadow-fight a rule it can never win against. */
 html[data-theme="light"] .a-rep.live{
   color:#1c1a17;
   text-shadow:0 0 10px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.35),0 0 22px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.22);
