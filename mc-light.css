@@ -83,11 +83,18 @@ html[data-theme="light"] .cd-btn{
   border-color:rgba(var(--accent-rgb,212,175,55),0.22);color:#1c1a17;}
 html[data-theme="light"] .plan-arrow{color:#1c1a17;background:rgba(var(--accent-rgb,212,175,55),0.12);border-color:rgba(var(--accent-rgb,212,175,55),0.2);}
 
-/* ── tabs (week / split selectors) ───────────────────────────────── */
-html[data-theme="light"] .tabs,
-html[data-theme="light"] .tabs-bar,
-html[data-theme="light"] .tab{color:#8a8377;}
-html[data-theme="light"] .tab.active{color:var(--accent,#8a6d1a);background:rgba(28,26,23,0.05);}
+/* ── tabs (week / split selectors) ───────────────────────────────────
+   .tab / .tab.active's only real owner is body.cond-elite (conditioning-
+   elite.css) — a real bug was found and removed here: that engine's own
+   .tab.active already reads var(--c-accent) (deliberately NOT overridden
+   in this file's body.cond-elite token block, since its rose accent reads
+   fine on both grounds), but this bare .tab.active rule used the generic
+   var(--accent) instead and matched it in specificity (0,3,1 vs 0,3,1),
+   so loading last it silently repainted the active conditioning-tab
+   indicator olive/gold instead of its intended rose in light mode on
+   every Conditioning Corner page. .tabs/.tabs-bar never needed a color
+   override at all — they're plain flex containers; the .tab buttons
+   inside always set their own explicit color. */
 
 /* ── pills / badges / chips (accent-tinted; keep hue, ensure contrast) */
 html[data-theme="light"] .schedule,
