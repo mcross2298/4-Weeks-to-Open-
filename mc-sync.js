@@ -33,7 +33,11 @@
       mergeSetlog: function () { return mergeSetlog.apply(null, arguments); },
       mergeActivity: function () { return mergeActivity.apply(null, arguments); },
       mergeDictByTs: function () { return mergeDictByTs.apply(null, arguments); },
-      mergeMacros: function () { return mergeMacros.apply(null, arguments); }
+      mergeMacros: function () { return mergeMacros.apply(null, arguments); },
+      mergeExerciseByName: function () { return mergeExerciseByName.apply(null, arguments); },
+      mergeScalarBase: function () { return mergeScalarBase.apply(null, arguments); },
+      mergeDictBase: function () { return mergeDictBase.apply(null, arguments); },
+      mergeStore: function () { return mergeStore.apply(null, arguments); }
     };
   }
   if (window.__mcSync) return;
@@ -55,7 +59,17 @@
     'mc_daily_v1':           'dictByTs',
     'mc_plan_targets_v1':    'dictByTs',
     'mc_session_summary_v1': 'dictByTs',
-    'mc_macros_v1':          'macros'
+    'mc_macros_v1':          'macros',
+    // Wave 1 (audit G-01/K-1.2): mc-exercise-catalog.js's own header has always
+    // documented this store as "synced across the user's own devices via
+    // mc-sync.js" — it was in neither this map nor mc-export.js, so a custom
+    // exercise library silently never left the phone that made it.
+    'mc_custom_exercises_v1': 'exerciseByName',
+    // Wave 1 (audit K-1.3, owner-classified as training data, not a device
+    // setting): which program you are running, and any schedule shifts, should
+    // follow you to a second device mid-block.
+    'mc_active_prog':         'scalarBase',
+    'mc_weekly_overrides_v1': 'dictBase'
   };
   // Roadmap B0 (cookbook↔workout bridge) — stores this app CONSUMES read-only
   // from Mike's Cookbook via the shared user_sync table. PULLED into local
@@ -225,7 +239,72 @@
     return out;
   }
 
-  function mergeStore(strategy, local, remote) {
+  // Custom exercises: [{name, muscle, programs, master, custom, createdAt}] —
+  // note there is NO id field, so mergeArrayById would push every entry
+  // unconditionally and duplicate the whole list on each sync. Identity here is
+  // the normalized NAME, which is exactly what mc-exercise-catalog.js already
+  // dedups on (its normalize()); this mirrors that rule so the sync layer and
+  // the catalog cannot disagree about what counts as the same exercise. Union
+  // by that key, first writer kept (entries are append-only in practice).
+  function normalizeExName(s) {
+    return String(s || '')
+      .toLowerCase()
+      .replace(/\*+/g, '')
+      .replace(/\([^)]*\)/g, ' ')
+      .replace(/[^a-z0-9 ]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  function mergeExerciseByName(local, remote) {
+    local = Array.isArray(local) ? local : [];
+    remote = Array.isArray(remote) ? remote : [];
+    var seen = {}, out = [];
+    local.concat(remote).forEach(function (e) {
+      var k = normalizeExName(e && e.name);
+      if (!k) { out.push(e); return; }
+      if (!seen[k]) { seen[k] = 1; out.push(e); }
+    });
+    return out;
+  }
+
+  // Three-way strategies. `base` is snapshot[key] — the value the SERVER held
+  // at the last sync, i.e. the common ancestor — so "did this side change?" is
+  // answerable without any timestamp embedded in the stored value. That matters
+  // for stores whose writers never stamped one (mc_active_prog is written from
+  // seven call sites; none of them would be a safe place to start).
+  //
+  // Tie-break on a true conflict (both sides changed) is LOCAL, deliberately:
+  // the device in your hand keeps the choice you just made, and pushes it.
+  function sameJson(v, baseRaw) {
+    if (baseRaw == null) return false;
+    try { return JSON.stringify(v) === JSON.stringify(JSON.parse(baseRaw)); } catch (e) { return false; }
+  }
+  // Whole-value last-writer-wins, for a single scalar/object pointer.
+  function mergeScalarBase(local, remote, base) {
+    if (remote === undefined || remote === null) return local;
+    if (local === undefined || local === null) return remote;
+    return sameJson(local, base) ? remote : local;    // only-remote-changed -> remote
+  }
+  // Same rule applied PER KEY of a dict, so two devices adjusting different
+  // programs both survive instead of one whole object clobbering the other.
+  function mergeDictBase(local, remote, base) {
+    local = local || {}; remote = remote || {};
+    var baseObj = {};
+    try { baseObj = base != null ? (JSON.parse(base) || {}) : {}; } catch (e) { baseObj = {}; }
+    var out = {}, k;
+    for (k in local) out[k] = local[k];
+    for (k in remote) {
+      if (!(k in out)) { out[k] = remote[k]; continue; }
+      var localUnchanged = JSON.stringify(out[k]) === JSON.stringify(baseObj[k]);
+      if (localUnchanged) out[k] = remote[k];          // only remote touched it
+    }
+    return out;
+  }
+
+  function mergeStore(strategy, local, remote, base) {
+    if (strategy === 'exerciseByName') return mergeExerciseByName(local, remote);
+    if (strategy === 'scalarBase') return mergeScalarBase(local, remote, base);
+    if (strategy === 'dictBase')   return mergeDictBase(local, remote, base);
     if (strategy === 'arrayById') return mergeArrayById(local, remote);
     if (strategy === 'arrayByIdTs') return mergeArrayByIdTs(local, remote);
     if (strategy === 'workoutLog') return mergeWorkoutLog(local, remote);
@@ -259,7 +338,7 @@
           var local = parse(readRaw(key));
           var remote = remoteByKey[key];
           var before = readRaw(key);
-          if (remote != null) writeVal(key, mergeStore(strategy, local, remote));
+          if (remote != null) writeVal(key, mergeStore(strategy, local, remote, snapshot[key]));
           if (readRaw(key) !== before) pulledChange = true;
           snapshot[key] = remote != null ? JSON.stringify(remote) : null;
         }

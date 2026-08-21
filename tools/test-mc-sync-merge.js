@@ -173,5 +173,102 @@ ok('module.exports captured all 7 merge fns', !!(M && M.mergeArrayById && M.merg
   eq('macros: newer local scalar wins over older remote', out.profile, { p: 'local' });
 }
 
+// ==========================================================================
+// Wave 1 strategies (audit G-01 / K-1.2, K-1.3)
+// ==========================================================================
+ok('module.exports captured the Wave 1 merge fns', !!(M && M.mergeExerciseByName &&
+  M.mergeScalarBase && M.mergeDictBase && M.mergeStore));
+
+// ---- exerciseByName: custom exercises have NO id ------------------------
+// This is the whole reason the strategy exists: mergeArrayById pushes every
+// id-less entry unconditionally, so syncing this store with it would duplicate
+// the entire library on every single sync.
+{
+  const local = [{ name: 'Zercher Squat', muscle: 'Legs', createdAt: 'a' }];
+  const remote = [{ name: 'Zercher Squat', muscle: 'Legs', createdAt: 'b' },
+                  { name: 'Jefferson Curl', muscle: 'Back', createdAt: 'c' }];
+  const viaId = M.mergeArrayById(local, remote);
+  ok('exerciseByName: arrayById WOULD duplicate id-less entries (the bug avoided)', viaId.length === 3);
+  const out = M.mergeExerciseByName(local, remote);
+  eq('exerciseByName: union by name, no duplicates', out.map(e => e.name),
+     ['Zercher Squat', 'Jefferson Curl']);
+}
+{
+  // identity must match mc-exercise-catalog.js's normalize(): case, punctuation
+  // and parentheticals are not identity-bearing.
+  const local = [{ name: 'Incline DB Press' }];
+  const remote = [{ name: 'incline db press (bench)' }, { name: 'Incline-DB-Press**' }];
+  const out = M.mergeExerciseByName(local, remote);
+  eq('exerciseByName: normalized identity collapses case/punct/parens', out.length, 1);
+}
+{
+  const out = M.mergeExerciseByName([], [{ name: 'Sissy Squat' }]);
+  eq('exerciseByName: empty local takes remote', out.map(e => e.name), ['Sissy Squat']);
+  eq('exerciseByName: non-array inputs are safe', M.mergeExerciseByName(null, null), []);
+}
+
+// ---- scalarBase: 3-way LWW using the last-synced value as ancestor -------
+{
+  const base = JSON.stringify({ id: 'mm', name: 'Modality Matrix' });
+  const local = { id: 'mm', name: 'Modality Matrix' };          // unchanged here
+  const remote = { id: 'ks', name: 'Kitchen Sink' };            // other device switched
+  eq('scalarBase: only remote changed -> remote wins',
+     M.mergeScalarBase(local, remote, base), remote);
+}
+{
+  const base = JSON.stringify({ id: 'mm' });
+  const local = { id: 'ks' };      // this device switched
+  const remote = { id: 'mm' };     // server still on the old one
+  eq('scalarBase: only local changed -> local kept',
+     M.mergeScalarBase(local, remote, base), local);
+}
+{
+  const base = JSON.stringify({ id: 'mm' });
+  const local = { id: 'ks' }, remote = { id: 'pmc' };   // both changed
+  eq('scalarBase: true conflict resolves to LOCAL (device in your hand wins)',
+     M.mergeScalarBase(local, remote, base), local);
+}
+{
+  eq('scalarBase: no local value -> take remote', M.mergeScalarBase(null, { id: 'x' }, null), { id: 'x' });
+  eq('scalarBase: no remote value -> keep local', M.mergeScalarBase({ id: 'y' }, null, null), { id: 'y' });
+  // first sync ever: no ancestor recorded, both sides present -> local kept
+  eq('scalarBase: null base is not "unchanged"', M.mergeScalarBase({ a: 1 }, { b: 2 }, null), { a: 1 });
+}
+
+// ---- dictBase: per-key 3-way, so two devices editing DIFFERENT programs
+// both survive (the reason this is not whole-object LWW) ------------------
+{
+  const base = JSON.stringify({ mm: { weeks: { 1: 'x' } }, pmc: { weeks: {} } });
+  const local = { mm: { weeks: { 1: 'LOCAL' } }, pmc: { weeks: {} } };   // edited mm
+  const remote = { mm: { weeks: { 1: 'x' } }, pmc: { weeks: { 2: 'REMOTE' } } }; // edited pmc
+  const out = M.mergeDictBase(local, remote, base);
+  eq('dictBase: local-only edit survives', out.mm.weeks[1], 'LOCAL');
+  eq('dictBase: remote-only edit survives', out.pmc.weeks[2], 'REMOTE');
+}
+{
+  const base = JSON.stringify({ mm: { v: 0 } });
+  const out = M.mergeDictBase({ mm: { v: 1 } }, { mm: { v: 2 } }, base);
+  eq('dictBase: same-key conflict resolves to LOCAL', out.mm, { v: 1 });
+}
+{
+  const out = M.mergeDictBase({ a: 1 }, { b: 2 }, null);
+  eq('dictBase: new keys from both sides are unioned', out, { a: 1, b: 2 });
+  eq('dictBase: null inputs are safe', M.mergeDictBase(null, null, null), {});
+  eq('dictBase: unparseable base does not throw', M.mergeDictBase({ a: 1 }, { a: 2 }, 'not json'), { a: 1 });
+}
+
+// ---- dispatcher routes the new strategies and still ignores base for old --
+{
+  eq('mergeStore routes exerciseByName',
+     M.mergeStore('exerciseByName', [{ name: 'A' }], [{ name: 'a' }]).length, 1);
+  eq('mergeStore routes scalarBase',
+     M.mergeStore('scalarBase', { v: 1 }, { v: 2 }, JSON.stringify({ v: 1 })), { v: 2 });
+  eq('mergeStore routes dictBase',
+     M.mergeStore('dictBase', { a: 1 }, { b: 2 }, null), { a: 1, b: 2 });
+  // the extra `base` argument must not disturb the pre-existing strategies
+  eq('mergeStore: base arg is inert for existing strategies',
+     M.mergeStore('arrayById', [{ id: 'a' }], [{ id: 'b' }], 'ignored').map(e => e.id), ['a', 'b']);
+}
+
 if (fail) { console.error(`\ntest-mc-sync-merge: ${pass} passed, ${fail} FAILED`); process.exit(1); }
 console.log(`test-mc-sync-merge: all ${pass} assertions passed`);
