@@ -112,6 +112,11 @@
      (base.css unless noted); read this list before adding a new one:
        --z-fw-bar        Finish Workout bar, baseline (no bottom nav)
        --z-banner        .fw-auto-banner (top-pinned "workout auto-saved")
+       --z-sw-update     mc-sw-update.js's self-mounted "Update available"
+                         banner. Top-anchored BELOW whatever fixed top
+                         chrome the page already has (measured at show
+                         time), so it never fights .prog-bar-wrap. Sits
+                         under --z-modal on purpose: a dialog covers it.
        --z-timer-float   Rest timer floating bar
        --z-modal         .fw-modal-overlay, and mc-summary.css's
                           .fw-recap-overlay at the same value — deliberately
@@ -152,6 +157,7 @@
      changes rendering, only names the values that were already correct. */
   --z-fw-bar:      40;
   --z-banner:      50;
+  --z-sw-update:   60;
   --z-timer-float: 100;
   --z-modal:       110;
   --z-fw-bar-nav:  120;
