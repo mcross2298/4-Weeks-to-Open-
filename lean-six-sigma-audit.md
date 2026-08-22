@@ -660,6 +660,78 @@ after it is protected)*
     dashboard card) weren't validated by any transcript evidence the way
     the meatball was, so adding hints there would have been six more
     untested guesses rather than one well-evidenced fix.
+    — **K-3.2/A-16 shipped (2026-08-22) — the batch's own "highest-risk,
+    deliberately ordered last" item, and it earned that label.** No prior
+    design doc existed beyond the roadmap's one-line aspiration ("push
+    changed keys, not whole stores"), and `mc-sync.js`'s `user_sync` table
+    (`user_id, store_key, data jsonb, ...`) is a real, live, signed-in
+    user's Supabase project — not something to reshape by guessing. Before
+    touching any code: measured what "whole store" actually costs. A
+    synthetic but realistic long-time-user `mc_setlog_v1` (40 pages × 10
+    exercises × 5 capped sessions) sized out to **337 KB** — and unlike
+    every other store, `push()`'s existing "unchanged, skip" short-circuit
+    barely helps it, since an active workout changes SOME key in this one
+    on almost every push cycle (every `PUSH_MS`, or sooner on pagehide), so
+    the whole blob re-uploads nearly every cycle regardless of how small
+    the real change was. That's the one store where the ticket's complaint
+    is real, not theoretical — so the fix was scoped to it alone rather
+    than restructuring every store's sync unit (a materially larger,
+    riskier change with no evidence the others need it) or attempting a
+    schema migration on the live project (an RPC/`jsonb_set` approach was
+    considered and rejected: no way to test it against the real table from
+    this environment, and getting a live sync engine's correctness wrong
+    risks actual user data — worse than shipping nothing).
+
+    Landed as a client-side-only, zero-schema-change protocol change:
+    `mc_setlog_v1` still syncs through the exact same `user_sync` table,
+    just as **per-page rows** (`store_key = 'mc_setlog_v1|<page>'`, page
+    derived from the store's own existing `pageId|exId` key format — no new
+    field) instead of one whole-store row. `mergeSetlog` itself is
+    completely untouched; `computeSetlogPushOps()`/`computeSetlogPullResult()`
+    only decide which slice of the store each network row reads from or
+    writes to. Backward compatible: a legacy whole-blob row from before this
+    shipped (`store_key` exactly `mc_setlog_v1`) is still pulled and merged
+    in on `pull()`, deliberately left in the table rather than deleted from
+    client code once superseded.
+
+    Since this module can't be live-tested against the real Supabase
+    project from this environment (no signed-in session here), verification
+    leaned entirely on the two testing paths this codebase already
+    established for exactly this file: the pure planning functions
+    (`computeSetlogPushOps`/`PullResult`, `splitSetlogByPage`/
+    `joinSetlogGroups`) got the same vm-sandboxed unit coverage as every
+    existing merge strategy, and — new for this file — a **mock Supabase
+    client** (`.from().select().eq()` / `.upsert()`, faithful to the real
+    call shape) drives the actual `push()`/`pull()`/`status()` functions
+    end-to-end, including simulated network failures. That harness caught
+    two real bugs, not hypothetical ones: a first cut kept a synthetic
+    whole-store `snapshot['mc_setlog_v1']` mirror "for `pendingCount()`
+    parity" and set it — in both `push()`'s success handler AND
+    unconditionally at the end of `pull()` — to the local value rather than
+    a server-confirmed one; a page-group upload that failed still left the
+    whole-store mirror looking "synced," so the next `push()` cycle's
+    short-circuit silently skipped retrying it, and `status().pending`
+    read `0` while data sat un-uploaded. Fixed by removing the whole-store
+    mirror entirely — only per-page-group snapshot entries are meaningful
+    for this store now, matching what "snapshot" means everywhere else in
+    the file ("what the server confirmed holding") — and reworking
+    `pendingCount()` to ask `computeSetlogPushOps()` directly rather than
+    compare against a value that no single network call ever confirms as a
+    whole. Verified live against the mock client afterward: a failed
+    page-group is never marked synced and is retried on every subsequent
+    `push()` call without re-sending groups that already succeeded;
+    `status().pending` correctly reflects both the settled and the
+    still-failing case. 74 assertions total in
+    `tools/test-mc-sync-merge.js` (up from 46), gated in `verify.yml`
+    already. `store-registry.json` needed no changes — `STORES['mc_setlog_v1']`
+    is still exactly one entry, `'setlog'`; only push()/pull()'s internal
+    handling of that one entry changed.
+
+This closes Wave 6 item 13's full 9-item batch (K-2.4, DG-8, DG-6, VOC-B2,
+VOC-A3, VOC-C2, K-3.3, K-3.4/VOC-C1, K-3.2/A-16), worked through in one
+sweep per the owner's instruction, each item still individually committed,
+gated, and (where the surface allowed) live-verified in a real browser
+before moving to the next.
 
 **Standing gate, unchanged:** the owner-side real-device QA matrix (iOS Safari,
 Android Chrome, installed PWA, two-device Supabase reconciliation) carried from

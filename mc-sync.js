@@ -37,7 +37,13 @@
       mergeExerciseByName: function () { return mergeExerciseByName.apply(null, arguments); },
       mergeScalarBase: function () { return mergeScalarBase.apply(null, arguments); },
       mergeDictBase: function () { return mergeDictBase.apply(null, arguments); },
-      mergeStore: function () { return mergeStore.apply(null, arguments); }
+      mergeStore: function () { return mergeStore.apply(null, arguments); },
+      // K-3.2/A-16
+      setlogPageOf: function () { return setlogPageOf.apply(null, arguments); },
+      splitSetlogByPage: function () { return splitSetlogByPage.apply(null, arguments); },
+      joinSetlogGroups: function () { return joinSetlogGroups.apply(null, arguments); },
+      computeSetlogPushOps: function () { return computeSetlogPushOps.apply(null, arguments); },
+      computeSetlogPullResult: function () { return computeSetlogPullResult.apply(null, arguments); }
     };
   }
   if (window.__mcSync) return;
@@ -92,7 +98,16 @@
     var n = 0;
     Object.keys(STORES).forEach(function (key) {
       var cur = readRaw(key);
-      if (cur != null && cur !== snapshot[key]) n++;
+      if (cur == null) return;
+      // K-3.2/A-16: setlog has no whole-store snapshot entry (see
+      // computeSetlogPushOps()'s comment on push() below) — "pending" means
+      // at least one page-group differs from what the server confirmed.
+      if (STORES[key] === 'setlog') {
+        var data = parse(cur);
+        if (data != null && computeSetlogPushOps(key, data, snapshot).ops.length) n++;
+        return;
+      }
+      if (cur !== snapshot[key]) n++;
     });
     return n;
   }
@@ -239,6 +254,104 @@
     return out;
   }
 
+  // ---- K-3.2/A-16: delta sync for mc_setlog_v1 -----------------------------
+  // mc_setlog_v1 grows without bound in KEY COUNT across a user's whole
+  // lifetime of programs (one dict entry per page|exercise ever logged);
+  // mergeSetlog's 5-session cap only bounds one key's depth, not the store's
+  // breadth. Under the whole-store push in push() below, logging ONE set
+  // anywhere re-uploads the ENTIRE lifetime history on the next push cycle —
+  // and unlike the store-level "unchanged, skip" short-circuit that already
+  // protects every OTHER store, an active workout changes SOME key in this
+  // one on almost every push cycle (PUSH_MS, or sooner on pagehide), so the
+  // whole-blob upload fires nearly every time regardless of how small the
+  // real change was.
+  //
+  // Fix: split ONLY this store's SYNC unit by page, derived from its own
+  // existing "pageId|exId" key format — no new field, no schema change, no
+  // change to mergeSetlog itself. The local store shape is untouched
+  // (mc-setlog.js/mc-suggest.js never see this split); it's purely how
+  // mc-sync.js chunks what it uploads, keyed 'mc_setlog_v1|<pageId>'.
+  // Backward compatible: a legacy whole-blob row (store_key exactly
+  // 'mc_setlog_v1', from before this shipped) is still pulled and merged in
+  // — pushSetlog()/pullSetlog() below are exercised by
+  // tools/test-mc-sync-merge.js against fixtures covering exactly that case.
+  function setlogPageOf(compoundKey) {
+    var i = String(compoundKey).indexOf('|');
+    return i < 0 ? compoundKey : compoundKey.slice(0, i);
+  }
+  function splitSetlogByPage(whole) {
+    var byPage = {};
+    Object.keys(whole || {}).forEach(function (k) {
+      var p = setlogPageOf(k);
+      (byPage[p] || (byPage[p] = {}))[k] = whole[k];
+    });
+    return byPage;
+  }
+  // Re-assemble page groups back into one whole-store object (inverse of
+  // splitSetlogByPage), used by pullSetlog() to write the merged result back
+  // to the single local mc_setlog_v1 key mc-setlog.js actually reads.
+  function joinSetlogGroups(groups) {
+    var whole = {};
+    Object.keys(groups || {}).forEach(function (page) {
+      var g = groups[page] || {};
+      Object.keys(g).forEach(function (k) { whole[k] = g[k]; });
+    });
+    return whole;
+  }
+
+  // Pure planning step for pushing mc_setlog_v1: given the current local
+  // whole store and the snapshot values already held per page-group (plus
+  // the whole-store snapshot at snapshotByKey[wholeKey], for pendingCount()
+  // parity with every other store), returns exactly which page-group rows
+  // need a network upsert and what the snapshot should become once they
+  // succeed. No I/O — push() below does the actual client.from(...).upsert
+  // calls and only commits newSnapshot on a successful response, same
+  // all-or-nothing-per-row discipline every other store already has.
+  function computeSetlogPushOps(wholeKey, localWhole, snapshotByKey) {
+    var groups = splitSetlogByPage(localWhole);
+    var ops = [], newSnapshot = {};
+    Object.keys(groups).forEach(function (page) {
+      var groupKey = wholeKey + '|' + page;
+      var groupJson = JSON.stringify(groups[page]);
+      if (groupJson !== snapshotByKey[groupKey]) {
+        ops.push({ storeKey: groupKey, data: groups[page], json: groupJson });
+      } else {
+        newSnapshot[groupKey] = groupJson;   // unchanged — carry forward as-is
+      }
+    });
+    return { ops: ops, wholeJson: JSON.stringify(localWhole), carrySnapshot: newSnapshot };
+  }
+
+  // Pure planning step for pulling mc_setlog_v1: given the local whole store,
+  // every remote row keyed 'mc_setlog_v1|<page>' (plus a legacy whole-blob
+  // row at remoteByKey[wholeKey], if one predates this feature), and the
+  // snapshot already held per page-group, returns the merged whole store and
+  // the snapshot values to record. mergeSetlog itself is untouched — this
+  // only decides WHICH slice of the store each remote row merges into.
+  function computeSetlogPullResult(wholeKey, localWhole, remoteByKey, snapshotByKey) {
+    var localGroups = splitSetlogByPage(localWhole);
+    var mergedGroups = {};
+    Object.keys(localGroups).forEach(function (p) { mergedGroups[p] = localGroups[p]; });
+    var newSnapshot = {};
+    var prefix = wholeKey + '|';
+    Object.keys(remoteByKey).forEach(function (rk) {
+      if (rk.indexOf(prefix) !== 0) return;
+      var page = rk.slice(prefix.length);
+      var remoteGroup = remoteByKey[rk];
+      mergedGroups[page] = mergeSetlog(localGroups[page] || {}, remoteGroup);
+      newSnapshot[rk] = JSON.stringify(remoteGroup);
+    });
+    var whole = joinSetlogGroups(mergedGroups);
+    // Legacy whole-blob row, from before this shipped: merge it in once. It
+    // is never written back to under the new per-page keys, so once every
+    // device has migrated it simply stops changing and stops mattering —
+    // deliberately left in the table rather than deleted from client code.
+    if (remoteByKey[wholeKey] != null) {
+      whole = mergeSetlog(whole, remoteByKey[wholeKey]);
+    }
+    return { whole: whole, newSnapshot: newSnapshot };
+  }
+
   // Custom exercises: [{name, muscle, programs, master, custom, createdAt}] —
   // note there is NO id field, so mergeArrayById would push every entry
   // unconditionally and duplicate the whole list on each sync. Identity here is
@@ -335,12 +448,32 @@
         // merged result instead of treating it as in-sync (owned stores only —
         // push() never touches CONSUME keys regardless of this snapshot).
         function pullKey(key, strategy) {
+          if (strategy === 'setlog') { pullSetlogKey(key); return; }
           var local = parse(readRaw(key));
           var remote = remoteByKey[key];
           var before = readRaw(key);
           if (remote != null) writeVal(key, mergeStore(strategy, local, remote, snapshot[key]));
           if (readRaw(key) !== before) pulledChange = true;
           snapshot[key] = remote != null ? JSON.stringify(remote) : null;
+        }
+        // K-3.2/A-16: mc_setlog_v1 syncs as per-page rows ('mc_setlog_v1|<page>')
+        // instead of one whole-store row — see computeSetlogPullResult()'s own
+        // comment above for why. Pure planning happens there; this just applies
+        // the result and updates snapshot/pulledChange the same way pullKey()
+        // does for every other store.
+        function pullSetlogKey(key) {
+          var localWhole = parse(readRaw(key)) || {};
+          var before = readRaw(key);
+          var result = computeSetlogPullResult(key, localWhole, remoteByKey, snapshot);
+          writeVal(key, result.whole);
+          if (readRaw(key) !== before) pulledChange = true;
+          // Only PER-GROUP snapshots are meaningful for this store — see
+          // computeSetlogPushOps()'s comment on push() below for why there is
+          // deliberately no snapshot[key] (whole-store) entry at all: it
+          // would mean "what the server holds," and nothing here confirms
+          // the server holds the merged whole, only whichever individual
+          // page-group rows actually came back in this pull.
+          Object.keys(result.newSnapshot).forEach(function (gk) { snapshot[gk] = result.newSnapshot[gk]; });
         }
         Object.keys(STORES).forEach(function (key) { pullKey(key, STORES[key]); });
         Object.keys(CONSUME).forEach(function (key) { pullKey(key, CONSUME[key]); });
@@ -350,9 +483,37 @@
 
   function push() {
     var ops = [];
+    // K-3.2/A-16: mc_setlog_v1 uploads only the page-group(s) that actually
+    // changed, not the whole store. There is deliberately no snapshot[key]
+    // (whole-store) entry for this store at all — only snapshot['mc_setlog_v1
+    // |<page>'] per group — because "snapshot" means "what the server
+    // confirmed holding," and no single network call ever confirms the
+    // WHOLE store at once here, only one page-group at a time. Same
+    // all-or-nothing-per-row commit discipline as the generic path below:
+    // each group's own snapshot entry is only updated inside a successful
+    // upsert's .then(), never optimistically before the call resolves —
+    // so a group whose upload fails is retried on the next push() call
+    // instead of being silently marked done (see tools/test-mc-sync-merge.js).
+    function pushSetlogKey(key, cur) {
+      var localWhole = parse(cur);
+      if (localWhole == null) return;
+      var plan = computeSetlogPushOps(key, localWhole, snapshot);
+      Object.keys(plan.carrySnapshot).forEach(function (gk) { snapshot[gk] = plan.carrySnapshot[gk]; });
+      plan.ops.forEach(function (op) {
+        ops.push(client.from(TABLE).upsert({
+          user_id: user.id, store_key: op.storeKey, data: op.data,
+          updated_at: new Date().toISOString(), device_id: DEVICE
+        }, { onConflict: 'user_id,store_key' }).then(function (r) {
+          if (!r.error) { snapshot[op.storeKey] = op.json; status.lastPush = Date.now(); }
+        }));
+      });
+    }
     Object.keys(STORES).forEach(function (key) {
       var cur = readRaw(key);
       if (cur == null) return;                 // nothing stored locally yet
+      // setlog has no whole-store snapshot to short-circuit against — its
+      // own per-group diff inside pushSetlogKey() IS the cheap no-op check.
+      if (STORES[key] === 'setlog') { pushSetlogKey(key, cur); return; }
       if (cur === snapshot[key]) return;        // unchanged since last sync
       var data = parse(cur);
       if (data == null) return;
