@@ -1,0 +1,20 @@
+{
+  "mm-p1.html": {
+    "mutationRecords": 15,
+    "observerCallbacks": 6,
+    "querySelectorAll": 301.8,
+    "storageReads": 26
+  },
+  "bro-split.html": {
+    "mutationRecords": 12,
+    "observerCallbacks": 6,
+    "querySelectorAll": 347.8,
+    "storageReads": 17
+  },
+  "psu-strength.html": {
+    "mutationRecords": 10,
+    "observerCallbacks": 4,
+    "querySelectorAll": 64,
+    "storageReads": 17
+  }
+}

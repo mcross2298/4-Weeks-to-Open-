@@ -107,7 +107,15 @@ workflow below, so a green CI run does not exercise them.
 
 **Workflows** (`.github/workflows/`):
 - **`verify.yml`** — the canonical gate list (everything above, plus a
-  headless-Chromium render smoke test and a light-mode contrast ratchet).
+  headless-Chromium render smoke test, a light-mode contrast ratchet
+  (`tools/check-contrast.js`, budgets in `tools/contrast-budgets.json`), a
+  runtime performance budget (`tools/measure-session.js --check`, audit
+  K-3.1/A-15 — 3 probe pages, budgets in `tools/perf-budgets.json`; the S1
+  −99.5% runtime win can never silently regress again the way S5c-0 nearly
+  did), and a kitchen-sink screenshot-diff visual ratchet
+  (`tools/check-visual-ratchet.js`, audit DG-9 — baselines in
+  `tools/visual-baselines/`). All three ratchets re-baseline with their own
+  `--update`/`--update-check` flag when a change is deliberate.
   Called by both `pr.yml` and `pages.yml` so a PR runs exactly what the
   deploy runs. `cross-repo-drift` (the Mikes-Cookbook shared-module
   byte-identity check) is deploy-only by design — it fails by construction
