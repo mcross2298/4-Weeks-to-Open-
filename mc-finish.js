@@ -301,6 +301,11 @@
     // have overflowed. The button's aria-label carries the full meaning.
     var txt=done+'/'+total;
     if(el&&el.textContent!==txt)el.textContent=txt;
+    // M3c: a session is "active" the moment the first set is logged -- not when
+    // the page loads. Until then the athlete is still browsing and the nav is
+    // how they browse. classList.toggle with an explicit boolean is idempotent,
+    // so this queues no mutation record once the state settles (A-2's rule).
+    document.body.classList.toggle('mc-in-session', done>0);
     var isComplete=total>0&&done>=total;
     if(isComplete&&!wasComplete&&!window._FW.finished){
       var modal=document.getElementById('fwModal');
