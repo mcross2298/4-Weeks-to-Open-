@@ -114,8 +114,25 @@ workflow below, so a green CI run does not exercise them.
   −99.5% runtime win can never silently regress again the way S5c-0 nearly
   did), and a kitchen-sink screenshot-diff visual ratchet
   (`tools/check-visual-ratchet.js`, audit DG-9 — baselines in
-  `tools/visual-baselines/`). All three ratchets re-baseline with their own
+  `tools/visual-baselines/`), and a **complete-workout journey gate**
+  (`tools/check-journey.js`, roadmap M5 — budgets in
+  `tools/journey-budgets.json`). All ratchets re-baseline with their own
   `--update`/`--update-check` flag when a change is deliberate.
+
+  **The journey gate exists because everything else inspects the app at rest.**
+  Nothing else in this list ever logs a set. Three defects shipped through the
+  full gate list green and were caught only by driving a session: two controls
+  in the session toolbar under the 44pt floor (including the button that *ends*
+  a workout), and a card strip permanently occluded by the superset hop buffer
+  — that last one not a bug in any single file, but two independently-correct
+  changes colliding on the one engine family neither was tested against. It
+  drives one page per card engine and asserts the session can be completed, no
+  control is unreachable at any scroll position, nothing overflows sideways, and
+  the controls the session shell owns clear 44×44. Its safe-area check is
+  deliberately a **source** check, not a runtime one: `env(safe-area-inset-top)`
+  is 0 headlessly, so an inset-aware `calc(54px + env(...))` and an inset-blind
+  `54px` are indistinguishable at runtime — the first version of that check
+  passed on known-broken CSS because it was testing its own override.
   Called by both `pr.yml` and `pages.yml` so a PR runs exactly what the
   deploy runs. `cross-repo-drift` (the Mikes-Cookbook shared-module
   byte-identity check) is deploy-only by design — it fails by construction
