@@ -7,8 +7,18 @@
 > `mc-program-hero.js`/`mc-program-hero.css` implement this hero and are
 > wired into `cat-pmc.html` and `cat-strength.html`; the remaining
 > `cat-*.html` / split pages this brief calls for have not been rolled out
-> yet. `Program Landing.dc.html` (the interactive design comp referenced
-> below) is unchanged and still lives at the repo root.
+> yet.
+>
+> **Update (2026-08-22, audit DG-8):** the other three comps in this Onyx
+> series (`Dashboard Redesign.dc.html`, `Programs Redesign.dc.html`,
+> `Conditioning Redesign.dc.html`) were pure dormant proposals with no
+> shipped descendant, and were retired (deleted, recoverable via git
+> history) rather than left as undecided inventory. `Program Landing.dc.html`
+> was retired the same way — but only *because* this doc, and the shipped
+> `mc-program-hero.js`/`mc-program-hero.css` it describes, already carry
+> forward everything the comp itself would still be useful for. This brief
+> stays as the living reference for finishing the rollout to the remaining
+> `cat-*.html` / split pages.
 
 ## Overview
 A new "landing" screen for the moment a user taps into a program from the

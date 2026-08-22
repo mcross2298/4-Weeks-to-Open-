@@ -464,6 +464,45 @@ after it is protected)*
     **VOC-A3** promo suppression, **VOC-B2** week-delta note, **VOC-C2**
     session-saved toast, **DG-6** motion tokens, **DG-8** comp triage,
     **K-2.4** fill-ins (`.sl-ck` sweep, `index.html` redirect).
+    — **K-2.4 shipped (2026-08-22).** `.sl-ck` (mc-superset-hop.js's
+    page-native checkbox fallback for a logger that no longer exists —
+    `mc-setlog.js`'s `.mcl-ck`/`.set-check` is the only one left) confirmed
+    fully dead fleet-wide via `class="X"`/className/string-literal grep, not
+    just a hit count, then removed from `mc-superset-hop.js`, `mc-finish.js`
+    (6 selector strings + 1 classList check), `mc-group-split.js`,
+    `mc-sw-update.js`, `base.css` (dark + light theme rule pairs), and 11
+    program HTML pages carrying the identical dead CSS pair. Sibling
+    selectors (`.setlog-toggle`/`.setlog-wrap`/`.sl-row`/`.sl-inp`) were
+    left untouched — not confirmed dead and outside this ticket's scope.
+    `index.html` also carried a `<meta http-equiv="refresh">` racing the
+    existing query/hash-preserving JS redirect (G-09) — being blind to
+    `?query`/`#hash`, it could win the race and silently drop a deep link;
+    removed, leaving the JS redirect + visible fallback link as the single
+    path.
+    — **DG-8 shipped (2026-08-22) — owner decision: Retire.** Read all four
+    comps end-to-end first: a coherent "Onyx" (dark + refined-gold,
+    Archivo/Manrope) redesign series, Dashboard → Programs → Conditioning →
+    Program Landing, each explicitly continuing the last. Actually shipping
+    or formally backlogging it would be a visual-identity-scale decision on
+    par with DG-1/DG-2's font choice (which had its own sign-off gate), so
+    this was put to the owner via `AskUserQuestion` rather than decided
+    unilaterally; **Retire** was chosen. All four `.dc.html` files deleted
+    (recoverable via git history). One wrinkle found mid-execution:
+    `program-landing-handoff.md`, the Program Landing comp's companion brief,
+    documents that the design was **partially already shipped** —
+    `mc-program-hero.js`/`mc-program-hero.css` implement its hero and are
+    wired into `cat-pmc.html`/`cat-strength.html` — so unlike the other
+    three, this doc was kept (status note updated to record the comp's
+    retirement) as the living reference for finishing that rollout, rather
+    than deleted with its comp. `markup-snippets.md` (the Conditioning
+    comp's companion — no shipped descendant) was deleted alongside its
+    comp. `content-manifest.json`'s scratch-list, which had `.dc.html`
+    entries for only 2 of the 4 comps to begin with (belt-and-suspenders on
+    top of `pages.yml`'s blanket `*.dc.html` strip, never fully applied),
+    had its now-dangling `Programs Redesign.dc.html` / `Conditioning
+    Redesign.dc.html` / `markup-snippets.md` entries removed;
+    `program-landing-handoff.md` stayed listed. `tools/build-market.py
+    --check` reconfirmed clean after the edit.
 
 **Standing gate, unchanged:** the owner-side real-device QA matrix (iOS Safari,
 Android Chrome, installed PWA, two-device Supabase reconciliation) carried from
