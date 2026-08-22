@@ -50,7 +50,7 @@
     // mid-session): stay on the day they actually worked rather than dropping
     // the bar to "0 / 0" and appearing to lose their session.
     return [].slice.call(document.querySelectorAll('.day-card')).filter(function(d){
-      return d.querySelector('.sl-ck.done,.set-check.done');
+      return d.querySelector('.set-check.done');
     });
   }
   function eachInScope(sel){
@@ -65,7 +65,7 @@
   // NOT read from mc_setlog_v1: save() runs on check but is not cleared on
   // uncheck, so a store-derived count would over-report every unchecked set.
   function getCheckedSets(){
-    return eachInScope('.sl-ck.done,.set-check.done').length;
+    return eachInScope('.set-check.done').length;
   }
   // Total comes from the PRESCRIPTION, not from rendered checkboxes, so it is
   // right whether or not a card's logger has been built (which is what makes
@@ -73,15 +73,15 @@
   // isn't loaded or a page ships its own logger.
   function getTotalSets(){
     var planned=window.MCSetlogUtil&&MCSetlogUtil.plannedSetCount;
-    if(!planned)return eachInScope('.sl-ck,.set-check').length;
+    if(!planned)return eachInScope('.set-check').length;
     var units=eachInScope(UNIT_SEL_FW);
-    if(!units.length)return eachInScope('.sl-ck,.set-check').length;
+    if(!units.length)return eachInScope('.set-check').length;
     var n=0;
     units.forEach(function(u){
       var c=MCSetlogUtil.plannedSetCount(u);
       // a unit mc-setlog.js doesn't build (page-native logger) still counts
       // whatever checkboxes it did render
-      n+=c||u.querySelectorAll('.sl-ck,.set-check').length;
+      n+=c||u.querySelectorAll('.set-check').length;
     });
     return n;
   }
@@ -475,7 +475,7 @@
     new MutationObserver(function(muts){
       for(var i=0;i<muts.length;i++){
         var t=muts[i].target;
-        if(t.classList&&(t.classList.contains('set-check')||t.classList.contains('sl-ck'))){
+        if(t.classList&&t.classList.contains('set-check')){
           debounceUpdate();
           return;
         }
@@ -569,7 +569,7 @@
         }
       }catch(e){}
       document.querySelectorAll('.ex-card.checked,.ss-ex.checked,.lift-card.checked,.ex-item.checked').forEach(function(c){c.classList.remove('checked');});
-      document.querySelectorAll('.sl-ck.done,.set-check.done').forEach(function(c){c.classList.remove('done');});
+      document.querySelectorAll('.set-check.done').forEach(function(c){c.classList.remove('done');});
       try{
         var sess=JSON.parse(localStorage.getItem('mc_session_v1')||'{}');
         if(sess[pageId]){delete sess[pageId];localStorage.setItem('mc_session_v1',JSON.stringify(sess));}

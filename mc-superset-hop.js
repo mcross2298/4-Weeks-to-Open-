@@ -12,12 +12,10 @@
    unlogged set. When every set of every member is logged, the superset is
    complete and no hop fires — the rest period (existing rest timer) takes over.
 
-   LOGGER-AGNOSTIC: PMC pages ship two different per-set loggers and they can
-   even race each other in the DOM:
-     - mc-setlog.js  -> ".mcl-toggle / .mcl-wrap / .mcl-row / .mcl-ck"
-     - page-native   -> ".setlog-toggle / .setlog-wrap / .sl-row / .sl-ck"
-   Both mark a completed set checkbox with ".done", so this module supports
-   whichever one is actually rendered.
+   Set checkboxes are ".mcl-ck" (mc-setlog.js's logger — the only one left;
+   the older page-native ".sl-ck" logger this module once also supported was
+   confirmed fully retired fleet-wide and its dead selector references
+   removed — audit K-2.4/G-09). Marked done via ".done".
 
    Design notes
    - Pure DELEGATION on the document in the CAPTURE phase: no edits to any
@@ -36,12 +34,12 @@
   var RADIUS = 20;
   var C = 2 * Math.PI * RADIUS;  // progress-ring circumference
 
-  var CK_SEL = '.mcl-ck, .sl-ck'; // a "complete set" checkbox in either logger
+  var CK_SEL = '.mcl-ck'; // a "complete set" checkbox
 
   // Card sub-elements that must NOT trigger a hop via the CARD-tap path.
   var IGNORE_SEL = [
     '.mcl-toggle', '.mcl-wrap', '.mcl-ck', '.mcl-inp',
-    '.setlog-toggle', '.setlog-wrap', '.sl-ck', '.sl-inp',
+    '.setlog-toggle', '.setlog-wrap', '.sl-inp',
     '.set-check', '.set-input',
     '.rest-timer', '.mc-meatball', '.mc-note', '.mc-reorder-ctrls',
     'input', 'button', 'a', 'select', 'textarea'
@@ -100,10 +98,9 @@
     var n = el.querySelector('.ss-name, .ex-name, .lift-name');
     return n ? n.textContent.trim() : 'Next exercise';
   }
-  // The active logger's set checkboxes for a member (prefer mcl, else native).
+  // The active logger's set checkboxes for a member.
   function setChecks(m) {
-    var mcl = m.querySelectorAll('.mcl-ck');
-    return mcl.length ? mcl : m.querySelectorAll('.sl-ck');
+    return m.querySelectorAll('.mcl-ck');
   }
   // The active logger's set rows for a member.
   function setRows(m) {
