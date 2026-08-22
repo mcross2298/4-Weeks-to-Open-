@@ -17,8 +17,16 @@ three prior audits had each partly seen but none had assembled. Measuring the
 live pages produced the governing fact:
 
 **An active workout page runs 6–7 simultaneous fixed layers and spends 25% of
-the viewport on chrome before any content renders — 36.4% while a rest timer
-runs.**
+the viewport on chrome before any content renders — and 55.7% of the viewport
+is covered once a rest timer is actually running.**
+
+> **Corrected 2026-08-22, after building the M3 prototype against the real
+> page.** This document previously said 36.4%, derived from `.timer-float`'s
+> declared `height:64px` in `base.css`. Measured live on `5on-2off.html` with a
+> set logged and the timer counting, the rest panel renders **220px** tall
+> (y427–647), and the union of all covered vertical space — overlaps counted
+> once — is **470px of 844 = 55.7%**. The earlier figure was too kind. A
+> declared height is not a rendered height; only the second one is a fact.
 
 | Page | Fixed layers | Top | Bottom | Chrome |
 |---|---|---|---|---|
@@ -79,9 +87,10 @@ Occupied band with a timer running: nav 0→55, `.fw-bar` 60→169,
 `.timer-float` 197→261. `bottom:197px` is a flat literal with no `env()`, so
 the shortfall is identical in-tab and notched.
 
-**D5 — Voice mic buried under the rest timer.** `.mc-voice-btn` z98, band
-199–247; `.timer-float` z100, band 197–261. Unusable exactly when you would
-speak to it.
+**D5 — Voice mic buried under the rest timer.** `.mc-voice-btn` z98 occupies
+y597–645; the running `.timer-float` z100 occupies y427–647. The mic is fully
+inside it — visible in the before/after capture as simply absent from the
+screen. Unusable exactly when you would speak to it.
 
 **D6 — Sticky tab rows pin under the stat bar.** `.week-tabs` (`base.css:266`,
 z8), `.tabs-bar` (28 pages, z8), `.week-selector` (mm-p1/2/3, hv-block, z20)
@@ -146,8 +155,11 @@ The owner-specified redesign, modelled on a reference app they supplied:
   A compact countdown persists in the top bar when the inline row is off-screen.
 - **Bottom nav auto-hides during an active session.**
 
-Removes D4 and D5 by construction. Result: **chrome 25% → 5.5%**, content
-633px → 798px (**+26%**, **+49%** during a rest period).
+Removes D4 and D5 by construction. Result measured on a working prototype
+applied to the live page: **7 fixed layers → 1**, covered viewport
+**55.7% → 5.5%**, content **633px → 798px**. In the captured state the
+prototype shows the entire active card plus three upcoming exercises where the
+current build shows one readable exercise name.
 
 **Blocking trap:** `mc-summary.js:483` is `if(!document.querySelector('.fw-bar'))return;`
 — the top bar is gated on the bottom bar. Removing `.fw-bar` naively silently
