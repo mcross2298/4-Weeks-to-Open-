@@ -43,6 +43,10 @@
   }
   function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 
+  // Shared so renderWeekTabs and renderDay's header note can't drift apart
+  // the way the old hardcoded label list once did (see file header comment).
+  function weekShortLabel(wt){ return wt.label.split(' · ')[1] || wt.label; }
+
   // A drop/burnout AMRAP set renders as a bare "∞" (one per AMRAP set), never
   // a "2×∞" shorthand. "Drop AMRAP" and "+ N×AMRAP" always convert (the word
   // "Drop" or a leading "+" signals an added set after real working sets,
@@ -146,12 +150,19 @@
     var exHtml = day.exercises.map(function(ex,eIdx){return renderExercise(ex,dIdx,eIdx);}).join("");
     var wt = WEEK_THEMES[currentWeek];
     var themeBar = '<div class="week-theme-bar"><span class="wtb-icon">'+wt.icon+'</span><div><div class="wtb-label">'+esc(wt.label)+'</div><div class="wtb-text">'+esc(wt.text)+'</div></div></div>';
+    // VOC-B2: the week tabs switch schemes correctly, but a collapsed day
+    // card gave no hint of what changed — the athlete had to expand it and
+    // diff "5×5" against memory. A one-line note on the header (visible
+    // before any tap) names this week's theme so the 4 feature lifts'
+    // delta is signposted up front; the full per-week explanation stays
+    // in the existing themeBar once expanded.
+    var weekNote = ' · This week: '+wt.icon+' '+esc(weekShortLabel(wt));
     return '<div class="day-card" data-d="'+dIdx+'">' +
       '<div class="day-header" onclick="MM.toggleDay(this.parentElement,'+dIdx+')">' +
         '<div class="day-icon" style="background:'+day.color+';box-shadow:0 2px 8px '+day.color+'55">'+day.icon+'</div>' +
         '<div class="day-info">' +
           '<div class="day-session">'+esc(day.session)+'</div>' +
-          '<div class="day-meta">'+esc(day.label)+' · '+day.exCount+' exercises · '+esc(day.meta)+'</div>' +
+          '<div class="day-meta">'+esc(day.label)+' · '+day.exCount+' exercises · '+esc(day.meta)+weekNote+'</div>' +
         '</div>' +
         '<div class="day-toggle" id="tog-'+dIdx+'">▼</div>' +
       '</div>' +
@@ -193,7 +204,7 @@
   ───────────────────────────────────────────────── */
   function renderWeekTabs(){
     return WEEK_THEMES.map(function(wt,i){
-      var short = wt.label.split(' · ')[1] || wt.label;
+      var short = weekShortLabel(wt);
       return '<button class="wtab'+(i===currentWeek?' active':'')+'" onclick="MM.switchWeek('+i+')">W'+(i+1)+'<span class="wt-label">'+short+'</span></button>';
     }).join("");
   }

@@ -530,6 +530,18 @@ after it is protected)*
     blanket rule already wins there too. No code change was needed for
     this half; the CLAUDE.md entry that motivated it undersold what was
     already shipped.
+    — **VOC-B2 shipped (2026-08-22).** `mm-engine.js`'s `renderDay()`
+    already rendered a full theme explanation in `.week-theme-bar` — but
+    only inside the day's expanded body, so an athlete had to tap a
+    collapsed card open just to learn what the week changed. Added a
+    one-line note (icon + short label, e.g. "This week: 📈 Pyramid") to
+    the collapsed `.day-meta` row itself — visible before any tap — reusing
+    the same short-label derivation `renderWeekTabs()` already used
+    (factored into a shared `weekShortLabel()` so the two can't drift
+    apart the way the file's own header comment says a prior hardcoded
+    label list once did). Verified live across W1/W2/W5 on `mm-p1.html`:
+    the note updates correctly on `switchWeek()`, and a 390×844 screenshot
+    confirms it wraps cleanly with no overlap or clipping.
 
 **Standing gate, unchanged:** the owner-side real-device QA matrix (iOS Safari,
 Android Chrome, installed PWA, two-device Supabase reconciliation) carried from
