@@ -103,6 +103,16 @@
   // positions it top-right, mirroring .back-link's top-left placement).
   // Skips dashboard.html/stats.html, which already ship their own.
   function buildThemeToggle() {
+    // M4: the floating theme toggle is retired. It was pinned top-right on
+    // every page including mid-workout, and M1/D11 measured it as 39 of its
+    // 40px behind the z999 session bar on a notched phone -- a dead button on
+    // exactly the pages it cluttered. Theme is a set-once preference, and the
+    // Dashboard and Stats pages both carry a real toggle in their topbar, so
+    // nothing is stranded: those pages already made this function stand down
+    // via the guard below.
+    return;
+  }
+  function _legacyBuildThemeToggle() {
     if (document.querySelector('.mc-theme-toggle')) return;
     var btn = document.createElement('div');
     btn.className = 'mc-theme-toggle mc-theme-toggle-float';

@@ -368,3 +368,14 @@ html[data-theme="light"] .mc-gym-chip.on{background:rgba(34,211,238,0.1);border-
 html[data-theme="light"] .mc-swap-pill{color:#0e7490;}
 
 html[data-theme="light"] .mc-toast{background:#f5f2ec;color:#1c1a17;border-color:rgba(28,26,23,0.1);}
+
+/* ══ M4 · "Short on time?" lives in the card list ═══════════════════════
+   Was position:fixed at z-index 1180 -- above the modal layer, and measured
+   sitting on top of set rows and the rest timer. In flow it needs no z-index
+   at all, which is the point: a control that is part of the list cannot
+   collide with the list.                                                  */
+.mc-qp-trigger.mc-qp-inflow{
+  position:static;z-index:auto;left:auto;right:auto;bottom:auto;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;margin:0 0 10px;min-height:44px;
+}

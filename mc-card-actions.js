@@ -875,7 +875,17 @@
     btn.className = 'mc-qp-trigger';
     btn.innerHTML = '⏱ <span>Short on time?</span>';
     btn.addEventListener('click', openQuickPumpSheet);
-    document.body.appendChild(btn);
+    // M4: in the card list, not floating over it. As a fixed z1180 pill this
+    // outranked even the modal layer and was measured covering set rows and the
+    // rest timer. mc-guided.js already establishes the pattern for an in-flow
+    // entry chip above the first card, so this uses it rather than inventing a
+    // second placement. Falls back to body only if no card can be found, which
+    // cannot happen given the >= 3 card guard above -- but a floating pill is
+    // still better than a dropped control.
+    var first = document.querySelector(CARD_SEL);
+    var host = first && first.parentNode;
+    if (host) { btn.classList.add('mc-qp-inflow'); host.insertBefore(btn, first); }
+    else { document.body.appendChild(btn); }
   }
 
   function loadQuickPump(cb) {
