@@ -231,14 +231,19 @@ body.mcs-resting .mcs-rest{display:inline-flex;}
   text-transform:uppercase;color:var(--muted,#8b95a4);}
 
 /* progress readout — also the mid-session summary toggle */
-.mcs-setbtn{flex:0 0 auto;min-height:34px;padding:6px 8px;background:none;border:0;
+/* M5: these were 34px -- under the 44pt floor, on the two controls that end a
+   session and open the summary. The bar is 46px with 6px of bottom padding, so
+   a 44px box would overflow it; negative block margins keep the tappable box a
+   true 44px while the bar stays 46px. Same technique, same reason as M1's
+   exercise-library star. */
+.mcs-setbtn{flex:0 0 auto;min-height:44px;margin-block:-2px;padding:6px 8px;background:none;border:0;
   font-size:12.5px;font-weight:800;letter-spacing:0.02em;white-space:nowrap;
   font-variant-numeric:tabular-nums;color:var(--muted,#8b95a4);cursor:pointer;
   -webkit-tap-highlight-color:transparent;}
 .mcs-setbtn.mcs-btn-open{color:var(--text,#e6e9ee);}
 
 /* the one terminal action */
-.mcs-endbtn{flex:0 0 auto;min-height:34px;padding:7px 14px;border-radius:999px;
+.mcs-endbtn{flex:0 0 auto;min-height:44px;margin-block:-2px;padding:7px 14px;border-radius:999px;
   background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.22);
   color:var(--text,#e6e9ee);font-size:12.5px;font-weight:800;letter-spacing:0.02em;
   white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;}

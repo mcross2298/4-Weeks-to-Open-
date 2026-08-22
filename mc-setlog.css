@@ -207,7 +207,9 @@
   border-left:3px solid var(--accent,#e0a82e);
 }
 .mcl-rest-adj{
-  min-height:38px;border-radius:8px;cursor:pointer;
+  /* M5: was 38px. These are the controls an athlete reaches for mid-set with
+     chalk on their hands -- the touch floor matters here more than anywhere. */
+  min-height:44px;border-radius:8px;cursor:pointer;
   background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);
   color:var(--text,#e6e9ee);font-size:12px;font-weight:800;
   font-variant-numeric:tabular-nums;-webkit-tap-highlight-color:transparent;

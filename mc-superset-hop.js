@@ -67,6 +67,14 @@
         'transition:transform .28s cubic-bezier(.22,1,.36,1);' +
         'display:flex;align-items:center;gap:14px;}',
       '.sshop-buffer.show{transform:translateY(0);}',
+      // M5: the buffer is ~75px of fixed bottom furniture, but M3c cut the
+      // in-session body reservation to 24px on the (then true) basis that
+      // nothing else sits at the bottom any more. On a superset page this one
+      // still does, and the last card could not be scrolled clear of it --
+      // measured as a strip permanently occluded by the buffer. Out-specifies
+      // mc-nav.css's own !important reservation (0,3,1 vs 0,2,1).
+      'body.sshop-open{padding-bottom:104px !important;}',
+      'body.sshop-open.mc-in-session.mc-has-nav{padding-bottom:104px !important;}',
       '.sshop-ring{position:relative;width:46px;height:46px;flex:0 0 46px;}',
       '.sshop-ring svg{transform:rotate(-90deg);display:block;}',
       '.sshop-ring-bg{stroke:rgba(168,85,247,0.18);}',
@@ -245,6 +253,7 @@
     void ringFg.offsetWidth; // reflow so the next change animates
     ringFg.style.transition = 'stroke-dashoffset 1s linear';
     buffer.classList.add('show');
+    document.body.classList.add('sshop-open');
     clearInterval(timer);
     // Wall-clock, not tick-counting — same reason as mc-summary.js and TMR: a
     // throttled tab drops ticks, and a hop buffer that under-counts leaves the
@@ -264,6 +273,7 @@
     clearInterval(timer);
     timer = null;
     if (buffer) buffer.classList.remove('show');
+    document.body.classList.remove('sshop-open');
     var t = pending;
     pending = null;
     if (t) hopTo(t);
