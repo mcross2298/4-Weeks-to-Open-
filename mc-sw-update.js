@@ -48,7 +48,7 @@
     var tf = document.getElementById('timerFloat');
     if (tf && tf.classList.contains('visible')) return true;
     return !!document.querySelector(
-      '.ex-card.checked, .ss-ex.checked, .lift-card.checked, .mcl-ck.done, .set-check.done, .sl-ck.done');
+      '.ex-card.checked, .ss-ex.checked, .lift-card.checked, .mcl-ck.done, .set-check.done');
   }
 
   function apply(worker) {

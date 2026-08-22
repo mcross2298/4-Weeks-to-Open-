@@ -270,5 +270,246 @@ ok('module.exports captured the Wave 1 merge fns', !!(M && M.mergeExerciseByName
      M.mergeStore('arrayById', [{ id: 'a' }], [{ id: 'b' }], 'ignored').map(e => e.id), ['a', 'b']);
 }
 
-if (fail) { console.error(`\ntest-mc-sync-merge: ${pass} passed, ${fail} FAILED`); process.exit(1); }
-console.log(`test-mc-sync-merge: all ${pass} assertions passed`);
+// ==========================================================================
+// K-3.2/A-16: delta sync for mc_setlog_v1 — push/pull per page-group, not
+// the whole store. mergeSetlog itself is untouched (already tested above);
+// these cover the NEW splitting/planning logic on top of it.
+// ==========================================================================
+ok('module.exports captured the K-3.2 setlog-delta fns', !!(M && M.setlogPageOf &&
+  M.splitSetlogByPage && M.joinSetlogGroups && M.computeSetlogPushOps && M.computeSetlogPullResult));
+
+// ---- setlogPageOf: page is everything before the first '|' ---------------
+{
+  eq('setlogPageOf: normal "page|exId" key', M.setlogPageOf('mm-p1|x-incline-db-press'), 'mm-p1');
+  eq('setlogPageOf: a key with no delimiter is its own page (no throw, no split)',
+     M.setlogPageOf('no-delimiter-key'), 'no-delimiter-key');
+  eq('setlogPageOf: only the FIRST "|" matters (exId can itself contain one)',
+     M.setlogPageOf('page|ex|extra'), 'page');
+}
+
+// ---- splitSetlogByPage / joinSetlogGroups: lossless round trip -----------
+{
+  const whole = {
+    'mm-p1|x-a': [{ d: 'Jan 1', sets: { 1: { w: 100, r: 5 } } }],
+    'mm-p1|x-b': [{ d: 'Jan 1', sets: { 1: { w: 50, r: 10 } } }],
+    'bro-split|x-c': [{ d: 'Jan 2', sets: { 1: { w: 200, r: 3 } } }]
+  };
+  const groups = M.splitSetlogByPage(whole);
+  eq('splitSetlogByPage: groups by page prefix', Object.keys(groups).sort(), ['bro-split', 'mm-p1']);
+  eq('splitSetlogByPage: both mm-p1 keys land in the same group',
+     Object.keys(groups['mm-p1']).sort(), ['mm-p1|x-a', 'mm-p1|x-b']);
+  eq('splitSetlogByPage + joinSetlogGroups round-trips losslessly', M.joinSetlogGroups(groups), whole);
+  eq('splitSetlogByPage: empty/null input is safe', M.splitSetlogByPage(null), {});
+  eq('joinSetlogGroups: empty/null input is safe', M.joinSetlogGroups(null), {});
+}
+
+// ---- computeSetlogPushOps: only CHANGED page-groups get an op ------------
+{
+  const wholeKey = 'mc_setlog_v1';
+  const local = {
+    'mm-p1|x-a': [{ d: 'Jan 1', sets: { 1: { w: 100, r: 5 } } }],   // will be "changed"
+    'bro-split|x-c': [{ d: 'Jan 1', sets: { 1: { w: 200, r: 3 } } }] // will be "unchanged"
+  };
+  const unchangedJson = JSON.stringify({ 'bro-split|x-c': local['bro-split|x-c'] });
+  const snapshot = { [wholeKey + '|bro-split']: unchangedJson }; // mm-p1 group never synced before
+  const plan = M.computeSetlogPushOps(wholeKey, local, snapshot);
+  eq('computeSetlogPushOps: exactly the changed page gets an op', plan.ops.map(o => o.storeKey),
+     [wholeKey + '|mm-p1']);
+  eq('computeSetlogPushOps: the op carries only that page\'s data (not the whole store)',
+     plan.ops[0].data, { 'mm-p1|x-a': local['mm-p1|x-a'] });
+  ok('computeSetlogPushOps: unchanged page is carried forward in the plan, not re-sent',
+     plan.carrySnapshot[wholeKey + '|bro-split'] === unchangedJson);
+}
+{
+  // nothing changed at all -> zero ops
+  const wholeKey = 'mc_setlog_v1';
+  const local = { 'mm-p1|x-a': [{ d: 'Jan 1', sets: {} }] };
+  const snapshot = { [wholeKey + '|mm-p1']: JSON.stringify({ 'mm-p1|x-a': local['mm-p1|x-a'] }) };
+  const plan = M.computeSetlogPushOps(wholeKey, local, snapshot);
+  eq('computeSetlogPushOps: identical local state -> no ops queued', plan.ops.length, 0);
+}
+
+// ---- computeSetlogPullResult: each remote row merges into its own slice --
+{
+  const wholeKey = 'mc_setlog_v1';
+  const local = {
+    'mm-p1|x-a': [{ d: 'Jan 1', sets: { 1: { w: 100, r: 5 } } }],
+    'bro-split|x-c': [{ d: 'Jan 1', sets: { 1: { w: 200, r: 3 } } }]
+  };
+  const remoteByKey = {
+    [wholeKey + '|mm-p1']: { 'mm-p1|x-a': [{ d: 'Jan 1', sets: { 2: { w: 100, r: 4 } } }] }, // same day, new set -> unions
+    'unrelated_other_store': { anything: true } // must be ignored (wrong prefix)
+  };
+  const result = M.computeSetlogPullResult(wholeKey, local, remoteByKey, {});
+  const mm1 = result.whole['mm-p1|x-a'][0];
+  eq('computeSetlogPullResult: remote page-group merges via mergeSetlog (set numbers unioned)',
+     Object.keys(mm1.sets).sort(), ['1', '2']);
+  eq('computeSetlogPullResult: a page with no matching remote row is left untouched',
+     result.whole['bro-split|x-c'], local['bro-split|x-c']);
+  ok('computeSetlogPullResult: snapshot recorded only for the page that actually had a remote row',
+     Object.keys(result.newSnapshot).length === 1 && (wholeKey + '|mm-p1') in result.newSnapshot);
+}
+{
+  // legacy whole-blob row (predates this feature): merged in once, same key as before
+  const wholeKey = 'mc_setlog_v1';
+  const local = { 'mm-p1|x-a': [{ d: 'Jan 1', sets: { 1: { w: 100, r: 5 } } }] };
+  const remoteByKey = {
+    [wholeKey]: { 'legacy-page|x-old': [{ d: 'Dec 1', sets: { 1: { w: 90, r: 8 } } }] }
+  };
+  const result = M.computeSetlogPullResult(wholeKey, local, remoteByKey, {});
+  ok('computeSetlogPullResult: legacy whole-blob row still merges in',
+     !!result.whole['legacy-page|x-old']);
+  ok('computeSetlogPullResult: local-only page survives alongside the legacy merge',
+     !!result.whole['mm-p1|x-a']);
+}
+
+// ==========================================================================
+// K-3.2/A-16: async integration coverage for the ACTUAL push()/pull() wiring
+// against a mock Supabase client — not just the pure planning functions
+// above. A mock client + localStorage lets MC_SYNC.push()/.pull() run for
+// real, including the retry-safety fix (whole-key snapshot only commits
+// once every queued page-group op succeeds) that pure-function tests alone
+// can't exercise, since it's about push()'s own success/failure handling.
+// ========================================================================== */
+function loadSyncEngine(localData, remoteRows, opts) {
+  opts = opts || {};
+  const localStore = {};
+  Object.keys(localData || {}).forEach(function (k) { localStore[k] = JSON.stringify(localData[k]); });
+  const rows = (remoteRows || []).map(function (r) { return { store_key: r.store_key, data: r.data }; });
+  const opLog = [];
+  const failKeys = opts.failKeys || new Set();
+  const mockClient = {
+    from: function () {
+      return {
+        select: function () {
+          return { eq: function () { return Promise.resolve({ data: rows.slice(), error: null }); } };
+        },
+        upsert: function (row) {
+          opLog.push(row);
+          if (failKeys.has(row.store_key)) return Promise.resolve({ error: { message: 'simulated failure' } });
+          const idx = rows.findIndex(function (r) { return r.store_key === row.store_key; });
+          const stored = { store_key: row.store_key, data: row.data };
+          if (idx >= 0) rows[idx] = stored; else rows.push(stored);
+          return Promise.resolve({ error: null });
+        }
+      };
+    }
+  };
+  const mockSB = {
+    configured: true,
+    ready: Promise.resolve(mockClient),
+    currentUser: function () { return Promise.resolve({ id: 'u1' }); }
+  };
+  const sandbox = {
+    module: { exports: {} },
+    window: { __mcSync: false, MC_SB: mockSB, addEventListener: function () {} },
+    MC_SB: mockSB,           // mc-sync.js reads this as a BARE identifier too (browser window-aliasing)
+    document: { addEventListener: function () {} },
+    localStorage: {
+      getItem: function (k) { return k in localStore ? localStore[k] : null; },
+      setItem: function (k, v) { localStore[k] = v; },
+      removeItem: function (k) { delete localStore[k]; }
+    },
+    sessionStorage: { getItem: function () { return null; }, setItem: function () {} },
+    setInterval: function () {},
+    location: {}
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(SRC, sandbox);
+  return { sandbox: sandbox, localStore: localStore, rows: rows, opLog: opLog };
+}
+function flush() { return new Promise(function (r) { setTimeout(r, 10); }); }
+function readSetlog(localStore) { try { return JSON.parse(localStore.mc_setlog_v1 || '{}'); } catch (e) { return {}; } }
+
+async function runAsyncTests() {
+  const mmA = [{ d: 'Jan 1', sets: { 1: { w: 100, r: 5 } } }];
+  const broC = [{ d: 'Jan 1', sets: { 1: { w: 200, r: 3 } } }];
+
+  // ---- successful push: only per-page rows are written, never a whole-blob row
+  {
+    const eng = loadSyncEngine({ mc_setlog_v1: { 'mm-p1|x-a': mmA, 'bro-split|x-c': broC } }, []);
+    await flush();
+    await eng.sandbox.window.MC_SYNC.push();
+    const keys = eng.rows.map(function (r) { return r.store_key; }).sort();
+    eq('push(): writes one row per changed page, never a whole-blob row',
+       keys, ['mc_setlog_v1|bro-split', 'mc_setlog_v1|mm-p1']);
+    eq('push(): each row carries only that page\'s slice',
+       eng.rows.find(function (r) { return r.store_key === 'mc_setlog_v1|mm-p1'; }).data,
+       { 'mm-p1|x-a': mmA });
+  }
+
+  // ---- retry safety: a failed group doesn't block the other, and a later
+  //      successful push retries ONLY the group that actually failed -------
+  {
+    const eng = loadSyncEngine(
+      { mc_setlog_v1: { 'mm-p1|x-a': mmA, 'bro-split|x-c': broC } }, [],
+      { failKeys: new Set(['mc_setlog_v1|mm-p1']) }
+    );
+    await flush();
+    await eng.sandbox.window.MC_SYNC.push();
+    const keysAfterFail = eng.rows.map(function (r) { return r.store_key; });
+    ok('push(): the failing group is NOT persisted server-side',
+       keysAfterFail.indexOf('mc_setlog_v1|mm-p1') === -1);
+    ok('push(): the OTHER group still succeeds despite the failure',
+       keysAfterFail.indexOf('mc_setlog_v1|bro-split') !== -1);
+    // Push again (the simulated failure is still armed): the whole point of
+    // the retry-safety fix is that a failed group's snapshot is NEVER
+    // committed, so it keeps being retried on every push() call rather than
+    // silently getting marked done after one lost attempt.
+    eng.opLog.length = 0;
+    await eng.sandbox.window.MC_SYNC.push();
+    ok('push(): a still-failing group keeps being retried on every push() call (never silently marked done)',
+       eng.opLog.some(function (o) { return o.store_key === 'mc_setlog_v1|mm-p1'; }));
+    ok('push(): the already-succeeded group is NOT re-sent on a retry cycle (real delta behavior)',
+       !eng.opLog.some(function (o) { return o.store_key === 'mc_setlog_v1|bro-split'; }));
+  }
+
+  // ---- legacy whole-blob row (predates this feature) still pulls in ------
+  {
+    const legacy = { 'legacy-page|x-old': [{ d: 'Dec 1', sets: { 1: { w: 90, r: 8 } } }] };
+    const eng = loadSyncEngine({ mc_setlog_v1: {} }, [{ store_key: 'mc_setlog_v1', data: legacy }]);
+    await flush();
+    await eng.sandbox.window.MC_SYNC.pull();
+    const local = readSetlog(eng.localStore);
+    ok('pull(): a legacy whole-blob row still merges into local mc_setlog_v1',
+       !!local['legacy-page|x-old']);
+  }
+
+  // ---- round trip: two devices, different pages, both survive ------------
+  {
+    const eng = loadSyncEngine({ mc_setlog_v1: { 'mm-p1|x-a': mmA } },
+      [{ store_key: 'mc_setlog_v1|bro-split', data: { 'bro-split|x-c': broC } }]);
+    await flush();
+    await eng.sandbox.window.MC_SYNC.pull();
+    const local = readSetlog(eng.localStore);
+    ok('pull(): remote-only page-group row merges in alongside local-only data',
+       !!local['bro-split|x-c'] && !!local['mm-p1|x-a']);
+  }
+
+  // ---- status().pending: correctly reflects setlog with no whole-store
+  //      snapshot at all — this is exactly what both push()/pull() bugs
+  //      found during development got wrong before being fixed. (start()
+  //      auto-runs an initial pull+push on load, so "before any push" isn't
+  //      an observable window here — only the settled states are checked.) -
+  {
+    const eng = loadSyncEngine({ mc_setlog_v1: { 'mm-p1|x-a': mmA } }, []);
+    await flush();
+    ok('status().pending: drops to 0 once the (auto-triggered) push actually succeeds',
+       eng.sandbox.window.MC_SYNC.status().pending === 0);
+  }
+  {
+    // the exact regression: a whole-store snapshot mirror set BEFORE the
+    // server confirmed anything would make this read "0 pending" while
+    // nothing had actually been uploaded yet.
+    const eng = loadSyncEngine({ mc_setlog_v1: { 'mm-p1|x-a': mmA } }, [],
+      { failKeys: new Set(['mc_setlog_v1|mm-p1']) });
+    await flush();
+    await eng.sandbox.window.MC_SYNC.push();
+    ok('status().pending: a failed push still reads as pending, not falsely settled',
+       eng.sandbox.window.MC_SYNC.status().pending >= 1);
+  }
+
+  if (fail) { console.error(`\ntest-mc-sync-merge: ${pass} passed, ${fail} FAILED`); process.exit(1); }
+  console.log(`test-mc-sync-merge: all ${pass} assertions passed`);
+}
+runAsyncTests();

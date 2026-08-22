@@ -109,6 +109,55 @@
     document.body.insertBefore(node, document.body.firstChild);
   }
 
+  // ==========================================================================
+  //  VOC-C2: "Session saved" reassurance toast — walking away mid-session
+  //  already worked (mc-live-tracker.js's logSession() writes mc_activity.last
+  //  on 'pagehide', the moment a nav-bar tap navigates away) but nothing ever
+  //  *said so*, so the athlete had no confirmation their sets weren't lost.
+  //  One hook, no new state: L.ts is already fresh (written on the pagehide
+  //  that got us here) the instant this page loads right after leaving an
+  //  active session, so a small recency check on the SAME store the persistent
+  //  banner below already reads is enough to tell "just left" from "resuming
+  //  later" — no separate store needed. A sessionStorage flag only guards
+  //  against a double-fire (e.g. the dashboard re-rendering its screen without
+  //  a full reload); it isn't itself the trigger.
+  // ==========================================================================
+  var TOAST_RECENT_MS = 8000;
+
+  function injectToastCSS() {
+    if (document.getElementById('mcrToastCss')) return;
+    var s = document.createElement('style');
+    s.id = 'mcrToastCss';
+    s.textContent =
+      '.mcr-toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(12px);' +
+        'z-index:220;display:flex;align-items:center;gap:8px;max-width:calc(100% - 32px);' +
+        'background:rgba(15,23,42,0.96);border:1px solid rgba(132,204,22,0.4);border-radius:11px;' +
+        'padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.4);' +
+        'font-size:12.5px;font-weight:700;color:#f0fdf4;white-space:nowrap;' +
+        'opacity:0;transition:opacity 0.25s ease,transform 0.25s ease;pointer-events:none;}' +
+      '.mcr-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}' +
+      '.mcr-toast .mcr-toast-ico{color:#84cc16;font-size:14px;}';
+    document.head.appendChild(s);
+  }
+
+  function maybeShowSavedToast(L) {
+    if (!L || (Date.now() - L.ts) > TOAST_RECENT_MS) return;
+    var shownKey = 'mc_resume_toast_shown';
+    try { if (sessionStorage.getItem(shownKey) === String(L.ts)) return; } catch (e) {}
+    injectToastCSS();
+    var el = document.createElement('div');
+    el.className = 'mcr-toast';
+    el.setAttribute('role', 'status');
+    el.innerHTML = '<span class="mcr-toast-ico">✓</span><span>Session saved — resume from the dashboard</span>';
+    document.body.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add('show'); });
+    setTimeout(function () {
+      el.classList.remove('show');
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+    }, 3200);
+    try { sessionStorage.setItem(shownKey, String(L.ts)); } catch (e) {}
+  }
+
   // ---- render -------------------------------------------------------------
   function render() {
     // Never show on an active workout view that happens to be a cat- page.
@@ -124,6 +173,7 @@
     var a = readAct(), L = a.last;
     if (!isResumable(L)) return;
 
+    maybeShowSavedToast(L);
     injectCSS();
 
     // a session synced in from another device gets called out as such

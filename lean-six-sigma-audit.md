@@ -464,6 +464,274 @@ after it is protected)*
     **VOC-A3** promo suppression, **VOC-B2** week-delta note, **VOC-C2**
     session-saved toast, **DG-6** motion tokens, **DG-8** comp triage,
     **K-2.4** fill-ins (`.sl-ck` sweep, `index.html` redirect).
+    — **K-2.4 shipped (2026-08-22).** `.sl-ck` (mc-superset-hop.js's
+    page-native checkbox fallback for a logger that no longer exists —
+    `mc-setlog.js`'s `.mcl-ck`/`.set-check` is the only one left) confirmed
+    fully dead fleet-wide via `class="X"`/className/string-literal grep, not
+    just a hit count, then removed from `mc-superset-hop.js`, `mc-finish.js`
+    (6 selector strings + 1 classList check), `mc-group-split.js`,
+    `mc-sw-update.js`, `base.css` (dark + light theme rule pairs), and 11
+    program HTML pages carrying the identical dead CSS pair. Sibling
+    selectors (`.setlog-toggle`/`.setlog-wrap`/`.sl-row`/`.sl-inp`) were
+    left untouched — not confirmed dead and outside this ticket's scope.
+    `index.html` also carried a `<meta http-equiv="refresh">` racing the
+    existing query/hash-preserving JS redirect (G-09) — being blind to
+    `?query`/`#hash`, it could win the race and silently drop a deep link;
+    removed, leaving the JS redirect + visible fallback link as the single
+    path.
+    — **DG-8 shipped (2026-08-22) — owner decision: Retire.** Read all four
+    comps end-to-end first: a coherent "Onyx" (dark + refined-gold,
+    Archivo/Manrope) redesign series, Dashboard → Programs → Conditioning →
+    Program Landing, each explicitly continuing the last. Actually shipping
+    or formally backlogging it would be a visual-identity-scale decision on
+    par with DG-1/DG-2's font choice (which had its own sign-off gate), so
+    this was put to the owner via `AskUserQuestion` rather than decided
+    unilaterally; **Retire** was chosen. All four `.dc.html` files deleted
+    (recoverable via git history). One wrinkle found mid-execution:
+    `program-landing-handoff.md`, the Program Landing comp's companion brief,
+    documents that the design was **partially already shipped** —
+    `mc-program-hero.js`/`mc-program-hero.css` implement its hero and are
+    wired into `cat-pmc.html`/`cat-strength.html` — so unlike the other
+    three, this doc was kept (status note updated to record the comp's
+    retirement) as the living reference for finishing that rollout, rather
+    than deleted with its comp. `markup-snippets.md` (the Conditioning
+    comp's companion — no shipped descendant) was deleted alongside its
+    comp. `content-manifest.json`'s scratch-list, which had `.dc.html`
+    entries for only 2 of the 4 comps to begin with (belt-and-suspenders on
+    top of `pages.yml`'s blanket `*.dc.html` strip, never fully applied),
+    had its now-dangling `Programs Redesign.dc.html` / `Conditioning
+    Redesign.dc.html` / `markup-snippets.md` entries removed;
+    `program-landing-handoff.md` stayed listed. `tools/build-market.py
+    --check` reconfirmed clean after the edit.
+    — **DG-6 shipped (2026-08-22) — narrower than scoped.** `base.css`
+    gained a `--duration-*`/`--ease-*` token block and every one of its 12
+    scattered transition/animation literals was swapped to reference it, a
+    strict 1:1 value substitution (e.g. `0.15s` → `var(--duration-fast)`)
+    verified live to be zero visual delta: computed `transitionDuration` on
+    `.ex-card`/`.rest-timer`/`.next-workout`/`.day-card` matches the
+    pre-refactor literal exactly, on real pages, not just by inspection.
+    The second half of this ticket — "close the `prefers-reduced-motion`
+    gap in `mc-setlog.js`/`mc-setlog.css`" — **turned out not to be a real
+    gap** on investigation: `base.css` already carries a blanket
+    `@media(prefers-reduced-motion:reduce){*,*::before,*::after{
+    animation:none!important;transition:none!important;
+    scroll-behavior:auto!important;}}` (shipped 2026-07-15, predating this
+    ticket), which `!important`-overrides every transition/animation
+    anywhere in the document regardless of file or specificity — confirmed
+    live with `page.emulateMedia({reducedMotion:'reduce'})` against
+    `mm-p1.html` (`.rest-timer`/`.mcl-toggle .mcl-chev`/`.day-card` all
+    collapse to ~0s). `mc-setlog.js`'s own `matchMedia` check
+    (`next.scrollIntoView(...)`) isn't redundant with that CSS rule despite
+    first appearances: `scrollIntoView({behavior:'smooth'})` requests smooth
+    scrolling explicitly, which per spec overrides the page's CSS
+    `scroll-behavior` — only `behavior:'auto'` defers to it — so a JS-level
+    check is the only way to respect the preference for that one call.
+    `mc-setlog.css`'s own transitions carry no `!important`, so the
+    blanket rule already wins there too. No code change was needed for
+    this half; the CLAUDE.md entry that motivated it undersold what was
+    already shipped.
+    — **VOC-B2 shipped (2026-08-22).** `mm-engine.js`'s `renderDay()`
+    already rendered a full theme explanation in `.week-theme-bar` — but
+    only inside the day's expanded body, so an athlete had to tap a
+    collapsed card open just to learn what the week changed. Added a
+    one-line note (icon + short label, e.g. "This week: 📈 Pyramid") to
+    the collapsed `.day-meta` row itself — visible before any tap — reusing
+    the same short-label derivation `renderWeekTabs()` already used
+    (factored into a shared `weekShortLabel()` so the two can't drift
+    apart the way the file's own header comment says a prior hardcoded
+    label list once did). Verified live across W1/W2/W5 on `mm-p1.html`:
+    the note updates correctly on `switchWeek()`, and a 390×844 screenshot
+    confirms it wraps cleanly with no overlap or clipping.
+    — **VOC-A3 shipped (2026-08-22) — the complaint was a real, live bug,
+    not just a UX gap.** Live-testing "no ads while I'm under a bar" found
+    the exact mechanism: `mc-cond-suggest.js`'s injection selector
+    (`a[href^="dashboard.html?tab=conditioning"]`) also matched
+    `mc-nav.js`'s persistent bottom-nav Conditioning tab, so the amber
+    "SUGGESTED — NEW FOR YOU · The 500 →" chip rendered inside the
+    always-on nav bar on every page that loads both modules — confirmed on
+    `mm-p1.html` mid-session via screenshot, not just by reading source.
+    Fixed at the source: `inject()` now excludes any link inside
+    `nav.mc-nav`/`.mc-nav-tab` rather than trying to positively match one
+    day-card class (three different shapes exist across the 11 pages that
+    load this module — `.cond-day-card` on the `mm-*` trio, `.cond-card` on
+    `cat-mm.html`/`cat-ie.html`, an unwrapped inline link on
+    `iron-engine.html` — a first attempt that scoped to `.cond-day-card`
+    only would have silently broken the other two shapes). Also added the
+    session-aware suppression the ticket asked for: a `sessionInProgress()`
+    check (the same two signals `mc-sw-update.js`'s `workoutInProgress()`
+    already uses — rest timer visible, or any set checked) now hides
+    already-injected chips via a delegated click listener +
+    `visibilitychange` — no polling/observer needed for a single style
+    toggle — so the chip stays suppressed the moment a session goes live,
+    even if that happens after the chip was first injected. Verified live
+    on 4 pages: the nav-bar leak is gone everywhere, the legitimate in-page
+    chip still renders on all 4 markup shapes (`mm-p1.html`: 2, `cat-mm.html`:
+    1, `cat-ie.html`: 1, `iron-engine.html`: 3), and checking a set hides it
+    / unchecking restores it.
+    — **VOC-C2 shipped (2026-08-22).** `mc-live-tracker.js` already wrote
+    `mc_activity.last` (with a fresh `ts`) on `pagehide` — the exact instant
+    a nav-bar tap navigates away mid-session — but nothing ever told the
+    athlete their sets survived. `mc-resume.js` gained a `maybeShowSavedToast()`
+    hook: a self-dismissing "✓ Session saved — resume from the dashboard"
+    toast that fires only when the already-read `L.ts` (the same store the
+    persistent "Resume last workout" banner already reads) is fresher than
+    8s — i.e. exactly "we just arrived here from leaving a live session," not
+    "resuming later" — no new store, one recency check on existing data. A
+    `sessionStorage` flag keyed on that same `ts` guards only against a
+    double-fire (e.g. a re-render without a full reload); it isn't the
+    trigger. Verified live end-to-end: the toast shows with the exact copy,
+    auto-dismisses (~3.5s), does not reappear on a reload with the same
+    `ts`, and correctly stays silent for a stale (60s-old) session while the
+    persistent banner still renders normally underneath it.
+    — **K-3.3/G-08 shipped (2026-08-22).** Progression at the point of the
+    load decision, not buried behind the meatball's trend sheet or a jump to
+    `stats.html`. `mc-setlog.js` gained a last-3-completed-session micro-trend
+    (`↑`/`→`/`↓` + weight) on every exercise card header, computed from data
+    already in `mc_setlog_v1` — no new store. The badge is injected as
+    `.ex-name`'s SIBLING, never its child: `origNameOf()`/`slugOf()`/`nameId()`
+    all read `.ex-name`'s `textContent` as the exercise's identity for
+    history-key and Supabase lookups, so writing inside it would have
+    corrupted that identity the instant a badge rendered — caught by reading
+    those call sites before writing a line of the fix, not after. A first cut
+    read `localStorage` fresh per card inside `trendFor()`; the K-3.1 budget
+    gate caught the regression immediately (`storageReads` 17 → 83 on
+    `bro-split.html`, past its 1.5× ceiling) — exactly the per-card-storage-
+    read shape S1 spent this whole roadmap eliminating. Fixed by caching the
+    store read once per `run()` pass (the same pattern `_nameIdx` already
+    used), after which all three K-3.1 probe pages measured within budget
+    again. Verified live: correct `↑`/`↓`/`→` across up/down/flat fixtures,
+    today's in-progress session correctly excluded from the comparison, no
+    badge on <2 completed sessions or a fresh install with no history, and
+    the exercise name's text confirmed unchanged after injection.
+    — **K-3.4/G-11/VOC-C1 shipped (2026-08-22) — scope narrowed to what the
+    roadmap's own language already committed to.** The item's earlier
+    framing named six modules (readiness, strain, cues, voice, wrapped,
+    muscle-map); VOC-C1's round sharpened it to "hint + promote 2 session
+    actions" (singular hint) — the one with real transcript evidence — and
+    that's what shipped. `mc-hints.js` is new: `MC_HINTS.show(id, targetEl,
+    text)` shows a small dismissible callout once ever per device
+    (localStorage, `mc_hints_seen_v1`, registered in `store-registry.json`),
+    added to all 78 pages that load `mc-card-actions.js` (uniform insertion
+    right before that script tag, keeping every `check-script-manifest.py`
+    family in sync). `mc-card-actions.js` calls it the first time the
+    athlete has a card open — the most attentive moment on the page —
+    pointing at that card's own meatball: "Tap ⋯ for more: replace,
+    reorder, tempo, notes, superset & drop set." The two session-flow
+    actions (⚡ superset, ↘️ drop set) are now ALSO visible buttons on the
+    active card, not just menu items — `openMenu()`'s PM/personal/pairing
+    visibility logic was factored into a shared `intAvailability()` so the
+    promoted buttons ask the exact same question the menu already answers,
+    and `runIntAction()` so both paths execute through one function, never
+    two copies to drift apart.
+
+    Three real bugs surfaced in testing, none hypothetical: (1) the hint
+    stacked duplicates — `MC_HINTS.show()` only marked a hint "seen" on
+    dismiss, so a second `scan()` pass firing before the athlete reacted
+    (which `MC_SCAN` does routinely) found "not yet seen" still true and
+    created another; over 20 piled up within seconds in live testing before
+    the fix (mark seen the instant it's shown, not on dismiss). (2) the
+    promoted row's CSS gate to `.active` did nothing at first — an inline
+    `row.style.display` set from JS was out-specificity-ing the class
+    selector, so the row showed on every resting card; fixed by using a
+    narrowing-only `.mc-qa-off` class instead of an inline style, since an
+    inline style always wins over a class regardless of which is "more
+    specific" on paper. (3) the K-3.1 budget gate caught a real regression
+    twice over: first `updateQuickActions()` ran `intAvailability()` — which
+    calls into `MC_PO`, whose own read-memoization is scoped to ITS pass,
+    not this module's — for all 10 resting cards every scan pass
+    (`storageReads` 17 → 349.9 on `mm-p1.html`); fixed by only computing it
+    for the one card it's ever visible on. The remaining overage was the
+    hint's own `MC_HINTS.seen()` check re-reading `localStorage` every pass
+    forever after the answer could only ever be "yes" — fixed with a
+    same-page in-memory latch. All three K-3.1 probe pages measure within
+    budget after both fixes. A fourth issue was cosmetic, not a budget
+    regression: the hint's fixed "always below the target" placement could
+    land underneath the page's fixed Finish/Exit bar when the target was
+    near the bottom of the viewport — fixed by flipping the callout above
+    the target whenever below wouldn't clear a reserved bottom safe-zone.
+    The visual ratchet's 5 kitchen-sink baselines were re-generated
+    (`--update`) to account for the promoted row's real +54px on an active
+    card — a deliberate, uniform change verified identical across all five
+    before re-baselining, not a drift. **Explicitly not shipped this pass:**
+    standalone hints for readiness/strain/cues/voice/wrapped/muscle-map —
+    `mc-strain.js`/`mc-muscle-map.js` are pure data layers with no UI
+    surface of their own to point a hint at, and the others (readiness's
+    pulse strip, voice's floating button, wrapped's already-prominent
+    dashboard card) weren't validated by any transcript evidence the way
+    the meatball was, so adding hints there would have been six more
+    untested guesses rather than one well-evidenced fix.
+    — **K-3.2/A-16 shipped (2026-08-22) — the batch's own "highest-risk,
+    deliberately ordered last" item, and it earned that label.** No prior
+    design doc existed beyond the roadmap's one-line aspiration ("push
+    changed keys, not whole stores"), and `mc-sync.js`'s `user_sync` table
+    (`user_id, store_key, data jsonb, ...`) is a real, live, signed-in
+    user's Supabase project — not something to reshape by guessing. Before
+    touching any code: measured what "whole store" actually costs. A
+    synthetic but realistic long-time-user `mc_setlog_v1` (40 pages × 10
+    exercises × 5 capped sessions) sized out to **337 KB** — and unlike
+    every other store, `push()`'s existing "unchanged, skip" short-circuit
+    barely helps it, since an active workout changes SOME key in this one
+    on almost every push cycle (every `PUSH_MS`, or sooner on pagehide), so
+    the whole blob re-uploads nearly every cycle regardless of how small
+    the real change was. That's the one store where the ticket's complaint
+    is real, not theoretical — so the fix was scoped to it alone rather
+    than restructuring every store's sync unit (a materially larger,
+    riskier change with no evidence the others need it) or attempting a
+    schema migration on the live project (an RPC/`jsonb_set` approach was
+    considered and rejected: no way to test it against the real table from
+    this environment, and getting a live sync engine's correctness wrong
+    risks actual user data — worse than shipping nothing).
+
+    Landed as a client-side-only, zero-schema-change protocol change:
+    `mc_setlog_v1` still syncs through the exact same `user_sync` table,
+    just as **per-page rows** (`store_key = 'mc_setlog_v1|<page>'`, page
+    derived from the store's own existing `pageId|exId` key format — no new
+    field) instead of one whole-store row. `mergeSetlog` itself is
+    completely untouched; `computeSetlogPushOps()`/`computeSetlogPullResult()`
+    only decide which slice of the store each network row reads from or
+    writes to. Backward compatible: a legacy whole-blob row from before this
+    shipped (`store_key` exactly `mc_setlog_v1`) is still pulled and merged
+    in on `pull()`, deliberately left in the table rather than deleted from
+    client code once superseded.
+
+    Since this module can't be live-tested against the real Supabase
+    project from this environment (no signed-in session here), verification
+    leaned entirely on the two testing paths this codebase already
+    established for exactly this file: the pure planning functions
+    (`computeSetlogPushOps`/`PullResult`, `splitSetlogByPage`/
+    `joinSetlogGroups`) got the same vm-sandboxed unit coverage as every
+    existing merge strategy, and — new for this file — a **mock Supabase
+    client** (`.from().select().eq()` / `.upsert()`, faithful to the real
+    call shape) drives the actual `push()`/`pull()`/`status()` functions
+    end-to-end, including simulated network failures. That harness caught
+    two real bugs, not hypothetical ones: a first cut kept a synthetic
+    whole-store `snapshot['mc_setlog_v1']` mirror "for `pendingCount()`
+    parity" and set it — in both `push()`'s success handler AND
+    unconditionally at the end of `pull()` — to the local value rather than
+    a server-confirmed one; a page-group upload that failed still left the
+    whole-store mirror looking "synced," so the next `push()` cycle's
+    short-circuit silently skipped retrying it, and `status().pending`
+    read `0` while data sat un-uploaded. Fixed by removing the whole-store
+    mirror entirely — only per-page-group snapshot entries are meaningful
+    for this store now, matching what "snapshot" means everywhere else in
+    the file ("what the server confirmed holding") — and reworking
+    `pendingCount()` to ask `computeSetlogPushOps()` directly rather than
+    compare against a value that no single network call ever confirms as a
+    whole. Verified live against the mock client afterward: a failed
+    page-group is never marked synced and is retried on every subsequent
+    `push()` call without re-sending groups that already succeeded;
+    `status().pending` correctly reflects both the settled and the
+    still-failing case. 74 assertions total in
+    `tools/test-mc-sync-merge.js` (up from 46), gated in `verify.yml`
+    already. `store-registry.json` needed no changes — `STORES['mc_setlog_v1']`
+    is still exactly one entry, `'setlog'`; only push()/pull()'s internal
+    handling of that one entry changed.
+
+This closes Wave 6 item 13's full 9-item batch (K-2.4, DG-8, DG-6, VOC-B2,
+VOC-A3, VOC-C2, K-3.3, K-3.4/VOC-C1, K-3.2/A-16), worked through in one
+sweep per the owner's instruction, each item still individually committed,
+gated, and (where the surface allowed) live-verified in a real browser
+before moving to the next.
 
 **Standing gate, unchanged:** the owner-side real-device QA matrix (iOS Safari,
 Android Chrome, installed PWA, two-device Supabase reconciliation) carried from

@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta http-equiv="refresh" content="0; url=dashboard.html">
   <link rel="stylesheet" href="base.css?v=68"/>
 <link rel="canonical" href="dashboard.html">
   <title>Mike Cross Training</title>
@@ -27,7 +26,11 @@
   </style>
   <script>
     // Dashboard is the hub — go straight there (replace = no back-button loop),
-    // carrying any ?query/#hash (e.g. ?tab=programs) through.
+    // carrying any ?query/#hash (e.g. ?tab=programs) through. The single
+    // redirect path (audit K-2.4/G-09): a <meta http-equiv="refresh"> used to
+    // race this, and being query/hash-blind could win and silently drop a
+    // deep link. The visible "Open Dashboard →" link below is the no-JS
+    // fallback — the app requires JS everywhere else too.
     location.replace('dashboard.html' + location.search + location.hash);
   </script>
 <link rel="stylesheet" href="mc-light.css">
