@@ -459,9 +459,21 @@
   }
 
   // Inject UI
+  var _injected=false;
   function inject(){
+    // Idempotency: inject() had no guard at all, so anything that evaluated
+    // this module twice produced two of everything.
+    if(_injected)return; _injected=true;
     injectDoneCss();
-    document.body.insertAdjacentHTML('beforeend',barHTML+modalHTML+doneHTML);
+    // A few pages own their own .fw-bar because it drives page-specific logic
+    // this module cannot replicate (run-workout.html's finishWorkout() writes a
+    // custom-workout log entry). Injecting ours on top of theirs produced two
+    // elements sharing id="fwBar" and two progress counters that disagreed --
+    // getElementById() then silently resolved to whichever came first.
+    // Take the modal and the done overlay regardless; skip only the bar.
+    var pageOwnsBar=!!document.querySelector('.fw-bar');
+    document.body.insertAdjacentHTML('beforeend',
+      (pageOwnsBar?'':barHTML)+modalHTML+doneHTML);
     // Watch for set check changes. NOT a document click-delegation listener —
     // mc-setlog.js's checkbox handler calls stopPropagation() (so does its
     // .mcl-wrap click guard), so a click on .set-check never bubbles to

@@ -1213,25 +1213,18 @@ buildStrip();
 //  mc-summary.js builds the sticky summary/stat bar, patches
 //  _FW.open → recap sheet, and handles save + navigation on exit.
 // ══════════════════════════════════════════════════════════════
-(function(){
-  const bar=document.createElement('div');
-  bar.className='fw-bar'; bar.id='fwBar';
-  bar.innerHTML='<span class="fw-progress" id="fwProgress">Finish when done</span>'+
-                '<button class="fw-btn" onclick="_FW.open()">Finish Workout ✓</button>';
-  // Live inside the workout view so the fixed bar only shows during a session.
-  document.getElementById('view-workout').appendChild(bar);
-})();
+// The Finish bar and the _FW controller are both owned by mc-finish.js, which
+// loads below. This page used to build its own #fwBar here AND define a _FW
+// stub -- but mc-finish.js loads afterwards and overwrites window._FW, so the
+// stub was already dead code, while the bar survived as a second element
+// sharing id="fwBar". That produced the two disagreeing set counters
+// ("0 / 32 sets" above "0 / 0 sets").
 
 // Optional page save hook — session history is persisted by mc-summary's
 // daily store; this is a no-op placeholder so _FW._save resolves cleanly.
 window.saveWorkout=function(){};
 
-// Minimal finish controller; mc-summary.js replaces .open with the recap sheet.
-window._FW={
-  open:function(){ /* patched by mc-summary.js → showRecap() */ },
-  close:function(){},
-  confirm:function(){ if(window.saveWorkout) window.saveWorkout(); location.href='dashboard.html'; }
-};
+
 </script>
 <script>
 /* ── SMART BACK NAV ── */
