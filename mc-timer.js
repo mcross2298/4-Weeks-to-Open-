@@ -95,6 +95,12 @@ function applyRestView() {
   const video = document.getElementById('timerVideo');
   if (float) float.classList.toggle('visible', running && pref === 'list');
   if (video) video.classList.toggle('visible', running && pref === 'video');
+  // M3: the session toolbar shows ONE timer at a time. While rest is running
+  // the elapsed readout is replaced by the rest countdown, because the two do
+  // not fit together -- measured at 390px, elapsed + rest + the sets readout +
+  // End workout needs 464px against a 390px bar. Swapping is keyed off rest
+  // running, not scroll position, so the bar never mutates under a thumb.
+  document.body.classList.toggle('mcs-resting', running);
 }
 
 // Screen-reader announcer — a visually-hidden polite live region. Announces
@@ -293,6 +299,8 @@ const TMR = {
 
     el.className = 'rest-timer running';
     el.querySelector('.rest-timer-label').textContent = this.formatTime(durationSecs);
+    const barSeed = document.getElementById('mcsRestVal');
+    if (barSeed) barSeed.textContent = this.formatTime(durationSecs);
 
     const floatTime = document.getElementById('timerFloatTime');
     const floatProgress = document.getElementById('timerFloatProgress');
@@ -342,6 +350,9 @@ const TMR = {
       // Update float + video
       _mcSetText(floatTime, this.formatTime(remaining));
       if (tvTime) _mcSetText(tvTime, this.formatTime(remaining));
+      // ...and the session toolbar's countdown, from this same tick.
+      const barTime = document.getElementById('mcsRestVal');
+      if (barTime) _mcSetText(barTime, this.formatTime(remaining));
 
       if (remaining > 0) {
         // exactly-10 check means a tick missed while backgrounded skips the

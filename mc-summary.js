@@ -209,7 +209,19 @@
   function buildStatBar(){
     if(!cards().length)return;  // only activate on actual workout pages
     var wrap=document.getElementById('progBarWrap')||document.querySelector('.prog-bar-wrap');
-    if(!wrap||wrap.classList.contains('mcs-stat'))return;
+    // 10 of the 77 pages that load mc-finish.js never authored a .prog-bar-wrap
+    // Before M3 that only cost them the stat bar; now the toolbar
+    // carries End workout, so a missing host would leave those pages with no way
+    // to finish a session at all. Create it -- base.css styles it as the 3px
+    // progress strip, and .mcs-stat upgrades it to the toolbar.
+    if(!wrap){
+      wrap=document.createElement('div');
+      wrap.className='prog-bar-wrap';
+      wrap.id='progBarWrap';
+      wrap.innerHTML='<div class="prog-bar-fill" id="progFill" style="width:0%"></div>';
+      document.body.appendChild(wrap);
+    }
+    if(wrap.classList.contains('mcs-stat'))return;
 
     var acc=accentOf();
     wrap.classList.add('mcs-stat');
@@ -217,16 +229,48 @@
 
     var row=document.createElement('div');
     row.className='mcs-stat-row';
+    // One timer slot, shared: .mcs-timer-wrap is session-elapsed at rest and the
+    // rest countdown while resting (mc-timer.js toggles body.mcs-resting and
+    // writes #mcsRestVal from its own tick). #fwProgress is mc-finish.js's own
+    // readout, relocated here rather than duplicated -- mc-finish.js keeps
+    // writing it, write-on-change guard and all, with no change to that file.
     row.innerHTML=
       '<div class="mcs-timer-wrap">'+
         '<span class="mcs-timer" id="mcsTimerVal">00:00</span>'+
         '<span class="mcs-timer-label">elapsed</span>'+
+        '<span class="mcs-rest" id="mcsRest">'+
+          '<span class="mcs-rest-val" id="mcsRestVal">0:00</span>'+
+          '<span class="mcs-rest-label">rest</span>'+
+        '</span>'+
       '</div>'+
-      '<div class="mcs-sets-wrap">'+
-        '<span class="mcs-sets-live" id="mcsSetsLive" style="color:'+rgb(acc)+';">0</span>'+
-        '<span class="mcs-sets-label">sets done</span>'+
-      '</div>';
+      '<span class="mcs-div" aria-hidden="true"></span>'+
+      '<button type="button" class="fw-progress mcs-setbtn" id="fwProgress" '+
+        'aria-label="Session progress, sets completed — open workout summary">0/0</button>'+
+      '<span class="mcs-spacer"></span>'+
+      '<button type="button" class="mcs-endbtn" id="mcsEnd">End workout</button>';
     wrap.insertBefore(row, wrap.firstChild);
+
+    // The sets readout doubles as the summary toggle. The in-page summary is a
+    // MID-session progress view (distinct from the finish recap), so it needs to
+    // stay reachable during a session -- and the toolbar has no width left for a
+    // separate control: elapsed + sets + End workout already measures 344px of
+    // 390. Giving the readout the job costs nothing and puts it where the number
+    // it summarises already is.
+    var setsBtn=row.querySelector('#fwProgress');
+    if(setsBtn) setsBtn.addEventListener('click',function(e){
+      e.preventDefault();e.stopPropagation();
+      var host=document.querySelector(SUMSEC_SEL);
+      if(!host)return;
+      var isOpen=host.classList.toggle('mcs-open');
+      setsBtn.classList.toggle('mcs-btn-open',isOpen);
+      if(isOpen) host.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+
+    var endBtn=row.querySelector('#mcsEnd');
+    if(endBtn) endBtn.addEventListener('click',function(e){
+      e.preventDefault();e.stopPropagation();
+      if(window._FW&&_FW.open)_FW.open();
+    });
   }
 
   function updateStatBar(t){
@@ -241,6 +285,13 @@
   // the primary Finish Workout button in the bar's stacked layout — see
   // base.css's .fw-bar (flex-direction:column) and mc-finish.js's barHTML.
   function injectSummaryButton(){
+    // M3: the summary toggle moved onto the toolbar's sets readout (see
+    // buildStatBar). This mounted into .fw-bar, which no longer exists. Kept as
+    // a no-op for the one page that still owns its own bar, so nothing here
+    // re-introduces a second control.
+    return;
+  }
+  function _legacyInjectSummaryButton(){
     var fwbar=document.querySelector('.fw-bar');
     if(!fwbar||fwbar.querySelector('.mcs-sumbtn'))return;
     var btn=document.createElement('button');
@@ -479,8 +530,16 @@
   /* ── main recompute ──────────────────────────────────────────────── */
   var writing=false;
   function recompute(){
-    // Only activate on actual workout session pages (those with a finish-workout bar)
-    if(!document.querySelector('.fw-bar'))return;
+    // Only activate on actual workout session pages. This used to test for a
+    // .fw-bar in the DOM -- but M3 retires that bar, and the top toolbar was
+    // therefore gated on the very element it replaces. window._FW is the same
+    // signal expressed as "this page loaded the finish-workout module": set
+    // unconditionally at mc-finish.js's top level, so it survives the bar's
+    // removal. Behaviourally identical -- the same two pages that load
+    // mc-summary.js without mc-finish.js are still
+    // excluded (verified by comparing the two script-tag sets), and no page
+    // loads mc-finish.js without mc-summary.js.
+    if(!window._FW)return;
     writing=true;
     try{
       autoBuild();
