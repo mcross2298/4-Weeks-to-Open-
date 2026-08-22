@@ -542,6 +542,32 @@ after it is protected)*
     label list once did). Verified live across W1/W2/W5 on `mm-p1.html`:
     the note updates correctly on `switchWeek()`, and a 390×844 screenshot
     confirms it wraps cleanly with no overlap or clipping.
+    — **VOC-A3 shipped (2026-08-22) — the complaint was a real, live bug,
+    not just a UX gap.** Live-testing "no ads while I'm under a bar" found
+    the exact mechanism: `mc-cond-suggest.js`'s injection selector
+    (`a[href^="dashboard.html?tab=conditioning"]`) also matched
+    `mc-nav.js`'s persistent bottom-nav Conditioning tab, so the amber
+    "SUGGESTED — NEW FOR YOU · The 500 →" chip rendered inside the
+    always-on nav bar on every page that loads both modules — confirmed on
+    `mm-p1.html` mid-session via screenshot, not just by reading source.
+    Fixed at the source: `inject()` now excludes any link inside
+    `nav.mc-nav`/`.mc-nav-tab` rather than trying to positively match one
+    day-card class (three different shapes exist across the 11 pages that
+    load this module — `.cond-day-card` on the `mm-*` trio, `.cond-card` on
+    `cat-mm.html`/`cat-ie.html`, an unwrapped inline link on
+    `iron-engine.html` — a first attempt that scoped to `.cond-day-card`
+    only would have silently broken the other two shapes). Also added the
+    session-aware suppression the ticket asked for: a `sessionInProgress()`
+    check (the same two signals `mc-sw-update.js`'s `workoutInProgress()`
+    already uses — rest timer visible, or any set checked) now hides
+    already-injected chips via a delegated click listener +
+    `visibilitychange` — no polling/observer needed for a single style
+    toggle — so the chip stays suppressed the moment a session goes live,
+    even if that happens after the chip was first injected. Verified live
+    on 4 pages: the nav-bar leak is gone everywhere, the legitimate in-page
+    chip still renders on all 4 markup shapes (`mm-p1.html`: 2, `cat-mm.html`:
+    1, `cat-ie.html`: 1, `iron-engine.html`: 3), and checking a set hides it
+    / unchecking restores it.
 
 **Standing gate, unchanged:** the owner-side real-device QA matrix (iOS Safari,
 Android Chrome, installed PWA, two-device Supabase reconciliation) carried from

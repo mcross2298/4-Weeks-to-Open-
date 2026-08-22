@@ -65,6 +65,32 @@
     document.head.appendChild(st);
   }
 
+  // VOC-A3: a session is "in progress" if a rest timer is counting or any
+  // set is checked — same two signals mc-sw-update.js's workoutInProgress()
+  // already uses to decide "don't disrupt the athlete right now". Kept as
+  // its own tiny copy rather than a cross-module call: it's 3 lines, stable,
+  // and mc-sw-update.js isn't guaranteed to have run yet on every page that
+  // loads this module.
+  function sessionInProgress() {
+    var tf = document.getElementById('timerFloat');
+    if (tf && tf.classList.contains('visible')) return true;
+    return !!document.querySelector(
+      '.ex-card.checked, .ss-ex.checked, .lift-card.checked, .mcl-ck.done, .set-check.done');
+  }
+
+  // Show/hide already-injected chips live, rather than deciding once at
+  // inject() time — a session can go from idle to in-progress well after
+  // the page loads (VOC-A3: "no ads for other programs while I'm under a
+  // bar"), and a chip only actually becomes visible to the athlete once its
+  // Day 5/6/7 conditioning card is expanded, which can happen anytime.
+  function updateVisibility() {
+    var live = sessionInProgress();
+    var chips = document.querySelectorAll('.mc-cond-suggest-chip');
+    Array.prototype.forEach.call(chips, function (c) {
+      c.style.display = live ? 'none' : '';
+    });
+  }
+
   function inject() {
     if (typeof CONDITIONING === 'undefined' || !window.MCCond) return;
     var routines = flatRoutines();
@@ -72,7 +98,18 @@
     var pick = suggest(routines);
     if (!pick) return;
 
-    var links = document.querySelectorAll('a[href^="dashboard.html?tab=conditioning"]');
+    // In-page "Browse Conditioning Corner" links are the intended surface —
+    // three different shapes exist across program pages (see file header),
+    // so this can't positively match one day-card class. What it CAN safely
+    // exclude is mc-nav.js's persistent bottom-nav Conditioning tab
+    // ('.mc-nav-tab' inside 'nav.mc-nav'): the old unscoped selector matched
+    // that too — a real bug, not a hypothetical — putting this chip inside
+    // the always-on nav bar on every page, visible mid-workout regardless of
+    // which (if any) day card was open.
+    var allLinks = document.querySelectorAll('a[href^="dashboard.html?tab=conditioning"]');
+    var links = Array.prototype.filter.call(allLinks, function (a) {
+      return !a.closest('nav.mc-nav, .mc-nav-tab');
+    });
     if (!links.length) return;
     injectCss();
     Array.prototype.forEach.call(links, function (a) {
@@ -89,6 +126,7 @@
         '<span class="mc-cond-suggest-ico">→</span>';
       a.parentNode.insertBefore(chip, a);
     });
+    updateVisibility();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inject);
@@ -96,4 +134,10 @@
   // Some program pages render day cards asynchronously after DOMContentLoaded.
   setTimeout(inject, 500);
   setTimeout(inject, 1500);
+
+  // Cheap, non-polling re-checks: a click anywhere (logging a set, starting
+  // a rest timer) or a return-to-tab is exactly when session state can have
+  // just changed. No observer/interval needed for a single style toggle.
+  document.addEventListener('click', updateVisibility, true);
+  document.addEventListener('visibilitychange', updateVisibility);
 })();
