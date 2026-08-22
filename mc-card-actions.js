@@ -242,13 +242,13 @@
     }
     return out;
   }
-  // Shared by the menu's int-drop/int-cluster/int-ss items AND the promoted
-  // quick-action buttons — one action path, not two.
+  // Menu-only now (the promoted quick-action row uses doReplace/startReorder
+  // directly — see injectQuickActions() above for why those need no shared
+  // dispatcher the way the PM/personal-aware intensifiers still do here).
   function runIntAction(card, act) {
     if (act === 'int-drop') { if (pmActive() && window.MC_PM) MC_PM.openIntensifier(card, 'drop'); else openPersonalIntensifier(card, 'drop'); }
     else if (act === 'int-cluster') { if (pmActive() && window.MC_PM) MC_PM.openIntensifier(card, 'cluster'); else openPersonalIntensifier(card, 'cluster'); }
     else if (act === 'int-ss') { if (pmActive() && window.MC_PM) MC_PM.toggleSuperset(card); else if (window.MC_PO) MC_PO.togglePersonalSS(card); }
-    invalidateQuickActionsCache();
   }
 
   function openMenu(card) {
@@ -935,63 +935,35 @@
     host.appendChild(btn);
   }
 
-  // K-3.4/VOC-C1: promote Superset/Drop set from meatball-only to a visible
-  // affordance on the ACTIVE card during a session (CSS gates the row to
-  // .active — see mc-card-actions.css) — the audit's own transcript found
-  // these two specifically as the session-flow actions worth surfacing,
-  // out of the whole meatball menu. Runs the exact same runIntAction() path
-  // the menu items use and the exact same intAvailability() visibility
-  // rules, so there is no second copy of the PM/personal/pairing logic to
-  // drift out of sync with the menu.
+  // K-3.4/VOC-C1: promote two meatball actions to a visible affordance on
+  // the ACTIVE card during a session (CSS gates the row to .active — see
+  // mc-card-actions.css). Originally shipped as Superset/Drop set (the
+  // session-flow actions the audit's transcript called out), then corrected
+  // per owner feedback to Replace/Reorder instead — the two most commonly
+  // used meatball actions in practice, not the two most session-flow-coded
+  // ones. Both call the exact same functions the menu's own "Replace
+  // exercise"/"Reorder exercises" items call (doReplace/startReorder), so
+  // there's no second copy of that logic to drift out of sync with the menu.
+  // Unlike the intensifier actions this replaced, replace/reorder carry no
+  // PM/personal/pairing availability rules in the menu either (both
+  // .mc-item entries render unconditionally in buildChrome(), never
+  // toggled in openMenu()) — so the promoted row needs no availability
+  // computation or per-card caching, just the .active CSS gate.
   function injectQuickActions(card) {
     var host = card.querySelector(BODY_SEL) || card;
     if (host.querySelector(':scope > .mc-quick-actions')) return;
     var row = document.createElement('div');
     row.className = 'mc-quick-actions';
     row.innerHTML =
-      '<button type="button" class="mc-qa-btn" data-qact="int-ss"><span class="mc-ico">⚡</span><span class="mc-qa-lbl">Superset</span></button>' +
-      '<button type="button" class="mc-qa-btn" data-qact="int-drop"><span class="mc-ico">↘️</span>Drop set</button>';
+      '<button type="button" class="mc-qa-btn" data-qact="replace"><span class="mc-ico">🔁</span>Replace</button>' +
+      '<button type="button" class="mc-qa-btn" data-qact="reorder"><span class="mc-ico">↕️</span>Reorder</button>';
     row.addEventListener('click', function (e) {
       var btn = e.target.closest('.mc-qa-btn'); if (!btn) return;
       e.stopPropagation(); e.preventDefault();
-      runIntAction(card, btn.dataset.qact);
+      if (btn.dataset.qact === 'replace') doReplace(card);
+      else if (btn.dataset.qact === 'reorder') startReorder(card);
     });
     host.appendChild(row);
-  }
-  // Memoized on the active card reference: intAvailability() calls into
-  // MC_PO, whose own read-memoization is scoped to ITS pass, not this
-  // module's — recomputing every scan() tick while the SAME card stays
-  // active would re-read localStorage that many times for an unchanged
-  // answer. Cleared whenever the active card changes (natural, since the
-  // key differs) or an intensifier action fires (state actually changed).
-  var _qaAvailCard = null, _qaAvailResult = null;
-  function invalidateQuickActionsCache() { _qaAvailCard = null; }
-  function updateQuickActions(card) {
-    var host = card.querySelector(BODY_SEL) || card;
-    var row = host && host.querySelector(':scope > .mc-quick-actions');
-    if (!row) return;
-    var avail;
-    if (_qaAvailCard === card) { avail = _qaAvailResult; }
-    else { avail = intAvailability(card); _qaAvailCard = card; _qaAvailResult = avail; }
-    // .mc-qa-off, not an inline display:none — the row's BASE visibility is
-    // CSS's job (gated to .active, see mc-card-actions.css) and an inline
-    // style here would out-specificity that gate and show the row on every
-    // resting card too (an inline style beats a class selector even when
-    // the class is more specific in source, since inline wins on its own
-    // higher-priority origin). This class only ever narrows further, when
-    // intensifiers aren't available on this card type at all (.ss-ex etc).
-    var offNow = row.classList.contains('mc-qa-off');
-    if (offNow !== !avail.intOn) row.classList.toggle('mc-qa-off', !avail.intOn);
-    if (!avail.intOn) return;
-    var ssBtn = row.querySelector('[data-qact="int-ss"]');
-    if (ssBtn) {
-      ssBtn.style.display = avail.ss.show ? '' : 'none';
-      var lbl = ssBtn.querySelector('.mc-qa-lbl');
-      var text = avail.ss.label.indexOf('Unpair') === 0 ? 'Unpair' : 'Superset';
-      if (lbl && lbl.textContent !== text) lbl.textContent = text;
-    }
-    var dropBtn = row.querySelector('[data-qact="int-drop"]');
-    if (dropBtn) dropBtn.style.display = avail.drop ? '' : 'none';
   }
 
   // K-3.4/G-11/VOC-C1: "I found eight power tools behind that ⋯ button" —
@@ -1015,7 +987,7 @@
     var btn = host.querySelector(':scope > .mc-meatball');
     if (!btn) return;
     MC_HINTS.show('meatball', btn,
-      'Tap ⋯ for more: replace, reorder, tempo, notes, superset & drop set.');
+      'Tap ⋯ for more: progress, tempo, notes, cluster set & superset.');
     _meatballHintDone = true;
   }
 
@@ -1030,15 +1002,14 @@
     try {
       withoutObserver(function () {
       Array.prototype.forEach.call(cards, injectMeatball);
+      // injectQuickActions() builds the row once per card and is idempotent
+      // (guarded by the .mc-quick-actions existence check); its base
+      // visibility is entirely CSS's job (gated to .active), and Replace/
+      // Reorder need no per-card availability computation to keep fresh
+      // (see injectQuickActions()'s own comment) — so unlike the K-3.4
+      // intensifier version this replaced, there's no per-pass "only touch
+      // the active card" update step needed here at all.
       Array.prototype.forEach.call(cards, injectQuickActions);
-      // Only the ACTIVE card's row is ever visible (CSS-gated) — computing
-      // availability for all 10 resting cards every pass would burn
-      // MC_PO.hasPersonalSS()/hasOwnerIntensifier() reads for nothing, since
-      // those aren't cached outside program-overrides.js's OWN scan pass.
-      // Caught live by the K-3.1 budget gate: storageReads 17 -> 349.9 on
-      // mm-p1.html when this ran on every card.
-      var activeForQA = document.querySelector('.ex-card.active, .ex-item.active, .ss-ex.active');
-      if (activeForQA) updateQuickActions(activeForQA);
       maybeShowMeatballHint();
       injectQuickPumpTrigger();
       var containers = [];

@@ -29,9 +29,11 @@
 .mc-meatball.mc-has-tempo .mc-dot-ind{display:block;}
 
 /* ── Promoted quick actions (K-3.4/VOC-C1) ──────────────────────────────
-   Superset / Drop set surfaced out of the meatball menu onto the card face
+   Replace / Reorder surfaced out of the meatball menu onto the card face
    — but only while the card is the one .active card in the day (R3), so
-   the 9 resting cards around it stay uncluttered. */
+   the 9 resting cards around it stay uncluttered. (Shipped first as
+   Superset/Drop set; corrected per owner feedback to the two most commonly
+   used meatball actions instead.) */
 .mc-quick-actions{display:none;gap:8px;margin-top:10px;}
 /* Descendant, not direct-child: injectQuickActions() mounts this on
    card.querySelector(BODY_SEL) || card, and BODY_SEL's nesting depth
@@ -39,10 +41,6 @@
 .ex-card.active .mc-quick-actions,
 .ex-item.active .mc-quick-actions,
 .ss-ex.active .mc-quick-actions{display:flex;}
-/* updateQuickActions() adds this when intensifiers aren't available on this
-   card at all (e.g. .ss-ex legs) — narrows the .active gate above, never
-   widens it, so it stays a plain class rule rather than an inline style. */
-.mc-quick-actions.mc-qa-off{display:none;}
 .mc-qa-btn{
   appearance:none;cursor:pointer;flex:1;min-height:44px;
   display:flex;align-items:center;justify-content:center;gap:6px;

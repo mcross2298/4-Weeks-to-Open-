@@ -660,6 +660,26 @@ after it is protected)*
     dashboard card) weren't validated by any transcript evidence the way
     the meatball was, so adding hints there would have been six more
     untested guesses rather than one well-evidenced fix.
+    — **K-3.4 correction (2026-08-22, owner feedback):** the two promoted
+    quick-action buttons shipped as ⚡ Superset / ↘️ Drop set — the audit
+    transcript's "session-flow" framing — but the owner's actual read was
+    that the two most commonly used meatball actions are 🔁 Replace and
+    ↕️ Reorder, not the two intensifiers. Swapped: `injectQuickActions()`
+    now calls `doReplace()`/`startReorder()` directly (the exact functions
+    the menu's own "Replace exercise"/"Reorder exercises" items already
+    call), and — unlike the intensifiers it replaced — neither carries any
+    PM/personal/pairing availability rule in the menu (`buildChrome()`
+    renders both `.mc-item`s unconditionally, `openMenu()` never toggles
+    them), so `intAvailability()`/`updateQuickActions()`/the per-card
+    availability cache the original version needed are gone entirely —
+    net simpler code, not just a relabel. The meatball discovery hint's
+    copy was updated to match (drops replace/reorder from the "what's
+    behind ⋯" list, since those are visible now; adds progress, which
+    wasn't mentioned before). Re-verified live end to end: Reorder
+    activates/exits the reorder bar correctly, Replace opens the
+    substitute picker; K-3.1 perf budget and DG-9 visual ratchet both
+    still pass (small ratchet deltas from the label text change, well
+    under budget, no re-baseline needed).
     — **K-3.2/A-16 shipped (2026-08-22) — the batch's own "highest-risk,
     deliberately ordered last" item, and it earned that label.** No prior
     design doc existed beyond the roadmap's one-line aspiration ("push
