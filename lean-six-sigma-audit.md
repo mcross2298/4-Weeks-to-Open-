@@ -568,8 +568,21 @@ after it is protected)*
     chip still renders on all 4 markup shapes (`mm-p1.html`: 2, `cat-mm.html`:
     1, `cat-ie.html`: 1, `iron-engine.html`: 3), and checking a set hides it
     / unchecking restores it.
-
-**Standing gate, unchanged:** the owner-side real-device QA matrix (iOS Safari,
+    — **VOC-C2 shipped (2026-08-22).** `mc-live-tracker.js` already wrote
+    `mc_activity.last` (with a fresh `ts`) on `pagehide` — the exact instant
+    a nav-bar tap navigates away mid-session — but nothing ever told the
+    athlete their sets survived. `mc-resume.js` gained a `maybeShowSavedToast()`
+    hook: a self-dismissing "✓ Session saved — resume from the dashboard"
+    toast that fires only when the already-read `L.ts` (the same store the
+    persistent "Resume last workout" banner already reads) is fresher than
+    8s — i.e. exactly "we just arrived here from leaving a live session," not
+    "resuming later" — no new store, one recency check on existing data. A
+    `sessionStorage` flag keyed on that same `ts` guards only against a
+    double-fire (e.g. a re-render without a full reload); it isn't the
+    trigger. Verified live end-to-end: the toast shows with the exact copy,
+    auto-dismisses (~3.5s), does not reappear on a reload with the same
+    `ts`, and correctly stays silent for a stale (60s-old) session while the
+    persistent banner still renders normally underneath it. the owner-side real-device QA matrix (iOS Safari,
 Android Chrome, installed PWA, two-device Supabase reconciliation) carried from
 B5 — still the last thing between this app and calling L6 done.
 
