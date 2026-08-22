@@ -174,6 +174,15 @@
 
   // ---- floating toggle button --------------------------------------------
   function mountButton() {
+    // M4: the floating mic is retired. It sat at z98 underneath the z100 rest
+    // timer -- measured buried for the entire rest period, i.e. unusable at
+    // exactly the moment you would speak to it -- and it floated over set rows
+    // the rest of the time. The module stays loaded and MCVoice's API is
+    // unchanged, so a future surface can mount a control without reviving a
+    // floating one.
+    return;
+  }
+  function _legacyMountButton() {
     if (!isSupported() || document.getElementById('mcVoiceBtn')) return;
     var btn = document.createElement('button');
     btn.id = 'mcVoiceBtn';

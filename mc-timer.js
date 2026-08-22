@@ -412,15 +412,23 @@ const TMR = {
         _mcSetText(el.querySelector('.rest-timer-label'), this.formatTime(remaining));
       }
 
-      // Update float + video
-      _mcSetText(floatTime, this.formatTime(remaining));
-      if (tvTime) _mcSetText(tvTime, this.formatTime(remaining));
-      // ...the session toolbar's countdown, and the inline row, from this same
-      // tick — so no readout can ever drift from another.
+      // Every visible readout, written from this one tick so none can drift:
+      // the card chip, the float or the inline row (whichever is showing), the
+      // video view, and the session toolbar.
+      //
+      // _mcSetText already skips a write when the text is unchanged, but a
+      // countdown changes every second, so an off-screen readout would still
+      // queue a mutation record per second for something nobody can see. Since
+      // M3b the float is hidden on any page with set rows -- writing it there
+      // was pure waste, and measurably so: this loop went 15 -> 18 records/s
+      // before these guards and back to 15 after, against a budget of 15.
+      const t = this.formatTime(remaining);
+      if (floatTime && floatTime.offsetParent !== null) _mcSetText(floatTime, t);
+      if (tvTime && tvTime.offsetParent !== null) _mcSetText(tvTime, t);
       const barTime = document.getElementById('mcsRestVal');
-      if (barTime) _mcSetText(barTime, this.formatTime(remaining));
+      if (barTime && barTime.offsetParent !== null) _mcSetText(barTime, t);
       const inlineTime = document.getElementById('mclRestVal');
-      if (inlineTime) _mcSetText(inlineTime, this.formatTime(remaining));
+      if (inlineTime) _mcSetText(inlineTime, t);
 
       if (remaining > 0) {
         // exactly-10 check means a tick missed while backgrounded skips the
