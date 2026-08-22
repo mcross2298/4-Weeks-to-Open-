@@ -171,7 +171,7 @@ jobs:
         # CI-only tooling, installed into a scratch prefix outside the repo —
         # no package.json here, deliberately (see CLAUDE.md).
         run: |
-          npm install --no-save --prefix /tmp/pw-ci playwright@latest
+          npm install --no-save --prefix /tmp/pw-ci playwright@latest pixelmatch pngjs
           /tmp/pw-ci/node_modules/.bin/playwright install --with-deps chromium
           python3 -m http.server 8080 &
           SERVER_PID=$!
@@ -185,6 +185,31 @@ jobs:
           # deliberate.
           if [ "$EXIT" -eq 0 ]; then
             NODE_PATH=/tmp/pw-ci/node_modules node tools/check-contrast.js http://localhost:8080
+            EXIT=$?
+          fi
+          # Runtime performance budget (audit K-3.1/A-15) — the S1 −99.5%
+          # runtime win (2983.8 → 15 mutation records/s on mm-p1.html) can
+          # never silently regress again the way S5c-0 nearly did (15 → 53.9
+          # records/s, caught only by a manual re-measurement). Three probe
+          # pages, one per rendering engine shape; budgets in
+          # tools/perf-budgets.json, re-baseline with
+          # `node tools/measure-session.js <url> --page <p> --update-check
+          # tools/perf-budgets.json` if a change is deliberate.
+          if [ "$EXIT" -eq 0 ]; then
+            for PAGE in mm-p1.html bro-split.html psu-strength.html; do
+              NODE_PATH=/tmp/pw-ci/node_modules node tools/measure-session.js http://localhost:8080 \
+                --page "$PAGE" --seconds 6 --check tools/perf-budgets.json
+              EXIT=$?
+              [ "$EXIT" -eq 0 ] || break
+            done
+          fi
+          # Kitchen-sink visual ratchet (audit DG-9) — the contrast ratchet's
+          # sibling, for structure/layout rather than per-element color.
+          # Baselines in tools/visual-baselines/; re-baseline with
+          # `node tools/check-visual-ratchet.js <url> --update` if a change
+          # is deliberate.
+          if [ "$EXIT" -eq 0 ]; then
+            NODE_PATH=/tmp/pw-ci/node_modules node tools/check-visual-ratchet.js http://localhost:8080
             EXIT=$?
           fi
           kill "$SERVER_PID" 2>/dev/null || true

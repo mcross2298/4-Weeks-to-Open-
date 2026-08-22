@@ -34,10 +34,26 @@
        --out <file>         write the report as JSON
        --baseline <file>    print a delta against a previous report
        --seconds <n>        length of each measurement window (default 10)
+       --check <file>       fail (exit 1) if this page's rest-timer perSecond
+                             numbers exceed <file>'s recorded budget for it by
+                             more than BUDGET_MULT — the K-3.1/A-15 CI gate.
+                             Silently no-ops (still exits 0) for a page with no
+                             entry in the budget file, so --check can run
+                             across pages beyond the committed probe set
+                             without failing on ones nobody has budgeted yet.
+       --update-check <file> like --check, but on a pass ALSO rewrites that
+                             page's entry to the just-measured numbers (the
+                             ratchet can only tighten — ordinary --page/--out
+                             runs never touch the budget file).
 
-   Exit code is 0 unless the run itself failed. This tool reports; it does not
-   yet judge. The budget assertions land in a later phase (A-15), which is why
-   the thresholds are absent rather than guessed.
+   Exit code is 0 unless the run itself failed, or --check finds a page over
+   its budget. This tool reports by default; --check is what turns a report
+   into a gate — see tools/perf-budgets.json for the committed thresholds and
+   why BUDGET_MULT is 1.5, not 1.0 (measurements are stable run-to-run on this
+   env, verified by re-running mm-p1.html twice with a 0.03% delta on the one
+   metric that moved at all — but a CI runner is a different machine, and
+   1.5x still catches the S5c-0 class of regression, +260% actual, by a wide
+   margin without also catching ordinary jitter).
    ========================================================================== */
 const fs = require('fs');
 const { chromium } = require('playwright');
@@ -57,6 +73,11 @@ const PAGE = opt('page', 'mm-p1.html');
 const OUT = opt('out', null);
 const BASELINE = opt('baseline', null);
 const WINDOW_S = parseInt(opt('seconds', '10'), 10);
+const CHECK = opt('check', null);
+const UPDATE_CHECK = opt('update-check', null);
+const CHECK_FILE = CHECK || UPDATE_CHECK;
+const BUDGET_MULT = 1.5;
+const BUDGET_METRICS = ['mutationRecords', 'observerCallbacks', 'querySelectorAll', 'storageReads'];
 
 /* Viewports: the UX report's recommendation — design to the 15/16, treat the
    SE/mini as a hard floor. Both are measured because the failure is worst
@@ -342,5 +363,40 @@ async function layout(page) {
     fs.writeFileSync(OUT, JSON.stringify(report, null, 2) + '\n');
     console.log('\n  wrote ' + OUT);
   }
+
+  /* ---- K-3.1/A-15 budget gate -------------------------------------------- */
+  if (CHECK_FILE) {
+    const budgets = fs.existsSync(CHECK_FILE) ? JSON.parse(fs.readFileSync(CHECK_FILE, 'utf8')) : {};
+    const entry = budgets[report.page];
+    console.log('\n  PERF BUDGET (' + CHECK_FILE + ')');
+    if (!entry) {
+      console.log('    ' + report.page + ': no budget entry — skipped (not a committed probe page)');
+    } else {
+      let over = false;
+      for (const k of BUDGET_METRICS) {
+        const budget = entry[k];
+        const actual = R.rest.perSecond[k];
+        const ceiling = Math.round(budget * BUDGET_MULT * 10) / 10;
+        const bad = actual > ceiling;
+        if (bad) over = true;
+        console.log('    ' + k.padEnd(20) + pad(actual, 10) + '  vs budget ' + pad(budget, 8) +
+          '  (ceiling ' + ceiling + ')' + (bad ? '  OVER BUDGET' : ''));
+      }
+      if (over) {
+        console.error('\n  ::error::' + report.page + ' exceeded its K-3.1/A-15 perf budget (>' +
+          BUDGET_MULT + 'x baseline). If this growth is deliberate, re-baseline with --update-check.');
+        process.exitCode = 1;
+      } else {
+        console.log('    within budget.');
+        if (UPDATE_CHECK) {
+          budgets[report.page] = {};
+          for (const k of BUDGET_METRICS) budgets[report.page][k] = R.rest.perSecond[k];
+          fs.writeFileSync(CHECK_FILE, JSON.stringify(budgets, null, 2) + '\n');
+          console.log('    updated ' + CHECK_FILE);
+        }
+      }
+    }
+  }
+
   console.log('');
 })().catch((e) => { console.error(e); process.exit(1); });

@@ -436,6 +436,29 @@ overlap Wave 5)*
 after it is protected)*
 12. **One `verify.yml` PR:** K-3.1 perf budget + DG-9 kitchen-sink visual
     ratchet + DG-5's `--check`, alongside the store gate already landed in W1.
+    — **shipped (2026-08-22).** DG-5's `--check` had already landed in Wave 4;
+    this closed the remaining two. **K-3.1**: `tools/measure-session.js`
+    gained a `--check`/`--update-check` mode (budgets in
+    `tools/perf-budgets.json`, `BUDGET_MULT` 1.5×) against 3 probe pages —
+    `pmc-back.html` (S1's original third page) was swapped for
+    `psu-strength.html` after live testing found its rest-timer chips sit
+    inside a `.ss-ex.mcl-collapsed` superset layer the tool's `enterSession()`
+    doesn't know to expand, so no `.rest-timer` ever becomes visible there —
+    a real, separate defect worth its own fix later, not blocking this gate.
+    Baselines re-measured twice to confirm stability before locking them in
+    (mm-p1.html: 301.8 vs 301.9 QSA/s across two runs, everything else
+    identical). **DG-9**: `tools/check-visual-ratchet.js` is new —
+    full-page, dark-mode-only screenshots (light mode stays
+    `check-contrast.js`'s job) of the 5 `kitchen-sink*.html` pages at
+    390×844/DPR1, diffed via `pixelmatch` (its v6+ ESM-only export needed a
+    CJS interop shim) against committed baselines in
+    `tools/visual-baselines/`, 0.5% mismatch budget. Verified both
+    directions live: a clean re-screenshot diffs at 0.000% on all 5 pages,
+    and an injected `body{background:#ff00ff}` regression was caught at
+    40–44% on every page before being reverted. Both new checks wired into
+    `verify.yml`'s existing smoke-test job (same Playwright install now also
+    pulls `pixelmatch`+`pngjs`), gated behind the render smoke test and
+    contrast ratchet passing first so a boot-breaking change fails fast.
 13. Then, in any order: **K-3.3** card-header micro-trend (after DG-3),
     **K-3.2** delta sync (after K-1.1), **K-3.4 / VOC-C1** discovery hints,
     **VOC-A3** promo suppression, **VOC-B2** week-delta note, **VOC-C2**
