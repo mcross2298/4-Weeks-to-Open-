@@ -43,6 +43,25 @@
   --replaced:     #22d3ee;
   --replaced-rgb: 34,211,238;
 
+  /* ── MOTION TOKENS (audit DG-6) ───────────────────────────────────
+     Named durations/eases for the transition/animation values that were
+     scattered as magic numbers across this file. Each token's value is
+     exactly the literal it replaces, so adopting it is a 1:1 var() swap
+     — zero visual delta, just one place to change a speed going forward.
+     The reduced-motion override below (@media prefers-reduced-motion)
+     already zeroes every transition/animation duration regardless of
+     these tokens, so it needs no changes here. */
+  --duration-fast:     0.15s;  /* hover/press micro-interactions */
+  --duration-base:     0.2s;   /* toggles, card open/close */
+  --duration-moderate: 0.35s;  /* rep-hero color/glow crossfade */
+  --duration-relaxed:  0.4s;   /* progress-bar fill */
+  --duration-slow:     1s;     /* timer pulse, timer-float progress */
+  --duration-slower:   1.2s;   /* empty-state pulse */
+  --duration-slowest:  2.6s;   /* live rep glow loop */
+  --ease-standard:  ease;
+  --ease-linear:    linear;
+  --ease-pulse:     ease-in-out;
+
   /* ── TYPE SCALE (L1 Phase B) ────────────────────────────────────────
      One documented ramp for the whole app so page titles, card names,
      labels and body text stop drifting page-to-page. Values match the
@@ -282,7 +301,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .ex-card{
   border-radius:14px;border:1px solid rgba(var(--accent-rgb),0.2);
   margin-bottom:10px;overflow:hidden;cursor:pointer;
-  transition:all 0.15s;
+  transition:all var(--duration-fast);
   background:linear-gradient(180deg,#0d0f12,#0a0b0d);
   position:relative;
   box-shadow:0 8px 26px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05);
@@ -299,7 +318,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
   position:absolute;top:12px;right:14px;
   font-size:var(--fs-xl);line-height:1;
   color:rgba(255,255,255,0.18);
-  transition:all 0.2s ease;
+  transition:all var(--duration-base) var(--ease-standard);
   pointer-events:none;
 }
 .ex-card.checked::after{content:'✓';color:var(--success);}
@@ -432,11 +451,11 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
    59% of the minimum safe size. That is an interaction defect, not a
    styling preference. The active card gets the fuller 52px band, since
    that is the card the athlete is actually resting on. */
-.rest-timer{appearance:none;-webkit-appearance:none;margin:0;font:inherit;color:inherit;border:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;user-select:none;padding:4px 12px;min-height:44px;border-radius:8px;transition:all 0.15s;position:relative;}
+.rest-timer{appearance:none;-webkit-appearance:none;margin:0;font:inherit;color:inherit;border:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;user-select:none;padding:4px 12px;min-height:44px;border-radius:8px;transition:all var(--duration-fast);position:relative;}
 .ex-card.active .rest-timer,.ss-ex.active .rest-timer{min-height:52px;}
 .rest-timer:active{transform:scale(0.96);}
 .rest-timer.idle{background:rgba(100,116,139,0.12);border:1px solid rgba(100,116,139,0.2);}
-.rest-timer.running{background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.35);animation:timerPulse 1s ease-in-out infinite;}
+.rest-timer.running{background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.35);animation:timerPulse var(--duration-slow) var(--ease-pulse) infinite;}
 .rest-timer.done{background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.35);}
 .rest-timer.overtime{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);}
 @keyframes timerPulse{0%,100%{opacity:1;}50%{opacity:0.7;}}
@@ -457,7 +476,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .timer-float-time.overtime{color:var(--danger);}
 .timer-float-ex{font-size:var(--fs-2xs);color:var(--muted);text-align:center;max-width:180px;line-height:1.4;}
 .timer-float-bar{width:100%;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:4px;overflow:hidden;}
-.timer-float-progress{height:100%;background:#fbbf24;border-radius:2px;transition:width 1s linear;width:100%;}
+.timer-float-progress{height:100%;background:#fbbf24;border-radius:2px;transition:width var(--duration-slow) var(--ease-linear);width:100%;}
 .timer-float-progress.done{background:#34d399;}
 .timer-float-progress.overtime{background:#f87171;}
 .timer-float-actions{display:flex;gap:8px;margin-top:6px;}
@@ -472,10 +491,10 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 
 /* ── PROGRESS BAR ───────────────────────────────────────────────── */
 .prog-bar-wrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:999;background:rgba(255,255,255,0.06);}
-.prog-bar-fill{height:3px;background:linear-gradient(90deg,#22d3ee,#a78bfa);transition:width 0.4s ease;border-radius:0 2px 2px 0;}
+.prog-bar-fill{height:3px;background:linear-gradient(90deg,#22d3ee,#a78bfa);transition:width var(--duration-relaxed) var(--ease-standard);border-radius:0 2px 2px 0;}
 
 /* ── NEXT WORKOUT LINK ──────────────────────────────────────────── */
-.next-workout{display:block;margin:28px 16px 32px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:16px 18px;text-decoration:none;color:var(--text);transition:all 0.15s;}
+.next-workout{display:block;margin:28px 16px 32px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:16px 18px;text-decoration:none;color:var(--text);transition:all var(--duration-fast);}
 .next-workout:active{transform:scale(0.98);background:rgba(255,255,255,0.07);}
 .next-workout-label{font-size:var(--fs-2xs);font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted2);margin-bottom:6px;}
 .next-workout-row{display:flex;align-items:center;gap:10px;}
@@ -602,8 +621,8 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .a-reps{padding:2px calc(16px * var(--density)) calc(10px * var(--density)) calc(18px * var(--density));}
 .a-leg{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
 .a-leg + .a-leg{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,0.07);}
-.a-rep{font-size:calc(var(--fs-title) * var(--density));font-weight:900;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;color:#3a4661;line-height:1;transition:color 0.35s ease,opacity 0.35s ease,text-shadow 0.35s ease;}
-.a-rep.live{color:#fff;text-shadow:0 0 10px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.55),0 0 22px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.4);animation:repGlow 2.6s ease-in-out infinite;}
+.a-rep{font-size:calc(var(--fs-title) * var(--density));font-weight:900;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;color:#3a4661;line-height:1;transition:color var(--duration-moderate) var(--ease-standard),opacity var(--duration-moderate) var(--ease-standard),text-shadow var(--duration-moderate) var(--ease-standard);}
+.a-rep.live{color:#fff;text-shadow:0 0 10px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.55),0 0 22px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.4);animation:repGlow var(--duration-slowest) var(--ease-pulse) infinite;}
 /* completed working set — settles to a calm dim-green, no glow (Phase 3) */
 .a-rep.rep-done{color:var(--success);opacity:0.5;text-shadow:none;animation:none;}
 @keyframes repGlow{
@@ -693,7 +712,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
   width:44px;height:44px;display:flex;align-items:center;justify-content:center;
   background:none;border:none;padding:0;margin:0;font:inherit;font-size:var(--fs-xl);line-height:1;
   color:var(--muted2);cursor:pointer;border-radius:10px;
-  -webkit-tap-highlight-color:transparent;transition:color .15s,background .15s;}
+  -webkit-tap-highlight-color:transparent;transition:color var(--duration-fast),background var(--duration-fast);}
 .a-info:active{background:rgba(var(--accent-rgb),0.14);}
 .a-info[aria-expanded="true"]{color:var(--accent);background:rgba(var(--accent-rgb),0.12);}
 /* The cue itself — present in the DOM for PM inline-edit and mc-setlog.js's
@@ -783,7 +802,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
    surface token) — their local rule still loads after this one in the
    cascade and overrides it unchanged, so this consolidation only removes
    duplicates that were already byte-identical. */
-.day-card{border-radius:16px;border:1px solid rgba(255,255,255,0.06);margin-bottom:10px;overflow:hidden;transition:all 0.2s;background:rgba(255,255,255,0.02);}
+.day-card{border-radius:16px;border:1px solid rgba(255,255,255,0.06);margin-bottom:10px;overflow:hidden;transition:all var(--duration-base);background:rgba(255,255,255,0.02);}
 
 /* ── REPLACED badge (L1 U4 consolidation) ─────────────────────────────────
    The "REPLACED" pill painted onto a swapped exercise used to carry a
@@ -816,7 +835,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .empty-text{font-size:var(--fs-sm);font-weight:var(--fw-semi);color:var(--muted);line-height:1.5;max-width:34ch;}
 .empty-sub{font-size:var(--fs-xs);font-weight:var(--fw-medium);color:var(--muted2);line-height:1.5;}
 .empty-state.error .empty-text{color:var(--danger);}
-.empty-state.loading .empty-icon{animation:empty-pulse 1.2s ease-in-out infinite;}
+.empty-state.loading .empty-icon{animation:empty-pulse var(--duration-slower) var(--ease-pulse) infinite;}
 @keyframes empty-pulse{0%,100%{opacity:0.35;}50%{opacity:0.95;}}
 
 /* ── MOTION (L1 Phase C) — honour prefers-reduced-motion globally ──────────

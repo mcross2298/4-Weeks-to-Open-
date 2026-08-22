@@ -503,6 +503,33 @@ after it is protected)*
     Redesign.dc.html` / `markup-snippets.md` entries removed;
     `program-landing-handoff.md` stayed listed. `tools/build-market.py
     --check` reconfirmed clean after the edit.
+    — **DG-6 shipped (2026-08-22) — narrower than scoped.** `base.css`
+    gained a `--duration-*`/`--ease-*` token block and every one of its 12
+    scattered transition/animation literals was swapped to reference it, a
+    strict 1:1 value substitution (e.g. `0.15s` → `var(--duration-fast)`)
+    verified live to be zero visual delta: computed `transitionDuration` on
+    `.ex-card`/`.rest-timer`/`.next-workout`/`.day-card` matches the
+    pre-refactor literal exactly, on real pages, not just by inspection.
+    The second half of this ticket — "close the `prefers-reduced-motion`
+    gap in `mc-setlog.js`/`mc-setlog.css`" — **turned out not to be a real
+    gap** on investigation: `base.css` already carries a blanket
+    `@media(prefers-reduced-motion:reduce){*,*::before,*::after{
+    animation:none!important;transition:none!important;
+    scroll-behavior:auto!important;}}` (shipped 2026-07-15, predating this
+    ticket), which `!important`-overrides every transition/animation
+    anywhere in the document regardless of file or specificity — confirmed
+    live with `page.emulateMedia({reducedMotion:'reduce'})` against
+    `mm-p1.html` (`.rest-timer`/`.mcl-toggle .mcl-chev`/`.day-card` all
+    collapse to ~0s). `mc-setlog.js`'s own `matchMedia` check
+    (`next.scrollIntoView(...)`) isn't redundant with that CSS rule despite
+    first appearances: `scrollIntoView({behavior:'smooth'})` requests smooth
+    scrolling explicitly, which per spec overrides the page's CSS
+    `scroll-behavior` — only `behavior:'auto'` defers to it — so a JS-level
+    check is the only way to respect the preference for that one call.
+    `mc-setlog.css`'s own transitions carry no `!important`, so the
+    blanket rule already wins there too. No code change was needed for
+    this half; the CLAUDE.md entry that motivated it undersold what was
+    already shipped.
 
 **Standing gate, unchanged:** the owner-side real-device QA matrix (iOS Safari,
 Android Chrome, installed PWA, two-device Supabase reconciliation) carried from
