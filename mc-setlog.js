@@ -1019,8 +1019,65 @@
     return 'x-' + base + (n ? '-' + n : '');
   }
 
+  // ---- K-3.3/G-08: last-3-session micro-trend on the card header ---------
+  // Progression at the point of the load decision (the day's card list),
+  // not buried behind the meatball's full trend sheet. Reuses this file's
+  // OWN store read (st()) and history key (ek()) — mc-suggest.js has a
+  // near-identical completedSessions()/historyKey() pair, but it's private
+  // to that file's IIFE, not exported, so this is a deliberate small
+  // duplicate rather than a cross-module reach (same reasoning as
+  // mc-cond-suggest.js's local copy of workoutInProgress()).
+  // A-2/S1: one localStorage read per run() pass, not one per card. The
+  // first cut of this called st() straight from trendFor() per-card, which
+  // the K-3.1 perf budget caught immediately (storageReads 17 -> 83 on
+  // bro-split.html, well past its 1.5x ceiling) — the exact per-card-storage-
+  // read shape S1 spent this whole roadmap eliminating.
+  var _stCache = null;
+  function trendFor(exId) {
+    var hist = (_stCache || (_stCache = st()))[ek(exId)] || [];   // newest-first, capped at 5
+    var today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    var tops = [];
+    for (var i = 0; i < hist.length && tops.length < 3; i++) {
+      var sess = hist[i];
+      if (!sess || sess.d === today || !sess.sets) continue;   // skip today's in-progress session
+      var weights = Object.keys(sess.sets).map(function (k) {
+        return parseFloat(sess.sets[k].w) || 0;
+      }).filter(Boolean);
+      if (!weights.length) continue;                // bodyweight/unweighted session
+      tops.push(Math.max.apply(null, weights));
+    }
+    if (tops.length < 2) return null;                // need 2 sessions for a direction
+    var latest = tops[0], prior = tops[1];
+    var arrow = latest > prior ? '↑' : (latest < prior ? '↓' : '→');
+    return { arrow: arrow, weight: latest };
+  }
+
+  function injectTrend(card, exId) {
+    var nameEl = card.querySelector('.ex-name, .ss-name, .lift-name');
+    // Never write inside nameEl itself — origNameOf()/slugOf() read its
+    // textContent as the exercise's identity for history-key + Supabase
+    // lookups, and this file's own nameId() depends on that staying exactly
+    // the authored name. The badge is a SIBLING, never a child.
+    if (!nameEl || !nameEl.parentNode) return;
+    var t = trendFor(exId);
+    var el = nameEl.nextElementSibling;
+    if (!(el && el.classList && el.classList.contains('a-trend'))) el = null;
+    if (!t) { if (el) el.parentNode.removeChild(el); return; }
+    var dir = t.arrow === '↑' ? 'up' : (t.arrow === '↓' ? 'down' : 'flat');
+    var label = t.arrow + ' ' + t.weight + ' lb';
+    if (el && el.textContent === label) return;      // A-2: write only on change
+    if (!el) {
+      el = document.createElement('div');
+      nameEl.parentNode.insertBefore(el, nameEl.nextSibling);
+    }
+    el.className = 'a-trend a-trend-' + dir;
+    el.textContent = label;
+    el.setAttribute('aria-label', 'Weight trend versus last session: ' + label);
+  }
+
   function run() {
     _nameIdx = null;                            // one index per pass
+    _stCache = null;                            // one storage read per pass (K-3.3)
     // Match cards WITH OR WITHOUT data-id. Older templates
     /* MARKET:STRIP influencer-refs START */
     // (STNDR push-pull-legs, PSU psu-strength, weeks-to-open, legacy-prep,
@@ -1045,6 +1102,7 @@
       var exId = c.dataset.id || nameId(c), setsStr = setsOf(c), rs = restSecs(c);
       buildStrip(host, c, exId, setsStr, rs);
       if (c.classList.contains('active')) buildRows(host, c, exId, setsStr, rs);
+      injectTrend(c, exId);
     });
     // Superset legs stay fully eager (build(), both phases) — excluded from
     // A-14's lazy scope. mc-superset-hop.js's leg-cycling (hasUndoneSet())
@@ -1058,12 +1116,15 @@
       // Read the prescribed rest from the exercise's own .rest-timer (data),
       // not a hardcoded value — fallback 90s. The superset normalizer below
       // then keeps a single timer on the SECOND row and parks it under the logger.
-      build(c.querySelector('.ss-content') || c.querySelector('.ex-body') || c, c, c.dataset.id || nameId(c), setsOf(c), restSecs(c) || 90);
+      var exId = c.dataset.id || nameId(c);
+      build(c.querySelector('.ss-content') || c.querySelector('.ex-body') || c, c, exId, setsOf(c), restSecs(c) || 90);
+      injectTrend(c, exId);
     });
     document.querySelectorAll('.ex-item').forEach(function (c) {
       var exId = c.dataset.id || nameId(c), setsStr = setsOf(c), rs = restSecs(c);
       buildStrip(c, c, exId, setsStr, rs);
       if (c.classList.contains('active')) buildRows(c, c, exId, setsStr, rs);
+      injectTrend(c, exId);
     });
     /* MARKET:STRIP influencer-refs START */
     // NOTE: .lift-card (PSU) has no dedicated handler of its own here — it
@@ -1082,6 +1143,7 @@
     normalizeSupersetTimers();
     collapseNotes();
     _nameIdx = null;                            // index is pass-scoped only
+    _stCache = null;                            // cache is pass-scoped only
   }
 
   // ---- superset rest-timer normalization ---------------------------------

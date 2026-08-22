@@ -336,6 +336,13 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 }
 .ex-content{flex:1;min-width:0;}
 .ex-name{font-weight:var(--fw-bold);font-size:var(--fs-md);letter-spacing:-0.01em;color:var(--text);line-height:1.3;margin-bottom:7px;overflow-wrap:break-word;word-break:break-word;}
+/* K-3.3/G-08: last-3-session micro-trend, injected as .ex-name's next
+   sibling by mc-setlog.js's injectTrend() — never as its child, since
+   .ex-name's textContent is the exercise's identity key elsewhere. */
+.a-trend{font-size:11px;font-weight:800;letter-spacing:0.01em;margin:-3px 0 6px;display:flex;align-items:center;gap:3px;}
+.a-trend-up{color:var(--success);}
+.a-trend-down{color:var(--danger);}
+.a-trend-flat{color:var(--muted);}
 .ex-tags{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
 .ex-sets{
   display:inline-block;font-size:var(--fs-xs);font-weight:900;padding:3px 10px;border-radius:6px;letter-spacing:0.01em;

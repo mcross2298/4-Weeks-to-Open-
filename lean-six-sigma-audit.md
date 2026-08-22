@@ -582,7 +582,29 @@ after it is protected)*
     trigger. Verified live end-to-end: the toast shows with the exact copy,
     auto-dismisses (~3.5s), does not reappear on a reload with the same
     `ts`, and correctly stays silent for a stale (60s-old) session while the
-    persistent banner still renders normally underneath it. the owner-side real-device QA matrix (iOS Safari,
+    persistent banner still renders normally underneath it.
+    — **K-3.3/G-08 shipped (2026-08-22).** Progression at the point of the
+    load decision, not buried behind the meatball's trend sheet or a jump to
+    `stats.html`. `mc-setlog.js` gained a last-3-completed-session micro-trend
+    (`↑`/`→`/`↓` + weight) on every exercise card header, computed from data
+    already in `mc_setlog_v1` — no new store. The badge is injected as
+    `.ex-name`'s SIBLING, never its child: `origNameOf()`/`slugOf()`/`nameId()`
+    all read `.ex-name`'s `textContent` as the exercise's identity for
+    history-key and Supabase lookups, so writing inside it would have
+    corrupted that identity the instant a badge rendered — caught by reading
+    those call sites before writing a line of the fix, not after. A first cut
+    read `localStorage` fresh per card inside `trendFor()`; the K-3.1 budget
+    gate caught the regression immediately (`storageReads` 17 → 83 on
+    `bro-split.html`, past its 1.5× ceiling) — exactly the per-card-storage-
+    read shape S1 spent this whole roadmap eliminating. Fixed by caching the
+    store read once per `run()` pass (the same pattern `_nameIdx` already
+    used), after which all three K-3.1 probe pages measured within budget
+    again. Verified live: correct `↑`/`↓`/`→` across up/down/flat fixtures,
+    today's in-progress session correctly excluded from the comparison, no
+    badge on <2 completed sessions or a fresh install with no history, and
+    the exercise name's text confirmed unchanged after injection.
+
+**Standing gate, unchanged:** the owner-side real-device QA matrix (iOS Safari,
 Android Chrome, installed PWA, two-device Supabase reconciliation) carried from
 B5 — still the last thing between this app and calling L6 done.
 
