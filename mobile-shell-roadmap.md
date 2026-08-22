@@ -161,6 +161,44 @@ applied to the live page: **7 fixed layers → 1**, covered viewport
 prototype shows the entire active card plus three upcoming exercises where the
 current build shows one readable exercise name.
 
+**Owner decisions, locked 2026-08-22 (measured, not assumed):**
+
+1. **The toolbar rest countdown SWAPS, it does not add.** Two live timers do not
+   fit: measured at 390px, elapsed + rest + `Set 1/32` + `End workout` needs
+   **464px** against a **390px** bar (`scrollWidth` 452 > `clientWidth` 390).
+   The swap variant needs **344px** and fits with 46px spare. So the elapsed
+   slot *becomes* the gold rest countdown for the duration of the rest period,
+   then reverts. It swaps whenever rest is running — not on scroll position,
+   which would mutate the bar under the user's thumb. Tapping it scrolls back
+   to the active set. Accepted cost: session-elapsed is not visible during rest.
+
+2. **The per-card rest badges are eliminated.** Rest time is now shown in two
+   better places (toolbar chip while resting, inline row in the set list), so
+   the `.rest-timer` chip on each card is redundant clutter and an extra
+   sub-44px touch target.
+
+   **The badge is load-bearing — this is not a delete.** `mc-setlog.js:510-517`
+   auto-starts rest on set check via
+   `var t = card.querySelector('.rest-timer'); if (t) { ... TMR.start(t, secs, 'Rest'); }`
+   — the chip is both the anchor `TMR.start()` binds to and the carrier of the
+   prescribed duration (`data-rest`, from the program data). Remove it naively
+   and `t` is null, the guard fails, and **rest silently stops auto-starting on
+   set check** with no error. Required order: carry the rest value on the card
+   as a data attribute, rewire `TMR.start()` to bind without a visible anchor,
+   then update `tools/check-one-timer.js`, which gates on the literal
+   `rest-timer idle` class string as its fleet-wide signature. ~30 pages render
+   these.
+
+3. **Prescribed rest survives as plain text.** Folded into the card's existing
+   meta line ("Rest 90s"), not a tappable badge — so a trainee can still see
+   what the rest is meant to be *before* logging the set, which neither the
+   toolbar chip nor the inline row can show (both only exist once the countdown
+   is already running). Loses the touch target and the visual weight, keeps the
+   information.
+
+4. **The inline row stays the primary control.** ±15s lives there. The toolbar
+   chip is a glanceable fallback only.
+
 **Blocking trap:** `mc-summary.js:483` is `if(!document.querySelector('.fw-bar'))return;`
 — the top bar is gated on the bottom bar. Removing `.fw-bar` naively silently
 kills the status bar. `mc-summary.js:244` and `:383` append the Summary button
