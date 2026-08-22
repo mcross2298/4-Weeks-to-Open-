@@ -178,6 +178,17 @@ jobs:
           for i in $(seq 1 20); do curl -sf http://localhost:8080/index.html >/dev/null && break; sleep 0.5; done
           NODE_PATH=/tmp/pw-ci/node_modules node tools/smoke-test-pages.js http://localhost:8080
           EXIT=$?
+          # Complete-workout journey gate. Every other check here inspects the
+          # app AT REST -- none of them ever logs a set. Three defects shipped
+          # through all of them and were caught only by driving a full session
+          # (roadmap M5), including one that is not a bug in any single file:
+          # two independently-correct changes that collide only on one engine
+          # family. Drives one page per card engine, and asserts the session can
+          # be completed, no control is unreachable, nothing overflows, and the
+          # controls the session shell owns clear the 44pt touch floor.
+          # Budgets in tools/journey-budgets.json; re-baseline deliberately with
+          # `node tools/check-journey.js <url> --update`.
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/check-journey.js http://localhost:8080; then EXIT=1; fi
           # Light-mode contrast ratchet (audit G-04/G-3.1). Shares this job
           # because it needs the same Playwright install. Per-page budgets in
           # tools/contrast-budgets.json can only shrink; re-baseline with
