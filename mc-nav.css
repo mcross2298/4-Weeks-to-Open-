@@ -80,3 +80,18 @@ html[data-theme="light"] .mc-theme-toggle-float .theme-icon-light path{
 html[data-theme="light"] .theme-icon-dark{display:none;}
 html[data-theme="light"] .theme-icon-light{display:block!important;}
 
+
+/* ══ M3c · NAV AUTO-HIDES DURING A SESSION ═════════════════════════════
+   Once the first set is logged the athlete is training, not navigating, and
+   the toolbar's "End workout" is the only exit they need. The nav costs 55px
+   + safe-area of a 844px viewport, and it was the last full-width bar left at
+   the bottom after M3a retired the Finish bar and M3b moved the rest timer
+   into the set list. It returns the moment the session is cleared (Exit &
+   discard sets the logged count back to zero), and the Back link at the top
+   of the page is unaffected throughout, so leaving the page never depends on
+   the nav being visible.
+   Specificity note: body.mc-has-nav's reservation above is !important, so
+   these must out-specify it (0,2,1 vs 0,1,1) rather than merely follow it. */
+body.mc-in-session nav.mc-nav{display:none;}
+body.mc-in-session.mc-has-nav{padding-bottom:24px !important;}
+body.mc-in-session.mc-has-nav .timer-float{bottom:0;}

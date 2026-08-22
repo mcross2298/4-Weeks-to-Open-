@@ -296,8 +296,16 @@
     // which writes again. Measured as a real feedback loop before this guard:
     // steady-state mutation records 15 -> 53.9/s and querySelectorAll
     // 291.7 -> 927.1/s. Same output, no write when the readout has not moved.
-    var txt=done+' / '+total+' sets';
+    // Compact form: this readout now lives in the 390px session toolbar, where
+    // 'done / total sets' left only 4px of slack and a three-digit total would
+    // have overflowed. The button's aria-label carries the full meaning.
+    var txt=done+'/'+total;
     if(el&&el.textContent!==txt)el.textContent=txt;
+    // M3c: a session is "active" the moment the first set is logged -- not when
+    // the page loads. Until then the athlete is still browsing and the nav is
+    // how they browse. classList.toggle with an explicit boolean is idempotent,
+    // so this queues no mutation record once the state settles (A-2's rule).
+    document.body.classList.toggle('mc-in-session', done>0);
     var isComplete=total>0&&done>=total;
     if(isComplete&&!wasComplete&&!window._FW.finished){
       var modal=document.getElementById('fwModal');
@@ -471,9 +479,16 @@
     // elements sharing id="fwBar" and two progress counters that disagreed --
     // getElementById() then silently resolved to whichever came first.
     // Take the modal and the done overlay regardless; skip only the bar.
-    var pageOwnsBar=!!document.querySelector('.fw-bar');
-    document.body.insertAdjacentHTML('beforeend',
-      (pageOwnsBar?'':barHTML)+modalHTML+doneHTML);
+    // M3: the bottom Finish bar is retired. Its two jobs moved into the session
+    // toolbar that mc-summary.js builds at the top of the page -- "End workout"
+    // and the progress readout (which keeps id="fwProgress", so updateProgress()
+    // below still drives it unchanged). The bar cost 105px of a 844px viewport
+    // and, stacked with the nav and the rest float, put 470px of chrome on
+    // screen during a rest period. The modal and the done overlay are still
+    // injected: those are the flow "End workout" opens.
+    // A page that authored its own .fw-bar keeps it (run-workout.html's drives
+    // custom-workout logging this module cannot replicate).
+    document.body.insertAdjacentHTML('beforeend', modalHTML+doneHTML);
     // Watch for set check changes. NOT a document click-delegation listener —
     // mc-setlog.js's checkbox handler calls stopPropagation() (so does its
     // .mcl-wrap click guard), so a click on .set-check never bubbles to

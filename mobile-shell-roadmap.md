@@ -124,6 +124,67 @@ markup, so no duplicate is produced.
 **D8 — Touch targets.** `exercise-library.html`: 202 × `.fav-btn` at 25×23px,
 plus 8 × `.filter-btn` at ~27px height. 10–20 sub-44px controls per workout page.
 
+**D8 fixed for `.fav-btn` (M1), and it took three passes because the first two
+each traded one defect for another:**
+
+1. Plain `min-height:44px` grew `.ex-item` from 51px to 70px. Over 202 rows
+   that is +273px of list — the opposite of what this roadmap exists for.
+   Margins do not shrink the border-box, so `margin-block:-11px` keeps a true
+   44×44 tappable area while the row returns to its original height.
+2. Widening 25px → 44px then pushed 15 exercise names onto a second line
+   (`{51:175, 69:27}` → `{51:160, 69:42}`). `margin-inline-start:-19px` gives
+   that width back to the text and `justify-content:flex-end` pins the glyph
+   where it already sat, so only the invisible box extends left — over
+   `.ex-muscle-tag`, an inert label. Final list height **18305px, identical to
+   baseline, histogram byte-for-byte unchanged**.
+3. Measuring the result surfaced a defect one layer down that nobody had
+   filed: the idle glyph was `#334155` on the `rgb(13,31,60)` card — **1.54:1**,
+   invisible. Only the favourited state (`#d4af37`, 7.61:1) ever rendered, so
+   the control could only be discovered by tapping where nothing appeared to
+   be. Raised to `#7b8ca6` (**4.81:1**), still clearly the unset state against
+   the gold. Light mode is unaffected — `mc-light.css:436` overrides
+   `.fav-btn` there.
+
+Verified: 202/202 stars exactly 44×44, zero adjacent overlaps, zero clashes
+with the neighbouring tag, hit-test at centre resolves to `BUTTON.fav-btn`, and
+a tap persists to storage and lights the star. The glyph did not move: it
+measured x342–359 before (25px box + `padding-left:8px`) and x342–359 after
+(44px box + `flex-end`).
+
+`.filter-btn` and `.back-link` are deliberately **not** raised to 44px here:
+they are pills in a filter row, and growing them ~17px each would add height to
+every visit of the page to fix 8 controls. They belong with the M4 chrome pass,
+not with a 202-instance list control.
+
+**D11 — The Back button was invisible and unclickable on every notched device
+during a session.** `mc-summary.css`'s offsets are all measured *down from the
+stat bar*, and the bar sits at `top:env(safe-area-inset-top)` — but the offsets
+were flat pixel values, and because they out-specify `base.css`'s `env()`-aware
+rules (0,2,1 vs 0,1,0) the flat values won on real hardware. `env()` cannot be
+emulated headlessly, so the same rules were re-declared against a controllable
+variable and measured on `5on-2off.html` with a session active:
+
+| inset | bar band | `.back-link` | covered by the z999 bar |
+|---|---|---|---|
+| 0px | y0–46 | y54–83 | 0 of 29px — looked fine in every browser and in CI |
+| 47px | y47–93 | y54–83 | **29 of 29px** — fully hidden |
+| 59px | y59–105 | y54–83 | 24 of 29px |
+
+The floating theme toggle was 39 of its 40px covered at 47px. That is the same
+control this CSS block exists to rescue — its own comment records that the
+toggle "was a dead button on every workout page." The rescue was inset-blind,
+so on real phones it stayed exactly as dead. Fixed by carrying the inset:
+`calc(54px + env(safe-area-inset-top,0px))`. Re-measured: 0px covered at all
+three insets, and **byte-identical geometry at inset 0**, so nothing changes
+where the inset is zero.
+
+**Still open (deferred to M2):** `.week-tabs` receives `top:env(safe-area-inset-top)`
+from `base.css:1020` *and* `padding-top:env(safe-area-inset-top)` from
+`mc-nav.js:53` — the notch is reserved twice. It is entangled with D6 (sticky
+tab rows pinning underneath the 46px stat bar rather than below it), which is a
+stacking-contract question, so both are handled together in M2 rather than
+patched twice.
+
 **D9 — Update delivery is invisible.** `mc-sw-update.js:39` shows its banner via
 `getElementById('swUpdate')`, and that element exists on **1 of 141 pages**
 (`dashboard.html`). A held update is undetectable everywhere else.

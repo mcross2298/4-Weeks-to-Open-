@@ -88,13 +88,83 @@ function getUpNext(el) {
 // Single source of truth for which rest surface is on screen: List (compact
 // float) or Video (full-screen). Both surfaces' text/time stay updated every
 // tick regardless of which is shown, so switching mid-rest is instant.
+
+/* ── M3b · INLINE REST ROW ────────────────────────────────────────────────
+   The rest timer stops being furniture and becomes a member of the set list:
+   a row directly beneath the set just logged, carrying the same -15s / +15s
+   controls as the float it replaces.
+
+   Why this is the same timer and not a second one: TMR still owns state and
+   the tick. This only mounts a DOM row and lets the existing tick write into
+   it, exactly as it already writes the float and the video view. The permanent
+   one-rest-timer rule holds -- there is no second controller here.
+
+   "Can this page do inline" is answered at runtime by asking whether it has
+   set rows at all, not by a hardcoded page list. Pages with mc-setlog.js get
+   the row; the two timer pages without it (a conditioning timer and a 1RM
+   calculator) keep the float, and stay correct without being named here.     */
+function _mcCanInlineRest() {
+  return !!document.querySelector('.mcl-row');
+}
+
+function _mcInlineRestUnmount() {
+  const r = document.getElementById('mclRest');
+  if (r && r.parentNode) r.parentNode.removeChild(r);
+}
+
+// Anchor: the last row the athlete actually checked inside this card, so the
+// countdown appears where their eye already is. Falls back to the last row of
+// the card when rest was started by tapping a chip rather than checking a set.
+function _mcInlineRestMount(el, durationSecs) {
+  _mcInlineRestUnmount();
+  if (!el || !_mcCanInlineRest()) return;
+  const card = el.closest('.ex-card, .ss-ex, .lift-card, .ex-item') || el.parentElement;
+  if (!card) return;
+  const rows = card.querySelectorAll('.mcl-row');
+  if (!rows.length) return;
+  let anchor = null;
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const ck = rows[i].querySelector('.mcl-ck.done, .set-check.done');
+    if (ck) { anchor = rows[i]; break; }
+  }
+  if (!anchor) anchor = rows[rows.length - 1];
+
+  const row = document.createElement('div');
+  row.className = 'mcl-rest';
+  row.id = 'mclRest';
+  row.innerHTML =
+    '<button type="button" class="mcl-rest-adj" aria-label="Subtract 15 seconds">\u221215s</button>' +
+    '<div class="mcl-rest-mid">' +
+      '<span class="mcl-rest-val" id="mclRestVal">' + TMR.formatTime(durationSecs) + '</span>' +
+      '<span class="mcl-rest-lbl">rest remaining</span>' +
+    '</div>' +
+    '<button type="button" class="mcl-rest-adj" aria-label="Add 15 seconds">+15s</button>';
+  const adj = row.querySelectorAll('.mcl-rest-adj');
+  adj[0].addEventListener('click', function (e) { e.stopPropagation(); TMR.adjust(-15); });
+  adj[1].addEventListener('click', function (e) { e.stopPropagation(); TMR.adjust(15); });
+  anchor.insertAdjacentElement('afterend', row);
+}
+
 function applyRestView() {
   const pref = MC_PREFS.get().restView;
   const running = TMR.startTime != null;
   const float = document.getElementById('timerFloat');
   const video = document.getElementById('timerVideo');
-  if (float) float.classList.toggle('visible', running && pref === 'list');
+  // The 220px float was the single largest piece of chrome on a workout page --
+  // measured, it put total covered viewport at 470px of 844 (55.7%) during a
+  // rest period. On any page with set rows the inline row replaces it entirely;
+  // the float remains for pages that have nowhere to put a row, and the video
+  // view is untouched either way.
+  const inline = running && pref === 'list' && _mcCanInlineRest();
+  if (float) float.classList.toggle('visible', running && pref === 'list' && !inline);
   if (video) video.classList.toggle('visible', running && pref === 'video');
+  if (!running || pref !== 'list') _mcInlineRestUnmount();
+  // M3: the session toolbar shows ONE timer at a time. While rest is running
+  // the elapsed readout is replaced by the rest countdown, because the two do
+  // not fit together -- measured at 390px, elapsed + rest + the sets readout +
+  // End workout needs 464px against a 390px bar. Swapping is keyed off rest
+  // running, not scroll position, so the bar never mutates under a thumb.
+  document.body.classList.toggle('mcs-resting', running);
 }
 
 // Screen-reader announcer — a visually-hidden polite live region. Announces
@@ -293,6 +363,9 @@ const TMR = {
 
     el.className = 'rest-timer running';
     el.querySelector('.rest-timer-label').textContent = this.formatTime(durationSecs);
+    const barSeed = document.getElementById('mcsRestVal');
+    if (barSeed) barSeed.textContent = this.formatTime(durationSecs);
+    if (MC_PREFS.get().restView === 'list') _mcInlineRestMount(el, durationSecs);
 
     const floatTime = document.getElementById('timerFloatTime');
     const floatProgress = document.getElementById('timerFloatProgress');
@@ -342,6 +415,12 @@ const TMR = {
       // Update float + video
       _mcSetText(floatTime, this.formatTime(remaining));
       if (tvTime) _mcSetText(tvTime, this.formatTime(remaining));
+      // ...the session toolbar's countdown, and the inline row, from this same
+      // tick — so no readout can ever drift from another.
+      const barTime = document.getElementById('mcsRestVal');
+      if (barTime) _mcSetText(barTime, this.formatTime(remaining));
+      const inlineTime = document.getElementById('mclRestVal');
+      if (inlineTime) _mcSetText(inlineTime, this.formatTime(remaining));
 
       if (remaining > 0) {
         // exactly-10 check means a tick missed while backgrounded skips the
@@ -402,6 +481,7 @@ const TMR = {
     }
     this.upNext = null;
     this.startTime = null;
+    _mcInlineRestUnmount();
     applyRestView();
     if(this._autoDismiss){clearTimeout(this._autoDismiss);this._autoDismiss=null;}
   },
