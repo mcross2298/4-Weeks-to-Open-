@@ -124,6 +124,38 @@ markup, so no duplicate is produced.
 **D8 — Touch targets.** `exercise-library.html`: 202 × `.fav-btn` at 25×23px,
 plus 8 × `.filter-btn` at ~27px height. 10–20 sub-44px controls per workout page.
 
+**D8 fixed for `.fav-btn` (M1), and it took three passes because the first two
+each traded one defect for another:**
+
+1. Plain `min-height:44px` grew `.ex-item` from 51px to 70px. Over 202 rows
+   that is +273px of list — the opposite of what this roadmap exists for.
+   Margins do not shrink the border-box, so `margin-block:-11px` keeps a true
+   44×44 tappable area while the row returns to its original height.
+2. Widening 25px → 44px then pushed 15 exercise names onto a second line
+   (`{51:175, 69:27}` → `{51:160, 69:42}`). `margin-inline-start:-19px` gives
+   that width back to the text and `justify-content:flex-end` pins the glyph
+   where it already sat, so only the invisible box extends left — over
+   `.ex-muscle-tag`, an inert label. Final list height **18305px, identical to
+   baseline, histogram byte-for-byte unchanged**.
+3. Measuring the result surfaced a defect one layer down that nobody had
+   filed: the idle glyph was `#334155` on the `rgb(13,31,60)` card — **1.54:1**,
+   invisible. Only the favourited state (`#d4af37`, 7.61:1) ever rendered, so
+   the control could only be discovered by tapping where nothing appeared to
+   be. Raised to `#7b8ca6` (**4.81:1**), still clearly the unset state against
+   the gold. Light mode is unaffected — `mc-light.css:436` overrides
+   `.fav-btn` there.
+
+Verified: 202/202 stars exactly 44×44, zero adjacent overlaps, zero clashes
+with the neighbouring tag, hit-test at centre resolves to `BUTTON.fav-btn`, and
+a tap persists to storage and lights the star. The glyph did not move: it
+measured x342–359 before (25px box + `padding-left:8px`) and x342–359 after
+(44px box + `flex-end`).
+
+`.filter-btn` and `.back-link` are deliberately **not** raised to 44px here:
+they are pills in a filter row, and growing them ~17px each would add height to
+every visit of the page to fix 8 controls. They belong with the M4 chrome pass,
+not with a 202-instance list control.
+
 **D9 — Update delivery is invisible.** `mc-sw-update.js:39` shows its banner via
 `getElementById('swUpdate')`, and that element exists on **1 of 141 pages**
 (`dashboard.html`). A held update is undetectable everywhere else.

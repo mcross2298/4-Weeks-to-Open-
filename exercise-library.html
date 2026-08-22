@@ -42,7 +42,29 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:60px;}
 .ex-name{flex:1;font-size:13px;font-weight:700;color:#e2e8f0;line-height:1.4;}
 .ex-programs{font-size:11px;color:#334155;font-weight:600;margin-top:2px;}
 .ex-muscle-tag{font-size:14px;flex-shrink:0;}
-.fav-btn{flex-shrink:0;background:none;border:none;font-size:19px;line-height:1;color:#334155;cursor:pointer;padding:2px 0 2px 8px;-webkit-tap-highlight-color:transparent;transition:color .15s,transform .1s;}
+/* Touch floor (roadmap M1/D8): the star was 25x23 -- 202 of them visible at
+   once, every one under the 44pt minimum, on the page with the most of them
+   in the app. The .ex-item row is already 51px tall and the nearest
+   neighbour (.ex-muscle-tag) ends 10px to the left, so a real 44x44 button
+   fits inside the existing row -- no hit-area pseudo-element, no layout
+   change, and the glyph stays 19px. Stars sit on a 57px pitch, so adjacent
+   44px targets keep a clear gap and cannot steal each other's taps.
+   The negative block margin is load-bearing: a plain min-height:44px
+   grew .ex-item from 51px to 70px, which over 202 rows made the list
+   ~37% longer -- the opposite of what this roadmap is for. Margins do
+   not shrink the border-box, so the tappable area stays a true 44x44
+   while the row returns to its original height.
+   Same reasoning horizontally: widening 25px -> 44px pushed 15 exercise
+   names onto a second line (+273px of list). The negative inline-start
+   margin gives that width back to the text, and justify-content:flex-end
+   keeps the glyph where it already sat, so only the invisible tappable
+   box extends left -- over .ex-muscle-tag, which is an inert label.
+   Colour, same defect one layer down: the idle glyph was #334155 on the
+   rgb(13,31,60) card -- 1.54:1, i.e. invisible. The control could only
+   be discovered by tapping where you could not see anything, since only
+   the favourited state (#d4af37, 7.61:1) ever rendered. #7b8ca6 gives
+   4.81:1 and still reads as the unset state against the gold. */
+.fav-btn{flex-shrink:0;background:none;border:none;font-size:19px;line-height:1;color:#7b8ca6;cursor:pointer;padding:0;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:flex-end;margin-block:-11px;margin-inline-start:-19px;-webkit-tap-highlight-color:transparent;transition:color .15s,transform .1s;}
 .fav-btn.on{color:#d4af37;}
 .fav-btn:active{transform:scale(0.85);}
 .master-group{border-radius:10px;overflow:hidden;border:1px solid rgba(212,175,55,0.2);background:#0d1f3c;}
