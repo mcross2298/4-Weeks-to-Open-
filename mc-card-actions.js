@@ -194,9 +194,7 @@
       else if (act === 'tempo') openTempo(card);
       // intensifiers: in PM mode they publish to everyone; otherwise they save
       // personally to this device (like Notes / Add Tempo).
-      else if (act === 'int-drop') { if (pmActive() && window.MC_PM) MC_PM.openIntensifier(card, 'drop'); else openPersonalIntensifier(card, 'drop'); }
-      else if (act === 'int-cluster') { if (pmActive() && window.MC_PM) MC_PM.openIntensifier(card, 'cluster'); else openPersonalIntensifier(card, 'cluster'); }
-      else if (act === 'int-ss') { if (pmActive() && window.MC_PM) MC_PM.toggleSuperset(card); else if (window.MC_PO) MC_PO.togglePersonalSS(card); }
+      else if (act === 'int-drop' || act === 'int-cluster' || act === 'int-ss') runIntAction(card, act);
       else if (act === 'pm' && window.MC_PM) window.MC_PM.openEditor(card);
     });
 
@@ -209,6 +207,50 @@
     reorderBar.querySelector('.mc-rb-done').addEventListener('click', endReorder);
   }
 
+  // K-3.4/VOC-C1: single source of truth for "is Drop/Cluster/Superset
+  // available on this card right now" — factored out of openMenu() so the
+  // promoted quick-action buttons (below) can ask the exact same question
+  // without re-deriving the PM/personal/pairing rules a second time. Pure
+  // read, no DOM writes, so it's safe to call from either the menu or the
+  // card face.
+  function intAvailability(card) {
+    var pmOn = pmActive();
+    // intensifiers (Drop / Cluster / superset): available to everyone on a
+    // top-level single card (needs the paint engine to render + persist).
+    var isTop = !!(card.matches && card.matches('.ex-card, .ex-item, .lift-card'));
+    var intOn = !!window.MC_PO && isTop;
+    var out = { intOn: intOn, drop: intOn, cluster: intOn, ss: { show: false, label: 'Make superset' } };
+    if (!intOn) return out;
+    // outside PM, users can only ADD their own — lock Drop/Cluster when the
+    // owner already published one on this card (published always wins).
+    if (!pmOn) {
+      ['drop', 'cluster'].forEach(function (kind) {
+        if (window.MC_PO.hasOwnerIntensifier && MC_PO.hasOwnerIntensifier(card, kind)) out[kind] = false;
+      });
+    }
+    // superset: contextual label, hidden when there's nothing to pair or
+    // (for users) when the card belongs to one of the owner's pairings.
+    if (pmOn) {
+      var pairedPM = !!(window.MC_PM && MC_PM.isSuperset && MC_PM.isSuperset(card));
+      out.ss.label = pairedPM ? 'Unpair superset' : 'Make superset';
+      out.ss.show = pairedPM || hasNextTopCard(card);
+    } else {
+      var personal = !!(MC_PO.hasPersonalSS && MC_PO.hasPersonalSS(card));
+      if (personal) { out.ss.show = true; out.ss.label = 'Unpair superset'; }
+      else if (card.closest && card.closest('.mcpo-ss')) { out.ss.show = false; }   // owner's pairing — locked
+      else { out.ss.show = hasNextTopCard(card); out.ss.label = 'Make superset'; }
+    }
+    return out;
+  }
+  // Shared by the menu's int-drop/int-cluster/int-ss items AND the promoted
+  // quick-action buttons — one action path, not two.
+  function runIntAction(card, act) {
+    if (act === 'int-drop') { if (pmActive() && window.MC_PM) MC_PM.openIntensifier(card, 'drop'); else openPersonalIntensifier(card, 'drop'); }
+    else if (act === 'int-cluster') { if (pmActive() && window.MC_PM) MC_PM.openIntensifier(card, 'cluster'); else openPersonalIntensifier(card, 'cluster'); }
+    else if (act === 'int-ss') { if (pmActive() && window.MC_PM) MC_PM.toggleSuperset(card); else if (window.MC_PO) MC_PO.togglePersonalSS(card); }
+    invalidateQuickActionsCache();
+  }
+
   function openMenu(card) {
     activeCard = card;
     sheetTitle.textContent = cardName(card) || 'Exercise';
@@ -217,40 +259,20 @@
     Array.prototype.forEach.call(menuOverlay.querySelectorAll('.mc-item-pm'), function (b) {
       b.style.display = pmOn ? '' : 'none';
     });
-    // intensifiers (Drop / Cluster / superset): available to everyone on a
-    // top-level single card (needs the paint engine to render + persist).
-    var isTop = !!(card.matches && card.matches('.ex-card, .ex-item, .lift-card'));
-    var intOn = !!window.MC_PO && isTop;
+    var avail = intAvailability(card);
     Array.prototype.forEach.call(menuOverlay.querySelectorAll('.mc-item-int'), function (b) {
-      b.style.display = intOn ? '' : 'none';
+      b.style.display = avail.intOn ? '' : 'none';
     });
-    if (intOn) {
-      // outside PM, users can only ADD their own — lock Drop/Cluster when the
-      // owner already published one on this card (published always wins).
-      if (!pmOn) {
-        ['drop', 'cluster'].forEach(function (kind) {
-          var it = menuOverlay.querySelector('[data-act="int-' + kind + '"]');
-          if (it && window.MC_PO.hasOwnerIntensifier && MC_PO.hasOwnerIntensifier(card, kind)) it.style.display = 'none';
-        });
-      }
-      // superset item: contextual label, hidden when there's nothing to pair
-      // or (for users) when the card belongs to one of the owner's pairings.
+    if (avail.intOn) {
+      var dropItem = menuOverlay.querySelector('[data-act="int-drop"]');
+      if (dropItem) dropItem.style.display = avail.drop ? '' : 'none';
+      var clusterItem = menuOverlay.querySelector('[data-act="int-cluster"]');
+      if (clusterItem) clusterItem.style.display = avail.cluster ? '' : 'none';
       var ssItem = menuOverlay.querySelector('[data-act="int-ss"]');
       if (ssItem) {
-        var show, label = 'Make superset';
-        if (pmOn) {
-          var pairedPM = !!(window.MC_PM && MC_PM.isSuperset && MC_PM.isSuperset(card));
-          label = pairedPM ? 'Unpair superset' : 'Make superset';
-          show = pairedPM || hasNextTopCard(card);
-        } else {
-          var personal = !!(MC_PO.hasPersonalSS && MC_PO.hasPersonalSS(card));
-          if (personal) { show = true; label = 'Unpair superset'; }
-          else if (card.closest && card.closest('.mcpo-ss')) { show = false; }   // owner's pairing — locked
-          else { show = hasNextTopCard(card); label = 'Make superset'; }
-        }
-        ssItem.style.display = show ? '' : 'none';
+        ssItem.style.display = avail.ss.show ? '' : 'none';
         var ssLbl = ssItem.querySelector('.mc-ss-label');
-        if (ssLbl) ssLbl.textContent = label;
+        if (ssLbl) ssLbl.textContent = avail.ss.label;
       }
     }
     menuOverlay.classList.add('open');
@@ -913,6 +935,90 @@
     host.appendChild(btn);
   }
 
+  // K-3.4/VOC-C1: promote Superset/Drop set from meatball-only to a visible
+  // affordance on the ACTIVE card during a session (CSS gates the row to
+  // .active — see mc-card-actions.css) — the audit's own transcript found
+  // these two specifically as the session-flow actions worth surfacing,
+  // out of the whole meatball menu. Runs the exact same runIntAction() path
+  // the menu items use and the exact same intAvailability() visibility
+  // rules, so there is no second copy of the PM/personal/pairing logic to
+  // drift out of sync with the menu.
+  function injectQuickActions(card) {
+    var host = card.querySelector(BODY_SEL) || card;
+    if (host.querySelector(':scope > .mc-quick-actions')) return;
+    var row = document.createElement('div');
+    row.className = 'mc-quick-actions';
+    row.innerHTML =
+      '<button type="button" class="mc-qa-btn" data-qact="int-ss"><span class="mc-ico">⚡</span><span class="mc-qa-lbl">Superset</span></button>' +
+      '<button type="button" class="mc-qa-btn" data-qact="int-drop"><span class="mc-ico">↘️</span>Drop set</button>';
+    row.addEventListener('click', function (e) {
+      var btn = e.target.closest('.mc-qa-btn'); if (!btn) return;
+      e.stopPropagation(); e.preventDefault();
+      runIntAction(card, btn.dataset.qact);
+    });
+    host.appendChild(row);
+  }
+  // Memoized on the active card reference: intAvailability() calls into
+  // MC_PO, whose own read-memoization is scoped to ITS pass, not this
+  // module's — recomputing every scan() tick while the SAME card stays
+  // active would re-read localStorage that many times for an unchanged
+  // answer. Cleared whenever the active card changes (natural, since the
+  // key differs) or an intensifier action fires (state actually changed).
+  var _qaAvailCard = null, _qaAvailResult = null;
+  function invalidateQuickActionsCache() { _qaAvailCard = null; }
+  function updateQuickActions(card) {
+    var host = card.querySelector(BODY_SEL) || card;
+    var row = host && host.querySelector(':scope > .mc-quick-actions');
+    if (!row) return;
+    var avail;
+    if (_qaAvailCard === card) { avail = _qaAvailResult; }
+    else { avail = intAvailability(card); _qaAvailCard = card; _qaAvailResult = avail; }
+    // .mc-qa-off, not an inline display:none — the row's BASE visibility is
+    // CSS's job (gated to .active, see mc-card-actions.css) and an inline
+    // style here would out-specificity that gate and show the row on every
+    // resting card too (an inline style beats a class selector even when
+    // the class is more specific in source, since inline wins on its own
+    // higher-priority origin). This class only ever narrows further, when
+    // intensifiers aren't available on this card type at all (.ss-ex etc).
+    var offNow = row.classList.contains('mc-qa-off');
+    if (offNow !== !avail.intOn) row.classList.toggle('mc-qa-off', !avail.intOn);
+    if (!avail.intOn) return;
+    var ssBtn = row.querySelector('[data-qact="int-ss"]');
+    if (ssBtn) {
+      ssBtn.style.display = avail.ss.show ? '' : 'none';
+      var lbl = ssBtn.querySelector('.mc-qa-lbl');
+      var text = avail.ss.label.indexOf('Unpair') === 0 ? 'Unpair' : 'Superset';
+      if (lbl && lbl.textContent !== text) lbl.textContent = text;
+    }
+    var dropBtn = row.querySelector('[data-qact="int-drop"]');
+    if (dropBtn) dropBtn.style.display = avail.drop ? '' : 'none';
+  }
+
+  // K-3.4/G-11/VOC-C1: "I found eight power tools behind that ⋯ button" —
+  // the meatball hides the whole hybrid toolkit (progress, replace, reorder,
+  // tempo, notes, drop set, cluster set, superset) behind one unlabeled
+  // icon. First natural moment = the athlete already has a card open (the
+  // most attentive moment on the page, and the same one VOC-A2's cold-start
+  // auto-open already tries to land them on) — points the hint at THAT
+  // card's own meatball, not just the first one in the DOM. MC_HINTS owns
+  // the "only once, ever" gate, so this only needs to find a target.
+  // Once true for this page load, never re-check MC_HINTS.seen('meatball')
+  // again — that's a localStorage read on every scan() pass otherwise,
+  // for a question whose answer can only flip false->true, never back.
+  var _meatballHintDone = false;
+  function maybeShowMeatballHint() {
+    if (_meatballHintDone || !window.MC_HINTS) return;
+    if (MC_HINTS.seen('meatball')) { _meatballHintDone = true; return; }
+    var active = document.querySelector('.ex-card.active, .ex-item.active, .ss-ex.active');
+    if (!active) return;
+    var host = active.querySelector(BODY_SEL) || active;
+    var btn = host.querySelector(':scope > .mc-meatball');
+    if (!btn) return;
+    MC_HINTS.show('meatball', btn,
+      'Tap ⋯ for more: replace, reorder, tempo, notes, superset & drop set.');
+    _meatballHintDone = true;
+  }
+
   var hydrateTimer = null;
 
   function scan() {
@@ -924,6 +1030,16 @@
     try {
       withoutObserver(function () {
       Array.prototype.forEach.call(cards, injectMeatball);
+      Array.prototype.forEach.call(cards, injectQuickActions);
+      // Only the ACTIVE card's row is ever visible (CSS-gated) — computing
+      // availability for all 10 resting cards every pass would burn
+      // MC_PO.hasPersonalSS()/hasOwnerIntensifier() reads for nothing, since
+      // those aren't cached outside program-overrides.js's OWN scan pass.
+      // Caught live by the K-3.1 budget gate: storageReads 17 -> 349.9 on
+      // mm-p1.html when this ran on every card.
+      var activeForQA = document.querySelector('.ex-card.active, .ex-item.active, .ss-ex.active');
+      if (activeForQA) updateQuickActions(activeForQA);
+      maybeShowMeatballHint();
       injectQuickPumpTrigger();
       var containers = [];
       Array.prototype.forEach.call(cards, function (c) {

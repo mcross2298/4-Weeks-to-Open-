@@ -603,6 +603,63 @@ after it is protected)*
     today's in-progress session correctly excluded from the comparison, no
     badge on <2 completed sessions or a fresh install with no history, and
     the exercise name's text confirmed unchanged after injection.
+    — **K-3.4/G-11/VOC-C1 shipped (2026-08-22) — scope narrowed to what the
+    roadmap's own language already committed to.** The item's earlier
+    framing named six modules (readiness, strain, cues, voice, wrapped,
+    muscle-map); VOC-C1's round sharpened it to "hint + promote 2 session
+    actions" (singular hint) — the one with real transcript evidence — and
+    that's what shipped. `mc-hints.js` is new: `MC_HINTS.show(id, targetEl,
+    text)` shows a small dismissible callout once ever per device
+    (localStorage, `mc_hints_seen_v1`, registered in `store-registry.json`),
+    added to all 78 pages that load `mc-card-actions.js` (uniform insertion
+    right before that script tag, keeping every `check-script-manifest.py`
+    family in sync). `mc-card-actions.js` calls it the first time the
+    athlete has a card open — the most attentive moment on the page —
+    pointing at that card's own meatball: "Tap ⋯ for more: replace,
+    reorder, tempo, notes, superset & drop set." The two session-flow
+    actions (⚡ superset, ↘️ drop set) are now ALSO visible buttons on the
+    active card, not just menu items — `openMenu()`'s PM/personal/pairing
+    visibility logic was factored into a shared `intAvailability()` so the
+    promoted buttons ask the exact same question the menu already answers,
+    and `runIntAction()` so both paths execute through one function, never
+    two copies to drift apart.
+
+    Three real bugs surfaced in testing, none hypothetical: (1) the hint
+    stacked duplicates — `MC_HINTS.show()` only marked a hint "seen" on
+    dismiss, so a second `scan()` pass firing before the athlete reacted
+    (which `MC_SCAN` does routinely) found "not yet seen" still true and
+    created another; over 20 piled up within seconds in live testing before
+    the fix (mark seen the instant it's shown, not on dismiss). (2) the
+    promoted row's CSS gate to `.active` did nothing at first — an inline
+    `row.style.display` set from JS was out-specificity-ing the class
+    selector, so the row showed on every resting card; fixed by using a
+    narrowing-only `.mc-qa-off` class instead of an inline style, since an
+    inline style always wins over a class regardless of which is "more
+    specific" on paper. (3) the K-3.1 budget gate caught a real regression
+    twice over: first `updateQuickActions()` ran `intAvailability()` — which
+    calls into `MC_PO`, whose own read-memoization is scoped to ITS pass,
+    not this module's — for all 10 resting cards every scan pass
+    (`storageReads` 17 → 349.9 on `mm-p1.html`); fixed by only computing it
+    for the one card it's ever visible on. The remaining overage was the
+    hint's own `MC_HINTS.seen()` check re-reading `localStorage` every pass
+    forever after the answer could only ever be "yes" — fixed with a
+    same-page in-memory latch. All three K-3.1 probe pages measure within
+    budget after both fixes. A fourth issue was cosmetic, not a budget
+    regression: the hint's fixed "always below the target" placement could
+    land underneath the page's fixed Finish/Exit bar when the target was
+    near the bottom of the viewport — fixed by flipping the callout above
+    the target whenever below wouldn't clear a reserved bottom safe-zone.
+    The visual ratchet's 5 kitchen-sink baselines were re-generated
+    (`--update`) to account for the promoted row's real +54px on an active
+    card — a deliberate, uniform change verified identical across all five
+    before re-baselining, not a drift. **Explicitly not shipped this pass:**
+    standalone hints for readiness/strain/cues/voice/wrapped/muscle-map —
+    `mc-strain.js`/`mc-muscle-map.js` are pure data layers with no UI
+    surface of their own to point a hint at, and the others (readiness's
+    pulse strip, voice's floating button, wrapped's already-prominent
+    dashboard card) weren't validated by any transcript evidence the way
+    the meatball was, so adding hints there would have been six more
+    untested guesses rather than one well-evidenced fix.
 
 **Standing gate, unchanged:** the owner-side real-device QA matrix (iOS Safari,
 Android Chrome, installed PWA, two-device Supabase reconciliation) carried from

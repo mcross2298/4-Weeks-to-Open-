@@ -162,6 +162,13 @@
       "export": false,
       "note": "Food-lookup API response cache. Derived data, re-fetchable."
     },
+    "mc_hints_seen_v1": {
+      "owner": "mc-hints.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "K-3.4/G-11: one-time contextual coach-mark dismissal flags, keyed by hint id. Meaningless on another device — each shows itself again there if never marked seen, which is the correct fallback, not a bug."
+    },
     "mc_interval_snap": {
       "owner": "mc-interval.js",
       "storage": "session",
@@ -289,6 +296,13 @@
       "storage": "local",
       "sync": false,
       "export": true
+    },
+    "mc_resume_toast_shown": {
+      "owner": "mc-resume.js",
+      "storage": "session",
+      "sync": false,
+      "export": false,
+      "note": "VOC-C2: dedup guard (keyed by mc_activity.last.ts) so the \"Session saved\" toast fires once per departure, not once per re-render. Tab-scoped bookkeeping, not user data."
     },
     "mc_session_summary_v1": {
       "owner": "mc-finish.js",

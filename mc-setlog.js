@@ -1029,9 +1029,9 @@
   // mc-cond-suggest.js's local copy of workoutInProgress()).
   // A-2/S1: one localStorage read per run() pass, not one per card. The
   // first cut of this called st() straight from trendFor() per-card, which
-  // the K-3.1 perf budget caught immediately (storageReads 17 -> 83 on
-  // bro-split.html, well past its 1.5x ceiling) — the exact per-card-storage-
-  // read shape S1 spent this whole roadmap eliminating.
+  // the K-3.1 perf budget caught immediately (storageReads 17 -> 83 on one
+  // of its probe pages, well past its 1.5x ceiling) — the exact per-card-
+  // storage-read shape S1 spent this whole roadmap eliminating.
   var _stCache = null;
   function trendFor(exId) {
     var hist = (_stCache || (_stCache = st()))[ek(exId)] || [];   // newest-first, capped at 5

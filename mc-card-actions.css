@@ -28,6 +28,31 @@
 .mc-meatball.mc-has-note .mc-dot-ind,
 .mc-meatball.mc-has-tempo .mc-dot-ind{display:block;}
 
+/* ── Promoted quick actions (K-3.4/VOC-C1) ──────────────────────────────
+   Superset / Drop set surfaced out of the meatball menu onto the card face
+   — but only while the card is the one .active card in the day (R3), so
+   the 9 resting cards around it stay uncluttered. */
+.mc-quick-actions{display:none;gap:8px;margin-top:10px;}
+/* Descendant, not direct-child: injectQuickActions() mounts this on
+   card.querySelector(BODY_SEL) || card, and BODY_SEL's nesting depth
+   under .ex-card/.ex-item/.ss-ex varies by template. */
+.ex-card.active .mc-quick-actions,
+.ex-item.active .mc-quick-actions,
+.ss-ex.active .mc-quick-actions{display:flex;}
+/* updateQuickActions() adds this when intensifiers aren't available on this
+   card at all (e.g. .ss-ex legs) — narrows the .active gate above, never
+   widens it, so it stays a plain class rule rather than an inline style. */
+.mc-quick-actions.mc-qa-off{display:none;}
+.mc-qa-btn{
+  appearance:none;cursor:pointer;flex:1;min-height:44px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  border-radius:9px;border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.05);color:#cbd5e1;
+  font-family:inherit;font-size:var(--fs-xs);font-weight:800;
+  -webkit-tap-highlight-color:transparent;transition:background 0.15s;
+}
+.mc-qa-btn:active{background:rgba(255,255,255,0.12);}
+
 /* MARKET:STRIP influencer-refs START */
 /* ── Tempo pill (on-demand add-in · STNDR notation) ── */
 /* MARKET:STRIP influencer-refs END */
@@ -280,6 +305,9 @@
 /* ── SAND LIGHT MODE (Phase 7) ─────────────────────────────────────────── */
 html[data-theme="light"] .mc-meatball{background:rgba(28,26,23,0.05);border-color:rgba(28,26,23,0.12);color:#6b6459;}
 html[data-theme="light"] .mc-meatball:active{background:rgba(28,26,23,0.1);}
+
+html[data-theme="light"] .mc-qa-btn{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.12);color:#6b6459;}
+html[data-theme="light"] .mc-qa-btn:active{background:rgba(28,26,23,0.1);}
 
 html[data-theme="light"] .mc-tempo-legend{color:#6b6459;}
 html[data-theme="light"] .mc-tempo-opt{background:#faf7f0;border-color:rgba(28,26,23,0.1);}
