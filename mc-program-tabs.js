@@ -72,6 +72,37 @@
     return r + ',' + g + ',' + b;
   }
 
+  // A program's accent is tuned to sit on a near-black ground. Used as TEXT on
+  // the cream light theme it fails badly — the contrast ratchet caught two
+  // programs at 1.77:1 and 1.87:1 against a 3:1 floor. So derive a darkened
+  // variant for light-mode text rather than reusing the brand hue: same colour
+  // family, enough luminance contrast to read. Computed per program, so a new
+  // program needs no hand-tuned entry and cannot be forgotten.
+  var LIGHT_BG = { r: 245, g: 242, b: 236 };   // the sand theme's page ground
+
+  function relLum(c) {
+    function f(v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+    return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
+  }
+  function ratio(a, b) {
+    var l1 = relLum(a), l2 = relLum(b);
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+  }
+  function inkFor(hex, target) {
+    var parts = hexToRgb(hex).split(',');
+    var c = { r: +parts[0], g: +parts[1], b: +parts[2] };
+    var want = target || 4.5;
+    // Step toward black in 5% increments until the ratio clears the target.
+    for (var i = 0; i <= 20; i++) {
+      var k = 1 - i * 0.05;
+      var t = { r: Math.round(c.r * k), g: Math.round(c.g * k), b: Math.round(c.b * k) };
+      if (ratio(t, LIGHT_BG) >= want) {
+        return 'rgb(' + t.r + ',' + t.g + ',' + t.b + ')';
+      }
+    }
+    return '#1c1a17';
+  }
+
   // ---- the list model ------------------------------------------------------
   // Split out from rendering so tools/test-mc-program-tabs.js can assert the
   // adaptive decisions (how many levels, which day numbers, what is ticked)
@@ -339,7 +370,8 @@
       '<div class="mpt-panel is-hidden" id="mpt-p-list" role="tabpanel" aria-labelledby="mpt-t-list"></div>';
     return '<div class="mpt' + (cfg.list === false ? ' mpt-solo' : '') +
       '" style="--mpt-accent:' + escapeHtml(cfg.accent || '#c9505a') +
-      ';--mpt-accent-rgb:' + hexToRgb(cfg.accent) + ';">' +
+      ';--mpt-accent-rgb:' + hexToRgb(cfg.accent) +
+      ';--mpt-accent-ink:' + inkFor(cfg.accent) + ';">' +
       head +
       '<div class="mpt-panel" id="mpt-p-overview" role="tabpanel"' +
         (cfg.list === false ? '' : ' aria-labelledby="mpt-t-overview"') + '></div>' +

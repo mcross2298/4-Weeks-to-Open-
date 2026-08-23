@@ -22,6 +22,15 @@
   padding:0 16px 26px;
 }
 
+
+/* Accent-as-TEXT. The brand hue is tuned for a near-black ground and fails the
+   3:1 floor on the sand theme (the ratchet caught two programs at 1.77:1 and
+   1.87:1), so light mode swaps in --mpt-accent-ink, a darkened variant
+   mc-program-tabs.js computes per program. Borders, outlines and tinted
+   backgrounds keep the raw accent — only text changes. */
+.mpt{ --mpt-accent-text:var(--mpt-accent,#c9505a); }
+html[data-theme="light"] .mpt{ --mpt-accent-text:var(--mpt-accent-ink,#1c1a17); }
+
 /* ── tab bar ───────────────────────────────────────────────────────────── */
 .mpt-tabs{
   display:flex;gap:6px;
@@ -48,7 +57,7 @@
 .mpt-sec{ margin-top:24px; }
 .mpt-sec-h{
   font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;
-  color:var(--mpt-accent,#c9505a);margin:0 0 10px;
+  color:var(--mpt-accent-text);margin:0 0 10px;
   display:flex;align-items:center;gap:8px;
 }
 .mpt-sec-h::after{
@@ -74,7 +83,7 @@
   padding:6px 2px;
 }
 .mpt-wd-mark{
-  font-size:13px;font-weight:900;color:var(--mpt-accent,#c9505a);
+  font-size:13px;font-weight:900;color:var(--mpt-accent-text);
   line-height:1;
 }
 .mpt-wd-lbl{
@@ -94,7 +103,7 @@
 }
 .mpt-chip-n{
   font-size:10.5px;font-weight:900;font-variant-numeric:tabular-nums;
-  color:var(--mpt-accent,#c9505a);
+  color:var(--mpt-accent-text);
   background:rgba(var(--mpt-accent-rgb,201,80,90),0.14);
   border-radius:20px;padding:1px 6px;
 }
@@ -108,7 +117,7 @@
 .mpt-link:active{ background:rgba(var(--mpt-accent-rgb,201,80,90),0.1); }
 .mpt-link-ico{ font-size:16px;flex-shrink:0; }
 .mpt-link-t{ flex:1;font-size:13px;font-weight:800;color:var(--mpt-ink); }
-.mpt-link-arrow{ color:var(--mpt-accent,#c9505a);font-size:16px;font-weight:900; }
+.mpt-link-arrow{ color:var(--mpt-accent-text);font-size:16px;font-weight:900; }
 
 /* ── program list ──────────────────────────────────────────────────────── */
 /* The drilled-in context header (decision 7) — a split's own name, size and
@@ -121,7 +130,7 @@
   border:1px solid rgba(var(--mpt-accent-rgb,201,80,90),0.3);
   border-radius:20px;
   font-family:inherit;font-size:12.5px;font-weight:800;
-  color:var(--mpt-accent,#c9505a);cursor:pointer;-webkit-tap-highlight-color:transparent;
+  color:var(--mpt-accent-text);cursor:pointer;-webkit-tap-highlight-color:transparent;
 }
 .mpt-back:active{ background:rgba(var(--mpt-accent-rgb,201,80,90),0.18); }
 .mpt-ctx-t{
@@ -130,7 +139,7 @@
 }
 .mpt-ctx-m{
   font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;
-  color:var(--mpt-accent,#c9505a);margin-top:4px;
+  color:var(--mpt-accent-text);margin-top:4px;
 }
 .mpt-ctx-d{ font-size:12.5px;line-height:1.6;color:var(--mpt-ink-2);margin:8px 0 0; }
 
