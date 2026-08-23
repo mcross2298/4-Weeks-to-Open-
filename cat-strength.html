@@ -67,9 +67,7 @@
 .resume-sub{font-size:11px;color:#6b7280;margin-top:1px;}
 .resume-arrow{font-size:18px;color:#a855f7;font-weight:900;}
 /* Split selector cards (vertical, MC-style) */
-.split-strip-wrap{padding:18px 0 4px;background:#0d0618;}
-.split-strip-label{font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;color:#475569;padding:0 16px;margin-bottom:12px;}
-.split-strip{display:flex;flex-direction:column;gap:10px;max-width:680px;margin:0 auto;padding:0 16px 8px;}
+/* F1: .split-strip-wrap / -label / .split-strip removed with buildStrip() — the Program list replaced that strip. */
 .split-card-sel{display:block;width:100%;text-align:left;background:#0f0f0f;border:1.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 16px 14px 18px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;font-family:inherit;}
 .split-card-sel::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--sp-color,#a855f7);opacity:0.45;transition:opacity 0.15s;}
 .split-card-sel:active{transform:scale(0.99);}
@@ -186,7 +184,6 @@ html[data-theme="light"] .resume-label,
 html[data-theme="light"] .resume-arrow{color:#7c3aed;}
 html[data-theme="light"] .resume-name{color:#1c1a17;}
 
-html[data-theme="light"] .split-strip-wrap{background:#f5f2ec;}
 html[data-theme="light"] .split-card-sel{background:#faf7f0;border-color:rgba(28,26,23,0.1);}
 html[data-theme="light"] .split-card-sel.active{background:#f0e9fa;}
 html[data-theme="light"] .split-card-name{color:#1c1a17;}
@@ -236,6 +233,10 @@ html[data-theme="light"] .ccc-dropdown-chev{color:#c2410c;}
 html[data-theme="light"] .ccc-sub{color:#6b6459;}
 </style>
 <link rel="stylesheet" href="mc-program-hero.css"/>
+<!-- F1: the Overview | Program list tabs, plus mc-program-day.css for the
+     reorder sheet mc-program-menu.js opens from the list. -->
+<link rel="stylesheet" href="mc-program-tabs.css"/>
+<link rel="stylesheet" href="mc-program-day.css"/>
 <link rel="stylesheet" href="mc-surprise.css"/>
 <link rel="stylesheet" href="mc-light.css">
 </head>
@@ -254,10 +255,9 @@ html[data-theme="light"] .ccc-sub{color:#6b6459;}
 ════════════════════════════════════ -->
 <div id="view-dashboard">
 
+  <!-- The Program Guide link moved into the Overview tab below, where it sits
+       with the rest of the program-identity content instead of above it. -->
   <div class="pd-links">
-    <a href="ss-instructions.html" class="inst-header-link" style="margin-top:0;">
-      <span>📋</span><span>Program Guide</span><span>→</span>
-    </a>
     <button type="button" class="mc-surprise-btn" data-mc-surprise style="--sp-accent:#c9505a;margin-top:0;"><span class="mc-surprise-ico">🎲</span>Surprise Me</button>
   </div>
 
@@ -271,11 +271,11 @@ html[data-theme="light"] .ccc-sub{color:#6b6459;}
     <div class="resume-arrow">→</div>
   </div>
 
-  <div class="split-strip-wrap">
-    <div class="split-strip-label">All workouts</div>
-    <div class="split-strip" id="splitStrip"></div>
-  </div>
-
+  <!-- F1: Overview | Program list. This replaces the flat "All workouts"
+       strip — Program list is that strip with completion state, day numbers
+       and reorder, and Overview is where the program's own identity content
+       finally has somewhere to live. -->
+  <div id="progTabs"></div>
 
 </div><!-- end #view-dashboard -->
 
@@ -318,10 +318,18 @@ window.MC_TEMPO_ENABLED = true;
 <script src="mc-haptics.js"></script>
 <script src="mc-reps.js"></script>
 <script src="mc-pm-data.js"></script>
-<!-- F0: only the state layer remains here. The three view modules moved to
+<!-- F0: only the state layer remains here. The week bar and day hero moved to
      dashboard.html with the day module. This loads before the page's inline
-     script, which reads MC_PROGRAM_PROGRESS in its INIT block. -->
+     script, which reads MC_PROGRAM_PROGRESS in its INIT block.
+     F1 adds the landing's tabs and the menu module the list's "Reorder days"
+     opens; mc-biomech.js is the single implementation of equipment
+     classification, which the Overview's equipment row derives from the day
+     data this page already holds (exercise-catalog.js is 87 KB and a landing
+     page has no business loading it). -->
 <script src="mc-program-progress.js"></script>
+<script src="mc-program-menu.js"></script>
+<script src="mc-biomech.js"></script>
+<script src="mc-program-tabs.js"></script>
 <script>
 
 // ══════════════════════════════════════════════════════════════
@@ -790,7 +798,7 @@ function backToSplit(){
   showDashboard();
 }
 
-// `week` is optional and defaults to 1, so the split-strip cards and the
+// `week` is optional and defaults to 1, so the Program list rows and the
 // not-found picker below (which call showWorkout(id) with no week) are
 // unchanged. The day view passes the week its day actually belongs to —
 // opening Day 8 must land on Week 2, not Week 1.
@@ -838,30 +846,10 @@ function resumeLastWorkout(){
 // ══════════════════════════════════════════════════════════════
 //  DASHBOARD — SPLIT STRIP & DETAIL
 // ══════════════════════════════════════════════════════════════
-// Single 6-week cycle → list its day workouts directly as cards (no split layer).
-function buildStrip(){
-  const split = SPLITS[0];
-  const c = split.color;
-  document.getElementById('splitStrip').innerHTML = split.workouts.map(w => {
-    const soon = !!w.comingSoon;
-    const tagHtml = (w.tags||[]).map(t =>
-      `<span class="workout-tag" style="background:${c}18;color:${c};border:1px solid ${c}30;">${t}</span>`
-    ).join('');
-    const onclick = soon ? '' : ` onclick="showWorkout('${w.id}')"`;
-    const meta = soon
-      ? `<span class="workout-tag" style="background:rgba(148,163,184,0.12);color:#94a3b8;border:1px solid rgba(148,163,184,0.3);">Coming soon</span>`
-      : `<span class="workout-tag" style="background:${c}18;color:${c};border:1px solid ${c}30;">6 weeks</span>`;
-    return `<div class="workout-card"${onclick}
-        style="background:${w.bg};border-color:${w.border};${soon?'opacity:0.6;cursor:default;':''}">
-      <div class="workout-icon" style="background:${c}18;">${w.icon}</div>
-      <div class="workout-info">
-        <div class="workout-name">${w.name}</div>
-        <div class="workout-tags">${tagHtml}${meta}</div>
-      </div>
-      <div class="workout-arrow">${soon?'⋯':'→'}</div>
-    </div>`;
-  }).join('');
-}
+// F1: buildStrip() rendered the flat "All workouts" card strip into
+// #splitStrip. MC_PROGRAM_TABS' Program list is that strip plus completion
+// state, day numbers and reorder, so the strip and its container are gone
+// rather than left to render the same five workouts a second time.
 
 // Renders the tapped split's workout breakout inside the split view.
 function renderSplitDetail(){
@@ -1228,7 +1216,6 @@ buildTimerFloat();
 // Dashboard init — main page shows only the split cards;
 // the breakout renders inside the split view when a card is tapped.
 initResumeBanner();
-buildStrip();
 
 // ══════════════════════════════
 //  PROGRAM PROGRESS  (program-flow-roadmap.md F0)
@@ -1249,6 +1236,53 @@ const SS_DEF = {
   rest:    (SS_SCHED.rest || [6, 7]).slice(),
   order:   (SS_SCHED.days || []).map(function(d){ return d.id; })
 };
+
+// ── the landing tabs (program-flow-roadmap.md F1) ──────────────────────────
+// ss is the one-level case: its "splits" ARE its days, so ONE group is passed
+// and MC_PROGRAM_TABS renders the day rows with no drill-in above them. A
+// two-level program hands over several groups instead; nothing here changes.
+//
+// dayMeta reads mc-pm-data.js's schedule record — the same source the
+// dashboard's day hero reads — so the two surfaces cannot disagree about a
+// day's title, icon or duration.
+const SS_DAY_META = {};
+(SS_SCHED.days || []).forEach(function (d) { SS_DAY_META[d.id] = d; });
+
+// Equipment is derived, not authored: every exercise name in the block, run
+// through mc-biomech.js's classifier. Weeks share the same movement pool, so
+// week 1 is representative and reading all six would only add duplicates.
+function ssExerciseNames(){
+  var out = [];
+  Object.keys(PMC_SPLITS).forEach(function (id) {
+    var wk = (PMC_SPLITS[id].data || {})[1] || [];
+    wk.forEach(function (ex) {
+      if (ex.type === 'superset') { if (ex.a) out.push(ex.a.name); if (ex.b) out.push(ex.b.name); }
+      else if (ex.name) out.push(ex.name);
+    });
+  });
+  return out;
+}
+
+const SS_PROG = (window.MC_PM_DATA && MC_PM_DATA.program('ss')) || {};
+const ssTabs = window.MC_PROGRAM_TABS && MC_PROGRAM_TABS.mount(document.getElementById('progTabs'), {
+  progId: 'ss',
+  def: SS_DEF,
+  accent: '#e11d48',
+  programName: SS_PROG.name || 'Strength & Supersets',
+  desc: SS_PROG.desc || '',
+  forWho: SS_PROG.forWho || '',
+  guide: { href: 'ss-instructions.html', label: 'Strength & Supersets guide' },
+  groups: [{ id: 'cycle', name: 'The 6-Week Cycle', days: SS_DEF.order.slice() }],
+  dayMeta: function (id) { return SS_DAY_META[id] || null; },
+  exerciseNames: ssExerciseNames(),
+  onNavigate: function (action) {
+    if (action === 'programs') location.href = 'dashboard.html?screen=programs';
+    else if (action === 'logs') location.href = 'workout-logs.html';
+    else if (action === 'calendar') location.href = 'dashboard.html?tab=calendar';
+  },
+  onOpen: function (workoutId, week) { showWorkout(workoutId, week); },
+  onLog: function (workoutId, logId) { location.href = 'workout-detail.html?id=' + encodeURIComponent(logId); }
+});
 
 // ── deep link ──────────────────
 // dashboard.html links cat-strength.html?day=<workoutId>&week=<n>. Landing on
@@ -1286,6 +1320,9 @@ document.addEventListener('mc:workout-finished', function(ev){
   if(!pos) return;
   var day = (activeWeek - 1) * rec.perWeek + pos;
   PD.complete('ss', day, { logId: entry.id, workoutId: currentWorkoutId }, SS_DEF);
+  // The list is behind the workout view right now, but the athlete backs out
+  // to it — re-read so the day it just banked is ticked when they get there.
+  if (ssTabs) ssTabs.refresh({ week: activeWeek });
 });
 
 // ══════════════════════════════════════════════════════════════
@@ -1350,7 +1387,10 @@ window.saveWorkout=function(){};
 <script src="mc-superset-hop.js"></script>
 <script src="mc-summary.js"></script>
 <script src="mc-sw-update.js"></script>
-<script>window.MC_SURPRISE = { sel: '.workout-card' };</script>
+<!-- F1: the Program list's day rows replaced the .workout-card strip on the
+     landing. .workout-card is kept in the list because #view-split still
+     renders them. -->
+<script>window.MC_SURPRISE = { sel: '.mpt-row[data-mpt-day], .workout-card' };</script>
 <script src="mc-surprise.js"></script>
 <script src="mc-nav.js"></script>
 <script src="mc-resume.js"></script>
@@ -1358,19 +1398,31 @@ window.saveWorkout=function(){};
 <script>
 /* F0 — the Onyx landing hero is back. D0–D3 removed it to make room for the
    day module; that module now lives on dashboard.html, so this page needs its
-   program-identity header again. F1 replaces this with the Overview /
-   Program list tabs. */
+   program-identity header again.
+
+   F1 — TRIMMED, not full. The full variant renders a stat strip (6 weeks /
+   5 days per week / Int.) and an invented 7-day schedule strip whose training
+   days are just "the first N cells". The Overview tab below now carries both
+   of those from the real record, with actual day names and completion state,
+   so the full variant would put two week strips and two copies of the block
+   shape on one screen — and the weaker, hand-passed pair would be on top.
+   The hero keeps what only it has: the art, the tier, the name, the tagline
+   and "What's inside". */
 MCProgramHero.mount(document.getElementById('programHero'), {
-  variant: 'full',
+  variant: 'trimmed',
   accent: '#e11d48',
   iconKey: 'ss',
   tierLabel: 'Flagship',
   name: "Strength & Supersets",
   tagline: 'Heavy compounds paired with high-volume supersets + AMRAP finishers',
-  weeks: 6,
-  daysPerWeek: 5,
-  level: 'Int.',
-  scheduleLabel: '5-on 2-off',
+  ctaLabel: 'Start Program',
+  // Straight to the day list rather than the trimmed default's scroll-to-next
+  // -sibling, which would land on the Overview tab the athlete is already on.
+  onStart: function () {
+    if (!ssTabs) return;
+    ssTabs.showTab('list');
+    document.getElementById('progTabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
   whatsInside: [
     { icon: 'chevron', title: 'Heavy compound lifts every session' },
     { icon: 'bars', title: 'Supersets and AMRAP finishers push volume at the end, not the start.' }
@@ -1378,10 +1430,9 @@ MCProgramHero.mount(document.getElementById('programHero'), {
   backHref: 'dashboard.html',
   onBadgeTap: function () {
     if (localStorage.getItem(LAST_WORKOUT_KEY)) { resumeLastWorkout(); }
-    else {
-      var strip = document.getElementById('splitStrip');
-      if (strip && strip.scrollIntoView) strip.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    // F1: no last workout yet -> open the Program list, which is where the
+    // workouts moved. (It used to scroll to #splitStrip, which is gone.)
+    else if (ssTabs) { ssTabs.showTab('list'); document.getElementById('progTabs').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   }
 });
 </script>

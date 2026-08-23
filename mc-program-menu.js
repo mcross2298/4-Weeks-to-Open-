@@ -305,9 +305,16 @@
     if (typeof cfg.onChange === 'function') cfg.onChange();
   }
 
+  // `view` (program-flow-roadmap.md F1) lets a caller open straight into one
+  // of the sub-sheets. The program landing's Program list surfaces "Reorder
+  // days" on the list itself, and walking the six-item root menu to reach the
+  // control you just tapped would be a step for nothing. The sub-sheet's own
+  // back button still leads to the root, so nothing becomes unreachable.
   function open(cfg) {
     if (!cfg || !cfg.rec || !window.MC_PROGRAM_PROGRESS) return;
     lastFocus = document.activeElement;
+    if (cfg.view === 'reorder') { openReorder(cfg); return; }
+    if (cfg.view === 'schedule') { openSchedule(cfg); return; }
     openRoot(cfg);
   }
 

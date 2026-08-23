@@ -29,6 +29,12 @@
     if (el.disabled || el.getAttribute('aria-disabled') === 'true') return false;
     if (/\b(soon|disabled|locked)\b/i.test(el.className || '')) return false;
     if (el.tagName === 'A') return !!el.getAttribute('href');
+    // A real <button> is clickable by construction, and the disabled /
+    // aria-disabled / "coming soon" checks above have already had their say.
+    // Requiring an onclick would exclude every control wired by a delegated
+    // listener — which is how the app's newer components are built, and how
+    // the program landing's list rows (mc-program-tabs.js) are wired.
+    if (el.tagName === 'BUTTON') return true;
     // non-link cards (onclick="showWorkout(...)") — "coming soon" placeholders
     // render with no handler at all, so require one to be present.
     return el.hasAttribute('onclick') || typeof el.onclick === 'function';

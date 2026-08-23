@@ -85,6 +85,8 @@ node tools/test-mc-readiness.js        # per-muscle recovery-curve math
 node tools/test-mc-quick-pump.js       # history-aware selection incl. mc-readiness.js integration
 node tools/test-mc-bridge.js           # cross-app bridge read layer
 node tools/test-mc-sync-merge.js       # mc-sync.js merge logic
+node tools/test-mc-program-progress.js # per-program day model (continuous days, rest-as-data)
+node tools/test-mc-program-tabs.js     # program-landing list model (adaptive depth, day numbers)
 node tools/test-mc-sw.js               # service-worker fetch strategy
 python3 tools/build-sw.py --check      # committed sw.js matches the tree
 python3 tools/check-script-manifest.py --check   # clone pages load identical module lists
@@ -398,6 +400,51 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > `.pd-links` block; the fleet-wide shortfall is pre-existing, is caught by
 > no gate today (`check-journey.js` only measures session-shell controls on
 > 6 pages), and wants its own change.
+
+> **Successor plan:** [`program-flow-roadmap.md`](program-flow-roadmap.md)
+> (opened 2026-08-23, `F0–F5`) corrects **where** the day module lives, gives
+> the program page a real landing, and ends the multi-day accordion. It exists
+> because `D0–D3` put the week bar + day hero on `cat-strength.html`, which is
+> the *landing*, not the home screen — comparing the reference app's two screen
+> sets shows they are two different screens, and the program-identity half lost.
+> Ten decisions locked across two `AskUserQuestion` rounds. Scratch-listed
+> (`content-manifest.json`), so it never ships to the public Rolodex build.
+>
+> **F0 shipped (2026-08-23):** the day module moved to `dashboard.html`'s Home,
+> keyed to `mc_active_prog`, so it is instantiated **once** instead of once per
+> program and per-program work collapses to supplying a record —
+> `mc-pm-data.js`'s `ss` entry gained a `schedule` block (weeks/perWeek/rest +
+> one entry per training day; `ex`/`sets`/`min` are **week 1** figures on
+> purpose, since duplicating 30 per-week triples would drift from the authored
+> prescription in `cat-strength.html`). Custom and owner-published programs
+> fall through to the old `#heroCard` (decision 4) — they have no declared rest
+> pattern and inventing one is out of scope. `cat-strength.html` got its Onyx
+> hero back plus a `?day=&week=` deep link for the "Start Day N" CTA to land
+> on. A **real touch-floor violation** was measured, not assumed: inside the
+> dashboard's padded `.hero-wrap` the week pills came out 43.72px at 390,
+> 39.42 at 360 and 33.72 at 320 — seven 44px cells cannot fit 320px, so no
+> padding tweak fixes it; the row became `flex:1 0 44px` + `overflow-x:auto`.
+>
+> **F1a shipped (2026-08-23):** `mc-program-tabs.js` (`MC_PROGRAM_TABS`) +
+> `mc-program-tabs.css` — the landing's `Overview | Program list` tabs, mounted
+> on `cat-strength.html`. A pure renderer over `mc-program-progress.js`, with
+> its list model split out and covered by `tools/test-mc-program-tabs.js` (50
+> vm-sandboxed assertions against the real source), so **adaptive depth** —
+> one group renders days directly, several render a group level and drill in —
+> is data, and `F1b` supplies config rather than code. Three defects came from
+> **driving the page, not reading it**: rows pinned to the authored order made
+> reordering renumber in place and appear to do nothing; an unweighted
+> equipment row came back as all seven categories `MCBiomech` knows, which is
+> true and useless (now counted and frequency-ordered); and the full hero
+> variant duplicated the week strip and block shape that Overview now renders
+> from the real record, so the hero dropped to `variant:'trimmed'`. Two things
+> were fixed rather than worked around: `mc-surprise.js`'s `isEnabled()`
+> required an `onclick` attribute and so excluded every delegated-listener
+> control (Surprise Me would have silently hidden itself), and
+> `mc-program-menu.js` gained a `view` option so "Reorder days" opens straight
+> into the sheet — reorder itself is **not** reimplemented. A CI gap was closed
+> on the way: `tools/test-mc-program-progress.js` shipped with `D0–D3` and was
+> never wired into a workflow, so its 68 assertions had never run in CI.
 
 > **Companion card-layer plan:** [`card-integration-roadmap.md`](card-integration-roadmap.md)
 > (opened 2026-08-19) merges two audits taken the same day against the same
