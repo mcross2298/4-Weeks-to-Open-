@@ -865,7 +865,11 @@ function initResumeBanner(){
 }
 function resumeLastWorkout(){
   const d = document.getElementById('resumeBanner')._data;
-  if(d){ currentWorkoutId = d.workoutId; activeWeek = d.week; showWorkout(d.workoutId); }
+  // The stored week used to be assigned to activeWeek and then immediately
+  // overwritten with 1 by showWorkout(), so resuming a Week 4 session always
+  // reopened Week 1 while the banner said "Week 4". Pre-existing; fixable
+  // now only because showWorkout() takes a week.
+  if(d){ currentWorkoutId = d.workoutId; showWorkout(d.workoutId, d.week); }
 }
 
 // ══════════════════════════════════════════════════════════════
