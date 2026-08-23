@@ -75,7 +75,13 @@
     // setting): which program you are running, and any schedule shifts, should
     // follow you to a second device mid-block.
     'mc_active_prog':         'scalarBase',
-    'mc_weekly_overrides_v1': 'dictBase'
+    'mc_weekly_overrides_v1': 'dictBase',
+    // program-day-view-roadmap.md D0 — where you are in a program (cursor,
+    // completed days, rest pattern, per-week day order). Same reasoning and
+    // the same per-key strategy as mc_weekly_overrides_v1 above: a block
+    // half-finished on the phone has to be half-finished on the tablet, and
+    // two devices advancing two DIFFERENT programs must both survive.
+    'mc_program_progress_v1': 'dictBase'
   };
   // Roadmap B0 (cookbook↔workout bridge) — stores this app CONSUMES read-only
   // from Mike's Cookbook via the shared user_sync table. PULLED into local

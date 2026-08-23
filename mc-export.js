@@ -38,6 +38,7 @@
     'mc_session_summary_v1',        // synced since B-era; was missing here
     'mc_custom_exercises_v1',       // G-01
     'mc_active_prog', 'mc_weekly_overrides_v1',
+    'mc_program_progress_v1',       // program-day-view-roadmap.md D0
     // export-only: per-exercise personalization. Real user decisions worth
     // restoring, but not synced yet — these dicts carry no per-entry
     // timestamp, so a live merge needs a conflict rule of its own (owner

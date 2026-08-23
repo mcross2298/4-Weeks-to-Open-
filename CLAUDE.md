@@ -350,6 +350,55 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > owner's to close before B5/L6 can be called truly complete. Full
 > breakdown in `cookbook-bridge-roadmap.md`'s B5 section.
 
+> **Companion program-view plan:** [`program-day-view-roadmap.md`](program-day-view-roadmap.md)
+> (opened 2026-08-23) refactors the **Strength & Supersets** (`ss`,
+> `cat-strength.html`) view from a static split picker into a day-by-day
+> module: paginated weekly schedule bar, stateful day hero, automatic
+> progression, rest-day recovery state, program context drawer (`D0–D3`).
+> Four decisions locked there via `AskUserQuestion`. Scratch-listed
+> (`content-manifest.json`), so it never ships to the public Rolodex build.
+>
+> **D0–D3 shipped (2026-08-23).** The finding that shaped the whole design:
+> **day-level completion cannot be derived from history on a multi-day SPA
+> page.** `cat-strength.html` serves all five training days and all six weeks
+> from one page and does not set `MC_PID_OVERRIDE`, so `mc-finish.js`,
+> `mc-setlog.js`, `mc-session.js` and `mc-summary.js` all resolve the same
+> `pageId` (`cat-strength`) for Legs Week 1 and Arms Week 6 — and the log
+> entry's only other identifying field, `workoutName`, is `document.title`, a
+> constant. `MC_PID_OVERRIDE` is not the fix either: every consumer captures
+> it at **module load**, so setting it when a view opens would be read by
+> nobody. So `mc-program-progress.js` / `mc_program_progress_v1` records the
+> prescribed-day identity explicitly at completion time, keeping the banked
+> entry's `logId` so a completed day still deep-links to
+> `workout-detail.html`. **No Supabase migration** — there are no
+> `user_programs`/`program_days` tables and none were added; cross-device
+> coverage rides the existing sync layer under `dictBase`, the per-key
+> strategy `mc_weekly_overrides_v1` already uses. Day numbers are continuous
+> across the block (Day 8 = week 2 pos 1) and **rest positions are data**: a
+> training day is ranked among the week's non-rest positions, so a program
+> resting mid-week maps onto its order with no renderer change (68 assertions
+> in `tools/test-mc-program-progress.js`, vm-sandboxed against the real
+> source). `mc-finish.js`'s `_FW.confirm()` — its one completion point — now
+> emits `mc:workout-finished`; inert on the 77 other pages that load it.
+> Two defects came from **driving the page, not reading it**: the drawer
+> originally used `data-act` with the same values (`reorder`, `cancel`) as
+> `mc-card-actions.js`'s own sheet sitting hidden in the same document, so a
+> document-wide query opened the wrong sheet (now `data-mpm-act`); and the
+> hero art band hardcoded `#101011` as its gradient end, rendering a muddy
+> grey slab on the cream light-theme card (now a token). A pre-existing bug
+> was fixed in passing: `resumeLastWorkout()` set `activeWeek` and then had
+> it overwritten with 1 by `showWorkout()`, so resuming a Week 4 session
+> always reopened Week 1. The Onyx landing hero (`mc-program-hero.js`) is
+> removed from this page only — the day module supersedes it; every other
+> `cat-*.html` still mounts it.
+>
+> **Known, not fixed here:** `.mc-surprise-btn` (`mc-surprise.css`) and
+> `.inst-header-link` render ~35px tall, under the app's 44pt touch floor,
+> on every page that carries them. Raised to 44px scoped to this page's
+> `.pd-links` block; the fleet-wide shortfall is pre-existing, is caught by
+> no gate today (`check-journey.js` only measures session-shell controls on
+> 6 pages), and wants its own change.
+
 > **Companion card-layer plan:** [`card-integration-roadmap.md`](card-integration-roadmap.md)
 > (opened 2026-08-19) merges two audits taken the same day against the same
 > page — a TIMWOODS runtime waste audit (`A-1…A-17`) and a card UX council
