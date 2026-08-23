@@ -149,6 +149,7 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
      so keep it static — base.css's absolute back-link would overlap the title. -->
 <style>.back-link{position:static;}</style>
 <link rel="stylesheet" href="mc-program-landing.css"/>
+<link rel="stylesheet" href="mc-program-tabs.css"/>
 <link rel="stylesheet" href="mc-surprise.css"/>
 <link rel="stylesheet" href="mc-light.css">
 </head>
@@ -164,74 +165,11 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 
   <div id="programStatus"></div>
 
-  <div class="sec-head">Bulk Programs</div>
-
-  <a href="mens-lean-bulk.html" class="plan-card">
-    <div class="plan-tag">5 Days · Lean Bulk</div>
-    <div class="plan-name">Men's Lean Bulk</div>
-    <div class="plan-meta">5-day split — Back/Bis, Chest/Tris, Legs/Abs, Shoulders/Traps, Arms. 5×5 compounds + 4×8-12 + drop sets. Rest Days 6 & 7.</div>
-    <div class="plan-arrow">→</div>
-  </a>
-
-  <a href="mens-shred.html" class="plan-card">
-    <div class="plan-tag">5 Days · Shred</div>
-    <div class="plan-name">Men's Shred</div>
-    <div class="plan-meta">5-day cut program — higher reps, more drop sets, lower rest. Same compound anchors (5×5). Active rest day option Day 3.</div>
-    <div class="plan-arrow">→</div>
-  </a>
-
-  <details class="mc-split-picker-other">
-    <summary>Other programs (6)</summary>
-    <div class="mc-split-picker-other-body">
-
-  <div class="sec-head">Specialty Programs</div>
-
-  <a href="lets-get-shredded.html" class="plan-card">
-    <div class="plan-tag">Full Program · Shred</div>
-    <div class="plan-name">Let's Get Shredded</div>
-    <div class="plan-meta">Full shred-focused program with cardio integration and high-rep conditioning work built into every session.</div>
-    <div class="plan-arrow">→</div>
-  </a>
-
-  <a href="every-chest-day.html" class="plan-card">
-    <div class="plan-tag">High Frequency · Chest</div>
-    <div class="plan-name">Every Chest Day</div>
-    <div class="plan-meta">Chest hit every day — paired with back, shoulders, arms, or legs. Includes chest mobility work 2x per week.</div>
-    <div class="plan-arrow">→</div>
-  </a>
-
-  <a href="every-arms-day.html" class="plan-card">
-    <div class="plan-tag">High Frequency · Arms</div>
-    <div class="plan-name">Every Arms Day</div>
-    <div class="plan-meta">Arms hit daily — paired with larger muscle groups. High frequency bicep/tricep volume with 4×8-12 and failure sets.</div>
-    <div class="plan-arrow">→</div>
-  </a>
-
-  <div class="sec-head">Frequency Variants</div>
-
-  <a href="5on-2off.html" class="plan-card">
-    <div class="plan-tag">Schedule · 5 On / 2 Off</div>
-    <div class="plan-name">5-On / 2-Off</div>
-    <div class="plan-meta">Standard 5-day training week with 2 full rest days. Best for most people with consistent schedules.</div>
-    <div class="plan-arrow">→</div>
-  </a>
-
-  <a href="3on-1off-high-freq.html" class="plan-card">
-    <div class="plan-tag">Schedule · 3 On / 1 Off</div>
-    <div class="plan-name">3-On / 1-Off High Frequency</div>
-    <div class="plan-meta">Higher frequency cadence — train 3 days, rest 1, repeat. More total training days per month.</div>
-    <div class="plan-arrow">→</div>
-  </a>
-
-  <a href="2on-1off.html" class="plan-card">
-    <div class="plan-tag">Schedule · 2 On / 1 Off</div>
-    <div class="plan-name">2-On / 1-Off</div>
-    <div class="plan-meta">Lower frequency option — ideal for recovery-focused athletes or those with limited training days.</div>
-    <div class="plan-arrow">→</div>
-  </a>
-
-    </div>
-  </details>
+  <!-- F1b: Overview | Program list. The three authored section headings are
+       real groups, so this list drills in; the <details> drawer that used to
+       hide six of the eight programs behind a disclosure is gone, because
+       those six are now two explicit groups at the same level as the first. -->
+  <div id="progTabs"></div>
 
 </div>
 
@@ -423,7 +361,13 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 <script src="mc-cues.js"></script>
 <script src="mc-superset-hop.js"></script>
 <script src="mc-sw-update.js"></script>
-<script>window.MC_SURPRISE = { sel: '.plan-card' };</script>
+<!-- F1b: the Program list's rows replaced the .plan-card links. -->
+<!-- This list opens at the GROUP level, so no [data-mpt-day] row is in
+     the DOM until a group is opened. mc-surprise.js's `group` option
+     exists for exactly that: it opens a random group first, then picks
+     a workout from the rows that drill-in just rendered. Without it the
+     button counts zero candidates and silently hides itself. -->
+<script>window.MC_SURPRISE = { group: '.mpt-row[data-mpt-group]', sel: '.mpt-row[data-mpt-day]' };</script>
 <script src="mc-surprise.js"></script>
 <script src="mc-summary.js"></script>
 <script src="mc-program-status.js"></script>
@@ -443,6 +387,52 @@ MCProgramStatus.mount(document.getElementById('programStatus'), {
   ],
   startHref: 'mens-lean-bulk.html'
 });
+</script>
+<script src="mc-pm-data.js"></script>
+<script src="mc-program-tabs.js"></script>
+<script>
+/* F1b — Overview | Program list.
+   No `def` is passed: this program has no schedule record (only `ss` does
+   until F5), so MC_PROGRAM_TABS builds none rather than inventing a week, and
+   the rows carry no day number or tick. Every row is still tappable, which is
+   what this landing was already for.
+   The groups ARE the page's own authored section headings — not an invented
+   level. `meta` on each row is the plan-tag it already carried. */
+(function () {
+  var p = (window.MC_PM_DATA && MC_PM_DATA.program('gainz')) || {};
+  var DAYS = {
+    'mens-lean-bulk':      { title: "Men's Lean Bulk",            icon: '\u{1F4AA}', meta: '5 Days \u00B7 Lean Bulk' },
+    'mens-shred':          { title: "Men's Shred",                icon: '\u{1F525}', meta: '5 Days \u00B7 Shred' },
+    'lets-get-shredded':   { title: "Let's Get Shredded",         icon: '\u{1F3C3}', meta: 'Full Program \u00B7 Shred' },
+    'every-chest-day':     { title: 'Every Chest Day',            icon: '\u{1F9BE}', meta: 'High Frequency \u00B7 Chest' },
+    'every-arms-day':      { title: 'Every Arms Day',             icon: '\u{1F4AF}', meta: 'High Frequency \u00B7 Arms' },
+    '5on-2off':            { title: '5-On / 2-Off',               icon: '\u{1F4C5}', meta: 'Schedule \u00B7 5 On / 2 Off' },
+    '3on-1off-high-freq':  { title: '3-On / 1-Off High Frequency',icon: '\u{26A1}',  meta: 'Schedule \u00B7 3 On / 1 Off' },
+    '2on-1off':            { title: '2-On / 1-Off',               icon: '\u{1F504}', meta: 'Schedule \u00B7 2 On / 1 Off' }
+  };
+  if (!window.MC_PROGRAM_TABS) return;
+  MC_PROGRAM_TABS.mount(document.getElementById('progTabs'), {
+    progId: 'gainz',
+    accent: '#378ADD',
+    programName: p.name || 'Daily Gainz',
+    desc: p.desc || '',
+    forWho: p.forWho || '',
+    guide: { href: 'gainz-instructions.html', label: 'Daily Gainz guide' },
+    groups: [
+      { id: 'bulk',      name: 'Bulk Programs',      meta: '2 programs',
+        desc: 'Five-day splits built around 5\u00D75 compound anchors.',
+        days: ['mens-lean-bulk', 'mens-shred'] },
+      { id: 'specialty', name: 'Specialty Programs', meta: '3 programs',
+        desc: 'Shred-focused and high-frequency blocks that target one area every session.',
+        days: ['lets-get-shredded', 'every-chest-day', 'every-arms-day'] },
+      { id: 'frequency', name: 'Frequency Variants', meta: '3 programs',
+        desc: 'The same training, on the training-week cadence that fits your schedule.',
+        days: ['5on-2off', '3on-1off-high-freq', '2on-1off'] }
+    ],
+    dayMeta: function (id) { return DAYS[id] || null; },
+    onOpen: function (id) { if (DAYS[id]) location.href = id + '.html'; }
+  });
+})();
 </script>
 </body>
 </html>

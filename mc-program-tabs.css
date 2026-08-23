@@ -200,3 +200,8 @@ html[data-theme="light"] .mpt-wd.is-rest{
 html[data-theme="light"] .mpt-wd.is-rest .mpt-wd-mark{ color:#475569; }
 html[data-theme="light"] .mpt-wd.is-done .mpt-wd-mark{ color:#047857; }
 html[data-theme="light"] .mpt-row-tick{ background:#047857;border-color:#047857;color:#f5f2ec; }
+
+/* Overview-only (F1b): no tab bar, so the panel needs the top breathing room
+   the tab strip's margin used to provide. */
+.mpt-solo{ padding-top:16px; }
+.mpt-solo .mpt-sec:first-child{ margin-top:0; }

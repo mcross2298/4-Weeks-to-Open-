@@ -202,6 +202,7 @@ html[data-theme="light"] .picker-name{color:#1c1a17;}
 html[data-theme="light"] .workout-back-btn{color:#7c3aed;}
 </style>
 <link rel="stylesheet" href="mc-program-hero.css"/>
+<link rel="stylesheet" href="mc-program-tabs.css"/>
 <link rel="stylesheet" href="mc-surprise.css"/>
 <link rel="stylesheet" href="mc-light.css">
 </head>
@@ -240,10 +241,9 @@ html[data-theme="light"] .workout-back-btn{color:#7c3aed;}
     <div class="resume-arrow">→</div>
   </div>
 
-  <div class="split-strip-wrap">
-    <div class="split-strip-label">Select Split</div>
-    <div class="split-strip" id="splitStrip"></div>
-  </div>
+  <!-- F1b: Overview | Program list. This program's splits each hold their own
+       workouts, so the list drills in: splits first, then that split's days. -->
+  <div id="progTabs"></div>
 
   <div class="badge-section">
     <div class="badge-section-head">🏷 Badge Key</div>
@@ -1351,20 +1351,9 @@ function resumeLastWorkout(){
 // ══════════════════════════════════════════════════════════════
 //  DASHBOARD — SPLIT STRIP & DETAIL
 // ══════════════════════════════════════════════════════════════
-function buildStrip(){
-  document.getElementById('splitStrip').innerHTML = SPLITS.map(s => {
-    const count = s.workouts.length;
-    return `<button class="split-card-sel" style="--sp-color:${s.color};" onclick="openSplit('${s.id}')">
-      <div class="split-card-top">
-        <div class="split-card-eyebrow">⚡ Split #${s.num} · 4 Weeks</div>
-        <div class="split-card-chev">›</div>
-      </div>
-      <div class="split-card-name">${s.name}</div>
-      ${s.desc?`<div class="split-card-desc">${s.desc}</div>`:''}
-      <div class="split-card-meta">${count} workout${count===1?'':'s'}</div>
-    </button>`;
-  }).join('');
-}
+// F1b: the "Select Split" strip rendered here. MC_PROGRAM_TABS' Program list
+// is that strip plus the drill-in, so the strip, its container and this
+// renderer are gone rather than drawing the same splits a second time.
 
 // Renders the tapped split's workout breakout inside the split view.
 function renderSplitDetail(){
@@ -1825,7 +1814,6 @@ buildTimerFloat();
 // Dashboard init — main page shows only the split cards;
 // the breakout renders inside the split view when a card is tapped.
 initResumeBanner();
-buildStrip();
 
 </script>
 <script>
@@ -1873,7 +1861,14 @@ buildStrip();
 <script src="mc-rep-progress.js"></script>
 <script src="mc-superset-hop.js"></script>
 <script src="mc-sw-update.js"></script>
-<script>window.MC_SURPRISE = { group: '.split-card-sel', sel: '.workout-card' };</script>
+<!-- F1b: Surprise Me now picks from the Program list's day rows. The old
+     group/sel pair pointed at the split strip and its breakout cards. -->
+<!-- This list opens at the GROUP level, so no [data-mpt-day] row is in
+     the DOM until a group is opened. mc-surprise.js's `group` option
+     exists for exactly that: it opens a random group first, then picks
+     a workout from the rows that drill-in just rendered. Without it the
+     button counts zero candidates and silently hides itself. -->
+<script>window.MC_SURPRISE = { group: '.mpt-row[data-mpt-group]', sel: '.mpt-row[data-mpt-day]' };</script>
 <script src="mc-surprise.js"></script>
 <script src="mc-nav.js"></script>
 <script src="mc-resume.js"></script>
@@ -1894,12 +1889,48 @@ MCProgramHero.mount(document.getElementById('programHero'), {
   backHref: 'index.html',
   onBadgeTap: function () {
     if (localStorage.getItem(LAST_WORKOUT_KEY)) { resumeLastWorkout(); }
-    else {
-      var strip = document.getElementById('splitStrip');
-      if (strip && strip.scrollIntoView) strip.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // F1b: no last workout yet -> open Program list, where the splits moved.
+    else if (window.__pmcTabs) {
+      window.__pmcTabs.showTab('list');
+      document.getElementById('progTabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
 });
+</script>
+<script src="mc-program-tabs.js"></script>
+<script>
+/* F1b - Overview | Program list, built from this page's OWN `SPLITS` data
+   rather than a transcription of it, so the two cannot drift.
+   This is the fleet's real two-level case: each split holds its own workouts,
+   so the list renders the splits and drills into one. No `def` is passed -
+   no schedule record until F5 - so rows carry no day number or tick. */
+(function () {
+  if (!window.MC_PROGRAM_TABS) return;
+  var p = (window.MC_PM_DATA && MC_PM_DATA.program('pmc')) || {};
+  var META = {};
+  var groups = SPLITS.map(function (s) {
+    s.workouts.forEach(function (w) {
+      META[w.id] = { title: w.name, icon: w.icon, meta: (w.tags || []).join(' \u00B7 ') };
+    });
+    return {
+      id: s.id,
+      name: s.name,
+      desc: s.desc || '',
+      meta: 'Split #' + s.num + ' \u00B7 ' + s.workouts.length + ' workout' + (s.workouts.length === 1 ? '' : 's'),
+      icon: '\u26A1',
+      days: s.workouts.map(function (w) { return w.id; })
+    };
+  });
+  window.__pmcTabs = MC_PROGRAM_TABS.mount(document.getElementById('progTabs'), {
+    progId: 'pmc', accent: '#8b7ff0',
+    programName: p.name || 'Project Muscle Confusion',
+    desc: p.desc || '', forWho: p.forWho || '',
+    guide: { href: 'pmc-instructions.html', label: 'Muscle Confusion guide' },
+    groups: groups,
+    dayMeta: function (id) { return META[id] || null; },
+    onOpen: function (id) { showWorkout(id); }
+  });
+})();
 </script>
 </body>
 </html>

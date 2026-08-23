@@ -187,6 +187,7 @@
   html[data-theme="light"] .cond-title { color: #92400e; }
 </style>
 <link rel="stylesheet" href="mc-program-landing.css"/>
+<link rel="stylesheet" href="mc-program-tabs.css"/>
 <link rel="stylesheet" href="mc-surprise.css"/>
 <link rel="stylesheet" href="mc-nav.css"/>
 </head>
@@ -215,65 +216,8 @@
     <button type="button" class="mc-surprise-btn" data-mc-surprise style="--sp-accent:#6f77e0"><span class="mc-surprise-ico">🎲</span>Surprise Me</button>
   </div>
 
-  <div class="section-label">Select Phase</div>
-
-  <a href="mm-p1.html" class="phase-card p1">
-    <div class="phase-inner">
-      <div class="phase-icon">🏋️</div>
-      <div class="phase-body">
-        <div class="phase-eyebrow">Phase 1 · Weeks 1–5</div>
-        <div class="phase-name">Dumbbell Split</div>
-        <div class="phase-desc">Pure DB isolation — build the mind-muscle connection before touching a barbell. Every set, every rep, every squeeze.</div>
-      </div>
-      <div class="phase-arrow">→</div>
-    </div>
-    <div class="phase-pills">
-      <span class="phase-pill">Dumbbell Only</span>
-      <span class="phase-pill">Archetype A</span>
-      <span class="phase-pill">DB / Bench Anchor</span>
-    </div>
-  </a>
-
-  <details class="mc-split-picker-other">
-    <summary>Other phases (2)</summary>
-    <div class="mc-split-picker-other-body">
-
-  <a href="mm-p2.html" class="phase-card p2">
-    <div class="phase-inner">
-      <div class="phase-icon">🔩</div>
-      <div class="phase-body">
-        <div class="phase-eyebrow">Phase 2 · Weeks 6–10</div>
-        <div class="phase-name">Barbell &amp; Smith Machine</div>
-        <div class="phase-desc">Raw bilateral strength — Squat, Bench, Deadlift and Overhead Press days. Olympic-barbell compounds stand alone; tri-sets &amp; supersets run as single-bar complexes; Smith handles the cluster &amp; drop.</div>
-      </div>
-      <div class="phase-arrow">→</div>
-    </div>
-    <div class="phase-pills">
-      <span class="phase-pill">Barbell-Dominant</span>
-      <span class="phase-pill">Single-Bar Complexes</span>
-      <span class="phase-pill">2 Smith / Day</span>
-    </div>
-  </a>
-
-  <a href="mm-p3.html" class="phase-card p3">
-    <div class="phase-inner">
-      <div class="phase-icon">⚡</div>
-      <div class="phase-body">
-        <div class="phase-eyebrow">Phase 3 · Weeks 11–15</div>
-        <div class="phase-name">Cable &amp; Plate-Loaded</div>
-        <div class="phase-desc">Constant-tension finishing — Push, Pull, Legs and Delts &amp; Arms days. Single cable-column complexes for the grouped work; plate-loaded machines anchor the heavy low-rep, cluster and drop.</div>
-      </div>
-      <div class="phase-arrow">→</div>
-    </div>
-    <div class="phase-pills">
-      <span class="phase-pill">Cable-Dominant</span>
-      <span class="phase-pill">Single-Column Complexes</span>
-      <span class="phase-pill">3 Machines / Day</span>
-    </div>
-  </a>
-
-    </div>
-  </details>
+  <!-- F1b: Overview | Program list. -->
+  <div id="progTabs"></div>
 
   <div class="section-label">Conditioning Block</div>
   <a href="dashboard.html?tab=conditioning" class="cond-card">
@@ -286,7 +230,8 @@
   </a>
 
 </div>
-<script>window.MC_SURPRISE = { sel: '.phase-card' };</script>
+<!-- F1b: the Program list's rows replaced the .phase-card links. -->
+<script>window.MC_SURPRISE = { sel: '.mpt-row[data-mpt-day]' };</script>
 <script src="mc-surprise.js"></script>
 <script src="mc-nav.js"></script>
 <!-- Volume II Phase 5 / Initiative 07 -- mc-resume.js's own header says it
@@ -310,5 +255,34 @@ MCProgramStatus.mount(document.getElementById('programStatus'), {
 <script src="mc-cond.js"></script>
 <script src="mc-cond-suggest.js"></script>
 <script src="mc-sw-update.js"></script>
+<script src="mc-pm-data.js"></script>
+<script src="mc-program-tabs.js"></script>
+<script>
+/* F1b — Overview | Program list. No `def` is passed: this program has no
+   schedule record (only `ss` does until F5), so MC_PROGRAM_TABS builds none
+   rather than inventing a week, and the rows carry no day number or tick.
+   Every row is still tappable, which is what this landing was already for. */
+(function () {
+  var p = (window.MC_PM_DATA && MC_PM_DATA.program('mm')) || {};
+  var DAYS = {
+    'mm-p1': { title: 'Dumbbell Split',          icon: '\u{1F3CB}\u{FE0F}', meta: 'Phase 1 \u00B7 Weeks 1\u20135' },
+    'mm-p2': { title: 'Barbell & Smith Machine', icon: '\u{1F529}',          meta: 'Phase 2 \u00B7 Weeks 6\u201310' },
+    'mm-p3': { title: 'Cable & Plate-Loaded',    icon: '\u{26A1}',           meta: 'Phase 3 \u00B7 Weeks 11\u201315' }
+  };
+  // One group: the three phases run in SEQUENCE. They are not parallel splits
+  // to choose between, so a drill-in level would misdescribe the program.
+  var CFG = {
+    progId: 'mm', accent: '#6f77e0',
+    programName: p.name || 'The Modality Matrix',
+    desc: p.desc || '', forWho: p.forWho || '',
+    guide: { href: 'mm-instructions.html', label: 'Modality Matrix guide' },
+    groups: [{ id: 'block', name: 'The 15-Week Block', days: ['mm-p1','mm-p2','mm-p3'] }],
+    dayMeta: function (id) { return DAYS[id] || null; },
+    onOpen: function (id) { if (DAYS[id]) location.href = id + '.html'; }
+  };
+  if (!window.MC_PROGRAM_TABS) return;
+  MC_PROGRAM_TABS.mount(document.getElementById('progTabs'), CFG);
+})();
+</script>
 </body>
 </html>

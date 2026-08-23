@@ -320,6 +320,10 @@
     return out;
   }
 
+  // `list:false` renders Overview alone, with no tab bar at all — for a
+  // program whose landing has exactly one destination (F1b decision). A tab
+  // strip over a Program list holding a single row is a level of nothing, the
+  // same reasoning that skips drill-in for a single group.
   function shellHtml(cfg) {
     var tab = function (key, label, sel) {
       return '<button type="button" role="tab" class="mpt-tab' + (sel ? ' is-on' : '') + '"' +
@@ -327,13 +331,19 @@
         ' aria-selected="' + (sel ? 'true' : 'false') + '" data-mpt-tab="' + key + '">' +
         escapeHtml(label) + '</button>';
     };
-    return '<div class="mpt" style="--mpt-accent:' + escapeHtml(cfg.accent || '#c9505a') +
-      ';--mpt-accent-rgb:' + hexToRgb(cfg.accent) + ';">' +
+    var head = cfg.list === false ? '' :
       '<div class="mpt-tabs" role="tablist" aria-label="Program sections">' +
         tab('overview', 'Overview', true) + tab('list', 'Program list', false) +
-      '</div>' +
-      '<div class="mpt-panel" id="mpt-p-overview" role="tabpanel" aria-labelledby="mpt-t-overview"></div>' +
-      '<div class="mpt-panel is-hidden" id="mpt-p-list" role="tabpanel" aria-labelledby="mpt-t-list"></div>' +
+      '</div>';
+    var listPanel = cfg.list === false ? '' :
+      '<div class="mpt-panel is-hidden" id="mpt-p-list" role="tabpanel" aria-labelledby="mpt-t-list"></div>';
+    return '<div class="mpt' + (cfg.list === false ? ' mpt-solo' : '') +
+      '" style="--mpt-accent:' + escapeHtml(cfg.accent || '#c9505a') +
+      ';--mpt-accent-rgb:' + hexToRgb(cfg.accent) + ';">' +
+      head +
+      '<div class="mpt-panel" id="mpt-p-overview" role="tabpanel"' +
+        (cfg.list === false ? '' : ' aria-labelledby="mpt-t-overview"') + '></div>' +
+      listPanel +
       '</div>';
   }
 
@@ -341,9 +351,16 @@
   function mount(el, cfg) {
     if (!el || !cfg) return null;
     var P = window.MC_PROGRAM_PROGRESS;
+    // No `def` means the program has no schedule record (only `ss` has one
+    // until F5, and a collection like a five-split library never will). Build
+    // NO record in that case rather than letting normalize() invent defaults:
+    // a fabricated 7-day / 2-rest week would render as this program's real
+    // schedule, which is the same "invented pattern" that got the full hero
+    // variant retired in F1a. Everything downstream already degrades cleanly —
+    // no week strip, no day numbers, no ticks, no reorder.
     var state = {
       P: P,
-      rec: cfg.rec || (P ? P.get(cfg.progId, cfg.def) : null),
+      rec: cfg.rec || ((P && cfg.def) ? P.get(cfg.progId, cfg.def) : null),
       week: cfg.week || 1,
       openGroup: null,
       tab: 'overview'
@@ -357,6 +374,7 @@
 
     function drawOverview() { pOverview.innerHTML = overviewHtml(cfg, state.rec, state.week, P); }
     function drawList() {
+      if (!pList) return;
       var model = listModel(cfg, state);
       // Reorder edits one week's order, which only means anything when the
       // record actually schedules these days.
@@ -365,6 +383,7 @@
       pList.innerHTML = listHtml(cfg, model, state.week, canReorder);
     }
     function showTab(key) {
+      if (!pList) return;                       // Overview-only: nothing to switch
       state.tab = key;
       Array.prototype.forEach.call(root.querySelectorAll('.mpt-tab'), function (b) {
         var on = b.getAttribute('data-mpt-tab') === key;

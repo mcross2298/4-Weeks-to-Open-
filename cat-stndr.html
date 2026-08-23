@@ -66,6 +66,7 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
      so keep it static — base.css's absolute back-link would overlap the title. -->
 <style>.back-link{position:static;}</style>
 <link rel="stylesheet" href="mc-program-landing.css"/>
+<link rel="stylesheet" href="mc-program-tabs.css"/>
 <link rel="stylesheet" href="mc-surprise.css"/>
 <link rel="stylesheet" href="mc-light.css">
 </head>
@@ -81,52 +82,8 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 
   <div id="programStatus"></div>
 
-  <a href="weeks-to-open.html" class="plan-card blue">
-    <div class="plan-tag">4-Week Program</div>
-    <div class="plan-name">Weeks to Open</div>
-    <div class="plan-meta">Upper/Lower split with progressive overload, drop sets, and AMRAP intensifiers.</div>
-    <div class="plan-stats"><span class="stat">📅 4 weeks</span><span class="stat">🏋️ 5/wk</span></div>
-    <div class="plan-arrow">→</div>
-  </a>
-
-  <details class="mc-split-picker-other">
-    <summary>Other splits (4)</summary>
-    <div class="mc-split-picker-other-body">
-
-  <a href="push-pull-legs.html" class="plan-card orange">
-    <div class="plan-tag">PPL · 2 Phases</div>
-    <div class="plan-name">Push / Pull / Legs</div>
-    <div class="plan-meta">Two-phase PPL with TUT-focused supersets, tri-sets, and strength-to-volume waves.</div>
-    <div class="plan-stats"><span class="stat">🔁 3 on / 1 off</span><span class="stat">🔥 5 cycles</span></div>
-    <div class="plan-arrow">→</div>
-  </a>
-
-  <a href="arnold-legacy.html" class="plan-card gold">
-    <div class="plan-tag">4-Week Program · 3 on / 1 off</div>
-    <div class="plan-name">Arnold Legacy</div>
-    <div class="plan-meta">Arnold-inspired Chest &amp; Back / Shoulders &amp; Arms / Legs rotation with supersets and drop AMRAPs.</div>
-    <div class="plan-stats"><span class="stat">📅 4 weeks</span><span class="stat">🔁 21 workout days</span></div>
-    <div class="plan-arrow">→</div>
-  </a>
-
-  <a href="legacy-prep.html" class="plan-card purple">
-    <div class="plan-tag">CBUM · Bodybuilding</div>
-    <div class="plan-name">Legacy Prep</div>
-    <div class="plan-meta">Hardcore prep with cluster sets, drop AMRAPs, and aggressive volume.</div>
-    <div class="plan-stats"><span class="stat">💀 Advanced</span><span class="stat">🏆 Prep-style</span></div>
-    <div class="plan-arrow">→</div>
-  </a>
-
-  <a href="bro-split.html" class="plan-card green">
-    <div class="plan-tag">2 Phases · 6 Weeks</div>
-    <div class="plan-name">The Bro Split</div>
-    <div class="plan-meta">Classic body-part split with 1-¼ reps, stretch holds, and tri-set intensifiers.</div>
-    <div class="plan-stats"><span class="stat">📅 6 weeks</span><span class="stat">💪 Hypertrophy</span></div>
-    <div class="plan-arrow">→</div>
-  </a>
-
-    </div>
-  </details>
+  <!-- F1b: Overview | Program list. -->
+  <div id="progTabs"></div>
 </div>
 <script>
 /* ── SMART BACK NAV ── */
@@ -146,7 +103,8 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
   });
 })();
 </script>
-<script>window.MC_SURPRISE = { sel: '.plan-card' };</script>
+<!-- F1b: the Program list's rows replaced the .plan-card links. -->
+<script>window.MC_SURPRISE = { sel: '.mpt-row[data-mpt-day]' };</script>
 <script src="mc-surprise.js"></script>
 <script src="mc-nav.js"></script>
 <!-- Volume II Phase 5 / Initiative 07 -- mc-resume.js's own header says it
@@ -168,5 +126,35 @@ MCProgramStatus.mount(document.getElementById('programStatus'), {
 });
 </script>
 <script src="mc-sw-update.js"></script>
+<script src="mc-pm-data.js"></script>
+<script src="mc-program-tabs.js"></script>
+<script>
+/* F1b — Overview | Program list. No `def`: no schedule record until F5, so
+   MC_PROGRAM_TABS builds none rather than inventing a week.
+   This page is licensed content (content-manifest.json), excluded wholesale
+   from the market build, so the program names below never reach the public
+   Rolodex tree — which is exactly why they live here and not in the shared
+   module. */
+(function () {
+  var p = (window.MC_PM_DATA && MC_PM_DATA.program('stndr')) || {};
+  var DAYS = {
+    'weeks-to-open':  { title: 'Weeks to Open',      icon: '\u{1F535}', meta: '4-Week Program \u00B7 5/wk' },
+    'push-pull-legs': { title: 'Push / Pull / Legs', icon: '\u{1F7E0}', meta: 'PPL \u00B7 2 Phases' },
+    'arnold-legacy':  { title: 'Arnold Legacy',      icon: '\u{1F7E1}', meta: '4-Week Program \u00B7 3 on / 1 off' },
+    'legacy-prep':    { title: 'Legacy Prep',        icon: '\u{1F7E3}', meta: 'Bodybuilding' },
+    'bro-split':      { title: 'The Bro Split',      icon: '\u{1F7E2}', meta: '2 Phases \u00B7 6 Weeks' }
+  };
+  if (!window.MC_PROGRAM_TABS) return;
+  MC_PROGRAM_TABS.mount(document.getElementById('progTabs'), {
+    progId: 'stndr', accent: '#1D9E75',
+    programName: p.name || '', desc: p.desc || '', forWho: p.forWho || '',
+    guide: { href: 'stndr-instructions.html', label: 'Program guide' },
+    groups: [{ id: 'programs', name: 'Programs',
+      days: ['weeks-to-open','push-pull-legs','arnold-legacy','legacy-prep','bro-split'] }],
+    dayMeta: function (id) { return DAYS[id] || null; },
+    onOpen: function (id) { if (DAYS[id]) location.href = id + '.html'; }
+  });
+})();
+</script>
 </body>
 </html>
