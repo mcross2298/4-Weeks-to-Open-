@@ -52,6 +52,56 @@ instead of ten times, and per-program work collapses to supplying a record.
    arms workout — clutter the owner called out explicitly, and the same
    structure behind the `S5c-0` completion-count defect.
 
+### Second round (AskUserQuestion, 2026-08-23)
+
+6. **Program list is adaptive** — it renders whatever level a program
+   actually has, and drills in only where one exists (see the shape table
+   below). The row component is identical at every level (thumbnail, name,
+   meta, completion tick), so it reads as one control rather than three
+   screens. `cat-strength.html`'s existing, currently-unused `#view-split`
+   state is the mechanism.
+7. **Drilling into a split shows that split's context** — a slim header
+   carrying its name, week/day count and description above the day rows,
+   reusing the eyebrow/title/meta block the day hero already has. Those
+   descriptions are authored in `mc-pm-data.js` and the `cat-*.html` pages
+   and currently render at no level where they help.
+8. **`F3` changes no exercise-card markup, and adds no files.** A page that
+   holds several days keeps its file, its engine and its `.ex-card` /
+   `.a-hdr` markup exactly as they are — it renders only the chosen day's
+   cards instead of all of them, with the day picked on the way in from
+   Program list. Explicit owner constraint: **the exercise cards are not
+   being redesigned.** Only the number of days a page renders changes.
+9. **No in-page day switcher.** Rejected deliberately: it would restore a
+   route from inside a workout to another day, which is the thing being
+   removed — behind a control instead of behind a scroll. Back returns to
+   Program list.
+10. **Overview carries the full instructions inline** — the entire body of
+    each `<id>-instructions.html`, not a summary. `program-guide.html` is a
+    fleet-wide index of all programs, so it stays a link rather than being
+    duplicated into all ten Overview tabs.
+
+### The `splits` field means three different things
+
+Measured against `mc-pm-data.js` and the real page graph. This is why
+"Program list" cannot be one fixed shape:
+
+| Shape | Programs | Real structure |
+|---|---|---|
+| **Days directly** | `ss`, `pump` | program → day |
+| **Sequential phases** | `mm`, `hv`, `stndr`, `psu` | program → phase page → days |
+| **True splits** | `mc`, `ks`, `gainz`, `pmc` | program → split → days |
+
+Within the third group the depth still varies, and the roadmap must not
+assume otherwise:
+
+- **`mc` is three levels** — `cat-mc.html` → `mc-split1.html` →
+  `mc-s1-back.html`. The split page is itself a picker.
+- **`gainz` / `ks` are two** — `cat-gainz.html` → `bro-split.html`, which
+  holds all five days in one accordion. After `F3` that page renders one day,
+  so its structure converges on `mc`'s without gaining a file.
+- **`pmc` inlines its split layer** on the cat page (`#view-split`), the same
+  mechanism `cat-strength.html` has but does not use.
+
 ---
 
 ## Measured scope — not estimated
@@ -123,11 +173,15 @@ page, no new architecture.
 
 - **Overview** — `forWho` ("Who this is for"), the workout split (from
   `MC_PROGRAM_PROGRESS.weekFrom()`, already tested), the equipment category
-  row, and **the program's instructions content** (decision 3).
-- **Program list** — tappable workout rows with completion state and the
-  reorder affordance that currently hides in the ☰ sheet.
+  row, and **the full body of the program's `<id>-instructions.html`**
+  (decision 10). `program-guide.html` stays a link.
+- **Program list** — tappable workout rows with completion state, the reorder
+  affordance that currently hides in the ☰ sheet, and **adaptive drill-in**
+  for programs that have a split layer (decisions 6–7).
 
-`cat-strength.html` first, then the other nine.
+`cat-strength.html` first — it is the one-level case and needs no drill-in —
+then the other nine, with a two-level program (`gainz`) taken early so the
+drill-in is proven before the three-level `mc`.
 
 ### `F2` — instructions absorbed into Overview
 
@@ -143,6 +197,15 @@ both must agree after this phase.
 
 The large one. A training day becomes its own screen; no page renders a second
 day's exercises behind it.
+
+**What this phase does NOT touch** (decision 8, explicit owner constraint):
+`.ex-card` / `.a-hdr` / `.mcl-*` markup, the five card engines' rendering of an
+individual exercise, the set logger, the rest timer, or the meatball menu. A
+workout, once opened, looks exactly as it does today. The only change is that
+the page renders **one day's** cards rather than every day in the block — and
+it does so in the same file, so no new pages are added. The correct
+finish-bar denominator (`0 / 30` rather than `0 / 172`) falls out of that for
+free.
 
 Sequencing, cheapest-risk first:
 
