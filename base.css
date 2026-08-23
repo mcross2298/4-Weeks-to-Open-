@@ -1031,8 +1031,20 @@ html[data-theme="light"] #fwModalBtns.fw-emph .fw-cancel,html[data-theme="light"
 @supports (padding: env(safe-area-inset-top)) {
   .header{padding-top:calc(76px + env(safe-area-inset-top));}
   .back-link + .hero{padding-top:calc(64px + env(safe-area-inset-top));}
-  /* Sticky week-tabs pin below the notch, not under it */
-  .week-tabs{top:env(safe-area-inset-top);}
+  /* Sticky top chrome pins below the notch, not under it.
+     .week-tabs is base.css's own; the other four are declared per-page (27
+     pages spell out .tabs-bar, 4 .week-selector, one each .phase-tabs and a
+     sticky .topbar) in <style> blocks parsed after this file, so they need a
+     selector that outranks their (0,1,0) rather than one that merely follows
+     it. `body ` is the cheapest way to get there and changes nothing else:
+     `top` is inert on the static .topbar variants two other pages declare.
+     Confirmed against a real 59px inset, where these stuck at y0-42 -- the
+     exact band the status bar paints over. */
+  body .tabs-bar,
+  body .week-tabs,
+  body .week-selector,
+  body .phase-tabs,
+  body .topbar{top:env(safe-area-inset-top);}
   /* Fixed top furniture */
   .prog-bar-wrap{top:env(safe-area-inset-top);}
   .fw-auto-banner{padding-top:calc(12px + env(safe-area-inset-top));}

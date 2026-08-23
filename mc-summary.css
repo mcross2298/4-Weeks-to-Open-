@@ -138,6 +138,37 @@ body.mcs-stat-active .back-link{top:calc(54px + max(12px, env(safe-area-inset-to
    inset is zero, so on real hardware it stayed exactly as dead as before. */
 body.mcs-stat-active .mc-theme-toggle-float{top:calc(54px + max(12px, env(safe-area-inset-top,0px)));}
 
+/* Sticky top chrome pins to the BAR'S BOTTOM EDGE, not to the viewport.
+   Found by reproducing a real device screenshot at a real Dynamic Island
+   inset (Emulation.setSafeAreaInsetsOverride — see the note in
+   tools/check-journey.js), not by reading the CSS.
+
+   33 of the 78 pages that load mc-finish.js carry their own sticky top bar
+   (.tabs-bar on 27, .week-selector on 4, .phase-tabs and a sticky .topbar on
+   one each), and every one of them declares `position:sticky;top:0` in the
+   page's OWN <style> block -- which is parsed AFTER base.css and after this
+   file, so an equal-specificity rule in either sheet loses on source order.
+   Hence the descendant selector: (0,2,1) beats a page's (0,1,0) wherever it
+   sits. base.css's .week-tabs is in the list because its own inset rule pins
+   it to env() -- correct with no session, behind the bar during one.
+
+   At inset 59 those tabs stuck at y0-42, entirely inside the notch: legible
+   only as the strip the status bar draws over. Making the bar an opaque lid
+   over y0-105 would have turned that into something worse -- elementFromPoint
+   at the first tab's centre returned the bar, i.e. the Cycle tabs became
+   completely UNTAPPABLE mid-session on all 33 pages. A lid has to push what
+   is under it out of the way, not just cover it.
+
+   46px is the bar's content box; the max() term is the inset it now owns --
+   the same expression every other offset in this block carries. */
+body.mcs-stat-active .tabs-bar,
+body.mcs-stat-active .week-tabs,
+body.mcs-stat-active .week-selector,
+body.mcs-stat-active .phase-tabs,
+body.mcs-stat-active .topbar{
+  top:calc(46px + max(12px, env(safe-area-inset-top,0px)));
+}
+
 /* Scroll-boundary backstop. This app scrolls the DOCUMENT — there is no inner
    `overflow-y:auto` viewport, and introducing one would re-base every
    position:fixed offset in the fleet — so the equivalent of "pad the scroll
