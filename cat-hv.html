@@ -36,7 +36,11 @@
 
   .page-wrap { max-width: 680px; margin: 0 auto; padding: 0 16px; }
 
-  .back-nav { padding: 16px 0 0; }
+  .back-nav { padding: calc(16px + env(safe-area-inset-top, 0px)) 0 0; }
+  /* These four program landing pages don't link base.css, so none of its
+     safe-area padding reaches them and this was the page's very first row
+     of content at y0. Measured at a 59px inset: the "\u2190 Programs" link
+     painted at y19, i.e. entirely behind the status bar. */
   .back-nav a { color: var(--muted); text-decoration: none; font-size: 13px; letter-spacing: 0.02em; }
   .back-nav a:hover { color: var(--accent); }
 
@@ -131,6 +135,11 @@
   .start-arrow { font-size: 16px; color: var(--muted); flex-shrink: 0; }
 </style>
 <link rel="stylesheet" href="mc-program-landing.css"/>
+<!-- mc-nav.js builds the bottom nav on this page (it has no native .tab-bar
+     to bail on), but this stylesheet was never linked, so the bar rendered
+     completely unstyled: 16px labels instead of 11px. Kept before
+     mc-light.css, which must stay last so it wins by source order. -->
+<link rel="stylesheet" href="mc-nav.css"/>
 <link rel="stylesheet" href="mc-light.css">
 </head>
 <body>

@@ -1,20 +1,54 @@
-/* mc-nav.css — shared bottom navigation (Phase 2.1) */
+/* mc-nav.css — shared bottom navigation (Phase 2.1)
+
+   SELF-SUFFICIENT BY CONTRACT. This sheet is <link>ed on its own, and four
+   pages that link it -- cat-hv, cat-ie, cat-ks, cat-mm, the program landing
+   pages -- deliberately do NOT link base.css, which is the only place
+   the --fs- and --z- scales are defined. Every var() here was unguarded, so
+   on those four `font-size:var(--fs-2xs)` was invalid at computed-value time
+   and the labels fell back to the inherited 16px instead of 11px. (Careful
+   how you name those two scales in prose: writing them as globs with a slash
+   between puts a literal comment terminator in the middle of this block,
+   which silently ends it early, swallows the .mc-nav rule below and drops the
+   bar out of position:fixed into the document flow. Ask how I know.)
+   Measured on cat-ks.html at
+   393px: "Conditioning" rendered 121px wide and the bar's scrollWidth hit
+   449px against a 393px viewport -- 56px of overflow (74px at 375px), which
+   is the fifth tab hanging off the right edge with the labels run together.
+   Every page that DOES load base.css measured 0px overflow, which is why this
+   survived: it is invisible on ~95% of the fleet.
+
+   So: every var() below carries the base.css value as its fallback. Keep them
+   in sync if base.css's scale changes -- the fallback is a floor for pages
+   without the token, not a second source of truth for pages with it. */
 .mc-nav{
-  position:fixed;left:0;right:0;bottom:0;z-index:var(--z-nav);
+  position:fixed;left:0;right:0;bottom:0;z-index:var(--z-nav,140);
   display:flex;
   background:rgba(8,10,16,0.96);
   -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
   border-top:1px solid rgba(255,255,255,0.10);
   padding:6px 0 calc(6px + env(safe-area-inset-bottom));
 }
+/* min-width:0 + the label clamp below are the same hardening dashboard.html's
+   own .tab-bar has carried for exactly this reason; this component never got
+   it. A flex item defaults to min-width:auto, i.e. it refuses to shrink below
+   its content, so one long label ("Conditioning") pushes the whole bar wider
+   than the viewport instead of being clipped -- the token bug above is what
+   made that reachable, but the missing floor is what let it overflow rather
+   than just look big. With both, a wrong font size degrades to an ellipsis
+   instead of a broken bar. */
 .mc-nav-tab{
-  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  flex:1 1 0;min-width:0;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
   text-decoration:none;color:#94a3b8;
-  font-family:inherit;font-size:var(--fs-2xs);font-weight:800;letter-spacing:0.03em;
+  font-family:inherit;font-size:var(--fs-2xs,11px);font-weight:800;letter-spacing:0.03em;
   padding:4px 0;-webkit-tap-highlight-color:transparent;
   transition:color 0.15s;
 }
-.mc-nav-tab .mc-nav-ico{font-size:var(--fs-2xl);line-height:1;}
+/* the label is every child except the icon */
+.mc-nav-tab > :not(.mc-nav-ico){
+  max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;
+}
+.mc-nav-tab .mc-nav-ico{font-size:var(--fs-2xl,18px);line-height:1;}
 .mc-nav-tab:active{color:#fff;transform:scale(0.94);}
 
 /* keep page content and the floating rest timer clear of the fixed bar */
@@ -25,12 +59,12 @@ body.mc-has-nav .timer-float{bottom:88px;}
    screen — nav is bottom:0, --z-nav), slimmed down so the bottom stays
    clean. mc-nav.js adds .mc-has-fw when a .fw-bar is present. */
 body.mc-has-nav .fw-bar{
-  bottom:60px;z-index:var(--z-fw-bar-nav);
+  bottom:60px;z-index:var(--z-fw-bar-nav,120);
   padding:8px 14px calc(8px + env(safe-area-inset-bottom));
   gap:6px;
 }
 body.mc-has-nav .fw-btn{
-  padding:9px 14px;font-size:var(--fs-sm);border-radius:10px;
+  padding:9px 14px;font-size:var(--fs-sm,13px);border-radius:10px;
 }
 /* Stacked bar (Finish Workout button / progress line / Workout Summary link)
    measures ~109px tall here vs. the old single-row bar's ~52px, so its top
@@ -51,7 +85,7 @@ body.mc-has-nav.mc-has-fw .mc-voice-btn{bottom:calc(199px + env(safe-area-inset-
    icon rail. Fixed circular button, top-right, mirrors .back-link's
    top-left placement in base.css. */
 .mc-theme-toggle-float{
-  position:fixed;top:18px;right:18px;z-index:var(--z-nav-toggle);
+  position:fixed;top:18px;right:18px;z-index:var(--z-nav-toggle,141);
   width:40px;height:40px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);

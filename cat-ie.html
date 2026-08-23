@@ -36,7 +36,11 @@
 
   .page-wrap { max-width: 680px; margin: 0 auto; padding: 0 16px; }
 
-  .back-nav { padding: 16px 0 0; }
+  .back-nav { padding: calc(16px + env(safe-area-inset-top, 0px)) 0 0; }
+  /* These four program landing pages don't link base.css, so none of its
+     safe-area padding reaches them and this was the page's very first row
+     of content at y0. Measured at a 59px inset: the "\u2190 Programs" link
+     painted at y19, i.e. entirely behind the status bar. */
   .back-nav a { color: var(--muted); text-decoration: none; font-size: 13px; letter-spacing: 0.02em; }
   .back-nav a:hover { color: var(--accent); }
 
