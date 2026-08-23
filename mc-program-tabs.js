@@ -72,6 +72,37 @@
     return r + ',' + g + ',' + b;
   }
 
+  // A program's accent is tuned to sit on a near-black ground. Used as TEXT on
+  // the cream light theme it fails badly — the contrast ratchet caught two
+  // programs at 1.77:1 and 1.87:1 against a 3:1 floor. So derive a darkened
+  // variant for light-mode text rather than reusing the brand hue: same colour
+  // family, enough luminance contrast to read. Computed per program, so a new
+  // program needs no hand-tuned entry and cannot be forgotten.
+  var LIGHT_BG = { r: 245, g: 242, b: 236 };   // the sand theme's page ground
+
+  function relLum(c) {
+    function f(v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+    return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
+  }
+  function ratio(a, b) {
+    var l1 = relLum(a), l2 = relLum(b);
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+  }
+  function inkFor(hex, target) {
+    var parts = hexToRgb(hex).split(',');
+    var c = { r: +parts[0], g: +parts[1], b: +parts[2] };
+    var want = target || 4.5;
+    // Step toward black in 5% increments until the ratio clears the target.
+    for (var i = 0; i <= 20; i++) {
+      var k = 1 - i * 0.05;
+      var t = { r: Math.round(c.r * k), g: Math.round(c.g * k), b: Math.round(c.b * k) };
+      if (ratio(t, LIGHT_BG) >= want) {
+        return 'rgb(' + t.r + ',' + t.g + ',' + t.b + ')';
+      }
+    }
+    return '#1c1a17';
+  }
+
   // ---- the list model ------------------------------------------------------
   // Split out from rendering so tools/test-mc-program-tabs.js can assert the
   // adaptive decisions (how many levels, which day numbers, what is ticked)
@@ -320,6 +351,10 @@
     return out;
   }
 
+  // `list:false` renders Overview alone, with no tab bar at all — for a
+  // program whose landing has exactly one destination (F1b decision). A tab
+  // strip over a Program list holding a single row is a level of nothing, the
+  // same reasoning that skips drill-in for a single group.
   function shellHtml(cfg) {
     var tab = function (key, label, sel) {
       return '<button type="button" role="tab" class="mpt-tab' + (sel ? ' is-on' : '') + '"' +
@@ -327,13 +362,20 @@
         ' aria-selected="' + (sel ? 'true' : 'false') + '" data-mpt-tab="' + key + '">' +
         escapeHtml(label) + '</button>';
     };
-    return '<div class="mpt" style="--mpt-accent:' + escapeHtml(cfg.accent || '#c9505a') +
-      ';--mpt-accent-rgb:' + hexToRgb(cfg.accent) + ';">' +
+    var head = cfg.list === false ? '' :
       '<div class="mpt-tabs" role="tablist" aria-label="Program sections">' +
         tab('overview', 'Overview', true) + tab('list', 'Program list', false) +
-      '</div>' +
-      '<div class="mpt-panel" id="mpt-p-overview" role="tabpanel" aria-labelledby="mpt-t-overview"></div>' +
-      '<div class="mpt-panel is-hidden" id="mpt-p-list" role="tabpanel" aria-labelledby="mpt-t-list"></div>' +
+      '</div>';
+    var listPanel = cfg.list === false ? '' :
+      '<div class="mpt-panel is-hidden" id="mpt-p-list" role="tabpanel" aria-labelledby="mpt-t-list"></div>';
+    return '<div class="mpt' + (cfg.list === false ? ' mpt-solo' : '') +
+      '" style="--mpt-accent:' + escapeHtml(cfg.accent || '#c9505a') +
+      ';--mpt-accent-rgb:' + hexToRgb(cfg.accent) +
+      ';--mpt-accent-ink:' + inkFor(cfg.accent) + ';">' +
+      head +
+      '<div class="mpt-panel" id="mpt-p-overview" role="tabpanel"' +
+        (cfg.list === false ? '' : ' aria-labelledby="mpt-t-overview"') + '></div>' +
+      listPanel +
       '</div>';
   }
 
@@ -341,9 +383,16 @@
   function mount(el, cfg) {
     if (!el || !cfg) return null;
     var P = window.MC_PROGRAM_PROGRESS;
+    // No `def` means the program has no schedule record (only `ss` has one
+    // until F5, and a collection like a five-split library never will). Build
+    // NO record in that case rather than letting normalize() invent defaults:
+    // a fabricated 7-day / 2-rest week would render as this program's real
+    // schedule, which is the same "invented pattern" that got the full hero
+    // variant retired in F1a. Everything downstream already degrades cleanly —
+    // no week strip, no day numbers, no ticks, no reorder.
     var state = {
       P: P,
-      rec: cfg.rec || (P ? P.get(cfg.progId, cfg.def) : null),
+      rec: cfg.rec || ((P && cfg.def) ? P.get(cfg.progId, cfg.def) : null),
       week: cfg.week || 1,
       openGroup: null,
       tab: 'overview'
@@ -357,6 +406,7 @@
 
     function drawOverview() { pOverview.innerHTML = overviewHtml(cfg, state.rec, state.week, P); }
     function drawList() {
+      if (!pList) return;
       var model = listModel(cfg, state);
       // Reorder edits one week's order, which only means anything when the
       // record actually schedules these days.
@@ -365,6 +415,7 @@
       pList.innerHTML = listHtml(cfg, model, state.week, canReorder);
     }
     function showTab(key) {
+      if (!pList) return;                       // Overview-only: nothing to switch
       state.tab = key;
       Array.prototype.forEach.call(root.querySelectorAll('.mpt-tab'), function (b) {
         var on = b.getAttribute('data-mpt-tab') === key;

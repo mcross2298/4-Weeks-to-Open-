@@ -261,5 +261,30 @@ const ONE_GROUP = {
   eq('no dayMeta -> the meta line is still the day number', m.rows[0].meta, 'Day 1');
 }
 
+// ── 10. no progress record at all ───────────────────────────────────────────
+{
+  // F1b: only one program has a `schedule` in mc-pm-data.js, and a collection
+  // program never will. Those landings pass no `def`, so mount() builds no
+  // record — deliberately, rather than letting normalize() invent a 7-day
+  // 2-rest week and render it as this program's real schedule. The list must
+  // still render every row; it just carries no day number and no tick.
+  const { T } = load({});
+  const m = T.listModel(ONE_GROUP, { P: null, rec: null, week: 1 });
+  eq('no record -> every row still renders', m.rows.length, 5);
+  eq('no record -> rows keep the authored order', m.rows.map(r => r.id), SS.order);
+  eq('no record -> no day numbers', m.rows.map(r => r.day), [null, null, null, null, null]);
+  eq('no record -> the meta line falls back to duration', m.rows[0].meta, '75 min');
+  ok('no record -> nothing is ticked', m.rows.every(r => r.complete === false));
+  ok('no record -> no logIds', m.rows.every(r => r.logId === null));
+
+  // Drill-in is a property of the config, not of the record, so a collection
+  // program with no schedule still gets its split level.
+  const MANY = { progId: 'coll', dayMeta,
+    groups: [{ id: 'a', name: 'A', days: ['legs'] }, { id: 'b', name: 'B', days: ['chest'] }] };
+  eq('no record -> drill-in still works', T.listModel(MANY, { P: null, rec: null, week: 1 }).level, 'groups');
+  eq('no record -> drilled-in level still lists days',
+    T.listModel(MANY, { P: null, rec: null, week: 1, openGroup: 'b' }).rows.map(r => r.name), ['Chest']);
+}
+
 console.log((fail ? '::error::' : '') + 'mc-program-tabs: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
