@@ -187,11 +187,16 @@
   html[data-theme="light"] .cond-title { color: #92400e; }
 </style>
 <link rel="stylesheet" href="mc-program-landing.css"/>
+<link rel="stylesheet" href="mc-program-hero.css"/>
 <link rel="stylesheet" href="mc-program-tabs.css"/>
 <link rel="stylesheet" href="mc-surprise.css"/>
 <link rel="stylesheet" href="mc-nav.css"/>
 </head>
 <body>
+<!-- F1b: the Onyx landing hero, trimmed (F1a's reasoning: the stat strip
+     and the invented 7-day schedule strip belong to Overview, from the real
+     record). Rollout pending since program-landing-handoff.md. -->
+<div id="programHero"></div>
 <div class="page-wrap">
   <div class="back-nav">
     <a href="index.html">← Programs</a>
@@ -200,10 +205,10 @@
   <div id="programStatus"></div>
 
   <div class="program-header">
-    <div class="program-eyebrow">🔷 Flagship Program</div>
-    <span class="program-icon">⬡</span>
-    <h1>The Modality Matrix</h1>
-    <p class="program-tagline">Three phases. Three modalities. One system — pure dumbbell isolation locks in mind-muscle mastery before the barbell builds raw strength, then cables finish with constant-tension conditioning.</p>
+    
+    
+    
+    
     <div class="program-meta">
       <span class="meta-badge">15 Weeks</span>
       <span class="meta-badge">3 Phases · 5 Weeks Each</span>
@@ -283,6 +288,30 @@ MCProgramStatus.mount(document.getElementById('programStatus'), {
   if (!window.MC_PROGRAM_TABS) return;
   MC_PROGRAM_TABS.mount(document.getElementById('progTabs'), CFG);
 })();
+</script>
+<script src="mc-program-hero.js"></script>
+<script>
+MCProgramHero.mount(document.getElementById('programHero'), {
+  variant: 'trimmed',
+  accent: '#6f77e0',
+  iconKey: 'mm',
+  tierLabel: 'Flagship',
+  name: 'The Modality Matrix',
+  tagline: 'Three modalities, three phases — dumbbell, then barbell, then cable',
+  ctaLabel: 'Browse workouts',
+  onStart: function () {
+    var el = document.getElementById('progTabs');
+    if (!el) return;
+    var t = document.querySelector('.mpt-tab[data-mpt-tab="list"]');
+    if (t) t.click();
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+  whatsInside: [
+    { icon: 'chevron', title: 'Three modalities, three phases' },
+    { icon: 'bars', title: 'Dumbbell, then barbell, then cable — 15 weeks covering every equipment type.' }
+  ],
+  backHref: 'dashboard.html'
+});
 </script>
 </body>
 </html>

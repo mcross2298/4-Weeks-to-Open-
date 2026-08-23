@@ -183,17 +183,17 @@
 <link rel="stylesheet" href="mc-nav.css"/>
 <link rel="stylesheet" href="mc-program-landing.css"/>
 <link rel="stylesheet" href="mc-surprise.css"/>
+<link rel="stylesheet" href="mc-program-hero.css"/>
 <link rel="stylesheet" href="mc-program-tabs.css"/>
 <link rel="stylesheet" href="mc-light.css">
 </head>
 <body>
+<!-- F1b: the Onyx landing hero, trimmed (F1a's reasoning: the stat strip
+     and the invented 7-day schedule strip belong to Overview, from the real
+     record). Rollout pending since program-landing-handoff.md. -->
+<div id="programHero"></div>
 <div class="wrap">
 
-  <div class="header">
-    <div class="eyebrow"><span class="pulse-dot"></span>Daily Pump</div>
-    <h1>CHOOSE<br>YOUR SPLIT</h1>
-    <div class="header-sub">Tap a module → drill into your workouts</div>
-  </div>
 
   <div style="text-align:center;">
     <a href="pump-instructions.html" class="inst-link">📋 Program Guide & Instructions</a><br/>
@@ -450,6 +450,30 @@ MCProgramStatus.mount(document.getElementById('programStatus'), {
     onOpen: function (id) { if (META[id]) location.href = id + '.html'; }
   });
 })();
+</script>
+<script src="mc-program-hero.js"></script>
+<script>
+MCProgramHero.mount(document.getElementById('programHero'), {
+  variant: 'trimmed',
+  accent: '#D85A30',
+  iconKey: 'pump',
+  tierLabel: 'Influencer',
+  name: 'Daily Pump',
+  tagline: 'Fast, high-rep isolation work that chases maximum pump and fullness',
+  ctaLabel: 'Browse workouts',
+  onStart: function () {
+    var el = document.getElementById('progTabs');
+    if (!el) return;
+    var t = document.querySelector('.mpt-tab[data-mpt-tab="list"]');
+    if (t) t.click();
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+  whatsInside: [
+    { icon: 'chevron', title: 'Eighteen workouts across five splits' },
+    { icon: 'bars', title: 'High-rep isolation, drop sets and tempo work \u2014 a pump, not a grind.' }
+  ],
+  backHref: 'dashboard.html'
+});
 </script>
 </body>
 </html>

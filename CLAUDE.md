@@ -445,6 +445,30 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > into the sheet — reorder itself is **not** reimplemented. A CI gap was closed
 > on the way: `tools/test-mc-program-progress.js` shipped with `D0–D3` and was
 > never wired into a workflow, so its 68 assertions had never run in CI.
+>
+> **F1b shipped (2026-08-23):** the other nine landings, plus the Onyx hero
+> rollout pending since `program-landing-handoff.md` — every `cat-*.html` is
+> now one pattern. Three decisions were taken with the owner first, because
+> the measured shape of the nine was not what the roadmap assumed: only `ss`
+> has a `schedule` record (so the other nine list workouts with no day
+> numbers or ticks until `F5`), `cat-hv`/`cat-psu` link to exactly ONE workout
+> each (so they get Overview alone, `list:false`), and the hero rollout rides
+> along. **Every landing turned out to be a flat list of destinations** — the
+> drill-in lives one page further in for most programs — so only three pages
+> have a real group level: `cat-gainz` (its own authored section headings),
+> `cat-pmc` and `cat-pump-new4` (both built from the page's own data, so
+> config and markup cannot drift). **Two accordion layers vanish as a side
+> effect**: `cat-pump-new4`'s five collapsible modules and the `<details>`
+> "other splits" drawers on five pages, which hid most of each program behind
+> a disclosure. `mount()` now builds **no** progress record when no `def` is
+> passed, rather than letting `normalize()` invent a 7-day 2-rest week and
+> render it as the program's real schedule. Bugs caught before shipping: all
+> four flat pages (and then all three group-level pages, for a different
+> reason) carried an `MC_SURPRISE` selector that would have silently hidden
+> Surprise Me; `cat-ks` actually lists **six** splits, not five, because Split
+> 2 is `cat-ie.html`, which a "not a `cat-*` page" filter dropped; `cat-psu`
+> has no guide page at all; and `cat-pmc` carried both the hero and its own
+> `<h1>`.
 
 > **Companion card-layer plan:** [`card-integration-roadmap.md`](card-integration-roadmap.md)
 > (opened 2026-08-19) merges two audits taken the same day against the same

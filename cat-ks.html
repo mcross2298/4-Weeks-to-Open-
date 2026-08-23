@@ -179,11 +179,16 @@
   html[data-theme="light"] .split-pill.push { color: #be123c; }
 </style>
 <link rel="stylesheet" href="mc-program-landing.css"/>
+<link rel="stylesheet" href="mc-program-hero.css"/>
 <link rel="stylesheet" href="mc-program-tabs.css"/>
 <link rel="stylesheet" href="mc-surprise.css"/>
 <link rel="stylesheet" href="mc-nav.css"/>
 </head>
 <body>
+<!-- F1b: the Onyx landing hero, trimmed (F1a's reasoning: the stat strip
+     and the invented 7-day schedule strip belong to Overview, from the real
+     record). Rollout pending since program-landing-handoff.md. -->
+<div id="programHero"></div>
 <div class="page-wrap">
   <div class="back-nav">
     <a href="dashboard.html">← Programs</a>
@@ -193,10 +198,10 @@
 
   <!-- Program Header -->
   <div class="program-header">
-    <div class="program-eyebrow">🔥 Flagship Program</div>
-    <span class="program-icon">🔥</span>
-    <h1>Everything Under the Kitchen Sink</h1>
-    <p class="program-tagline">Six distinct training splits under one roof — the complete MC arsenal, station-anchored for commercial gym efficiency. Pick your split and get to work.</p>
+    
+    
+    
+    
     <div class="program-meta">
       <span class="meta-badge">6 Splits</span>
       <span class="meta-badge">Station-Anchored</span>
@@ -269,6 +274,30 @@ MCProgramStatus.mount(document.getElementById('programStatus'), {
   if (!window.MC_PROGRAM_TABS) return;
   MC_PROGRAM_TABS.mount(document.getElementById('progTabs'), CFG);
 })();
+</script>
+<script src="mc-program-hero.js"></script>
+<script>
+MCProgramHero.mount(document.getElementById('programHero'), {
+  variant: 'trimmed',
+  accent: '#e0a03c',
+  iconKey: 'ks',
+  tierLabel: 'Flagship',
+  name: 'Everything Under the Kitchen Sink',
+  tagline: 'Six splits under one roof — station-anchored for commercial gyms',
+  ctaLabel: 'Browse workouts',
+  onStart: function () {
+    var el = document.getElementById('progTabs');
+    if (!el) return;
+    var t = document.querySelector('.mpt-tab[data-mpt-tab="list"]');
+    if (t) t.click();
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+  whatsInside: [
+    { icon: 'chevron', title: 'Six splits, one station-anchored system' },
+    { icon: 'bars', title: 'Every pairing keeps you at one spot on the floor — no equipment hogging.' }
+  ],
+  backHref: 'dashboard.html'
+});
 </script>
 </body>
 </html>

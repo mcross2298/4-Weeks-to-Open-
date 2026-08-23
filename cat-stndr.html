@@ -66,16 +66,21 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
      so keep it static — base.css's absolute back-link would overlap the title. -->
 <style>.back-link{position:static;}</style>
 <link rel="stylesheet" href="mc-program-landing.css"/>
+<link rel="stylesheet" href="mc-program-hero.css"/>
 <link rel="stylesheet" href="mc-program-tabs.css"/>
 <link rel="stylesheet" href="mc-surprise.css"/>
 <link rel="stylesheet" href="mc-light.css">
 </head>
 <body>
+<!-- F1b: the Onyx landing hero, trimmed (F1a's reasoning: the stat strip
+     and the invented 7-day schedule strip belong to Overview, from the real
+     record). Rollout pending since program-landing-handoff.md. -->
+<div id="programHero"></div>
 <div class="container">
   <a href="dashboard.html" class="back-link">← Categories</a>
-  <div class="eyebrow">⚡ STNDR</div>
-  <h1 class="title">STNDR</h1>
-  <p class="subtitle">Bodybuilding & strength programs</p>
+  
+  
+  
   <div class="designer">✍️ Designed by CBUM</div>
   <a href="stndr-instructions.html" class="inst-link">📋 Program Guide & Instructions</a>
   <button type="button" class="mc-surprise-btn" data-mc-surprise style="--sp-accent:#1D9E75"><span class="mc-surprise-ico">🎲</span>Surprise Me</button>
@@ -155,6 +160,30 @@ MCProgramStatus.mount(document.getElementById('programStatus'), {
     onOpen: function (id) { if (DAYS[id]) location.href = id + '.html'; }
   });
 })();
+</script>
+<script src="mc-program-hero.js"></script>
+<script>
+MCProgramHero.mount(document.getElementById('programHero'), {
+  variant: 'trimmed',
+  accent: '#1D9E75',
+  iconKey: 'stndr',
+  tierLabel: 'Influencer',
+  name: 'STNDR',
+  tagline: 'Structured lifting built on progressive overload and smart periodization',
+  ctaLabel: 'Browse workouts',
+  onStart: function () {
+    var el = document.getElementById('progTabs');
+    if (!el) return;
+    var t = document.querySelector('.mpt-tab[data-mpt-tab="list"]');
+    if (t) t.click();
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+  whatsInside: [
+    { icon: 'chevron', title: 'Five programs, one progressive system' },
+    { icon: 'bars', title: 'Progressive overload, supersets and periodization across every block.' }
+  ],
+  backHref: 'dashboard.html'
+});
 </script>
 </body>
 </html>

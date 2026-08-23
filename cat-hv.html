@@ -137,6 +137,7 @@
 <link rel="stylesheet" href="mc-program-landing.css"/>
 <!-- F1b: the landing's Overview. One destination, so Overview alone
      (list:false) — the Start card below already is the list. -->
+<link rel="stylesheet" href="mc-program-hero.css"/>
 <link rel="stylesheet" href="mc-program-tabs.css"/>
 <!-- mc-nav.js builds the bottom nav on this page (it has no native .tab-bar
      to bail on), but this stylesheet was never linked, so the bar rendered
@@ -146,6 +147,10 @@
 <link rel="stylesheet" href="mc-light.css">
 </head>
 <body>
+<!-- F1b: the Onyx landing hero, trimmed (F1a's reasoning: the stat strip
+     and the invented 7-day schedule strip belong to Overview, from the real
+     record). Rollout pending since program-landing-handoff.md. -->
+<div id="programHero"></div>
 <div class="page-wrap">
   <div class="back-nav">
     <a href="index.html">← Programs</a>
@@ -156,10 +161,10 @@
   <div id="progTabs"></div>
 
   <div class="program-header">
-    <div class="program-eyebrow">🔷 Flagship Program</div>
-    <span class="program-icon">💥</span>
-    <h1>High-Volume Training Template</h1>
-    <p class="program-tagline">A 4-week high-set, high-rep progression — compound-dominant single-body-part days build into full supersets, then high-set pyramids, then finish with bodyweight &amp; accessory density. 5–6 sets, 15–25 reps, trisets strictly banned.</p>
+    
+    
+    
+    
     <div class="program-meta">
       <span class="meta-badge">4-Week Block</span>
       <span class="meta-badge">5–6 Sets · 15–25 Reps</span>
@@ -290,5 +295,29 @@ MCProgramStatus.mount(document.getElementById('programStatus'), {
 })();
 </script>
 <script src="mc-sw-update.js"></script>
+<script src="mc-program-hero.js"></script>
+<script>
+MCProgramHero.mount(document.getElementById('programHero'), {
+  variant: 'trimmed',
+  accent: '#9fbf4a',
+  iconKey: 'hv',
+  tierLabel: 'Flagship',
+  name: 'High-Volume Training Template',
+  tagline: 'Compound into superset into pyramid — volume escalates week by week',
+  ctaLabel: 'Browse workouts',
+  onStart: function () {
+    var el = document.getElementById('progTabs');
+    if (!el) return;
+    var t = document.querySelector('.mpt-tab[data-mpt-tab="list"]');
+    if (t) t.click();
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+  whatsInside: [
+    { icon: 'chevron', title: 'Compound into superset into pyramid' },
+    { icon: 'bars', title: 'Volume escalates week to week; trisets are banned by design.' }
+  ],
+  backHref: 'dashboard.html'
+});
+</script>
 </body>
 </html>

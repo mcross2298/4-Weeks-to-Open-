@@ -42,17 +42,17 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 <!-- F1b: the landing's Overview. This program has exactly one destination, so
      it gets Overview alone (list:false) — a Program list holding a single row
      is a level of nothing, and the Start card below already is that row. -->
+<link rel="stylesheet" href="mc-program-hero.css"/>
 <link rel="stylesheet" href="mc-program-tabs.css"/>
 <link rel="stylesheet" href="mc-light.css">
 </head>
 <body>
+<!-- F1b: the Onyx landing hero, trimmed (F1a's reasoning: the stat strip
+     and the invented 7-day schedule strip belong to Overview, from the real
+     record). Rollout pending since program-landing-handoff.md. -->
+<div id="programHero"></div>
 <div class="container">
   <a href="dashboard.html" class="back-link">← Categories</a>
-  <div class="header">
-    <div class="eyebrow">🦁 Category</div>
-    <h1 class="title">PSU Football</h1>
-    <div class="subtitle">Off-season strength training programs</div>
-  </div>
 
   <div id="programStatus"></div>
 
@@ -128,5 +128,29 @@ MCProgramStatus.mount(document.getElementById('programStatus'), {
 })();
 </script>
 <script src="mc-sw-update.js"></script>
+<script src="mc-program-hero.js"></script>
+<script>
+MCProgramHero.mount(document.getElementById('programHero'), {
+  variant: 'trimmed',
+  accent: '#639922',
+  iconKey: 'psu',
+  tierLabel: 'Influencer',
+  name: 'PSU Football',
+  tagline: 'A collegiate strength and conditioning system, built for athletic performance',
+  ctaLabel: 'Browse workouts',
+  onStart: function () {
+    var el = document.getElementById('progTabs');
+    if (!el) return;
+    var t = document.querySelector('.mpt-tab[data-mpt-tab="list"]');
+    if (t) t.click();
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+  whatsInside: [
+    { icon: 'chevron', title: 'A real collegiate S&C system' },
+    { icon: 'bars', title: 'Two phases of progressive loading on cleans, squats, deadlifts and bench.' }
+  ],
+  backHref: 'dashboard.html'
+});
+</script>
 </body>
 </html>

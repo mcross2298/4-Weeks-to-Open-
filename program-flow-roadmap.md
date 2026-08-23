@@ -249,6 +249,61 @@ program — `F0` moved that to Home and did not update the tour. Corrected, and
 a new "The program page" module added for the tabs. `ss-instructions.html`
 had the same `F0` staleness plus no mention of the landing; both fixed.
 
+#### `F1b` shipped (2026-08-23)
+
+The other nine landings, plus the Onyx hero rollout that has been pending
+since `program-landing-handoff.md`. Every `cat-*.html` is now one pattern.
+
+**Three decisions taken with the owner first**, because the measured shape of
+the nine was not what this roadmap assumed:
+
+1. Only `ss` has a `schedule` record, so for the other nine the list has no
+   day numbers, ticks or reorder until `F5`. Shipped as a plain tappable list
+   rather than held back; `F5` lights up progress with no further page edits.
+2. `cat-hv` and `cat-psu` link to exactly ONE workout each, so they get
+   Overview alone (`list:false`).
+3. The hero rollout is taken alongside.
+
+**The measurement that reshaped the phase:** every landing is a **flat list of
+destinations** — the drill-in lives one page further in for most programs, not
+on the landing. So `F1b` is mostly one group per page. Three pages do have a
+real group level and use it: `cat-gainz` (its own three authored section
+headings), `cat-pmc` (built from the page's own `SPLITS` data, so the two
+cannot drift) and `cat-pump-new4` (five splits).
+
+**Two accordion layers disappear as a side effect** — `cat-pump-new4`'s five
+collapsible modules, and the `<details>` "other splits" drawers that hid most
+of each program on `cat-gainz`/`cat-mm`/`cat-ks`/`cat-mc`/`cat-stndr`. Both
+become navigation, with one level on screen at a time. That is `F3`'s
+principle arriving early on the landings, not in the workout pages.
+
+**Component:** `list:false` renders Overview with no tab bar; `mount()` builds
+**no** progress record when no `def` is passed, rather than letting
+`normalize()` invent a 7-day 2-rest week and render it as the program's real
+schedule — the same "invented pattern" that retired the full hero variant in
+`F1a`. Eight new assertions cover it (58 total).
+
+**Caught before shipping, by assertion or by driving:**
+
+- All four flat pages carried an `MC_SURPRISE` selector pointing at cards this
+  change removes — Surprise Me would have silently hidden itself on each.
+- On a list that opens at the **group** level, no `[data-mpt-day]` row is in
+  the DOM until a group is opened, so the same button hid itself on
+  `cat-gainz`, `cat-pmc` and `cat-pump-new4` too. `mc-surprise.js`'s existing
+  `group` option is exactly for this and is now used.
+- **`cat-ks` lists six splits, not five**: Split 2 is `cat-ie.html`, which a
+  "not a `cat-*` page" filter silently dropped. That reconciles the page's own
+  "6 Splits" badge with its links.
+- `cat-psu` has no `psu-instructions.html` — the one program with no guide
+  page — so it links only the fleet-wide index.
+- `cat-pmc` carried BOTH the Onyx hero and its own `<h1>`, a duplication only
+  visible once the whole fleet used one pattern.
+
+**Known, not fixed here:** the pages keep their own `← Programs` back link
+below the hero, which has a back chevron of its own — two back affordances.
+Removing the page-level one interacts with the smart-back-nav script that
+rewrites those `<a>`s, so it wants its own change rather than a drive-by.
+
 **Known, not fixed here (pre-existing, verified against `main`):** opening a
 workout on `cat-strength.html` leaves **no card active** — 8 meatballs render
 and 0 are visible, because every card sits collapsed to its `.mcl-strip`

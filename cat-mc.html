@@ -270,11 +270,16 @@
 <link rel="stylesheet" href="base.css?v=68"/>
 <link rel="stylesheet" href="mc-nav.css"/>
 <link rel="stylesheet" href="mc-program-landing.css"/>
+<link rel="stylesheet" href="mc-program-hero.css"/>
 <link rel="stylesheet" href="mc-program-tabs.css"/>
 <link rel="stylesheet" href="mc-surprise.css"/>
 <link rel="stylesheet" href="mc-light.css">
 </head>
 <body>
+<!-- F1b: the Onyx landing hero, trimmed (F1a's reasoning: the stat strip
+     and the invented 7-day schedule strip belong to Overview, from the real
+     record). Rollout pending since program-landing-handoff.md. -->
+<div id="programHero"></div>
 <div class="page-wrap">
 
   <!-- Back Nav -->
@@ -286,11 +291,9 @@
 
   <!-- ① Program Overview -->
   <div class="program-header">
-    <div class="program-eyebrow">⚡ Program · Personal Collection</div>
-    <h1>Mike Cross'<br>5 Favorite Splits</h1>
-    <p class="program-tagline">
-      5 personal splits across every major training style — 7-day weeks, push/pull/legs, body part splits, and more. Each split has its own color, workout cards, and drill-ins.
-    </p>
+    
+    
+    
     <div class="program-meta">
       <span class="meta-badge">5 Splits</span>
       <span class="meta-badge">18 Workouts</span>
@@ -386,6 +389,30 @@ MCProgramStatus.mount(document.getElementById('programStatus'), {
   if (!window.MC_PROGRAM_TABS) return;
   MC_PROGRAM_TABS.mount(document.getElementById('progTabs'), CFG);
 })();
+</script>
+<script src="mc-program-hero.js"></script>
+<script>
+MCProgramHero.mount(document.getElementById('programHero'), {
+  variant: 'trimmed',
+  accent: '#d8b463',
+  iconKey: 'mc',
+  tierLabel: 'Flagship',
+  name: 'Mike Cross\' Favorite Splits',
+  tagline: 'Five personal splits spanning every major training style',
+  ctaLabel: 'Browse workouts',
+  onStart: function () {
+    var el = document.getElementById('progTabs');
+    if (!el) return;
+    var t = document.querySelector('.mpt-tab[data-mpt-tab="list"]');
+    if (t) t.click();
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+  whatsInside: [
+    { icon: 'chevron', title: 'Five personal training styles' },
+    { icon: 'bars', title: 'Pick whichever split matches how you want to train this block.' }
+  ],
+  backHref: 'dashboard.html'
+});
 </script>
 </body>
 </html>
