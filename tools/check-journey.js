@@ -170,7 +170,11 @@ const STATE = () => ({
   toolbar: !!document.querySelector('.mcs-stat-row'),
 });
 
-// D11 guard — a SOURCE check, deliberately, because a runtime one is unsound.
+// D11 guard — a SOURCE check. It was written as one because a runtime check
+// was unsound at the time (see below); that is no longer strictly true --
+// runInsetPass() further down now sets a REAL inset over CDP and asserts at
+// runtime. Both are kept: this one needs no browser, covers the rules rather
+// than one rendered state, and still runs where the CDP override is missing.
 //
 // env(safe-area-inset-top) resolves to 0 in headless Chromium, so an
 // inset-AWARE rule -- calc(54px + env(safe-area-inset-top,0px)) -- computes to
@@ -230,6 +234,138 @@ async function revealCards(pg) {
     }
   }
   return null;
+}
+
+/* ── REAL safe-area pass (D11-runtime) ───────────────────────────────────────
+   The source check above exists because "env(safe-area-inset-top) resolves to
+   0 in headless Chromium" -- true when it was written, and no longer true:
+   CDP's Emulation.setSafeAreaInsetsOverride sets a REAL inset that env()
+   resolves against, so an inset-aware rule and an inset-blind one finally
+   compute differently and can be told apart at runtime.
+
+   That matters because the source check can only see what it knows to read --
+   `body.mcs-stat-active` blocks in mc-summary.css. It is blind to a page's OWN
+   chrome, and 33 of the pages that load mc-finish.js declare a sticky top bar
+   (.tabs-bar on 27, .week-selector on 4, .phase-tabs and a sticky .topbar on
+   one each) in their own <style> with a flat `top:0`. At inset 0 those sit
+   exactly where they should; at inset 59 they sit inside the notch, and once
+   the session bar became an opaque lid over that whole band they became
+   unreachable -- elementFromPoint at a tab's centre returned the bar. A green
+   run of every other check in this file said nothing about it.
+
+   So: drive the same session again at a real Dynamic Island inset and assert
+   the two things only a nonzero inset can break -- that every sticky top bar
+   clears both the notch and the session bar, and that the controls this shell
+   owns are still hit-testable. Degrades to a skip (never a failure) where the
+   CDP command is unavailable, so an older Chromium can't turn this into a
+   red build on a repo that is fine. */
+const INSET_TOP = 59;    // iPhone 15/16 Pro Dynamic Island, portrait
+const STICKY_TOP_SEL = '.tabs-bar, .week-tabs, .week-selector, .phase-tabs, .topbar';
+
+async function runInsetPass(ctx, entry) {
+  const out = { page: entry.page, failures: [], skipped: null };
+  const pg = await ctx.newPage();
+  try {
+    const cdp = await ctx.newCDPSession(pg);
+    try {
+      await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: { top: INSET_TOP, bottom: 34 } });
+    } catch (e) {
+      out.skipped = 'Emulation.setSafeAreaInsetsOverride unavailable in this Chromium';
+      await pg.close(); return out;
+    }
+    await pg.goto(baseUrl + '/' + entry.page, { waitUntil: 'domcontentloaded', timeout: 25000 });
+    await pg.waitForTimeout(2200);
+
+    // Confirm the override actually took, or the whole pass is meaningless --
+    // this is the mistake the original runtime check made (testing its own
+    // override). If env() still reads 0 we skip rather than assert on nothing.
+    const envTop = await pg.evaluate(() => {
+      const d = document.createElement('div');
+      d.style.cssText = 'position:fixed;top:0;width:1px;height:env(safe-area-inset-top,0px);';
+      document.body.appendChild(d);
+      const h = d.getBoundingClientRect().height; d.remove(); return h;
+    });
+    if (Math.round(envTop) !== INSET_TOP) {
+      out.skipped = 'env(safe-area-inset-top) read back as ' + envTop + 'px, not ' + INSET_TOP;
+      await pg.close(); return out;
+    }
+
+    if (!(await revealCards(pg))) { await pg.close(); return out; }   // picker page: nothing to drive
+    await pg.evaluate(() => { const s = document.querySelectorAll('.mcl-strip'); const t = s[1] || s[0]; if (t) t.click(); });
+    await pg.waitForTimeout(1000);
+    await pg.evaluate(() => { const w = document.querySelector('.mcl-wrap.open .mcl-w');
+      if (w) { w.value = '185'; w.dispatchEvent(new Event('input', { bubbles: true })); }
+      const c = document.querySelector('.mcl-wrap.open .mcl-ck'); if (c) c.click(); });
+    await pg.waitForTimeout(1800);
+    // push the sticky chrome hard against its offset so it is actually stuck
+    await pg.evaluate(() => window.scrollBy(0, 900));
+    await pg.waitForTimeout(500);
+
+    const res = await pg.evaluate(({ inset, stickySel, critical }) => {
+      const bar = document.querySelector('.prog-bar-wrap.mcs-stat');
+      const barBottom = bar ? bar.getBoundingClientRect().bottom : inset;
+      const bad = [];
+      // NOTE: the sticky-chrome scan below must run before the critical-control
+      // loop, which scrolls elements to centre and would move the page under it.
+      document.querySelectorAll(stickySel).forEach(el => {
+        const cs = getComputedStyle(el);
+        if (cs.position !== 'sticky' || cs.display === 'none' || cs.visibility === 'hidden') return;
+        const r = el.getBoundingClientRect();
+        if (r.height < 4) return;
+        const name = '.' + String(el.className || '').trim().split(/\s+/)[0];
+        if (r.top < Math.round(barBottom) - 1) {
+          // Two distinct failures, both real, and worth telling apart: inside
+          // the notch means the status bar is drawn over it; below the notch
+          // but above the bar's bottom means the bar covers it.
+          bad.push(name + ' sticks at y' + Math.round(r.top) + ' — ' +
+            (r.top < inset
+              ? 'inside the ' + inset + 'px notch, where the status bar paints over it'
+              : 'behind the session bar (which ends at y' + Math.round(barBottom) + ')') +
+            '. Sticky top chrome must pin below both.');
+          return;
+        }
+        const tab = el.querySelector('button,a,.wtab') || el.firstElementChild;
+        if (!tab) return;
+        const q = tab.getBoundingClientRect();
+        if (!q.width || !q.height) return;
+        const hit = document.elementFromPoint(Math.round(q.left + q.width / 2), Math.round(q.top + q.height / 2));
+        if (!(hit && (hit === tab || tab.contains(hit) || hit.contains(tab)))) {
+          bad.push(name + ' is covered — a tap at its first control lands on ' +
+            (hit ? hit.tagName.toLowerCase() + '.' + String(hit.className || '').split(' ')[0] : 'nothing'));
+        }
+      });
+      // The session shell's own controls must survive the inset too -- but
+      // PERMANENT occlusion only, exactly as MEASURE() defines it. A control
+      // that happens to be under the bar at this scroll position is fine (you
+      // scroll); one still covered after being centred is not. Skipping the
+      // scrollIntoView here reported every set checkbox that had drifted under
+      // the toolbar, on pages that are completely fine.
+      critical.forEach(c => {
+        document.querySelectorAll(c.sel).forEach(el => {
+          const cs = getComputedStyle(el);
+          if (cs.display === 'none' || cs.visibility === 'hidden') return;
+          const r0 = el.getBoundingClientRect();
+          if (!r0.width || !r0.height) return;
+          el.scrollIntoView({ block: 'center' });
+          const r = el.getBoundingClientRect();
+          const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+          if (cy < 0 || cy >= innerHeight || cx < 0 || cx >= innerWidth) return;
+          const hit = document.elementFromPoint(Math.round(cx), Math.round(cy));
+          if (hit && !(hit === el || el.contains(hit) || hit.contains(el))) {
+            bad.push(c.name + ' unreachable at inset — tap lands on ' +
+              hit.tagName.toLowerCase() + '.' + String(hit.className || '').split(' ')[0]);
+          }
+        });
+      });
+      return [...new Set(bad)];
+    }, { inset: INSET_TOP, stickySel: STICKY_TOP_SEL, critical: CRITICAL });
+
+    out.failures = res;
+  } catch (e) {
+    out.failures.push('inset pass threw — ' + String(e).slice(0, 120));
+  }
+  await pg.close();
+  return out;
 }
 
 async function runJourney(ctx, entry, vpName) {
@@ -314,6 +450,7 @@ async function runJourney(ctx, entry, vpName) {
 
   const browser = await chromium.launch();
   const results = [];
+  const insetResults = [];
   for (const vpName of vpNames) {
     const ctx = await browser.newContext({
       viewport: VIEWPORTS[vpName], deviceScaleFactor: 2, isMobile: true, hasTouch: true });
@@ -321,6 +458,12 @@ async function runJourney(ctx, entry, vpName) {
     await ctx.route('**://fonts.googleapis.com/**', r => r.abort());
     await ctx.route('**://cdn.jsdelivr.net/**', r => r.abort());
     for (const entry of PAGES) results.push(await runJourney(ctx, entry, vpName));
+    // One real-inset pass per page, at the baseline viewport only — the inset
+    // is what this tests, not the width, so sweeping widths would just re-run
+    // the same assertion four times.
+    if (vpName === 'iPhone 13') {
+      for (const entry of PAGES) insetResults.push(await runInsetPass(ctx, entry));
+    }
     await ctx.close();
   }
   await browser.close();
@@ -367,6 +510,22 @@ async function runJourney(ctx, entry, vpName) {
     fs.writeFileSync(BUDGET_FILE, JSON.stringify(nextBudgets, null, 2) + '\n');
     console.log('\nBudgets written — ' + Object.keys(nextBudgets).length + ' entr(ies) to ' + path.basename(BUDGET_FILE));
     process.exit(0);
+  }
+
+  // real-inset pass
+  const insetSkipped = insetResults.filter(r => r.skipped);
+  const insetBadPages = insetResults.filter(r => r.failures.length);
+  if (insetSkipped.length && insetSkipped.length === insetResults.length) {
+    console.log('\ncheck-journey: real-inset pass SKIPPED — ' + insetSkipped[0].skipped);
+  } else if (insetBadPages.length && !UPDATE) {
+    insetBadPages.forEach(r => {
+      console.error('\n\u2717 ' + r.page + '  @ safe-area inset ' + INSET_TOP + 'px');
+      r.failures.forEach(f => console.error('    ::error file=' + r.page + '::SAFE-AREA(runtime): ' + f));
+    });
+    failed += insetBadPages.length;
+  } else if (insetResults.length) {
+    console.log('\ncheck-journey: real-inset pass clean on ' +
+      (insetResults.length - insetSkipped.length) + ' page(s) at a ' + INSET_TOP + 'px inset.');
   }
 
   console.log('\ncheck-journey: ' + (results.length - failed) + '/' + results.length +

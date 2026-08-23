@@ -1,26 +1,26 @@
 {
   "mm-p1.html @ iPhone 13": {
-    "atRest": 12,
-    "inSession": 5.5
+    "atRest": 13.4,
+    "inSession": 6.9
   },
   "2on-1off.html @ iPhone 13": {
-    "atRest": 12,
-    "inSession": 5.5
+    "atRest": 13.4,
+    "inSession": 6.9
   },
   "pmc-back.html @ iPhone 13": {
-    "atRest": 12,
-    "inSession": 14.3
+    "atRest": 13.4,
+    "inSession": 15.8
   },
   "s3-back-traps.html @ iPhone 13": {
-    "atRest": 12,
-    "inSession": 5.5
+    "atRest": 13.4,
+    "inSession": 6.9
   },
   "kitchen-sink-s3.html @ iPhone 13": {
-    "atRest": 12,
-    "inSession": 5.5
+    "atRest": 13.4,
+    "inSession": 6.9
   },
   "chest-tri-pump.html @ iPhone 13": {
-    "atRest": 12,
-    "inSession": 5.5
+    "atRest": 13.4,
+    "inSession": 6.9
   }
 }

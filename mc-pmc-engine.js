@@ -84,7 +84,13 @@ function attachEvents(){
     c.addEventListener('click',function(e){if(e.target.closest('.setlog-toggle,.setlog-wrap,.set-check,.set-input'))return;var id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');});
   });
   document.querySelectorAll('[data-type="ssex"]').forEach(function(c){
-    c.addEventListener('click',function(e){e.stopPropagation();var id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');});
+    // Same exemption as the .rest-timer guard in mc-freq-engine.js, and the
+    // same shape as the [data-type="single"] handler directly above, which
+    // already returns early rather than swallowing clicks on its own children.
+    // Without it the unconditional stopPropagation() ate the rest chip's click
+    // before mc-timer.js's delegated document listener could see it, leaving
+    // every superset rest chip on this engine's 5 pages inert.
+    c.addEventListener('click',function(e){if(e.target.closest('.rest-timer'))return;e.stopPropagation();var id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');});
   });
   document.querySelectorAll('.wtab').forEach(function(b){
     b.addEventListener('click',function(){activeWeek=parseInt(b.dataset.w);render();});

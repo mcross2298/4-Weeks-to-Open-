@@ -223,7 +223,14 @@ function _mcSetText(node, text) {
 function _mcSetCls(node, cls) {
   if (node && node.className !== cls) node.className = cls;
 }
-// Renders a tappable rest-timer chip: a real `<button>` (D-5 — was a `<span>`
+// The chip's PRESCRIPTION text — what this exercise's rest is SUPPOSED to be.
+// Static for the life of the card. See makeRestTimer below for why.
+function _mcRestTargetText(restStr) {
+  var s = String(restStr == null ? '' : restStr).trim();
+  return s ? 'Rest: ' + s : 'Rest';
+}
+
+// Renders a rest-timer chip: a real `<button>` (D-5 — was a `<span>`
 // with an onclick, keyboard-unreachable and announced as nothing in
 // particular by a screen reader). secs/name travel as data-* attributes for
 // the delegated listener below, not embedded in an inline handler string —
@@ -232,16 +239,46 @@ function _mcSetCls(node, cls) {
 // escaped. Always ensures #timerFloat exists first (buildTimerFloat() is
 // idempotent) — three pages' former local copies omitted that call, which
 // meant the float those pages depend on might never get constructed (D-4).
+//
+// STATIC TARGET, NOT A THIRD COUNTDOWN. This chip used to be a live readout:
+// start() overwrote its label with the remaining time and its className with
+// running/done/overtime, and the 1 Hz tick rewrote both every second. Measured
+// on all six engine pages, that made THREE elements count the same rest down
+// at once — this chip, the inline row directly beneath the set just logged
+// (#mclRest), and the session toolbar (#mcsRest) — three renderings of one
+// piece of state within one thumb's reach of each other.
+//
+// The two that stayed are the two with a distinct job: the toolbar is the
+// glanceable one that survives scrolling, and the inline row is the one
+// carrying the −15s/+15s controls, sitting where the athlete's eye already is.
+// This chip's job is the one neither of those can do — saying what the
+// PRESCRIBED rest is, which is what you want to read while the timer ISN'T
+// running. The live countdown destroyed exactly that: mid-rest the card no
+// longer showed its own target at all.
+//
+// So the label is written once, here, and nothing ever writes it again. The
+// button stays tappable — it is still the only way to start a rest without
+// logging a set, and the delegated listener below is what check-one-timer.js's
+// ORPHAN CHIP rule is built around — it just no longer renders timer state.
+// aria-label carries the intent explicitly, because the visible text can no
+// longer change to signal that a tap did anything.
+//
+// data-label is gone with the state: its only reader was stop()'s "put the
+// prescription back" restore, which exists solely to undo a label overwrite
+// that no longer happens. data-rest stays — mc-setlog.js's restSecs() reads it
+// to size the auto-started rest, and that is unrelated to display.
 function makeRestTimer(restStr, exerciseName) {
   var secs = TMR.parseSeconds(restStr);
   var label = _mcEscRestTimerAttr(restStr);
   if (!secs) return '<span class="ex-sets" style="opacity:0.5">⏱️ ' + label + '</span>';
   var name = _mcEscRestTimerAttr(String(exerciseName || ''));
-  return '<button type="button" class="rest-timer idle" data-rest="' + label + '" data-label="' + label + '" ' +
+  var target = _mcEscRestTimerAttr(_mcRestTargetText(restStr));
+  return '<button type="button" class="rest-timer idle" data-rest="' + label + '" ' +
     'data-secs="' + secs + '" data-name="' + name + '" ' +
+    'aria-label="' + target + '. Tap to start or stop the rest timer." ' +
     'title="Tap to start rest timer">' +
     '<span class="rest-timer-icon">⏱️</span>' +
-    '<span class="rest-timer-label">' + label + '</span>' +
+    '<span class="rest-timer-label">' + target + '</span>' +
     '</button>';
 }
 // Delegated click handling (Volume II Phase 6 / Initiative 08) for every
@@ -361,8 +398,13 @@ const TMR = {
     this._done = false;
     this.upNext = getUpNext(el);
 
-    el.className = 'rest-timer running';
-    el.querySelector('.rest-timer-label').textContent = this.formatTime(durationSecs);
+    // The chip is a static prescription now (see makeRestTimer) — no label
+    // overwrite, no state class. Note what the removed `el.className = ...`
+    // also did by accident: a bare className ASSIGNMENT wiped every other
+    // class on the chip, including the .mcl-rest-under that mc-setlog.js's
+    // normalizeSupersetTimers() adds to park a superset's single timer under
+    // the logger. Starting a rest on a superset silently unstyled its own
+    // chip; nothing puts that class back.
     const barSeed = document.getElementById('mcsRestVal');
     if (barSeed) barSeed.textContent = this.formatTime(durationSecs);
     if (MC_PREFS.get().restView === 'list') _mcInlineRestMount(el, durationSecs);
@@ -407,14 +449,10 @@ const TMR = {
       const elapsed = (Date.now() - this.startTime) / 1000;
       const remaining = Math.ceil(this.duration - elapsed);
 
-      // Update card badge
-      if (el) {
-        _mcSetText(el.querySelector('.rest-timer-label'), this.formatTime(remaining));
-      }
-
       // Every visible readout, written from this one tick so none can drift:
-      // the card chip, the float or the inline row (whichever is showing), the
-      // video view, and the session toolbar.
+      // the float or the inline row (whichever is showing), the video view,
+      // and the session toolbar. The card chip is deliberately NOT in this
+      // list any more — it is a static prescription, not a countdown.
       //
       // _mcSetText already skips a write when the text is unchanged, but a
       // countdown changes every second, so an off-screen readout would still
@@ -443,7 +481,6 @@ const TMR = {
         _mcSetCls(floatTime, 'timer-float-time');
         _mcSetCls(floatProgress, 'timer-float-progress');
         if (tvTime) _mcSetCls(tvTime, 'tv-time');
-        if (el) _mcSetCls(el, 'rest-timer running');
       } else if (!this._done) {
         // First tick where remaining has reached zero. Using a latch (rather
         // than an exact remaining===0 match) matters because a backgrounded/
@@ -462,7 +499,6 @@ const TMR = {
         _mcSetText(floatLabel, 'DONE!');
         if (tvTime) _mcSetCls(tvTime, 'tv-time done');
         if (tvLabel) _mcSetText(tvLabel, 'DONE!');
-        if (el) _mcSetCls(el, 'rest-timer done');
         if(!this._autoDismiss)this._autoDismiss=setTimeout(()=>this.stop(),4000);
       } else {
         // Overtime
@@ -473,7 +509,6 @@ const TMR = {
         if (tvTime) _mcSetText(tvTime, '+' + this.formatTime(-remaining));
         if (tvTime) _mcSetCls(tvTime, 'tv-time overtime');
         if (tvLabel) _mcSetText(tvLabel, 'OVERTIME');
-        if (el) _mcSetCls(el, 'rest-timer overtime');
       }
     }, 1000);
   },
@@ -481,12 +516,12 @@ const TMR = {
   stop() {
     if (this.interval) clearInterval(this.interval);
     this.interval = null;
-    if (this.activeEl) {
-      const secs = this.parseSeconds(this.activeEl.dataset.rest);
-      this.activeEl.querySelector('.rest-timer-label').textContent = this.activeEl.dataset.label;
-      this.activeEl.className = 'rest-timer idle';
-      this.activeEl = null;
-    }
+    // No chip state to unwind: the label was never overwritten and no state
+    // class was ever added, so the chip is already in the only appearance it
+    // has. (The `const secs = ...parseSeconds(...)` that used to open this
+    // block was assigned and never read — dead before this change, gone with
+    // the rest of it.)
+    this.activeEl = null;
     this.upNext = null;
     this.startTime = null;
     _mcInlineRestUnmount();

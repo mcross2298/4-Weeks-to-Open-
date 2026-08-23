@@ -116,10 +116,15 @@
     var secs = parseInt(rest, 10) || 0;
     if (!secs) return '';
     var label = secs >= 60 && secs % 60 === 0 ? (secs / 60) + ' min' : secs + ' sec';
-    return '<button type="button" class="rest-timer idle" data-rest="' + label + '" data-label="' + label + '" ' +
+    // Static prescription, not a countdown — mc-timer.js's makeRestTimer()
+    // carries the full reasoning; this page's own chip builder must emit the
+    // same contract or it would be the one card in the fleet still ticking.
+    var target = 'Rest: ' + label;
+    return '<button type="button" class="rest-timer idle" data-rest="' + label + '" ' +
       'data-secs="' + secs + '" data-name="' + esc(name) + '" ' +
+      'aria-label="' + target + '. Tap to start or stop the rest timer." ' +
       'title="Tap to start rest timer">' +
-      '<span class="rest-timer-icon">⏱️</span><span class="rest-timer-label">' + label + '</span></button>';
+      '<span class="rest-timer-icon">⏱️</span><span class="rest-timer-label">' + target + '</span></button>';
   }
 
   // --- intensifier rendering (same contract as run-workout.html) ----------

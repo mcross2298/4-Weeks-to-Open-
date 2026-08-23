@@ -24,6 +24,18 @@ function bindEvents(){
   });
   document.querySelectorAll(".ex-item").forEach(item=>{
     item.addEventListener("click",e=>{
+      // The rest chip is a real button with its own job, and mc-timer.js
+      // reaches it through ONE delegated listener on `document` (the One rest
+      // timer rule). An unconditional stopPropagation() here swallowed the
+      // click before it ever got there, so every rest chip on the 8 pages this
+      // engine drives was silently inert -- a tap that did nothing, no error.
+      // That is the exact failure mode check-one-timer.js's ORPHAN CHIP rule
+      // exists to prevent, arriving through a door it can't see: the page DOES
+      // load mc-timer.js, an ancestor just eats the event. Found by driving a
+      // tap rather than reading the source, and it predates this change --
+      // the chip was a live countdown before, so it LOOKED responsive while
+      // being just as untappable.
+      if(e.target.closest(".rest-timer"))return;
       e.stopPropagation();
       const id=item.dataset.id;
       checkState[id]=!checkState[id];
