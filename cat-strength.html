@@ -32,10 +32,37 @@
 <link rel="stylesheet" href="mc-card-actions.css"/>
 <link rel="stylesheet" href="mc-setlog.css"/>
 <link rel="stylesheet" href="mc-summary.css"/>
+<link rel="stylesheet" href="mc-program-day.css"/>
 <style>
 /* ── PAGE-SPECIFIC STYLES (restored) ──
    These rules are unique to this page and are NOT part of base.css.
    They were inadvertently dropped during the Phase 2 CSS extraction. */
+/* ── Day-by-day program view (program-day-view-roadmap.md D3) ──
+   The topbar is page-owned chrome; everything below it is rendered by the
+   three shared modules and styled by mc-program-day.css. Sticky top bars on
+   this fleet are padded for the notch centrally by mc-nav.js's safe-area
+   pass, so this rule must NOT hardcode its own top offset. */
+.pd-topbar{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#0d0618;}
+.pd-topbar-name{display:flex;align-items:center;gap:6px;flex:1;min-width:0;background:none;border:none;padding:8px 4px;min-height:44px;cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent;}
+.pd-topbar-mark{width:16px;height:12px;flex-shrink:0;background:repeating-linear-gradient(115deg,#c9505a 0 3px,transparent 3px 6px);}
+.pd-topbar-txt{font-family:'Archivo',system-ui,sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:-0.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pd-topbar-chev{color:#94a3b8;font-size:16px;font-weight:800;flex-shrink:0;}
+/* Secondary program links, demoted below the day module — the Onyx landing
+   hero that used to carry them is what this view replaces. */
+.pd-links{display:flex;gap:8px;flex-wrap:wrap;padding:0 12px 16px;}
+/* Both of these render ~35px tall from their own shared rules, under the
+   app's 44pt touch floor. Raised here, scoped to this block, rather than in
+   mc-surprise.css / the .inst-header-link rule: .mc-surprise-btn is a
+   fleet-wide component on many pages and .inst-header-link is used in the
+   dark program headers elsewhere on this page, so widening either would
+   reflow surfaces this change never tested. The underlying fleet-wide
+   shortfall is pre-existing and is called out in the PR, not silently
+   inherited here. */
+.pd-links .inst-header-link,
+.pd-links .mc-surprise-btn{min-height:44px;padding-top:0;padding-bottom:0;}
+html[data-theme="light"] .pd-topbar{background:#f5f2ec;}
+html[data-theme="light"] .pd-topbar-txt{color:#1c1a17;}
+html[data-theme="light"] .pd-topbar-chev{color:#57514a;}
 .dash-title{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.02em;line-height:1.1;margin-bottom:4px;}
 .dash-title span{color:#a855f7;}
 .subtitle{font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:12px;}
@@ -228,27 +255,43 @@ html[data-theme="light"] .ccc-sub{color:#6b6459;}
 </head>
 <body>
 <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill"></div></div>
-<div id="programHero"></div>
 
 <!-- ═══════════════════════════════════
-     VIEW 1: DASHBOARD
+     VIEW 1: DASHBOARD — the day-by-day program module
+     (program-day-view-roadmap.md D3). The Onyx landing hero that used to
+     mount at #programHero here is superseded by this: it was the static
+     "here is the program" card, and this is the stateful "here is your day"
+     one, carrying the same stats and Start CTA plus the schedule and menu.
 ════════════════════════════════════ -->
 <div id="view-dashboard">
 
-  <div class="header">
-    <a href="dashboard.html" class="back-link">← Programs</a>
-    <div class="eyebrow">🏋️ Program · 6-Week Cycle</div>
-    <h1 class="dash-title">Strength <span>&amp;</span> Supersets</h1>
-    <p class="subtitle">6-week program · 5 training days · heavy compounds + high-volume supersets</p>
-    <div class="header-pills">
-      <span class="header-pill">6-week cycle</span>
-      <span class="header-pill">5 training days</span>
-      <span class="header-pill">by Mike Cross</span>
-    </div>
-    <a href="ss-instructions.html" class="inst-header-link">
-      <span>📋</span><span>Program Guide &amp; Instructions</span><span>→</span>
+  <div class="pd-topbar">
+    <button type="button" class="pd-topbar-name" id="pdProgramBtn" aria-label="Switch program">
+      <span class="pd-topbar-mark" aria-hidden="true"></span>
+      <span class="pd-topbar-txt">Strength &amp; Supersets</span>
+      <span class="pd-topbar-chev" aria-hidden="true">›</span>
+    </button>
+    <button type="button" class="mpd-menu-btn" id="pdMenuBtn" aria-label="Program menu" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M4 7h16M4 12h11M4 17h16"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Achievement/banner slot. Deliberately empty: this app has no
+       achievements engine (roadmap non-goal), and a hard-coded "Badge
+       Unlocked!" strip with nothing behind it is worse than no strip. -->
+  <div id="pdBanner"></div>
+
+  <div id="pdWeekBar"></div>
+  <div id="pdDayHero"></div>
+
+  <div class="pd-links">
+    <a href="ss-instructions.html" class="inst-header-link" style="margin-top:0;">
+      <span>📋</span><span>Program Guide</span><span>→</span>
     </a>
-    <button type="button" class="mc-surprise-btn" data-mc-surprise style="--sp-accent:#c9505a"><span class="mc-surprise-ico">🎲</span>Surprise Me</button>
+    <button type="button" class="mc-surprise-btn" data-mc-surprise style="--sp-accent:#c9505a;margin-top:0;"><span class="mc-surprise-ico">🎲</span>Surprise Me</button>
   </div>
 
   <div class="resume-banner" id="resumeBanner" onclick="resumeLastWorkout()">
@@ -262,7 +305,7 @@ html[data-theme="light"] .ccc-sub{color:#6b6459;}
   </div>
 
   <div class="split-strip-wrap">
-    <div class="split-strip-label">Select a Workout</div>
+    <div class="split-strip-label">All workouts</div>
     <div class="split-strip" id="splitStrip"></div>
   </div>
 
@@ -308,6 +351,14 @@ window.MC_TEMPO_ENABLED = true;
 <script src="mc-haptics.js"></script>
 <script src="mc-reps.js"></script>
 <script src="mc-pm-data.js"></script>
+<!-- Day-by-day program view (program-day-view-roadmap.md). These four load
+     BEFORE the page's inline script, which calls into all of them at the
+     bottom of its INIT block — an inline script tag is never deferred and
+     would otherwise run ahead of them. -->
+<script src="mc-program-progress.js"></script>
+<script src="mc-week-bar.js"></script>
+<script src="mc-day-hero.js"></script>
+<script src="mc-program-menu.js"></script>
 <script>
 
 // ══════════════════════════════════════════════════════════════
@@ -776,15 +827,19 @@ function backToSplit(){
   showDashboard();
 }
 
-function showWorkout(workoutId){
+// `week` is optional and defaults to 1, so the split-strip cards and the
+// not-found picker below (which call showWorkout(id) with no week) are
+// unchanged. The day view passes the week its day actually belongs to —
+// opening Day 8 must land on Week 2, not Week 1.
+function showWorkout(workoutId, week){
   currentWorkoutId = workoutId;
-  activeWeek = 1;
+  activeWeek = (week && week > 0) ? week : 1;
   // Save for resume
   const w = PMC_SPLITS[workoutId];
   if(w){
     const split = SPLITS.find(s => s.workouts.some(wk => wk.id === workoutId));
     localStorage.setItem(LAST_WORKOUT_KEY, JSON.stringify({
-      workoutId, week:1, name: w.title, splitName: split ? split.name : w.split
+      workoutId, week: activeWeek, name: w.title, splitName: split ? split.name : w.split
     }));
   }
   document.getElementById('view-dashboard').classList.add('hidden');
@@ -1209,6 +1264,186 @@ initResumeBanner();
 buildStrip();
 
 // ══════════════════════════════════════════════════════════════
+//  DAY-BY-DAY PROGRAM VIEW  (program-day-view-roadmap.md D3)
+//  Wires mc-program-progress.js + the three renderers to this page's own
+//  PMC_SPLITS data. This page is the ONLY state owner here — the three
+//  view modules are pure renderers and re-mounting is the update path.
+// ══════════════════════════════════════════════════════════════
+const PD = window.MC_PROGRAM_PROGRESS;
+
+// The program's own definition, passed on every call so the store never
+// needs a migration when the block gains a week or the day order changes.
+// rest [6,7] is the Weekly Layout Standard's 5-on 2-off.
+const SS_DEF = {
+  weeks: 6, perWeek: 7,
+  order: PMC_SPLIT_META['cycle'].workouts.slice(),
+  rest: [6, 7]
+};
+const SS_ACCENT = '#e11d48';
+
+let pdRec  = PD.ensure('ss', SS_DEF);
+let pdDay  = PD.currentDay('ss', SS_DEF);
+let pdWeek = PD.weekOf(pdRec, pdDay);      // the week the BAR is paged to
+
+// A set string is authored for humans, not parsers: "5×5", "8,6,4,4",
+// "4×20", "AMRAP (50–100 reps)", "200 reps". Anything that isn't an
+// N×M or a comma list is one working set.
+function pdSetCount(s){
+  const t = String(s||'').trim();
+  const mult = t.match(/^(\d+)\s*[×x]/i);
+  if(mult) return parseInt(mult[1],10);
+  if(/^[\d\s,]+$/.test(t)) return t.split(',').filter(x=>x.trim()).length;
+  return 1;
+}
+
+// Exercises/sets for one authored week of a day. A superset row is two
+// exercises, which is why this counts entries rather than rows.
+function pdCountWeek(workout, week){
+  const wk = getWeekData(workout, week);
+  const list = wk ? wk.exercises : [];
+  let ex = 0, sets = 0;
+  list.forEach(e=>{
+    if(e.type === 'superset'){
+      ex += 2;
+      sets += pdSetCount(e.a && e.a.sets) + pdSetCount(e.b && e.b.sets);
+    } else {
+      ex += 1;
+      sets += pdSetCount(e.sets);
+    }
+  });
+  return { exercises: ex, sets: sets };
+}
+
+// Week whose prescription the hero is describing. Set before each mount so
+// the stats match the day on screen rather than always reading week 1.
+let pdMetaWeek = pdWeek;
+
+function pdDayMeta(workoutId){
+  if(!workoutId) return null;
+  const w = PMC_SPLITS[workoutId];
+  if(!w) return null;
+  const card = (SPLITS[0].workouts || []).find(x => x.id === workoutId) || {};
+  const c = pdCountWeek(w, pdMetaWeek);
+  return {
+    title: w.title,
+    icon: w.icon || card.icon,
+    color: w.color || SS_ACCENT,
+    tags: card.tags || [],
+    exercises: c.exercises,
+    sets: c.sets,
+    // Estimate, not a stored figure: ~2.5 min per working set including
+    // rest, rounded to the nearest 5 so it reads as the approximation it is.
+    minutes: c.sets ? Math.max(15, Math.round(c.sets * 2.5 / 5) * 5) : null,
+    comingSoon: !!w.comingSoon
+  };
+}
+
+function pdRender(){
+  pdMetaWeek = PD.weekOf(pdRec, pdDay);
+  MC_WEEK_BAR.mount(document.getElementById('pdWeekBar'), {
+    rec: pdRec, week: pdWeek, activeDay: pdDay, accent: SS_ACCENT,
+    onWeek: function(w){
+      if(w < 1 || w > pdRec.weeks) return;
+      pdWeek = w;
+      pdRender();
+    },
+    // Tapping any day pill jumps the hero to that day. This moves the
+    // cursor, so the choice survives a reload — a day picked deliberately
+    // is a stronger signal than the derived "first incomplete".
+    onDay: function(d){
+      pdRec = PD.setCursor('ss', d, SS_DEF);
+      pdDay = d;
+      pdRender();
+    }
+  });
+
+  MC_DAY_HERO.mount(document.getElementById('pdDayHero'), {
+    rec: pdRec, day: pdDay, accent: SS_ACCENT, dayMeta: pdDayMeta,
+    onStart: function(day, workoutId){
+      if(!workoutId) return;
+      pdRec = PD.setCursor('ss', day, SS_DEF);
+      pdDay = day;
+      showWorkout(workoutId, PD.weekOf(pdRec, day));
+    },
+    // "View workout" reads the prescription without claiming the day —
+    // deliberately does NOT move the cursor.
+    onView: function(day, workoutId){
+      if(workoutId) showWorkout(workoutId, PD.weekOf(pdRec, day));
+    },
+    onLog: function(day, logId){
+      // The log id banked at completion is what makes this a real deep
+      // link; without one (a day completed before this view existed) fall
+      // back to the program's own log list.
+      location.href = logId
+        ? 'workout-detail.html?id=' + encodeURIComponent(logId)
+        : 'workout-logs.html';
+    },
+    // Rest hero's peek: page the bar to the next training day and show it,
+    // without marking the rest day done.
+    onPreview: function(nextDay){
+      pdDay = nextDay;
+      pdWeek = PD.weekOf(pdRec, nextDay);
+      pdRec = PD.setCursor('ss', nextDay, SS_DEF);
+      pdRender();
+    }
+  });
+}
+
+document.getElementById('pdMenuBtn').addEventListener('click', function(){
+  MC_PROGRAM_MENU.open({
+    progId: 'ss', def: SS_DEF, rec: pdRec, week: pdWeek,
+    accent: SS_ACCENT, programName: 'Strength & Supersets',
+    dayMeta: pdDayMeta,
+    onNavigate: function(action){
+      if(action === 'programs')      location.href = 'dashboard.html?tab=programs';
+      else if(action === 'logs')     location.href = 'workout-logs.html';
+      else if(action === 'calendar') location.href = 'dashboard.html?tab=dashboard#calendar';
+    },
+    onChange: function(){
+      // The drawer wrote through MC_PROGRAM_PROGRESS; re-read rather than
+      // trusting a local copy, and re-clamp the cursor in case a restart or
+      // a schedule change moved it.
+      pdRec = PD.get('ss', SS_DEF);
+      pdDay = PD.currentDay('ss', SS_DEF);
+      pdWeek = PD.weekOf(pdRec, pdDay);
+      pdRender();
+    }
+  });
+});
+
+document.getElementById('pdProgramBtn').addEventListener('click', function(){
+  location.href = 'dashboard.html?tab=programs';
+});
+
+// AUTOMATIC PROGRESSION. mc-finish.js emits this from _FW.confirm(), its one
+// completion point (roadmap D1) — the only way this same-page SPA can learn
+// that the session it opened was just banked. currentWorkoutId/activeWeek
+// still hold the day that was being trained, so the completion is attributed
+// to the right prescribed day rather than to whatever the cursor reads now.
+document.addEventListener('mc:workout-finished', function(ev){
+  if(!currentWorkoutId) return;
+  const entry = (ev.detail && ev.detail.entry) || {};
+  const order = PD.orderForWeek(pdRec, activeWeek);
+  const rank  = order.indexOf(currentWorkoutId);
+  if(rank < 0) return;
+  // Rank among the week's NON-rest positions -> the continuous day number.
+  let pos = 0, seen = -1;
+  for(let p = 1; p <= pdRec.perWeek; p++){
+    if(pdRec.rest.indexOf(p) >= 0) continue;
+    seen++;
+    if(seen === rank){ pos = p; break; }
+  }
+  if(!pos) return;
+  const day = (activeWeek - 1) * pdRec.perWeek + pos;
+  pdRec = PD.complete('ss', day, { logId: entry.id, workoutId: currentWorkoutId }, SS_DEF);
+  pdDay = PD.currentDay('ss', SS_DEF);
+  pdWeek = PD.weekOf(pdRec, pdDay);
+  pdRender();
+});
+
+pdRender();
+
+// ══════════════════════════════════════════════════════════════
 //  FINISH WORKOUT BAR + SAVE HOOK (consumed by mc-summary.js)
 //  mc-summary.js builds the sticky summary/stat bar, patches
 //  _FW.open → recap sheet, and handles save + navigation on exit.
@@ -1274,32 +1509,11 @@ window.saveWorkout=function(){};
 <script src="mc-surprise.js"></script>
 <script src="mc-nav.js"></script>
 <script src="mc-resume.js"></script>
-<script src="mc-program-hero.js"></script>
-<script>
-MCProgramHero.mount(document.getElementById('programHero'), {
-  variant: 'full',
-  accent: '#e11d48',
-  iconKey: 'ss',
-  tierLabel: 'Flagship',
-  name: "Strength & Supersets",
-  tagline: 'Heavy compounds paired with high-volume supersets + AMRAP finishers',
-  weeks: 6,
-  daysPerWeek: 5,
-  level: 'Int.',
-  scheduleLabel: '5-on 2-off',
-  whatsInside: [
-    { icon: 'chevron', title: 'Heavy compound lifts every session' },
-    { icon: 'bars', title: 'Supersets and AMRAP finishers push volume at the end, not the start.' }
-  ],
-  backHref: 'dashboard.html',
-  onBadgeTap: function () {
-    if (localStorage.getItem(LAST_WORKOUT_KEY)) { resumeLastWorkout(); }
-    else {
-      var strip = document.getElementById('splitStrip');
-      if (strip && strip.scrollIntoView) strip.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }
-});
-</script>
+<!-- mc-program-hero.js (the Onyx program-landing hero) is deliberately NOT
+     loaded here any more: the day-by-day module at the top of #view-dashboard
+     replaces it, carrying the same stats and Start CTA plus live day state.
+     It is not in check-script-manifest.py's REQUIRED_MODULES, so dropping the
+     tag is a real removal, not a parity break. Every other cat-*.html still
+     mounts it. -->
 </body>
 </html>

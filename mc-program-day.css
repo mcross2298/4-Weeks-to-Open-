@@ -1,0 +1,325 @@
+/* ==========================================================================
+   mc-program-day.css — styles for the day-by-day program view
+   --------------------------------------------------------------------------
+   program-day-view-roadmap.md D2. Shared by mc-week-bar.js (.mwb-*),
+   mc-day-hero.js (.mdh-*) and mc-program-menu.js (.mpm-*).
+
+   Two standing constraints this file is written against:
+     * Touch floor — every control clears 44x44 (S1 raised the whole app to
+       that floor; a new surface must not reintroduce a sub-44pt target).
+     * Light theme — cat-strength.html carries a contrast budget, so every
+       token gets an html[data-theme="light"] value rather than inheriting a
+       dark-only color onto a light background.
+   The bottom-sheet chrome itself (.mc-menu-overlay/.mc-sheet/.mc-item) is
+   NOT redefined here — mc-card-actions.css owns it and this file only adds
+   what the drawer's two inline editors need.
+   ========================================================================== */
+
+/* ── weekly schedule bar ─────────────────────────────────────────────────── */
+.mwb{padding:10px 12px 14px;}
+.mwb-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
+.mwb-title{
+  flex:1;text-align:center;font-family:'Archivo',system-ui,sans-serif;
+  font-size:16px;font-weight:800;color:#f1f5f9;letter-spacing:-0.01em;
+}
+.mwb-arrow{
+  width:44px;height:44px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:transparent;border:none;border-radius:12px;
+  color:#e2e8f0;cursor:pointer;font-family:inherit;
+  -webkit-tap-highlight-color:transparent;transition:background .12s ease,opacity .12s ease;
+}
+.mwb-arrow:active{background:rgba(255,255,255,0.08);}
+.mwb-arrow[disabled]{opacity:0.25;cursor:default;}
+
+.mwb-row{display:flex;gap:4px;}
+.mwb-day{
+  flex:1 1 0;min-width:0;
+  /* 44px floor is on the interactive box, not just the visible pill */
+  min-height:52px;padding:6px 2px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  background:transparent;border:none;border-radius:12px;
+  cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;
+  transition:background .12s ease;
+}
+.mwb-day:active{background:rgba(255,255,255,0.06);}
+.mwb-day-lbl{
+  font-family:'Archivo',system-ui,sans-serif;
+  font-size:10px;font-weight:800;letter-spacing:0.08em;
+  color:#64748b;text-transform:uppercase;
+}
+.mwb-day-mark{
+  width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;line-height:1;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+  color:#94a3b8;
+  transition:background .12s ease,border-color .12s ease,color .12s ease;
+}
+.mwb-day.is-done .mwb-day-mark{
+  background:rgba(52,211,153,0.16);border-color:rgba(52,211,153,0.4);color:#34d399;
+}
+.mwb-day.is-rest .mwb-day-mark{
+  background:rgba(148,163,184,0.1);border-color:rgba(148,163,184,0.22);color:#64748b;
+}
+.mwb-day.is-active .mwb-day-lbl{color:#fff;}
+.mwb-day.is-active .mwb-day-mark{
+  background:var(--mwb-accent,#c9505a);border-color:var(--mwb-accent,#c9505a);color:#fff;
+  box-shadow:0 0 0 3px rgba(255,255,255,0.08);
+}
+/* An active day that is also done keeps the accent ring but shows it is
+   banked — otherwise the accent would hide the completion entirely. */
+.mwb-day.is-active.is-done .mwb-day-mark{
+  background:#34d399;border-color:#34d399;color:#06281d;
+}
+
+/* ── day hero ─────────────────────────────────────────────────────────────── */
+.mdh{
+  margin:0 12px 14px;border-radius:20px;overflow:hidden;
+  background:#0f0f10;border:1px solid rgba(255,255,255,0.08);
+}
+.mdh-art{
+  position:relative;height:168px;
+  /* Synthetic accent art (decision 4) — no photo assets in this repo.
+     --mdh-art-base is the colour the accent gradient FADES INTO, and it has
+     to be the card's own surface. Hardcoding the dark value here rendered a
+     muddy grey slab in light mode (caught in a light-theme render, not by
+     inspection) — the accent faded toward near-black on a cream card. */
+  --mdh-art-base:#101011;
+  background:
+    repeating-linear-gradient(135deg,
+      rgba(var(--mdh-accent-rgb),0.13) 0px, rgba(var(--mdh-accent-rgb),0.13) 2px,
+      transparent 2px, transparent 15px),
+    radial-gradient(120% 90% at 20% 0%, rgba(var(--mdh-accent-rgb),0.42), transparent 62%),
+    linear-gradient(160deg, rgba(var(--mdh-accent-rgb),0.22), var(--mdh-art-base) 72%);
+}
+.mdh-art-scrim{
+  position:absolute;inset:0;
+  background:linear-gradient(0deg,#0f0f10 2%,rgba(15,15,16,0.1) 58%,rgba(15,15,16,0.4) 100%);
+}
+.mdh-art-glyph{
+  position:absolute;left:16px;top:14px;
+  width:46px;height:46px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;font-size:23px;
+  background:rgba(var(--mdh-accent-rgb),0.2);
+  border:1px solid rgba(var(--mdh-accent-rgb),0.34);
+  box-shadow:0 8px 22px -10px rgba(var(--mdh-accent-rgb),0.6);
+}
+.mdh-done-badge{
+  position:absolute;left:16px;bottom:14px;
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:20px;
+  background:rgba(16,110,80,0.9);border:1px solid rgba(52,211,153,0.5);
+  font-family:'Archivo',system-ui,sans-serif;
+  font-size:12px;font-weight:800;color:#d1fae5;letter-spacing:0.02em;
+}
+.mdh-done-tick{
+  width:16px;height:16px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:#34d399;color:#06281d;font-size:11px;font-weight:900;line-height:1;
+}
+
+.mdh-body{padding:14px 16px 16px;}
+.mdh-eyebrow{
+  font-family:'Archivo',system-ui,sans-serif;
+  font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--mdh-accent,#c9505a);margin-bottom:6px;
+}
+.mdh-title{
+  font-family:'Archivo',system-ui,sans-serif;
+  font-size:27px;font-weight:900;line-height:1.1;letter-spacing:-0.02em;
+  color:#fff;margin:0 0 8px;overflow-wrap:anywhere;
+}
+.mdh-tags{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:12px;}
+.mdh-tag{font-size:12px;font-weight:600;color:#94a3b8;}
+.mdh-tag-sep{font-size:12px;color:#475569;}
+
+.mdh-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  border-top:1px solid rgba(255,255,255,0.07);
+  padding-top:12px;margin-bottom:14px;
+}
+.mdh-stat{text-align:center;position:relative;}
+.mdh-stat + .mdh-stat::before{
+  content:'';position:absolute;left:0;top:2px;bottom:2px;width:1px;
+  background:rgba(255,255,255,0.07);
+}
+.mdh-stat-v{
+  font-family:'Archivo',system-ui,sans-serif;
+  font-size:21px;font-weight:800;color:#fff;line-height:1.15;
+}
+.mdh-stat-l{font-size:12px;color:#94a3b8;margin-top:2px;}
+
+.mdh-cta{display:flex;gap:9px;}
+.mdh-btn{
+  flex:1 1 0;min-height:48px;padding:12px 14px;
+  border-radius:13px;cursor:pointer;
+  font-family:'Archivo',system-ui,sans-serif;
+  font-size:15px;font-weight:800;letter-spacing:-0.01em;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .1s ease,opacity .12s ease;
+}
+.mdh-btn:active{transform:scale(0.98);}
+.mdh-btn[disabled]{opacity:0.45;cursor:default;transform:none;}
+.mdh-btn-primary{background:#fff;border:1px solid #fff;color:#101011;}
+.mdh-btn-ghost{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);
+  color:#e2e8f0;
+}
+
+/* ── rest hero ───────────────────────────────────────────────────────────── */
+.mdh-rest .mdh-art{height:132px;}
+.mdh-rest-since{font-size:14px;color:#cbd5e1;margin-bottom:12px;}
+.mdh-rest-list{
+  list-style:none;margin:0 0 14px;padding:0;
+  border-top:1px solid rgba(255,255,255,0.07);
+}
+.mdh-rest-row{
+  padding:10px 0;font-size:14px;color:#cbd5e1;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.mdh-rest-row:last-child{border-bottom:none;}
+.mdh-rest-row::before{content:'•';color:var(--mdh-accent,#0d9488);font-weight:900;margin-right:9px;}
+
+/* ── program menu drawer ─────────────────────────────────────────────────── */
+.mpm-sheet{max-height:82vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.mpm-item{min-height:48px;}
+.mpm-ico{color:var(--mpm-accent,#c9505a);flex-shrink:0;}
+.mpm-item-text{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.mpm-item-lbl{font-size:15px;font-weight:700;color:#e2e8f0;}
+.mpm-item-sub{font-size:12px;font-weight:500;color:#64748b;}
+.mc-item-cancel .mpm-item-lbl{color:#94a3b8;}
+.mpm-note{font-size:12px;line-height:1.5;color:#94a3b8;margin:0 14px 10px;}
+
+.mpm-toggles{display:flex;flex-direction:column;gap:6px;padding:0 8px 8px;}
+.mpm-toggle{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  width:100%;min-height:48px;padding:10px 14px;
+  border-radius:12px;border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.03);cursor:pointer;
+  font-family:inherit;-webkit-tap-highlight-color:transparent;
+}
+.mpm-toggle:active{background:rgba(255,255,255,0.07);}
+.mpm-toggle-pos{font-size:15px;font-weight:700;color:#e2e8f0;}
+.mpm-toggle-state{
+  font-family:'Archivo',system-ui,sans-serif;
+  font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;
+  padding:4px 10px;border-radius:20px;
+  background:rgba(var(--mdh-accent-rgb,201,80,90),0.15);
+  border:1px solid var(--mpm-accent,#c9505a);color:var(--mpm-accent,#c9505a);
+}
+.mpm-toggle.is-rest .mpm-toggle-state{
+  background:rgba(148,163,184,0.12);border-color:rgba(148,163,184,0.35);color:#94a3b8;
+}
+
+.mpm-list{list-style:none;margin:0;padding:0 8px 8px;}
+.mpm-row{
+  display:flex;align-items:center;gap:10px;
+  min-height:52px;padding:8px 12px;margin-bottom:6px;
+  border-radius:12px;border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.03);
+}
+.mpm-row.is-dragging{opacity:0.45;}
+.mpm-row-grip{color:#475569;font-size:15px;cursor:grab;flex-shrink:0;}
+.mpm-row-ico{font-size:17px;flex-shrink:0;}
+.mpm-row-name{
+  flex:1;min-width:0;font-size:15px;font-weight:700;color:#e2e8f0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.mpm-row-btns{display:flex;gap:4px;flex-shrink:0;}
+.mpm-move{
+  width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:10px;border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.04);color:#cbd5e1;
+  font-size:12px;cursor:pointer;font-family:inherit;
+  -webkit-tap-highlight-color:transparent;
+}
+.mpm-move:active{background:rgba(255,255,255,0.1);}
+.mpm-move[disabled]{opacity:0.28;cursor:default;}
+.mpm-row-actions{display:flex;flex-direction:column;}
+.mpm-reset{justify-content:center;color:#94a3b8;font-size:13px;}
+
+/* ── top-bar meatball trigger (hosted by the page) ───────────────────────── */
+.mpd-menu-btn{
+  width:44px;height:44px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:12px;border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.05);color:#e2e8f0;
+  cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;
+}
+.mpd-menu-btn:active{background:rgba(255,255,255,0.12);}
+
+/* ── light theme ─────────────────────────────────────────────────────────── */
+html[data-theme="light"] .mwb-title{color:#1c1a17;}
+html[data-theme="light"] .mwb-arrow{color:#3f3a33;}
+html[data-theme="light"] .mwb-arrow:active{background:rgba(28,26,23,0.07);}
+html[data-theme="light"] .mwb-day:active{background:rgba(28,26,23,0.05);}
+html[data-theme="light"] .mwb-day-lbl{color:#6b6459;}
+html[data-theme="light"] .mwb-day-mark{
+  background:rgba(28,26,23,0.05);border-color:rgba(28,26,23,0.14);color:#57514a;
+}
+html[data-theme="light"] .mwb-day.is-done .mwb-day-mark{
+  background:rgba(6,120,86,0.14);border-color:rgba(6,120,86,0.4);color:#046c4e;
+}
+html[data-theme="light"] .mwb-day.is-rest .mwb-day-mark{
+  background:rgba(28,26,23,0.05);border-color:rgba(28,26,23,0.14);color:#6b6459;
+}
+html[data-theme="light"] .mwb-day.is-active .mwb-day-lbl{color:#1c1a17;}
+html[data-theme="light"] .mwb-day.is-active.is-done .mwb-day-mark{
+  background:#046c4e;border-color:#046c4e;color:#fff;
+}
+
+html[data-theme="light"] .mdh{background:#fffdf9;border-color:rgba(28,26,23,0.1);}
+html[data-theme="light"] .mdh-art{--mdh-art-base:#fffdf9;}
+html[data-theme="light"] .mdh-art-scrim{
+  background:linear-gradient(0deg,#fffdf9 2%,rgba(255,253,249,0.1) 58%,rgba(255,253,249,0.4) 100%);
+}
+html[data-theme="light"] .mdh-title{color:#1c1a17;}
+html[data-theme="light"] .mdh-tag{color:#57514a;}
+html[data-theme="light"] .mdh-tag-sep{color:#a09789;}
+html[data-theme="light"] .mdh-stats{border-top-color:rgba(28,26,23,0.1);}
+html[data-theme="light"] .mdh-stat + .mdh-stat::before{background:rgba(28,26,23,0.1);}
+html[data-theme="light"] .mdh-stat-v{color:#1c1a17;}
+html[data-theme="light"] .mdh-stat-l{color:#57514a;}
+html[data-theme="light"] .mdh-rest-since{color:#3f3a33;}
+html[data-theme="light"] .mdh-rest-list{border-top-color:rgba(28,26,23,0.1);}
+html[data-theme="light"] .mdh-rest-row{color:#3f3a33;border-bottom-color:rgba(28,26,23,0.07);}
+html[data-theme="light"] .mdh-btn-primary{background:#1c1a17;border-color:#1c1a17;color:#fffdf9;}
+html[data-theme="light"] .mdh-btn-ghost{
+  background:rgba(28,26,23,0.05);border-color:rgba(28,26,23,0.14);color:#1c1a17;
+}
+html[data-theme="light"] .mdh-done-badge{
+  background:rgba(4,108,78,0.95);border-color:rgba(4,108,78,0.6);color:#ecfdf5;
+}
+
+html[data-theme="light"] .mpm-item-lbl{color:#1c1a17;}
+html[data-theme="light"] .mpm-item-sub{color:#6b6459;}
+html[data-theme="light"] .mc-item-cancel .mpm-item-lbl{color:#57514a;}
+html[data-theme="light"] .mpm-note{color:#57514a;}
+html[data-theme="light"] .mpm-toggle{
+  background:rgba(28,26,23,0.03);border-color:rgba(28,26,23,0.12);
+}
+html[data-theme="light"] .mpm-toggle-pos{color:#1c1a17;}
+html[data-theme="light"] .mpm-toggle.is-rest .mpm-toggle-state{
+  background:rgba(28,26,23,0.06);border-color:rgba(28,26,23,0.2);color:#57514a;
+}
+html[data-theme="light"] .mpm-row{
+  background:rgba(28,26,23,0.03);border-color:rgba(28,26,23,0.12);
+}
+html[data-theme="light"] .mpm-row-name{color:#1c1a17;}
+html[data-theme="light"] .mpm-row-grip{color:#a09789;}
+html[data-theme="light"] .mpm-move{
+  background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.12);color:#3f3a33;
+}
+html[data-theme="light"] .mpm-reset{color:#57514a;}
+html[data-theme="light"] .mpd-menu-btn{
+  background:rgba(28,26,23,0.05);border-color:rgba(28,26,23,0.12);color:#1c1a17;
+}
+
+/* ── reduced motion ──────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce){
+  .mwb-arrow,.mwb-day,.mwb-day-mark,.mdh-btn{transition:none;}
+  .mdh-btn:active{transform:none;}
+}

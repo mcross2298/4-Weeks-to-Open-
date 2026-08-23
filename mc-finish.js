@@ -645,6 +645,16 @@
       // back up the finished session right away (no-op when signed out)
       try{if(window.MC_SYNC&&MC_SYNC.push)MC_SYNC.push();}catch(e){}
       window._FW.close();
+      // program-day-view-roadmap.md D1 — the ONE completion point in this
+      // module, and until now it emitted nothing. A day-by-day program view
+      // that lives on the same page as its workout (cat-strength.html is a
+      // three-view SPA) has no other way to learn that the session it opened
+      // was just banked. Detail carries the entry so a listener can keep the
+      // log id and deep-link back into history.
+      // Inert on the 77 other pages that load this file and don't listen.
+      try{
+        document.dispatchEvent(new CustomEvent('mc:workout-finished',{detail:{entry:entry,pageId:pageId}}));
+      }catch(e){}
       // Celebratory recap instead of just a button flash
       showDone(entry);
       // Flash confirmation on the bar too
