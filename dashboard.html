@@ -1291,6 +1291,7 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
 <script src="mc-appearance.js"></script>
 <script src="exercise-catalog.js"></script>
 <script src="mc-global-search.js"></script>
+<link rel="stylesheet" href="mc-program-day.css"/>
 <link rel="stylesheet" href="mc-light.css">
 </head>
 <body>
@@ -1369,6 +1370,17 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
       <div class="hero-empty-sub">Open any program below and tap 'Set as Active' to pin it here.</div>
       <div class="hero-empty-btn">Choose Program</div>
     </div>
+
+    <!-- program-flow-roadmap.md F0 — the day-by-day module. Renders for a
+         built-in program that declares a `schedule` in mc-pm-data.js; every
+         other case (custom, owner-published, or a built-in not yet given a
+         schedule) falls through to #heroCard below, unchanged. -->
+    <div id="dayModule"><div id="dmBar"></div><div id="dmHero"></div></div>
+    <!-- The fatigue chips live inside #heroCard, so they would vanish for any
+         program showing the day module instead. Second target, same class —
+         renderFatigue() paints every .hero-fatigue, so neither branch loses
+         the warning. -->
+    <div class="hero-fatigue" id="dayFatigue" style="padding:0 12px 10px;"></div>
 
     <div class="hero-card" id="heroCard" onclick="openActiveProgram()" role="button" tabindex="0" aria-label="Continue your active program" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openActiveProgram();}">
       <div class="hero-glow"></div>
@@ -1682,6 +1694,12 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
 <script src="mc-chart.js"></script>
 <script src="mc-calendar.js"></script>
 <script src="mc-pm-data.js"></script>
+<!-- program-flow-roadmap.md F0 — the day module. Loaded after mc-pm-data.js
+     because dayModuleDef() reads each program's `schedule` from it, and
+     before the big inline script whose renderHero() mounts them. -->
+<script src="mc-program-progress.js"></script>
+<script src="mc-week-bar.js"></script>
+<script src="mc-day-hero.js"></script>
 <script src="mc-offline-prefetch.js"></script>
 <script src="mc-recap.js"></script>
 <script src="mc-input-sheet.js"></script>
@@ -1942,11 +1960,96 @@ function switchTab(tab){
 }
 
 // ── HERO ──
+// ── DAY MODULE (program-flow-roadmap.md F0) ──────────────────────────────
+// The week bar + day hero, driven by mc_active_prog. Mounted ONCE here rather
+// than once per cat-*.html page, which is what makes the fleet rollout a data
+// question (supply a schedule) instead of a wiring question.
+//
+// Eligibility is deliberately narrow: a built-in program that declares a
+// `schedule` in mc-pm-data.js. Custom and owner-published programs have
+// arbitrary structure and no declared rest pattern (decision 4), and the nine
+// built-ins without a schedule yet simply have no data — both fall through to
+// #heroCard, which is untouched.
+function dayModuleDef(prog){
+  if(!prog||prog.cprogId||prog.pubId) return null;          // custom / published
+  if(!window.MC_PROGRAM_PROGRESS||!window.MC_WEEK_BAR||!window.MC_DAY_HERO) return null;
+  const src=(window.MC_PM_DATA&&MC_PM_DATA.program(prog.id))||prog;
+  const sc=src.schedule;
+  if(!sc||!sc.days||!sc.days.length) return null;
+  return {
+    prog:src,
+    def:{weeks:sc.weeks,perWeek:sc.perWeek,rest:(sc.rest||[]).slice(),
+         order:sc.days.map(function(d){return d.id;})},
+    byId:sc.days.reduce(function(m,d){m[d.id]=d;return m;},{})
+  };
+}
+
+// Week the bar is paged to. Page-local view state, not persisted — the CURSOR
+// is what persists (mc_program_progress_v1), and paging away from it is a
+// look-ahead, not a change of intent.
+let dmWeek=null;
+
+function renderDayModule(cfg){
+  const P=window.MC_PROGRAM_PROGRESS;
+  const rec=P.ensure(cfg.prog.id,cfg.def);
+  const day=P.currentDay(cfg.prog.id,cfg.def);
+  if(dmWeek==null) dmWeek=P.weekOf(rec,day);
+  const accent=cfg.prog.color||'#c9505a';
+  const meta=function(id){
+    const d=cfg.byId[id]; if(!d) return null;
+    return {title:d.title,icon:d.icon,color:accent,tags:d.tags||[],
+            exercises:d.ex,sets:d.sets,minutes:d.min};
+  };
+  // Deep link into the program page's own day view (cat-strength.html?day=…).
+  const open=function(dayNo,workoutId){
+    if(!workoutId||!cfg.prog.href) return;
+    location.href=cfg.prog.href+'?day='+encodeURIComponent(workoutId)+
+                  '&week='+P.weekOf(rec,dayNo);
+  };
+
+  MC_WEEK_BAR.mount(document.getElementById('dmBar'),{
+    rec:rec,week:dmWeek,activeDay:day,accent:accent,
+    onWeek:function(w){ if(w>=1&&w<=rec.weeks){dmWeek=w;renderDayModule(cfg);} },
+    onDay:function(d){ P.setCursor(cfg.prog.id,d,cfg.def); renderDayModule(cfg); }
+  });
+  MC_DAY_HERO.mount(document.getElementById('dmHero'),{
+    rec:rec,day:day,accent:accent,dayMeta:meta,
+    onStart:function(d,w){ P.setCursor(cfg.prog.id,d,cfg.def); open(d,w); },
+    onView:open,
+    onLog:function(d,logId){
+      location.href=logId?('workout-detail.html?id='+encodeURIComponent(logId)):'workout-logs.html';
+    },
+    onPreview:function(next){ P.setCursor(cfg.prog.id,next,cfg.def); dmWeek=P.weekOf(rec,next); renderDayModule(cfg); }
+  });
+}
+
 function renderHero(){
   const empty=document.getElementById('heroEmpty');
   const card=document.getElementById('heroCard');
-  if(!activeProg){empty.style.display='block';card.style.display='none';return;}
+  const mod=document.getElementById('dayModule');
+  const dayFat=document.getElementById('dayFatigue');
+  if(!activeProg){
+    empty.style.display='block';card.style.display='none';
+    if(mod)mod.style.display='none';
+    if(dayFat)dayFat.style.display='none';
+    return;
+  }
   empty.style.display='none';
+  // F0: a program with a schedule renders the day module INSTEAD of the card.
+  // updateHeroOffline() runs in BOTH branches — it is what keeps
+  // MCOfflinePrefetch.ensure() firing for the active program, and dropping it
+  // here would silently stop offline prefetch for every scheduled program.
+  const dm=dayModuleDef(activeProg);
+  if(dm){
+    card.style.display='none';
+    if(mod)mod.style.display='block';
+    if(dayFat)dayFat.style.display='';
+    updateHeroOffline();
+    try{ renderDayModule(dm); return; }
+    catch(e){ /* fall through to the card rather than showing nothing */ }
+  }
+  if(mod)mod.style.display='none';
+  if(dayFat)dayFat.style.display='none';
   card.style.display='block';
   updateHeroOffline();
   document.getElementById('heroName').textContent=activeProg.name;
@@ -2274,12 +2377,16 @@ loadState();
 (function(){
   var THRESHOLD=20; // sets per muscle per 7 days = "high load" flag
   function renderFatigue(counts){
-    var el=document.getElementById('heroFatigue'); if(!el) return;
+    // F0: paints EVERY .hero-fatigue, not just #heroFatigue. The day module
+    // replaces #heroCard for programs that declare a schedule, and the chips
+    // live inside that card — targeting the class keeps the warning visible
+    // in whichever branch rendered.
+    var els=document.querySelectorAll('.hero-fatigue'); if(!els.length) return;
     var high=Object.keys(counts).filter(function(m){return counts[m]>=THRESHOLD&&m!=='Other';});
-    if(!high.length){el.innerHTML='';return;}
-    el.innerHTML=high.map(function(m){
+    var html=high.length?high.map(function(m){
       return '<span class="hero-fatigue-chip">🔥 '+m+' · '+counts[m]+' sets</span>';
-    }).join('');
+    }).join(''):'';
+    for(var i=0;i<els.length;i++)els[i].innerHTML=html;
   }
   try{
     if(window.MC_SB&&MC_SB.configured&&MC_SB.getWeeklyVolume){
