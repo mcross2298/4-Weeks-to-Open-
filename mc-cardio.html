@@ -52,17 +52,12 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:0 0 60px;}
   transition:all 0.15s;position:relative;
 }
 .rest-timer:active{transform:scale(0.96);}
+/* .rest-timer.running/.done/.overtime + @keyframes timerPulse removed here
+   too -- dead once the chip stopped rendering timer state. See base.css. */
 .rest-timer.idle{background:rgba(100,116,139,0.12);border:1px solid rgba(100,116,139,0.2);}
-.rest-timer.running{background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.35);animation:timerPulse 1s ease-in-out infinite;}
-.rest-timer.done{background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.35);}
-.rest-timer.overtime{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);}
-@keyframes timerPulse{0%,100%{opacity:1;}50%{opacity:0.7;}}
 .rest-timer-icon{font-size:13px;}
 .rest-timer-label{font-size:11px;font-weight:800;letter-spacing:0.04em;}
 .rest-timer.idle .rest-timer-label{color:#64748b;}
-.rest-timer.running .rest-timer-label{color:#fbbf24;}
-.rest-timer.done .rest-timer-label{color:#34d399;}
-.rest-timer.overtime .rest-timer-label{color:#f87171;}
 .rest-timer-hint{font-size:11px;color:#475569;margin-top:2px;font-style:italic;}
 
 /* Floating timer display — shows when running */

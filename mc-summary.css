@@ -41,12 +41,44 @@
    one identical exit-dialog design. */
 
 /* ── STAT BAR (sticky top — timer + sets counter) ─────────────────── */
+/* OPAQUE, and it owns the notch strip itself.
+   Two separate defects, both measured on the six engine pages before the fix:
+
+   1. TRANSLUCENT. background:rgba(10,10,10,0.97) + backdrop-filter:blur(12px)
+      is a frosted pane, not a lid. Every card scrolling underneath stayed
+      visible through it as a moving smear — the "scroll bleed" this bar is
+      supposed to prevent. A backdrop-filter also forces its own compositing
+      layer that repaints for the whole length of a scroll, for an effect
+      nothing here wanted. var(--body-bg) is the app's own ground, so the bar
+      reads as the top of the page rather than a pane floating over it, and it
+      follows both themes AND mc-theme.js's per-program primaryBg override for
+      free (it re-points --body-bg at call time).
+
+   2. THE STRIP ABOVE IT. The bar used to sit AT top:env(safe-area-inset-top)
+      (base.css) rather than covering it, so on any notched device the band
+      between y0 and the inset was the page's own scrolling content, showing
+      through behind the status bar. Measured with the inset simulated at 47px:
+      the element painting at y23 was .header on all six engines. The bar now
+      starts at top:0 and absorbs the inset as its OWN padding, so its opaque
+      background fills that band — that is what makes it a lid at the top edge
+      rather than 46px of chrome with a transparent gutter above it.
+      max(12px, …) keeps a real 12px breathing gap where the inset is 0
+      (Android, desktop, every browser CI can run), instead of the text sitting
+      flush against the viewport edge.
+
+   box-sizing is border-box fleet-wide (base.css `*`), so the height below
+   resolves the CONTENT box to exactly the same 46px the row has always had —
+   only the bar's total footprint grows, by the inset it now covers. Every
+   offset measured down from the bar carries the identical max() term; see the
+   block below. */
 .prog-bar-wrap.mcs-stat{
-  height:46px;
+  top:0;
+  height:calc(46px + max(12px, env(safe-area-inset-top,0px)));
+  padding-top:max(12px, env(safe-area-inset-top,0px));
   display:flex;flex-direction:column;justify-content:flex-end;
-  background:rgba(10,10,10,0.97);backdrop-filter:blur(12px);
+  background:var(--body-bg,#0a0a0a);
   border-bottom:1px solid rgba(255,255,255,0.06);
-  padding:0;
+  padding-left:0;padding-right:0;padding-bottom:0;
 }
 .mcs-stat-row{
   display:flex;align-items:center;justify-content:space-between;
@@ -93,9 +125,9 @@
 
    i.e. the Back button was invisible and unclickable during a session on every
    notched device, and only ever correct where the inset is zero. */
-body.mcs-stat-active .header{padding-top:calc(94px + env(safe-area-inset-top,0px));}
-body.mcs-stat-active .hero{padding-top:calc(94px + env(safe-area-inset-top,0px));}
-body.mcs-stat-active .back-link{top:calc(54px + env(safe-area-inset-top,0px));}
+body.mcs-stat-active .header{padding-top:calc(94px + max(12px, env(safe-area-inset-top,0px)));}
+body.mcs-stat-active .hero{padding-top:calc(94px + max(12px, env(safe-area-inset-top,0px)));}
+body.mcs-stat-active .back-link{top:calc(54px + max(12px, env(safe-area-inset-top,0px)));}
 /* The floating theme toggle (mc-nav.js, top:18px) sits exactly where this
    46px stat bar renders, so a tap there always hit the bar instead — the
    toggle was a dead button on every workout page. Same relocation as
@@ -104,7 +136,25 @@ body.mcs-stat-active .back-link{top:calc(54px + env(safe-area-inset-top,0px));}
    rescue: at inset 47px the toggle spanned y54-94 against a bar at y47-93 --
    39 of its 40px behind a z999 element. The relocation fixed it only where the
    inset is zero, so on real hardware it stayed exactly as dead as before. */
-body.mcs-stat-active .mc-theme-toggle-float{top:calc(54px + env(safe-area-inset-top,0px));}
+body.mcs-stat-active .mc-theme-toggle-float{top:calc(54px + max(12px, env(safe-area-inset-top,0px)));}
+
+/* Scroll-boundary backstop. This app scrolls the DOCUMENT — there is no inner
+   `overflow-y:auto` viewport, and introducing one would re-base every
+   position:fixed offset in the fleet — so the equivalent of "pad the scroll
+   container by the header's height" is a top offset on the page's own first
+   content block. The two rules above are that offset, and a scan of all 78
+   pages that load mc-finish.js found 76 of them carry a .header or a .hero and
+   are therefore already covered (verified at scroll-top: zero text-bearing
+   elements intersect the bar's band).
+
+   The remaining two (pmc-workout.html, workout-detail.html) render neither, so
+   their first row of content started at y0 with nothing offsetting it. Pad the
+   body itself for exactly that case, rather than unconditionally — an
+   unconditional body pad would stack on top of the .header/.hero rules above
+   and open ~100px of dead space at the top of the other 76. */
+body.mcs-stat-active:not(:has(.header, .hero)){
+  padding-top:calc(46px + max(12px, env(safe-area-inset-top,0px)));
+}
 
 /* ── SUMMARY CARD VISIBILITY (hidden by default, toggled open) ────── */
 body.mcs-stat-active .sum-section,
@@ -187,7 +237,7 @@ html[data-theme="light"] .fw-recap-overlay{background:rgba(28,26,23,0.4);}
 html[data-theme="light"] .fw-recap-sheet{background:#f5f2ec;border-top-color:rgba(28,26,23,0.1);}
 html[data-theme="light"] .fw-recap-handle{background:rgba(28,26,23,0.15);}
 
-html[data-theme="light"] .prog-bar-wrap.mcs-stat{background:rgba(245,242,236,0.97);border-bottom-color:rgba(28,26,23,0.08);}
+html[data-theme="light"] .prog-bar-wrap.mcs-stat{background:var(--body-bg,#f5f2ec);border-bottom-color:rgba(28,26,23,0.08);}
 html[data-theme="light"] .mcs-timer{color:#1c1a17;}
 html[data-theme="light"] .mcs-sumbtn{color:#6b6459;}
 html[data-theme="light"] .mcs-sumbtn:active{color:#1c1a17;}

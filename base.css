@@ -117,6 +117,19 @@
                          chrome the page already has (measured at show
                          time), so it never fights .prog-bar-wrap. Sits
                          under --z-modal on purpose: a dialog covers it.
+       --z-session-bar   .prog-bar-wrap — the 3px progress strip, and the
+                         46px session toolbar mc-summary.js upgrades it
+                         into (.mcs-stat: elapsed/rest, sets, End workout).
+                         This was a bare literal 999, the one fixed element
+                         never migrated onto this scale — which put it above
+                         BOTH dialog layers, so mc-summary.css's
+                         .fw-recap-overlay and mc-finish.js's .fw-modal-
+                         overlay each rendered with the toolbar punched
+                         through their top edge. It only ever needs to beat
+                         page content (.week-tabs at 8 is the highest
+                         non-fixed stack in the fleet); a full-screen dialog
+                         is supposed to cover it, hence a slot below
+                         --z-timer-float rather than above everything.
        --z-timer-float   Rest timer floating bar
        --z-modal         .fw-modal-overlay, and mc-summary.css's
                           .fw-recap-overlay at the same value — deliberately
@@ -158,6 +171,7 @@
   --z-fw-bar:      40;
   --z-banner:      50;
   --z-sw-update:   60;
+  --z-session-bar: 70;
   --z-timer-float: 100;
   --z-modal:       110;
   --z-fw-bar-nav:  120;
@@ -467,17 +481,18 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .rest-timer{appearance:none;-webkit-appearance:none;margin:0;font:inherit;color:inherit;border:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;user-select:none;padding:4px 12px;min-height:44px;border-radius:8px;transition:all var(--duration-fast);position:relative;}
 .ex-card.active .rest-timer,.ss-ex.active .rest-timer{min-height:52px;}
 .rest-timer:active{transform:scale(0.96);}
+/* .rest-timer.running / .done / .overtime and @keyframes timerPulse are gone
+   with the state they painted: the chip is a static prescription now and never
+   receives those classes (mc-timer.js's makeRestTimer explains why). Leaving
+   the rules behind would have recreated this repo's own documented trap --
+   "a dead timer reads exactly like a working one in source" (CLAUDE.md, the
+   One rest timer rule) -- here and in the 10 page-local <style> blocks that
+   each carried their own copy. .idle is the chip's only state, and is still
+   applied by every emitter. */
 .rest-timer.idle{background:rgba(100,116,139,0.12);border:1px solid rgba(100,116,139,0.2);}
-.rest-timer.running{background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.35);animation:timerPulse var(--duration-slow) var(--ease-pulse) infinite;}
-.rest-timer.done{background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.35);}
-.rest-timer.overtime{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);}
-@keyframes timerPulse{0%,100%{opacity:1;}50%{opacity:0.7;}}
 .rest-timer-icon{font-size:var(--fs-sm);}
 .rest-timer-label{font-size:var(--fs-2xs);font-weight:800;letter-spacing:0.04em;}
 .rest-timer.idle .rest-timer-label{color:var(--muted);}
-.rest-timer.running .rest-timer-label{color:#fbbf24;}
-.rest-timer.done .rest-timer-label{color:var(--success);}
-.rest-timer.overtime .rest-timer-label{color:var(--danger);}
 .rest-timer-hint{font-size:var(--fs-2xs);color:var(--muted2);margin-top:2px;font-style:italic;}
 
 /* ── TIMER FLOAT — full-width bottom bar ────────────────────────── */
@@ -503,7 +518,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .timer-preset:active{background:rgba(var(--accent-rgb),0.2);color:var(--accent);border-color:rgba(var(--accent-rgb),0.4);}
 
 /* ── PROGRESS BAR ───────────────────────────────────────────────── */
-.prog-bar-wrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:999;background:rgba(255,255,255,0.06);}
+.prog-bar-wrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:var(--z-session-bar);background:rgba(255,255,255,0.06);}
 .prog-bar-fill{height:3px;background:linear-gradient(90deg,#22d3ee,#a78bfa);transition:width var(--duration-relaxed) var(--ease-standard);border-radius:0 2px 2px 0;}
 
 /* ── NEXT WORKOUT LINK ──────────────────────────────────────────── */

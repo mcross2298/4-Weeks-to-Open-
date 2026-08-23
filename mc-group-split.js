@@ -75,8 +75,11 @@
     var s = document.createElement('span');
     s.className = 'rest-timer idle';
     s.setAttribute('data-rest', rest || '120 sec');
+    // Same static-prescription wording as every other chip in the fleet (see
+    // mc-timer.js's makeRestTimer). This one carries no data-secs, so the
+    // delegated listener never picks it up — it was always display-only.
     s.innerHTML = '<span class="rest-timer-icon">⏱️</span>' +
-                  '<span class="rest-timer-label">' + (rest || '120 sec') + '</span>';
+                  '<span class="rest-timer-label">Rest: ' + (rest || '120 sec') + '</span>';
     return s;
   }
 
