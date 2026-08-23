@@ -1,0 +1,202 @@
+/* ==========================================================================
+   mc-program-tabs.css — the program landing's Overview | Program list tabs
+   --------------------------------------------------------------------------
+   Pairs with mc-program-tabs.js (program-flow-roadmap.md F1). Everything is
+   scoped under .mpt-* and the accent arrives as inline custom properties on
+   .mpt, so this component never depends on a host page defining --accent —
+   the same rule mc-program-landing.css follows, and the reason it can be
+   dropped onto ten cat-*.html pages that each carry their own vocabulary of
+   .card / .title / .subtitle without colliding with any of them.
+
+   Light mode is a token swap at the bottom rather than a second set of rules.
+   --mpt-surface is the colour a row and a section sit on, and it has to be a
+   token for the same reason --mdh-art-base does: a hardcoded near-black slab
+   renders as a muddy grey card on the cream theme.
+   ========================================================================== */
+.mpt{
+  --mpt-surface:rgba(255,255,255,0.03);
+  --mpt-line:rgba(255,255,255,0.08);
+  --mpt-ink:#f4f3f1;
+  --mpt-ink-2:#a6a6ad;
+  --mpt-ink-3:#7d7d84;
+  padding:0 16px 26px;
+}
+
+/* ── tab bar ───────────────────────────────────────────────────────────── */
+.mpt-tabs{
+  display:flex;gap:6px;
+  border-bottom:1px solid var(--mpt-line);
+  margin-bottom:18px;
+}
+.mpt-tab{
+  flex:1 1 0;min-height:48px;padding:12px 8px;
+  background:none;border:0;border-bottom:2px solid transparent;
+  font-family:inherit;font-size:13.5px;font-weight:800;letter-spacing:-0.01em;
+  color:var(--mpt-ink-3);cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:color 0.15s ease, border-color 0.15s ease;
+}
+.mpt-tab.is-on{ color:var(--mpt-ink); border-bottom-color:var(--mpt-accent,#c9505a); }
+.mpt-tab:active{ background:rgba(var(--mpt-accent-rgb,201,80,90),0.08); }
+.mpt-tab:focus-visible{ outline:2px solid var(--mpt-accent,#c9505a); outline-offset:-3px; }
+.mpt-panel.is-hidden{ display:none; }
+
+/* ── overview ──────────────────────────────────────────────────────────── */
+.mpt-lede{
+  font-size:14px;line-height:1.6;color:var(--mpt-ink-2);
+  margin:0 0 4px;
+}
+.mpt-sec{ margin-top:24px; }
+.mpt-sec-h{
+  font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--mpt-accent,#c9505a);margin:0 0 10px;
+  display:flex;align-items:center;gap:8px;
+}
+.mpt-sec-h::after{
+  content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,rgba(var(--mpt-accent-rgb,201,80,90),0.32),transparent);
+}
+.mpt-body{ font-size:13px;line-height:1.65;color:var(--mpt-ink-2);margin:0; }
+.mpt-body-tight{ margin-bottom:10px; }
+
+/* week strip — 7 cells, scrollable so each stays above the 44pt floor at
+   320px where seven cells plus gaps cannot fit the viewport. Same fix and the
+   same reason as .mwb-row in mc-program-day.css. */
+.mpt-week{
+  display:flex;gap:4px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;-ms-overflow-style:none;
+}
+.mpt-week::-webkit-scrollbar{ display:none; }
+.mpt-wd{
+  flex:1 0 44px;min-width:44px;min-height:56px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  background:var(--mpt-surface);border:1px solid var(--mpt-line);border-radius:11px;
+  padding:6px 2px;
+}
+.mpt-wd-mark{
+  font-size:13px;font-weight:900;color:var(--mpt-accent,#c9505a);
+  line-height:1;
+}
+.mpt-wd-lbl{
+  font-size:9px;font-weight:700;color:var(--mpt-ink-3);
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.mpt-wd.is-rest{ background:rgba(51,65,85,0.16);border-color:rgba(51,65,85,0.4); }
+.mpt-wd.is-rest .mpt-wd-mark{ color:#94a3b8; }
+.mpt-wd.is-done .mpt-wd-mark{ color:#34d399; }
+
+.mpt-chips{ display:flex;flex-wrap:wrap;gap:6px; }
+.mpt-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11.5px;font-weight:700;color:var(--mpt-ink-2);
+  background:var(--mpt-surface);border:1px solid var(--mpt-line);
+  border-radius:20px;padding:5px 9px 5px 11px;
+}
+.mpt-chip-n{
+  font-size:10.5px;font-weight:900;font-variant-numeric:tabular-nums;
+  color:var(--mpt-accent,#c9505a);
+  background:rgba(var(--mpt-accent-rgb,201,80,90),0.14);
+  border-radius:20px;padding:1px 6px;
+}
+
+.mpt-link{
+  display:flex;align-items:center;gap:11px;min-height:48px;
+  text-decoration:none;color:inherit;
+  background:var(--mpt-surface);border:1px solid var(--mpt-line);
+  border-radius:12px;padding:11px 14px;margin-bottom:8px;
+}
+.mpt-link:active{ background:rgba(var(--mpt-accent-rgb,201,80,90),0.1); }
+.mpt-link-ico{ font-size:16px;flex-shrink:0; }
+.mpt-link-t{ flex:1;font-size:13px;font-weight:800;color:var(--mpt-ink); }
+.mpt-link-arrow{ color:var(--mpt-accent,#c9505a);font-size:16px;font-weight:900; }
+
+/* ── program list ──────────────────────────────────────────────────────── */
+/* The drilled-in context header (decision 7) — a split's own name, size and
+   description, which are authored in mc-pm-data.js and the cat pages and
+   render at no level where they help today. */
+.mpt-ctx{ margin-bottom:16px; }
+.mpt-back{
+  min-height:44px;padding:8px 14px;margin-bottom:10px;
+  background:rgba(var(--mpt-accent-rgb,201,80,90),0.1);
+  border:1px solid rgba(var(--mpt-accent-rgb,201,80,90),0.3);
+  border-radius:20px;
+  font-family:inherit;font-size:12.5px;font-weight:800;
+  color:var(--mpt-accent,#c9505a);cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.mpt-back:active{ background:rgba(var(--mpt-accent-rgb,201,80,90),0.18); }
+.mpt-ctx-t{
+  font-size:20px;font-weight:900;letter-spacing:-0.02em;color:var(--mpt-ink);
+  overflow-wrap:anywhere;
+}
+.mpt-ctx-m{
+  font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--mpt-accent,#c9505a);margin-top:4px;
+}
+.mpt-ctx-d{ font-size:12.5px;line-height:1.6;color:var(--mpt-ink-2);margin:8px 0 0; }
+
+.mpt-listbar{
+  display:flex;align-items:center;gap:10px;margin-bottom:10px;
+}
+.mpt-listbar-t{
+  font-size:11px;font-weight:900;letter-spacing:0.16em;text-transform:uppercase;
+  color:var(--mpt-ink-3);
+}
+.mpt-reorder{
+  margin-left:auto;min-height:44px;padding:8px 14px;
+  background:var(--mpt-surface);border:1px solid var(--mpt-line);border-radius:20px;
+  font-family:inherit;font-size:12px;font-weight:800;
+  color:var(--mpt-ink-2);cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.mpt-reorder:active{ background:rgba(var(--mpt-accent-rgb,201,80,90),0.12);color:var(--mpt-ink); }
+
+.mpt-rows{ display:flex;flex-direction:column;gap:8px; }
+.mpt-row{
+  display:flex;align-items:center;gap:12px;width:100%;min-height:64px;
+  text-align:left;font-family:inherit;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  background:linear-gradient(135deg, rgba(var(--mpt-accent-rgb,201,80,90),0.07), var(--mpt-surface));
+  border:1px solid var(--mpt-line);border-radius:14px;padding:11px 13px;
+  transition:transform 0.12s ease, border-color 0.15s ease;
+}
+.mpt-row:active{ transform:scale(0.985);border-color:rgba(var(--mpt-accent-rgb,201,80,90),0.45); }
+.mpt-row:focus-visible{ outline:2px solid var(--mpt-accent,#c9505a); outline-offset:2px; }
+/* The row art is the accent treatment, not photography — the repo ships zero
+   photo assets and inventing a pipeline for ten thumbnails is a roadmap
+   non-goal. */
+.mpt-row-art{
+  flex-shrink:0;width:42px;height:42px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:19px;
+  background:
+    radial-gradient(120% 90% at 25% 0%, rgba(var(--mpt-accent-rgb,201,80,90),0.4), transparent 65%),
+    rgba(var(--mpt-accent-rgb,201,80,90),0.14);
+  border:1px solid rgba(var(--mpt-accent-rgb,201,80,90),0.3);
+}
+.mpt-row-body{ flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:3px; }
+.mpt-row-n{
+  font-size:14px;font-weight:800;letter-spacing:-0.01em;color:var(--mpt-ink);
+  overflow-wrap:anywhere;
+}
+.mpt-row-m{ font-size:11.5px;font-weight:600;color:var(--mpt-ink-3); }
+.mpt-row-tick{
+  flex-shrink:0;width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:900;color:#0a2e22;
+  background:#34d399;border:1px solid #34d399;
+}
+.mpt-row-arrow{ flex-shrink:0;font-size:20px;font-weight:900;color:var(--mpt-ink-3); }
+.mpt-row.is-done .mpt-row-n{ color:var(--mpt-ink-2); }
+
+/* ── SAND LIGHT MODE ───────────────────────────────────────────────────── */
+html[data-theme="light"] .mpt{
+  --mpt-surface:rgba(28,26,23,0.035);
+  --mpt-line:rgba(28,26,23,0.12);
+  --mpt-ink:#1c1a17;
+  --mpt-ink-2:#5d564b;
+  --mpt-ink-3:#6b6459;
+}
+html[data-theme="light"] .mpt-wd.is-rest{
+  background:rgba(51,65,85,0.1);border-color:rgba(51,65,85,0.25);
+}
+html[data-theme="light"] .mpt-wd.is-rest .mpt-wd-mark{ color:#475569; }
+html[data-theme="light"] .mpt-wd.is-done .mpt-wd-mark{ color:#047857; }
+html[data-theme="light"] .mpt-row-tick{ background:#047857;border-color:#047857;color:#f5f2ec; }

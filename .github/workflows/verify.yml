@@ -69,6 +69,14 @@ jobs:
           node tools/test-mc-bridge.js
           node tools/test-mc-sync-merge.js
 
+      - name: Program day-progression tests (mc-program-progress.js + mc-program-tabs.js)
+        # test-mc-program-progress.js shipped with D0-D3 but was never added to
+        # a workflow, so its 68 assertions have not run in CI once. Wired here
+        # alongside the F1 landing-tabs test, which builds on the same record.
+        run: |
+          node tools/test-mc-program-progress.js
+          node tools/test-mc-program-tabs.js
+
       - name: Service-worker strategy test (stale-while-revalidate — audit LS-4)
         run: node tools/test-mc-sw.js
 

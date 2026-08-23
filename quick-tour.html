@@ -311,18 +311,33 @@ const SLIDES = [
   {
     eyebrow:'Module 3b · Your place in a program',
     title:"The day-by-day schedule",
-    tagline:"Some programs open on the day you're actually on, instead of a list of every workout.",
-    scene:{glyph:'📅',caption:'Week strip → today’s card → Start → next day, automatically',color:'rgba(225,29,72,0.35)',glow:'rgba(225,29,72,0.13)'},
-    narration:"Open Strength & Supersets and you land on your current day, not a menu. Under the week heading there's a row of seven pills — one per day of that week. A number means you haven't trained it, a check means it's banked, and a moon means it's a rest day. The card underneath is that day: what you're training, how many exercises and sets, roughly how long, and a Start button. Finish the workout and it moves you to the next day on its own. The arrows either side of the week heading page forward and back through the whole block, and tapping any pill jumps straight to that day.",
+    tagline:"Your active program shows up on Home as the day you're actually on — not as a list of every workout.",
+    scene:{glyph:'📅',caption:'Home: week strip → today’s card → Start → next day, automatically',color:'rgba(225,29,72,0.35)',glow:'rgba(225,29,72,0.13)'},
+    narration:"Set a program active and the Home screen becomes it. Under the week heading there's a row of seven pills — one per day of that week. A number means you haven't trained it, a check means it's banked, and a moon means it's a rest day. The card underneath is that day: what you're training, how many exercises and sets, roughly how long, and a Start button. Finish the workout and it moves you to the next day on its own. The arrows either side of the week heading page forward and back through the whole block, and tapping any pill jumps straight to that day. The program's own page is still there for everything about the program rather than about today — see the next module.",
     steps:[
-      {tx:"Open <b>Strength &amp; Supersets</b> from the Programs tab."},
+      {tx:"Make <b>Strength &amp; Supersets</b> your active program, then open <b>Home</b>."},
       {tx:"Tap any <b>day pill</b> under the week heading to jump the card to that day."},
       {tx:"Use <span class='tap'>‹</span> and <span class='tap'>›</span> to page through the weeks of the block."},
       {tx:"Tap <span class='tap'>Start Day N</span> to train it. When you finish, the app advances to the next day for you."},
       {tx:"Landed on a <b>rest day</b>? You'll get a recovery card with what's next — and a <b>Train anyway</b> button if you'd rather not wait."},
       {tx:"Tap <span class='tap'>☰</span> top-right for the program menu: workout logs, calendar, and — under <b>Workout schedule</b> and <b>Reorder days</b> — the controls to move your rest days and reshuffle a week to fit your real life."}
     ],
-    cta:{ico:'📅',label:'Try it now',name:'Open Strength & Supersets',href:'cat-strength.html'}
+    cta:{ico:'📅',label:'Try it now',name:'Open your dashboard',href:'dashboard.html'}
+  },
+  {
+    eyebrow:'Module 3c · The program page',
+    title:"Overview and Program list",
+    tagline:"Tapping a program opens its landing page: what it is on one tab, every workout in it on the other.",
+    scene:{glyph:'📘',caption:'Overview · Program list — identity on one side, workouts on the other',color:'rgba(225,29,72,0.35)',glow:'rgba(225,29,72,0.13)'},
+    narration:"Home is about today. A program's own page is about the program. It opens on <b>Overview</b> — who the program is for, how its week is shaped with your real rest days and the sessions you've already banked, which equipment it leans on, and a link to the full guide. Switch to <b>Program list</b> for every workout in the block as a tappable row: its day number, roughly how long it takes, and a green check once you've banked it. Tapping a completed one opens exactly what you lifted that day. Reorder days is right there on the list, so a week can be reshuffled without hunting for a menu.",
+    steps:[
+      {tx:"Open <b>Strength &amp; Supersets</b> from the Programs tab — it lands on <b>Overview</b>."},
+      {tx:"Read <b>The week</b>: your actual training and rest days, with a check on each one you've banked."},
+      {tx:"Tap <span class='tap'>Program list</span> for the workouts — each row shows <b>Day N</b> and its rough duration."},
+      {tx:"Tap a row to train it. Tap a <b>checked</b> row instead and you get that day's log."},
+      {tx:"Tap <span class='tap'>Reorder days</span> to drag this week's workouts into a different order — other weeks are left alone."}
+    ],
+    cta:{ico:'📘',label:'Try it now',name:'Open Strength & Supersets',href:'cat-strength.html'}
   },
   {
     eyebrow:'Module 4 · ⭐ Core skill',

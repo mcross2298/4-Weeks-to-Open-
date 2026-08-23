@@ -183,6 +183,91 @@ page, no new architecture.
 then the other nine, with a two-level program (`gainz`) taken early so the
 drill-in is proven before the three-level `mc`.
 
+**Split into `F1a` (the component + `cat-strength.html`) and `F1b` (the other
+nine pages)**, the same way `S4` was split into engines-then-pages: the
+component is one reviewable change and the rollout is nine repetitions of a
+config. `F1a` builds the adaptive drill-in in full so `F1b` adds no logic.
+
+#### `F1a` shipped (2026-08-23)
+
+`mc-program-tabs.js` (`MC_PROGRAM_TABS`) + `mc-program-tabs.css`, mounted on
+`cat-strength.html`. A pure renderer over `mc-program-progress.js`, same
+contract as `mc-day-hero.js` — the caller hands over the record and the block
+definition, the component owns no state beyond which group is open.
+
+**The list is data, not markup.** `listModel(cfg, state)` is split out from
+rendering and is what `tools/test-mc-program-tabs.js` asserts against (50
+assertions, vm-sandboxed against the real source with
+`mc-program-progress.js` loaded beside it, so day numbers come from a real
+record rather than a fixture of one). Adaptive depth falls out of it: one
+group renders its days with no level above them, several groups render the
+group rows first and then a slim context header (decision 7) over that
+group's days. `F1b` supplies groups; it adds no code.
+
+**Three things came from driving the page, not reading it:**
+
+1. **Reordering appeared to do nothing.** Rows were pinned to the group's
+   authored order, so moving Legs down renumbered it to `Day 2` *in place* —
+   the numbers changed and the list did not. Rows now follow the week's
+   order; unscheduled days (a collection program holding workouts outside the
+   block) sort after the scheduled ones, since they have no number to sort by.
+   The unit test asserted the old behaviour and was corrected with it.
+2. **The equipment row said nothing.** An unweighted set of categories came
+   back as *all seven* `MCBiomech` knows — true, and useless. It is now
+   ordered by how many exercises use each, with the count, so the row reads
+   "Barbell 17 · Dumbbell 9 · Machine 5 …". The counts lean toward Barbell
+   because that is `equipOf()`'s fallback for an unmatched name; that is the
+   same inference the substitute picker already trusts app-wide, so it is not
+   a new trust decision, but it is why the row shows proportions rather than
+   claiming an inventory.
+3. **The hero and the Overview said the same thing twice.** The full hero
+   variant renders a stat strip and a 7-day schedule strip whose training days
+   are just "the first N cells" — an invented pattern. Overview now carries
+   both from the real record, with actual day names and completion state, so
+   the hero moved to `variant:'trimmed'` and keeps only what is uniquely its:
+   art, tier, name, tagline, "What's inside" and the CTA (wired to open
+   Program list, rather than the trimmed default's scroll-to-next-sibling,
+   which would land on the tab you are already on).
+
+**Two things were fixed rather than worked around.** `mc-surprise.js`'s
+`isEnabled()` required an `onclick` attribute, which excluded every control
+wired by a delegated listener — so Surprise Me would have silently hidden
+itself on this page. A real `<button>` now counts as clickable, which is how
+the app's newer components are built. And `mc-program-menu.js` gained a
+`view` option so the list's "Reorder days" opens straight into the reorder
+sheet; reorder itself is **not** reimplemented — that sheet is already
+keyboard-operable and backed by `reorderWeek()`, per the single-implementation
+rule.
+
+**A CI gap found on the way:** `tools/test-mc-program-progress.js` shipped
+with `D0–D3` and was never added to a workflow, so its 68 assertions had not
+run in CI once. Wired into `verify.yml` alongside the new test.
+
+**Documentation currency:** `quick-tour.html`'s "day-by-day schedule" module
+still told the athlete they land on their current day when they open the
+program — `F0` moved that to Home and did not update the tour. Corrected, and
+a new "The program page" module added for the tabs. `ss-instructions.html`
+had the same `F0` staleness plus no mention of the landing; both fixed.
+
+**Known, not fixed here (pre-existing, verified against `main`):** opening a
+workout on `cat-strength.html` leaves **no card active** — 8 meatballs render
+and 0 are visible, because every card sits collapsed to its `.mcl-strip`
+(`S5b`/`R3`) and `S3`'s auto-activate never fires on this page's engine. On
+`mm-p1.html` and `pmc-back.html` exactly one card is active on load, as
+intended. So the ⋯ menu is unreachable here until the athlete opens a card by
+hand. Confirmed by stashing this branch and re-measuring on `main`, so it is
+not an `F1` regression — `F1` touches nothing inside `#view-workout`. It wants
+its own change.
+
+**Not in `F1a`, deliberately:** decision 10 (the full `<id>-instructions.html`
+body inlined into Overview) is `F2`'s phase, and Overview carries a real
+entry point to the guide until then. Worth knowing before `F2` starts: all
+eleven instruction pages share one class vocabulary (`sec` / `sec-head` /
+`card` / `card-head` / `card-body` / `rule-box` / `fav-row` / `rep-card`),
+so one prefixed stylesheet covers the fleet — but those names collide with
+the vocabulary the `cat-*.html` pages already use, so the absorbed markup has
+to be re-prefixed rather than injected raw.
+
 ### `F2` — instructions absorbed into Overview
 
 Fold each `<id>-instructions.html` into its program's Overview tab. The
