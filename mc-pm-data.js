@@ -43,7 +43,32 @@
   // tag already reads var(--o-gold), a self-adapting owner-theme token) for
   // a program whose tag needs no separate light-mode override.
   var programs = [
-    { id: 'ss',   tier: 'flagship', icon: '🏋️', name: 'Strength & Supersets',      meta: '6-Week Cycle · 5 Days', color: '#c9505a', tagTint: '#fda4af', tagTintLight: '#a13c46', desc: 'Heavy low-rep compounds paired with high-volume supersets and AMRAP finishers for raw strength and size.', forWho: 'Intermediate+ lifters who want heavy compound strength paired with size-focused supersets, 5 days a week.', href: 'cat-strength.html', splits: ['Legs', 'Chest', 'Back & Shoulders', 'Arms & Forearms', 'Cardio & Calves'] },
+    { id: 'ss',   tier: 'flagship', icon: '🏋️', name: 'Strength & Supersets',      meta: '6-Week Cycle · 5 Days', color: '#c9505a', tagTint: '#fda4af', tagTintLight: '#a13c46', desc: 'Heavy low-rep compounds paired with high-volume supersets and AMRAP finishers for raw strength and size.', forWho: 'Intermediate+ lifters who want heavy compound strength paired with size-focused supersets, 5 days a week.', href: 'cat-strength.html', splits: ['Legs', 'Chest', 'Back & Shoulders', 'Arms & Forearms', 'Cardio & Calves'],
+      // program-flow-roadmap.md F0 — the day module mounts on dashboard.html,
+      // which cannot see cat-strength.html's inline PMC_SPLITS. This is the
+      // record it reads: block shape plus one entry per training day.
+      //
+      // `rest` is the Weekly Layout Standard's 5-on 2-off, as DATA — the
+      // renderers rank a training day among the week's non-rest positions,
+      // so a program resting mid-week needs no renderer change.
+      //
+      // ex/sets/min are WEEK 1 figures, measured off the rendered page across
+      // all 30 training days. They are deliberately not stored per week: the
+      // authored prescription lives in cat-strength.html and duplicating 30
+      // triples here would drift the moment the program is edited, which is
+      // the exact failure mode check-program-colors.js and check-single-impl.js
+      // exist to catch elsewhere. The program page shows the exact per-week
+      // numbers; this is the at-a-glance figure for the dashboard hero.
+      schedule: {
+        weeks: 6, perWeek: 7, rest: [6, 7],
+        days: [
+          { id: 'legs',           title: 'Legs',              icon: '🦵', tags: ['Quads', 'Hamstrings', 'Calves'],       ex: 8, sets: 30, min: 75 },
+          { id: 'chest',          title: 'Chest',             icon: '💪', tags: ['Chest', 'Push'],                       ex: 8, sets: 32, min: 80 },
+          { id: 'back_shoulders', title: 'Back & Shoulders',  icon: '🔙', tags: ['Back', 'Delts', 'Pull'],               ex: 8, sets: 32, min: 80 },
+          { id: 'arms_forearms',  title: 'Arms & Forearms',   icon: '💥', tags: ['Biceps', 'Triceps', 'Forearms'],       ex: 9, sets: 32, min: 80 },
+          { id: 'cardio_calves',  title: 'Calves & Cardio',   icon: '🏃', tags: ['Calves', 'Cardio'],                    ex: 3, sets: 12, min: 30 }
+        ]
+      } },
     { id: 'pmc',  tier: 'flagship', icon: '⚡', name: 'Project Muscle Confusion',   meta: '7 Splits · 2 Weeks Each', color: '#8b7ff0', tagTint: '#c4bdfa', tagTintLight: '#5b4fc7', desc: 'Constantly varied supersets, pyramids, drop sets, AMRAP and tempo work that never lets your muscles adapt.', forWho: 'Lifters who get bored easily and want constant variety — a new stimulus every split, no two weeks alike.', href: 'cat-pmc.html', splits: ['Split 1', 'Split 2', 'Split 3', 'Split 4', 'Split 5', 'Split 6', 'Split 7'] },
     { id: 'mc',   tier: 'flagship', icon: '👑', name: "Mike Cross' Favorite Splits", meta: '5 Splits · 23 Workouts', color: '#d8b463', tagTint: 'var(--o-gold)', desc: "Mike's five personal splits spanning every major training style — the way he actually trains.", forWho: "Trainees who want a well-rounded sample of Mike's own go-to training styles across one program.", href: 'cat-mc.html', splits: ['Split 1', 'Split 2', 'Split 3', 'Split 4', 'Split 5'] },
     { id: 'ks',   tier: 'flagship', icon: '🔥', name: 'Everything Under the Kitchen Sink', meta: '6 Splits · Station-Anchored', color: '#e0a03c', tagTint: '#f0c078', tagTintLight: '#a3701f', desc: 'Six distinct training splits under one roof — the complete MC arsenal, station-anchored for commercial gym efficiency.', forWho: 'Commercial-gym lifters who want maximum split variety without hogging equipment — everything station-anchored.', href: 'cat-ks.html', splits: ['Everything Under the Kitchen Sink', 'Iron Engine', 'Split 3', 'Split 4', 'Split 5', 'Split 6'] },

@@ -16,7 +16,9 @@
    ========================================================================== */
 
 /* ── weekly schedule bar ─────────────────────────────────────────────────── */
-.mwb{padding:10px 12px 14px;}
+/* Trimmed from 12px so the seven pills clear 44px at 390 without scrolling,
+   which is the common phone width. */
+.mwb{padding:10px 6px 14px;}
 .mwb-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
 .mwb-title{
   flex:1;text-align:center;font-family:'Archivo',system-ui,sans-serif;
@@ -32,9 +34,22 @@
 .mwb-arrow:active{background:rgba(255,255,255,0.08);}
 .mwb-arrow[disabled]{opacity:0.25;cursor:default;}
 
-.mwb-row{display:flex;gap:4px;}
+/* Seven day pills at the 44pt floor need 7x44 + gaps of row width. Inside
+   the dashboard's padded .hero-wrap that is 43.7px at 390 and 33.7px at 320 —
+   a real floor violation, and one no padding tweak can fix: 7x44 simply does
+   not fit across a 320px phone. So the pill KEEPS its 44px minimum and the
+   row scrolls when they cannot all show, per this repo's rule that wide
+   content scrolls inside its own overflow-x container rather than making the
+   page scroll sideways. `flex:1 0 44px` still lets them share the extra
+   space on wider screens. */
+.mwb-row{
+  display:flex;gap:4px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;-ms-overflow-style:none;
+}
+.mwb-row::-webkit-scrollbar{display:none;}
 .mwb-day{
-  flex:1 1 0;min-width:0;
+  flex:1 0 44px;min-width:44px;
   /* 44px floor is on the interactive box, not just the visible pill */
   min-height:52px;padding:6px 2px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
