@@ -756,6 +756,61 @@ captures at module load, so a static declaration would be read too early.
 
 `F4` is what unlocks the day module for programs beyond `ss`.
 
+#### `F4` shipped (2026-08-24) — the day-identity contract
+
+`mc-program-day.js` (`MC_PROGRAM_DAY`) publishes `current() → {prog, week,
+position}`, plus `dayNumber()` and `bank()`. 39 vm-sandboxed assertions in
+`tools/test-mc-program-day.js` drive the real source alongside the real
+`mc-program-progress.js`, wired into `verify.yml`.
+
+**Taken before `F3-5` deliberately.** `F3-5`'s four remaining pages all belong
+to `stndr`, and `F5`'s named targets are `hv` and `mm` (with `mc` and `ks`
+excluded as collections) — programs whose pages are already 100% converted. So
+the biggest build is not on this critical path, and parking it costs `F4`/`F5`
+nothing.
+
+**What was actually wrong.** The attribution arithmetic — rank among the week's
+non-rest positions → continuous day number → `PD.complete()` — lived **inline
+in `cat-strength.html`**, and worked only because that page serves its workouts
+in-page and holds `currentWorkoutId`/`activeWeek` in its own scope. Every other
+program puts workouts on separate pages, so finishing there attributed nothing
+at all. That inline block is now deleted; the page keeps only the genuinely
+page-specific part — a resolver saying which day it currently has open.
+
+**Two shapes, because pages genuinely differ.** A page whose day array already
+includes its rest entries reports `position` (the slot) directly —
+`openDayIdx + 1` on `mm` and `hv`. A page listing only trainable workouts
+reports `rank`, and the contract maps it onto the week's real rest pattern.
+Centralising that conversion is the point: it is right under a mid-week rest
+pattern, which a per-page copy gets wrong silently (assertions 3d–3f).
+
+**It never invents a schedule.** Banking is refused unless the program carries
+a real `schedule` record in `mc-pm-data.js`. `mm` and `hv` register resolvers
+now and are correctly declined until `F5` supplies their records — verified
+live: `mm` resolves `{mm, week 3, position 2}` while `dayNumber()` and `bank()`
+both return null. This is `F1b`'s `mount()` lesson applied up front rather than
+after the fact.
+
+**A bug the unit test caught, and a silent failure fixed by design.** The
+module read `window.MC_PM_DATA` and then a bare `MC_PM_DATA` — identical in a
+browser, but the vm sandbox has no such global, so the test failed until the
+module read consistently through `window.`. Then driving the pages found the
+real one: `mm-engine.js` registers from **inside its IIFE**, which runs the
+moment that file loads, and the contract's `<script>` tag sat twelve lines
+below it — so `if (window.MC_PROGRAM_DAY)` was false, registration never
+happened, and **nothing threw**. Rather than only reorder the tags, the module
+now reads its resolver lazily (`provide()` or
+`window.MC_PROGRAM_DAY_RESOLVER`), so a mis-ordered page works instead of
+failing quietly — the exact failure mode that got `A-17` dropped.
+
+Verified end to end on `cat-strength.html` through the real `_FW.confirm()`:
+opening the second workout resolves `{ss, week 1, position 2}` and finishing
+banks `completed:["2"]` with the cursor advancing to 3 — identical to the old
+inline behaviour, now from one implementation.
+
+**No doc update:** `ss` behaves exactly as before, and `mm`/`hv` change nothing
+user-visible until `F5`. Purely internal, per the documentation currency rule.
+
 ### `F5` — fleet rollout
 
 Supply a progress record per program and let the dashboard module drive them

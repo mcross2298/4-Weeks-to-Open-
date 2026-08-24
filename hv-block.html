@@ -600,6 +600,21 @@ function bindEditable(){
 }
 
 
+// F4 — the day-identity contract. A resolver, not a value: currentWeek and
+// openDayIdx both change without the page reloading. `position` is
+// openDayIdx + 1 directly, since this page's day array includes its rest
+// entries, so the index already IS the slot in the week.
+//
+// Inert until hv carries a `schedule` record in mc-pm-data.js (roadmap F5) —
+// mc-program-day.js refuses to invent one.
+window.MC_PROGRAM_DAY_RESOLVER = function () {
+  if (openDayIdx === null) return null;
+  const days = WEEKS[currentWeek].days;
+  const day = days[openDayIdx];
+  if (!day || day.type === 'rest') return null;
+  return { prog: 'hv', week: currentWeek + 1, position: openDayIdx + 1 };
+};
+
 buildTimerFloat();
 applyDeepLink();          // ?day= / ?week=, clamped -- see applyDeepLink()
 render();
@@ -615,6 +630,8 @@ if(typeof updateProgress!=="undefined") updateProgress();
      selectors the removed copy didn't support. -->
 <script src="mc-replace.js"></script>
 <script src="mc-strain.js"></script>
+<script src="mc-program-progress.js"></script>
+<script src="mc-program-day.js"></script>
 <script src="mc-finish.js"></script>
 <script src="mc-supabase.js"></script>
 <script src="mc-sync.js"></script>

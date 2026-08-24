@@ -679,6 +679,43 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > both converted probe pages' at-rest chrome drops (13.4% → 6.5% and 6.9%)
 > and their budgets are re-baselined, since a ratchet left at the old value
 > would let the chrome regress back to it and still pass.
+>
+> **`F4` shipped (2026-08-24) — the day-identity contract.** `mc-program-day.js`
+> (`MC_PROGRAM_DAY`) publishes `current() → {prog, week, position}` plus
+> `dayNumber()`/`bank()`, covered by 39 vm-sandboxed assertions in
+> `tools/test-mc-program-day.js` (wired into `verify.yml`).
+>
+> **Taken before `F3-5` on purpose:** the four pages left in `F3-5` all belong
+> to one licensed program, while `F5`'s named targets (`hv`, `mm`) are already
+> 100% converted — so the biggest build is not on the critical path.
+>
+> **What was wrong:** the attribution arithmetic (rank among the week's
+> non-rest positions → continuous day number → `complete()`) lived **inline in
+> `cat-strength.html`** and worked only because that page serves its workouts
+> in-page. Every other program puts workouts on separate pages, so finishing
+> there attributed nothing. That block is deleted; the page keeps only a
+> resolver saying which day it has open. Pages report `position` directly when
+> their day array includes rest entries, or `rank` when they list only
+> trainable workouts — the rank→position conversion lives once, because a
+> per-page copy gets mid-week rest patterns wrong silently.
+>
+> **It never invents a schedule** — banking is refused unless the program
+> carries a real `schedule` record, so `mm`/`hv` register now and are correctly
+> declined until `F5`. `F1b`'s `mount()` lesson applied up front.
+>
+> **A silent failure fixed by design.** `mm-engine.js` registers from inside
+> its IIFE, which runs when that file loads — and the contract's `<script>` tag
+> sat below it, so the existence guard was false, registration never happened,
+> and **nothing threw**. The module now reads its resolver lazily (`provide()`
+> or `window.MC_PROGRAM_DAY_RESOLVER`) so a mis-ordered page works rather than
+> failing quietly — the failure mode that got `A-17` dropped. A second bug came
+> from the unit test: the module read `window.MC_PM_DATA` then a bare
+> `MC_PM_DATA`, identical in a browser but not in a vm sandbox.
+>
+> Verified end to end through the real `_FW.confirm()` on `cat-strength.html`:
+> the second workout resolves `{ss, week 1, position 2}` and finishing banks
+> `completed:["2"]`, cursor advancing to 3 — identical to the old inline
+> behaviour, from one implementation.
 
 > **Companion card-layer plan:** [`card-integration-roadmap.md`](card-integration-roadmap.md)
 > (opened 2026-08-19) merges two audits taken the same day against the same

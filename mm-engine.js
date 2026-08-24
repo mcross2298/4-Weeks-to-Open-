@@ -412,6 +412,24 @@
     if(typeof updateProgress!=="undefined") updateProgress();
   }
 
+  // F4 — the day-identity contract. Registered from INSIDE this IIFE because
+  // currentWeek and openDayIdx live here and are unreachable from outside; a
+  // constant declared elsewhere could not see them, and could not see them
+  // CHANGE, which is the whole reason the contract takes a function.
+  //
+  // `position` is openDayIdx + 1 directly: this engine's day array includes its
+  // rest entries, so the array index already IS the slot in the week.
+  //
+  // Inert until mm carries a `schedule` record in mc-pm-data.js (roadmap F5) —
+  // mc-program-day.js refuses to invent one, so until then this resolves and
+  // is then correctly declined rather than banking against a made-up block.
+  window.MC_PROGRAM_DAY_RESOLVER = function () {
+    if (openDayIdx === null || !activeProgram) return null;
+    var day = DAYS[openDayIdx];
+    if (!day || day.type === 'rest') return null;
+    return { prog: 'mm', week: currentWeek + 1, position: openDayIdx + 1 };
+  };
+
   window.MM = {
     init: init,
     switchWeek: switchWeek,
