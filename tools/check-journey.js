@@ -67,9 +67,27 @@ const UPDATE = has('--update');
 const BUDGET_FILE = path.resolve(__dirname, 'journey-budgets.json');
 const BUDGET_SLACK = 1.35;   // same spirit as perf-budgets: catch drift, not noise
 
-// One page per card engine. These are the six shapes a session can take; a
-// change that works on five of them and not the sixth is exactly the failure
-// this tool exists for.
+// One page per SHAPE a session can take. "Shape" is not the same as "engine":
+// six of these are the shared card engines, and three are hand-written pages
+// that no engine covers -- measured, not assumed. A change that works on eight
+// of them and not the ninth is exactly the failure this tool exists for.
+//
+// The last three were added when scoping roadmap F3 (drop the accordion),
+// which changes how a session is ENTERED on the 23 pages that render more than
+// one day. Only three of those 23 were driven here before; the multi-day
+// pages carry three distinct day-opening mechanisms and two of them had no
+// coverage at all:
+//
+//   re-render on toggle   openDayIdx = n; render()      2on-1off, legacy-prep
+//   class toggle          card.classList.toggle('open') mm-p1, kitchen-sink-s3,
+//                                                       iron-engine (+4 more)
+//   inline onclick        onclick="toggleDay(this...)"  hv-block
+//
+// iron-engine covers a five-page hand-written clone family (bro-split,
+// arnold-legacy, push-pull-legs, weeks-to-open carry near-identical toggle
+// bodies) and is the only one of the five that is not licensed content.
+// legacy-prep is both its own shape and the largest page in the tree -- 26
+// days, 163 exercise cards -- so it is where a per-day change fails first.
 const PAGES = [
   { page: 'mm-p1.html',           engine: 'mm-engine' },
   { page: '2on-1off.html',        engine: 'mc-freq-engine / mc-workout-engine' },
@@ -77,6 +95,9 @@ const PAGES = [
   { page: 's3-back-traps.html',   engine: 'mc-s3-engine' },
   { page: 'kitchen-sink-s3.html', engine: 'ks-engine' },
   { page: 'chest-tri-pump.html',  engine: 'mc-workout-engine' },
+  { page: 'iron-engine.html',     engine: 'hand-written (clone family, 5 pages)' },
+  { page: 'hv-block.html',        engine: 'hand-written (inline onclick)' },
+  { page: 'legacy-prep.html',     engine: 'hand-written (re-render, 26 days)' },
 ];
 
 // Viewports differ on two axes that matter independently: WIDTH (where text
@@ -290,7 +311,18 @@ async function runInsetPass(ctx, entry) {
       await pg.close(); return out;
     }
 
-    if (!(await revealCards(pg))) { await pg.close(); return out; }   // picker page: nothing to drive
+    // A page whose cards cannot be revealed has nothing to assert against, so
+    // this pass bails -- but it MUST bail as a skip, not as a pass. It used to
+    // `return out` with skipped:null, which the summary counts as clean: a page
+    // that reveals nothing reported "inset pass clean" while asserting nothing
+    // at all. The main pass catches an unrevealable page (JOURNEY: no exercise
+    // cards could be revealed), so this never went wrong in practice -- but
+    // roadmap F3 changes precisely this reveal path on 23 pages, which is the
+    // moment a silently-clean inset pass would start lying.
+    if (!(await revealCards(pg))) {
+      out.skipped = 'no exercise cards could be revealed at inset';
+      await pg.close(); return out;
+    }
     await pg.evaluate(() => { const s = document.querySelectorAll('.mcl-strip'); const t = s[1] || s[0]; if (t) t.click(); });
     await pg.waitForTimeout(1000);
     await pg.evaluate(() => { const w = document.querySelector('.mcl-wrap.open .mcl-w');
@@ -526,6 +558,9 @@ async function runJourney(ctx, entry, vpName) {
   } else if (insetResults.length) {
     console.log('\ncheck-journey: real-inset pass clean on ' +
       (insetResults.length - insetSkipped.length) + ' page(s) at a ' + INSET_TOP + 'px inset.');
+    // Name a PARTIAL skip. "clean on 8 page(s)" after nine were requested is
+    // only readable if the ninth says why it dropped out.
+    insetSkipped.forEach(r => console.log('    - skipped ' + r.page + ': ' + r.skipped));
   }
 
   console.log('\ncheck-journey: ' + (results.length - failed) + '/' + results.length +

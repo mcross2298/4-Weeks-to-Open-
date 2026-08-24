@@ -96,9 +96,15 @@ assume otherwise:
 
 - **`mc` is three levels** — `cat-mc.html` → `mc-split1.html` →
   `mc-s1-back.html`. The split page is itself a picker.
-- **`gainz` / `ks` are two** — `cat-gainz.html` → `bro-split.html`, which
-  holds all five days in one accordion. After `F3` that page renders one day,
+- **`gainz` / `ks` are two** — `cat-gainz.html` → `mens-lean-bulk.html`, which
+  holds all six days in one accordion. After `F3` that page renders one day,
   so its structure converges on `mc`'s without gaining a file.
+  (**Corrected 2026-08-24, F3 scoping:** this bullet named `bro-split.html` as
+  `gainz`'s two-level example. It is not reachable from `cat-gainz.html` at
+  all — it is linked only from `cat-stndr.html`, while `content-manifest.json`
+  attributes it to the **`gainz`** licence. One of those two is wrong and it
+  wants its own change; it does not affect either build, since both owners are
+  stripped from the Rolodex.)
 - **`pmc` inlines its split layer** on the cat page (`#view-split`), the same
   mechanism `cat-strength.html` has but does not use.
 
@@ -122,14 +128,18 @@ Worst offenders:
 |---:|---:|---|
 | 26 | 112 | `legacy-prep.html` |
 | 21 | 243 | `arnold-legacy.html` |
-| 7 | 55–106 | the five `kitchen-sink*.html` |
+| 5–7 | 55–106 | the five `kitchen-sink*.html` (`-s5` is 5 days, not 7) |
 | 6 | — | `2on-1off`, `mens-lean-bulk`, `mens-shred` |
 | 4 | 5 | `mm-p1/p2/p3.html` |
 
-**Four of the 23 are licensed STNDR content** (`legacy-prep`,
-`arnold-legacy`, `push-pull-legs`, `weeks-to-open`) — including the two
-largest. Accordion work touches the market-stripped set, so
-`tools/build-market.py --check` is a gate on this phase, not an afterthought.
+**Thirteen of the 23 are licensed** — re-measured against
+`content-manifest.json` on 2026-08-24 and **not four**, as this section said
+until then. Four are STNDR (`legacy-prep`, `arnold-legacy`, `push-pull-legs`,
+`weeks-to-open`, including the two largest) and **nine are `gainz`**: all eight
+freq-family pages plus `bro-split`. So `tools/build-market.py --check` gates
+essentially every step of this phase rather than only the last one, and the
+public Rolodex build only ever sees **10** of the 23 pages. The original
+sequencing below was ordered on the wrong premise and has been corrected.
 
 Other measured inputs:
 
@@ -343,26 +353,108 @@ day's exercises behind it.
 individual exercise, the set logger, the rest timer, or the meatball menu. A
 workout, once opened, looks exactly as it does today. The only change is that
 the page renders **one day's** cards rather than every day in the block — and
-it does so in the same file, so no new pages are added. The correct
-finish-bar denominator (`0 / 30` rather than `0 / 172`) falls out of that for
-free.
+it does so in the same file, so no new pages are added.
 
-Sequencing, cheapest-risk first:
+~~The correct finish-bar denominator (`0 / 30` rather than `0 / 172`) falls out
+of that for free.~~ **Struck 2026-08-24:** `S5c-0` already banked it by scoping
+both counters to the open day — see the gate findings below. `F3` stands on the
+UX and DOM-weight case alone.
 
-1. **`mm-p1/p2/p3`** (4 days, 5 set rows) — small, shared engine, three pages
-   fixed by one engine change.
-2. **The five `kitchen-sink*`** (7 days) — shared `ks-engine.js`, and they are
-   the `check-visual-ratchet` baseline pages, so regressions are caught.
-3. **The `freq-split` family** (`2on-1off`, `5on-2off`, `mens-*`,
-   `every-*-day`, `lets-get-shredded`, `3on-1off-high-freq`) — one
-   `mc-freq-engine.js` change covers eight pages.
-4. **`bro-split`, `hv-block`, `iron-engine`** — individually.
+#### Gate cleared (`AskUserQuestion`, 2026-08-24)
+
+The gate this phase required is closed. Three things were decided, and the
+scoping run that fed them corrected four numbers this document was carrying
+(see **Measured scope** above, and the two findings below).
+
+11. **The accordion becomes a tappable day list that drills into the exercise
+    cards.** A page opens as a list of its days and nothing else; tapping a day
+    renders that day's cards; Back returns to the list. `?day=N` deep-links
+    straight past the list, so an entry point that already knows the day never
+    pays for it. This is the same "one level on screen at a time" move `F1b`
+    made on the landings, one page further in — and it needs no landing change
+    and no day-name duplication, which the alternative (enumerating each page's
+    days in `cat-*.html` config) would have cost on 23 pages.
+12. **Sequencing is reordered by measured risk**, not by the original
+    cheapest-first guess (below).
+13. **`check-journey.js` is extended before any page changes**, as its own
+    step, so the gate that protects a session exists before the 23 pages move.
+
+#### What the scoping run found
+
+- **The accordion is already one-day-at-a-time — visually.** All 23 pages share
+  one DOM contract (`.day-card > .day-header`), engine-rendered and
+  hand-written alike, and **every one already has exactly one day `.open` at
+  load**. The defect is not that other days are *shown*; it is that they are
+  fully *built*. **83% of day-card DOM belongs to days the athlete is not
+  training** (47,761 nodes across the 23, 8,306 in the open day).
+  `arnold-legacy` holds 243 set rows, 17 of them in the open day.
+- **The "free" denominator win is already banked.** This section claimed the
+  correct finish-bar count falls out of `F3`. It does not — `S5c-0` already
+  scoped both counters to the open day. Measured on `main`: `mm-p1` reads
+  `0/43` and the 26-day `legacy-prep` reads `0/33`, not `0/172`. **`F3` stands
+  on the UX and DOM-weight case alone.**
+- **Three day-opening mechanisms, not one.** The eight freq pages already
+  re-render the whole page on every toggle (`openDayIdx = n; render()`) and
+  carry **no set logger at all** — `.ex-item` checkbox rows, zero `.sl-ck`. The
+  three `mm` pages toggle `display:none` on a prebuilt div. The remaining
+  twelve toggle a CSS class only. `legacy-prep` is the re-render shape too.
+- **Five hand-written pages carry near-identical toggle bodies**
+  (`bro-split`, `iron-engine`, `arnold-legacy`, `push-pull-legs`,
+  `weeks-to-open`) — the same clone pattern `check-single-impl.js` exists to
+  catch, in markup it does not police.
+- **`F3` collides with `A-14`.** Rendering one day means `mc-setlog` builds
+  only that day's loggers — `A-14`'s outcome arriving through this door, and
+  inheriting the restore-on-build problem `S5c-0` left open. A session resumed
+  mid-day must land back on its day: `mc-session.js` already reopens a day by
+  simulating a `.day-header` click (`S3`), engine-agnostically, but it finds
+  the card by scanning the DOM. **The day list must therefore stay in the DOM
+  as rows**, which the tappable-list design gives for free — this is a
+  constraint on the design, not an afterthought.
+
+#### Sequencing (corrected)
+
+The original order below was "cheapest-risk first" on the belief that only the
+last step touched licensed content. With 13 of 23 licensed that premise is
+gone, and the genuinely cheapest step is the one it placed third.
+
+0. **Extend `check-journey.js` first** (decision 13) — done, see below.
+1. **The eight freq pages** (`mc-freq-engine.js`) — one engine, already
+   re-renders on toggle, and **no set logger to break**, so a third of the
+   scope carries none of the `A-14` risk. Proves the pattern before it meets a
+   page with real loggers.
+2. **`mm-p1/p2/p3`** — one engine change, three pages, journey-covered.
+3. **The five `kitchen-sink*`** — one engine, and the `check-visual-ratchet`
+   baseline pages, so regressions are caught by pixel diff as well.
+4. **`iron-engine`, `hv-block`, `bro-split`** — the hand-written shapes.
 5. **The four licensed STNDR pages last**, including the 26- and 21-day
-   monsters, with `build-market.py --check` green before and after.
+   monsters, with `build-market.py --check` green before and after — as it must
+   be from step 1 now, not only here.
 
-**This phase needs its own `AskUserQuestion` gate before it starts.** It
-changes how a session is entered on 23 pages, and `check-journey.js` covers
-only 6 of them.
+#### `F3-0` shipped (2026-08-24) — the journey gate, extended first
+
+`check-journey.js` drove **6** pages, of which only **3** were multi-day
+(`mm-p1`, `2on-1off`, `kitchen-sink-s3`) — the other three are single-day, so
+this document's "covers only 6 of them" overstated it. Combined with the five
+`kitchen-sink*` visual baselines, **7 of the 23 pages had any behavioural or
+visual coverage and 16 had none.**
+
+The tool's page table now covers **shapes, not engines** — the three
+hand-written day-opening mechanisms no engine represents were added:
+`iron-engine.html` (the five-page clone family, and the only member of it that
+is not licensed), `hv-block.html` (inline `onclick`), and `legacy-prep.html`
+(re-render, and the largest page in the tree at 26 days / 163 exercise cards,
+so it is where a per-day change fails first). 9/9 journeys clean.
+
+**A real hole was found in the tool while verifying it.** The runtime
+safe-area pass bails when no cards can be revealed — and bailed by returning
+`skipped: null`, which the summary counts as **clean**. A page that revealed
+nothing reported "inset pass clean" while asserting nothing at all. It never
+went wrong in practice because the main pass fails loudly on an unrevealable
+page, but `F3` changes precisely that reveal path on 23 pages, which is the
+moment it would have started lying. It now bails as a named skip, and a
+partial skip prints which page dropped out and why. This is the same class of
+defect as the one recorded at the top of this file about the safe-area source
+check testing its own override.
 
 ### `F4` — the day-identity contract
 

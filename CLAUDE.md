@@ -470,6 +470,54 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > has no guide page at all; and `cat-pmc` carried both the hero and its own
 > `<h1>`.
 
+> **`F3` gate cleared + `F3-0` shipped (2026-08-24).** `F3` (drop the
+> accordion) required its own `AskUserQuestion` gate; it is closed. The
+> accordion becomes **a tappable day list that drills into the exercise
+> cards** — a page opens as a list of its days, tapping one renders that day,
+> Back returns to the list, and `?day=N` skips the list for an entry point that
+> already knows the day. Rejected: enumerating each page's days in `cat-*.html`
+> config, which would duplicate day names and order across 23 pages.
+>
+> **Scoping corrected four numbers the roadmap was carrying.** **13 of the 23
+> pages carry licensed content, not 4** — the second licensed program's whole
+> eight-page frequency family was missed — so `build-market.py --check` gates
+> nearly every step of the phase rather than only its last one, and the public
+> build only ever sees 10 of the 23. The **"free" finish-bar denominator win is
+> already banked** by `S5c-0`: `mm-p1.html` reads `0/43` on `main` today, and
+> the 26-day licensed page reads `0/33`, not `0/172` — so `F3` stands on UX and
+> DOM weight alone. `check-journey.js` covered **3** of the 23, not 6. And one
+> licensed workout page is attributed to one program in `content-manifest.json`
+> while being linked only from the other program's landing — one of the two is
+> wrong, and it wants its own change (both are stripped, so neither build is
+> affected).
+>
+> **What the measurement found.** All 23 pages share one DOM contract
+> (`.day-card > .day-header`) and **every one already has exactly one day
+> `.open` at load** — the defect is not that other days are shown, it is that
+> they are fully *built*: **83% of day-card DOM belongs to days the athlete is
+> not training** (47,761 nodes, 8,306 in the open day; the largest page holds
+> 243 set rows, 17 of them live). There are **three** day-opening mechanisms,
+> not one — the eight-page frequency family already re-renders on every toggle
+> and carries **no set logger at all** (`.ex-item` rows, zero `.sl-ck`), which
+> is why sequencing was reordered to take that family first rather than third.
+> `F3` also collides with `A-14`: rendering one day means `mc-setlog` builds
+> only that day's loggers, inheriting the restore-on-build problem `S5c-0` left
+> open — so the day list must stay in the DOM as rows, which the chosen design
+> gives for free.
+>
+> **`F3-0`** extends `check-journey.js` first, before any page changes: its
+> table now covers **shapes, not engines**, adding the three hand-written
+> day-opening mechanisms no engine represents — `iron-engine.html` (which
+> stands in for a five-page clone family of near-identical toggle bodies, and
+> is the only unlicensed member of it), `hv-block.html` (inline `onclick`) and
+> the largest page in the tree (re-render, 26 days / 163 exercise cards).
+> 6 → 9 pages, 9/9 journeys clean. **A real hole was found in the tool while
+> verifying it**: the runtime safe-area pass bailed on an unrevealable page by
+> returning `skipped: null`, which the summary counts as **clean** — a page
+> asserting nothing reported "inset pass clean". Harmless until now (the main
+> pass fails loudly on an unrevealable page), but `F3` changes exactly that
+> reveal path on 23 pages. It now bails as a named skip.
+
 > **Companion card-layer plan:** [`card-integration-roadmap.md`](card-integration-roadmap.md)
 > (opened 2026-08-19) merges two audits taken the same day against the same
 > page — a TIMWOODS runtime waste audit (`A-1…A-17`) and a card UX council
