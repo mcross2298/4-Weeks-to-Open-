@@ -24,7 +24,11 @@
 
 /* ── Week selector ── */
 .week-selector{display:flex;gap:6px;padding:14px 16px;background:#0a0a0a;border-bottom:1px solid rgba(255,255,255,0.05);position:sticky;top:0;z-index:20;}
-.wtab{flex:1;padding:8px 4px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:#475569;font-size:11px;font-weight:800;letter-spacing:0.08em;text-align:center;cursor:pointer;transition:all 0.15s;line-height:1.3;}
+/* min-width:0 lets a flex item shrink below its content's intrinsic width --
+   without it the four tabs' text floors the row at 324px and the page scrolls
+   sideways at 320 (measured; pre-existing, not introduced by the F3 day-list
+   conversion, but fixed here since this page is in hand). */
+.wtab{flex:1;min-width:0;padding:8px 4px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:#475569;font-size:11px;font-weight:800;letter-spacing:0.08em;text-align:center;cursor:pointer;transition:all 0.15s;line-height:1.3;}
 .wtab:active{transform:scale(0.97);}
 .wtab.active{background:rgba(132,204,22,0.15);border-color:rgba(132,204,22,0.4);color:#a3e635;}
 .wtab .wt-label{display:block;font-size:9px;font-weight:700;color:#334155;letter-spacing:0.1em;text-transform:uppercase;margin-top:2px;}
@@ -437,43 +441,92 @@ function renderExercise(ex, wIdx, dIdx, eIdx){
 /* ─────────────────────────────────────────────────
    RENDER DAY CARD
 ───────────────────────────────────────────────── */
+// Roadmap F3: null = the DAY LIST, a number = that day on its own screen.
+let openDayIdx = null;
+
+// A day ROW -- the list level. Reuses .day-card/.day-header/.day-icon/.day-info/
+// .day-toggle so this page's existing CSS styles it unchanged; the row and Back
+// affordances are the shared .mc-day-row / .mc-day-back from base.css that every
+// F3-converted family uses. It keeps the same inline onclick the header already
+// carried, so opening from the list and closing back to it are the SAME
+// function -- there is no second code path to drift.
+function renderDayRow(day, wIdx, dIdx){
+  return '<div class="day-card mc-day-row" data-w="'+wIdx+'" data-d="'+dIdx+'">' +
+    '<div class="day-header" onclick="toggleDay(this.parentElement,\''+wIdx+'-'+dIdx+'\')">' +
+      '<div class="day-icon" style="background:'+day.color+';box-shadow:0 2px 8px '+day.color+'55">'+day.icon+'</div>' +
+      '<div class="day-info">' +
+        '<div class="day-session">'+esc(day.session)+'</div>' +
+        '<div class="day-meta">'+esc(day.label)+' · '+day.exCount+' exercises</div>' +
+      '</div>' +
+      '<div class="day-toggle">\u203A</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function backBtn(){
+  return '<button type="button" class="mc-day-back" onclick="showDayList()">\u2190 All days</button>';
+}
+
 function renderDay(day, wIdx, dIdx){
+  // A rest day has no exercises and nothing to drill into, so it stays the
+  // compact informational card it already was -- in the LIST only. It is never
+  // a destination, so day mode omits it entirely.
+  if(openDayIdx === null && day.type !== "rest") return renderDayRow(day, wIdx, dIdx);
+  if(openDayIdx !== null && openDayIdx !== dIdx) return "";   // one workout, one screen
   if(day.type === "rest"){
+    if(openDayIdx !== null) return "";
     return '<div class="rest-card"><span style="font-size:20px">😴</span><div><div class="rest-label">REST DAY</div><div class="rest-sub">Full Recovery &amp; Growth</div></div></div>';
   }
   const exHtml = day.exercises.map((ex,eIdx)=>renderExercise(ex,wIdx,dIdx,eIdx)).join("");
-  return '<div class="day-card" data-w="'+wIdx+'" data-d="'+dIdx+'">' +
+  return backBtn() + '<div class="day-card open" data-w="'+wIdx+'" data-d="'+dIdx+'">' +
     '<div class="day-header" onclick="toggleDay(this.parentElement,\''+wIdx+'-'+dIdx+'\')">' +
       '<div class="day-icon" style="background:'+day.color+';box-shadow:0 2px 8px '+day.color+'55">'+day.icon+'</div>' +
       '<div class="day-info">' +
         '<div class="day-session">'+esc(day.session)+'</div>' +
         '<div class="day-meta">'+esc(day.label)+' · '+day.exCount+' exercises · '+esc(day.meta)+'</div>' +
       '</div>' +
-      '<div class="day-toggle" id="tog-'+wIdx+'-'+dIdx+'">▼</div>' +
+      '<div class="day-toggle" id="tog-'+wIdx+'-'+dIdx+'">▲</div>' +
     '</div>' +
-    '<div class="exercises" id="ex-'+wIdx+'-'+dIdx+'" style="display:none;border-top-color:'+day.color+'33">'+exHtml+'</div>' +
+    '<div class="exercises" id="ex-'+wIdx+'-'+dIdx+'" style="border-top-color:'+day.color+'33">'+exHtml+'</div>' +
   '</div>';
 }
 
 /* ─────────────────────────────────────────────────
    TOGGLE HELPERS
 ───────────────────────────────────────────────── */
+// F3: this no longer shows/hides a pre-built panel in place -- it moves between
+// the two screens, so a day's cards are BUILT on open and gone on close, which
+// is what makes the DOM win real rather than cosmetic. The `key` argument is
+// kept ('wIdx-dIdx') because the header's inline onclick already passes it and
+// mc-session.js reopens the athlete's day by synthesising a real .day-header
+// click (S3) -- that keeps working here exactly as it does elsewhere.
 function toggleDay(card, key){
-  const exDiv = document.getElementById('ex-'+key);
-  const tog = document.getElementById('tog-'+key);
-  const isOpen = card.classList.contains('open');
-  const color = card.querySelector('.day-icon').style.background;
-  card.classList.toggle('open');
-  exDiv.style.display = isOpen ? 'none' : 'block';
-  tog.textContent = isOpen ? '▼' : '▲';
-  if(!isOpen){
-    tog.style.background = color;
-    card.style.setProperty('--day-rgb', hexToRgb(rgbToHex(color)));
-    card.style.boxShadow = '0 4px 24px rgba(0,0,0,0.2)';
-  } else {
-    tog.style.background = 'rgba(255,255,255,0.06)';
-    card.style.boxShadow = 'none';
-  }
+  const dIdx = parseInt(String(key).split('-')[1], 10);
+  if(openDayIdx === dIdx) showDayList(); else showDay(dIdx);
+}
+function showDay(dIdx){
+  openDayIdx = dIdx;
+  render();
+  window.scrollTo(0,0);
+}
+function showDayList(){
+  openDayIdx = null;
+  render();
+  window.scrollTo(0,0);
+}
+
+// `?day=N` (1-based) opens straight into a day; `?week=N` picks the block week.
+// Both are CLAMPED to what the program actually has -- an unclamped index
+// renders every day as "" and leaves a blank screen with no way back, which is
+// what F3-1's first draft shipped and only driving the URL caught. Rest days
+// are rejected: they are not destinations here.
+function applyDeepLink(){
+  let q; try { q = new URLSearchParams(location.search); } catch(e){ return; }
+  const w = parseInt(q.get('week'), 10);
+  if(!isNaN(w) && w >= 1 && w <= WEEKS.length) currentWeek = w - 1;
+  const days = WEEKS[currentWeek].days;
+  const d = parseInt(q.get('day'), 10);
+  if(!isNaN(d) && d >= 1 && d <= days.length && days[d-1].type !== 'rest') openDayIdx = d - 1;
 }
 function rgbToHex(rgbStr){
   const m = rgbStr.match(/\d+/g);
@@ -513,7 +566,7 @@ function render(){
       '<div style="font-size:12px;font-weight:700;color:var(--accent);opacity:0.85;margin-top:8px;">✍️ Designed by Mike Cross</div>' +
     '</div></div>' +
     '<div class="week-selector" id="weekSel">'+renderWeekTabs()+'</div>' +
-    '<div class="content"><div class="hint">Tap a session to expand · Tap any field to edit</div>'+themeBar+daysHtml+'</div>';
+    '<div class="content"><div class="hint">'+(openDayIdx===null?'Pick a session to start training':'Tap any field to edit \u00B7 Back returns to the session list')+'</div>'+themeBar+daysHtml+'</div>';
 
   bindEditable();
   buildTimerFloat();
@@ -548,6 +601,7 @@ function bindEditable(){
 
 
 buildTimerFloat();
+applyDeepLink();          // ?day= / ?week=, clamped -- see applyDeepLink()
 render();
 if(typeof updateProgress!=="undefined") updateProgress();
 

@@ -648,6 +648,37 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > visual ratchet re-baselined** — these five pages are its baselines, and page
 > height went 2973 → 1108px (−63%); the diff was inspected before
 > re-baselining, not after.
+>
+> **`F3-4` shipped (2026-08-24) — the three hand-written shapes.**
+> `iron-engine.html`, `hv-block.html` and one licensed page — the three pages
+> no shared engine covers. **19 of 23 done.** Each took the transformation its shape
+> already matched, which is the payoff of doing the engines first: one is the
+> Kitchen Sink lineage (three day types, all with authored panels, so all are
+> destinations, and its per-branch chrome literals collapsed into one
+> `dayChrome(day)` table), the other two are the Modality Matrix lineage (a
+> pre-built panel toggled by an inline `onclick` or a bound header, and a bare
+> rest card that stays list-only because there is nothing behind it). No new
+> patterns, no engine touched.
+>
+> **No fifth "cards at load" module appeared.** `F3-3` moved that rule into
+> `mc-summary.js` and these three inherited it with no per-page work — the
+> first `F3` step where the class of bug that bit `F3-1`, `F3-2` and `F3-3` did
+> not recur.
+>
+> **One pre-existing defect fixed in passing:** one page overflowed
+> horizontally at 320 (324px in a 320px viewport) because its four week tabs
+> are `flex:1` with no `min-width:0`, so the row floored at its text's
+> intrinsic width. Verified identical on `main`, so `F3` did not cause it;
+> fixed as a one-rule change since the page was in hand. `check-journey` runs
+> at 390, where the row fits, so no gate would have caught it.
+>
+> Verified on all three at 320/390/430 (rows ≥70px, Back exactly 44px, no
+> overflow, zero errors), an occlusion pass hit-testing every row — zero
+> occluded, session round trips restoring on all three, and every
+> session-shell control clearing 44×44 in day mode. `check-journey` 9/9;
+> both converted probe pages' at-rest chrome drops (13.4% → 6.5% and 6.9%)
+> and their budgets are re-baselined, since a ratchet left at the old value
+> would let the chrome regress back to it and still pass.
 
 > **Companion card-layer plan:** [`card-integration-roadmap.md`](card-integration-roadmap.md)
 > (opened 2026-08-19) merges two audits taken the same day against the same
