@@ -91,6 +91,7 @@ node tools/test-mc-sw.js               # service-worker fetch strategy
 python3 tools/build-sw.py --check      # committed sw.js matches the tree
 python3 tools/check-script-manifest.py --check   # clone pages load identical module lists
 python3 tools/build-instructions.py --check      # program-landing guide embeds match their source page
+node tools/gen-schedules.js --check    # mm/hv schedule records match mm-data.js + hv-block.html
 python3 tools/apply-head-contract.py --check     # canonical <head> block + PWA tags on every page
 node tools/check-program-colors.js     # mc-pm-data.js vs dashboard.html vs mc-theme.js
 python3 tools/gen-program-css.py --check  # dashboard.html .cat-card/.rail-card CSS vs mc-pm-data.js
@@ -716,6 +717,43 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > the second workout resolves `{ss, week 1, position 2}` and finishing banks
 > `completed:["2"]`, cursor advancing to 3 — identical to the old inline
 > behaviour, from one implementation.
+>
+> **`F5` shipped (2026-08-24) — the fleet rollout, `mm` + `hv`.** Three
+> decisions taken with the owner: **only `mm` and `hv` get records** (their
+> metas say "15 Weeks · 3 Phases" and "4-Week Block"; the other five describe
+> collections — "4 Programs", "10 Workouts", "8 Programs", "7 Splits · 2 Weeks
+> Each" — and keep the picker), **`mm` is ONE 15-week record** rather than
+> three, and **the records are generated** with a `--check` gate. This is also
+> why `F3-5` never gated `F5`: its remaining pages all belong to a program that
+> gets no record.
+>
+> `tools/gen-schedules.js` reads each program's own data (`mm-data.js`, and the
+> `WEEKS` literal in its page) and writes the `schedule` blocks into
+> `mc-pm-data.js` between per-program markers. Hand-typed they are a second
+> copy of the authored prescription, free to drift; derived they cannot
+> disagree with the page they describe — the reasoning behind `build-sw.py`,
+> `build-instructions.py` and `gen-program-css.py`. **`ss` is deliberately not
+> regenerated** (hand-authored in `F0`, differently shaped page data).
+>
+> **The record shape had to grow twice, and real data forced both — the
+> generator's own assertions found them, not review.** (1) A flat `order`
+> cannot express `mm`'s three phases of entirely different lifts, so
+> `def.phases` carries them, re-derived from the definition on every read and
+> **never persisted** — deliberately separate from `weekOrder`, which is
+> ATHLETE state written by `reorderWeek()`; carrying authored content there
+> would let a reorder of week 6 overwrite phase 2's real prescription, and
+> `restart()` would wipe the program's own definition. (2) The 4-week block is
+> neither one repeating day set nor one rest pattern — it rests at **[3,6],
+> [6,7], [3,7], [4]** across its four weeks — so it is four phases of one week
+> each carrying its own rest, and every rest-aware read goes through one
+> `restForWeek()`.
+>
+> **Verified live end to end:** a phase-2 page's week 1 resolves to block
+> **week 6, day 36** and a real `_FW.confirm()` banked `completed:["36"]`,
+> cursor advancing to 37 — a completion attributed to nothing at all before
+> `F4`+`F5`. The dashboard week strip pages the four different rest patterns,
+> proving they reach the UI and not just the record.
+> `mc-program-progress.js` grew 68 → **91 assertions**.
 
 > **Companion card-layer plan:** [`card-integration-roadmap.md`](card-integration-roadmap.md)
 > (opened 2026-08-19) merges two audits taken the same day against the same

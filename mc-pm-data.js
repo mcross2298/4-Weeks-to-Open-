@@ -72,8 +72,573 @@
     { id: 'pmc',  tier: 'flagship', icon: '⚡', name: 'Project Muscle Confusion',   meta: '7 Splits · 2 Weeks Each', color: '#8b7ff0', tagTint: '#c4bdfa', tagTintLight: '#5b4fc7', desc: 'Constantly varied supersets, pyramids, drop sets, AMRAP and tempo work that never lets your muscles adapt.', forWho: 'Lifters who get bored easily and want constant variety — a new stimulus every split, no two weeks alike.', href: 'cat-pmc.html', splits: ['Split 1', 'Split 2', 'Split 3', 'Split 4', 'Split 5', 'Split 6', 'Split 7'] },
     { id: 'mc',   tier: 'flagship', icon: '👑', name: "Mike Cross' Favorite Splits", meta: '5 Splits · 23 Workouts', color: '#d8b463', tagTint: 'var(--o-gold)', desc: "Mike's five personal splits spanning every major training style — the way he actually trains.", forWho: "Trainees who want a well-rounded sample of Mike's own go-to training styles across one program.", href: 'cat-mc.html', splits: ['Split 1', 'Split 2', 'Split 3', 'Split 4', 'Split 5'] },
     { id: 'ks',   tier: 'flagship', icon: '🔥', name: 'Everything Under the Kitchen Sink', meta: '6 Splits · Station-Anchored', color: '#e0a03c', tagTint: '#f0c078', tagTintLight: '#a3701f', desc: 'Six distinct training splits under one roof — the complete MC arsenal, station-anchored for commercial gym efficiency.', forWho: 'Commercial-gym lifters who want maximum split variety without hogging equipment — everything station-anchored.', href: 'cat-ks.html', splits: ['Everything Under the Kitchen Sink', 'Iron Engine', 'Split 3', 'Split 4', 'Split 5', 'Split 6'] },
-    { id: 'mm',   tier: 'flagship', icon: '⬡',  name: 'The Modality Matrix',            meta: '15 Weeks · 3 Phases · 4-Day Split',   color: '#6f77e0', tagTint: '#a3a8f2', tagTintLight: '#454dc4', desc: 'Three phases, three modalities — dumbbell isolation, barbell strength, cable conditioning — one complete system.', forWho: 'Lifters committing to a longer block who want to master every major equipment modality in sequence.', href: 'cat-mm.html', splits: ['Phase 1 · Dumbbell', 'Phase 2 · Barbell', 'Phase 3 · Cable'] },
-    { id: 'hv',   tier: 'flagship', icon: '💥', name: 'High-Volume Training Template',  meta: '4-Week Block · 5–6 Sets · 15–25 Reps', color: '#9fbf4a', tagTint: '#c3dc8f', tagTintLight: '#6b8a2a', desc: 'Compound-dominant into full supersets, into high-set pyramids, into bodyweight & accessory density — trisets banned throughout.', forWho: 'Lifters chasing hypertrophy through sheer volume — one 4-week block that escalates set density week by week.', href: 'cat-hv.html', splits: ['Week 1 · Compound Dominant', 'Week 2 · Fully Supersetted', 'Week 3 · High-Volume Pyramids', 'Week 4 · Bodyweight & Accessory'] }
+    { id: 'mm',   tier: 'flagship', icon: '⬡',  name: 'The Modality Matrix',            meta: '15 Weeks · 3 Phases · 4-Day Split',   color: '#6f77e0', tagTint: '#a3a8f2', tagTintLight: '#454dc4', desc: 'Three phases, three modalities — dumbbell isolation, barbell strength, cable conditioning — one complete system.', forWho: 'Lifters committing to a longer block who want to master every major equipment modality in sequence.', href: 'cat-mm.html', splits: ['Phase 1 · Dumbbell', 'Phase 2 · Barbell', 'Phase 3 · Cable'],
+      /* GEN:schedule:mm */
+      schedule: {
+        "weeks": 15,
+        "perWeek": 7,
+        "rest": [
+          5
+        ],
+        "phases": [
+          {
+            "weeks": 5,
+            "days": [
+              "p1-1",
+              "p1-2",
+              "p1-3",
+              "p1-4",
+              "p1-6",
+              "p1-7"
+            ]
+          },
+          {
+            "weeks": 5,
+            "days": [
+              "p2-1",
+              "p2-2",
+              "p2-3",
+              "p2-4",
+              "p2-6",
+              "p2-7"
+            ]
+          },
+          {
+            "weeks": 5,
+            "days": [
+              "p3-1",
+              "p3-2",
+              "p3-3",
+              "p3-4",
+              "p3-6",
+              "p3-7"
+            ]
+          }
+        ],
+        "days": [
+          {
+            "id": "p1-1",
+            "title": "Chest",
+            "icon": "🏋️",
+            "tags": [
+              "Dumbbell Split",
+              "Phase 1"
+            ],
+            "ex": 10,
+            "sets": 45,
+            "href": "mm-p1.html?day=1"
+          },
+          {
+            "id": "p1-2",
+            "title": "Arms",
+            "icon": "💪",
+            "tags": [
+              "Dumbbell Split",
+              "Phase 1"
+            ],
+            "ex": 10,
+            "sets": 42,
+            "href": "mm-p1.html?day=2"
+          },
+          {
+            "id": "p1-3",
+            "title": "Legs",
+            "icon": "🦵",
+            "tags": [
+              "Dumbbell Split",
+              "Phase 1"
+            ],
+            "ex": 10,
+            "sets": 42,
+            "href": "mm-p1.html?day=3"
+          },
+          {
+            "id": "p1-4",
+            "title": "Back & Shoulders",
+            "icon": "🔙",
+            "tags": [
+              "Dumbbell Split",
+              "Phase 1"
+            ],
+            "ex": 10,
+            "sets": 47,
+            "href": "mm-p1.html?day=4"
+          },
+          {
+            "id": "p1-6",
+            "title": "Conditioning Corner",
+            "icon": "⚡",
+            "tags": [
+              "Dumbbell Split",
+              "Phase 1"
+            ],
+            "ex": 0,
+            "sets": 0,
+            "href": "mm-p1.html?day=6"
+          },
+          {
+            "id": "p1-7",
+            "title": "Conditioning Corner",
+            "icon": "⚡",
+            "tags": [
+              "Dumbbell Split",
+              "Phase 1"
+            ],
+            "ex": 0,
+            "sets": 0,
+            "href": "mm-p1.html?day=7"
+          },
+          {
+            "id": "p2-1",
+            "title": "Squat",
+            "icon": "🦵",
+            "tags": [
+              "Barbell & Smith",
+              "Phase 2"
+            ],
+            "ex": 10,
+            "sets": 45,
+            "href": "mm-p2.html?day=1"
+          },
+          {
+            "id": "p2-2",
+            "title": "Bench",
+            "icon": "🏋️",
+            "tags": [
+              "Barbell & Smith",
+              "Phase 2"
+            ],
+            "ex": 10,
+            "sets": 45,
+            "href": "mm-p2.html?day=2"
+          },
+          {
+            "id": "p2-3",
+            "title": "Deadlift / Pull",
+            "icon": "🔙",
+            "tags": [
+              "Barbell & Smith",
+              "Phase 2"
+            ],
+            "ex": 10,
+            "sets": 45,
+            "href": "mm-p2.html?day=3"
+          },
+          {
+            "id": "p2-4",
+            "title": "Overhead Press",
+            "icon": "🏋️",
+            "tags": [
+              "Barbell & Smith",
+              "Phase 2"
+            ],
+            "ex": 10,
+            "sets": 45,
+            "href": "mm-p2.html?day=4"
+          },
+          {
+            "id": "p2-6",
+            "title": "Conditioning Corner",
+            "icon": "⚡",
+            "tags": [
+              "Barbell & Smith",
+              "Phase 2"
+            ],
+            "ex": 0,
+            "sets": 0,
+            "href": "mm-p2.html?day=6"
+          },
+          {
+            "id": "p2-7",
+            "title": "Conditioning Corner",
+            "icon": "⚡",
+            "tags": [
+              "Barbell & Smith",
+              "Phase 2"
+            ],
+            "ex": 0,
+            "sets": 0,
+            "href": "mm-p2.html?day=7"
+          },
+          {
+            "id": "p3-1",
+            "title": "Push",
+            "icon": "🏋️",
+            "tags": [
+              "Cable & Plate-Loaded",
+              "Phase 3"
+            ],
+            "ex": 10,
+            "sets": 45,
+            "href": "mm-p3.html?day=1"
+          },
+          {
+            "id": "p3-2",
+            "title": "Pull",
+            "icon": "🔙",
+            "tags": [
+              "Cable & Plate-Loaded",
+              "Phase 3"
+            ],
+            "ex": 10,
+            "sets": 45,
+            "href": "mm-p3.html?day=2"
+          },
+          {
+            "id": "p3-3",
+            "title": "Legs",
+            "icon": "🦵",
+            "tags": [
+              "Cable & Plate-Loaded",
+              "Phase 3"
+            ],
+            "ex": 10,
+            "sets": 45,
+            "href": "mm-p3.html?day=3"
+          },
+          {
+            "id": "p3-4",
+            "title": "Delts & Arms",
+            "icon": "💪",
+            "tags": [
+              "Cable & Plate-Loaded",
+              "Phase 3"
+            ],
+            "ex": 10,
+            "sets": 45,
+            "href": "mm-p3.html?day=4"
+          },
+          {
+            "id": "p3-6",
+            "title": "Conditioning Corner",
+            "icon": "⚡",
+            "tags": [
+              "Cable & Plate-Loaded",
+              "Phase 3"
+            ],
+            "ex": 0,
+            "sets": 0,
+            "href": "mm-p3.html?day=6"
+          },
+          {
+            "id": "p3-7",
+            "title": "Conditioning Corner",
+            "icon": "⚡",
+            "tags": [
+              "Cable & Plate-Loaded",
+              "Phase 3"
+            ],
+            "ex": 0,
+            "sets": 0,
+            "href": "mm-p3.html?day=7"
+          }
+        ]
+      },
+      /* /GEN:schedule:mm */
+    },
+    { id: 'hv',   tier: 'flagship', icon: '💥', name: 'High-Volume Training Template',  meta: '4-Week Block · 5–6 Sets · 15–25 Reps', color: '#9fbf4a', tagTint: '#c3dc8f', tagTintLight: '#6b8a2a', desc: 'Compound-dominant into full supersets, into high-set pyramids, into bodyweight & accessory density — trisets banned throughout.', forWho: 'Lifters chasing hypertrophy through sheer volume — one 4-week block that escalates set density week by week.', href: 'cat-hv.html', splits: ['Week 1 · Compound Dominant', 'Week 2 · Fully Supersetted', 'Week 3 · High-Volume Pyramids', 'Week 4 · Bodyweight & Accessory'],
+      /* GEN:schedule:hv */
+      schedule: {
+        "weeks": 4,
+        "perWeek": 7,
+        "rest": [
+          3,
+          6
+        ],
+        "phases": [
+          {
+            "weeks": 1,
+            "days": [
+              "hv-w1-1",
+              "hv-w1-2",
+              "hv-w1-4",
+              "hv-w1-5",
+              "hv-w1-7"
+            ],
+            "rest": [
+              3,
+              6
+            ]
+          },
+          {
+            "weeks": 1,
+            "days": [
+              "hv-w2-1",
+              "hv-w2-2",
+              "hv-w2-3",
+              "hv-w2-4",
+              "hv-w2-5"
+            ],
+            "rest": [
+              6,
+              7
+            ]
+          },
+          {
+            "weeks": 1,
+            "days": [
+              "hv-w3-1",
+              "hv-w3-2",
+              "hv-w3-4",
+              "hv-w3-5",
+              "hv-w3-6"
+            ],
+            "rest": [
+              3,
+              7
+            ]
+          },
+          {
+            "weeks": 1,
+            "days": [
+              "hv-w4-1",
+              "hv-w4-2",
+              "hv-w4-3",
+              "hv-w4-5",
+              "hv-w4-6",
+              "hv-w4-7"
+            ],
+            "rest": [
+              4
+            ]
+          }
+        ],
+        "days": [
+          {
+            "id": "hv-w1-1",
+            "title": "Chest",
+            "icon": "🏋️",
+            "tags": [
+              "3 Pyramids · 1 Static · 1 Drop · 1 Cluster"
+            ],
+            "ex": 6,
+            "sets": 27,
+            "href": "hv-block.html?week=1&day=1"
+          },
+          {
+            "id": "hv-w1-2",
+            "title": "Arms",
+            "icon": "💪",
+            "tags": [
+              "3 Pyramids · 1 Static · 1 Drop · 1 Cluster"
+            ],
+            "ex": 6,
+            "sets": 30,
+            "href": "hv-block.html?week=1&day=2"
+          },
+          {
+            "id": "hv-w1-4",
+            "title": "Legs",
+            "icon": "🦵",
+            "tags": [
+              "3 Pyramids · 1 Static · 1 Drop · 1 Cluster"
+            ],
+            "ex": 6,
+            "sets": 27,
+            "href": "hv-block.html?week=1&day=4"
+          },
+          {
+            "id": "hv-w1-5",
+            "title": "Shoulders",
+            "icon": "🎯",
+            "tags": [
+              "3 Pyramids · 1 Static · 1 Drop · 1 Cluster"
+            ],
+            "ex": 6,
+            "sets": 30,
+            "href": "hv-block.html?week=1&day=5"
+          },
+          {
+            "id": "hv-w1-7",
+            "title": "Back",
+            "icon": "🔙",
+            "tags": [
+              "3 Pyramids · 1 Static · 1 Drop · 1 Cluster"
+            ],
+            "ex": 6,
+            "sets": 27,
+            "href": "hv-block.html?week=1&day=7"
+          },
+          {
+            "id": "hv-w2-1",
+            "title": "Chest & Biceps",
+            "icon": "🏋️",
+            "tags": [
+              "3 Pyramids · 4 Supersets · 120 sec Rest"
+            ],
+            "ex": 8,
+            "sets": 37,
+            "href": "hv-block.html?week=2&day=1"
+          },
+          {
+            "id": "hv-w2-2",
+            "title": "Shoulders & Triceps",
+            "icon": "🎯",
+            "tags": [
+              "3 Pyramids · 4 Supersets · 120 sec Rest"
+            ],
+            "ex": 8,
+            "sets": 40,
+            "href": "hv-block.html?week=2&day=2"
+          },
+          {
+            "id": "hv-w2-3",
+            "title": "Legs",
+            "icon": "🦵",
+            "tags": [
+              "3 Pyramids · 4 Supersets · 120 sec Rest"
+            ],
+            "ex": 8,
+            "sets": 37,
+            "href": "hv-block.html?week=2&day=3"
+          },
+          {
+            "id": "hv-w2-4",
+            "title": "Back",
+            "icon": "🔙",
+            "tags": [
+              "3 Pyramids · 4 Supersets · 120 sec Rest"
+            ],
+            "ex": 8,
+            "sets": 40,
+            "href": "hv-block.html?week=2&day=4"
+          },
+          {
+            "id": "hv-w2-5",
+            "title": "Rear Delts & Traps",
+            "icon": "🔺",
+            "tags": [
+              "3 Pyramids · 4 Supersets · 120 sec Rest"
+            ],
+            "ex": 8,
+            "sets": 37,
+            "href": "hv-block.html?week=2&day=5"
+          },
+          {
+            "id": "hv-w3-1",
+            "title": "Chest & Shoulders",
+            "icon": "🏋️",
+            "tags": [
+              "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster"
+            ],
+            "ex": 8,
+            "sets": 41,
+            "href": "hv-block.html?week=3&day=1"
+          },
+          {
+            "id": "hv-w3-2",
+            "title": "Arms",
+            "icon": "💪",
+            "tags": [
+              "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster"
+            ],
+            "ex": 8,
+            "sets": 41,
+            "href": "hv-block.html?week=3&day=2"
+          },
+          {
+            "id": "hv-w3-4",
+            "title": "Back & Traps",
+            "icon": "🔙",
+            "tags": [
+              "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster"
+            ],
+            "ex": 8,
+            "sets": 41,
+            "href": "hv-block.html?week=3&day=4"
+          },
+          {
+            "id": "hv-w3-5",
+            "title": "Legs",
+            "icon": "🦵",
+            "tags": [
+              "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster"
+            ],
+            "ex": 8,
+            "sets": 41,
+            "href": "hv-block.html?week=3&day=5"
+          },
+          {
+            "id": "hv-w3-6",
+            "title": "Rear Delts + Arms",
+            "icon": "🔺",
+            "tags": [
+              "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster"
+            ],
+            "ex": 8,
+            "sets": 41,
+            "href": "hv-block.html?week=3&day=6"
+          },
+          {
+            "id": "hv-w4-1",
+            "title": "Full Body (Circuit Format)",
+            "icon": "🔁",
+            "tags": [
+              "Continuous Circuit · 45–60 sec Rest"
+            ],
+            "ex": 8,
+            "sets": 40,
+            "href": "hv-block.html?week=4&day=1"
+          },
+          {
+            "id": "hv-w4-2",
+            "title": "Core (Circuit Format)",
+            "icon": "🎯",
+            "tags": [
+              "Continuous Circuit · 45–60 sec Rest"
+            ],
+            "ex": 8,
+            "sets": 40,
+            "href": "hv-block.html?week=4&day=2"
+          },
+          {
+            "id": "hv-w4-3",
+            "title": "Calves & Forearms",
+            "icon": "🦶",
+            "tags": [
+              "3 Pyramids · 1 Static · 2 Supersets · 45–60 sec Rest"
+            ],
+            "ex": 8,
+            "sets": 39,
+            "href": "hv-block.html?week=4&day=3"
+          },
+          {
+            "id": "hv-w4-5",
+            "title": "Full Body (Circuit Format)",
+            "icon": "🔁",
+            "tags": [
+              "Continuous Circuit · 45–60 sec Rest"
+            ],
+            "ex": 8,
+            "sets": 40,
+            "href": "hv-block.html?week=4&day=5"
+          },
+          {
+            "id": "hv-w4-6",
+            "title": "Core (Circuit Format)",
+            "icon": "🎯",
+            "tags": [
+              "Continuous Circuit · 45–60 sec Rest"
+            ],
+            "ex": 8,
+            "sets": 40,
+            "href": "hv-block.html?week=4&day=6"
+          },
+          {
+            "id": "hv-w4-7",
+            "title": "Calves & Forearms",
+            "icon": "🦶",
+            "tags": [
+              "3 Pyramids · 1 Static · 2 Supersets · 45–60 sec Rest"
+            ],
+            "ex": 8,
+            "sets": 39,
+            "href": "hv-block.html?week=4&day=7"
+          }
+        ]
+      },
+      /* /GEN:schedule:hv */
+    }
     /* MARKET:STRIP influencer-progs START */
     ,
     { id: 'stndr', tier: 'influencer', icon: '🏋️', name: 'STNDR',         meta: '4 Programs',      color: '#1D9E75', tagTint: '#6ee7b7', tagTintLight: '#157a56', desc: 'CBUM-style structured lifting built on progressive overload, supersets and smart periodization.', forWho: "Fans of CBUM's methodical, progressive-overload approach to classic bodybuilding.", href: 'cat-stndr.html', splits: ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4'] },

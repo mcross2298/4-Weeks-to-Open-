@@ -821,6 +821,63 @@ invent a structure the program does not have.
 
 ---
 
+#### `F5` shipped (2026-08-24) — the fleet rollout, `mm` + `hv`
+
+Three decisions taken with the owner first (`AskUserQuestion`):
+
+14. **`mm` and `hv` only.** Their own metas say they are blocks — "15 Weeks ·
+    3 Phases · 4-Day Split" and "4-Week Block" — while `stndr` ("4 Programs"),
+    `pump` ("10 Workouts"), `gainz` ("8 Programs") and `pmc` ("7 Splits · 2
+    Weeks Each") all describe collections, and `mc`/`ks` were already excluded.
+    The five undecided programs keep the picker, which is what they are. This
+    is also why **`F3-5` never gated `F5`**: its four remaining pages are all
+    `stndr`, and `stndr` gets no record.
+15. **`mm` is ONE 15-week record**, not three 5-week ones, matching the
+    program's own identity and giving the dashboard a single cursor.
+16. **The records are generated**, with a `--check` gate.
+
+**`tools/gen-schedules.js`** reads each program's own data — `mm-data.js`'s
+`PROGRAMS`, and `hv-block.html`'s `WEEKS` literal — and writes the `schedule`
+blocks into `mc-pm-data.js` between per-program markers. `--check` runs in
+`verify.yml`. Hand-typed, those records are a second copy of the authored
+prescription, free to drift the moment a program gains a week; derived, they
+cannot disagree with the page they describe. Same reasoning as `build-sw.py`,
+`build-instructions.py` and `gen-program-css.py`. **`ss` is deliberately not
+regenerated** — its record was hand-authored in `F0` and its page's day data is
+shaped differently, so rewriting it is a separate decision.
+
+**The record shape had to grow twice, and both times real data forced it —
+the generator's own assertions are what found them.**
+
+1. **Authored phases.** A flat `order` cannot express `mm`'s three phases,
+   which run entirely different lifts. `def.phases` now carries them,
+   re-derived from the definition on every read and **never persisted** —
+   deliberately separate from `weekOrder`, which is ATHLETE state written by
+   `reorderWeek()`. Carrying authored content there would let a reorder of
+   week 6 overwrite phase 2's real prescription, and `restart()` would wipe
+   the program's own definition along with the athlete's progress.
+2. **Per-phase rest.** The first draft asserted `hv` was one repeating day set
+   with one rest pattern. It is neither: week 1 day 1 is "Chest" while week 2
+   day 1 is "Chest & Biceps" (exactly what its splits say — "Week 1 · Compound
+   Dominant", "Week 2 · Fully Supersetted"), and it rests at **[3,6], [6,7],
+   [3,7], [4]** across the four weeks. So `hv` is four phases of one week, each
+   carrying its own rest, and every rest-aware read goes through a single
+   `restForWeek()` so a phase-varying block cannot be half-supported.
+
+**Verified live, end to end.** `mm-p2` week 1 resolves to block **week 6, day
+36**, prescribing `p2-1` — and a real `_FW.confirm()` there banked
+`completed:["36"]` with the cursor advancing to 37. Before `F4`+`F5` that
+completion was attributed to nothing at all. `mm-p1` w1 → day 1, `mm-p3` w5 →
+day 99, all prescribing their own phase's workout. `hv` resolves across all
+four weeks, and the dashboard's week strip pages [3,6] → [6,7] → [3,7] → [4],
+proving the per-phase rest reaches the UI rather than just the record.
+
+The dashboard day module now drives `mm`, `hv` and `ss`; `mc` still falls
+through to `#heroCard`, as decided. `mc-program-progress.js` grew from 68 to
+**91 assertions** (23 new, covering phase resolution, the day-36 arithmetic,
+reorder-beats-phase precedence, and a program with no phases being unchanged).
+Guides updated for both programs and their `F2` embeds regenerated.
+
 ## Non-goals
 
 - **No new `prog-*.html` pages.** `cat-*.html` is already the landing; ten new

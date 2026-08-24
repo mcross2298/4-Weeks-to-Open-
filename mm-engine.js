@@ -427,7 +427,18 @@
     if (openDayIdx === null || !activeProgram) return null;
     var day = DAYS[openDayIdx];
     if (!day || day.type === 'rest') return null;
-    return { prog: 'mm', week: currentWeek + 1, position: openDayIdx + 1 };
+    // F5: mm is ONE 15-week block of three 5-week phases (its own meta says so),
+    // so a phase page's local week 1-5 has to be offset onto the block week
+    // 1-15 -- phase 2 week 1 is block week 6. Reported wrong, a phase-2
+    // completion would tick a phase-1 day. The offset lives here once because
+    // all three pages share this engine.
+    var phase = parseInt(activeProgram.phase, 10) || 1;
+    var perPhase = WEEK_THEMES.length || 5;
+    return {
+      prog: 'mm',
+      week: (phase - 1) * perPhase + currentWeek + 1,
+      position: openDayIdx + 1
+    };
   };
 
   window.MM = {
