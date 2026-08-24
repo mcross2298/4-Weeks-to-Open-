@@ -23,6 +23,7 @@
       "files": [
         "cat-stndr.html",
         "stndr-instructions.html",
+        "stndr-instructions.gen.js",
         "stndr-checkoff.js",
         "push-pull-legs.html",
         "legacy-prep.html",
@@ -44,6 +45,7 @@
         "legs-pump.html",
         "legs-s3-pump.html",
         "pump-instructions.html",
+        "pump-instructions.gen.js",
         "quads-pump.html",
         "s3-back-traps.html",
         "s3-chest-biceps.html",
@@ -69,6 +71,7 @@
         "every-chest-day.html",
         "gainz-dark.css",
         "gainz-instructions.html",
+        "gainz-instructions.gen.js",
         "lets-get-shredded.html",
         "mens-lean-bulk.html",
         "mens-shred.html"

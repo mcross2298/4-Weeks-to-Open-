@@ -275,6 +275,7 @@ MCProgramStatus.mount(document.getElementById('programStatus'), {
 });
 </script>
 <script src="mc-pm-data.js"></script>
+<script src="hv-instructions.gen.js"></script>
 <script src="mc-program-tabs.js"></script>
 <script>
 /* F1b — Overview only. No `def`: this program has no schedule record until
@@ -289,6 +290,7 @@ MCProgramStatus.mount(document.getElementById('programStatus'), {
       programName: p.name || 'High-Volume Training Template',
       desc: p.desc || '',
       forWho: p.forWho || '',
+      instructions: window.MC_INSTRUCTIONS,
       guide: { href: 'hv-instructions.html', label: 'High-Volume guide' }
     });
   }

@@ -214,3 +214,31 @@ html[data-theme="light"] .mpt-row-tick{ background:#047857;border-color:#047857;
    the tab strip's margin used to provide. */
 .mpt-solo{ padding-top:16px; }
 .mpt-solo .mpt-sec:first-child{ margin-top:0; }
+
+/* ── the absorbed guide (F2) ───────────────────────────────────────────────
+   Everything INSIDE .ovi is the guide's own stylesheet, generated and scoped
+   by tools/build-instructions.py — nothing here restyles it, and nothing here
+   may, or the two copies start to diverge. These rules only seat the block in
+   the panel: the guide was authored for a full page with its own .max-w
+   gutter (dropped in generation, since the panel already has one), and its
+   first .sec carries a top margin that would double the gap under the section
+   heading this block sits beneath. */
+.mpt .ovi > :first-child{ margin-top:0; }
+.mpt .ovi{ max-width:100%; }
+
+/* The one exception, and not a style choice — a correction the embed cannot
+   make for itself. `.sec-head` is in BOTH vocabularies: base.css and
+   mc-light.css both claim it fleet-wide as `color:var(--accent)`, and
+   `html[data-theme="light"] .sec-head` (0,2,1) outranks the generated
+   `.ovi .sec-head` (0,2,0), so the guide's headings render in the LANDING's
+   raw accent whatever the guide asked for. Measured: on the program whose
+   accent is lime that is 1.77:1 on Sand — a real contrast failure the
+   ratchet caught. There is no "leave it alone" option here, so both themes
+   take the accent the rest of this component uses, which in light mode is
+   already darkened to clear 4.5:1 (see inkFor() in mc-program-tabs.js). */
+.mpt .ovi .sec-head{ color:var(--mpt-accent-text); }
+html[data-theme="light"] .mpt .ovi .sec-head{ color:var(--mpt-accent-text); }
+/* Wide guide content (a grid of rep cards, a long prescription string) scrolls
+   inside itself rather than pushing the landing sideways. */
+.mpt .ovi table,
+.mpt .ovi pre{ display:block;max-width:100%;overflow-x:auto; }

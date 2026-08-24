@@ -44,6 +44,26 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:0 0 60px;}
 .fav-badge{font-size:11px;font-weight:900;padding:3px 9px;border-radius:5px;background:rgba(132,204,22,0.15);color:#84cc16;border:1px solid rgba(132,204,22,0.25);white-space:nowrap;}
 .fav-desc{font-size:12px;color:#9ca3af;}
 .cta{display:block;text-align:center;margin-top:28px;padding:14px;border-radius:12px;background:rgba(132,204,22,0.12);border:1px solid rgba(132,204,22,0.25);color:#84cc16;font-size:14px;font-weight:900;text-decoration:none;letter-spacing:0.06em;}
+/* ── SAND LIGHT MODE (F2) ─────────────────────────────────────────────
+   mc-light.css already themes this page's shell (body, .hero, .title,
+   .eyebrow, .sec-head, .back-link) and wins those on source order, so
+   nothing here restates them. What it does NOT know is this guide's own
+   card vocabulary — measured before this block, .card sat at a near-black
+   background and .card-head was white, on a cream page. That is what the
+   rules below fix, and every one of them was verified to change a real
+   computed value rather than lose the cascade. ──────────────────────── */
+html[data-theme="light"] .card,
+html[data-theme="light"] .rep-card,
+html[data-theme="light"] .fav-row{background:#faf7f0;border-color:rgba(132,204,22,0.22);}
+html[data-theme="light"] .card-head{color:#1c1a17;}
+html[data-theme="light"] .card-body{color:#6b6459;}
+html[data-theme="light"] .card-body strong{color:#1c1a17;}
+html[data-theme="light"] .rule-box{background:rgba(132,204,22,0.10);border-left-color:#4f7a0d;color:#355209;}
+html[data-theme="light"] .rule-box strong{color:#1c1a17;}
+html[data-theme="light"] .rep-name{color:#4f7a0d;}
+html[data-theme="light"] .rep-eg{color:#6b6459;}
+html[data-theme="light"] .fav-badge{background:rgba(132,204,22,0.14);color:#4f7a0d;border-color:rgba(132,204,22,0.30);}
+html[data-theme="light"] .fav-desc{color:#6b6459;}
 </style><link rel="stylesheet" href="base.css?v=68"/>
 <link rel="stylesheet" href="mc-nav.css"/>
 <link rel="stylesheet" href="mc-light.css">
