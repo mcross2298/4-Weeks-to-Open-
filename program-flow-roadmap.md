@@ -333,6 +333,71 @@ home for that content.
 Governed by the documentation currency rule: whichever surface is canonical,
 both must agree after this phase.
 
+#### `F2` shipped (2026-08-23)
+
+**"Both must agree" became a build gate rather than a promise.**
+`tools/build-instructions.py` extracts each guide's `<div class="max-w">` body
+and its `<style>`, and emits `<id>-instructions.gen.js`
+(`window.MC_INSTRUCTIONS = {id, css, html}`). The guide page stays the one
+authored source; the embed is a generated artifact with a `--check` gate, the
+same generate-and-verify pattern as `build-sw.py`, `gen-program-css.py` and
+`apply-head-contract.py`. Nine landings load it; Overview renders the body
+inside `.ovi` and drops its now-redundant "Program guide →" link.
+
+Two alternatives were **ruled out by measurement, not preference**:
+hand-copying (two copies of nine guides, drifting from the first edit), and
+fetching the guide at runtime — elegant, one source, except the instruction
+pages are **not in `sw.js`'s precache**, so the guide would silently vanish
+offline for anyone who had not already opened that page.
+
+**The collision the generator exists to solve.** The guides and the landings
+share a class vocabulary — `card`, `card-body`, `sec`, `rule-box`, `fav-row`,
+`rep-card` — and mean different things by it. Injecting the markup raw would
+inherit the host's styles and render as garbage. So the guide's own stylesheet
+travels with it, every selector rewritten under `.ovi`. That is why a guide
+gaining a new class needs no work here: regenerate and it is covered. Two
+things had to be right for that rewrite to hold, and only one was obvious:
+`html[data-theme="light"] .card` must become `html[...] .ovi .card`, not
+`.ovi html[...] .card`; and **CSS comments are part of a rule's prelude**, so
+the `/* SAND LIGHT MODE */` banner five guides carry in front of their light
+block glued itself onto the selector — the theme rewrite stopped matching and
+the `body` drop stopped firing, producing `.ovi /* … */ html[…] body` on five
+of the nine. Caught by reading the generated output, which is why it is
+committed rather than built at deploy.
+
+**Five guides had no light mode at all, and embedding would have exposed it.**
+`mc-light.css` themes the page shell fleet-wide (`body`, `.hero`, `.title`,
+`.sec-head`), which is why those pages looked broadly right and nobody had
+filed it — but it knows nothing of each guide's own card vocabulary. Measured
+on the real pages: `.card` sat at `rgb(26,5,5)` and `.card-head` at pure white
+**on a cream page**. Embedded, that is a black slab inside the landing. All
+five gained a light block, their contrast budgets fell 4/10/6/4/5 → **0**, and
+each rule was verified to change a real computed value before it shipped: a
+first draft also restated `body`/`.hero`/`.eyebrow`/`.sec-head`/`.back-link`,
+and a before-and-after computed-style diff showed every one of those losing
+the cascade to `mc-light.css` — dead CSS that reads exactly like working CSS,
+so they were cut.
+
+**One real regression, found by the ratchet and fixed at the seating layer.**
+`.sec-head` is in both vocabularies, and `html[data-theme="light"] .sec-head`
+(0,2,1) from `mc-light.css` outranks the generated `.ovi .sec-head` (0,2,0) —
+so every embedded heading rendered in the *landing's* raw accent, which on the
+lime-accented program is **1.77:1 on Sand**. There is no "leave the embed
+alone" option when the host is already restyling it, so `.sec-head` inside
+`.ovi` now takes `--mpt-accent-text`, already darkened to clear 4.5:1.
+
+Two smaller findings: the generated set is driven by the `<script>` tags that
+load it, not by the set of guide pages — `cat-faint.html` predates the F1 tabs,
+so its embed was generated, precached, and loaded by nobody until `--check`
+learned to report orphans. And three guides are **licensed content**;
+`build-market.py --check` caught their `.gen.js` copies leaking into the public
+build before the first push, and they are now listed in `content-manifest.json`
+beside their source pages.
+
+Net effect on the landings the embed touched: five contrast budgets improved
+(two from 20 to **0**), no page scrolls sideways, and no console errors on any
+of the nine.
+
 ### `F3` — one workout, one screen (drop the accordion)
 
 The large one. A training day becomes its own screen; no page renders a second

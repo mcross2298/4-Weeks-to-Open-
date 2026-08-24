@@ -89,6 +89,14 @@ jobs:
       - name: Script-manifest drift check (clone pages load identical module lists — audit LS-3)
         run: python3 tools/check-script-manifest.py --check
 
+      - name: Absorbed program guides match their source page (roadmap F2)
+        # Each <id>-instructions.gen.js is a generated copy of that guide page's
+        # body, rendered inside the program landing's Overview tab. The guide
+        # page stays the one authored source; this fails the moment the two
+        # disagree, or an embed is left behind that no page loads.
+        # Regenerate with: python3 tools/build-instructions.py
+        run: python3 tools/build-instructions.py --check
+
       - name: Page head-contract check (install meta + theme boot on every page — audit G-02/G-03)
         # Owns the <head> block and the mc-sw-update.js tail tag on all 140
         # deployable pages. Regenerate with: python3 tools/apply-head-contract.py

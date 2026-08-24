@@ -37,6 +37,22 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:0 0 60px;}
 .banned-box{background:rgba(239,68,68,0.08);border-left:3px solid #f87171;border-radius:0 8px 8px 0;padding:12px 14px;margin-bottom:10px;font-size:12px;color:#fca5a5;line-height:1.65;display:flex;gap:10px;align-items:flex-start;}
 .banned-box strong{color:#fff;}
 .banned-icon{font-size:16px;flex-shrink:0;}
+/* ── SAND LIGHT MODE (F2) ─────────────────────────────────────────────
+   mc-light.css already themes this page's shell (body, .hero, .title,
+   .eyebrow, .sec-head, .back-link) and wins those on source order, so
+   nothing here restates them. What it does NOT know is this guide's own
+   card vocabulary — measured before this block, .card sat at a near-black
+   background and .card-head was white, on a cream page. That is what the
+   rules below fix, and every one of them was verified to change a real
+   computed value rather than lose the cascade. ──────────────────────── */
+html[data-theme="light"] .card{background:#faf7f0;border-color:rgba(132,204,22,0.22);}
+html[data-theme="light"] .card-head{color:#1c1a17;}
+html[data-theme="light"] .card-body{color:#6b6459;}
+html[data-theme="light"] .card-body strong{color:#1c1a17;}
+html[data-theme="light"] .rule-box{background:rgba(132,204,22,0.10);border-left-color:#556d2d;color:#435523;}
+html[data-theme="light"] .rule-box strong{color:#1c1a17;}
+html[data-theme="light"] .banned-box{background:rgba(239,68,68,0.10);border-left-color:#ae4f4f;color:#7c3939;}
+html[data-theme="light"] .banned-box strong{color:#1c1a17;}
 </style><link rel="stylesheet" href="base.css?v=68"/>
 <link rel="stylesheet" href="mc-nav.css"/>
 <link rel="stylesheet" href="mc-light.css">

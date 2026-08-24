@@ -1894,6 +1894,7 @@ MCProgramHero.mount(document.getElementById('programHero'), {
   }
 });
 </script>
+<script src="pmc-instructions.gen.js"></script>
 <script src="mc-program-tabs.js"></script>
 <script>
 /* F1b - Overview | Program list, built from this page's OWN `SPLITS` data
@@ -1922,6 +1923,7 @@ MCProgramHero.mount(document.getElementById('programHero'), {
     progId: 'pmc', accent: '#8b7ff0',
     programName: p.name || 'Project Muscle Confusion',
     desc: p.desc || '', forWho: p.forWho || '',
+    instructions: window.MC_INSTRUCTIONS,
     guide: { href: 'pmc-instructions.html', label: 'Muscle Confusion guide' },
     groups: groups,
     dayMeta: function (id) { return META[id] || null; },

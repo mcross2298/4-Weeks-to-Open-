@@ -329,6 +329,7 @@ window.MC_TEMPO_ENABLED = true;
 <script src="mc-program-progress.js"></script>
 <script src="mc-program-menu.js"></script>
 <script src="mc-biomech.js"></script>
+<script src="ss-instructions.gen.js"></script>
 <script src="mc-program-tabs.js"></script>
 <script>
 
@@ -1271,6 +1272,7 @@ const ssTabs = window.MC_PROGRAM_TABS && MC_PROGRAM_TABS.mount(document.getEleme
   programName: SS_PROG.name || 'Strength & Supersets',
   desc: SS_PROG.desc || '',
   forWho: SS_PROG.forWho || '',
+  instructions: window.MC_INSTRUCTIONS,
   guide: { href: 'ss-instructions.html', label: 'Strength & Supersets guide' },
   groups: [{ id: 'cycle', name: 'The 6-Week Cycle', days: SS_DEF.order.slice() }],
   dayMeta: function (id) { return SS_DAY_META[id] || null; },

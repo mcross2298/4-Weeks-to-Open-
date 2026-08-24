@@ -47,6 +47,9 @@
        forWho,                       // "Who this is for" copy (mc-pm-data.js `forWho`)
        desc,                         // one-line program pitch
        guide: { href, label },       // <id>-instructions.html entry point
+       instructions,                 // optional; window.MC_INSTRUCTIONS from
+                                     // <id>-instructions.gen.js — the guide,
+                                     // absorbed (F2). Falls back to the link.
        groups: [ { id, name, desc, meta, icon, days:[dayId,...] } ],
        dayMeta: fn(dayId) -> { title, icon, tags[], ex, sets, min },
        exerciseNames: [...],         // optional; equipment row is derived from these
@@ -270,6 +273,38 @@
     return '<div class="mpt-week" aria-label="Week ' + week + ' schedule">' + cells + '</div>';
   }
 
+  // ---- the absorbed guide (F2) -------------------------------------------
+  // The guide's own stylesheet travels with its markup — tools/build-
+  // instructions.py scopes every selector under `.ovi`, because the guides and
+  // the landings share a class vocabulary (`card`, `card-body`, `sec`,
+  // `rule-box`) and mean different things by it.
+  //
+  // It goes in the document head, once per page, rather than inside the panel:
+  // drawOverview() replaces the panel's innerHTML on every refresh, and a
+  // <style> living in there would be torn down and rebuilt on each one.
+  function injectGuideCss(ins) {
+    if (!ins || !ins.css) return;
+    var id = 'mpt-ovi-css-' + ins.id;
+    if (document.getElementById(id)) return;
+    var s = document.createElement('style');
+    s.id = id;
+    s.textContent = ins.css;
+    document.head.appendChild(s);
+  }
+
+  // A guide can end with its own "start the program" CTA. Absorbed into that
+  // program's own landing, it points at the page the reader is already on, so
+  // it is dropped rather than rendered as a link to nowhere new. Compared via
+  // the anchor's resolved `href` property, so a relative path is normalised
+  // rather than string-matched.
+  function dropSelfLinks(scope) {
+    var here = location.pathname.split('/').pop();
+    Array.prototype.forEach.call(scope.querySelectorAll('.ovi a[href]'), function (a) {
+      var to = a.href.split('#')[0].split('?')[0].split('/').pop();
+      if (to === here && a.parentNode) a.parentNode.removeChild(a);
+    });
+  }
+
   function overviewHtml(cfg, rec, week, P) {
     var out = '';
     if (cfg.desc) out += '<p class="mpt-lede">' + escapeHtml(cfg.desc) + '</p>';
@@ -290,10 +325,21 @@
           '<span class="mpt-chip-n">' + e.n + '</span></span>';
       }).join('') + '</div>');
     }
-    // F2 folds the full <id>-instructions.html body in here. Until then this
-    // is a real entry point to it, not a placeholder for one.
+    // F2 / roadmap decision 10: the ENTIRE guide body, not a summary. Its own
+    // markup, unchanged, so the guide page stays the single authored source
+    // and this is a generated copy of it (tools/build-instructions.py --check
+    // fails the build the moment the two disagree).
+    var embedded = !!(cfg.instructions && cfg.instructions.html);
+    if (embedded) {
+      out += section('The program guide', '<div class="ovi">' + cfg.instructions.html + '</div>');
+    }
+
     var links = '';
-    if (cfg.guide && cfg.guide.href) {
+    // With the guide inline, a "Program guide →" link here would lead to the
+    // same words on another page. The standalone page is still a live deep-link
+    // target — program-guide.html and the fleet's own header links reach it —
+    // it just stops being the only way in.
+    if (!embedded && cfg.guide && cfg.guide.href) {
       links += '<a class="mpt-link" href="' + escapeHtml(cfg.guide.href) + '">' +
         '<span class="mpt-link-ico">📋</span>' +
         '<span class="mpt-link-t">' + escapeHtml(cfg.guide.label || 'Program guide') + '</span>' +
@@ -404,7 +450,11 @@
     var pOverview = el.querySelector('#mpt-p-overview');
     var pList = el.querySelector('#mpt-p-list');
 
-    function drawOverview() { pOverview.innerHTML = overviewHtml(cfg, state.rec, state.week, P); }
+    injectGuideCss(cfg.instructions);
+    function drawOverview() {
+      pOverview.innerHTML = overviewHtml(cfg, state.rec, state.week, P);
+      dropSelfLinks(pOverview);
+    }
     function drawList() {
       if (!pList) return;
       var model = listModel(cfg, state);

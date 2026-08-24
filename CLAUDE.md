@@ -90,6 +90,7 @@ node tools/test-mc-program-tabs.js     # program-landing list model (adaptive de
 node tools/test-mc-sw.js               # service-worker fetch strategy
 python3 tools/build-sw.py --check      # committed sw.js matches the tree
 python3 tools/check-script-manifest.py --check   # clone pages load identical module lists
+python3 tools/build-instructions.py --check      # program-landing guide embeds match their source page
 python3 tools/apply-head-contract.py --check     # canonical <head> block + PWA tags on every page
 node tools/check-program-colors.js     # mc-pm-data.js vs dashboard.html vs mc-theme.js
 python3 tools/gen-program-css.py --check  # dashboard.html .cat-card/.rail-card CSS vs mc-pm-data.js
@@ -170,6 +171,17 @@ to use — update the matching onboarding doc in the same piece of work:
   program itself is new (see the New Program Creation Workflow below, step 4,
   for the required `dashboard.html` + `mc-pm-data.js` wiring that makes a new
   program discoverable in the first place).
+
+**Editing a guide page means regenerating its embed.** A program landing's
+Overview tab renders that guide's whole body inline, from a committed
+`<id>-instructions.gen.js` built by `tools/build-instructions.py` (the guide
+page stays the one authored source — the embed is a generated artifact, like
+`sw.js`). Run the tool after touching a guide; `--check` runs in CI and fails
+on drift, and on an embed left behind that no page loads. The generated file
+carries the guide's own stylesheet rewritten under `.ovi`, because the guides
+and the landings both use `card` / `card-body` / `sec` / `rule-box` and mean
+different things by them. A guide that is licensed content needs its `.gen.js`
+listed in `content-manifest.json` beside its source page.
 
 Purely internal changes (refactors, data-only additions with no user-visible
 behavior change, bug fixes restoring already-documented behavior, CSS/copy
