@@ -569,6 +569,50 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > `check-journey` 9/9; the converted probe page's at-rest chrome drops
 > 13.4% → 6.9% because the session toolbar correctly no longer shows on a
 > picker screen, and its budget is re-baselined to match.
+>
+> **`F3-2` shipped (2026-08-24) — the Modality Matrix trio.** `mm-engine.js`
+> (`mm-p1/p2/p3`) converted: same day list + one-workout-per-screen shape as
+> `F3-1`, different mechanism underneath (this engine toggled `display:none` on
+> a **pre-built** panel and drives real `.ex-card` markup through the full
+> `mc-setlog` logger, not the lighter `.ex-item` rows).
+>
+> **The Back control and row treatment moved into `base.css`** as
+> `.mc-day-back` / `.mc-day-row`. `F3-1` put them in the stylesheet its eight
+> pages exclusively share — right for one family, wrong for five, since `F3`
+> needs this control on 23 pages across every engine. Defined once now,
+> accent-neutral (reads `--accent`), with the first family's sheet keeping only
+> its brand-colour token overrides. Same reasoning `check-single-impl.js`
+> enforces for shared JS helpers.
+>
+> **A defect found by driving, whose cause was not where it looked.** The day
+> list overflowed horizontally (395px in a 390px viewport) and the overflowing
+> element was PROGRAM SUMMARY — which this change never touched.
+> `mc-summary.css` hides `.sum-section` behind `body.mcs-stat-active`, a class
+> `mc-summary.js` only adds once it finds exercise cards; on a day list there
+> are none, so the rule never applied and the block summary rendered **fully
+> expanded**, exposed purely because the cards moved. Now hidden on the list
+> and left alone in day mode, where that class governs it as before.
+> **This is the same shape as `F3-1`'s `mc-session.js` bug** — a module keying
+> off "are there cards at load" — and it is the **third** such module found
+> (`mc-session.js`, `mc-summary.js`, plus `mc-finish.js`'s already-fixed
+> counter scoping). Any remaining `F3` step should look for a fourth rather
+> than assume there isn't one.
+>
+> Rest days stay informational rows (never a destination); conditioning days
+> open their panel; the week tabs stay on both screens on purpose — decision 9
+> rejects an in-page DAY switcher, and a week is the same day's prescription,
+> verified live re-rendering an open session onto a new scheme. `?day=N`
+> (clamped, rest days rejected) and `?week=N` deep-link. Verified on all three
+> pages at 320/390/430, session round trip intact on `F3-1`'s `MC_SCAN`
+> deferral with no further change. `check-journey` 9/9. **Runtime measured:**
+> DOM 2082 → 313 elements on the list / 761 in an open day, `querySelectorAll`
+> 302 → 122/s.
+>
+> **Known, not fixed (pre-existing, verified on `main`):**
+> `tools/measure-session.js` reports `timer confirmed running: false` on
+> `mm-p1.html` — its rest-timer probe never starts a timer there, so that
+> column measures idle rather than the load it names. Identical on `main`, so
+> `F3` did not cause it, but the perf gate is weaker on that page than it looks.
 
 > **Companion card-layer plan:** [`card-integration-roadmap.md`](card-integration-roadmap.md)
 > (opened 2026-08-19) merges two audits taken the same day against the same

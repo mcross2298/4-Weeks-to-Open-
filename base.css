@@ -1055,3 +1055,41 @@ html[data-theme="light"] #fwModalBtns.fw-emph .fw-cancel,html[data-theme="light"
 .timer-float{height:calc(64px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);}
 body.mc-has-nav .timer-float{height:64px;padding-bottom:0;}
 .fw-modal-overlay{padding:16px 16px calc(16px + env(safe-area-inset-bottom));}
+
+/* ==========================================================================
+   Day list — the "back to all days" control (roadmap F3)
+   --------------------------------------------------------------------------
+   F3 turns every multi-day workout page from an accordion into a day LIST that
+   drills into ONE workout. That needs a "back to the list" control on 23 pages
+   across five separate engine families, so it is defined once here rather than
+   per family — the same reasoning tools/check-single-impl.js enforces for
+   shared JS helpers, which exist because makeRestTimer drifted into six
+   divergent per-page bodies before anyone noticed.
+
+   Accent-neutral on purpose: it reads from --accent, so a page family whose
+   brand colour differs from its --accent restyles this by overriding those
+   tokens in its own sheet rather than by cloning the rule. 44px min-height is
+   the app's gym-floor touch floor, and it is a real <button>, so it is
+   keyboard-operable with no extra key handling.
+   ========================================================================== */
+.mc-day-back{
+  display:inline-flex; align-items:center; gap:6px;
+  min-height:44px; padding:0 16px; margin:0 0 12px;
+  border-radius:22px; cursor:pointer;
+  font-family:inherit; font-size:13px; font-weight:700;
+  color:var(--accent);
+  background:rgba(var(--accent-rgb),0.14);
+  border:1px solid rgba(var(--accent-rgb),0.40);
+}
+.mc-day-back:active{ background:rgba(var(--accent-rgb),0.24); }
+.mc-day-back:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+/* A day ROW is a destination, not a disclosure. The chevron replaces the
+   accordion's ▼/▲ and the row gets a press response. */
+.day-card.mc-day-row .day-header{ min-height:56px; }
+.day-card.mc-day-row .day-toggle{
+  font-size:20px; line-height:1; font-weight:900;
+  background:transparent; color:var(--accent);
+}
+.day-card.mc-day-row{ transition:transform .12s ease, border-color .2s, box-shadow .2s; }
+.day-card.mc-day-row:active{ transform:scale(0.985); }

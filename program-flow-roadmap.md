@@ -578,6 +578,72 @@ because the session toolbar correctly no longer shows on a picker screen, and
 its budget is re-baselined to match. Guide updated (`gainz-instructions.html`)
 and its `F2` embed regenerated.
 
+#### `F3-2` shipped (2026-08-24) — the Modality Matrix trio
+
+`mm-engine.js` (`mm-p1/p2/p3`) converted. Same shape as `F3-1` — a day list of
+tappable rows, one workout per screen, `← All days` back — but a different
+mechanism underneath: this engine toggled `display:none` on a **pre-built**
+panel, and it drives real `.ex-card` markup through the full `mc-setlog`
+logger rather than the lighter `.ex-item` rows.
+
+**The Back control and row treatment moved into `base.css`.** `F3-1` put them
+in the stylesheet its eight pages exclusively share, which was right for one
+family and wrong for five: `F3` needs this control on 23 pages across every
+engine. They are now `.mc-day-back` / `.mc-day-row`, defined once, accent-neutral
+(reading `--accent`), and the first family's sheet keeps only the token
+overrides that give it its own brand colour. Same reasoning
+`tools/check-single-impl.js` enforces for shared JS helpers.
+
+**Three day types, three behaviours.** A **rest** day has nothing to drill
+into, so it stays the compact informational card it already was and appears in
+the list only — never a destination. A **conditioning** day is a row that opens
+its Conditioning Corner panel. A **training** day opens the full card stack.
+Both openable types route through the same `toggleDay`/`toggleCond` the
+headers' inline `onclick` already called, so there is no second code path.
+
+**The week tabs stay on both screens**, deliberately. Decision 9 rejects an
+in-page DAY switcher; the week is not another day, it is the same day's
+prescription. Verified live: switching week from inside an open session
+re-renders that session on the new scheme and the theme bar follows
+(`Week 3 · Tempo` → `Week 5 · Superset`).
+
+**A defect found by driving, and its cause was not where it looked.** The day
+list overflowed horizontally (395px in a 390px viewport) — and the overflowing
+element was PROGRAM SUMMARY, which this change never touched. `mc-summary.css`
+hides `.sum-section` behind `body.mcs-stat-active`, a class `mc-summary.js`
+only adds once `buildStatBar()` finds exercise cards. On a day list there are
+none, so the rule never applied and the block summary rendered **fully
+expanded** — a readout that on `main` is correctly tucked behind the summary
+control, exposed here purely because the cards moved. It is now hidden on the
+list and left entirely alone in day mode, where `mcs-stat-active` governs it as
+before; `renderSummary()` re-applies the same rule, because the page calls it
+after `MM.init()` and a `?day=N` deep link would otherwise land in day mode
+with the summary still showing. **This is the same shape as `F3-1`'s
+`mc-session.js` bug** — a module keying off "are there cards at load" — and it
+is the third such module found. Any remaining `F3` step should check for a
+fourth rather than assume.
+
+`?day=N` (clamped, and rest days rejected) and `?week=N` both deep-link;
+`?day=99` falls back to the list rather than the blank screen `F3-1`'s first
+draft produced.
+
+Verified on all three pages at 320/390/430: rows ≥ 70px, Back exactly 44px, no
+overflow, zero page errors, `0/43` per-day denominators. Session round trip
+holds — log a set, reload, reopen the day, and it restores (`1/43`, strip reads
+`1/5 Sets`), on `F3-1`'s `MC_SCAN` deferral with no further change.
+`check-journey` 9/9; `mm-p1`'s at-rest chrome drops 13.4% → 6.9% (session
+toolbar correctly absent from a picker) and its budget is re-baselined.
+**Runtime measured, not assumed:** DOM 2082 → 313 elements on the list and 761
+in an open day, `querySelectorAll` 302 → 122/s — the perf budget passes with
+room. Guide updated (`mm-instructions.html`) and its `F2` embed regenerated.
+
+**Known, not fixed here (pre-existing, verified on `main`):**
+`tools/measure-session.js` reports `timer confirmed running: false` on
+`mm-p1.html` — its rest-timer probe does not actually start a timer on this
+page, so that column measures idle rather than the timer load it names. It
+reads identically on `main`, so `F3` did not cause it, but it means the perf
+gate is weaker on this page than it appears and it wants its own change.
+
 ### `F4` — the day-identity contract
 
 With one workout per screen, a day page can finally name itself. Publish

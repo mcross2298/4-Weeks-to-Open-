@@ -28,6 +28,10 @@
   'use strict';
 
   var currentWeek = 0;
+  // Roadmap F3: null = the DAY LIST, a number = that day on its own screen.
+  // The Modality Matrix trio used to render all four days of the block at
+  // once as an accordion; now a day is its own screen. See renderDay().
+  var openDayIdx = null;
   var activeProgram = null;
   var DAYS = [];
   var WEEK_THEMES = [];
@@ -127,21 +131,65 @@
   /* ─────────────────────────────────────────────────
      RENDER DAY CARD
   ───────────────────────────────────────────────── */
+  // A day ROW -- the list level. Reuses .day-card/.day-header/.day-icon/
+  // .day-info/.day-toggle so this page's existing per-day-colour CSS styles it
+  // unchanged; the row and Back affordances are the shared .mc-day-row /
+  // .mc-day-back from base.css that every F3-converted family uses.
+  //
+  // The row keeps the inline onclick these headers already carry, so the
+  // toggle path is the SAME function whether you are opening a day from the
+  // list or closing one back to it -- there is no second code path to drift.
+  function renderDayRow(day, dIdx){
+    var cond = day.type === "cond";
+    var meta = cond
+      ? esc(day.label) + ' \u00B7 Conditioning Corner'
+      : esc(day.label) + ' \u00B7 ' + day.exCount + ' exercises';
+    var fn = cond ? 'MM.toggleCond' : 'MM.toggleDay';
+    return '<div class="day-card mc-day-row" data-d="'+dIdx+'">' +
+      '<div class="day-header" onclick="'+fn+'(this.parentElement,'+dIdx+')">' +
+        '<div class="day-icon" style="background:'+day.color+';box-shadow:0 2px 8px '+day.color+'55">'+day.icon+'</div>' +
+        '<div class="day-info">' +
+          '<div class="day-session">'+esc(day.session)+'</div>' +
+          '<div class="day-meta">'+meta+'</div>' +
+        '</div>' +
+        '<div class="day-toggle">\u203A</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // One hint line, two states -- it cannot tell the athlete to "expand" a
+  // session on the screen where sessions are rows.
+  function hintText(){
+    return openDayIdx === null
+      ? 'Pick a session to start training'
+      : 'Tap any field to edit \u00B7 Back returns to the session list';
+  }
+
+  function backBtn(){
+    return '<button type="button" class="mc-day-back" onclick="MM.showDayList()">\u2190 All days</button>';
+  }
+
   function renderDay(day, dIdx){
+    // A rest day has no exercises and nothing to drill into, so it stays the
+    // compact informational card it already was -- in the LIST only. It is
+    // never a destination, so day mode omits it entirely.
+    if(openDayIdx === null && day.type !== "rest") return renderDayRow(day, dIdx);
+    if(openDayIdx !== null && openDayIdx !== dIdx) return "";   // one workout, one screen
+
     if(day.type === "rest"){
       return '<div class="rest-card"><span style="font-size:20px">😴</span><div><div class="rest-label">REST DAY</div><div class="rest-sub">Full Recovery &amp; Growth</div></div></div>';
     }
     if(day.type === "cond"){
-      return '<div class="cond-day-card" data-d="'+dIdx+'">' +
+      return backBtn() + '<div class="cond-day-card open" data-d="'+dIdx+'">' +
         '<div class="day-header" onclick="MM.toggleCond(this.parentElement,'+dIdx+')">' +
           '<div class="day-icon" style="background:'+day.color+';box-shadow:0 2px 8px '+day.color+'55">'+day.icon+'</div>' +
           '<div class="day-info">' +
             '<div class="day-session">'+esc(day.session)+'</div>' +
             '<div class="day-meta">'+esc(day.label)+' · Conditioning Corner · 4-On 1-Off 2-On</div>' +
           '</div>' +
-          '<div class="day-toggle" id="cond-tog-'+dIdx+'">▼</div>' +
+          '<div class="day-toggle" id="cond-tog-'+dIdx+'">▲</div>' +
         '</div>' +
-        '<div class="exercises" id="cond-ex-'+dIdx+'" style="display:none;padding:12px 16px;">' +
+        '<div class="exercises" id="cond-ex-'+dIdx+'" style="padding:12px 16px;">' +
           '<div class="cond-activity"><span class="cond-act-icon">🏃</span><div><div class="cond-act-name">Choose Your Session</div><div class="cond-act-desc">Browse the Conditioning Corner for HIIT, circuits, lactate threshold work, and more.</div></div></div>' +
           '<a href="dashboard.html?tab=conditioning" class="cond-link-row"><span>Browse Conditioning Corner →</span></a>' +
         '</div>' +
@@ -157,46 +205,58 @@
     // delta is signposted up front; the full per-week explanation stays
     // in the existing themeBar once expanded.
     var weekNote = ' · This week: '+wt.icon+' '+esc(weekShortLabel(wt));
-    return '<div class="day-card" data-d="'+dIdx+'">' +
+    return backBtn() + '<div class="day-card open" data-d="'+dIdx+'">' +
       '<div class="day-header" onclick="MM.toggleDay(this.parentElement,'+dIdx+')">' +
         '<div class="day-icon" style="background:'+day.color+';box-shadow:0 2px 8px '+day.color+'55">'+day.icon+'</div>' +
         '<div class="day-info">' +
           '<div class="day-session">'+esc(day.session)+'</div>' +
           '<div class="day-meta">'+esc(day.label)+' · '+day.exCount+' exercises · '+esc(day.meta)+weekNote+'</div>' +
         '</div>' +
-        '<div class="day-toggle" id="tog-'+dIdx+'">▼</div>' +
+        '<div class="day-toggle" id="tog-'+dIdx+'">▲</div>' +
       '</div>' +
-      '<div class="exercises" id="ex-'+dIdx+'" style="display:none;border-top-color:'+day.color+'33">'+themeBar+exHtml+'</div>' +
+      '<div class="exercises" id="ex-'+dIdx+'" style="border-top-color:'+day.color+'33">'+themeBar+exHtml+'</div>' +
     '</div>';
   }
 
   /* ─────────────────────────────────────────────────
      TOGGLE HELPERS
   ───────────────────────────────────────────────── */
+  // F3: these no longer show/hide a pre-built panel in place -- they move
+  // between the two screens. render() is the single path, so a day's cards are
+  // BUILT on open and gone on close, which is what makes the DOM win real
+  // rather than cosmetic. Same signature as before, because the headers'
+  // inline onclick is unchanged and mc-session.js reopens a day by
+  // synthesising a real .day-header click (S3) -- that keeps working here
+  // exactly as it does on the engines F3 has not reached yet.
+  function showDay(dIdx){
+    openDayIdx = dIdx;
+    render();
+    window.scrollTo(0, 0);
+  }
+  function showDayList(){
+    openDayIdx = null;
+    render();
+    window.scrollTo(0, 0);
+  }
   function toggleDay(card, dIdx){
-    var day = DAYS[dIdx];
-    var exDiv = document.getElementById('ex-'+dIdx);
-    var tog = document.getElementById('tog-'+dIdx);
-    var isOpen = card.classList.contains('open');
-    card.classList.toggle('open');
-    exDiv.style.display = isOpen ? 'none' : 'block';
-    tog.textContent = isOpen ? '▼' : '▲';
-    if(!isOpen){
-      tog.style.background = day.color+'cc';
-      card.style.setProperty('--day-rgb', hexToRgb(day.color));
-      card.style.boxShadow = '0 4px 24px '+day.color+'22';
-    } else {
-      tog.style.background = 'rgba(255,255,255,0.06)';
-      card.style.boxShadow = 'none';
-    }
+    if(openDayIdx === dIdx) showDayList(); else showDay(dIdx);
   }
   function toggleCond(card, dIdx){
-    var exDiv = document.getElementById('cond-ex-'+dIdx);
-    var tog = document.getElementById('cond-tog-'+dIdx);
-    var isOpen = card.classList.contains('open');
-    card.classList.toggle('open');
-    exDiv.style.display = isOpen ? 'none' : 'block';
-    tog.textContent = isOpen ? '▼' : '▲';
+    if(openDayIdx === dIdx) showDayList(); else showDay(dIdx);
+  }
+
+  // `?day=N` (1-based, matching the day numbers on the rows) opens straight
+  // into a day; `?week=N` picks the block week. Both are clamped to what the
+  // program actually has -- an unclamped index renders every day as "" and
+  // leaves a blank screen with no way back, which is exactly what shipped in
+  // F3-1's first draft and was only caught by driving the URL.
+  function applyDeepLink(){
+    var q;
+    try { q = new URLSearchParams(location.search); } catch(e){ return; }
+    var w = parseInt(q.get('week'), 10);
+    if(!isNaN(w) && w >= 1 && w <= WEEK_THEMES.length) currentWeek = w - 1;
+    var d = parseInt(q.get('day'), 10);
+    if(!isNaN(d) && d >= 1 && d <= DAYS.length && DAYS[d-1].type !== 'rest') openDayIdx = d - 1;
   }
 
   /* ─────────────────────────────────────────────────
@@ -229,7 +289,25 @@
         '<div style="font-size:12px;font-weight:700;color:var(--accent);opacity:0.85;margin-top:8px;">✍️ Designed by Mike Cross</div>' +
       '</div></div>' +
       '<div class="week-selector" id="weekSel">'+renderWeekTabs()+'</div>' +
-      '<div class="content"><div class="hint">Tap a session to expand · Tap any field to edit</div>'+daysHtml+'</div>';
+      '<div class="content"><div class="hint">'+hintText()+'</div>'+daysHtml+'</div>';
+
+    // PROGRAM SUMMARY lives outside #app, so render() does not rewrite it --
+    // but it does have to hide it on the day LIST, and the reason is not
+    // obvious. mc-summary.css hides .sum-section behind `body.mcs-stat-active`,
+    // a class mc-summary.js only adds once buildStatBar() finds exercise cards.
+    // On the list there are none, so that rule never applies and the summary
+    // renders FULLY EXPANDED -- a block readout the athlete never asked for,
+    // which also overflows horizontally (measured: 395px wide in a 390px
+    // viewport). On main it is correctly tucked behind the summary control,
+    // because cards always existed at load.
+    //
+    // So: hidden on the list, and in day mode left entirely alone, where
+    // mcs-stat-active governs it exactly as it does today. Deliberately NOT
+    // forced visible in day mode -- that would break the toggle that owns it.
+    // Guarded because the page calls MM.renderSummary() only after MM.init(),
+    // so the placeholder is not in the DOM on the first render.
+    var sum = document.getElementById('programSummary');
+    if (sum) sum.style.display = (openDayIdx === null) ? 'none' : '';
 
     bindEditable();
     buildTimerFloat();
@@ -303,6 +381,10 @@
   function renderSummary(){
     var container = document.getElementById('programSummary');
     if(!container) return;
+    // The page calls this after MM.init(), so render()'s list/day decision has
+    // already been made and missed this element. Re-apply it here or a
+    // `?day=N` deep link lands in day mode with the block summary still shown.
+    container.style.display = (openDayIdx === null) ? 'none' : '';
     var p = activeProgram;
     var accent = p.accent;
     var trainingDays = DAYS.filter(function(d){return d.type==='training';});
@@ -345,6 +427,8 @@
     DAYS = activeProgram.days;
     WEEK_THEMES = MM_DATA.WEEK_THEMES;
     currentWeek = 0;
+    openDayIdx = null;
+    applyDeepLink();          // ?day= / ?week=, clamped -- see applyDeepLink()
     buildTimerFloat();
     render();
     if(typeof updateProgress!=="undefined") updateProgress();
@@ -355,6 +439,7 @@
     switchWeek: switchWeek,
     toggleDay: toggleDay,
     toggleCond: toggleCond,
+    showDayList: showDayList,   // F3: the day list's Back control
     renderSummary: renderSummary
   };
 })();

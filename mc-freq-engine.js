@@ -80,7 +80,7 @@ function freqShowDayList(){
 }
 
 function bindEvents(){
-  var back=document.querySelector('[data-fd-back]');
+  var back=document.querySelector('[data-mc-day-back]');
   if(back) back.addEventListener('click',freqShowDayList);
 
   document.querySelectorAll(".day-card").forEach(card=>{
@@ -119,12 +119,13 @@ function bindEvents(){
   });
 }
 
-// A day ROW: the whole list level. Deliberately reuses .day-card/.day-header/
-// .day-icon/.day-info/.day-toggle so each page's existing (per-page, per-accent)
-// CSS styles it with no new rules -- only the chevron and the absent
-// .exercises block differ from the card it becomes when opened.
+// A day ROW: the whole list level. Reuses .day-card/.day-header/.day-icon/
+// .day-info/.day-toggle so each page's existing (per-page, per-accent) CSS
+// styles it with no new rules; the row and Back affordances come from the
+// shared .mc-day-row / .mc-day-back in base.css, which F3 uses on every
+// converted family rather than cloning per engine.
 function renderDayRow(day,dIdx){
-  return `<div class="day-card fd-row" data-d="${dIdx}">
+  return `<div class="day-card mc-day-row" data-d="${dIdx}">
     <div class="day-header" role="button" tabindex="0" aria-label="Open ${escapeHtml(day.name)}">
       <div class="day-icon">${day.icon}</div>
       <div class="day-info">
@@ -149,7 +150,7 @@ function renderDay(day,dIdx){
     <div style="margin-top:4px;">${makeRestTimer(ex.rest||"60 sec",ex.name)}</div>
     </div>`;
   }).join("");
-  return `<button type="button" class="fd-back" data-fd-back>\u2190 All days</button>
+  return `<button type="button" class="mc-day-back" data-mc-day-back>\u2190 All days</button>
   <div class="day-card open" data-d="${dIdx}">
     <div class="day-header">
       <div class="day-icon">${day.icon}</div>
