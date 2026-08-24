@@ -291,24 +291,6 @@
       '<div class="week-selector" id="weekSel">'+renderWeekTabs()+'</div>' +
       '<div class="content"><div class="hint">'+hintText()+'</div>'+daysHtml+'</div>';
 
-    // PROGRAM SUMMARY lives outside #app, so render() does not rewrite it --
-    // but it does have to hide it on the day LIST, and the reason is not
-    // obvious. mc-summary.css hides .sum-section behind `body.mcs-stat-active`,
-    // a class mc-summary.js only adds once buildStatBar() finds exercise cards.
-    // On the list there are none, so that rule never applies and the summary
-    // renders FULLY EXPANDED -- a block readout the athlete never asked for,
-    // which also overflows horizontally (measured: 395px wide in a 390px
-    // viewport). On main it is correctly tucked behind the summary control,
-    // because cards always existed at load.
-    //
-    // So: hidden on the list, and in day mode left entirely alone, where
-    // mcs-stat-active governs it exactly as it does today. Deliberately NOT
-    // forced visible in day mode -- that would break the toggle that owns it.
-    // Guarded because the page calls MM.renderSummary() only after MM.init(),
-    // so the placeholder is not in the DOM on the first render.
-    var sum = document.getElementById('programSummary');
-    if (sum) sum.style.display = (openDayIdx === null) ? 'none' : '';
-
     bindEditable();
     buildTimerFloat();
     // MC_REPLACE.apply() (mc-replace.js), not a local render()-wrap: this
@@ -381,10 +363,6 @@
   function renderSummary(){
     var container = document.getElementById('programSummary');
     if(!container) return;
-    // The page calls this after MM.init(), so render()'s list/day decision has
-    // already been made and missed this element. Re-apply it here or a
-    // `?day=N` deep link lands in day mode with the block summary still shown.
-    container.style.display = (openDayIdx === null) ? 'none' : '';
     var p = activeProgram;
     var accent = p.accent;
     var trainingDays = DAYS.filter(function(d){return d.type==='training';});

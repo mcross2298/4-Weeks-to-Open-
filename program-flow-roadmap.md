@@ -644,6 +644,58 @@ page, so that column measures idle rather than the timer load it names. It
 reads identically on `main`, so `F3` did not cause it, but it means the perf
 gate is weaker on this page than it appears and it wants its own change.
 
+#### `F3-3` shipped (2026-08-24) — the five Kitchen Sink pages
+
+`ks-engine.js` converted. Same day list + one-workout-per-screen shape as
+`F3-1`/`F3-2`, and the third distinct mechanism: this engine already rebuilt
+`#app` on every week-tab change, so the list/day split rides the render path it
+already had.
+
+**Every day type is a destination here**, unlike the Modality Matrix trio where
+a rest day is a list-only card. That is a difference in the **data**, not a
+change of mind: these `rest` and `activerest` days carry three authored
+recovery rows each (the Weekly Layout Standard's info-card panels), so there is
+something to open. A day with nothing behind it should not be tappable.
+
+**The day-type chrome was collapsed into one table.** `renderDay()`'s four
+branches each carried their own literal session name, icon, colour and rgb
+triple. A row and the card it opens now both read `dayChrome(day)`, so they
+cannot disagree about what a day is called or what colour it is — the same
+class of drift `check-single-impl.js` exists to prevent, in markup it does not
+police. Two dead `const rgb` locals fell out of that and were removed.
+
+**The fourth "cards at load" module — found, and fixed once for the fleet.**
+The `F3-2` notes above said to look for a fourth rather than assume there
+wasn't one. There was, and it is `mc-summary.js` again through a different
+door: all five Kitchen Sink pages carry a **pre-authored** `<div
+class="sum-section">` in their HTML (the Modality Matrix builds its own at
+runtime), so on the day list it rendered fully expanded and cost **631px** of
+page height. Rather than patch a third engine, the rule now lives in the module
+that owns the summary: `recompute()` hides `.sum-section` when there are no
+exercise cards and restores it when a day opens. That covers pre-authored and
+auto-built sections alike, fixes `F3-2`'s case generally, and **`F3-2`'s
+engine-level workaround was deleted** — verified with no flash, sampling at
+600ms as well as settled. Every remaining `F3` family gets it for free.
+
+`?day=N` and `?week=N` deep-link, both clamped; `?day=99` falls back to the
+list. The cycle tabs stay on both screens, same reasoning as `F3-2`. The
+structure legend (①–⑩ position key) shows only in day mode, where the positions
+it names actually exist.
+
+Verified on all five pages at 320/390/430 — rows ≥ 70px, Back exactly 44px, no
+overflow, zero page errors, `0/39`–`0/40` per-day denominators — plus every day
+type opened and closed individually on `kitchen-sink.html`, and a session round
+trip (log a set, reload, reopen the day, `1/40` restored, strip reads
+`1/4 Sets`). An occlusion pass scrolled every row to centre and hit-tested it:
+zero occluded. `check-journey` 9/9; `kitchen-sink-s3`'s at-rest chrome drops
+13.4% → 6.5% and its budget is re-baselined.
+
+**The visual ratchet re-baselined, which is the point of these five pages being
+its baselines.** Page height 2973 → 1108px (`-63%`) at 390, and the same on all
+five. The diff was inspected before re-baselining rather than after: the new
+baseline is the day list rendering correctly, nothing else moved. Guide updated
+(`ks-instructions.html`) and its `F2` embed regenerated.
+
 ### `F4` — the day-identity contract
 
 With one workout per screen, a day page can finally name itself. Publish
