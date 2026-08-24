@@ -878,6 +878,103 @@ through to `#heroCard`, as decided. `mc-program-progress.js` grew from 68 to
 reorder-beats-phase precedence, and a program with no phases being unchanged).
 Guides updated for both programs and their `F2` embeds regenerated.
 
+## `F6` — the landing reads as a landing
+
+**Opened 2026-08-24.** Four decisions taken with the owner before any code.
+
+`F1a`/`F1b` shipped the `Overview | Program list` split and it is still live —
+on **10 of the 13** `cat-*.html` landings. The pattern did not get away from us.
+Two things went wrong around it instead, and this phase fixes both.
+
+**1. Overview stopped being an overview.** `F2`'s decision 10 renders the
+**entire** program guide body inline, from the generated `<id>-instructions.gen.js`.
+That is 384–838 words of full guide markup — its own headings, rule boxes and
+section cards — dropped into the tab, on top of the lede, the who-it's-for line,
+the week strip, the equipment chips and the links. Overview is the longest
+screen in the program flow, and it is longest on the programs a new trainee is
+most likely to open first (`ss` 838 words, `mm` 618, `pump` 610, `pmc` 599).
+The tab that exists to tell you *what this program is* takes longer to read
+than the program list it is supposed to introduce.
+
+| guide embed | words inlined |
+|---|---|
+| `ss` | 838 |
+| `mm` | 618 |
+| `pump` | 610 |
+| `pmc` | 599 |
+| `gainz` / `stndr` | 556 / 549 |
+| `ks` / `hv` | 515 / 495 |
+| `mc` | 384 |
+
+**Decision 1: the guide goes back to being a destination.** Overview ends with
+a `Program guide →` card pointing at `<id>-instructions.html`, which has been a
+live, complete, authored page the whole time. Rejected: a collapsed `<details>`
+(the weight is still shipped and still precached, and a disclosure that hides
+90% of a tab is the accordion `F3` just spent five steps deleting) and a
+first-section slice (a generator change to salvage a mechanism we are removing).
+
+**This retires the embed pipeline outright** — nine `.gen.js` artifacts,
+`tools/build-instructions.py`, its `--check` gate in `verify.yml`, three
+`content-manifest.json` entries, nine `<script>` tags and the precache lines.
+Keeping a generator whose only consumer is gone is how dead subsystems like the
+`_T`/`_rp()` timer got to live for 27 pages. The guide pages themselves are
+untouched and stay the one authored source; they simply stop being copied.
+
+**2. The flagship hero opens with 190px of nothing.** `.pl-imgband`
+(`mc-program-hero.css:30`) is a fixed 190px band carrying a repeating diagonal
+stripe gradient in the program accent, a scrim, an animated sheen, and a 44px
+badge. It holds **no image and never has** — this roadmap's own Non-goals
+section rules photography out. In the reference app that band is a real
+photograph, which is what earns the height; ours is texture. It is the first
+thing on every flagship landing and it says nothing about the program.
+
+**Decision 2: delete the band and put the stat row where it was.** The
+`5x Per Week · 6 Weeks · 60–75 Minutes` row — real program facts — occupies the
+space the placeholder held, matching the reference layout minus the photo.
+`.pl-badge` survives the removal and moves into the title block — it is the
+program's identity glyph and the only place the per-program icon appears on the
+landing. The duplicate tier label goes: it renders twice today, in `.pl-topbar`
+and again as `.pl-tier-pill`, and the **pill** is the one `mount()` binds
+`onBadgeTap` to (resume-last-workout on `cat-pmc` and `cat-strength`), so the
+copy that survives is the one carrying the live control.
+
+**Stats are derived, never authored.** Programs carrying a real `schedule`
+record (`ss`, `mm`, `hv`) yield all three cells exactly: training days per week
+from `perWeek - rest.length`, `weeks`, and a min–max from the days' own `min`
+figures. The other seven have no schedule (`F5` decided they describe
+collections, not blocks), so their cells are parsed from the `meta` string
+already on every entry — the same string the dashboard card renders, so the two
+surfaces cannot disagree. No new authored field, and nothing invents a schedule
+for a program that has none — `F1b`'s `mount()` lesson.
+
+**Decision 3: Overview is description, who it's for, and the guide link.** The
+week strip and equipment chips come out. The stat row does not move into
+Overview — it lives in the hero, above the tab bar, so it is visible from both
+tabs. `What's inside` stays in the hero where it already is.
+
+**Decision 4: the three unmounted landings get the pattern**, so all 13 are one
+shape. They are unmounted for three different reasons and take three different
+treatments:
+- `cat-ie.html` (Iron Engine) links to exactly **one** workout, so it takes
+  `list:false` — Overview alone, like `cat-hv` and `cat-psu`. It is Split 2 of
+  Kitchen Sink, which is why `F1b`'s "not a `cat-*` page" filter missed it.
+- `cat-faint.html` is a flat list of 9 conditioning workouts — one group, no
+  drill-in, the `F1b` majority shape.
+- `cat-custom.html` is not a catalog landing at all: it resolves ONE
+  user-built or owner-published program from `?prog=`/`?pub=`, so it has no
+  `mc-pm-data.js` entry to read. Its config is built from the resolved program
+  object at boot instead.
+
+None of the three has a `mc-pm-data.js` entry, so their copy is page-local —
+the same way `cat-ks` and `cat-stndr` already carry their own `DAYS` maps.
+
+**Gates this phase must clear:** `build-market.py --check` (`cat-ie` sits in the
+Kitchen Sink family and three retired `.gen.js` files are manifest-listed),
+`build-sw.py --check` (nine precache lines removed), `check-script-manifest.py
+--check` (nine `<script>` tags removed), the contrast and visual ratchets (hero
+height changes on every landing), and `check-journey.js`.
+
+
 ## Non-goals
 
 - **No new `prog-*.html` pages.** `cat-*.html` is already the landing; ten new

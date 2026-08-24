@@ -65,48 +65,12 @@ html[data-theme="light"] .mpt{ --mpt-accent-text:var(--mpt-accent-ink,#1c1a17); 
   background:linear-gradient(90deg,rgba(var(--mpt-accent-rgb,201,80,90),0.32),transparent);
 }
 .mpt-body{ font-size:13px;line-height:1.65;color:var(--mpt-ink-2);margin:0; }
-.mpt-body-tight{ margin-bottom:10px; }
 
-/* week strip — 7 cells, scrollable so each stays above the 44pt floor at
-   320px where seven cells plus gaps cannot fit the viewport. Same fix and the
-   same reason as .mwb-row in mc-program-day.css. */
-.mpt-week{
-  display:flex;gap:4px;
-  overflow-x:auto;-webkit-overflow-scrolling:touch;
-  scrollbar-width:none;-ms-overflow-style:none;
-}
-.mpt-week::-webkit-scrollbar{ display:none; }
-.mpt-wd{
-  flex:1 0 44px;min-width:44px;min-height:56px;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-  background:var(--mpt-surface);border:1px solid var(--mpt-line);border-radius:11px;
-  padding:6px 2px;
-}
-.mpt-wd-mark{
-  font-size:13px;font-weight:900;color:var(--mpt-accent-text);
-  line-height:1;
-}
-.mpt-wd-lbl{
-  font-size:9px;font-weight:700;color:var(--mpt-ink-3);
-  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
-.mpt-wd.is-rest{ background:rgba(51,65,85,0.16);border-color:rgba(51,65,85,0.4); }
-.mpt-wd.is-rest .mpt-wd-mark{ color:#94a3b8; }
-.mpt-wd.is-done .mpt-wd-mark{ color:#34d399; }
+/* F6: the week strip left Overview with the guide embed — the hero stat
+   row carries the block shape now, above the tab bar, so it reads from both
+   tabs. Its rules go with it rather than styling markup nothing renders. */
 
-.mpt-chips{ display:flex;flex-wrap:wrap;gap:6px; }
-.mpt-chip{
-  display:inline-flex;align-items:center;gap:6px;
-  font-size:11.5px;font-weight:700;color:var(--mpt-ink-2);
-  background:var(--mpt-surface);border:1px solid var(--mpt-line);
-  border-radius:20px;padding:5px 9px 5px 11px;
-}
-.mpt-chip-n{
-  font-size:10.5px;font-weight:900;font-variant-numeric:tabular-nums;
-  color:var(--mpt-accent-text);
-  background:rgba(var(--mpt-accent-rgb,201,80,90),0.14);
-  border-radius:20px;padding:1px 6px;
-}
+
 
 .mpt-link{
   display:flex;align-items:center;gap:11px;min-height:48px;
@@ -203,11 +167,7 @@ html[data-theme="light"] .mpt{
   --mpt-ink-2:#5d564b;
   --mpt-ink-3:#6b6459;
 }
-html[data-theme="light"] .mpt-wd.is-rest{
-  background:rgba(51,65,85,0.1);border-color:rgba(51,65,85,0.25);
-}
-html[data-theme="light"] .mpt-wd.is-rest .mpt-wd-mark{ color:#475569; }
-html[data-theme="light"] .mpt-wd.is-done .mpt-wd-mark{ color:#047857; }
+
 html[data-theme="light"] .mpt-row-tick{ background:#047857;border-color:#047857;color:#f5f2ec; }
 
 /* Overview-only (F1b): no tab bar, so the panel needs the top breathing room

@@ -10,8 +10,8 @@
    authored truth, free to drift the moment a program gains a week or a lift.
    F0 hit exactly that when it froze the ss record's figures at week 1 rather
    than duplicate 30 per-week triples. Derived, the record cannot disagree with
-   the page it describes -- the same reasoning behind build-sw.py,
-   build-instructions.py and gen-program-css.py.
+   the page it describes -- the same reasoning behind build-sw.py and
+   gen-program-css.py.
 
    SOURCES, each read as the program's own truth:
      mm  ->  mm-data.js         PROGRAMS.p1/p2/p3  (3 phases x 5 weeks = 15)

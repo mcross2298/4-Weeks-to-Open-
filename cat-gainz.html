@@ -394,7 +394,6 @@ MCProgramStatus.mount(document.getElementById('programStatus'), {
 });
 </script>
 <script src="mc-pm-data.js"></script>
-<script src="gainz-instructions.gen.js"></script>
 <script src="mc-program-tabs.js"></script>
 <script>
 /* F1b — Overview | Program list.
@@ -423,7 +422,6 @@ MCProgramStatus.mount(document.getElementById('programStatus'), {
     programName: p.name || 'Daily Gainz',
     desc: p.desc || '',
     forWho: p.forWho || '',
-    instructions: window.MC_INSTRUCTIONS,
     guide: { href: 'gainz-instructions.html', label: 'Daily Gainz guide' },
     groups: [
       { id: 'bulk',      name: 'Bulk Programs',      meta: '2 programs',
@@ -446,6 +444,7 @@ MCProgramStatus.mount(document.getElementById('programStatus'), {
 MCProgramHero.mount(document.getElementById('programHero'), {
   variant: 'trimmed',
   accent: '#378ADD',
+  progId: 'gainz',   // F6: derives the stat row from mc-pm-data.js
   iconKey: 'gainz',
   tierLabel: 'Influencer',
   name: 'Daily Gainz',
