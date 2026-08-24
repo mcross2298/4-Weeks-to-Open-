@@ -226,19 +226,49 @@ function renderExercise(ex,dIdx,eIdx){
   </div></div>`;
 }
 
-function renderDay(day,dIdx){
-  if(day.type==="rest"){
-    return `<div class="rest-day"><span style="font-size:20px">😴</span><div><div class="rest-label">REST DAY</div><div class="rest-sub">Active Recovery</div></div></div>`;
-  }
-  const exHtml=day.exercises.map((ex,eIdx)=>renderExercise(ex,dIdx,eIdx)).join("");
-  return `<div class="day-card" data-d="${dIdx}" style="">
+// Roadmap F3: null = the DAY LIST, a number = that day on its own screen.
+let openDayIdx = null;
+
+// A day ROW -- the list level. Reuses .day-card/.day-header/.day-icon/.day-info/
+// .day-toggle so this page's existing CSS styles it unchanged; the row and Back
+// affordances are the shared .mc-day-row / .mc-day-back from base.css that every
+// F3-converted family uses.
+function renderDayRow(day,dIdx){
+  return `<div class="day-card mc-day-row" data-d="${dIdx}">
     <div class="day-header">
       <div class="day-icon" style="background:${day.color};box-shadow:0 2px 10px ${day.color}66">${day.icon}</div>
       <div class="day-info">
         <div class="day-session">${escapeHtml(day.session)}</div>
         <div class="day-meta">${escapeHtml(day.label)} · ${day.exercises.length} exercises</div>
       </div>
-      <div class="day-toggle">▼</div>
+      <div class="day-toggle">\u203A</div>
+    </div>
+  </div>`;
+}
+
+function backBtn(){
+  return `<button type="button" class="mc-day-back" data-mc-day-back>\u2190 All days</button>`;
+}
+
+function renderDay(day,dIdx){
+  // A rest day has no exercises and nothing to drill into, so it stays the
+  // compact informational card it already was -- in the LIST only. It is never
+  // a destination, so day mode omits it entirely.
+  if(openDayIdx===null && day.type!=="rest") return renderDayRow(day,dIdx);
+  if(openDayIdx!==null && openDayIdx!==dIdx) return "";   // one workout, one screen
+  if(day.type==="rest"){
+    if(openDayIdx!==null) return "";
+    return `<div class="rest-day"><span style="font-size:20px">😴</span><div><div class="rest-label">REST DAY</div><div class="rest-sub">Active Recovery</div></div></div>`;
+  }
+  const exHtml=day.exercises.map((ex,eIdx)=>renderExercise(ex,dIdx,eIdx)).join("");
+  return backBtn() + `<div class="day-card open" data-d="${dIdx}" style="">
+    <div class="day-header">
+      <div class="day-icon" style="background:${day.color};box-shadow:0 2px 10px ${day.color}66">${day.icon}</div>
+      <div class="day-info">
+        <div class="day-session">${escapeHtml(day.session)}</div>
+        <div class="day-meta">${escapeHtml(day.label)} · ${day.exercises.length} exercises</div>
+      </div>
+      <div class="day-toggle">▲</div>
     </div>
     <div class="exercises" style="border-top-color:${day.color}33">${exHtml}</div>
   </div>`;
@@ -260,7 +290,7 @@ function render(){
     <div class="tabs-bar"><div class="tabs">${tabs}</div></div>
     <div class="content">
       <div class="phase-note"><strong>${phase.label}:</strong> ${phase.note}</div>
-      <div class="hint">Tap a session to expand · Tap any field to edit</div>
+      <div class="hint">${openDayIdx===null?'Pick a session to start training':'Tap any field to edit \u00B7 Back returns to the session list'}</div>
       ${days}
     </div>`;
   bindEvents();
@@ -270,29 +300,22 @@ function bindEvents(){
   document.querySelectorAll(".tab").forEach(b=>{
     b.addEventListener("click",()=>{activePhase=b.dataset.phase;render();});
   });
+  // F3: a header no longer shows/hides a panel in place -- it moves between the
+  // two screens, so a day's cards are BUILT on open and gone on close. The
+  // header stays the control, which keeps mc-session.js's "reopen the athlete's
+  // day by synthesising a real .day-header click" (S3) working here unchanged.
   document.querySelectorAll(".day-card").forEach(card=>{
     const header=card.querySelector(".day-header");
     header.addEventListener("click",e=>{
       if(e.target.classList.contains("editable"))return;
-      card.classList.toggle("open");
-      const toggle=card.querySelector(".day-toggle");
-      const dIdx=card.dataset.d;
-      const day=DATA.phases.find(p=>p.id===activePhase).days[dIdx];
-      if(card.classList.contains("open")){
-        toggle.textContent="▲";
-        toggle.style.background=day.color;
-        card.style.borderColor=day.color;
-        card.style.boxShadow=`0 4px 18px ${day.color}33`;
-        header.style.background=`${day.color}10`;
-      }else{
-        toggle.textContent="▼";
-        toggle.style.background="rgba(255,255,255,0.06)";
-        card.style.borderColor="rgba(255,255,255,0.06)";
-        card.style.boxShadow="none";
-        header.style.background="transparent";
-      }
+      const dIdx=parseInt(card.dataset.d,10);
+      openDayIdx = (openDayIdx===dIdx) ? null : dIdx;
+      render();
+      window.scrollTo(0,0);
     });
   });
+  const back=document.querySelector('[data-mc-day-back]');
+  if(back) back.addEventListener("click",()=>{ openDayIdx=null; render(); window.scrollTo(0,0); });
   document.querySelectorAll(".editable").forEach(el=>{
     el.addEventListener("click",e=>{
       e.stopPropagation();
@@ -312,6 +335,19 @@ function bindEvents(){
     });
   });
 }
+
+// `?day=N` (1-based) opens straight into a day; `?phase=N` picks the phase.
+// Both CLAMPED -- an unclamped index renders every day as "" and leaves a blank
+// screen with no way back (F3-1's first draft shipped exactly that). Rest days
+// are rejected: they are not destinations here.
+(function applyDeepLink(){
+  let q; try { q = new URLSearchParams(location.search); } catch(e){ return; }
+  const ph = parseInt(q.get('phase'),10);
+  if(!isNaN(ph) && ph>=1 && ph<=DATA.phases.length) activePhase = DATA.phases[ph-1].id;
+  const days = (DATA.phases.find(p=>p.id===activePhase)||{}).days || [];
+  const d = parseInt(q.get('day'),10);
+  if(!isNaN(d) && d>=1 && d<=days.length && days[d-1].type!=='rest') openDayIdx = d-1;
+})();
 
 render();
 

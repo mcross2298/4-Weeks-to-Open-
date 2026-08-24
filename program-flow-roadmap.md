@@ -696,6 +696,48 @@ five. The diff was inspected before re-baselining rather than after: the new
 baseline is the day list rendering correctly, nothing else moved. Guide updated
 (`ks-instructions.html`) and its `F2` embed regenerated.
 
+#### `F3-4` shipped (2026-08-24) — the three hand-written shapes
+
+`iron-engine.html`, `hv-block.html` and `bro-split.html` converted — the pages
+no shared engine covers. **19 of 23 done.**
+
+Each took the transformation its shape already matched, which is the payoff of
+having done the engines first: `iron-engine` is `ks-engine`'s lineage (three day
+types, all with authored panels, so all three are destinations, and its four
+per-branch chrome literals collapsed into one `dayChrome(day)` table), while
+`hv-block` and `bro-split` are `mm-engine`'s (a pre-built panel toggled by an
+inline `onclick` / a bound header, and a bare rest card that stays list-only
+because there is nothing behind it). No new patterns were invented and no
+engine was touched.
+
+**No fifth "cards at load" module appeared.** `F3-3` moved that rule into
+`mc-summary.js`, and these three inherited it with no per-page work — the
+summary is correctly absent on every list here. That is the first `F3` step
+where the class of bug that bit `F3-1`, `F3-2` and `F3-3` simply did not recur.
+
+**One pre-existing defect fixed in passing.** `hv-block` overflowed
+horizontally at 320 — 324px in a 320px viewport — because its four week tabs
+are `flex:1` with no `min-width:0`, so the row floored at its text's intrinsic
+width. Verified identical on `main` (scrollWidth 324 there too), so `F3` did
+not cause it; fixed here as a one-rule change since the page was in hand. It is
+invisible to `check-journey`, which runs at 390 where the row fits.
+
+Verified on all three at 320/390/430: rows ≥ 70px, Back exactly 44px, no
+overflow, zero page errors, and an occlusion pass that scrolled every row to
+centre and hit-tested it — zero occluded. Session round trip holds on all three
+(log a set, reload, reopen the day, restored: `1/40`, `1/38`, `1/20`). Every
+control the session shell owns clears 44×44 in day mode. `?day=N` deep-links
+(clamped, rest days rejected) with `?week=N` on two and `?phase=N` on
+`bro-split`; `?day=99` falls back to the list on all three.
+
+**Documentation:** `hv-instructions.html` updated and its `F2` embed
+regenerated — `cat-hv` links exactly one workout, so converting it converts the
+whole program. `cat-ie` has no guide page at all (the second such program,
+after the one `F1b` found). The STNDR guide is deliberately **not** updated
+yet: `bro-split` is one of five workouts under `cat-stndr` and the other four
+convert in `F3-5`, so documenting the new flow now would be true of one page in
+five. It is `F3-5`'s to write.
+
 ### `F4` — the day-identity contract
 
 With one workout per screen, a day page can finally name itself. Publish

@@ -402,17 +402,56 @@ function groupBanner(tag){
 }
 
 // ── DAY RENDERER ──
+// ── F3: DAY LIST vs ONE DAY ──
+// null = the day LIST, a number = that day on its own screen.
+let openDayIdx = null;
+
+// The three day types' header chrome, in ONE place. renderDay()'s branches and
+// renderDayRow() both read it, so a row and the card it opens cannot disagree
+// about a day's name, icon or colour -- they were separate literals per branch
+// before, which is exactly how a list and its destination drift apart.
+function dayChrome(day){
+  if(day.type==='conditioning') return {session:day.session||'Conditioning Day', sub:'Select Workout', icon:'\u26A1', color:'#d97706', rgb:'217,119,6'};
+  if(day.type==='rest')         return {session:day.session||'Rest Day',         sub:'Full Rest',     icon:'\uD83D\uDE34', color:'#334155', rgb:'51,65,85'};
+  return {session:day.session, sub:'10 exercises', icon:day.icon, color:day.color, rgb:hexToRgb(day.color)};
+}
+
+// A day ROW -- the list level. Reuses this page's existing .day-card CSS; the
+// row and Back affordances come from the shared .mc-day-row / .mc-day-back in
+// base.css that every F3-converted family uses. EVERY day type is a destination
+// here: these conditioning and rest days carry authored panels, so there is
+// something to open (unlike the pages where a rest day is a bare card).
+function renderDayRow(day,dIdx){
+  const c=dayChrome(day);
+  return`<div class="day-card mc-day-row" data-d="${dIdx}" style="--day-rgb:${c.rgb}">
+    <div class="day-header">
+      <div class="day-icon" style="background:${c.color};box-shadow:0 2px 10px ${c.color}66">${c.icon}</div>
+      <div class="day-info">
+        <div class="day-session">${escapeHtml(c.session)}</div>
+        <div class="day-meta">${escapeHtml(day.label)} \u00B7 ${escapeHtml(c.sub)}</div>
+      </div>
+      <div class="day-toggle">\u203A</div>
+    </div>
+  </div>`;
+}
+
+function backBtn(){
+  return`<button type="button" class="mc-day-back" data-mc-day-back>\u2190 All days</button>`;
+}
+
 function renderDay(day,dIdx){
+  if(openDayIdx===null) return renderDayRow(day,dIdx);
+  if(openDayIdx!==dIdx) return "";          // one workout, one screen
   if(day.type==='conditioning'){
-    const rgb='217,119,6';
-    return`<div class="day-card" data-d="${dIdx}" style="--day-rgb:${rgb}">
+    const c=dayChrome(day);
+    return backBtn()+`<div class="day-card open" data-d="${dIdx}" style="--day-rgb:${c.rgb}">
       <div class="day-header">
-        <div class="day-icon" style="background:#d97706;box-shadow:0 2px 10px #d9770666">⚡</div>
+        <div class="day-icon" style="background:${c.color};box-shadow:0 2px 10px ${c.color}66">${c.icon}</div>
         <div class="day-info">
-          <div class="day-session">${escapeHtml(day.session||'Conditioning Day')}</div>
-          <div class="day-meta">${escapeHtml(day.label)} · Select Workout · 3-on 1-off</div>
+          <div class="day-session">${escapeHtml(c.session)}</div>
+          <div class="day-meta">${escapeHtml(day.label)} · ${escapeHtml(c.sub)} · 3-on 1-off</div>
         </div>
-        <div class="day-toggle">▼</div>
+        <div class="day-toggle">▲</div>
       </div>
       <div class="exercises" style="border-top-color:#d9770633">
         <div style="padding:10px 4px 4px;font-size:10.5px;color:#fbbf24;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;opacity:0.65">Select a conditioning session</div>
@@ -427,7 +466,6 @@ function renderDay(day,dIdx){
     </div>`;
   }
   if(day.type==='rest'){
-    const rgb='51,65,85';
     const acts=[
       {icon:'😴',name:'Full Rest',desc:'No training, no structured activity — complete physical recovery'},
       {icon:'🌙',name:'Deep Sleep & Active Recovery',desc:'Prioritize 8–9 hrs sleep; light foam roll only if needed'},
@@ -437,14 +475,15 @@ function renderDay(day,dIdx){
       <span style="font-size:18px;flex-shrink:0">${a.icon}</span>
       <div><div style="font-weight:800;font-size:13px;color:#94a3b8">${a.name}</div><div style="font-size:11px;color:#475569;margin-top:2px">${a.desc}</div></div>
     </div>`).join('');
-    return`<div class="day-card" data-d="${dIdx}" style="--day-rgb:${rgb}">
+    const c=dayChrome(day);
+    return backBtn()+`<div class="day-card open" data-d="${dIdx}" style="--day-rgb:${c.rgb}">
       <div class="day-header">
-        <div class="day-icon" style="background:#334155;box-shadow:0 2px 10px #33415566">😴</div>
+        <div class="day-icon" style="background:${c.color};box-shadow:0 2px 10px ${c.color}66">${c.icon}</div>
         <div class="day-info">
-          <div class="day-session">${escapeHtml(day.session||'Rest Day')}</div>
-          <div class="day-meta">${escapeHtml(day.label)} · Full Rest · 3-on 1-off</div>
+          <div class="day-session">${escapeHtml(c.session)}</div>
+          <div class="day-meta">${escapeHtml(day.label)} · ${escapeHtml(c.sub)} · 3-on 1-off</div>
         </div>
-        <div class="day-toggle">▼</div>
+        <div class="day-toggle">▲</div>
       </div>
       <div class="exercises" style="border-top-color:#33415533">
         <div style="padding:4px 4px 4px 4px">${actsHtml}</div>
@@ -457,15 +496,15 @@ function renderDay(day,dIdx){
     if(ex.tag!==lastTag){banner=groupBanner(ex.tag);lastTag=ex.tag;}
     return banner+renderExercise(ex,dIdx,eIdx);
   }).join('');
-  const rgb=hexToRgb(day.color);
-  return`<div class="day-card" data-d="${dIdx}" style="--day-rgb:${rgb}">
+  const c=dayChrome(day);
+  return backBtn()+`<div class="day-card open" data-d="${dIdx}" style="--day-rgb:${c.rgb}">
     <div class="day-header">
-      <div class="day-icon" style="background:${day.color};box-shadow:0 2px 10px ${day.color}66">${day.icon}</div>
+      <div class="day-icon" style="background:${c.color};box-shadow:0 2px 10px ${c.color}66">${c.icon}</div>
       <div class="day-info">
-        <div class="day-session">${escapeHtml(day.session)}</div>
-        <div class="day-meta">${escapeHtml(day.label)} · 10 exercises · 3-on 1-off</div>
+        <div class="day-session">${escapeHtml(c.session)}</div>
+        <div class="day-meta">${escapeHtml(day.label)} · ${escapeHtml(c.sub)} · 3-on 1-off</div>
       </div>
-      <div class="day-toggle">▼</div>
+      <div class="day-toggle">▲</div>
     </div>
     <div class="exercises" style="border-top-color:${day.color}33">${exHtml}</div>
   </div>`;
@@ -488,15 +527,15 @@ function render(){
     <div class="tabs-bar"><div class="tabs">${tabs}</div></div>
     <div class="content">
       <div class="phase-note"><strong>${week.label}:</strong> ${week.note}</div>
-      <div class="structure-legend">
+      ${openDayIdx===null?'':`<div class="structure-legend">
         <span class="sl-item">①② <b>Compounds</b> — 90 sec rest</span>
         <span class="sl-item">③–⑤ <b>Tri-Set</b> — no rest between, 2-3 min after</span>
         <span class="sl-item">⑥⑦ <b>Superset</b> — 60 sec after</span>
         <span class="sl-item">⑧ <b>Cluster</b> — base sets + 3×micro (15 sec intra)</span>
         <span class="sl-item">⑨ <b>Drop Set</b> — base + 2×AMRAP drops</span>
         <span class="sl-item">⑩ <b>Finisher</b> — 3×AMRAP</span>
-      </div>
-      <div class="hint">Tap session to expand · Tap field to edit</div>
+      </div>`}
+      <div class="hint">${openDayIdx===null?'Pick a session to start training':'Tap field to edit \u00B7 Back returns to the session list'}</div>
       ${days}
     </div>`;
   bindEvents(week);
@@ -506,25 +545,22 @@ function bindEvents(week){
   document.querySelectorAll('.tab').forEach(b=>{
     b.addEventListener('click',()=>{activeWeek=b.dataset.week;render();});
   });
+  // F3: a header no longer shows/hides a panel in place -- it moves between the
+  // two screens, so a day's cards are BUILT on open and gone on close. The
+  // header stays the control, which keeps mc-session.js's "reopen the athlete's
+  // day by synthesising a real .day-header click" (S3) working here unchanged.
   document.querySelectorAll('.day-card').forEach(card=>{
     const header=card.querySelector('.day-header');
     header.addEventListener('click',e=>{
       if(e.target.classList.contains('editable'))return;
-      card.classList.toggle('open');
-      const toggle=card.querySelector('.day-toggle');
-      const dIdx=card.dataset.d;
-      const day=week.days[dIdx];
-      if(card.classList.contains('open')){
-        toggle.textContent='▲';toggle.style.background=day.color;
-        card.style.borderColor=day.color;card.style.boxShadow=`0 4px 18px ${day.color}33`;
-        header.style.background=`${day.color}10`;
-      }else{
-        toggle.textContent='▼';toggle.style.background='rgba(255,255,255,0.06)';
-        card.style.borderColor='rgba(255,255,255,0.06)';card.style.boxShadow='none';
-        header.style.background='transparent';
-      }
+      const dIdx=parseInt(card.dataset.d,10);
+      openDayIdx = (openDayIdx===dIdx) ? null : dIdx;
+      render();
+      window.scrollTo(0,0);
     });
   });
+  const back=document.querySelector('[data-mc-day-back]');
+  if(back) back.addEventListener('click',()=>{ openDayIdx=null; render(); window.scrollTo(0,0); });
   document.querySelectorAll('.editable').forEach(el=>{
     el.addEventListener('click',e=>{
       e.stopPropagation();
@@ -539,6 +575,18 @@ function bindEvents(week){
     });
   });
 }
+
+// `?day=N` (1-based) opens straight into a day; `?week=N` picks the block week.
+// Both CLAMPED -- an unclamped index renders every day as "" and leaves a blank
+// screen with no way back (F3-1's first draft shipped exactly that).
+(function applyDeepLink(){
+  let q; try { q = new URLSearchParams(location.search); } catch(e){ return; }
+  const w = parseInt(q.get('week'),10);
+  if(!isNaN(w) && w>=1 && w<=DATA.weeks.length) activeWeek = DATA.weeks[w-1].id;
+  const wk = DATA.weeks.find(x=>x.id===activeWeek);
+  const d = parseInt(q.get('day'),10);
+  if(wk && !isNaN(d) && d>=1 && d<=wk.days.length) openDayIdx = d-1;
+})();
 
 render();
 </script>
