@@ -199,7 +199,7 @@ buildTimerFloat();
 
 
 const DATA = {"days": [{"name": "Day 1 — Back & Biceps", "icon": "💪", "exercises": [{"name": "HIIT Cardio", "sets": "15 min"}, {"name": "Pull-ups", "sets": "4 × failure"}, {"name": "Deadlifts", "sets": "5 × 4–6"}, {"name": "T-Bar Row", "sets": "4 × 8–12"}, {"name": "Lat Pulldown (drop set)", "sets": "3 × 12–15"}, {"name": "Seated Alternating DB Curl", "sets": "3 × 8–12"}, {"name": "Cable Curl", "sets": "3 × 8–12"}, {"name": "DB Preacher Curl", "sets": "3 × 8–12"}, {"name": "Post Cardio Low Intensity", "sets": "30 min"}]}, {"name": "Day 2 — Chest & Triceps", "icon": "💚", "exercises": [{"name": "HIIT Cardio", "sets": "15 min"}, {"name": "Cable Crossover (drop set)", "sets": "3 × 12–15"}, {"name": "Bench", "sets": "4 × 8–12"}, {"name": "Incline Hammer Press (drop set)", "sets": "4 × 8–12"}, {"name": "Pushups", "sets": "5 × failure"}, {"name": "Skullcrushers", "sets": "4 × 8–12"}, {"name": "V Grip Pressdown (drop set)", "sets": "3 × 12–15"}, {"name": "Rope Pressdown", "sets": "3 × 8–12"}, {"name": "Low Intensity Cardio", "sets": "20–30 min"}]}, {"name": "Day 3 — Legs", "icon": "🦵", "exercises": [{"name": "Low Intensity Cardio", "sets": "5–10 min"}, {"name": "Squat", "sets": "5 × 8–10"}, {"name": "Leg Press", "sets": "3 × 8–12"}, {"name": "Hack Squat", "sets": "3 × 8–12"}, {"name": "Leg Extensions (drop set)", "sets": "3 × 20–25"}, {"name": "Leg Curl (drop set)", "sets": "5 × 12–15"}, {"name": "Seated Calf Raises", "sets": "5 × 12–15"}, {"name": "Low Intensity Cardio", "sets": "20–30 min"}]}, {"name": "Day 4 — Shoulders & Abs", "icon": "🏔️", "exercises": [{"name": "Pre Cardio HIIT", "sets": "15 min"}, {"name": "Reverse Pec Deck", "sets": "3 × 12–15"}, {"name": "DB Side Raises", "sets": "3 × 12–15"}, {"name": "DB Front Raises", "sets": "3 × 8–12"}, {"name": "Machine Shoulder Press", "sets": "4 × 8–12"}, {"name": "Cable Upright Row (drop set)", "sets": "3 × 12–15"}, {"name": "Barbell Shrugs", "sets": "5 × 12–15"}, {"name": "Hanging Leg Raises / Ab Wheel", "sets": "100 / 50 reps"}, {"name": "Post Cardio", "sets": "20–30 min"}]}, {"name": "Day 5 — Biceps & Triceps", "icon": "💪", "exercises": [{"name": "HIIT Cardio", "sets": "15 min"}, {"name": "Barbell Curl (drop set)", "sets": "5 × 8–10"}, {"name": "Reverse Grip Barbell Curl", "sets": "3 × 12–15"}, {"name": "Hammer Curl", "sets": "3 × 8–12"}, {"name": "Close Grip Smith Bench (drop set)", "sets": "5 × 8–10"}, {"name": "DB Kickback", "sets": "3 × 8–12"}, {"name": "DB Overhead Extensions", "sets": "3 × 12–15"}, {"name": "DB Wrist Curl", "sets": "3 × 25"}, {"name": "Cardio", "sets": "20–30 min"}]}]};
-let openDayIdx = null;
+let openDayIdx = freqInitialDay();   /* F3-1: ?day=N deep link, else the day list */
 const checkState = {};
 
 
@@ -217,7 +217,7 @@ function render(){
       </div>
     </div>
     <div class="content">
-      <div class="hint">Tap a day to expand · Tap exercises to check off</div>
+      <div class="hint">${freqHint()}</div>
       ${days}
     </div>`;
   bindEvents();

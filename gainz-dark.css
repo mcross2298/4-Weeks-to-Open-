@@ -201,3 +201,49 @@ html[data-theme="light"] .ex-sets{
   border-color:rgba(77,124,15,0.30);
 }
 html[data-theme="light"] .mcs-progress-pct{ color:var(--gz-deep); }
+
+/* ==========================================================================
+   F3-1 — the day list (roadmap program-flow-roadmap.md)
+   --------------------------------------------------------------------------
+   These 8 pages used to render every day of the block at once as an accordion.
+   The day list is now a real level: the page opens as tappable day ROWS, and
+   opening one renders THAT DAY ONLY (mc-freq-engine.js). This sheet is loaded
+   by exactly these 8 pages and nothing else, so the rules live here rather
+   than in a new file — F3 decision 8 adds no files.
+
+   The row deliberately reuses .day-card/.day-header/.day-icon/.day-info, which
+   every one of the 8 pages already styles in its own inline <style> with its
+   own accent. Only the affordances differ, so only those are defined here.
+   ========================================================================== */
+
+/* A row is a destination, not a disclosure — lift it and make the whole row
+   read as tappable. .day-header already carries cursor:pointer on every page. */
+.day-card.fd-row .day-header{ min-height:56px; }
+.day-card.fd-row .day-toggle{
+  font-size:20px; line-height:1; font-weight:900;
+  background:transparent; color:var(--gz);
+}
+.day-card.fd-row:active{ transform:scale(0.985); }
+.day-card.fd-row{ transition:transform .12s ease, border-color .2s, box-shadow .2s; }
+
+/* Back to the day list. A real <button>, so it is keyboard-operable for free,
+   and 44px tall to clear the app's touch floor (the gym-floor minimum this
+   project holds every control to). */
+.fd-back{
+  display:inline-flex; align-items:center; gap:6px;
+  min-height:44px; padding:0 16px; margin:0 0 12px;
+  border-radius:22px; cursor:pointer;
+  font-family:inherit; font-size:13px; font-weight:700;
+  color:var(--gz-bright);
+  background:var(--gz-soft);
+  border:1px solid rgba(132,204,22,0.40);
+}
+.fd-back:active{ background:rgba(132,204,22,0.24); }
+.fd-back:focus-visible{ outline:2px solid var(--gz); outline-offset:2px; }
+
+html[data-theme="light"] .fd-back{
+  color:var(--gz-deep);
+  background:rgba(132,204,22,0.12);
+  border-color:rgba(77,124,15,0.30);
+}
+html[data-theme="light"] .day-card.fd-row .day-toggle{ color:var(--gz-deep); }

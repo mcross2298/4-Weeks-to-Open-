@@ -199,7 +199,7 @@ buildTimerFloat();
 
 
 const DATA = {"days": [{"name": "Day 1 — Back & Biceps", "icon": "💪", "exercises": [{"name": "Chin Ups", "sets": "3 × failure"}, {"name": "Wide Lat Pulldowns (drop set)", "sets": "4 × 8–12"}, {"name": "Single Arm DB Row", "sets": "4 × 8–12"}, {"name": "Close Grip Cable Row (drop set)", "sets": "4 × 8–12"}, {"name": "Barbell or DB Shrugs", "sets": "5 × 12–15"}, {"name": "Standing Alternating DB Curl", "sets": "3 × 10"}, {"name": "DB Preacher Curl", "sets": "3 × 10"}, {"name": "Cable Curl (5 sec negatives, drop set)", "sets": "3 × 10"}]}, {"name": "Day 2 — Chest / Shoulders / Triceps", "icon": "🔥", "exercises": [{"name": "Cable Crossover × Pushups (10 reps)", "sets": "4 × 12–15"}, {"name": "Bench", "sets": "4 × 8–12"}, {"name": "DB Incline Press", "sets": "4 × 8–12"}, {"name": "GIANT SET: Arnold Press, Dips, Side Lateral, DB Front Raise, Reverse DB Fly", "sets": "4 × 8–12"}, {"name": "V Grip Pressdown (drop set)", "sets": "4 × 8–12"}, {"name": "Cable Kickback", "sets": "3 × 12–15"}]}, {"name": "Day 3 — Legs & Forearms", "icon": "🦵", "exercises": [{"name": "DB Wrist Curl (15–20 sec rest)", "sets": "3 × 25"}, {"name": "Hammer Curl × Reverse Barbell Curl", "sets": "3 × 8–12 superset"}, {"name": "Leg Extension (3 sec pause at top)", "sets": "4 × 8–12"}, {"name": "Squat", "sets": "5 × 8–10"}, {"name": "RDLs (5 sec negatives)", "sets": "3 × 8–10"}, {"name": "Lying or Seated Leg Curl (5 sec negatives)", "sets": "4 × 8–12"}, {"name": "Seated or Standing Calf (5 sec hold bottom, 3 sec top)", "sets": "5 × 10"}]}, {"name": "Day 4 — Biceps, Triceps & Abs", "icon": "💪", "exercises": [{"name": "Concentration Curl × DB Kickback", "sets": "4 × 8–12 superset"}, {"name": "Wide Grip Barbell Curl (5 sec negative)", "sets": "4 × 10"}, {"name": "Close Grip Bench", "sets": "4 × 10"}, {"name": "Wide Grip Reverse Pushdowns × Close Grip Cable Curl (5 sec concentric)", "sets": "4 × 8–12"}, {"name": "Rope Hammer Curl × Rope Pressdown", "sets": "4 × 12–15 superset"}, {"name": "Incline Sit-up or Hanging Leg Raises", "sets": "50–100 reps"}]}, {"name": "Day 5 — Rest, Then Repeat Day 1", "icon": "🔄", "exercises": [{"name": "Rest day", "sets": "Recovery"}, {"name": "Cycle restarts at Day 1", "sets": "—"}]}]};
-let openDayIdx = null;
+let openDayIdx = freqInitialDay();   /* F3-1: ?day=N deep link, else the day list */
 const checkState = {};
 
 
@@ -217,7 +217,7 @@ function render(){
       </div>
     </div>
     <div class="content">
-      <div class="hint">Tap a day to expand · Tap exercises to check off</div>
+      <div class="hint">${freqHint()}</div>
       ${days}
     </div>`;
   bindEvents();

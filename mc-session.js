@@ -249,8 +249,33 @@
   }
 
   // ---- init ----------------------------------------------------------------
+  var inited = false;
   function init() {
-    if (!document.querySelector(CARD_SEL)) return;   // not a workout page
+    if (inited) return;
+
+    // Roadmap F3: a multi-day page can now open on its DAY LIST, with no
+    // exercise card in the DOM until the athlete picks a day. This guard used
+    // to read that as "not a workout page" and return — so the MutationObserver
+    // below was never wired, save() never ran, and a whole session went
+    // unrecorded: the sets landed in mc_setlog_v1 but mc_session_v1 stayed
+    // empty, which also costs the dashboard its resume banner. Measured, not
+    // theorised — it is the A-14 hazard S5c-0 flagged, arriving through F3's
+    // door on the first page family converted.
+    //
+    // So a page that HAS day cards but has not rendered one yet is deferred,
+    // not rejected: MC_SCAN is the shared "cards just rendered" signal (S5a),
+    // and init() re-runs the moment the first card appears. Pages with neither
+    // cards nor day cards still return immediately, as before.
+    if (!document.querySelector(CARD_SEL)) {
+      if (document.querySelector('.day-card') && window.MC_SCAN && MC_SCAN.subscribe) {
+        MC_SCAN.subscribe(function () {
+          if (!inited && document.querySelector(CARD_SEL)) init();
+        });
+        if (MC_SCAN.start) MC_SCAN.start();
+      }
+      return;                                        // not a workout page (yet)
+    }
+    inited = true;
 
     var s = prune(readAll());
     session = s[PID] || null;
