@@ -613,6 +613,41 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > `mm-p1.html` — its rest-timer probe never starts a timer there, so that
 > column measures idle rather than the load it names. Identical on `main`, so
 > `F3` did not cause it, but the perf gate is weaker on that page than it looks.
+>
+> **`F3-3` shipped (2026-08-24) — the five Kitchen Sink pages.** `ks-engine.js`
+> converted: same day list + one-workout-per-screen shape, and the third
+> distinct mechanism — this engine already rebuilt `#app` on every week-tab
+> change, so the list/day split rides the render path it already had.
+>
+> **Every day type is a destination here**, unlike the Modality Matrix trio
+> where a rest day is a list-only card. That is a difference in the **data**,
+> not a change of mind: these rest and active-rest days carry three authored
+> recovery rows each (the Weekly Layout Standard's info-card panels), so there
+> is something to open. The four day types' session name, icon and colour were
+> four separate literals inside `renderDay()`'s branches; a row and the card it
+> opens now both read one `dayChrome(day)` table, so they cannot drift apart.
+>
+> **The fourth "cards at load" module — found, and fixed once for the fleet.**
+> The `F3-2` note above said to look for a fourth rather than assume there
+> wasn't one. There was: `mc-summary.js` again, through a different door. These
+> five pages carry a **pre-authored** `.sum-section` in their HTML (the trio
+> builds its own at runtime), so on the day list it rendered fully expanded and
+> cost **631px** of page height. Rather than patch a third engine, the rule now
+> lives in the module that owns the summary — `recompute()` hides
+> `.sum-section` when no exercise cards exist and restores it when a day opens.
+> That covers pre-authored and auto-built sections alike, fixes `F3-2`'s case
+> generally, and **`F3-2`'s engine-level workaround was deleted**; verified with
+> no flash, sampling at 600ms as well as settled. Every remaining `F3` family
+> gets it for free.
+>
+> Verified on all five pages at 320/390/430 (rows ≥70px, Back exactly 44px, no
+> overflow, zero errors), every day type opened individually, a session round
+> trip restored (`1/40`, strip `1/4 Sets`), and an occlusion pass that scrolled
+> every row to centre and hit-tested it — zero occluded. `check-journey` 9/9;
+> `kitchen-sink-s3` at-rest chrome 13.4% → 6.5%, budget re-baselined. **The
+> visual ratchet re-baselined** — these five pages are its baselines, and page
+> height went 2973 → 1108px (−63%); the diff was inspected before
+> re-baselining, not after.
 
 > **Companion card-layer plan:** [`card-integration-roadmap.md`](card-integration-roadmap.md)
 > (opened 2026-08-19) merges two audits taken the same day against the same

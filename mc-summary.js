@@ -547,6 +547,23 @@
       buildStatBar();
       var host=document.querySelector(SUMSEC_SEL);
       if(!host)return;
+
+      // A page with NO exercise cards is a day picker, not a session (roadmap
+      // F3 turns every multi-day workout page into one). The summary is a
+      // session surface: mc-summary.css hides .sum-section behind
+      // `body.mcs-stat-active`, which buildStatBar() only sets once it finds
+      // cards -- so on a picker that rule never applies and a PRE-AUTHORED
+      // .sum-section renders FULLY EXPANDED, a block readout nobody asked for.
+      // It cost 631px of page height on a Kitchen Sink day list, and on the
+      // Modality Matrix trio it also overflowed the viewport sideways.
+      //
+      // Fixed here rather than in each engine because the rule belongs to the
+      // module that owns the summary, and because F3 creates this condition on
+      // 23 pages across five engine families. Toggled, not one-way: opening a
+      // day brings the cards back and this restores the element to whatever
+      // mcs-stat-active says, so the summary control still governs it.
+      if(!cards().length){ host.style.display='none'; return; }
+      if(host.style.display==='none') host.style.display='';
       if(host.classList.contains('summary-section')){
         renderMC(host);
       }else if(host.classList.contains('mcs-auto')&&cards().length){
