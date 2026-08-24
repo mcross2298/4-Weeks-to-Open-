@@ -722,6 +722,10 @@ width. Verified identical on `main` (scrollWidth 324 there too), so `F3` did
 not cause it; fixed here as a one-rule change since the page was in hand. It is
 invisible to `check-journey`, which runs at 390 where the row fits.
 
+`check-journey` 9/9, and `iron-engine`'s at-rest chrome drops 13.4% → 6.5%
+with `hv-block`'s 13.4% → 6.9% — both budgets re-baselined, since a ratchet
+left at the old value would let the chrome regress back to it and still pass.
+
 Verified on all three at 320/390/430: rows ≥ 70px, Back exactly 44px, no
 overflow, zero page errors, and an occlusion pass that scrolled every row to
 centre and hit-tested it — zero occluded. Session round trip holds on all three

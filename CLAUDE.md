@@ -675,7 +675,10 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > Verified on all three at 320/390/430 (rows ≥70px, Back exactly 44px, no
 > overflow, zero errors), an occlusion pass hit-testing every row — zero
 > occluded, session round trips restoring on all three, and every
-> session-shell control clearing 44×44 in day mode.
+> session-shell control clearing 44×44 in day mode. `check-journey` 9/9;
+> both converted probe pages' at-rest chrome drops (13.4% → 6.5% and 6.9%)
+> and their budgets are re-baselined, since a ratchet left at the old value
+> would let the chrome regress back to it and still pass.
 
 > **Companion card-layer plan:** [`card-integration-roadmap.md`](card-integration-roadmap.md)
 > (opened 2026-08-19) merges two audits taken the same day against the same
