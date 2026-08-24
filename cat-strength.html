@@ -327,6 +327,7 @@ window.MC_TEMPO_ENABLED = true;
      data this page already holds (exercise-catalog.js is 87 KB and a landing
      page has no business loading it). -->
 <script src="mc-program-progress.js"></script>
+<script src="mc-program-day.js"></script>
 <script src="mc-program-menu.js"></script>
 <script src="mc-biomech.js"></script>
 <script src="ss-instructions.gen.js"></script>
@@ -1306,24 +1307,28 @@ const ssTabs = window.MC_PROGRAM_TABS && MC_PROGRAM_TABS.mount(document.getEleme
 // trained, so the completion is attributed to the right prescribed day rather
 // than to whatever the cursor happens to read. Until F4 gives day pages their
 // own identity contract, this listener is what keeps the dashboard advancing.
-document.addEventListener('mc:workout-finished', function(ev){
-  if(!currentWorkoutId || !PD) return;
-  var entry = (ev.detail && ev.detail.entry) || {};
+// F4: this page used to carry the rank->position->day arithmetic inline and
+// bank the completion itself. That logic now lives once in mc-program-day.js,
+// because every OTHER program serves its workouts from separate pages and had
+// no way to attribute a completion at all — the whole point of the contract.
+// What stays here is the only genuinely page-specific part: which day this
+// page currently has open. It is a RESOLVER, not a value, because
+// currentWorkoutId and activeWeek change as the athlete moves around without
+// the page reloading.
+window.MC_PROGRAM_DAY_RESOLVER = function () {
+  if (!currentWorkoutId || !PD) return null;
   var rec = PD.get('ss', SS_DEF);
   var rank = PD.orderForWeek(rec, activeWeek).indexOf(currentWorkoutId);
-  if(rank < 0) return;
-  // Rank among the week's NON-rest positions -> the continuous day number.
-  var pos = 0, seen = -1;
-  for(var p = 1; p <= rec.perWeek; p++){
-    if(rec.rest.indexOf(p) >= 0) continue;
-    seen++;
-    if(seen === rank){ pos = p; break; }
-  }
-  if(!pos) return;
-  var day = (activeWeek - 1) * rec.perWeek + pos;
-  PD.complete('ss', day, { logId: entry.id, workoutId: currentWorkoutId }, SS_DEF);
-  // The list is behind the workout view right now, but the athlete backs out
-  // to it — re-read so the day it just banked is ticked when they get there.
+  if (rank < 0) return null;
+  // This page lists only trainable workouts, so it reports a RANK and lets the
+  // contract map it onto the week's real rest pattern.
+  return { prog: 'ss', week: activeWeek, rank: rank + 1 };
+};
+
+// The list is behind the workout view when this fires, but the athlete backs
+// out to it — re-read so the day just banked is ticked when they get there.
+document.addEventListener('mc:program-day-banked', function(ev){
+  if (!ev.detail || ev.detail.prog !== 'ss') return;
   if (ssTabs) ssTabs.refresh({ week: activeWeek });
 });
 
