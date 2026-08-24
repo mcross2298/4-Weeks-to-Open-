@@ -1976,10 +1976,19 @@ function dayModuleDef(prog){
   const src=(window.MC_PM_DATA&&MC_PM_DATA.program(prog.id))||prog;
   const sc=src.schedule;
   if(!sc||!sc.days||!sc.days.length) return null;
+  // F5: a multi-phase block runs a different day set (and sometimes a
+  // different rest pattern) in each phase, so `phases` is passed through when
+  // the program declares it. `order` stays the flat fallback — phase 1's days
+  // for a phased program — and byId indexes EVERY phase's days, so a week-11
+  // workout still resolves its title and icon.
+  var phases=(sc.phases||[]).map(function(ph){
+    return {weeks:ph.weeks,order:(ph.days||[]).slice(),rest:(ph.rest||[]).slice()};
+  });
   return {
     prog:src,
     def:{weeks:sc.weeks,perWeek:sc.perWeek,rest:(sc.rest||[]).slice(),
-         order:sc.days.map(function(d){return d.id;})},
+         phases:phases,
+         order:(phases.length?phases[0].order:sc.days.map(function(d){return d.id;})).slice()},
     byId:sc.days.reduce(function(m,d){m[d.id]=d;return m;},{})
   };
 }

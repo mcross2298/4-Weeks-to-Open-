@@ -255,5 +255,67 @@ const SS = {
   ok('10e ...while keeping its completion history', d.P.dayInfo('ss', 1, SS).complete);
 }
 
+// ── 11. authored phases (roadmap F5) ────────────────────────────────────────
+// The Modality Matrix is ONE 15-week program made of three 5-week phases that
+// each run a completely different day set. A flat `order` cannot say that, so
+// `def.phases` carries the authored content -- and must stay separate from
+// weekOrder, which is the athlete's own reorder.
+{
+  const MM = {
+    weeks: 15, perWeek: 7, rest: [5],
+    order: ['p1a', 'p1b', 'p1c', 'p1d', 'p1cond1', 'p1cond2'],
+    phases: [
+      { weeks: 5, order: ['p1a', 'p1b', 'p1c', 'p1d', 'p1cond1', 'p1cond2'] },
+      { weeks: 5, order: ['p2a', 'p2b', 'p2c', 'p2d', 'p2cond1', 'p2cond2'] },
+      { weeks: 5, order: ['p3a', 'p3b', 'p3c', 'p3d', 'p3cond1', 'p3cond2'] }
+    ]
+  };
+  const { P } = load({});
+  const rec = P.ensure('mm', MM);
+
+  eq('11a a 15-week block is 105 days', P.totalDays(rec), 105);
+  eq('11b week 5 is the last week of phase 1', P.phaseForWeek(rec, 5).order[0], 'p1a');
+  eq('11c week 6 is the FIRST week of phase 2', P.phaseForWeek(rec, 6).order[0], 'p2a');
+  eq('11d week 11 is the first week of phase 3', P.phaseForWeek(rec, 11).order[0], 'p3a');
+  eq('11e week 15 is still phase 3', P.phaseForWeek(rec, 15).order[0], 'p3a');
+  eq('11f a week past the block has no phase', P.phaseForWeek(rec, 16), null);
+
+  eq('11g week 1 runs the phase-1 day set', P.orderForWeek(rec, 1)[1], 'p1b');
+  eq('11h week 6 runs the phase-2 day set', P.orderForWeek(rec, 6)[1], 'p2b');
+  eq('11i week 11 runs the phase-3 day set', P.orderForWeek(rec, 11)[1], 'p3b');
+
+  // Day 36 = week 6 position 1 (5 weeks x 7 = 35 days behind it), which is
+  // phase 2's first workout -- the arithmetic the whole contract turns on.
+  eq('11j day 36 is week 6', P.weekOf(rec, 36), 6);
+  eq('11k day 36 is position 1', P.positionOf(rec, 36), 1);
+  eq('11l day 36 prescribes phase 2, not phase 1', P.workoutFor(rec, 36), 'p2a');
+  eq('11m day 1 still prescribes phase 1', P.workoutFor(rec, 1), 'p1a');
+  eq('11n day 71 (week 11) prescribes phase 3', P.workoutFor(rec, 71), 'p3a');
+
+  // Position 5 is the block's rest slot in EVERY phase.
+  ok('11o position 5 is rest in phase 1', P.isRest(rec, 5));
+  ok('11p position 5 is rest in phase 2', P.isRest(rec, 40));
+
+  // An athlete reordering one week must beat the authored phase for THAT week
+  // only -- and must not leak into the phase's other weeks.
+  const r2 = P.reorderWeek('mm', 6, ['p2c', 'p2a', 'p2b', 'p2d', 'p2cond1', 'p2cond2'], MM);
+  eq('11q a reorder wins over the authored phase', P.orderForWeek(r2, 6)[0], 'p2c');
+  eq('11r ...for that week only', P.orderForWeek(r2, 7)[0], 'p2a');
+  eq('11s ...and never touches another phase', P.orderForWeek(r2, 1)[0], 'p1a');
+
+  // Phase content is AUTHORED: re-derived from def on every read, never
+  // persisted. A record stored without it still resolves phases correctly.
+  const bare = load({ 'mc_program_progress_v1': JSON.stringify({ mm: { completed: { '36': { ts: 1 } } } }) });
+  eq('11t phases come from the definition, not the store',
+     bare.P.workoutFor(bare.P.get('mm', MM), 36), 'p2a');
+  ok('11u ...while the stored completion survives', bare.P.dayInfo('mm', 36, MM).complete);
+
+  // A program with no phases is unchanged -- the flat order still governs.
+  const flat = load({});
+  const frec = flat.P.ensure('ss', SS);
+  eq('11v a program with no phases uses its flat order', flat.P.orderForWeek(frec, 3)[0], 'legs');
+  eq('11w ...and has no phase for any week', flat.P.phaseForWeek(frec, 3), null);
+}
+
 console.log((fail ? '✗' : '✓') + ' mc-program-progress: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

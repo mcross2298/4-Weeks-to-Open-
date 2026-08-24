@@ -83,6 +83,29 @@
       perWeek: perWeek,
       order: order.slice(),
       rest: rest.slice().filter(function (p) { return p >= 1 && p <= perWeek; }),
+      // AUTHORED phase content (roadmap F5), re-derived from `def` on every
+      // read and deliberately NEVER persisted. A multi-phase block runs a
+      // different day set in each phase -- The Modality Matrix is 15 weeks of
+      // three 5-week phases with entirely different lifts -- which a single
+      // flat `order` cannot express.
+      //
+      // It is kept separate from weekOrder because weekOrder is ATHLETE state
+      // (reorderWeek writes it, sparse, per week). Carrying authored phase
+      // content in there would let a reorder of week 6 overwrite phase 2's
+      // real prescription, and restart() would wipe the program's own
+      // definition along with the athlete's progress.
+      phases: (def.phases || []).map(function (ph) {
+        return {
+          weeks: intOr(ph.weeks, 0),
+          order: (ph.order || []).slice(),
+          // Per-phase rest, because a real program needed it: the High-Volume
+          // block rests at positions [3,6] in week 1 and [6,7] in week 2. A
+          // single flat `rest` cannot describe that, and assuming it could
+          // would silently mark a training day as rest. Absent -> the phase
+          // inherits the program's flat rest.
+          rest: (ph.rest || []).slice().filter(function (q) { return q >= 1 && q <= perWeek; })
+        };
+      }),
       weekOrder: rec.weekOrder || {},
       completed: rec.completed || {},
       cursor: rec.cursor != null ? intOr(rec.cursor, null) : null,
@@ -127,14 +150,42 @@
     return Math.floor((day - 1) / rec.perWeek) + 1;
   }
   function isRest(rec, day) {
-    return rec.rest.indexOf(positionOf(rec, day)) >= 0;
+    return restForWeek(rec, weekOf(rec, day)).indexOf(positionOf(rec, day)) >= 0;
+  }
+
+  // The rest pattern in effect for one week: the authored phase's own, when it
+  // declares one, else the program's flat pattern. Every rest-aware read goes
+  // through here so a phase-varying block cannot be half-supported.
+  function restForWeek(rec, week) {
+    var ph = phaseForWeek(rec, week);
+    return (ph && ph.rest && ph.rest.length) ? ph.rest : rec.rest;
   }
 
   // The training-day order in effect for one week — the per-week reorder
   // override when the athlete has dragged days around, else the program order.
+  // Precedence: the athlete's own reorder for THIS week wins; then the
+  // authored phase that contains the week; then the program's flat order.
+  // Anything else would make a reorder invisible or a phase unreachable.
   function orderForWeek(rec, week) {
     var o = rec.weekOrder && rec.weekOrder[String(week)];
-    return (o && o.length) ? o : rec.order;
+    if (o && o.length) return o;
+    var ph = phaseForWeek(rec, week);
+    if (ph && ph.order.length) return ph.order;
+    return rec.order;
+  }
+
+  // Which authored phase a block week falls in. Phases are consecutive and
+  // 1-based: with three 5-week phases, week 6 is the first week of phase 2.
+  function phaseForWeek(rec, week) {
+    var list = rec.phases || [];
+    if (!list.length) return null;
+    var start = 1;
+    for (var i = 0; i < list.length; i++) {
+      var end = start + list[i].weeks - 1;
+      if (week >= start && week <= end) return list[i];
+      start = end + 1;
+    }
+    return null;
   }
 
   // Which workout a continuous day number prescribes. Rest days map to null.
@@ -144,9 +195,10 @@
   function workoutFor(rec, day) {
     if (isRest(rec, day)) return null;
     var pos = positionOf(rec, day);
+    var rest = restForWeek(rec, weekOf(rec, day));
     var rank = 0;
     for (var p = 1; p < pos; p++) {
-      if (rec.rest.indexOf(p) < 0) rank++;
+      if (rest.indexOf(p) < 0) rank++;
     }
     var order = orderForWeek(rec, weekOf(rec, day));
     return order[rank] != null ? order[rank] : null;
@@ -348,6 +400,8 @@
     isRest: function (rec, d) { return isRest(rec, d); },
     workoutFor: function (rec, d) { return workoutFor(rec, d); },
     orderForWeek: orderForWeek,
+    phaseForWeek: phaseForWeek,
+    restForWeek: restForWeek,
     dayInfo: dayInfo,
     dayInfoFrom: dayInfoFrom,
     week: week,
