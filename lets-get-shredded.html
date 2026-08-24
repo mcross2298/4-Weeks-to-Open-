@@ -199,7 +199,7 @@ buildTimerFloat();
 
 
 const DATA = {"days": [{"name": "Day 1 — Back & Chest", "icon": "🔙", "exercises": [{"name": "Warmup: 2000m Rower", "sets": "Warmup"}, {"name": "Inverted Rows", "sets": "4 × Bodyweight"}, {"name": "Deadlift", "sets": "5 × 5"}, {"name": "Barbell Shrugs", "sets": "4 × 20–25"}, {"name": "Close Grip Cable Row", "sets": "3 × 8–12"}, {"name": "Cable Crossovers", "sets": "4 × 12–15"}, {"name": "Bench Press", "sets": "3 × 8–12"}, {"name": "DB Incline", "sets": "3 × 8–12"}, {"name": "Decline Press", "sets": "3 × 8–12"}, {"name": "Dips", "sets": "4 × Bodyweight"}]}, {"name": "Day 2 — Dynamic Cardio", "icon": "🏃", "exercises": [{"name": "HIIT Cardio", "sets": "15 min"}, {"name": "Box Jumps", "sets": "4 × 15"}, {"name": "Burpees", "sets": "100 total"}, {"name": "Jump Rope (1 min on / 30 sec off)", "sets": "5 rounds"}, {"name": "Hanging Leg Raise", "sets": "100 total"}, {"name": "Reverse Barbell Curl", "sets": "3 × 8–12"}]}, {"name": "Day 3 — Shoulders & Arms", "icon": "💪", "exercises": [{"name": "HIIT Cardio", "sets": "10 min"}, {"name": "Reverse Cable Crossover", "sets": "3 × 12–15"}, {"name": "DB Side Lateral", "sets": "3 × 12–15"}, {"name": "Standing Push Press", "sets": "5 × 5–8"}, {"name": "Seated Arnold Press", "sets": "3 × 8–12"}, {"name": "Wide Neutral Grip Cable Row", "sets": "3 × 12–15"}, {"name": "Standing DB Curl", "sets": "5 × 10"}, {"name": "Skull Crushers", "sets": "5 × 10"}, {"name": "Rope Hammer Curl", "sets": "4 × 15–20"}, {"name": "Rope Pressdown", "sets": "4 × 20–25"}]}, {"name": "Day 4 — Legs", "icon": "🦵", "exercises": [{"name": "HIIT Cardio (jump rope or rower)", "sets": "10 min"}, {"name": "Stationary Lunges", "sets": "4 × 15–20"}, {"name": "Squat", "sets": "5 × 10"}, {"name": "Leg Press", "sets": "4 × 25"}, {"name": "Seated Leg Curl", "sets": "4 × 20"}, {"name": "DB Stiff Legged Deadlift", "sets": "3 × 12–15"}, {"name": "Seated Calf Raise", "sets": "4 × 25"}, {"name": "Cardio Cooldown", "sets": "10–15 min"}]}, {"name": "Day 5 — Barbell Complex", "icon": "🏋️", "exercises": [{"name": "Hang Clean and Press", "sets": "10 × 10"}, {"name": "Barbell Row", "sets": "10 × 10"}, {"name": "Barbell Curl", "sets": "10 × 10"}]}]};
-let openDayIdx = null;
+let openDayIdx = freqInitialDay();   /* F3-1: ?day=N deep link, else the day list */
 const checkState = {};
 
 
@@ -217,7 +217,7 @@ function render(){
       </div>
     </div>
     <div class="content">
-      <div class="hint">Tap a day to expand · Tap exercises to check off</div>
+      <div class="hint">${freqHint()}</div>
       ${days}
     </div>`;
   bindEvents();

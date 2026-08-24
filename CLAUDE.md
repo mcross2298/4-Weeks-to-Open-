@@ -529,6 +529,46 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > asserting nothing reported "inset pass clean". Harmless until now (the main
 > pass fails loudly on an unrevealable page), but `F3` changes exactly that
 > reveal path on 23 pages. It now bails as a named skip.
+>
+> **`F3-1` shipped (2026-08-24) — the eight frequency pages, `F3`'s first
+> family.** `mc-freq-engine.js` renders a day **list** (tappable rows, no
+> exercise row built) and opening a day renders that day alone with an
+> `← All days` button; `?day=N` deep-links past the list. Each page's own
+> `render()` is untouched — `renderDay()` returns a row in list mode and `""`
+> for days that are not open — so the eight pages needed two one-line edits
+> each. New CSS went into the stylesheet exactly those eight pages load, so no
+> file was added (decision 8).
+>
+> **A correction the step forced:** the `F3` gate notes above say this family
+> "carries no set logger at all". **That is wrong** — `mc-setlog.js`'s unit
+> selector includes `.ex-item`, so it builds a strip on every row here;
+> `.sl-ck` measured 0 only because strips render collapsed. The family did
+> carry the restore risk.
+>
+> **Two defects, both from driving rather than reading.** `?day=99` rendered a
+> **completely blank screen** — no rows, no day, no way back — because the
+> guard checked only the lower bound, while its own comment claimed it fell
+> back to the list; now clamped to the real day count. And **the session
+> stopped being recorded at all**: `mc-session.js`'s `init()` returns early
+> when no exercise card exists at load ("not a workout page"), which a day list
+> satisfies, so its observer never wired and `save()` never ran — sets reached
+> `mc_setlog_v1` while `mc_session_v1` stayed empty, costing the dashboard its
+> resume banner too. **That is the `A-14` hazard `S5c-0` flagged, arriving
+> through `F3`'s door on the very first family**, and it will recur on every
+> remaining step, so it was fixed generally: a page that HAS day cards but has
+> not rendered one yet is now **deferred, not rejected**, re-running `init()`
+> off `MC_SCAN` when the first card appears. Pages with neither cards nor day
+> cards still return immediately, so the other ~70 pages are unaffected.
+>
+> **It fixed a pre-existing bug as a side effect**, measured against `main`:
+> log a set and reload, and on `main` the day reopens with the set **gone**
+> (`0/38`); here reopening the day restores it (`1/38`) — the cards now render
+> *after* session init, so `restoreSets()`'s poll finds the rows. Verified on
+> all eight pages at 320 and 390 (rows ≥70px, Back exactly 44px, no overflow,
+> zero console errors); list-mode DOM ~237 nodes, down from ~830.
+> `check-journey` 9/9; the converted probe page's at-rest chrome drops
+> 13.4% → 6.9% because the session toolbar correctly no longer shows on a
+> picker screen, and its budget is re-baselined to match.
 
 > **Companion card-layer plan:** [`card-integration-roadmap.md`](card-integration-roadmap.md)
 > (opened 2026-08-19) merges two audits taken the same day against the same

@@ -521,6 +521,63 @@ partial skip prints which page dropped out and why. This is the same class of
 defect as the one recorded at the top of this file about the safe-area source
 check testing its own override.
 
+#### `F3-1` shipped (2026-08-24) — the eight frequency pages
+
+The first page family converted, and the one the corrected sequencing put
+first because it carries the least `A-14` risk. `mc-freq-engine.js` renders a
+day **list** — tappable rows, no `.ex-item` built — and opening a day renders
+that day alone with an `← All days` button. `?day=N` deep-links past the list.
+
+**Each page's own `render()` is untouched.** It still maps every day through
+`renderDay()`; `renderDay()` returns a row in list mode and `""` for days that
+are not open, so the eight page files needed only two one-line edits each (the
+`?day=` init, and a hint line that now has two states). New CSS went into
+`gainz-dark.css`, which exactly these eight pages load and nothing else — no
+new file, per decision 8.
+
+**A correction this step forced.** The `F3` gate notes recorded that this
+family "carries no set logger at all". That is wrong: `mc-setlog.js`'s unit
+selector includes `.ex-item`, so it builds a `.mcl-strip` on every row here.
+`.sl-ck` measured 0 only because strips render collapsed. This family did
+carry the restore risk, and the sequencing rationale was weaker than stated —
+though still correct on the other counts (one engine, already re-renders on
+toggle).
+
+**Two real defects, both found by driving rather than reading:**
+
+1. **`?day=99` rendered a completely blank screen.** The guard checked only
+   the lower bound, so `openDayIdx` became 98, every `renderDay()` returned
+   `""`, and the page had no rows, no day and no way back — while the comment
+   above it claimed it fell back to the list. Now clamped to the real day
+   count, which each page has in scope as `DATA.days`.
+2. **The session stopped being recorded at all.** `mc-session.js`'s `init()`
+   returns early when no `.ex-card, .ss-ex, .ex-item` exists at load — "not a
+   workout page". On a day list there are none, so its MutationObserver was
+   never wired and `save()` never ran: sets reached `mc_setlog_v1` while
+   `mc_session_v1` stayed empty, which also costs the dashboard its resume
+   banner. **This is the `A-14` hazard `S5c-0` flagged, arriving through `F3`'s
+   door on the very first family** — and it will recur on every remaining
+   step, so it was fixed generally: a page that HAS day cards but has not
+   rendered one yet is now *deferred* rather than rejected, re-running `init()`
+   off `MC_SCAN` (the shared "cards just rendered" signal from `S5a`) when the
+   first card appears. Pages with neither cards nor day cards still return
+   immediately, so the other 70-odd pages are unaffected.
+
+**It fixed a pre-existing bug as a side effect**, measured against `main` on
+the same page: log a set and reload, and on `main` the day reopens with the set
+**gone** (`0 / 38`, `.mcl-ck.done` = 0). On this branch, reopening the day
+restores it correctly (`1 / 38`, the strip reads `1/5 Sets`) — because the
+cards now render *after* session init rather than before it, so
+`restoreSets()`'s poll actually finds the rows.
+
+Verified on all eight pages at 320 and 390: rows ≥ 70px, the Back control
+exactly 44px, no horizontal overflow, zero console errors, and per-day finish
+denominators (`0/30`–`0/42`). List-mode DOM falls to ~237 nodes from ~830.
+`check-journey` 9/9 clean; `2on-1off`'s at-rest chrome drops 13.4% → 6.9%
+because the session toolbar correctly no longer shows on a picker screen, and
+its budget is re-baselined to match. Guide updated (`gainz-instructions.html`)
+and its `F2` embed regenerated.
+
 ### `F4` — the day-identity contract
 
 With one workout per screen, a day page can finally name itself. Publish

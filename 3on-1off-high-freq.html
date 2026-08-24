@@ -199,7 +199,7 @@ buildTimerFloat();
 
 
 const DATA = {"days": [{"name": "Day 1 — Back & Shoulders", "icon": "💪", "exercises": [{"name": "Bodyweight Pull-ups to Failure", "sets": "AMRAP"}, {"name": "Barbell Row", "sets": "5 × 8–12"}, {"name": "Barbell Shrug × Barbell Upright Row", "sets": "4 × 8–12 superset"}, {"name": "Close Grip Cable Row × DB Front Raises", "sets": "4 × 8–12 superset"}, {"name": "Lat Pulldowns (drop set)", "sets": "4 × 12–15"}, {"name": "Machine Shoulder Press", "sets": "5 × 8–12"}, {"name": "Face Pulls × DB Side Lateral Raises", "sets": "4 × 12–15 superset"}]}, {"name": "Day 2 — Legs", "icon": "🦵", "exercises": [{"name": "Cardio Warm-up", "sets": "10 min"}, {"name": "Leg Extensions (drop set)", "sets": "4 × 20–25"}, {"name": "Squat", "sets": "5 × 10"}, {"name": "Leg Curl (drop set)", "sets": "4 × 20–25"}, {"name": "Leg Press", "sets": "4 × 12–15"}, {"name": "Box Jumps", "sets": "5 × 10"}, {"name": "Hanging Leg Raises / Incline Sit-up / Ab Wheel", "sets": "100 reps"}]}, {"name": "Day 3 — Chest & Arms", "icon": "💚", "exercises": [{"name": "Cable Crossover (drop set)", "sets": "4 × 12–15"}, {"name": "Flat DB Press × DB Fly", "sets": "4 × 8–12 superset"}, {"name": "Machine Incline Press × Pushups", "sets": "4 × 8–12 superset"}, {"name": "Cable Curl × Rope Pressdown", "sets": "4 × 8–12 superset"}, {"name": "Hammer Curl × DB Kickbacks", "sets": "4 × 8–12 superset"}, {"name": "DB Overhead Extensions", "sets": "4 × 12–15"}, {"name": "DB Preacher Curl", "sets": "4 × 8–12"}]}, {"name": "Day 4 — Rest", "icon": "😴", "exercises": [{"name": "Rest day", "sets": "Recovery"}, {"name": "Day 5 repeats Day 1", "sets": "—"}]}]};
-let openDayIdx = null;
+let openDayIdx = freqInitialDay();   /* F3-1: ?day=N deep link, else the day list */
 const checkState = {};
 
 
@@ -217,7 +217,7 @@ function render(){
       </div>
     </div>
     <div class="content">
-      <div class="hint">Tap a day to expand · Tap exercises to check off</div>
+      <div class="hint">${freqHint()}</div>
       ${days}
     </div>`;
   bindEvents();

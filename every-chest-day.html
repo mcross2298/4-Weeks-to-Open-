@@ -199,7 +199,7 @@ buildTimerFloat();
 
 
 const DATA = {"days": [{"name": "Day 1 — Chest & Back", "icon": "💚", "exercises": [{"name": "Pec Deck / Reverse Pec Deck", "sets": "3 × 12–15"}, {"name": "Flat Bench", "sets": "4 × 8–12"}, {"name": "DB Incline", "sets": "4 × 8–12"}, {"name": "Decline Machine Press (drop set)", "sets": "4 × 8–12"}, {"name": "Wide Grip Lat Pulldowns", "sets": "4 × 12–15"}, {"name": "Single Arm DB Row", "sets": "3 × 8–12"}, {"name": "Wide Neutral Grip Cable Rows", "sets": "4 × 12–15"}, {"name": "Hyperextensions", "sets": "3 × 12–15"}]}, {"name": "Day 2 — Chest & Shoulders", "icon": "🟢", "exercises": [{"name": "Cable Crossover / Reverse Cable Crossover", "sets": "3 × 12–15"}, {"name": "DB Fly Press", "sets": "4 × 8–12"}, {"name": "Machine Incline Press", "sets": "4 × 8–12"}, {"name": "Decline DB Fly", "sets": "4 × 12–15"}, {"name": "Arnold Press × DB Side Laterals", "sets": "4 × 8–12 superset"}, {"name": "Barbell Front Raise × Upright Row", "sets": "4 × 12–15 superset"}, {"name": "Barbell Shrugs", "sets": "5 × 12–15"}]}, {"name": "Day 3 — Chest Mobility & Arms", "icon": "💪", "exercises": [{"name": "Pushups to Failure", "sets": "3 × failure"}, {"name": "Dips to Failure", "sets": "3 × failure"}, {"name": "Barbell Curl", "sets": "4 × 8–12"}, {"name": "V Grip Pressdown (drop set)", "sets": "4 × 8–12"}, {"name": "Double Arm Hammer Curl", "sets": "4 × 8–12"}, {"name": "Cable Kickback", "sets": "3 × 12–15"}, {"name": "DB Preacher Curl", "sets": "3 × 8–12"}, {"name": "Hanging Leg Raises / Incline Sit-ups", "sets": "50 / 50"}]}, {"name": "Day 4 — Chest Mobility & Legs", "icon": "🦵", "exercises": [{"name": "Pushups to Failure", "sets": "3 × failure"}, {"name": "Broomstick Stretch", "sets": "5 × 10"}, {"name": "DB Fly Static Hold (10 sec contraction)", "sets": "3 × 10"}, {"name": "Leg Extensions", "sets": "3 × 20–25"}, {"name": "Barbell Squat or Deadlift", "sets": "5 × 5–8"}, {"name": "Leg Press or Hack Squat", "sets": "4 × 8–12"}, {"name": "Stiff Legged Deadlift", "sets": "4 × 8–12"}, {"name": "Leg Curl", "sets": "3 × 20–25"}, {"name": "Calf Raises", "sets": "5 × 8–12"}]}, {"name": "Day 5 — Active Cardio or Rest", "icon": "😴", "exercises": [{"name": "Active cardio session", "sets": "20–30 min"}, {"name": "Or full rest day", "sets": "—"}]}]};
-let openDayIdx = null;
+let openDayIdx = freqInitialDay();   /* F3-1: ?day=N deep link, else the day list */
 const checkState = {};
 
 
@@ -217,7 +217,7 @@ function render(){
       </div>
     </div>
     <div class="content">
-      <div class="hint">Tap a day to expand · Tap exercises to check off</div>
+      <div class="hint">${freqHint()}</div>
       ${days}
     </div>`;
   bindEvents();
