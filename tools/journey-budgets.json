@@ -22,5 +22,17 @@
   "chest-tri-pump.html @ iPhone 13": {
     "atRest": 13.4,
     "inSession": 6.9
+  },
+  "iron-engine.html @ iPhone 13": {
+    "atRest": 13.4,
+    "inSession": 6.9
+  },
+  "hv-block.html @ iPhone 13": {
+    "atRest": 13.4,
+    "inSession": 6.9
+  },
+  "legacy-prep.html @ iPhone 13": {
+    "atRest": 13.4,
+    "inSession": 6.9
   }
 }
