@@ -1,7 +1,7 @@
 // MC Training — Service Worker v2
 // Relative-path precache so the app works at any GitHub Pages project subpath
 
-const CACHE_NAME = 'mc-training-v165';
+const CACHE_NAME = 'mc-training-v166';
 const BASE = 'https://mcross2298.github.io/4-Weeks-to-Open-/';
 
 // DG-1/DG-2: the app's one type identity (Archivo+Manrope) is loaded from
@@ -29,8 +29,6 @@ const CACHE_URLS = [
     './dashboard.html',
     './exercise-catalog.js',
     './gainz-dark.css',
-    './gainz-instructions.gen.js',
-    './hv-instructions.gen.js',
     './icon-192-maskable.png',
     './icon-192.png',
     './icon-512-maskable.png',
@@ -38,7 +36,6 @@ const CACHE_URLS = [
     './icon.svg',
     './index.html',
     './ks-engine.js',
-    './ks-instructions.gen.js',
     './manifest.json',
     './mc-account.js',
     './mc-appearance.js',
@@ -74,7 +71,6 @@ const CACHE_URLS = [
     './mc-hints.js',
     './mc-input-sheet.js',
     './mc-install.js',
-    './mc-instructions.gen.js',
     './mc-interval.js',
     './mc-layout.js',
     './mc-light.css',
@@ -142,16 +138,11 @@ const CACHE_URLS = [
     './mc-wrapped.js',
     './mm-data.js',
     './mm-engine.js',
-    './mm-instructions.gen.js',
-    './pmc-instructions.gen.js',
     './pmc-s7-data.js',
     './program-manager.js',
     './program-overrides.js',
     './program-overrides.json',
-    './pump-instructions.gen.js',
-    './ss-instructions.gen.js',
     './stndr-checkoff.js',
-    './stndr-instructions.gen.js',
     './sw.js'
     /* AUTOGEN:URLS END */
 ];

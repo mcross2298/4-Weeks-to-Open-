@@ -10,6 +10,9 @@
    cfg = {
      variant: 'full' | 'trimmed',   // default 'full'
      accent, iconKey, tierLabel, name, tagline,
+     progId,        // F6 — derives the stat row (see statsFor); trimmed variant
+     stats,         // optional explicit [{v,l}] override for a page with no
+                    // mc-pm-data.js entry (cat-faint / cat-ie / cat-custom)
      weeks, daysPerWeek, level, scheduleLabel,   // full variant only
      whatsInside: [{ icon:'chevron'|'bars', title, body, href }],
      ctaLabel, backHref,
@@ -75,6 +78,79 @@
     return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
   }
 
+  /* F6 — the stat row that replaced the empty .pl-imgband placeholder.
+     Derived, never authored, by the same reasoning as gen-schedules.js: a
+     hand-typed copy of a program's own facts is free to drift from them.
+
+     A program carrying a real `schedule` record yields all three cells
+     exactly. The other seven describe collections rather than blocks (F5),
+     so they have no record and never get one invented for them — their cells
+     are parsed out of the `meta` string every entry already has, which is the
+     same string the dashboard card renders. */
+  function statsFor(progId) {
+    var p = (window.MC_PM_DATA && MC_PM_DATA.program) ? MC_PM_DATA.program(progId) : null;
+    if (!p) return [];
+    var sc = p.schedule;
+    if (!sc || !sc.weeks || !sc.perWeek) return metaStats(p.meta);
+
+    // Rest can vary phase to phase — hv rests at [3,6], [6,7], [3,7] then [4],
+    // so it trains 5 days for three weeks and 6 in the fourth. Reading only
+    // sc.rest would print a week-1 figure as if it held for the whole block,
+    // which is the drift F5 built restForWeek() to prevent. A block whose
+    // training count actually varies says so as a range.
+    var counts = [];
+    ((sc.phases && sc.phases.length) ? sc.phases : [sc]).forEach(function (ph) {
+      var rest = (ph.rest || sc.rest || []).length;
+      counts.push(sc.perWeek - rest);
+    });
+    var lo = Math.min.apply(null, counts), hi = Math.max.apply(null, counts);
+
+    var out = [
+      { v: (lo === hi ? lo : lo + '\u2013' + hi) + 'x', l: 'Per Week' },
+      { v: String(sc.weeks), l: sc.weeks === 1 ? 'Week' : 'Weeks' }
+    ];
+
+    // Minutes only where the days actually carry a figure. ss is hand-authored
+    // and does; the generated mm/hv records do not, and a third cell invented
+    // from set counts would be a guess dressed as a program fact — so those
+    // programs simply show two cells.
+    var mins = [];
+    (sc.days || []).forEach(function (d) {
+      var n = parseInt(d && d.min, 10);
+      if (n > 0) mins.push(n);
+    });
+    if (mins.length) {
+      var a = Math.min.apply(null, mins), b = Math.max.apply(null, mins);
+      out.push({ v: a === b ? String(a) : (a + '\u2013' + b), l: 'Minutes' });
+    }
+    return out;
+  }
+
+  /* "15 Weeks \u00B7 3 Phases \u00B7 4-Day Split" -> three value/label cells.
+     A leading numeric token (including ranges like "5\u20136") is the value and
+     the remainder is the label; a segment with no leading number becomes a
+     single-line cell, since inventing a label for it would be fiction. */
+  function metaStats(meta) {
+    if (!meta) return [];
+    return String(meta).split('\u00B7').map(function (seg) {
+      var t = seg.trim();
+      if (!t) return null;
+      var m = /^([0-9]+(?:[\u2013\u2014-][0-9]+)?)[\s\u00A0]*(.*)$/.exec(t);
+      if (m && m[2]) return { v: m[1], l: m[2] };
+      return { v: t, l: '' };
+    }).filter(Boolean).slice(0, 3);
+  }
+
+  function renderStats(cells) {
+    if (!cells || !cells.length) return '';
+    return '<div class="pl-stats">' + cells.map(function (c) {
+      return '<div class="pl-stat">' +
+        '<div class="pl-stat-v">' + escapeHtml(c.v) + '</div>' +
+        (c.l ? '<div class="pl-stat-l">' + escapeHtml(c.l) + '</div>' : '') +
+        '</div>';
+    }).join('') + '</div>';
+  }
+
   function renderScheduleStrip(daysPerWeek, scheduleLabel) {
     var glyphs = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
     var n = parseInt(daysPerWeek, 10) || 0;
@@ -105,13 +181,16 @@
     var light = lighten(accent, 0.3);
     var full = cfg.variant !== 'trimmed';
 
-    var statsHtml = full ? (
-      '<div class="pl-stats">' +
-      '<div class="pl-stat"><div class="pl-stat-v">' + escapeHtml(cfg.weeks) + '</div><div class="pl-stat-l">Weeks</div></div>' +
-      '<div class="pl-stat"><div class="pl-stat-v">' + escapeHtml(cfg.daysPerWeek) + '</div><div class="pl-stat-l">Days / wk</div></div>' +
-      '<div class="pl-stat"><div class="pl-stat-v">' + escapeHtml(cfg.level) + '</div><div class="pl-stat-l">Level</div></div>' +
-      '</div>'
-    ) : '';
+    // The full variant keeps its authored three cells. The trimmed variant
+    // (every cat-*.html landing) derives them, or takes an explicit override
+    // from a page with no mc-pm-data.js entry to read.
+    var statsHtml = full
+      ? renderStats([
+          { v: cfg.weeks, l: 'Weeks' },
+          { v: cfg.daysPerWeek, l: 'Days / wk' },
+          { v: cfg.level, l: 'Level' }
+        ])
+      : renderStats(cfg.stats || statsFor(cfg.progId));
 
     var schedHtml = full ? renderScheduleStrip(cfg.daysPerWeek, cfg.scheduleLabel) : '';
 
@@ -128,17 +207,22 @@
       '<a class="pl-icon-btn pl-back" href="' + escapeHtml(cfg.backHref || 'dashboard.html') + '" aria-label="Back">' +
       '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e2e2e6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>' +
       '</a>' +
-      '<div class="pl-tier-label">' + escapeHtml(cfg.tierLabel || '') + '</div>' +
+      '<div class="pl-topbar-sp" aria-hidden="true"></div>' +
       '<div class="pl-icon-btn pl-menu" aria-hidden="true">' +
       '<svg width="17" height="17" viewBox="0 0 24 24" fill="' + accent + '"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>' +
       '</div>' +
       '</div>' +
-      '<div class="pl-imgband">' +
-      '<div class="pl-imgband-scrim"></div>' +
-      '<div class="pl-sheen"></div>' +
-      '<div class="pl-badge">' + heroIconSvg(cfg.iconKey, accent) + '</div>' +
-      '</div>' +
+      // F6: the 190px .pl-imgband placeholder is gone — it held a stripe
+      // gradient and never an image (this roadmap rules photography out), and
+      // the stat row now occupies that space. .pl-badge moves into the title
+      // block rather than going with it: it is the program's identity glyph,
+      // the only place the per-program icon appears on the landing.
+      // The tier label dropped from .pl-topbar is a duplicate of
+      // .pl-tier-pill below, which is also what mount() binds onBadgeTap to
+      // (resume-last-workout on cat-pmc / cat-strength) — so the pill is what
+      // had to survive, and it does.
       '<div class="pl-title-block">' +
+      '<div class="pl-badge">' + heroIconSvg(cfg.iconKey, accent) + '</div>' +
       '<div class="pl-tier-pill">' + escapeHtml(cfg.tierLabel || '') + '</div>' +
       '<div class="pl-name">' + escapeHtml(cfg.name) + '</div>' +
       '<div class="pl-tagline">' + escapeHtml(cfg.tagline || '') + '</div>' +

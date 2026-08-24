@@ -229,27 +229,14 @@
   html[data-theme="light"] .cond-title { color: #92400e; }
   html[data-theme="light"] .week-row { border-bottom-color: rgba(28,26,23,0.06); }
 </style>
+<link rel="stylesheet" href="mc-program-hero.css"/>
+<link rel="stylesheet" href="mc-program-tabs.css"/>
 <link rel="stylesheet" href="mc-nav.css"/>
 </head>
 <body>
+<div id="programHero"></div>
 <div class="page-wrap">
-  <div class="back-nav">
-    <a href="cat-ks.html">← Everything Under the Kitchen Sink</a>
-  </div>
-
-  <!-- Program Header -->
-  <div class="program-header">
-    <div class="program-eyebrow">🔩 Flagship Program</div>
-    <h1>Iron &amp; Engine</h1>
-    <p class="program-tagline">Push / Pull / Legs strength welded to a 3-day conditioning engine — built to make you strong and hard to kill.</p>
-    <div class="program-meta">
-      <span class="meta-badge">4 Weeks</span>
-      <span class="meta-badge">3-On 1-Off</span>
-      <span class="meta-badge">PPL + Conditioning</span>
-      <span class="meta-badge">Station-Anchored</span>
-    </div>
-    <div class="designer-credit">✍️ Designed by Mike Cross</div>
-  </div>
+  <div id="progTabs"></div>
 
   <!-- Weekly Schedule Overview -->
   <div class="modules-label">Weekly Schedule</div>
@@ -341,6 +328,49 @@
 <script src="mc-input-sheet.js"></script>
 <script src="mc-cond.js"></script>
 <script src="mc-cond-suggest.js"></script>
+<script src="mc-pm-data.js"></script>
+<script src="mc-program-tabs.js"></script>
+<script src="mc-program-hero.js"></script>
+<script>
+/* F6 — cat-ie is Split 2 of Everything Under the Kitchen Sink, which is why
+   F1b's "not a cat-* page" filter walked straight past it and it never got the
+   landing pattern. It links to exactly ONE workout (iron-engine.html), so it
+   takes list:false — Overview alone, no tab bar — the same shape the other two
+   single-workout landings already use for the same reason. (Naming one of them
+   here is what build-market.py's brand-term scan catches: this file ships in
+   the public build, so a program id in a comment is still a leak.)
+
+   Its guide is the Kitchen Sink guide: there is no ie-instructions.html,
+   because this is a split of that program rather than a program of its own. */
+(function () {
+  var accent = '#f97316';
+  if (window.MCProgramHero) {
+    MCProgramHero.mount(document.getElementById('programHero'), {
+      variant: 'trimmed', accent: accent, iconKey: 'ks',
+      tierLabel: 'Kitchen Sink · Split 2', name: 'Iron & Engine',
+      tagline: 'Push / Pull / Legs strength welded to a 3-day conditioning engine',
+      // The four meta badges the hand-written header carried; the last two are
+      // qualities rather than counts, so they stay in "What's inside" below
+      // instead of being forced into value/label stat cells.
+      stats: [{ v: '4', l: 'Weeks' }, { v: '6', l: 'Sessions / wk' }, { v: '3-1', l: 'On / Off' }],
+      whatsInside: [
+        { icon: 'chevron', title: 'PPL strength plus a three-day conditioning engine' },
+        { icon: 'bars', title: 'Station-anchored throughout — built to make you strong and hard to kill.' }
+      ],
+      ctaLabel: 'Open strength program', startHref: 'iron-engine.html',
+      backHref: 'cat-ks.html'
+    });
+  }
+  if (!window.MC_PROGRAM_TABS) return;
+  MC_PROGRAM_TABS.mount(document.getElementById('progTabs'), {
+    progId: 'ie', accent: accent, list: false,
+    programName: 'Iron & Engine',
+    desc: 'Push / Pull / Legs strength welded to a 3-day conditioning engine — built to make you strong and hard to kill.',
+    forWho: 'Lifters who refuse to choose between strength and conditioning, and want both in one 4-week block.',
+    guide: { href: 'ks-instructions.html', label: 'Kitchen Sink guide' }
+  });
+})();
+</script>
 <script src="mc-sw-update.js"></script>
 </body>
 </html>

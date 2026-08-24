@@ -90,7 +90,6 @@ node tools/test-mc-program-tabs.js     # program-landing list model (adaptive de
 node tools/test-mc-sw.js               # service-worker fetch strategy
 python3 tools/build-sw.py --check      # committed sw.js matches the tree
 python3 tools/check-script-manifest.py --check   # clone pages load identical module lists
-python3 tools/build-instructions.py --check      # program-landing guide embeds match their source page
 node tools/gen-schedules.js --check    # mm/hv schedule records match mm-data.js + hv-block.html
 python3 tools/apply-head-contract.py --check     # canonical <head> block + PWA tags on every page
 node tools/check-program-colors.js     # mc-pm-data.js vs dashboard.html vs mc-theme.js
@@ -174,16 +173,15 @@ to use — update the matching onboarding doc in the same piece of work:
   for the required `dashboard.html` + `mc-pm-data.js` wiring that makes a new
   program discoverable in the first place).
 
-**Editing a guide page means regenerating its embed.** A program landing's
-Overview tab renders that guide's whole body inline, from a committed
-`<id>-instructions.gen.js` built by `tools/build-instructions.py` (the guide
-page stays the one authored source — the embed is a generated artifact, like
-`sw.js`). Run the tool after touching a guide; `--check` runs in CI and fails
-on drift, and on an embed left behind that no page loads. The generated file
-carries the guide's own stylesheet rewritten under `.ovi`, because the guides
-and the landings both use `card` / `card-body` / `sec` / `rule-box` and mean
-different things by them. A guide that is licensed content needs its `.gen.js`
-listed in `content-manifest.json` beside its source page.
+**A guide page is edited in place — there is no embed to regenerate.**
+Roadmap `F6` retired that pipeline: `tools/build-instructions.py`, the nine
+committed `<id>-instructions.gen.js` artifacts and the `--check` gate are gone.
+A program landing's Overview tab links to `<id>-instructions.html` rather than
+inlining its body, so the guide page is both the authored source and the thing
+the reader sees, and the two cannot drift because there is only one copy.
+Editing a guide is now a one-file change. (It was inlined by `F2`'s decision
+10; that made Overview 384–838 words longer than it needed to be and is why
+`F6` reversed it.)
 
 Purely internal changes (refactors, data-only additions with no user-visible
 behavior change, bug fixes restoring already-documented behavior, CSS/copy
@@ -733,7 +731,7 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > `mc-pm-data.js` between per-program markers. Hand-typed they are a second
 > copy of the authored prescription, free to drift; derived they cannot
 > disagree with the page they describe — the reasoning behind `build-sw.py`,
-> `build-instructions.py` and `gen-program-css.py`. **`ss` is deliberately not
+> `build-sw.py` and `gen-program-css.py`. **`ss` is deliberately not
 > regenerated** (hand-authored in `F0`, differently shaped page data).
 >
 > **The record shape had to grow twice, and real data forced both — the

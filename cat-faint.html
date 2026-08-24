@@ -45,21 +45,19 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
   .plan-card.teal{background:linear-gradient(135deg,#001a1a,#000);border-color:rgba(45,212,191,0.3);}
 </style>
 <link rel="stylesheet" href="base.css?v=68"/>
+<link rel="stylesheet" href="mc-program-hero.css"/>
+<link rel="stylesheet" href="mc-program-tabs.css"/>
 <link rel="stylesheet" href="mc-nav.css"/>
 <link rel="stylesheet" href="mc-light.css">
 </head>
 <body>
+<div id="programHero"></div>
 <div class="container">
-  <a href="dashboard.html" class="back-link">← Categories</a>
-  <div class="header">
-    <div class="eyebrow">Category · Brutal</div>
-    <h1 class="title">Not for the Faint of Heart</h1>
-    <div class="subtitle">High-intensity circuits and challenge workouts</div>
-    <a href="faint-instructions.html" style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;text-decoration:none;background:rgba(220,38,38,0.12);border:1px solid rgba(220,38,38,0.4);color:#f87171;font-size:11px;font-weight:800;padding:7px 14px;border-radius:20px;letter-spacing:0.06em;">📋 Program Guide &amp; Instructions →</a>
-  </div>
-
   <div class="warning"><strong>⚠️ Warning:</strong> These workouts are designed to push your limits. Bring water, towel, and the right mindset. NO QUITTING.</div>
-
+  <div id="progTabs"></div>
+  <!-- F6: the nine .plan-card links stay in the DOM as the authored source the
+       Program list reads its rows from, hidden so they are not drawn twice. -->
+  <div id="faintPlans" hidden>
   <a href="the-500.html" class="plan-card red">
     <div class="plan-tag">Challenge Workout</div>
     <div class="plan-name">The 500</div>
@@ -157,7 +155,9 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
     </div>
     <div class="plan-arrow">→</div>
   </a>
-</div><script>
+  </div>
+</div>
+<script>
 /* ── SMART BACK NAV ── */
 (function(){
   var back = sessionStorage.getItem('mc_back_to');
@@ -182,6 +182,72 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 <script src="conditioning-data.js"></script>
 <script src="mc-input-sheet.js"></script>
 <script src="mc-cond.js"></script>
+<script src="mc-pm-data.js"></script>
+<script src="mc-program-tabs.js"></script>
+<script src="mc-program-hero.js"></script>
+<script>
+/* F6 — cat-faint had no landing pattern at all: a hand-written header, a guide
+   chip and nine .plan-card links. It is a flat list of nine conditioning
+   workouts with no schedule record and no mc-pm-data.js entry, so it takes the
+   F1b majority shape: one group, no drill-in, no day numbers or ticks.
+
+   Rows are read from the page's own .plan-card markup rather than retyped into
+   a DAYS literal here, so the list and the authored cards cannot drift — the
+   same reason cat-pmc and cat-ks build their config from their page data. */
+(function () {
+  var cards = document.querySelectorAll('#faintPlans .plan-card');
+  if (!cards.length) return;
+  var DAYS = {}, order = [];
+  Array.prototype.forEach.call(cards, function (a) {
+    var id = (a.getAttribute('href') || '').replace(/\.html$/, '');
+    if (!id) return;
+    var name = a.querySelector('.plan-name');
+    var tag = a.querySelector('.plan-tag');
+    var stats = a.querySelectorAll('.plan-stats .stat');
+    // The tag doubles as the icon on some cards (it is authored with a leading
+    // emoji on four of the nine), so the icon comes from the stats row where
+    // every card has one, and falls back to a constant rather than guessing.
+    // Array.from, not /^\S/: an emoji is a surrogate PAIR, and matching one
+    // UTF-16 code unit sliced it in half — every row rendered a lone \ud83d.
+    var first = stats[0] ? Array.from(stats[0].textContent.trim())[0] : '';
+    var ico = (first && !/[\w\d]/.test(first)) ? first : '\u{1F525}';
+    DAYS[id] = {
+      title: name ? name.textContent.trim() : id,
+      icon: ico,
+      meta: tag ? tag.textContent.trim().replace(/^[^\w(]+\s*/, '') : ''
+    };
+    order.push(id);
+  });
+
+  var accent = '#dc2626';
+  if (window.MCProgramHero) {
+    MCProgramHero.mount(document.getElementById('programHero'), {
+      variant: 'trimmed', accent: accent, iconKey: 'ks',
+      tierLabel: 'Category', name: 'Not for the Faint of Heart',
+      tagline: 'High-intensity circuits and challenge workouts',
+      // No mc-pm-data.js entry to derive from — this is a category page, not a
+      // registered program — so the one honest stat it has is stated outright.
+      stats: [{ v: String(order.length), l: 'Workouts' }],
+      whatsInside: [
+        { icon: 'chevron', title: 'Nine challenge workouts, no easy day' },
+        { icon: 'bars', title: 'Circuits, ladders and gauntlets — bring water, a towel and the right mindset.' }
+      ],
+      ctaLabel: 'Browse workouts', backHref: 'dashboard.html'
+    });
+  }
+  if (!window.MC_PROGRAM_TABS) return;
+  MC_PROGRAM_TABS.mount(document.getElementById('progTabs'), {
+    progId: 'faint', accent: accent,
+    programName: 'Not for the Faint of Heart',
+    desc: 'High-intensity circuits and challenge workouts built to push past what you think you can finish.',
+    forWho: 'Trainees who want a conditioning gut-check rather than a hypertrophy session — every one of these is a test.',
+    guide: { href: 'faint-instructions.html', label: 'Faint of Heart guide' },
+    groups: [{ id: 'workouts', name: 'Workouts', days: order }],
+    dayMeta: function (id) { return DAYS[id] || null; },
+    onOpen: function (id) { if (DAYS[id]) location.href = id + '.html'; }
+  });
+})();
+</script>
 <script src="mc-sw-update.js"></script>
 </body>
 </html>

@@ -330,7 +330,6 @@ window.MC_TEMPO_ENABLED = true;
 <script src="mc-program-day.js"></script>
 <script src="mc-program-menu.js"></script>
 <script src="mc-biomech.js"></script>
-<script src="ss-instructions.gen.js"></script>
 <script src="mc-program-tabs.js"></script>
 <script>
 
@@ -1273,7 +1272,6 @@ const ssTabs = window.MC_PROGRAM_TABS && MC_PROGRAM_TABS.mount(document.getEleme
   programName: SS_PROG.name || 'Strength & Supersets',
   desc: SS_PROG.desc || '',
   forWho: SS_PROG.forWho || '',
-  instructions: window.MC_INSTRUCTIONS,
   guide: { href: 'ss-instructions.html', label: 'Strength & Supersets guide' },
   groups: [{ id: 'cycle', name: 'The 6-Week Cycle', days: SS_DEF.order.slice() }],
   dayMeta: function (id) { return SS_DAY_META[id] || null; },
@@ -1418,6 +1416,7 @@ window.saveWorkout=function(){};
 MCProgramHero.mount(document.getElementById('programHero'), {
   variant: 'trimmed',
   accent: '#e11d48',
+  progId: 'ss',   // F6: derives the stat row from mc-pm-data.js
   iconKey: 'ss',
   tierLabel: 'Flagship',
   name: "Strength & Supersets",

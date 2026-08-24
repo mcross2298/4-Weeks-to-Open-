@@ -47,12 +47,8 @@
        forWho,                       // "Who this is for" copy (mc-pm-data.js `forWho`)
        desc,                         // one-line program pitch
        guide: { href, label },       // <id>-instructions.html entry point
-       instructions,                 // optional; window.MC_INSTRUCTIONS from
-                                     // <id>-instructions.gen.js — the guide,
-                                     // absorbed (F2). Falls back to the link.
        groups: [ { id, name, desc, meta, icon, days:[dayId,...] } ],
        dayMeta: fn(dayId) -> { title, icon, tags[], ex, sets, min },
-       exerciseNames: [...],         // optional; equipment row is derived from these
        onOpen: fn(dayId, week),      // tap a day row
        onLog:  fn(dayId, logId)      // tap a completed day row's log
      })
@@ -150,6 +146,15 @@
     if (day) bits.push('Day ' + day);
     if (meta.min) bits.push(meta.min + ' min');
     else if (meta.ex) bits.push(meta.ex + ' exercises');
+    // F6 — pre-existing since F1b, found by driving cat-faint's new list: a
+    // page whose dayMeta() authors a `meta` STRING had it silently dropped.
+    // All three derived bits come from a schedule record, and the seven
+    // programs that never got one (F5: they describe collections, not blocks)
+    // therefore rendered every row with a bare title and no subtitle at all —
+    // "Split 1 · 5-On 2-Off", "Phase 1 · Weeks 1–5" and the rest, authored on
+    // six landings and shown on none. The derived form still wins where it
+    // exists, since Day N + duration says more than a static tag.
+    if (!bits.length && meta.meta) bits.push(meta.meta);
     return {
       kind: 'day',
       id: dayId,
@@ -220,135 +225,43 @@
     };
   }
 
-  // ---- equipment ----------------------------------------------------------
-  // exercise-catalog.js is 87 KB and a landing page has no business loading it.
-  // mc-biomech.js is the single implementation of equipment classification and
-  // infers it from the exercise NAME with no catalog, so the row is derived
-  // from the day data a program page already holds. Absent that module the
-  // section is omitted rather than guessed at.
-  //
-  // COUNTED, not just listed. A plain set of category names came back as all
-  // seven of them on the first program tried, which is true and tells the
-  // reader nothing. Ordering by how many exercises use each one says what the
-  // program actually is ("mostly barbell and dumbbell") in the same row.
-  // Note the counts lean toward Barbell: it is equipOf()'s fallback for a name
-  // no keyword matches. That is the same inference the substitute picker
-  // already trusts app-wide, so this is not a new trust decision — but it is
-  // why this row shows proportions rather than claiming an exact inventory.
-  function equipmentOf(cfg) {
-    var names = (cfg && cfg.exerciseNames) || [];
-    if (!names.length || !window.MCBiomech || !window.MCBiomech.classify) return [];
-    var count = {};
-    for (var i = 0; i < names.length; i++) {
-      var e = '';
-      try { e = (window.MCBiomech.classify(names[i]) || {}).equipment || ''; } catch (err) { e = ''; }
-      if (!e) continue;
-      count[e] = (count[e] || 0) + 1;
-    }
-    // MCBiomech.EQUIP is ordered; it breaks ties so two programs never
-    // disagree about the order of two equally-used categories.
-    var rank = window.MCBiomech.EQUIP || [];
-    return Object.keys(count).map(function (k) { return { name: k, n: count[k] }; })
-      .sort(function (a, b) {
-        return (b.n - a.n) || (rank.indexOf(a.name) - rank.indexOf(b.name));
-      });
-  }
-
   // ---- rendering ----------------------------------------------------------
   function section(title, body) {
     return '<section class="mpt-sec"><h2 class="mpt-sec-h">' + escapeHtml(title) + '</h2>' + body + '</section>';
   }
 
-  function weekStripHtml(rec, week, cfg, P) {
-    if (!rec || !P) return '';
-    var days = P.weekFrom(rec, week);
-    var cells = days.map(function (d) {
-      var meta = (!d.rest && cfg.dayMeta) ? (cfg.dayMeta(d.workoutId) || {}) : {};
-      var label = d.rest ? 'Rest' : (meta.title || 'Train');
-      var cls = 'mpt-wd' + (d.rest ? ' is-rest' : '') + (d.complete ? ' is-done' : '');
-      var mark = d.rest ? '☾' : (d.complete ? '✓' : String(d.position));
-      return '<div class="' + cls + '"><span class="mpt-wd-mark">' + mark + '</span>' +
-        '<span class="mpt-wd-lbl">' + escapeHtml(label) + '</span></div>';
-    }).join('');
-    return '<div class="mpt-week" aria-label="Week ' + week + ' schedule">' + cells + '</div>';
-  }
+  /* F6 — Overview is an overview again.
 
-  // ---- the absorbed guide (F2) -------------------------------------------
-  // The guide's own stylesheet travels with its markup — tools/build-
-  // instructions.py scopes every selector under `.ovi`, because the guides and
-  // the landings share a class vocabulary (`card`, `card-body`, `sec`,
-  // `rule-box`) and mean different things by it.
-  //
-  // It goes in the document head, once per page, rather than inside the panel:
-  // drawOverview() replaces the panel's innerHTML on every refresh, and a
-  // <style> living in there would be torn down and rebuilt on each one.
-  function injectGuideCss(ins) {
-    if (!ins || !ins.css) return;
-    var id = 'mpt-ovi-css-' + ins.id;
-    if (document.getElementById(id)) return;
-    var s = document.createElement('style');
-    s.id = id;
-    s.textContent = ins.css;
-    document.head.appendChild(s);
-  }
+     F2's decision 10 rendered the ENTIRE program guide inline here, from the
+     generated <id>-instructions.gen.js: 384-838 words of full guide markup on
+     top of everything else, which made the tab that exists to introduce the
+     program longer than the program list it introduces. The guide goes back to
+     being a destination (<id>-instructions.html was a complete authored page
+     the whole time), and the embed pipeline is retired with it rather than
+     left generating artifacts nobody loads.
 
-  // A guide can end with its own "start the program" CTA. Absorbed into that
-  // program's own landing, it points at the page the reader is already on, so
-  // it is dropped rather than rendered as a link to nowhere new. Compared via
-  // the anchor's resolved `href` property, so a relative path is normalised
-  // rather than string-matched.
-  function dropSelfLinks(scope) {
-    var here = location.pathname.split('/').pop();
-    Array.prototype.forEach.call(scope.querySelectorAll('.ovi a[href]'), function (a) {
-      var to = a.href.split('#')[0].split('?')[0].split('/').pop();
-      if (to === here && a.parentNode) a.parentNode.removeChild(a);
-    });
-  }
-
-  function overviewHtml(cfg, rec, week, P) {
+     The week strip and equipment chips went with it: the stat row in the hero
+     carries the shape of the block now, above the tab bar, so it reads from
+     both tabs instead of only this one. What is left is what the owner asked
+     for - what the program is, who it is for, and the way in to the guide. */
+  function overviewHtml(cfg) {
     var out = '';
     if (cfg.desc) out += '<p class="mpt-lede">' + escapeHtml(cfg.desc) + '</p>';
     if (cfg.forWho) {
       out += section('Who this is for', '<p class="mpt-body">' + escapeHtml(cfg.forWho) + '</p>');
     }
-    var strip = weekStripHtml(rec, week, cfg, P);
-    if (strip) {
-      var train = rec.perWeek - rec.rest.length;
-      out += section('The week',
-        '<p class="mpt-body mpt-body-tight">' + train + ' training days · ' +
-        rec.rest.length + ' rest · ' + rec.weeks + '-week block</p>' + strip);
-    }
-    var eq = equipmentOf(cfg);
-    if (eq.length) {
-      out += section('Equipment', '<div class="mpt-chips">' + eq.map(function (e) {
-        return '<span class="mpt-chip">' + escapeHtml(e.name) +
-          '<span class="mpt-chip-n">' + e.n + '</span></span>';
-      }).join('') + '</div>');
-    }
-    // F2 / roadmap decision 10: the ENTIRE guide body, not a summary. Its own
-    // markup, unchanged, so the guide page stays the single authored source
-    // and this is a generated copy of it (tools/build-instructions.py --check
-    // fails the build the moment the two disagree).
-    var embedded = !!(cfg.instructions && cfg.instructions.html);
-    if (embedded) {
-      out += section('The program guide', '<div class="ovi">' + cfg.instructions.html + '</div>');
-    }
 
     var links = '';
-    // With the guide inline, a "Program guide →" link here would lead to the
-    // same words on another page. The standalone page is still a live deep-link
-    // target — program-guide.html and the fleet's own header links reach it —
-    // it just stops being the only way in.
-    if (!embedded && cfg.guide && cfg.guide.href) {
+    if (cfg.guide && cfg.guide.href) {
       links += '<a class="mpt-link" href="' + escapeHtml(cfg.guide.href) + '">' +
-        '<span class="mpt-link-ico">📋</span>' +
+        '<span class="mpt-link-ico">\u{1F4CB}</span>' +
         '<span class="mpt-link-t">' + escapeHtml(cfg.guide.label || 'Program guide') + '</span>' +
-        '<span class="mpt-link-arrow" aria-hidden="true">→</span></a>';
+        '<span class="mpt-link-arrow" aria-hidden="true">\u2192</span></a>';
     }
     links += '<a class="mpt-link" href="program-guide.html">' +
-      '<span class="mpt-link-ico">📚</span>' +
+      '<span class="mpt-link-ico">\u{1F4DA}</span>' +
       '<span class="mpt-link-t">All program guides</span>' +
-      '<span class="mpt-link-arrow" aria-hidden="true">→</span></a>';
+      '<span class="mpt-link-arrow" aria-hidden="true">\u2192</span></a>';
     out += section('Learn the program', links);
     return out;
   }
@@ -450,10 +363,8 @@
     var pOverview = el.querySelector('#mpt-p-overview');
     var pList = el.querySelector('#mpt-p-list');
 
-    injectGuideCss(cfg.instructions);
     function drawOverview() {
-      pOverview.innerHTML = overviewHtml(cfg, state.rec, state.week, P);
-      dropSelfLinks(pOverview);
+      pOverview.innerHTML = overviewHtml(cfg);
     }
     function drawList() {
       if (!pList) return;

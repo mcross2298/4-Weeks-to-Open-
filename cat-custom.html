@@ -85,12 +85,18 @@ html[data-theme="light"] .hd-btn{color:var(--text);border-color:rgba(28,26,23,0.
 html[data-theme="light"] .hd-btn.pin{background:var(--accent);border-color:var(--accent);color:#fff;}
 html[data-theme="light"] .sched-banner{color:var(--muted);}
 </style>
+<link rel="stylesheet" href="mc-program-hero.css"/>
 <link rel="stylesheet" href="mc-light.css">
 </head><body>
 
+<div id="programHero"></div>
 <div class="header" id="hd">
-  <a href="dashboard.html?tab=programs" class="back-link">← Programs</a>
-  <div class="hd-row">
+  <!-- F6: identity (icon / eyebrow / title / meta) moved into the Onyx hero
+       above, so this page reads like the other twelve landings. The action row
+       below stays here — pin / edit / share / publish / delete are this page's
+       whole reason to exist and the hero has no slot for them.
+       The hidden nodes are kept because boot() writes to them by id. -->
+  <div class="hd-row" hidden>
     <div class="hd-icon" id="hdIcon">🧩</div>
     <div>
       <div class="hd-eyebrow">Custom Program</div>
@@ -117,6 +123,7 @@ html[data-theme="light"] .sched-banner{color:var(--muted);}
   <div id="dayList"></div>
 </div>
 
+<script src="mc-program-hero.js"></script>
 <script src="mc-program-store.js"></script>
 <script src="mc-biomech.js"></script>
 <script src="mc-schedule.js"></script>
@@ -178,6 +185,40 @@ html[data-theme="light"] .sched-banner{color:var(--muted);}
   }
 
   document.title = p.name + ' — MC Training';
+
+  /* F6 — the Onyx hero, so a custom program's landing reads like the other
+     twelve. Its stats come off the program object itself, which is the only
+     truth here: there is no mc-pm-data.js entry to derive from and never will
+     be, since the athlete authored this program.
+
+     No MC_PROGRAM_TABS mount: #dayList below is ALREADY this program's day
+     list, per week, with the calendar and timeline layouts mc-layout.js gives
+     it — a Program list tab would be a strictly worse second copy. And a
+     user-built program carries no authored desc or forWho (asProgCard
+     synthesises one from day names), so an Overview tab would have nothing
+     real to say. F1b's mount() lesson: build no surface for data that isn't
+     there rather than invent the data to justify the surface. */
+  if (window.MCProgramHero) {
+    MCProgramHero.mount(document.getElementById('programHero'), {
+      variant: 'trimmed',
+      accent: p.color || '#34d399',
+      iconKey: 'ss',
+      tierLabel: isPub ? 'Published Program' : 'Custom Program',
+      name: p.name,
+      tagline: (p.days || []).map(function (d) { return d.name; }).join(' · '),
+      stats: [
+        { v: String(p.weeks || 1), l: (p.weeks > 1 ? 'Weeks' : 'Week') },
+        { v: String((p.days || []).length), l: 'Days / wk' }
+      ],
+      whatsInside: [
+        { icon: 'chevron', title: (p.days || []).length + ' training days, ' + (p.weeks || 1) + '-week block' },
+        { icon: 'bars', title: 'Built by you — pin it as the active program to drive the dashboard day module.' }
+      ],
+      ctaLabel: 'Browse days',
+      backHref: 'dashboard.html?tab=programs'
+    });
+  }
+
   $('hdIcon').textContent = p.icon || '🧩';
   $('hdTitle').textContent = p.name;
   $('hdMeta').textContent = p.weeks + ' weeks · ' + p.days.length + ' days/week';
