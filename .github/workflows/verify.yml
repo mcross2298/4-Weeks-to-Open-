@@ -163,6 +163,17 @@ jobs:
         # This is the gate that makes that class of drift impossible to reland.
         run: node tools/check-store-coverage.js
 
+      - name: Topmost-bar safe-area check (sticky .topbar pins at top:0, opaque)
+        # base.css offset `.topbar` with the SECONDARY sticky bars, but a
+        # .topbar is the TOPMOST bar on its page — pinning it at the inset left
+        # the status-bar band unpainted, so page content scrolled through it in
+        # plain sight, and dashboard.html double-inset because it pads itself
+        # too. All seven also faded to transparent INSIDE the bar, so content
+        # read through the bottom fifth of the chrome. env() is 0 headlessly,
+        # so this is a SOURCE check for the same reason check-journey.js's
+        # safe-area pass is — at runtime the broken and fixed forms look alike.
+        run: node tools/check-topbar-inset.js
+
       - name: Market-extraction leak check (content-manifest.json)
         run: python3 tools/build-market.py --check
 
