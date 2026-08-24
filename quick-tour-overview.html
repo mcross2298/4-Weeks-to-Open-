@@ -31,8 +31,24 @@ body{background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;p
 .topbar{
   display:flex;align-items:center;gap:12px;padding:18px 16px 12px;
   position:sticky;top:0;z-index:20;
-  background:linear-gradient(to bottom,var(--bg) 78%,transparent);
+  background:var(--bg);
 }
+@supports (padding: env(safe-area-inset-top)) {
+  .topbar{padding-top:calc(18px + env(safe-area-inset-top));}
+}
+/* Header is OPAQUE, and the soft fade lives BELOW it (roadmap: header bleed).
+   It used to be `linear-gradient(<bg> 80%, transparent)` -- a fade INSIDE the
+   bar, so the bottom fifth of the header itself was see-through and scrolling
+   content read straight through the chrome. On a notched device in standalone
+   the bar grows by the inset, so that see-through band grew with it (15px ->
+   27px at a 59px inset). Same dissolve, moved to a scrim that hangs below the
+   bar, where there is no chrome to read through. */
+.topbar::after{
+  content:'';position:absolute;left:0;right:0;top:100%;height:18px;
+  background:linear-gradient(to bottom,var(--bg),transparent);
+  pointer-events:none;
+}
+
 .back{
   display:flex;align-items:center;justify-content:center;
   width:36px;height:36px;border-radius:10px;flex-shrink:0;

@@ -1017,8 +1017,9 @@ html[data-theme="light"] #fwModalBtns.fw-emph .fw-cancel,html[data-theme="light"
    whole screen. Pad the shared program-page top furniture down from under the
    notch and lift the fixed bottom furniture above the home indicator. The
    bottom nav (`.mc-nav`), its lifted `.fw-bar`, and the theme toggle already
-   carry their own insets in mc-nav.css; the dashboard's Onyx `.topbar` carries
-   its own — none are touched here, so the dashboard shell can't double-inset.
+   carry their own insets in mc-nav.css. Sticky `.topbar`s are NOT offset here
+   — see the note on the `top:` group below for why pinning a top bar at the
+   inset is the wrong shape for the topmost bar on a page.
    `env()` resolves to 0 in a normal browser tab and drops to the base value
    where unsupported, so every rule below is inert until it's actually needed. */
 
@@ -1031,20 +1032,36 @@ html[data-theme="light"] #fwModalBtns.fw-emph .fw-cancel,html[data-theme="light"
 @supports (padding: env(safe-area-inset-top)) {
   .header{padding-top:calc(76px + env(safe-area-inset-top));}
   .back-link + .hero{padding-top:calc(64px + env(safe-area-inset-top));}
-  /* Sticky top chrome pins below the notch, not under it.
-     .week-tabs is base.css's own; the other four are declared per-page (27
-     pages spell out .tabs-bar, 4 .week-selector, one each .phase-tabs and a
-     sticky .topbar) in <style> blocks parsed after this file, so they need a
-     selector that outranks their (0,1,0) rather than one that merely follows
-     it. `body ` is the cheapest way to get there and changes nothing else:
-     `top` is inert on the static .topbar variants two other pages declare.
+  /* SECONDARY sticky chrome pins below the notch, not under it.
+     .week-tabs is base.css's own; the other three are declared per-page (27
+     pages spell out .tabs-bar, 4 .week-selector, one .phase-tabs) in <style>
+     blocks parsed after this file, so they need a selector that outranks
+     their (0,1,0) rather than one that merely follows it. `body ` is the
+     cheapest way to get there.
      Confirmed against a real 59px inset, where these stuck at y0-42 -- the
-     exact band the status bar paints over. */
+     exact band the status bar paints over.
+
+     `.topbar` USED TO BE IN THIS GROUP AND MUST NOT GO BACK IN IT.
+     These four are all SECONDARY bars -- something else (a .header, a .hero,
+     a .topbar) paints above them, so pinning them at the inset lands them
+     against real chrome. A `.topbar` is the TOPMOST bar on its page, so
+     `top:inset` pins it with NOTHING above it: the status-bar band is left
+     unpainted and page content scrolls through it in plain sight. Seven pages
+     declare a sticky `.topbar` (dashboard, workout-detail, workout-logs,
+     program-guide, quick-tour, quick-tour-overview, pm-mode-overview) and
+     every one of them was doing that. dashboard.html compounded it, because
+     it ALSO pads its own content down by the inset -- so the bar was inset
+     twice and its title sat ~2x the inset down the screen. The comment at the
+     top of this block used to assert the dashboard "carries its own -- none
+     are touched here, so the dashboard shell can't double-inset"; the bare
+     `.topbar` in this selector list is exactly what made that false.
+     The right shape for a topmost bar is `top:0` plus the inset as PADDING,
+     so the bar's own background paints the notch band. Each of the seven
+     declares that itself; tools/check-topbar-inset.js holds the line. */
   body .tabs-bar,
   body .week-tabs,
   body .week-selector,
-  body .phase-tabs,
-  body .topbar{top:env(safe-area-inset-top);}
+  body .phase-tabs{top:env(safe-area-inset-top);}
   /* Fixed top furniture */
   .prog-bar-wrap{top:env(safe-area-inset-top);}
   .fw-auto-banner{padding-top:calc(12px + env(safe-area-inset-top));}

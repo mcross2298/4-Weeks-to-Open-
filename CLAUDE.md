@@ -102,6 +102,7 @@ node tools/check-program-data.js       # note-field + day-type vocabulary, fleet
 node tools/check-one-timer.js          # no orphan/duplicate/missing rest-timer implementation
 node tools/check-single-impl.js        # declared shared functions exist exactly once tree-wide
 node tools/check-store-coverage.js     # store-registry.json vs mc-sync.js STORES / mc-export.js KEYS
+node tools/check-topbar-inset.js       # sticky .topbar pins at top:0, absorbs the inset as padding, opaque
 python3 tools/build-market.py --check  # no licensed content leaks into the Rolodex build
 ```
 
@@ -965,6 +966,50 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > rated this item its lowest severity. All exploratory edits were reverted;
 > nothing partial shipped. Full writeup: `card-integration-roadmap.md`'s
 > "`A-17` — investigated in full ... and DROPPED" section.
+
+> **Header safe-area + bleed fix (2026-08-24).** The app header read as
+> unfixed and see-through in the installed PWA: content scrolled visibly
+> *above* it, *through* it, and its title sat far down the screen. All three
+> traced to two causes, both confirmed by replaying a real 59px inset rather
+> than by reading the CSS.
+>
+> **1. `base.css` offset the topmost bar.** The PWA safe-area block pinned
+> sticky chrome with `top:env(safe-area-inset-top)`, and `.topbar` was in that
+> selector group. That is right for a **secondary** bar (`.tabs-bar`,
+> `.week-tabs`, `.week-selector`, `.phase-tabs`) — something else paints above
+> it — but a `.topbar` is the **topmost** bar on its page, so the offset pinned
+> it at y=59 with **nothing above it**: the status-bar band was left unpainted
+> and page content scrolled through it in plain sight. `dashboard.html`
+> compounded it, because it also pads its own content down by the inset — the
+> bar was inset **twice**, so its title landed at y=128 instead of y=69.
+> The comment above that group asserted the dashboard "carries its own — none
+> are touched here, so the dashboard shell can't double-inset"; the bare
+> `.topbar` in the selector list is exactly what made that false. The same
+> comment said **one** page declares a sticky `.topbar` — **seven** do
+> (dashboard, workout-detail, workout-logs, program-guide, quick-tour,
+> quick-tour-overview, pm-mode-overview), and every one was affected. Fixed by
+> removing `.topbar` from the group; the six pages that had no inset padding of
+> their own gained it, so their titles still clear the notch.
+>
+> **2. The header faded to transparent inside itself.** Every one of the seven
+> painted with `linear-gradient(<bg> 80%, transparent)` and carried no
+> `backdrop-filter`, so the bottom fifth of the bar was see-through and
+> scrolling content read straight through the chrome. That band **scales with
+> the bar**, so the inset padding grew it from 15px to **27px**. The bar is now
+> opaque and the soft dissolve moved to a `.topbar::after` scrim hanging
+> *below* it, where there is no chrome to read through — same look, nothing
+> readable through the header.
+>
+> **Why no gate saw it.** `env()` resolves to **0** headlessly, so the broken
+> and fixed forms are pixel-identical in a normal browser tab; `check-journey.js`
+> measures session chrome on 9 pages, none of them these seven; and the contrast
+> and visual ratchets sample at scroll-top, where nothing is under the bar yet.
+> `tools/check-topbar-inset.js` is therefore a **source** check, for the same
+> reason `check-journey.js`'s safe-area pass is. It asserts `.topbar` never
+> re-enters the `top:env()` group, and that every sticky `.topbar` pins at
+> `top:0`, absorbs the inset as padding, and paints opaque — verified to fail on
+> all three regression shapes before landing, since a gate that cannot fail is
+> worthless.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 
