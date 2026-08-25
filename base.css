@@ -17,14 +17,77 @@
   --font-ui:      'Manrope', system-ui, sans-serif;
   --accent:       #d4af37;
   --accent-rgb:   212,175,55;
-  --body-bg:      #0a0a0a;
-  --card-bg:      #0f0f0f;
-  --text:         #e2e8f0;
-  --muted:        #64748b;
-  --muted2:       #475569;
+
+  /* ── NEUTRAL RAMP (premium-design-roadmap.md P1) ───────────────────
+     ONE warm neutral ramp, read from opposite ends by the two themes.
+
+     Before this the app carried TWO incompatible neutral families: the
+     dark theme was Tailwind *slate* — blue-tinted (#e2e8f0 / #cbd5e1 /
+     #94a3b8 / #64748b / #475569) — while the light theme was a warm
+     stone/cream ramp (#faf7f0 / #f5f2ec / #efe9db / #8a8377 / #6b6459 /
+     #1c1a17), under a warm gold accent. Blue greys beneath a gold accent
+     are why dark mode read "dashboard" rather than "premium", and why the
+     two themes never felt like one product.
+
+     The light theme's ramp was the good one, so it won: every --ink-*
+     step at 3 and above is a value the light theme already shipped, which
+     is why the light block below re-points onto these tokens with its
+     rendered output BYTE-IDENTICAL. Only the dark theme changes, so the
+     light-mode contrast ratchet cannot regress from this step.
+
+     --ink-0  canvas (dark)          --ink-6  muted2 (dark) / muted (light)
+     --ink-1  raised surface (dark)  --ink-7  muted (dark) / muted2 (light)
+     --ink-2  card (dark)            --ink-8  secondary text (dark)
+     --ink-3  elevated / text(light) --ink-9  card (light)
+     --ink-4  solid border (dark)    --ink-10 canvas (light)
+     --ink-5  tertiary               --ink-11 primary text (dark)
+
+     --ink-0 is TRUE black on purpose, not #0a0a0a. On the OLED panels this
+     app is used on, true black switches the pixel off — that infinite
+     local contrast behind near-white type is most of what reads as "4K"
+     in the reference screenshots, and it costs nothing. */
+  --ink-0:  #000000;
+  --ink-1:  #0b0b0a;
+  --ink-2:  #141312;
+  --ink-3:  #1c1a17;
+  --ink-4:  #2a2724;
+  --ink-5:  #4a453f;
+  --ink-6:  #6b6459;
+  --ink-7:  #8a8377;
+  --ink-8:  #cfc9bf;
+  --ink-9:  #efe9db;
+  --ink-10: #f5f2ec;
+  --ink-11: #faf7f0;
+
+  /* Semantic aliases. Every existing var(--text)/var(--muted) consumer
+     fleet-wide inherits the correction with no edit of its own — which is
+     why P1 ships alone: a regression here has exactly one possible cause.
+     Measured against the ground each sits on:
+       --text   #e2e8f0 on #0a0a0a  15.9:1  ->  #faf7f0 on #000  19.8:1
+       --muted  #64748b on #0a0a0a   4.19:1 ->  #8a8377 on #000   5.59:1
+       --muted2 #475569 on #0a0a0a   2.63:1 ->  #6b6459 on #000   3.59:1
+     --muted was FAILING WCAG AA for normal text at 4.19:1 and now passes;
+     all three improve, none regress. */
+  --body-bg:      var(--ink-0);
+  --card-bg:      var(--ink-2);
+  --text:         var(--ink-11);
+  --muted:        var(--ink-7);
+  --muted2:       var(--ink-6);
   --border-faint: rgba(255,255,255,0.07);
   --border-dim:   rgba(255,255,255,0.1);
-  --surface-bg:   #0a0a0a;
+  --surface-bg:   var(--ink-1);
+  /* Hairline: the reference designs divide with 1px rules and space rather
+     than with filled, bordered, rounded boxes. This is that rule's colour,
+     so a hairline-divided row is a token swap and not a new literal. */
+  --hairline:     rgba(255,255,255,0.09);
+
+  /* ── ELEVATION (P1) ────────────────────────────────────────────────
+     Shadow was previously ad-hoc per component. Two steps only: a resting
+     lift and a floating/overlay lift. On a true-black canvas a shadow
+     reads as a soft halo rather than a drop, so both are deliberately
+     low-opacity and wide. */
+  --elev-1: 0 2px 12px -4px rgba(0,0,0,.7);
+  --elev-2: 0 12px 32px -12px rgba(0,0,0,.85);
   --density:      1;       /* PM ThemeConfig density scale (mc-theme.js) */
 
   /* Macro tracker palette (mc-macros.js reads these, not hardcoded hex) */
@@ -81,12 +144,52 @@
   --fs-3xl:   20px;  /* section headings */
   --fs-title: 24px;  /* page title — single source for all .title */
   --fs-hero:  30px;  /* hero / display heading */
+  /* P1: the ramp topped out at 30px while the reference display titles run
+     ~36-38px. Premium reads from a WIDER dynamic range — 10px micro-labels
+     against a 38px display size — not from a larger middle. */
+  --fs-display: 38px; /* program name / landing display title */
 
-  /* ── WEIGHT SCALE (L1 Phase B) — the 4 weights actually in use ─────── */
+  /* ── WEIGHT SCALE (L1 Phase B; extended P1) ─────────────────────────
+     The app had NO light type weight. Measured across every stylesheet:
+     266 font-weight declarations, 264 of them >= 600 — 107x900, 87x800,
+     53x700, 17x600, TWO at 500 and ZERO at 400. --fw-medium:600 was the
+     scale's lightest token, so body copy, taglines and secondary text were
+     all set in what is really a display weight.
+
+     Uniform boldness is the single largest reason the app reads loud and
+     consumer-grade rather than premium. Premium interfaces get their calm
+     from EDITORIAL CONTRAST: light body copy set against heavy display
+     type. The two new steps below supply the light half of that pairing.
+
+     Roles, so this doesn't drift back:
+       --fw-light/--fw-regular   body copy, taglines, descriptions, any
+                                 running prose longer than a label
+       --fw-medium/--fw-semi     labels, meta, secondary emphasis
+       --fw-bold/--fw-black      display type, numerals, titles ONLY
+
+     The four original tokens keep their exact values, so nothing shifts
+     until a component deliberately opts in. */
+  --fw-light:  400;  /* body copy / running prose */
+  --fw-regular:500;  /* secondary body / taglines */
   --fw-medium: 600;  /* muted meta */
   --fw-semi:   700;  /* body emphasis */
   --fw-bold:   800;  /* card names / labels */
   --fw-black:  900;  /* titles / numerals */
+
+  /* ── RADIUS SCALE (P1) ──────────────────────────────────────────────
+     21 distinct border-radius px literals existed across the tree (1,2,3,
+     4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,999) with no token to
+     check a new one against — six of them inside a single 116-line
+     component file. Inconsistent corner geometry is exactly what breaks a
+     high-fidelity read at a glance, because the eye compares corners
+     across a screen even when it can't name what's wrong.
+     tools/check-design-tokens.js ratchets the off-scale count downward. */
+  --r-xs:   4px;   /* chips, tags, inline marks */
+  --r-sm:   8px;   /* small controls, thumbnails */
+  --r-md:  12px;   /* cards, rows, inputs */
+  --r-lg:  16px;   /* panels, sheets */
+  --r-xl:  24px;   /* hero surfaces, modals */
+  --r-pill: 999px; /* pills, fully-round buttons */
 
   /* ── SPACING RHYTHM (L1 Phase B) — 4px base step ──────────────────── */
   --sp-1:  4px;
@@ -891,14 +994,22 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
    left alone everywhere (per-program mid-tone accent already reads fine on
    a light background). */
 html[data-theme="light"]{
-  --body-bg:#f5f2ec;
-  --card-bg:#efe9db;
-  --text:#1c1a17;
-  --muted:#6b6459;
-  --muted2:#8a8377;
+  /* P1: re-pointed onto the shared --ink-* ramp. Every value below is the
+     SAME colour this block already shipped — the light theme's warm ramp is
+     the one the dark theme adopted, not the reverse — so light-mode rendered
+     output is byte-identical across this change and the light-mode contrast
+     ratchet cannot move because of it. */
+  --body-bg:var(--ink-10);
+  --card-bg:var(--ink-9);
+  --text:var(--ink-3);
+  --muted:var(--ink-6);
+  --muted2:var(--ink-7);
   --border-faint:rgba(28,26,23,0.06);
   --border-dim:rgba(28,26,23,0.1);
-  --surface-bg:#efe9db;
+  --surface-bg:var(--ink-9);
+  --hairline:rgba(28,26,23,0.12);
+  --elev-1:0 2px 12px -4px rgba(28,26,23,.12);
+  --elev-2:0 12px 32px -12px rgba(28,26,23,.20);
   /* Accent had no light value until audit G-04. The brand gold above is tuned
      for the near-black ground (9.42:1) and collapses to 1.88:1 on Sand, so
      every var(--accent) consumer — back links, eyebrows, section heads, active
