@@ -7,110 +7,229 @@
    accent is supplied at render time as inline custom properties on .pl-hero
    (--pl-accent / --pl-accent-rgb / --pl-accent-light), not the page's own
    --accent, so this component never depends on a host page defining one.
+
+   P2 (premium-design-roadmap.md) moved this file onto the --ink, --r and
+   --fw scales. Four things changed and each is a decision, not a tidy-up.
+
+   (Never end a token glob with an asterisk immediately followed by a slash
+   inside a CSS comment — that pair IS a comment terminator. Writing the two
+   token families separated by a slash closed this comment twenty lines early
+   on the first attempt and silently deleted the entire .pl-hero rule that
+   followed it. No error is raised anywhere: the browser just drops the rule,
+   every alias below goes undefined, and the landing renders with a 16px
+   title and an unstyled CTA. Separate globs with spaces, or use a comma.)
+
+   1. BOXES BECAME SPACE AND HAIRLINES. .pl-stat and .pl-inside-row were
+      filled, bordered, rounded boxes; the reference designs divide with 1px
+      rules and whitespace and carry no chrome at all. Boxes on boxes is the
+      single most "template-y" thing a dark UI can do.
+   2. ONE ACCENT PER SCREEN (decision 4). The accent used to paint the badge,
+      the tier pill, the schedule tag, the active day swatch, the inside-row
+      icons AND the CTA — six places. It now carries exactly one UI signal,
+      the tier pill (this screen's analogue of the reference's difficulty
+      glyph), plus the ambient radial field that gives each program its
+      identity. Structural state — a training day vs a rest day — is carried
+      by the neutral ramp's own contrast, which is what the reference does.
+   3. THE CTA INVERTED. A near-white pill with ink text, per decision 3:
+      with photography ruled out, inverted contrast is what gives the primary
+      action the weight the reference gets from a full-bleed image.
+   4. LIGHT BODY COPY. .pl-tagline and .pl-inside-body drop to --fw-light /
+      --fw-regular. They were 500 and 600 — display weights doing body work.
+      Light type needs MORE contrast, not less, so they sit on --ink-8/--ink-7
+      rather than the dimmer greys they used to.
    ========================================================================== */
+/* ── TOKEN FALLBACKS — this component must survive without base.css ──────
+   FOUR landings (cat-hv, cat-ie, cat-ks, cat-mm) deliberately do not link
+   base.css. They are documented self-contained pages (DG-1/DG-2) carrying
+   their own small copy of the type-identity tokens — and they load THIS
+   stylesheet. The file used to survive there by hardcoding every value
+   ('Archivo', literal hex, literal px), which is exactly why it drifted off
+   the scale in the first place.
+
+   P2's first pass moved everything onto base.css tokens and broke that
+   contract SILENTLY: on those four pages `font-size:var(--fs-display)` is an
+   invalid declaration, so .pl-name fell back to the inherited 16px, .pl-cta
+   lost its background and radius entirely, and the stat hairlines vanished.
+   Nothing threw — it rendered wrong on a third of the landings. Caught by
+   driving all 13, not by reading.
+
+   Each token is therefore aliased to a --pl-* name whose fallback is the
+   identical base.css literal. Where base.css IS present the fallback is never
+   reached and the real ramp wins, including its light-theme values; where it
+   is absent the component still renders correctly in dark.
+
+   The alias must NOT be self-referential. `--ink-0: var(--ink-0, #000)` reads
+   like the obvious idiom and is a CSS CYCLE: the declaration depends on
+   itself, so the property goes guaranteed-invalid and every consumer falls
+   back to its initial value. Verified in a browser rather than argued — a
+   width came out as `auto` (1264px) and a height as 0, i.e. worse than doing
+   nothing, and in BOTH the base.css-present and base.css-absent cases. */
 .pl-hero{
+  --pl-ink-0: var(--ink-0, #000000);
+  --pl-ink-3: var(--ink-3, #1c1a17);
+  --pl-ink-5: var(--ink-5, #4a453f);
+  --pl-ink-6: var(--ink-6, #6b6459);
+  --pl-ink-7: var(--ink-7, #8a8377);
+  --pl-ink-8: var(--ink-8, #cfc9bf);
+  --pl-ink-10: var(--ink-10, #f5f2ec);
+  --pl-ink-11: var(--ink-11, #faf7f0);
+  --pl-r-sm: var(--r-sm, 8px);
+  --pl-r-md: var(--r-md, 12px);
+  --pl-r-pill: var(--r-pill, 999px);
+  --pl-fs-2xs: var(--fs-2xs, 11px);
+  --pl-fs-xs: var(--fs-xs, 12px);
+  --pl-fs-sm: var(--fs-sm, 13px);
+  --pl-fs-md: var(--fs-md, 14px);
+  --pl-fs-lg: var(--fs-lg, 15px);
+  --pl-fs-xl: var(--fs-xl, 16px);
+  --pl-fs-3xl: var(--fs-3xl, 20px);
+  --pl-fs-display: var(--fs-display, 38px);
+  --pl-fw-light: var(--fw-light, 400);
+  --pl-fw-regular: var(--fw-regular, 500);
+  --pl-fw-medium: var(--fw-medium, 600);
+  --pl-fw-semi: var(--fw-semi, 700);
+  --pl-fw-bold: var(--fw-bold, 800);
+  --pl-fw-black: var(--fw-black, 900);
+  --pl-font-display: var(--font-display, 'Archivo', system-ui, sans-serif);
+  --pl-font-ui: var(--font-ui, 'Manrope', system-ui, sans-serif);
+  --pl-border-faint: var(--border-faint, rgba(255,255,255,0.07));
+  --pl-border-dim: var(--border-dim, rgba(255,255,255,0.1));
+  --pl-hairline: var(--hairline, rgba(255,255,255,0.09));
+  --pl-elev-2: var(--elev-2, 0 12px 32px -12px rgba(0,0,0,.85));
+  --pl-duration-fast: var(--duration-fast, .15s);
+  --pl-ease-standard: var(--ease-standard, ease);
+
   position:relative;overflow:hidden;
-  background:radial-gradient(120% 60% at 50% -6%, rgba(var(--pl-accent-rgb),.16) 0%, #0a0a0b 60%);
+  /* The gradient's far stop was a hardcoded #0a0a0b. With P1's true-black
+     canvas that left a visible seam where the hero met the page, so it ends
+     on the canvas token itself and cannot drift from it again. */
+  background:radial-gradient(120% 60% at 50% -6%, rgba(var(--pl-accent-rgb),.16) 0%, var(--pl-ink-0) 60%);
   padding-bottom:26px;
-  font-family:'Manrope',system-ui,sans-serif;
-  color:#e5e5e5;
+  font-family:var(--pl-font-ui);
+  color:var(--pl-ink-8);
 }
 .pl-hero *{box-sizing:border-box;}
 .pl-hero-inner{max-width:680px;margin:0 auto;}
 
 /* top bar */
 .pl-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 4px;position:relative;z-index:1;}
-.pl-icon-btn{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;}
+/* 44x44, not the 38x38 this shipped with. These are the Back and Menu
+   controls on every program landing — primary navigation, under the app's
+   own 44pt touch floor. Verified identical on the parent commit, so P2 did
+   not cause it; fixed as a one-rule change since the file was in hand. It is
+   the same family as the .mc-surprise-btn / .inst-header-link shortfall
+   CLAUDE.md records as caught by no gate today: check-journey.js only
+   measures session-shell controls, and no landing is in its table. */
+.pl-icon-btn{width:44px;height:44px;border-radius:var(--pl-r-md);background:rgba(255,255,255,.06);border:1px solid var(--pl-border-dim);display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;}
 .pl-topbar-sp{flex:1;}
-.pl-tier-label{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:var(--fs-2xs);letter-spacing:.16em;text-transform:uppercase;color:#8b8b92;}
-.pl-tier-tappable{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .12s ease;}
+.pl-tier-label{font-family:var(--pl-font-display);font-weight:var(--pl-fw-bold);font-size:var(--pl-fs-2xs);letter-spacing:.16em;text-transform:uppercase;color:var(--pl-ink-7);}
+.pl-tier-tappable{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity var(--pl-duration-fast) var(--pl-ease-standard);}
 .pl-tier-tappable:active{opacity:.6;}
-.pl-tier-tappable::after{content:'\203A';display:inline-block;margin-left:4px;font-weight:800;opacity:.7;}
+.pl-tier-tappable::after{content:'\203A';display:inline-block;margin-left:4px;font-weight:var(--pl-fw-bold);opacity:.7;}
 
 /* F6: the 190px .pl-imgband placeholder is deleted. It painted a repeating
    stripe gradient behind a scrim and an animated sheen, held no image, and was
    never going to (this component's roadmap rules photography out) — so it was
    the tallest element on every landing and said nothing about the program.
    The stat row now occupies that space. .pl-badge stays, re-anchored into the
-   title block as the program's identity glyph. */
-.pl-badge{width:44px;height:44px;border-radius:13px;margin-bottom:14px;
-  background:rgba(var(--pl-accent-rgb),.18);border:1px solid rgba(var(--pl-accent-rgb),.3);
-  display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -8px rgba(var(--pl-accent-rgb),.55);
+   title block as the program's identity glyph.
+   P2: neutral, not accent-filled — the tier pill is this screen's one accent. */
+.pl-badge{width:44px;height:44px;border-radius:var(--pl-r-md);margin-bottom:14px;
+  background:rgba(255,255,255,.05);border:1px solid var(--pl-border-dim);
+  display:flex;align-items:center;justify-content:center;
 }
 
 /* title block */
 .pl-title-block{padding:16px 20px 0;position:relative;z-index:1;}
-.pl-tier-pill{display:inline-block;font-family:'Archivo',system-ui,sans-serif;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+/* The ONE accent on this screen. */
+.pl-tier-pill{display:inline-block;font-family:var(--pl-font-display);font-size:10.5px;font-weight:var(--pl-fw-bold);letter-spacing:.1em;text-transform:uppercase;
   color:var(--pl-accent-light);background:rgba(var(--pl-accent-rgb),.14);border:1px solid rgba(var(--pl-accent-rgb),.3);
-  border-radius:20px;padding:4px 11px;margin-bottom:12px;
+  border-radius:var(--pl-r-pill);padding:4px 11px;margin-bottom:12px;
 }
-.pl-name{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:var(--fs-hero);line-height:1.08;letter-spacing:-.02em;color:#f6f5f2;}
-.pl-tagline{font-size:13.5px;font-weight:500;color:#a6a6ad;line-height:1.55;margin-top:9px;}
+.pl-name{font-family:var(--pl-font-display);font-weight:var(--pl-fw-bold);font-size:var(--pl-fs-display);line-height:1.05;letter-spacing:-.025em;color:var(--pl-ink-11);}
+.pl-tagline{font-size:var(--pl-fs-md);font-weight:var(--pl-fw-light);color:var(--pl-ink-8);line-height:1.6;margin-top:11px;max-width:34ch;}
 
-/* stat strip */
-/* F6: grid-auto-flow instead of repeat(3,1fr) — a program with no schedule
+/* stat strip — hairline-divided cells, no fill, no border, no radius.
+   F6: grid-auto-flow instead of repeat(3,1fr) — a program with no schedule
    record yields its cells from `meta`, which is 1-3 segments, not always 3. */
-.pl-stats{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px;padding:18px 20px 0;position:relative;z-index:1;}
-.pl-stat{border-radius:14px;padding:12px 6px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);text-align:center;}
-.pl-stat-v{font-family:'Archivo',system-ui,sans-serif;font-weight:900;font-size:var(--fs-xl);color:#f4f3f1;}
-.pl-stat-l{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7d7d84;margin-top:3px;}
+.pl-stats{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:0;padding:24px 20px 0;position:relative;z-index:1;}
+.pl-stat{padding:2px 6px;text-align:center;}
+.pl-stat + .pl-stat{border-left:1px solid var(--pl-hairline);}
+.pl-stat-v{font-family:var(--pl-font-display);font-weight:var(--pl-fw-black);font-size:var(--pl-fs-3xl);letter-spacing:-.02em;color:var(--pl-ink-11);}
+.pl-stat-l{font-size:9.5px;font-weight:var(--pl-fw-semi);letter-spacing:.08em;text-transform:uppercase;color:var(--pl-ink-7);margin-top:5px;}
 
 /* "this week" schedule strip */
-.pl-sched{padding:24px 20px 0;position:relative;z-index:1;}
-.pl-sched-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;}
-.pl-sched-title{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:var(--fs-xl);letter-spacing:-.01em;color:#f4f3f1;}
-.pl-sched-tag{font-size:var(--fs-xs);font-weight:700;color:var(--pl-accent-light);}
+.pl-sched{padding:30px 20px 0;position:relative;z-index:1;}
+.pl-sched-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;}
+.pl-sched-title{font-family:var(--pl-font-display);font-weight:var(--pl-fw-bold);font-size:var(--pl-fs-xl);letter-spacing:-.01em;color:var(--pl-ink-11);}
+.pl-sched-tag{font-size:var(--pl-fs-xs);font-weight:var(--pl-fw-medium);color:var(--pl-ink-7);}
 .pl-sched-row{display:flex;gap:8px;}
-.pl-day{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;}
-.pl-day-swatch{width:100%;aspect-ratio:1;border-radius:11px;display:flex;align-items:center;justify-content:center;font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:var(--fs-2xs);}
-.pl-day.on .pl-day-swatch{background:rgba(var(--pl-accent-rgb),.16);border:1px solid rgba(var(--pl-accent-rgb),.4);color:var(--pl-accent);}
-.pl-day.off .pl-day-swatch{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);color:#4a4a50;}
-.pl-day-label{font-size:8.5px;font-weight:700;color:#7d7d84;letter-spacing:.02em;}
+.pl-day{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;}
+.pl-day-swatch{width:100%;aspect-ratio:1;border-radius:var(--pl-r-md);display:flex;align-items:center;justify-content:center;font-family:var(--pl-font-display);font-weight:var(--pl-fw-bold);font-size:var(--pl-fs-2xs);}
+/* Training vs rest is carried by the neutral ramp's own contrast, not by the
+   accent — same as the reference, whose schedule and stat rows are pure
+   monochrome. An "on" day reads as raised, an "off" day as recessed. */
+.pl-day.on .pl-day-swatch{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);color:var(--pl-ink-11);}
+.pl-day.off .pl-day-swatch{background:rgba(255,255,255,.02);border:1px solid var(--pl-border-faint);color:var(--pl-ink-5);}
+.pl-day-label{font-size:8.5px;font-weight:var(--pl-fw-semi);color:var(--pl-ink-7);letter-spacing:.02em;}
 
-/* what's inside */
-.pl-inside{padding:26px 20px 0;position:relative;z-index:1;}
-.pl-inside-title-h{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:var(--fs-xl);letter-spacing:-.01em;color:#f4f3f1;margin-bottom:10px;}
-.pl-inside-list{display:flex;flex-direction:column;gap:9px;}
-.pl-inside-row{display:flex;align-items:flex-start;gap:11px;border-radius:15px;padding:13px 14px;
-  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);text-decoration:none;color:inherit;
+/* what's inside — hairline-separated rows on flat ground, no boxes */
+.pl-inside{padding:30px 20px 0;position:relative;z-index:1;}
+.pl-inside-title-h{font-family:var(--pl-font-display);font-weight:var(--pl-fw-bold);font-size:var(--pl-fs-xl);letter-spacing:-.01em;color:var(--pl-ink-11);margin-bottom:4px;}
+.pl-inside-list{display:flex;flex-direction:column;}
+.pl-inside-row{display:flex;align-items:flex-start;gap:13px;padding:15px 2px;
+  border-bottom:1px solid var(--pl-hairline);text-decoration:none;color:inherit;
 }
-a.pl-inside-row{transition:background .12s ease;}
-a.pl-inside-row:active{background:rgba(255,255,255,.06);}
-.pl-inside-icon{width:30px;height:30px;border-radius:9px;background:rgba(var(--pl-accent-rgb),.14);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.pl-inside-title{font-family:'Archivo',system-ui,sans-serif;font-weight:700;font-size:13.5px;color:#f4f3f1;}
-.pl-inside-body{font-size:var(--fs-xs);color:#8b8b92;margin-top:2px;line-height:1.45;}
+.pl-inside-row:last-child{border-bottom:none;}
+a.pl-inside-row{transition:background var(--pl-duration-fast) var(--pl-ease-standard);}
+a.pl-inside-row:active{background:rgba(255,255,255,.05);}
+.pl-inside-icon{width:30px;height:30px;border-radius:var(--pl-r-sm);background:rgba(255,255,255,.05);color:var(--pl-ink-8);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pl-inside-title{font-family:var(--pl-font-display);font-weight:var(--pl-fw-semi);font-size:var(--pl-fs-sm);color:var(--pl-ink-11);}
+.pl-inside-body{font-size:var(--pl-fs-xs);font-weight:var(--pl-fw-regular);color:var(--pl-ink-7);margin-top:3px;line-height:1.5;}
 
 /* CTA — the design spec pins this to the viewport bottom, but this hero sits
    above a page's existing content (timers, nav bars, finish banners already
    use fixed positioning there), so it renders in normal flow at the end of
-   the hero block instead of position:fixed. */
-.pl-cta-wrap{padding:24px 20px 0;position:relative;z-index:1;}
-.pl-cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:15px;border:none;border-radius:16px;cursor:pointer;
-  background:linear-gradient(135deg,var(--pl-accent-light),var(--pl-accent));
-  box-shadow:0 14px 28px -10px rgba(var(--pl-accent-rgb),.47);
-  font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:15.5px;color:#14110b;letter-spacing:.01em;
+   the hero block instead of position:fixed.
+   P2: inverted contrast (near-white pill, ink text). With photography ruled
+   out by decision 3, this is what gives the primary action the weight the
+   reference gets from its full-bleed image — and it keeps the accent free to
+   mean exactly one thing on this screen. */
+.pl-cta-wrap{padding:28px 20px 0;position:relative;z-index:1;}
+.pl-cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:16px;border:none;border-radius:var(--pl-r-pill);cursor:pointer;
+  background:var(--pl-ink-11);box-shadow:var(--pl-elev-2);
+  font-family:var(--pl-font-display);font-weight:var(--pl-fw-bold);font-size:var(--pl-fs-lg);color:var(--pl-ink-0);letter-spacing:.01em;
+  transition:transform var(--pl-duration-fast) var(--pl-ease-standard);
 }
 .pl-cta:active{transform:scale(.99);}
-.pl-cta-hint{display:block;width:100%;background:none;border:none;text-align:center;font-size:var(--fs-xs);font-weight:700;color:#8b8b92;margin-top:11px;cursor:pointer;font-family:inherit;padding:4px;}
+.pl-cta-hint{display:block;width:100%;background:none;border:none;text-align:center;font-size:var(--pl-fs-xs);font-weight:var(--pl-fw-medium);color:var(--pl-ink-7);margin-top:14px;cursor:pointer;font-family:inherit;padding:10px;}
 
 /* ── SAND LIGHT MODE (Phase 7) ─────────────────────────────────────────── */
+/* P2: re-pointed onto the shared ramp. The rules that used to repaint a fill
+   or a border on .pl-stat / .pl-inside-row are gone because those elements no
+   longer HAVE a fill or a border in either theme — --hairline already flips
+   per theme, so one rule serves both. */
 html[data-theme="light"] .pl-hero{
-  background:radial-gradient(120% 60% at 50% -6%, rgba(var(--pl-accent-rgb),0.18) 0%, #f5f2ec 60%);
-  color:#1c1a17;
+  background:radial-gradient(120% 60% at 50% -6%, rgba(var(--pl-accent-rgb),0.18) 0%, var(--pl-ink-10) 60%);
+  color:var(--pl-ink-6);
 }
 html[data-theme="light"] .pl-icon-btn{background:rgba(28,26,23,0.05);border-color:rgba(28,26,23,0.1);}
-html[data-theme="light"] .pl-tier-label{color:#6b6459;}
-html[data-theme="light"] .pl-name{color:#1c1a17;}
-html[data-theme="light"] .pl-tagline{color:#6b6459;}
-html[data-theme="light"] .pl-stat{background:rgba(28,26,23,0.03);border-color:rgba(28,26,23,0.08);}
-html[data-theme="light"] .pl-stat-v{color:#1c1a17;}
-html[data-theme="light"] .pl-stat-l{color:#8a8377;}
-html[data-theme="light"] .pl-sched-title{color:#1c1a17;}
-html[data-theme="light"] .pl-day.off .pl-day-swatch{background:rgba(28,26,23,0.03);border-color:rgba(28,26,23,0.08);}
-html[data-theme="light"] .pl-day-label{color:#8a8377;}
-html[data-theme="light"] .pl-inside-title-h{color:#1c1a17;}
-html[data-theme="light"] .pl-inside-row{background:rgba(28,26,23,0.03);border-color:rgba(28,26,23,0.08);}
-html[data-theme="light"] a.pl-inside-row:active{background:rgba(28,26,23,0.06);}
-html[data-theme="light"] .pl-inside-title{color:#1c1a17;}
-html[data-theme="light"] .pl-inside-body{color:#6b6459;}
-html[data-theme="light"] .pl-cta-hint{color:#6b6459;}
+html[data-theme="light"] .pl-badge{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.1);}
+html[data-theme="light"] .pl-tier-label{color:var(--pl-ink-6);}
+html[data-theme="light"] .pl-name{color:var(--pl-ink-3);}
+html[data-theme="light"] .pl-tagline{color:var(--pl-ink-6);}
+html[data-theme="light"] .pl-stat-v{color:var(--pl-ink-3);}
+html[data-theme="light"] .pl-stat-l{color:var(--pl-ink-6);}
+html[data-theme="light"] .pl-sched-title{color:var(--pl-ink-3);}
+html[data-theme="light"] .pl-sched-tag{color:var(--pl-ink-6);}
+html[data-theme="light"] .pl-day.on .pl-day-swatch{background:rgba(28,26,23,0.10);border-color:rgba(28,26,23,0.18);color:var(--pl-ink-3);}
+html[data-theme="light"] .pl-day.off .pl-day-swatch{background:rgba(28,26,23,0.02);border-color:rgba(28,26,23,0.08);color:var(--pl-ink-7);}
+html[data-theme="light"] .pl-day-label{color:var(--pl-ink-6);}
+html[data-theme="light"] .pl-inside-title-h{color:var(--pl-ink-3);}
+html[data-theme="light"] .pl-inside-icon{background:rgba(28,26,23,0.05);color:var(--pl-ink-6);}
+html[data-theme="light"] a.pl-inside-row:active{background:rgba(28,26,23,0.05);}
+html[data-theme="light"] .pl-inside-title{color:var(--pl-ink-3);}
+html[data-theme="light"] .pl-inside-body{color:var(--pl-ink-6);}
+/* The CTA inverts the other way in light mode — ink pill, cream text. */
+html[data-theme="light"] .pl-cta{background:var(--pl-ink-3);color:var(--pl-ink-11);}
+html[data-theme="light"] .pl-cta-hint{color:var(--pl-ink-6);}

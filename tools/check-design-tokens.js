@@ -72,6 +72,43 @@ for (const f of files) {
   const src = decomment(fs.readFileSync(path.join(ROOT, f), 'utf8'));
   const lineOf = idx => src.slice(0, idx).split('\n').length;
 
+  /* 0. A comment closed by a token glob. A token name ending in an asterisk,
+        written directly against a slash, forms a comment TERMINATOR — so the
+        rest of the prose is parsed as CSS and swallows whatever rule follows
+        it. Nothing throws; the browser silently drops the rule.
+        (This very comment originally spelled that terminator out as a literal
+        and closed itself twenty lines early, in JavaScript this time. The
+        trap is not CSS-specific: it is every C-style comment there is.)
+
+        Both known instances were real. P2 introduced one in mc-program-hero.css
+        that deleted the entire .pl-hero token-alias rule — every landing
+        rendered with a 16px title and an unstyled CTA. The sweep for it then
+        found a PRE-EXISTING one in mc-light.css that had been eating
+        `html[data-theme="light"] .mcl-toggle{...}`, confirmed absent from
+        document.styleSheets, so the Log Sets toggle kept its dark colour on the
+        cream ground — the exact bug that rule was written to fix.
+
+        Read on the raw source, before comments are stripped. */
+  {
+    const raw = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    let i = 0;
+    while (true) {
+      const a = raw.indexOf('/*', i);
+      if (a < 0) break;
+      const b = raw.indexOf('*/', a + 2);
+      if (b < 0) break;
+      if (raw.slice(b - 1, b + 2) === '-*/') {
+        fail.push(`${f}:${raw.slice(0, b).split('\n').length} — this comment is ` +
+          `closed by a token glob: a name ending in an asterisk sits directly ` +
+          `against the closing slash. That pair IS a comment terminator, so ` +
+          `the rest of the comment is parsed as CSS and the next rule is ` +
+          `silently dropped.\n    Separate the glob from the slash with a ` +
+          `space, or rewrite the sentence without the slash.`);
+      }
+      i = b + 2;
+    }
+  }
+
   /* 1. font-weight — hard fail outside the scale */
   for (const m of src.matchAll(/font-weight:\s*(\d{3})/g)) {
     counts.weights++;

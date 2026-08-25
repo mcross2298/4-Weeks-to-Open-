@@ -167,7 +167,12 @@
   }
 
   function renderInsideRow(row) {
-    var icon = '<div class="pl-inside-icon" style="color:var(--pl-accent)">' + rowIconSvg(row.icon) + '</div>';
+    /* P2 (premium-design-roadmap.md, decision 4 — one accent per screen):
+       the icon glyph used to be painted with an inline color:var(--pl-accent),
+       which put a second accent on the screen no stylesheet could override
+       without !important. Presentation belongs in mc-program-hero.css, which
+       now colours it from the neutral ramp in both themes. */
+    var icon = '<div class="pl-inside-icon">' + rowIconSvg(row.icon) + '</div>';
     var text = '<div><div class="pl-inside-title">' + escapeHtml(row.title) + '</div>' +
       (row.body ? '<div class="pl-inside-body">' + escapeHtml(row.body) + '</div>' : '') + '</div>';
     var tag = row.href ? 'a' : 'div';
