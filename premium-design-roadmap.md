@@ -144,12 +144,33 @@ Inspect the visual diff on all five `kitchen-sink` baselines **before**
 re-baselining, not after (`F3-3`'s discipline). Contrast budgets re-measured.
 `quick-tour.html` updated if any of this is user-discoverable.
 
+> **Constraint found in `P1`, and it governs this phase: contrast and visual
+> baselines cannot be rewritten from an agent sandbox.** `fonts.googleapis.com`
+> is blocked by the sandbox proxy, `document.fonts` comes back empty, and every
+> page renders in the `system-ui` fallback instead of Archivo/Manrope. Text
+> metrics therefore differ from CI, where the fonts load.
+>
+> This is not theoretical. `P1` ran `check-contrast.js` twice against an
+> unchanged tree: the enforcing pass reported *"310 findings, none over budget,
+> 5 pages improved"*, but `--update` then wrote **11 budget INCREASES** on pages
+> the change never touched (`pm-mode-overview` 82→83, `psu-strength` 18→19,
+> `quick-tour` 6→7, …) alongside the 5 real decreases. Same tool, same tree,
+> different per-page numbers — noise, not signal.
+>
+> Committing that would have permanently loosened the ratchet on 11 pages using
+> wrong font metrics, which is strictly worse than the "re-baseline to get past
+> a gate" antipattern the `P0` hex-metric fix already avoided once. The file was
+> reverted. **Re-baseline contrast and visual budgets from CI, or from an
+> environment where `fonts.gstatic.com` resolves — never from here.** Enforcing
+> runs are still trustworthy (they passed), only `--update` is not.
+
 ---
 
 ## Risks carried
 
 - **Both ratchets will move.** That is expected and intended; the discipline
-  is that every diff is inspected before a baseline is rewritten.
+  is that every diff is inspected before a baseline is rewritten — and, per the
+  `P4` constraint above, that the rewrite happens somewhere the webfonts load.
 - **`--text` is consumed fleet-wide.** Re-pointing it is the highest-leverage
   and highest-blast-radius edit in `P1`. It is why `P1` ships alone, with no
   component changes, so any regression has exactly one possible cause.
