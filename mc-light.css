@@ -124,9 +124,19 @@ html[data-theme="light"] .setlog-hl{color:#8a8377;}
 html[data-theme="light"] .set-check{border-color:rgba(28,26,23,0.16);}
 
 /* ── mc-setlog.js logger (.mcl-* — shared Log Sets panel on every workout
-   page) — same near-white-on-dark palette as .set-*/.tf above with no light
-   override, so weight/reps/RPE values and headers were unreadable on the
-   cream background. */
+   page) — same near-white-on-dark palette as the .set- and .tf rules above
+   with no light override, so weight/reps/RPE values and headers were
+   unreadable on the cream background.
+
+   The glob used to be written with an asterisk directly against the slash
+   before .tf, which forms a comment terminator: this comment closed on that
+   line, the remaining three lines of prose were parsed as CSS, and they
+   swallowed the .mcl-toggle rule immediately below as part of one invalid
+   selector. Verified in the browser — the rule was absent from
+   document.styleSheets, so the Log Sets toggle kept its dark-mode colour on
+   the cream ground, i.e. the exact unreadability this block exists to fix.
+   Pre-existing; found by a tree-wide sweep for the same hazard after P2
+   introduced one of its own. */
 html[data-theme="light"] .mcl-toggle{color:#8a8377;}
 html[data-theme="light"] .mcl-count{background:rgba(28,26,23,0.05);}
 html[data-theme="light"] .mcl-count.done{color:#047857;background:rgba(52,211,153,0.16);}
