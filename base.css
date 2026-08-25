@@ -393,7 +393,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
   font-weight:900;font-size:var(--fs-2xs);background:transparent;
   border-bottom:3px solid transparent;text-align:center;
   letter-spacing:0.05em;min-height:48px;
-  color:#94a3b8;
+  color:var(--ink-8,#cfc9bf);
 }
 .wtab.active{
   color:var(--accent);font-size:var(--fs-md);
@@ -537,13 +537,13 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .tb-highset{background:rgba(52,211,153,0.2);color:var(--success);}
 .tb-superset{background:rgba(168,85,247,0.22);color:#c084fc;}
 .tb-minrest{background:rgba(139,92,246,0.2);color:#a78bfa;}
-.tb-optional{background:rgba(100,116,139,0.2);color:#94a3b8;}
+.tb-optional{background:rgba(107,100,89,0.2);color:var(--ink-8,#cfc9bf);}
 .tb-finisher{background:rgba(16,185,129,0.2);color:var(--success);}
 /* Equipment badges — distinct from the intensifier set above so
    station-anchoring (which equipment a block uses) reads as its own visual
    category, not more intensifier noise. tb-dumbbell/tb-cable existed with
    no color at all; tb-barbell/tb-machine/tb-smith/tb-plate didn't exist. */
-.tb-barbell{background:rgba(148,163,184,0.2);color:#cbd5e1;}
+.tb-barbell{background:rgba(138,131,119,0.2);color:var(--ink-8,#cfc9bf);}
 .tb-dumbbell{background:rgba(56,189,248,0.2);color:#7dd3fc;}
 .tb-cable{background:rgba(45,212,191,0.2);color:#5eead4;}
 .tb-machine{background:rgba(161,161,170,0.2);color:#d4d4d8;}
@@ -592,7 +592,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
    One rest timer rule) -- here and in the 10 page-local <style> blocks that
    each carried their own copy. .idle is the chip's only state, and is still
    applied by every emitter. */
-.rest-timer.idle{background:rgba(100,116,139,0.12);border:1px solid rgba(100,116,139,0.2);}
+.rest-timer.idle{background:rgba(107,100,89,0.12);border:1px solid rgba(107,100,89,0.2);}
 .rest-timer-icon{font-size:var(--fs-sm);}
 .rest-timer-label{font-size:var(--fs-2xs);font-weight:800;letter-spacing:0.04em;}
 .rest-timer.idle .rest-timer-label{color:var(--muted);}
@@ -617,7 +617,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 
 /* ── TIMER PRESETS ──────────────────────────────────────────────── */
 .timer-presets{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;justify-content:center;}
-.timer-preset{padding:5px 12px;min-height:44px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.07);color:#94a3b8;font-size:var(--fs-2xs);font-weight:800;cursor:pointer;letter-spacing:0.05em;display:inline-flex;align-items:center;justify-content:center;}
+.timer-preset{padding:5px 12px;min-height:44px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.07);color:var(--ink-8,#cfc9bf);font-size:var(--fs-2xs);font-weight:800;cursor:pointer;letter-spacing:0.05em;display:inline-flex;align-items:center;justify-content:center;}
 .timer-preset:active{background:rgba(var(--accent-rgb),0.2);color:var(--accent);border-color:rgba(var(--accent-rgb),0.4);}
 
 /* ── PROGRESS BAR ───────────────────────────────────────────────── */
@@ -752,7 +752,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .a-reps{padding:2px calc(16px * var(--density)) calc(10px * var(--density)) calc(18px * var(--density));}
 .a-leg{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
 .a-leg + .a-leg{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,0.07);}
-.a-rep{font-size:calc(var(--fs-title) * var(--density));font-weight:900;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;color:#3a4661;line-height:1;transition:color var(--duration-moderate) var(--ease-standard),opacity var(--duration-moderate) var(--ease-standard),text-shadow var(--duration-moderate) var(--ease-standard);}
+.a-rep{font-size:calc(var(--fs-title) * var(--density));font-weight:900;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;color:var(--ink-5,#4a453f);line-height:1;transition:color var(--duration-moderate) var(--ease-standard),opacity var(--duration-moderate) var(--ease-standard),text-shadow var(--duration-moderate) var(--ease-standard);}
 .a-rep.live{color:#fff;text-shadow:0 0 10px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.55),0 0 22px rgba(var(--rep-glow-rgb,var(--accent-rgb)),0.4);animation:repGlow var(--duration-slowest) var(--ease-pulse) infinite;}
 /* completed working set — settles to a calm dim-green, no glow (Phase 3) */
 .a-rep.rep-done{color:var(--success);opacity:0.5;text-shadow:none;animation:none;}
@@ -1071,9 +1071,9 @@ html[data-theme="light"] .tb-amrap{background:rgba(239,68,68,0.16);color:#b91c1c
 html[data-theme="light"] .tb-highset{background:rgba(52,211,153,0.16);color:#047857;}
 html[data-theme="light"] .tb-superset{background:rgba(168,85,247,0.16);color:#7c3aed;}
 html[data-theme="light"] .tb-minrest{background:rgba(139,92,246,0.14);color:#6d28d9;}
-html[data-theme="light"] .tb-optional{background:rgba(100,116,139,0.14);color:#475569;}
+html[data-theme="light"] .tb-optional{background:rgba(107,100,89,0.14);color:var(--ink-6,#6b6459);}
 html[data-theme="light"] .tb-finisher{background:rgba(16,185,129,0.16);color:#047857;}
-html[data-theme="light"] .tb-barbell{background:rgba(100,116,139,0.16);color:#475569;}
+html[data-theme="light"] .tb-barbell{background:rgba(107,100,89,0.16);color:var(--ink-6,#6b6459);}
 html[data-theme="light"] .tb-dumbbell{background:rgba(14,165,233,0.14);color:#0369a1;}
 html[data-theme="light"] .tb-cable{background:rgba(20,184,166,0.14);color:#0f766e;}
 html[data-theme="light"] .tb-machine{background:rgba(113,113,122,0.16);color:#52525b;}
