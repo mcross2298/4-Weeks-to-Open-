@@ -167,6 +167,17 @@ jobs:
         # safe-area pass is — at runtime the broken and fixed forms look alike.
         run: node tools/check-topbar-inset.js
 
+      - name: Design-token scale (premium-design-roadmap.md P0)
+        # font-weight is a hard fail: every weight in the tree is already on
+        # the declared 400-900 scale, so this passes today and fails the
+        # moment an off-scale one appears. The other three are ratchets that
+        # may only go down — 97 of the tree's border-radius declarations sit
+        # off-scale today, and failing all 97 on day one would just get the
+        # gate disabled. A weight of 700 where 400 was meant renders fine,
+        # throws nothing and reads as deliberate, so like check-topbar-inset
+        # this is a SOURCE check; nothing else in this list can see it.
+        run: node tools/check-design-tokens.js
+
       - name: Market-extraction leak check (content-manifest.json)
         run: python3 tools/build-market.py --check
 
