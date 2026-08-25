@@ -86,11 +86,11 @@
 }
 .mcs-timer-wrap{display:flex;align-items:baseline;gap:5px;}
 .mcs-timer{
-  font-size:var(--fs-lg);font-weight:900;color:#fff;
+  font-size:var(--fs-lg);font-weight:900;color:var(--ink-11,#faf7f0);
   font-variant-numeric:tabular-nums;letter-spacing:0.02em;
 }
 .mcs-timer-label{
-  font-size:var(--fs-3xs);font-weight:700;color:#475569;
+  font-size:var(--fs-3xs);font-weight:700;color:var(--ink-6,#6b6459);
   letter-spacing:0.1em;text-transform:uppercase;
 }
 .mcs-sets-wrap{display:flex;align-items:baseline;gap:4px;text-align:right;}
@@ -99,7 +99,7 @@
   font-variant-numeric:tabular-nums;letter-spacing:-0.01em;
 }
 .mcs-sets-label{
-  font-size:var(--fs-3xs);font-weight:700;color:#475569;
+  font-size:var(--fs-3xs);font-weight:700;color:var(--ink-6,#6b6459);
   letter-spacing:0.1em;text-transform:uppercase;
 }
 /* Thin progress fill sits at the very bottom of the stat bar */
@@ -206,11 +206,11 @@ body.mcs-stat-active .summary-section.mcs-open{
   width:100%;display:flex;align-items:center;justify-content:center;gap:6px;
   padding:8px;border-radius:10px;
   background:transparent;border:none;
-  color:#94a3b8;font-family:inherit;font-size:var(--fs-xs);font-weight:800;letter-spacing:0.03em;
+  color:var(--ink-8,#cfc9bf);font-family:inherit;font-size:var(--fs-xs);font-weight:800;letter-spacing:0.03em;
   cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap;
   transition:all 0.15s;
 }
-.mcs-sumbtn:active{transform:scale(0.97);color:#cbd5e1;}
+.mcs-sumbtn:active{transform:scale(0.97);color:var(--ink-8,#cfc9bf);}
 .mcs-sumbtn.mcs-btn-open{
   color:var(--accent,#d4af37);
 }
@@ -218,7 +218,7 @@ body.mcs-stat-active .summary-section.mcs-open{
 /* ── IN-CARD PROGRESS BAR ────────────────────────────────────────── */
 .mcs-progress{margin-bottom:16px;}
 .mcs-progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
-.mcs-progress-label{font-size:var(--fs-2xs);font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;}
+.mcs-progress-label{font-size:var(--fs-2xs);font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-7,#8a8377);}
 .mcs-progress-pct{font-size:var(--fs-md);font-weight:900;color:#34d399;letter-spacing:-0.01em;}
 .mcs-progress-track{height:8px;border-radius:5px;background:rgba(255,255,255,0.08);overflow:hidden;}
 .mcs-progress-fill{height:100%;width:0;border-radius:5px;
@@ -248,7 +248,7 @@ body.mcs-stat-active .summary-section.mcs-open{
   border-bottom:1px solid rgba(255,255,255,0.05);}
 .sum-section .sum-row:last-of-type{border-bottom:none;}
 .sum-section .sum-ico{font-size:var(--fs-lg);width:22px;text-align:center;flex-shrink:0;}
-.sum-section .sum-nm{flex:1;font-size:var(--fs-xs);font-weight:600;color:#e2e8f0;line-height:1.3;}
+.sum-section .sum-nm{flex:1;font-size:var(--fs-xs);font-weight:600;color:var(--ink-11,#faf7f0);line-height:1.3;}
 .sum-section .sum-dt{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;}
 .sum-section .sum-st{font-size:var(--fs-2xs);font-weight:800;text-align:right;}
 .sum-section .sum-rp{font-size:var(--fs-2xs);font-weight:600;opacity:0.78;text-align:right;}
@@ -309,7 +309,7 @@ body.mcs-resting .mcs-rest{display:inline-flex;}
 .mcs-rest-val{font-size:15px;font-weight:800;letter-spacing:0.01em;
   font-variant-numeric:tabular-nums;color:var(--accent,#e0a82e);}
 .mcs-rest-label{font-size:9.5px;font-weight:700;letter-spacing:0.14em;
-  text-transform:uppercase;color:var(--muted,#8b95a4);}
+  text-transform:uppercase;color:var(--muted,var(--ink-7,#8a8377));}
 
 /* progress readout — also the mid-session summary toggle */
 /* M5: these were 34px -- under the 44pt floor, on the two controls that end a
@@ -319,14 +319,14 @@ body.mcs-resting .mcs-rest{display:inline-flex;}
    exercise-library star. */
 .mcs-setbtn{flex:0 0 auto;min-height:44px;margin-block:-2px;padding:6px 8px;background:none;border:0;
   font-size:12.5px;font-weight:800;letter-spacing:0.02em;white-space:nowrap;
-  font-variant-numeric:tabular-nums;color:var(--muted,#8b95a4);cursor:pointer;
+  font-variant-numeric:tabular-nums;color:var(--muted,var(--ink-7,#8a8377));cursor:pointer;
   -webkit-tap-highlight-color:transparent;}
-.mcs-setbtn.mcs-btn-open{color:var(--text,#e6e9ee);}
+.mcs-setbtn.mcs-btn-open{color:var(--text,var(--ink-11,#faf7f0));}
 
 /* the one terminal action */
 .mcs-endbtn{flex:0 0 auto;min-height:44px;margin-block:-2px;padding:7px 14px;border-radius:999px;
   background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.22);
-  color:var(--text,#e6e9ee);font-size:12.5px;font-weight:800;letter-spacing:0.02em;
+  color:var(--text,var(--ink-11,#faf7f0));font-size:12.5px;font-weight:800;letter-spacing:0.02em;
   white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .mcs-endbtn:active{transform:scale(0.97);}
 
