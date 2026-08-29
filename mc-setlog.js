@@ -17,6 +17,27 @@
      with the late native render, which then no-ops.
    ========================================================================== */
 (function () {
+  // W0 — Node-side hook so CI can regression-test the REAL prescription
+  // parser (same convention as mc-sync.js / mc-suggest.js) instead of a
+  // transcribed copy that could drift from what ships. Placed above the
+  // `window` guard on purpose: there is no window in Node, and the parser
+  // functions are `function` declarations further down this same closure, so
+  // hoisting has already defined them by the time this runs. See
+  // tools/test-mc-setlog-plan.js and tools/check-set-schemes.js.
+  if (typeof module !== 'undefined' && module.exports) {
+    // Deliberately only the four functions that already existed before W1:
+    // the tests assert the PUBLIC contract ("how many rows, targeting what"),
+    // not this file's internal decomposition, so they run unchanged against
+    // the old parser and the new one — which is what lets them be proven to
+    // fail on the tree before the fix lands.
+    module.exports = {
+      setCount:   function () { return setCount.apply(null, arguments); },
+      repFor:     function () { return repFor.apply(null, arguments); },
+      parseDrop:  function () { return parseDrop.apply(null, arguments); },
+      stripDrop:  function () { return stripDrop.apply(null, arguments); }
+    };
+    return;
+  }
   if (window.__mcSetlog) return;
   window.__mcSetlog = true;
 
@@ -268,17 +289,161 @@
   var RPE_STEPS = ['', '8', '8.5', '9', '9.5', '10', 'F'];
 
   // ---- parse the prescribed "sets" string --------------------------------
-  function setCount(s) {
-    if (!s) return 3;
-    var x = s.match(/^(\d+)\s*[x×]/i); if (x) return Math.min(parseInt(x[1], 10), 12);
-    var c = s.split(','); if (c.length > 1) return c.length;
-    var n = s.match(/^(\d+)/); return n ? Math.min(parseInt(n[1], 10), 8) : 3;
+  // ONE resolution, read by both setCount() and repFor(): a prescription
+  // becomes an ordered list of per-row rep targets, so the number of logging
+  // rows IS that list's length and row i's target IS list[i]. They used to be
+  // two independent parsers over the same string, and they disagreed —
+  // "25/20/20/15/12" built EIGHT rows, every one asking for 25 reps, for a
+  // five-step descending pyramid. Everything downstream inherits this: the
+  // "0/N Sets" strip badge, and (through planFor -> plannedSetCount)
+  // mc-finish.js's whole-workout total.
+  //
+  // '/' is overloaded FOUR ways in the authored data, and the order of the
+  // branches below is what keeps the two that were always correct correct —
+  // the multiplier settles the count before any slash is looked at:
+  //
+  //   1. "4×10 / 12 per side"       N× multiplier   -> 4 rows  (always right)
+  //   2. "4×6, + Cluster 6/6/6"     cluster inner   -> 4 rows  (always right)
+  //   3. "12, 12, 10 / 10, 10, 8"   leg separator   -> 3 rows  (was 5)
+  //   4. "25/20/20/15/12"           set separator   -> 5 rows  (was 8)
+  //
+  // See tools/test-mc-setlog-plan.js (every shape pinned) and
+  // tools/check-set-schemes.js (the fleet-wide invariants).
+
+  // Everything this parser needs is a FUNCTION DECLARATION, never a `var`
+  // initialiser: the Node export hook at the top of this file returns before
+  // any statement in the closure body runs, so a `var X = …` would still be
+  // undefined when CI calls in. Declarations hoist; assignments do not.
+
+  // A superset is 2 legs and a tri-set is 3 — ks-engine.js's GROUP_SIZE and
+  // mc-group-split.js's `tri = names.length >= 3` both say so. The bound
+  // matters: it is what separates a leg list from the per-ROUND form
+  // "12/12, 10/10, 8/8", where the COMMA is the outer separator and each
+  // slash pairs the two legs' reps inside one round. That form has 4 slash
+  // segments for 3 rounds, so a leg rule that just counted slashes would get
+  // it wrong; raising this bound needs a different discriminator, not a
+  // bigger number.
+  function maxLegs() { return 3; }
+  // A leading number is a SET count only when the prose says so ("4 sets",
+  // "3 sets to failure", "4–5 sets"). The same shape carrying a rep or
+  // duration unit — "100–200 reps", "30 sec each side", "21s" — prescribes
+  // REPS and names no set count at all; reading it as one clamped a
+  // hundred-rep finisher into eight logging rows.
+  function declaredSets(s) {
+    var m = String(s).match(/^\s*(\d+)\s*(?:[–\-—]\s*\d+\s*)?\+?\s*sets?\b/i);
+    return m ? Math.min(parseInt(m[1], 10), 12) : null;
   }
+
+  // The rep target one row asks for, read off its own slice of the
+  // prescription. It takes the FIRST number, never every digit in the slice
+  // run together: a slice routinely carries a second number that is not a rep
+  // target at all — a drop or cluster round ("10 + 1× Drop"), a back-off set
+  // ("4 + 1× back-off 12 reps"), or the other leg's reps ("12/12") — and
+  // concatenating them invented targets like 101, 411 and 121 that appear
+  // nowhere in the program. A LEADING multiplier is stripped first, because
+  // in "3× Cluster 8 reps" the 3 counts rounds and the 8 is the actual rep
+  // target. Guarded fleet-wide by tools/check-set-schemes.js's provenance
+  // check: no row may target a number its prescription does not contain.
+  function repDigits(r) {
+    var s = String(r == null ? '' : r).replace(/^[^\dA-Za-z]*\d+\s*[x×]\s*/i, '');
+    var n = s.match(/\d+/);
+    return n ? n[0].slice(0, 3) : '';
+  }
+  function slashSegs(s) {
+    return String(s).split('/').map(function (p) { return p.trim(); })
+      .filter(function (p) { return p.length; });
+  }
+  // "G1: … / G2: … / G3: …" (push-pull-legs' giant sets) puts a whole ROUND
+  // in each slash segment, so the segment count is the round count however
+  // many lifts each round happens to name.
+  function roundLabelled(segs) {
+    return segs.length > 1 && segs.every(function (p) {
+      return /^(?:G|R|Round)\s*\d+\s*[:.]/i.test(p);
+    });
+  }
+  // The fallback rep target for a prescription that carries no per-row list:
+  // the reps beside a multiplier ("4×12" -> 12), else the first number.
+  function loneRep(s) {
+    var x = String(s).match(/[x×]\s*(\d+)/i); if (x) return x[1];
+    var n = String(s).match(/(\d+)/); return n ? n[1] : '';
+  }
+  function fill(n, rep) {
+    var out = [], i;
+    for (i = 0; i < n; i++) out.push(rep);
+    return out;
+  }
+
+  function computeRepList(s) {
+    if (!s) return ['', '', ''];                    // no information -> 3 rows
+
+    // (1)(2) an N× multiplier states the set count outright, so it wins over
+    // every slash rule below — this is why "4×10 / 12 per side" stays 4 rows
+    // and a cluster's inner "6/6/6" never becomes rows of its own.
+    var mult = String(s).match(/^\s*(\d+)\s*[x×]/i);
+    if (mult) return fill(Math.min(parseInt(mult[1], 10), 12), loneRep(s));
+
+    var segs = slashSegs(s);
+    if (segs.length > 1) {
+      if (roundLabelled(segs)) return fill(segs.length, '');
+      var parts = segs.map(function (p) {
+        return p.split(',').map(function (x) { return x.trim(); })
+          .filter(function (x) { return x.length; });
+      });
+      var anyList = parts.some(function (p) { return p.length > 1; });
+
+      // (4) no commas anywhere -> the slashes ARE the set separator: an
+      // ascending or descending pyramid, one prescribed set per step.
+      if (!anyList) return segs.map(repDigits);
+
+      // (3) a comma list on at least one side of the slash -> leg separator.
+      // The legs are the SAME rounds performed at two or three stations, so
+      // the row count is one leg's, never the sum. It takes the LONGEST leg,
+      // which covers three real shapes at once: matched legs ("12, 12, 10 /
+      // 10, 10, 8" -> 3), a leg written as a single token beside a full list
+      // ("AMRAP / 3, 3, 3", "8, 8 / 2× AMRAP" -> the list's length), and
+      // irregular authoring where one leg carries more sets than the other
+      // ("10, 8, 20, 15 / 20, 20, 15" -> 4). Showing one spare row is
+      // recoverable; silently dropping a prescribed set is not.
+      if (segs.length <= maxLegs()) {
+        var longest = parts[0], k;
+        for (k = 1; k < parts.length; k++) {
+          if (parts[k].length > longest.length) longest = parts[k];
+        }
+        return longest.map(repDigits);
+      }
+      // Anything else (a lone token beside a real leg, "AMRAP / 3, 3, 3";
+      // the per-round form) falls through to the comma split below, which is
+      // the outer separator in exactly those cases.
+    }
+
+    var c = String(s).split(',');
+    if (c.length > 1) return c.map(repDigits);
+
+    var decl = declaredSets(s);
+    if (decl != null) return fill(decl, '');
+    return fill(3, loneRep(s));
+  }
+
+  // Pure over its input, and the same ~530 authored strings recur on every
+  // card of every page, so memoise rather than re-parse per row. Callers read
+  // the array (length / index) and never mutate it. The cache hangs off the
+  // function itself rather than a closure `var` for the hoisting reason above
+  // — a `var` initialiser has not run when the Node export hook calls in.
+  function repList(s) {
+    if (!repList.cache) repList.cache = {};
+    // Prefix every key so a prescription can never collide with an inherited
+    // Object.prototype member ("constructor" is not a real sets string, but a
+    // cache that answers one is a bug waiting for the day something is).
+    var key = '§' + (s == null ? '' : String(s));
+    var hit = repList.cache[key];
+    if (hit) return hit;
+    return (repList.cache[key] = computeRepList(s));
+  }
+  function setCount(s) { return repList(s).length; }
   function repFor(s, i) {
-    if (!s) return '';
-    var c = s.split(','); if (c.length > 1) return (c[i] || c[c.length - 1]).replace(/[^\d]/g, '').slice(0, 3) || '';
-    var x = s.match(/[x×]\s*(\d+)/i); if (x) return x[1];
-    var n = s.match(/(\d+)/); return n ? n[1] : '';
+    var L = repList(s);
+    if (!L.length) return '';
+    return (L[i] != null ? L[i] : L[L.length - 1]) || '';
   }
 
   // ---- cluster-set detection ----------------------------------------------

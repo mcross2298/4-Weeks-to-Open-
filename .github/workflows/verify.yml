@@ -78,6 +78,30 @@ jobs:
           node tools/test-mc-program-tabs.js
           node tools/test-mc-program-day.js
 
+      - name: Set-row prescription parser (mc-setlog.js) + fleet-wide scheme contract
+        # The logger derives row count, the "0/N Sets" badge and (through
+        # planFor -> plannedSetCount) mc-finish.js's whole-workout total from
+        # ONE parse of the program's authored `sets:` string. It was wrong:
+        # "25/20/20/15/12", a five-step pyramid, built EIGHT rows every one of
+        # which asked for 25 reps, because '/' had no rule and the string fell
+        # through to a leading-number branch that read "25 sets" and clamped
+        # it to 8. A second family comma-split "12, 12, 10 / 10, 10, 8" — one
+        # card, two stations, three rounds — into 5 rows and handed row 3 a
+        # target of "101", the digits of "10 / 10" run together.
+        #
+        # Two gates, deliberately different in kind. The unit test pins the
+        # shapes (every one of the four meanings '/' carries in this tree).
+        # check-set-schemes.js asserts INVARIANTS over all 530 authored
+        # prescriptions instead of re-implementing the parser and comparing —
+        # a mirror-image gate would pass for any pair of matching-but-wrong
+        # implementations. It also closes the door PM-mode inline editing
+        # leaves open: the owner can retype a sets field live, so a fixed
+        # parser alone does not keep this shut. Both were proven to fail on
+        # the tree before the fix landed.
+        run: |
+          node tools/test-mc-setlog-plan.js
+          node tools/check-set-schemes.js
+
       - name: Program schedule records match their source data (roadmap F5)
         # mm's and hv's `schedule` blocks in mc-pm-data.js are GENERATED from
         # mm-data.js and hv-block.html's own WEEKS. Hand-edited, they become a
