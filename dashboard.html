@@ -33,17 +33,41 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:var(--font-ui);-webkit-tap-highlight-color:transparent;}
 :root{
-  --bg:#0a0a0a;
-  --surface:#111;
-  --surface2:#161616;
-  --border:rgba(255,255,255,0.06);
-  --border2:rgba(255,255,255,0.1);
+  /* premium-design-roadmap.md, dashboard step. This screen carries its own
+     token vocabulary (--bg/--surface/--text/--muted) that SHADOWS base.css's
+     semantic names, which is why P1's ramp reached all ~161 other pages and
+     stopped at the app's most-visited one: Home stayed #0a0a0a while
+     everything around it went true black.
+
+     The values below are now ramp steps rather than literals. The dashboard's
+     own semantic ASSIGNMENT is deliberately kept, not replaced with
+     base.css's: --muted2 is used 21 times here against --muted's 6, so on this
+     screen --muted2 is the dominant secondary-text role and correctly holds
+     the higher-contrast value. Inheriting base.css's assignment instead would
+     swap the two and drop those 21 sites from 5.23:1 to 3.36:1 in light mode —
+     measured, not assumed, and the reason this is a re-point rather than a
+     delete.
+
+     Dark-mode contrast, before -> after:
+       --text   #fff     19.75 -> --ink-11 19.63  (unchanged in effect, warm)
+       --muted  #9ca3af   7.80 -> --ink-8  12.76  improves
+       --muted2 #64748b   4.16 -> --ink-7   5.59  crosses the WCAG AA floor
+     --muted2 was FAILING AA on the role this page uses most. */
+  --bg:var(--ink-0);
+  --surface:var(--ink-2);
+  --surface2:var(--ink-3);
+  --border:var(--border-faint);
+  --border2:var(--border-dim);
+  /* --gold is this screen's brand accent and stays a literal on purpose:
+     mapping it to var(--accent) would make Home program-adaptive, since
+     mc-theme.js rewrites --accent per program. That is a behaviour change,
+     not a token cleanup. */
   --gold:#d4af37;
   --gold-dim:rgba(212,175,55,0.15);
   --gold-glow:rgba(212,175,55,0.25);
-  --text:#fff;
-  --muted:#9ca3af;
-  --muted2:#64748b;
+  --text:var(--ink-11);
+  --muted:var(--ink-8);
+  --muted2:var(--ink-7);
   --tab-h:64px;
 }
 body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom));}
@@ -532,7 +556,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 }
 .ps-overlay.open{display:flex;}
 .ps-sheet{
-  width:100%;background:#0e0e0e;
+  width:100%;background:var(--surface);
   border-top:1px solid rgba(255,255,255,0.1);
   border-radius:24px 24px 0 0;
   padding:20px 18px calc(40px + env(safe-area-inset-bottom));
@@ -586,8 +610,8 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
    itself if the sheet is dismissed/replaced) with an opaque backing so
    scrolled cards don't show through underneath it. */
 .ob-skip{
-  position:sticky;bottom:0;z-index:1;
-  background:#0e0e0e;border-top:1px solid rgba(255,255,255,0.08);
+  position:sticky;bottom:0;z-index:1;min-height:44px;
+  background:var(--surface);border-top:1px solid rgba(255,255,255,0.08);
   margin:8px -18px -40px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));
   width:calc(100% + 36px);
 }
@@ -685,7 +709,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
   --o-surface-border:rgba(255,255,255,0.07);
   --font-display:'Archivo',system-ui,sans-serif;
   --font-ui:'Manrope',system-ui,sans-serif;
-  background:radial-gradient(120% 60% at 50% -10%, #171612 0%, #0a0a0b 46%);
+  background:radial-gradient(120% 60% at 50% -10%, #171612 0%, var(--ink-0) 46%);
   font-family:var(--font-ui);
 }
 
@@ -726,7 +750,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 /* Hero card */
 #scr-dashboard .hero-card{
   border-radius:24px;
-  background:linear-gradient(158deg,#1c1a16 0%,#0e0e10 68%);
+  background:linear-gradient(158deg,#1c1a16 0%,var(--ink-1) 68%);
   border:1px solid rgba(216,180,99,.24);
   box-shadow:0 24px 50px -24px rgba(0,0,0,.85);
   transition:box-shadow .15s;
@@ -845,7 +869,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
   --o-faint:#7d7d84;
   --font-display:'Archivo',system-ui,sans-serif;
   --font-ui:'Manrope',system-ui,sans-serif;
-  background:radial-gradient(120% 60% at 50% -10%, #171612 0%, #0a0a0b 46%);
+  background:radial-gradient(120% 60% at 50% -10%, #171612 0%, var(--ink-0) 46%);
   font-family:var(--font-ui);
 }
 
@@ -1009,7 +1033,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
    Scoped to #scr-conditioning / #condBody.
    ══════════════════════════════════════════════════════════════ */
 #scr-conditioning{
-  background:radial-gradient(120% 60% at 50% -10%, #171612 0%, #0a0a0b 46%);
+  background:radial-gradient(120% 60% at 50% -10%, #171612 0%, var(--ink-0) 46%);
   font-family:'Manrope',system-ui,sans-serif;
 }
 #scr-conditioning .topbar-title{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:26px;letter-spacing:-.02em;color:#f6f5f2;line-height:1.1;}
@@ -1025,7 +1049,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
    Scoped to #scr-nutrition.
    ══════════════════════════════════════════════════════════════ */
 #scr-nutrition{
-  background:radial-gradient(120% 60% at 50% -10%, #171612 0%, #0a0a0b 46%);
+  background:radial-gradient(120% 60% at 50% -10%, #171612 0%, var(--ink-0) 46%);
   font-family:'Manrope',system-ui,sans-serif;
 }
 #scr-nutrition .topbar-title{font-family:'Archivo',system-ui,sans-serif;font-weight:800;font-size:26px;letter-spacing:-.02em;color:#f6f5f2;line-height:1.1;}
@@ -1143,14 +1167,19 @@ html[data-theme="light"] .theme-icon-light{display:block!important;}
    inside any #scr-* screen, so a screen-scoped override would never
    reach them at all. */
 html[data-theme="light"]{
-  --bg:#f5f2ec;
-  --surface:#efe9db;
+  /* Every value here was ALREADY a ramp colour, written as a literal — the
+     light theme is where the warm ramp came from. Tokenising changes nothing
+     it renders; it just makes the relationship visible and stops the two
+     copies drifting. The --muted/--muted2 assignment stays this screen's own,
+     for the usage reason in the dark block above. */
+  --bg:var(--ink-10);
+  --surface:var(--ink-9);
   --surface2:rgba(28,26,23,.06);
   --border:rgba(28,26,23,.08);
   --border2:rgba(28,26,23,.12);
-  --text:#1c1a17;
-  --muted:#8a8377;
-  --muted2:#6b6459;
+  --text:var(--ink-3);
+  --muted:var(--ink-7);
+  --muted2:var(--ink-6);
 }
 /* Body-appended sheets: a few backgrounds/inputs are hardcoded hex
    tuned for the dark canvas and don't route through any token. */
