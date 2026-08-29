@@ -343,7 +343,7 @@ re-baselining, not after (`F3-3`'s discipline). Contrast budgets re-measured.
 > environment where `fonts.gstatic.com` resolves — never from here.** Enforcing
 > runs are still trustworthy (they passed), only `--update` is not.
 
-### `P5` — Card surface + the blue-bias gate ✅ **shipped 2026-08-29**
+### `P5` — Card surface + the blue-bias gate ✅ **shipped 2026-08-29** (PR #313)
 
 Opened by one question — *did the premium aesthetic reach the exercise cards?*
 Measured live on `kitchen-sink.html?day=1`, the answer split cleanly in two, and

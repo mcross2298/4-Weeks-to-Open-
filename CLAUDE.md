@@ -1038,7 +1038,7 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > after. It is the most bespoke surface in the app, so it wants its own step
 > rather than a silent fix inside a phase aimed at other files.
 >
-> **`P5` shipped (2026-08-29) — the card surface, and the gate that finds the
+> **`P5` shipped (2026-08-29, PR #313) — the card surface, and the gate that finds the
 > next one.** Asked whether the refit reached the exercise cards, the measured
 > answer split in two: the card's **type** went warm (name `rgb(250,247,240)`,
 > muted `rgb(138,131,119)`), its **surface** did not —
