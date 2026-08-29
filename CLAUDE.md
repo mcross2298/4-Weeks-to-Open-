@@ -102,7 +102,7 @@ node tools/check-one-timer.js          # no orphan/duplicate/missing rest-timer 
 node tools/check-single-impl.js        # declared shared functions exist exactly once tree-wide
 node tools/check-store-coverage.js     # store-registry.json vs mc-sync.js STORES / mc-export.js KEYS
 node tools/check-topbar-inset.js       # sticky .topbar pins at top:0, absorbs the inset as padding, opaque
-node tools/check-design-tokens.js      # font-weight on-scale; radius/size/hex ratchets; no glob-closed CSS comment
+node tools/check-design-tokens.js      # font-weight on-scale; radius/size/hex ratchets; no cool dark neutral; no glob-closed CSS comment
 python3 tools/build-market.py --check  # no licensed content leaks into the Rolodex build
 ```
 
@@ -1037,6 +1037,44 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > itself and is **insulated from the ramp** — pre-existing, identical before and
 > after. It is the most bespoke surface in the app, so it wants its own step
 > rather than a silent fix inside a phase aimed at other files.
+>
+> **`P5` shipped (2026-08-29) — the card surface, and the gate that finds the
+> next one.** Asked whether the refit reached the exercise cards, the measured
+> answer split in two: the card's **type** went warm (name `rgb(250,247,240)`,
+> muted `rgb(138,131,119)`), its **surface** did not —
+> `linear-gradient(#0d0f12,#0a0b0d)`, blue-biased **+5 and +3**, on a true-black
+> warm ground. **The ramp reaches only code that ASKS for a token**, and a
+> gradient literal asks for nothing.
+>
+> **Why `P3` missed it is the transferable part:** `P3` swept for the Tailwind
+> **slate family BY NAME**. These are bespoke near-blacks nobody ever named, so
+> they were never in the query — and `check-contrast.js` is a **light-mode**
+> ratchet, so dark-mode colour is unmeasured end to end. A search by name cannot
+> find a value whose only defect is its value.
+>
+> So the gate is a property of the value: `luminance < 60 && blue − red >= 2`
+> (b−r of 1 is rounding — `#101011`, `#0f0f10`). It is a **hard fail with two
+> explicit lists**, deliberately **not** a count ratchet — `COOL_SEMANTIC` (9
+> hues, each named with the job it does) and `COOL_PENDING` (1 named defect, may
+> only shrink); a ratchet seeded at 1 would let a *different* cool dark be
+> swapped in and still pass. Proven to fail on three regression shapes first.
+> Also shipped: five off-scale radii onto `--r-*`, and `#2C2C2E` on the Finish
+> Workout buttons → `--ink-4` (missed by `P3` for being written **uppercase**).
+> Ratchets fell on their own — `distinctHex` 150 → 147, `offScaleRadii` 91 → 84.
+> A pre-existing bug fixed in passing: `decomment()` deleted comment text and so
+> shifted every `file:line` the tool reports — a rule on 428 was reported as 252.
+>
+> **A blind spot found by measuring:** the change moved **0 pixels** on all five
+> `kitchen-sink` visual baselines. Not luck — since `F3-3` those pages open as a
+> **day list**, so no exercise card is rendered at rest and
+> `check-visual-ratchet.js` cannot see a card-level change at all. It still
+> guards the day list; it no longer guards the component gallery it is named for.
+>
+> **`P4`'s constraint, sharpened:** `curl` reaches `fonts.googleapis.com` from an
+> agent sandbox and returns **200** — headless **Chromium does not**
+> (`ERR_ABORTED`, `document.fonts` empty, Manrope and the fallback both measuring
+> 172px). The constraint is not "the network is blocked", it is "the *browser's*
+> network is blocked", which no amount of checking with `curl` will reveal.
 
 > **Header safe-area + bleed fix (2026-08-24).** The app header read as
 > unfixed and see-through in the installed PWA: content scrolled visibly

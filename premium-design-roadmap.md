@@ -343,6 +343,94 @@ re-baselining, not after (`F3-3`'s discipline). Contrast budgets re-measured.
 > environment where `fonts.gstatic.com` resolves — never from here.** Enforcing
 > runs are still trustworthy (they passed), only `--update` is not.
 
+### `P5` — Card surface + the blue-bias gate ✅ **shipped 2026-08-29**
+
+Opened by one question — *did the premium aesthetic reach the exercise cards?*
+Measured live on `kitchen-sink.html?day=1`, the answer split cleanly in two, and
+the split is the whole phase:
+
+| on the card | value | verdict |
+|---|---|---|
+| exercise name (`var(--text)`) | `rgb(250,247,240)` | blue **−10** — warm ✅ |
+| logger chevron + set count (`var(--muted)`) | `rgb(138,131,119)` | blue **−19** — warm ✅ |
+| the card surface itself | `#0d0f12 → #0a0b0d` | blue **+5, +3** — cool ❌ |
+
+**The ramp reached everything that ASKS for a token.** The surface asks for a
+literal, so `P1`–`P3` could not touch it: the card's type went warm while the
+panel underneath it stayed faintly blue, on a true-black warm ground. Small,
+consistent across every workout page, and therefore reading as a slightly
+different material rather than as a bug.
+
+**Why `P3` missed it, and this is the transferable part.** `P3` swept for the
+Tailwind **slate family BY NAME** and found 46 hexes plus 12 tints.
+`#0d0f12`/`#0a0b0d` are bespoke near-blacks nobody ever named — they were never
+in the query. Nothing else could see them either: `check-contrast.js` is a
+**light-mode** ratchet, so dark-mode colour is unmeasured end to end. A search
+by NAME cannot find a value whose only defect is its VALUE.
+
+**Shipped:** the three gradient sites (`.ex-card`, `.ex-card.a-card`,
+`.ss-card`) onto `var(--ink-2)`/`var(--ink-1)`; five off-scale radii snapped to
+the `--r-*` scale (`.a-idx` 9→8, `.mcl-ck` 9→8, `.a-info` 10→8, `.a-pill` and
+`.mcl-count` 6→4, `.ex-card`/`.ss-card` 14→16 to match the `.a-card`/`.a-ss`
+variants already at 16); and `#2C2C2E` on the Finish Workout buttons → `--ink-4`
+— the same cool-neutral family, missed by `P3` because it is written **uppercase**
+and lives in `base.css` rather than the setlog files.
+
+Every semantic hue is untouched — the four structural rails (superset violet,
+tri-set amber, cluster cyan, drop rose), the success green, the accent gold, and
+the dark grounds those hues sit on. Contrast after the surface change: name
+17.34:1, muted **4.94:1** (AA floor 4.5), accent 8.82:1; card-vs-ground
+separation *improves* 1.094 → 1.132:1.
+
+**The gate is a property of the VALUE, not of a name** —
+`luminance < 60 && blue − red >= 2`, the bias at which a value stops being
+neutral (b−r of 1 is rounding: `#101011`, `#0f0f10`, `#0a0a0b`). It is a **hard
+fail with two explicit lists**, deliberately **not** a count-based ratchet:
+`COOL_SEMANTIC` (9 hues, each named with the job it does) and `COOL_PENDING`
+(1 named defect, may only shrink). A ratchet seeded at 1 would let someone swap
+that offender for a *different* cool dark and still pass at count 1. Proven to
+fail on three regression shapes before landing — the literal pair returning, a
+new blue step added to the ramp itself, and a substitute cool dark swapped into
+the pending slot — since a gate that cannot fail is worthless.
+
+**A pre-existing bug in the tool, fixed in passing.** `decomment()` *deleted*
+comment text, which shifted every byte offset and therefore every `file:line`
+the tool reports: a rule on line 428 was reported as **252**. Comments are now
+blanked to same-length whitespace, so the font-weight and radius checks report
+true line numbers too. Ratchets moved down on their own: `distinctHex`
+150 → **147**, `offScaleRadii` 91 → **84**.
+
+**Two things verified rather than assumed.** `.ss-card`'s change is a **no-op at
+render** — every `.ss-card` the app actually builds is `.ss-card.a-ss`, which
+carries its own violet gradient at higher specificity; removing the literal keeps
+the gate clean and stops an unscoped one coming back cool, and that is all it
+does. And the **light theme is byte-identical on the card**: `html[data-theme=
+"light"] .ex-card` is specificity (0,2,1) against `.ex-card.a-card`'s (0,2,0),
+so it already won and still does — confirmed by A/B against `origin/main` in
+both themes, not by reading the cascade.
+
+**A blind spot the visual ratchet has had since `F3-3`.** The change produced
+**0 pixels of difference** on all five `kitchen-sink` baselines. That is not luck:
+after `F3-3` those pages open as a **day list**, so no exercise card is rendered
+at rest and `check-visual-ratchet.js` cannot see any card-level change at all.
+The gate was designed when the page built every card at load. It still guards the
+day list; it no longer guards the component gallery it was named for, and
+restoring that coverage (capture with a day open) wants its own change.
+
+**A sharper form of `P4`'s constraint, found while trying to work around it:**
+`curl` reaches `fonts.googleapis.com` from an agent sandbox and returns 200 —
+**headless Chromium does not**, with or without the proxy (`ERR_ABORTED` /
+`ERR_FAILED`, `document.fonts` empty, Manrope and the fallback measuring an
+identical 172px). So the constraint is not "the network is blocked", it is
+"the browser's network is blocked", and no amount of checking with `curl` will
+reveal it.
+
+**Known, not fixed (out of scope, named in `COOL_PENDING`):**
+`.sl-inp::placeholder` and `.sl-hl` are `#2d3748`, a Tailwind slate on a
+near-black ground at roughly **1.5:1**. That is a **legibility** defect, not a
+warmth one — remapping it onto the ramp at equal luminance would keep it
+invisible. It needs a readable value chosen for it, which is its own change.
+
 ---
 
 ## Risks carried
