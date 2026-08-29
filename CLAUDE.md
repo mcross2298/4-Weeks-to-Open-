@@ -102,6 +102,7 @@ node tools/check-one-timer.js          # no orphan/duplicate/missing rest-timer 
 node tools/check-single-impl.js        # declared shared functions exist exactly once tree-wide
 node tools/check-store-coverage.js     # store-registry.json vs mc-sync.js STORES / mc-export.js KEYS
 node tools/check-topbar-inset.js       # sticky .topbar pins at top:0, absorbs the inset as padding, opaque
+node tools/check-design-tokens.js      # font-weight on-scale; radius/size/hex ratchets; no glob-closed CSS comment
 python3 tools/build-market.py --check  # no licensed content leaks into the Rolodex build
 ```
 
@@ -964,6 +965,78 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > rated this item its lowest severity. All exploratory edits were reverted;
 > nothing partial shipped. Full writeup: `card-integration-roadmap.md`'s
 > "`A-17` — investigated in full ... and DROPPED" section.
+
+> **Companion design-system plan:** [`premium-design-roadmap.md`](premium-design-roadmap.md)
+> (opened 2026-08-24, `P0–P4`) answers a brief posed with two screenshots of a
+> commercial training app: *what would it take to install that "4K" feel while
+> keeping the style, themes and colours this app owns?* **It is not a resolution
+> question** — neither reference screen contains anything this app cannot
+> render. Measured across every stylesheet, the whole gap sat in the token
+> layer. Four decisions locked via `AskUserQuestion`: full-refit foundation,
+> landing + session first, **stay typographic** (no photography, so `F6`'s
+> deletion of the `.pl-imgband` placeholder stands), and one accent per screen.
+> Scratch-listed (`content-manifest.json`), so it never ships to the public
+> Rolodex build.
+>
+> **What the measurement found.** **266 `font-weight` declarations, 264 of them
+> ≥ 600** — two at 500, **zero at 400**: `--fw-medium:600` was the scale's
+> *lightest* token, so body copy, taglines and running prose were all set in a
+> display weight. **Two incompatible neutral families** — a blue Tailwind slate
+> ramp in dark, a warm stone/cream ramp in light, under a *warm* gold accent.
+> **21 distinct `border-radius` px literals** with no token to check a new one
+> against, and **28 hardcoded `font-size` literals** on top of the 11-step
+> `--fs-*` scale.
+>
+> **`P0`–`P3` shipped (2026-08-24/25, PRs #308–#310).** `tools/check-design-tokens.js`
+> was written **before** any token change and proven to fail on the tree first.
+> Then one warm `--ink-0…--ink-11` ramp **read from opposite ends by the two
+> themes** — the light theme's ramp won, so light-mode output is byte-identical
+> and only dark moved; plus `--fw-light`/`--fw-regular`, a `--r-*` scale,
+> `--fs-display`, `--hairline` and two elevation steps. Then the 13 landings
+> (boxes → hairlines, accent six places → one, inverted-contrast CTA) and the
+> session surface. **A real accessibility fix fell out**: `--muted` was at
+> **4.16:1, below the WCAG AA floor**, now 5.59:1.
+>
+> **`P3`'s finding is the one worth remembering: tokens only reach code that
+> asks for them.** `P1` unified the neutrals at the token layer, but the session
+> surface asked for slate *by literal* — **46 hardcoded slate hexes and 12 slate
+> `rgba()` tints** — so the app's chrome went warm while the screen the athlete
+> trains on stayed blue. Every value was remapped **by measured luminance, not
+> by eye**, because `check-contrast.js` is a light-mode ratchet and **nothing in
+> CI catches a dark-mode contrast regression**.
+>
+> **A trap this repo should not meet a fourth time: a token glob written
+> directly against a slash inside a C-style comment forms a comment
+> terminator.** `P2` introduced one in its own header comment; the comment
+> closed twenty lines early, the remaining prose parsed as CSS, and it swallowed
+> the entire `.pl-hero` rule — every landing rendered a 16px title and a
+> transparent CTA, with **no error anywhere**. Sweeping for the shape found a
+> **pre-existing** instance in `mc-light.css` that had been eating
+> `html[data-theme="light"] .mcl-toggle{…}`, so the Log Sets toggle kept its
+> dark colour on the cream ground — the exact bug that rule exists to fix.
+> Writing the gate's own explanation reproduced it a **third** time, in
+> JavaScript. `check-design-tokens.js` now fails on it; it is a **source**
+> check, for the same reason `check-topbar-inset.js` is.
+>
+> Two other findings generalise: **an undefined `var()` invalidates the whole
+> declaration**, which silently broke the four landings that deliberately don't
+> link `base.css` (`cat-hv`, `cat-ie`, `cat-ks`, `cat-mm`); and the obvious
+> alias idiom **`--ink-0: var(--ink-0, #000)` is a CSS cycle** that computes to
+> the initial value — verified in a browser, not argued.
+>
+> **`P4` is half open.** The docs are done; the **ratchet re-baseline cannot be
+> run from an agent sandbox** — `fonts.googleapis.com` is blocked there, so
+> pages render in the `system-ui` fallback and text metrics differ from CI. Two
+> runs of `check-contrast.js` on an unchanged tree disagreed on 11 pages, and
+> `--update` wanted to *raise* budgets on pages nothing had touched. Enforcing
+> runs are trustworthy; only `--update` is not. Five real `P2` improvements stay
+> unbanked until someone re-baselines from CI (`pmc-s7-giant` 24 → 1,
+> `pmc-home` 14 → 0, and three more).
+>
+> **Known, not fixed:** `dashboard.html` overrides `--text`/`--muted`/`--body-bg`
+> itself and is **insulated from the ramp** — pre-existing, identical before and
+> after. It is the most bespoke surface in the app, so it wants its own step
+> rather than a silent fix inside a phase aimed at other files.
 
 > **Header safe-area + bleed fix (2026-08-24).** The app header read as
 > unfixed and see-through in the installed PWA: content scrolled visibly
