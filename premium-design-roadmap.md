@@ -99,47 +99,226 @@ Run against every tracked `*.css` in the repo:
 Each phase is its own PR. `AskUserQuestion` gate between phases per the
 project's multi-phase rule.
 
-### `P0` — Measurement harness *(gate: none)*
-`tools/check-design-tokens.js` — a source gate that counts what this roadmap
-just measured by hand, so the numbers can't silently regress:
-- fails on a `font-weight` literal outside the declared scale,
-- fails on a `border-radius` px literal where a `--r-*` token exists,
-- reports (does not yet fail) the hardcoded `font-size` and hex counts as a
-  ratchet, seeded at today's values.
-Written **before** any token changes, so it is proven to fail on the current
-tree first — a gate that cannot fail is worthless (`check-topbar-inset.js`'s
-lesson).
+### `P0` — Measurement harness ✅ **shipped 2026-08-24** (PR #308)
 
-### `P1` — Token foundation *(base.css only)*
-- **Neutral ramp**, warm, replacing slate: `--ink-0` (true black canvas)
-  through `--ink-9`, with `--text` / `--muted` / `--muted2` re-pointed onto
-  it so every existing `var()` consumer inherits the correction with no edit.
-- **Weight scale gains `--fw-light:400` and `--fw-regular:500`**; existing
-  tokens keep their values so nothing shifts until a component opts in.
-- **`--r-xs … --r-xl` + `--r-pill`** radius scale.
-- **Type scale extended**: `--fs-display:38px` above `--fs-hero`.
-- **Elevation + hairline tokens** — `--hairline`, `--elev-1/2`.
-- Light theme re-derived from the same ramp so the two themes are one system.
-- **Zero component edits.** Measured before/after on the contrast ratchet;
-  any budget movement is inspected, then re-baselined deliberately.
+`tools/check-design-tokens.js`, written **before** any token change and proven
+to fail on the tree first — a gate that cannot fail is worthless
+(`check-topbar-inset.js`'s lesson). Both directions were exercised: injecting
+`font-weight:350` fails it, removing it passes.
 
-### `P2` — Landing surface
-`mc-program-hero.css` + `mc-program-tabs.css` onto the new tokens. The
-bordered `.pl-stat` boxes become a hairline-divided stat row; `.pl-name`
-moves to `--fs-display`; `.pl-tagline` moves to `--fw-light`; the six radius
-literals collapse onto the scale; accent drops to one signal per screen; the
-CTA becomes the inverted-contrast pill. All 13 `cat-*.html` verified live at
-320/390/430 in both themes.
+- **`font-weight` is a hard failure.** Every weight in the tree already sat on
+  the declared 400–900 scale, so the check passes today and fails the moment an
+  off-scale one appears — which is the whole job.
+- **Radius, hardcoded sizes and component-literal hex are ratchets** that may
+  only go down. Failing 97 off-scale radii on day one would have meant the gate
+  got disabled, and a disabled gate protects nothing.
 
-### `P3` — Session surface
-`.a-hdr` (in `base.css`), `mc-setlog.css`, `mc-summary.css`. The session
-toolbar goes monochrome per decision 4. Per-set rep numerals move from
-chrome to opacity-graded bare numerals. **Constraint: no touch target may
-shrink** — `check-journey.js`'s 44×44 floor is the gate, and the whole
-`S1`–`S5` card-integration chain is upstream of these files, so no runtime
-regression is acceptable either (`measure-session.js --check` must hold).
+**The ratchet fired on `P0`'s own commit**, because adding 12 canonical ramp
+tokens raised the distinct-hex count. Re-baselining past my own gate would have
+taught the next person that re-baselining is how you get past it, so **the
+metric was corrected instead**: hexes now count only as literals inside
+component rules, never as custom-property definitions. A token definition is
+the cure; a literal buried in a rule is the disease. That tightened the real
+number 169 → 158.
 
-### `P4` — Ratchet re-baseline + docs
+### `P1` — Token foundation ✅ **shipped 2026-08-24** (PR #308)
+
+One warm `--ink-0 … --ink-11` ramp, **read from opposite ends by the two
+themes**. The light theme's ramp was the good one, so it won: every step at 3
+and above is a value light mode already shipped, and the light block re-points
+onto the tokens with its **rendered output byte-identical**. Only dark changes,
+which is why the light-mode contrast ratchet could not regress from this step.
+
+`--ink-0` is true `#000` on purpose — on the OLED panels this app is used on
+the pixel switches off, and that infinite local contrast behind near-white type
+is most of what reads as "4K" in the references.
+
+Also added `--fw-light`/`--fw-regular` (the missing light half of the editorial
+pairing), the `--r-*` radius scale, `--fs-display:38px`, `--hairline` and two
+elevation steps. The four original weight tokens kept their exact values, so
+nothing shifted until a component opted in. **Zero component edits** — `P1`
+shipped alone so a regression would have exactly one possible cause.
+
+**Measured, driving a browser against the parent commit:**
+
+| token | before | after | |
+|---|--:|--:|---|
+| `--text` | 15.90:1 | 19.80:1 | improves |
+| `--muted` | **4.16:1** | **5.59:1** | was FAILING WCAG AA |
+| `--muted2` | 2.63:1 | 3.59:1 | improves |
+
+3 of 4 probe pages moved `#0a0a0a` → `#000`; light-mode token values
+byte-identical everywhere; zero overflow, zero pageerrors, `scrollWidth`
+unchanged.
+
+**Two corrections the verification forced**, recorded because both would
+otherwise have shipped as false claims. The first A/B ran against a stale local
+`main` (`f3cc45a`) rather than the true parent (`84458e1`) — a pre-`F3` tree —
+and appeared to show a 395px → 390px overflow "fix" this change does not make.
+And setting `data-theme` after `DOMContentLoaded` is **clobbered by each page's
+own theme-boot script**, so the first light-mode run compared dark values on
+both sides and reported five false differences.
+
+**Known, not fixed:** `dashboard.html` overrides `--text`/`--muted`/`--body-bg`
+itself and is insulated from the ramp — it stays `rgb(10,10,10)`. Pre-existing
+and identical on both sides. It is the most bespoke surface in the app
+(hand-written CSS per program id), so folding it into a phase aimed at other
+files is how a broad regression gets in unnoticed. **It wants its own step.**
+
+### `P2` — Landing surface ✅ **shipped 2026-08-25** (PR #309)
+
+`mc-program-hero.css` onto the `P1` scales across all 13 `cat-*.html` landings.
+Bordered `.pl-stat` boxes became a hairline-divided stat row; `.pl-inside-row`
+became hairline-separated rows on flat ground; `.pl-name` moved to
+`--fs-display`; `.pl-tagline` dropped to `--fw-light` and moved *up* the ramp
+to `--ink-8`, because light type needs more contrast, not less. The accent went
+from **six places to one** (the tier pill), and the CTA became an
+inverted-contrast near-white pill. Also fixed a seam `P1` created: the hero
+gradient's far stop was a hardcoded `#0a0a0b`, visible against the new
+true-black canvas.
+
+**Four defects, all found by driving 52 checkpoints (13 landings × 2 themes ×
+2 widths), none of which reading would have caught and none of which raised an
+error.**
+
+1. **A comment terminator hidden in prose.** This file's own new header said the
+   work moved it onto the `--ink`, `--r` and `--fw` scales — written, at first,
+   as a slash-separated list of globs. A token glob written directly against a
+   slash **forms a comment terminator**: the comment closed twenty lines early,
+   the rest of the prose was parsed as CSS, and it swallowed the entire
+   `.pl-hero` rule. Every landing rendered a 16px title and a transparent,
+   unrounded CTA. Diagnosed by asking the browser for `document.styleSheets` —
+   the rule came back NOT FOUND while `.pl-hero *` right after it survived.
+
+   Sweeping the tree for the same shape found a **pre-existing instance** in
+   `mc-light.css`, where `.set-*` written against `/.tf` had been eating
+   `html[data-theme="light"] .mcl-toggle{…}` — confirmed absent from
+   `document.styleSheets` on the parent commit too, so the Log Sets toggle kept
+   its dark-mode colour on the cream ground, precisely the unreadability the
+   block above it says it exists to fix. Now gated by
+   `check-design-tokens.js`. Writing that gate's own explanation reproduced the
+   bug a **third** time, in JavaScript — the trap is not CSS-specific.
+
+2. **The component must survive without `base.css`.** Four landings (`cat-hv`,
+   `cat-ie`, `cat-ks`, `cat-mm`) deliberately do not link it — documented
+   self-contained pages under DG-1/DG-2 — and they load this stylesheet. Moving
+   everything onto shared tokens broke them silently: an undefined `var()`
+   invalidates the whole declaration, so three rendered a 16px title while ten
+   were correct. Every token is now aliased to a `--pl-*` name whose fallback is
+   the identical `base.css` literal.
+
+3. **The obvious alias idiom is a CSS cycle.** `--ink-0: var(--ink-0, #000)`
+   reads like the natural way to write that fallback and is a self-dependency,
+   so the property goes guaranteed-invalid. Verified in a browser rather than
+   argued: a probe width computed as `auto` (1264px) and a height as 0 — worse
+   than doing nothing, and broken in **both** the `base.css`-present and
+   `-absent` cases.
+
+4. **A pre-existing touch-floor violation.** `.pl-icon-btn` — the Back and Menu
+   controls on every landing — shipped at 38×38, under the app's 44pt floor.
+   Verified identical on the parent; raised to 44. Same family as the
+   `.mc-surprise-btn` / `.inst-header-link` shortfall recorded elsewhere as
+   caught by no gate: `check-journey.js` measures session-shell controls only,
+   and no landing is in its table.
+
+`cat-custom.html` has no hero by design (custom programs fall through to
+`#heroCard` per `F0` decision 4) — confirmed absent on the parent, so the probe
+was corrected rather than the page.
+
+### `P3` — Session surface ✅ **shipped 2026-08-25** (PR #310)
+
+**The finding that defines this phase: tokens only reach code that asks for
+them.** `P1` unified the two neutral families at the token layer, but the
+session surface asked for slate *by literal*, so it never moved — **46
+hardcoded slate hexes and 12 slate `rgba()` tints** across `base.css`,
+`mc-setlog.css`, `mc-summary.css` and `mc-card-actions.css`. The app's chrome
+had gone warm while the screen the athlete actually spends the session on
+stayed blue: the resting-card chevron rendered `rgb(100,116,139)` — Tailwind
+slate-500 — against a true-black warm ground, and `.a-rep`'s rep numerals were
+`#3a4661`, a blue that exists nowhere else in the design system.
+
+**Mapped by luminance, not by eye**, because nothing in CI would catch a
+dark-mode contrast regression — `check-contrast.js` is a light-mode ratchet.
+On `#000`:
+
+| slate | before | warm | after | |
+|---|--:|---|--:|---|
+| `#f1f5f9` | 19.17 | `--ink-11` | 19.63 | improves |
+| `#e2e8f0` | 17.03 | `--ink-11` | 19.63 | improves |
+| `#e6e9ee` | 17.25 | `--ink-11` | 19.63 | improves |
+| `#cbd5e1` | 14.14 | `--ink-8` | 12.76 | nearest step |
+| `#94a3b8` | 8.19 | `--ink-8` | 12.76 | improves |
+| `#64748b` | 4.41 | `--ink-7` | 5.59 | improves |
+| `#475569` | 2.77 | `--ink-6` | 3.59 | improves |
+| `#3a4661` | 2.23 | `--ink-5` | 2.21 | same dimness |
+
+Seven of nine improve. The two that don't are both fine: `#cbd5e1` lands on the
+nearest warm step and is still 12.76:1, far above AA; and `#8b95a4`/`#e6e9ee`
+appear **only as `var(--muted, …)` / `var(--text, …)` fallbacks**, which can
+never fire because both tokens are always defined on `:root` — the rendered
+value is unchanged and only the literal becomes honest. `#3a4661` → `--ink-5`
+is the neat one: the same dimness, warm instead of blue, which is exactly what
+an upcoming rep numeral wants.
+
+The 12 `rgba()` tints were warmed to the matching ramp triplet at identical
+alpha — a warm hex on a blue-tinted background is worse than either alone.
+Also applied `P1`'s weight roles: `.mc-tempo-desc`, `.mc-qp-legend` and
+`.mc-sub-empty` are running prose set at 600 and dropped to `--fw-regular`; the
+toolbar's elapsed timer moved off pure `#fff` onto `--ink-11`.
+
+**What was deliberately NOT changed.** The toolbar turned out closer to the
+reference than this roadmap assumed — `.mcs-timer` was already monochrome and
+`.mcs-endbtn` already a 44px grey pill. Its only accent sites are
+`.mcs-rest-val` and `.mcs-sumbtn.mcs-btn-open`, both genuine state signals, and
+`.mcs-timer`/`.mcs-rest` are **mutually exclusive** (`body.mcs-resting` swaps
+them), so at most one accent is on screen at a time and decision 4 already
+held. No changes were manufactured to make the diff look bigger. The
+`.a-rep.live` glow was left alone: removing it is a UX call beyond a token
+phase, and it carries runtime risk `card-integration-roadmap.md` spent six
+steps buying down.
+
+**Verified against the real current `main`:** `check-journey` 9/9 clean, no
+session-shell control under 44×44 (the phase's stated constraint), runtime
+budget within limits on all three probe pages, and a blue-bias scan (B > R)
+over rep numerals, chevron, logger toggle and strip count returning **zero**
+blue-biased colours on the branch versus two on `main`.
+
+**Two false readings caught before they became claims:** a probe compared
+against a `/tmp` baseline built from a pre-`P1` HEAD, where `var(--ink-5)` is
+undefined and falls back to inherited slate — it "proved" the parent was blue
+for entirely the wrong reason; and that same probe returned all-null selectors
+on both sides, because after `F3` these pages open as a day **list** with no
+exercise card at load, so nothing was being measured at all. The real check
+deep-links `?day=1` (35 rep numerals, 10 strips) and adds `pmc-back.html`.
+
+**Cumulative ratchet movement across `P0`–`P3`:** font-weight declarations
+266 → 249, off-scale radii 97 → 91, hardcoded px font-sizes 93 → 90,
+component hex literals 169 → 150.
+
+### `P4` — Ratchet re-baseline + docs 🟡 **docs half shipped; ratchet half open**
+
+The documentation half is done: the shipped entries above, this roadmap's entry
+in `CLAUDE.md`'s Active Development Plan section, and
+`tools/check-design-tokens.js` added to `CLAUDE.md`'s canonical gate list — it
+had been running in `verify.yml` since `P0` while the docs never mentioned it,
+which is exactly the drift that list exists to prevent.
+
+**No user-facing doc update was required** under the documentation currency
+rule: `P0`–`P3` changed colour, weight, radius and spacing tokens, not a
+feature a trainee has to discover or learn to use. `quick-tour.html` and the
+program guides describe behaviour, and none of it changed.
+
+**The ratchet half remains open, and cannot be closed from an agent sandbox** —
+see the constraint below. Five real improvements from `P2` are still unbanked
+(`pmc-s7-giant` 24 → 1 findings, `pmc-home` 14 → 0, `iron-engine` 4 → 1,
+`kitchen-sink-s3` 4 → 1, `kitchen-sink` 3 → 1). Nothing is failing; the budgets
+are simply looser than reality, so a regression back toward the old numbers
+would pass. Closing it needs one run of
+`node tools/check-contrast.js <url> --update` and
+`node tools/check-visual-ratchet.js <url> --update` from CI or any environment
+where `fonts.gstatic.com` resolves.
+
+Original scope, for reference:
 Inspect the visual diff on all five `kitchen-sink` baselines **before**
 re-baselining, not after (`F3-3`'s discipline). Contrast budgets re-measured.
 `quick-tour.html` updated if any of this is user-discoverable.
