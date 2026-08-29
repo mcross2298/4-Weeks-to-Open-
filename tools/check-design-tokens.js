@@ -52,6 +52,54 @@ const WEIGHTS = new Set([400, 500, 600, 700, 800, 900]);
    steps, and are allowed as literals. */
 const RADII = new Set([4, 8, 12, 16, 24]);
 
+/* ── cool dark neutrals ────────────────────────────────────────────────────
+   A dark value whose BLUE channel exceeds its RED is either a deliberate hue
+   or a cool neutral that does not belong under this app's warm gold accent.
+   The P3 sweep could not find the two on the exercise card because it looked
+   for the Tailwind SLATE FAMILY BY NAME, and #0d0f12 / #0a0b0d are bespoke
+   near-blacks nobody ever named — they were never in the query. Nothing else
+   in CI could see them either: check-contrast.js is a LIGHT-mode ratchet, so
+   dark-mode colour is unmeasured end to end.
+
+   So the test is a property of the VALUE, not of its name: dark enough to
+   read as a surface, with a blue bias past the rounding noise. Everything it
+   returns is then one of two things, and each gets its own list. */
+
+/* Perceptual weight on the 0-255 scale, and the bias past which a value has
+   stopped being neutral. b-r of 1 is rounding (#101011, #0f0f10, #0a0a0b) —
+   2 is the first bias visible against a true-black ground. */
+const COOL_LUM_MAX  = 60;
+const COOL_BIAS_MIN = 2;
+
+/* HUES doing a job. These are the app's structural grammar — the colour an
+   athlete reads mid-set to tell a superset from a drop set — plus the dark
+   foregrounds that sit ON those hues. They are cool because they are blue,
+   green and violet, which is the point of them. Permanent. */
+const COOL_SEMANTIC = new Map([
+  ['#04120c', 'checked-card ground (green)'],
+  ['#061a0d', 'checked-card ground (green)'],
+  ['#06281d', 'success ground (green)'],
+  ['#062c20', 'success ground (green)'],
+  ['#08130a', 'success ground (green)'],
+  ['#0a2e22', 'success ground (green)'],
+  ['#04222a', 'foreground ON the cyan cluster hue #22d3ee'],
+  ['#0a0810', 'superset-card ground (violet)'],
+  ['#100c16', 'superset-card ground (violet)'],
+]);
+
+/* NEUTRALS that are still cool, each with the reason it has not been mapped
+   onto the ink ramp yet. This list may only SHRINK. Adding to it is a
+   deliberate act that has to survive review — which is the difference
+   between this and a count-based ratchet, where swapping one offender for a
+   different one passes silently. */
+const COOL_PENDING = new Map([
+  ['#2d3748', '.sl-inp::placeholder / .sl-hl (base.css) — a Tailwind slate on ' +
+              'a near-black ground at roughly 1.5:1. That is a LEGIBILITY ' +
+              'defect, not a warmth one: remapping it onto the ramp at equal ' +
+              'luminance would keep it invisible. It needs a readable value ' +
+              'chosen for it, which is its own change.'],
+]);
+
 /* Files where a literal is the point rather than drift. */
 const EXEMPT = new Set([]);
 
@@ -65,8 +113,13 @@ const fail = [];
 const counts = { fontSizePx: 0, hex: new Set(), weights: 0, radii: 0, offScaleRadii: 0 };
 const offScaleSample = [];
 
-/* Strip comments so a documented example never counts as a declaration. */
-const decomment = s => s.replace(/\/\*[\s\S]*?\*\//g, '');
+/* Strip comments so a documented example never counts as a declaration.
+   Blanked to same-length whitespace rather than removed, so byte offsets —
+   and therefore every `file:line` this tool reports — still point at the real
+   source. Deleting the text shifted them: a rule on line 428 was reported as
+   252, which sends the reader to the wrong place in the file. */
+const decomment = s =>
+  s.replace(/\/\*[\s\S]*?\*\//g, m => m.replace(/[^\n]/g, ' '));
 
 for (const f of files) {
   const src = decomment(fs.readFileSync(path.join(ROOT, f), 'utf8'));
@@ -148,6 +201,26 @@ for (const f of files) {
       counts.hex.add(h.toLowerCase());
     }
   }
+
+  /* 5. cool dark neutrals — hard fail outside the two declared lists.
+        Token DEFINITIONS are scanned too, unlike the hex ratchet above: a new
+        blue step added to the ink ramp itself is the worst version of this
+        drift, not an exemption from it. */
+  for (const m of src.matchAll(/#([0-9a-fA-F]{6})\b/g)) {
+    const hex = ('#' + m[1]).toLowerCase();
+    const r = parseInt(m[1].slice(0, 2), 16);
+    const g = parseInt(m[1].slice(2, 4), 16);
+    const b = parseInt(m[1].slice(4, 6), 16);
+    const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    if (lum >= COOL_LUM_MAX || b - r < COOL_BIAS_MIN) continue;
+    if (COOL_SEMANTIC.has(hex)) continue;
+    if (COOL_PENDING.has(hex)) continue;
+    fail.push(`${f}:${lineOf(m.index)} — ${hex} is a COOL DARK NEUTRAL ` +
+      `(r${r} g${g} b${b}, blue leads red by ${b - r}) under a warm gold ` +
+      `accent, on a warm ink ramp.\n    Map it onto --ink-0..--ink-11, or ` +
+      `— if it is a hue doing a job — name it in COOL_SEMANTIC at the top of ` +
+      `this file with the job it does.`);
+  }
 }
 
 const now = {
@@ -188,4 +261,6 @@ console.log(`check-design-tokens: OK — ${counts.weights} font-weight and ` +
             `${counts.radii} single-value border-radius declarations across ` +
             `${files.length} stylesheets are on-scale; ` +
             `${now.fontSizePx} px font-sizes / ${now.distinctHex} distinct ` +
-            `hexes within ratchet.`);
+            `hexes within ratchet; every cool dark value is either a declared ` +
+            `hue (${COOL_SEMANTIC.size}) or a named pending neutral ` +
+            `(${COOL_PENDING.size}).`);

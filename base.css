@@ -422,10 +422,10 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 
 /* ── EXERCISE CARD ──────────────────────────────────────────────── */
 .ex-card{
-  border-radius:14px;border:1px solid rgba(var(--accent-rgb),0.2);
+  border-radius:var(--r-lg);border:1px solid rgba(var(--accent-rgb),0.2);
   margin-bottom:10px;overflow:hidden;cursor:pointer;
   transition:all var(--duration-fast);
-  background:linear-gradient(180deg,#0d0f12,#0a0b0d);
+  background:linear-gradient(180deg,var(--ink-2),var(--ink-1));
   position:relative;
   box-shadow:0 8px 26px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05);
 }
@@ -483,8 +483,8 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
    "spine" rail + a branch tie into each numbered leg, so the chained moves
    read as one back-to-back unit. Extra bottom margin sets grouped blocks
    clearly apart from neighbouring standalone cards. */
-.ss-card{border-radius:14px;border:1px solid rgba(168,85,247,0.28);margin-bottom:16px;overflow:hidden;position:relative;
-  background:linear-gradient(180deg,#0d0f12,#0a0b0d);
+.ss-card{border-radius:var(--r-lg);border:1px solid rgba(168,85,247,0.28);margin-bottom:16px;overflow:hidden;position:relative;
+  background:linear-gradient(180deg,var(--ink-2),var(--ink-1));
   box-shadow:0 8px 26px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05);}
 /* Premier purpose-rail — violet for supersets (structural grammar) */
 .ss-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;z-index:1;
@@ -688,14 +688,14 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
    CSS (the-500.html, hell-week.html, driveway-demolition.html, etc.) —
    recoloring the shared class globally would have silently reskinned all
    of those too. */
-#fwModalBtns .fw-cancel,#fwRecapBtns .fw-cancel{padding:14px;background:#2C2C2E;border:none;color:#fff;font-size:var(--fs-md);font-weight:800;-webkit-tap-highlight-color:transparent;}
+#fwModalBtns .fw-cancel,#fwRecapBtns .fw-cancel{padding:14px;background:var(--ink-4);border:none;color:#fff;font-size:var(--fs-md);font-weight:800;-webkit-tap-highlight-color:transparent;}
 #fwModalBtns .fw-cancel:active,#fwRecapBtns .fw-cancel:active{opacity:0.85;transform:scale(0.98);}
 #fwModalBtns .fw-confirm,#fwRecapBtns .fw-confirm{padding:14px;background:#FFFFFF;color:#000000;-webkit-tap-highlight-color:transparent;}
 #fwModalBtns .fw-confirm:active,#fwRecapBtns .fw-confirm:active{opacity:0.85;transform:scale(0.98);}
 /* Zero-set / <30s accidental-open guard: swap visual weight so Exit &
    discard reads as the default action instead of Log workout. */
 #fwModalBtns.fw-emph .fw-cancel,#fwRecapBtns.fw-emph .fw-cancel{flex:2;background:#FFFFFF;color:#000000;}
-#fwModalBtns.fw-emph .fw-confirm,#fwRecapBtns.fw-emph .fw-confirm{flex:1;background:#2C2C2E;color:#fff;}
+#fwModalBtns.fw-emph .fw-confirm,#fwRecapBtns.fw-emph .fw-confirm{flex:1;background:var(--ink-4);color:#fff;}
 .fw-auto-banner{position:fixed;top:0;left:0;right:0;background:rgba(52,211,153,0.12);border-bottom:1px solid rgba(52,211,153,0.3);padding:12px 16px;text-align:center;font-size:var(--fs-sm);font-weight:800;color:var(--success);z-index:var(--z-banner);display:none;letter-spacing:0.02em;cursor:pointer;}
 .fw-auto-banner.show{display:block;}
 
@@ -706,7 +706,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
    Scoped to .ex-card.a-card so no other program's cards are affected. */
 .ex-card.a-card{
   border:1px solid rgba(var(--accent-rgb),0.18);
-  background:linear-gradient(180deg,#0d0f12,#0a0b0d);
+  background:linear-gradient(180deg,var(--ink-2),var(--ink-1));
   box-shadow:0 10px 30px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05);
   border-radius:16px;overflow:hidden;position:relative;
 }
@@ -733,7 +733,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
   background:#c084fc;box-shadow:0 0 10px rgba(168,85,247,0.6);}
 .a-idx{font-size:calc(var(--fs-sm) * var(--density));font-weight:900;font-variant-numeric:tabular-nums;
   min-width:calc(30px * var(--density));height:calc(30px * var(--density));
-  border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;
+  border-radius:var(--r-sm);flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;
   background:rgba(var(--accent-rgb),0.12);color:var(--accent);border:1px solid rgba(var(--accent-rgb),0.3);}
 .a-card.is-ss .a-idx{background:rgba(168,85,247,0.14);color:#c084fc;border-color:rgba(168,85,247,0.35);}
 .a-card.is-tri .a-idx{background:rgba(245,158,11,0.14);color:#fbbf24;border-color:rgba(245,158,11,0.4);}
@@ -743,7 +743,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .a-head{flex:1;min-width:0;}
 .a-card .ex-name.a-name{font-size:calc(var(--fs-lg) * var(--density));font-weight:800;line-height:1.25;letter-spacing:-0.01em;margin-bottom:0;color:var(--text);padding-right:0;}
 .a-badges{display:flex;gap:6px;margin-top:calc(7px * var(--density));flex-wrap:wrap;}
-.a-pill{font-size:10.5px;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;padding:calc(3px * var(--density)) calc(7px * var(--density));border-radius:6px;}
+.a-pill{font-size:10.5px;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;padding:calc(3px * var(--density)) calc(7px * var(--density));border-radius:var(--r-xs);}
 .a-pill.grp{background:rgba(168,85,247,0.16);color:#c084fc;border:1px solid rgba(168,85,247,0.32);}
 .a-card.is-tri .a-pill.grp{background:rgba(245,158,11,0.16);color:#fbbf24;border-color:rgba(245,158,11,0.34);}
 .a-card.is-cluster .a-pill.grp{background:rgba(34,211,238,0.16);color:#67e8f9;border-color:rgba(34,211,238,0.34);}
@@ -842,7 +842,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
   appearance:none;-webkit-appearance:none;
   width:44px;height:44px;display:flex;align-items:center;justify-content:center;
   background:none;border:none;padding:0;margin:0;font:inherit;font-size:var(--fs-xl);line-height:1;
-  color:var(--muted2);cursor:pointer;border-radius:10px;
+  color:var(--muted2);cursor:pointer;border-radius:var(--r-sm);
   -webkit-tap-highlight-color:transparent;transition:color var(--duration-fast),background var(--duration-fast);}
 .a-info:active{background:rgba(var(--accent-rgb),0.14);}
 .a-info[aria-expanded="true"]{color:var(--accent);background:rgba(var(--accent-rgb),0.12);}
