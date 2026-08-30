@@ -233,9 +233,14 @@
     info = info || { secs: BUFFER_SECS, boundary: false, manageRest: false };
     pending = target;
     ensureBuffer();
-    // When the card manages its own rest (data-between/data-after), claim the rest
-    // UI: kill any float a logger just started on this set-check so the buffer
-    // is the single countdown. Cards without the data attrs are untouched.
+    // manageRest is true for an IN-BETWEEN hop (restInfoFor: !boundary) --
+    // there is no real per-exercise rest between two superset legs, so any
+    // TMR state here is stale leftover, not this hop's own, and the buffer
+    // is free to claim the countdown outright. A BOUNDARY hop leaves this
+    // false on purpose: mc-setlog.js already started a real, correctly
+    // duration'd TMR off the group's own last-member chip a moment ago, and
+    // it should keep running under the buffer -- bottomOffset() below
+    // already stacks the two rather than assuming only one is ever shown.
     if (info.manageRest) { try { if (typeof TMR !== 'undefined' && TMR.stop) TMR.stop(); } catch (e) {} }
     var off = bottomOffset();
     buffer.style.bottom = off + 'px';
@@ -291,10 +296,35 @@
 
   // ---- hop dispatch (debounced so a single tap can't double-fire) ---------
   // Decide how long the buffer should run. Cards that opt in via
-  // data-between / data-after (the mc-group-split superset/triset splitter) get a SHORT
-  // member→member pause inside a round and the LONG round-break rest when the
-  // hop wraps back to an earlier station. Cards without those attrs (PMC, MC, …)
-  // fall back to the original fixed BUFFER_SECS for every hop — unchanged.
+  // data-between / data-after (the mc-group-split superset/triset splitter)
+  // get a SHORT member→member pause inside a round and the LONG round-break
+  // rest when the hop wraps back to an earlier station.
+  //
+  // Every OTHER .ss-card emitter (ks-engine.js, mc-engine.js,
+  // mc-pmc-engine.js, hv-block.html, run-workout.html, run-program.html)
+  // never stamped those attributes at all, so this used to fall back to a
+  // fixed 10s for EVERY hop — including the round-complete one, where the
+  // program's own prescribed rest (2 min, in the case that was measured
+  // live) got silently replaced by a 10-second pause. Verified live on
+  // kitchen-sink.html: a tri-set whose last member authors rest:"2 min"
+  // measured a 10s buffer at every step, including the wrap back to member A.
+  //
+  // Rather than requiring every emitter to remember to stamp two new
+  // attributes (the same "one more engine forgot it" failure this app has
+  // hit repeatedly — check-one-timer.js and check-single-impl.js both exist
+  // because of it), the fallback derives the round's real rest from where
+  // every one of those engines ALREADY puts it: the group's own LAST
+  // member's .rest-timer chip (the "one timer per group" convention shared
+  // by all of them, W3/W4). Between-legs stays the documented 10s default —
+  // no engine authors a shorter explicit value for that gap, so there is
+  // nothing truthful to derive it from.
+  function deriveRestInfo(card) {
+    var members = card.querySelectorAll('.ss-ex');
+    var lastTimer = members.length ? members[members.length - 1].querySelector('.rest-timer') : null;
+    var secs = (lastTimer && typeof TMR !== 'undefined' && TMR.parseSeconds)
+      ? TMR.parseSeconds(lastTimer.dataset.rest) : 0;
+    return { between: BUFFER_SECS, after: secs || BUFFER_SECS };
+  }
   function restInfoFor(fromEx, target) {
     var card = fromEx.closest('.ss-card');
     var members = card ? Array.prototype.slice.call(card.querySelectorAll('.ss-ex')) : [];
@@ -302,12 +332,30 @@
     var boundary = (ti >= 0 && fi >= 0 && ti <= fi);   // wrapped to an earlier station = round done
     var betA = card && card.getAttribute('data-between');
     var aftA = card && card.getAttribute('data-after');
-    if (betA == null && aftA == null) return { secs: BUFFER_SECS, boundary: false, manageRest: false };
-    var bet = parseInt(betA != null ? betA : BUFFER_SECS, 10);
-    var aft = parseInt(aftA != null ? aftA : betA, 10);
+    var bet, aft;
+    if (betA == null && aftA == null) {
+      var derived = deriveRestInfo(card);
+      bet = derived.between; aft = derived.after;
+    } else {
+      bet = parseInt(betA != null ? betA : BUFFER_SECS, 10);
+      aft = parseInt(aftA != null ? aftA : betA, 10);
+    }
     var secs = boundary ? aft : bet;
     if (!secs || isNaN(secs)) secs = BUFFER_SECS;
-    return { secs: secs, boundary: boundary, manageRest: true };
+    // A boundary hop's rest is REAL: mc-setlog.js's own check handler already
+    // started TMR on the group's last member's .rest-timer chip with this
+    // exact duration (the prescribed round rest), and TMR.isRunning() plus
+    // the floating widget are both meant to keep reflecting it -- the
+    // stacking math below already accommodates a still-visible float
+    // alongside the buffer rather than assuming only one is ever shown.
+    // Only an IN-BETWEEN hop has nothing real to preserve (no .rest-timer
+    // chip exists on a non-last member, so nothing legitimate was running),
+    // which is the one case that should claim/kill whatever TMR happens to
+    // be doing. Getting this backwards is what silently turned a real
+    // 2-minute round rest into a stopped, invisible TMR the instant the
+    // boundary hop fired — measured live: TMR.duration stayed 120 but
+    // isRunning() read false a beat later, with no error anywhere.
+    return { secs: secs, boundary: boundary, manageRest: !boundary };
   }
 
   var lastFrom = null, lastT = 0;
@@ -319,8 +367,15 @@
     lastFrom = fromEx;
     lastT = now;
     var info = restInfoFor(fromEx, target);
-    // In-between hops shouldn't sit under a freshly-started rest timer.
-    try { if (typeof TMR !== 'undefined' && TMR.stop) TMR.stop(); } catch (e) {}
+    // In-between hops shouldn't sit under a freshly-started rest timer --
+    // the comment always said so, but the call below ran UNCONDITIONALLY,
+    // so it stopped a boundary hop's real, correctly-duration'd TMR too:
+    // mc-setlog.js's own check handler starts TMR the instant a set on the
+    // group's last member (the only one carrying a .rest-timer chip) is
+    // checked, and this ran 40ms later on every hop, in-between or not.
+    // info.manageRest is exactly "is this an in-between hop" (restInfoFor
+    // sets it to !boundary) — this is the guard the comment always claimed.
+    if (info.manageRest) { try { if (typeof TMR !== 'undefined' && TMR.stop) TMR.stop(); } catch (e) {} }
     setTimeout(function () { startBuffer(target, info); }, 60);
   }
 
