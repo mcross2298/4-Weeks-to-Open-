@@ -456,6 +456,93 @@ async function runJourney(ctx, entry, vpName) {
   return r;
 }
 
+/* ── fleet-wide shared chrome (W-I1, VOC/VOA Kaizen audit) ─────────────────
+   Every other pass in this file drives a SESSION -- these controls live on
+   pages that aren't one, and until now nothing measured them at all: the
+   audit found 141 of 141 pages carry a sub-44px control and this gate saw
+   none of them, because CRITICAL is deliberately scoped to controls the
+   session rebuild owns (see its own comment above).
+
+   Not hard-failed. .mc-nav-tab (125 pages) and .back-link (114) are already
+   under the 44px floor fleet-wide, and their fix (the audit's W-I2) is a
+   separate, design-reviewed change that hasn't landed -- asserting >=44px
+   here would fail on main the moment this merges, which is exactly the
+   "red from birth, gets turned off" trap CRITICAL's own comment describes
+   for the same reason. A RATCHET catches a regression starting today (any
+   measured size below its last recorded value fails) and becomes a real
+   floor for free the moment a control's fix lands and its size crosses 44 --
+   nothing here ever lets a stored value shrink.
+
+   Only 3 pages, not 141: every selector below is owned by ONE shared
+   stylesheet (mc-nav.css for .mc-nav-tab, base.css for .back-link,
+   dashboard.html's own inline styles for .topbar-icon, quick-tour.html's for
+   .dot-nav), so a real render on any one page carrying it proves the rule
+   for every page that loads the same CSS -- the audit's own 125/114 reach
+   counts are a static class-usage count, not something re-measuring on all
+   141 pages would prove any further. 320px is a REAL device width
+   (iPhone SE / older Android), not covered by any other check-journey.js
+   pass today -- --all-viewports sweeps width extremes for the full journey,
+   but the default CI invocation never does, so this pass runs its own sweep
+   unconditionally rather than depending on that flag. */
+const CHROME_SELECTORS = [
+  { sel: '.mc-nav-tab',  name: 'bottom nav tab' },
+  { sel: '.back-link',   name: 'back link' },
+  { sel: '.topbar-icon', name: 'topbar icon' },
+  { sel: '.dot-nav',     name: 'tour step dot' },
+];
+// One page per selector-owning stylesheet; 2on-1off.html carries both
+// .mc-nav-tab and .back-link so three pages, not four, are enough.
+const CHROME_PAGES = ['2on-1off.html', 'dashboard.html', 'quick-tour.html'];
+const CHROME_VIEWPORTS = { '390': { width: 390, height: 844 }, '320': { width: 320, height: 568 } };
+const CHROME_BUDGET_FILE = path.resolve(__dirname, 'chrome-budgets.json');
+const CHROME_EPSILON = 0.3;   // sub-pixel float jitter, not a real regression
+
+const MEASURE_CHROME = (selectors) => {
+  const out = {};
+  selectors.forEach(({ sel, name }) => {
+    let worst = null;
+    document.querySelectorAll(sel).forEach(el => {
+      const cs = getComputedStyle(el);
+      if (cs.display === 'none' || cs.visibility === 'hidden') return;
+      const r = el.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      const w = Math.round(r.width * 10) / 10, h = Math.round(r.height * 10) / 10;
+      if (!worst || Math.min(w, h) < Math.min(worst.w, worst.h)) worst = { w, h };
+    });
+    if (worst) out[name] = worst;
+  });
+  return out;
+};
+
+async function runChromePass(browser) {
+  const measured = {};
+  for (const vpKey of Object.keys(CHROME_VIEWPORTS)) {
+    const ctx = await browser.newContext({
+      viewport: CHROME_VIEWPORTS[vpKey], deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    await ctx.route('**://fonts.googleapis.com/**', r => r.abort());
+    await ctx.route('**://cdn.jsdelivr.net/**', r => r.abort());
+    for (const page of CHROME_PAGES) {
+      const pg = await ctx.newPage();
+      try {
+        await pg.goto(baseUrl + '/' + page, { waitUntil: 'domcontentloaded', timeout: 25000 });
+        await pg.waitForTimeout(1200);
+        const m = await pg.evaluate(MEASURE_CHROME, CHROME_SELECTORS);
+        for (const [name, size] of Object.entries(m)) {
+          const key = name + ' @ ' + vpKey;
+          // the same control (.mc-nav-tab) can be found on more than one
+          // CHROME_PAGES entry -- keep the worst (smallest) across all of them
+          if (!measured[key] || Math.min(size.w, size.h) < Math.min(measured[key].w, measured[key].h)) {
+            measured[key] = size;
+          }
+        }
+      } catch (e) { /* a broken page load surfaces via smoke-test-pages.js; skip here */ }
+      await pg.close();
+    }
+    await ctx.close();
+  }
+  return measured;
+}
+
 /* ── main ────────────────────────────────────────────────────────────────── */
 (async () => {
   const vpNames = has('--all-viewports')
@@ -470,6 +557,10 @@ async function runJourney(ctx, entry, vpName) {
   if (fs.existsSync(BUDGET_FILE)) {
     try { budgets = JSON.parse(fs.readFileSync(BUDGET_FILE, 'utf8')); } catch (e) { budgets = {}; }
   }
+  let chromeBudgets = {};
+  if (fs.existsSync(CHROME_BUDGET_FILE)) {
+    try { chromeBudgets = JSON.parse(fs.readFileSync(CHROME_BUDGET_FILE, 'utf8')); } catch (e) { chromeBudgets = {}; }
+  }
 
   // Source-level guard first — it needs no browser, and a failure here means
   // every viewport below would have passed while a real phone stayed broken.
@@ -480,7 +571,9 @@ async function runJourney(ctx, entry, vpName) {
       ' is a flat pixel offset. The bar sits at top:env(safe-area-inset-top), so this is correct only where the inset is zero.'));
   }
 
-  const browser = await chromium.launch();
+  const browser = await chromium.launch(
+    process.env.MC_CHROMIUM ? { executablePath: process.env.MC_CHROMIUM } : {}
+  );
   const results = [];
   const insetResults = [];
   for (const vpName of vpNames) {
@@ -498,6 +591,7 @@ async function runJourney(ctx, entry, vpName) {
     }
     await ctx.close();
   }
+  const chromeMeasured = await runChromePass(browser);
   await browser.close();
 
   /* budgets: chrome coverage only. Everything else is a hard assertion — an
@@ -541,7 +635,40 @@ async function runJourney(ctx, entry, vpName) {
   if (UPDATE) {
     fs.writeFileSync(BUDGET_FILE, JSON.stringify(nextBudgets, null, 2) + '\n');
     console.log('\nBudgets written — ' + Object.keys(nextBudgets).length + ' entr(ies) to ' + path.basename(BUDGET_FILE));
+    fs.writeFileSync(CHROME_BUDGET_FILE, JSON.stringify(chromeMeasured, null, 2) + '\n');
+    console.log('Chrome-control sizes written — ' + Object.keys(chromeMeasured).length +
+      ' entr(ies) to ' + path.basename(CHROME_BUDGET_FILE));
     process.exit(0);
+  }
+
+  // fleet-wide chrome-control ratchet (W-I1) — a size below its last
+  // recorded value is a real regression; a size at or above it (including
+  // an entry chrome-budgets.json has never seen) is fine. Only a SHRINK
+  // fails, which is what makes this safe to land before W-I2's fix and a
+  // real floor once that fix crosses 44 on a given control.
+  let chromeFailed = 0;
+  for (const [key, size] of Object.entries(chromeMeasured)) {
+    const prior = chromeBudgets[key];
+    if (!prior) continue;
+    const shrankW = size.w < prior.w - CHROME_EPSILON;
+    const shrankH = size.h < prior.h - CHROME_EPSILON;
+    if (shrankW || shrankH) {
+      chromeFailed++;
+      console.error('\n✗ CHROME-CONTROL: ' + key);
+      console.error('    ::error::' + key + ' measured ' + size.w + 'x' + size.h +
+        'px, smaller than the recorded ' + prior.w + 'x' + prior.h + 'px — a real regression, not drift.');
+    }
+  }
+  if (chromeFailed) {
+    failed += chromeFailed;
+  } else if (Object.keys(chromeMeasured).length) {
+    console.log('\ncheck-journey: chrome-control sizes hold or improved on all ' +
+      Object.keys(chromeMeasured).length + ' measured control/viewport pairs.');
+    const stillUnder44 = Object.entries(chromeMeasured).filter(([, s]) => s.w < 44 || s.h < 44);
+    if (stillUnder44.length) {
+      console.log('    (' + stillUnder44.length + ' still under the 44px floor — tracked, not yet fixed: ' +
+        stillUnder44.map(([k]) => k).join(', ') + ')');
+    }
   }
 
   // real-inset pass

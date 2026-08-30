@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 /* ==========================================================================
-   check-contrast.js — light-mode text contrast, ratcheted (audit G-04/G-3.1)
+   check-contrast.js — text contrast, ratcheted, light AND dark (audit
+   G-04/G-3.1, W-I3 VOC/VOA Kaizen audit)
    --------------------------------------------------------------------------
    Every colour in this app was originally picked against a near-black ground.
    When Sand light mode went fleet-wide, 112 of 140 pages ended up with at
@@ -19,10 +20,31 @@
    The tail can only shrink. A page fixed below its budget should have the
    budget lowered in the same commit — the gate says so when it notices.
 
-   Needs Playwright, so it runs in the smoke-test job rather than the fast one.
+   W-I3 — dark mode was the one axis this gate never measured, even though
+   dark is the app's DEFAULT theme (mc_theme_mode: 'dark' | 'light', dark
+   unless a trainee opts into light) and the premium-design-roadmap.md P3/P5
+   entries both found real dark-only defects a light-mode-only gate cannot
+   see by construction (a card surface with slate literals instead of the
+   warm token ramp; a cool-biased near-black gradient). --dark reuses every
+   line of PROBE and the ratchet mechanics below, against a second budget
+   file, so the two modes cannot silently diverge in method.
 
-     node tools/check-contrast.js <baseUrl>            # CI
-     node tools/check-contrast.js <baseUrl> --update   # rewrite the budgets
+   That second file is deliberately NOT seeded from an agent sandbox.
+   fonts.googleapis.com is blocked at the browser level there (verified —
+   curl reaches it and returns 200, headless Chromium does not), so pages
+   render in the system-ui fallback with different text metrics than real
+   CI: two runs of THIS SAME LIGHT-MODE PASS on an unchanged tree already
+   disagreed on 11 pages under that condition (premium-design-roadmap.md's
+   own P4 finding). A baseline captured under that constraint would commit
+   wrong counts, not real ones. So --dark --update writes the file when it
+   runs from wherever fonts.googleapis.com is actually reachable (a real CI
+   runner); until that file exists, --dark reports every page's count but
+   never fails the build — see NO_BASELINE below.
+
+     node tools/check-contrast.js <baseUrl>                  # CI, light mode
+     node tools/check-contrast.js <baseUrl> --update         # rewrite light budgets
+     node tools/check-contrast.js <baseUrl> --dark           # CI, dark mode
+     node tools/check-contrast.js <baseUrl> --dark --update  # rewrite dark budgets (run from real CI only)
 
    ========================================================================== */
 const { chromium } = require('playwright');
@@ -30,7 +52,6 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const BUDGETS = path.join(__dirname, 'contrast-budgets.json');
 const MIN_RATIO = 3.0;            // WCAG AA large-text floor
 
 // The first baseline used a flat 250ms wait, which was enough on a fast dev
@@ -52,8 +73,17 @@ const TOLERANCE = 1;
 
 const base = process.argv[2];
 const update = process.argv.includes('--update');
+const dark = process.argv.includes('--dark');
+const THEME = dark ? 'dark' : 'light';
+const BUDGETS = path.join(__dirname, dark ? 'contrast-budgets-dark.json' : 'contrast-budgets.json');
+// W-I3: dark's budget file only exists once someone has run --dark --update
+// from a real browser (see the file header). Until then this pass measures
+// and reports every page but never fails the build on it — a hand-picked
+// pass/fail number for an unbaselined axis would be exactly as wrong as
+// skipping the axis, just quieter about it.
+const NO_BASELINE = dark && !update && !fs.existsSync(BUDGETS);
 if (!base) {
-  console.error('usage: node tools/check-contrast.js <baseUrl> [--update]');
+  console.error('usage: node tools/check-contrast.js <baseUrl> [--update] [--dark]');
   process.exit(1);
 }
 
@@ -109,14 +139,18 @@ const pages = fs.readdirSync(ROOT)
 
 (async () => {
   const budgets = fs.existsSync(BUDGETS) ? JSON.parse(fs.readFileSync(BUDGETS, 'utf8')) : {};
-  const browser = await chromium.launch();
+  const browser = await chromium.launch(
+    process.env.MC_CHROMIUM ? { executablePath: process.env.MC_CHROMIUM } : {}
+  );
   const ctx = await browser.newContext();
   const p = await ctx.newPage();
   p.on('pageerror', () => {});
 
-  // Light mode is the whole point of this check — set it once, then navigate.
+  // Set the theme once, then navigate. mc_theme_mode: 'dark' is the app's
+  // own default (see mc-appearance.js) — set explicitly anyway so this pass
+  // isn't relying on an undocumented default staying what it is today.
   await p.goto(base.replace(/\/$/, '') + '/dashboard.html');
-  await p.evaluate(() => localStorage.setItem('mc_theme_mode', 'light'));
+  await p.evaluate((t) => localStorage.setItem('mc_theme_mode', t), THEME);
 
   const found = {};
   let over = 0, under = 0, total = 0;
@@ -130,28 +164,36 @@ const pages = fs.readdirSync(ROOT)
     } catch (e) { continue; }
     found[pg] = r.bad;
     total += r.bad;
+    if (NO_BASELINE) continue;   // measuring only — nothing to compare against yet
     const budget = budgets[pg] === undefined ? 0 : budgets[pg];
     if (r.bad > budget + TOLERANCE) {
       over++;
-      console.error(`::error file=${pg}::light-mode contrast regressed — ${r.bad} element(s) below ${MIN_RATIO}:1, budget is ${budget}`);
+      console.error(`::error file=${pg}::${THEME}-mode contrast regressed — ${r.bad} element(s) below ${MIN_RATIO}:1, budget is ${budget}`);
       r.worst.forEach(w => console.error(`         ${w}`));
     } else if (r.bad < budget - TOLERANCE) {
       under++;
-      console.log(`  ${pg}: improved to ${r.bad} (budget ${budget}) — lower the budget in tools/contrast-budgets.json`);
+      console.log(`  ${pg}: improved to ${r.bad} (budget ${budget}) — lower the budget in tools/${path.basename(BUDGETS)}`);
     }
   }
   await browser.close();
 
   if (update) {
     fs.writeFileSync(BUDGETS, JSON.stringify(found, null, 0).replace(/,/g, ',\n') + '\n');
-    console.log(`Budgets written — ${pages.length} pages, ${total} total findings.`);
+    console.log(`${THEME[0].toUpperCase()}${THEME.slice(1)} budgets written — ${pages.length} pages, ${total} total findings, to ${path.basename(BUDGETS)}.`);
+    return 0;
+  }
+  if (NO_BASELINE) {
+    console.log(`\n${THEME}-mode contrast: no baseline yet (${path.basename(BUDGETS)} doesn't exist) — ` +
+      `measured ${total} finding(s) across ${pages.length} pages, informational only. ` +
+      `Seed it from a real CI run (not an agent sandbox — see this file's header) with: ` +
+      `node tools/check-contrast.js <url> --dark --update`);
     return 0;
   }
   if (over) {
     console.error(`\n${over} page(s) over budget. Fix the contrast, or if this is deliberate, ` +
-      `re-baseline with: node tools/check-contrast.js <url> --update`);
+      `re-baseline with: node tools/check-contrast.js <url>${dark ? ' --dark' : ''} --update`);
     process.exit(1);
   }
-  console.log(`Light-mode contrast OK — ${pages.length} pages, ${total} finding(s), none over budget` +
+  console.log(`${THEME[0].toUpperCase()}${THEME.slice(1)}-mode contrast OK — ${pages.length} pages, ${total} finding(s), none over budget` +
     (under ? `; ${under} page(s) improved and can have their budget lowered.` : '.'));
 })().catch(e => { console.error('check-contrast crashed — ' + e.message); process.exit(1); });

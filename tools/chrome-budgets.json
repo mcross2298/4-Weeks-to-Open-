@@ -1,0 +1,34 @@
+{
+  "bottom nav tab @ 320": {
+    "w": 64,
+    "h": 42
+  },
+  "back link @ 320": {
+    "w": 80.5,
+    "h": 29
+  },
+  "topbar icon @ 320": {
+    "w": 29.1,
+    "h": 40
+  },
+  "tour step dot @ 320": {
+    "w": 22,
+    "h": 8
+  },
+  "bottom nav tab @ 390": {
+    "w": 78,
+    "h": 42
+  },
+  "back link @ 390": {
+    "w": 80.5,
+    "h": 29
+  },
+  "topbar icon @ 390": {
+    "w": 36,
+    "h": 40
+  },
+  "tour step dot @ 390": {
+    "w": 22,
+    "h": 8
+  }
+}

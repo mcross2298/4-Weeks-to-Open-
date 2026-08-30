@@ -262,6 +262,18 @@ jobs:
             NODE_PATH=/tmp/pw-ci/node_modules node tools/check-contrast.js http://localhost:8080
             EXIT=$?
           fi
+          # Dark-mode contrast ratchet (W-I3, VOC/VOA Kaizen audit) — the
+          # light-mode pass's sibling, same PROBE/ratchet mechanics, dark's
+          # own budgets in tools/contrast-budgets-dark.json. That file is
+          # deliberately not seeded from an agent sandbox (blocked webfonts
+          # there change text metrics — see check-contrast.js's own header),
+          # so until someone runs `--dark --update` from a real environment
+          # this step measures and reports but never fails the build; it
+          # becomes a real ratchet the moment that file is committed.
+          if [ "$EXIT" -eq 0 ]; then
+            NODE_PATH=/tmp/pw-ci/node_modules node tools/check-contrast.js http://localhost:8080 --dark
+            EXIT=$?
+          fi
           # Runtime performance budget (audit K-3.1/A-15) — the S1 −99.5%
           # runtime win (2983.8 → 15 mutation records/s on mm-p1.html) can
           # never silently regress again the way S5c-0 nearly did (15 → 53.9
