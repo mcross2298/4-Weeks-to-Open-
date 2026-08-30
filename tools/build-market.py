@@ -94,12 +94,38 @@ overwritten by the next deploy.
 """
 
 
+def check_md_completeness(scratch, shippable):
+    """R-I1 — every root *.md must be a deliberate choice, not an omission.
+
+    pm-rename-design.md, readiness-stats-roadmap.md and CLAUDE.md were all
+    HTTP 200 on the public site while `--check` stayed green, because the
+    leak scanner only asks "is this licensed content or a brand term?" —
+    never "should this internal doc be public at all?". This closes that
+    gap at the manifest level: a new root .md that's in neither 'scratch'
+    nor 'shippable' fails CI instead of silently shipping.
+    """
+    unclassified = sorted(
+        p.name for p in ROOT.glob("*.md")
+        if p.name not in scratch and p.name not in shippable
+    )
+    if unclassified:
+        sys.exit(
+            "content-manifest.json is missing these root .md files from "
+            "both 'scratch' and 'shippable' — add each to 'scratch' (stays "
+            "internal) or 'shippable' (ships to the public build) before "
+            "this can pass: %s" % unclassified
+        )
+
+
 def load_manifest():
     m = json.loads(MANIFEST.read_text(encoding="utf-8"))
     licensed = sorted({f for src in m["licensed"].values() for f in src["files"]})
-    missing = [f for f in licensed + m["scratch"] if not (ROOT / f).exists()]
+    shippable = set(m.get("shippable", []))
+    missing = [f for f in licensed + m["scratch"] + sorted(shippable)
+               if not (ROOT / f).exists()]
     if missing:
         sys.exit("content-manifest.json lists files that don't exist: %s" % missing)
+    check_md_completeness(set(m["scratch"]), shippable)
     programs = sorted({src["program"] for src in m["licensed"].values()
                        if "program" in src})
     return (m, set(licensed), set(m["scratch"]), m.get("brand_terms", []),

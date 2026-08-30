@@ -290,8 +290,18 @@ async function layout(page) {
     await page.waitForTimeout(5000);           // steady state, not the start transient
 
     report.runtime.rest = await sample(page, WINDOW_S);
+    // NOT `.rest-timer.running` — mc-timer.js's TMR.start() deliberately never
+    // sets a state class on the chip any more (see its own comment: "no label
+    // overwrite, no state class" — a bare className assignment used to wipe
+    // mc-setlog.js's .mcl-rest-under class off a superset's chip). That made
+    // this check a false negative on EVERY page, not just the one it was
+    // filed against — verified against bro-split.html, one of this file's
+    // other two budget pages, which reported the identical false "false"
+    // despite real rest-timer load in the RUNTIME numbers right above it.
+    // TMR.isRunning() reads the engine's own state instead of a DOM signal
+    // the app stopped emitting.
     report.runtime.timerConfirmedRunning = await page.evaluate(
-      () => !!document.querySelector('.rest-timer.running')
+      () => typeof TMR !== 'undefined' && TMR.isRunning()
     );
 
     await page.evaluate(() => { try { TMR.stop(); } catch (e) {} });

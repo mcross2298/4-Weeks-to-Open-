@@ -41,14 +41,26 @@ jobs:
         uses: actions/checkout@v4
       - name: Generate service worker (auto version + precache list)
         run: python3 tools/build-sw.py --version "ci-${{ github.run_number }}"
-      - name: Strip design comps + scratch pages from deploy artifact (audit LS-2 W-08)
+      - name: Strip design comps + scratch pages from deploy artifact (audit LS-2 W-08, R-I3)
         # These design mockups live in the repo for reference but must never be
         # guessable URLs on the production origin. Removed from the working tree
         # AFTER verify has run and BEFORE the artifact is packed — git history
-        # keeps them; only the deploy is trimmed. (The Rolodex market build
-        # already excludes them via content-manifest.json + *.dc.html.)
+        # keeps them; only the deploy is trimmed.
+        #
+        # R-I3 (VOC/VOA Kaizen audit): content-manifest.json's own top comment
+        # defines 'scratch' as "ships to NEITHER build" — but until now only
+        # the Rolodex extraction (build-market.py) honored that. This deploy
+        # stripped just two hardcoded names, so every scratch-listed internal
+        # doc (roadmaps, audit findings, CLAUDE.md) stayed live on THIS repo's
+        # own origin even after being scratch-listed. One disclosure rule,
+        # read from the manifest both deploys share, instead of two that
+        # quietly disagreed. content-manifest.json itself is dropped too,
+        # matching build-market.py's own MANIFEST exclusion — the manifest is
+        # build tooling, not a shipped asset.
         run: |
-          rm -f ./*.dc.html stndr-card-concepts.html
+          python3 -c "import json; print(chr(10).join(json.load(open('content-manifest.json'))['scratch']))" \
+            | xargs -d '\n' -r rm -f
+          rm -f ./*.dc.html content-manifest.json
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
