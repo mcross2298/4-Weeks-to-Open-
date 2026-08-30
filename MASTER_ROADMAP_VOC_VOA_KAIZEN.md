@@ -152,6 +152,7 @@ similarity, not behaviour.
 | Scripts missing from the offline shell | **13** (`household-finance`), **12** (`Cross-Household-`) |
 | Offline reload of the public demo | **non-deterministic** — blank in 1 of 3 runs |
 | Interviews conducted | **25** (5 profiles × 5 repos) |
+| Declared capabilities demo-verified | **59 of 60 true, 0 false** (1 unverifiable locally) |
 | CI initiatives proposed | **24** (21 repo-specific, 3–5 each, + 3 cross-cutting) |
 
 ---
@@ -163,6 +164,118 @@ against every application separately, because the same profile hits genuinely
 different walls in different apps. Each quote below is tied to a **measured**
 observation; nothing here rests on an unmeasured impression. Where a persona
 found nothing wrong, that is recorded as a finding too.
+
+### 2.0 Quick Tour verification — every declared capability, demoed
+
+**This is the Gemba walk proper.** Before interviewing anyone, every capability
+each app *declares* was extracted from its own onboarding surface and then
+**driven in a real browser** to confirm it actually does what it claims.
+
+Claims were taken from the authoritative source in each app, not paraphrased:
+the workout tour's 18 rendered steps, the cookbook's `SLIDES` array (12), and
+each finance app's `js/features.js` registry (16 and 14).
+
+| Application | Declared capabilities | Source of truth | Verified true | Unverifiable here | False |
+|---|---|---|---|---|---|
+| `4-Weeks-to-Open-` | 18 | `quick-tour.html` steps | **17** | 1 | 0 |
+| `MC-Training-Rolodex` | 18 (inherited) | same tour, public build | **18** link-integrity | — | 0 |
+| `Mikes-Cookbook` | 12 | `SLIDES` in `quick-tour.html` | **12** | 0 | 0 |
+| `Cross-Household-` | 16 | `js/features.js` | **16** | 0 | 0 |
+| `household-finance` | 14 | `js/features.js` | **14** | 0 | 0 |
+| **Total** | **60** | | **59 demoed true** | **1** | **0** |
+
+**The headline result: not one declared capability turned out to be false.**
+Every tour and every feature blurb describes something the app actually does.
+For a fleet this size with hand-authored onboarding, that is a genuinely strong
+result and it should be stated before any finding.
+
+**What "verified" means here** — these were functional demos, not presence
+checks. A sample of what was actually driven:
+
+- **Logging a set** (`W7`): checked a real set box on `kitchen-sink.html?day=1`
+  and confirmed `mc_setlog_v1` was written — `{"kitchen-sink|x-bb-flat-bench-press":
+  [{"d":"Aug 30","sets":{"1":{"w":…` — with the rest-timer chip present.
+- **Pinning a program** (`W3`/`W5`): drove the complete journey — Choose Program →
+  sheet → confirm — and watched `mc_active_prog` become
+  `{"id":"ss","name":"Strength & Supersets"…}` and the dashboard hero re-render as
+  **Week 1 · DAY 1–5 · REST · REST**, then **DAY 1 · WEEK 1 — Legs — 8 Exercises**.
+  That is `F0`'s day module, with its real rest pattern, reached the way a user
+  reaches it.
+- **Scaling a recipe** (`C4`): tapped the serving stepper and confirmed the
+  ingredient panel re-rendered as *"Scaled live from 2 servings"*.
+- **Search** (`C3`): typed `"chicken broccoli"` and confirmed results render with
+  the `rc-match-badge` — the "matched: ingredient" badge — proving the ranked
+  search path, not a substring scan, produced them.
+- **Favorites persistence** (`C10`): tapped a heart and read
+  `mc-cookbook:favorites = ["jalapeno-chicken-bake"]` back out of storage.
+- **The ⋮ menu** (`W8`): opened it and confirmed Replace, Reorder and Notes are
+  all present.
+- **Offline** (`C11`): reloaded with the network cut and confirmed the cookbook
+  still rendered 1,576 characters of app.
+
+**The one unverifiable claim.** `4-Weeks-to-Open-`'s *"Install & train offline"*
+(`W17`) could not be confirmed locally: the service worker is registered and
+active, but `sw.js` carries a hardcoded production-origin guard in its fetch
+handler, so offline behaviour is only observable on the deployed origin. This is
+pre-existing and already documented in `CLAUDE.md`. **Recorded as unverified, not
+as working, and not as broken.**
+
+**Tour link integrity — including in the public build.** Every internal link in
+both tours was resolved against both builds. All 7 workout targets
+(`dashboard`, `cat-strength`, `workout-logs`, `build-workout`, `quick-pump`,
+`exercise-library`, `quick-tour-overview`) and all 4 cookbook targets return
+HTTP 200. Critically, **no tour link points at a page the market build strips** —
+a real risk given 40 pages are removed, and it holds.
+
+---
+
+### The one copy defect the demo pass found
+
+**`4-Weeks-to-Open-` — the dashboard's empty state misdirects the user.**
+
+`dashboard.html:1412` renders:
+
+> *"Open any program below and tap 'Set as Active' to pin it here."*
+
+Following that literally sends the user to a program landing (`cat-strength.html`
+and its nine siblings), where the only comparable control is **"Start Program"**.
+There is no "Set as Active" there. Measured: the sole matching control on that
+landing is `["Start Program"]`.
+
+The real affordance is **on the dashboard itself** — the "Choose Program" /
+"See all" sheet (`.ps-overlay`), whose confirm button pins the program. Driven
+end to end, that path works perfectly.
+
+**The Quick Tour gets this right** — it says *"Tap 'See all,' and a sheet slides
+up with every program… hit Set as Active Program"*, which is accurate. So this is
+**not** tour drift: it is the dashboard's own empty-state copy contradicting the
+tour and the UI. Fix is a one-line copy change pointing at "Choose Program".
+
+*Severity: low. Impact: highest on the Casual / Low-Tech persona, who follows
+instructions literally and has no model of where else to look.*
+
+---
+
+### A note on method, because it changed the findings
+
+**Seven apparent failures in this pass were my own measurement bugs, not app
+defects**, and each was chased down before being written up. They are worth
+listing, because a less careful pass would have filed all seven as bugs:
+
+| Apparent failure | Reality |
+|---|---|
+| Cookbook tour "doesn't advance" | It is a **scroll page**, not a stepper — all 12 slides render at once |
+| Browse search "returns 0 results" | Results render as `.rc`, which my `[class*=card]` selector missed |
+| Recipe "doesn't scale" | I sampled **macros**, which are per-serving constant **by design** |
+| Tracker "won't open" | My harness reused one page; the SPA didn't re-route. Fresh load works |
+| Workout tour "has 0 headings" | Titles are `h1`, my selector looked for `h2`/`h3` |
+| "No day-by-day schedule" | It lives on the **dashboard** since `F0`, not the landing |
+| Debt "missing snowball/avalanche" | Present — my text capture truncated before that section |
+
+The correction applied was **one fresh browser context per claim**, since SPA
+state bleed between probes caused three of the seven. Every remaining pass or
+fail in the matrix above was re-observed after that fix.
+
 
 ### Profiles
 
@@ -474,8 +587,15 @@ be closed from an agent session say so.
   *Options:* (a) accept — they contain no secrets; (b) extend the `pages.yml`
   strip step to drop scratch-listed files from the Pages artifact too.
   **Owner decision required — `AskUserQuestion` gate.**
-- Re-verify `quick-tour.html` / `quick-tour-overview.html` against shipped
-  features per the Documentation currency rule.
+- **W0-3 — Quick Tour verification is DONE and passed (see 2.0).** All 18
+  declared steps were demoed; 17 verified true, 1 (offline) unverifiable
+  locally by design. No tour claim is false. Tour link integrity holds in both
+  the master and the public build.
+- **W0-4 — one copy defect to fix.** `dashboard.html:1412` tells the user to
+  "Open any program below and tap 'Set as Active'", but that control lives in
+  the dashboard's own "Choose Program" / "See all" sheet; program landings offer
+  "Start Program". The Quick Tour is correct; the empty-state copy is not.
+  One-line fix.
 - **DoD:** manifest updated; W0-2 decision recorded; gates green.
 
 #### Wave 1: Active Workout Logging & Real-Time Timer Bug Fixes
@@ -575,7 +695,9 @@ and `.back-link` (114 pages) are two rules in `base.css`, not 239 page edits.
 - **W5-2 — offline shell verified working**; the Supabase CDN dependency
   (identical `SDK_URL` to the workout app) is the one hole. Same treatment as
   W2-2: make it visible, decide vendoring in Initiative 2.
-- Verify `quick-tour.html` / `quick-tour-overview.html` currency.
+- **W5-3 — Quick Tour verification is DONE and passed (see 2.0).** All 12
+  declared slides demoed true, including recipe scaling, ranked search, planner,
+  tracker, favorites persistence, Cooking Mode deep link and offline reload.
 - **DoD:** gap documented with measurements; Wave 6 scoped from real numbers.
 
 #### Wave 6: Kitchen UX / Hands-Free / Scaled Ingredient Calculation Fixes
