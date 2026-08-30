@@ -6,7 +6,16 @@
     "'scratch' (concept/superseded files that ship to neither build).",
     "tools/build-market.py consumes this to generate the clean market repo",
     "and to CI-check that no licensed content leaks into it.",
-    "When adding a new influencer page/asset, list it here in the same change."
+    "When adding a new influencer page/asset, list it here in the same change.",
+    "R-I1 (VOC/VOA Kaizen audit): every root *.md file must appear in EITHER",
+    "'scratch' or 'shippable' \u2014 build-market.py --check fails CI on a new one",
+    "that's in neither, so a doc can never again leak by omission the way",
+    "pm-rename-design.md, readiness-stats-roadmap.md and CLAUDE.md did (all",
+    "three were HTTP 200 on the public site with the leak scanner green,",
+    "because that scanner checks for licensed content and brand terms, not",
+    "internal-doc disclosure \u2014 a different question the old gate never asked).",
+    "'shippable' starts empty on purpose: today NO root .md is meant for a",
+    "trainee to read \u2014 the app's own UI is the product, not its docs."
   ],
   "cookbook": {
     "_comment": "Roadmap 4.7 \u2014 unified market. build-market.py's --cookbook-root checks out this repo and mounts it under cookbook/ inside the Rolodex build (deploy-time merge only; the master 4-Weeks-to-Open- site itself never carries cookbook content \u2014 see MARKET:ADD in dashboard.html). Everything in Mikes-Cookbook is original content today, so 'exclude' is empty.",
@@ -103,8 +112,12 @@
     "README.md",
     "program-landing-handoff.md",
     "premium-design-roadmap.md",
-    "MASTER_ROADMAP_VOC_VOA_KAIZEN.md"
+    "pm-rename-design.md",
+    "readiness-stats-roadmap.md",
+    "MASTER_ROADMAP_VOC_VOA_KAIZEN.md",
+    "CLAUDE.md"
   ],
+  "shippable": [],
   "brand_terms": [
     "CBUM",
     "STNDR",

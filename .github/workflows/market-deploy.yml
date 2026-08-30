@@ -87,3 +87,26 @@ jobs:
           git push --force \
             "https://x-access-token:${TOKEN}@github.com/mcross2298/MC-Training-Rolodex.git" \
             main
+
+  # R-I2 (VOC/VOA Kaizen audit). MC-Training-Rolodex has no .github/workflows
+  # directory of its own -- nothing has ever verified the artifact a real user
+  # actually loads. A defect from the EXTRACTION (build-market.py, the strip
+  # step, GitHub Pages branch-deploy propagation) would reach production
+  # unopposed even with this repo's own CI fully green, because that CI only
+  # proves the local build is clean, not that what's live matches it.
+  verify-deploy:
+    needs: deploy
+    if: github.repository == 'mcross2298/4-Weeks-to-Open-'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Post-deploy artifact verification (hard gate)
+        # CI-only tooling, installed into a scratch prefix outside the repo —
+        # same pattern as the smoke-test job in verify.yml.
+        run: |
+          npm install --no-save --prefix /tmp/pw-ci playwright@latest
+          /tmp/pw-ci/node_modules/.bin/playwright install --with-deps chromium
+          NODE_PATH=/tmp/pw-ci/node_modules node tools/check-deploy-artifact.js \
+            "https://mcross2298.github.io/MC-Training-Rolodex"
