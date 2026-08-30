@@ -395,6 +395,19 @@ function amrapToInfinity(s){
 /* ─────────────────────────────────────────────────
    RENDER EXERCISE CARD
 ───────────────────────────────────────────────── */
+// Shared between a flat card and a grouped .ss-ex member -- one rep-chip
+// renderer, so a superset leg's chips are byte-identical to what a standalone
+// card would have shown for the same sets string.
+function repsChipsHtml(sets){
+  const reps = String(sets||"—").split(",").map(r=>r.trim());
+  return '<div class="a-leg">' + reps.map((rep,ri)=>{
+    const special = rep.toUpperCase().includes("AMRAP")||rep.includes("Drop")||rep.includes("×")||rep.includes("Cluster");
+    const cls = special?"a-rep special":(ri===0?"a-rep live":"a-rep");
+    const sep = ri<reps.length-1?'<span class="a-sep">·</span>':"";
+    return '<span class="'+cls+'">'+esc(amrapToInfinity(rep))+'</span>'+sep;
+  }).join("") + '</div>';
+}
+
 function renderExercise(ex, wIdx, dIdx, eIdx){
   const tag = ex.tag;
   const isSS = tag === "SUPERSET";
@@ -403,13 +416,7 @@ function renderExercise(ex, wIdx, dIdx, eIdx){
   const isCC = tag === "CIRCUIT";
   const ssCls = isSS ? " is-ss" : (isCL ? " is-cluster" : (isDR ? " is-drop" : (isCC ? " is-circuit" : "")));
 
-  const reps = String(ex.sets||"—").split(",").map(r=>r.trim());
-  const repsHtml = '<div class="a-leg">' + reps.map((rep,ri)=>{
-    const special = rep.toUpperCase().includes("AMRAP")||rep.includes("Drop")||rep.includes("×")||rep.includes("Cluster");
-    const cls = special?"a-rep special":(ri===0?"a-rep live":"a-rep");
-    const sep = ri<reps.length-1?'<span class="a-sep">·</span>':"";
-    return '<span class="'+cls+'">'+esc(amrapToInfinity(rep))+'</span>'+sep;
-  }).join("") + '</div>';
+  const repsHtml = repsChipsHtml(ex.sets);
 
   const pillCls = isSS?"grp":isCL?"grp cluster":isDR?"grp drop":isCC?"grp circuit":"grp";
   const pillLabel = isSS?"⚡ Superset":isCL?"◈ Cluster":isDR?"↘ Drop Set":isCC?"🔁 Circuit":"";
@@ -436,6 +443,100 @@ function renderExercise(ex, wIdx, dIdx, eIdx){
     '<div class="a-timerbar">'+makeRestTimer(ex.rest||'60 sec', ex.name)+'</div>' +
     noteHtml +
     '</div></div>';
+}
+
+/* ─────────────────────────────────────────────────
+   SUPERSET GROUPING (roadmap program-flow: W4)
+   --------------------------------------------------
+   A SUPERSET-tagged exercise pairs with the exercise immediately following
+   it -- always exactly 2 members -- even when that second exercise's OWN
+   tag is more specific (DROP or CLUSTER, because that exercise carries its
+   own intensifier on top of being this pair's second station). Verified
+   against every training day's own authored `meta` count ("N Supersets"):
+   this reproduces all of them, including the "Fully Supersetted" week where
+   four separate pairs sit back-to-back with no separating exercise between
+   them -- a same-tag-run grouping (the shape ks-engine.js already uses for
+   TRI-SET/SUPERSET) would wrongly merge that week's five consecutive
+   SUPERSET-tagged exercises into one five-member block and strand the two
+   DROP/CLUSTER-tagged second members as orphaned standalone cards, since a
+   run-based rule cannot see that a tag change mid-run is still the SAME
+   pair's second half.
+
+   CIRCUIT days are untouched on purpose: CIRCUIT here is a distinct
+   whole-day format (6-8 exercises done back-to-back with round rest, one
+   continuous circuit) rather than a 2-3 member station-anchored group, so
+   the shared .ss-card component -- built for exactly that station-anchored
+   shape -- doesn't extend to it. ks-engine.js's own GROUP_SIZE map likewise
+   only knows TRI-SET and SUPERSET; this mirrors that scope exactly rather
+   than inventing a wider one hv-block was never asked for.
+
+   One rest timer, on the final member only -- matching every other .ss-card
+   emitter in the tree (ks-engine.js, mc-group-split.js, mc-engine.js,
+   mc-pmc-engine.js). Two independent countdown chips on the same visible
+   pair is confusing UI, not a preserved behavior worth keeping: the pair
+   reads as one round, and mc-superset-hop.js already treats it as one.
+   Per-leg "Rest" text editing is dropped for the same reason -- no other
+   .ss-card emitter carries an editable rest field on a grouped member
+   either, since rest is a round-level property once grouped. mc-setlog.js's
+   ensureRowsBuilt()/setsOf()/nameId() need nothing more than the existing
+   .ex-sets/[data-field=sets] and .ss-name selectors already present here,
+   so PM-mode inline editing of name/sets keeps working unchanged; see
+   tools/test-mc-setlog-plan.js and check-set-schemes.js for the parser this
+   markup change does not touch.
+───────────────────────────────────────────────── */
+function letter(i){ return String.fromCharCode(65+i); }
+
+function renderSSMember(ex, wIdx, dIdx, eIdx, side, isLast){
+  const isCL = ex.tag === "CLUSTER";
+  const isDR = ex.tag === "DROP";
+  const pillCls = isCL?"grp cluster":isDR?"grp drop":"";
+  const pillLabel = isCL?"◈ Cluster":isDR?"↘ Drop Set":"";
+  const badgeHtml = pillLabel ? '<div class="a-badges"><span class="a-pill '+pillCls+'">'+pillLabel+'</span></div>' : "";
+  const noteHtml = ex.note ? '<div class="a-notes">'+esc(ex.note)+'</div>' : "";
+  const restHtml = isLast ? '<div class="a-timerbar">'+makeRestTimer(ex.rest||'60 sec', ex.name)+'</div>' : "";
+  return '<div class="ss-ex" data-id="ssex-'+wIdx+'-'+dIdx+'-'+eIdx+'" data-type="ssex" data-w="'+wIdx+'" data-d="'+dIdx+'" data-e="'+eIdx+'">' +
+    '<div class="ss-num">'+side+'</div>' +
+    '<div class="ss-content">' +
+      '<div class="ss-name"><span class="editable" data-field="name" data-w="'+wIdx+'" data-d="'+dIdx+'" data-e="'+eIdx+'">'+esc(ex.name)+'</span></div>' +
+      badgeHtml +
+      '<div class="a-ss-reps">'+repsChipsHtml(ex.sets)+'</div>' +
+      '<div class="a-ss-sets-hidden"><span class="ex-sets"><span class="editable" data-field="sets" data-w="'+wIdx+'" data-d="'+dIdx+'" data-e="'+eIdx+'">'+esc(ex.sets)+'</span></span></div>' +
+      noteHtml +
+      restHtml +
+    '</div>' +
+  '</div>';
+}
+
+function renderSSCard(members, wIdx, dIdx, startEIdx){
+  const rowsHtml = members.map((ex,i)=>{
+    const eIdx = startEIdx+i;
+    const isLast = i===members.length-1;
+    const divider = isLast?"":'<div class="ss-divider"><span class="ss-x">× SUPERSET ×</span></div>';
+    return renderSSMember(ex, wIdx, dIdx, eIdx, letter(i), isLast) + divider;
+  }).join("");
+  return '<div class="ss-card a-ss">' +
+    '<div class="ss-header"><span class="ss-label">⚡ Superset</span></div>' +
+    rowsHtml +
+  '</div>';
+}
+
+// Walks a day's exercises, pairing a SUPERSET-tagged leader with the
+// exercise immediately after it and leaving everything else -- standalone
+// pyramids, lone DROP/CLUSTER intensifiers, whole CIRCUIT days -- exactly as
+// renderExercise() already renders it.
+function groupExerciseBlocks(exercises, wIdx, dIdx){
+  const blocks = []; let i = 0;
+  while(i < exercises.length){
+    const ex = exercises[i];
+    if(ex.tag === "SUPERSET" && i+1 < exercises.length){
+      blocks.push(renderSSCard([exercises[i], exercises[i+1]], wIdx, dIdx, i));
+      i += 2;
+    } else {
+      blocks.push(renderExercise(ex, wIdx, dIdx, i));
+      i += 1;
+    }
+  }
+  return blocks.join("");
 }
 
 /* ─────────────────────────────────────────────────
@@ -477,7 +578,7 @@ function renderDay(day, wIdx, dIdx){
     if(openDayIdx !== null) return "";
     return '<div class="rest-card"><span style="font-size:20px">😴</span><div><div class="rest-label">REST DAY</div><div class="rest-sub">Full Recovery &amp; Growth</div></div></div>';
   }
-  const exHtml = day.exercises.map((ex,eIdx)=>renderExercise(ex,wIdx,dIdx,eIdx)).join("");
+  const exHtml = groupExerciseBlocks(day.exercises, wIdx, dIdx);
   return backBtn() + '<div class="day-card open" data-w="'+wIdx+'" data-d="'+dIdx+'">' +
     '<div class="day-header" onclick="toggleDay(this.parentElement,\''+wIdx+'-'+dIdx+'\')">' +
       '<div class="day-icon" style="background:'+day.color+';box-shadow:0 2px 8px '+day.color+'55">'+day.icon+'</div>' +

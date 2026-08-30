@@ -156,7 +156,14 @@ function renderSSMember(ex,dIdx,eIdx,idx,isLast){
   // last, so this just doesn't render a badge for the '—' members at all,
   // same as makeRestTimer already does for a non-interactive '—' string).
   const restHtml=isLast?`<div class="ex-rest">${makeRestTimer(ex.rest||'90 sec',ex.name)}</div>`:'';
-  return`<div class="ss-ex" data-id="ssex-${dIdx}-${eIdx}">
+  // mc-superset-hop.js keys every trigger on '.ss-ex[data-type="ssex"]' —
+  // every other .ss-ex emitter in the tree (mc-engine.js, mc-pmc-engine.js,
+  // mc-group-split.js, run-workout.html, run-program.html) carries it, and
+  // this was the one that did not. Proven by A/B: as shipped, checking a set
+  // here never creates a buffer element at all, so the hop this file's own
+  // comment says it exists to enable has never fired on any of the five
+  // Kitchen Sink pages.
+  return`<div class="ss-ex" data-id="ssex-${dIdx}-${eIdx}" data-type="ssex">
     <div class="ss-num">${letter(idx)}</div>
     <div class="ss-content">
       <div class="ss-name"><span class="editable" data-field="name" data-d="${dIdx}" data-e="${eIdx}">${escapeHtml(ex.name)}</span></div>
