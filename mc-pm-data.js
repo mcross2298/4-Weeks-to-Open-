@@ -125,7 +125,7 @@
               "Phase 1"
             ],
             "ex": 10,
-            "sets": 45,
+            "sets": 43,
             "href": "mm-p1.html?day=1"
           },
           {
@@ -137,7 +137,7 @@
               "Phase 1"
             ],
             "ex": 10,
-            "sets": 42,
+            "sets": 43,
             "href": "mm-p1.html?day=2"
           },
           {
@@ -149,7 +149,7 @@
               "Phase 1"
             ],
             "ex": 10,
-            "sets": 42,
+            "sets": 43,
             "href": "mm-p1.html?day=3"
           },
           {
@@ -161,7 +161,7 @@
               "Phase 1"
             ],
             "ex": 10,
-            "sets": 47,
+            "sets": 43,
             "href": "mm-p1.html?day=4"
           },
           {
@@ -197,7 +197,7 @@
               "Phase 2"
             ],
             "ex": 10,
-            "sets": 45,
+            "sets": 43,
             "href": "mm-p2.html?day=1"
           },
           {
@@ -209,7 +209,7 @@
               "Phase 2"
             ],
             "ex": 10,
-            "sets": 45,
+            "sets": 43,
             "href": "mm-p2.html?day=2"
           },
           {
@@ -221,7 +221,7 @@
               "Phase 2"
             ],
             "ex": 10,
-            "sets": 45,
+            "sets": 43,
             "href": "mm-p2.html?day=3"
           },
           {
@@ -233,7 +233,7 @@
               "Phase 2"
             ],
             "ex": 10,
-            "sets": 45,
+            "sets": 43,
             "href": "mm-p2.html?day=4"
           },
           {
@@ -269,7 +269,7 @@
               "Phase 3"
             ],
             "ex": 10,
-            "sets": 45,
+            "sets": 43,
             "href": "mm-p3.html?day=1"
           },
           {
@@ -281,7 +281,7 @@
               "Phase 3"
             ],
             "ex": 10,
-            "sets": 45,
+            "sets": 43,
             "href": "mm-p3.html?day=2"
           },
           {
@@ -293,7 +293,7 @@
               "Phase 3"
             ],
             "ex": 10,
-            "sets": 45,
+            "sets": 43,
             "href": "mm-p3.html?day=3"
           },
           {
@@ -305,7 +305,7 @@
               "Phase 3"
             ],
             "ex": 10,
-            "sets": 45,
+            "sets": 43,
             "href": "mm-p3.html?day=4"
           },
           {
@@ -412,7 +412,7 @@
               "3 Pyramids · 1 Static · 1 Drop · 1 Cluster"
             ],
             "ex": 6,
-            "sets": 27,
+            "sets": 28,
             "href": "hv-block.html?week=1&day=1"
           },
           {
@@ -423,7 +423,7 @@
               "3 Pyramids · 1 Static · 1 Drop · 1 Cluster"
             ],
             "ex": 6,
-            "sets": 30,
+            "sets": 31,
             "href": "hv-block.html?week=1&day=2"
           },
           {
@@ -434,7 +434,7 @@
               "3 Pyramids · 1 Static · 1 Drop · 1 Cluster"
             ],
             "ex": 6,
-            "sets": 27,
+            "sets": 28,
             "href": "hv-block.html?week=1&day=4"
           },
           {
@@ -445,7 +445,7 @@
               "3 Pyramids · 1 Static · 1 Drop · 1 Cluster"
             ],
             "ex": 6,
-            "sets": 30,
+            "sets": 31,
             "href": "hv-block.html?week=1&day=5"
           },
           {
@@ -456,7 +456,7 @@
               "3 Pyramids · 1 Static · 1 Drop · 1 Cluster"
             ],
             "ex": 6,
-            "sets": 27,
+            "sets": 28,
             "href": "hv-block.html?week=1&day=7"
           },
           {
@@ -467,7 +467,7 @@
               "3 Pyramids · 4 Supersets · 120 sec Rest"
             ],
             "ex": 8,
-            "sets": 37,
+            "sets": 38,
             "href": "hv-block.html?week=2&day=1"
           },
           {
@@ -478,7 +478,7 @@
               "3 Pyramids · 4 Supersets · 120 sec Rest"
             ],
             "ex": 8,
-            "sets": 40,
+            "sets": 41,
             "href": "hv-block.html?week=2&day=2"
           },
           {
@@ -489,7 +489,7 @@
               "3 Pyramids · 4 Supersets · 120 sec Rest"
             ],
             "ex": 8,
-            "sets": 37,
+            "sets": 38,
             "href": "hv-block.html?week=2&day=3"
           },
           {
@@ -500,7 +500,7 @@
               "3 Pyramids · 4 Supersets · 120 sec Rest"
             ],
             "ex": 8,
-            "sets": 40,
+            "sets": 41,
             "href": "hv-block.html?week=2&day=4"
           },
           {
@@ -511,7 +511,7 @@
               "3 Pyramids · 4 Supersets · 120 sec Rest"
             ],
             "ex": 8,
-            "sets": 37,
+            "sets": 38,
             "href": "hv-block.html?week=2&day=5"
           },
           {
@@ -522,7 +522,7 @@
               "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster"
             ],
             "ex": 8,
-            "sets": 41,
+            "sets": 42,
             "href": "hv-block.html?week=3&day=1"
           },
           {
@@ -533,7 +533,7 @@
               "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster"
             ],
             "ex": 8,
-            "sets": 41,
+            "sets": 42,
             "href": "hv-block.html?week=3&day=2"
           },
           {
@@ -544,7 +544,7 @@
               "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster"
             ],
             "ex": 8,
-            "sets": 41,
+            "sets": 42,
             "href": "hv-block.html?week=3&day=4"
           },
           {
@@ -555,7 +555,7 @@
               "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster"
             ],
             "ex": 8,
-            "sets": 41,
+            "sets": 42,
             "href": "hv-block.html?week=3&day=5"
           },
           {
@@ -566,7 +566,7 @@
               "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster"
             ],
             "ex": 8,
-            "sets": 41,
+            "sets": 42,
             "href": "hv-block.html?week=3&day=6"
           },
           {

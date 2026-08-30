@@ -180,6 +180,34 @@
     btn.setAttribute('aria-expanded', String(open));
   });
 
+  // ---- the expansion unit is the GROUP, not the card ---------------------
+  // A superset or tri-set is one block the athlete performs as a unit —
+  // A set 1, B set 1, A set 2 — so expanding one leg while its partners stay
+  // collapsed hides exactly the rows the next thirty seconds need. And a
+  // collapsed partner is not merely smaller: mc-setlog.css collapses a leg to
+  // its 48px strip with `display:none!important` on every other child, so its
+  // logger leaves the layout entirely. mc-superset-hop.js's openLog() adding
+  // .open to a wrap inside a collapsed leg therefore changed nothing on
+  // screen — the hop landed the athlete on an invisible logger.
+  //
+  // FOCUS stays per-exercise while EXPANSION is group-wide: exactly one unit
+  // carries .active (the one being performed, which the hop advances leg by
+  // leg and mc-voice reads), and every member of its group is open. A
+  // standalone exercise is a group of one, so this is the same code path for
+  // every card in the tree rather than a superset special case — which is
+  // what makes it hold on the ~9 rendering engines without per-engine work.
+  function groupOf(unit) {
+    return (unit && unit.closest && unit.closest('.ss-card')) || unit;
+  }
+  function membersOf(unit) {
+    var group = groupOf(unit);
+    if (group && group.classList && group.classList.contains('ss-card')) {
+      var legs = group.querySelectorAll('.ss-ex');
+      if (legs.length) return Array.prototype.slice.call(legs);
+    }
+    return unit ? [unit] : [];
+  }
+
   function setActiveCard(card) {
     document.querySelectorAll('.ex-card.active, .ss-ex.active').forEach(function (c) {
       if (c !== card) c.classList.remove('active');
@@ -188,18 +216,21 @@
     // other card rests as its 48px .mcl-strip. This reverses base.css's
     // recorded "no accordion" decision, which was made when a card was ~150px
     // and is being revisited now that S1-S4 measured it at 272px collapsed.
-    // Signed off by the owner (roadmap decision 2).
+    // Signed off by the owner (roadmap decision 2). "One exercise" reads as
+    // one GROUP now — the smallest block that is coherent to train.
     if (card) {
-      // A-14: build this card's rows now if it's a plain unit that was only
-      // ever strip-built — openLogger() below assumes .mcl-wrap exists.
-      // Superset legs are already eager (see run()) so this is a no-op there.
-      ensureRowsBuilt(card);
+      var members = membersOf(card);
+      // A-14: build every member's rows now if they were only ever
+      // strip-built — openLogger() below assumes .mcl-wrap exists. Superset
+      // legs are already eager (see run()) so this is a no-op there, but a
+      // standalone card still needs it and a future eager/lazy change to
+      // legs must not silently reveal an empty partner.
+      members.forEach(ensureRowsBuilt);
       document.querySelectorAll(UNIT_SEL_R3).forEach(function (c) {
-        if (c !== card && c.querySelector('.mcl-strip')) setCollapsed(c, true);
+        if (members.indexOf(c) < 0 && c.querySelector('.mcl-strip')) setCollapsed(c, true);
       });
       card.classList.add('active');
-      setCollapsed(card, false);
-      openLogger(card);
+      members.forEach(function (m) { setCollapsed(m, false); openLogger(m); });
     }
   }
 
@@ -741,9 +772,15 @@
       // real work for the first time, since every OTHER setActiveCard()
       // caller only fires on a wrap the athlete already opened by hand.
       card.__mclCollapseTimer = setTimeout(function () {
-        setCollapsed(card, true);
         var next = nextIncompleteUnit(card);
-        if (!next) return;
+        // Collapsing is setActiveCard's job now, and it collapses everything
+        // outside the NEXT exercise's group. That distinction is the whole
+        // point: finishing leg A of a superset does not end the block, so A
+        // must stay open while the athlete works leg B — the old
+        // unconditional collapse here closed A and setActiveCard(B) reopened
+        // it a frame later. With nothing left to promote there is no group to
+        // belong to, so the finished card collapses on its own.
+        if (!next) { setCollapsed(card, true); return; }
         setActiveCard(next);
         try {
           var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -757,7 +794,7 @@
       // every card is collapsed at rest, so the old unguarded form re-expanded
       // all ten of them on every updateCount() pass.
       clearTimeout(card.__mclCollapseTimer);
-      setCollapsed(card, false);
+      membersOf(card).forEach(function (m) { setCollapsed(m, false); });
     } else if (!allDone) {
       clearTimeout(card.__mclCollapseTimer);
     }

@@ -34,18 +34,34 @@ const CHECK = process.argv.includes('--check');
 
 function die(msg) { console.error('::error::gen-schedules: ' + msg); process.exit(1); }
 
-// Sets prescribed by one exercise in ONE week. "5×5" -> 5, "8/6/4/4" -> 4,
-// "4×AMRAP" -> 4. Deliberately the same leading-count reading mc-setlog.js's
-// setCount() uses, so the record and the logger agree on what a day costs.
+// Sets prescribed by one exercise in ONE week — the number of logging rows
+// mc-setlog.js will actually build for it, working sets plus any appended
+// drop rows, read from THE LOGGER ITSELF via its Node export hook.
+//
+// This used to be a private re-implementation whose comment claimed it was
+// "deliberately the same leading-count reading mc-setlog.js's setCount()
+// uses, so the record and the logger agree on what a day costs". It was not,
+// and measurement is what showed it: the two disagreed on 5 of 12 real
+// shapes in this tree. It never handled a comma list at all, so "12,10,8,8"
+// fell through to the leading number and returned 12 instead of 4, and it
+// counted no drop rows, so "4×8, Drop AMRAP" returned 4 instead of 5.
+//
+// The records shipped wrong because of it: every mm training day really costs
+// 43 sets — the figure mm-p1.html's own finish bar shows — while the record
+// claimed 45, 42 and 47, and 15 of hv's 21 days undercounted by their drop
+// set. A number the dashboard shows the athlete, contradicting the screen
+// they train on.
+//
+// Calling the real parser is the point of the whole file: a derived record
+// cannot disagree with the page it describes, which is why build-sw.py and
+// gen-program-css.py exist too. A second copy of a shared function is
+// exactly what check-single-impl.js was written to stop.
+const SETLOG = require(path.join(ROOT, 'mc-setlog.js'));
 function setsOf(str) {
   if (!str) return 0;
-  var s = String(str);
-  var m = s.match(/^(\d+)\s*[x×]/i);
-  if (m) return parseInt(m[1], 10);
-  var slash = s.split('/');
-  if (slash.length > 1) return slash.length;
-  var n = s.match(/^(\d+)/);
-  return n ? parseInt(n[1], 10) : 0;
+  const drop = SETLOG.parseDrop('', str);
+  const work = drop.is ? SETLOG.stripDrop(str) : str;
+  return SETLOG.setCount(work) + (drop.is ? drop.drops.length : 0);
 }
 
 // ---- mm: three phases, read from mm-data.js -------------------------------
