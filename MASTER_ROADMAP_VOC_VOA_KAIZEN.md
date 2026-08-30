@@ -1078,8 +1078,13 @@ different levels of coverage. Composed of W-I1, C-I1, X-I2, H-I3.
 
 **F-I2 · Shared-module offline parity** — **M**
 Cookbook and workout carry byte-identical shared modules and the **identical**
-`cdn.jsdelivr.net` dependency. Fix it once, in the canonical copy, and let the
-existing cross-repo drift gate propagate it. Composed of W-I3's sibling, C-I3.
+`cdn.jsdelivr.net` dependency.
+**Verified scoping correction:** `mc-supabase.js` — the file that actually holds
+that CDN URL — is **not** in either coupling system. It is an independent copy in
+each repo, compared by no gate. So the SDK-vendoring work is **two independent
+PRs**, not a paired set, and neither blocks the other (see 5.0, Rule 1B). Only a
+change to one of the **7** genuinely shared files needs the canonical-first,
+paired-PR discipline.
 *Impacted:* `Mikes-Cookbook`, `4-Weeks-to-Open-` → Rolodex.
 
 **F-I3 · Finance shared-module bridge — scope before building** — **L** · **decision first**
@@ -1129,6 +1134,144 @@ two it is.
 ## 5. REPO-BY-REPO INDIVIDUAL SESSION EXECUTION PLAN
 
 How to run one focused session per repository from this roadmap.
+
+### 5.0 PR strategy — how changes land, repo by repo
+
+**One PR cannot span repositories.** A GitHub pull request targets exactly one
+repo, so "one PR for the whole roadmap" is not an option. The unit of work is a
+**wave**; the unit of delivery is **one PR per repo per wave** — except where a
+file is *coupled*, and then it is a **paired set landed in a fixed order**.
+
+#### Rule 0 — there are four pushable repos, not five
+
+| Repo | PR here? | Why |
+|---|---|---|
+| `4-Weeks-to-Open-` | **Yes** | Master workout repo. All workout work lands here |
+| `Mikes-Cookbook` | **Yes** | Standalone |
+| `Cross-Household-` | **Yes** | Private finance |
+| `household-finance` | **Yes** | Public demo |
+| `MC-Training-Rolodex` | **NEVER** | Force-pushed by `market-deploy.yml`; its `main` has unrelated history. It inherits every fix automatically. Opening a PR here is always wrong |
+
+#### Rule 1 — know whether your file is coupled before you branch
+
+There are **two independent coupling systems**, and they behave differently.
+
+**A. Finance pair — `Cross-Household-` ↔ `household-finance`**
+Governed by `scripts/sync/manifest.json`: **31 coupled units**, enforced by
+`check-sync-drift.mjs` as a **blocking PR job**.
+
+Coupled (a change here needs a paired PR *or* a consciously updated baseline):
+
+> `js/app.js` · `js/charts.js` · `js/features.js` · `js/motion.js` · `js/icons.js`
+> · `js/lock.js` · `js/theme.js` · `js/tour.js` · `css/styles.css` · **`sw.js`** ·
+> `index.html` · `tests.html` · `manifest.json` · `.github/workflows/tests.yml` ·
+> `scripts/run-tests.mjs` · `scripts/check-doc-drift.mjs` · **`js/store/` (whole
+> directory, concatenated)** · and all 14 `js/views/*.js`
+
+Not coupled, so free to change alone: `js/cloud.js`, `js/sync.js`,
+`js/views/paycheck.js`, `js/views/report.js`, `supabase/`, `reference/`, and
+every doc.
+
+**B. Cookbook ↔ workout — exactly 7 files**
+Enforced by `sync-shared-modules.py`, run as `cross-repo-drift`, which is
+**deploy-only by design** — it fails *by construction* between the two merges,
+so it must never gate a PR.
+
+| Canonical (`4-Weeks-to-Open-`) | Copy in `Mikes-Cookbook` | Kind |
+|---|---|---|
+| `mc-foodapi.js` | `tracker-foodapi.js` | generated, renamed |
+| `mc-macrocalc.js` | `tracker-calc.js` | generated, renamed |
+| `mc-barcode.js` | `tracker-barcode.js` | generated, renamed |
+| `mc-bridge.js` | `mc-bridge.js` | **byte-identical** |
+| `mc-install.js` | `mc-install.js` | **byte-identical** |
+| `mc-backup-status.js` | `mc-backup-status.js` | **byte-identical** |
+| `tools/test-mc-bridge.js` | same | **byte-identical** |
+
+**Direction is fixed: edit in `4-Weeks-to-Open-` (canonical), copy to the
+cookbook. Never the reverse.** Land the workout PR **first**, the cookbook PR
+second.
+
+> **Verified correction — do not plan `C-I3` as a paired PR.** `mc-supabase.js`
+> is **not** in either coupling system. Both repos carry an independent copy
+> with the identical `cdn.jsdelivr.net` SDK URL, and no gate compares them. The
+> Supabase-vendoring work is therefore **two independent PRs**, related only by
+> intent. They can land in any order, and neither blocks the other.
+
+#### Rule 2 — the slicing table
+
+| Wave / initiative | Repos touched | PRs | Coupled? | Landing order |
+|---|---|---|---|---|
+| `H-I1` + `X-I1` offline shell | hf + Cross | **2, paired** | **Yes — `sw.js`** | Either first, then refresh baseline |
+| `X-I2`/`X-I3` + `H-I3` 320px & thresholds | Cross + hf | **2, paired** | **Yes — `tests.yml`, `check-doc-drift.mjs`** | Either first, then refresh baseline |
+| `W-I1`…`W-I5` workout ergonomics | workout | **1** | No | Rolodex inherits on merge |
+| `C-I1`, `C-I2`, `C-I5` cookbook a11y | cookbook | **1** | No | — |
+| `C-I3` cookbook SDK vendoring | cookbook | **1** | **No** (verified) | Independent |
+| `W`-side SDK vendoring | workout | **1** | **No** (verified) | Independent |
+| `F-I2` shared-module change | workout + cookbook | **2, paired** | **Yes — the 7 files** | **Workout first**, cookbook second |
+| `R-I1`…`R-I3` Rolodex initiatives | **workout** | **1** | No | Fixes live in the master repo |
+| `H-I2`, `H-I4` demo polish | hf | **1** | Depends on file — check the 31 | — |
+| `X-I4` chart audit | Cross | **1** | `js/views/*` **is** coupled — check | Pair if a view changes |
+
+#### Rule 3 — landing a paired set (finance)
+
+1. Open **both** PRs. Each is normal and independently reviewable.
+2. Merge one. `check-sync-drift` on the *other* now legitimately shows the whole
+   wave as diff. **That is correct, not a bug** — do not "fix" it by editing code.
+3. Merge the second.
+4. **Then** refresh the baseline, against a real `main`:
+   ```bash
+   # from a household-finance checkout
+   git worktree add /tmp/hf-main origin/main
+   # from Cross-Household-
+   node scripts/update-sync-baseline.mjs /tmp/hf-main
+   ```
+   **Never baseline against a feature branch.** CI checks out `main` with no
+   `ref:` override, so a branch-derived baseline encodes the wrong comparison
+   and fails later in a way that looks like a tooling bug but isn't.
+5. Commit the refreshed baseline as its own small PR.
+
+> **The one place "port it" is the wrong instinct:** `js/features.js` is coupled
+> *and* deliberately divergent — its manifest entry records that Cloud Sync and
+> Live Sync are Cross-only until Phase 5. There, accept the divergence into the
+> baseline rather than porting.
+
+#### Rule 4 — pre-push gate, per repo
+
+Run the repo's own checks before pushing. One validated push beats three
+speculative ones.
+
+```bash
+# 4-Weeks-to-Open-
+for f in $(git ls-files '*.js'); do node --check "$f" || echo "FAIL $f"; done
+python3 tools/build-market.py --check
+python3 tools/build-sw.py --check
+python3 tools/apply-head-contract.py --check
+
+# Mikes-Cookbook
+node tools/validate-recipes.js && node tools/check-docs.js
+node tools/build-data.js --check && python3 tools/build-sw.py --check
+python3 -m http.server 8765 & node tools/smoke-test.js
+
+# Cross-Household- / household-finance  (CHROMIUM_PATH avoids a browser download)
+node scripts/run-tests.mjs
+node scripts/check-token-drift.mjs && node scripts/check-doc-drift.mjs
+CHROMIUM_PATH=/path/to/chrome node scripts/check-a11y.mjs
+node scripts/check-sync-drift.mjs            # Cross only
+```
+
+#### Rule 5 — every PR, every time
+
+- Branch: `claude/<slug>`, never push to `main`.
+- Open as a **draft PR** targeting that repo's `main`.
+- One wave per PR. Don't widen it because a file was already open.
+- If it touches a coupled unit, **say so in the PR body** and link its pair.
+- Re-baseline a ratchet only when the change is deliberate, and inspect the diff
+  **before** accepting it — never after.
+- **Never re-baseline `check-contrast.js` or the visual ratchet from an agent
+  sandbox.** Webfonts are blocked at the *browser* level there (`curl` returns
+  200, Chromium does not), so text metrics differ from CI and `--update`
+  produces wrong budgets. Enforcing runs are trustworthy; only `--update` is not.
+
 
 ### Before any session (all repos)
 
