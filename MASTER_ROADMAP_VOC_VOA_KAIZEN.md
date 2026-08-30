@@ -110,6 +110,29 @@ This is **not a new discovery of breakage** — `4-Weeks-to-Open-`'s own
 no gate today." What this audit adds is the **measurement**: which controls, on
 which screens, at what size.
 
+### The second finding: a stale offline shell in both finance apps
+
+The service-worker `SHELL` in **both** finance repos still precaches
+`./js/store.js` — a file deleted when the store was split into `js/store/*.js` —
+plus `./js/views/plan.js`, which never existed. Neither lists a single one of the
+real store files. The install handler swallows both 404s with
+`.catch(() => {})`, so nothing has ever surfaced it.
+
+The fetch handler caches at runtime, which masks the gap **only if the user
+happened to be online long enough**. That makes offline correctness a race:
+
+| Online warm-up before going offline | `Cross-Household-` | `household-finance` |
+|---|---|---|
+| 800 ms | OK | OK |
+| 3 s | OK | **BLANK** |
+| 8 s | OK | OK |
+
+The public demo renders a **white screen with no error message** on a reload
+after losing connection. This is the one finding in the audit that is a live,
+reproducible functional defect rather than an ergonomic or coverage gap — and
+`check-sync-drift.mjs` could not catch it, because it compares source
+similarity, not behaviour.
+
 ### Key metrics / friction indicators
 
 | Indicator | Measured value |
@@ -125,111 +148,297 @@ which screens, at what size.
 | Smallest interactive control found | **8 × 8 px** (`4-Weeks-to-Open-` Quick Tour step dot) |
 | Smallest control on a hands-free screen | **32 × 32 px** (Cooking Mode daylight toggle) |
 | Finance doc-vs-gate drift | CLAUDE.md says 48px; gate enforces **44px** (both repos) |
-| Internal planning docs leaked to public build | **2** (`MC-Training-Rolodex`) |
+| Internal planning docs served from public build | **3** at HTTP 200 (incl. `CLAUDE.md`) |
+| Scripts missing from the offline shell | **13** (`household-finance`), **12** (`Cross-Household-`) |
+| Offline reload of the public demo | **non-deterministic** — blank in 1 of 3 runs |
+| Interviews conducted | **25** (5 profiles × 5 repos) |
+| CI initiatives proposed | **24** (21 repo-specific, 3–5 each, + 3 cross-cutting) |
 
 ---
 
 ## 2. VOC / VOA INTERVIEW SYNTHESIS
 
-Five associate profiles were run against all four applications. Quotes are
-composed to express a **measured** finding — each is traceable to a specific
-number in Section 3. No quote below rests on an unmeasured impression.
+**25 interviews — 5 associate profiles × 5 repositories.** Every persona was run
+against every application separately, because the same profile hits genuinely
+different walls in different apps. Each quote below is tied to a **measured**
+observation; nothing here rests on an unmeasured impression. Where a persona
+found nothing wrong, that is recorded as a finding too.
 
-### Associate 1 — Daily Power User (speed, shortcuts, rapid entry)
+### Profiles
 
-> *"The set logger is genuinely fast now. What slows me down is everything
-> around it — I keep missing the topbar icons on my phone because they shrink
-> as the screen narrows."*
+| # | Profile | Focus |
+|---|---|---|
+| A1 | Daily Power User | Speed, shortcuts, rapid entry, input efficiency |
+| A2 | Mobile-First / On-the-Go | Touch targets, responsiveness, offline reliability |
+| A3 | Data & Analytics Enthusiast | Reporting accuracy, charts, exports, modelling |
+| A4 | Casual / Low-Tech | Onboarding clarity, hierarchy, error recovery |
+| A5 | Cross-Device / Sync | State persistence, cache updates, multi-device |
 
-- **Positive:** the workout session surface is the most refined part of the
-  fleet. The `S1`–`S5c` runtime work (−99.5% mutation records) is felt: no lag
-  logging sets.
-- **Friction:** `dashboard.html` topbar icons measure **34.9 × 40px at 390px and
-  26.6 × 40px at 320px** — they compress with the viewport instead of scrolling.
-  These are the app's primary navigation.
-- **Friction:** `exercise-library.html` filter chips are **27px tall** (20 of
-  them on screen at once) — the primary way a power user narrows 577 exercises.
-- **Request:** a keyboard/quick-entry path for weight+reps that doesn't require
-  hitting a 40px target between sets.
+---
 
-### Associate 2 — Mobile-First / On-the-Go (touch, offline, low connectivity)
+### 2.1 `4-Weeks-to-Open-` — Workout (master)
 
-> *"Cooking Mode is the whole reason I open this on the counter, and it has the
-> smallest buttons in the app. My hands are covered in chicken."*
+**A1 · Daily Power User**
+> *"Logging sets is genuinely fast now. It's everything around the logging that costs me time — I miss the topbar icons because they get smaller as my screen gets smaller."*
 
-- **Positive:** no horizontal overflow anywhere, at any width tested, in any of
-  the four apps. Nothing had to be pinched or side-scrolled.
-- **Friction — headline:** `Mikes-Cookbook` Cooking Mode is the *hands-free*
-  screen and carries the app's smallest controls: **daylight toggle 32×32**,
-  **font ± 40×32**, **voice toggle 40×32**, **Exit 53×18**.
-- **Friction:** the serving stepper `±` on `recipe.html` is **40×40** — the
-  single most-tapped control while actually cooking.
-- **Friction:** collection-card heart and add-to-plan are **34×34**.
-- **Offline:** the app shell caches and serves correctly. **But** sign-in loads
-  the Supabase SDK from `cdn.jsdelivr.net` at runtime — cross-origin, therefore
-  not precacheable — in **both** the cookbook and the workout app.
+- The session surface is the most refined thing in the fleet; the `S1`–`S5c`
+  runtime work (mutation records −99.5%) is felt as real responsiveness.
+- **Measured:** `.topbar-icon` is 34.9 × 40px at 390 and **26.6 × 40 at 320** —
+  it compresses instead of scrolling. Primary navigation.
+- **Measured:** `.filter-btn` on `exercise-library.html` is **27px tall**, 20 on
+  screen — the main way to narrow 577 exercises.
+- **Ask:** a between-sets entry path that doesn't require a 27px target.
 
-### Associate 3 — Data & Analytics Enthusiast (reporting, charts, exports)
+**A2 · Mobile-First**
+> *"Nothing has ever needed side-scrolling. That's rarer than it sounds."*
 
-> *"The numbers are right and the exports round-trip. I just can't tap the thin
-> slices on the donut."*
+- **Measured:** **0 horizontal-overflow defects across all 141 pages** at 390,
+  and 0 at 320 on the 11 walked pages. The `F3-4` fix holds fleet-wide.
+- **Measured:** offline reload could **not** be verified locally — `sw.js`
+  carries a hardcoded production-origin guard in its fetch handler, so offline
+  behaviour is only observable on the deployed origin. Pre-existing and
+  documented; recorded as **UNVERIFIED**, not as working.
+- **Measured:** `.mc-nav-tab` 78 × **42** on **125 pages** — two pixels under.
 
-- **Positive:** money-math suites pass in both finance repos; the backup format
-  round-trips (`test-mc-export.js`); `check-doc-drift` keeps the CSV contract
-  honest against `00-state.js`.
-- **Friction:** `household-finance` dashboard donut segments are tappable
-  ("View <member> transactions") but a small slice renders at **8.8 × 0.6px**.
-  This is *formally exempt* under the repo's own documented WCAG 2.5.8 rule
-  (the 44px legend button is the equivalent target) — so it is a UX
-  observation, **not a gate violation**.
-- **Request:** the Monthly Report (`Cross-Household-`-only) is the deepest
-  analytical surface and is measured by no gate at any width other than 390.
+**A3 · Data & Analytics**
+> *"I trust the numbers. I can't see what the app looks like in dark mode to anyone auditing it."*
 
-### Associate 4 — Casual / Low-Tech (onboarding, hierarchy, error recovery)
+- **Measured:** `check-contrast.js` is a **light-mode ratchet**; dark-mode
+  contrast is unmeasured end to end — the repo's own `P3`/`P5` notes say so.
+- **Measured:** `.wl-tab` on `workout-logs.html` is **38px tall**; `.ntx-ico` on
+  the nutrition tab **38 × 38**.
+- **Recorded gap:** `measure-session.js` reports `timer confirmed running:
+  false` on `mm-p1.html` — the perf budget measures idle, not the load it names.
 
-> *"The tour is the first thing I ever touched, and the dots to move between
-> steps are smaller than a grain of rice."*
+**A4 · Casual / Low-Tech**
+> *"The dots that move me through the tour are smaller than a grain of rice — and the tour is the first thing I ever touched."*
 
-- **Friction — headline:** `4-Weeks-to-Open-` `quick-tour.html` step dots are
-  **8 × 8px** (22×8 when active). This is the **onboarding** surface — the
-  first interactive control a new trainee ever meets.
-- **Friction:** `Skip` is 47×30; `Back` is 36×36 across `quick-tour.html`,
-  `quick-tour-overview.html`, `program-guide.html` and `workout-logs.html`.
-- **Friction:** the cookbook's backup-banner dismiss control is **17 × 23px**.
-- **Positive:** both finance apps' Quick Tour + Executive Summary render from
-  the single `js/features.js` registry, so the "what can this app do" surface
-  cannot drift from the screen list. This is the best onboarding pattern in the
-  fleet and is the model Initiative 5 generalises.
+- **Measured:** `quick-tour.html` `.dot-nav` = **8 × 8px** (22×8 active). The
+  smallest interactive control in the entire fleet, on the onboarding surface.
+- **Measured:** `a.skip` 47 × **30**; `a.back` **36 × 36** on four pages.
+- **Positive:** an onboarding overlay (`ps-overlay`) does auto-present on clean
+  storage — the entry path exists and fires.
 
-### Associate 5 — Cross-Device / Sync (persistence, cache, multi-device)
+**A5 · Cross-Device / Sync**
+> *"One phone is flawless. I can't prove the second one."*
 
-> *"It works beautifully on one phone. I can't prove to myself it works across
-> two."*
+- **Measured:** `mc-supabase.js:32` loads the SDK from `cdn.jsdelivr.net` at
+  runtime — cross-origin, so `sw.js` **cannot** precache it. Sign-in is
+  unavailable on a cold offline launch and fails silently.
+- **Measured:** only `mc_device_id` is written on a first visit — clean.
+- **UNVERIFIED:** two-device Supabase reconciliation. Owner-side, open since `B5`.
 
-- **Positive:** the kitchen timer's absolute-instant design (`endsAt`, never a
-  decrementing count) survived a full page navigation in test — verified live.
-- **Positive:** `mc-sync.js` merge strategies are unit-tested against real
-  conflicting fixtures in both cookbook and workout repos.
-- **Friction:** sign-in depends on a **cross-origin CDN script**
-  (`cdn.jsdelivr.net/npm/@supabase/supabase-js@2`) in both apps. A service
-  worker cannot precache it. On a cold offline launch the sync layer is simply
-  unavailable, and the failure is silent.
-- **UNVERIFIED / owner-gated:** real two-device Supabase reconciliation. This
-  was already flagged as owner-only in `cookbook-bridge-roadmap.md`'s `B5` and
-  **remains open**. No wave below claims to close it from an agent session.
+---
 
-### Top common pain points (all applications)
+### 2.2 `MC-Training-Rolodex` — Workout (public build)
 
-1. **Sub-44px controls concentrated on exactly the screens used with compromised
-   hands** — cookbook Cooking Mode, workout Quick Tour, both topbars.
-2. **Ergonomic gate coverage inverted vs. risk** — 0 gates (cookbook), 5.5% page
-   coverage (workout), full coverage (both finance apps).
-3. **Cross-origin CDN dependency** breaks the otherwise-solid offline story in
-   both cookbook and workout.
-4. **Narrow-viewport (320px) behaviour is correct but unguarded** — all four
-   apps are clean at 320 today; no gate in any repo measures it, so nothing
-   holds the line.
-5. **Documentation drift that the doc-drift gates are not scoped to catch.**
+**A1 · Daily Power User**
+> *"Same app, same friction. It inherits everything."*
+
+- **Measured:** 101 HTML pages vs. the master's 141 — 40 licensed pages
+  correctly stripped. Every ergonomic finding in 2.1 is inherited by
+  construction; none is separately fixable here.
+
+**A2 · Mobile-First**
+> *"Identical build, so identical behaviour — but nothing checks that."*
+
+- **Measured:** `MC-Training-Rolodex` has **no `.github/workflows` directory at
+  all**. Zero gates run against the public artifact. It is force-pushed by
+  `market-deploy.yml`, and the *master's* CI is the only thing verifying it.
+
+**A3 · Data & Analytics**
+> *"I can read your internal roadmap from the public site."*
+
+- **Measured, HTTP 200 from the served build:** `pm-rename-design.md`,
+  `readiness-stats-roadmap.md`, **and `CLAUDE.md`** — internal architecture and
+  planning history, publicly fetchable.
+- **Verified — and this bounds the finding:** a brand-term scan of every served
+  `.md` using the manifest's own 10 terms returns **0 hits**. `.md` *is* in
+  `build-market.py`'s `TEXT_EXT` and the leak scan does cover it. **This is an
+  internal-document disclosure, not a licensed-content leak.** The gate is
+  working exactly as designed; the manifest's `scratch` list is incomplete.
+
+**A4 · Casual / Low-Tech**
+> *"The tour made it over intact."*
+
+- **Measured:** 9 tour + instruction pages present in the public build —
+  onboarding parity with the master is genuinely good.
+
+**A5 · Cross-Device / Sync**
+> *"Whatever ships here, ships unverified."*
+
+- The public build is a force-pushed artifact with no post-deploy check. A
+  regression introduced by the extraction itself — not by the master's source —
+  would reach users with nothing standing in the way.
+
+---
+
+### 2.3 `Mikes-Cookbook` — Recipe & Cookbook
+
+**A1 · Daily Power User**
+> *"Search finally understands me. Adding to the plan is what slows me down."*
+
+- **Positive:** `mc-search.js` handles `"chicken broccoli"` and `"chiken"`,
+  which the old scan returned zero results for, at ~4–8 ms/query.
+- **Measured:** `.fav-toggle` / `.plan-toggle` on collection cards are
+  **34 × 34** — the two highest-frequency taps in the browse flow.
+
+**A2 · Mobile-First**
+> *"Cooking Mode is why this app is on my counter, and it has the smallest buttons in it. My hands are covered in chicken."*
+
+- **Measured, all in Cooking Mode:** daylight toggle **32 × 32**; font ± **40 ×
+  32**; voice toggle **40 × 32**; Exit **53 × 18**.
+- **Measured:** the serving stepper `±` is **40 × 40** — the most-tapped control
+  during actual cooking.
+- **Positive:** offline reload **rendered correctly**; `?cook=1` opens Cooking
+  Mode directly; 0 horizontal overflow on all 8 screens at both widths.
+
+**A3 · Data & Analytics**
+> *"The grocery maths is honest about its own estimates. I like that."*
+
+- **Positive:** `MCUnits` tags every density-derived conversion (`viaDensity`)
+  so the UI can show its work; the fragmentation ratchet stands at **179/854**
+  and may only fall.
+- **Positive:** backup format v2 round-trips, pinned by `test-mc-export.js`.
+- **Measured gap:** `:photos` is deliberately unsynced, so a cook's photos exist
+  in the backup file but never cross devices — correct by design, invisible in UI.
+
+**A4 · Casual / Low-Tech**
+> *"The thing telling me to take the tour has a dismiss button I can't hit."*
+
+- **Measured:** `.backup-banner-dismiss` = **17 × 23px**; its CTA
+  ("Take the tour →") is 118 × **30**.
+- **Measured:** `.home-search-btn` / `.home-workout-btn` / `.home-account-btn`
+  are **40 × 40** on **every** shell screen.
+- **Measured:** `.r-back` ("‹ Back") is 42 × **21**; `.col-back` 58 × **19.5**.
+
+**A5 · Cross-Device / Sync**
+> *"The timer survives everything. The sign-in doesn't survive a bad kitchen Wi-Fi."*
+
+- **Positive, verified live:** a running timer survived a full navigation from
+  `recipe.html` to `index.html` with its store intact — the absolute-instant
+  (`endsAt`) design works.
+- **Measured:** identical `cdn.jsdelivr.net` SDK dependency to the workout app;
+  `sw.js` precaches the local `mc-supabase.js` wrapper but not the SDK.
+- **Measured:** **zero** of the 14 CI gates measures a target, a ratio, or a width.
+
+---
+
+### 2.4 `Cross-Household-` — Personal Finance (private, real data)
+
+**A1 · Daily Power User**
+> *"Sixteen screens, nothing broken. I have no speed complaint."*
+
+- **Measured:** all 16 routes clean at 390 **and** 320 — zero console errors,
+  zero overflow. Inputs and selects render at 46px, above the floor.
+- The strongest-built app in the fleet on this axis. No A1 finding.
+
+**A2 · Mobile-First**
+> *"It works offline. I just found out that's partly luck."*
+
+- **Measured:** offline reload succeeded **3/3** across 800 ms / 3 s / 8 s
+  warm-up windows.
+- **Measured, latent:** `sw.js`'s `SHELL` still precaches **`./js/store.js`** —
+  a file deleted when the store was split into `js/store/*.js` — plus
+  `./js/views/plan.js`, which does not exist. **None of the 8 real store files
+  is precached**, nor `ui.js`, `features.js`, `tour.js`, `summary.js`. The
+  install handler's `.catch(() => {})` swallows both 404s silently. Offline
+  works here only because the fetch handler caches at runtime and this app won
+  the race — see 2.5, where the identical bug produces a blank app.
+
+**A3 · Data & Analytics**
+> *"The Excel bridge holds. The deepest screen in the app is measured at one width."*
+
+- **Positive:** money-math suite green; `check-doc-drift.mjs` keeps
+  `CSV_HEADER` / `CATEGORIES` honest against `00-state.js`.
+- **Measured:** Monthly Report (`#/report`) is Cross-only and the most
+  analytically dense surface here — `check-a11y.mjs` runs **390px only**.
+
+**A4 · Casual / Low-Tech**
+> *"The tour found me on my own. That's the best onboarding of the five."*
+
+- **Measured:** a real modal tour auto-presents on clean storage.
+- **Positive:** both onboarding surfaces render from the single
+  `js/features.js` registry, so a screen cannot drift out of the two places
+  users learn about it. **The best onboarding pattern in the fleet.**
+- **Measured:** `check-a11y.mjs` passes 16 routes × **2 themes** — light and
+  dark both enforced, which the workout app does not do.
+
+**A5 · Cross-Device / Sync**
+> *"Two devices remains a promise, not a proof."*
+
+- **Positive:** `check-sync-drift.mjs` makes divergence from the public template
+  deliberate rather than accidental.
+- **Measured:** only 2 localStorage keys after a first visit — a tidy surface.
+- **UNVERIFIED:** real two-device Supabase reconciliation (Phases 1–3 applied).
+
+---
+
+### 2.5 `household-finance` — Financial Demo (public, fictional data)
+
+**A1 · Daily Power User**
+> *"Fourteen routes, all clean. Nothing to report."*
+
+- **Measured:** 14 routes, zero errors, zero overflow at both widths. No A1
+  finding — recorded as a pass, not padded into a complaint.
+
+**A2 · Mobile-First**
+> *"I lost signal, reloaded, and got a white screen. On the app that's supposed to sell the others."*
+
+- **Measured and reproduced — the sharpest defect in this audit:** offline
+  reload is **non-deterministic**. Across three identical runs differing only in
+  online warm-up time: **OK (1673 chars) / BLANK (53 chars) / OK**. The blank run
+  threw `ReferenceError: CATEGORIES is not defined` and
+  `ReferenceError: Store is not defined`.
+- **Root cause, confirmed in source:** `sw.js`'s `SHELL` precaches
+  **`./js/store.js`** (deleted in the store split) and `./js/views/plan.js`
+  (nonexistent). **13 scripts the app actually loads are absent from the
+  shell** — all 9 `js/store/*.js`, plus `ui.js`, `features.js`, `summary.js`,
+  `tour.js`. The install handler swallows the 404s; the fetch handler's runtime
+  caching masks the gap **only if the user happened to be online long enough**.
+- This is the same latent bug as 2.4 — here it actually fires.
+
+**A3 · Data & Analytics**
+> *"I tried to tap a slice and there was nothing to tap."*
+
+- **Measured:** a dashboard donut segment carrying a real `aria-label`
+  ("View Sam transactions") renders at **8.8 × 0.6px**.
+- **Formally exempt** under the repo's own documented WCAG 2.5.8 rule (the 44px
+  legend button is the equivalent target) — so a UX observation, **not a gate
+  violation**. But this is the *demo*: it is the surface an evaluator touches.
+
+**A4 · Casual / Low-Tech**
+> *"Good tour. Then a blank screen the second time I opened it on the train."*
+
+- **Positive:** same auto-presenting modal tour and same `features.js` registry
+  as 2.4 — onboarding is a strength.
+- The A2 defect lands hardest on this persona: a blank app offers no error, no
+  explanation, and no recovery path.
+
+**A5 · Cross-Device / Sync**
+> *"The docs describe sync that isn't there. I couldn't tell until I read the code."*
+
+- **Measured:** `MIGRATION.md` / `STORAGE.md` / `SUPABASE.md` describe a cloud
+  sync layer; **nothing in `js/` implements it** — no `supabase/` directory, no
+  client code. `SUPABASE.md` self-labels as draft; the other two do not.
+- **Measured:** this repo has **no `sync-drift` job** (correct — it is the
+  downstream side), so nothing here detects divergence from `Cross-Household-`.
+
+---
+
+### Top common pain points
+
+1. **Sub-44px controls concentrated on the screens used with compromised hands**
+   — cookbook Cooking Mode, workout Quick Tour, both topbars.
+2. **Ergonomic gate coverage inverted against ergonomic risk** — full coverage
+   on the desk apps, 6.4% on the gym app, zero on the kitchen app.
+3. **A stale service-worker shell in both finance apps** — reproduced as a blank
+   offline app on the public demo, latent on the private one.
+4. **Cross-origin CDN auth** breaks the offline story in cookbook and workout.
+5. **320px is correct everywhere and guarded nowhere** — no gate in any of the
+   five repos measures below 390.
+6. **Documentation that no doc-drift gate is scoped to catch** — the 48-vs-44
+   claim, and `household-finance`'s unshipped-sync docs.
 
 ---
 
@@ -481,8 +690,13 @@ exist on a counter, and it carries its smallest controls.
   record: `js/cloud.js` and `js/sync.js` are real and loaded; five migrations
   applied across Phases 1–3. Read it before assuming either "no backend" or
   "fully shipped."
+- **W11-3 — repair the stale service-worker shell (`X-I1`).** `SHELL` precaches
+  `./js/store.js` (deleted in the store split) and `./js/views/plan.js`
+  (nonexistent), and omits all 8 real store files plus `ui.js`, `features.js`,
+  `tour.js`, `summary.js`. Offline works here today only by runtime-cache luck.
 - **UNVERIFIED:** true two-device reconciliation. Owner-side.
-- **DoD:** baseline refreshed against `main`; sync status re-stated accurately.
+- **DoD:** baseline refreshed against `main`; `SHELL` matches `index.html`'s
+  script tags, enforced by a static gate; sync status re-stated accurately.
 
 #### Wave 12: Analytics, Dashboard Charts & Wave Sign-Off
 
@@ -508,8 +722,17 @@ exist on a counter, and it carries its smallest controls.
 
 #### Wave 13: Demo Flow Walkthrough & Scenario State Audit
 
-- **Verified clean:** 14 routes, zero console errors, zero horizontal overflow
-  at 390 and 320. `check-a11y.mjs` passes 14 routes × 2 themes.
+- **W13-0 — the offline shell is broken, and it fires (`H-I1`). Take this first.**
+  Offline reload is **non-deterministic**: across three identical runs varying
+  only in online warm-up, results were **OK / BLANK / OK**, the blank run
+  throwing `ReferenceError: Store is not defined`. `sw.js`'s `SHELL` precaches
+  `./js/store.js` (deleted) and `./js/views/plan.js` (nonexistent) while omitting
+  **13** scripts the app actually loads. The install handler's `.catch(() => {})`
+  swallows the 404s; runtime caching masks the gap only if the user was online
+  long enough. **A blank screen with no error is the worst first impression the
+  demo app can give.**
+- **Verified clean otherwise:** 14 routes, zero console errors, zero horizontal
+  overflow at 390 and 320. `check-a11y.mjs` passes 14 routes × 2 themes.
 - **W13-1 — same 48px-vs-44px doc drift as Wave 9**, identical wording in
   `CLAUDE.md`, identical `check-a11y.mjs:119` threshold. Fix both repos in one
   coordinated pass so `sync-drift` sees a single deliberate divergence rather
@@ -560,86 +783,224 @@ exist on a counter, and it carries its smallest controls.
 
 ## 4. NEW CONTINUOUS IMPROVEMENT (CI) INITIATIVES
 
-All five stay inside the vanilla / no-build constraint locked with the owner.
+**24 initiatives — 21 repo-specific (3 to 5 each) plus 3 cross-cutting.** Every one is
+derived from a numbered finding in Section 2, and every one stays inside the
+vanilla / no-framework / no-build-step constraint locked with the owner. Node
+and Python check scripts are the only tooling any initiative may add.
 
-### Initiative 1: Unified Cross-PWA Ergonomic Floor & Its Gate
+Each carries an **effort** estimate (S / M / L) and names the finding it answers.
 
-- **Description:** one written 44×44 touch floor for all five apps, enforced by
-  a gate in **every** repo — not four different levels of coverage. Concretely:
-  port `Cross-Household-`'s `check-a11y.mjs` pattern into `Mikes-Cookbook`
-  (which has none), and extend `4-Weeks-to-Open-`'s `check-journey.js` with a
-  chrome-control pass beyond its 9 session pages. Add **320px** to every matrix.
-- **Value:** closes the audit's spine finding — the apps used with compromised
-  hands have the weakest enforcement. Turns a documented "known, not fixed"
-  into an enforced floor.
-- **Impacted repos:** all five (`MC-Training-Rolodex` inherits by construction).
-- **Constraint fit:** plain Playwright-in-CI scripts, the exact pattern three of
-  these repos already run. No runtime code, no build step.
+---
 
-### Initiative 2: Offline-Honest Sync — Vendor the Supabase SDK
+### 4.1 `4-Weeks-to-Open-` — Workout (master) · 5 initiatives
 
-- **Description:** both the cookbook and the workout app load
-  `cdn.jsdelivr.net/npm/@supabase/supabase-js@2` at runtime. Cross-origin, so
-  the service worker cannot precache it; on a cold offline launch sign-in is
-  silently unavailable. Vendor a pinned copy into each repo, add it to the
-  precache list, and give the sync layer a visible offline state.
-- **Value:** the only remaining hole in an otherwise solid offline story, on the
-  two apps most likely to be opened in a basement gym or a kitchen with bad Wi-Fi.
-- **Impacted repos:** `Mikes-Cookbook`, `4-Weeks-to-Open-` (→ Rolodex).
-- **Constraint fit:** a vendored `.js` file plus a `build-sw.py` run. No bundler.
-- **Decision required:** vendoring pins the SDK version and takes on update
-  duty. **`AskUserQuestion` gate before implementing.**
+**W-I1 · Chrome-control pass for the journey gate** — *answers A1, A2, A4* · **M**
+Extend `check-journey.js` beyond its 9 session pages with a **chrome-control
+pass** covering topbar, back controls, nav tabs and the tour, and add **320px**
+alongside 390. Today 141 of 141 pages carry a sub-44 control and the gate sees
+none of them. *Value:* the ergonomics work in Wave 3 is unguarded without this —
+a fix that no gate holds is a fix that regresses.
 
-### Initiative 3: One Shared Chrome — Topbar, Back Control, Tour Dots
+**W-I2 · Shared chrome consolidation** — *answers A1, A4* · **S**
+`.mc-nav-tab` (125 pages) and `.back-link` (114 pages) are two rules in
+`base.css`, not 239 page edits. Follow the precedent of moving `.mc-day-back`
+into `base.css` in `F3-2`. *Value:* highest fix-to-reach ratio in the audit;
+per-page patching is exactly how six divergent `makeRestTimer` bodies arose.
 
-- **Description:** the same three controls are undersized in different ways in
-  different repos (`a.back` 36×36 on four workout pages; `.r-back` 42×21 and
-  `.col-back` 57×19 in the cookbook; topbar icons compressing to 26.6px at 320).
-  Define each **once** per repo — `base.css` / `cookbook.css` — following the
-  precedent `F3-2` set by moving `.mc-day-back` into `base.css`, and the rule
-  `check-single-impl.js` already enforces for shared JS.
-- **Value:** four-page patches are how six divergent `makeRestTimer` bodies came
-  to exist. One definition cannot drift.
-- **Impacted repos:** `4-Weeks-to-Open-`, `Mikes-Cookbook`.
-- **Constraint fit:** CSS only.
+**W-I3 · Dark-mode contrast gate** — *answers A3* · **M**
+`check-contrast.js` is a **light-mode ratchet**; dark-mode contrast is unmeasured
+end to end, which the repo's own `P3`/`P5` notes state plainly — and dark is the
+default the athlete actually trains in. Add a dark pass. *Value:* closes the one
+axis where a regression is currently invisible to CI.
+*Caveat:* must be baselined **from CI**, never an agent sandbox — blocked
+webfonts change text metrics.
 
-### Initiative 4: Cross-App Unified Financial Data Bridge (`Cross-Household-` ↔ `household-finance`)
+**W-I4 · Perf-probe integrity** — *answers A3* · **S**
+`measure-session.js` reports `timer confirmed running: false` on `mm-p1.html`,
+so that budget measures idle rather than the rest-timer load it claims. Fix the
+probe, then re-baseline deliberately. *Value:* a green gate that measures the
+wrong thing is worse than no gate — it manufactures false confidence.
 
-- **Description:** the workout↔cookbook bridge (`mc-bridge.js`: one read-only,
-  byte-identical module, one writer per store, CI drift gate in both repos) is a
-  proven pattern in this fleet. The finance pair has **no runtime bridge** —
-  only `check-sync-drift.mjs`, a *source-similarity* gate, which is a different
-  thing entirely.
-- **Honest scoping — read before planning this:** the two finance apps are
-  **deliberately divergent**, not two copies. Fixed two-person `WHO` vs. dynamic
-  `data.members`; real data vs. fictional demo; Cross-only Direct Deposit and
-  Monthly Report. A *data* bridge between a private real household and a public
-  demo is **not obviously desirable and may be actively wrong**.
-  The defensible version is a **shared-module** bridge — formatting, money math,
-  chart primitives — held byte-identical and gated, exactly as `mc-bridge.js` is.
-  **This initiative must not begin without an `AskUserQuestion` gate**
-  establishing which of the two it is.
-- **Impacted repos:** `Cross-Household-`, `household-finance`.
+**W-I5 · Topbar that scrolls instead of compressing** — *answers A1* · **S**
+`.topbar-icon` narrows 34.9 → 26.6px between 390 and 320. Five 44px cells cannot
+fit 320px, so no padding tweak works. **Reuse `F0`'s solved pattern**
+(`flex: 1 0 44px` + `overflow-x: auto`) rather than re-deriving it.
 
-### Initiative 5: The Feature Registry, Fleet-Wide (identified during the Gemba walk)
+---
 
-- **Description:** the finance apps' `js/features.js` — one array driving **both**
-  the Quick Tour and the Executive Summary's feature grid — is the best
-  onboarding pattern in the fleet: a screen cannot drift out of the two places
-  users learn about it, because there is one list. The cookbook and workout apps
-  have **hand-authored** tour pages (`quick-tour.html`,
-  `quick-tour-overview.html`, nine `<id>-instructions.html`) kept current only by
-  a documentation *rule*, not a mechanism.
-- **Value:** converts a discipline into a gate. The workout repo already proved
-  the failure mode this prevents — `F6` retired an instructions build pipeline
-  precisely because two copies of the same guide could drift.
-- **Impacted repos:** `Mikes-Cookbook`, `4-Weeks-to-Open-` (→ Rolodex).
-- **Constraint fit:** a data file plus a render function; a `--check` gate
-  asserting every registered screen appears in the tour. No build step.
-- **Caution:** the workout app's guides are long-form authored prose, not
-  blurbs. The registry should govern **coverage** (is every screen represented?)
-  rather than replace authored content — `F6`'s lesson was that inlining
-  authored guides made things worse, not better.
+### 4.2 `MC-Training-Rolodex` — Workout (public build) · 3 initiatives
+
+> All three are about the **build and its verification**, never source — this
+> repo is force-pushed and is never a place to land a fix.
+
+**R-I1 · Manifest completeness gate** — *answers A3* · **S**
+`build-market.py --check` verifies licensed content and brand terms, and passes.
+It does **not** assert that every root document is *classified*. Add a check that
+fails when a root `.md` is neither scratch-listed nor explicitly marked
+shippable. *Value:* `pm-rename-design.md`, `readiness-stats-roadmap.md` and
+`CLAUDE.md` are served at HTTP 200 from the public build today; a classification
+gate makes that a deliberate choice rather than an omission.
+
+**R-I2 · Post-deploy verification of the public artifact** — *answers A2, A5* · **M**
+The Rolodex has **no workflows at all** — nothing verifies the thing users
+actually load. Add a minimal post-deploy job (shell boots, no console errors, no
+404 on a precached asset, leak re-scan). *Value:* today a defect introduced by
+the *extraction* rather than the source would ship unopposed.
+
+**R-I3 · Pages-artifact strip parity** — *answers A3* · **S** · **decision first**
+`pages.yml` strips only `*.dc.html` and one page, so scratch-listed files are
+excluded from the Rolodex but still published to GitHub Pages from the master.
+Either accept deliberately or extend the strip step to honour `scratch`.
+*Value:* one disclosure rule instead of two that disagree.
+
+---
+
+### 4.3 `Mikes-Cookbook` — Recipe & Cookbook · 5 initiatives
+
+**C-I1 · The cookbook's first accessibility gate** — *answers A2, A4* · **M**
+Port the `check-a11y.mjs` pattern (routes × themes × 44px + contrast) to the
+hub-and-spoke shell and standalone pages, **with Cooking Mode as an explicit
+route** — it is drivable via `recipe.html?id=<id>&cook=1`, exactly the mechanism
+a gate needs. *Value:* closes the single largest coverage gap in the fleet: 14
+blocking gates, none measuring a target, a ratio, or a width.
+*Rule:* prove it fails on the pre-fix tree before landing it.
+
+**C-I2 · Cooking Mode ergonomic refit** — *answers A2* · **S**
+Daylight toggle 32×32, font ± 40×32, voice 40×32, Exit 53×18 → 44 minimum.
+*Value:* Counter Mode exists *because* this screen is used at arm's length in
+bad light with dirty hands; 32px controls contradict the feature's own rationale.
+
+**C-I3 · Offline-honest authentication** — *answers A5* · **M** · **decision first**
+Vendor a pinned Supabase SDK into the repo and precache it, replacing the
+runtime `cdn.jsdelivr.net` fetch the service worker cannot cache; give the sync
+layer a visible offline state. *Value:* the one hole in an otherwise solid
+offline story. *Trade-off:* vendoring pins the version and takes on update duty.
+
+**C-I4 · Feature registry + tour-coverage gate** — *answers A4* · **M**
+Adopt the finance apps' `features.js` pattern — one array, rendered by both the
+tour and an overview — plus a `--check` asserting every registered screen appears
+in `quick-tour.html`. *Value:* converts the Documentation currency *rule* into a
+*mechanism*. *Caution:* govern **coverage**, not authored prose — `F6` reversed
+an inlining pipeline for exactly that reason.
+
+**C-I5 · High-frequency card controls** — *answers A1* · **S**
+`.fav-toggle` / `.plan-toggle` at 34×34 are the two most-tapped controls in the
+browse flow. They render through the shared `mc-cards.js`, so **one** fix covers
+the shell and collection pages — verify no second definition exists first.
+
+---
+
+### 4.4 `Cross-Household-` — Personal Finance (private) · 4 initiatives
+
+**X-I1 · Repair and gate the service-worker shell** — *answers A2* · **M**
+`SHELL` precaches `./js/store.js` (deleted in the store split) and
+`./js/views/plan.js` (nonexistent), and omits all 8 real store files plus
+`ui.js`, `features.js`, `tour.js`, `summary.js`. Add a check that every
+`<script src>` in `index.html` appears in `SHELL` and that every `SHELL` entry
+exists on disk. *Value:* offline currently works by runtime-cache luck; in the
+sibling repo the identical bug produces a blank app. **The silent
+`.catch(() => {})` on install is what let this survive** — the gate must be
+static, not runtime.
+
+**X-I2 · 320px in the accessibility matrix** — *answers A2, A3* · **S**
+`check-a11y.mjs` runs one 390px viewport. This audit found 320 clean across all
+16 routes — so this protects a currently-correct state rather than fixing a
+defect, which is the cheapest kind of gate to add.
+
+**X-I3 · Reconcile the documented floor with the enforced one** — *answers A3* · **S** · **decision first**
+`CLAUDE.md` says 48px; `check-a11y.mjs:119` enforces 44. Then **extend
+`check-doc-drift.mjs`** to cover claims about gate thresholds, not just
+`CSV_HEADER` / `CATEGORIES`. *Value:* the drift existed precisely because the
+doc-drift gate wasn't scoped to catch it.
+
+**X-I4 · Chart-segment target equivalence audit** — *answers A3* · **S**
+The exemption for data-sized chart segments is honest **only where an equivalent
+44px target genuinely exists**. Verify the legend equivalence holds on every
+chart exposing a tappable segment. *Value:* keeps a documented exemption truthful
+rather than a blanket waiver.
+
+---
+
+### 4.5 `household-finance` — Financial Demo (public) · 4 initiatives
+
+**H-I1 · Repair the offline shell, and gate it** — *answers A2, A4* · **M** · **highest priority in this repo**
+Same stale `SHELL` as X-I1, but **13** missing scripts and it actually fires:
+offline reload was reproduced as **blank** with `Store is not defined`. Fix the
+list, then add both the static gate from X-I1 **and** an offline-reload
+assertion. *Value:* a white screen with no error is the worst possible first
+impression for the app that exists to demonstrate the others.
+
+**H-I2 · Demo-quality chart targets** — *answers A3* · **S**
+A tappable donut segment measured 8.8 × 0.6px. Introduce a minimum-angle floor,
+or route small slices into an "Other" segment with a real target. *Value:*
+formally exempt, but this is the demo — it is the surface being evaluated.
+
+**H-I3 · Paired 320px + threshold reconciliation** — *answers A2, A3* · **S**
+Mirror X-I2 and X-I3 **in the same wave as the Cross-Household- change**, so
+`sync-drift` sees one deliberate divergence instead of two accidental ones.
+
+**H-I4 · Start-fresh onboarding verification** — *answers A4* · **S**
+`startFresh()` / `emptyState()` is the real onboarding path — a cloned demo
+becomes a real household there. Assert end-to-end that clearing demo data leaves
+a coherent single-member (`"You"`) state across all 14 routes. *Value:* the one
+flow where a new user's first action is destructive and irreversible.
+
+---
+
+### 4.6 Cross-cutting · 3 initiatives
+
+**F-I1 · One ergonomic floor, written once, enforced everywhere** — **L**
+A single documented 44px standard with a gate in *every* repo, rather than four
+different levels of coverage. Composed of W-I1, C-I1, X-I2, H-I3.
+*Impacted:* all five.
+
+**F-I2 · Shared-module offline parity** — **M**
+Cookbook and workout carry byte-identical shared modules and the **identical**
+`cdn.jsdelivr.net` dependency. Fix it once, in the canonical copy, and let the
+existing cross-repo drift gate propagate it. Composed of W-I3's sibling, C-I3.
+*Impacted:* `Mikes-Cookbook`, `4-Weeks-to-Open-` → Rolodex.
+
+**F-I3 · Finance shared-module bridge — scope before building** — **L** · **decision first**
+The brief proposed a cross-app *data* bridge. The two finance apps are
+**deliberately** divergent — fixed two-person roster vs. dynamic members, real
+data vs. fictional demo, Cross-only Direct Deposit and Monthly Report — so
+bridging *data* between a private household and a public demo may be actively
+wrong. The defensible version is a shared-**module** bridge (formatting, money
+math, chart primitives) held byte-identical and gated, exactly as `mc-bridge.js`
+already is between cookbook and workout — and X-I1/H-I1 prove the two SWs
+*already* drifted in a way `check-sync-drift.mjs` did not catch, because it
+compares source similarity, not behaviour.
+**Must not begin without an `AskUserQuestion` gate** establishing which of the
+two it is.
+*Impacted:* `Cross-Household-`, `household-finance`.
+
+---
+
+### Initiative index
+
+| ID | Repository | Initiative | Effort | Gate? |
+|---|---|---|---|---|
+| W-I1 | 4-Weeks-to-Open- | Chrome-control journey pass | M | adds |
+| W-I2 | 4-Weeks-to-Open- | Shared chrome consolidation | S | — |
+| W-I3 | 4-Weeks-to-Open- | Dark-mode contrast gate | M | adds |
+| W-I4 | 4-Weeks-to-Open- | Perf-probe integrity | S | fixes |
+| W-I5 | 4-Weeks-to-Open- | Topbar scrolls, not compresses | S | — |
+| R-I1 | MC-Training-Rolodex | Manifest completeness gate | S | adds |
+| R-I2 | MC-Training-Rolodex | Post-deploy artifact verification | M | adds |
+| R-I3 | MC-Training-Rolodex | Pages-artifact strip parity | S | decision |
+| C-I1 | Mikes-Cookbook | First accessibility gate | M | adds |
+| C-I2 | Mikes-Cookbook | Cooking Mode refit | S | — |
+| C-I3 | Mikes-Cookbook | Offline-honest auth | M | decision |
+| C-I4 | Mikes-Cookbook | Feature registry + tour gate | M | adds |
+| C-I5 | Mikes-Cookbook | High-frequency card controls | S | — |
+| X-I1 | Cross-Household- | Repair + gate the SW shell | M | adds |
+| X-I2 | Cross-Household- | 320px in a11y matrix | S | adds |
+| X-I3 | Cross-Household- | Threshold reconciliation | S | decision |
+| X-I4 | Cross-Household- | Chart equivalence audit | S | — |
+| H-I1 | household-finance | Repair offline shell + gate | M | adds |
+| H-I2 | household-finance | Demo-quality chart targets | S | — |
+| H-I3 | household-finance | Paired 320px + threshold | S | adds |
+| H-I4 | household-finance | Start-fresh verification | S | adds |
 
 ---
 
