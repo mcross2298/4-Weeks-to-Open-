@@ -112,8 +112,11 @@ workflow below, so a green CI run does not exercise them.
 
 **Workflows** (`.github/workflows/`):
 - **`verify.yml`** — the canonical gate list (everything above, plus a
-  headless-Chromium render smoke test, a light-mode contrast ratchet
-  (`tools/check-contrast.js`, budgets in `tools/contrast-budgets.json`), a
+  headless-Chromium render smoke test, a contrast ratchet
+  (`tools/check-contrast.js`, light-mode budgets in `tools/contrast-budgets.json`;
+  `--dark` runs the same probe against dark's own `tools/contrast-budgets-dark.json`,
+  informational-only until that file is seeded from a real CI run — W-I3, see
+  the file's own header for why an agent sandbox can't seed it), a
   runtime performance budget (`tools/measure-session.js --check`, audit
   K-3.1/A-15 — 3 probe pages, budgets in `tools/perf-budgets.json`; the S1
   −99.5% runtime win can never silently regress again the way S5c-0 nearly
@@ -1119,6 +1122,97 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > `top:0`, absorbs the inset as padding, and paints opaque — verified to fail on
 > all three regression shapes before landing, since a gate that cannot fail is
 > worthless.
+
+> **Companion audit:** [`MASTER_ROADMAP_VOC_VOA_KAIZEN.md`](MASTER_ROADMAP_VOC_VOA_KAIZEN.md)
+> (opened 2026-08-30) is a fleet-wide VOC/VOA Kaizen audit across all five
+> repos this account owns; only its `4-Weeks-to-Open-`/`MC-Training-Rolodex`
+> waves (0–4) and initiatives (`W-I1`–`W-I5`, `R-I1`–`R-I3`) apply here.
+> Scratch-listed, so it never ships to the public Rolodex build.
+>
+> **Wave 0 + W-I4 shipped (2026-08-30, PR #318):** scratch-listed
+> `pm-rename-design.md` and `readiness-stats-roadmap.md`, both HTTP 200 on
+> the public build despite `build-market.py --check` staying green (that
+> gate checks licensed content and brand terms, not internal-doc
+> disclosure) — and found a third: `CLAUDE.md` itself was the only root
+> `.md` shipping publicly, confirmed with the owner and scratch-listed too.
+> `tools/measure-session.js`'s rest-timer probe checked for a
+> `.rest-timer.running` CSS class `mc-timer.js` deliberately stopped setting
+> (a past fix for a superset-styling bug — see `TMR.start()`'s own comment),
+> so "timer confirmed running" read false on **every** page, not just
+> `mm-p1.html` as the roadmap filed it; verified against all three
+> `perf-budgets.json` probe pages before and after. Also fixed
+> `dashboard.html`'s empty-state copy, which described a "Set as Active"
+> control that doesn't exist.
+>
+> **R-I1/R-I2/R-I3 shipped (2026-08-30, PR #318):** a manifest-completeness
+> gate — every root `.md` must now be in `content-manifest.json`'s `scratch`
+> array or a new explicit `shippable` allowlist (empty; no doc is meant to
+> be public today), or `build-market.py --check` fails CI; proved it fails
+> on a planted test file before landing. `pages.yml`'s strip step stripped
+> only two hardcoded filenames, so the master's own Pages deploy served
+> every scratch-listed internal doc the Rolodex build already excluded —
+> now strips everything in `scratch` (plus the manifest itself, matching
+> `build-market.py`'s own exclusion), one disclosure rule instead of two
+> that quietly disagreed. `MC-Training-Rolodex` has no `.github/workflows`
+> of its own, so nothing verified the artifact a real user loads after the
+> force-push — added `tools/check-deploy-artifact.js` + a `verify-deploy`
+> job: polls the live site until it's up, drives it in real headless
+> Chromium (shell boots, zero console errors), checks a sampled precached
+> asset resolves, and re-scans the live site for scratch/licensed files.
+> Testing it against a real local extraction caught a real bug in the first
+> draft: `build-market.py` intentionally regenerates its own `README.md`
+> with different content, which a naive "every scratch name must 404" check
+> would have permanently failed on.
+>
+> **W-I1 shipped (2026-08-30):** `tools/check-journey.js` gained a
+> fleet-wide chrome-control pass — `.mc-nav-tab` (125 pages), `.back-link`
+> (114), `.topbar-icon` and the tour's `.dot-nav`, at both 390px and a real
+> 320px device width neither this file nor its default CI invocation had
+> ever covered. **Ratcheted, not hard-failed**: all four are already under
+> the 44px floor fleet-wide and their fix (`W-I2`) is a separate,
+> design-reviewed change still pending sign-off — asserting `>=44px` now
+> would fail on `main` the instant this merged, the exact "red from birth,
+> gets turned off" trap `CRITICAL`'s own comment warns against. A ratchet
+> catches a regression starting today and becomes a real floor for free the
+> moment a control's fix lands and crosses 44, since nothing lets a stored
+> size shrink. Only 3 representative pages, not 141 — every selector is
+> owned by one shared stylesheet, so a real render on any page carrying it
+> proves the rule for every page that loads the same CSS. Budgets in
+> `tools/chrome-budgets.json`; proved the ratchet both holds clean and
+> fails on a real regression before landing.
+>
+> **W-I3 shipped (2026-08-30):** `tools/check-contrast.js` gained `--dark`,
+> reusing its light-mode probe and ratchet mechanics against a second
+> budget file (`contrast-budgets-dark.json`) — dark is the app's own
+> *default* theme (`mc_theme_mode: 'dark' | 'light'`), and until now it was
+> the one axis a regression could ship on invisibly. **That budget file is
+> deliberately not committed from this session.** `fonts.googleapis.com` is
+> blocked at the browser level in an agent sandbox (verified: `curl` reaches
+> it and returns 200, headless Chromium does not), so pages measure against
+> the `system-ui` fallback's different text metrics — the identical
+> constraint `premium-design-roadmap.md`'s `P4` already hit re-baselining
+> the *light* ratchet from here, where two sandbox runs on an unchanged tree
+> disagreed on 11 pages. Until `contrast-budgets-dark.json` exists, `--dark`
+> measures and reports every page but never fails the build (see
+> `NO_BASELINE` in the file); it becomes a real gate the moment someone runs
+> `--dark --update` from an environment that can actually reach Google
+> Fonts. The mechanism itself **was** verified here — write, clean read-back,
+> and a real induced regression correctly failing — all against a throwaway
+> local baseline, deleted before committing, never against the numbers that
+> will actually ship.
+>
+> **A real, unfixed finding surfaced building the gate, not yet acted on.**
+> That throwaway measurement still counted **587 dark-mode contrast
+> failures across all 140 pages** (310 on light) — including outright
+> invisible controls (`.coach-icon` on `dashboard.html`, black-on-black,
+> 1.00:1; `.lift-name` on `psu-strength.html`, white-on-white) and a
+> recurring pattern across 30+ pages: `rgb(51,65,85)` / `rgb(71,85,105)` —
+> Tailwind slate-700/600 — on `.tab`, `.day-meta`, `.a-rep`, `.wt-label`,
+> `.wtab`, `.stat-label`. `premium-design-roadmap.md`'s `P3` swept for
+> exactly this slate family **by name** and thought it had closed it; these
+> are the same hexes reappearing through selectors that sweep never
+> reached. Fixing them is a separate change from building the gate that can
+> now see them — logged here so it isn't lost.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 
