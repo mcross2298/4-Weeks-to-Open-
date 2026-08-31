@@ -51,11 +51,11 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 .stats-bar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);}
 .stat{background:#0a0a0a;padding:14px 12px;text-align:center;}
 .stat-num{font-size:22px;font-weight:900;color:#d4af37;letter-spacing:-0.02em;}
-.stat-label{font-size:11px;font-weight:700;color:#475569;letter-spacing:0.08em;text-transform:uppercase;margin-top:2px;}
+.stat-label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-top:2px;}
 
 /* Content */
 .content{padding:20px 18px 0;}
-.section-label{font-size:11px;font-weight:900;letter-spacing:0.2em;color:#475569;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.section-label{font-size:11px;font-weight:900;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
 .section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.08),transparent);}
 
 /* Log cards */
@@ -63,7 +63,7 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 .log-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--prog-color,#d4af37);border-radius:0 2px 2px 0;}
 .log-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
 .log-name{font-size:15px;font-weight:800;color:#fff;line-height:1.3;}
-.log-date{font-size:11px;color:#475569;font-weight:600;white-space:nowrap;margin-left:8px;flex-shrink:0;}
+.log-date{font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap;margin-left:8px;flex-shrink:0;}
 .log-meta-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
 .log-tag{font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid rgba(255,255,255,0.07);letter-spacing:0.05em;}
 .log-tag.gold{background:rgba(212,175,55,0.1);color:#d4af37;border-color:rgba(212,175,55,0.25);}
@@ -72,13 +72,13 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 .set-ex{font-size:12px;font-weight:700;color:#e2e8f0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .set-data{font-size:12px;color:#d4af37;font-weight:700;white-space:nowrap;}
 .set-pr{font-size:11px;font-weight:900;background:rgba(212,175,55,0.15);color:#d4af37;border-radius:4px;padding:1px 5px;letter-spacing:0.06em;border:1px solid rgba(212,175,55,0.25);}
-.log-duration{font-size:11px;color:#475569;margin-top:8px;display:flex;align-items:center;gap:5px;}
+.log-duration{font-size:11px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:5px;}
 
 /* Empty state */
 .empty{text-align:center;padding:48px 24px;}
 .empty-icon{font-size:40px;margin-bottom:14px;}
 .empty-title{font-size:18px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-0.01em;}
-.empty-sub{font-size:13px;color:#475569;line-height:1.6;margin-bottom:20px;}
+.empty-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
 .empty-btn{display:inline-block;padding:12px 24px;background:#d4af37;color:#000;border-radius:12px;font-size:14px;font-weight:900;text-decoration:none;letter-spacing:0.03em;}
 
 /* Clear btn */
@@ -89,7 +89,7 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
   cursor:pointer;font-family:inherit;margin-top:16px;letter-spacing:0.03em;
 }
 .clear-btn:active{background:rgba(239,68,68,0.15);}
-.lp-hint{font-size:11px;color:#475569;font-weight:600;margin-bottom:12px;}
+.lp-hint{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:12px;}
 
 /* Sessions / Programs tabs */
 .wl-tabs{display:flex;gap:8px;padding:14px 18px 0;}
@@ -110,8 +110,8 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
   background:var(--prog-color,#d4af37);border-radius:0 2px 2px 0;}
 .prog-header{display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .prog-name{font-size:15px;font-weight:800;color:#fff;}
-.prog-meta{font-size:11px;color:#475569;font-weight:600;margin-top:4px;}
-.prog-chev{font-size:12px;color:#475569;transition:transform 0.2s;flex-shrink:0;}
+.prog-meta{font-size:11px;color:var(--muted);font-weight:600;margin-top:4px;}
+.prog-chev{font-size:12px;color:var(--muted);transition:transform 0.2s;flex-shrink:0;}
 .prog-card.open .prog-chev{transform:rotate(180deg);}
 .prog-sessions{display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);}
 .prog-card.open .prog-sessions{display:block;}
@@ -142,9 +142,9 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
   margin:0 auto 12px;padding:12px 0;box-sizing:content-box;cursor:pointer;
   -webkit-tap-highlight-color:transparent;}
 .wl-sheet-title{font-size:19px;font-weight:900;color:#fff;letter-spacing:-0.01em;margin-bottom:2px;}
-.wl-sheet-sub{font-size:12px;color:#475569;font-weight:600;margin-bottom:14px;}
+.wl-sheet-sub{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:14px;}
 .wl-sheet-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
-.wl-empty-note{font-size:12px;color:#475569;line-height:1.6;background:#0d0d0d;
+.wl-empty-note{font-size:12px;color:var(--muted);line-height:1.6;background:#0d0d0d;
   border-radius:10px;padding:12px;margin-bottom:6px;}
 .wl-resume-btn{display:block;width:100%;text-align:center;padding:13px;border-radius:12px;
   background:linear-gradient(90deg,#22d3ee,#34d399);color:#04121f;font-weight:900;
@@ -349,7 +349,7 @@ function renderSessionCard(kind, idx, prog){
       <span class="set-data">${s.weight?s.weight+' lb':'—'} × ${s.reps||'—'}</span>
       ${s.pr?'<span class="set-pr">PR</span>':''}
     </div>`).join('');
-  const moreSets = (log.sets||[]).length > 4 ? `<div style="font-size:11px;color:#475569;padding:6px 10px;">+${log.sets.length-4} more sets</div>` : '';
+  const moreSets = (log.sets||[]).length > 4 ? `<div style="font-size:11px;color:var(--muted);padding:6px 10px;">+${log.sets.length-4} more sets</div>` : '';
   // Completed sessions open the real read-only Completed Workout page
   // (the exact workout card that was completed, not a list-summary sheet) —
   // only 'daily' (in-progress) entries still use the bottom-sheet path below.

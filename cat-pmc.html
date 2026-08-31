@@ -55,7 +55,7 @@
 .resume-arrow{font-size:18px;color:#a855f7;font-weight:900;}
 /* Split selector cards (vertical, MC-style) */
 .split-strip-wrap{padding:18px 0 4px;background:#0d0618;}
-.split-strip-label{font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;color:#475569;padding:0 16px;margin-bottom:12px;}
+.split-strip-label{font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);padding:0 16px;margin-bottom:12px;}
 .split-strip{display:flex;flex-direction:column;gap:10px;max-width:680px;margin:0 auto;padding:0 16px 8px;}
 .split-card-sel{display:block;width:100%;text-align:left;background:#0f0f0f;border:1.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 16px 14px 18px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;font-family:inherit;}
 .split-card-sel::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--sp-color,#a855f7);opacity:0.45;transition:opacity 0.15s;}
@@ -67,13 +67,13 @@
 .split-card-chev{font-size:18px;font-weight:900;color:var(--sp-color,#a855f7);flex-shrink:0;line-height:1;}
 .split-card-name{font-size:17px;font-weight:900;color:#fff;letter-spacing:-0.01em;margin-bottom:5px;}
 .split-card-desc{font-size:12px;color:#94a3b8;line-height:1.45;margin-bottom:8px;}
-.split-card-meta{font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#475569;}
+.split-card-meta{font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);}
 /* Split detail */
 .split-detail{max-width:680px;margin:0 auto;padding:20px 16px 0;}
 .split-detail-num{font-size:11px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:8px;display:inline-block;}
 .split-detail-name{font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.01em;margin-bottom:4px;}
 .split-detail-desc{font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:16px;}
-.workouts-label{font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;color:#475569;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.workouts-label{font-size:11px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
 .workouts-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.06);}
 .workout-card{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;border:1.5px solid;margin-bottom:10px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;}
 .workout-card:active{transform:scale(0.98);}
@@ -82,7 +82,7 @@
 .workout-name{font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;line-height:1.3;}
 .workout-tags{display:flex;gap:6px;flex-wrap:wrap;}
 .workout-tag{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:2px 7px;border-radius:4px;}
-.workout-arrow{font-size:16px;color:#475569;flex-shrink:0;}
+.workout-arrow{font-size:16px;color:var(--muted);flex-shrink:0;}
 /* Badge key */
 .badge-section{max-width:680px;margin:28px auto 0;padding:0 16px 40px;}
 .badge-section-head{font-size:11px;font-weight:900;letter-spacing:0.22em;color:#a855f7;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
@@ -125,12 +125,12 @@
 .round-btn.done{background:rgba(52,211,153,0.15);border-color:rgba(52,211,153,0.4);color:#34d399;}
 .round-btn:active{transform:scale(0.97);}
 .ex-notes-input{width:100%;background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;font-weight:600;font-family:inherit;resize:none;line-height:1.5;}
-.ex-notes-input::placeholder{color:#334155;}
-.ex-notes-label{font-size:11px;font-weight:800;letter-spacing:0.15em;color:#475569;text-transform:uppercase;margin-bottom:4px;}
+.ex-notes-input::placeholder{color:var(--muted2);}
+.ex-notes-label{font-size:11px;font-weight:800;letter-spacing:0.15em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;}
 /* ── PICKER ── */
 .picker-header{padding:60px 20px 24px;background:linear-gradient(135deg,#1a0040,#0d0618);text-align:center;border-bottom:1px solid rgba(192,132,252,0.15);}
 .picker-title{font-size:24px;font-weight:900;color:#fff;margin-bottom:6px;}
-.picker-sub{font-size:12px;color:#475569;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;}
+.picker-sub{font-size:12px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;font-weight:700;}
 .picker-content{max-width:680px;margin:0 auto;padding:20px 16px 48px;}
 .picker-split{margin-bottom:24px;}
 .picker-split-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px;}
