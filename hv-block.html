@@ -28,10 +28,10 @@
    without it the four tabs' text floors the row at 324px and the page scrolls
    sideways at 320 (measured; pre-existing, not introduced by the F3 day-list
    conversion, but fixed here since this page is in hand). */
-.wtab{flex:1;min-width:0;padding:8px 4px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:#475569;font-size:11px;font-weight:800;letter-spacing:0.08em;text-align:center;cursor:pointer;transition:all 0.15s;line-height:1.3;}
+.wtab{flex:1;min-width:0;padding:8px 4px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:var(--muted);font-size:11px;font-weight:800;letter-spacing:0.08em;text-align:center;cursor:pointer;transition:all 0.15s;line-height:1.3;}
 .wtab:active{transform:scale(0.97);}
 .wtab.active{background:rgba(132,204,22,0.15);border-color:rgba(132,204,22,0.4);color:#a3e635;}
-.wtab .wt-label{display:block;font-size:9px;font-weight:700;color:#334155;letter-spacing:0.1em;text-transform:uppercase;margin-top:2px;}
+.wtab .wt-label{display:block;font-size:9px;font-weight:700;color:var(--muted2);letter-spacing:0.1em;text-transform:uppercase;margin-top:2px;}
 .wtab.active .wt-label{color:#84cc16;opacity:0.8;}
 
 /* ── Day accordion ── */
@@ -41,8 +41,8 @@
 .day-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:#fff;}
 .day-info{flex:1;}
 .day-session{font-weight:800;font-size:14px;color:#e2e8f0;letter-spacing:-0.01em;}
-.day-meta{font-size:11px;color:#475569;margin-top:2px;}
-.day-toggle{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.05);color:#475569;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.08);transition:all 0.2s;}
+.day-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.day-toggle{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.05);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.08);transition:all 0.2s;}
 .day-card.open .day-toggle{color:#fff;}
 
 /* ── Exercises ── */
@@ -51,7 +51,7 @@
 
 /* ── Rest day cards ── */
 .rest-card{background:rgba(255,255,255,0.015);border:1px dashed rgba(255,255,255,0.08);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:12px;margin-bottom:10px;}
-.rest-label{font-weight:800;font-size:13px;color:#334155;letter-spacing:0.06em;}
+.rest-label{font-weight:800;font-size:13px;color:var(--muted2);letter-spacing:0.06em;}
 .rest-sub{font-size:11px;color:#1e293b;margin-top:2px;}
 
 /* ── Exercise card (a-card style, matches mm-p2 / arnold-legacy) ── */
@@ -61,7 +61,7 @@
 .a-card.is-cluster{border-left:3px solid rgba(34,211,238,0.45);padding-left:10px;margin-left:6px;}
 .a-card.is-drop{border-left:3px solid rgba(244,63,94,0.45);padding-left:10px;margin-left:6px;}
 .a-card.is-circuit{border-left:3px solid rgba(249,115,22,0.45);padding-left:10px;margin-left:6px;}
-.a-idx{min-width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#475569;flex-shrink:0;margin-top:1px;}
+.a-idx{min-width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--muted);flex-shrink:0;margin-top:1px;}
 .a-head{flex:1;min-width:0;}
 .a-name{font-size:14px;font-weight:800;color:#e2e8f0;line-height:1.3;margin-bottom:4px;}
 .a-badges{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;}
@@ -75,12 +75,12 @@
 .a-rep{font-size:12px;font-weight:800;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:#e2e8f0;}
 .a-rep.live{background:rgba(132,204,22,0.12);border-color:rgba(132,204,22,0.25);color:#a3e635;}
 .a-rep.special{background:rgba(244,63,94,0.1);border-color:rgba(244,63,94,0.25);color:#fb7185;}
-.a-sep{color:#334155;font-size:11px;font-weight:600;padding:0 1px;}
+.a-sep{color:var(--muted2);font-size:11px;font-weight:600;padding:0 1px;}
 .a-strip{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-bottom:6px;padding-left:32px;}
-.a-cell .k{font-size:10px;font-weight:800;color:#475569;letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:2px;}
+.a-cell .k{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:2px;}
 .a-cell .v{font-size:12px;font-weight:700;color:#94a3b8;}
 .a-timerbar{padding-left:32px;}
-.a-notes{font-size:11px;color:#475569;font-style:italic;margin-top:5px;padding-left:32px;line-height:1.45;}
+.a-notes{font-size:11px;color:var(--muted);font-style:italic;margin-top:5px;padding-left:32px;line-height:1.45;}
 .editable{cursor:text;border-bottom:1px dashed rgba(132,204,22,0.4);padding-bottom:1px;display:inline-block;color:#e2e8f0;}
 
 /* ── Week theme / rules banner ── */

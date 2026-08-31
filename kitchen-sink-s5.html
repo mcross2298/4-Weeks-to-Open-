@@ -30,7 +30,7 @@
 .schedule{display:inline-block;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.35);border-radius:6px;padding:5px 14px;font-size:12px;color:#fcd34d;font-weight:700;letter-spacing:0.04em;}
 .tabs-bar{background:#0a0a0a;border-bottom:1px solid rgba(245,158,11,0.12);padding:0 12px;position:sticky;top:0;z-index:8;}
 .tabs{max-width:680px;margin:0 auto;display:flex;overflow-x:auto;}
-.tab{flex:1;padding:12px 8px;border:none;cursor:pointer;font-weight:900;font-size:12px;background:transparent;color:#334155;border-bottom:3px solid transparent;white-space:nowrap;text-align:center;letter-spacing:0.06em;font-family:inherit;}
+.tab{flex:1;padding:12px 8px;border:none;cursor:pointer;font-weight:900;font-size:12px;background:transparent;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap;text-align:center;letter-spacing:0.06em;font-family:inherit;}
 .tab.active{color:#f59e0b;border-bottom-color:#f59e0b;}
 .hint{font-size:11px;color:#f59e0b;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;text-align:center;opacity:0.55;}
 .phase-note{background:rgba(245,158,11,0.06);border-left:3px solid rgba(245,158,11,0.5);padding:12px 14px;border-radius:0 8px 8px 0;margin-bottom:18px;color:#fcd34d;font-size:12px;line-height:1.6;}
@@ -44,8 +44,8 @@
 .day-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:#fff;}
 .day-info{flex:1;}
 .day-session{font-weight:800;font-size:14px;color:#e2e8f0;letter-spacing:-0.01em;}
-.day-meta{font-size:11px;color:#475569;margin-top:2px;}
-.day-toggle{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.05);color:#475569;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.08);transition:all 0.2s;}
+.day-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.day-toggle{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.05);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.08);transition:all 0.2s;}
 .day-card.open .day-toggle{color:#fff;}
 .exercises{padding:4px 12px 14px;border-top:1px solid rgba(245,158,11,0.08);display:none;}
 .day-card.open .exercises{display:block;}
@@ -341,7 +341,7 @@ window.DATA={
     <div class="sum-row" style="border-bottom-color:#e11d4822;"><span class="sum-ico">💪</span><span class="sum-nm">Upper Body — Day 1</span><div class="sum-dt"><span class="sum-st" style="color:#f59e0b;">10 exs</span><span class="sum-rp" style="color:#f59e0b;">Bench · Cable Tri-Set · DB Bench SS · Cluster · Drop</span></div></div>
     <div class="sum-row" style="border-bottom-color:#16a34a22;"><span class="sum-ico">🦵</span><span class="sum-nm">Lower Body — Day 2</span><div class="sum-dt"><span class="sum-st" style="color:#f59e0b;">10 exs</span><span class="sum-rp" style="color:#f59e0b;">Squat · Machine Tri-Set · Curl SS · Cluster · Drop</span></div></div>
     <div class="sum-row" style="border-bottom-color:#7c3aed22;"><span class="sum-ico">⚡</span><span class="sum-nm">Full Body — Day 3</span><div class="sum-dt"><span class="sum-st" style="color:#f59e0b;">10 exs</span><span class="sum-rp" style="color:#f59e0b;">Deadlift · DB Bench Tri-Set · Cable SS · Cluster · Drop</span></div></div>
-    <div class="sum-row" style="border-bottom-color:#33415522;"><span class="sum-ico">😴</span><span class="sum-nm" style="color:#94a3b8;">Rest Day — Day 4</span><div class="sum-dt"><span class="sum-st" style="color:#475569;">Full Rest</span><span class="sum-rp" style="color:#475569;">Sleep · Nutrition · Recovery</span></div></div>
+    <div class="sum-row" style="border-bottom-color:#33415522;"><span class="sum-ico">😴</span><span class="sum-nm" style="color:#94a3b8;">Rest Day — Day 4</span><div class="sum-dt"><span class="sum-st" style="color:var(--muted);">Full Rest</span><span class="sum-rp" style="color:var(--muted);">Sleep · Nutrition · Recovery</span></div></div>
     <div class="sum-row" style="border-bottom-color:#0d948822;"><span class="sum-ico">🚶</span><span class="sum-nm" style="color:#2dd4bf;">Active Rest — Day 5</span><div class="sum-dt"><span class="sum-st" style="color:#0d9488;">Low Intensity</span><span class="sum-rp" style="color:#0d9488;">Cardio · Stretching · Mobility</span></div></div>
     <div class="sum-div" style="background:#f59e0b26;"></div>
     <div class="sum-grid">

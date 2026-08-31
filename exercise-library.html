@@ -28,19 +28,19 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:60px;}
 .content{max-width:680px;margin:0 auto;padding:0 16px;}
 .search-wrap{position:sticky;top:0;z-index:10;background:#050d1a;padding:14px 0 10px;border-bottom:1px solid rgba(255,255,255,0.06);}
 .search-box{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 16px 12px 40px;color:#e2e8f0;font-size:16px;font-weight:600;outline:none;}/* 16px: no iOS focus-zoom */
-.search-box::placeholder{color:#334155;}
+.search-box::placeholder{color:var(--muted2);}
 .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
 .search-rel{position:relative;}
 .filter-wrap{display:flex;gap:6px;overflow-x:auto;padding:10px 0 6px;-webkit-overflow-scrolling:touch;}
 .filter-wrap::-webkit-scrollbar{display:none;}
 .filter-btn{flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:var(--muted);font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;letter-spacing:0.04em;transition:all 0.15s;min-height:44px;display:inline-flex;align-items:center;box-sizing:border-box;}
 .filter-btn.active{background:rgba(212,175,55,0.2);border-color:rgba(212,175,55,0.5);color:#fbbf24;}
-.results-count{font-size:11px;color:#475569;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:14px 0 8px;}
+.results-count{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:14px 0 8px;}
 .ex-list{display:flex;flex-direction:column;gap:6px;}
 .ex-item{background:#0d1f3c;border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
 .ex-muscle-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .ex-name{flex:1;font-size:13px;font-weight:700;color:#e2e8f0;line-height:1.4;}
-.ex-programs{font-size:11px;color:#334155;font-weight:600;margin-top:2px;}
+.ex-programs{font-size:11px;color:var(--muted2);font-weight:600;margin-top:2px;}
 .ex-muscle-tag{font-size:14px;flex-shrink:0;}
 /* Touch floor (roadmap M1/D8): the star was 25x23 -- 202 of them visible at
    once, every one under the 44pt minimum, on the page with the most of them
@@ -82,7 +82,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:60px;}
 .var-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;opacity:0.6;}
 /* .empty-state / .empty-icon / .empty-text now come from base.css (L1 Phase C
    shared empty-state vocabulary) — local overrides removed to converge. */
-.lib-note{margin:14px 0 0;font-size:11px;color:#334155;line-height:1.5;border-top:1px solid rgba(255,255,255,0.05);padding-top:12px;}
+.lib-note{margin:14px 0 0;font-size:11px;color:var(--muted2);line-height:1.5;border-top:1px solid rgba(255,255,255,0.05);padding-top:12px;}
 .phase8-badge{display:inline-block;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.3);color:#d4af37;font-size:11px;font-weight:800;letter-spacing:0.1em;padding:2px 8px;border-radius:20px;margin-left:8px;text-transform:uppercase;vertical-align:middle;}
 /* Replace mode — arrived via ?replace= so the user can pick a swap */
 .replace-banner{background:linear-gradient(90deg,rgba(34,211,238,0.14),rgba(34,211,238,0.05));border:1px solid rgba(34,211,238,0.3);border-radius:10px;padding:11px 14px;margin:14px 0 0;color:#a5f3fc;font-size:13px;font-weight:700;line-height:1.5;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
@@ -246,7 +246,7 @@ function buildMasterGroup(masterName,variations,muscle){
     +'<div class="ex-muscle-dot" style="background:'+col+';box-shadow:0 0 5px '+col+'44;"></div>'
     +'<div style="flex:1">'
     +'<div class="ex-name">'+esc(masterName)+"</div>"
-    +'<div class="master-label">'+esc(muscle)+' &nbsp;&middot;&nbsp; <span style="color:#475569;font-weight:700;">'+variations.length+" variations &mdash; tap to expand</span></div>"
+    +'<div class="master-label">'+esc(muscle)+' &nbsp;&middot;&nbsp; <span style="color:var(--muted);font-weight:700;">'+variations.length+" variations &mdash; tap to expand</span></div>"
     +"</div>"
     +'<span class="master-chevron">&#9660;</span>'
     +"</div>"

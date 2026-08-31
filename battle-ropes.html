@@ -48,7 +48,7 @@ body{background:#070a12;min-height:100vh;padding-bottom:210px;color:#e2e8f0;}
 .cfg-opt-title{font-size:13.5px;font-weight:900;color:#fff;}
 .cfg-opt-desc{font-size:11.5px;color:#94a3b8;font-weight:600;margin-top:2px;line-height:1.45;}
 .cfg-start{width:100%;margin-top:6px;padding:16px;border-radius:14px;border:none;font-size:15px;font-weight:900;letter-spacing:0.04em;font-family:inherit;cursor:pointer;background:linear-gradient(135deg,#f97316,#dc2626);color:#fff;box-shadow:0 8px 26px rgba(220,38,38,0.4);}
-.cfg-start:disabled{background:rgba(255,255,255,0.06);color:#475569;box-shadow:none;cursor:not-allowed;}
+.cfg-start:disabled{background:rgba(255,255,255,0.06);color:var(--muted);box-shadow:none;cursor:not-allowed;}
 .cfg-start:not(:disabled):active{transform:scale(0.99);}
 
 /* step cards */
@@ -112,7 +112,7 @@ body{background:#070a12;min-height:100vh;padding-bottom:210px;color:#e2e8f0;}
 .cd-btn.ghost{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.12);}
 .pstep-complete{width:100%;margin-top:12px;padding:13px;border-radius:12px;border:none;cursor:pointer;font-size:14px;font-weight:900;letter-spacing:0.03em;font-family:inherit;background:linear-gradient(135deg,#34d399,#059669);color:#06281d;}
 .pstep-complete:active{transform:scale(0.99);}
-.pstep-complete:disabled{background:rgba(255,255,255,0.05);color:#475569;cursor:not-allowed;}
+.pstep-complete:disabled{background:rgba(255,255,255,0.05);color:var(--muted);cursor:not-allowed;}
 
 .done-banner{display:none;background:linear-gradient(135deg,#34d399,#059669);border-radius:16px;padding:18px;text-align:center;margin-bottom:16px;box-shadow:0 8px 30px rgba(16,185,129,0.4);}
 .done-banner.show{display:block;}

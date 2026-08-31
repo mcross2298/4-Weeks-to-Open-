@@ -28,27 +28,27 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 .content{max-width:680px;margin:0 auto;padding:0 16px;}
 .sec-label{font-size:11px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;color:#34d399;margin:22px 0 10px;}
 .name-input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:13px 16px;color:#e2e8f0;font-size:15px;font-weight:700;outline:none;}
-.name-input::placeholder{color:#334155;}
+.name-input::placeholder{color:var(--muted2);}
 .search-wrap{position:sticky;top:0;z-index:10;background:#050d1a;padding:12px 0 8px;}
 .search-rel{position:relative;}
 .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
 .search-box{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 16px 12px 40px;color:#e2e8f0;font-size:14px;font-weight:600;outline:none;}
-.search-box::placeholder{color:#334155;}
+.search-box::placeholder{color:var(--muted2);}
 .filter-wrap{display:flex;gap:6px;overflow-x:auto;padding:10px 0 6px;-webkit-overflow-scrolling:touch;}
 .filter-wrap::-webkit-scrollbar{display:none;}
 .filter-btn{flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:var(--muted);font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;letter-spacing:0.04em;min-height:44px;display:inline-flex;align-items:center;box-sizing:border-box;}
 .filter-btn.active{background:rgba(212,175,55,0.2);border-color:rgba(212,175,55,0.5);color:#fbbf24;}
-.results-count{font-size:11px;color:#475569;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:8px 0;}
+.results-count{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:8px 0;}
 .ex-list{display:flex;flex-direction:column;gap:6px;}
 .ex-row{background:#0d1f3c;border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .ex-row:active{background:#112240;}
 .ex-row.added{border-color:rgba(52,211,153,0.5);background:rgba(52,211,153,0.08);}
 .ex-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .ex-nm{flex:1;font-size:13px;font-weight:700;color:var(--text);line-height:1.4;}
-.ex-progs{font-size:11px;color:#334155;font-weight:600;margin-top:2px;}
+.ex-progs{font-size:11px;color:var(--muted2);font-weight:600;margin-top:2px;}
 .ex-add{font-size:18px;font-weight:900;color:#34d399;width:24px;text-align:center;flex-shrink:0;}
 .ex-row.added .ex-add{color:#34d399;}
-.empty-state{text-align:center;padding:40px 20px;color:#334155;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted2);}
 /* selected tray — a small "Review (N)" pill (always visible once something is
    selected, sits above the fixed bottom nav) opens a full bottom-sheet modal
    holding the actual config UI, instead of a config panel permanently fighting
@@ -95,7 +95,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 .sel-move:disabled{opacity:0.3;cursor:not-allowed;}
 .sel-hint{font-size:11px;color:var(--muted);font-weight:600;line-height:1.5;margin-top:9px;}
 .sel-hint b{color:#a855f7;}
-.sel-lbl{font-size:11px;color:#475569;font-weight:700;text-transform:uppercase;}
+.sel-lbl{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;}
 /* superset + drop-set controls */
 /* Off (default) state is a neutral, clearly-inactive "opt in" button so a
    freshly-added exercise never *looks* like it's already a superset. The
@@ -103,7 +103,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 .sel-ss{font-size:11px;font-weight:800;border-radius:8px;padding:5px 9px;cursor:pointer;font-family:inherit;flex-shrink:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);color:#94a3b8;}
 .sel-ss:hover{border-color:rgba(168,85,247,0.5);color:#c084fc;}
 .sel-ss.on{background:#a855f7;border-color:#a855f7;color:#0a0810;}
-.sel-sshint{font-size:11px;color:#334155;flex-shrink:0;padding:0 4px;font-weight:800;}
+.sel-sshint{font-size:11px;color:var(--muted2);flex-shrink:0;padding:0 4px;font-weight:800;}
 .sel-item.ss-linked{border-color:rgba(168,85,247,0.4);background:rgba(168,85,247,0.07);}
 .sel-sslink{font-size:10px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:#c084fc;}
 .sel-drops{align-items:center;}
@@ -125,7 +125,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 .saved-actions{display:flex;gap:8px;}
 .run-btn{flex:1;text-align:center;text-decoration:none;padding:10px;border-radius:10px;background:linear-gradient(90deg,#22d3ee,#34d399);color:#04121f;font-size:13px;font-weight:900;}
 .del-btn{padding:10px 14px;border-radius:10px;background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.35);color:#f87171;font-size:13px;font-weight:800;cursor:pointer;}
-.no-saved{font-size:12px;color:#475569;font-weight:600;padding:6px 0 14px;}
+.no-saved{font-size:12px;color:var(--muted);font-weight:600;padding:6px 0 14px;}
 select.name-input{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%2364748b' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;}
 select.name-input option{background:#0d1f3c;color:#e2e8f0;}
 .assign-hint{font-size:11px;color:var(--muted);font-weight:600;line-height:1.5;margin-top:7px;}
@@ -156,11 +156,11 @@ select.name-input option{background:#0d1f3c;color:#e2e8f0;}
   <div class="sec-label">Create a New Workout</div>
   <input type="text" class="name-input" id="wkName" placeholder="Workout name (e.g. Sunday Push)" maxlength="48"/>
 
-  <div class="sec-label">Assign to program <span style="color:#475569;font-weight:700;">— optional</span></div>
+  <div class="sec-label">Assign to program <span style="color:var(--muted);font-weight:700;">— optional</span></div>
   <select class="name-input" id="wkProgram"></select>
   <div class="assign-hint" id="assignHint">Leave as <strong>Bonus</strong> and this workout is auto-collected into your <strong>Bonus Workouts</strong> card — no manual linking.</div>
 
-  <div class="sec-label">Add to collection <span style="color:#475569;font-weight:700;">— optional</span></div>
+  <div class="sec-label">Add to collection <span style="color:var(--muted);font-weight:700;">— optional</span></div>
   <select class="name-input" id="wkCollection"></select>
   <div class="assign-hint">Group it into a <strong>Collection</strong> (folder). <a href="collections.html" style="color:#7dd3fc;">Manage collections →</a></div>
 
