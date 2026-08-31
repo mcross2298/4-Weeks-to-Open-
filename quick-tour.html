@@ -50,12 +50,8 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   pointer-events:none;
 }
 
-.back{
-  display:flex;align-items:center;justify-content:center;
-  width:36px;height:36px;border-radius:10px;flex-shrink:0;
-  background:var(--surface);border:1px solid var(--border2);
-  color:var(--gold);font-size:16px;text-decoration:none;
-}
+/* .back is now shared in base.css (W3-3, VOC/VOA Kaizen audit) -- this page
+   loads base.css so no local copy is needed. */
 .topbar-info{flex:1;min-width:0;}
 .topbar-title{font-size:17px;font-weight:900;letter-spacing:-0.02em;}
 .topbar-sub{font-size:12px;color:var(--muted2);margin-top:1px;}
@@ -194,10 +190,18 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .nav-btn:disabled{opacity:0.32;cursor:not-allowed;}
 
 /* ── DOT NAV ── */
-.dots{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;padding:4px 0 22px;}
-.dot-nav{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.14);cursor:pointer;transition:all 0.2s;border:none;padding:0;}
-.dot-nav.active{background:var(--gold);width:22px;border-radius:4px;}
-.dot-nav.seen{background:rgba(212,175,55,0.4);}
+/* W3-2: 18 dots must stay single-row at 320px, so the real hit box (the
+   button itself, what check-journey.js's chrome ratchet measures via
+   getBoundingClientRect) can't grow past ~12-26px wide without wrapping or
+   overlapping neighbors -- but height has no such ceiling, so it goes to
+   the full 44px floor. The 8px (22px active) visual dot moves to ::after,
+   centered in the bigger invisible button box, so the look is unchanged. */
+.dots{display:flex;justify-content:center;gap:3px;flex-wrap:wrap;padding:4px 0 22px;}
+.dot-nav{width:12px;height:44px;background:transparent;cursor:pointer;transition:width 0.2s;border:none;padding:0;display:flex;align-items:center;justify-content:center;}
+.dot-nav::after{content:'';width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.14);transition:all 0.2s;}
+.dot-nav.active{width:26px;}
+.dot-nav.active::after{background:var(--gold);width:22px;height:8px;border-radius:4px;}
+.dot-nav.seen::after{background:rgba(212,175,55,0.4);}
 </style>
 <link rel="stylesheet" href="mc-light.css">
 </head>

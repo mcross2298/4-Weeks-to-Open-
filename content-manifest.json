@@ -36,7 +36,8 @@
         "push-pull-legs.html",
         "legacy-prep.html",
         "arnold-legacy.html",
-        "weeks-to-open.html"
+        "weeks-to-open.html",
+        "bro-split.html"
       ]
     },
     "pump": {
@@ -72,7 +73,6 @@
         "2on-1off.html",
         "3on-1off-high-freq.html",
         "5on-2off.html",
-        "bro-split.html",
         "cat-gainz.html",
         "every-arms-day.html",
         "every-chest-day.html",
