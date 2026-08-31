@@ -21,10 +21,36 @@
   window.__mcSwUpdate = true;
 
   var swWaiting = null;
+  var pendingReload = false;
 
-  // Reload exactly once when a fresh worker takes control of the page.
+  // L2: whether THIS page was already under a worker's control before this
+  // module ran. `self.clients.claim()` in sw.js's `activate` handler claims
+  // every matching client unconditionally — including a page's very first
+  // load, the instant its own registration finishes activating (nothing else
+  // was controlling it yet, so no skipWaiting is even needed to get there).
+  // That fired 'controllerchange' — and an unconditional reload — on every
+  // user's first-ever visit, with no stale content to replace. Captured here,
+  // before register() runs below, so the very first claim is recognised and
+  // skipped rather than reloaded.
+  var wasControlled = !!navigator.serviceWorker.controller;
+
+  // Reload once a fresh worker takes control of the page — except:
+  //  - the first-ever claim (see wasControlled above), and
+  //  - mid-workout (L2): postMessage('skipWaiting') targets the ONE shared
+  //    worker script for the whole origin, not just the tab that sent it, so
+  //    self.clients.claim() in its activate handler claims every open tab —
+  //    including an idle tab's neighbour that's mid-set. That tab's own
+  //    controller genuinely changes too, and this listener had no guard, so
+  //    an idle tab applying an update could force-reload a DIFFERENT tab out
+  //    from under an in-progress workout, defeating the whole hold mc-sw-
+  //    update.js exists to guarantee. The control switch itself can't be
+  //    undone from here, but the reload can wait: defer it and let the
+  //    existing applyIfIdle() drain (visibilitychange/focus/interval, already
+  //    wired below) fire it the moment the user is no longer mid-workout.
   navigator.serviceWorker.addEventListener('controllerchange', function () {
     if (window.__mcSwReloaded) return;
+    if (!wasControlled) { wasControlled = true; return; }
+    if (workoutInProgress()) { pendingReload = true; return; }
     window.__mcSwReloaded = true;
     window.location.reload();
   });
@@ -124,6 +150,12 @@
   // Apply a held update the moment the user is no longer mid-workout (also
   // covered naturally by navigating away, e.g. finishing → dashboard).
   function applyIfIdle() {
+    if (pendingReload && !workoutInProgress()) {
+      pendingReload = false;
+      window.__mcSwReloaded = true;
+      window.location.reload();
+      return;
+    }
     if (pendingWorker && !workoutInProgress()) {
       var w = pendingWorker; pendingWorker = null;
       apply(w);

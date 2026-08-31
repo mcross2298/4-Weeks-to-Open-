@@ -43,7 +43,20 @@
       splitSetlogByPage: function () { return splitSetlogByPage.apply(null, arguments); },
       joinSetlogGroups: function () { return joinSetlogGroups.apply(null, arguments); },
       computeSetlogPushOps: function () { return computeSetlogPushOps.apply(null, arguments); },
-      computeSetlogPullResult: function () { return computeSetlogPullResult.apply(null, arguments); }
+      computeSetlogPullResult: function () { return computeSetlogPullResult.apply(null, arguments); },
+      // S1/S2 (tools/test-mc-sync-merge.js) — same hoisting trick, one level
+      // further: these read `client`/`user`/`snapshot`/`quotaBlocked`, which
+      // are only assigned once the module runs past the early-return guards
+      // below, so each entry is a THUNK (called later, once a configured
+      // MC_SB has let the module run to completion) rather than a value.
+      writeVal: function () { return writeVal.apply(null, arguments); },
+      pull: function () { return pull.apply(null, arguments); },
+      push: function () { return push.apply(null, arguments); },
+      start: function () { return start.apply(null, arguments); },
+      maybeReload: function () { return maybeReload.apply(null, arguments); },
+      workoutInProgress: function () { return workoutInProgress.apply(null, arguments); },
+      getSnapshot: function () { return snapshot; },
+      getQuotaBlocked: function () { return quotaBlocked; }
     };
   }
   if (window.__mcSync) return;
@@ -99,6 +112,11 @@
   var snapshot = {};            // store_key -> JSON string last in sync with server
   var pulledChange = false;
   var status = { lastPush: 0, lastPull: 0, signedIn: false };
+  // S1: store keys whose last local write failed (almost always
+  // QuotaExceededError — a heavy user near the localStorage cap, where a
+  // multi-device merge is strictly larger than either side alone). Set by
+  // writeVal() below, cleared the moment a write for that key succeeds again.
+  var quotaBlocked = {};
 
   function pendingCount() {
     var n = 0;
@@ -120,7 +138,18 @@
 
   function readRaw(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function parse(s) { try { return JSON.parse(s); } catch (e) { return null; } }
-  function writeVal(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  // S1: previously `try{...}catch(e){}` — a failed write (quota) was
+  // indistinguishable from a successful one to every caller. pullKey() would
+  // still advance snapshot[key] to "what the server holds" even though the
+  // merged value never actually landed in localStorage, so the NEXT push()
+  // would see the stale, still-unmerged local value as "different from what
+  // the server holds" and upload it — silently overwriting the server's
+  // newer merged data with older local-only data. Returning success lets
+  // callers leave snapshot untouched and skip that key's push instead.
+  function writeVal(k, v) {
+    try { localStorage.setItem(k, JSON.stringify(v)); delete quotaBlocked[k]; return true; }
+    catch (e) { quotaBlocked[k] = true; return false; }
+  }
 
   function deviceId() {
     try {
@@ -458,9 +487,14 @@
           var local = parse(readRaw(key));
           var remote = remoteByKey[key];
           var before = readRaw(key);
-          if (remote != null) writeVal(key, mergeStore(strategy, local, remote, snapshot[key]));
+          // S1: only advance snapshot to "what the server holds" once the
+          // merged write actually landed locally. On failure, leave
+          // snapshot[key] as it was — quotaBlocked[key] (set inside
+          // writeVal()) is what keeps push() from uploading the stale,
+          // still-unmerged local value over this remote data next cycle.
+          var wrote = remote == null || writeVal(key, mergeStore(strategy, local, remote, snapshot[key]));
           if (readRaw(key) !== before) pulledChange = true;
-          snapshot[key] = remote != null ? JSON.stringify(remote) : null;
+          if (wrote) snapshot[key] = remote != null ? JSON.stringify(remote) : null;
         }
         // K-3.2/A-16: mc_setlog_v1 syncs as per-page rows ('mc_setlog_v1|<page>')
         // instead of one whole-store row — see computeSetlogPullResult()'s own
@@ -471,7 +505,12 @@
           var localWhole = parse(readRaw(key)) || {};
           var before = readRaw(key);
           var result = computeSetlogPullResult(key, localWhole, remoteByKey, snapshot);
-          writeVal(key, result.whole);
+          // S1: same reasoning as pullKey() above — only record the
+          // per-group snapshots (what pushSetlogKey() treats as "server
+          // holds this") if the merged whole actually made it into
+          // localStorage. On failure quotaBlocked[key] (set inside
+          // writeVal()) keeps pushSetlogKey() from uploading a stale group.
+          var wrote = writeVal(key, result.whole);
           if (readRaw(key) !== before) pulledChange = true;
           // Only PER-GROUP snapshots are meaningful for this store — see
           // computeSetlogPushOps()'s comment on push() below for why there is
@@ -479,7 +518,9 @@
           // would mean "what the server holds," and nothing here confirms
           // the server holds the merged whole, only whichever individual
           // page-group rows actually came back in this pull.
-          Object.keys(result.newSnapshot).forEach(function (gk) { snapshot[gk] = result.newSnapshot[gk]; });
+          if (wrote) {
+            Object.keys(result.newSnapshot).forEach(function (gk) { snapshot[gk] = result.newSnapshot[gk]; });
+          }
         }
         Object.keys(STORES).forEach(function (key) { pullKey(key, STORES[key]); });
         Object.keys(CONSUME).forEach(function (key) { pullKey(key, CONSUME[key]); });
@@ -517,6 +558,12 @@
     Object.keys(STORES).forEach(function (key) {
       var cur = readRaw(key);
       if (cur == null) return;                 // nothing stored locally yet
+      // S1: never upload a key whose last local write failed (quota) — see
+      // writeVal()'s own comment. `cur` here is necessarily the stale,
+      // still-unmerged local value in that case, and uploading it would
+      // overwrite the server's newer data that this device simply couldn't
+      // fit locally. Cleared automatically the moment a write succeeds again.
+      if (quotaBlocked[key]) return;
       // setlog has no whole-store snapshot to short-circuit against — its
       // own per-group diff inside pushSetlogKey() IS the cheap no-op check.
       if (STORES[key] === 'setlog') { pushSetlogKey(key, cur); return; }
@@ -533,9 +580,33 @@
     return ops.length ? Promise.all(ops) : Promise.resolve();
   }
 
-  // a fresh device pulls data the already-rendered page can't show; reload once
+  // S2: same mid-workout signals mc-sw-update.js's workoutInProgress() checks
+  // before reloading for a service-worker update — duplicated locally rather
+  // than imported, because mc-sync.js runs and can already be mid-pull before
+  // mc-sw-update.js's script tag (deliberately tail-positioned, right before
+  // </body>) has even executed, so its private predicate isn't reliably
+  // available yet on every page that loads both.
+  function workoutInProgress() {
+    try {
+      var tf = document.getElementById('timerFloat');
+      if (tf && tf.classList.contains('visible')) return true;
+      return !!document.querySelector(
+        '.ex-card.checked, .ss-ex.checked, .lift-card.checked, .mcl-ck.done, .set-check.done');
+    } catch (e) { return false; }
+  }
+
+  // a fresh device pulls data the already-rendered page can't show; reload
+  // once — but never mid-workout (S2). A pulled change can arrive from ANY
+  // signed-in device (a second tab, another phone), and mc-sync.js had no
+  // equivalent to mc-sw-update.js's hold: an unconditional reload here could
+  // force-close a card and lose scroll position out from under an in-progress
+  // set. Deferring costs nothing — this function is idempotent (pulledChange
+  // stays true, the sessionStorage flag isn't set yet), so the
+  // visibilitychange/focus listeners wired in start() below simply keep
+  // re-checking it until the workout ends.
   function maybeReload() {
     if (!pulledChange) return;
+    if (workoutInProgress()) return;
     try {
       if (sessionStorage.getItem('mc_sync_reloaded') === '1') return;
       sessionStorage.setItem('mc_sync_reloaded', '1');
@@ -544,13 +615,24 @@
   }
 
   function start() {
+    // S2: pull, then push, THEN maybeReload — previously reload was
+    // attempted before push() had a chance to run, and an unconditional
+    // location.reload() can abort an in-flight/not-yet-sent upload, silently
+    // dropping whatever local changes triggered the pull's merge in the
+    // first place. Now the upload has already completed (or been given the
+    // chance to) by the time a reload could possibly happen.
     pull()
-      .then(function () { maybeReload(); return push(); })
+      .then(function () { return push(); })
+      .then(function () { maybeReload(); })
       .catch(function () {});
     // upload pending changes when the user leaves / hides the page
     var flush = function () { push().catch(function () {}); };
     window.addEventListener('pagehide', flush);
-    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') flush(); });
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') flush();
+      else maybeReload();   // S2: drain a reload deferred by workoutInProgress()
+    });
+    window.addEventListener('focus', maybeReload);   // S2: same drain, tab regains focus
     setInterval(flush, PUSH_MS);
   }
 
@@ -560,8 +642,12 @@
     pull: function () { return pull(); },
     push: function () { return push(); },
     status: function () {
+      // S1: surfaces which stores are stuck (storage full, write failing) so
+      // a future UI (e.g. mc-backup-status.js) can tell the user their data
+      // isn't reaching other devices, instead of it failing invisibly.
       return { lastPush: status.lastPush, lastPull: status.lastPull,
-               pending: pendingCount(), signedIn: !!user };
+               pending: pendingCount(), signedIn: !!user,
+               blocked: Object.keys(quotaBlocked) };
     },
     kick: function () {
       if (user || !client) return;

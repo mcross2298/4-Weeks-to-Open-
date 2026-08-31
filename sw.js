@@ -274,7 +274,20 @@ function assetOfflinePage() {
 // background cache write). Split out as a pure function so tools/test-mc-sw.js
 // can verify the logic with a sandboxed fetch/caches — the live fetch handler
 // is guarded to the production origin and can't be exercised on localhost.
-function staleWhileRevalidate(request, offlineFallback) {
+//
+// matchIgnoresSearch (finding L1): a navigation to a precached page carrying
+// app-state query params (`dashboard.html?tab=conditioning`, `mm-p1.html
+// ?day=3&week=2` — 17 such link patterns in the tree) keys `caches.match()`
+// on the FULL url by default, which never matches the no-query entry
+// `CACHE_URLS` actually precached — a guaranteed offline-shell miss on every
+// one of those links, on a page proven installed and in the cache. Passing
+// `{ignoreSearch:true}` only for these navigations fixes that. It must NOT
+// apply to asset requests: `base.css?v=68` and friends use their query
+// string as a real cache-buster (see every page's own `<link>`/`<script>`
+// tag), so ignoring it there would let a stale versioned asset satisfy a
+// request for a newer one — silently worse than the bug this fixes.
+function staleWhileRevalidate(request, offlineFallback, matchIgnoresSearch) {
+    const matchOpts = matchIgnoresSearch ? { ignoreSearch: true } : undefined;
     const revalidation = fetch(request).then(resp => {
         if (resp && resp.status === 200) {
             const clone = resp.clone();
@@ -282,7 +295,7 @@ function staleWhileRevalidate(request, offlineFallback) {
         }
         return resp;
     }).catch(() => null);
-    const response = caches.match(request).then(cached =>
+    const response = caches.match(request, matchOpts).then(cached =>
         cached || revalidation.then(resp => resp || offlineFallback())
     );
     return { response, revalidation };
@@ -321,9 +334,14 @@ self.addEventListener('fetch', event => {
     // Only handle same-origin GETs (POSTs, Supabase calls, etc. pass through).
     if (!url.startsWith('https://mcross2298.github.io')) return;
 
-    const isHTML = url.endsWith('.html') || url.endsWith('/') || !url.split('/').pop().includes('.');
+    // L1: strip the query/hash before the extension check — `.pop().includes('.')`
+    // on `mm-p1.html?day=3&week=2` matched via the `.html` inside the QUERY
+    // string, not the path, so this used to misclassify every query-string
+    // page as an asset (wrong offline fallback shown, and no ignoreSearch).
+    const path = url.split('?')[0].split('#')[0];
+    const isHTML = path.endsWith('.html') || path.endsWith('/') || !path.split('/').pop().includes('.');
     const { response, revalidation } = staleWhileRevalidate(
-        event.request, isHTML ? offlinePage : assetOfflinePage
+        event.request, isHTML ? offlinePage : assetOfflinePage, isHTML
     );
     event.waitUntil(revalidation.catch(() => {}));
     event.respondWith(response);

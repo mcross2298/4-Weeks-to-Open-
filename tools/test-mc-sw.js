@@ -40,7 +40,17 @@ function loadSW(fetchImpl, store) {
         clients: {},
         caches: {
             open: async () => ({ put: async (req, resp) => { store.set(key(req), resp); } }),
-            match: async req => store.get(key(req)),
+            // ignoreSearch mirrors the real Cache API: strip the query string
+            // before comparing keys. Needed to test L1 below.
+            match: async (req, opts) => {
+                const k = key(req);
+                if (store.has(k)) return store.get(k);
+                if (opts && opts.ignoreSearch) {
+                    const base = k.split('?')[0];
+                    for (const [sk, sv] of store) { if (sk.split('?')[0] === base) return sv; }
+                }
+                return undefined;
+            },
             keys: async () => [],
             delete: async () => true,
         },
@@ -98,6 +108,20 @@ const fallback = () => ({ status: 200, tag: 'OFFLINE', clone() { return this; } 
         let threw = false;
         try { await revalidation; } catch (e) { threw = true; }
         assert(!threw, '4: failed revalidation does not reject');
+    }
+
+    // 5. L1: a precached navigation queried with app-state params (e.g.
+    // `dashboard.html?tab=conditioning`) must hit the no-query cache entry
+    // when matchIgnoresSearch (offline navigations) — and must NOT when it's
+    // off (versioned asset requests like `base.css?v=68`, where the query is
+    // a real cache-buster and a stale match would be a worse bug than L1).
+    {
+        const store = new Map([['dashboard.html', { tag: 'CACHED' }]]);
+        const sw = loadSW(async () => { throw new Error('offline'); }, store);
+        const { response: withIgnore } = sw.staleWhileRevalidate('dashboard.html?tab=conditioning', fallback, true);
+        assert((await withIgnore).tag === 'CACHED', '5a: navigation with query hits no-query cache entry when ignoreSearch is set');
+        const { response: withoutIgnore } = sw.staleWhileRevalidate('dashboard.html?tab=conditioning', fallback, false);
+        assert((await withoutIgnore).tag === 'OFFLINE', '5b: asset-style request with query does NOT ignoreSearch (cache-busting stays intact)');
     }
 
     if (failures) { console.error(`\ntest-mc-sw: ${failures} FAILED of ${checks}`); process.exit(1); }
