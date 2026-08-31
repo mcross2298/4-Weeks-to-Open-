@@ -30,8 +30,14 @@
   // ---- CONFIG (anon key is safe to ship; RLS is the real boundary) --------
   var SUPABASE_URL = 'https://dhlxmoyjfxohbeiexwnr.supabase.co';
   var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRobHhtb3lqZnhvaGJlaWV4d25yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMjgwNDAsImV4cCI6MjA5NjcwNDA0MH0.G9XpWjEqaGhY7mdLjz8yAaQBFl5EXvYFfAkJMivG38E';
-  // supabase-js UMD build, loaded on demand (browser isn't sandboxed)
-  var SDK_URL = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+  // supabase-js UMD build, loaded on demand. Vendored locally (F-I2, VOC/VOA
+  // Kaizen audit) rather than fetched from cdn.jsdelivr.net -- the CDN is
+  // cross-origin, so sw.js could never precache it, and offline sign-in
+  // failed on every cold launch regardless of prior visits. Same-origin and
+  // precached (see tools/build-sw.py's LAZY_ASSETS), so it works offline
+  // once a device has loaded it while online. See supabase-vendor.js's own
+  // header for the pinned version and update procedure.
+  var SDK_URL = './supabase-vendor.js';
 
   var configured = /^https:\/\/[a-z0-9]+\.supabase\.co/.test(SUPABASE_URL) && SUPABASE_ANON_KEY.indexOf('eyJ') === 0;
   var client = null;

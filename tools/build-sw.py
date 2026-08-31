@@ -76,7 +76,11 @@ EAGER_HTML = {"index.html", "dashboard.html"}
 # as EAGER_HTML, just for a non-HTML asset: still a real deployed file
 # (fetched and cached on first visit like any lazy page), just not shipped
 # to every device on day one.
-LAZY_ASSETS = {"conditioning-elite.css"}
+# supabase-vendor.js (F-I2, VOC/VOA Kaizen audit) is a real ~213 KB vendored
+# third-party file, same reasoning: only pages that touch auth/sync load it
+# (mc-supabase.js injects it on demand), so it doesn't belong in the eager
+# install payload every device pays on first launch either.
+LAZY_ASSETS = {"conditioning-elite.css", "supabase-vendor.js"}
 
 
 def collect_urls(root, base):
