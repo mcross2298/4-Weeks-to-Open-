@@ -653,6 +653,14 @@ render();
 <!-- Volume II Phase 5 / Initiative 07 -- mc-rep-progress.js shipped fleet-wide
      (owner decision, AskUserQuestion) for module-coverage consistency. -->
 <script src="mc-rep-progress.js"></script>
+<!-- mc-group-split.js: without it, mc-superset-hop.js below never has anything
+     to hop between -- iron-engine renders each tri-set/superset member as its
+     own standalone .ex-card (joined only by the cosmetic .group-banner
+     divider), so the hop's .ss-card/.ss-ex contract never existed on this
+     page. See mc-group-split.js's own header for the two authoring shapes it
+     covers; this page is shape 2 (separate sibling cards), same as
+     mm-engine.js. -->
+<script src="mc-group-split.js"></script>
 <script src="mc-superset-hop.js"></script>
 <script src="conditioning-data.js"></script>
 <script src="mc-input-sheet.js"></script>

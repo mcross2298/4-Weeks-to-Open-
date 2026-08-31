@@ -1,30 +1,46 @@
 /* ==========================================================================
-   mc-group-split.js  —  split combined superset/triset cards into hop-able rows
+   mc-group-split.js  —  turn superset/triset exercises into hop-able rows
    --------------------------------------------------------------------------
-   A few programs (push-pull-legs, bro-split, legacy-prep, weeks-to-open) author
-   a superset/triset as a SINGLE card whose name is "A × B × C" and whose sets
-   are "8,8,8 / 10,10,10 / 12,12,12". With one card there is nothing to hop
-   between, so this module rewrites each such card into the .ss-card / .ss-ex
-   structure that mc-setlog (per-set logging) and mc-superset-hop (the set-by-set
-   hop) both understand — with ZERO changes required to them.
+   Two different authoring shapes both leave a superset/triset with nothing
+   for mc-superset-hop.js to hop between, so this module rewrites both into
+   the same .ss-card / .ss-ex structure that mc-setlog (per-set logging) and
+   mc-superset-hop (the set-by-set hop) understand — with ZERO changes
+   required to them:
+
+     1. COMBO cards (push-pull-legs, bro-split, legacy-prep, weeks-to-open,
+        arnold-legacy) author the pair/trio as a SINGLE card whose name is
+        "A × B × C" and whose sets are "8,8,8 / 10,10,10 / 12,12,12".
+        transformCombo() splits that one card's name/sets/tempo fields apart.
+     2. SEPARATE-CARD engines (iron-engine.html's hand-written renderer,
+        mm-engine.js / The Modality Matrix) give every grouped exercise its
+        OWN full .ex-card, joined only by a shared is-ss/is-tri class and
+        DOM adjacency (plus, cosmetically, a .group-banner divider between
+        them). There's no "×" name to split — transformSiblingRun() instead
+        walks forward through same-kind sibling .ex-card elements and merges
+        the whole run into one .ss-card. Found via K-audit: both engines
+        loaded this file (mm-p1/p2/p3) or mc-superset-hop.js directly
+        (iron-engine.html), yet neither ever produced a .ss-card, so the
+        hop/auto-expand-together behavior was silently dead on all of them —
+        checking a set never advanced to the next station.
 
    This is the Concept-A revision. It:
-     • matches the redesigned cards (.ex-card.is-ss / .is-cluster) as well as the
-       legacy .superset / .triset classes,
-     • styles the result in the Concept-A language via a scoping class (.a-ss) so
-       PMC / MC stations keep their own look,
+     • matches the redesigned cards (.ex-card.is-ss / .is-tri / .is-cluster)
+       as well as the legacy .superset / .triset classes,
+     • styles the result in the Concept-A language via a scoping class (.a-ss)
+       so PMC / MC stations keep their own look,
      • parses the program's rest string into a SHORT "between" rest (member→member
        inside a round) and a LONG "after" rest (the round break), and stamps them
        on the .ss-card as data-between / data-after so mc-superset-hop can pause
        for the right duration at each step. The final member's rest timer is set
        to the "after" value so the post-exercise rest is correct too.
 
-   Safety: every card is transformed inside try/catch and only replaced if it
-   parses into >= 2 named parts. Anything ambiguous is left exactly as-is, so a
-   parsing miss degrades to "no hop on that card", never a broken card.
+   Safety: every card/run is transformed inside try/catch and only replaced
+   if it resolves to >= 2 members. Anything ambiguous is left exactly as-is,
+   so a parsing miss degrades to "no hop on that card", never a broken card.
    ========================================================================== */
 /* MARKET:STRIP influencer-refs START */
-/* Only the four STNDR pages load this file. */
+/* Loaded fleet-wide on any grouped-exercise page, not just the four STNDR
+   ones — see the two-shape header comment above. */
 /* MARKET:STRIP influencer-refs END */
 (function () {
   if (window.__mcGroupSplit) return;
@@ -156,86 +172,193 @@
     return ex;
   }
 
+  // Builds the shared .ss-card wrapper (header + members + dividers) given
+  // an already-resolved list of {name, sets, tempo} members. Both authoring
+  // shapes converge on this one builder, so the output markup — and every
+  // downstream consumer of it — cannot drift between the two.
+  function buildGroup(members, tri, restRaw, idBase) {
+    var rest = parseRest(restRaw);
+    var ssCard = document.createElement('div');
+    ssCard.className = 'ss-card a-ss' + (tri ? ' is-tri' : '');
+    // the hop reads these to pause for the right duration at each step
+    ssCard.setAttribute('data-between', rest.between);
+    ssCard.setAttribute('data-after', rest.after);
+
+    var hd = document.createElement('div');
+    hd.className = 'ss-header';
+    var lbl = document.createElement('span');
+    lbl.className = 'ss-label';
+    lbl.textContent = (tri ? '⚡ Triset' : '⚡ Superset');
+    hd.appendChild(lbl);
+    var rl = document.createElement('span');
+    rl.className = 'ss-rests';
+    rl.textContent = rest.between + 's between · ' + rest.after + 's after';
+    hd.appendChild(rl);
+    ssCard.appendChild(hd);
+
+    var afterStr = rest.after + ' sec';
+    var dividerLabel = (tri ? '× TRISET ×' : '× SUPERSET ×');
+    members.forEach(function (m, i) {
+      var isLast = (i === members.length - 1);
+      ssCard.appendChild(row(m.name, m.sets, m.tempo, afterStr, idBase + '-' + i, i, isLast));
+      if (!isLast) {
+        var dv = document.createElement('div');
+        dv.className = 'ss-divider';
+        var dx = document.createElement('span');
+        dx.className = 'ss-x';
+        dx.textContent = dividerLabel;
+        dv.appendChild(dx);
+        var bt = document.createElement('span');
+        bt.className = 'ss-btw';
+        bt.textContent = '↺ ' + rest.between + 's';
+        dv.appendChild(bt);
+        ssCard.appendChild(dv);
+      }
+    });
+    return ssCard;
+  }
+
+  function cardName(card) {
+    return txt(card.querySelector('.ex-name .editable') || card.querySelector('.ex-name'));
+  }
+  function cardSets(card) {
+    return txt(card.querySelector('[data-field="sets"]') ||
+               card.querySelector('.a-cell .editable[data-field="sets"]') ||
+               card.querySelector('.notes-row'));
+  }
+  function cardRest(card) {
+    return txt(card.querySelector('[data-field="rest"]')) || '120 sec';
+  }
+  // tempo: Concept-A uses .a-pill.tempo ("⏱ 3:1:1:0"); legacy uses .tempo-chip.
+  function cardTempos(card) {
+    var tempoEls = card.querySelectorAll('.a-pill.tempo, .tempo-chip');
+    return Array.prototype.map.call(tempoEls, function (c) {
+      var m = c.textContent.match(/[\d:]+/); return m ? m[0] : '';
+    }).filter(Boolean);
+  }
+  function groupIdBase(card, rawName) {
+    var ed = card.querySelector('.editable[data-field="name"]');
+    var dI = ed ? ed.getAttribute('data-d') : null;
+    var eI = ed ? ed.getAttribute('data-e') : null;
+    return (dI != null && eI != null)
+      ? ('grp-' + dI + '-' + eI)
+      : ('grp-' + rawName.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 24));
+  }
+
+  // A card is TRI-SET-kind under either authoring convention: iron-engine.html
+  // and mm-engine.js stamp "is-triset" (plus a generic "is-ss"); the combo-card
+  // pages and mc-freq-engine-style pages stamp "is-tri". "triset" is the older
+  // legacy class name kept for backward compatibility.
+  function isTriCard(c) {
+    return c.classList.contains('is-triset') || c.classList.contains('is-tri') ||
+           c.classList.contains('triset');
+  }
+  // A card is SUPERSET-kind if it carries "is-superset" (iron-engine/mm), or
+  // carries the shared "is-ss" class without ALSO being tri-kind (every
+  // convention above uses is-ss as the umbrella "grouped, not cluster/drop"
+  // marker, with is-tri/is-triset narrowing it down to tri-set specifically).
+  function isSupersetCard(c) {
+    return c.classList.contains('is-superset') ||
+           (c.classList.contains('is-ss') && !isTriCard(c)) ||
+           c.classList.contains('superset');
+  }
+
+  // ---- shape 1: one card named "A × B × C" -------------------------------
+  function transformCombo(card, rawName) {
+    var names = rawName.split('×').map(function (s) { return s.trim(); }).filter(Boolean);
+    if (names.length < 2) return;                          // nothing to hop between
+
+    var rawSets = cardSets(card);
+    var setGroups = rawSets ? rawSets.split('/').map(function (s) { return s.trim(); }) : [];
+    var restRaw = cardRest(card);
+    var tempos = cardTempos(card);
+    var tri = card.classList.contains('triset') || names.length >= 3;
+    var idBase = groupIdBase(card, rawName);
+
+    var members = names.map(function (nm, i) {
+      return {
+        name: nm,
+        sets: setGroups.length ? (setGroups[i] != null ? setGroups[i] : setGroups[setGroups.length - 1]) : rawSets,
+        tempo: tempos.length ? (tempos[i] != null ? tempos[i] : tempos[0]) : ''
+      };
+    });
+
+    var ssCard = buildGroup(members, tri, restRaw, idBase);
+    if (card.parentNode) card.parentNode.replaceChild(ssCard, card);
+  }
+
+  // ---- shape 2: one .ex-card PER member, joined only by a shared is-ss/
+  // is-tri class + DOM adjacency (iron-engine.html, mm-engine.js) ----------
+  function transformSiblingRun(card) {
+    var tri = isTriCard(card), ss = isSupersetCard(card);
+    if (!tri && !ss) return;                  // cluster/drop: single station, never grouped
+
+    // Collect this card + every immediately-following .ex-card sibling that
+    // shares the same kind, skipping non-card nodes in between (the cosmetic
+    // .group-banner divider these engines render between grouped exercises).
+    // Stops at the first .ex-card of a different kind (the next exercise/group).
+    var members = [card];
+    var sib = card.nextElementSibling;
+    while (sib) {
+      if (sib.classList && sib.classList.contains('ex-card')) {
+        var sameKind = tri ? isTriCard(sib) : (isSupersetCard(sib) && !isTriCard(sib));
+        if (!sameKind) break;
+        members.push(sib);
+      }
+      sib = sib.nextElementSibling;
+    }
+    if (members.length < 2) return;            // solo card — nothing to hop between
+
+    // The real round-rest is authored on the LAST member only (both engines'
+    // data give every earlier member rest:"—", meaning "no standalone rest,
+    // handled by the group") -- reading the first member here would silently
+    // replace a real "2 min" round rest with the 10s default, the exact
+    // regression this file's own header comment already names once
+    // (kitchen-sink.html, before the derive-from-last-member fix).
+    var restRaw = cardRest(members[members.length - 1]);
+    var rawName = cardName(card);
+    var idBase = groupIdBase(card, rawName);
+    var rowMembers = members.map(function (m) {
+      return { name: cardName(m), sets: cardSets(m), tempo: cardTempos(m)[0] || '' };
+    });
+
+    var ssCard = buildGroup(rowMembers, tri, restRaw, idBase);
+
+    // Drop the .group-banner sitting immediately before the FIRST member —
+    // it's the divider this run's own tag introduced; ss-header/ss-divider
+    // above supersede it. Members after the first are simply removed along
+    // with any banner immediately preceding them (there shouldn't be one,
+    // since same-kind runs don't re-print the banner between their own
+    // members, but a defensive check costs nothing).
+    members.forEach(function (m) {
+      var prevBanner = m.previousElementSibling;
+      if (prevBanner && prevBanner.classList && prevBanner.classList.contains('group-banner')) {
+        prevBanner.parentNode.removeChild(prevBanner);
+      }
+    });
+    if (card.parentNode) card.parentNode.replaceChild(ssCard, card);
+    members.slice(1).forEach(function (m) {
+      if (m.parentNode) m.parentNode.removeChild(m);
+    });
+  }
+
   function transform(card) {
     try {
-      var grouped = card.classList.contains('is-ss') || card.classList.contains('is-cluster') ||
+      if (!card.parentNode) return;            // already consumed by an earlier run merge
+      var grouped = card.classList.contains('is-ss') || card.classList.contains('is-tri') ||
+                    card.classList.contains('is-cluster') ||
                     card.classList.contains('superset') || card.classList.contains('triset');
       if (!grouped) return;
 
-      var rawName = txt(card.querySelector('.ex-name .editable') || card.querySelector('.ex-name'));
-      if (rawName.indexOf('×') < 0) return;             // not a grouped name
-      var names = rawName.split('×').map(function (s) { return s.trim(); }).filter(Boolean);
-      if (names.length < 2) return;                          // nothing to hop between
-
-      var rawSets = txt(card.querySelector('[data-field="sets"]') ||
-                        card.querySelector('.a-cell .editable[data-field="sets"]') ||
-                        card.querySelector('.notes-row'));
-      var setGroups = rawSets ? rawSets.split('/').map(function (s) { return s.trim(); }) : [];
-      var restRaw = txt(card.querySelector('[data-field="rest"]')) || '120 sec';
-      var rest = parseRest(restRaw);
-      // tempo: Concept-A uses .a-pill.tempo ("⏱ 3:1:1:0"); legacy uses .tempo-chip.
-      var tempoEls = card.querySelectorAll('.a-pill.tempo, .tempo-chip');
-      var tempos = Array.prototype.map.call(tempoEls, function (c) {
-        var m = c.textContent.match(/[\d:]+/); return m ? m[0] : '';
-      }).filter(Boolean);
-
-      var tri = card.classList.contains('triset') || names.length >= 3;
-      var ed = card.querySelector('.editable[data-field="name"]');
-      var dI = ed ? ed.getAttribute('data-d') : null;
-      var eI = ed ? ed.getAttribute('data-e') : null;
-      var base = (dI != null && eI != null)
-        ? ('grp-' + dI + '-' + eI)
-        : ('grp-' + rawName.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 24));
-
-      var ssCard = document.createElement('div');
-      ssCard.className = 'ss-card a-ss' + (tri ? ' is-tri' : '');
-      // the hop reads these to pause for the right duration at each step
-      ssCard.setAttribute('data-between', rest.between);
-      ssCard.setAttribute('data-after', rest.after);
-
-      var hd = document.createElement('div');
-      hd.className = 'ss-header';
-      var lbl = document.createElement('span');
-      lbl.className = 'ss-label';
-      lbl.textContent = (tri ? '⚡ Triset' : '⚡ Superset');
-      hd.appendChild(lbl);
-      var rl = document.createElement('span');
-      rl.className = 'ss-rests';
-      rl.textContent = rest.between + 's between · ' + rest.after + 's after';
-      hd.appendChild(rl);
-      ssCard.appendChild(hd);
-
-      var afterStr = rest.after + ' sec';
-      var dividerLabel = (tri ? '× TRISET ×' : '× SUPERSET ×');
-      names.forEach(function (nm, i) {
-        var sets = setGroups.length
-          ? (setGroups[i] != null ? setGroups[i] : setGroups[setGroups.length - 1])
-          : rawSets;
-        var tempo = tempos.length ? (tempos[i] != null ? tempos[i] : tempos[0]) : '';
-        var isLast = (i === names.length - 1);
-        ssCard.appendChild(row(nm, sets, tempo, afterStr, base + '-' + i, i, isLast));
-        if (!isLast) {
-          var dv = document.createElement('div');
-          dv.className = 'ss-divider';
-          var dx = document.createElement('span');
-          dx.className = 'ss-x';
-          dx.textContent = dividerLabel;
-          dv.appendChild(dx);
-          var bt = document.createElement('span');
-          bt.className = 'ss-btw';
-          bt.textContent = '↺ ' + rest.between + 's';
-          dv.appendChild(bt);
-          ssCard.appendChild(dv);
-        }
-      });
-
-      if (card.parentNode) card.parentNode.replaceChild(ssCard, card);
-    } catch (e) { /* leave the original card untouched on any parse failure */ }
+      var rawName = cardName(card);
+      if (rawName.indexOf('×') >= 0) { transformCombo(card, rawName); return; }
+      transformSiblingRun(card);
+    } catch (e) { /* leave the original card(s) untouched on any parse failure */ }
   }
 
   function run() {
     var cards = document.querySelectorAll(
-      '.ex-card.is-ss, .ex-card.is-cluster, .ex-card.superset, .ex-card.triset');
+      '.ex-card.is-ss, .ex-card.is-tri, .ex-card.is-cluster, .ex-card.superset, .ex-card.triset');
     Array.prototype.forEach.call(cards, transform);
   }
 
