@@ -120,7 +120,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
   background:linear-gradient(to bottom,var(--bg),transparent);
   pointer-events:none;
 }
-.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-left{display:flex;align-items:center;gap:12px;min-width:0;overflow:hidden;}
 .avatar{
   width:42px;height:42px;border-radius:50%;flex-shrink:0;
   background:linear-gradient(135deg,#d4af37,#8a6a10);
@@ -128,8 +128,14 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
   font-size:var(--fs-md);font-weight:900;color:#000;letter-spacing:0.5px;
   border:1.5px solid rgba(212,175,55,0.4);
 }
-.topbar-title{font-size:19px;font-weight:900;color:var(--text);letter-spacing:-0.02em;}
-.topbar-sub{font-size:var(--fs-xs);color:var(--muted2);margin-top:1px;}
+/* Every .topbar's leading (non-.topbar-left) child is the bare title/sub
+   block on the Programs/Conditioning/Nutrition screens -- same squeeze fix,
+   no HTML change needed since it's the row's first flex item everywhere. */
+.topbar > div:first-child{min-width:0;overflow:hidden;}
+.topbar-title{font-size:19px;font-weight:900;color:var(--text);letter-spacing:-0.02em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.topbar-sub{font-size:var(--fs-xs);color:var(--muted2);margin-top:1px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
 /* ── Universal momentum strip ────────────────────────────────────────────────
    Market-safe: a standalone element (NOT inside a licensed program card), so it
@@ -167,7 +173,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ts-arr{font-size:var(--fs-lg);font-weight:800;color:#a78bfa;flex-shrink:0;}
 .topbar-icon{
-  width:36px;height:36px;border-radius:10px;
+  width:36px;height:36px;border-radius:10px;flex-shrink:0;
   background:var(--surface);border:1px solid var(--border2);
   display:flex;align-items:center;justify-content:center;font-size:var(--fs-xl);
 }
