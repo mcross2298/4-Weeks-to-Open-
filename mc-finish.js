@@ -644,6 +644,21 @@
       try{if(window.MCActivity&&MCActivity.releaseSessionLock)MCActivity.releaseSessionLock();}catch(e){}
       // back up the finished session right away (no-op when signed out)
       try{if(window.MC_SYNC&&MC_SYNC.push)MC_SYNC.push();}catch(e){}
+      // L6 (partial): request persistent storage the first time a workout is
+      // ever completed — the strongest signal most browsers accept for
+      // granting persistence (Chrome bases the decision on the site's
+      // engagement score, which a completed workout meaningfully raises),
+      // reducing the risk of localStorage/Cache Storage/IndexedDB being
+      // silently evicted under disk pressure. Asked at most once ever: in
+      // Firefox this is a real permission prompt, not just a Chrome-side
+      // heuristic bump, and the browser's decision doesn't change by asking
+      // again on every future finish — only the annoyance would.
+      try{
+        if(!localStorage.getItem('mc_storage_persist_asked')&&navigator.storage&&navigator.storage.persist){
+          localStorage.setItem('mc_storage_persist_asked','1');
+          navigator.storage.persist().catch(function(){});
+        }
+      }catch(e){}
       window._FW.close();
       // program-day-view-roadmap.md D1 — the ONE completion point in this
       // module, and until now it emitted nothing. A day-by-day program view

@@ -56,7 +56,12 @@
       maybeReload: function () { return maybeReload.apply(null, arguments); },
       workoutInProgress: function () { return workoutInProgress.apply(null, arguments); },
       getSnapshot: function () { return snapshot; },
-      getQuotaBlocked: function () { return quotaBlocked; }
+      getQuotaBlocked: function () { return quotaBlocked; },
+      pendingRows: function () { return pendingRows.apply(null, arguments); },
+      keepaliveFlush: function () { return keepaliveFlush.apply(null, arguments); },
+      getLastError: function () { return lastError; },
+      getAccessToken: function () { return accessToken; },
+      setAccessToken: function (t) { accessToken = t; }   // test-only setter, bypasses onAuthStateChange timing
     };
   }
   if (window.__mcSync) return;
@@ -117,6 +122,14 @@
   // multi-device merge is strictly larger than either side alone). Set by
   // writeVal() below, cleared the moment a write for that key succeeds again.
   var quotaBlocked = {};
+  // S4: the last pull/push error, surfaced on status() — previously nothing
+  // outside this closure could ever learn that sync had started failing.
+  var lastError = null;
+  // S3: the current session's access token, kept in sync via
+  // onAuthStateChange below. Needed synchronously (no await) by the
+  // pagehide-triggered keepalive flush, which can't rely on an async
+  // getSession() call completing before the browser tears the page down.
+  var accessToken = null;
 
   function pendingCount() {
     var n = 0;
@@ -466,9 +479,16 @@
 
   // ---- sync cycle ----------------------------------------------------------
   function pull() {
+    // S4: user can now go null mid-session (SIGNED_OUT, below) — without this
+    // guard, `user.id` throws synchronously, which (called from the
+    // unconditional periodic `flush` / visibilitychange listeners start()
+    // wires up for the rest of the page's life) escapes past even a
+    // `.catch()` on the caller, since the throw happens before this function
+    // returns a promise at all.
+    if (!client || !user) return Promise.resolve();
     return client.from(TABLE).select('store_key, data').eq('user_id', user.id)
       .then(function (r) {
-        if (r.error) throw r.error;
+        if (r.error) { lastError = { op: 'pull', message: r.error.message || String(r.error), at: Date.now() }; throw r.error; }
         var remoteByKey = {};
         (r.data || []).forEach(function (row) { remoteByKey[row.store_key] = row.data; });
         // Owned stores (STORES) are pulled+merged and later pushed; consumed
@@ -529,6 +549,7 @@
   }
 
   function push() {
+    if (!client || !user) return Promise.resolve();   // S4: user can go null (SIGNED_OUT) mid-session
     var ops = [];
     // K-3.2/A-16: mc_setlog_v1 uploads only the page-group(s) that actually
     // changed, not the whole store. There is deliberately no snapshot[key]
@@ -551,7 +572,13 @@
           user_id: user.id, store_key: op.storeKey, data: op.data,
           updated_at: new Date().toISOString(), device_id: DEVICE
         }, { onConflict: 'user_id,store_key' }).then(function (r) {
+          // S4: previously no else — a 401 (expired token) or any other
+          // upload error was discarded with no retry and no trace. The
+          // group is naturally retried next push() (see the comment above
+          // pushSetlogKey — snapshot only advances on success), so nothing
+          // extra is needed for retry; this just makes the failure visible.
           if (!r.error) { snapshot[op.storeKey] = op.json; status.lastPush = Date.now(); }
+          else { lastError = { op: 'push', key: op.storeKey, message: r.error.message || String(r.error), at: Date.now() }; }
         }));
       });
     }
@@ -574,7 +601,11 @@
         user_id: user.id, store_key: key, data: data,
         updated_at: new Date().toISOString(), device_id: DEVICE
       }, { onConflict: 'user_id,store_key' }).then(function (r) {
+        // S4: same reasoning as pushSetlogKey() above — record the failure
+        // (retried automatically next push() since snapshot[key] is
+        // untouched) instead of discarding it silently.
         if (!r.error) { snapshot[key] = cur; status.lastPush = Date.now(); }
+        else { lastError = { op: 'push', key: key, message: r.error.message || String(r.error), at: Date.now() }; }
       }));
     });
     return ops.length ? Promise.all(ops) : Promise.resolve();
@@ -614,6 +645,74 @@
     } catch (e) {}
   }
 
+  // S3: exactly what push() would upload right now, as plain row objects —
+  // split out so keepaliveFlush() below can build the same payload without
+  // going through the supabase-js client (which offers no way to attach
+  // `keepalive` to its own fetch calls). Deliberately does not touch
+  // `snapshot` — a fire-and-forget beacon has no confirmed response to
+  // advance it from, and upsert makes re-sending the same rows via a later,
+  // confirmed push() a harmless no-op.
+  function pendingRows() {
+    var rows = [];
+    Object.keys(STORES).forEach(function (key) {
+      var cur = readRaw(key);
+      if (cur == null || quotaBlocked[key]) return;
+      if (STORES[key] === 'setlog') {
+        var localWhole = parse(cur);
+        if (localWhole == null) return;
+        var plan = computeSetlogPushOps(key, localWhole, snapshot);
+        plan.ops.forEach(function (op) {
+          rows.push({ user_id: user.id, store_key: op.storeKey, data: op.data,
+                      updated_at: new Date().toISOString(), device_id: DEVICE });
+        });
+        return;
+      }
+      if (cur === snapshot[key]) return;
+      var data = parse(cur);
+      if (data == null) return;
+      rows.push({ user_id: user.id, store_key: key, data: data,
+                  updated_at: new Date().toISOString(), device_id: DEVICE });
+    });
+    return rows;
+  }
+
+  // S3: best-effort last-chance upload for a REAL unload (pagehide when the
+  // page is actually being discarded, not just backgrounded/bfcached). The
+  // normal push() path goes through the supabase-js client's own fetch
+  // calls, which carry no `keepalive` flag — the browser is free to cancel a
+  // not-yet-sent request the instant the page starts tearing down, silently
+  // dropping whatever change triggered this flush (e.g. the last set of the
+  // workout, logged right as the athlete taps away). `fetch(...,
+  // {keepalive:true})` is specifically kept alive past unload for this case.
+  // Talks to the PostgREST endpoint directly (supabase-js's own upsert()
+  // has no keepalive option to pass through) using `client.supabaseUrl` /
+  // `client.supabaseKey` — documented, commonly-relied-on public properties
+  // of the supabase-js v2 client, but NOT exercised against a live Supabase
+  // instance here (this sandbox has no network egress to one) — wrapped in
+  // try/catch and never touching snapshot, so if that assumption is ever
+  // wrong for a given client version, this best-effort addition degrades to
+  // a silent no-op rather than a regression: the existing, unaffected
+  // push()-on-pagehide call right after it is unchanged either way.
+  function keepaliveFlush() {
+    try {
+      if (!client || !user || !accessToken) return;
+      var rows = pendingRows();
+      if (!rows.length) return;
+      var url = client.supabaseUrl + '/rest/v1/' + TABLE + '?on_conflict=user_id,store_key';
+      fetch(url, {
+        method: 'POST',
+        keepalive: true,
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: client.supabaseKey,
+          Authorization: 'Bearer ' + accessToken,
+          Prefer: 'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify(rows)
+      }).catch(function () {});
+    } catch (e) {}
+  }
+
   function start() {
     // S2: pull, then push, THEN maybeReload — previously reload was
     // attempted before push() had a chance to run, and an unconditional
@@ -625,9 +724,13 @@
       .then(function () { return push(); })
       .then(function () { maybeReload(); })
       .catch(function () {});
-    // upload pending changes when the user leaves / hides the page
+    // upload pending changes when the user leaves / hides the page. S3: the
+    // keepalive beacon runs FIRST and synchronously on pagehide specifically
+    // — it's the one that has to survive an actual unload; the normal
+    // push() alongside it still helps in the bfcache/backgrounded case where
+    // the page isn't really being destroyed and the async call can complete.
     var flush = function () { push().catch(function () {}); };
-    window.addEventListener('pagehide', flush);
+    window.addEventListener('pagehide', function () { keepaliveFlush(); flush(); });
     document.addEventListener('visibilitychange', function () {
       if (document.visibilityState === 'hidden') flush();
       else maybeReload();   // S2: drain a reload deferred by workoutInProgress()
@@ -645,9 +748,11 @@
       // S1: surfaces which stores are stuck (storage full, write failing) so
       // a future UI (e.g. mc-backup-status.js) can tell the user their data
       // isn't reaching other devices, instead of it failing invisibly.
+      // S4: lastError likewise surfaces the last pull/push failure (e.g. an
+      // auth error) instead of it being discarded with no trace.
       return { lastPush: status.lastPush, lastPull: status.lastPull,
                pending: pendingCount(), signedIn: !!user,
-               blocked: Object.keys(quotaBlocked) };
+               blocked: Object.keys(quotaBlocked), lastError: lastError };
     },
     kick: function () {
       if (user || !client) return;
@@ -655,8 +760,49 @@
     }
   };
 
+  // S5 (partial): the only other 'online' listener in the whole app is
+  // dashboard.html's cosmetic offline bar — nothing anywhere retries sync
+  // when connectivity returns, so a session that hit a network error on
+  // pull()/push() just sits there until the next periodic timer (up to
+  // PUSH_MS away) or a manual reload. Reconnecting now retries immediately:
+  // if sync had already started, re-run the cycle; if it never got a
+  // chance to (client loaded, but currentUser()/start() didn't run yet —
+  // e.g. that earlier attempt itself raced a flaky connection), kick() is
+  // the same manual-sign-in-after-the-fact hook already used elsewhere.
+  // NOT fixed here: if the Supabase SDK itself failed to load while
+  // offline (loadSD() in mc-supabase.js), `client` stays null for the rest
+  // of this page's life and no retry here can help — the SDK isn't in
+  // sw.js's CACHE_URLS (it's fetched from cdn.jsdelivr.net at runtime), so
+  // a first-ever offline load can never sync in that session at all. The
+  // real fix is vendoring/self-hosting the SDK so it can be precached;
+  // this sandbox has no network egress to cdn.jsdelivr.net to do that
+  // (confirmed: CONNECT rejected by the egress proxy), so it's left as a
+  // follow-up rather than attempted blind.
+  window.addEventListener('online', function () {
+    if (client && user) { pull().then(function () { return push(); }).catch(function () {}); }
+    else if (client) { window.MC_SYNC.kick(); }
+  });
+
   MC_SB.ready
-    .then(function (c) { if (!c) return null; client = c; return MC_SB.currentUser(); })
+    .then(function (c) {
+      if (!c) return null;
+      client = c;
+      // S3/S4: keep accessToken current and react to real auth transitions.
+      // TOKEN_REFRESHED: retry push() — anything that 401'd on a stale token
+      // (previously silently discarded, see S4's lastError above) goes out
+      // now instead of waiting for the next periodic flush. SIGNED_OUT:
+      // clear `user` so a page left open past sign-out doesn't keep
+      // uploading to (or reading) the previous account's rows — pull()/
+      // push() both now guard on `!user` for exactly this case.
+      try {
+        c.auth.onAuthStateChange(function (event, session) {
+          accessToken = (session && session.access_token) || null;
+          if (event === 'TOKEN_REFRESHED') { push().catch(function () {}); }
+          else if (event === 'SIGNED_OUT') { user = null; }
+        });
+      } catch (e) {}
+      return MC_SB.currentUser();
+    })
     .then(function (u) { if (u && client) { user = u; start(); } })
     .catch(function () {});
 })();

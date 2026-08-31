@@ -69,6 +69,15 @@ jobs:
           node tools/test-mc-bridge.js
           node tools/test-mc-sync-merge.js
 
+      - name: Sync runtime cycle tests (mc-sync.js pull/push/reload, real cycle not a copy)
+        # Findings S1 (a failed local write must never let push() re-upload a
+        # stale value over newer server data), S2 (never reload mid-workout;
+        # push must complete before a reload), S3 (keepalive beacon on real
+        # unload), S4 (auth-state transitions: token refresh retries a
+        # pending push, sign-out clears user so writes don't leak to the next
+        # account), and S5 partial (an online event retries immediately).
+        run: node tools/test-mc-sync-runtime.js
+
       - name: Program day-progression tests (mc-program-progress.js + mc-program-tabs.js)
         # test-mc-program-progress.js shipped with D0-D3 but was never added to
         # a workflow, so its 68 assertions have not run in CI once. Wired here
@@ -111,7 +120,30 @@ jobs:
         run: node tools/gen-schedules.js --check
 
       - name: Service-worker strategy test (stale-while-revalidate — audit LS-4)
+        # Also covers findings L1 (ignoreSearch on query-string navigations),
+        # L3 (cache-poisoning guard), L4 (font cache never caches a failed
+        # fetch), and L5 (offline asset fallback is network-error-shaped, not
+        # HTML a <script> tag would try to parse).
         run: node tools/test-mc-sw.js
+
+      - name: Service-worker update lifecycle test (mc-sw-update.js)
+        # Findings L2 (controllerchange reload guard: fresh-install and
+        # cross-tab mid-workout cases) and U4 (fleet-wide offline banner).
+        run: node tools/test-mc-sw-update.js
+
+      - name: Offline program-prefetch test (mc-offline-prefetch.js)
+        # Finding L8: respects Save-Data/2G, and only counts a genuinely
+        # successful (resp.ok) fetch as a prefetched page.
+        run: node tools/test-mc-offline-prefetch.js
+
+      - name: Storage-persistence request test (mc-finish.js, finding L6 partial)
+        run: node tools/test-mc-persist.js
+
+      - name: Gesture contract (overscroll-behavior + touch-action — findings U1/U3)
+        # A source check, like check-topbar-inset.js below — a real Android
+        # pull-to-refresh or the native double-tap-to-zoom timer can't be
+        # reproduced by a headless browser or a dispatched event.
+        run: node tools/check-gesture-contract.js
 
       - name: Service-worker precache freshness (committed sw.js matches the tree)
         # --check, not --version: the deploy regenerates sw.js with a run-scoped
@@ -127,6 +159,14 @@ jobs:
         # Owns the <head> block and the mc-sw-update.js tail tag on all 140
         # deployable pages. Regenerate with: python3 tools/apply-head-contract.py
         run: python3 tools/apply-head-contract.py --check
+
+      - name: Head-boot script test (real generated <script>, not a copy)
+        # Findings L7 (the PWA cold-launch redirect must not evict a live
+        # mid-workout session) and S6 (window error/unhandledrejection
+        # capture) — extracts and runs the ACTUAL script apply-head-
+        # contract.py wrote onto a real page, so a change that breaks its
+        # emitted JS (or a forgotten re-run of the generator) shows up here.
+        run: node tools/test-head-boot-guard.js
 
       - name: Program color-sync check (mc-pm-data.js vs dashboard.html vs mc-theme.js)
         run: node tools/check-program-colors.js

@@ -124,6 +124,58 @@
     b.classList.add('show');
   }
 
+  // U4: dashboard.html already has its own in-flow #offlineBar with its own
+  // online/offline listeners (below, via ensureOfflineBanner() returning that
+  // element unchanged) — every OTHER page had no connectivity signal at all
+  // until a navigation actually failed and showed the SW's offline shell.
+  // Self-mounts the same kind of fixed banner ensureBanner() above already
+  // solves the "clear other fixed chrome" problem for, in red rather than
+  // green, reusing the same positionBanner() so the two stack instead of
+  // overlapping if both are visible at once.
+  function ensureOfflineBanner() {
+    var b = document.getElementById('offlineBar');
+    if (b) return b;   // dashboard.html's own native bar — never touched here
+    b = document.getElementById('mcOfflineBar');
+    if (b) return b;   // already self-mounted on an earlier online/offline event
+    if (!document.body) return null;
+    if (!document.getElementById('mcOfflineCss')) {
+      var st = document.createElement('style');
+      st.id = 'mcOfflineCss';
+      st.textContent =
+        '.mc-offlinebar{position:fixed;left:12px;right:12px;z-index:var(--z-sw-update,60);' +
+        'display:none;background:rgba(248,113,113,0.14);border:1px solid rgba(248,113,113,0.4);' +
+        'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);' +
+        'border-radius:12px;padding:11px 14px;min-height:44px;box-sizing:border-box;' +
+        'font-size:13px;font-weight:800;color:#f87171;text-align:center;' +
+        'letter-spacing:0.03em;box-shadow:0 6px 20px rgba(0,0,0,0.5);}' +
+        '.mc-offlinebar.show{display:block;}' +
+        // Same light-mode fix ensureBanner()'s CSS above already carries for
+        // its own green (audit: --success/red at low opacity land far under
+        // AA on the cream #f5f2ec body) — a darker, more saturated variant.
+        'html[data-theme="light"] .mc-offlinebar{background:rgba(185,28,28,0.10);' +
+        'border-color:rgba(185,28,28,0.35);color:#b91c1c;' +
+        'box-shadow:0 6px 20px rgba(28,26,23,0.16);}';
+      document.head.appendChild(st);
+    }
+    b = document.createElement('div');
+    b.id = 'mcOfflineBar';
+    b.className = 'mc-offlinebar';
+    b.textContent = '📵 Offline — showing cached content';
+    document.body.appendChild(b);
+    return b;
+  }
+
+  function updateOfflineBanner() {
+    var b = ensureOfflineBanner();
+    if (!b || b.id === 'offlineBar') return;   // dashboard.html drives its own bar's visibility
+    positionBanner(b);
+    b.classList.toggle('show', 'onLine' in navigator && !navigator.onLine);
+  }
+  window.addEventListener('online', updateOfflineBanner);
+  window.addEventListener('offline', updateOfflineBanner);
+  if (document.body) updateOfflineBanner();
+  else document.addEventListener('DOMContentLoaded', updateOfflineBanner);
+
   var pendingWorker = null;
 
   // A workout is "in progress" if a rest timer is counting or any set is

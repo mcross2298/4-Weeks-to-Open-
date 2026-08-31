@@ -43,7 +43,7 @@ const flush = () => new Promise(r => setImmediate(r));
 
 function fakeEl() {
     return {
-        style: {}, classList: { add() {}, contains() { return false; } },
+        style: {}, classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
         appendChild() {}, addEventListener() {}, setAttribute() {},
     };
 }
@@ -95,6 +95,93 @@ function loadModule(initialController, workoutInProgressRef) {
     };
 }
 
+// ---- richer DOM mock, only for the U4 (offline banner) tests below —
+// positionBanner()/ensureOfflineBanner() need real element creation,
+// classList, and a body child list, which the lightweight loadModule()
+// above deliberately doesn't provide (its existing L2 tests don't need it).
+function makeFakeElement(tag) {
+    const el = {
+        tag, id: '', className: '', textContent: '', style: {},
+        _style: { position: 'static', display: 'block', visibility: 'visible' },
+        _rect: { top: 0, bottom: 0, height: 0 },
+        children: [],
+        appendChild(child) { el.children.push(child); },
+        addEventListener() {},
+        setAttribute() {},
+        getBoundingClientRect() { return el._rect; },
+        classList: {
+            add(c) { if ((' ' + el.className + ' ').indexOf(' ' + c + ' ') < 0) el.className = (el.className + ' ' + c).trim(); },
+            remove(c) { el.className = el.className.split(' ').filter(x => x && x !== c).join(' '); },
+            toggle(c, force) {
+                const has = el.classList.contains(c);
+                const want = force === undefined ? !has : force;
+                if (want && !has) el.classList.add(c);
+                if (!want && has) el.classList.remove(c);
+            },
+            contains(c) { return (' ' + el.className + ' ').indexOf(' ' + c + ' ') >= 0; },
+        },
+    };
+    return el;
+}
+
+function loadModuleForOffline(opts) {
+    opts = opts || {};
+    const bodyKids = [];
+    const byId = {};
+    if (opts.nativeOfflineBar) { byId.offlineBar = makeFakeElement('div'); byId.offlineBar.id = 'offlineBar'; }
+    const windowListeners = {};
+    const win = {
+        addEventListener(type, cb) { (windowListeners[type] = windowListeners[type] || []).push(cb); },
+        location: { reload() {} },
+    };
+    const bodyEl = {
+        appendChild(child) { bodyKids.push(child); },
+    };
+    const doc = {
+        visibilityState: 'visible',
+        addEventListener() {},
+        getElementById(id) { return byId[id] || null; },
+        querySelector() { return null; },
+        querySelectorAll(sel) { return sel === 'body > *' ? bodyKids : []; },
+        createElement(tag) {
+            const el = makeFakeElement(tag);
+            // track by id once set (createElement callers set .id right after)
+            Object.defineProperty(el, 'id', {
+                get() { return el._id || ''; },
+                set(v) { el._id = v; byId[v] = el; },
+            });
+            return el;
+        },
+        head: { appendChild() {} },
+        body: bodyEl,
+    };
+    const reg = { update() {}, waiting: null, addEventListener() {} };
+    const sw = {
+        controller: {},
+        addEventListener() {},
+        register() { return Promise.resolve(reg); },
+    };
+    const nav = { serviceWorker: sw, onLine: opts.onLine !== false };
+    const sandbox = {
+        window: win,
+        document: doc,
+        navigator: nav,
+        getComputedStyle(el) { return el._style; },
+        console,
+        setInterval: () => 0, clearInterval() {}, setTimeout, clearTimeout,
+    };
+    vm.createContext(sandbox);
+    vm.runInContext(SRC, sandbox, { filename: 'mc-sw-update.js' });
+    return {
+        // A real browser updates navigator.onLine BEFORE dispatching the
+        // online/offline events — mirror that so updateOfflineBanner()'s own
+        // read of navigator.onLine sees the new state, same as it would live.
+        fireOnline: () => { nav.onLine = true; (windowListeners.online || []).forEach(cb => cb()); },
+        fireOffline: () => { nav.onLine = false; (windowListeners.offline || []).forEach(cb => cb()); },
+        offlineBar: () => byId.mcOfflineBar || byId.offlineBar || null,
+    };
+}
+
 (async () => {
     // 1. Fresh install: no prior controller. clients.claim() still fires
     //    'controllerchange' on this very first load — must NOT reload.
@@ -129,6 +216,33 @@ function loadModule(initialController, workoutInProgressRef) {
         wip.checked = false;
         m.fireFocus();
         assert(m.reloaded(), '3b: the deferred reload fires once idle (focus-driven drain)');
+    }
+
+    // ---- U4: fleet-wide offline banner (pages with no native #offlineBar) ----
+    {
+        const m = loadModuleForOffline({ onLine: false });
+        await flush();
+        const bar = m.offlineBar();
+        assert(!!bar, '4a: a self-mounted offline banner exists on a page with no native one');
+        assert(bar.classList.contains('show'), '4b: it shows immediately when the page loads already offline');
+
+        m.fireOnline();
+        assert(!bar.classList.contains('show'), '4c: it hides on the online event');
+
+        m.fireOffline();
+        assert(bar.classList.contains('show'), '4d: it re-shows on a later offline event');
+    }
+
+    // ---- U4: a page WITH dashboard.html's native #offlineBar is untouched ----
+    {
+        const m = loadModuleForOffline({ onLine: false, nativeOfflineBar: true });
+        const bar = m.offlineBar();
+        bar.className = 'offline-bar sentinel';   // dashboard's own script owns this — mark it
+        await flush();
+        m.fireOffline();
+        m.fireOnline();
+        assert(bar.className === 'offline-bar sentinel',
+            '5: the native #offlineBar\'s classList is never touched by this module (dashboard drives it itself)');
     }
 
     if (failures) { console.error(`\ntest-mc-sw-update: ${failures} FAILED of ${checks}`); process.exit(1); }

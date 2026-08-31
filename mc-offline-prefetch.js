@@ -147,7 +147,17 @@
     return Promise.all(urls.map(function (url, i) {
       return new Promise(function (resolve) {
         setTimeout(function () {
-          fetch(url).then(function () { resolve(true); }).catch(function () { resolve(false); });
+          fetch(url).then(function (resp) {
+            // L8: a fetch() promise resolving is not success — it only
+            // REJECTS on a true network failure, so a 404 (a stale/renamed
+            // page in a crawled link) used to count as a successful
+            // prefetch just like a real 200, inflating the "Available
+            // offline ✓" confirmation count with pages that were never
+            // actually cached. resp.ok is the real signal (2xx only —
+            // this also already excludes an opaque no-cors response, whose
+            // status is always 0 and therefore never .ok).
+            resolve(!!(resp && resp.ok));
+          }).catch(function () { resolve(false); });
         }, i * STAGGER_MS);
       });
     })).then(function (results) {
@@ -159,6 +169,17 @@
     if (!activeProg || !activeProg.id) return Promise.resolve(null);
     if (!window.fetch) return Promise.resolve(null);
     if ('onLine' in navigator && !navigator.onLine) return Promise.resolve(null);
+    // L8: up to MAX_PAGES fetches, fired back-to-back (STAGGER_MS apart) the
+    // instant a program is picked — respect an explicit low-data signal
+    // instead of spending a trainee's data cap or a slow 2G connection on a
+    // background prefetch they didn't ask for. `navigator.connection` isn't
+    // implemented everywhere (notably Safari/iOS), so its absence is not a
+    // signal either way — this only ever SKIPS on an explicit true/2g,
+    // never blocks a browser that can't say.
+    try {
+      var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (conn && (conn.saveData || /(^|-)2g$/.test(conn.effectiveType || ''))) return Promise.resolve(null);
+    } catch (e) {}
 
     // Only catalog programs (mc-pm-data.js) have a fixed page set to find.
     // Custom (cprogId) and PM-published (pubId) programs are built from

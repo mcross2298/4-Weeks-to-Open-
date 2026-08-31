@@ -40,10 +40,13 @@ const flush = () => new Promise(r => setImmediate(r));
 // throwOnKeys: Set of localStorage keys whose setItem() throws (simulates
 // QuotaExceededError). log: ordered array of side-effect tags ('upsert:<key>',
 // 'reload'), used to assert S2's push-before-reload ordering.
-function loadModule(throwOnKeys, wip, log, pullRows) {
+function loadModule(throwOnKeys, wip, log, pullRows, opts) {
+    opts = opts || {};
     const store = {};
     const upserted = [];
+    const fetchCalls = [];
     const windowListeners = {}, docListeners = {};
+    let authChangeCb = null;
 
     const localStorage = {
         getItem: k => (k in store ? store[k] : null),
@@ -56,10 +59,17 @@ function loadModule(throwOnKeys, wip, log, pullRows) {
     const sessionStorage = { getItem: () => null, setItem: () => {} };
 
     const client = {
+        supabaseUrl: 'https://fake.supabase.co',
+        supabaseKey: 'fake-anon-key',
+        auth: { onAuthStateChange: cb => { authChangeCb = cb; } },
         from: () => ({
             select: () => ({ eq: () => Promise.resolve({ data: pullRows || [], error: null }) }),
             upsert: (row) => {
                 upserted.push(row.store_key);
+                if (opts.upsertShouldFail && opts.upsertShouldFail(row.store_key)) {
+                    log.push('upsert-fail:' + row.store_key);
+                    return Promise.resolve({ error: { message: 'simulated failure' } });
+                }
                 log.push('upsert:' + row.store_key);
                 return Promise.resolve({ error: null });
             },
@@ -82,11 +92,16 @@ function loadModule(throwOnKeys, wip, log, pullRows) {
     };
     const win = { addEventListener(type, cb) { (windowListeners[type] = windowListeners[type] || []).push(cb); } };
     const location = { reload() { log.push('reload'); } };
+    // S3: keepaliveFlush() calls the bare global fetch(), not client.from() —
+    // separate mock, tracking calls so tests can assert keepalive:true and
+    // the request shape without a real network (unavailable in this sandbox).
+    const fetchMock = (url, init) => { fetchCalls.push({ url, init }); return Promise.resolve({ ok: true }); };
 
     const sandbox = {
         module: { exports: {} },
         window: win, document: doc, location,
         localStorage, sessionStorage,
+        fetch: fetchMock,
         setInterval: () => 0, clearInterval() {}, setTimeout, clearTimeout,
         console,
     };
@@ -96,8 +111,11 @@ function loadModule(throwOnKeys, wip, log, pullRows) {
     vm.runInContext(SRC, sandbox, { filename: 'mc-sync.js' });
     return {
         M: sandbox.module.exports,
-        store, upserted,
+        store, upserted, fetchCalls,
         fireFocus: () => (windowListeners.focus || []).forEach(cb => cb()),
+        firePagehide: () => (windowListeners.pagehide || []).forEach(cb => cb()),
+        fireOnline: () => (windowListeners.online || []).forEach(cb => cb()),
+        fireAuthChange: (event, session) => { if (authChangeCb) authChangeCb(event, session); },
     };
 }
 
@@ -158,6 +176,104 @@ function loadModule(throwOnKeys, wip, log, pullRows) {
         ok('S2b: the pushed key\'s upsert happened', upsertIdx !== -1);
         ok('S2b: reload fired', reloadIdx !== -1);
         ok('S2b: push completed before reload (upload is not abandoned by an unload)', upsertIdx < reloadIdx);
+    }
+
+    // ---- S3: pendingRows() mirrors exactly what push() would upload ----
+    {
+        const log = [];
+        const { M, store } = loadModule(new Set(), {}, log, []);
+        await flush();   // let the initial bootstrap push settle first
+        store['mc_workout_log_v1'] = JSON.stringify([{ id: 'w1', ts: 1 }]);
+        const rows = M.pendingRows();
+        ok('S3: pendingRows() includes a genuinely unsynced local store', rows.some(r => r.store_key === 'mc_workout_log_v1'));
+        ok('S3: pendingRows() row carries the right user/device shape', rows.every(r => r.user_id === 'u1' && r.device_id));
+    }
+
+    // ---- S3: keepaliveFlush() sends a real keepalive fetch with pending rows ----
+    {
+        const log = [];
+        const { M, fetchCalls, store } = loadModule(new Set(), {}, log, []);
+        await flush();
+        store['mc_workout_log_v1'] = JSON.stringify([{ id: 'w1', ts: 1 }]);
+        M.setAccessToken('fake-token');
+        M.keepaliveFlush();
+        ok('S3: keepaliveFlush() issues a fetch when there is pending data and a token', fetchCalls.length === 1);
+        ok('S3: the fetch is keepalive:true (the whole point — survives real unload)',
+            fetchCalls[0] && fetchCalls[0].init && fetchCalls[0].init.keepalive === true);
+        ok('S3: the fetch carries an Authorization bearer header',
+            fetchCalls[0] && fetchCalls[0].init.headers.Authorization === 'Bearer fake-token');
+        const body = fetchCalls[0] && JSON.parse(fetchCalls[0].init.body);
+        ok('S3: the fetch body contains the pending row', Array.isArray(body) && body.some(r => r.store_key === 'mc_workout_log_v1'));
+    }
+
+    // ---- S3: keepaliveFlush() is a safe no-op with no access token yet ----
+    {
+        const log = [];
+        const { M, fetchCalls, store } = loadModule(new Set(), {}, log, []);
+        await flush();
+        store['mc_workout_log_v1'] = JSON.stringify([{ id: 'w1', ts: 1 }]);
+        let threw = false;
+        try { M.keepaliveFlush(); } catch (e) { threw = true; }
+        ok('S3: keepaliveFlush() does not throw with no access token yet', !threw);
+        ok('S3: ...and does not fetch either', fetchCalls.length === 0);
+    }
+
+    // ---- S3: pagehide triggers the keepalive beacon ----
+    {
+        const log = [];
+        const { M, fetchCalls, store, firePagehide } = loadModule(new Set(), {}, log, []);
+        await flush();
+        store['mc_workout_log_v1'] = JSON.stringify([{ id: 'w1', ts: 1 }]);
+        M.setAccessToken('fake-token');
+        firePagehide();
+        ok('S3: pagehide fires the keepalive beacon', fetchCalls.length === 1);
+    }
+
+    // ---- S4: TOKEN_REFRESHED retries a pending push ----
+    {
+        const log = [];
+        const { M, fireAuthChange, store } = loadModule(new Set(), {}, log, []);
+        await flush();   // initial bootstrap push runs first, with nothing pending yet
+        store['mc_workout_log_v1'] = JSON.stringify([{ id: 'w1', ts: 1 }]);
+        fireAuthChange('TOKEN_REFRESHED', { access_token: 'tok2', user: { id: 'u1' } });
+        await flush();
+        ok('S4: TOKEN_REFRESHED retries a push for anything pending', log.indexOf('upsert:mc_workout_log_v1') !== -1);
+        ok('S4: accessToken is updated from the auth event', M.getAccessToken() === 'tok2');
+    }
+
+    // ---- S4: SIGNED_OUT clears user; push()/pull() no-op safely afterward ----
+    {
+        const log = [];
+        const { M, fireAuthChange } = loadModule(new Set(), {}, log, []);
+        await flush();
+        fireAuthChange('SIGNED_OUT', null);
+        let threw = false;
+        try { await M.push(); await M.pull(); } catch (e) { threw = true; }
+        ok('S4: push()/pull() after SIGNED_OUT resolve without throwing', !threw);
+    }
+
+    // ---- S4: a failed upsert surfaces on getLastError() instead of vanishing ----
+    {
+        const log = [];
+        const { M, store } = loadModule(new Set(), {}, log, [], { upsertShouldFail: k => k === 'mc_workout_log_v1' });
+        store['mc_workout_log_v1'] = JSON.stringify([{ id: 'w1', ts: 1 }]);
+        await flush();
+        const err = M.getLastError();
+        ok('S4: a failed push is recorded on getLastError() instead of silently discarded',
+            !!(err && err.op === 'push' && err.key === 'mc_workout_log_v1'));
+    }
+
+    // ---- S5 (partial): reconnecting retries immediately, not on the next
+    // periodic timer, when sync already started ----
+    {
+        const log = [];
+        const { store, fireOnline } = loadModule(new Set(), {}, log, []);
+        await flush();
+        store['mc_workout_log_v1'] = JSON.stringify([{ id: 'w1', ts: 1 }]);
+        fireOnline();
+        await flush();
+        ok('S5: an online event retries sync immediately for a pending change',
+            log.indexOf('upsert:mc_workout_log_v1') !== -1);
     }
 
     console.log(fail ? `\ntest-mc-sync-runtime: ${fail} FAILED of ${pass + fail}` : `test-mc-sync-runtime: all ${pass} assertions passed`);

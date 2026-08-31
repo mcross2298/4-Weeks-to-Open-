@@ -247,12 +247,17 @@ function offlinePage(msg) {
     );
 }
 
-// Offline fallback for a non-HTML asset that was never cached.
+// Offline fallback for a non-HTML asset that was never cached (finding L5).
+// Previously returned the same themed HTML shell as the navigation fallback,
+// with Content-Type: text/html — a <script src> pointed at this received a
+// full HTML document typed as if it were the actual asset. Script/link tags
+// don't check Content-Type, so the browser tries to parse the shell's markup
+// as JS/CSS anyway, throws on the first `<`, and the module is silently dead
+// for the rest of the page load with no visible error. A real network-error-
+// shaped Response (non-2xx, empty body) instead fires the tag's own native
+// `error` event, exactly like any other failed asset load.
 function assetOfflinePage() {
-    return new Response(
-        offlineShell('<h1>You\'re offline</h1><p>Open this page while online once to save it for next time.</p>'),
-        { headers: { 'Content-Type': 'text/html' } }
-    );
+    return new Response('', { status: 503, statusText: 'Offline' });
 }
 
 // Stale-while-revalidate (audit LS-4, finding W-12). Serve the cached copy
@@ -275,7 +280,7 @@ function assetOfflinePage() {
 // can verify the logic with a sandboxed fetch/caches — the live fetch handler
 // is guarded to the production origin and can't be exercised on localhost.
 //
-// matchIgnoresSearch (finding L1): a navigation to a precached page carrying
+// isHTML (finding L1): a navigation to a precached page carrying
 // app-state query params (`dashboard.html?tab=conditioning`, `mm-p1.html
 // ?day=3&week=2` — 17 such link patterns in the tree) keys `caches.match()`
 // on the FULL url by default, which never matches the no-query entry
@@ -286,12 +291,27 @@ function assetOfflinePage() {
 // string as a real cache-buster (see every page's own `<link>`/`<script>`
 // tag), so ignoring it there would let a stale versioned asset satisfy a
 // request for a newer one — silently worse than the bug this fixes.
-function staleWhileRevalidate(request, offlineFallback, matchIgnoresSearch) {
-    const matchOpts = matchIgnoresSearch ? { ignoreSearch: true } : undefined;
+function staleWhileRevalidate(request, offlineFallback, isHTML) {
+    const matchOpts = isHTML ? { ignoreSearch: true } : undefined;
     const revalidation = fetch(request).then(resp => {
-        if (resp && resp.status === 200) {
+        // L3: never cache a response whose body doesn't match what was
+        // asked for. This origin is HTTPS-only, so the classic "captive
+        // portal MITMs the connection" case is already blocked by TLS
+        // validation before a Response ever reaches here — but a captive
+        // portal's connectivity-check redirect, a misconfigured edge, or any
+        // proxy a device has been made to trust can still substitute an
+        // HTML page for an asset request. Cache-first means whatever gets
+        // written here is replayed on every load until the next deploy
+        // bumps CACHE_NAME, so a swapped-in login page cached as `mc-
+        // setlog.js` would otherwise break that page for good until then.
+        // Content-Type is the one signal available regardless of *why* the
+        // response is wrong: a genuine asset from this origin is never
+        // text/html.
+        const ct = resp && resp.headers && resp.headers.get && resp.headers.get('Content-Type');
+        const looksSwapped = !isHTML && ct && ct.indexOf('text/html') === 0;
+        if (resp && resp.ok && !looksSwapped) {
             const clone = resp.clone();
-            caches.open(CACHE_NAME).then(c => c.put(request, clone));
+            caches.open(CACHE_NAME).then(c => c.put(request, clone)).catch(() => {});
         }
         return resp;
     }).catch(() => null);
@@ -305,16 +325,26 @@ function staleWhileRevalidate(request, offlineFallback, matchIgnoresSearch) {
 // Cache-first rather than stale-while-revalidate: Google's font URLs are
 // content-addressed (a given URL's bytes never change), so there is nothing
 // to revalidate — once fetched, serving the cached copy forever is correct,
-// not stale. `{mode:'no-cors'}` accepts the opaque cross-origin response
-// (Cache Storage can store and replay one, just never read its contents);
-// omitted mode would let a CORS rejection reach the page as a broken font
-// load instead of falling through to this cache.
+// not stale.
+//
+// L4: this used to force `{mode:'no-cors'}`, which produces an OPAQUE
+// response whose `status` is always 0 — a real 200 and a captive-portal/
+// error response were indistinguishable, so a failed fetch got cached
+// exactly like a successful one, permanently, in FONT_CACHE_NAME (which
+// deliberately outlives every deploy — see its declaration above). A plain
+// `fetch(request)` (real CORS mode) makes `resp.ok` meaningful instead: both
+// fonts.googleapis.com and fonts.gstatic.com are documented to serve
+// `Access-Control-Allow-Origin: *` on every response (the whole reason
+// cross-origin @font-face embedding from Google Fonts works at all), so
+// this isn't expected to reintroduce the CORS-rejection risk the old
+// no-cors mode was guarding against — the `.catch(() => cached)` below is
+// the safety net if that ever isn't true for a given deployment.
 function cacheFirstFont(request) {
     return caches.open(FONT_CACHE_NAME).then(cache =>
         cache.match(request).then(cached => {
             if (cached) return cached;
-            return fetch(request, { mode: 'no-cors' }).then(resp => {
-                cache.put(request, resp.clone());
+            return fetch(request).then(resp => {
+                if (resp && resp.ok) cache.put(request, resp.clone()).catch(() => {});
                 return resp;
             }).catch(() => cached);
         })
