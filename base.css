@@ -367,6 +367,12 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
   color:var(--accent);
   background:rgba(var(--accent-rgb),0.1);
   border:1px solid rgba(var(--accent-rgb),0.3);
+  /* VOC/VOA Kaizen audit W-I2 — 29px tall, under the 44px touch floor.
+     Grown via min-height rather than a padding rewrite so the same fix
+     applies unchanged to every page's own colour/shape variant of this
+     rule (see the per-page .back-link duplicates this stylesheet doesn't
+     own). */
+  min-height:44px;display:inline-flex;align-items:center;box-sizing:border-box;
 }
 /* The back-link floats absolutely; hero headers need top room so it
    doesn't overlap the eyebrow/title (the .header class reserves 76px). */
