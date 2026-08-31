@@ -38,11 +38,15 @@
    instead of a broken bar. */
 .mc-nav-tab{
   flex:1 1 0;min-width:0;
-  display:flex;flex-direction:column;align-items:center;gap:3px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
   text-decoration:none;color:#94a3b8;
   font-family:inherit;font-size:var(--fs-2xs,11px);font-weight:800;letter-spacing:0.03em;
   padding:4px 0;-webkit-tap-highlight-color:transparent;
   transition:color 0.15s;
+  /* VOC/VOA Kaizen audit W-I2 — 42px tall on 125 pages, under the 44px
+     floor. min-height + justify-content:center keeps the icon/label pair
+     centred in the taller box rather than pinned to the top. */
+  min-height:44px;
 }
 /* the label is every child except the icon */
 .mc-nav-tab > :not(.mc-nav-ico){
