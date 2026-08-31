@@ -94,7 +94,25 @@ THEME_BOOT = (
     "('(display-mode: standalone)').matches))&&!sessionStorage.getItem('mc_launched')){"
     "sessionStorage.setItem('mc_launched','1');"
     "var _p=(location.pathname.split('/').pop()||'').toLowerCase();"
-    "if(_p!==''&&_p!=='index.html'&&_p!=='dashboard.html'){location.replace('dashboard.html');}}"
+    "if(_p!==''&&_p!=='index.html'&&_p!=='dashboard.html'){"
+    # L7: iOS can silently kill a backgrounded installed PWA and hand the
+    # relaunch a FRESH sessionStorage, so this guard's own launch flag reads
+    # as unset — a trainee mid-set who only switched apps for a moment gets
+    # bounced to the dashboard on return, losing their open card. mc_session_
+    # v1 (mc-session.js) is the same store the dashboard's own resume banner
+    # already reads for "you have an unfinished workout" — if it shows a
+    # live record for THIS page (same 12h staleness window mc-session.js
+    # itself prunes on, so this can't drift from that module's own
+    # definition of "still current"), that's real in-progress work to
+    # protect, so the redirect is skipped and the page opens where it is.
+    "var _hasLive=false;"
+    "try{"
+    "var _sess=JSON.parse(localStorage.getItem('mc_session_v1')||'{}');"
+    "var _rec=_sess[_p.replace('.html','')];"
+    "_hasLive=!!(_rec&&(Date.now()-(_rec.lastTs||0))<43200000);"
+    "}catch(e){}"
+    "if(!_hasLive)location.replace('dashboard.html');"
+    '}}'
     '}catch(e){}'
     'try{'
     # A page may opt out of light mode with <html data-theme-lock="dark">. Used
@@ -108,6 +126,30 @@ THEME_BOOT = (
     "if(_l)document.documentElement.setAttribute('data-theme','light');"
     "var _m=document.querySelector('meta[name=\"theme-color\"]');"
     "if(_m)_m.setAttribute('content',_l?'" + LIGHT_BG + "':'" + DARK_BG + "');"
+    '}catch(e){}'
+    'try{'
+    # S6: nothing in the app reported a runtime error anywhere outside a
+    # CI/local console — a broken build was indistinguishable from a working
+    # one until a user complained. A capped ring buffer (last 20), not a
+    # third-party service: the goal is a breadcrumb trail an owner can pull
+    # from the account sheet, not full telemetry. Registered here, in the
+    # head block that runs before any other script on the page, specifically
+    # so it catches an error thrown by one of THOSE other scripts too — a
+    # listener added later (e.g. from mc-nav.js, loaded at the end of body
+    # on most pages) would already have missed anything that happened
+    # earlier in the page's own load.
+    "var _erK='mc_errors_v1',_erMax=20;"
+    "function _erRec(e){try{"
+    "var a=JSON.parse(localStorage.getItem(_erK)||'[]');if(!Array.isArray(a))a=[];"
+    "a.unshift(e);if(a.length>_erMax)a.length=_erMax;"
+    "localStorage.setItem(_erK,JSON.stringify(a));"
+    "}catch(_){}}"
+    "window.addEventListener('error',function(ev){_erRec({t:Date.now(),k:'error',"
+    "m:(ev&&ev.message)||'Unknown error',s:(ev&&ev.filename)||'',l:(ev&&ev.lineno)||0,"
+    "p:(location.pathname.split('/').pop()||'')});});"
+    "window.addEventListener('unhandledrejection',function(ev){var r=ev&&ev.reason;"
+    "_erRec({t:Date.now(),k:'unhandledrejection',m:(r&&(r.message||String(r)))||'Unhandled rejection',"
+    "p:(location.pathname.split('/').pop()||'')});});"
     '}catch(e){}</script>'
 )
 
@@ -123,9 +165,16 @@ FONT_HREF = ('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;'
              '700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap')
 FONT_LINK = '<link href="%s" rel="stylesheet" media="print" onload="this.media=\'all\'"/>' % FONT_HREF
 FONT_NOSCRIPT = '<noscript><link href="%s" rel="stylesheet"/></noscript>' % FONT_HREF
+# U2: fonts.googleapis.com's own CSS response is what points the browser at
+# fonts.gstatic.com in the first place, so on a cold load the actual font
+# file's DNS+TLS handshake is only ever discovered AFTER that CSS parses —
+# a fully serial round trip on a throttled connection. Preconnecting to the
+# file host up front lets that handshake happen in parallel instead.
+FONT_PRECONNECT = '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>'
 
 BLOCK = '\n'.join([
     START,
+    FONT_PRECONNECT,
     FONT_LINK,
     FONT_NOSCRIPT,
     '<link rel="manifest" href="manifest.json"/>',
@@ -165,6 +214,10 @@ MANAGED = [
     # match, leaving a stray empty <noscript></noscript> behind.
     re.compile(r'[ \t]*<noscript>\s*<link[^>]*\bhref="https://fonts\.googleapis\.com/[^"]*"[^>]*>\s*</noscript>' + TAIL, re.I),
     re.compile(r'[ \t]*<link[^>]*\bhref="https://fonts\.googleapis\.com/[^"]*"[^>]*>' + TAIL, re.I),
+    # U2: any pre-existing hand-rolled preconnect hint to either font host —
+    # dashboard.html already carried its own pair before this block existed.
+    # Normalized into the block so there's one copy, not two.
+    re.compile(r'[ \t]*<link[^>]*\brel="preconnect"[^>]*\bhref="https://fonts\.(?:googleapis|gstatic)\.com[^"]*"[^>]*>' + TAIL, re.I),
     # The hand-rolled theme snippets this block replaces (audit G-03).
     re.compile(r'[ \t]*<script>\s*try\s*\{\s*if\s*\(\s*localStorage\.getItem\(\s*[\'"]mc_theme_mode[\'"]\s*\)'
                r'.*?</script>' + TAIL, re.I | re.S),

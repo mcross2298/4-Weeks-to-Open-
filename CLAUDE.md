@@ -87,11 +87,17 @@ node tools/test-mc-bridge.js           # cross-app bridge read layer
 node tools/test-mc-sync-merge.js       # mc-sync.js merge logic
 node tools/test-mc-program-progress.js # per-program day model (continuous days, rest-as-data)
 node tools/test-mc-program-tabs.js     # program-landing list model (adaptive depth, day numbers)
-node tools/test-mc-sw.js               # service-worker fetch strategy
+node tools/test-mc-sw.js               # service-worker fetch strategy (L1, L3, L4, L5)
+node tools/test-mc-sw-update.js        # SW update lifecycle + offline banner (L2, U4)
+node tools/test-mc-offline-prefetch.js # program prefetch: Save-Data/2G + real-success check (L8)
+node tools/test-mc-sync-runtime.js     # mc-sync.js real pull/push/reload cycle (S1-S5)
+node tools/test-mc-persist.js          # storage-persistence request, mc-finish.js (L6 partial)
+node tools/check-gesture-contract.js   # overscroll-behavior + touch-action on hot tap targets (U1, U3)
 python3 tools/build-sw.py --check      # committed sw.js matches the tree
 python3 tools/check-script-manifest.py --check   # clone pages load identical module lists
 node tools/gen-schedules.js --check    # mm/hv schedule records match mm-data.js + hv-block.html
 python3 tools/apply-head-contract.py --check     # canonical <head> block + PWA tags on every page
+node tools/test-head-boot-guard.js     # real generated head-boot script: cold-launch guard + error capture (L7, S6)
 node tools/check-program-colors.js     # mc-pm-data.js vs dashboard.html vs mc-theme.js
 python3 tools/gen-program-css.py --check  # dashboard.html .cat-card/.rail-card CSS vs mc-pm-data.js
 node tools/check-day-colors.js         # governed training-day palette

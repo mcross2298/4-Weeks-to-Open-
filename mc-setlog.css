@@ -85,6 +85,9 @@
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;font-size:var(--fs-lg);color:var(--ink-8,#cfc9bf);transition:all .15s;
   -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;   /* U3: a fast double-tap logging two sets back to
+    back was eaten as a zoom gesture instead — this is the single hottest tap
+    target in the whole app, hit once per set. */
 }
 .mcl-ck.done{background:rgba(52,211,153,0.16);border-color:rgba(52,211,153,0.45);color:#34d399;}
 .mcl-row.done-row{background:rgba(52,211,153,0.06);border-radius:7px;}

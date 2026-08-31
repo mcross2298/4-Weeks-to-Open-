@@ -131,6 +131,13 @@
       "export": false,
       "note": "Undo buffer for a discarded session. Deliberately short-lived and device-local."
     },
+    "mc_errors_v1": {
+      "owner": "tools/apply-head-contract.py",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "S6: capped ring buffer (last 20) of window 'error'/'unhandledrejection' events, written by the generated head-boot script on every page. Local debug breadcrumbs, not user data — deliberately not synced or backed up."
+    },
     "mc_ex_favs": {
       "owner": "exercise-library.html",
       "storage": "local",
@@ -337,6 +344,13 @@
       "storage": "local",
       "sync": "setlog",
       "export": true
+    },
+    "mc_storage_persist_asked": {
+      "owner": "mc-finish.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "L6: one-time flag so navigator.storage.persist() is requested at most once ever, on the first completed workout."
     },
     "mc_swap_accept_v1": {
       "owner": "mc-card-actions.js",

@@ -21,10 +21,36 @@
   window.__mcSwUpdate = true;
 
   var swWaiting = null;
+  var pendingReload = false;
 
-  // Reload exactly once when a fresh worker takes control of the page.
+  // L2: whether THIS page was already under a worker's control before this
+  // module ran. `self.clients.claim()` in sw.js's `activate` handler claims
+  // every matching client unconditionally — including a page's very first
+  // load, the instant its own registration finishes activating (nothing else
+  // was controlling it yet, so no skipWaiting is even needed to get there).
+  // That fired 'controllerchange' — and an unconditional reload — on every
+  // user's first-ever visit, with no stale content to replace. Captured here,
+  // before register() runs below, so the very first claim is recognised and
+  // skipped rather than reloaded.
+  var wasControlled = !!navigator.serviceWorker.controller;
+
+  // Reload once a fresh worker takes control of the page — except:
+  //  - the first-ever claim (see wasControlled above), and
+  //  - mid-workout (L2): postMessage('skipWaiting') targets the ONE shared
+  //    worker script for the whole origin, not just the tab that sent it, so
+  //    self.clients.claim() in its activate handler claims every open tab —
+  //    including an idle tab's neighbour that's mid-set. That tab's own
+  //    controller genuinely changes too, and this listener had no guard, so
+  //    an idle tab applying an update could force-reload a DIFFERENT tab out
+  //    from under an in-progress workout, defeating the whole hold mc-sw-
+  //    update.js exists to guarantee. The control switch itself can't be
+  //    undone from here, but the reload can wait: defer it and let the
+  //    existing applyIfIdle() drain (visibilitychange/focus/interval, already
+  //    wired below) fire it the moment the user is no longer mid-workout.
   navigator.serviceWorker.addEventListener('controllerchange', function () {
     if (window.__mcSwReloaded) return;
+    if (!wasControlled) { wasControlled = true; return; }
+    if (workoutInProgress()) { pendingReload = true; return; }
     window.__mcSwReloaded = true;
     window.location.reload();
   });
@@ -98,6 +124,58 @@
     b.classList.add('show');
   }
 
+  // U4: dashboard.html already has its own in-flow #offlineBar with its own
+  // online/offline listeners (below, via ensureOfflineBanner() returning that
+  // element unchanged) — every OTHER page had no connectivity signal at all
+  // until a navigation actually failed and showed the SW's offline shell.
+  // Self-mounts the same kind of fixed banner ensureBanner() above already
+  // solves the "clear other fixed chrome" problem for, in red rather than
+  // green, reusing the same positionBanner() so the two stack instead of
+  // overlapping if both are visible at once.
+  function ensureOfflineBanner() {
+    var b = document.getElementById('offlineBar');
+    if (b) return b;   // dashboard.html's own native bar — never touched here
+    b = document.getElementById('mcOfflineBar');
+    if (b) return b;   // already self-mounted on an earlier online/offline event
+    if (!document.body) return null;
+    if (!document.getElementById('mcOfflineCss')) {
+      var st = document.createElement('style');
+      st.id = 'mcOfflineCss';
+      st.textContent =
+        '.mc-offlinebar{position:fixed;left:12px;right:12px;z-index:var(--z-sw-update,60);' +
+        'display:none;background:rgba(248,113,113,0.14);border:1px solid rgba(248,113,113,0.4);' +
+        'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);' +
+        'border-radius:12px;padding:11px 14px;min-height:44px;box-sizing:border-box;' +
+        'font-size:13px;font-weight:800;color:#f87171;text-align:center;' +
+        'letter-spacing:0.03em;box-shadow:0 6px 20px rgba(0,0,0,0.5);}' +
+        '.mc-offlinebar.show{display:block;}' +
+        // Same light-mode fix ensureBanner()'s CSS above already carries for
+        // its own green (audit: --success/red at low opacity land far under
+        // AA on the cream #f5f2ec body) — a darker, more saturated variant.
+        'html[data-theme="light"] .mc-offlinebar{background:rgba(185,28,28,0.10);' +
+        'border-color:rgba(185,28,28,0.35);color:#b91c1c;' +
+        'box-shadow:0 6px 20px rgba(28,26,23,0.16);}';
+      document.head.appendChild(st);
+    }
+    b = document.createElement('div');
+    b.id = 'mcOfflineBar';
+    b.className = 'mc-offlinebar';
+    b.textContent = '📵 Offline — showing cached content';
+    document.body.appendChild(b);
+    return b;
+  }
+
+  function updateOfflineBanner() {
+    var b = ensureOfflineBanner();
+    if (!b || b.id === 'offlineBar') return;   // dashboard.html drives its own bar's visibility
+    positionBanner(b);
+    b.classList.toggle('show', 'onLine' in navigator && !navigator.onLine);
+  }
+  window.addEventListener('online', updateOfflineBanner);
+  window.addEventListener('offline', updateOfflineBanner);
+  if (document.body) updateOfflineBanner();
+  else document.addEventListener('DOMContentLoaded', updateOfflineBanner);
+
   var pendingWorker = null;
 
   // A workout is "in progress" if a rest timer is counting or any set is
@@ -124,6 +202,12 @@
   // Apply a held update the moment the user is no longer mid-workout (also
   // covered naturally by navigating away, e.g. finishing → dashboard).
   function applyIfIdle() {
+    if (pendingReload && !workoutInProgress()) {
+      pendingReload = false;
+      window.__mcSwReloaded = true;
+      window.location.reload();
+      return;
+    }
     if (pendingWorker && !workoutInProgress()) {
       var w = pendingWorker; pendingWorker = null;
       apply(w);
