@@ -378,6 +378,22 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
    doesn't overlap the eyebrow/title (the .header class reserves 76px). */
 .back-link + .hero{padding-top:64px;}
 
+/* .back — the OTHER back control: a circular topbar icon button, distinct
+   from .back-link above (an absolutely-positioned pill). VOC/VOA Kaizen
+   audit W3-3 — byte-identical across quick-tour.html, program-guide.html,
+   workout-detail.html and workout-logs.html at 36x36, under the 44px touch
+   floor; consolidated here per check-single-impl.js's philosophy rather than
+   patching four pages. Two pages (quick-tour-overview.html,
+   pm-mode-overview.html) don't load base.css at all (see mc-nav.css's own
+   header comment on that pattern) and keep their own copy of this rule,
+   grown the same way, since there is nothing here for them to inherit. */
+.back{
+  display:flex;align-items:center;justify-content:center;
+  width:44px;height:44px;border-radius:12px;flex-shrink:0;
+  background:var(--surface,#111);border:1px solid var(--border2,rgba(255,255,255,0.1));
+  color:var(--gold,var(--accent));font-size:var(--fs-xl);text-decoration:none;
+}
+
 /* ── HEADER ─────────────────────────────────────────────────────── */
 .header{padding:76px 20px 22px;position:relative;}
 .header-inner{max-width:680px;margin:0 auto;}

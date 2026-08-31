@@ -73,6 +73,15 @@
         '<div class="acct-info">✓ Your workouts, set logs and streak sync across your devices — and your macro tracker reconciles with Mike’s Cookbook if you use both. You’ll stay signed in on this device.</div>' +
         '<button class="acct-btn acct-secondary" id="acctSignout">Sign out</button>';
       body.querySelector('#acctSignout').addEventListener('click', doSignOut);
+    } else if (MC_SB.sdkLoadFailed) {
+      // W2-2 (VOC/VOA Kaizen audit): the sign-in SDK loads from a CDN sw.js
+      // can't precache, so a cold offline launch used to fail the sign-in
+      // form silently (console.warn only) with a misleading "Supabase not
+      // configured" error. Say what's actually true instead.
+      body.innerHTML =
+        '<div class="acct-title">Sign in</div>' +
+        '<div class="acct-sub">Sign-in needs an internet connection, and this device is currently offline. Everything else — your workouts, set logs and streak — keeps working normally offline; come back here once you’re back online.</div>' +
+        '<div class="acct-note">Accounts are provided by the app owner — ask for an invite to get one.</div>';
     } else {
       body.innerHTML =
         '<div class="acct-title">Sign in</div>' +
@@ -225,7 +234,12 @@
       if (window.MC_SYNC && MC_SYNC.kick) MC_SYNC.kick();   // start syncing now
     }).catch(function (e) {
       var m = (e && e.message) ? e.message : 'Sign-in failed.';
-      if (/invalid login/i.test(m)) m = 'Wrong email or password.';
+      // W2-2: covers the race where the sheet opened (and the form still
+      // rendered) before MC_SB.ready settled -- by the time this rejects,
+      // the SDK-load outcome is known, so re-check rather than surface the
+      // raw "Supabase not configured" throw.
+      if (MC_SB.sdkLoadFailed) m = 'Sign-in needs an internet connection — you’re currently offline. Try again once you’re back online.';
+      else if (/invalid login/i.test(m)) m = 'Wrong email or password.';
       else if (/email not confirmed/i.test(m)) m = 'Please confirm your email (check your inbox) before signing in.';
       err.textContent = m;
       btn.disabled = false; btn.textContent = 'Sign in';

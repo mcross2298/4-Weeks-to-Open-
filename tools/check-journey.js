@@ -489,6 +489,7 @@ const CHROME_SELECTORS = [
   { sel: '.back-link',   name: 'back link' },
   { sel: '.topbar-icon', name: 'topbar icon' },
   { sel: '.dot-nav',     name: 'tour step dot' },
+  { sel: '.back',        name: 'back icon button' },
 ];
 // One page per selector-owning stylesheet; 2on-1off.html carries both
 // .mc-nav-tab and .back-link so three pages, not four, are enough.

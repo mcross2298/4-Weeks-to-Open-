@@ -6,6 +6,8 @@
      MC_SB.ready            Promise that resolves once the client is created
      MC_SB.client           the configured supabase-js client (or null)
      MC_SB.configured       true when real keys are present
+     MC_SB.sdkLoadFailed    true once `ready` settles if the CDN fetch for
+                             supabase-js itself failed (almost always offline)
      MC_SB.currentUser()    -> Promise<user|null>
      MC_SB.isOwner()        -> Promise<bool>   (uid present in admins table)
      MC_SB.signIn(email)    -> magic-link sign-in
@@ -33,6 +35,13 @@
 
   var configured = /^https:\/\/[a-z0-9]+\.supabase\.co/.test(SUPABASE_URL) && SUPABASE_ANON_KEY.indexOf('eyJ') === 0;
   var client = null;
+  // W2-2 (VOC/VOA Kaizen audit): distinct from `configured` (a permanent,
+  // build-time state) -- this is set only when the SDK itself failed to
+  // fetch, almost always because the device is offline. mc-account.js reads
+  // it to show "sign-in needs a connection" instead of the sign-in form
+  // failing with the misleading "Supabase not configured" error signIn/
+  // signInPassword throw when `client` is null for any reason.
+  var sdkLoadFailed = false;
 
   function loadSDK() {
     if (window.supabase && window.supabase.createClient) return Promise.resolve();
@@ -53,7 +62,7 @@
           auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
         });
         return client;
-      }).catch(function (e) { console.warn('[MC_SB]', e && e.message); return null; });
+      }).catch(function (e) { sdkLoadFailed = true; console.warn('[MC_SB]', e && e.message); return null; });
 
   // A-9: getUser() validates the JWT against the server on every call — a
   // real network round trip, paid by all ~17 call sites that used to route
@@ -741,6 +750,7 @@
     ready: ready,
     get client() { return client; },
     configured: configured,
+    get sdkLoadFailed() { return sdkLoadFailed; },
     currentUser: currentUser,
     isOwner: isOwner,
     signIn: signIn,
