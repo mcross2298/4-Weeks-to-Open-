@@ -1220,6 +1220,29 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > reached. Fixing them is a separate change from building the gate that can
 > now see them — logged here so it isn't lost.
 
+> **Companion flagship plan:** [`flagship-immersive-roadmap.md`](flagship-immersive-roadmap.md)
+> (opened 2026-09-02, `H0–H5`) — a spatial muscle-visualization + biometric-
+> recovery-sync roadmap, locked via two `AskUserQuestion` rounds to: core
+> identity **high-aesthetic immersive experience**, vectors **spatial muscle
+> heatmap** + **wearable/biometric recovery sync**, social/community layer
+> explicitly **out of scope**, and infrastructure ambition **new Supabase
+> tables + browser sensor APIs allowed** (gated per-phase, not blanket). Four
+> feature proposals: a `MC_CHART.bodyMap()` anatomical SVG primitive over
+> `mc-readiness.js`/`mc-stats.js`'s already-computed per-muscle data (no new
+> store), a post-session animated reveal off the existing
+> `mc:workout-finished` event, a `mc_biometric_v1` store (manual-entry
+> baseline; a Shortcuts-bridge/Web Bluetooth path for HR/HRV/sleep is
+> explicitly flagged as needing a platform-support spike before being
+> scoped as committed, not assumed), and a fusion pre-session brief. The
+> audit that opened it corrected the originating brief's own benchmark
+> list: two of its five named competitors (STNDR/CBUM, Daily Gainz/Bradley
+> Martyn) are not external rivals — `content-manifest.json` already lists
+> both as licensed influencer program tiers of this same app. Scratch-listed
+> (`content-manifest.json`), so it never ships to the public Rolodex build.
+> `H0` may start immediately per the Planning rule above; `H1`–`H5` each
+> keep their own `AskUserQuestion` gate per the multi-phase-work rule, and
+> `H3` (the Supabase-schema phase) requires one explicitly.
+
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 
 ### Decisions locked in (via AskUserQuestion, session 2026-06-27)
