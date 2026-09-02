@@ -9,6 +9,8 @@
      MC_CHART.heatmap(days, opts)    GitHub-style consistency calendar
      MC_CHART.ring(pct, opts)        circular progress ring, 0-100
      MC_CHART.ringCircumference(opts) circumference for a ring's stroke-dasharray math
+     MC_CHART.bodyMap(dataByGroup, opts)  front/back anatomical figure, one
+                                           region per MC_MUSCLES group id
 
    All return SVG markup strings; colors default to the page accent.
    ========================================================================== */
@@ -131,5 +133,125 @@
       '</svg>';
   }
 
-  window.MC_CHART = { line: line, bars: bars, heatmap: heatmap, ring: ring, ringCircumference: ringCircumference };
+  // ── bodyMap ──────────────────────────────────────────────────────────
+  // dataByGroup: {calves,shoulders,legs,triceps,back,chest,core,biceps,forearms}
+  // each value 0-100 or omitted/null for "no data" (rendered as a neutral
+  // silhouette region, not zero — matches mc-readiness.js's own "no history
+  // = fully fresh" convention rather than reading as low/bad).
+  //
+  // Front and back are two independent stylized figures, not anatomically
+  // literal plates: each MC_MUSCLES group renders on whichever figure best
+  // shows it (shoulders/chest/core/biceps/forearms/legs/calves up front,
+  // back/triceps behind), and the other figure dims that same region for
+  // context rather than re-coloring it — there is one value per group, not
+  // one per figure. opts.view picks 'front' | 'back' | 'both' (default);
+  // 'both' returns two sibling <svg> strings for the caller's own flex
+  // layout, same "no wrapping markup" convention as every other function
+  // in this file.
+  //
+  // opts: { view, width (per-figure, default 150), lowColor, midColor,
+  //         highColor, thresholds:[low,high] default [40,70], colorFor(pct) }
+  var BODYMAP_LABELS = {
+    calves: 'Calves', shoulders: 'Shoulders', legs: 'Legs', triceps: 'Triceps',
+    back: 'Back', chest: 'Chest', core: 'Core', biceps: 'Biceps', forearms: 'Forearms'
+  };
+  var BODYMAP_VB_W = 150, BODYMAP_VB_H = 330;
+
+  function bodyMapColor(pct, opts) {
+    if (opts.colorFor) return opts.colorFor(pct);
+    var t = opts.thresholds || [40, 70];
+    if (pct < t[0]) return opts.lowColor || 'var(--danger, #f87171)';
+    if (pct < t[1]) return opts.midColor || accent(opts);
+    return opts.highColor || 'var(--success, #34d399)';
+  }
+
+  // shapes shared by both figures: id -> array of {tag, attrs}
+  var BODYMAP_SHAPES = {
+    shoulders: [
+      { tag: 'ellipse', attrs: { cx: 40, cy: 72, rx: 16, ry: 13 } },
+      { tag: 'ellipse', attrs: { cx: 110, cy: 72, rx: 16, ry: 13 } }
+    ],
+    chest: [
+      { tag: 'path', attrs: { d: 'M52 64 Q75 56 98 64 L98 108 Q75 118 52 108 Z' } }
+    ],
+    back: [
+      { tag: 'path', attrs: { d: 'M50 62 Q75 54 100 62 L98 112 Q75 122 52 112 Z' } }
+    ],
+    core: [
+      { tag: 'rect', attrs: { x: 56, y: 112, width: 38, height: 46, rx: 12 } }
+    ],
+    biceps: [
+      { tag: 'rect', attrs: { x: 26, y: 80, width: 17, height: 46, rx: 8.5, transform: 'rotate(-6 34 103)' } },
+      { tag: 'rect', attrs: { x: 107, y: 80, width: 17, height: 46, rx: 8.5, transform: 'rotate(6 116 103)' } }
+    ],
+    triceps: [
+      { tag: 'rect', attrs: { x: 26, y: 80, width: 17, height: 46, rx: 8.5, transform: 'rotate(-6 34 103)' } },
+      { tag: 'rect', attrs: { x: 107, y: 80, width: 17, height: 46, rx: 8.5, transform: 'rotate(6 116 103)' } }
+    ],
+    forearms: [
+      { tag: 'rect', attrs: { x: 22, y: 124, width: 15, height: 42, rx: 7.5, transform: 'rotate(-4 29 145)' } },
+      { tag: 'rect', attrs: { x: 113, y: 124, width: 15, height: 42, rx: 7.5, transform: 'rotate(4 120 145)' } }
+    ],
+    legs: [
+      { tag: 'rect', attrs: { x: 58, y: 162, width: 16, height: 82, rx: 8 } },
+      { tag: 'rect', attrs: { x: 76, y: 162, width: 16, height: 82, rx: 8 } }
+    ],
+    calves: [
+      { tag: 'rect', attrs: { x: 59, y: 248, width: 14, height: 52, rx: 7 } },
+      { tag: 'rect', attrs: { x: 77, y: 248, width: 14, height: 52, rx: 7 } }
+    ]
+  };
+  // Every shape drawn on a figure, and which of those are that figure's
+  // OWN groups (data-colored) vs. carried over from the other figure for
+  // anatomical context only (always dimmed/neutral, regardless of data —
+  // there is one value per group, and it belongs to its primary figure).
+  var BODYMAP_FRONT_ALL = ['shoulders', 'chest', 'core', 'biceps', 'forearms', 'legs', 'calves'];
+  var BODYMAP_FRONT_PRIMARY = BODYMAP_FRONT_ALL; // front is every one of these groups' canonical view
+  var BODYMAP_BACK_ALL = ['shoulders', 'back', 'core', 'triceps', 'forearms', 'legs', 'calves'];
+  var BODYMAP_BACK_PRIMARY = ['back', 'triceps']; // the only two groups back is canonical for
+  var BODYMAP_NEUTRAL_ALWAYS = [
+    { tag: 'ellipse', attrs: { cx: 75, cy: 26, rx: 17, ry: 19 } },      // head
+    { tag: 'rect', attrs: { x: 66, y: 42, width: 18, height: 12, rx: 4 } }, // neck
+    { tag: 'ellipse', attrs: { cx: 66, cy: 308, rx: 9, ry: 6 } },       // foot
+    { tag: 'ellipse', attrs: { cx: 84, cy: 308, rx: 9, ry: 6 } }        // foot
+  ];
+
+  function bodyMapShapeMarkup(tag, attrs, fill, extra) {
+    var a = '';
+    for (var k in attrs) { if (attrs.hasOwnProperty(k)) a += ' ' + k + '="' + attrs[k] + '"'; }
+    return '<' + tag + a + ' fill="' + fill + '"' + (extra || '') + ' class="mcchart-bodymap-region"/>';
+  }
+
+  function bodyMapFigure(allIds, primaryIds, data, opts) {
+    var neutralFill = 'rgba(255,255,255,0.06)', neutralStroke = ' stroke="rgba(255,255,255,0.10)" stroke-width="1"';
+    var out = '';
+    BODYMAP_NEUTRAL_ALWAYS.forEach(function (s) { out += bodyMapShapeMarkup(s.tag, s.attrs, neutralFill, neutralStroke); });
+    var isPrimary = {}; primaryIds.forEach(function (id) { isPrimary[id] = true; });
+    allIds.forEach(function (id) {
+      if (!BODYMAP_SHAPES[id]) return;
+      var v = isPrimary[id] ? data[id] : null; // non-primary groups always render as context, never data-colored
+      var hasData = (v != null && !isNaN(v));
+      var fill = hasData ? bodyMapColor(Math.max(0, Math.min(100, v)), opts) : neutralFill;
+      var extra = hasData ? '' : neutralStroke;
+      var title = hasData ? '<title>' + esc(BODYMAP_LABELS[id] || id) + ' · ' + Math.round(v) + '%</title>' : '';
+      BODYMAP_SHAPES[id].forEach(function (s, i) {
+        var markup = bodyMapShapeMarkup(s.tag, s.attrs, fill, extra);
+        out += (i === 0 && title) ? markup.replace('/>', '>' + title + '</' + s.tag + '>') : markup;
+      });
+    });
+    var w = (opts.width || BODYMAP_VB_W);
+    return '<svg class="mcchart-bodymap" viewBox="0 0 ' + BODYMAP_VB_W + ' ' + BODYMAP_VB_H + '"' +
+      ' width="' + w + '" style="width:' + w + 'px;height:auto;display:inline-block;">' + out + '</svg>';
+  }
+
+  function bodyMap(dataByGroup, opts) {
+    opts = opts || {};
+    var data = dataByGroup || {};
+    var view = opts.view || 'both';
+    var front = view !== 'back' ? bodyMapFigure(BODYMAP_FRONT_ALL, BODYMAP_FRONT_PRIMARY, data, opts) : '';
+    var back = view !== 'front' ? bodyMapFigure(BODYMAP_BACK_ALL, BODYMAP_BACK_PRIMARY, data, opts) : '';
+    return front + back;
+  }
+
+  window.MC_CHART = { line: line, bars: bars, heatmap: heatmap, ring: ring, ringCircumference: ringCircumference, bodyMap: bodyMap };
 })();
