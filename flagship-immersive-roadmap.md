@@ -14,6 +14,35 @@
 > so it never ships to the public Rolodex build (same as every other
 > companion roadmap linked from `CLAUDE.md`).
 
+> **`H0` shipped (2026-09-02).** `MC_CHART.bodyMap(dataByGroup, opts)` added
+> to `mc-chart.js` alongside the existing `line`/`bars`/`heatmap`/`ring` —
+> same pattern (pure function, returns SVG markup strings, no dependency on
+> any other module, colors default to page tokens). Front and back figures
+> are two independent `<svg>` strings (no wrapping markup, matching every
+> other function here); `view:'front'|'back'|'both'` (default `'both'`)
+> picks which. Nine regions match `MC_MUSCLES`' own group ids exactly
+> (calves/shoulders/legs/triceps/back/chest/core/biceps/forearms) — the
+> front figure is canonical for 7 of them, the back figure for `back` and
+> `triceps` only. **A real bug caught before finalizing:** the first draft
+> colored a group from `dataByGroup` on *both* figures wherever it had a
+> shape (e.g. `legs` on the back figure too), contradicting the "one value
+> per group" design — fixed by splitting each figure's shape list into
+> `ALL` (drawn) vs. `PRIMARY` (data-colored; everything else on that figure
+> renders as a fixed neutral/dimmed region regardless of data). Verified
+> programmatically (region counts, front/back title placement, the
+> `Forearms` group's colored title appearing exactly once — front only —
+> not twice) and once visually via the design-review process this session
+> already ran the same coordinates through. No new store, no CSS-token
+> change: colors reuse the app's existing `--accent`/`--success`/`--danger`
+> tokens (no new semantic hue introduced), and the neutral/dim fill matches
+> `heatmap()`'s own existing "off cell" treatment
+> (`rgba(255,255,255,0.06)`), so nothing here is new to
+> `check-design-tokens.js`, which only scans `*.css` files in any case — a
+> runtime-generated SVG string in a `.js` file is outside its scope. No test
+> file added, matching the file's existing precedent: `line`/`bars`/
+> `heatmap`/`ring` have none either. `H1` (wiring this into the Stats hub)
+> still needs its own `AskUserQuestion` gate before starting.
+
 ---
 
 ## 1. Executive summary & codebase audit
