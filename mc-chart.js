@@ -253,5 +253,12 @@
     return front + back;
   }
 
-  window.MC_CHART = { line: line, bars: bars, heatmap: heatmap, ring: ring, ringCircumference: ringCircumference, bodyMap: bodyMap };
+  window.MC_CHART = {
+    line: line, bars: bars, heatmap: heatmap, ring: ring, ringCircumference: ringCircumference,
+    bodyMap: bodyMap,
+    // exposed so a caller can color a companion legend/chip with the exact
+    // same low/mid/high thresholds bodyMap used — one implementation, not
+    // a second copy of the bucket logic at the call site
+    bodyMapColorFor: bodyMapColor
+  };
 })();

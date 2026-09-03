@@ -1242,6 +1242,17 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > `H0` may start immediately per the Planning rule above; `H1`–`H5` each
 > keep their own `AskUserQuestion` gate per the multi-phase-work rule, and
 > `H3` (the Supabase-schema phase) requires one explicitly.
+>
+> **`H0`+`H1` shipped (2026-09-02/03).** `H0`: `MC_CHART.bodyMap()` landed in
+> `mc-chart.js`, primitive only. `H1` (its own `AskUserQuestion` gate:
+> replace the old bar list rather than duplicate it, default to Recovery
+> mode) wired it into the Stats hub, replacing `mc-stats.js`'s
+> `renderMuscles()`. A real touch-target constraint — a region on a
+> phone-width figure measures well under the 44px floor — moved tap-through
+> off the SVG itself onto a `.ready-chip`-based legend (the same component
+> `renderCurrentReadiness()` already uses one section up the same page),
+> tapping into `mc-exercise-trends.js`. Full writeup in
+> `flagship-immersive-roadmap.md`.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 

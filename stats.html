@@ -73,6 +73,24 @@ body{background:var(--body-bg,#0a0a0a);}
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ready-bar{display:block;height:3px;margin-top:9px;border-radius:0;}
 
+/* Spatial Muscle Map (flagship-immersive-roadmap.md H1) — reuses .ready-board/
+   .ready-chip's visual language for the tap-through legend rather than a
+   second chip style, since it's the same look already established above. */
+.mg-toggle{display:flex;gap:8px;margin-bottom:14px;}
+.mg-toggle button{flex:1;min-height:40px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.03);color:#94a3b8;font-size:12px;font-weight:800;letter-spacing:.02em;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.mg-toggle button.active{background:rgba(var(--accent-rgb),0.14);border-color:rgba(var(--accent-rgb),0.4);color:var(--accent);}
+.mg-toggle button:active{transform:scale(0.97);}
+.mg-figures{display:flex;justify-content:center;gap:16px;margin-bottom:4px;}
+.mg-fig{text-align:center;}
+.mg-fig-cap{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748b;margin-top:4px;}
+.mg-note{font-size:10px;font-weight:700;color:#64748b;text-align:center;margin:8px 0 14px;}
+.mg-chip{cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:64px;}
+.mg-chip:active{transform:scale(0.96);}
+.mg-chip.static{cursor:default;}
+.mg-chip-val{display:block;font-size:9px;font-weight:700;color:#64748b;margin-top:2px;}
+
 /* Sand light mode (Phase 6, Stats page). Flat hardcoded hex here (no
    Onyx token system on this page), so each dark value gets a direct
    light counterpart. --accent (#d4af37 gold) is left as-is — it
@@ -97,7 +115,12 @@ html[data-theme="light"] .ready-lbl{color:#1c1a17;}
 html[data-theme="light"] .card,
 html[data-theme="light"] .stat-cell,
 html[data-theme="light"] .ready-chip{background:#efe9db;border-color:rgba(28,26,23,.08);}
-html[data-theme="light"] .week-nav button{background:rgba(28,26,23,.05);border-color:rgba(28,26,23,.12);}
+html[data-theme="light"] .week-nav button,
+html[data-theme="light"] .mg-toggle button{background:rgba(28,26,23,.05);border-color:rgba(28,26,23,.12);}
+html[data-theme="light"] .mg-toggle button.active{background:rgba(var(--accent-rgb),0.14);border-color:rgba(var(--accent-rgb),0.4);}
+html[data-theme="light"] .mg-fig-cap,
+html[data-theme="light"] .mg-note,
+html[data-theme="light"] .mg-chip-val{color:#6b6459;}
 html[data-theme="light"] .mg-bar-wrap{background:rgba(28,26,23,.08);}
 html[data-theme="light"] .pr-row{border-bottom-color:rgba(28,26,23,.08);}
 html[data-theme="light"] .topbar-icon{background:rgba(28,26,23,.05);border-color:rgba(28,26,23,.12);}
@@ -177,7 +200,7 @@ html[data-theme="light"] .theme-icon-light{display:block!important;}
   </div>
 
   <div class="sec">
-    <div class="sec-title">💪 Volume by Muscle Group <span class="muted" style="margin-left:auto;">last 30 days</span></div>
+    <div class="sec-title">🧍 Muscle Map</div>
     <div class="card" id="muscleCard"><div class="empty">Loading…</div></div>
   </div>
 
@@ -214,6 +237,7 @@ html[data-theme="light"] .theme-icon-light{display:block!important;}
 <script src="mc-muscle-map.js"></script>
 <script src="mc-recap.js"></script>
 <script src="mc-readiness.js"></script>
+<script src="mc-exercise-trends.js"></script>
 <script src="mc-stats.js"></script>
 <script src="mc-input-sheet.js"></script>
 <script src="mc-body.js"></script>

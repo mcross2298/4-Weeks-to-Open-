@@ -53,35 +53,128 @@
       (streak > 0 ? '<div class="streak-line">🔥 ' + streak + '-day streak</div>' : '');
   }
 
-  function renderMuscles(all) {
-    var host = document.getElementById('muscleCard');
-    if (!host) return;
-    var cutoff = Date.now() - 30 * DAY;
+  // ---- Muscle Map (flagship-immersive-roadmap.md H1) ----------------------
+  // Replaces the old bar-list renderMuscles() with MC_CHART.bodyMap() over
+  // the same two data sources the roadmap already computes elsewhere:
+  // Volume from this file's own 30-day set tally (unchanged math, new
+  // rendering), Recovery straight from mc-readiness.js's MC_READY.byMuscle().
+  //
+  // Tap-through targets a chip legend, not the SVG regions themselves — a
+  // region on a phone-width figure (two views side by side, ~120-150px each)
+  // measures well under the app's 44px touch floor once you account for how
+  // thin a forearm or bicep region actually renders at that scale, and
+  // padding every limb's hit-area out to 44px would make neighboring
+  // regions' hit zones overlap so much that tapping one reliably hits
+  // another instead. The chip grid reuses .ready-board/.ready-chip's
+  // existing pattern from renderCurrentReadiness() below, which is already
+  // a real ≥44px target — same visual language, not a second component.
+  var muscleMapMode = 'recovery'; // in-memory only; a reload always opens on Recovery, per the locked default
+
+  function exerciseTally(all, cutoff) {
     var byGroup = {};
     all.forEach(function (e) {
-      if (new Date(e.date || 0).getTime() < cutoff) return;
+      if (cutoff != null && new Date(e.date || 0).getTime() < cutoff) return;
       (e.sets || []).forEach(function (s) {
         var g = MC_MUSCLES.classify(s.name);
-        var b = byGroup[g.id] || (byGroup[g.id] = { g: g, sets: 0, tonnage: 0 });
+        if (g.id === 'other') return;
+        var b = byGroup[g.id] || (byGroup[g.id] = { g: g, sets: 0, byExercise: {} });
         b.sets++;
-        b.tonnage += (parseFloat(s.weight) || 0) * (parseInt(s.reps, 10) || 0);
+        var nm = String(s.name || '').trim();
+        if (nm) b.byExercise[nm] = (b.byExercise[nm] || 0) + 1;
       });
     });
-    var rows = Object.keys(byGroup).map(function (k) { return byGroup[k]; })
-      .sort(function (a, b) { return b.sets - a.sets; });
-    if (!rows.length) {
-      host.innerHTML = '<div class="empty">Finish a workout with logged sets to see your muscle-group split.</div>';
-      return;
-    }
-    var max = rows[0].sets;
-    host.innerHTML = rows.map(function (r) {
-      return '<div class="mg-row">' +
-        '<span class="mg-ico">' + r.g.icon + '</span>' +
-        '<span class="mg-name">' + r.g.label + '</span>' +
-        '<div class="mg-bar-wrap"><div class="mg-bar" style="width:' + Math.round((r.sets / max) * 100) + '%"></div></div>' +
-        '<span class="mg-val">' + r.sets + ' sets</span>' +
+    return byGroup;
+  }
+
+  function topExerciseName(tally) {
+    var best = null, bestN = 0;
+    Object.keys(tally || {}).forEach(function (nm) {
+      if (tally[nm] > bestN) { bestN = tally[nm]; best = nm; }
+    });
+    return best;
+  }
+
+  function escAttr(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // dataPct: {groupId: 0-100}. tapNameByGroup: {groupId: exerciseName|undefined}.
+  // labelFor(groupId) -> display string for a group WITH data (never called otherwise).
+  function renderMuscleChips(dataPct, tapNameByGroup, labelFor) {
+    var groups = MC_MUSCLES.groups.filter(function (g) { return g.id !== 'other'; });
+    return '<div class="ready-board">' + groups.map(function (g) {
+      var pct = dataPct[g.id];
+      var hasData = (pct != null && !isNaN(pct));
+      var col = hasData ? MC_CHART.bodyMapColorFor(Math.max(0, Math.min(100, pct)), {}) : 'rgba(255,255,255,0.12)';
+      var label = hasData ? labelFor(g.id) : '';
+      var exName = tapNameByGroup[g.id];
+      var cls = 'ready-chip mg-chip' + (exName ? '' : ' static');
+      return '<div class="' + cls + '"' + (exName ? ' data-ex="' + escAttr(exName) + '"' : '') +
+        ' title="' + escAttr(g.label + (label ? ' — ' + label : '')) + '">' +
+        '<span class="ready-icon">' + g.icon + '</span>' +
+        '<span class="ready-lbl">' + g.label + '</span>' +
+        '<span class="ready-bar" style="background:' + col + '"></span>' +
+        '<span class="mg-chip-val">' + (label || '—') + '</span>' +
       '</div>';
-    }).join('');
+    }).join('') + '</div>';
+  }
+
+  function renderMuscleMap(all) {
+    var host = document.getElementById('muscleCard');
+    if (!host) return;
+    var mode = muscleMapMode;
+    var cutoff = Date.now() - 30 * DAY;
+    var tally30 = exerciseTally(all, cutoff);
+    var tallyAll = exerciseTally(all, null); // tap-through should find a lift even outside the 30-day window
+    var tapNameByGroup = {};
+    Object.keys(tallyAll).forEach(function (id) { tapNameByGroup[id] = topExerciseName(tallyAll[id].byExercise); });
+
+    var bodyData = {}, chipHtml, note = '';
+    if (mode === 'recovery') {
+      var ready = (window.MC_READY && window.MC_MUSCLES) ? MC_READY.byMuscle() : null;
+      if (!ready) {
+        chipHtml = '<div class="empty">Log a session or two to see your recovery by muscle group.</div>';
+      } else {
+        Object.keys(ready).forEach(function (id) { bodyData[id] = ready[id].pct; });
+        chipHtml = renderMuscleChips(bodyData, tapNameByGroup, function (id) { return Math.round(ready[id].pct) + '%'; });
+      }
+    } else {
+      var rows = Object.keys(tally30).map(function (k) { return tally30[k]; });
+      if (!rows.length) {
+        chipHtml = '<div class="empty">Finish a workout with logged sets to see your muscle-group split.</div>';
+      } else {
+        var max = rows.reduce(function (m, r) { return Math.max(m, r.sets); }, 1);
+        var setsById = {};
+        rows.forEach(function (r) { bodyData[r.g.id] = (r.sets / max) * 100; setsById[r.g.id] = r.sets; });
+        chipHtml = renderMuscleChips(bodyData, tapNameByGroup, function (id) { return setsById[id] + ' sets'; });
+        note = '<div class="mg-note">last 30 days</div>';
+      }
+    }
+
+    var figHtml = '<div class="mg-figures">' +
+      '<div class="mg-fig">' + MC_CHART.bodyMap(bodyData, { view: 'front', width: 130 }) + '<div class="mg-fig-cap">Front</div></div>' +
+      '<div class="mg-fig">' + MC_CHART.bodyMap(bodyData, { view: 'back', width: 130 }) + '<div class="mg-fig-cap">Back</div></div>' +
+    '</div>';
+
+    host.innerHTML =
+      '<div class="mg-toggle">' +
+        '<button type="button" data-mode="recovery" class="' + (mode === 'recovery' ? 'active' : '') + '">Recovery</button>' +
+        '<button type="button" data-mode="volume" class="' + (mode === 'volume' ? 'active' : '') + '">Volume</button>' +
+      '</div>' +
+      figHtml + note + chipHtml;
+
+    host.querySelectorAll('.mg-toggle button').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        muscleMapMode = btn.getAttribute('data-mode');
+        renderMuscleMap(all);
+      });
+    });
+    host.querySelectorAll('.mg-chip[data-ex]').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        if (window.MCTrends) MCTrends.open(chip.getAttribute('data-ex'));
+      });
+    });
   }
 
   function renderTonnage(all) {
@@ -272,7 +365,7 @@
     var all = logs();
     renderTop(all);
     renderHeatmap();
-    renderMuscles(all);
+    renderMuscleMap(all);
     renderTonnage(all);
     renderPRs(all);
     renderMaxes();

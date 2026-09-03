@@ -43,6 +43,54 @@
 > `heatmap`/`ring` have none either. `H1` (wiring this into the Stats hub)
 > still needs its own `AskUserQuestion` gate before starting.
 
+> **`H1` shipped (2026-09-03) — two decisions locked first.** Replace, not
+> supplement: the Stats hub's old 30-day muscle-volume bar list
+> (`renderMuscles()`/`#muscleCard`) is gone, not duplicated alongside the new
+> map. Default mode on load: **Recovery**, not Volume — the vector this whole
+> roadmap was scoped around, and the newer of the two signals.
+>
+> **A real touch-target constraint changed the tap-through design from what
+> Feature 1's spec literally said.** The spec called for tapping an SVG
+> region directly; measured against this card's actual width on a 320–390px
+> phone (two figures side by side inside a ~680px-max content column with
+> 16–32px of padding stacked on both sides), a region's real screen size
+> — a forearm or bicep rect included — comes out well under the app's 44px
+> touch floor. Padding every limb's hit-area out to 44px would make
+> neighboring regions' hit zones overlap enough that tapping one would
+> often land on another. So the SVG stays a pure visual (still carries
+> `<title>` tooltips), and the tap-through target is a 9-chip legend below
+> it, built on `.ready-board`/`.ready-chip` — the exact component
+> `renderCurrentReadiness()` already uses one section up on this same page
+> for its own live-readiness grid, so this borrows a real ≥44px control
+> rather than inventing a second one. Tapping a chip opens
+> `mc-exercise-trends.js`'s sheet on that muscle group's most-logged
+> exercise (all-time, not scoped to the 30-day window Volume mode displays,
+> so a chip stays useful even for a muscle trained a while ago); a chip with
+> no logged history at all renders `.static` — visible, not tappable.
+>
+> `MC_CHART` gained one more export, `bodyMapColorFor` — `H0`'s internal
+> low/mid/high bucket function, exposed so the chip legend colors its bars
+> with the exact same thresholds the body map used, rather than a second
+> copy of that logic at the call site.
+>
+> `mc-stats.js`'s `renderWeekMuscles()`/`renderCurrentReadiness()` (the
+> separate week-picker view further up the same page) are untouched — out
+> of this phase's scope, since the roadmap named `renderMuscles()`
+> specifically and touching the week-picker's own muscle view was never
+> part of the locked decisions.
+>
+> Verified with a stubbed-DOM harness driving the real source (not a mock):
+> default Recovery render (9 chips, correct default-active toggle state),
+> a real mode toggle round-trip (Volume shows "last 30 days" + correct
+> per-group set counts, Recovery restores cleanly), and the empty-state
+> path when `MC_READY` is unavailable and the log has no sets — all three
+> render without throwing and degrade to the expected empty-state copy
+> rather than a blank card. All local CI-equivalent gates run clean:
+> `check-exports`, `check-single-impl`, `check-script-manifest`,
+> `apply-head-contract --check`, `check-design-tokens`,
+> `check-store-coverage`, `check-topbar-inset`, `build-market --check`, and
+> a full tree-wide `node --check` sweep.
+
 ---
 
 ## 1. Executive summary & codebase audit
