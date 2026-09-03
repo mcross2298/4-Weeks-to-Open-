@@ -1283,8 +1283,36 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > harness (25 assertions) caught a real bug on its first run: bare
 > `MC_READY`/`MC_CHART`/`MC_VITALS` references instead of `window.`-qualified
 > ones — identical in a browser, `ReferenceError` in the sandbox, silently
-> swallowed by the module's own fail-open guard. Full writeup in
-> `flagship-immersive-roadmap.md`.
+> swallowed by the module's own fail-open guard.
+>
+> **`H5` shipped (2026-09-03) — closed as audited.** The roadmap named
+> `check-journey.js`/`check-visual-ratchet.js`/`measure-session.js` as H5's
+> production-readiness gates; auditing each for real, none structurally
+> apply (wrong pages, wrong selectors, and — verified by grep — zero
+> observers/intervals in any of `H0`–`H4`'s new code to measure in the
+> first place). The one genuinely fleet-wide gate, `check-contrast.js`,
+> already covered `dashboard.html`/`stats.html` with no new wiring, and was
+> run for real (headless Chromium against `/opt/pw-browsers/chromium` via
+> the tools' `MC_CHROMIUM` override, the tool's own `PROBE` function reused
+> verbatim): zero new findings from any of the new CSS on either page.
+> Locked via `AskUserQuestion`: close as audited rather than inventing new
+> baseline/probe coverage for gates that wouldn't test anything real.
+>
+> **PR #331 (ahead of this writeup, since it fixed already-merged code):**
+> three real 44px touch-floor violations across `H2`/`H3`/`H4`'s own new
+> buttons (`.fw-muscle-save`, `.vt-log`, and the readiness brief's
+> Skip/Begin — the last because they reused `.fw-cancel`/`.fw-confirm`
+> classes whose 44px padding `base.css` deliberately scopes elsewhere),
+> found auditing for H5 and fixed with the same `min-height:44px` pattern
+> `base.css`'s own `.back-link` already uses (`W-I2`). None of H5's named
+> gates would have caught any of the three — a real, logged gap, not fixed
+> inside this phase. A second suspected instance of the `W-I3` hardcoded-
+> slate pattern (`H1`'s `.mg-*` rules in `stats.html`) was investigated and
+> correctly ruled out: it matches that one page's own pre-existing,
+> explicitly-commented "no token system here" convention, not a new
+> regression. `quick-tour.html`/`quick-tour-overview.html` updated with all
+> four `H0`–`H4` features per the Documentation currency rule. Full writeup
+> in `flagship-immersive-roadmap.md`.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 

@@ -105,7 +105,7 @@
         ringHtml +
         figHtml +
         advisoryHtml +
-        '<div class="fw-modal-btns">' +
+        '<div class="fw-modal-btns rb-btns">' +
           '<button type="button" class="fw-cancel" id="rbSkip">Skip</button>' +
           '<button type="button" class="fw-confirm" id="rbBegin">Begin</button>' +
         '</div>' +

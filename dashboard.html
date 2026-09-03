@@ -197,6 +197,10 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
   flex-shrink:0;padding:8px 14px;border-radius:10px;border:1px solid rgba(45,212,191,0.35);
   background:rgba(45,212,191,0.14);color:#2dd4bf;font-size:12px;font-weight:800;
   cursor:pointer;-webkit-tap-highlight-color:transparent;font-family:inherit;
+  /* 32px tall at just padding:8px 14px on 12px text — under the 44px touch
+     floor. Same min-height fix base.css's own .back-link already uses
+     (W-I2), so the same shape applies unchanged. */
+  min-height:44px;display:inline-flex;align-items:center;box-sizing:border-box;
 }
 .vt-log:active{transform:scale(0.96);}
 
@@ -217,6 +221,13 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 .rb-fig{text-align:center;}
 .rb-fig-cap{font-size:var(--fs-2xs);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2);margin-top:4px;}
 .rb-note{font-size:var(--fs-xs);font-weight:700;color:var(--danger,#f87171);text-align:center;margin:10px 0 4px;}
+/* base.css's .fw-cancel/.fw-confirm 44px-tall padding is scoped to
+   #fwModalBtns/#fwRecapBtns on purpose (those classes are also reused by an
+   unrelated post-save "Done" button); .rb-btns gets the same padding boost
+   scoped to this screen only, keeping the ghost/accent look the base rule
+   already gives Skip/Begin rather than the exit-dialog's white/ink-4 reskin. */
+.rb-btns .fw-cancel,.rb-btns .fw-confirm{padding:14px;-webkit-tap-highlight-color:transparent;}
+.rb-btns .fw-cancel:active,.rb-btns .fw-confirm:active{opacity:0.85;transform:scale(0.98);}
 
 /* ── SECTION HEADERS ── */
 .sec-header{
