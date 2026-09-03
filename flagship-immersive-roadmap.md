@@ -285,6 +285,111 @@
 > sweep including `dashboard.html`'s four inline `<script>` blocks extracted
 > and checked individually.
 
+> **`H5` shipped (2026-09-03) — closed as audited, no new gate coverage
+> invented.** The roadmap's own H5 line item named `check-journey.js`/
+> `check-visual-ratchet.js`/`measure-session.js` as production-readiness
+> gates for the new screens — auditing each for real, before writing
+> anything, none of the three structurally apply:
+>
+> - **`check-journey.js`**'s 9 tracked `PAGES` and its `CHROME_PAGES` chrome
+>   pass (`.mc-nav-tab`/`.back-link`/`.topbar-icon`/`.dot-nav`) are all
+>   workout-session pages and session-shell selectors. None of `H0`–`H4`
+>   touched a session page, and none of the new CSS (`.rb-*`, `.vt-log`,
+>   `.mg-*`) shares a selector with what that pass measures.
+> - **`check-visual-ratchet.js`**'s baselines are the five `kitchen-sink*`
+>   pages only (`tools/visual-baselines/`) — `dashboard.html`/`stats.html`
+>   were never part of that gallery before or after this roadmap.
+> - **`measure-session.js`**'s three perf-probe pages (`mm-p1.html`,
+>   `bro-split.html`, `psu-strength.html`) are unrelated pages, and there is
+>   nothing for it to measure regardless: a tree-wide grep for
+>   `MutationObserver`/`setInterval`/`MC_SCAN` across `mc-chart.js`,
+>   `mc-stats.js`, `mc-vitals.js`, `mc-readiness-brief.js`, and every new
+>   function added to `mc-finish.js` (`sessionMuscleData`,
+>   `renderMuscleReveal`, `saveMuscleCard`) turns up zero matches — the only
+>   observer near any of this is `mc-finish.js`'s own pre-existing S5c-0 one,
+>   untouched. Every one of `H0`–`H4`'s renders is one-shot and
+>   event-triggered (page load, a mode-toggle click, `showDone()`,
+>   `MC_DAY_HERO`'s `onStart`) — there is no polling loop for a mutation-rate
+>   budget to bound in the first place.
+>
+> **The one gate that IS genuinely fleet-wide, `check-contrast.js`, needed no
+> new wiring** — its page list is every `.html` file in the tree, so
+> `dashboard.html`/`stats.html` were already budgeted (8 and 3 findings
+> respectively) before this roadmap touched them. Rather than trust that by
+> reasoning alone, it was run for real: `npm install --no-save --prefix
+> /tmp/pw-ci playwright@latest` against the pre-installed Chromium at
+> `/opt/pw-browsers/chromium` (via the tools' existing `MC_CHROMIUM`
+> override — the installed `playwright@latest` expects a newer browser
+> build than what's pre-staged here, so the override is required, not
+> optional, in this environment), a local `python3 -m http.server`, and the
+> tool's own `PROBE` function reused verbatim against both pages at its real
+> `MIN_RATIO = 3.0` (not the 4.5 first assumed by mistake — corrected before
+> the run that mattered). Result: **zero new findings from any of the new
+> CSS on either page** — `dashboard.html` measured exactly at its existing
+> budget (8), `stats.html` at 4 against a budget of 3, within the gate's own
+> 1-element tolerance, and every flagged element on both pages was a
+> pre-existing, unrelated selector (`.tool-sub`, `.span`, `.button`,
+> `.bw-log`) — none of `H0`–`H4`'s own classes appeared in either list at
+> all.
+>
+> **A real, already-fixed defect this audit surfaced (PR #331, shipped
+> ahead of this write-up since it was fixing already-merged code): three
+> 44px touch-floor violations across `H2`/`H3`/`H4`'s own new buttons** —
+> `mc-finish.js`'s "Save card" (`.fw-muscle-save`, ~34px),
+> `dashboard.html`'s vitals-strip "Log" (`.vt-log`, ~32px), and
+> `mc-readiness-brief.js`'s Skip/Begin (~41px, because they reused the bare
+> `.fw-cancel`/`.fw-confirm` classes whose 44px-tall padding `base.css`
+> deliberately scopes to `#fwModalBtns`/`#fwRecapBtns` only, to avoid
+> reskinning an unrelated post-save "Done" button and several bespoke
+> pages' own finish-modal CSS). All three fixed with the identical
+> `min-height:44px;display:inline-flex;align-items:center;box-sizing:
+> border-box` pattern `base.css`'s own `.back-link` already uses for this
+> exact class of bug (`W-I2`). None of the three would have been caught by
+> any of the gates named above — they measure contrast, visual diffs, and
+> runtime mutation rate, not element geometry — which is itself a real
+> finding: this app's 44px floor still has no automated fleet-wide gate at
+> all (`check-journey.js`'s chrome pass covers 4 specific selectors on 3
+> pages; nothing covers a bespoke button on an untracked page). Logged here
+> as a real gap, not fixed inside this phase — the same reasoning `P5`/`W-I3`
+> used to log rather than silently expand scope.
+>
+> **A second false alarm, investigated and correctly ruled out.** `H1`'s own
+> `.mg-fig-cap`/`.mg-note`/`.mg-chip-val` rules in `stats.html` hardcode
+> `#64748b` (Tailwind slate-500) as their text color — at first glance the
+> exact `W-I3`-documented anti-pattern (hardcoded slate instead of a
+> `--muted`/`--muted2` token). Checking precedent before "fixing" it:
+> `stats.html` carries an explicit header comment — "Flat hardcoded hex
+> here (no Onyx token system on this page)" — and six pre-existing rules on
+> the same page (`.topbar-sub`, `.hero-sub`, `.muted`, `.pr-date`,
+> `.stat-lbl`, `.wk-lbl`) already use that identical hex as the page's own
+> established, self-consistent convention. `H1`'s three rules correctly
+> matched the file they were added to; token-izing only those three would
+> have made the page a partial, inconsistent migration rather than fixed
+> anything. Left as-is — it is the same fleet-wide, already-logged `W-I3`
+> gap on 30+ other pages, not a defect this roadmap introduced.
+>
+> **Documentation currency rule, closed for real.** Both onboarding docs
+> updated (all four features are app-wide, so `quick-tour.html` +
+> `quick-tour-overview.html`, per `CLAUDE.md`'s own rule) — Muscle Map and
+> Daily Vitals added to each doc's Home/Dashboard section (right after the
+> existing Weekly-Review/pulse-strip copy those two build on), the
+> Readiness Brief added at its real trigger point (`quick-tour.html`'s
+> Module 3b "Start Day N" step; `quick-tour-overview.html`'s Home section,
+> since that doc has never described the day-by-day schedule module `F0`–`F5`
+> shipped — backfilling that separate, pre-existing gap was judged out of
+> scope for this pass), and the post-session muscle reveal slotted into its
+> exact real position in both docs (verified against `mc-finish.js`'s actual
+> `showDone()` call order — Strain ring → Muscle Reveal → Refuel card —
+> rather than guessed). Both files re-verified to parse as valid HTML and
+> (for `quick-tour.html`'s inline `SLIDES` array) valid JS after editing.
+>
+> **Closing decision, locked via `AskUserQuestion`:** given every named gate
+> either doesn't apply or already passes, H5 closes as audited rather than
+> inventing new baseline/probe coverage for gates that would not be testing
+> anything real (no visual-regression class these two screens are prone to
+> today, no runtime loop to bound). `H0`–`H5` of
+> `flagship-immersive-roadmap.md` are complete.
+
 ---
 
 ## 1. Executive summary & codebase audit
