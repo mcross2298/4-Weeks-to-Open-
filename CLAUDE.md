@@ -1259,7 +1259,17 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > this session) and its own small canvas export rather than reusing
 > `mc-wrapped.js`'s `save()`, which turned out on inspection to be one
 > monolithic function tied to its own card shape, not a reusable pipeline.
-> Full writeup in `flagship-immersive-roadmap.md`.
+>
+> **`H3` shipped (2026-09-03).** A manual daily wellness entry
+> (`mc-vitals.js`, `mc_vitals_v1` — renamed from the roadmap's original
+> `mc_biometric_v1`, which collided with the existing Face ID auth module
+> of that near-name) surfaces its own Recovery ring in a new dashboard
+> strip. Deliberately does **not** feed `mc-readiness.js`'s per-muscle
+> formula — that function is tested and consumed by four other places
+> app-wide, so wiring a new signal into it stays separate, verified future
+> work. No Supabase table; rides the existing `mc-sync.js` `arrayById`
+> path, same as `mc_body_v1`. Full writeup in
+> `flagship-immersive-roadmap.md`.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 

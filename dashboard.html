@@ -178,6 +178,28 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
   display:flex;align-items:center;justify-content:center;font-size:var(--fs-xl);
 }
 
+/* ── Daily Vitals strip (flagship-immersive-roadmap.md H3) — manual
+   sleep/HR/readiness entry, its own Recovery ring. Same show/hide idiom as
+   the momentum + today strips above, distinct teal accent so it reads as
+   its own signal, not a restyle of either. */
+.vitals-strip{
+  display:none;align-items:center;gap:12px;margin:0 18px 22px;
+  padding:12px 15px;border-radius:14px;
+  background:linear-gradient(135deg,rgba(45,212,191,0.12),rgba(45,212,191,0.025));
+  border:1px solid rgba(45,212,191,0.22);
+}
+.vitals-strip.show{display:flex;}
+.vt-ring{flex-shrink:0;width:40px;height:40px;display:flex;align-items:center;justify-content:center;}
+.vt-body{min-width:0;flex:1;}
+.vt-line{font-size:var(--fs-md);font-weight:900;color:var(--text);letter-spacing:-0.01em;line-height:1.15;}
+.vt-sub{font-size:var(--fs-2xs);font-weight:700;color:var(--muted2);margin-top:2px;}
+.vt-log{
+  flex-shrink:0;padding:8px 14px;border-radius:10px;border:1px solid rgba(45,212,191,0.35);
+  background:rgba(45,212,191,0.14);color:#2dd4bf;font-size:12px;font-weight:800;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;font-family:inherit;
+}
+.vt-log:active{transform:scale(0.96);}
+
 /* ── SECTION HEADERS ── */
 .sec-header{
   display:flex;align-items:center;justify-content:space-between;
@@ -1403,6 +1425,18 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
        the cookbook sees nothing extra on Home. -->
   <div class="today-strip" id="todayStrip" onclick="switchTab('nutrition')" role="button" tabindex="0" aria-label="Open Nutrition tab"></div>
 
+  <!-- Daily Vitals strip (flagship-immersive-roadmap.md H3) — manual
+       sleep/resting-HR/readiness entry, its own Recovery ring. Hidden with
+       no entry logged yet, same convention as the two strips above. -->
+  <div class="vitals-strip" id="vitalsStrip">
+    <div class="vt-ring" id="vtRing"></div>
+    <div class="vt-body">
+      <div class="vt-line" id="vtLine"></div>
+      <div class="vt-sub" id="vtSub">Recovery</div>
+    </div>
+    <button type="button" class="vt-log" id="vtLog">Log</button>
+  </div>
+
   <!-- Current Program -->
   <div class="sec-header">
     <div class="sec-title">Current Program</div>
@@ -1751,6 +1785,7 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
 <script src="mc-recap.js"></script>
 <script src="mc-input-sheet.js"></script>
 <script src="mc-body.js"></script>
+<script src="mc-vitals.js"></script>
 <script src="mc-macrocalc.js"></script>
 <script src="mc-foodapi.js"></script>
 <script src="mc-barcode.js"></script>
@@ -1905,6 +1940,66 @@ document.getElementById('flagCount').textContent=document.querySelectorAll('#fla
     '<div class="ts-body"><div class="ts-line">'+parts.join(' · ')+'</div></div>'+
     '<span class="ts-arr">›</span>';
   strip.classList.add('show');
+})();
+
+// ── DAILY VITALS STRIP (flagship-immersive-roadmap.md H3 · mc-vitals.js) ──
+// Manual sleep/resting-HR/readiness entry, its own Recovery ring. Reads
+// ONLY mc_vitals_v1, never mc_workout_log_v1 — deliberately separate from
+// mc-readiness.js's per-muscle recovery reading elsewhere in the app (see
+// mc-vitals.js's own header for why this phase doesn't merge the two).
+// Hidden with no entry logged yet, same convention as the two strips above.
+function paintVitalsStrip(){
+  if(!window.MC_VITALS) return;
+  const strip=document.getElementById('vitalsStrip');
+  if(!strip) return;
+  const score=MC_VITALS.recoveryScore();
+  if(score==null){ strip.classList.remove('show'); return; }
+  const ringEl=document.getElementById('vtRing');
+  if(ringEl && window.MC_CHART) ringEl.innerHTML=MC_CHART.ring(score,{size:40,stroke:4,color:'#2dd4bf'});
+  const e=MC_VITALS.latest();
+  const bits=[];
+  if(e.sleepHrs!=null) bits.push(e.sleepHrs+'h sleep');
+  if(e.restingHr!=null) bits.push(e.restingHr+' bpm resting');
+  document.getElementById('vtLine').textContent=score+'% recovery';
+  document.getElementById('vtSub').textContent=bits.length?bits.join(' · '):'Recovery';
+  strip.classList.add('show');
+}
+(function populateVitalsStrip(){
+  paintVitalsStrip();
+  const btn=document.getElementById('vtLog');
+  if(!btn || !window.MCInputSheet || !window.MC_VITALS) return;
+  btn.addEventListener('click',function(){
+    const entry={};
+    // Three quick sequential prompts (same MCInputSheet component mc-body.js's
+    // own "Log weight" already uses) rather than a new multi-field stepper UI
+    // this session has no way to visually verify. Each field is optional
+    // (blank + Save is valid); an explicit Cancel at any step discards the
+    // whole entry rather than saving a partial one — simplest behavior to
+    // reason about without a live browser to check a partial-save flow in.
+    MCInputSheet.prompt({
+      title:'Resting Heart Rate',label:'Beats per minute (optional)',placeholder:'e.g. 58',
+      inputMode:'numeric',
+      validate:function(v){ if(v==='')return null; const n=parseFloat(v); return (n>0&&n<=220)?null:'Enter a resting heart rate in bpm, e.g. 58'; }
+    }).then(function(v){
+      if(v!=='') entry.restingHr=Math.round(parseFloat(v));
+      return MCInputSheet.prompt({
+        title:'Sleep',label:'Hours slept last night (optional)',placeholder:'e.g. 7.5',
+        inputMode:'decimal',
+        validate:function(v2){ if(v2==='')return null; const n=parseFloat(v2); return (n>=0&&n<=24)?null:'Enter hours slept, e.g. 7.5'; }
+      });
+    }).then(function(v){
+      if(v!=='') entry.sleepHrs=parseFloat(v);
+      return MCInputSheet.prompt({
+        title:'Readiness',label:'How ready do you feel, 1-5 (optional)',placeholder:'e.g. 4',
+        inputMode:'numeric',
+        validate:function(v3){ if(v3==='')return null; const n=parseInt(v3,10); return (n>=1&&n<=5)?null:'Enter 1-5'; }
+      });
+    }).then(function(v){
+      if(v!=='') entry.readiness=parseInt(v,10);
+      MC_VITALS.log(entry);
+      paintVitalsStrip();
+    }, function(){ /* cancelled — discard the whole entry */ });
+  });
 })();
 
 /* MARKET:STRIP influencer-js START */

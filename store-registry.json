@@ -59,6 +59,13 @@
       "sync": "arrayById",
       "export": true
     },
+    "mc_vitals_v1": {
+      "owner": "mc-vitals.js",
+      "storage": "local",
+      "sync": "arrayById",
+      "export": true,
+      "note": "Manual daily wellness entry (restingHr/sleepHrs/readiness) — flagship-immersive-roadmap.md H3. Not consumed by mc-readiness.js's per-muscle formula; see that phase's own note."
+    },
     "mc_cal_collapsed": {
       "owner": "mc-calendar.js",
       "storage": "local",

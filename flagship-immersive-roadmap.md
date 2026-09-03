@@ -148,6 +148,67 @@
 > `check-script-manifest --check`, and a full tree-wide `node --check`
 > sweep.
 
+> **`H3` shipped (2026-09-03) — three decisions locked first, one of them a
+> naming correction the audit forced.** The roadmap named this store/module
+> `mc_biometric_v1`/`mc-biometric.js` throughout — but `mc-biometric.js`
+> already exists as the Face ID/Touch ID auth gate for PM Mode, a completely
+> unrelated feature (confirmed against `store-registry.json`'s own
+> `mc_bio_cred` entry, which is that feature's real store). Renamed to
+> `mc_vitals_v1`/`mc-vitals.js` before writing a line of it, rather than
+> shipping a collision.
+>
+> **Formula scope: the store, its entry UI, and its own Recovery ring only
+> — `mc-readiness.js`'s per-muscle formula stays untouched this phase.**
+> Reading the real function first (`recoveryFor()`) found it is not an
+> isolated helper: it's tested (`tools/test-mc-readiness.js`) and consumed
+> by the dashboard readiness board, `mc-quick-pump.js`'s Full Body
+> balancing, `H1`'s own new Stats hub Recovery mode, and the exercise-card
+> freshness dots. Wiring a new, often-empty, self-reported signal into that
+> exact formula sight-unseen (no headless browser this session to verify
+> it against) was correctly judged the wrong risk to take in the same pass
+> as everything else — `mc-vitals.js`'s `recoveryScore()` is a fully
+> separate reading over `mc_vitals_v1` alone, never touching
+> `mc_workout_log_v1`, so it cannot silently move any of those four
+> existing consumers. Feeding it into `recoveryFor()`'s `tau` stays
+> explicit future work, gated on its own verification pass.
+>
+> **Supabase scope: none.** Manual entry rides the existing local-first +
+> `mc-sync.js` `arrayById` path, same convention `mc_body_v1` already
+> uses — confirmed by copying that store's exact `store-registry.json`
+> shape rather than inventing a new one. No server table was added; the
+> Shortcuts-bridge/Web Bluetooth paths and their schema stay exactly where
+> the original roadmap left them, gated on a platform-support spike neither
+> of which happened this phase.
+>
+> **UI:** a new dashboard strip (`.vitals-strip`, teal accent — distinct
+> from the gold momentum strip and violet cross-app strip already in that
+> position) showing the Recovery ring + today's sleep/resting-HR readout,
+> hidden entirely with no entry logged yet. "Log" chains three
+> `MCInputSheet.prompt()` calls (resting HR, sleep hours, 1–5 readiness,
+> each optional) — reusing the exact component `mc-body.js`'s own "Log
+> weight" button already uses, rather than building a new multi-field
+> stepper UI this session has no way to visually verify. An explicit
+> Cancel at any step discards the whole entry rather than saving a partial
+> one — simplest behavior to reason about without a live browser to check
+> a partial-save flow in.
+>
+> Verified with a stubbed-`localStorage` harness against the real source:
+> `null` latest/score with no entries; a full entry's score computed
+> correctly (readiness 4 → 80, zero sleep nudge at exactly 8h); a
+> low-readiness/short-sleep entry's negative nudge clamped correctly
+> (readiness 2 → 40, sleep 5h's −18 clamped to −15 → 25); an HR-only entry
+> falling back to the documented neutral 70 baseline with no fabricated
+> sleep field; newest-first array order; and score clamping at the 100
+> ceiling on a maxed-out entry. All local CI-equivalent gates re-run clean:
+> `check-store-coverage` (the new store registered in all three required
+> places — `store-registry.json`, `mc-sync.js`'s `STORES`, `mc-export.js`'s
+> `KEYS` — in the same change, per the repo's standing rule),
+> `check-exports`, `check-single-impl`, `check-script-manifest --check`,
+> `apply-head-contract --check`, `check-design-tokens`,
+> `build-market --check`, and a full tree-wide `node --check` sweep
+> including `dashboard.html`'s four inline `<script>` blocks extracted and
+> checked individually.
+
 ---
 
 ## 1. Executive summary & codebase audit
