@@ -1251,8 +1251,15 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > phone-width figure measures well under the 44px floor — moved tap-through
 > off the SVG itself onto a `.ready-chip`-based legend (the same component
 > `renderCurrentReadiness()` already uses one section up the same page),
-> tapping into `mc-exercise-trends.js`. Full writeup in
-> `flagship-immersive-roadmap.md`.
+> tapping into `mc-exercise-trends.js`.
+>
+> **`H2` shipped (2026-09-03).** A post-session muscle reveal wired into
+> `mc-finish.js`'s existing "Session Complete" recap, right after the
+> strain ring. Static, not animated (no way to verify motion timing from
+> this session) and its own small canvas export rather than reusing
+> `mc-wrapped.js`'s `save()`, which turned out on inspection to be one
+> monolithic function tied to its own card shape, not a reusable pipeline.
+> Full writeup in `flagship-immersive-roadmap.md`.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 

@@ -240,7 +240,12 @@
       });
     });
     var w = (opts.width || BODYMAP_VB_W);
-    return '<svg class="mcchart-bodymap" viewBox="0 0 ' + BODYMAP_VB_W + ' ' + BODYMAP_VB_H + '"' +
+    // xmlns matters here even though every current caller inserts this via
+    // innerHTML (where the HTML parser resolves the SVG namespace for free):
+    // H2 loads this same markup as a standalone Image() src for canvas
+    // export, and a namespace-less fragment is not a valid standalone SVG
+    // document in every browser.
+    return '<svg xmlns="http://www.w3.org/2000/svg" class="mcchart-bodymap" viewBox="0 0 ' + BODYMAP_VB_W + ' ' + BODYMAP_VB_H + '"' +
       ' width="' + w + '" style="width:' + w + 'px;height:auto;display:inline-block;">' + out + '</svg>';
   }
 

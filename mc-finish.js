@@ -348,6 +348,7 @@
       '<div class="fw-done-title">Session Complete</div>'+
       '<div class="fw-done-sub" id="fwDoneSub"></div>'+
       '<div class="fw-strain-wrap" id="fwStrainWrap"></div>'+
+      '<div class="fw-muscle-wrap" id="fwMuscleWrap"></div>'+
       '<div class="fw-done-grid" id="fwDoneGrid"></div>'+
       '<div class="fw-done-prs" id="fwDonePRs"></div>'+
       '<div class="fw-refuel-wrap" id="fwRefuelWrap"></div>'+
@@ -370,6 +371,12 @@
       '.fw-strain-val{font-size:19px;font-weight:900;color:#d4af37;line-height:1.1;text-align:center;}'+
       '.fw-strain-val span{display:block;font-size:9px;font-weight:800;color:#64748b;margin-top:2px;letter-spacing:0.02em;}'+
       '.fw-strain-lbl{font-size:11px;font-weight:700;color:#94a3b8;margin-top:8px;}'+
+      '.fw-muscle-wrap:not(:empty){margin-bottom:16px;}'+
+      '.fw-muscle-figs{display:flex;justify-content:center;gap:14px;}'+
+      '.fw-muscle-lbl{font-size:11px;font-weight:700;color:#94a3b8;margin-top:10px;}'+
+      '.fw-muscle-save{margin-top:10px;padding:9px 16px;border-radius:10px;border:1px solid rgba(212,175,55,0.35);'+
+        'background:rgba(212,175,55,0.1);color:#f5d76e;font-size:12px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;}'+
+      '.fw-muscle-save:active{transform:scale(0.97);}'+
       '.fw-done-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}'+
       '.fw-done-cell{background:#141414;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 8px;}'+
       '.fw-done-num{font-size:22px;font-weight:900;color:var(--accent,#d4af37);letter-spacing:-0.01em;}'+
@@ -412,6 +419,94 @@
         '<div class="fw-strain-lbl">'+lbl+'</div>';
     }catch(e){wrap.innerHTML='';}
   }
+  // flagship-immersive-roadmap.md H2 — Post-Session Muscle Map. Static (no
+  // stagger animation — this repo's own sandbox can't verify animation
+  // timing in a real browser, so a verifiable static render shipped instead
+  // of an animation nobody here could actually watch run). Per-group value
+  // is this SESSION's own set count normalized to its own max group, same
+  // percent-of-max convention mc-stats.js's Volume mode already uses — a
+  // single session has no meaningful "0-100 recovery" reading of its own,
+  // so this reuses the volume convention, not the readiness one.
+  function sessionMuscleData(sets){
+    if(!window.MC_MUSCLES)return null;
+    var byGroup={};
+    (sets||[]).forEach(function(s){
+      var g=MC_MUSCLES.classify(s.name);
+      if(g.id==='other')return;
+      byGroup[g.id]=(byGroup[g.id]||0)+1;
+    });
+    var ids=Object.keys(byGroup);
+    if(!ids.length)return null;
+    var max=ids.reduce(function(m,id){return Math.max(m,byGroup[id]);},1);
+    var data={};
+    ids.forEach(function(id){data[id]=(byGroup[id]/max)*100;});
+    return data;
+  }
+  function renderMuscleReveal(entry){
+    var wrap=document.getElementById('fwMuscleWrap');
+    if(!wrap)return;
+    wrap.innerHTML='';
+    if(!window.MC_CHART)return;
+    var data=sessionMuscleData(entry.sets);
+    if(!data)return;
+    wrap.innerHTML=
+      '<div class="fw-muscle-figs">'+
+        MC_CHART.bodyMap(data,{view:'front',width:96})+
+        MC_CHART.bodyMap(data,{view:'back',width:96})+
+      '</div>'+
+      '<div class="fw-muscle-lbl">Today\'s work, mapped</div>'+
+      '<button type="button" class="fw-muscle-save" id="fwMuscleSave">Save card</button>';
+    var btn=document.getElementById('fwMuscleSave');
+    if(btn)btn.addEventListener('click',function(){saveMuscleCard(entry,data);});
+  }
+  // Standalone export — deliberately NOT a shared pipeline with
+  // mc-wrapped.js's save(): that function is one monolithic draw tied to
+  // its own month/year card shape, not a separated export helper, so
+  // reusing it would mean refactoring a shipped feature as a prerequisite
+  // to this one. Small, real duplication of the canvas.toBlob->share/
+  // download plumbing (same pattern as mc-wrapped.js's save()) accepted
+  // instead — see this roadmap phase's own AskUserQuestion decision.
+  function saveMuscleCard(entry,data){
+    if(!window.MC_CHART)return;
+    var W=1080,H=1080;
+    var cv=document.createElement('canvas');cv.width=W;cv.height=H;
+    var ctx=cv.getContext('2d');
+    ctx.fillStyle='#0a0a0a';ctx.fillRect(0,0,W,H);
+    ctx.textAlign='center';
+    ctx.fillStyle='#ffffff';ctx.font='900 54px system-ui';
+    ctx.fillText('Session Complete',W/2,110);
+    ctx.fillStyle='#d4af37';ctx.font='700 32px system-ui';
+    ctx.fillText(String(entry.workoutName||'').slice(0,40),W/2,160);
+
+    var figW=340,figH=figW*(330/150);
+    var frontImg=new Image(),backImg=new Image(),loaded=0,failed=false;
+    function draw(){
+      loaded++;
+      if(loaded<2)return;
+      if(!failed){
+        ctx.drawImage(frontImg,W/2-figW-20,220,figW,figH);
+        ctx.drawImage(backImg,W/2+20,220,figW,figH);
+      }
+      ctx.fillStyle='#64748b';ctx.font='600 26px system-ui';
+      ctx.fillText('MC Training',W/2,H-50);
+      cv.toBlob(function(blob){
+        var file=new File([blob],'mc-session.png',{type:'image/png'});
+        if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+          navigator.share({files:[file],title:'MC Training — Session Complete'}).catch(function(){});
+        }else{
+          var a=document.createElement('a');
+          a.href=URL.createObjectURL(blob);
+          a.download='mc-session.png';
+          a.click();
+          setTimeout(function(){URL.revokeObjectURL(a.href);},5000);
+        }
+      },'image/png');
+    }
+    frontImg.onload=draw;backImg.onload=draw;
+    frontImg.onerror=backImg.onerror=function(){failed=true;draw();};
+    frontImg.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(MC_CHART.bodyMap(data,{view:'front',width:figW}));
+    backImg.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(MC_CHART.bodyMap(data,{view:'back',width:figW}));
+  }
   // "The Refuel Handoff" (Phase 3 / Initiative 03) — a one-tap deep link from
   // the Session Complete screen straight into a recipe search sized to what
   // this specific session calls for, reusing the same ?mkcal=&mp=&dt= query
@@ -441,6 +536,7 @@
     var sets=entry.sets||[];
     var prList=prSpotlight(sets);
     renderStrain(entry);
+    renderMuscleReveal(entry);
     renderRefuel(entry);
     var grid=document.getElementById('fwDoneGrid');
     if(grid){

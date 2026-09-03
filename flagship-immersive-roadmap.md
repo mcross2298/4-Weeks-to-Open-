@@ -91,6 +91,63 @@
 > `check-store-coverage`, `check-topbar-inset`, `build-market --check`, and
 > a full tree-wide `node --check` sweep.
 
+> **`H2` shipped (2026-09-03) — three decisions locked first.** Placement:
+> the reveal sits right after the strain ring, before the stats grid — the
+> visual payoff while attention is highest, not a closing afterthought.
+> Save-card scope: a small standalone canvas export, not a shared pipeline
+> with `mc-wrapped.js`. Animation: static reveal only, no ~1.2s stagger —
+> this session has no headless browser to verify animation timing/easing
+> against (the same constraint `premium-design-roadmap.md`'s `P4` and
+> `W-I3` already hit re-baselining ratchets from here), so it ships
+> something verifiable instead of a motion feel nobody here could watch.
+>
+> **The roadmap's own "reuse mc-wrapped.js's canvas pipeline" assumption
+> didn't survive reading the real code**, and this is exactly the kind of
+> gap the alignment round exists to catch before code, not after: `save()`
+> in `mc-wrapped.js` is one monolithic function drawing its own specific
+> 1080×1350 card tied to its own month/year aggregate data — there is no
+> separated export helper to plug a second card into. `mc-finish.js` gets
+> its own small `saveMuscleCard()`, deliberately duplicating the
+> `canvas.toBlob` → share-sheet/download plumbing (~20 lines, same pattern
+> `mc-wrapped.js`'s `save()` already uses) rather than refactoring a
+> shipped, working feature as a prerequisite to this one.
+>
+> `renderMuscleReveal()` computes a per-session muscle read from
+> `entry.sets` (`sessionMuscleData()`) — a single session has no meaningful
+> 0–100 "recovery" reading of its own, so this reuses `H1`'s Volume
+> convention (percent of this session's own max-group set count), not the
+> Recovery one. Wired directly into `showDone()` (the one place that both
+> already calls `renderStrain()`/`renderRefuel()` in this exact pattern
+> and is guaranteed to run right after the entry is saved) rather than
+> listening for the `mc:workout-finished` `CustomEvent` the roadmap's
+> spec named — that event exists for a *different* consumer
+> (`program-day-view-roadmap.md`'s day-identity listener on a separate
+> page), and `showDone()` already has the entry in hand synchronously, so
+> a same-file function call is simpler and one less moving part than an
+> event round-trip to itself.
+>
+> `mc-chart.js` gained one line: `bodyMap()`'s root `<svg>` now carries
+> `xmlns="http://www.w3.org/2000/svg"`. Free in every existing caller
+> (inserted via `innerHTML`, where the HTML parser resolves the namespace
+> regardless), but required for `H2`'s new use — loading the same markup
+> as a standalone `Image().src` data URI for canvas export, which is not
+> guaranteed to render without it.
+>
+> Verified in isolation (the full `mc-finish.js` self-inits off
+> `location.pathname` at load, so it isn't `require()`-able the way
+> `mc-chart.js`/`mc-stats.js` are; `sessionMuscleData()`'s exact body was
+> extracted and run standalone instead): correct percent-of-max
+> normalization (3/3/1/2 sets across three groups → 100/66.7/33.3), `null`
+> on an empty or missing session, and the two-figure `bodyMap()` render
+> reading a `Chest · 100%` title with `xmlns` present on both `<svg>`
+> roots. Every page carrying `mc-finish.js` (77) already loads both
+> `mc-chart.js` (80) and `mc-muscle-map.js` (83) — confirmed by diffing
+> the two script-tag sets, not assumed — so no page's script list needed
+> touching. All local CI-equivalent gates re-run clean on the new commit:
+> `check-exports`, `check-single-impl`, `check-store-coverage`,
+> `check-script-manifest --check`, and a full tree-wide `node --check`
+> sweep.
+
 ---
 
 ## 1. Executive summary & codebase audit
