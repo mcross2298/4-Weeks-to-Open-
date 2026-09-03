@@ -209,6 +209,82 @@
 > including `dashboard.html`'s four inline `<script>` blocks extracted and
 > checked individually.
 
+> **`H4` shipped (2026-09-03) — one decision locked first, a real data gap
+> forced it.** The roadmap's own spec dimmed the body map to only the
+> muscles today's prescribed day will train, computed via
+> `MC_MUSCLES.classify()` over the day's exercise list. **That data does not
+> reach the trigger point.** The one and only place a program's "Start Day
+> N" / "Train anyway" CTA lives is `dashboard.html`'s day module
+> (`MC_DAY_HERO.mount()`, confirmed the only caller tree-wide) — and
+> `dashboard.html` never loads any program's real exercise data (`mm-data.js`,
+> `hv-block.html`'s inline data, `cat-strength.html`'s), only
+> `mc-pm-data.js`'s `schedule.days` aggregate `ex`/`sets`/`min` counts. Those
+> records' `tags` aren't reliably muscle names either: `ss`'s hand-authored
+> tags are ("Quads", "Hamstrings"), but `mm`'s **generated** tags
+> (`tools/gen-schedules.js`) are equipment/phase labels ("Dumbbell Split",
+> "Phase 1") with no muscle information at all. Building a second,
+> title/tag-based classifier to approximate scoping would have been exactly
+> the per-page-clone shape `check-single-impl.js` exists to prevent, and
+> wrong for ambiguous titles ("Arms", "Push") besides. **Decision: full-body
+> Recovery map, undimmed** — honest about what the app actually knows at
+> this trigger point, ships now rather than inventing data.
+>
+> `mc-readiness-brief.js` (`MC_READINESS_BRIEF.show(cfg)`) fuses `H1`'s body
+> map (`MC_READY.byMuscle()`, Recovery mode, both figures, no scoping) with
+> `H3`'s Recovery ring (`MC_VITALS.recoveryScore()`, omitted entirely when
+> null — same "hidden with no entry logged" convention `H3` already uses,
+> not a broken zero ring) and a single advisory note naming the worst
+> **`status === 'overreached'`** muscle group — reusing `mc-readiness.js`'s
+> own real classification threshold rather than inventing a new cutoff for
+> this one screen. Wired into `dashboard.html`'s existing `onStart` handler
+> (`MC_DAY_HERO.mount()`'s `onStart` callback, ~line 2168): the brief shows
+> first, and only the "Begin" tap (or "Skip", or a backdrop tap — never a
+> hard gate) proceeds to the original `open(d,w)` navigation, so nothing
+> about the "S0–S6 spent so much effort making logging fast" flow gets
+> slower for anyone who dismisses it.
+>
+> **Shell reuse, not a new full-screen takeover.** Built on `base.css`'s
+> existing `.fw-modal-overlay`/`.fw-modal` bottom-sheet primitive
+> (`mc-finish.js`'s own confirm/recap modals) and its `.fw-cancel`/
+> `.fw-confirm` button classes for Skip/Begin — one modal shell in the tree,
+> not a second bespoke one for this screen. All required data modules
+> (`mc-chart.js`, `mc-vitals.js`, `mc-muscle-map.js`, `mc-readiness.js`) were
+> already loaded on `dashboard.html` from `H1`/`H3`; only the one new
+> `<script src="mc-readiness-brief.js">` tag was needed.
+>
+> **A real bug caught by a vm-sandboxed harness, not by reading the code.**
+> The first draft referenced `MC_READY`/`MC_CHART`/`MC_VITALS` as bare
+> globals inside `show()` instead of `window.MC_READY` etc. In a real
+> browser this is identical (`window` **is** the global object there), which
+> is exactly why it read as correct on inspection — but it throws
+> `ReferenceError` in the vm-sandboxed test harness this session used to
+> verify the module (same technique as `test-mc-bridge.js`/
+> `test-mc-program-day.js`), and the guarded `try/catch` around
+> `MC_READY.byMuscle()` silently swallowed it as a "module unavailable,
+> fail open" case — so the harness's own first run reported the happy path
+> as the empty-state path, passing for the wrong reason. This is the same
+> bare-global-vs-`window.` pitfall `mc-program-day.js`'s own header comment
+> already documents; fixed by reaching every one through `window.`, matching
+> that file's stated convention. No committed test file was added (matching
+> `mc-day-hero.js`/`mc-day-hero.js`-adjacent files' own no-test precedent —
+> this is a thin renderer over already-tested modules, not new math), but a
+> throwaway vm harness drove the real source end-to-end: 25 assertions —
+> fail-open with no `MC_CHART`/`MC_READY`/`MC_MUSCLES` and no overlay
+> appended, fail-open when `MC_READY.byMuscle()` throws, the ring omitted
+> (not zero) with no vitals entry or the module entirely absent, the correct
+> lowest-pct `overreached` group chosen as the advisory (not merely any
+> overreached group), no advisory when nothing is overreached, Begin/Skip/
+> backdrop-tap all dismissing exactly once and idempotently, and the day
+> title HTML-escaped against injection. All local CI-equivalent gates re-run
+> clean: `check-exports`, `check-single-impl`, `check-script-manifest
+> --check`, `apply-head-contract --check`, `check-design-tokens`,
+> `check-store-coverage`, `check-topbar-inset`, `build-sw.py --bump`
+> (cache v168→v169 for the new file) + `--check`, `build-market --check`,
+> `test-mc-program-day.js` (39/39) and `test-mc-program-progress.js`
+> (91/91) re-confirmed unaffected, plus a full tree-wide `node --check`
+> sweep including `dashboard.html`'s four inline `<script>` blocks extracted
+> and checked individually.
+
 ---
 
 ## 1. Executive summary & codebase audit

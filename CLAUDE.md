@@ -1268,7 +1268,22 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > formula — that function is tested and consumed by four other places
 > app-wide, so wiring a new signal into it stays separate, verified future
 > work. No Supabase table; rides the existing `mc-sync.js` `arrayById`
-> path, same as `mc_body_v1`. Full writeup in
+> path, same as `mc_body_v1`.
+>
+> **`H4` shipped (2026-09-03).** `mc-readiness-brief.js` fuses `H1`'s body
+> map with `H3`'s Recovery ring into a pre-session interstitial off
+> `dashboard.html`'s "Start Day N" CTA. The roadmap's spec dimmed the map to
+> only today's prescribed muscles via `MC_MUSCLES.classify()` on the day's
+> exercise list — that data doesn't reach the one real trigger point
+> (`dashboard.html` never loads any program's actual exercise data), so
+> per-`AskUserQuestion` decision it ships as a full-body, undimmed Recovery
+> map instead of inventing a second, unverified tag-based classifier. Built
+> on `base.css`'s existing `.fw-modal-overlay` shell (`mc-finish.js`'s own
+> modal primitive) rather than a new full-screen takeover. A vm-sandboxed
+> harness (25 assertions) caught a real bug on its first run: bare
+> `MC_READY`/`MC_CHART`/`MC_VITALS` references instead of `window.`-qualified
+> ones — identical in a browser, `ReferenceError` in the sandbox, silently
+> swallowed by the module's own fail-open guard. Full writeup in
 > `flagship-immersive-roadmap.md`.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
