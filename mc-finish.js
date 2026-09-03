@@ -375,7 +375,10 @@
       '.fw-muscle-figs{display:flex;justify-content:center;gap:14px;}'+
       '.fw-muscle-lbl{font-size:11px;font-weight:700;color:#94a3b8;margin-top:10px;}'+
       '.fw-muscle-save{margin-top:10px;padding:9px 16px;border-radius:10px;border:1px solid rgba(212,175,55,0.35);'+
-        'background:rgba(212,175,55,0.1);color:#f5d76e;font-size:12px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;}'+
+        'background:rgba(212,175,55,0.1);color:#f5d76e;font-size:12px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;'+
+        /* ~34px tall at padding:9px 16px on 12px text -- under the 44px touch
+           floor. Same min-height fix base.css's own .back-link uses (W-I2). */
+        'min-height:44px;display:inline-flex;align-items:center;box-sizing:border-box;}'+
       '.fw-muscle-save:active{transform:scale(0.97);}'+
       '.fw-done-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}'+
       '.fw-done-cell{background:#141414;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 8px;}'+
