@@ -200,6 +200,24 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 }
 .vt-log:active{transform:scale(0.96);}
 
+/* ── Readiness Brief (flagship-immersive-roadmap.md H4) — pre-session
+   interstitial fusing H1's body map (Recovery mode, full body — undimmed;
+   see mc-readiness-brief.js's own header for why scoping to today's
+   exercises isn't done) with H3's Recovery ring. Built on base.css's
+   .fw-modal-overlay/.fw-modal shell + .fw-cancel/.fw-confirm buttons, so
+   there's one modal shell in the tree, not a second one for this screen. */
+.rb-modal{text-align:center;}
+.rb-eyebrow{font-size:var(--fs-2xs);font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2);margin-bottom:4px;}
+.rb-title{font-size:var(--fs-2xl);font-weight:900;letter-spacing:-0.02em;color:var(--text);margin-bottom:14px;}
+.rb-ring-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;}
+.rb-ring-text{text-align:left;}
+.rb-ring-val{font-size:var(--fs-xl);font-weight:900;color:var(--text);line-height:1;}
+.rb-ring-lbl{font-size:var(--fs-2xs);font-weight:700;color:var(--muted2);margin-top:2px;}
+.rb-figures{display:flex;justify-content:center;gap:16px;margin-bottom:4px;}
+.rb-fig{text-align:center;}
+.rb-fig-cap{font-size:var(--fs-2xs);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2);margin-top:4px;}
+.rb-note{font-size:var(--fs-xs);font-weight:700;color:var(--danger,#f87171);text-align:center;margin:10px 0 4px;}
+
 /* ── SECTION HEADERS ── */
 .sec-header{
   display:flex;align-items:center;justify-content:space-between;
@@ -1781,6 +1799,7 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
 <script src="mc-program-progress.js"></script>
 <script src="mc-week-bar.js"></script>
 <script src="mc-day-hero.js"></script>
+<script src="mc-readiness-brief.js"></script>
 <script src="mc-offline-prefetch.js"></script>
 <script src="mc-recap.js"></script>
 <script src="mc-input-sheet.js"></script>
@@ -2165,7 +2184,15 @@ function renderDayModule(cfg){
   });
   MC_DAY_HERO.mount(document.getElementById('dmHero'),{
     rec:rec,day:day,accent:accent,dayMeta:meta,
-    onStart:function(d,w){ P.setCursor(cfg.prog.id,d,cfg.def); open(d,w); },
+    onStart:function(d,w){
+      P.setCursor(cfg.prog.id,d,cfg.def);
+      var m=meta(w)||{};
+      if(window.MC_READINESS_BRIEF){
+        MC_READINESS_BRIEF.show({dayTitle:m.title,icon:m.icon,accent:accent,onBegin:function(){open(d,w);}});
+      } else {
+        open(d,w);
+      }
+    },
     onView:open,
     onLog:function(d,logId){
       location.href=logId?('workout-detail.html?id='+encodeURIComponent(logId)):'workout-logs.html';
