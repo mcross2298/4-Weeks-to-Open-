@@ -14,7 +14,7 @@
     { id: 'shoulders', label: 'Shoulders', icon: '🏔️', re: /shoulder|delt|lateral raise|overhead press|military|arnold|upright row|face pull/i },
     { id: 'legs',      label: 'Legs',      icon: '🦵', re: /squat|leg press|lunge|hack|leg extension|hip thrust|leg curl|hamstring|\bham\b|rdl|romanian|deadlift|good morning|glute|step.?up|quad/i },
     { id: 'triceps',   label: 'Triceps',   icon: '💪', re: /tricep|pushdown|skull|kickback|overhead extension|\bdip\b/i },
-    { id: 'back',      label: 'Back',      icon: '🪝', re: /back|\brow\b|pull-?up|pull-?down|chin|\blat\b|shrug|\btrap/i },
+    { id: 'back',      label: 'Back',      icon: '🪝', re: /back|\brow\b|pull-?up|pull-?down|\bchins?\b|\blat\b|shrug|\btrap/i },
     { id: 'chest',     label: 'Chest',     icon: '🫷', re: /bench|chest|\bfly\b|flye|incline|decline|\bpec\b|push-?up|press/i },
     { id: 'core',      label: 'Core',      icon: '🔥', re: /\babs?\b|core|crunch|plank|knee raise|sit-?up|leg raise|hollow|russian twist|woodchop/i },
     { id: 'biceps',    label: 'Biceps',    icon: '💪', re: /bicep|curl|preacher|hammer/i },

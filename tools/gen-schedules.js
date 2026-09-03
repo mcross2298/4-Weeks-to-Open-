@@ -64,6 +64,31 @@ function setsOf(str) {
   return SETLOG.setCount(work) + (drop.is ? drop.drops.length : 0);
 }
 
+// Which MC_MUSCLES groups a day's own exercise list actually trains
+// (flagship-immersive-roadmap.md H4b) — read the real classifier the same
+// way mm-data.js/hv-block.html are read above (a vm'd `window` shim, since
+// mc-muscle-map.js is a plain browser IIFE with no module.exports hook of
+// its own), so this can never disagree with what mc-stats.js's Muscle Map
+// or the pre-session Readiness Brief actually render for the same names.
+let MC_MUSCLES = null;
+function classifier() {
+  if (MC_MUSCLES) return MC_MUSCLES;
+  const ctx = { window: {} };
+  vm.createContext(ctx);
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'mc-muscle-map.js'), 'utf8'), ctx);
+  MC_MUSCLES = ctx.window.MC_MUSCLES;
+  return MC_MUSCLES;
+}
+function musclesFor(names) {
+  const MC = classifier();
+  const set = new Set();
+  names.forEach(function (n) {
+    const g = MC.classify(n);
+    if (g.id !== 'other') set.add(g.id);
+  });
+  return Array.from(set).sort();
+}
+
 // ---- mm: three phases, read from mm-data.js -------------------------------
 function buildMM() {
   const ctx = { window: {} };
@@ -111,6 +136,10 @@ function buildMM() {
         sets: ex.reduce(function (n, e) {
           return n + setsOf(e.w && e.w[0] && e.w[0].sets);
         }, 0),
+        // Exercise identity (not just its per-week scheme) is fixed across
+        // all 5 weeks of a phase, so unlike ex/sets this needs no "week 1"
+        // caveat — the same list trains the same muscles every week.
+        muscles: musclesFor(ex.map(function (e) { return e.name; })),
         href: 'mm-' + pid + '.html?day=' + (i + 1)
       });
     });
@@ -166,6 +195,7 @@ function buildHV() {
         tags: [d.meta || ('Week ' + (wi + 1))],
         ex: ex.length,
         sets: ex.reduce(function (n, e) { return n + setsOf(e.sets); }, 0),
+        muscles: musclesFor(ex.map(function (e) { return e.name; })),
         href: 'hv-block.html?week=' + (wi + 1) + '&day=' + (i + 1)
       });
     });

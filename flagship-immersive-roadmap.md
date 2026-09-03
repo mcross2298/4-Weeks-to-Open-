@@ -390,6 +390,101 @@
 > today, no runtime loop to bound). `H0`–`H5` of
 > `flagship-immersive-roadmap.md` are complete.
 
+> **`H4b` shipped (2026-09-03) — the deferred muscle-scoping, closed for
+> real.** `H4`'s own gate (option A of three, locked via `AskUserQuestion`)
+> shipped the Readiness Brief full-body and undimmed because no program's
+> real exercise list reached the trigger point. Asked to continue with
+> "phase 2" of the Readiness Brief, a second `AskUserQuestion` round
+> confirmed the target: option C from that original gate — load each
+> program's real exercise data and classify it for real, rather than leave
+> the gap open indefinitely.
+>
+> **The data was there all along, just not read.** `tools/gen-schedules.js`
+> already reads `mm-data.js`/`hv-block.html` via `vm` to derive `ex`/`sets`
+> for `mc-pm-data.js`'s `schedule.days` — the same files carry each day's
+> real exercise `name`s (`mm-data.js`: `{name, w:[...]}`; `hv-block.html`:
+> flat `{name, sets, ...}`; `cat-strength.html`'s `PMC_SPLITS[id].data[1]`:
+> `{type:'single', name}` or `{type:'superset', a:{name}, b:{name}}`). The
+> tool now also classifies each day's exercise names through the real
+> `MC_MUSCLES.classify()` (loaded via the identical `vm`-with-a-`window`-shim
+> technique it already uses for `mm-data.js`/`hv-block.html` — no
+> `module.exports` hook needed, since `mc-muscle-map.js` touches nothing but
+> `window`) and writes the resulting group-id set as a new `muscles` field
+> per day, generated for `mm`/`hv` and hand-typed (from the same real
+> `classify()` output, run once and verified) for `ss` — consistent with
+> that program's schedule block already being hand-authored, not
+> machine-generated (see `tools/gen-schedules.js`'s own header). A day with
+> no fixed exercise list (`ss`'s Conditioning day, pulled live from the
+> Conditioning Corner) gets `muscles: []` — honestly empty, not guessed.
+>
+> **`mc-readiness-brief.js` and `dashboard.html` wire it through with zero
+> `mc-chart.js` changes.** `MC_CHART.bodyMap()` already renders any group
+> whose key is *omitted* from `dataByGroup` as its existing neutral/dimmed
+> "no data" fill (see that function's own doc comment) — so scoping is just
+> which keys `mc-readiness-brief.js`'s `bodyData` object includes, not a new
+> chart option. `dashboard.html`'s `meta()` now exposes `d.muscles`, and
+> `onStart` passes it as `MC_READINESS_BRIEF.show()`'s new `scope` param; no
+> scope (empty array, or a custom/published program with no schedule
+> record) falls back to the exact full-body-undimmed rendering `H4` shipped.
+> The advisory note also now prefers a scoped read — "under-recovered for
+> what's prescribed" was the original spec's actual intent, and `worst
+> Overreached()` now searches only `scope`'s groups when one is given,
+> rather than the whole body (so a worse-but-untrained group elsewhere
+> stays silent, correctly). A new `.rb-focus` line ("Today: Chest · Back")
+> names the scoped groups in plain text, since a dimmed map with no caption
+> could otherwise read as broken rather than deliberate.
+>
+> **A real, pre-existing classifier bug found and fixed along the way, not
+> introduced by this work.** Running `MC_MUSCLES.classify()` against real
+> exercise names surfaced a false positive already live everywhere this
+> classifier is used (Stats hub Volume/Recovery, `mc-readiness.js`,
+> exercise freshness dots, `mc-quick-pump.js`): the `back` group's `chin`
+> pattern had no word boundary, so it matched the literal substring "chin"
+> inside "**Mach*in*e**" — any exercise name containing "Machine" that
+> didn't already hit an earlier-checked group (calves/shoulders/legs/
+> triceps) silently misclassified as `back` instead of its real group.
+> Swept against all 577 `exercise-catalog.js` entries: **28 real exercises**
+> corrected (mostly "Machine"/"Smith Machine" chest presses and flies wrongly
+> reading as back volume, plus two preacher-curl variants), all moving from
+> a wrong `back` to a correct group or an honest `other`. Fixed with a
+> precise word-boundary swap (`chin` → `\bchins?\b`, plural included) rather
+> than a blanket change — verified before landing that it doesn't regress
+> the one legitimate catalog match ("Chin Ups") and, checked separately,
+> that it *fixes* a second real defect the naive `\bchin\b` singular-only
+> form would have introduced ("Rack Chins on Smith Machine" briefly fell to
+> `other` before the pluralization fix). Two much narrower, harder-to-fix
+> false positives were found and deliberately left alone (documented in
+> `ss`'s hand-authored `muscles` comment rather than silently patched): a
+> "(shoulder width)" stance descriptor false-triggering `shoulders` (3
+> catalog-wide instances) and "Behind-the-Back Barbell Curls" literally
+> containing the word "back" (a genuine substring, not a boundary bug) —
+> both narrow, and both would need broader regex redesign with its own risk
+> to the classifier's many other consumers, out of scope for this pass.
+>
+> Verified with a vm-sandboxed harness (17 assertions) against the real
+> `mc-readiness-brief.js` source: no-scope behavior is byte-identical to
+> `H4` (all 9 groups, whole-body worst-overreached, no `.rb-focus` line);
+> a 2-group scope narrows `bodyData` to exactly those keys and the advisory
+> correctly reports the worse of *only* those two, ignoring a worse
+> untrained group outside scope; a scope containing only fresh (non-
+> overreached) groups renders no advisory even though other body-wide
+> groups are overreached; an empty-array scope and an unknown scope id both
+> degrade gracefully with no crash; Begin/dismiss still fire `onBegin()`
+> exactly once with a scope active. All local CI-equivalent gates re-run
+> clean: `gen-schedules.js --check` (idempotent — a second run with no
+> further edits reports no drift), `validate-programs.js`,
+> `check-program-colors.js`, `gen-program-css.py --check`,
+> `check-exports`, `check-single-impl`, `check-script-manifest --check`,
+> `apply-head-contract --check`, `check-design-tokens`,
+> `check-store-coverage`, `check-topbar-inset`, `check-one-timer`,
+> `check-gesture-contract`, `check-program-data`, `build-sw.py --check`,
+> `build-market --check`, plus `test-mc-readiness.js`,
+> `test-mc-quick-pump.js`, `test-mc-program-day.js` (39/39),
+> `test-mc-program-progress.js` (91/91) and `test-mc-program-tabs.js`
+> (58/58) re-confirmed unaffected by the classifier fix, and a full
+> tree-wide `node --check` sweep including `dashboard.html`'s four inline
+> `<script>` blocks extracted and checked individually.
+
 ---
 
 ## 1. Executive summary & codebase audit

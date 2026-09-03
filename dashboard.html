@@ -204,15 +204,17 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 }
 .vt-log:active{transform:scale(0.96);}
 
-/* ── Readiness Brief (flagship-immersive-roadmap.md H4) — pre-session
-   interstitial fusing H1's body map (Recovery mode, full body — undimmed;
-   see mc-readiness-brief.js's own header for why scoping to today's
-   exercises isn't done) with H3's Recovery ring. Built on base.css's
-   .fw-modal-overlay/.fw-modal shell + .fw-cancel/.fw-confirm buttons, so
-   there's one modal shell in the tree, not a second one for this screen. */
+/* ── Readiness Brief (flagship-immersive-roadmap.md H4, muscle-scoping H4b)
+   — pre-session interstitial fusing H1's body map (Recovery mode, dimmed
+   to today's real trained groups on mm/hv/ss; full-body undimmed elsewhere
+   — see mc-readiness-brief.js's own header) with H3's Recovery ring. Built
+   on base.css's .fw-modal-overlay/.fw-modal shell + .fw-cancel/.fw-confirm
+   buttons, so there's one modal shell in the tree, not a second one for
+   this screen. */
 .rb-modal{text-align:center;}
 .rb-eyebrow{font-size:var(--fs-2xs);font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2);margin-bottom:4px;}
 .rb-title{font-size:var(--fs-2xl);font-weight:900;letter-spacing:-0.02em;color:var(--text);margin-bottom:14px;}
+.rb-focus{font-size:var(--fs-xs);font-weight:700;color:var(--muted2);margin:-8px 0 14px;}
 .rb-ring-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;}
 .rb-ring-text{text-align:left;}
 .rb-ring-val{font-size:var(--fs-xl);font-weight:900;color:var(--text);line-height:1;}
@@ -2179,7 +2181,7 @@ function renderDayModule(cfg){
   const meta=function(id){
     const d=cfg.byId[id]; if(!d) return null;
     return {title:d.title,icon:d.icon,color:accent,tags:d.tags||[],
-            exercises:d.ex,sets:d.sets,minutes:d.min};
+            exercises:d.ex,sets:d.sets,minutes:d.min,muscles:d.muscles||[]};
   };
   // Deep link into the program page's own day view (cat-strength.html?day=…).
   const open=function(dayNo,workoutId){
@@ -2199,7 +2201,7 @@ function renderDayModule(cfg){
       P.setCursor(cfg.prog.id,d,cfg.def);
       var m=meta(w)||{};
       if(window.MC_READINESS_BRIEF){
-        MC_READINESS_BRIEF.show({dayTitle:m.title,icon:m.icon,accent:accent,onBegin:function(){open(d,w);}});
+        MC_READINESS_BRIEF.show({dayTitle:m.title,icon:m.icon,accent:accent,scope:m.muscles,onBegin:function(){open(d,w);}});
       } else {
         open(d,w);
       }
