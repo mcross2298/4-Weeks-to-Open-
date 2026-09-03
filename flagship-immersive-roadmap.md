@@ -43,6 +43,172 @@
 > `heatmap`/`ring` have none either. `H1` (wiring this into the Stats hub)
 > still needs its own `AskUserQuestion` gate before starting.
 
+> **`H1` shipped (2026-09-03) — two decisions locked first.** Replace, not
+> supplement: the Stats hub's old 30-day muscle-volume bar list
+> (`renderMuscles()`/`#muscleCard`) is gone, not duplicated alongside the new
+> map. Default mode on load: **Recovery**, not Volume — the vector this whole
+> roadmap was scoped around, and the newer of the two signals.
+>
+> **A real touch-target constraint changed the tap-through design from what
+> Feature 1's spec literally said.** The spec called for tapping an SVG
+> region directly; measured against this card's actual width on a 320–390px
+> phone (two figures side by side inside a ~680px-max content column with
+> 16–32px of padding stacked on both sides), a region's real screen size
+> — a forearm or bicep rect included — comes out well under the app's 44px
+> touch floor. Padding every limb's hit-area out to 44px would make
+> neighboring regions' hit zones overlap enough that tapping one would
+> often land on another. So the SVG stays a pure visual (still carries
+> `<title>` tooltips), and the tap-through target is a 9-chip legend below
+> it, built on `.ready-board`/`.ready-chip` — the exact component
+> `renderCurrentReadiness()` already uses one section up on this same page
+> for its own live-readiness grid, so this borrows a real ≥44px control
+> rather than inventing a second one. Tapping a chip opens
+> `mc-exercise-trends.js`'s sheet on that muscle group's most-logged
+> exercise (all-time, not scoped to the 30-day window Volume mode displays,
+> so a chip stays useful even for a muscle trained a while ago); a chip with
+> no logged history at all renders `.static` — visible, not tappable.
+>
+> `MC_CHART` gained one more export, `bodyMapColorFor` — `H0`'s internal
+> low/mid/high bucket function, exposed so the chip legend colors its bars
+> with the exact same thresholds the body map used, rather than a second
+> copy of that logic at the call site.
+>
+> `mc-stats.js`'s `renderWeekMuscles()`/`renderCurrentReadiness()` (the
+> separate week-picker view further up the same page) are untouched — out
+> of this phase's scope, since the roadmap named `renderMuscles()`
+> specifically and touching the week-picker's own muscle view was never
+> part of the locked decisions.
+>
+> Verified with a stubbed-DOM harness driving the real source (not a mock):
+> default Recovery render (9 chips, correct default-active toggle state),
+> a real mode toggle round-trip (Volume shows "last 30 days" + correct
+> per-group set counts, Recovery restores cleanly), and the empty-state
+> path when `MC_READY` is unavailable and the log has no sets — all three
+> render without throwing and degrade to the expected empty-state copy
+> rather than a blank card. All local CI-equivalent gates run clean:
+> `check-exports`, `check-single-impl`, `check-script-manifest`,
+> `apply-head-contract --check`, `check-design-tokens`,
+> `check-store-coverage`, `check-topbar-inset`, `build-market --check`, and
+> a full tree-wide `node --check` sweep.
+
+> **`H2` shipped (2026-09-03) — three decisions locked first.** Placement:
+> the reveal sits right after the strain ring, before the stats grid — the
+> visual payoff while attention is highest, not a closing afterthought.
+> Save-card scope: a small standalone canvas export, not a shared pipeline
+> with `mc-wrapped.js`. Animation: static reveal only, no ~1.2s stagger —
+> this session has no headless browser to verify animation timing/easing
+> against (the same constraint `premium-design-roadmap.md`'s `P4` and
+> `W-I3` already hit re-baselining ratchets from here), so it ships
+> something verifiable instead of a motion feel nobody here could watch.
+>
+> **The roadmap's own "reuse mc-wrapped.js's canvas pipeline" assumption
+> didn't survive reading the real code**, and this is exactly the kind of
+> gap the alignment round exists to catch before code, not after: `save()`
+> in `mc-wrapped.js` is one monolithic function drawing its own specific
+> 1080×1350 card tied to its own month/year aggregate data — there is no
+> separated export helper to plug a second card into. `mc-finish.js` gets
+> its own small `saveMuscleCard()`, deliberately duplicating the
+> `canvas.toBlob` → share-sheet/download plumbing (~20 lines, same pattern
+> `mc-wrapped.js`'s `save()` already uses) rather than refactoring a
+> shipped, working feature as a prerequisite to this one.
+>
+> `renderMuscleReveal()` computes a per-session muscle read from
+> `entry.sets` (`sessionMuscleData()`) — a single session has no meaningful
+> 0–100 "recovery" reading of its own, so this reuses `H1`'s Volume
+> convention (percent of this session's own max-group set count), not the
+> Recovery one. Wired directly into `showDone()` (the one place that both
+> already calls `renderStrain()`/`renderRefuel()` in this exact pattern
+> and is guaranteed to run right after the entry is saved) rather than
+> listening for the `mc:workout-finished` `CustomEvent` the roadmap's
+> spec named — that event exists for a *different* consumer
+> (`program-day-view-roadmap.md`'s day-identity listener on a separate
+> page), and `showDone()` already has the entry in hand synchronously, so
+> a same-file function call is simpler and one less moving part than an
+> event round-trip to itself.
+>
+> `mc-chart.js` gained one line: `bodyMap()`'s root `<svg>` now carries
+> `xmlns="http://www.w3.org/2000/svg"`. Free in every existing caller
+> (inserted via `innerHTML`, where the HTML parser resolves the namespace
+> regardless), but required for `H2`'s new use — loading the same markup
+> as a standalone `Image().src` data URI for canvas export, which is not
+> guaranteed to render without it.
+>
+> Verified in isolation (the full `mc-finish.js` self-inits off
+> `location.pathname` at load, so it isn't `require()`-able the way
+> `mc-chart.js`/`mc-stats.js` are; `sessionMuscleData()`'s exact body was
+> extracted and run standalone instead): correct percent-of-max
+> normalization (3/3/1/2 sets across three groups → 100/66.7/33.3), `null`
+> on an empty or missing session, and the two-figure `bodyMap()` render
+> reading a `Chest · 100%` title with `xmlns` present on both `<svg>`
+> roots. Every page carrying `mc-finish.js` (77) already loads both
+> `mc-chart.js` (80) and `mc-muscle-map.js` (83) — confirmed by diffing
+> the two script-tag sets, not assumed — so no page's script list needed
+> touching. All local CI-equivalent gates re-run clean on the new commit:
+> `check-exports`, `check-single-impl`, `check-store-coverage`,
+> `check-script-manifest --check`, and a full tree-wide `node --check`
+> sweep.
+
+> **`H3` shipped (2026-09-03) — three decisions locked first, one of them a
+> naming correction the audit forced.** The roadmap named this store/module
+> `mc_biometric_v1`/`mc-biometric.js` throughout — but `mc-biometric.js`
+> already exists as the Face ID/Touch ID auth gate for PM Mode, a completely
+> unrelated feature (confirmed against `store-registry.json`'s own
+> `mc_bio_cred` entry, which is that feature's real store). Renamed to
+> `mc_vitals_v1`/`mc-vitals.js` before writing a line of it, rather than
+> shipping a collision.
+>
+> **Formula scope: the store, its entry UI, and its own Recovery ring only
+> — `mc-readiness.js`'s per-muscle formula stays untouched this phase.**
+> Reading the real function first (`recoveryFor()`) found it is not an
+> isolated helper: it's tested (`tools/test-mc-readiness.js`) and consumed
+> by the dashboard readiness board, `mc-quick-pump.js`'s Full Body
+> balancing, `H1`'s own new Stats hub Recovery mode, and the exercise-card
+> freshness dots. Wiring a new, often-empty, self-reported signal into that
+> exact formula sight-unseen (no headless browser this session to verify
+> it against) was correctly judged the wrong risk to take in the same pass
+> as everything else — `mc-vitals.js`'s `recoveryScore()` is a fully
+> separate reading over `mc_vitals_v1` alone, never touching
+> `mc_workout_log_v1`, so it cannot silently move any of those four
+> existing consumers. Feeding it into `recoveryFor()`'s `tau` stays
+> explicit future work, gated on its own verification pass.
+>
+> **Supabase scope: none.** Manual entry rides the existing local-first +
+> `mc-sync.js` `arrayById` path, same convention `mc_body_v1` already
+> uses — confirmed by copying that store's exact `store-registry.json`
+> shape rather than inventing a new one. No server table was added; the
+> Shortcuts-bridge/Web Bluetooth paths and their schema stay exactly where
+> the original roadmap left them, gated on a platform-support spike neither
+> of which happened this phase.
+>
+> **UI:** a new dashboard strip (`.vitals-strip`, teal accent — distinct
+> from the gold momentum strip and violet cross-app strip already in that
+> position) showing the Recovery ring + today's sleep/resting-HR readout,
+> hidden entirely with no entry logged yet. "Log" chains three
+> `MCInputSheet.prompt()` calls (resting HR, sleep hours, 1–5 readiness,
+> each optional) — reusing the exact component `mc-body.js`'s own "Log
+> weight" button already uses, rather than building a new multi-field
+> stepper UI this session has no way to visually verify. An explicit
+> Cancel at any step discards the whole entry rather than saving a partial
+> one — simplest behavior to reason about without a live browser to check
+> a partial-save flow in.
+>
+> Verified with a stubbed-`localStorage` harness against the real source:
+> `null` latest/score with no entries; a full entry's score computed
+> correctly (readiness 4 → 80, zero sleep nudge at exactly 8h); a
+> low-readiness/short-sleep entry's negative nudge clamped correctly
+> (readiness 2 → 40, sleep 5h's −18 clamped to −15 → 25); an HR-only entry
+> falling back to the documented neutral 70 baseline with no fabricated
+> sleep field; newest-first array order; and score clamping at the 100
+> ceiling on a maxed-out entry. All local CI-equivalent gates re-run clean:
+> `check-store-coverage` (the new store registered in all three required
+> places — `store-registry.json`, `mc-sync.js`'s `STORES`, `mc-export.js`'s
+> `KEYS` — in the same change, per the repo's standing rule),
+> `check-exports`, `check-single-impl`, `check-script-manifest --check`,
+> `apply-head-contract --check`, `check-design-tokens`,
+> `build-market --check`, and a full tree-wide `node --check` sweep
+> including `dashboard.html`'s four inline `<script>` blocks extracted and
+> checked individually.
+
 ---
 
 ## 1. Executive summary & codebase audit

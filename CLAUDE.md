@@ -1242,6 +1242,34 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > `H0` may start immediately per the Planning rule above; `H1`–`H5` each
 > keep their own `AskUserQuestion` gate per the multi-phase-work rule, and
 > `H3` (the Supabase-schema phase) requires one explicitly.
+>
+> **`H0`+`H1` shipped (2026-09-02/03).** `H0`: `MC_CHART.bodyMap()` landed in
+> `mc-chart.js`, primitive only. `H1` (its own `AskUserQuestion` gate:
+> replace the old bar list rather than duplicate it, default to Recovery
+> mode) wired it into the Stats hub, replacing `mc-stats.js`'s
+> `renderMuscles()`. A real touch-target constraint — a region on a
+> phone-width figure measures well under the 44px floor — moved tap-through
+> off the SVG itself onto a `.ready-chip`-based legend (the same component
+> `renderCurrentReadiness()` already uses one section up the same page),
+> tapping into `mc-exercise-trends.js`.
+>
+> **`H2` shipped (2026-09-03).** A post-session muscle reveal wired into
+> `mc-finish.js`'s existing "Session Complete" recap, right after the
+> strain ring. Static, not animated (no way to verify motion timing from
+> this session) and its own small canvas export rather than reusing
+> `mc-wrapped.js`'s `save()`, which turned out on inspection to be one
+> monolithic function tied to its own card shape, not a reusable pipeline.
+>
+> **`H3` shipped (2026-09-03).** A manual daily wellness entry
+> (`mc-vitals.js`, `mc_vitals_v1` — renamed from the roadmap's original
+> `mc_biometric_v1`, which collided with the existing Face ID auth module
+> of that near-name) surfaces its own Recovery ring in a new dashboard
+> strip. Deliberately does **not** feed `mc-readiness.js`'s per-muscle
+> formula — that function is tested and consumed by four other places
+> app-wide, so wiring a new signal into it stays separate, verified future
+> work. No Supabase table; rides the existing `mc-sync.js` `arrayById`
+> path, same as `mc_body_v1`. Full writeup in
+> `flagship-immersive-roadmap.md`.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 

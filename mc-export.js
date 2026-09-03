@@ -33,7 +33,7 @@
     // synced training data
     'mc_setlog_v1', 'mc_custom_workouts_v1',
     'mc_custom_programs_v1', 'mc_collections_v1', 'mc_workout_log_v1',
-    'mc_cond_log_v1', 'mc_body_v1', 'mc_max_v1', 'mc_activity',
+    'mc_cond_log_v1', 'mc_body_v1', 'mc_vitals_v1', 'mc_max_v1', 'mc_activity',
     'mc_daily_v1', 'mc_plan_targets_v1', 'mc_macros_v1',
     'mc_session_summary_v1',        // synced since B-era; was missing here
     'mc_custom_exercises_v1',       // G-01

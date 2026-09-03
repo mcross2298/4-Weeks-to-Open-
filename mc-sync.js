@@ -78,6 +78,7 @@
     'mc_workout_log_v1':     'workoutLog',
     'mc_cond_log_v1':        'arrayById',
     'mc_body_v1':            'arrayById',
+    'mc_vitals_v1':          'arrayById',
     'mc_max_v1':             'arrayById',
     'mc_activity':           'activity',
     'mc_daily_v1':           'dictByTs',
