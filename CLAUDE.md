@@ -1311,8 +1311,23 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > correctly ruled out: it matches that one page's own pre-existing,
 > explicitly-commented "no token system here" convention, not a new
 > regression. `quick-tour.html`/`quick-tour-overview.html` updated with all
-> four `H0`–`H4` features per the Documentation currency rule. Full writeup
-> in `flagship-immersive-roadmap.md`.
+> four `H0`–`H4` features per the Documentation currency rule.
+>
+> **`H4b` shipped (2026-09-03) — the deferred muscle-scoping.** `H4` shipped
+> full-body/undimmed because no program's real exercise list reached the
+> trigger point; `tools/gen-schedules.js` now also classifies each `mm`/`hv`
+> day's real exercise names through `MC_MUSCLES.classify()` (same `vm`
+> technique it already uses to read `ex`/`sets`) and writes a `muscles`
+> field per day, hand-typed for `ss` from the same real classifier output
+> since that program's block is hand-authored, not generated. The Readiness
+> Brief dims every group outside today's real scope for `mm`/`hv`/`ss`,
+> using `MC_CHART.bodyMap()`'s existing "omitted group renders neutral"
+> behavior — zero chart-primitive changes needed. Found and fixed along the
+> way: a real, pre-existing `MC_MUSCLES` classifier bug (an unbounded `chin`
+> pattern matching the substring inside "Machine", corrected **28 real
+> exercise-catalog classifications** from a wrong `back` to their real
+> group) that was live everywhere the shared classifier is used, not
+> introduced by this work. Full writeup in `flagship-immersive-roadmap.md`.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 
