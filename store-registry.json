@@ -148,25 +148,25 @@
     "mc_ex_favs": {
       "owner": "exercise-library.html",
       "storage": "local",
-      "sync": false,
+      "sync": "stringSetBase",
       "export": true
     },
     "mc_ex_notes": {
       "owner": "mc-card-actions.js",
       "storage": "local",
-      "sync": false,
+      "sync": "dictBase",
       "export": true
     },
     "mc_ex_order": {
       "owner": "mc-card-actions.js",
       "storage": "local",
-      "sync": false,
+      "sync": "dictBase",
       "export": true
     },
     "mc_ex_tempo": {
       "owner": "mc-card-actions.js",
       "storage": "local",
-      "sync": false,
+      "sync": "dictBase",
       "export": true
     },
     "mc_foodapi_cache_v1": {
@@ -233,7 +233,7 @@
     "mc_personal_intensifiers": {
       "owner": "program-overrides.js",
       "storage": "local",
-      "sync": false,
+      "sync": "dictBase",
       "export": true
     },
     "mc_personal_theme_v1": {
@@ -315,7 +315,7 @@
     "mc_replacements_global": {
       "owner": "mc-card-actions.js",
       "storage": "local",
-      "sync": false,
+      "sync": "dictBase",
       "export": true
     },
     "mc_resume_toast_shown": {
@@ -412,7 +412,7 @@
     "mc_replacements|": {
       "owner": "mc-card-actions.js",
       "storage": "local",
-      "sync": false,
+      "sync": "dictBase",
       "export": true,
       "note": "Per-page exercise swaps. Dynamic key per page id, so only matchable by prefix."
     },

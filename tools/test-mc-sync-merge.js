@@ -509,6 +509,100 @@ async function runAsyncTests() {
        eng.sandbox.window.MC_SYNC.status().pending >= 1);
   }
 
+  /* ======================================================================
+     Phase 3.1 (audit P2-03) — the athlete-authored training stores.
+     Replacements, order, notes, tempo, favourites and personal intensifiers
+     were export-only: in a manual backup, never synced, so none of them
+     followed the athlete to a second device. Replacements are the sharp
+     case — a device without them shows the WRONG EXERCISE on the card, not a
+     missing preference.
+     ====================================================================== */
+  ok('Phase 3.1 exports are reachable',
+     !!(M && M.mergeStringSetBase && M.prefixStrategy && M.syncableKeys));
+
+  // --- favourites are a SET, and both add and remove are real edits --------
+  {
+    // A plain union would silently undo an un-favourite: the other device
+    // still holds the name, so it comes straight back. This is the assertion
+    // that forbids that shortcut.
+    const base = JSON.stringify(['Squat', 'Bench', 'Row']);
+    const out = M.mergeStringSetBase(['Squat', 'Row'], ['Squat', 'Bench', 'Row'], base);
+    ok('a favourite removed locally STAYS removed', out.indexOf('Bench') < 0,
+       JSON.stringify(out));
+    ok('  and the untouched ones survive', out.indexOf('Squat') >= 0 && out.indexOf('Row') >= 0,
+       JSON.stringify(out));
+  }
+  {
+    const base = JSON.stringify(['Squat']);
+    const out = M.mergeStringSetBase(['Squat', 'Curl'], ['Squat', 'Dip'], base);
+    ok('additions from BOTH devices survive',
+       out.indexOf('Curl') >= 0 && out.indexOf('Dip') >= 0 && out.indexOf('Squat') >= 0,
+       JSON.stringify(out));
+    ok('  and nothing is duplicated', out.length === new Set(out).size, JSON.stringify(out));
+  }
+  {
+    const out = M.mergeStringSetBase(['Squat', 'Bench'], ['Squat', 'Bench'], JSON.stringify(['Squat', 'Bench']));
+    ok('no change on either side is a no-op', JSON.stringify(out) === JSON.stringify(['Squat', 'Bench']),
+       JSON.stringify(out));
+  }
+  {
+    const out = M.mergeStringSetBase(['A'], ['B'], null);
+    ok('no base yet (first sync) keeps both', out.indexOf('A') >= 0 && out.indexOf('B') >= 0,
+       JSON.stringify(out));
+  }
+  ok('a corrupt favourites value never throws',
+     Array.isArray(M.mergeStringSetBase(null, undefined, '{oops')), '');
+  ok('a non-array remote is ignored rather than adopted',
+     JSON.stringify(M.mergeStringSetBase(['A'], { not: 'an array' }, null)) === JSON.stringify(['A']), '');
+  ok('mergeStore routes stringSetBase',
+     JSON.stringify(M.mergeStore('stringSetBase', ['A'], ['B'], null)) !== JSON.stringify(['A']), '');
+
+  // --- the dynamic page-scoped swap family --------------------------------
+  ok('a page-scoped swap key is recognised by prefix',
+     M.prefixStrategy('mc_replacements|cat-strength.html') === 'dictBase',
+     String(M.prefixStrategy('mc_replacements|cat-strength.html')));
+  ok('the GLOBAL swap key is not mistaken for the prefix family',
+     M.prefixStrategy('mc_replacements_global') === null,
+     String(M.prefixStrategy('mc_replacements_global')));
+  ok('an unrelated key matches no prefix', M.prefixStrategy('mc_theme_mode') === null);
+  ok('a null key does not throw', M.prefixStrategy(null) === null);
+
+  // syncableKeys() must union in keys the SERVER knows about but this device
+  // has never held — without that, a fresh device never receives its swaps,
+  // which is the whole case this change exists for.
+  {
+    const all = M.syncableKeys(['mc_replacements|mm-p1.html', 'mc_theme_mode']);
+    ok('a server-only page-scoped key is picked up for pull',
+       all['mc_replacements|mm-p1.html'] === 'dictBase', JSON.stringify(all['mc_replacements|mm-p1.html']));
+    ok('  but a non-syncing server key is NOT adopted',
+       !('mc_theme_mode' in all), '');
+    // The FIXED half of the table is not asserted here on purpose: `var
+    // STORES` may not have initialised when this file is require()d (the
+    // export hook is deliberately placed before the guards). It is checked
+    // far more strictly by tools/check-store-coverage.js, which compares
+    // every entry against store-registry.json, strategy names included.
+  }
+
+  // --- the six stores merge per key, so two devices do not clobber ---------
+  {
+    // reorder day 1 on the phone, add a note on day 3 from the tablet
+    const base = JSON.stringify({ 'day1.html': { a: 1 } });
+    const out = M.mergeDictBase(
+      { 'day1.html': { a: 2 } },                       // local reordered day 1
+      { 'day1.html': { a: 1 }, 'day3.html': { b: 9 } },// remote added day 3
+      base);
+    ok('a per-page edit on each device survives the other',
+       out['day1.html'].a === 2 && out['day3.html'].b === 9, JSON.stringify(out));
+  }
+  {
+    // the sharp case: a swap made on one device reaches the other
+    const out = M.mergeStore('dictBase', { 'bench press': 'DB Press' }, {}, JSON.stringify({}));
+    ok('a local-only swap is not dropped by an empty remote',
+       out['bench press'] === 'DB Press', JSON.stringify(out));
+    const out2 = M.mergeStore('dictBase', {}, { 'squat': 'Hack Squat' }, JSON.stringify({}));
+    ok('a remote-only swap arrives', out2['squat'] === 'Hack Squat', JSON.stringify(out2));
+  }
+
   if (fail) { console.error(`\ntest-mc-sync-merge: ${pass} passed, ${fail} FAILED`); process.exit(1); }
   console.log(`test-mc-sync-merge: all ${pass} assertions passed`);
 }

@@ -37,6 +37,10 @@
       mergeExerciseByName: function () { return mergeExerciseByName.apply(null, arguments); },
       mergeScalarBase: function () { return mergeScalarBase.apply(null, arguments); },
       mergeDictBase: function () { return mergeDictBase.apply(null, arguments); },
+      // Phase 3.1
+      mergeStringSetBase: function () { return mergeStringSetBase.apply(null, arguments); },
+      prefixStrategy: function () { return prefixStrategy.apply(null, arguments); },
+      syncableKeys: function () { return syncableKeys.apply(null, arguments); },
       mergeStore: function () { return mergeStore.apply(null, arguments); },
       // K-3.2/A-16
       setlogPageOf: function () { return setlogPageOf.apply(null, arguments); },
@@ -100,8 +104,81 @@
     // the same per-key strategy as mc_weekly_overrides_v1 above: a block
     // half-finished on the phone has to be half-finished on the tablet, and
     // two devices advancing two DIFFERENT programs must both survive.
-    'mc_program_progress_v1': 'dictBase'
+    'mc_program_progress_v1': 'dictBase',
+    // Phase 3.1 (audit P2-03) — the ATHLETE-AUTHORED training stores. All of
+    // them were export-only: in a manual backup, but never synced, so none of
+    // them followed the athlete to a second device. The registry's own note
+    // says it plainly ("a key may be export-only: backing one up costs
+    // nothing, while syncing it needs a merge rule"), and this is that rule.
+    //
+    // Replacements matter most and are the reason this is not cosmetic: a
+    // device without them shows the WRONG EXERCISE on the card — not a missing
+    // preference, a different lift.
+    //
+    // Every one of these is a dict keyed by something the two devices are
+    // unlikely to touch at once (an exercise name, a page id), so `dictBase`
+    // is right for all of them: it resolves PER KEY against the last-synced
+    // base, so reordering day 1 on the phone and adding a note on day 3 from
+    // the tablet both survive. A whole-value strategy would let either
+    // clobber the other.
+    'mc_replacements_global':   'dictBase',   // { origLower: newName }
+    'mc_ex_order':              'dictBase',   // { pageId: { containerKey: [names] } }
+    'mc_ex_notes':              'dictBase',   // { pageId: { name: "text" } }
+    'mc_ex_tempo':              'dictBase',   // { pageId: { name: "3:0:1:0" } }
+    'mc_personal_intensifiers': 'dictBase',   // { pageId: { baseKey: patch } }
+    // Favourites are an ARRAY of names, not a dict, so none of the strategies
+    // above fit — see mergeStringSetBase().
+    'mc_ex_favs':               'stringSetBase'
   };
+
+  // Dynamic key FAMILIES, where the key itself carries data (the page id) and
+  // so cannot be listed. mc-export.js already solved this with its own
+  // KEY_PREFIXES; the sync layer had no equivalent, which is exactly why a
+  // page-scoped swap never left the device that made it.
+  // A function, not a `var` holding an object: this file's Node export hook is
+  // placed to run BEFORE the guards, exploiting function-declaration hoisting,
+  // so no `var` initialiser in the IIFE has run when a test calls in. The same
+  // trap cost a debugging round in Phase 2.3. check-store-coverage.js parses
+  // the literal below, so keep it a plain single-quoted map.
+  function PREFIX_STORES() {
+    return {
+      'mc_replacements|': 'dictBase'          // { origLower: newName }, per page
+    };
+  }
+  function prefixStrategy(key) {
+    var map = PREFIX_STORES();
+    for (var p in map) {
+      if (key && key.indexOf(p) === 0) return map[p];
+    }
+    return null;
+  }
+  // Every key this device should sync right now: the fixed table above, plus
+  // every dynamic-family key present locally. `extraKeys` lets the caller that
+  // can see the SERVER's key list (pull) union it in — without that, a fresh
+  // device would never receive page-scoped swaps it has never held, which is
+  // the case the whole change exists for.
+  function syncableKeys(extraKeys) {
+    var out = {}, k;
+    // STORES is a `var`, and the Node export hook can be reached before its
+    // initialiser has run (see PREFIX_STORES above). In a browser it is always
+    // set by the time anything calls this; the guard keeps the dynamic half
+    // usable from a test either way.
+    var fixed = (typeof STORES !== 'undefined' && STORES) || {};
+    for (k in fixed) out[k] = fixed[k];
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var lk = localStorage.key(i), st = lk && prefixStrategy(lk);
+        if (st && !(lk in out)) out[lk] = st;
+      }
+    } catch (e) {}
+    if (extraKeys) {
+      for (var j = 0; j < extraKeys.length; j++) {
+        var ek = extraKeys[j], es = prefixStrategy(ek);
+        if (es && !(ek in out)) out[ek] = es;
+      }
+    }
+    return out;
+  }
   // Roadmap B0 (cookbook↔workout bridge) — stores this app CONSUMES read-only
   // from Mike's Cookbook via the shared user_sync table. PULLED into local
   // localStorage (so mc-bridge.js can read today's planned meals) but NEVER
@@ -134,13 +211,14 @@
 
   function pendingCount() {
     var n = 0;
-    Object.keys(STORES).forEach(function (key) {
+    var ALL = syncableKeys();
+    Object.keys(ALL).forEach(function (key) {
       var cur = readRaw(key);
       if (cur == null) return;
       // K-3.2/A-16: setlog has no whole-store snapshot entry (see
       // computeSetlogPushOps()'s comment on push() below) — "pending" means
       // at least one page-group differs from what the server confirmed.
-      if (STORES[key] === 'setlog') {
+      if (ALL[key] === 'setlog') {
         var data = parse(cur);
         if (data != null && computeSetlogPushOps(key, data, snapshot).ops.length) n++;
         return;
@@ -463,7 +541,32 @@
     return out;
   }
 
+  // A SET of names (favourites), where both add and remove are real edits.
+  // A plain union would silently undo an un-favourite: the other device still
+  // holds the name, so it comes straight back. Resolved against the last
+  // synced base instead — keep what both still have, plus anything either
+  // device ADDED since the base, which leaves a removal on either side
+  // removed.
+  function mergeStringSetBase(local, remote, base) {
+    if (!Array.isArray(local) && !Array.isArray(remote)) return local || remote || [];
+    var L = Array.isArray(local) ? local : [];
+    var R = Array.isArray(remote) ? remote : [];
+    var baseArr = [];
+    try { baseArr = base != null ? (JSON.parse(base) || []) : []; } catch (e) { baseArr = []; }
+    if (!Array.isArray(baseArr)) baseArr = [];
+    var inBase = {}, inL = {}, inR = {}, out = [], seen = {};
+    baseArr.forEach(function (x) { inBase[x] = 1; });
+    L.forEach(function (x) { inL[x] = 1; });
+    R.forEach(function (x) { inR[x] = 1; });
+    function take(x) { if (!seen[x]) { seen[x] = 1; out.push(x); } }
+    // order follows local first, so the athlete's own device keeps its order
+    L.forEach(function (x) { if (inR[x] || !inBase[x]) take(x); });
+    R.forEach(function (x) { if (!inBase[x]) take(x); });
+    return out;
+  }
+
   function mergeStore(strategy, local, remote, base) {
+    if (strategy === 'stringSetBase') return mergeStringSetBase(local, remote, base);
     if (strategy === 'exerciseByName') return mergeExerciseByName(local, remote);
     if (strategy === 'scalarBase') return mergeScalarBase(local, remote, base);
     if (strategy === 'dictBase')   return mergeDictBase(local, remote, base);
@@ -543,7 +646,10 @@
             Object.keys(result.newSnapshot).forEach(function (gk) { snapshot[gk] = result.newSnapshot[gk]; });
           }
         }
-        Object.keys(STORES).forEach(function (key) { pullKey(key, STORES[key]); });
+        // Union the SERVER's key list in, so a dynamic-family key this device
+        // has never held still arrives (see syncableKeys()).
+        var ALL = syncableKeys(Object.keys(remoteByKey));
+        Object.keys(ALL).forEach(function (key) { pullKey(key, ALL[key]); });
         Object.keys(CONSUME).forEach(function (key) { pullKey(key, CONSUME[key]); });
         status.lastPull = Date.now();
       });
@@ -583,7 +689,8 @@
         }));
       });
     }
-    Object.keys(STORES).forEach(function (key) {
+    var ALL = syncableKeys();
+    Object.keys(ALL).forEach(function (key) {
       var cur = readRaw(key);
       if (cur == null) return;                 // nothing stored locally yet
       // S1: never upload a key whose last local write failed (quota) — see
@@ -594,7 +701,7 @@
       if (quotaBlocked[key]) return;
       // setlog has no whole-store snapshot to short-circuit against — its
       // own per-group diff inside pushSetlogKey() IS the cheap no-op check.
-      if (STORES[key] === 'setlog') { pushSetlogKey(key, cur); return; }
+      if (ALL[key] === 'setlog') { pushSetlogKey(key, cur); return; }
       if (cur === snapshot[key]) return;        // unchanged since last sync
       var data = parse(cur);
       if (data == null) return;
@@ -655,10 +762,11 @@
   // confirmed push() a harmless no-op.
   function pendingRows() {
     var rows = [];
-    Object.keys(STORES).forEach(function (key) {
+    var ALL = syncableKeys();
+    Object.keys(ALL).forEach(function (key) {
       var cur = readRaw(key);
       if (cur == null || quotaBlocked[key]) return;
-      if (STORES[key] === 'setlog') {
+      if (ALL[key] === 'setlog') {
         var localWhole = parse(cur);
         if (localWhole == null) return;
         var plan = computeSetlogPushOps(key, localWhole, snapshot);
