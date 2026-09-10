@@ -1329,6 +1329,37 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > group) that was live everywhere the shared classifier is used, not
 > introduced by this work. Full writeup in `flagship-immersive-roadmap.md`.
 
+> **Companion engine-repair plan:** [`engine-repair-roadmap.md`](engine-repair-roadmap.md)
+> (opened 2026-09-10, `Phase 0`–`Phase 5`) is the repository's copy of a
+> three-pass architecture audit of the flagship training path, published as
+> three HTML artifacts: the **Flagship Engine Audit** (the engine flow and its
+> four information losses; `DB-*`, `PG-*`, `EN-*`), the **Engine Repair
+> Roadmap** (20 more modules, all 9 Edge Functions, every table policy, all 58
+> stores; `P2-*`; three corrections to pass 1; the original four-phase plan)
+> and the **Launch Readiness Gate** (concurrency, crash recovery, numeric
+> boundaries, a live RLS penetration test; `L-*`, `FIX-01`–`FIX-06`,
+> `TEST 1`–`TEST 5`; `Phase 0` in front and `Phase 5` behind). Six phases,
+> numbered 0 through 5 — there is no Phase 6. Scratch-listed
+> (`content-manifest.json`), so it never ships to the public Rolodex build.
+> `Phase 0` may start immediately per the Planning rule above; each later
+> phase keeps its own `AskUserQuestion` gate per the multi-phase-work rule.
+>
+> **The three headline findings.** Two open tabs destroy half a session
+> silently (10 sets accepted, 5 persisted; the single-tab control loses
+> nothing) and a process kill loses everything since the last browser flush,
+> while a perfect cloud copy sits unread — `Phase 0` exists for those two. The
+> weekly check-in has **failed on all nine scheduled runs since 12 July and
+> has never sent a notification**, because the repository secret its workflow
+> guards on was never set. And row-level security **passed cleanly** — seven
+> cross-user read, write and privilege-escalation attacks, zero findings.
+>
+> **The sign-off is deliberately not a clean one.** About 45 of 102 modules
+> were opened across the three passes; multi-device sync, real-device QA and
+> any rendering measurement remain unverified from an agent session, the same
+> constraints `B5`, `P4` and `W-I3` already record. The full residual list is
+> in the roadmap's own closing section rather than absorbed into a tidy
+> statement.
+
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 
 ### Decisions locked in (via AskUserQuestion, session 2026-06-27)
