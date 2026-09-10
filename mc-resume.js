@@ -70,6 +70,10 @@
       '.mcr-name{font-size:13px;font-weight:800;color:#f0fdf4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
       '.mcr-ago{font-size:11px;font-weight:700;color:#94a3b8;margin-top:2px;}' +
       '.mcr-prog{font-size:11px;font-weight:700;color:#a3e635;margin-left:auto;flex-shrink:0;}' +
+      // P2-07: the unit, muted so the numbers still read first. The restore
+      // banner further down this file has always named its unit ("3 sets");
+      // this makes the resume banner consistent with its own sibling.
+      '.mcr-prog-unit{font-weight:600;opacity:0.7;}' +
       '.mcr-arrow{color:#d9f99d;font-size:15px;flex-shrink:0;}' +
       '.mcr-dismiss{background:none;border:0;color:#94a3b8;font-size:15px;line-height:1;' +
         'padding:4px 6px;margin-left:2px;flex-shrink:0;cursor:pointer;' +
@@ -194,7 +198,15 @@
         '<div class="mcr-name"></div>' +
         '<div class="mcr-ago"></div>' +
       '</div>' +
-      '<span class="mcr-prog">' + L.done + '/' + L.total + '</span>' +
+      // P2-07: name the UNIT. This banner counts EXERCISES while the session
+      // toolbar counts SETS, so the same workout read "1/6" here and "1/28"
+      // there — two correct measures of different things, and no way for the
+      // athlete to tell that from two bare fractions. The toolbar cannot say
+      // it (its own comment records the 4px of slack it had at 390px); this
+      // banner has the room, so it is the one that says what it counts.
+      '<span class="mcr-prog" aria-label="' + L.done + ' of ' + L.total +
+        ' exercises logged">' + L.done + '/' + L.total +
+        '<span class="mcr-prog-unit"> ex</span></span>' +
       '<span class="mcr-arrow">→</span>' +
       '<button class="mcr-dismiss" aria-label="Dismiss">✕</button>';
     el.querySelector('.mcr-name').textContent = L.title;   // textContent = no HTML injection

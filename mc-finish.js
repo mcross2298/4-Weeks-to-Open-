@@ -316,6 +316,16 @@
     // have overflowed. The button's aria-label carries the full meaning.
     var txt=done+'/'+total;
     if(el&&el.textContent!==txt)el.textContent=txt;
+    // P2-07: an aria-label OVERRIDES the element's own text, so the numbers
+    // above were never announced — a screen reader heard "sets completed" with
+    // no count at all. This is the same defect card-integration R3 fixed on
+    // .mcl-strip, recurring on a different element, so the label is rebuilt
+    // with the count rather than left as a static string. Write-on-change for
+    // A-2's reason, same as the text above.
+    if(el){
+      var lbl='Session progress, '+done+' of '+total+' sets completed — open workout summary';
+      if(el.getAttribute('aria-label')!==lbl)el.setAttribute('aria-label',lbl);
+    }
     // M3c: a session is "active" the moment the first set is logged -- not when
     // the page loads. Until then the athlete is still browsing and the nav is
     // how they browse. classList.toggle with an explicit boolean is idempotent,
