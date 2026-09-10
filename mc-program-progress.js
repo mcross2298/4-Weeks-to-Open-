@@ -106,6 +106,16 @@
           rest: (ph.rest || []).slice().filter(function (q) { return q >= 1 && q <= perWeek; })
         };
       }),
+      // AUTHORED like `phases`, and re-derived on every read for the same
+      // reason: which weeks of this block are DELOAD weeks (roadmap Phase 4
+      // step 3, audit PG-2). No flagship program had one, including the
+      // fifteen-week one. It is data rather than "the last week", so a program
+      // can declare none, or later declare more than one, without a renderer
+      // learning a rule. Never persisted — an athlete's stored record must not
+      // be able to contradict the program's own prescription.
+      deloadWeeks: (def.deloadWeeks || []).slice().filter(function (w) {
+        return w >= 1 && w <= intOr(rec.weeks, intOr(def.weeks, 1));
+      }),
       weekOrder: rec.weekOrder || {},
       completed: rec.completed || {},
       cursor: rec.cursor != null ? intOr(rec.cursor, null) : null,
@@ -389,15 +399,48 @@
     };
   }
 
+  // The `def` a caller passes in, derived from a program's own `schedule` block
+  // in mc-pm-data.js. It lived inline in dashboard.html's dayModuleDef(), which
+  // was fine while the day module was the only consumer; the adherence streak
+  // (mc-streak.js) is the second, and it runs on stats.html too, where the day
+  // module's own dependencies are not loaded. One derivation, so a phased
+  // program cannot describe itself differently to two readers.
+  // Is this week of the block a deload? Reads the record's own declared list,
+  // so a program with none never gets one invented for it — the same rule
+  // mount() learned in F1b, where normalizing an absent schedule silently
+  // rendered a 7-day 2-rest week as the program's real prescription.
+  function isDeloadWeek(rec, week) {
+    var list = (rec && rec.deloadWeeks) || [];
+    return list.indexOf(intOr(week, 0)) >= 0;
+  }
+
+  function defFromSchedule(sc) {
+    if (!sc || !sc.days || !sc.days.length) return null;
+    var phases = (sc.phases || []).map(function (ph) {
+      return { weeks: ph.weeks, order: (ph.days || []).slice(), rest: (ph.rest || []).slice() };
+    });
+    return {
+      weeks: sc.weeks,
+      perWeek: sc.perWeek,
+      rest: (sc.rest || []).slice(),
+      deloadWeeks: (sc.deloadWeeks || []).slice(),
+      phases: phases,
+      order: (phases.length ? phases[0].order
+                            : sc.days.map(function (d) { return d.id; })).slice()
+    };
+  }
+
   window.MC_PROGRAM_PROGRESS = {
     KEY: KEY,
     get: get,
+    defFromSchedule: defFromSchedule,
     ensure: ensure,
     save: save,
     totalDays: function (rec) { return totalDays(rec); },
     weekOf: function (rec, d) { return weekOf(rec, d); },
     positionOf: function (rec, d) { return positionOf(rec, d); },
     isRest: function (rec, d) { return isRest(rec, d); },
+    isDeloadWeek: isDeloadWeek,
     workoutFor: function (rec, d) { return workoutFor(rec, d); },
     orderForWeek: orderForWeek,
     phaseForWeek: phaseForWeek,

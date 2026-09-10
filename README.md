@@ -19,7 +19,7 @@ is the source of truth for contribution rules.
   Everything Under the Kitchen Sink, The Modality Matrix, High-Volume
   Training Template) and 4 licensed-influencer programs (STNDR, Daily Pump,
   Daily Gainz, PSU Football).
-- **A 577-exercise catalog** (`exercise-catalog.js`), deduplicated to true
+- **A 580-exercise catalog** (`exercise-catalog.js`), deduplicated to true
   mechanical variations, every entry tagged with `equipment` and `movement`
   so the substitute picker (`mc-card-actions.js` + `mc-biomech.js`) can
   suggest biomechanically close swaps.

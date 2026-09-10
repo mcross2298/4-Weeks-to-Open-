@@ -223,6 +223,11 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 .rb-fig{text-align:center;}
 .rb-fig-cap{font-size:var(--fs-2xs);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2);margin-top:4px;}
 .rb-note{font-size:var(--fs-xs);font-weight:700;color:var(--danger,#f87171);text-align:center;margin:10px 0 4px;}
+/* Roadmap Phase 4 step 3: the deload line states the program's own plan, so it
+   reads as information (cyan, like the week bar's badge) and not as a warning
+   the way .rb-note does. */
+.rb-deload{font-size:var(--fs-xs);font-weight:800;color:#22d3ee;text-align:center;margin:10px 0 4px;}
+.rb-lighter{min-height:44px;}
 /* base.css's .fw-cancel/.fw-confirm 44px-tall padding is scoped to
    #fwModalBtns/#fwRecapBtns on purpose (those classes are also reused by an
    unrelated post-save "Done" button); .rb-btns gets the same padding boost
@@ -319,7 +324,8 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 /* ── PUSH ALERTS CHIP ── */
 .push-chip{
   display:none;align-items:center;gap:8px;
-  margin:0 18px 14px;padding:11px 14px;
+  margin:0 18px 14px;padding:11px 14px;min-height:44px;width:calc(100% - 36px);
+  text-align:left;
   background:var(--surface);border:1px solid var(--border2);border-radius:14px;
   cursor:pointer;
 }
@@ -1456,6 +1462,19 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
        the cookbook sees nothing extra on Home. -->
   <div class="today-strip" id="todayStrip" onclick="switchTab('nutrition')" role="button" tabindex="0" aria-label="Open Nutrition tab"></div>
 
+  <!-- Roadmap Phase 4 step 5: the welcome-moment ask. The CSS and the handler
+       for this chip have existed since the push work landed, but the ELEMENT
+       never did — getElementById('pushChip') returned null on every load, so
+       the dashboard has never once asked for notification permission. Verified
+       in a browser, not inferred. A real <button>, so Enter and Space work. -->
+  <button type="button" class="push-chip" id="pushChip" onclick="onEnablePush()">
+    <span class="push-chip-icon" aria-hidden="true">🔔</span>
+    <span class="push-chip-text">Get told the moment you beat a lift
+      <span class="push-chip-sub">Personal records and a Sunday nudge if the week slipped. One tap, no email.</span>
+    </span>
+    <span class="push-chip-btn">Turn on</span>
+  </button>
+
   <!-- Daily Vitals strip (flagship-immersive-roadmap.md H3) — manual
        sleep/resting-HR/readiness entry, its own Recovery ring. Hidden with
        no entry logged yet, same convention as the two strips above. -->
@@ -1801,6 +1820,7 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
 <script src="mc-collections.js"></script>
 <script src="mc-program-pub.js"></script>
 <script src="mc-haptics.js"></script>
+<script src="mc-streak.js"></script>
 <script src="mc-live-tracker.js"></script>
 <script src="mc-resume.js"></script>
 <script src="mc-chart.js"></script>
@@ -1932,7 +1952,10 @@ document.getElementById('flagCount').textContent=document.querySelectorAll('#fla
   const strip=document.getElementById('momentumStrip');
   if(!strip) return;
   if(a.streak>0){
-    document.getElementById('msStreak').textContent=a.streak+'-day streak';
+    // "day" only when the count IS days — an adherence streak counts prescribed
+    // workouts, and ten of those span fourteen calendar days on a 5-on 2-off
+    // block (roadmap Phase 4 step 1).
+    document.getElementById('msStreak').textContent=a.streak+'-'+(a.streakUnit||'day')+' streak';
     const sub=document.getElementById('msSub'), badge=document.getElementById('msBadge');
     if(a.trainedToday){
       sub.textContent='Nice — you trained today'; sub.className='ms-sub today';
@@ -2048,7 +2071,7 @@ function paintVitalsStrip(){
 
   if(a.streak>0){
     live.style.display='flex';
-    streakEl.innerHTML='<span class="gz-flame">🔥</span>'+a.streak+'-day streak'+
+    streakEl.innerHTML='<span class="gz-flame">🔥</span>'+a.streak+'-'+(a.streakUnit||'day')+' streak'+
       (a.trainedToday?' <span class="gz-streak-sub">· trained today</span>':' <span class="gz-streak-sub">· keep it alive</span>');
   } else {
     live.style.display='none';
@@ -2153,18 +2176,15 @@ function dayModuleDef(prog){
   const sc=src.schedule;
   if(!sc||!sc.days||!sc.days.length) return null;
   // F5: a multi-phase block runs a different day set (and sometimes a
-  // different rest pattern) in each phase, so `phases` is passed through when
-  // the program declares it. `order` stays the flat fallback — phase 1's days
-  // for a phased program — and byId indexes EVERY phase's days, so a week-11
-  // workout still resolves its title and icon.
-  var phases=(sc.phases||[]).map(function(ph){
-    return {weeks:ph.weeks,order:(ph.days||[]).slice(),rest:(ph.rest||[]).slice()};
-  });
+  // different rest pattern) in each phase. That derivation moved into
+  // mc-program-progress.js's defFromSchedule() when mc-streak.js became its
+  // second consumer — byId still indexes EVERY phase's days here, so a week-11
+  // workout resolves its title and icon.
+  const def=MC_PROGRAM_PROGRESS.defFromSchedule(sc);
+  if(!def) return null;
   return {
     prog:src,
-    def:{weeks:sc.weeks,perWeek:sc.perWeek,rest:(sc.rest||[]).slice(),
-         phases:phases,
-         order:(phases.length?phases[0].order:sc.days.map(function(d){return d.id;})).slice()},
+    def:def,
     byId:sc.days.reduce(function(m,d){m[d.id]=d;return m;},{})
   };
 }
@@ -2203,7 +2223,12 @@ function renderDayModule(cfg){
       P.setCursor(cfg.prog.id,d,cfg.def);
       var m=meta(w)||{};
       if(window.MC_READINESS_BRIEF){
-        MC_READINESS_BRIEF.show({dayTitle:m.title,icon:m.icon,accent:accent,scope:m.muscles,onBegin:function(){open(d,w);}});
+        // Roadmap Phase 4 step 3: the brief is told whether today falls in a
+        // deload week. It is resolved here because this is where the record
+        // and the day number already are — the brief is a renderer.
+        MC_READINESS_BRIEF.show({dayTitle:m.title,icon:m.icon,accent:accent,scope:m.muscles,
+          deload:!!(P.isDeloadWeek&&P.isDeloadWeek(rec,P.weekOf(rec,d))),
+          onBegin:function(){open(d,w);}});
       } else {
         open(d,w);
       }
@@ -2732,6 +2757,19 @@ function loadCoachNote(){
     if(!window.MC_PUSH||!MC_PUSH.isSupported()) return;
     if(MC_PUSH.getState()==='granted'){maybeCheckStreak();return;}
     if(MC_PUSH.getState()==='denied') return;
+    // ONE welcome moment, and only once the app has earned it (roadmap Phase 4
+    // step 5). Two conditions the old code had neither of:
+    //   • at least one finished workout — asking a first-time visitor to accept
+    //     notifications before they have trained is the ask people refuse.
+    //   • not already asked — mc-finish.js's post-PR offer writes the same key,
+    //     so the two asks are one ask between them and neither nags.
+    try{ if(localStorage.getItem('mc_push_asked_v1')) return; }catch(e){}
+    var trained=0;
+    try{
+      var log=(window.MC_LOG&&MC_LOG.readWorkoutLog)?MC_LOG.readWorkoutLog():[];
+      trained=log.length;
+    }catch(e2){}
+    if(!trained) return;
     var chip=document.getElementById('pushChip');
     if(chip) chip.classList.add('visible');
   }
@@ -2743,9 +2781,12 @@ function loadCoachNote(){
 
 function onEnablePush(){
   if(!window.MC_PUSH) return;
+  // Recorded BEFORE the permission call, like mc-finish.js's offer: whatever
+  // the athlete answers in the browser's own dialog, this app has had its turn.
+  try{ localStorage.setItem('mc_push_asked_v1',String(Date.now())); }catch(e){}
+  var chip=document.getElementById('pushChip');
+  if(chip) chip.classList.remove('visible');
   MC_PUSH.requestAndSubscribe().then(function(sub){
-    var chip=document.getElementById('pushChip');
-    if(chip) chip.classList.remove('visible');
     if(sub) maybeCheckStreak();
   }).catch(function(){});
 }
@@ -2753,23 +2794,21 @@ function onEnablePush(){
 // ── 7-day streak milestone detection ────────────────────────────────────────
 function maybeCheckStreak(){
   try{
-    var log=JSON.parse(localStorage.getItem('mc_workout_log_v1')||'[]');
-    if(!Array.isArray(log)||log.length<7) return;
-    var today=new Date(); today.setHours(0,0,0,0);
-    var streak=0;
-    for(var i=0;i<7;i++){
-      var d=new Date(today); d.setDate(d.getDate()-i);
-      var ds=d.toDateString();
-      if(log.some(function(e){return e.date&&new Date(e.date).toDateString()===ds;})){streak++;}
-      else break;
-    }
+    // Phase 4 step 1 (audit EN-4): this used to re-derive its own seven-day
+    // streak from mc_workout_log_v1, independently of MCActivity's count over
+    // mc_activity.days — two implementations of one concept over two stores.
+    // It reads the one streak now, which also makes the milestone REACHABLE:
+    // every program rests at least one day a week, so seven consecutive
+    // calendar days required disobeying the prescription.
+    if(!window.MCActivity) return;
+    var streak=MCActivity.get().streak||0;
     if(streak<7) return;
     // Don't spam — only push once per streak detection per day
     var streakKey='mc_streak_push_'+new Date().toISOString().slice(0,10);
     if(localStorage.getItem(streakKey)) return;
     localStorage.setItem(streakKey,'1');
     if(window.MC_SB&&MC_SB.sendPush){
-      MC_SB.sendPush({title:'🔥 7-Day Streak!',body:'You\'ve trained 7 days in a row. Incredible consistency — keep it going!'}).catch(function(){});
+      MC_SB.sendPush({title:'🔥 7-Workout Streak!',body:'Seven prescribed sessions in a row, rest days included. Incredible consistency — keep it going!'}).catch(function(){});
     }
   }catch(e){}
 }

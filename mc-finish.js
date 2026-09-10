@@ -412,6 +412,15 @@
       '.fw-done-prs:not(:empty){margin-bottom:16px;}'+
       '.fw-done-prs-title{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#d4af37;margin-bottom:8px;}'+
       '.fw-pr-chip{display:inline-block;margin:3px;padding:7px 12px;border-radius:10px;background:rgba(212,175,55,0.14);border:1px solid rgba(212,175,55,0.35);color:#f5d76e;font-size:12px;font-weight:800;}'+
+      /* Roadmap Phase 4 step 5: the one ask, shown under the records it is
+         about. Both controls clear the 44px touch floor — the H2/H3/H4
+         buttons missed it by reusing classes whose padding base.css scopes
+         elsewhere (PR #331), so these carry their own min-height. */
+      '.fw-push-offer{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);}'+
+      '.fw-push-line{font-size:12px;font-weight:700;color:#cbd5e1;margin-bottom:9px;}'+
+      '.fw-push-offer button{min-height:44px;padding:0 14px;margin:0 4px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;}'+
+      '.fw-push-yes{background:rgba(212,175,55,0.16);border:1px solid rgba(212,175,55,0.45);color:#f5d76e;}'+
+      '.fw-push-no{background:transparent;border:1px solid rgba(255,255,255,0.14);color:#94a3b8;}'+
       '.fw-refuel-wrap:not(:empty){margin-bottom:16px;padding:14px;border-radius:14px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);text-align:left;}'+
       '.fw-refuel-title{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#d4af37;}'+
       '.fw-refuel-sub{font-size:13px;font-weight:700;color:#e2e8f0;margin-top:4px;}'+
@@ -586,8 +595,67 @@
         :'';
     }
     if(prList.length)MC_HAPTICS.pr();else MC_HAPTICS.confirm();
+    offerPushAfterPR(prList);
     var ov=document.getElementById('fwDone');
     if(ov)ov.classList.add('open');
+  }
+
+  // ---- EN-3 / roadmap Phase 4 step 5: earn the permission -----------------
+  // The permission was only ever asked for by a chip on the dashboard, and the
+  // PR push in mc-setlog.js fires ONLY when it has already been granted — so an
+  // athlete who never tapped that chip hit personal records the app then said
+  // nothing about, forever.
+  //
+  // This is the moment worth asking at: they just finished, they just set a
+  // record, the record is on screen with its name and weight, and the tap that
+  // opened this recap is a real user gesture (browsers require one). It never
+  // asks without a PR, never asks twice, and never asks once the answer is
+  // already 'granted' or 'denied'.
+  //
+  // mc-push.js is loaded ON DEMAND rather than added to 78 workout pages: it is
+  // precached by the service worker, so this is a cache hit offline too, and
+  // nothing loads it for the athletes who never see this prompt.
+  var PUSH_ASKED_KEY = 'mc_push_asked_v1';
+  function pushState(){
+    try{
+      if(!('Notification' in window)) return 'unsupported';
+      return Notification.permission;
+    }catch(e){ return 'unsupported'; }
+  }
+  function loadPushModule(){
+    return new Promise(function(res,rej){
+      if(window.MC_PUSH) return res(window.MC_PUSH);
+      var t=document.createElement('script');
+      t.src='mc-push.js';
+      t.onload=function(){ window.MC_PUSH?res(window.MC_PUSH):rej(); };
+      t.onerror=rej;
+      document.head.appendChild(t);
+    });
+  }
+  function offerPushAfterPR(prList){
+    var host=document.getElementById('fwDonePRs');
+    if(!host||!prList||!prList.length) return;
+    if(pushState()!=='default') return;
+    try{ if(localStorage.getItem(PUSH_ASKED_KEY)) return; }catch(e){}
+    var top=prList[0];
+    var wrap=document.createElement('div');
+    wrap.className='fw-push-offer';
+    // Specific, not "enable notifications": name the record it would have told
+    // them about. Generic permission copy is what teaches people to say no.
+    wrap.innerHTML='<div class="fw-push-line">Want a nudge the next time you beat '+
+      esc(top.name)+'\u2019s '+top.weight+' lb?</div>'+
+      '<button type="button" class="fw-push-yes">Notify me</button>'+
+      '<button type="button" class="fw-push-no">Not now</button>';
+    host.appendChild(wrap);
+    function done(){ try{ localStorage.setItem(PUSH_ASKED_KEY,String(Date.now())); }catch(e){}
+                     if(wrap.parentNode) wrap.parentNode.removeChild(wrap); }
+    wrap.querySelector('.fw-push-no').addEventListener('click',done);
+    wrap.querySelector('.fw-push-yes').addEventListener('click',function(){
+      // Marked asked BEFORE the permission call: whatever the athlete answers
+      // in the browser's own dialog, this app has had its one turn.
+      done();
+      loadPushModule().then(function(P){ return P.requestAndSubscribe(); }).catch(function(){});
+    });
   }
 
   // Inject UI
@@ -815,6 +883,12 @@
       try{
         document.dispatchEvent(new CustomEvent('mc:workout-finished',{detail:{entry:entry,pageId:pageId}}));
       }catch(e){}
+      // Roadmap Phase 4 step 3: "lighter session" was a decision about THIS
+      // session. Clearing it on completion means the next workout in the same
+      // tab is prescribed in full again, rather than inheriting a choice the
+      // athlete made hours ago. The four-hour window in mc-setlog.js is the
+      // backstop for a session that is never finished, not the primary rule.
+      try{ sessionStorage.removeItem('mc_deload_v1'); }catch(e){}
       // Celebratory recap instead of just a button flash
       showDone(entry);
       // Flash confirmation on the bar too

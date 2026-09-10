@@ -146,8 +146,8 @@ html[data-theme="light"] .mcl-inp{
   background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);}
 html[data-theme="light"] .mcl-inp:focus{border-color:rgba(var(--accent-rgb,212,175,55),0.5);background:rgba(var(--accent-rgb,212,175,55),0.08);}
 html[data-theme="light"] .mcl-inp::placeholder{color:#b7b0a3;}
-html[data-theme="light"] .mcl-rpe{border-color:rgba(28,26,23,0.14);background:rgba(28,26,23,0.04);}
-html[data-theme="light"] .mcl-rpe.set{color:var(--accent,#8a6d1a);border-color:rgba(var(--accent-rgb,212,175,55),0.4);background:rgba(var(--accent-rgb,212,175,55),0.12);}
+html[data-theme="light"] .mcl-effort-btn{border-color:rgba(28,26,23,0.14);background:rgba(28,26,23,0.04);}
+html[data-theme="light"] .mcl-effort-btn.set{color:var(--accent,#8a6d1a);border-color:rgba(var(--accent-rgb,212,175,55),0.4);background:rgba(var(--accent-rgb,212,175,55),0.12);}
 html[data-theme="light"] .mcl-ck{border-color:rgba(28,26,23,0.18);color:#8a8377;}
 html[data-theme="light"] .mcl-ck.done{background:rgba(52,211,153,0.16);border-color:rgba(5,150,105,0.4);color:#047857;}
 html[data-theme="light"] .mcl-row.done-row{background:rgba(52,211,153,0.08);}

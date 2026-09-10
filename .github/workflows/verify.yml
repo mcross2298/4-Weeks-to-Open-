@@ -95,6 +95,15 @@ jobs:
           node tools/test-mc-program-tabs.js
           node tools/test-mc-program-day.js
 
+      - name: Adherence streak (roadmap Phase 4 step 1, audit EN-4)
+        # Every program in the app rests at least one day a week, so the old
+        # consecutive-CALENDAR-day count broke on the first prescribed rest day
+        # and the seven-day milestone could not be reached without disobeying
+        # the program. mc-streak.js counts adherence instead — a rest day is
+        # skipped, a missed training day ends the run — and the suite is proven
+        # to fail on the old behaviour, not just to pass on the new one.
+        run: node tools/test-mc-streak.js
+
       - name: Set-row prescription parser (mc-setlog.js) + fleet-wide scheme contract
         # The logger derives row count, the "0/N Sets" badge and (through
         # planFor -> plannedSetCount) mc-finish.js's whole-workout total from

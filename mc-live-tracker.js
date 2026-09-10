@@ -208,9 +208,50 @@
     writeAct(a);
   }
 
-  // public read API for the dashboard card
+  // public read API for the dashboard card.
+  //
+  // Phase 4 step 1 (audit EN-4): the count itself lives in mc-streak.js, which
+  // counts ADHERENCE — a prescribed rest day preserves the streak, a missed
+  // training day ends it. This walked consecutive CALENDAR days, and every
+  // program in the app rests at least one day a week, so following a
+  // prescription exactly used to break the streak on its first rest day.
+  //
+  // Resolved lazily, never captured at parse time, the same way this file
+  // already treats every other cross-module read: <script> order across ~140
+  // pages does not guarantee mc-streak.js has run when this parses. Only
+  // dashboard.html and stats.html read `.streak`, and both load it; a page
+  // without it still gets a number rather than an exception.
+  // The mode the last computeStreak() ran in, so a caller can word the label
+  // correctly: 'schedule' and 'history' count WORKOUTS, 'calendar' counts days,
+  // and "10-day streak" is wrong for the first two (ten prescribed training
+  // days span fourteen calendar days on a 5-on 2-off block).
+  var lastMode = 'calendar';
+  function streakInputs() {
+    var out = { days: null, rec: null, isRest: null, pattern: null };
+    try {
+      var prog = JSON.parse(localStorage.getItem('mc_active_prog') || 'null');
+      var P = window.MC_PROGRAM_PROGRESS;
+      if (prog && prog.id && !prog.cprogId && !prog.pubId && P && window.MC_PM_DATA) {
+        var src = MC_PM_DATA.program(prog.id);
+        var def = src && P.defFromSchedule(src.schedule);
+        if (def) {
+          var rec = P.get(prog.id, def);
+          out.rec = rec;
+          out.isRest = function (d) { return P.isRest(rec, d); };
+        }
+      }
+    } catch (e) {}
+    try { if (window.MCBridge) out.pattern = MCBridge.likelyTrainingDays(); } catch (e) {}
+    return out;
+  }
   function computeStreak(days) {
     if (!days) return 0;
+    var S = window.MC_STREAK;
+    if (S && S.compute) {
+      var inp = streakInputs();
+      inp.days = days;
+      try { var r = S.compute(inp); lastMode = r.mode; return r.n || 0; } catch (e) {}
+    }
     var cur = new Date(), n = 0;
     if (!days[dayKey(cur)]) cur.setDate(cur.getDate() - 1);   // today not done yet: don't break the streak
     while (days[dayKey(cur)]) { n++; cur.setDate(cur.getDate() - 1); }
@@ -224,8 +265,10 @@
   window.MCActivity = {
     get: function () {
       var a = readAct();
+      var n = computeStreak(a.days);
       return { last: isResumable(a.last) ? a.last : null,
-               streak: computeStreak(a.days), trainedToday: !!(a.days && a.days[dayKey()]) };
+               streak: n, streakMode: lastMode, streakUnit: lastMode === 'calendar' ? 'day' : 'workout',
+               trainedToday: !!(a.days && a.days[dayKey()]) };
     },
     enableSessionLock:  function () { sessionActive = true;  syncLock(); },
     releaseSessionLock: function () { sessionActive = false; syncLock(); }

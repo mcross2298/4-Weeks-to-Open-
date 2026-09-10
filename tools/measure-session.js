@@ -90,7 +90,7 @@ const VIEWPORTS = [
 /* Controls an athlete taps mid-set, against the 44 pt floor. */
 const TOUCH_TARGETS = [
   '.rest-timer', '.mcl-toggle', '.mc-qa-btn', '.a-notes',
-  '.mc-meatball', '.mcl-inp', '.mcl-rpe', '.mcl-ck'
+  '.mc-meatball', '.mcl-inp', '.mcl-effort-btn', '.mcl-ck'
 ];
 
 /* ==========================================================================

@@ -323,11 +323,52 @@ deletion outright), and add the missing delete policy on `daily_health`.
 > `test-mc-muscle-classify.js` (71), `test-mc-exercise-identity.js` (27,
 > browser-driven), plus 37 more in `test-mc-setlog-plan.js` (65 → 102).
 >
-> **Not closed here:** "DB 21" is filed Forearms while "21s" is Biceps — the
-> same movement, filed two ways, outside the correction pattern the owner
-> approved. And the root cause of the tick-in-the-name is the page that renders
-> the chip there; `mc-setlog.js` reads past it defensively, which is the
-> identity layer's job, but moving the chip out is not.
+> **Both open items closed (2026-09-10), and measuring changed both answers.**
+>
+> **The 21s records.** The contradiction was real — "DB 21" filed Forearms,
+> "21s" filed Biceps — but it was not the defect. `mc-classify.js` indexes the
+> catalog by exact lowercased name, and **neither string is a name any page
+> renders**: the programs render "DB 21s", "DB 21's" and "DB 21s (standing,
+> full + partial curls)". All three matched no record, fell through to the
+> regexes, and resolved to **"other"** — no muscle at all on the Stats body
+> map, the post-session reveal or the Readiness Brief. So the fix is two
+> things, not one: `DB 21` is corrected to Biceps and off the `Forearm Curl`
+> master, and the three rendered spellings each get a record under a shared
+> `21s` master — the same shape `Barbell Row` and `Hammer Curl` already use, so
+> the Library shows one collapsible group rather than five loose rows. All five
+> names now resolve Biceps. Catalog 577 → 580.
+>
+> **A second, larger finding came out of that.** `tools/gen-schedules.js`
+> generates the per-day `muscles` used by the Readiness Brief, and it loaded
+> `mc-muscle-map.js` **alone** — not the catalog, not `mc-classify.js`. So it
+> ran the classifier permanently in its regex fallback while the two surfaces
+> that consume its output load all three files and read the curated record. Its
+> own comment claimed the two "can never disagree". Wiring the catalog in moved
+> **eight day records**: a Chest day stopped reporting Triceps (only "Dip
+> Machine" ever said so, and the catalog files it as Chest), two Arms days
+> stopped reporting Chest, three Back days gained Shoulders from their shrug
+> and rear-delt work, a Deadlift/Pull day dropped Legs (the catalog files
+> "Barbell Deadlift" as Back), and "Cable Crossover" resolved at all for the
+> first time.
+>
+> **The tick chip. It was never visible.** The plan was to move it out of
+> `.ex-name`; measuring first showed there was nothing to move *to*. `base.css`
+> carried `.ex-card.a-card .stndr-ck{display:none}` — "completion shown via idx
+> + strike" — and **all 191 cards across the four STNDR pages render as
+> `.a-card`**. So the chip was pure dead decoration whose only effect was
+> corrupting the identity it sat inside. It is deleted, along with the
+> `base.css` rule that existed solely to hide it (one fewer `MARKET:STRIP`
+> block). Completion still reads as the struck-through name and the dimmed
+> card, and the card-body tap — the only thing that ever worked — is untouched.
+>
+> **The gate is at the source now, not at the key.** `test-mc-exercise-identity.js`
+> already asserted that no history key carries a tick glyph, which only proves
+> the defensive read works, and only for the one glyph somebody happened to
+> inject. It now compares each `.ex-name`'s own text against the authored name
+> node, so **any** injected text fails — a badge, a set counter, a superset
+> letter. All four STNDR pages joined the sweep. Proven to fail on the tree
+> before the fix (191 of 266 cards dirty, every other page already clean) and
+> to pass after; 27 → 47 assertions.
 
 ---
 
@@ -488,6 +529,284 @@ deletion outright), and add the missing delete policy on `daily_health`.
 5. **Turn the notification path on and earn the permission.** Ask at one
    welcome moment and immediately after a personal record, and keep the
    content specific. Needs Phase 1 steps 1 and 2.
+
+> **Phase 4 opened (2026-09-10) — scoping pass, and four of the phase's own
+> premises did not survive it.** Two decisions taken with the owner, recorded
+> below. Per the Planning rule this entry authorises implementation; each step
+> still reports what it measured.
+>
+> **1. "Each program record already declares its rest positions" is true of
+> three programs, not ten.** Evaluated from `mc-pm-data.js`: only `ss`
+> (rest `[6,7]`), `mm` (rest `[5]`, 3 phases) and `hv` (4 phases, a different
+> rest pattern each week) carry a `schedule`. The other seven — `pmc`, `mc`,
+> `ks`, `stndr`, `pump`, `gainz`, `psu` — carry none, and `F5` left it that way
+> on purpose: their metas describe collections ("7 Splits", "10 Workouts"), not
+> blocks, so there is no prescription to adhere to. **Decision:** a program with
+> no schedule infers its rest pattern from the athlete's own history.
+> `mc-bridge.js`'s `likelyTrainingDays()` already derives exactly that from
+> `mc_workout_log_v1` for the cookbook, so this is a second consumer of
+> existing arithmetic, not a new one.
+>
+> **2. There are two streaks, and they disagree.**
+> `mc-live-tracker.js`'s `computeStreak()` walks `mc_activity.days` backwards
+> over consecutive calendar days, and `dashboard.html`'s `maybeCheckStreak()`
+> independently re-derives a seven-day streak from `mc_workout_log_v1` for the
+> milestone push. Two implementations of one concept over two different stores
+> — the drift shape `check-single-impl.js` exists for. The milestone is
+> unreachable for a second reason on top of `EN-4`: **every program in the app
+> rests at least one day a week**, so an athlete who follows any prescription
+> exactly can never log seven consecutive calendar days.
+>
+> **3. Step 2 is largely built, and what is missing is not what the step
+> says.** `mc-exercise-trends.js` already charts every lift across every
+> finished workout **matched by name app-wide**, with an Epley estimate per
+> session — "one lift, one curve, across every program" is the behaviour it
+> already has. Two real gaps sit underneath it. There is **no record marked on
+> the curve**, which is the half the step actually asks for. And there are
+> **two divergent one-rep-max estimators**: `mc-exercise-trends.js` uses bare
+> Epley, while `mc-maxout.js` applies the Cable/Machine ×0.85 coefficient that
+> Task 3.3 added precisely because bare Epley overstates a machine lift. The
+> same lift therefore reports two different estimated maxes depending on which
+> screen the athlete is looking at. Consolidating them onto one implementation
+> is this step's real content — the same call Phase 2.4 made for `equipCat()`,
+> and it needs no new decision.
+>
+> **4. Step 4's control is a non-semantic `<div>`.** `.mcl-rpe` is a seven-step
+> cycling chip (`– → 8 → 8.5 → 9 → 9.5 → 10 → F`) on **every** set row, so
+> recording "to failure" costs six taps and the chip is keyboard-unreachable —
+> Volume II Phase 6 converted the rest-timer and set-check controls to real
+> `<button>`s and this one was not in that sweep. The step's own prescription
+> (three choices, last set of an exercise only) fixes the tap cost; the element
+> type is a second, separate defect on the same control.
+>
+> **5. Step 5 cannot be fully proven from a session.** It needs Phase 1 step 1,
+> the weekly check-in secret, which is the owner's and still open. **Decision:**
+> build it, verify everything testable without a real scheduled run, and record
+> the unproven half explicitly rather than reporting the step closed.
+>
+> **Step 1 shipped (2026-09-10) — one streak, and it counts adherence.**
+> `mc-streak.js` (`MC_STREAK.compute()`) holds the count; the two divergent
+> implementations are gone, and `computeStreak` is registered in
+> `check-single-impl.js` so a third cannot appear. Three modes, picked by what
+> the athlete's data supports: **schedule** walks the program's own day
+> sequence backwards from the last completed day (a prescribed rest day is
+> skipped, a missed training day ends it — no calendar mapping is involved,
+> because the day sequence IS the prescription); **history** stands the
+> athlete's own training weekdays in for one, via `mc-bridge.js`'s existing
+> `likelyTrainingDays()`; **calendar** is the original count, kept so a
+> brand-new athlete still reads something.
+>
+> **Staleness is derived, not picked.** A schedule streak has no calendar in
+> it, so alone it would freeze at 12 forever. The grace window is the longest
+> run of consecutive prescribed rest days anywhere in the block, plus one, read
+> off `isRest()` — so `hv`, which rests a different pair each week, answers for
+> itself and nothing has to know which program it is looking at.
+>
+> **The day arithmetic is not reimplemented.** The caller passes
+> `mc-program-progress.js`'s own `isRest()`. Its `def` derivation, which lived
+> inline in `dashboard.html`'s `dayModuleDef()`, moved into that module as
+> `defFromSchedule()` — the streak is its second consumer and runs on
+> `stats.html`, where the day module's dependencies are not loaded.
+>
+> **The label was wrong the moment the count changed.** Ten prescribed training
+> days span fourteen calendar days on a 5-on 2-off block, so "10-day streak"
+> was a false statement. `MCActivity.get()` publishes `streakUnit` alongside
+> the count, and all three surfaces (the momentum strip, the licensed program
+> card, the Stats heatmap line) plus the milestone push read it: "10-workout
+> streak" in schedule and history mode, "3-day streak" in calendar mode.
+>
+> **A real bug, found by driving and not by reading — the same class this
+> repository keeps meeting.** `likelyTrainingDays()` answers with
+> **capitalised** codes (`Mon`, `Tue`, …), because `mc-bridge.js` is
+> byte-identical with the cookbook's copy and its `DAYS` array always was. The
+> first implementation assumed lower case, so the pattern check found no
+> training day and **every history-mode athlete fell silently through to
+> calendar mode** — no error, and a unit test written against the same wrong
+> assumption passed. Driving `dashboard.html` with a real eight-week Mon/Wed/Fri
+> log is what exposed it (read 1, should read 24). The pattern is normalised on
+> the way in rather than changing the gated shared module, and the suite now
+> pins the REAL shape taken from `mc-bridge.js`'s own array.
+>
+> `tools/test-mc-streak.js` — 35 vm-sandboxed assertions against the real
+> source, wired into `verify.yml`, and **proven to fail on the old behaviour**
+> (a probe that breaks on a rest day instead of skipping it fails 6, including
+> the headline case) rather than only to pass on the new.
+>
+> **Step 2 shipped (2026-09-10) — one estimator, and records on the curve.**
+> The step reads "an all-time estimated one-rep-max curve per lift with real
+> records on it". The curve already existed and was already cross-program:
+> `mc-exercise-trends.js` charts every lift across every finished workout,
+> matched by name app-wide. What was actually wrong sat underneath it.
+>
+> **There were TWO estimators and they disagreed about the same logged set.**
+> `mc-maxout.js` capped reps at 12 (Epley is fitted on low-rep work and runs
+> away above about a dozen) and discounted leverage-assisted equipment ×0.85;
+> `mc-exercise-trends.js` did neither. Measured before the fix:
+>
+> | exercise | set | equipment | Max Out | trend sheet |
+> |---|---|---|---|---|
+> | Tricep Rope Pushdown | 60 × 20 | Cable | 71 | 100 |
+> | Cable Crossover | 40 × 25 | Cable | 48 | 73 |
+> | Leg Press | 300 × 15 | Machine | 357 | 450 |
+> | Barbell Bench Press | 225 × 5 | Barbell | 263 | 263 |
+> | DB Curl | 35 × 12 | Dumbbell | 49 | 49 |
+>
+> They agreed only on a barbell or dumbbell set at or under the cap, so the
+> same lift reported two different maxes depending on which screen was open —
+> and the difference is 26–52% on exactly the equipment the coefficient exists
+> for. `e1rm()` and `applyEquipCoeff()` now live in `mc-log-read.js`, chosen
+> because **every** page that loads the trend sheet already loads it (79 of 79,
+> checked) and so does `max-out.html`: one implementation, no new script tag on
+> any page. Both are registered in `check-single-impl.js`.
+>
+> **A source check backs the registry**, because `check-single-impl.js` catches
+> a second `e1rm` DECLARATION and not the arithmetic written inline under
+> another name. `test-mc-maxout.js` now sweeps all 296 tracked files for an
+> Epley expression outside `mc-log-read.js` and fails on one — proven by
+> planting a copy in `mc-stats.js`. Its first version reported
+> `mc-exercise-trends.js`, which no longer contains the arithmetic at all: the
+> scan was reading the formula out of a PROSE header. It strips comments now,
+> and that header — which still claimed the file computed Epley itself — was
+> corrected rather than left to mislead.
+>
+> **Records on the curve.** `MC_CHART.line()` takes `p.best` and draws that
+> point as a ringed dot with "best to date" in its `<title>`, so the mark is
+> not carried by colour alone (one accent per screen, and it has to read in
+> both themes). A point is marked when it is a new all-time best **in the
+> series being shown**, so the mark means the same thing on all three tabs; the
+> first session is never marked, or every one-session curve would look like a
+> record. The app's own PR flag — `mc-finish.js` writes it, the Stats PR
+> timeline reads it — is reported separately in the meta line (🏆 2 PRs) rather
+> than folded in, so the two notions of "record" cannot drift into disagreeing.
+>
+> Verified live on `stats.html` at 320 and 390: six sessions of a cable
+> pushdown mark 3 records on Top weight, 4 on Est. 1RM and 1 on Total reps,
+> the Est. 1RM series opens at **71** for the 60 × 20 set (the capped,
+> discounted figure — it would have read 100 before), no horizontal overflow,
+> zero console errors.
+>
+> **Steps 3 and 4 shipped (2026-09-10).** Step 4 was taken before step 3
+> because step 3 needed a decision and step 4 did not.
+>
+> **Step 4 — six choices, two outcomes.** The effort control was a seven-step
+> chip on EVERY set row, so recording "to failure" cost six taps, and effort
+> was logged on 1.6% of sets. Measuring what READS it showed the deeper
+> problem: `mc-suggest.js`, `mc-strain.js` and `mc-readiness.js` all test the
+> same predicate — `rpe === 'F' || parseFloat(rpe) >= 9.5` — so six choices
+> only ever produced TWO answers. It is now one question on the finished
+> exercise: **Easy / Solid / To failure**, three real `<button>`s at the 44px
+> floor (the old chip was a non-semantic `<div>`, so keyboard-unreachable —
+> Volume II Phase 6 fixed exactly this for the rest-timer and set-check
+> controls and missed this one). The stored values stay inside the old
+> vocabulary (`8`, `9`, `F`), so existing logs, the Supabase column and all
+> three consumers are untouched. Tapping the chosen answer again clears it,
+> and the freed 44px column goes to the weight and reps inputs.
+>
+> **A bug the change created, caught by driving it:** `onCheck()` read the
+> removed element for its rpe value, so re-checking the last set would have
+> written `''` and silently erased an answer already given. It carries the
+> stored value forward now.
+>
+> **Step 3 — the decision first.** "Schedule a real deload at the end of each
+> block" has two readings, and one of them rewrites authored program content
+> across the page data, the landing badges, the dashboard and `mc-pm-data.js`,
+> all of which must agree. Put to the owner: **the last week of each block
+> becomes a deload** — no week counts change.
+>
+> `deloadWeeks` is DATA on the schedule record, not "the last week" as a rule
+> in a renderer, so a program can declare none. It is re-derived from the
+> definition on every read and never persisted, for the same reason `phases`
+> is: a stored record must not be able to contradict the program's own
+> prescription. `ss` carries `[6]` by hand, `gen-schedules.js` emits `[weeks]`
+> for `mm` and `hv`. Deliberately the last week of the BLOCK and not of each
+> phase — `mm` is three five-week phases, but `hv` is four phases of ONE week
+> each, where per-phase would make every week a deload.
+>
+> **Both halves reduce volume through ONE code path**, so they cannot drift
+> into meaning different things: `planFor()` builds one working set fewer,
+> floored at one, and `plannedSetCount()` — `mc-finish.js`'s completion
+> denominator — falls with it automatically. Drop rows are untouched, because a
+> drop set IS the reduction on that exercise, and a prescription that never
+> stated a set count is left alone (P2-12): trimming a default nobody asked for
+> would be inventing a number twice. The card says which reason applies.
+>
+> The pre-session brief gains a third action, **Lighter**, offered only when
+> there is a real reason — a group `MC_READY` itself calls overreached, a
+> Recovery Score under its low band, or a deload week. Verified suppressed with
+> none of the three. It writes `mc_deload_v1` to sessionStorage (a decision
+> about today's session, not a setting: tab-scoped, timestamped, four-hour
+> window, cleared by `mc-finish.js` on completion) and is declared in
+> `store-registry.json` in the same change.
+>
+> **A real race, found by driving a deep link and not by reading.** With
+> `?week=4&day=1` the deload did NOT apply, while the same week reached through
+> the day list did. `mc-pm-data.js` was reaching three of the five
+> schedule-bearing pages only through an ASYNC injection, so the first cards
+> were built before the program record existed — and the resolved answer was
+> cached, so one early "no" governed the whole page load. Two fixes: those
+> pages now load the data synchronously before `mc-setlog.js`, and an
+> unknowable answer is never cached, so a mis-ordered page degrades for one
+> pass instead of permanently.
+>
+> **And a bug that was not one.** `hv-block.html?week=2` appeared to render a
+> day with zero exercises. Week 2 of that block is entirely supersets, so it
+> renders `.ss-ex` units and no `.ex-card` — the probe was counting the wrong
+> selector. Confirmed identical on the unchanged tree before concluding it.
+>
+> Verified live: week 4 of the four-week block prescribes 4 rows where weeks 1
+> and 2 prescribe 5, with `plannedSetCount` agreeing; a page with no schedule
+> is untouched; the brief's three buttons fit at 320 with no overflow and the
+> Lighter control measures 83×45; the effort answer survives a reload.
+> `mc-program-progress.js` grew 91 → **102 assertions**, every local gate is
+> green and `check-journey` is 9/9; `quick-tour.html` documents both.
+>
+> **Step 5 shipped (2026-09-10) — and the ask was never on screen.** The step
+> reads "turn the notification path on and earn the permission". Driving the
+> dashboard rather than reading it found why the path was dead beyond the
+> unset secret: **`#pushChip` does not exist in the document.** The CSS for it,
+> the `initPushChip()` guard chain and the global `onEnablePush()` have all
+> been in `dashboard.html` since the push work landed, but the ELEMENT was
+> never authored — `getElementById('pushChip')` returned null on every load,
+> and the `if (chip)` guard swallowed it. So the app has never once asked for
+> notification permission. Verified in a browser, not inferred.
+>
+> **Two asks now, and they are one ask between them.** The welcome moment is
+> the chip, finally rendered — as a real `<button>`, so Enter and Space work —
+> and shown only once the athlete has **finished at least one workout**, since
+> asking a first-time visitor to accept notifications before they have trained
+> is the ask people refuse. The second is the moment the step names: right
+> under the new records on the Session Complete recap, naming the record it
+> would have told them about, on the user gesture that opened the recap
+> (browsers require one). Both write `mc_push_asked_v1` **before** calling the
+> browser's dialog — whatever the athlete answers there, this app has had its
+> one turn — so neither nags and they never compete.
+>
+> `mc-push.js` is loaded **on demand** by the recap rather than added to 78
+> workout pages: the service worker already precaches it, so it is a cache hit
+> offline too, and nothing loads it for the athletes who never see the prompt.
+>
+> **Content.** The PR push said "your best lift ever", which is true of every
+> PR and so says nothing. It now carries the number it beat and the difference,
+> which is the part worth reading on a lock screen and was already in hand at
+> the call site. The seven-day milestone copy was corrected in step 1, since a
+> streak of prescribed sessions is not "seven days in a row".
+>
+> **Not closed, and it is not code.** Phase 1 step 1 — the repository secret
+> the weekly check-in workflow guards on — is still unset, so the Sunday
+> check-in has still never fired and cannot be proven from a session. Every
+> other part of this step is verified live: the chip is hidden with no
+> training history, appears after one finished workout (354×94 at 390, 284×122
+> at 320), and is suppressed once asked; the post-PR offer appears through the
+> real `_FW.confirm()` flow with a 96×44 control and is suppressed once asked;
+> no console errors and no overflow at 320 or 390.
+>
+> **A pre-existing defect surfaced by the new copy, not fixed here.** The
+> recap's PR chips take their name from `deSlug()`, which rebuilds a display
+> name from the lowercased, 24-char-truncated history slug — so a lift renders
+> as "Bb Flat Bench Press". The push itself is unaffected (`mc-setlog.js` reads
+> the authored name off the card), but the recap and now this prompt both show
+> the mangled form. Fixing it means carrying the authored name into the log
+> entry, which is a data-shape change and wants its own step.
 
 ---
 

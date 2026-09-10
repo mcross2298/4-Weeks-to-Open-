@@ -755,9 +755,6 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .ex-card.a-card.is-tri::before{background:linear-gradient(180deg,#fbbf24,#b45309);box-shadow:0 0 16px rgba(245,158,11,0.5);}
 .ex-card.a-card.is-cluster::before{background:linear-gradient(180deg,#22d3ee,#0e7490);box-shadow:0 0 16px rgba(34,211,238,0.45);}
 .ex-card.a-card.is-drop::before{background:linear-gradient(180deg,#fb7185,#9f1239);box-shadow:0 0 16px rgba(244,63,94,0.5);}
-/* MARKET:STRIP influencer-refs START */
-.ex-card.a-card .stndr-ck{display:none;}           /* completion shown via idx + strike; beats checkoff's injected style */
-/* MARKET:STRIP influencer-refs END */
 /* Active-exercise focus ring — set by mc-setlog.js when the athlete opens a
    card's Log Sets panel, checks a set, or focuses a weight/reps field. Purely
    a visual cue (every other exercise stays fully expanded, no accordion);

@@ -79,6 +79,12 @@
       // is nothing to classify — empty, not guessed.
       schedule: {
         weeks: 6, perWeek: 7, rest: [6, 7],
+        // The last week of the block is a deload (roadmap Phase 4 step 3,
+        // audit PG-2). Hand-typed here for the same reason the rest of this
+        // block is: `ss` is deliberately not machine-generated (see
+        // tools/gen-schedules.js's own header) — that tool emits the same
+        // [weeks] for mm and hv.
+        deloadWeeks: [6],
         days: [
           { id: 'legs',           title: 'Legs',              icon: '🦵', tags: ['Quads', 'Hamstrings', 'Calves'],       ex: 8, sets: 30, min: 75, muscles: ['calves', 'legs'] },
           { id: 'chest',          title: 'Chest',             icon: '💪', tags: ['Chest', 'Push'],                       ex: 8, sets: 32, min: 80, muscles: ['chest'] },
@@ -97,6 +103,9 @@
         "perWeek": 7,
         "rest": [
           5
+        ],
+        "deloadWeeks": [
+          15
         ],
         "phases": [
           {
@@ -268,7 +277,6 @@
             "muscles": [
               "back",
               "biceps",
-              "legs",
               "shoulders"
             ],
             "href": "mm-p2.html?day=3"
@@ -422,6 +430,9 @@
           3,
           6
         ],
+        "deloadWeeks": [
+          4
+        ],
         "phases": [
           {
             "weeks": 1,
@@ -491,8 +502,7 @@
             "ex": 6,
             "sets": 28,
             "muscles": [
-              "chest",
-              "triceps"
+              "chest"
             ],
             "href": "hv-block.html?week=1&day=1"
           },
@@ -507,7 +517,6 @@
             "sets": 31,
             "muscles": [
               "biceps",
-              "chest",
               "triceps"
             ],
             "href": "hv-block.html?week=1&day=2"
@@ -536,7 +545,6 @@
             "ex": 6,
             "sets": 31,
             "muscles": [
-              "chest",
               "shoulders"
             ],
             "href": "hv-block.html?week=1&day=5"
@@ -551,7 +559,8 @@
             "ex": 6,
             "sets": 28,
             "muscles": [
-              "back"
+              "back",
+              "shoulders"
             ],
             "href": "hv-block.html?week=1&day=7"
           },
@@ -656,7 +665,6 @@
             "sets": 42,
             "muscles": [
               "biceps",
-              "chest",
               "triceps"
             ],
             "href": "hv-block.html?week=3&day=2"
@@ -671,7 +679,8 @@
             "ex": 8,
             "sets": 42,
             "muscles": [
-              "back"
+              "back",
+              "shoulders"
             ],
             "href": "hv-block.html?week=3&day=4"
           },
@@ -699,6 +708,7 @@
             "ex": 8,
             "sets": 42,
             "muscles": [
+              "back",
               "biceps",
               "chest",
               "shoulders",

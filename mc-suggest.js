@@ -89,7 +89,7 @@
   // file and mc-maxout.js each carried their own copy and they disagreed:
   // mc-maxout.js had no Dumbbell branch, so the same lift was "Dumbbell" here
   // and "Barbell" there, and neither knew Smith, Plate-Loaded or Bodyweight
-  // existed — three of the catalog's seven values, 119 of its 577 exercises.
+  // existed — three of the catalog's seven values, 119 of its 580 exercises.
   // Resolved lazily, never captured at parse time, since script order across
   // ~140 pages does not guarantee mc-classify.js has run when this parses.
   function _cls() {

@@ -68,13 +68,29 @@ function setsOf(str) {
 // (flagship-immersive-roadmap.md H4b) — read the real classifier the same
 // way mm-data.js/hv-block.html are read above (a vm'd `window` shim, since
 // mc-muscle-map.js is a plain browser IIFE with no module.exports hook of
-// its own), so this can never disagree with what mc-stats.js's Muscle Map
-// or the pre-session Readiness Brief actually render for the same names.
+// its own), so this cannot disagree with what mc-stats.js's Muscle Map or
+// the pre-session Readiness Brief render for the same names. Agreement is a
+// property of loading the SAME THREE FILES a page loads, not of reusing the
+// map — see classifier() below for what happened when only the map was read.
 let MC_MUSCLES = null;
 function classifier() {
   if (MC_MUSCLES) return MC_MUSCLES;
   const ctx = { window: {} };
   vm.createContext(ctx);
+  // The catalog and mc-classify.js FIRST, in that order. mc-muscle-map.js
+  // projects from window.MC_CLASSIFY.catalogMuscle() and only falls back to
+  // its own regexes for a name the catalog does not carry (roadmap Phase
+  // 2.2, "the catalog is the authority"). This generator used to read the map
+  // alone, which ran it permanently in that fallback mode: every `muscles`
+  // value it wrote was a regex answer, while the two surfaces that consume
+  // them load all three files and read the curated record. Wiring the catalog
+  // in changed eight day records — a Chest day stopped reporting Triceps
+  // (only "Dip Machine", which the catalog files as Chest, ever said so), an
+  // Arms day stopped reporting Chest, three Back days gained Shoulders from
+  // their shrug and rear-delt work, and "Cable Crossover" resolved at all for
+  // the first time instead of "other".
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'exercise-catalog.js'), 'utf8'), ctx);
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'mc-classify.js'), 'utf8'), ctx);
   vm.runInContext(fs.readFileSync(path.join(ROOT, 'mc-muscle-map.js'), 'utf8'), ctx);
   MC_MUSCLES = ctx.window.MC_MUSCLES;
   return MC_MUSCLES;
@@ -146,10 +162,19 @@ function buildMM() {
     phases.push({ weeks: weeksPerPhase, days: order });
   });
 
+  const weeks = weeksPerPhase * ids.length;
   return {
-    weeks: weeksPerPhase * ids.length,
+    weeks: weeks,
     perWeek: perWeek,
     rest: rest,
+    // Roadmap Phase 4 step 3 (audit PG-2): the last week of the block is a
+    // deload. It is emitted as DATA rather than left as a "last week" rule in
+    // a renderer, so a program can declare none or later declare several, and
+    // so mc-program-progress.js never has to invent one. Deliberately the last
+    // week of the BLOCK and not of each phase: this block is three five-week
+    // phases, but the High-Volume block below is four phases of ONE week each,
+    // where per-phase would make every week a deload.
+    deloadWeeks: [weeks],
     phases: phases,
     days: days
   };
@@ -205,7 +230,8 @@ function buildHV() {
     phases.push({ weeks: 1, days: order, rest: thisRest });
   });
 
-  return { weeks: WEEKS.length, perWeek: perWeek, rest: rest, phases: phases, days: days };
+  return { weeks: WEEKS.length, perWeek: perWeek, rest: rest,
+           deloadWeeks: [WEEKS.length], phases: phases, days: days };
 }
 
 // ---- splice into mc-pm-data.js -------------------------------------------

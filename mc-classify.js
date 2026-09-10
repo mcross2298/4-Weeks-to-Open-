@@ -11,11 +11,11 @@
    So the same dumbbell lift was "Dumbbell" to the progression engine and
    "Barbell" to the one-rep-max estimator, and neither knew Smith,
    Plate-Loaded or Bodyweight existed at all — three of the seven values the
-   catalog actually uses, covering 119 of its 577 exercises. Whichever engine
+   catalog actually uses, covering 119 of its 580 exercises. Whichever engine
    asked got a different answer about the same lift.
 
    THE CATALOG IS AUTHORITATIVE, the keywords are the fallback. exercise-catalog.js
-   tags all 577 exercises with a real `equipment` value; that is the answer
+   tags all 580 exercises with a real `equipment` value; that is the answer
    whenever the name resolves, and the regexes below only ever run for a name
    the catalog does not carry (a page's authored variant wording, a custom
    exercise, an owner-published one).

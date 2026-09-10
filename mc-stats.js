@@ -76,10 +76,18 @@
       host.innerHTML = '<div class="empty">No training days recorded yet — check off a workout to light this up.</div>';
       return;
     }
-    var streak = 0;
-    try { if (window.MCActivity) streak = MCActivity.get().streak || 0; } catch (e) {}
+    var streak = 0, unit = 'day';
+    // The unit comes from the count's own mode: an adherence streak counts
+    // prescribed WORKOUTS, not calendar days (roadmap Phase 4 step 1).
+    try {
+      if (window.MCActivity) {
+        var act = MCActivity.get();
+        streak = act.streak || 0;
+        unit = act.streakUnit || 'day';
+      }
+    } catch (e) {}
     host.innerHTML = MC_CHART.heatmap(days, { weeks: 16 }) +
-      (streak > 0 ? '<div class="streak-line">🔥 ' + streak + '-day streak</div>' : '');
+      (streak > 0 ? '<div class="streak-line">🔥 ' + streak + '-' + unit + ' streak</div>' : '');
   }
 
   // ---- Muscle Map (flagship-immersive-roadmap.md H1) ----------------------
