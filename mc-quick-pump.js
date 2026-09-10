@@ -3,7 +3,7 @@
    --------------------------------------------------------------------------
    Two modes:
      generate({minutes, muscles})   — cross-program variety: builds a fresh
-       session from the full 577-exercise catalog (exercise-catalog.js),
+       session from the full 580-exercise catalog (exercise-catalog.js),
        sized to the time budget.
      abbreviateCurrentPage(minutes) — trims the workout page you're already
        on down to fit the time budget (station-anchored .ss-card pairs move

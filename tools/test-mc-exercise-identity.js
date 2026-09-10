@@ -122,7 +122,12 @@ function sameLift(names) {
      positional.length + ': ' + positional.slice(0, 5).join(', '));
 
   /* ---- and one page per remaining engine family -------------------------- */
-  for (const pg of ['hv-block.html', 'mm-p1.html', 'kitchen-sink.html', 'iron-engine.html', 'bro-split.html']) {
+  // The four STNDR pages are all here on purpose: they are the ones that
+  // rendered a completion chip INSIDE .ex-name, and the name-purity check
+  // below is the assertion that would have caught it at the source.
+  for (const pg of ['hv-block.html', 'mm-p1.html', 'kitchen-sink.html', 'iron-engine.html',
+                    'bro-split.html', 'weeks-to-open.html', 'push-pull-legs.html',
+                    'legacy-prep.html']) {
     const rows = await cardsOn(p, pg);
     ok(pg + ' renders cards with resolvable ids', !!(rows && rows.length), rows ? '0 cards' : 'no MCSetlogUtil');
     if (!rows) continue;
@@ -133,12 +138,40 @@ function sameLift(names) {
     ok(pg + ': keys are derived from the exercise name', named.length === rows.length,
        named.length + ' of ' + rows.length + ': ' +
        rows.filter(r => !/\|x-/.test(r.key)).slice(0, 3).map(r => r.key).join(', '));
-    // A key must not carry rendered CHROME. stndr-checkoff.js inserts a ✓ chip
-    // inside .ex-name on some pages, and origNameOf() used to slug it straight
-    // into the history key.
+    // A key must not carry rendered CHROME. stndr-checkoff.js used to insert a
+    // ✓ chip inside .ex-name, and origNameOf() slugged it straight into the
+    // history key.
     const ticked = rows.filter(r => /[✓✔]/.test(r.key));
     ok(pg + ': no history key carries a completion tick', ticked.length === 0,
        ticked.slice(0, 3).map(r => r.key).join(', '));
+
+    // NAME PURITY — the assertion at the source, not at the key. mc-setlog.js
+    // reads .ex-name's textContent as the exercise's identity, so nothing may
+    // render inside it. Its origNameOf() drops tick glyphs defensively, which
+    // is the identity layer doing its job, but that defence only covers the
+    // one glyph anybody happened to inject; a badge, a set counter or a
+    // superset letter placed there would sail past it. This compares the name
+    // element's own text against the authored name node (or the card's
+    // data-mc-orig-name), so ANY injected text fails, not just a tick.
+    //
+    // Measured on the tree before stndr-checkoff.js was corrected: 191 of 266
+    // cards across these four pages carried a "✓" prefix, and every other page
+    // here was already clean.
+    const dirty = await p.evaluate(() => {
+      const out = [];
+      document.querySelectorAll('.ex-card,.ss-ex,.ex-item,.lift-card').forEach(c => {
+        const nm = c.querySelector('.ex-name,.ss-name,.lift-name,.var-name');
+        if (!nm) return;
+        const authored = nm.querySelector('[data-field="name"]');
+        const want = (c.getAttribute('data-mc-orig-name') ||
+                      (authored ? authored.textContent : nm.textContent) || '').trim();
+        const got = (nm.textContent || '').trim();
+        if (got !== want) out.push(JSON.stringify(got) + ' vs ' + JSON.stringify(want));
+      });
+      return out;
+    });
+    ok(pg + ': nothing is rendered inside the exercise name element', dirty.length === 0,
+       dirty.length + ' of ' + rows.length + ': ' + dirty.slice(0, 3).join(' ; '));
   }
 
   /* ---- the round trip: a logged set must come back under the new key ----- */

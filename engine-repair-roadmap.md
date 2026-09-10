@@ -323,11 +323,52 @@ deletion outright), and add the missing delete policy on `daily_health`.
 > `test-mc-muscle-classify.js` (71), `test-mc-exercise-identity.js` (27,
 > browser-driven), plus 37 more in `test-mc-setlog-plan.js` (65 → 102).
 >
-> **Not closed here:** "DB 21" is filed Forearms while "21s" is Biceps — the
-> same movement, filed two ways, outside the correction pattern the owner
-> approved. And the root cause of the tick-in-the-name is the page that renders
-> the chip there; `mc-setlog.js` reads past it defensively, which is the
-> identity layer's job, but moving the chip out is not.
+> **Both open items closed (2026-09-10), and measuring changed both answers.**
+>
+> **The 21s records.** The contradiction was real — "DB 21" filed Forearms,
+> "21s" filed Biceps — but it was not the defect. `mc-classify.js` indexes the
+> catalog by exact lowercased name, and **neither string is a name any page
+> renders**: the programs render "DB 21s", "DB 21's" and "DB 21s (standing,
+> full + partial curls)". All three matched no record, fell through to the
+> regexes, and resolved to **"other"** — no muscle at all on the Stats body
+> map, the post-session reveal or the Readiness Brief. So the fix is two
+> things, not one: `DB 21` is corrected to Biceps and off the `Forearm Curl`
+> master, and the three rendered spellings each get a record under a shared
+> `21s` master — the same shape `Barbell Row` and `Hammer Curl` already use, so
+> the Library shows one collapsible group rather than five loose rows. All five
+> names now resolve Biceps. Catalog 577 → 580.
+>
+> **A second, larger finding came out of that.** `tools/gen-schedules.js`
+> generates the per-day `muscles` used by the Readiness Brief, and it loaded
+> `mc-muscle-map.js` **alone** — not the catalog, not `mc-classify.js`. So it
+> ran the classifier permanently in its regex fallback while the two surfaces
+> that consume its output load all three files and read the curated record. Its
+> own comment claimed the two "can never disagree". Wiring the catalog in moved
+> **eight day records**: a Chest day stopped reporting Triceps (only "Dip
+> Machine" ever said so, and the catalog files it as Chest), two Arms days
+> stopped reporting Chest, three Back days gained Shoulders from their shrug
+> and rear-delt work, a Deadlift/Pull day dropped Legs (the catalog files
+> "Barbell Deadlift" as Back), and "Cable Crossover" resolved at all for the
+> first time.
+>
+> **The tick chip. It was never visible.** The plan was to move it out of
+> `.ex-name`; measuring first showed there was nothing to move *to*. `base.css`
+> carried `.ex-card.a-card .stndr-ck{display:none}` — "completion shown via idx
+> + strike" — and **all 191 cards across the four STNDR pages render as
+> `.a-card`**. So the chip was pure dead decoration whose only effect was
+> corrupting the identity it sat inside. It is deleted, along with the
+> `base.css` rule that existed solely to hide it (one fewer `MARKET:STRIP`
+> block). Completion still reads as the struck-through name and the dimmed
+> card, and the card-body tap — the only thing that ever worked — is untouched.
+>
+> **The gate is at the source now, not at the key.** `test-mc-exercise-identity.js`
+> already asserted that no history key carries a tick glyph, which only proves
+> the defensive read works, and only for the one glyph somebody happened to
+> inject. It now compares each `.ex-name`'s own text against the authored name
+> node, so **any** injected text fails — a badge, a set counter, a superset
+> letter. All four STNDR pages joined the sweep. Proven to fail on the tree
+> before the fix (191 of 266 cards dirty, every other page already clean) and
+> to pass after; 27 → 47 assertions.
 
 ---
 

@@ -39,7 +39,7 @@ Deliberately no framework and no build step:
   prefix outside the repo (`/tmp/pw-ci`) only when a job needs a headless
   browser.
 - **Data:** `mc-pm-data.js` (10 programs — 6 flagship, 4 licensed-influencer)
-  and `exercise-catalog.js` (577 deduplicated exercises, each tagged
+  and `exercise-catalog.js` (580 deduplicated exercises, each tagged
   `equipment` + `movement`) are the two catalog sources of truth.
 - **Browser storage:** `store-registry.json` declares every `mc_*` localStorage
   /sessionStorage key once — its owning module, whether it syncs (and with
@@ -1428,10 +1428,40 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > recoverable, simply no longer written to. Nothing is deleted and nothing is
 > mixed.
 >
-> **Not closed:** "DB 21" is Forearms while "21s" is Biceps — the same movement
-> filed two ways, outside the approved correction pattern. And the root cause of
-> the tick-in-the-name is the page rendering the chip there; the identity layer
-> reads past it defensively, which is its job, but moving the chip out is not.
+> **Phase 2 closed out (2026-09-10) — the two open items, and measuring
+> changed both answers.** The 21s contradiction was real but was not the
+> defect: `mc-classify.js` indexes the catalog by exact lowercased name, and
+> **neither "DB 21" nor "21s" is a name any page renders** — the programs
+> render "DB 21s", "DB 21's" and "DB 21s (standing, full + partial curls)",
+> which matched no record and resolved to **"other"**, no muscle at all. `DB 21`
+> is corrected to Biceps and the three rendered spellings each get a record
+> under a shared `21s` master (the shape `Barbell Row` and `Hammer Curl`
+> already use, so the Library shows one group, not five rows). Catalog
+> 577 → 580.
+>
+> **That surfaced a bigger one.** `tools/gen-schedules.js` generates the
+> per-day `muscles` the Readiness Brief dims by, and loaded `mc-muscle-map.js`
+> **alone** — no catalog, no `mc-classify.js` — so it ran the classifier
+> permanently in its regex fallback while the surfaces consuming its output
+> load all three and read the curated record. Its own comment claimed the two
+> "can never disagree". Wiring the catalog in moved **eight day records**
+> (a Chest day stopped reporting Triceps, three Back days gained Shoulders,
+> "Cable Crossover" resolved at all for the first time).
+>
+> **The tick chip was never visible.** The plan was to move it out of
+> `.ex-name`; measuring first showed there was nowhere to move it to.
+> `base.css` carried `.ex-card.a-card .stndr-ck{display:none}` and **all 191
+> cards on the four STNDR pages are `.a-card`** — dead decoration whose only
+> effect was corrupting the identity it sat inside. Deleted, along with the
+> `base.css` rule that existed solely to hide it. Completion still reads as the
+> struck-through name and the dimmed card.
+>
+> **The gate moved to the source.** `test-mc-exercise-identity.js` asserted
+> that no history KEY carries a tick, which only proves the defensive read
+> works, and only for the one glyph somebody injected. It now compares each
+> `.ex-name`'s text against the authored name node, so any injected text fails
+> — a badge, a set counter, a superset letter. Proven to fail on the pre-fix
+> tree (191 of 266 cards dirty) and pass after; 27 → 47 assertions.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 

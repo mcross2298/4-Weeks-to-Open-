@@ -6,8 +6,18 @@
    Workout Summary (mc-summary.js) could never move past 0%. This adds the same
    tap-to-complete behaviour every other program has:
 
-     • an inline ✓ checkbox prepended to each exercise name
-     • tapping the checkbox OR the card body toggles completion
+     • tapping the card body toggles completion
+     • NO checkbox glyph. This module used to prepend an inline ✓ span as the
+       first child of .ex-name. It was never visible: base.css hides
+       .stndr-ck on .a-card, which is what all 191 cards on these four pages
+       render as — completion already reads as the struck-through name and the
+       dimmed card. But mc-setlog.js takes .ex-name's textContent as the
+       exercise's IDENTITY (its history key and its Supabase max-weight
+       lookup), so the invisible glyph was slugged into that key
+       ("x-\u2713incline-db-press") on 191 of 266 cards. Nothing may render
+       inside a name element; card-header decoration belongs in .a-head, where
+       program-overrides.js puts its superset leg label.
+       tools/test-mc-exercise-identity.js asserts this on all four pages.
      • taps on the ⋮ menu, editable fields, rest timers and the day header are
        ignored (they keep their own behaviour)
      • state is keyed by  pid | active-tab | day-index | exercise-index  so it
@@ -55,28 +65,16 @@
     st.id = 'stndr-ck-style';
     st.textContent =
       '.ex-card{cursor:pointer;}' +
-      '.ex-card .stndr-ck{display:inline-flex;align-items:center;justify-content:center;' +
-        'width:18px;height:18px;min-width:18px;border-radius:50%;margin-right:8px;vertical-align:-3px;' +
-        'border:2px solid rgba(148,163,184,0.55);background:transparent;color:transparent;' +
-        'font-size:11px;font-weight:900;line-height:1;transition:all .15s;-webkit-tap-highlight-color:transparent;}' +
       '.ex-card.checked{opacity:0.72;}' +
-      '.ex-card.checked .stndr-ck{background:#16a34a;border-color:#16a34a;color:#fff;}' +
       '.ex-card.checked .ex-name .editable{text-decoration:line-through;color:#34d399;}';
     document.head.appendChild(st);
   }
 
-  // add the checkbox + reflect saved state on every (re)render
+  // reflect saved state on every (re)render
   function decorate() {
     injectStyle();
     var saved = bag();
     document.querySelectorAll('.ex-card').forEach(function (card) {
-      var nameEl = card.querySelector('.ex-name');
-      if (nameEl && !nameEl.querySelector(':scope > .stndr-ck')) {
-        var ck = document.createElement('span');
-        ck.className = 'stndr-ck';
-        ck.textContent = '✓';
-        nameEl.insertBefore(ck, nameEl.firstChild);
-      }
       card.classList.toggle('checked', !!saved[keyFor(card)]);
     });
   }

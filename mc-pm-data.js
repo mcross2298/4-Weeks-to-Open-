@@ -268,7 +268,6 @@
             "muscles": [
               "back",
               "biceps",
-              "legs",
               "shoulders"
             ],
             "href": "mm-p2.html?day=3"
@@ -491,8 +490,7 @@
             "ex": 6,
             "sets": 28,
             "muscles": [
-              "chest",
-              "triceps"
+              "chest"
             ],
             "href": "hv-block.html?week=1&day=1"
           },
@@ -507,7 +505,6 @@
             "sets": 31,
             "muscles": [
               "biceps",
-              "chest",
               "triceps"
             ],
             "href": "hv-block.html?week=1&day=2"
@@ -536,7 +533,6 @@
             "ex": 6,
             "sets": 31,
             "muscles": [
-              "chest",
               "shoulders"
             ],
             "href": "hv-block.html?week=1&day=5"
@@ -551,7 +547,8 @@
             "ex": 6,
             "sets": 28,
             "muscles": [
-              "back"
+              "back",
+              "shoulders"
             ],
             "href": "hv-block.html?week=1&day=7"
           },
@@ -656,7 +653,6 @@
             "sets": 42,
             "muscles": [
               "biceps",
-              "chest",
               "triceps"
             ],
             "href": "hv-block.html?week=3&day=2"
@@ -671,7 +667,8 @@
             "ex": 8,
             "sets": 42,
             "muscles": [
-              "back"
+              "back",
+              "shoulders"
             ],
             "href": "hv-block.html?week=3&day=4"
           },
@@ -699,6 +696,7 @@
             "ex": 8,
             "sets": 42,
             "muscles": [
+              "back",
               "biceps",
               "chest",
               "shoulders",

@@ -2,7 +2,15 @@
    De-duplicated to true mechanical variations (equipment/angle/grip/pattern/rep-style);
    program tags are unioned in data but hidden in the Library/Build-Your-Own UI.
    761 raw entries -> 343 variations. + Strength & Supersets merged: +148 unique
-   variations (39 dupes unioned by program tag) -> 491 total. */
+   variations (39 dupes unioned by program tag) -> 491 total. 580 today.
+
+   Deduplicated by MOVEMENT, not by spelling. A record is also how a name gets
+   classified at all: mc-classify.js indexes this list by exact lowercased
+   name, so a program that renders "DB 21s" matches nothing when the only
+   record is "DB 21" — it falls through to the regexes and usually resolves as
+   "other". Spelling variants of one movement therefore each get a record and
+   share a `master`, which is what collapses them back into a single group in
+   the Library ("Barbell Row", "Hammer Curl" and "21s" are all this shape). */
 var EXERCISES=[
 {"name":"Adduction Machine","muscle":"Adductors","equipment":"Machine","movement":"Isolation","programs":["STNDR"],"master":null},
 {"name":"Adductor Machine","muscle":"Adductors","equipment":"Machine","movement":"Isolation","programs":["Daily Pump"],"master":null},
@@ -58,7 +66,10 @@ var EXERCISES=[
 {"name":"Lat Pulldown (Underhand)","muscle":"Back","equipment":"Cable","movement":"Pull","programs":["STNDR","Daily Pump"],"master":"Lat Pulldown"},
 {"name":"V Grip Cable Rows","muscle":"Back","equipment":"Cable","movement":"Pull","programs":["Daily Pump"],"master":"Seated Cable Row"},
 {"name":"100 Rep Bicep Easy Curl","muscle":"Biceps","equipment":"Dumbbell","movement":"Isolation","programs":["Daily Pump"],"master":null},
-{"name":"21s","muscle":"Biceps","equipment":"Dumbbell","movement":"Isolation","programs":["PMC"],"master":null},
+{"name":"21s","muscle":"Biceps","equipment":"Dumbbell","movement":"Isolation","programs":["PMC"],"master":"21s"},
+{"name":"DB 21s","muscle":"Biceps","equipment":"Dumbbell","movement":"Isolation","programs":["STNDR"],"master":"21s"},
+{"name":"DB 21's","muscle":"Biceps","equipment":"Dumbbell","movement":"Isolation","programs":["STNDR"],"master":"21s"},
+{"name":"DB 21s (standing, full + partial curls)","muscle":"Biceps","equipment":"Dumbbell","movement":"Isolation","programs":[],"master":"21s"},
 {"name":"Alternating DB Curl","muscle":"Biceps","equipment":"Dumbbell","movement":"Isolation","programs":["Daily Pump"],"master":"DB Curl"},
 {"name":"Alternating Hammer Curls","muscle":"Biceps","equipment":"Barbell","movement":"Isolation","programs":["Daily Pump","STNDR"],"master":"Hammer Curl"},
 {"name":"Incline DB Curl (Incline, Alternating)","muscle":"Biceps","equipment":"Dumbbell","movement":"Isolation","programs":["MC","Daily Pump"],"master":"Incline DB Curl"},
@@ -120,7 +131,7 @@ var EXERCISES=[
 {"name":"Barbell Bench (underhand grip)","muscle":"Chest","equipment":"Barbell","movement":"Isolation","programs":["PMC"],"master":"Barbell Bench Press"},
 {"name":"Close Grip Bench (Close)","muscle":"Chest","equipment":"Barbell","movement":"Isolation","programs":["MC","PMC","Daily Pump","STNDR"],"master":"Close Grip Bench"},
 {"name":"Barbell Floor Press","muscle":"Chest","equipment":"Barbell","movement":"Push","programs":["Daily Pump"],"master":"Barbell Bench Press"},
-{"name":"DB 21","muscle":"Forearms","equipment":"Dumbbell","movement":"Isolation","programs":["MC","PMC","STNDR","Faint of Heart"],"master":"Forearm Curl"},
+{"name":"DB 21","muscle":"Biceps","equipment":"Dumbbell","movement":"Isolation","programs":["MC","PMC","STNDR","Faint of Heart"],"master":"21s"},
 {"name":"Rear Delt Fly (Bent Over)","muscle":"Shoulders","equipment":"Barbell","movement":"Pull","programs":["Daily Pump"],"master":"Rear Delt Fly"},
 {"name":"Push-Up","muscle":"Chest","equipment":"Bodyweight","movement":"Push","programs":["Daily Pump","PMC","PSU Football"],"master":"Push-Up"},
 {"name":"Machine Chest (Cable, Standing)","muscle":"Chest","equipment":"Cable","movement":"Isolation","programs":["Daily Pump"],"master":"Machine Chest Press"},
