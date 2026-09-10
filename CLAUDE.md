@@ -159,6 +159,19 @@ workflow below, so a green CI run does not exercise them.
   is 0 headlessly, so an inset-aware `calc(54px + env(...))` and an inset-blind
   `54px` are indistinguishable at runtime — the first version of that check
   passed on known-broken CSS because it was testing its own override.
+  **Phase 3.5 added a subsystem pass** to the same tool, for three features
+  that ship on real pages and were driven by nothing in this list: guided mode,
+  the conditioning interval timer, and the voice module's injection. It found
+  three defects on its first run and a fourth on its first CI-shaped run —
+  guided mode was silently unreachable on eight pages (its step selector named
+  `.ex-card, .ss-card` while `mc-setlog.js`'s own unit selector is
+  `.ex-card, .ss-ex, .ex-item`, so those pages got a working set logger and no
+  entry button, with no error), and four controls sat under the 44px floor,
+  every one of them the only way OUT of something: guided mode's exit (32px)
+  and entry (39px), the interval timer's back button (17×24) and its three run
+  controls (43px). Voice is deliberately a load-and-publish assertion, not a
+  drive — `mountButton()` is an intentional no-op and `SpeechRecognition` does
+  not exist headlessly, so driving it would test a stub.
   Called by both `pr.yml` and `pages.yml` so a PR runs exactly what the
   deploy runs. `cross-repo-drift` (the Mikes-Cookbook shared-module
   byte-identity check) is deploy-only by design — it fails by construction

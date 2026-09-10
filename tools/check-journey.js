@@ -38,6 +38,12 @@
      CHROME    covered viewport within budget, at rest and mid-session
      TOUCH     every control in CRITICAL is at least 44x44
 
+   And a SUBSYSTEM pass (Phase 3.5) drives three features that ship on real
+   pages and are driven by nothing else in verify.yml -- guided mode, the
+   conditioning interval timer, and the voice module's injection. See its own
+   header, below the chrome pass, for what driving them found that reading
+   them had not.
+
    TOUCH is deliberately a named list, not "every control on the page". The app
    still has pre-existing sub-44px controls (.back-link is 29px on every page);
    failing on those would make this gate red from birth and it would be turned
@@ -544,6 +550,269 @@ async function runChromePass(browser) {
   return measured;
 }
 
+/* ── subsystem pass (Phase 3.5) ───────────────────────────────────────────────
+   Three subsystems ship on real pages and are driven by NOTHING in verify.yml.
+   The journeys above end a workout; they never enter guided mode, never open
+   the conditioning interval timer, and never touch the voice module. The audit
+   that opened this phase listed five such paths -- offline prefetch and the
+   naming resolver turned out to already have substantive unit coverage
+   (test-mc-offline-prefetch.js, test-naming.js), so "opened at header level
+   only" described the AUDIT's reading depth, not the repo's. These three had
+   nothing.
+
+   Driving them found what reading them had not, on the first run:
+
+     * GUIDED MODE WAS DEAD ON EIGHT PAGES. mc-guided.js keyed its step
+       selector to '.ex-card, .ss-card' while mc-setlog.js's own unit selector
+       is '.ex-card, .ss-ex, .ex-item' -- so the eight frequency pages got a
+       working set logger and no entry button, with no error to notice.
+       Measured by driving all 79 pages that load mc-setlog.js: 63 offered
+       guided mode, 8 rendered .ex-item rows and offered nothing, 8 are
+       pickers rendering no cards at all (correctly nothing).
+     * Its entry button measured 39px and its EXIT button 32px -- the only way
+       out of a mode that dims the whole page.
+     * The interval timer's back button, the only way off that screen before a
+       run starts, measured 17x24.
+
+   None of those is visible at rest, which is why every other check missed all
+   three. What each subsystem asserts is below, at its own step.
+
+   The voice module is deliberately a load-and-publish assertion, not a drive:
+   mountButton() is an intentional no-op (its own comment records that the
+   floating mic was retired) and SpeechRecognition does not exist in headless
+   Chromium, so an end-to-end drive would be testing a stub. What CAN regress
+   is the injection itself -- mc-card-actions.js appends the script -- and that
+   is what is checked. */
+const SUBSYS_VIEWPORT = { width: 390, height: 844 };
+const GUIDED_FLOOR = 44;
+
+// One page per ROW SHAPE, because the shape is what the selector bug turned on:
+// chest-tri-pump renders .ex-card, 2on-1off renders .ex-item. Both are already
+// in PAGES above, so this adds no new page to the licensed-content surface.
+const GUIDED_PAGES = [
+  { page: 'chest-tri-pump.html', shape: '.ex-card' },
+  { page: '2on-1off.html',       shape: '.ex-item' },
+];
+// A conditioning routine that actually carries a protocol -- without one
+// mc-interval.js renders "No guided protocol" and there is nothing to drive.
+const INTERVAL_ROUTINE = 'the-500';
+
+async function subsysReveal(pg) {
+  const strips = () => pg.evaluate(() => document.querySelectorAll('.mcl-strip').length);
+  if (await strips() > 0) return true;
+  try {
+    const ok = await pg.evaluate(() => {
+      if (typeof window.render === 'function') { window.openDayIdx = 0; window.render(); return true; }
+      return false;
+    });
+    if (ok) { await pg.waitForTimeout(1400); if (await strips() > 0) return true; }
+  } catch (e) { /* no global render(); click a day header instead */ }
+  for (const sel of ['.day-header', '.day-hdr', '.day-card']) {
+    const els = await pg.$$(sel);
+    for (let i = 0; i < Math.min(els.length, 3); i++) {
+      try { await els[i].click({ timeout: 1200, force: true }); } catch (e) { continue; }
+      await pg.waitForTimeout(800);
+      if (await strips() > 0) return true;
+    }
+  }
+  return false;
+}
+
+async function runGuidedPass(ctx, entry) {
+  const fail = [];
+  const pg = await ctx.newPage();
+  const errors = [];
+  pg.on('pageerror', e => errors.push(String(e && e.message || e)));
+  try {
+    await pg.goto(baseUrl + '/' + entry.page, { waitUntil: 'domcontentloaded', timeout: 25000 });
+    await pg.waitForTimeout(1000);
+    if (!await subsysReveal(pg)) {
+      await pg.close();
+      return { name: 'guided ' + entry.page, skipped: 'could not reveal exercise rows' };
+    }
+    await pg.waitForTimeout(600);
+
+    const seen = await pg.evaluate(sel => ({
+      rows: document.querySelectorAll(sel).length,
+      api: !!(window.MC_GUIDED && window.MC_GUIDED.start),
+      entry: !!document.querySelector('.mcgd-entry'),
+    }), entry.shape);
+
+    if (!seen.rows) { await pg.close();
+      return { name: 'guided ' + entry.page, skipped: 'page rendered no ' + entry.shape + ' rows' }; }
+    if (!seen.api) fail.push('mc-guided.js did not publish window.MC_GUIDED');
+    // The bug this pass exists for: rows are on the page, mc-setlog built a
+    // logger on them, and guided mode silently offers no way in.
+    if (!seen.entry) fail.push(entry.shape + ' rows render but no .mcgd-entry button was built — ' +
+      'guided mode is unreachable on this page (check mc-guided.js STEP_SEL)');
+
+    if (seen.entry) {
+      const eBtn = await pg.$('.mcgd-entry');
+      const eBox = await eBtn.boundingBox();
+      if (eBox && Math.round(eBox.height) < GUIDED_FLOOR)
+        fail.push('.mcgd-entry is ' + Math.round(eBox.height) + 'px tall, under the ' + GUIDED_FLOOR + 'px floor');
+      await eBtn.click({ force: true });
+      await pg.waitForTimeout(600);
+
+      const on = await pg.evaluate(() => {
+        const ex = document.querySelector('.mcgd-exit');
+        const r = ex && ex.getBoundingClientRect();
+        return {
+          active: !!(window.MC_GUIDED && window.MC_GUIDED.isActive()),
+          current: document.querySelectorAll('.mc-guided-current').length,
+          dim: document.querySelectorAll('.mc-guided-dim').length,
+          exitShown: !!(ex && getComputedStyle(ex).display !== 'none'),
+          exitH: r ? Math.round(r.height) : 0,
+          exitW: r ? Math.round(r.width) : 0,
+        };
+      });
+      if (!on.active) fail.push('start() left MC_GUIDED.isActive() false');
+      // exactly one focused step, and something dimmed behind it: a mode that
+      // focuses nothing, or dims everything including the current step, is broken
+      if (on.current !== 1) fail.push('after start, ' + on.current + ' steps carry .mc-guided-current (expected exactly 1)');
+      if (on.dim < 1) fail.push('after start, no step is dimmed — the focus effect is not applying');
+      if (!on.exitShown) fail.push('no visible .mcgd-exit — guided mode cannot be left');
+      if (on.exitShown && (on.exitH < GUIDED_FLOOR || on.exitW < GUIDED_FLOOR))
+        fail.push('.mcgd-exit is ' + on.exitW + 'x' + on.exitH + 'px, under the ' + GUIDED_FLOOR + 'px floor — ' +
+          'it is the only way out of a mode that dims the page');
+
+      const xBtn = await pg.$('.mcgd-exit');
+      if (xBtn) { await xBtn.click({ force: true }); await pg.waitForTimeout(500); }
+      const off = await pg.evaluate(() => ({
+        active: !!(window.MC_GUIDED && window.MC_GUIDED.isActive()),
+        left: document.querySelectorAll('.mc-guided-current, .mc-guided-dim').length,
+      }));
+      if (off.active) fail.push('stop() left MC_GUIDED.isActive() true');
+      if (off.left) fail.push('exiting guided mode left ' + off.left + ' step(s) still dimmed/focused');
+    }
+
+    // the voice module rides along on any page carrying mc-card-actions.js
+    const voice = await pg.evaluate(() => ({
+      injected: !!document.querySelector('script[src*="mc-voice"]'),
+      api: !!window.MCVoice,
+    }));
+    if (voice.injected && !voice.api)
+      fail.push('mc-voice.js is injected but published no window.MCVoice — it threw on load');
+  } catch (e) {
+    fail.push('crashed: ' + e.message);
+  }
+  errors.slice(0, 3).forEach(e => fail.push('ERROR: ' + e));
+  await pg.close();
+  return { name: 'guided ' + entry.page, failures: fail };
+}
+
+async function runIntervalPass(ctx) {
+  const fail = [];
+  const pg = await ctx.newPage();
+  const errors = [];
+  pg.on('pageerror', e => errors.push(String(e && e.message || e)));
+  try {
+    const url = baseUrl + '/conditioning-timer.html?id=' + INTERVAL_ROUTINE;
+    await pg.goto(url, { waitUntil: 'domcontentloaded', timeout: 25000 });
+    await pg.waitForTimeout(900);
+
+    const intro = await pg.evaluate(() => {
+      const box = s => { const e = document.querySelector(s); if (!e) return null;
+        const r = e.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height) }; };
+      return { missing: !!document.querySelector('.iv-missing'),
+        plan: document.querySelectorAll('.iv-plan-row').length,
+        back: box('#ivBack'), start: box('.iv-start') };
+    });
+    if (intro.missing) { await pg.close();
+      return { name: 'interval timer', skipped: 'routine "' + INTERVAL_ROUTINE + '" no longer carries a protocol' }; }
+    if (!intro.plan) fail.push('the intro rendered no .iv-plan-row — the protocol did not reach the screen');
+    if (intro.back && (intro.back.w < GUIDED_FLOOR || intro.back.h < GUIDED_FLOOR))
+      fail.push('#ivBack is ' + intro.back.w + 'x' + intro.back.h + 'px, under the ' + GUIDED_FLOOR +
+        'px floor — it is the only way off this screen before the run starts');
+    if (!intro.start) fail.push('no .iv-start control — the run cannot be started');
+
+    if (intro.start) {
+      await pg.click('.iv-start');
+      await pg.waitForTimeout(700);
+      const run = await pg.evaluate(() => ({
+        introHidden: getComputedStyle(document.getElementById('ivIntro')).display === 'none',
+        runShown: getComputedStyle(document.getElementById('ivRun')).display !== 'none',
+        stepN: (document.getElementById('ivStepN').textContent || '').trim(),
+        step: (document.getElementById('ivStep').textContent || '').trim(),
+        total: (document.getElementById('ivTotal').textContent || '').trim(),
+        ctrls: ['ivPause', 'ivSkip', 'ivQuit'].map(id => {
+          const r = document.getElementById(id).getBoundingClientRect();
+          return { id, w: Math.round(r.width), h: Math.round(r.height) };
+        }),
+      }));
+      if (!run.introHidden || !run.runShown) fail.push('Start did not swap the intro screen for the run screen');
+      if (!/^1 \/ \d+$/.test(run.stepN)) fail.push('after Start the step counter reads "' + run.stepN + '", expected "1 / N"');
+      if (!run.step) fail.push('after Start the current-station label is empty');
+      run.ctrls.forEach(c => { if (c.w < GUIDED_FLOOR || c.h < GUIDED_FLOOR)
+        fail.push('#' + c.id + ' is ' + c.w + 'x' + c.h + 'px, under the ' + GUIDED_FLOOR + 'px floor'); });
+
+      // pause must FREEZE the total clock -- it is wall-clock arithmetic, so a
+      // broken pause reads correct for the first second and drifts after
+      await pg.click('#ivPause');
+      const t1 = await pg.evaluate(() => document.getElementById('ivTotal').textContent);
+      await pg.waitForTimeout(1600);
+      const t2 = await pg.evaluate(() => document.getElementById('ivTotal').textContent);
+      if (t1 !== t2) fail.push('the total clock ran from ' + t1 + ' to ' + t2 + ' while paused');
+      await pg.click('#ivPause');
+      await pg.waitForTimeout(300);
+
+      // a reload mid-run must resume in place, not drop back to the intro
+      await pg.reload({ waitUntil: 'domcontentloaded' });
+      await pg.waitForTimeout(800);
+      const after = await pg.evaluate(() => ({
+        intro: getComputedStyle(document.getElementById('ivIntro')).display,
+        run: getComputedStyle(document.getElementById('ivRun')).display,
+        stepN: (document.getElementById('ivStepN').textContent || '').trim(),
+      }));
+      if (after.intro !== 'none' || after.run === 'none')
+        fail.push('reloading mid-run dropped back to the intro screen — the sessionStorage snapshot did not restore');
+
+      // walk to the end and assert the finish actually banks a result
+      const n = Number((after.stepN.split('/')[1] || '0').trim()) || 0;
+      for (let i = 0; i < n + 2; i++) {
+        const done = await pg.evaluate(() => getComputedStyle(document.getElementById('ivDone')).display !== 'none');
+        if (done) break;
+        try { await pg.click('#ivSkip', { force: true, timeout: 1500 }); } catch (e) { break; }
+        await pg.waitForTimeout(180);
+      }
+      const fin = await pg.evaluate(() => ({
+        done: getComputedStyle(document.getElementById('ivDone')).display !== 'none',
+        time: (document.getElementById('ivDoneTime').textContent || '').trim(),
+        pb: (document.getElementById('ivDonePb').textContent || '').trim(),
+        log: localStorage.getItem('mc_cond_log_v1'),
+        snap: sessionStorage.getItem('mc_interval_snap'),
+      }));
+      if (!fin.done) fail.push('walking every station never reached the done screen');
+      else {
+        if (!/^\d+:\d\d$/.test(fin.time)) fail.push('the done screen shows "' + fin.time + '" as the total, expected M:SS');
+        if (!fin.pb) fail.push('the done screen showed no personal-best line — MCCond did not report');
+        let logged = 0;
+        try { const a = JSON.parse(fin.log || '[]'); logged = a.filter(e => e && e.routineId === INTERVAL_ROUTINE).length; } catch (e) {}
+        if (!logged) fail.push('finishing the run wrote no mc_cond_log_v1 entry for ' + INTERVAL_ROUTINE);
+        if (fin.snap) fail.push('the resume snapshot survived the finish — a reload would re-enter a completed run');
+      }
+    }
+  } catch (e) {
+    fail.push('crashed: ' + e.message);
+  }
+  errors.slice(0, 3).forEach(e => fail.push('ERROR: ' + e));
+  await pg.close();
+  return { name: 'interval timer', failures: fail };
+}
+
+async function runSubsystemPass(browser) {
+  const ctx = await browser.newContext({
+    viewport: SUBSYS_VIEWPORT, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  await ctx.route('**://fonts.googleapis.com/**', r => r.abort());
+  await ctx.route('**://cdn.jsdelivr.net/**', r => r.abort());
+  await ctx.route('**://*.supabase.co/**', r => r.abort());
+  const out = [];
+  for (const entry of GUIDED_PAGES) out.push(await runGuidedPass(ctx, entry));
+  out.push(await runIntervalPass(ctx));
+  await ctx.close();
+  return out;
+}
+
 /* ── main ────────────────────────────────────────────────────────────────── */
 (async () => {
   const vpNames = has('--all-viewports')
@@ -593,6 +862,7 @@ async function runChromePass(browser) {
     await ctx.close();
   }
   const chromeMeasured = await runChromePass(browser);
+  const subsysResults = await runSubsystemPass(browser);
   await browser.close();
 
   /* budgets: chrome coverage only. Everything else is a hard assertion — an
@@ -633,6 +903,11 @@ async function runChromePass(browser) {
     }
   }
 
+  // `failed` keeps accumulating below (chrome ratchet, subsystem pass, inset
+  // pass). Snapshot the per-page count now, so the summary line can say how
+  // many JOURNEYS were clean without counting a subsystem failure as one.
+  const journeyFailed = failed;
+
   if (UPDATE) {
     fs.writeFileSync(BUDGET_FILE, JSON.stringify(nextBudgets, null, 2) + '\n');
     console.log('\nBudgets written — ' + Object.keys(nextBudgets).length + ' entr(ies) to ' + path.basename(BUDGET_FILE));
@@ -672,6 +947,25 @@ async function runChromePass(browser) {
     }
   }
 
+  // subsystem pass (Phase 3.5) — hard assertions, not a ratchet. Every one of
+  // these is clean on main today, so there is no "red from birth" problem the
+  // chrome ratchet above has to work around.
+  const subsysSkipped = subsysResults.filter(r => r.skipped);
+  const subsysBad = subsysResults.filter(r => r.failures && r.failures.length);
+  if (subsysBad.length) {
+    subsysBad.forEach(r => {
+      console.error('\n\u2717 subsystem: ' + r.name);
+      r.failures.forEach(f => console.error('    ::error::SUBSYSTEM(' + r.name + '): ' + f));
+    });
+    failed += subsysBad.length;
+  } else {
+    console.log('\ncheck-journey: subsystem pass clean on ' +
+      (subsysResults.length - subsysSkipped.length) + ' of ' + subsysResults.length +
+      ' driven subsystem(s) (guided mode, interval timer, voice injection).');
+  }
+  // A skip asserts nothing. Name it, for the same reason the inset pass does.
+  subsysSkipped.forEach(r => console.log('    - skipped ' + r.name + ': ' + r.skipped));
+
   // real-inset pass
   const insetSkipped = insetResults.filter(r => r.skipped);
   const insetBadPages = insetResults.filter(r => r.failures.length);
@@ -691,12 +985,12 @@ async function runChromePass(browser) {
     insetSkipped.forEach(r => console.log('    - skipped ' + r.page + ': ' + r.skipped));
   }
 
-  console.log('\ncheck-journey: ' + (results.length - failed) + '/' + results.length +
+  console.log('\ncheck-journey: ' + (results.length - journeyFailed) + '/' + results.length +
     ' complete workout journeys clean across ' + vpNames.length + ' viewport(s)' +
     (insetBad.length ? '' : ', safe-area offsets all inset-aware'));
   if (insetBad.length) failed++;
   if (failed) {
-    console.error('\ncheck-journey: ' + failed + ' journey/journeys failed. ' +
+    console.error('\ncheck-journey: ' + failed + ' check(s) failed. ' +
       'These are defects a resting page cannot show — re-run locally with ' +
       '`node tools/check-journey.js <url>` and drive the page yourself.');
     process.exit(1);

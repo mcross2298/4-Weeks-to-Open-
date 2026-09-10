@@ -355,6 +355,116 @@ deletion outright), and add the missing delete policy on `daily_health`.
    header level only. Extend `check-journey.js`, the only check in the project
    that drives the app rather than inspecting it at rest.
 
+> **Phase 3 shipped (2026-09-10).** Steps `3.1`–`3.5`, in branch order
+> `3.1` → `3.2` → `3.4` → `3.3` → `3.5`.
+>
+> **`3.1` — the six athlete-authored stores now sync.** Replacements
+> (`mc_replacements_global` plus the per-page `mc_replacements|<pageId>`
+> family), order, notes, tempo, favourites and personal intensifiers each got a
+> real merge rule in `mc-sync.js` and a `store-registry.json` declaration in the
+> same change, as the registry's own rule requires. The page-scoped family
+> needed a mechanism the file did not have — its keys are a PREFIX, not a fixed
+> name — so `PREFIX_STORES()` and `syncableKeys()` were added rather than
+> enumerating page ids that change every time a page is added. Favourites are a
+> set, not a dictionary, so `mergeStringSetBase()` was written for them; a
+> dictionary merge would have resurrected an un-favourited exercise on the next
+> pull from the other device.
+>
+> **The hoisting trap, met three times in this phase alone.** `mc-sync.js`'s
+> Node export hook runs at module scope, so a table held in a `var` is still
+> `undefined` when the hook reads it. `PREFIX_STORES` had to become a hoisted
+> **function**. The identical shape had already bitten `2.3` (a `var` holding a
+> regex) and bit once more inside `3.x`. Anything a `module.exports` hook reads
+> in one of these browser-first IIFEs must be a function declaration.
+>
+> **`3.2` — conflicts resolve by time, not by who wrote first.** `entryTs()`
+> learned `createdAt` and `date` alongside its existing fields, five stores
+> moved from `arrayById` to `arrayByIdTs`, and `mergeSetlog` now sorts by
+> timestamp **before** applying the five-session cap — but only when every
+> entry actually carries one, so a store of untimestamped legacy entries keeps
+> its existing order rather than being reshuffled by a sort on `undefined`.
+>
+> **`3.4` — one denominator.** The resume banner counted exercises while the
+> toolbar counted sets, so a single session read "1 of 10" in one place and
+> "1 of 43" in another. Both now state their unit in the visible text and in
+> the `aria-label`, which was the actual defect: the numbers were each correct
+> for what they measured and neither said what it was measuring.
+>
+> **`3.3` — `daily_health` kept, and documented in-repo.** The roadmap says
+> "the table, its unique constraint and a correct upsert function are all in
+> place". Two of those three are true. **There is no upsert function** — the
+> table exists (0 rows), the unique constraint exists, and nothing in the
+> repository or the database writes to it. The roadmap's framing, "two homes
+> for one signal", also did not survive the data: `daily_health` is shaped for
+> **device-measured** biometrics and `mc_vitals_v1` for **manual self-report**,
+> and only 2 of 5 fields overlap. Put to the owner; the decision was to keep it
+> and record it, so `supabase/daily-health.sql` now carries the live schema and
+> its four RLS policies, transcribed from `pg_catalog` and deliberately NOT
+> applied — the file documents what is already there.
+>
+> **`3.5` — driving found three defects that reading had not, and corrected the
+> step's own premise.** Two of the five paths it names, offline prefetch and the
+> naming resolver, **already have substantive unit coverage**
+> (`test-mc-offline-prefetch.js`, `test-naming.js`) covering exactly what the
+> step describes. "Opened at header level only" described the audit's own
+> reading depth, not the repository's. Recorded rather than duplicated.
+>
+> The other three had nothing, and driving them found:
+>
+> **Guided mode was dead on eight pages.** `mc-guided.js` keyed its step
+> selector to `.ex-card, .ss-card` while `mc-setlog.js`'s own unit selector is
+> `.ex-card, .ss-ex, .ex-item` — so the eight frequency pages got a working set
+> logger and **no entry button at all**, with no error to notice. Measured by
+> driving all **79** pages that load `mc-setlog.js`: 63 offered guided mode, 8
+> rendered `.ex-item` rows and offered nothing, 8 are pickers rendering no
+> cards (correctly nothing). An `.ex-item` is never nested inside a card on any
+> of them, verified before widening the selector, so listing all three cannot
+> double-count a step.
+>
+> **Three touch-floor violations, all on the only way OUT of something.** The
+> guided-mode entry button measured 39px and its **exit** button 32px — the one
+> control that leaves a mode which dims the entire page. The interval timer's
+> back button measured **17×24**, the only way off that screen before a run
+> starts. All three now clear 44×44.
+>
+> **The interval timer itself was correct end to end** and is now asserted:
+> Start swaps to the run screen at station 1, Pause freezes the total (it is
+> wall-clock arithmetic, so a broken pause reads right for one second and
+> drifts after), a reload mid-run resumes in place from its `sessionStorage`
+> snapshot, and finishing writes a real `mc_cond_log_v1` entry, shows the
+> personal-best line and clears the snapshot.
+>
+> **Voice is deliberately a load-and-publish assertion, not a drive.**
+> `mountButton()` is an intentional no-op — its own comment records that the
+> floating mic was retired — and `SpeechRecognition` does not exist in headless
+> Chromium, so an end-to-end drive would be testing a stub. What can still
+> regress is the injection `mc-card-actions.js` performs, and that is what is
+> checked.
+>
+> All of it lands as a **subsystem pass** in `tools/check-journey.js`, hard
+> assertions rather than a ratchet — every one is clean on this branch, so
+> there is no "red from birth" problem the fleet-wide chrome ratchet above it
+> has to work around.
+>
+> **The gate found a fourth violation on its own first full run**, which is the
+> best argument for it: the interval timer's three run controls measure **43px**
+> under the tool's own rendering, where an ad-hoc probe of the same page in the
+> same browser had read 44. A one-pixel difference in a font fallback is exactly
+> the margin a hand-check loses and a committed gate keeps. Fixed with the same
+> `min-height:44px` pattern.
+>
+> It also exposed a **reporting artifact in `check-journey.js` itself**: the
+> summary line divided by the page count while counting chrome, inset AND
+> subsystem failures, so one failing subsystem printed "8/9 complete workout
+> journeys clean" when all nine journeys were in fact clean. The per-page count
+> is now snapshotted before the later passes add to it.
+>
+> **Proven to fail before being trusted**, per this repository's standing rule
+> that a gate which cannot fail is worthless: reverting the step selector makes
+> it report guided mode unreachable on the `.ex-item` page, and removing the
+> exit button's floor makes it report the control's real size. Its fourth shape
+> was proven organically, by the 43px finding above.
+
 ---
 
 ## Phase 4 — Retention and habit-loop implementation
