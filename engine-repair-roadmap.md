@@ -631,6 +631,59 @@ deletion outright), and add the missing delete policy on `daily_health`.
 > source, wired into `verify.yml`, and **proven to fail on the old behaviour**
 > (a probe that breaks on a rest day instead of skipping it fails 6, including
 > the headline case) rather than only to pass on the new.
+>
+> **Step 2 shipped (2026-09-10) — one estimator, and records on the curve.**
+> The step reads "an all-time estimated one-rep-max curve per lift with real
+> records on it". The curve already existed and was already cross-program:
+> `mc-exercise-trends.js` charts every lift across every finished workout,
+> matched by name app-wide. What was actually wrong sat underneath it.
+>
+> **There were TWO estimators and they disagreed about the same logged set.**
+> `mc-maxout.js` capped reps at 12 (Epley is fitted on low-rep work and runs
+> away above about a dozen) and discounted leverage-assisted equipment ×0.85;
+> `mc-exercise-trends.js` did neither. Measured before the fix:
+>
+> | exercise | set | equipment | Max Out | trend sheet |
+> |---|---|---|---|---|
+> | Tricep Rope Pushdown | 60 × 20 | Cable | 71 | 100 |
+> | Cable Crossover | 40 × 25 | Cable | 48 | 73 |
+> | Leg Press | 300 × 15 | Machine | 357 | 450 |
+> | Barbell Bench Press | 225 × 5 | Barbell | 263 | 263 |
+> | DB Curl | 35 × 12 | Dumbbell | 49 | 49 |
+>
+> They agreed only on a barbell or dumbbell set at or under the cap, so the
+> same lift reported two different maxes depending on which screen was open —
+> and the difference is 26–52% on exactly the equipment the coefficient exists
+> for. `e1rm()` and `applyEquipCoeff()` now live in `mc-log-read.js`, chosen
+> because **every** page that loads the trend sheet already loads it (79 of 79,
+> checked) and so does `max-out.html`: one implementation, no new script tag on
+> any page. Both are registered in `check-single-impl.js`.
+>
+> **A source check backs the registry**, because `check-single-impl.js` catches
+> a second `e1rm` DECLARATION and not the arithmetic written inline under
+> another name. `test-mc-maxout.js` now sweeps all 296 tracked files for an
+> Epley expression outside `mc-log-read.js` and fails on one — proven by
+> planting a copy in `mc-stats.js`. Its first version reported
+> `mc-exercise-trends.js`, which no longer contains the arithmetic at all: the
+> scan was reading the formula out of a PROSE header. It strips comments now,
+> and that header — which still claimed the file computed Epley itself — was
+> corrected rather than left to mislead.
+>
+> **Records on the curve.** `MC_CHART.line()` takes `p.best` and draws that
+> point as a ringed dot with "best to date" in its `<title>`, so the mark is
+> not carried by colour alone (one accent per screen, and it has to read in
+> both themes). A point is marked when it is a new all-time best **in the
+> series being shown**, so the mark means the same thing on all three tabs; the
+> first session is never marked, or every one-session curve would look like a
+> record. The app's own PR flag — `mc-finish.js` writes it, the Stats PR
+> timeline reads it — is reported separately in the meta line (🏆 2 PRs) rather
+> than folded in, so the two notions of "record" cannot drift into disagreeing.
+>
+> Verified live on `stats.html` at 320 and 390: six sessions of a cable
+> pushdown mark 3 records on Top weight, 4 on Est. 1RM and 1 on Total reps,
+> the Est. 1RM series opens at **71** for the 60 × 20 set (the capped,
+> discounted figure — it would have read 100 before), no horizontal overflow,
+> zero console errors.
 
 ---
 

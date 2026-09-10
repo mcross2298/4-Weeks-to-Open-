@@ -52,6 +52,13 @@ const CANONICAL_HOME = {
   // mc_workout_log_v1 — and they disagreed. Registered the moment they were
   // collapsed onto mc-streak.js, so a third cannot appear.
   computeStreak: 'mc-live-tracker.js',
+  // Roadmap Phase 4 step 2: there were TWO estimated-one-rep-max
+  // implementations — mc-maxout.js capped reps at 12 and discounted
+  // leverage-assisted equipment, mc-exercise-trends.js did neither — so the
+  // same logged set reported maxes 26-52% apart depending on the screen.
+  // Registered the moment they were collapsed onto mc-log-read.js.
+  e1rm: 'mc-log-read.js',
+  applyEquipCoeff: 'mc-log-read.js',
 };
 const WATCHED = Object.keys(CANONICAL_HOME);
 

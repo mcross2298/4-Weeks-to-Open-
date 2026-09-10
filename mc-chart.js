@@ -39,9 +39,19 @@
     var path = points.map(function (p, i) {
       return (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(p.y).toFixed(1);
     }).join(' ');
+    // A point may declare itself a RECORD (roadmap Phase 4 step 2). It gets a
+    // larger dot inside a ring rather than a different colour, so the mark
+    // survives the one-accent-per-screen rule and reads in both themes. The
+    // <title> says so too — the ring is not the only carrier of the fact.
     var dots = points.map(function (p, i) {
-      return '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(p.y).toFixed(1) + '" r="3" fill="' + col + '">' +
-             '<title>' + esc(p.x) + ': ' + esc(p.y) + '</title></circle>';
+      var cx = X(i).toFixed(1), cy = Y(p.y).toFixed(1);
+      var t = '<title>' + esc(p.x) + ': ' + esc(p.y) + (p.best ? ' — best to date' : '') + '</title>';
+      if (!p.best) {
+        return '<circle cx="' + cx + '" cy="' + cy + '" r="3" fill="' + col + '">' + t + '</circle>';
+      }
+      return '<circle cx="' + cx + '" cy="' + cy + '" r="6" fill="none" stroke="' + col +
+               '" stroke-width="1.5" opacity="0.75"/>' +
+             '<circle cx="' + cx + '" cy="' + cy + '" r="3.5" fill="' + col + '">' + t + '</circle>';
     }).join('');
     var lastY = points[n - 1].y;
 

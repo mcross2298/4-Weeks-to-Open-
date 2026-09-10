@@ -6,7 +6,9 @@
    name app-wide, so a lift's history follows it across programs):
 
      • Top weight   — heaviest logged set per session
-     • Est. 1RM     — Epley (w × (1 + r/30)) on the best set per session
+     • Est. 1RM     — mc-log-read.js's e1rm() on the best set per session
+                       (one estimator app-wide; see that file for the rep cap
+                       and the leverage-assisted equipment coefficient)
      • Total reps   — volume per session
 
    Opened from the ⋮ menu ("Exercise progress", wired in mc-card-actions.js)
@@ -27,6 +29,12 @@
   }
   function repsTotal(v) { var L = _mcLog(); return L ? L.repsTotal(v) : 0; }
   function repsTop(v)   { var L = _mcLog(); return L ? L.repsTop(v) : 0; }
+  // Roadmap Phase 4 step 2: the estimate is mc-log-read.js's now. This file
+  // used bare Epley with no rep cap and no equipment coefficient, while
+  // max-out.html applied both, so the same logged set reported two maxes
+  // 26-52% apart on a machine or a high-rep set — a cable pushdown at 60x20
+  // read 100 here and 71 there. One estimator, one answer.
+  function e1rmOf(w, r, name) { var L = _mcLog(); return L ? L.e1rm(w, r, name) : 0; }
 
   // FIX-04 (audit L-03): `(e.sets || [])` guards a MISSING set list and
   // nothing else — an object where an array belongs throws
@@ -59,9 +67,10 @@
     var key = norm(name);
     var out = [];
     logs().slice().reverse().forEach(function (e) {       // oldest → newest
-      var best = null, reps = 0;
+      var best = null, reps = 0, prHere = false;
       setsOf(e).forEach(function (s) {
         if (norm(s.name) !== key && norm(s.name).indexOf(key) !== 0) return;
+        if (s.pr) prHere = true;
         // P2-08: the two readings a cluster set needs. Total reps is the
         // VOLUME answer for the "Total reps" series; the e1RM below is a
         // STRENGTH claim, and Epley off a rested 5+5+6 as though it were one
@@ -75,8 +84,13 @@
       out.push({
         date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         weight: best.w,
-        e1rm: best.w ? Math.round(best.w * (1 + best.r / 30)) : 0,
-        reps: reps
+        e1rm: e1rmOf(best.w, best.r, name),
+        reps: reps,
+        // The app's own record flag, written by mc-finish.js when a set beats
+        // a real historical max. Carried through so the curve can show where
+        // the records actually fell rather than re-deriving a second notion
+        // of "record" that would disagree with the PR timeline on Stats.
+        pr: prHere
       });
     });
     return out;
@@ -142,15 +156,32 @@
       meta.textContent = '';
       return;
     }
-    var pts = series.map(function (p) { return { x: p.date, y: p[mode === 'weight' ? 'weight' : mode] }; });
+    // Records on the curve (roadmap Phase 4 step 2): a point is marked when it
+    // is a new all-time best IN THE SERIES BEING SHOWN, so the mark always
+    // means the same thing whichever tab is open. The first session is not
+    // marked — it is trivially the best and marking it makes every one-session
+    // curve look like a record. The app's own PR flag (mc-finish.js, and the
+    // PR timeline on Stats) is reported separately in the meta line below
+    // rather than folded in here, so the two never disagree.
+    var runningBest = -Infinity;
+    var pts = series.map(function (p, i) {
+      var y = p[mode === 'weight' ? 'weight' : mode];
+      var isBest = i > 0 && y > runningBest;
+      if (y > runningBest) runningBest = y;
+      return { x: p.date, y: y, best: isBest };
+    });
     var unit = mode === 'reps' ? ' reps' : ' lb';
     chart.innerHTML = (window.MC_CHART && series.length > 1)
       ? MC_CHART.line(pts, { height: 140 })
       : '<div class="mct-empty">' + pts[0].y + unit + ' · ' + series[0].date +
         '<br>One session logged — two make a trend.</div>';
     var first = pts[0].y, last = pts[pts.length - 1].y;
+    var bestPt = pts.reduce(function (a, b) { return b.y > a.y ? b : a; }, pts[0]);
+    var prs = series.filter(function (p) { return p.pr; }).length;
     meta.textContent = series.length + ' sessions · ' + first + unit + ' → ' + last + unit +
-      (first ? ' (' + (last >= first ? '+' : '') + Math.round(((last - first) / first) * 100) + '%)' : '');
+      (first ? ' (' + (last >= first ? '+' : '') + Math.round(((last - first) / first) * 100) + '%)' : '') +
+      ' · best ' + bestPt.y + unit + ' on ' + bestPt.x +
+      (prs ? ' · 🏆 ' + prs + ' PR' + (prs === 1 ? '' : 's') : '');
   }
 
   function open(name) {

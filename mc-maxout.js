@@ -31,7 +31,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
   function esc(s) { return String(s == null ? '' : s).replace(/</g, '&lt;'); }
-  // FIX-03 (audit L-04): round5, applyEquipCoeff and the Epley estimate each
+  // FIX-03 (audit L-04): round5, the equipment coefficient and the Epley estimate each
   // propagated NaN from a NaN/undefined/Infinite input, straight into the
   // warm-up ladder, which has no guard of its own — so the athlete was shown
   // "NaN lb" rungs rather than an error. Every one is total now.
@@ -64,20 +64,21 @@
   // Smith work, one plate step for everything else.
   function floorFor(name) { var C = _cls(); return (C && C.usesBarbell(name)) ? BAR : 5; }
 
-  // Cable/Machine e1RM estimates get discounted ×0.85 to offset machine-assisted
-  // leverage; Smith and everything else (including Barbell) is unchanged.
-  function applyEquipCoeff(e1, equip) {
-    e1 = Number(e1);
-    if (!isFinite(e1) || e1 <= 0) return 0;
-    // Plate-Loaded added here (audit EN-11): it is 26 catalog entries and
-    // holds the heavy anchor, cluster and drop positions of an entire
-    // flagship phase, so leaving it undiscounted overstated exactly the lifts
-    // the coefficient exists for.
-    var C = _cls();
-    return (C ? C.isLeverageAssisted(equip)
-              : (equip === 'Cable' || equip === 'Machine' || equip === 'Plate-Loaded'))
-      ? Math.round(e1 * 0.85) : e1;
+  // The estimate and its equipment coefficient moved to mc-log-read.js
+  // (roadmap Phase 4 step 2). There were TWO estimators: this one capped reps
+  // at 12 and discounted leverage-assisted equipment ×0.85, and
+  // mc-exercise-trends.js's did neither, so the same logged set reported two
+  // different maxes 26-52% apart depending on which screen the athlete opened.
+  // Plate-Loaded is in the discount (audit EN-11) because it is 26 catalog
+  // entries holding the heavy anchor, cluster and drop positions of a whole
+  // flagship phase. Resolved lazily and with a require() fallback, the same
+  // shape as _cls() above, so the Node-side test can reach the real one.
+  function _log() {
+    if (typeof window !== 'undefined' && window.MC_LOG && window.MC_LOG.e1rm) return window.MC_LOG;
+    try { return require('./mc-log-read.js'); } catch (e) { return null; }
   }
+  function coeff(e1, equip) { var L = _log(); return L ? L.applyEquipCoeff(e1, equip) : e1; }
+  function estimate1RM(w, r, name) { var L = _log(); return L ? L.e1rm(w, r, name) : 0; }
 
   // FIX-04 (audit L-03): one shared, TOTAL reader. The local copy this
   // replaced caught malformed text and nothing else, so valid JSON of the
@@ -127,14 +128,12 @@
         // P2-08: the TOP mini-set, not the sum. A cluster is rested mid-set,
         // so an Epley estimate off its total reps would overstate the max.
         var w = parseFloat(s.weight), r = repsTop(s.reps);
-        // A negative weight used to yield a negative estimated max, and
-        // negative reps an estimate BELOW the working weight (audit L-05).
-        if (!isFinite(w) || w <= 0) return;
-        if (!isFinite(r) || r < 1) r = 1;
         var k = String(s.name || '').trim();
         if (!k) return;
-        var e1 = Math.round(w * (1 + Math.min(r, 12) / 30));
-        if (!isFinite(e1)) return;
+        // The rep cap, the L-05 negative-input guards and the equipment
+        // coefficient all live in mc-log-read.js's e1rm() now — one estimate.
+        var e1 = estimate1RM(w, r, k);
+        if (!e1) return;
         if (!by[k] || e1 > by[k].e1) by[k] = { name: k, e1: e1, sessions: 0 };
       });
     });
@@ -152,7 +151,7 @@
   // Node-side hook so CI can regression-test the real max-out math (see
   // tools/test-mc-maxout.js) instead of a duplicated inline copy.
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { equipCat: equipOf, applyEquipCoeff: applyEquipCoeff, round5: round5,
+    module.exports = { equipCat: equipOf, applyEquipCoeff: coeff, round5: round5,
                        floorFor: floorFor };
   }
 
@@ -190,7 +189,7 @@
   function start(l) {
     lift = l;
     var equip = equipOf(l.name);
-    var t = applyEquipCoeff(l.e1, equip);
+    var t = coeff(l.e1, equip);
     // EN-12: the ladder is barbell-shaped. On a cable stack or a dumbbell it
     // has no empty bar to open with and no 45 lb floor to respect — every rung
     // used to clamp to 45, so a 40 lb estimated max produced six identical
