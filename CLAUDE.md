@@ -97,6 +97,9 @@ node tools/test-mc-numeric-guards.js   # every exported calculation is finite + 
 # these two need a static server + Playwright (see verify.yml)
 node tools/test-mc-setlog-concurrency.js http://localhost:8080  # two-tab set-log durability (FIX-01, L-01)
 node tools/test-mc-store-resilience.js http://localhost:8080    # corrupt-store shapes, 5 pages (FIX-04, L-03)
+node tools/test-mc-crash-recovery.js http://localhost:8080      # process kill + cloud rehydrate (FIX-02, L-02)
+# needs a direct Postgres URL; SKIPS without one rather than failing
+SUPABASE_DB_URL=... pytest tests/test_rls.py   # 7 cross-user attacks + the phase-12 constraints (TEST 5)
 python3 tools/build-sw.py --check      # committed sw.js matches the tree
 python3 tools/check-script-manifest.py --check   # clone pages load identical module lists
 node tools/gen-schedules.js --check    # mm/hv schedule records match mm-data.js + hv-block.html

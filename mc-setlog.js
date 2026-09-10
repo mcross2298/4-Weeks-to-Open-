@@ -751,6 +751,19 @@
       // unconfirmed again — re-arm the pending snapshot from whatever is in
       // the fields right now, same as if it had never been checked.
       setPending(exId, sn, w ? w.value.trim() : '', rEl ? rEl.value.trim() : '');
+      // FIX-05 (audit EN-6): remove the cloud row too. Unchecking used to be
+      // local-only, so the row stayed in workout_logs forever and kept
+      // winning the all-time maximum — a mistyped weight was uncorrectable.
+      try {
+        if (window.MC_SB && MC_SB.configured && MC_SB.unlogSet) {
+          var unNm = card.querySelector('.ex-name, .ss-name, .lift-name, .var-name');
+          MC_SB.unlogSet({
+            session_id: SESSION_ID,
+            exercise: origNameOf(unNm),
+            set_number: sn
+          }).catch(function () {});
+        }
+      } catch (ue) {}
       return;
     }
     var rpeEl = row.querySelector('.mcl-rpe');
@@ -1557,6 +1570,123 @@
   // When localStorage has no history (e.g. new device), query Supabase for the
   // last logged weight per exercise and update data-fill on weight inputs.
   // Non-blocking — runs 2s after the initial render to avoid startup latency.
+  // ---- FIX-02 (audit L-02): rehydrate today's sets from the cloud ---------
+  // A signed-in athlete's sets are already inserted one row per set, and
+  // until now nothing ever read them back: only two functions in the tree
+  // write this store and neither restores from the server. A device that
+  // died mid-session, was wiped, or was restored from a backup lost the local
+  // record while a perfect copy sat in the database.
+  //
+  // Gap-filling only, and deliberately so — a local value ALWAYS wins. This
+  // is recovery, not a second sync path: mc-sync.js owns cross-device merge,
+  // and overwriting a local entry here would silently undo a correction the
+  // athlete made on this device.
+  //
+  // Rows are matched to cards by exercise NAME, which is the identity the
+  // cloud table actually carries. That is the weakest link and it is the
+  // roadmap's Phase 2 step 1 to fix properly; until a stable catalog id
+  // exists, a row whose name matches no card on this page is skipped rather
+  // than written under a guessed key.
+  var REHYDRATE_WINDOW_MS = 12 * 3600 * 1000;
+  var _rehydrated = false;
+
+  function cardsByName() {
+    var map = {};
+    document.querySelectorAll('.ex-card, .ss-ex, .ex-item, .lift-card').forEach(function (card) {
+      var nmEl = card.querySelector('.ex-name, .ss-name, .lift-name, .var-name');
+      if (!nmEl) return;
+      var name = origNameOf(nmEl).trim().toLowerCase();
+      if (!name || map[name]) return;          // first card wins, as history does
+      map[name] = card.dataset.id || nameId(card);
+    });
+    return map;
+  }
+
+  function rehydrateFromCloud() {
+    if (_rehydrated) return;
+    if (!window.MC_SB || !MC_SB.configured || !MC_SB.getSessionSets) return;
+    var byName = cardsByName();
+    if (!Object.keys(byName).length) return;   // nothing rendered yet
+    _rehydrated = true;
+    var since = new Date(Date.now() - REHYDRATE_WINDOW_MS).toISOString();
+    MC_SB.getSessionSets(since).then(function (rows) {
+      if (!rows || !rows.length) return;
+      var d = dayStamp(), added = [];
+      withStore(function (s) {
+        rows.forEach(function (row) {
+          var exId = byName[String(row.exercise || '').trim().toLowerCase()];
+          if (!exId) return;
+          var sn = row.set_number;
+          if (sn == null) return;
+          var k = ek(exId);
+          if (!s[k]) s[k] = [];
+          var sess = s[k][0];
+          if (!sess || sess.d !== d) {
+            sess = { d: d, sets: {} };
+            s[k].unshift(sess);
+            s[k] = s[k].slice(0, 5);
+          }
+          if (sess.sets[sn] != null) return;   // local always wins
+          sess.sets[sn] = {
+            w: row.weight_lbs != null ? String(row.weight_lbs) : '',
+            r: row.reps != null ? String(row.reps) : '',
+            rpe: row.rpe || undefined
+          };
+          added.push({ exId: exId, sn: sn, w: sess.sets[sn].w, r: sess.sets[sn].r });
+        });
+      }).then(function () {
+        if (!added.length) return;
+        _stCache = null;
+        if (window.MC_SCAN && MC_SCAN.schedule) MC_SCAN.schedule();
+        else run();
+        // Restoring the STORE is only half of it. The ticked state of a row
+        // lives in mc_session_v1, a different store that the same crash also
+        // lost, and restoreSets() reads row ids from there — so without this
+        // the weights come back while every row reads unchecked and the
+        // finish counter reads zero. Paint the rows here; mc-session.js's own
+        // save() snapshots `.mcl-ck.done` from the DOM, so the restored
+        // session persists itself from that point on.
+        setTimeout(function () { paintRestored(added); }, 60);
+      });
+    }).catch(function () { _rehydrated = false; });
+  }
+
+  // Mark rehydrated sets as done in the DOM, exactly as a reload from a
+  // surviving local session would have. Never clicks the checkbox: a click
+  // would re-run onCheck() and insert a duplicate row into the very cloud
+  // table these values came from.
+  function paintRestored(entries) {
+    var cards = [];
+    entries.forEach(function (e) {
+      var card = document.querySelector('[data-id="' + e.exId + '"]');
+      if (!card) {
+        // nameId()-derived cards carry no data-id; find by rebuilt key.
+        var all = document.querySelectorAll('.ex-card, .ss-ex, .ex-item, .lift-card');
+        for (var i = 0; i < all.length; i++) {
+          if ((all[i].dataset.id || nameId(all[i])) === e.exId) { card = all[i]; break; }
+        }
+      }
+      if (!card) return;
+      if (window.MCSetlogUtil && MCSetlogUtil.ensureRowsBuilt) MCSetlogUtil.ensureRowsBuilt(card);
+      var row = document.getElementById('mclr-' + cssId(e.exId) + '-' + e.sn);
+      if (!row) return;
+      var w = row.querySelector('.mcl-w'), r = row.querySelector('.mcl-r:not(.mcl-rmini)');
+      if (w && e.w) { w.value = e.w; w.classList.remove('mcl-ghost'); delete w.dataset.ghost; }
+      if (r && e.r) { r.value = e.r; r.classList.remove('mcl-ghost'); delete r.dataset.ghost; }
+      var ck = row.querySelector('.mcl-ck');
+      if (ck && !ck.classList.contains('done')) {
+        ck.classList.add('done');
+        ck.textContent = '✓';
+        ck.setAttribute('aria-checked', 'true');
+        row.classList.add('done-row');
+        if (cards.indexOf(card) === -1) cards.push(card);
+      }
+    });
+    if (window.MCSetlogUtil && MCSetlogUtil.updateCountByCard) {
+      cards.forEach(function (c) { MCSetlogUtil.updateCountByCard(c); });
+    }
+  }
+
   function trySupabasePrefill() {
     if (!window.MC_SB || !MC_SB.configured || !MC_SB.getLastWeight) return;
     document.querySelectorAll('.mcl-wrap').forEach(function (wrap) {
@@ -1608,6 +1738,10 @@
       setTimeout(run, 600);
     }
     run();
+    // FIX-02: recover today's sets from the durable cloud copy before the
+    // pre-fill runs, so a restored set is a real logged set rather than a
+    // ghosted suggestion the athlete has to re-check.
+    setTimeout(rehydrateFromCloud, 1200);
     // Supabase pre-fill: after initial render settles
     setTimeout(trySupabasePrefill, 2000);
   }
