@@ -34,7 +34,10 @@
       setCount:   function () { return setCount.apply(null, arguments); },
       repFor:     function () { return repFor.apply(null, arguments); },
       parseDrop:  function () { return parseDrop.apply(null, arguments); },
-      stripDrop:  function () { return stripDrop.apply(null, arguments); }
+      stripDrop:  function () { return stripDrop.apply(null, arguments); },
+      // Added by Phase 2.3 so the "did this prescription state a set count"
+      // question is testable against the real implementation.
+      statesSetCount: function () { return statesSetCount.apply(null, arguments); }
     };
     return;
   }
@@ -514,11 +517,66 @@
       return /^(?:G|R|Round)\s*\d+\s*[:.]/i.test(p);
     });
   }
+  // An OPEN-ENDED rep token states no number at all: AMRAP, to failure, max.
+  // "4×AMRAP" prescribes four sets and no rep target — reading a number out of
+  // it is the whole of audit P2-09.
+  // A function declaration, not a `var` holding a regex: this file's Node
+  // export hook calls setCount() at require() time, before any `var`
+  // initialiser in the IIFE has run — the same hoisting reason repList()'s
+  // cache hangs off the function itself. Caught by running the exports.
+  function isOpenRep(v) { return /^(?:amrap|∞|failure|fail|max)\b/i.test(String(v == null ? '' : v).trim()); }
+
   // The fallback rep target for a prescription that carries no per-row list:
   // the reps beside a multiplier ("4×12" -> 12), else the first number.
+  //
+  // It used to search the WHOLE string for the first `[x×]\s*(\d+)` and, failing
+  // that, for the first bare number. Both fall through to the SET COUNT when
+  // the reps are open-ended, because the only digit in "4×AMRAP" is the 4:
+  // twelve authored prescriptions in this tree — "3×failure", "5×AMRAP",
+  // "4× AMRAP", "3xfailure each" — asked every row for as many reps as there
+  // were sets, and six more ("AMRAP in 2 min" -> 2, "AMRAP (50-100 reps)" ->
+  // 50, "AMRAP × 3" -> 3) picked up whatever number happened to be nearby.
+  // A rep target the program never prescribed then drives the progression
+  // engine's "did every set hit the target" comparison.
+  //
+  // So: read the reps from where the reps actually are — immediately after the
+  // multiplier when there is one — and answer '' rather than invent a number.
+  // '' means "no fixed target", which every consumer already handles, because
+  // an unparseable prescription has always been able to produce it.
   function loneRep(s) {
-    var x = String(s).match(/[x×]\s*(\d+)/i); if (x) return x[1];
-    var n = String(s).match(/(\d+)/); return n ? n[1] : '';
+    var str = String(s).trim();
+    var m = str.match(/^\s*\d+\s*[x×]\s*([\s\S]*)$/i);
+    if (m) {
+      var after = m[1].trim();
+      if (isOpenRep(after)) return '';
+      var d = after.match(/(\d+)/);
+      return d ? d[1] : '';
+    }
+    if (isOpenRep(str)) return '';
+    // A trailing "sets" makes the number a SET COUNT, not a rep target
+    // ("10-12 each motion × 3 sets" used to prescribe 3 reps).
+    var x = str.match(/[x×]\s*(\d+)(\s*sets?\b)?/i);
+    if (x) return x[2] ? '' : x[1];
+    var n = str.match(/(\d+)/); return n ? n[1] : '';
+  }
+
+  // Does the prescription state how many sets to do? An N× multiplier, the
+  // word "sets", a slash pyramid or a comma list all do. "100-200 reps",
+  // "AMRAP in 2 min" and "Pyramid" do not — 39 distinct prescriptions in this
+  // tree — and those fall through to a THREE-ROW DEFAULT that the athlete has
+  // never been shown as a guess (audit P2-12). Surfaced on the logger's set
+  // counter and in its screen-reader label; consumed by mc-suggest.js, which
+  // refuses to judge progression against a set count nobody prescribed.
+  function statesSetCount(s) {
+    if (s == null || s === '') return false;
+    var str = String(s);
+    if (/^\s*\d+\s*[x×]/i.test(str)) return true;
+    if (declaredSets(str) != null) return true;
+    if (slashSegs(str).length > 1) return true;
+    var toks = str.split(',').filter(function (p) {
+      return /\d/.test(p) || isOpenRep(p);
+    });
+    return toks.length > 1;
   }
   function fill(n, rep) {
     var out = [], i;
@@ -711,7 +769,8 @@
     var work = drop.is ? stripDrop(setsStr) : setsStr;
     var n = setCount(work);
     var nd = drop.is ? drop.drops.length : 0;   // number of appended drop rows
-    return { nmEl: nmEl, drop: drop, work: work, n: n, nd: nd, total: n + nd };
+    return { nmEl: nmEl, drop: drop, work: work, n: n, nd: nd, total: n + nd,
+             stated: statesSetCount(work) };
   }
   function plannedSetCount(card) {
     try { return planFor(card).total; } catch (e) { return 0; }
@@ -890,7 +949,10 @@
       // R3 it is the resting state of every card and progress is the whole
       // point of it, so the label has to carry the count itself.
       var wantLbl = 'Expand ' + (stripEl.querySelector('.mcl-strip-name') || {}).textContent
-                  + ', ' + done + ' of ' + rows.length + ' sets logged';
+                  + ', ' + done + ' of ' + rows.length + ' sets logged'
+                  // P2-12: a row count nobody prescribed is announced as the
+                  // default it is, not as the program's own number.
+                  + (card.dataset.mcSetsUnstated ? ' (set count not prescribed)' : '');
       if (stripEl.getAttribute('aria-label') !== wantLbl) stripEl.setAttribute('aria-label', wantLbl);
     }
     var toggleEl = card.querySelector('.mcl-toggle');
@@ -1046,6 +1108,17 @@
     var n = plan.n;
     var nd = plan.nd;                           // number of appended drop rows
     var total = plan.total;
+    // P2-12: mark the card when its row count is this file's 3-row DEFAULT
+    // rather than anything the prescription stated, so the guess is visible
+    // (counter tooltip, strip screen-reader label) instead of silent.
+    // Written only on change — an unconditional attribute write is the
+    // observe/write feedback loop the card-integration roadmap exists to keep
+    // out (audit A-2).
+    var wantUnstated = plan.stated ? '' : '1';
+    if ((card.dataset.mcSetsUnstated || '') !== wantUnstated) {
+      if (wantUnstated) card.dataset.mcSetsUnstated = wantUnstated;
+      else delete card.dataset.mcSetsUnstated;
+    }
     var dropAmrap = nd === 1 && drop.drops[0] === 'AMRAP';
     var clusterParts = parseClusterAttr(card.dataset.mcCluster);
     var clusterRestLabel = card.dataset.mcClusterRest || '';
@@ -1061,7 +1134,9 @@
     var toggle = document.createElement('div');
     toggle.className = 'mcl-toggle';
     toggle.innerHTML = '<span class="mcl-chev">▾</span><span class="mcl-lbl">Log Sets</span>' +
-                       '<span class="mcl-count mcl-count-' + cid + '">0/' + total + '</span>' +
+                       '<span class="mcl-count mcl-count-' + cid + '"' +
+                         (plan.stated ? '' : ' title="This exercise\u2019s prescription does not say how many sets ' +
+                           '\u2014 showing ' + total + ' by default"') + '>0/' + total + '</span>' +
                        (drop.is ? '<span class="mcl-amrap" title="' + dropTitle + '">' + dropTag + '</span>' : '') +
                        '<span class="mcl-hist mcl-hist-' + cid + '">' + histText(exId) + '</span>';
 
@@ -1529,6 +1604,10 @@
   // re-implementing the prescribed-scheme parser anywhere else
   window.MCSetlogUtil = {
     setCount: setCount, repFor: repFor, pid: PID, histKey: ek,
+    statesSetCount: statesSetCount,   // P2-12: mc-suggest.js refuses to judge
+                                      // progression against a set count the
+                                      // prescription never stated
+
     updateCountByCard: updateCountByCard,
     sessionId: SESSION_ID,   // A-5: lets mc-finish.js purge exactly this
                               // page-load's Supabase workout_logs rows on discard

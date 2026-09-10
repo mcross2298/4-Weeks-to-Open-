@@ -50,6 +50,19 @@
    mc-finish.js's Refuel row (Phase 3 / Initiative 03) reads proteinTarget().
    ========================================================================== */
 (function () {
+
+  // ---- cluster reps: one implementation, in mc-log-read.js (audit P2-08) ---
+  // Resolved LAZILY, never captured at parse time: <script> order across ~140
+  // pages does not guarantee mc-log-read.js has run when this file parses.
+  // These are thin delegators, not a second copy of the arithmetic — the same
+  // shape this file already uses for logs()/setsOf(), and the reason
+  // check-single-impl.js is not the right tool for them.
+  function _mcLog() {
+    if (typeof window !== 'undefined' && window.MC_LOG) return window.MC_LOG;
+    try { return require('./mc-log-read.js'); } catch (e) { return null; }
+  }
+  function repsTotal(v) { var L = _mcLog(); return L ? L.repsTotal(v) : 0; }
+  function repsTop(v)   { var L = _mcLog(); return L ? L.repsTop(v) : 0; }
   var isBrowser = typeof window !== 'undefined';
   if (isBrowser) {
     if (window.MC_STRAIN) return;
@@ -148,7 +161,9 @@
   function sessionTonnage(sets) {
     var t = 0;
     setList(sets).forEach(function (s) {
-      var w = parseFloat(s.weight), r = parseInt(s.reps, 10);
+      // P2-08: cluster sets store "5+5+6"; parseInt read a third of the work,
+      // so the session came out lighter than it was.
+      var w = parseFloat(s.weight), r = repsTotal(s.reps);
       if (!isFinite(w) || !isFinite(r)) return;
       t += Math.max(0, Math.min(w, MAX_SET_WEIGHT_LB)) *
            Math.max(0, Math.min(r, MAX_SET_REPS));
