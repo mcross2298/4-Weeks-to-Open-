@@ -130,6 +130,19 @@ jobs:
         # cluster as one long straight set.
         run: node tools/test-mc-cluster-reps.js
 
+      - name: One equipment resolver, and the arithmetic on it (roadmap Phase 2.4)
+        # equipCat() existed twice and the two copies disagreed: mc-maxout.js
+        # had no Dumbbell branch, so the same lift was "Dumbbell" to the
+        # progression engine and "Barbell" to the 1RM estimator, and neither
+        # knew Smith, Plate-Loaded or Bodyweight existed — three of the seven
+        # values the catalog uses, 119 of its 577 exercises. Also pins the
+        # arithmetic built on it: a dumbbell step is PER HAND (a 10 lb compound
+        # jump was really 20), Plate-Loaded moves in the same small plate as
+        # Cable and Machine, the warm-up ladder only floors at an empty barbell
+        # for lifts that use one (a 40 lb cable max built six identical 45 lb
+        # rungs), and a logged weight is validated rather than trusted.
+        run: node tools/test-mc-classify.js
+
       - name: PMC week-3/4 intensifier rotation (roadmap Phase 2.5)
         # The rotation that builds weeks 3 and 4 of Project Muscle Confusion
         # used to return ONE replacement badge, so the most common pairing in

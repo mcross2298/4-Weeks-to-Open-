@@ -110,6 +110,14 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
 <script src="mc-timer.js"></script>
 <script src="mc-haptics.js"></script>
 <script src="mc-log-read.js"></script>
+<!-- The catalog is what makes mc-classify.js authoritative rather than a
+     keyword guess, and this is the one page that needs it and never got
+     it: every other consumer receives it from mc-card-actions.js, which
+     async-injects it on workout pages. Equipment decides the 1RM
+     coefficient AND the warm-up ladder's floor, so guessing it here is
+     the difference between a real ladder and six identical rungs. -->
+<script src="exercise-catalog.js"></script>
+<script src="mc-classify.js"></script>
 <script src="mc-maxout.js"></script>
 <script src="mc-supabase.js"></script>
 <script src="mc-sync.js"></script>
