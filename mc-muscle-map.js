@@ -25,7 +25,16 @@
   window.MC_MUSCLES = {
     groups: GROUPS.concat([OTHER]),
     classify: function (name) {
-      var n = String(name || '');
+      // Parentheses on an exercise name carry a COACHING CUE, not the
+      // movement: "Barbell Squat (shoulder width)" is a squat, and
+      // "Leg Press (feet shoulder width)" is a leg press. Classifying the cue
+      // put both of them under Shoulders — found by dry-running this
+      // classifier over the real logged exercise names before backfilling the
+      // cloud attribution column (roadmap Phase 1.4), not by reading the
+      // regexes. Two of the 39 live names were affected, and both were
+      // squats. The taxonomy below is untouched; only the text it is given
+      // changes, so this cannot reshuffle anything that was already right.
+      var n = String(name || '').replace(/\([^)]*\)/g, ' ');
       for (var i = 0; i < GROUPS.length; i++) {
         if (GROUPS[i].re.test(n)) return GROUPS[i];
       }

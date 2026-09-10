@@ -682,6 +682,14 @@
 
   // Calls the push-notify Edge Function to send a Web Push to the current user.
   // Best-effort — caller should .catch() silently.
+  //
+  // FIX (audit EN-3): this used to call res.json() with no status check, so a
+  // 404 from a path that did not resolve was parsed as if it were a result and
+  // resolved successfully. Combined with callers that swallow errors by
+  // design, that is why every personal-record notification failed in total
+  // silence for the whole life of the feature. A non-2xx now rejects, which
+  // the callers still swallow — but the promise tells the truth, and the
+  // console carries the status.
   function sendPush(opts) {
     return ready.then(function (c) {
       if (!c) return null;
@@ -695,7 +703,10 @@
             'Authorization': 'Bearer ' + session.access_token
           },
           body: JSON.stringify({ title: opts.title || 'MC Training', body: opts.body || '' })
-        }).then(function (res) { return res.json(); });
+        }).then(function (res) {
+          if (!res.ok) throw new Error('push-notify failed: ' + res.status);
+          return res.json();
+        });
       });
     });
   }

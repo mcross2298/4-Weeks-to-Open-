@@ -64,19 +64,23 @@
       // actually classifies to via mc-muscle-map.js's real classify() — computed,
       // not guessed, same as mm/hv's generated `muscles` below, just hand-typed
       // here since this whole block already is (not run through gen-schedules.js
-      // — see the file header above). `legs` includes "shoulders" because
-      // "Barbell/Hack Squat (shoulder width)" contains that literal phrase as a
-      // stance descriptor, a known false positive in the shared classifier's
-      // shoulders regex (narrow — 3 catalog-wide instances) left as-is rather
-      // than risk a broader regex change; `arms_forearms` includes "back" for
-      // the same reason ("Behind-the-Back Barbell Curls" literally contains
-      // "back"). `cardio_calves` has none: its exercise list is pulled live
+      // — see the file header above). `legs` USED to include "shoulders",
+      // because "Barbell/Hack Squat (shoulder width)" carries that phrase as a
+      // stance cue and the classifier read the cue as the movement. H4b called
+      // that a narrow false positive and left it rather than risk a broader
+      // regex change; roadmap Phase 1.4 fixed it at the source instead —
+      // classify() now drops parentheses before matching, since a parenthetical
+      // on an exercise name is always a cue and never the movement. The
+      // taxonomy itself is untouched. `arms_forearms` still includes "back",
+      // which is a DIFFERENT shape and still open: "Behind-the-Back Barbell
+      // Curls" carries the word outside any parenthesis, so only the
+      // classifier reconciliation in roadmap Phase 2 step 2 can resolve it. `cardio_calves` has none: its exercise list is pulled live
       // from the Conditioning Corner at runtime, not authored here, so there
       // is nothing to classify — empty, not guessed.
       schedule: {
         weeks: 6, perWeek: 7, rest: [6, 7],
         days: [
-          { id: 'legs',           title: 'Legs',              icon: '🦵', tags: ['Quads', 'Hamstrings', 'Calves'],       ex: 8, sets: 30, min: 75, muscles: ['calves', 'legs', 'shoulders'] },
+          { id: 'legs',           title: 'Legs',              icon: '🦵', tags: ['Quads', 'Hamstrings', 'Calves'],       ex: 8, sets: 30, min: 75, muscles: ['calves', 'legs'] },
           { id: 'chest',          title: 'Chest',             icon: '💪', tags: ['Chest', 'Push'],                       ex: 8, sets: 32, min: 80, muscles: ['chest'] },
           { id: 'back_shoulders', title: 'Back & Shoulders',  icon: '🔙', tags: ['Back', 'Delts', 'Pull'],               ex: 8, sets: 32, min: 80, muscles: ['back', 'shoulders'] },
           { id: 'arms_forearms',  title: 'Arms & Forearms',   icon: '💥', tags: ['Biceps', 'Triceps', 'Forearms'],       ex: 9, sets: 32, min: 80, muscles: ['back', 'biceps', 'chest', 'triceps'] },
@@ -174,8 +178,7 @@
             "sets": 43,
             "muscles": [
               "calves",
-              "legs",
-              "shoulders"
+              "legs"
             ],
             "href": "mm-p1.html?day=3"
           },

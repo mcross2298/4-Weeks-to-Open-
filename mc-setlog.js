@@ -785,8 +785,7 @@
       if (window.MC_SB && MC_SB.configured && MC_SB.logSet) {
         var nmEl = card.querySelector('.ex-name, .ss-name, .lift-name, .var-name');
         var exName = origNameOf(nmEl);
-        var muscle = '';
-        try { if (window.MC_EXCATALOG) muscle = MC_EXCATALOG.classify(exName); } catch (me) {}
+        var muscle = classifyForCloud(exName);
         var wNum = wVal ? (parseFloat(wVal) || null) : null;
         // A cluster row's rVal is "5+5+6" — sum the mini-sets for a meaningful
         // total rep count rather than parseInt-ing just the first number.
@@ -802,7 +801,7 @@
           reps:         repsNum,
           rpe:          rpeVal || null,
           workout_name: document.title || '',
-          program_id:   (window.activeProg && activeProg.id) || ''
+          program_id:   activeProgramId()
         };
         // Local high-water mark first (A-9) — a real network call only on
         // this exercise's first checked set THIS page load; every later one
@@ -1570,6 +1569,55 @@
   // When localStorage has no history (e.g. new device), query Supabase for the
   // last logged weight per exercise and update data-fill on weight inputs.
   // Non-blocking — runs 2s after the initial render to avoid startup latency.
+  // ---- Phase 1.4 (audit EN-2): fill the cloud attribution columns ---------
+  // Every one of the 125 live workout_logs rows carried a null muscle AND a
+  // null program_id, so any server-side volume, adherence or coaching query
+  // had nothing to group by. Both columns had the same shape of bug: the
+  // writer read something that is not there on a workout page, and the
+  // failure went into an empty catch.
+  //
+  //   muscle      read MC_EXCATALOG.classify(). mc-exercise-catalog.js loads
+  //               on THREE pages; mc-setlog.js loads on 79. On every logging
+  //               page the lookup threw and the catch swallowed it.
+  //   program_id  read window.activeProg, which is a dashboard-local variable
+  //               and simply does not exist on a workout page, so the `||`
+  //               fell through to '' every single time.
+  //
+  // The roadmap offered "load the classifier on the logging pages, or
+  // classify server-side". Measuring first found a third option that costs
+  // nothing: mc-muscle-map.js is ALREADY loaded on all 79 pages that load
+  // this one (checked, not assumed — zero missing), and MC_MUSCLES.classify()
+  // is the same taxonomy the recovery curve, the heatmap and the volume stats
+  // already use. So the cloud now agrees with the client instead of adding a
+  // third opinion, and no page gains a script tag.
+  //
+  // MC_MUSCLES' own ordering defects are real and known (audit DB-2, DB-8),
+  // and roadmap Phase 2 step 2 reconciles the classifiers. A column filled
+  // with the app's own taxonomy is still strictly better than a null one, and
+  // when that reconciliation lands this improves with it rather than needing
+  // its own second fix.
+  function classifyForCloud(exName) {
+    try {
+      if (window.MC_MUSCLES && MC_MUSCLES.classify) {
+        var g = MC_MUSCLES.classify(exName);
+        if (g && g.label) return g.label;
+      }
+    } catch (e) {}
+    // Not an empty catch this time: a missing classifier is a real regression
+    // and the console is where it should show up.
+    if (!window.MC_MUSCLES) console.warn('mc-setlog: MC_MUSCLES absent — workout_logs.muscle will be null');
+    return null;
+  }
+
+  // The active program is a persisted store (mc_active_prog), the same one
+  // mc-theme.js reads for the page accent, not a dashboard-only variable.
+  function activeProgramId() {
+    try {
+      var p = JSON.parse(localStorage.getItem('mc_active_prog') || 'null');
+      return (p && p.id) ? String(p.id) : null;
+    } catch (e) { return null; }
+  }
+
   // ---- FIX-02 (audit L-02): rehydrate today's sets from the cloud ---------
   // A signed-in athlete's sets are already inserted one row per set, and
   // until now nothing ever read them back: only two functions in the tree
