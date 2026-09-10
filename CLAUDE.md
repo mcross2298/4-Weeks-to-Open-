@@ -94,7 +94,12 @@ node tools/test-mc-sync-runtime.js     # mc-sync.js real pull/push/reload cycle 
 node tools/test-mc-persist.js          # storage-persistence request, mc-finish.js (L6 partial)
 node tools/check-gesture-contract.js   # overscroll-behavior + touch-action on hot tap targets (U1, U3)
 node tools/test-mc-numeric-guards.js   # every exported calculation is finite + non-negative (FIX-03, L-03..L-06)
-# these two need a static server + Playwright (see verify.yml)
+node tools/test-mc-pmc-confusion.js    # PMC week-3/4 intensifier rotation (Phase 2.5, PG-1/PG-3/PG-4)
+node tools/test-mc-cluster-reps.js     # cluster sets are summed, not truncated (Phase 2.3, P2-08)
+node tools/test-mc-classify.js         # one equipment resolver + the progression arithmetic on it (Phase 2.4)
+node tools/test-mc-muscle-classify.js  # one muscle taxonomy, catalog-first (Phase 2.2, DB-*/P2-14)
+# these need a static server + Playwright (see verify.yml)
+node tools/test-mc-exercise-identity.js http://localhost:8080   # history keys name the exercise, not its position (Phase 2.1, EN-1/EN-8)
 node tools/test-mc-setlog-concurrency.js http://localhost:8080  # two-tab set-log durability (FIX-01, L-01)
 node tools/test-mc-store-resilience.js http://localhost:8080    # corrupt-store shapes, 5 pages (FIX-04, L-03)
 node tools/test-mc-crash-recovery.js http://localhost:8080      # process kill + cloud rehydrate (FIX-02, L-02)
@@ -1366,6 +1371,54 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > constraints `B5`, `P4` and `W-I3` already record. The full residual list is
 > in the roadmap's own closing section rather than absorbed into a tidy
 > statement.
+>
+> **Phase 2 shipped (2026-09-10)** across two PRs — `2.6`/`2.5`/`2.3`, then
+> `2.4`/`2.2`/`2.1`. Taken out of order deliberately: `2.6` before `2.5` so the
+> week-3/4 rotation engine was repaired in ONE copy rather than two (the two PMC
+> pages carried a byte-identical 1000-line duplicate), and `2.3` before the rest
+> because `2.5`'s own new suite caught the AMRAP defect on its first run.
+>
+> **Four of the roadmap's numbers were understated, and measuring is what showed
+> it.** `2.1` says "six live history-key collisions": on the page serving all 30
+> PMC workouts, **31 of 32 keys were shared by different exercises** and the
+> worst carried **eight** — a squat's logged weight averaged with a lat
+> pulldown's. `2.5`'s "54 workouts" is 54 workout-WEEKS (77 supersets broken
+> apart, 58 badge sets truncated, 53 tempo rotations emitting no tempo). `2.3`'s
+> cluster `parseInt` sat at **seven** call sites, not just the progression
+> classifier, so tonnage and strain counted a third of the work. And the
+> "36.2% classifier match rate" measured 74.8%.
+>
+> **A roadmap premise did not survive the data.** "Make the curated catalog
+> authoritative" assumes a clean catalog. Going authoritative rescues 57
+> exercises no regex could classify but overrides the regex on 71 more, **17 of
+> them data errors** — 11 filed under Forearms purely for a grip modifier, 6
+> tricep kickbacks filed as glutes beside five identical ones filed as triceps.
+> Put to the owner with the measurements; the call was to correct the records
+> and then go authoritative.
+>
+> **The transferable lessons.** Three bugs were caught by the new gates rather
+> than by review — a bare `AMRAP` states no set count so four prescribed sets
+> rendered three; a `var` holding a regex had not initialised when the Node
+> export hook called in; and `chin`, unbounded, matches inside ma-CHIN-e, the
+> **seventh** instance of a pattern `H4b` already fixed once in a sibling file
+> nobody re-checked. And two changes were **inert until driven rather than
+> read**: `2.2` changed nothing on `stats.html` because that page loads neither
+> the catalog nor the classifier (no card actions, so no async catalog
+> injection), and `2.1`'s gate surfaced a completion chip rendered INSIDE the
+> name element — slugging a tick into the history key, on pages where
+> `mc-setlog.js`'s own comment already forbids exactly that.
+>
+> **`2.1`'s migration policy, because it is a decision and not a detail:** a
+> positional key holds a MIXTURE of exercises, so carrying it forward would
+> attribute one lift's sets to another. Only an already-name-derived legacy id
+> is migrated; everything else is left untouched, still in the store, still
+> recoverable, simply no longer written to. Nothing is deleted and nothing is
+> mixed.
+>
+> **Not closed:** "DB 21" is Forearms while "21s" is Biceps — the same movement
+> filed two ways, outside the approved correction pattern. And the root cause of
+> the tick-in-the-name is the page rendering the chip there; the identity layer
+> reads past it defensively, which is its job, but moving the chip out is not.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 

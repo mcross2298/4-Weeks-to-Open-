@@ -255,6 +255,80 @@ deletion outright), and add the missing delete policy on `daily_health`.
    ~865 lines apiece, with nothing enforcing agreement. Remove the 24 dead
    `file:` references while the file is open. Fixes `PG-6`, `PG-7`.
 
+> **Phase 2 shipped (2026-09-10)**, in two pull requests: `2.6`, `2.5` and
+> `2.3` in the first, `2.4`, `2.2` and `2.1` in the second. Taken out of order
+> on purpose — `2.6` before `2.5` so the rotation engine was repaired in one
+> copy rather than two, and `2.3` before the rest because `2.5`'s own new
+> regression suite caught its AMRAP defect on the first run.
+>
+> **Four of the roadmap's own numbers were wrong, and measuring is what showed
+> it.** Every one of them was understated:
+>
+> `2.1` says "six live history-key collisions". On the page that serves all 30
+> PMC workouts from one document, **31 of 32 distinct history keys were shared
+> by DIFFERENT exercises**, and the worst single key carried **eight** — a
+> squat's logged weight in the same bucket as a lat pulldown's, averaged into a
+> progression suggestion. Across the wider fleet, 170 of 456 cards carried a
+> positional id. Zero real collisions remain (two keys are one lift spelled two
+> ways, which SHOULD share a bucket).
+>
+> `2.5` says "all 54 week 3–4 workouts are affected". 54 is right, but it is
+> workout-WEEKS, not workouts: 30 workouts, 60 week-3/4 slots, 6 of them block
+> format and 4 hand-authored, leaving 50 that rotate automatically. Within
+> them: 77 supersets broken apart, 58 badge sets truncated, 53 tempo rotations
+> emitting no tempo.
+>
+> `2.3` says 17 cluster and 57 AMRAP prescriptions. The cluster defect reaches
+> further than the progression classifier the step scopes it to — the same
+> `parseInt` sat at **seven** call sites, so tonnage, strain and weekly volume
+> all counted a third of a cluster set's work.
+>
+> `2.2` says the regex classifiers match the curated catalog 36.2% of the time.
+> Measured, the coarse taxonomy agreed with the catalog on **416 of 556**
+> comparable exercises (74.8%) and answered "other" for 66.
+>
+> **And one premise did not survive contact with the data.** "Make the curated
+> catalog authoritative" assumes the catalog is clean. It is not: going
+> authoritative rescues 57 exercises no regex could classify, but overrides the
+> regex on 71 more, **17 of which were data errors** — 11 exercises filed under
+> Forearms purely because their name carries a grip modifier, and 6 tricep
+> kickbacks filed as glute work beside five identically-named ones already
+> filed as triceps. Put to the owner with the measurements; the decision was to
+> correct the records and then go authoritative, which is what shipped.
+>
+> **Three bugs were found by the new gates rather than by review**, which is
+> the argument for writing them: a bare `AMRAP` states no set count, so four
+> prescribed sets rendered three; a `var` holding a regex had not initialised
+> when the Node export hook called in; and `chin`, unbounded, matches the
+> substring inside ma-CHIN-e — the **seventh** instance of a pattern this
+> repository already fixed once, in a file nobody re-checked.
+>
+> **Two changes were inert until they were driven, not read.** `2.2` was
+> measured live on `stats.html` and found to change nothing, because that page
+> loads neither the catalog nor the classifier — it carries no card actions, so
+> it never received the async catalog injection every workout page gets. And
+> `2.1`'s identity gate surfaced a completion chip rendered INSIDE the name
+> element, slugging a tick into the history key, on a page where `mc-setlog.js`'s
+> own comment already forbids exactly that.
+>
+> **Migration policy for `2.1`, stated because it is a decision and not a
+> detail:** a positional key holds a MIXTURE of exercises, so carrying it
+> forward would attribute one lift's sets to another. Only a legacy id that was
+> already name-derived is migrated. Everything else is left exactly where it
+> is — untouched, still in the store, still recoverable, simply no longer
+> written to. No athlete data is deleted and none is mixed.
+>
+> New gates, all wired into `verify.yml`: `test-mc-pmc-confusion.js` (93),
+> `test-mc-cluster-reps.js` (49), `test-mc-classify.js` (60),
+> `test-mc-muscle-classify.js` (71), `test-mc-exercise-identity.js` (27,
+> browser-driven), plus 37 more in `test-mc-setlog-plan.js` (65 → 102).
+>
+> **Not closed here:** "DB 21" is filed Forearms while "21s" is Biceps — the
+> same movement, filed two ways, outside the correction pattern the owner
+> approved. And the root cause of the tick-in-the-name is the page that renders
+> the chip there; `mc-setlog.js` reads past it defensively, which is the
+> identity layer's job, but moving the chip out is not.
+
 ---
 
 ## Phase 3 — Automation and edge-case stabilisation

@@ -369,7 +369,7 @@
     var host = card.classList.contains('ex-card')
       ? (card.querySelector('.ex-content') || card.querySelector('.ex-body') || card)
       : card;
-    buildRows(host, card, card.dataset.id || nameId(card), setsOf(card), restSecs(card));
+    buildRows(host, card, exIdOf(card), setsOf(card), restSecs(card));
   }
   var UNIT_SEL_R3 = '.ex-card, .ss-ex, .ex-item';
   function openLogger(card) {
@@ -1389,7 +1389,22 @@
     if (!el) return '';
     var card = el.closest('.ex-card, .ss-ex, .ex-item, .lift-card');
     var orig = card && card.getAttribute('data-mc-orig-name');
-    return orig || el.textContent || '';
+    if (orig) return orig;
+    // injectTrend() below already states the rule this guards: NOTHING may be
+    // written inside the name element, because origNameOf() and slugOf() read
+    // its textContent as the exercise's IDENTITY for the history key and the
+    // Supabase lookup. Some pages break it — a completion chip is rendered as
+    // a CHILD of .ex-name — so the history key came out with a tick slugged
+    // into it ("x-\u2713incline-db-press"). Found by the Phase 2.1 identity
+    // gate, and present on `main` too, so pre-existing.
+    //
+    // Two defences, in order: prefer the authored name node when the page
+    // marks one, then drop tick glyphs, which are decoration wherever they
+    // appear and never part of an exercise's name. Deliberately generic — the
+    // fix is for the SHAPE of the bug, not for one page's chip.
+    var authored = el.querySelector('[data-field="name"]');
+    var text = authored ? (authored.textContent || '') : (el.textContent || '');
+    return text.replace(/[\u2713\u2714]/g, '');
   }
   function slugOf(el) {
     return origNameOf(el).trim().replace(/\s+/g, '-').toLowerCase().slice(0, 24) || 'ex';
@@ -1428,6 +1443,62 @@
     var base = slugOf(mine);
     var n = _nameIdx.counts[base] || 0;
     return 'x-' + base + (n ? '-' + n : '');
+  }
+
+  // ---- exercise identity (audit EN-1, EN-8) --------------------------------
+  // A history key must name the EXERCISE, never its POSITION. Measured across
+  // 12 pages and 456 cards before this changed: 170 of them (37%) carried a
+  // positional data-id — "1-s-3", "ssex-0-2", "0-b-4", "grp-6-0-0" — and on a
+  // page that serves several workouts from one document that is catastrophic.
+  // On pmc-workout.html, 31 of 32 distinct history keys were shared by
+  // DIFFERENT exercises and the worst single key carried EIGHT of them: a
+  // squat's logged weight sat in the same bucket as a lat pulldown's, and the
+  // suggestion engine averaged them into a progression.
+  //
+  // The other 286 cards carry NO data-id and have always been keyed by
+  // nameId(), which derives from the authored exercise name and survives a
+  // rename through data-mc-orig-name. So this is a convergence onto the scheme
+  // most of the fleet already uses, not a new one — which is also why the
+  // majority of pages see no change at all.
+  //
+  // data-id is left alone on the card: the engines use it for their own
+  // checkState bookkeeping, and it is page-local session state, not history.
+  function exIdOf(card) { return nameId(card); }
+
+  // A positional key holds a MIXTURE of exercises, so moving it forward would
+  // attribute one lift's sets to another — worse than leaving it. Only a
+  // legacy id that was ALREADY name-derived can be migrated safely. Everything
+  // else is left exactly where it is: untouched, still in the store, still
+  // recoverable, simply no longer written to.
+  function legacyNameDerivedId(card) {
+    var raw = card && card.dataset && card.dataset.id;
+    if (!raw) return '';
+    return /^(?:grp|x)-[a-z]/.test(raw) ? raw : '';
+  }
+  var _migrated = false;
+  function migrateLegacyHistory(cards) {
+    if (_migrated) return;
+    // Do NOT latch on an empty pass. run() fires before the cards exist on
+    // every page that opens as a day LIST (roadmap F3 converted 23 of them),
+    // so latching here would mean the migration never ran on exactly the
+    // pages with the most history to carry forward.
+    if (!cards || !cards.length) return;
+    _migrated = true;
+    var pairs = [];
+    for (var i = 0; i < cards.length; i++) {
+      var legacy = legacyNameDerivedId(cards[i]);
+      if (!legacy) continue;
+      var to = ek(exIdOf(cards[i])), from = ek(legacy);
+      if (from !== to) pairs.push([from, to]);
+    }
+    if (!pairs.length) return;
+    try {
+      withStore(function (store) {
+        pairs.forEach(function (pr) {
+          if (store[pr[0]] && !store[pr[1]]) store[pr[1]] = store[pr[0]];
+        });
+      });
+    } catch (e) {}
   }
 
   // ---- K-3.3/G-08: last-3-session micro-trend on the card header ---------
@@ -1489,6 +1560,11 @@
   function run() {
     _nameIdx = null;                            // one index per pass
     _stCache = null;                            // one storage read per pass (K-3.3)
+    // EN-1/EN-8: carry forward any history whose old key was already
+    // name-derived. One-shot per page load and it exits immediately when
+    // there is nothing to move, so it never enters the per-pass hot path
+    // this roadmap spent S1 clearing.
+    migrateLegacyHistory(document.querySelectorAll('.ex-card, .ss-ex, .ex-item, .lift-card'));
     // Match cards WITH OR WITHOUT data-id. Older templates
     /* MARKET:STRIP influencer-refs START */
     // (STNDR push-pull-legs, PSU psu-strength, weeks-to-open, legacy-prep,
@@ -1510,7 +1586,7 @@
       // host varies by template: .ex-content (PMC/MC), .ex-body (STNDR), else card
       /* MARKET:STRIP influencer-refs END */
       var host = c.querySelector('.ex-content') || c.querySelector('.ex-body') || c;
-      var exId = c.dataset.id || nameId(c), setsStr = setsOf(c), rs = restSecs(c);
+      var exId = exIdOf(c), setsStr = setsOf(c), rs = restSecs(c);
       buildStrip(host, c, exId, setsStr, rs);
       if (c.classList.contains('active')) buildRows(host, c, exId, setsStr, rs);
       injectTrend(c, exId);
@@ -1527,12 +1603,12 @@
       // Read the prescribed rest from the exercise's own .rest-timer (data),
       // not a hardcoded value — fallback 90s. The superset normalizer below
       // then keeps a single timer on the SECOND row and parks it under the logger.
-      var exId = c.dataset.id || nameId(c);
+      var exId = exIdOf(c);
       build(c.querySelector('.ss-content') || c.querySelector('.ex-body') || c, c, exId, setsOf(c), restSecs(c) || 90);
       injectTrend(c, exId);
     });
     document.querySelectorAll('.ex-item').forEach(function (c) {
-      var exId = c.dataset.id || nameId(c), setsStr = setsOf(c), rs = restSecs(c);
+      var exId = exIdOf(c), setsStr = setsOf(c), rs = restSecs(c);
       buildStrip(c, c, exId, setsStr, rs);
       if (c.classList.contains('active')) buildRows(c, c, exId, setsStr, rs);
       injectTrend(c, exId);
@@ -1588,7 +1664,7 @@
     });
   }
 
-  // Derives exId the same way run() does (card.dataset.id || nameId(card)) and
+  // Derives exId the same way run() does (exIdOf(card)) and
   // runs the full updateCount() derivation for that card — badge text, the
   // .checked mirror, the collapsed-strip count, .mcl-alldone, and the
   // auto-collapse timer. Exposed for mc-session.js#restoreSets() (A-7): a
@@ -1597,13 +1673,16 @@
   // this being called afterward.
   function updateCountByCard(card) {
     if (!card) return;
-    updateCount(card, card.dataset.id || nameId(card));
+    updateCount(card, exIdOf(card));
   }
 
   // shared parsing helpers for mc-suggest.js (and future analytics) — avoids
   // re-implementing the prescribed-scheme parser anywhere else
   window.MCSetlogUtil = {
     setCount: setCount, repFor: repFor, pid: PID, histKey: ek,
+    exIdOf: exIdOf,                   // EN-1/EN-8: the ONE identity derivation,
+                                      // so mc-suggest.js cannot key history on a
+                                      // different id than the logger writes under
     statesSetCount: statesSetCount,   // P2-12: mc-suggest.js refuses to judge
                                       // progression against a set count the
                                       // prescription never stated
@@ -1724,7 +1803,7 @@
       if (!nmEl) return;
       var name = origNameOf(nmEl).trim().toLowerCase();
       if (!name || map[name]) return;          // first card wins, as history does
-      map[name] = card.dataset.id || nameId(card);
+      map[name] = exIdOf(card);
     });
     return map;
   }
@@ -1787,10 +1866,12 @@
     entries.forEach(function (e) {
       var card = document.querySelector('[data-id="' + e.exId + '"]');
       if (!card) {
-        // nameId()-derived cards carry no data-id; find by rebuilt key.
+        // EN-1: exIds are name-derived now, so a card is found by rebuilding
+        // the id rather than by matching a data-id attribute that no longer
+        // has anything to do with the history key.
         var all = document.querySelectorAll('.ex-card, .ss-ex, .ex-item, .lift-card');
         for (var i = 0; i < all.length; i++) {
-          if ((all[i].dataset.id || nameId(all[i])) === e.exId) { card = all[i]; break; }
+          if (exIdOf(all[i]) === e.exId) { card = all[i]; break; }
         }
       }
       if (!card) return;

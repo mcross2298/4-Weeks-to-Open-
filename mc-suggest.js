@@ -278,7 +278,13 @@
       var card = tgl.closest('.ex-card, .ss-ex, .ex-item') || tgl.parentNode;
       var nmEl = card.querySelector('.ex-name, .ss-name, .lift-name');
       var seEl = card.querySelector('.ex-sets, [data-field="sets"], .lift-meta');
-      var exId = (card.dataset && card.dataset.id) || cls.slice('mcl-hist-'.length);
+      // EN-1/EN-8: ask mc-setlog.js for the id it actually writes under.
+      // Reading card.dataset.id here would key the suggestion on the card's
+      // POSITION while the logger keys history on the exercise NAME — two
+      // different buckets for the same set, so no suggestion would ever
+      // find the history it was computed from.
+      var u0 = window.MCSetlogUtil;
+      var exId = (u0 && u0.exIdOf) ? u0.exIdOf(card) : cls.slice('mcl-hist-'.length);
 
       var nmStr = nmEl ? nmEl.textContent : '';
       var setsStr = seEl ? seEl.textContent.trim() : '';

@@ -404,6 +404,14 @@ jobs:
           # ticks included. Its graceful-close control runs in the same pass,
           # so a broken harness cannot read as a pass.
           if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-crash-recovery.js http://localhost:8080; then EXIT=1; fi
+          # Exercise identity (Phase 2.1 / audit EN-1, EN-8). A history key must
+          # name the EXERCISE, never its POSITION. 170 of 456 cards measured
+          # across the fleet carried a positional data-id, and on the page that
+          # serves all 30 PMC workouts from one document 31 of 32 distinct keys
+          # were shared by DIFFERENT exercises -- the worst carrying eight, so a
+          # squat's logged weight sat in the same bucket as a lat pulldown's.
+          # Needs a browser: the identity is derived from the rendered card.
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-exercise-identity.js http://localhost:8080; then EXIT=1; fi
           # Light-mode contrast ratchet (audit G-04/G-3.1). Shares this job
           # because it needs the same Playwright install. Per-page budgets in
           # tools/contrast-budgets.json can only shrink; re-baseline with
