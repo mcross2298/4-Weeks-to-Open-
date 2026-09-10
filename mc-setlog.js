@@ -74,17 +74,139 @@
   // ---- storage (shape-compatible with the Finish-Workout module) ---------
   function st() { try { return JSON.parse(localStorage.getItem(SK) || '{}'); } catch (e) { return {}; } }
   function ek(id) { return PID + '|' + id; }
+  function dayStamp() { return new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+
+  // ---- FIX-01 (audit L-01): serialise every write to the shared store -----
+  // save() used to read the WHOLE store, mutate it and write it back with no
+  // lock and no re-read. Two tabs of the same program page interleaving that
+  // sequence means the second write is computed from a snapshot taken before
+  // the first, so it silently overwrites it. Measured on the pre-fix build:
+  // ten sets accepted across two tabs, five persisted; the single-tab control
+  // lost nothing. No error, no warning, and each tab shows a correct count.
+  //
+  // Two mechanisms are needed here, and the second one is not obvious.
+  //
+  // 1. A Web Lock around the whole read-modify-write. localStorage is
+  //    synchronous within a page but nothing coordinates two pages, and only
+  //    two of the 43 modules that write browser storage listen for cross-tab
+  //    changes (neither is this one).
+  //
+  // 2. A broadcast of each committed set, replayed into every later write.
+  //    THE LOCK ALONE IS NOT ENOUGH, which was measured rather than assumed:
+  //    two tabs doing 100 locked read-modify-writes on one key still lost
+  //    one, while the same test without the lock lost fifty. Web Locks order
+  //    the CODE; they do not flush another renderer process's localStorage
+  //    cache, so a read taken inside the lock can still miss a write the
+  //    other tab has already made. Re-applying the recently committed sets on
+  //    every write repairs exactly that hole: a snapshot that came back stale
+  //    gets the missing entries put back before it is written out again.
+  //
+  // Taking the lock also makes the write asynchronous, which matters because
+  // lsess()/lset() read the store back. The same _recent list doubles as the
+  // in-memory view for those reads — layered ON TOP of a fresh read, never
+  // instead of it, so it can only add a pending value, never hide one.
+  var RECENT_MS = 60000;
+  var _recent = [];         // {k, d, sn, entry, ts} — this tab's and its peers'
+
+  function noteRecent(rec) {
+    var cut = Date.now() - RECENT_MS;
+    _recent = _recent.filter(function (r) {
+      return r.ts >= cut && !(r.k === rec.k && r.sn === rec.sn && r.d === rec.d);
+    });
+    _recent.push(rec);
+  }
+
+  // Peers announce their commits here. The storage event alone cannot carry
+  // this: it fires with the whole serialised blob, which is the very value
+  // that may be stale.
+  var _bc = null;
+  try {
+    if (typeof BroadcastChannel !== 'undefined') {
+      _bc = new BroadcastChannel(SK);
+      _bc.onmessage = function (ev) {
+        var rec = ev && ev.data;
+        if (!rec) return;
+        if (rec.forget) {
+          _recent = _recent.filter(function (r) { return r.k.indexOf(rec.forget) !== 0; });
+          return;
+        }
+        if (!rec.k || rec.sn == null) return;
+        noteRecent({ k: rec.k, d: rec.d, sn: rec.sn, entry: rec.entry, ts: rec.ts || Date.now() });
+        _stCache = null;
+        if (window.MC_SCAN && MC_SCAN.schedule) MC_SCAN.schedule();
+      };
+    }
+  } catch (e) { _bc = null; }
+
+  // Put every recently committed set back into a snapshot that may have been
+  // read stale. Oldest first, so the newest value for a slot wins.
+  function replayRecent(s) {
+    _recent.slice().sort(function (a, b) { return a.ts - b.ts; }).forEach(function (r) {
+      if (!s[r.k]) s[r.k] = [];
+      var sess = s[r.k][0];
+      if (!sess || sess.d !== r.d) {
+        sess = { d: r.d, sets: {} };
+        s[r.k].unshift(sess);
+        s[r.k] = s[r.k].slice(0, 5);
+      }
+      sess.sets[r.sn] = r.entry;
+    });
+  }
+
+  // forget() drops recent records for a page. Discard needs it: without it
+  // replayRecent() would faithfully put back the very sets the athlete just
+  // threw away, which is the opposite of what discard means.
+  function forgetRecent(pagePrefix) {
+    var pre = pagePrefix + '|';
+    _recent = _recent.filter(function (r) { return r.k.indexOf(pre) !== 0; });
+    try { if (_bc) _bc.postMessage({ forget: pre, ts: Date.now() }); } catch (e) {}
+  }
+
+  function withStore(mutate, opts) {
+    var replay = !(opts && opts.replay === false);
+    function run() {
+      var s = st();
+      try { if (mutate) mutate(s); } catch (e) { return; }
+      if (replay) replayRecent(s);
+      try { localStorage.setItem(SK, JSON.stringify(s)); }
+      catch (e) {
+        // Phase 5 will surface this properly (audit M7). Until then the
+        // failure at least stops pretending the write landed.
+        try { if (window.MC_TOAST) MC_TOAST('Storage full — set not saved'); } catch (te) {}
+      }
+    }
+    if (typeof navigator !== 'undefined' && navigator.locks && navigator.locks.request) {
+      return navigator.locks.request(SK, run).catch(function () { run(); });
+    }
+    run();
+    return Promise.resolve();
+  }
+
   function save(exId, sn, w, r, rpe) {
-    var s = st(), k = ek(exId); if (!s[k]) s[k] = [];
-    var d = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    var sess = s[k][0];
-    if (!sess || sess.d !== d) { sess = { d: d, sets: {} }; s[k].unshift(sess); s[k] = s[k].slice(0, 5); }
+    var k = ek(exId), d = dayStamp();
     var entry = { w: w, r: r };
     if (rpe) entry.rpe = rpe;          // optional — older readers ignore it
-    sess.sets[sn] = entry;
-    try { localStorage.setItem(SK, JSON.stringify(s)); } catch (e) {}
+    var rec = { k: k, d: d, sn: sn, entry: entry, ts: Date.now() };
+    noteRecent(rec);
+    try { if (_bc) _bc.postMessage(rec); } catch (e) {}
+    withStore(null);                   // replayRecent() carries the new entry
   }
-  function lsess(exId) { var s = st(); return (s[ek(exId)] || [])[0] || null; }
+
+  function lsess(exId) {
+    var k = ek(exId);
+    var sess = (st()[k] || [])[0] || null;
+    var mine = _recent.filter(function (r) { return r.k === k; });
+    if (!mine.length) return sess;
+    var d = mine[mine.length - 1].d;
+    var out = { d: (sess && sess.d === d) ? sess.d : d, sets: {} };
+    if (sess && sess.d === d) {
+      Object.keys(sess.sets || {}).forEach(function (sn) { out.sets[sn] = sess.sets[sn]; });
+    }
+    mine.sort(function (a, b) { return a.ts - b.ts; }).forEach(function (r) {
+      if (r.d === out.d) out.sets[r.sn] = r.entry;
+    });
+    return out;
+  }
   function lset(exId, sn) { var sess = lsess(exId); return sess ? sess.sets[sn] || null : null; }
 
   // ---- A-10: typed-but-unchecked values survive a reload -------------------
@@ -1405,9 +1527,31 @@
                                     // checkboxes (see planFor above)
     ensureRowsBuilt: ensureRowsBuilt,  // A-14: lets mc-session.js build a specific
                                     // card's rows before restoring checks onto it
-    firstIncompleteUnit: firstIncompleteUnit  // VOC-A2: lets mc-session.js find
+    firstIncompleteUnit: firstIncompleteUnit,  // VOC-A2: lets mc-session.js find
                                     // where to land a genuinely fresh visit
+    withStore: withStore,            // FIX-01: the ONE guarded read-modify-write
+    forgetRecent: forgetRecent,      // ...and the way a discard tells it to stop
+                                    // replaying the sets it just removed
+                                    // on mc_setlog_v1. mc-finish.js (discard)
+                                    // and mc-resume.js (restore) are the only
+                                    // other writers of this store; they route
+                                    // through here so a concurrent tab cannot
+                                    // lose their write either.
   };
+
+  // ---- FIX-01, second half: notice a write from another tab ---------------
+  // The lock stops the two tabs destroying each other's data. It does not
+  // stop this tab holding a stale VIEW of it — a set logged next door is in
+  // the store but not on this screen. Drop the per-pass caches and ask for a
+  // rebuild; mc-session.js's restore then repaints the checked rows.
+  if (typeof window !== 'undefined' && window.addEventListener) {
+    window.addEventListener('storage', function (e) {
+      if (e.key !== SK) return;
+      _stCache = null;
+      if (window.MC_SCAN && MC_SCAN.schedule) MC_SCAN.schedule();
+      else run();
+    });
+  }
 
   // ---- cross-device pre-fill from Supabase ----------------------------------
   // When localStorage has no history (e.g. new device), query Supabase for the

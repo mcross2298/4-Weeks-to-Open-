@@ -694,6 +694,7 @@
           localStorage.setItem('mc_discard_snapshot_v1',JSON.stringify(snapshot));
         }
       }catch(e){}
+      var _slWritten=Promise.resolve();
       document.querySelectorAll('.ex-card.checked,.ss-ex.checked,.lift-card.checked,.ex-item.checked').forEach(function(c){c.classList.remove('checked');});
       document.querySelectorAll('.set-check.done').forEach(function(c){c.classList.remove('done');});
       try{
@@ -701,15 +702,30 @@
         if(sess[pageId]){delete sess[pageId];localStorage.setItem('mc_session_v1',JSON.stringify(sess));}
       }catch(e){}
       try{
-        var sl=JSON.parse(localStorage.getItem(SL_KEY)||'{}');
+        // FIX-01 (audit L-01): discard is a read-modify-write on the same
+        // shared store the set logger writes, so it takes the same lock. A
+        // second tab logging a set while this one discards would otherwise
+        // lose one of the two writes, exactly as two loggers did.
         var today2=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
-        var changed=false;
-        Object.keys(sl).forEach(function(k){
-          if(k.indexOf(pageId+'|')!==0)return;
-          if(sl[k][0]&&sl[k][0].d===today2){sl[k].shift();changed=true;}
-          if(!sl[k].length){delete sl[k];changed=true;}
-        });
-        if(changed)localStorage.setItem(SL_KEY,JSON.stringify(sl));
+        var mutate=function(sl){
+          Object.keys(sl).forEach(function(k){
+            if(k.indexOf(pageId+'|')!==0)return;
+            if(sl[k][0]&&sl[k][0].d===today2){sl[k].shift();}
+            if(!sl[k].length){delete sl[k];}
+          });
+        };
+        if(window.MCSetlogUtil&&MCSetlogUtil.withStore){
+          // replay:false, and forget first — the guarded writer re-applies
+          // recently committed sets to repair a stale cross-tab read, and
+          // those are exactly the sets a discard is removing.
+          if(MCSetlogUtil.forgetRecent)MCSetlogUtil.forgetRecent(pageId);
+          _slWritten=MCSetlogUtil.withStore(mutate,{replay:false});
+        }
+        else{
+          var sl=JSON.parse(localStorage.getItem(SL_KEY)||'{}');
+          mutate(sl);
+          localStorage.setItem(SL_KEY,JSON.stringify(sl));
+        }
       }catch(e){}
       try{
         // mc-live-tracker.js's own PAGE_ID keeps the ".html" suffix (unlike
@@ -734,7 +750,12 @@
       try{if(window.MCActivity&&MCActivity.releaseSessionLock)MCActivity.releaseSessionLock();}catch(e){}
       window._FW.finished=true;
       window._FW.close();
-      location.href='dashboard.html';
+      // The guarded set-log write waits on a cross-tab lock, so it is
+      // asynchronous. Navigating first would abandon it and leave the
+      // discarded sets in the store — the opposite of what discard means.
+      Promise.resolve(_slWritten).catch(function(){}).then(function(){
+        location.href='dashboard.html';
+      });
     },
     confirm:function(){
       window._FW.finished=true;

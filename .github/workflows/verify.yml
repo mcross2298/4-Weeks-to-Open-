@@ -293,6 +293,15 @@ jobs:
           # Budgets in tools/journey-budgets.json; re-baseline deliberately with
           # `node tools/check-journey.js <url> --update`.
           if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/check-journey.js http://localhost:8080; then EXIT=1; fi
+          # Concurrent-write durability on mc_setlog_v1 (engine-repair roadmap
+          # Phase 0.1 / audit L-01, FIX-01). The journey gate drives ONE tab;
+          # this one drives two, because two tabs of the same program page used
+          # to destroy half a session silently -- ten sets accepted, five
+          # persisted, no error anywhere. Its LOCK pass is the deterministic
+          # half: it holds the store's own Web Lock and asserts a write waits on
+          # it, so the gate fails on an unfixed build every run rather than
+          # whenever scheduling happens to expose the race.
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-setlog-concurrency.js http://localhost:8080; then EXIT=1; fi
           # Light-mode contrast ratchet (audit G-04/G-3.1). Shares this job
           # because it needs the same Playwright install. Per-page budgets in
           # tools/contrast-budgets.json can only shrink; re-baseline with
