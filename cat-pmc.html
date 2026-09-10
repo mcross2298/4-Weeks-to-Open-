@@ -593,7 +593,8 @@ function toggleRound(btn, rid){
 
 // ── CONFUSION BANNER ──────────────────────────────────────────────
 function confusionBanner(wk){
-  if(wk<=2) return '';
+  // Which weeks are rotated is data (MC_PMC_DATA.weeks), not `wk<=2`.
+  if(!MC_PMC_DATA.isRotatedWeek(wk)) return '';
   return `<div class="confusion-banner">🔀 Muscle Confusion Active — Week ${wk}<br><span>Same exercises · lift type rotated · your muscles won't see it coming</span></div>`;
 }
 
@@ -645,8 +646,10 @@ function render(){
   if(!workout){ renderNotFound(); return; }
 
   const _wcolor = workout.color || '#c084fc';
-  const tabs = [1,2,3,4].map(w=>
-    `<button class="wtab${activeWeek===w?' active':''}" data-w="${w}" style="${activeWeek===w?`color:${_wcolor};border-bottom-color:${_wcolor}`:''}">WEEK ${w}</button>`
+  // Shipping-checklist rule: the week list is derived from the block's own
+  // theme data, never hardcoded (see MC_PMC_DATA.weeks).
+  const tabs = MC_PMC_DATA.weeks.map(wk=>
+    `<button class="wtab${activeWeek===wk.n?' active':''}" data-w="${wk.n}" title="${wk.theme}" style="${activeWeek===wk.n?`color:${_wcolor};border-bottom-color:${_wcolor}`:''}">${wk.label}</button>`
   ).join('');
   document.getElementById('weekTabs').innerHTML = tabs;
 

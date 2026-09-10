@@ -955,57 +955,200 @@
     // Additional splits will use auto-generated swaps via autoConfusion()
   };
 
-  // ── AUTO CONFUSION GENERATOR (for splits without manual maps) ─────
-  // Applies generic lift type rotation rules to any week 1/2 data
+  // ── WEEK 3-4 ROTATION ENGINE ──────────────────────────────────────
+  // Weeks 3 and 4 re-run weeks 1 and 2 with the INTENSIFIER rotated while the
+  // exercise, its station and its set count stay put. That is what the page's
+  // own banner promises: "same exercises · lift type rotated".
+  //
+  // Audit PG-1/PG-3/PG-4 — what the previous implementation actually did, all
+  // three measured over the real data before anything was changed:
+  //
+  //   * It rotated ONE badge. swapBadges() was a ladder of `if
+  //     (badges.includes(x)) return [y]`, so it returned a one-element array
+  //     for whatever matched first and threw the rest away. The most common
+  //     pairing in this dataset is ['tb-pyramid','tb-drop'] (51 exercises):
+  //     every one of them lost its drop set outright in weeks 3 and 4. 58
+  //     badge sets were truncated this way. swapSets() had the same shape and
+  //     the same defect, so the prescription agreed with the truncated badge.
+  //
+  //   * It broke every superset apart. autoConfusion() turned a superset into
+  //     two standalone cards numbered 1a/1b, so 77 supersets stopped being
+  //     supersets in weeks 3 and 4 — a station-anchoring change (see
+  //     CLAUDE.md's archetypes) that nothing asked for.
+  //
+  //   * Its tempo rotation emitted no tempo. `tb-lowrep` became `tb-tempo`
+  //     with a set string of "4×8" — a rep scheme with nothing tempo about it,
+  //     53 times. This project's own rule is that tempo appears as real
+  //     notation in the set field ("@ 4-0-1"), not as a coaching note.
+  //
+  // The model here separates the two roles the badge vocabulary actually
+  // carries in the authored data:
+  //
+  //   BASE       exactly one rep scheme — low rep / pyramid / 12-15 / 20-30 /
+  //              tempo / AMRAP. These rotate on a 6-cycle.
+  //   MODIFIER   tb-drop. It is never a rep scheme of its own in this data (it
+  //              only ever appears ALONGSIDE a base, e.g. "12,10,8,8 drop 15"),
+  //              so it rides the rotation rather than being consumed by it.
+  //              A drop set staying a drop set while the scheme under it
+  //              rotates is the behaviour the banner describes; the old code's
+  //              "drop -> high rep" edge is precisely how the drop vanished.
+  //
+  // Everything else on the badge list (tb-superset, tb-minrest, tb-optional,
+  // tb-finisher, equipment badges) is carried through untouched.
+  //
+  // The 6-cycle keeps five of the old table's six edges. The one that changes
+  // is tb-highrep20, which used to point at tb-lowrep — leaving tb-highrep12
+  // with no predecessor, so once an exercise rotated off "12-15 reps" nothing
+  // could ever rotate back onto it. Pointing highrep20 at highrep12 closes the
+  // cycle: every intensifier now has exactly one predecessor and one
+  // successor, which is what makes this a rotation rather than a drain.
+  var BASE_CYCLE = {
+    'tb-lowrep':    'tb-tempo',
+    'tb-tempo':     'tb-amrap',
+    'tb-amrap':     'tb-pyramid',
+    'tb-pyramid':   'tb-highrep20',
+    'tb-highrep20': 'tb-highrep12',
+    'tb-highrep12': 'tb-lowrep'
+  };
+  var MODIFIERS = ['tb-drop'];
+
+  // Which base writes the set string when a rotated card carries more than one
+  // (the authored data does this too — "pyramid performed at tempo"). A
+  // numeric scheme always beats AMRAP, because "AMRAP @ 4-0-1" is not a
+  // prescription any parser in this app can read a rep target out of.
+  var BASE_PRIORITY = ['tb-lowrep', 'tb-pyramid', 'tb-highrep12', 'tb-highrep20', 'tb-tempo', 'tb-amrap'];
+
+  var SHORT = {
+    'tb-lowrep': 'low rep heavy', 'tb-tempo': 'tempo', 'tb-amrap': 'AMRAP',
+    'tb-pyramid': 'pyramid', 'tb-highrep20': 'high rep', 'tb-highrep12': '12-15 reps',
+    'tb-drop': 'drop set', 'tb-superset': 'superset'
+  };
+
+  var PYRAMIDS = {
+    2: '12,10', 3: '12,10,8', 4: '12,10,8,8',
+    5: '15,12,10,8,8', 6: '15,12,10,8,8,6'
+  };
+
+  function isBase(b) { return Object.prototype.hasOwnProperty.call(BASE_CYCLE, b); }
+  function isModifier(b) { return MODIFIERS.indexOf(b) >= 0; }
+
+  // Working-set count of an authored prescription. Deliberately a small local
+  // reader rather than a reach into mc-setlog.js's MCSetlogUtil: this runs
+  // inside render(), which fires before the page's tail <script> tags have
+  // loaded that module, so it cannot be there to ask.
+  function workSetCount(sets) {
+    var work = String(sets == null ? '' : sets).replace(/\s*\bdrop\b.*$/i, '').trim();
+    var mult = work.match(/^\s*(\d+)\s*[x×]/i);
+    if (mult) return Math.min(Math.max(parseInt(mult[1], 10), 1), 8);
+    var parts = work.split(',').filter(function (p) { return /\d/.test(p); });
+    if (parts.length > 1) return Math.min(parts.length, 8);
+    return 4;                       // no set count stated — the house default
+  }
+
+  // Top (heaviest, lowest-rep) working target of a base scheme, used to size
+  // the drop. The authored pairs in this file are 8 -> "drop 15" and
+  // 12 -> "drop 20"; this reproduces both rather than inventing a formula.
+  function dropReps(top) {
+    if (!top) return 20;
+    if (top <= 8) return 15;
+    if (top <= 12) return 20;
+    return 25;
+  }
+
+  function schemeFor(base, n) {
+    if (base === 'tb-lowrep')    return { str: n + '×6',  top: 6 };
+    if (base === 'tb-highrep12') return { str: n + '×12', top: 12 };
+    if (base === 'tb-highrep20') return { str: n + '×20', top: 20 };
+    if (base === 'tb-tempo')     return { str: n + '×8 @ 4-0-1', top: 8 };
+    // "N×AMRAP", not a bare "AMRAP": a bare one states no set count, so
+    // mc-setlog.js falls back to its 3-row default and the athlete is shown
+    // three rows where four were prescribed. Caught by this file's own
+    // regression sweep against the real parser, on 50 rotated cards.
+    if (base === 'tb-amrap')     return { str: n + '×AMRAP', top: 0 };
+    if (base === 'tb-pyramid') {
+      var p = PYRAMIDS[n] || PYRAMIDS[4];
+      var toks = p.split(',');
+      return { str: p, top: parseInt(toks[toks.length - 1], 10) };
+    }
+    return null;
+  }
+
+  // Rotate a whole badge list, as a set: every base advances one step on the
+  // cycle, every modifier and every non-structural badge is carried through in
+  // its original position. Order is preserved so the rendered badge row keeps
+  // the shape the author gave it.
+  function rotateBadges(badges) {
+    if (!badges || !badges.length) return badges ? badges.slice() : [];
+    return badges.map(function (b) { return isBase(b) ? BASE_CYCLE[b] : b; });
+  }
+
+  // Build the rotated prescription from the ROTATED badge set, so the string
+  // and the badges can never disagree. Returns the authored string unchanged
+  // when nothing structural rotated.
+  function rotateSets(sets, badges) {
+    var rot = rotateBadges(badges);
+    var bases = BASE_PRIORITY.filter(function (b) { return rot.indexOf(b) >= 0; });
+    var hasDrop = rot.indexOf('tb-drop') >= 0;
+    var n = workSetCount(sets);
+
+    var scheme = bases.length ? schemeFor(bases[0], n) : null;
+    if (!scheme) {
+      // Modifier-only or nothing structural at all. A card whose only
+      // structural badge is tb-drop keeps its own working scheme and its own
+      // drop clause — there is nothing to re-express.
+      return sets;
+    }
+    var out = scheme.str;
+    // tb-tempo present but not the chosen base decorates the scheme instead of
+    // replacing it ("12,10,8,8 @ 4-0-1"), which is how mm-data.js writes its
+    // own tempo week.
+    if (rot.indexOf('tb-tempo') >= 0 && bases[0] !== 'tb-tempo' && bases[0] !== 'tb-amrap') {
+      out += ' @ 4-0-1';
+    }
+    if (hasDrop) out += ' drop ' + dropReps(scheme.top);
+    return out;
+  }
+
+  function rotationNote(badges) {
+    var from = (badges || []).filter(function (b) { return isBase(b) || isModifier(b); });
+    if (!from.length) return null;
+    var to = from.map(function (b) { return isBase(b) ? BASE_CYCLE[b] : b; });
+    function label(list) {
+      return list.map(function (b) { return SHORT[b] || b; }).join(' + ');
+    }
+    return '🔀 was ' + label(from) + ' → ' + label(to);
+  }
+
+  function rotateExercise(ex) {
+    var note = rotationNote(ex.badges);
+    // No structural intensifier (a bodyweight finisher, an optional extra):
+    // there is nothing to rotate, so the authored card passes through whole
+    // rather than being re-badged or having its coaching note truncated.
+    if (!note) return Object.assign({}, ex);
+    return Object.assign({}, ex, {
+      sets: rotateSets(ex.sets, ex.badges),
+      badges: rotateBadges(ex.badges),
+      note: note
+    });
+  }
+
+  // ── AUTO ROTATION (for splits without a hand-authored week 3/4 map) ─────
+  // PG-3: a superset stays a superset. The previous implementation split one
+  // into two standalone cards numbered "1a"/"1b", which changed the day's
+  // station anchoring (CLAUDE.md's superset archetypes) as a side effect of
+  // rotating a rep scheme, and cost the pair its shared rest.
   function autoConfusion(exercises, sourceWeek){
-    return exercises.map(ex => {
-      if(ex.type === 'superset'){
-        // Break superset into individual cards with swapped types
-        return [
-          Object.assign({}, ex.a, {type:'single', num:ex.num+'a',
-            sets: swapSets(ex.a.sets, ex.a.badges),
-            badges: swapBadges(ex.a.badges),
-            note: '🔀 was superset → ' + (ex.a.note||'').substring(0,40)
-          }),
-          Object.assign({}, ex.b, {type:'single', num:ex.num+'b',
-            sets: swapSets(ex.b.sets, ex.b.badges),
-            badges: swapBadges(ex.b.badges),
-            note: '🔀 was superset → ' + (ex.b.note||'').substring(0,40)
-          }),
-        ];
+    return (exercises || []).map(function (ex) {
+      if (ex.type === 'superset') {
+        return Object.assign({}, ex, {
+          a: rotateExercise(ex.a || {}),
+          b: rotateExercise(ex.b || {})
+        });
       }
-      return Object.assign({}, ex, {
-        sets: swapSets(ex.sets, ex.badges),
-        badges: swapBadges(ex.badges),
-        note: '🔀 ' + (ex.note||'').substring(0,50),
-      });
-    }).flat();
+      return rotateExercise(ex);
+    });
   }
 
-  function swapSets(sets, badges){
-    if(!badges) return sets;
-    if(badges.includes('tb-lowrep'))    return '4×8';       // low rep → tempo
-    if(badges.includes('tb-pyramid'))   return '4×20';      // pyramid → high rep
-    if(badges.includes('tb-drop'))      return '4×20';      // drop → high rep
-    if(badges.includes('tb-tempo'))     return 'AMRAP';     // tempo → AMRAP
-    if(badges.includes('tb-highrep20')) return '4×6';       // high rep → low rep
-    if(badges.includes('tb-highrep12')) return '4×6';       // high rep → low rep
-    if(badges.includes('tb-amrap'))     return '12,10,8,8'; // AMRAP → pyramid
-    return sets;
-  }
-  function swapBadges(badges){
-    if(!badges) return [];
-    if(badges.includes('tb-lowrep'))    return ['tb-tempo'];
-    if(badges.includes('tb-pyramid'))   return ['tb-highrep20'];
-    if(badges.includes('tb-drop'))      return ['tb-highrep20'];
-    if(badges.includes('tb-tempo'))     return ['tb-amrap'];
-    if(badges.includes('tb-highrep20')) return ['tb-lowrep'];
-    if(badges.includes('tb-highrep12')) return ['tb-lowrep'];
-    if(badges.includes('tb-amrap'))     return ['tb-pyramid'];
-    return badges;
-  }
-
-  // ── GET EXERCISES FOR WEEK ─────────────────────────────────────────
   function getWeekData(workout, week){
     const raw = workout.data;
     if(workout.type === 'blocks') return null; // blocks handled separately
@@ -1022,33 +1165,60 @@
       return weekData.warmup === true;
     }
 
-    if(week <= 2){
+    // Which week (if any) this one is rotated FROM comes from the WEEKS table
+    // below, not from a `week <= 2` literal — same reason the tab row reads it.
+    const src = sourceWeekFor(week);
+    if(!src){
       const wd = raw[week] || raw[1];
       return { exercises: getExercises(wd), warmup: hasWarmup(wd) };
     }
 
-    // Weeks 3–4: check manual map first, then auto-generate
+    const bwd = raw[src] || raw[1];
+
+    // A hand-authored week 3/4 map always wins over the automatic rotation.
     const manualKey = workout.id;
     if(CONFUSION_SWAPS[manualKey] && CONFUSION_SWAPS[manualKey][week]){
-      const backWeek = week === 3 ? 1 : 2;
-      const bwd = raw[backWeek] || raw[1];
       return { exercises: CONFUSION_SWAPS[manualKey][week], warmup: hasWarmup(bwd) };
     }
 
-    // Auto-generate from base week
-    const baseWeek = week === 3 ? 1 : 2;
-    const bwd = raw[baseWeek] || raw[1];
-    const baseExercises = getExercises(bwd);
-    return { exercises: autoConfusion(baseExercises, baseWeek), warmup: hasWarmup(bwd) };
+    return { exercises: autoConfusion(getExercises(bwd), src), warmup: hasWarmup(bwd) };
   }
+
+  // ── WEEK THEMES ───────────────────────────────────────────────────
+  // The block's shape as DATA. Both PMC pages built their week bar from a
+  // hardcoded `[1,2,3,4]`, which is exactly what this project's own shipping
+  // checklist forbids ("Themes drive the tabs ... never hardcode the week
+  // list"): the block length then lives in three places that are free to
+  // disagree. The tab row maps over this array now, so adding or removing a
+  // week is a one-line change here.
+  var WEEKS = [
+    { n: 1, label: 'WEEK 1', theme: 'As authored', from: 0 },
+    { n: 2, label: 'WEEK 2', theme: 'As authored', from: 0 },
+    { n: 3, label: 'WEEK 3', theme: 'Rotated from week 1', from: 1 },
+    { n: 4, label: 'WEEK 4', theme: 'Rotated from week 2', from: 2 }
+  ];
+  function weekRec(w) {
+    var n = Number(w);
+    return WEEKS.filter(function (x) { return x.n === n; })[0] || null;
+  }
+  // 0 when the week is authored outright; otherwise the week it rotates from.
+  function sourceWeekFor(w) {
+    var rec = weekRec(w);
+    return rec ? rec.from : 0;
+  }
+  function isRotatedWeek(w) { return sourceWeekFor(w) > 0; }
 
   window.MC_PMC_DATA = {
     splits: PMC_SPLITS,
     meta: PMC_SPLIT_META,
     confusionSwaps: CONFUSION_SWAPS,
+    weeks: WEEKS,
+    isRotatedWeek: isRotatedWeek,
+    sourceWeekFor: sourceWeekFor,
     getWeekData: getWeekData,
     autoConfusion: autoConfusion,
-    swapSets: swapSets,
-    swapBadges: swapBadges
+    rotateSets: rotateSets,
+    rotateBadges: rotateBadges,
+    rotateExercise: rotateExercise
   };
 })();

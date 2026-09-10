@@ -119,6 +119,18 @@ jobs:
           node tools/test-mc-setlog-plan.js
           node tools/check-set-schemes.js
 
+      - name: PMC week-3/4 intensifier rotation (roadmap Phase 2.5)
+        # The rotation that builds weeks 3 and 4 of Project Muscle Confusion
+        # used to return ONE replacement badge, so the most common pairing in
+        # the data lost its drop set on 51 exercises; it split every superset
+        # into two cards; and its tempo rotation emitted a rep scheme with no
+        # tempo notation. This sweeps the real 30-workout dataset and feeds
+        # every generated prescription back through mc-setlog.js's own parser,
+        # so a rotation can never emit a string the logger reads differently
+        # than it was meant. It caught a defect in the repair itself: a bare
+        # "AMRAP" states no set count, so four prescribed sets rendered three.
+        run: node tools/test-mc-pmc-confusion.js
+
       - name: Program schedule records match their source data (roadmap F5)
         # mm's and hv's `schedule` blocks in mc-pm-data.js are GENERATED from
         # mm-data.js and hv-block.html's own WEEKS. Hand-edited, they become a
