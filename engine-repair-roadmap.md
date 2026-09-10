@@ -684,6 +684,81 @@ deletion outright), and add the missing delete policy on `daily_health`.
 > the Est. 1RM series opens at **71** for the 60 × 20 set (the capped,
 > discounted figure — it would have read 100 before), no horizontal overflow,
 > zero console errors.
+>
+> **Steps 3 and 4 shipped (2026-09-10).** Step 4 was taken before step 3
+> because step 3 needed a decision and step 4 did not.
+>
+> **Step 4 — six choices, two outcomes.** The effort control was a seven-step
+> chip on EVERY set row, so recording "to failure" cost six taps, and effort
+> was logged on 1.6% of sets. Measuring what READS it showed the deeper
+> problem: `mc-suggest.js`, `mc-strain.js` and `mc-readiness.js` all test the
+> same predicate — `rpe === 'F' || parseFloat(rpe) >= 9.5` — so six choices
+> only ever produced TWO answers. It is now one question on the finished
+> exercise: **Easy / Solid / To failure**, three real `<button>`s at the 44px
+> floor (the old chip was a non-semantic `<div>`, so keyboard-unreachable —
+> Volume II Phase 6 fixed exactly this for the rest-timer and set-check
+> controls and missed this one). The stored values stay inside the old
+> vocabulary (`8`, `9`, `F`), so existing logs, the Supabase column and all
+> three consumers are untouched. Tapping the chosen answer again clears it,
+> and the freed 44px column goes to the weight and reps inputs.
+>
+> **A bug the change created, caught by driving it:** `onCheck()` read the
+> removed element for its rpe value, so re-checking the last set would have
+> written `''` and silently erased an answer already given. It carries the
+> stored value forward now.
+>
+> **Step 3 — the decision first.** "Schedule a real deload at the end of each
+> block" has two readings, and one of them rewrites authored program content
+> across the page data, the landing badges, the dashboard and `mc-pm-data.js`,
+> all of which must agree. Put to the owner: **the last week of each block
+> becomes a deload** — no week counts change.
+>
+> `deloadWeeks` is DATA on the schedule record, not "the last week" as a rule
+> in a renderer, so a program can declare none. It is re-derived from the
+> definition on every read and never persisted, for the same reason `phases`
+> is: a stored record must not be able to contradict the program's own
+> prescription. `ss` carries `[6]` by hand, `gen-schedules.js` emits `[weeks]`
+> for `mm` and `hv`. Deliberately the last week of the BLOCK and not of each
+> phase — `mm` is three five-week phases, but `hv` is four phases of ONE week
+> each, where per-phase would make every week a deload.
+>
+> **Both halves reduce volume through ONE code path**, so they cannot drift
+> into meaning different things: `planFor()` builds one working set fewer,
+> floored at one, and `plannedSetCount()` — `mc-finish.js`'s completion
+> denominator — falls with it automatically. Drop rows are untouched, because a
+> drop set IS the reduction on that exercise, and a prescription that never
+> stated a set count is left alone (P2-12): trimming a default nobody asked for
+> would be inventing a number twice. The card says which reason applies.
+>
+> The pre-session brief gains a third action, **Lighter**, offered only when
+> there is a real reason — a group `MC_READY` itself calls overreached, a
+> Recovery Score under its low band, or a deload week. Verified suppressed with
+> none of the three. It writes `mc_deload_v1` to sessionStorage (a decision
+> about today's session, not a setting: tab-scoped, timestamped, four-hour
+> window, cleared by `mc-finish.js` on completion) and is declared in
+> `store-registry.json` in the same change.
+>
+> **A real race, found by driving a deep link and not by reading.** With
+> `?week=4&day=1` the deload did NOT apply, while the same week reached through
+> the day list did. `mc-pm-data.js` was reaching three of the five
+> schedule-bearing pages only through an ASYNC injection, so the first cards
+> were built before the program record existed — and the resolved answer was
+> cached, so one early "no" governed the whole page load. Two fixes: those
+> pages now load the data synchronously before `mc-setlog.js`, and an
+> unknowable answer is never cached, so a mis-ordered page degrades for one
+> pass instead of permanently.
+>
+> **And a bug that was not one.** `hv-block.html?week=2` appeared to render a
+> day with zero exercises. Week 2 of that block is entirely supersets, so it
+> renders `.ss-ex` units and no `.ex-card` — the probe was counting the wrong
+> selector. Confirmed identical on the unchanged tree before concluding it.
+>
+> Verified live: week 4 of the four-week block prescribes 4 rows where weeks 1
+> and 2 prescribe 5, with `plannedSetCount` agreeing; a page with no schedule
+> is untouched; the brief's three buttons fit at 320 with no overflow and the
+> Lighter control measures 83×45; the effort answer survives a reload.
+> `mc-program-progress.js` grew 91 → **102 assertions**, every local gate is
+> green and `check-journey` is 9/9; `quick-tour.html` documents both.
 
 ---
 
