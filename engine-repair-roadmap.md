@@ -530,6 +530,60 @@ deletion outright), and add the missing delete policy on `daily_health`.
    welcome moment and immediately after a personal record, and keep the
    content specific. Needs Phase 1 steps 1 and 2.
 
+> **Phase 4 opened (2026-09-10) — scoping pass, and four of the phase's own
+> premises did not survive it.** Two decisions taken with the owner, recorded
+> below. Per the Planning rule this entry authorises implementation; each step
+> still reports what it measured.
+>
+> **1. "Each program record already declares its rest positions" is true of
+> three programs, not ten.** Evaluated from `mc-pm-data.js`: only `ss`
+> (rest `[6,7]`), `mm` (rest `[5]`, 3 phases) and `hv` (4 phases, a different
+> rest pattern each week) carry a `schedule`. The other seven — `pmc`, `mc`,
+> `ks`, `stndr`, `pump`, `gainz`, `psu` — carry none, and `F5` left it that way
+> on purpose: their metas describe collections ("7 Splits", "10 Workouts"), not
+> blocks, so there is no prescription to adhere to. **Decision:** a program with
+> no schedule infers its rest pattern from the athlete's own history.
+> `mc-bridge.js`'s `likelyTrainingDays()` already derives exactly that from
+> `mc_workout_log_v1` for the cookbook, so this is a second consumer of
+> existing arithmetic, not a new one.
+>
+> **2. There are two streaks, and they disagree.**
+> `mc-live-tracker.js`'s `computeStreak()` walks `mc_activity.days` backwards
+> over consecutive calendar days, and `dashboard.html`'s `maybeCheckStreak()`
+> independently re-derives a seven-day streak from `mc_workout_log_v1` for the
+> milestone push. Two implementations of one concept over two different stores
+> — the drift shape `check-single-impl.js` exists for. The milestone is
+> unreachable for a second reason on top of `EN-4`: **every program in the app
+> rests at least one day a week**, so an athlete who follows any prescription
+> exactly can never log seven consecutive calendar days.
+>
+> **3. Step 2 is largely built, and what is missing is not what the step
+> says.** `mc-exercise-trends.js` already charts every lift across every
+> finished workout **matched by name app-wide**, with an Epley estimate per
+> session — "one lift, one curve, across every program" is the behaviour it
+> already has. Two real gaps sit underneath it. There is **no record marked on
+> the curve**, which is the half the step actually asks for. And there are
+> **two divergent one-rep-max estimators**: `mc-exercise-trends.js` uses bare
+> Epley, while `mc-maxout.js` applies the Cable/Machine ×0.85 coefficient that
+> Task 3.3 added precisely because bare Epley overstates a machine lift. The
+> same lift therefore reports two different estimated maxes depending on which
+> screen the athlete is looking at. Consolidating them onto one implementation
+> is this step's real content — the same call Phase 2.4 made for `equipCat()`,
+> and it needs no new decision.
+>
+> **4. Step 4's control is a non-semantic `<div>`.** `.mcl-rpe` is a seven-step
+> cycling chip (`– → 8 → 8.5 → 9 → 9.5 → 10 → F`) on **every** set row, so
+> recording "to failure" costs six taps and the chip is keyboard-unreachable —
+> Volume II Phase 6 converted the rest-timer and set-check controls to real
+> `<button>`s and this one was not in that sweep. The step's own prescription
+> (three choices, last set of an exercise only) fixes the tap cost; the element
+> type is a second, separate defect on the same control.
+>
+> **5. Step 5 cannot be fully proven from a session.** It needs Phase 1 step 1,
+> the weekly check-in secret, which is the owner's and still open. **Decision:**
+> build it, verify everything testable without a real scheduled run, and record
+> the unproven half explicitly rather than reporting the step closed.
+
 ---
 
 ## Phase 5 — Post-launch reliability
