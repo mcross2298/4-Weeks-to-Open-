@@ -10,6 +10,14 @@
 --   daily_health   3 policies: INSERT, SELECT, UPDATE. No DELETE.
 --
 -- Step 1 deletes rows. Read it before running it.
+--
+-- APPLIED 2026-09-10 to the live project, with the owner watching. Verified
+-- immediately afterwards: 125 -> 120 rows (exactly the 5 surplus duplicates),
+-- 0 duplicate groups, workout_logs_set_uniq present, user_sync's foreign key
+-- now reads ON DELETE CASCADE, and daily_health carries 4 policies including
+-- DELETE. Kept here as the record of what ran, and because it is idempotent
+-- enough to re-read: re-running it would fail at the constraint, which is the
+-- correct outcome for a migration that has already landed.
 -- ===========================================================================
 
 begin;
