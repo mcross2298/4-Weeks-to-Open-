@@ -48,6 +48,18 @@
     } catch (e) {}
   }
 
+  // A logged weight is free text: the athlete types it mid-set, and it also
+  // comes back from sync and from a restored snapshot. Anything not a finite,
+  // positive, physically-possible number is not a weight, and must not become
+  // one by falling through a `|| 0` (audit P2-11). The ceiling matches
+  // mc-strain.js's MAX_SET_WEIGHT_LB.
+  var MAX_SET_WEIGHT_LB = 5000;
+  function usableWeight(v) {
+    var n = parseFloat(v);
+    if (!isFinite(n) || n <= 0 || n > MAX_SET_WEIGHT_LB) return 0;
+    return n;
+  }
+
   // big compound movements progress in 10 lb jumps; everything else 5 lb
   var BIG = /squat|deadlift|leg press|bench|overhead press|ohp|barbell press|military/i;
 
@@ -58,24 +70,33 @@
   // way Cable/Machine are.
   function computeIncrement(name, equip) {
     var inc = BIG.test(name || '') ? 10 : 5;
-    if (equip === 'Cable' || equip === 'Machine') inc = 2.5;
+    // A DUMBBELL increment is PER HAND, so the 10 lb compound jump is really a
+    // 20 lb jump — and the BIG pattern matches plenty of dumbbell lifts
+    // ("DB Bench Press", "DB Overhead Press", "Goblet Squat" via 'squat').
+    // Capped at 5 per hand, which is also the smallest step most racks carry
+    // (audit P2-10).
+    if (equip === 'Dumbbell') inc = Math.min(inc, 5);
+    // Cable, Machine and Plate-Loaded move in the smaller plate their stack
+    // actually has. Plate-Loaded was missing here (audit EN-11) — 26 catalog
+    // entries, and it holds the heavy anchor, cluster and drop positions of a
+    // whole flagship phase.
+    var C = _cls();
+    if (C && C.isLeverageAssisted(equip)) inc = 2.5;
     return inc;
   }
 
-  // Resolve equipment type for an exercise: catalog lookup first, then keyword fallback.
-  function equipCat(name) {
-    if (typeof window !== 'undefined' && window.EXERCISES) {
-      var nl = (name || '').toLowerCase();
-      for (var i = 0; i < window.EXERCISES.length; i++) {
-        if (window.EXERCISES[i].name.toLowerCase() === nl) return window.EXERCISES[i].equipment || '';
-      }
-    }
-    var s = ' ' + (name || '').toLowerCase() + ' ';
-    if (/\bcable\b|pulldown|push-?down|rope |lat pull|face pull/.test(s)) return 'Cable';
-    if (/\bmachine\b|leg press|leg extension|leg curl|pec deck|abductor|adductor/.test(s)) return 'Machine';
-    if (/dumbbell|\bdb\b/.test(s)) return 'Dumbbell';
-    return 'Barbell';
+  // Equipment comes from mc-classify.js — the ONE resolver (audit P2-13). This
+  // file and mc-maxout.js each carried their own copy and they disagreed:
+  // mc-maxout.js had no Dumbbell branch, so the same lift was "Dumbbell" here
+  // and "Barbell" there, and neither knew Smith, Plate-Loaded or Bodyweight
+  // existed — three of the catalog's seven values, 119 of its 577 exercises.
+  // Resolved lazily, never captured at parse time, since script order across
+  // ~140 pages does not guarantee mc-classify.js has run when this parses.
+  function _cls() {
+    if (typeof window !== 'undefined' && window.MC_CLASSIFY) return window.MC_CLASSIFY;
+    try { return require('./mc-classify.js'); } catch (e) { return null; }
   }
+  function equipOf(name) { var C = _cls(); return C ? C.equipCat(name) : 'Barbell'; }
 
   // The prescribed top rep target for the scheme ("4x12" -> 12, "12,10,8,8" ->
   // 8, the last one). 0 means THERE IS NO TARGET, and every caller below
@@ -151,7 +172,15 @@
   function classifySession(sess, setsStr) {
     if (!sess || !sess.sets) return null;
     var sets = Object.keys(sess.sets).map(function (k) { return sess.sets[k]; });
-    var weights = sets.map(function (s) { return parseFloat(s.w) || 0; }).filter(Boolean);
+    // Validate the weight field rather than trusting it (audit P2-11). It is a
+    // free-text input the athlete types with one thumb mid-set, and it also
+    // arrives from sync and from restored snapshots. `parseFloat(x) || 0`
+    // rejects only NaN and zero: a NEGATIVE weight passed straight through and
+    // became the session's max when every other set was heavier in the wrong
+    // direction, and an Infinity or a fat-fingered 18500 became a suggestion
+    // built on it. The 5000 lb ceiling is mc-strain.js's own, for the same
+    // reason it has one — past a loaded sled, nothing real is heavier.
+    var weights = sets.map(function (s) { return usableWeight(s.w); }).filter(Boolean);
     if (!weights.length) return null;                 // bodyweight / unweighted
     var W = Math.max.apply(null, weights);
 
@@ -174,15 +203,24 @@
   }
 
   function suggestFor(exId, name, setsStr) {
+    // completedSessions() exists to exclude TODAY's still-in-progress session,
+    // and the fallback that used to sit here — `: (store()[historyKey(exId)]
+    // || [])[0]` — reached straight past it and took that very session
+    // whenever it was the only one on record (audit EN-5). So on a first-ever
+    // session the engine read the sets the athlete had just logged minutes
+    // earlier, judged them a completed session, and suggested adding weight
+    // mid-workout off its own half-finished data. No history means no
+    // suggestion; that is what "no history -> no hint" in this file's own
+    // header has always said.
     var sessions = completedSessions(exId);
-    var sess = sessions.length ? sessions[0] : (store()[historyKey(exId)] || [])[0];
-    var cls = classifySession(sess, setsStr);
+    if (!sessions.length) return null;
+    var cls = classifySession(sessions[0], setsStr);
     if (!cls) return null;
 
     if (cls.status === 'hold') return { w: cls.w, base: cls.w, status: 'hold', why: 'hold — last session was near max' };
     if (cls.status === 'repeat') return { w: cls.w, base: cls.w, status: 'repeat', why: 'repeat — chase the rep target' };
     if (cls.status === 'progress') {
-      var eq = equipCat(name || '');
+      var eq = equipOf(name || '');
       var inc = computeIncrement(name, eq);
       return { w: cls.w + inc, base: cls.w, status: 'progress', why: 'all reps hit last time — move up' };
     }
@@ -200,8 +238,10 @@
   // increment (2.5 lb for Cable/Machine, 5 lb otherwise — the smallest step
   // those stacks/plates actually move in, not the BIG-lift progression jump).
   function deloadWeight(base, name) {
-    var eq = equipCat(name || '');
-    var step = (eq === 'Cable' || eq === 'Machine') ? 2.5 : 5;
+    var eq = equipOf(name || '');
+    var C = _cls();
+    // Plate-Loaded moves in the same small increments (audit EN-11).
+    var step = (C && C.isLeverageAssisted(eq)) ? 2.5 : 5;
     return Math.round((base * 0.9) / step) * step;
   }
 
@@ -238,7 +278,13 @@
       var card = tgl.closest('.ex-card, .ss-ex, .ex-item') || tgl.parentNode;
       var nmEl = card.querySelector('.ex-name, .ss-name, .lift-name');
       var seEl = card.querySelector('.ex-sets, [data-field="sets"], .lift-meta');
-      var exId = (card.dataset && card.dataset.id) || cls.slice('mcl-hist-'.length);
+      // EN-1/EN-8: ask mc-setlog.js for the id it actually writes under.
+      // Reading card.dataset.id here would key the suggestion on the card's
+      // POSITION while the logger keys history on the exercise NAME — two
+      // different buckets for the same set, so no suggestion would ever
+      // find the history it was computed from.
+      var u0 = window.MCSetlogUtil;
+      var exId = (u0 && u0.exIdOf) ? u0.exIdOf(card) : cls.slice('mcl-hist-'.length);
 
       var nmStr = nmEl ? nmEl.textContent : '';
       var setsStr = seEl ? seEl.textContent.trim() : '';
@@ -248,7 +294,7 @@
       var hint = document.createElement('span');
       hint.className = 'mcl-suggest';
       hint.title = s.why;
-      var perHand = equipCat(nmStr) === 'Dumbbell' ? ' per hand' : '';
+      var perHand = equipOf(nmStr) === 'Dumbbell' ? ' per hand' : '';
       hint.textContent = 'Suggested: ' + s.w + ' lb' + perHand;
       tgl.insertBefore(hint, hist);
 
@@ -333,10 +379,11 @@
   // (see tools/test-mc-suggest.js) instead of a duplicated inline copy.
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
-      computeIncrement: computeIncrement, topRep: topRep, equipCat: equipCat,
+      computeIncrement: computeIncrement, topRep: topRep, equipCat: equipOf,
       repsOf: repsOf,
       classifySession: classifySession, detectPlateau: detectPlateau, suggestFor: suggestFor,
-      writeTarget: writeTarget, deloadWeight: deloadWeight
+      writeTarget: writeTarget, deloadWeight: deloadWeight,
+      usableWeight: usableWeight
     };
   }
 })();

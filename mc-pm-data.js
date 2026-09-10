@@ -701,7 +701,8 @@
             "muscles": [
               "biceps",
               "chest",
-              "shoulders"
+              "shoulders",
+              "triceps"
             ],
             "href": "hv-block.html?week=3&day=6"
           },

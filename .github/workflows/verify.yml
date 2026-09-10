@@ -130,6 +130,33 @@ jobs:
         # cluster as one long straight set.
         run: node tools/test-mc-cluster-reps.js
 
+      - name: One equipment resolver, and the arithmetic on it (roadmap Phase 2.4)
+        # equipCat() existed twice and the two copies disagreed: mc-maxout.js
+        # had no Dumbbell branch, so the same lift was "Dumbbell" to the
+        # progression engine and "Barbell" to the 1RM estimator, and neither
+        # knew Smith, Plate-Loaded or Bodyweight existed — three of the seven
+        # values the catalog uses, 119 of its 577 exercises. Also pins the
+        # arithmetic built on it: a dumbbell step is PER HAND (a 10 lb compound
+        # jump was really 20), Plate-Loaded moves in the same small plate as
+        # Cable and Machine, the warm-up ladder only floors at an empty barbell
+        # for lifts that use one (a 40 lb cable max built six identical 45 lb
+        # rungs), and a logged weight is validated rather than trusted.
+        run: node tools/test-mc-classify.js
+
+      - name: One muscle taxonomy, catalog-first (roadmap Phase 2.2)
+        # Three engines answered "what does this exercise train" and disagreed:
+        # mc-muscle-map.js's coarse groups (Stats hub, recovery curve, Readiness
+        # Brief), mc-biomech.js's fine buckets (which lift can substitute for
+        # which), and the curated `muscle` on all 577 catalog entries. The
+        # catalog is the authority now and the regexes are the fallback for a
+        # name it does not carry. Pins all six ordering defects — a close-grip
+        # CURL filed as triceps, an unreachable upright-row branch, overhead
+        # triceps work read as a shoulder press, calf raises claimed by the
+        # squat rule, "BW " not recognised as bodyweight, and `lat ` matching
+        # inside "flat" — plus a seventh this test found itself: `chin`,
+        # unbounded, matching the substring inside "machine".
+        run: node tools/test-mc-muscle-classify.js
+
       - name: PMC week-3/4 intensifier rotation (roadmap Phase 2.5)
         # The rotation that builds weeks 3 and 4 of Project Muscle Confusion
         # used to return ONE replacement badge, so the most common pairing in
@@ -377,6 +404,14 @@ jobs:
           # ticks included. Its graceful-close control runs in the same pass,
           # so a broken harness cannot read as a pass.
           if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-crash-recovery.js http://localhost:8080; then EXIT=1; fi
+          # Exercise identity (Phase 2.1 / audit EN-1, EN-8). A history key must
+          # name the EXERCISE, never its POSITION. 170 of 456 cards measured
+          # across the fleet carried a positional data-id, and on the page that
+          # serves all 30 PMC workouts from one document 31 of 32 distinct keys
+          # were shared by DIFFERENT exercises -- the worst carrying eight, so a
+          # squat's logged weight sat in the same bucket as a lat pulldown's.
+          # Needs a browser: the identity is derived from the rendered card.
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-exercise-identity.js http://localhost:8080; then EXIT=1; fi
           # Light-mode contrast ratchet (audit G-04/G-3.1). Shares this job
           # because it needs the same Playwright install. Per-page budgets in
           # tools/contrast-budgets.json can only shrink; re-baseline with

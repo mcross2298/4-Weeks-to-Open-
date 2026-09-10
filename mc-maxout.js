@@ -35,25 +35,34 @@
   // propagated NaN from a NaN/undefined/Infinite input, straight into the
   // warm-up ladder, which has no guard of its own — so the athlete was shown
   // "NaN lb" rungs rather than an error. Every one is total now.
-  function round5(x) {
+  // `floor` is the lightest load this lift can actually be done with. It
+  // defaults to an empty barbell because that is what the ladder was written
+  // for — and that default was applied to EVERY lift (audit EN-12). A cable
+  // pushdown with a 40 lb estimated max produced a ladder of 45/45/45/45/45,
+  // every rung at or above the working max, opening with "Empty bar". Cables,
+  // machines, dumbbells and bodyweight movements floor at one plate step
+  // instead.
+  function round5(x, floor) {
+    if (floor == null || !isFinite(floor)) floor = BAR;
     x = Number(x);
-    if (!isFinite(x) || x <= 0) return BAR;
-    return Math.max(BAR, Math.round(x / 5) * 5);
+    if (!isFinite(x) || x <= 0) return floor;
+    return Math.max(floor, Math.round(x / 5) * 5);
   }
 
-  // Equipment coefficient: Cable/Machine estimates get ×0.85 to offset machine-assisted leverage.
-  function equipCat(name) {
-    if (typeof window !== 'undefined' && window.EXERCISES) {
-      var nl = (name || '').toLowerCase();
-      for (var i = 0; i < window.EXERCISES.length; i++) {
-        if (window.EXERCISES[i].name.toLowerCase() === nl) return window.EXERCISES[i].equipment || '';
-      }
-    }
-    var s = ' ' + (name || '').toLowerCase() + ' ';
-    if (/\bcable\b|pulldown|push-?down|rope |lat pull|face pull/.test(s)) return 'Cable';
-    if (/\bmachine\b|leg press|leg extension|leg curl|pec deck|abductor|adductor/.test(s)) return 'Machine';
-    return 'Barbell';
+  // Equipment comes from mc-classify.js — the ONE resolver (audit P2-13). The
+  // copy that used to live here disagreed with mc-suggest.js's: it had no
+  // Dumbbell branch, so the same lift was "Barbell" to this estimator and
+  // "Dumbbell" to the progression engine, and neither knew Smith, Plate-Loaded
+  // or Bodyweight existed at all. Resolved lazily — script order across the
+  // fleet does not guarantee mc-classify.js has run when this file parses.
+  function _cls() {
+    if (typeof window !== 'undefined' && window.MC_CLASSIFY) return window.MC_CLASSIFY;
+    try { return require('./mc-classify.js'); } catch (e) { return null; }
   }
+  function equipOf(name) { var C = _cls(); return C ? C.equipCat(name) : 'Barbell'; }
+  // The lightest load this lift can be loaded to: an empty bar for barbell and
+  // Smith work, one plate step for everything else.
+  function floorFor(name) { var C = _cls(); return (C && C.usesBarbell(name)) ? BAR : 5; }
 
   // Cable/Machine e1RM estimates get discounted ×0.85 to offset machine-assisted
   // leverage; Smith and everything else (including Barbell) is unchanged.
@@ -64,7 +73,9 @@
     // holds the heavy anchor, cluster and drop positions of an entire
     // flagship phase, so leaving it undiscounted overstated exactly the lifts
     // the coefficient exists for.
-    return (equip === 'Cable' || equip === 'Machine' || equip === 'Plate-Loaded')
+    var C = _cls();
+    return (C ? C.isLeverageAssisted(equip)
+              : (equip === 'Cable' || equip === 'Machine' || equip === 'Plate-Loaded'))
       ? Math.round(e1 * 0.85) : e1;
   }
 
@@ -141,7 +152,8 @@
   // Node-side hook so CI can regression-test the real max-out math (see
   // tools/test-mc-maxout.js) instead of a duplicated inline copy.
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { equipCat: equipCat, applyEquipCoeff: applyEquipCoeff, round5: round5 };
+    module.exports = { equipCat: equipOf, applyEquipCoeff: applyEquipCoeff, round5: round5,
+                       floorFor: floorFor };
   }
 
   // ---- picker ---------------------------------------------------------------
@@ -177,18 +189,26 @@
 
   function start(l) {
     lift = l;
-    var equip = equipCat(l.name);
+    var equip = equipOf(l.name);
     var t = applyEquipCoeff(l.e1, equip);
+    // EN-12: the ladder is barbell-shaped. On a cable stack or a dumbbell it
+    // has no empty bar to open with and no 45 lb floor to respect — every rung
+    // used to clamp to 45, so a 40 lb estimated max produced six identical
+    // rungs at or above the athlete's own working weight.
+    var bar = floorFor(l.name);
+    var opener = bar === BAR
+      ? { lbl: 'Warm-up 1', w: BAR, r: '× 10', note: 'Empty bar. Groove the pattern.' }
+      : { lbl: 'Warm-up 1', w: round5(t * 0.25, bar), r: '× 10', note: 'Light. Groove the pattern.' };
     plan = [
-      { lbl: 'Warm-up 1', w: BAR, r: '× 10', note: 'Empty bar. Groove the pattern.' },
-      { lbl: 'Warm-up 2', w: round5(t * 0.4), r: '× 5', note: 'Fast and crisp.' },
-      { lbl: 'Warm-up 3', w: round5(t * 0.6), r: '× 3', note: 'Tighten the setup.' },
-      { lbl: 'Warm-up 4', w: round5(t * 0.75), r: '× 2', note: 'Rest ~2 min after this one.' },
-      { lbl: 'Heavy single', w: round5(t * 0.85), r: '× 1', note: 'Treat it like the max — full setup. Rest 3 min.' },
-      { lbl: 'Last warm-up', w: round5(t * 0.92), r: '× 1', note: 'Should move with a little grind, no doubt. Rest 3 min.' }
+      opener,
+      { lbl: 'Warm-up 2', w: round5(t * 0.4, bar), r: '× 5', note: 'Fast and crisp.' },
+      { lbl: 'Warm-up 3', w: round5(t * 0.6, bar), r: '× 3', note: 'Tighten the setup.' },
+      { lbl: 'Warm-up 4', w: round5(t * 0.75, bar), r: '× 2', note: 'Rest ~2 min after this one.' },
+      { lbl: 'Heavy single', w: round5(t * 0.85, bar), r: '× 1', note: 'Treat it like the max — full setup. Rest 3 min.' },
+      { lbl: 'Last warm-up', w: round5(t * 0.92, bar), r: '× 1', note: 'Should move with a little grind, no doubt. Rest 3 min.' }
     ];
     idx = 0;
-    attemptW = round5(t * 0.975);
+    attemptW = round5(t * 0.975, bar);
     bestMade = 0;
     retried = false;
     $('mxPick').style.display = 'none';

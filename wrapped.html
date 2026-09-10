@@ -63,6 +63,17 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;}
   <button class="wr-save" id="wrapSave">💾 Save card</button>
 </div>
 
+<!-- The muscle taxonomy is catalog-first (mc-classify.js / mc-muscle-map.js,
+     roadmap Phase 2.2), and a catalog that is not loaded is not authoritative.
+     Every other MC_MUSCLES consumer receives exercise-catalog.js from
+     mc-card-actions.js, which async-injects it on workout pages; these three
+     analytics pages carry no card actions, so the whole change was inert on
+     them until this tag existed. Measured, not assumed: this page reported 0
+     catalog entries loaded in a real browser. Loaded synchronously rather than
+     injected, so the charts do not render once on a guess and again on the
+     answer; the service worker precaches it either way. -->
+<script src="exercise-catalog.js"></script>
+<script src="mc-classify.js"></script>
 <script src="mc-muscle-map.js"></script>
 <script src="mc-log-read.js"></script>
 <script src="mc-wrapped.js"></script>
