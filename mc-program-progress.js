@@ -389,9 +389,31 @@
     };
   }
 
+  // The `def` a caller passes in, derived from a program's own `schedule` block
+  // in mc-pm-data.js. It lived inline in dashboard.html's dayModuleDef(), which
+  // was fine while the day module was the only consumer; the adherence streak
+  // (mc-streak.js) is the second, and it runs on stats.html too, where the day
+  // module's own dependencies are not loaded. One derivation, so a phased
+  // program cannot describe itself differently to two readers.
+  function defFromSchedule(sc) {
+    if (!sc || !sc.days || !sc.days.length) return null;
+    var phases = (sc.phases || []).map(function (ph) {
+      return { weeks: ph.weeks, order: (ph.days || []).slice(), rest: (ph.rest || []).slice() };
+    });
+    return {
+      weeks: sc.weeks,
+      perWeek: sc.perWeek,
+      rest: (sc.rest || []).slice(),
+      phases: phases,
+      order: (phases.length ? phases[0].order
+                            : sc.days.map(function (d) { return d.id; })).slice()
+    };
+  }
+
   window.MC_PROGRAM_PROGRESS = {
     KEY: KEY,
     get: get,
+    defFromSchedule: defFromSchedule,
     ensure: ensure,
     save: save,
     totalDays: function (rec) { return totalDays(rec); },

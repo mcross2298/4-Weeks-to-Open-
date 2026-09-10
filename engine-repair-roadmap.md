@@ -583,6 +583,54 @@ deletion outright), and add the missing delete policy on `daily_health`.
 > the weekly check-in secret, which is the owner's and still open. **Decision:**
 > build it, verify everything testable without a real scheduled run, and record
 > the unproven half explicitly rather than reporting the step closed.
+>
+> **Step 1 shipped (2026-09-10) — one streak, and it counts adherence.**
+> `mc-streak.js` (`MC_STREAK.compute()`) holds the count; the two divergent
+> implementations are gone, and `computeStreak` is registered in
+> `check-single-impl.js` so a third cannot appear. Three modes, picked by what
+> the athlete's data supports: **schedule** walks the program's own day
+> sequence backwards from the last completed day (a prescribed rest day is
+> skipped, a missed training day ends it — no calendar mapping is involved,
+> because the day sequence IS the prescription); **history** stands the
+> athlete's own training weekdays in for one, via `mc-bridge.js`'s existing
+> `likelyTrainingDays()`; **calendar** is the original count, kept so a
+> brand-new athlete still reads something.
+>
+> **Staleness is derived, not picked.** A schedule streak has no calendar in
+> it, so alone it would freeze at 12 forever. The grace window is the longest
+> run of consecutive prescribed rest days anywhere in the block, plus one, read
+> off `isRest()` — so `hv`, which rests a different pair each week, answers for
+> itself and nothing has to know which program it is looking at.
+>
+> **The day arithmetic is not reimplemented.** The caller passes
+> `mc-program-progress.js`'s own `isRest()`. Its `def` derivation, which lived
+> inline in `dashboard.html`'s `dayModuleDef()`, moved into that module as
+> `defFromSchedule()` — the streak is its second consumer and runs on
+> `stats.html`, where the day module's dependencies are not loaded.
+>
+> **The label was wrong the moment the count changed.** Ten prescribed training
+> days span fourteen calendar days on a 5-on 2-off block, so "10-day streak"
+> was a false statement. `MCActivity.get()` publishes `streakUnit` alongside
+> the count, and all three surfaces (the momentum strip, the licensed program
+> card, the Stats heatmap line) plus the milestone push read it: "10-workout
+> streak" in schedule and history mode, "3-day streak" in calendar mode.
+>
+> **A real bug, found by driving and not by reading — the same class this
+> repository keeps meeting.** `likelyTrainingDays()` answers with
+> **capitalised** codes (`Mon`, `Tue`, …), because `mc-bridge.js` is
+> byte-identical with the cookbook's copy and its `DAYS` array always was. The
+> first implementation assumed lower case, so the pattern check found no
+> training day and **every history-mode athlete fell silently through to
+> calendar mode** — no error, and a unit test written against the same wrong
+> assumption passed. Driving `dashboard.html` with a real eight-week Mon/Wed/Fri
+> log is what exposed it (read 1, should read 24). The pattern is normalised on
+> the way in rather than changing the gated shared module, and the suite now
+> pins the REAL shape taken from `mc-bridge.js`'s own array.
+>
+> `tools/test-mc-streak.js` — 35 vm-sandboxed assertions against the real
+> source, wired into `verify.yml`, and **proven to fail on the old behaviour**
+> (a probe that breaks on a rest day instead of skipping it fails 6, including
+> the headline case) rather than only to pass on the new.
 
 ---
 

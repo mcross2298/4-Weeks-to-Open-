@@ -1,7 +1,7 @@
 // MC Training — Service Worker v2
 // Relative-path precache so the app works at any GitHub Pages project subpath
 
-const CACHE_NAME = 'mc-training-v179';
+const CACHE_NAME = 'mc-training-v180';
 const BASE = 'https://mcross2298.github.io/4-Weeks-to-Open-/';
 
 // DG-1/DG-2: the app's one type identity (Archivo+Manrope) is loaded from
@@ -123,6 +123,7 @@ const CACHE_URLS = [
     './mc-share.js',
     './mc-stats.js',
     './mc-strain.js',
+    './mc-streak.js',
     './mc-suggest.js',
     './mc-summary.css',
     './mc-summary.js',
