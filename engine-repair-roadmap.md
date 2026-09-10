@@ -119,6 +119,14 @@ or the migration fails on live data, then add the uniqueness constraint on
 `user_sync` foreign key (the only one of five without it, which blocks account
 deletion outright), and add the missing delete policy on `daily_health`.
 
+> **Applied 2026-09-10**, with the owner watching, and verified straight after:
+> 125 → 120 rows (exactly the 5 surplus duplicates), 0 duplicate groups, the
+> uniqueness constraint present, `user_sync`'s foreign key now reading
+> `ON DELETE CASCADE`, and `daily_health` carrying 4 policies including
+> `DELETE`. `TEST 5`'s three schema assertions were written to fail before
+> this ran and pass after it, which is the only way to know they assert
+> anything.
+
 ---
 
 ## Phase 1 — Critical system and data integrity repairs

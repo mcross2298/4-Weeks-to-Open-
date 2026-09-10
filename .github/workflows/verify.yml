@@ -21,6 +21,14 @@ on:
           by design; see the step comment for why it must not gate a PR.
         type: boolean
         default: false
+    secrets:
+      SUPABASE_DB_URL:
+        description: >-
+          Direct Postgres connection string for the row-level-security
+          regression suite (engine-repair roadmap Phase 0.4, TEST 5). Optional:
+          without it the suite SKIPS rather than failing, because a gate that
+          goes red for want of a credential is a gate somebody turns off.
+        required: false
 
 permissions:
   contents: read
@@ -138,6 +146,34 @@ jobs:
 
       - name: Storage-persistence request test (mc-finish.js, finding L6 partial)
         run: node tools/test-mc-persist.js
+
+      - name: Numeric boundary contract (TEST 4)
+        # engine-repair roadmap Phase 0.3 / audit L-03..L-06. Calls the real
+        # exported calculations with the inputs real stored data produces and
+        # asserts every result is finite and non-negative. On the pre-fix tree
+        # this reported 97 failures: a NaN chain into the warm-up ladder,
+        # negative tonnage beside a positive calorie figure, an Infinite
+        # tonnage, and 680,444 kcal for a session left open.
+        run: node tools/test-mc-numeric-guards.js
+
+      - name: Row-level security regression suite (TEST 5)
+        # engine-repair roadmap Phase 0.4. The database is the one layer here
+        # with no JavaScript to test against, and the one where a mistake is a
+        # data leak rather than a broken screen. Phase 3 of the audit ran seven
+        # cross-user read, write and privilege-escalation attacks by hand and
+        # every one was repelled -- the only clean result in three passes. This
+        # encodes them so a later policy edit cannot quietly reopen them. Every
+        # case runs inside a rolled-back transaction and touches no real data.
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "SUPABASE_DB_URL is not set — RLS suite skipped."
+            echo "::warning::TEST 5 (row-level security) did not run: no SUPABASE_DB_URL secret."
+            exit 0
+          fi
+          pip install --quiet pytest "psycopg[binary]"
+          pytest tests/test_rls.py -q
 
       - name: Gesture contract (overscroll-behavior + touch-action — findings U1/U3)
         # A source check, like check-topbar-inset.js below — a real Android
@@ -293,6 +329,31 @@ jobs:
           # Budgets in tools/journey-budgets.json; re-baseline deliberately with
           # `node tools/check-journey.js <url> --update`.
           if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/check-journey.js http://localhost:8080; then EXIT=1; fi
+          # Concurrent-write durability on mc_setlog_v1 (engine-repair roadmap
+          # Phase 0.1 / audit L-01, FIX-01). The journey gate drives ONE tab;
+          # this one drives two, because two tabs of the same program page used
+          # to destroy half a session silently -- ten sets accepted, five
+          # persisted, no error anywhere. Its LOCK pass is the deterministic
+          # half: it holds the store's own Web Lock and asserts a write waits on
+          # it, so the gate fails on an unfixed build every run rather than
+          # whenever scheduling happens to expose the race.
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-setlog-concurrency.js http://localhost:8080; then EXIT=1; fi
+          # Hostile-shape resilience (Phase 0.3 / audit L-03, FIX-04). Seeds a
+          # corrupt store before the page loads. The shape that matters is not
+          # malformed text -- every JSON.parse here is already wrapped, and that
+          # case is kept only as a control. It is valid JSON of the wrong shape,
+          # which went straight through the try/catch and left the dashboard,
+          # the stats page and the history page half-rendered. Six failing page
+          # loads on the pre-fix tree, zero after.
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-store-resilience.js http://localhost:8080; then EXIT=1; fi
+          # Crash durability and cloud recovery (Phase 0.2 / audit L-02,
+          # FIX-02). Never asserts that a process kill loses nothing -- browser
+          # storage is flushed to disk asynchronously and no web app defeats
+          # that. It asserts the part that WAS a design choice: an empty device
+          # must recover the session from the cloud rows that already exist,
+          # ticks included. Its graceful-close control runs in the same pass,
+          # so a broken harness cannot read as a pass.
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-crash-recovery.js http://localhost:8080; then EXIT=1; fi
           # Light-mode contrast ratchet (audit G-04/G-3.1). Shares this job
           # because it needs the same Playwright install. Per-page budgets in
           # tools/contrast-budgets.json can only shrink; re-baseline with

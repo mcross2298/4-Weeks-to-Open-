@@ -289,21 +289,38 @@
     el.querySelector('.mcr-name').textContent = snap.workoutName || snap.pageId;
 
     function restore() {
+      var written = Promise.resolve();
       try {
         if (snap.session) {
           var s2 = JSON.parse(localStorage.getItem('mc_session_v1') || '{}') || {};
           s2[snap.pageId] = snap.session;
           localStorage.setItem('mc_session_v1', JSON.stringify(s2));
         }
-        var sl = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}') || {};
-        Object.keys(snap.sets || {}).forEach(function (k) {
-          if (!sl[k]) sl[k] = [];
-          sl[k].unshift(snap.sets[k]);
-        });
-        localStorage.setItem('mc_setlog_v1', JSON.stringify(sl));
+        // FIX-01 (audit L-01): restoring a discarded workout is the third
+        // read-modify-write on the shared set-log store. Route it through the
+        // same lock the logger takes so a concurrent tab cannot lose either
+        // side of it. The dashboard rarely has a session page open beside it,
+        // but "rarely" is what made the logger's own race survive this long.
+        var putBack = function (sl) {
+          Object.keys(snap.sets || {}).forEach(function (k) {
+            if (!sl[k]) sl[k] = [];
+            sl[k].unshift(snap.sets[k]);
+          });
+        };
+        if (window.MCSetlogUtil && MCSetlogUtil.withStore) { written = MCSetlogUtil.withStore(putBack); }
+        else {
+          var sl = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}') || {};
+          putBack(sl);
+          localStorage.setItem('mc_setlog_v1', JSON.stringify(sl));
+        }
       } catch (e) {}
       clearDiscard();
-      location.href = snap.pageId + '.html';
+      // The guarded write is asynchronous while it waits on the lock, and
+      // this handler navigates away. Navigating first would abandon the
+      // restore mid-flight and lose the very sets it exists to bring back.
+      Promise.resolve(written).catch(function () {}).then(function () {
+        location.href = snap.pageId + '.html';
+      });
     }
     el.addEventListener('click', restore);
     el.addEventListener('keydown', function (ev) {

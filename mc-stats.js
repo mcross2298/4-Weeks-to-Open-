@@ -9,13 +9,29 @@
      • PR timeline           sets flagged pr:true by mc-finish.js
    ========================================================================== */
 (function () {
-  var WL_KEY = 'mc_workout_log_v1';
   var ACT_KEY = 'mc_activity';
   var DAY = 24 * 3600 * 1000;
 
+  // FIX-04 (audit L-03): one shared, TOTAL reader, plus the same treatment
+  // one level down. `setsOf(e)` guards a MISSING list and nothing else:
+  // an object where an array belongs throws `.forEach is not a function`, and
+  // a null member throws on `s.name` — both reached this page from real
+  // stored data and left it half-rendered. Found by TEST 3.
+  function setsOf(entry) {
+    if (typeof window !== 'undefined' && window.MC_LOG && window.MC_LOG.readSets) {
+      return window.MC_LOG.readSets(entry);
+    }
+    var s = entry && entry.sets;
+    if (!Array.isArray(s)) return [];
+    return s.filter(function (x) { return x && typeof x === 'object'; });
+  }
+
   function logs() {
-    try { return JSON.parse(localStorage.getItem(WL_KEY) || '[]') || []; }
-    catch (e) { return []; }
+    // typeof-guarded: mc-maxout.js and this file's siblings are require()'d
+    // from tools/ in Node, where a bare `window` is a ReferenceError.
+    return (typeof window !== 'undefined' && window.MC_LOG && window.MC_LOG.readWorkoutLog)
+      ? window.MC_LOG.readWorkoutLog()
+      : [];
   }
   function activity() {
     try { return JSON.parse(localStorage.getItem(ACT_KEY) || '{}') || {}; }
@@ -31,7 +47,7 @@
     var host = document.getElementById('statsTop');
     if (!host) return;
     var sets = 0, prs = 0;
-    all.forEach(function (e) { sets += (e.sets || []).length; prs += e.prs || 0; });
+    all.forEach(function (e) { sets += setsOf(e).length; prs += e.prs || 0; });
     host.innerHTML =
       '<div class="stat-cell"><div class="stat-num">' + all.length + '</div><div class="stat-lbl">Workouts</div></div>' +
       '<div class="stat-cell"><div class="stat-num">' + sets + '</div><div class="stat-lbl">Sets Logged</div></div>' +
@@ -74,7 +90,7 @@
     var byGroup = {};
     all.forEach(function (e) {
       if (cutoff != null && new Date(e.date || 0).getTime() < cutoff) return;
-      (e.sets || []).forEach(function (s) {
+      setsOf(e).forEach(function (s) {
         var g = MC_MUSCLES.classify(s.name);
         if (g.id === 'other') return;
         var b = byGroup[g.id] || (byGroup[g.id] = { g: g, sets: 0, byExercise: {} });
@@ -194,7 +210,7 @@
       var d = new Date(e.date || 0);
       var m = byKey[d.getFullYear() + '-' + d.getMonth()];
       if (!m) return;
-      (e.sets || []).forEach(function (s) {
+      setsOf(e).forEach(function (s) {
         var t = (parseFloat(s.weight) || 0) * (parseInt(s.reps, 10) || 0);
         if (t) { m.value += t; any = true; }
       });
@@ -213,7 +229,7 @@
     if (!host) return;
     var prs = [];
     all.forEach(function (e) {
-      (e.sets || []).forEach(function (s) {
+      setsOf(e).forEach(function (s) {
         if (s.pr) prs.push({ name: s.name, weight: s.weight, reps: s.reps, date: e.date });
       });
     });
@@ -278,7 +294,7 @@
     all.forEach(function (e) {
       var t = new Date(e.date || 0).getTime();
       if (t < start || t >= end) return;
-      (e.sets || []).forEach(function (s) {
+      setsOf(e).forEach(function (s) {
         var g = MC_MUSCLES.classify(s.name);
         var b = byGroup[g.id] || (byGroup[g.id] = { g: g, sets: 0 });
         b.sets++;

@@ -29,6 +29,8 @@ jobs:
       # cookbook PR merging there. Re-run this workflow once the cookbook PR
       # lands. It must not gate pull requests — see verify.yml's step comment.
       cross-repo-drift: true
+    secrets:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
 
   deploy:
     needs: verify

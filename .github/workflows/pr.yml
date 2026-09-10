@@ -24,3 +24,7 @@ jobs:
     # cross-repo-drift stays false here on purpose — see the step's comment in
     # verify.yml. It fails by design between a shared-module PR merging here and
     # the matching cookbook PR merging there.
+    secrets:
+      # Optional. Absent on a fork PR, and absent until someone sets it; the
+      # RLS suite skips with a warning rather than failing in that case.
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}

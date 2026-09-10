@@ -41,6 +41,12 @@ const ROOT = path.resolve(__dirname, '..');
 const CANONICAL_HOME = {
   makeRestTimer: 'mc-timer.js',
   applyReplacements: 'mc-replace.js',
+  // FIX-04 (audit L-03): six modules carried the same five-line
+  // mc_workout_log_v1 reader and all six had the same hole — try/catch around
+  // JSON.parse catches malformed TEXT and not valid JSON of the wrong SHAPE,
+  // which is the form that actually reached them and threw. Registered here
+  // the moment the copies were collapsed, so a seventh cannot appear.
+  readWorkoutLog: 'mc-log-read.js',
 };
 const WATCHED = Object.keys(CANONICAL_HOME);
 

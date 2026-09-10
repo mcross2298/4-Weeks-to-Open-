@@ -36,6 +36,12 @@ global.localStorage = {
   setItem: function (k, v) { localStorageData[k] = v; }
 };
 
+// mc-quick-pump.js reads the workout log through the one shared reader
+// (FIX-04). Every page that loads it also loads mc-log-read.js — enforced by
+// tools/check-script-manifest.py — so the harness composes the same pair
+// rather than testing the module in a shape no page ever runs.
+global.window.MC_LOG = require(path.resolve(__dirname, '../mc-log-read.js'));
+
 const qp = require(path.resolve(__dirname, '../mc-quick-pump.js'));
 
 // ---- preferFresh ----------------------------------------------------------

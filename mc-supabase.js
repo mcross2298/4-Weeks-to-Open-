@@ -524,12 +524,21 @@
   }
   // ---- workout_logs table (per-set history for suggestions + fatigue flag) -
   // logSet() is best-effort — callers should .catch() silently.
+  //
+  // FIX-05 (audit EN-6): an UPSERT, not an insert. Re-checking a set used to
+  // write a second row, because nothing constrained the table — 4 duplicate
+  // groups and 5 surplus rows in 125 live rows when the audit measured it. A
+  // fat-fingered weight was therefore permanent and permanently won the
+  // all-time maximum used for personal records and cross-device prefill.
+  // Keyed on the constraint supabase/phase12-launch-hardening.sql adds; until
+  // that migration is applied the upsert behaves exactly as the old insert
+  // did, so this is safe to ship ahead of it.
   function logSet(entry) {
     return ready.then(function (c) {
       if (!c) return null;
       return currentUser().then(function (u) {
         if (!u) return null;
-        return c.from('workout_logs').insert({
+        return c.from('workout_logs').upsert({
           user_id:      u.id,
           session_id:   entry.session_id   || 'unknown',
           exercise:     entry.exercise     || '',
@@ -540,7 +549,59 @@
           rpe:          entry.rpe          || null,
           workout_name: entry.workout_name || null,
           program_id:   entry.program_id   || null
-        }).then(function (r) { if (r.error) throw r.error; return r; });
+        }, { onConflict: 'user_id,session_id,exercise,set_number' })
+          .then(function (r) { if (r.error) throw r.error; return r; });
+      });
+    });
+  }
+
+  // FIX-05, second half: unchecking a set must remove its cloud row. Without
+  // this the correction path is one-way — the tick disappears locally while
+  // the row it came from stays in the table forever, and the personal-record
+  // query keeps reading it. The policy already permits the delete; the app
+  // simply never asked.
+  function unlogSet(entry) {
+    if (!entry || !entry.session_id || !entry.exercise || entry.set_number == null) {
+      return Promise.resolve(null);
+    }
+    return ready.then(function (c) {
+      if (!c) return null;
+      return currentUser().then(function (u) {
+        if (!u) return null;
+        return c.from('workout_logs').delete()
+          .eq('user_id', u.id)
+          .eq('session_id', entry.session_id)
+          .eq('exercise', entry.exercise)
+          .eq('set_number', entry.set_number)
+          .then(function (r) { if (r.error) throw r.error; return r; });
+      });
+    });
+  }
+
+  // FIX-02 (audit L-02): read today's rows BACK. A signed-in athlete's sets
+  // are already inserted one row per set, but nothing in the tree ever read
+  // them again — only two functions write mc_setlog_v1 and neither restores
+  // from the server. So a device that died mid-session, was wiped, or was
+  // restored from a backup lost the local record while a perfect copy sat in
+  // the database. Browser storage is flushed to disk asynchronously, which no
+  // web app can defeat with browser storage alone; having the durable copy be
+  // unreachable is the part that was a design choice.
+  //
+  // Scoped by time rather than by page: the row carries session_id and
+  // exercise, not the page it was logged on, so a 12-hour window is the
+  // honest filter for "this session". Ordered oldest-first so a later row for
+  // the same slot wins, matching what the athlete last checked.
+  function getSessionSets(sinceIso) {
+    return ready.then(function (c) {
+      if (!c) return null;
+      return currentUser().then(function (u) {
+        if (!u) return null;
+        return c.from('workout_logs')
+          .select('exercise,set_number,weight_lbs,reps,rpe,logged_at')
+          .eq('user_id', u.id)
+          .gte('logged_at', sinceIso)
+          .order('logged_at', { ascending: true })
+          .then(function (r) { if (r.error) throw r.error; return r.data || []; });
       });
     });
   }
@@ -793,6 +854,8 @@
     saveActiveProgram: saveActiveProgram,
     getActiveProgram: getActiveProgram,
     logSet: logSet,
+    unlogSet: unlogSet,               // FIX-05: the correction path
+    getSessionSets: getSessionSets,   // FIX-02: the durable copy, read back
     deleteSessionLog: deleteSessionLog,
     getLastWeight: getLastWeight,
     getWeeklyVolume: getWeeklyVolume,

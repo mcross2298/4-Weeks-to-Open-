@@ -14,14 +14,29 @@
    Requires mc-chart.js.
    ========================================================================== */
 (function () {
+
+  // FIX-04 (audit L-03): `(e.sets || [])` guards a MISSING set list and
+  // nothing else — an object where an array belongs throws
+  // `.forEach is not a function`, and a null member throws one level in.
+  // One-line delegation to the single implementation in mc-log-read.js
+  // rather than a seventh private copy of the filtering itself.
+  function setsOf(e) {
+    return (typeof window !== 'undefined' && window.MC_LOG && window.MC_LOG.readSets)
+      ? window.MC_LOG.readSets(e) : [];
+  }
   if (window.MCTrends) return;
 
-  var WL_KEY = 'mc_workout_log_v1';
   var overlay = null, mode = 'weight', curName = '';
 
+  // FIX-04 (audit L-03): one shared, TOTAL reader. The local copy this
+  // replaced caught malformed text and nothing else, so valid JSON of the
+  // wrong shape threw straight through it. See mc-log-read.js.
   function logs() {
-    try { return JSON.parse(localStorage.getItem(WL_KEY) || '[]') || []; }
-    catch (e) { return []; }
+    // typeof-guarded: mc-maxout.js and this file's siblings are require()'d
+    // from tools/ in Node, where a bare `window` is a ReferenceError.
+    return (typeof window !== 'undefined' && window.MC_LOG && window.MC_LOG.readWorkoutLog)
+      ? window.MC_LOG.readWorkoutLog()
+      : [];
   }
 
   function norm(s) { return String(s || '').trim().toLowerCase(); }
@@ -32,7 +47,7 @@
     var out = [];
     logs().slice().reverse().forEach(function (e) {       // oldest → newest
       var best = null, reps = 0;
-      (e.sets || []).forEach(function (s) {
+      setsOf(e).forEach(function (s) {
         if (norm(s.name) !== key && norm(s.name).indexOf(key) !== 0) return;
         var w = parseFloat(s.weight) || 0, r = parseInt(s.reps, 10) || 0;
         reps += r;
