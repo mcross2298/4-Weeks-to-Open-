@@ -989,9 +989,14 @@
             // celebration turns into noise people mute. A first log is a
             // baseline, not a record: require a known previous max to beat.
             if (wNum && prevMax !== null && wNum > prevMax && MC_SB.sendPush) {
+              // Roadmap Phase 4 step 5: say what actually happened. "Your best
+              // lift ever" is true of every PR and so tells the athlete
+              // nothing; the number it BEAT is the part worth reading on a
+              // lock screen, and it is already in hand here.
               MC_SB.sendPush({
-                title: '🏆 New PR — ' + exName + '!',
-                body: wNum + ' lbs — your best lift ever. Keep pushing!'
+                title: '🏆 New PR — ' + exName,
+                body: wNum + ' lb, up from ' + prevMax + ' lb. That is +' +
+                      Math.round(wNum - prevMax) + ' on your best.'
               }).catch(function () {});
             }
             noteMax(exName, wNum);

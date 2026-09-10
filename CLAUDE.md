@@ -1463,6 +1463,65 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > — a badge, a set counter, a superset letter. Proven to fail on the pre-fix
 > tree (191 of 266 cards dirty) and pass after; 27 → 47 assertions.
 
+> **Phase 4 shipped (2026-09-10) — all five steps.** Two decisions were taken
+> with the owner up front, because the roadmap's own premises did not survive
+> measurement: **rest positions are declared by 3 of 10 programs, not all of
+> them** (`F5` left the other seven without a schedule on purpose), so a
+> program with none infers its rest pattern from the athlete's own history via
+> `mc-bridge.js`'s existing `likelyTrainingDays()`; and **"a real deload at the
+> end of each block" marks the last week** rather than appending one, which
+> would have rewritten authored program content across four surfaces that must
+> agree.
+>
+> **`4.1` — one streak, counting adherence.** There were TWO streaks over two
+> stores and they disagreed. Both broke on the same fact: every program rests
+> at least one day a week, so following any prescription exactly lost the
+> streak on the first rest day and the seven-day milestone was **unreachable
+> without disobeying the program**. `mc-streak.js` counts prescribed training
+> days instead. The label was wrong the moment the count changed — ten
+> prescribed days span fourteen calendar days — so `MCActivity.get()` publishes
+> `streakUnit` and every surface reads it.
+>
+> **`4.2` — one estimated one-rep max.** Two estimators disagreed about the
+> same logged set: the Max Out page capped reps at 12 and discounted
+> leverage-assisted equipment, the trend sheet did neither, so a cable pushdown
+> at 60×20 read **71 on one screen and 100 on the other** (26–52% apart on
+> machines and high-rep sets). Collapsed onto `mc-log-read.js`, which every
+> consumer already loads. Records are marked on the curve as new all-time bests
+> in the series being shown; the app's own PR flag stays separate so the two
+> notions cannot drift.
+>
+> **`4.3` + `4.4` — a real deload, and one effort question.** The effort
+> control cycled seven values on every row, yet all three consumers test one
+> predicate, so **six choices only ever produced two outcomes**; it is now
+> Easy / Solid / To failure on the finished exercise, as real `<button>`s.
+> `deloadWeeks` is data on the schedule record, re-derived and never persisted,
+> and both it and the brief's new **Lighter** action reduce volume through ONE
+> code path so they cannot mean different things.
+>
+> **`4.5` — the ask was never on screen.** `#pushChip`'s CSS, its guard chain
+> and its global handler have all existed since the push work landed, but the
+> ELEMENT was never authored, so `getElementById` returned null on every load
+> and the `if (chip)` guard swallowed it: **the app has never once asked for
+> notification permission.** Found by driving the dashboard, not by reading it.
+> Two asks now — the chip, shown after a first finished workout, and one under
+> the new records on the Session Complete recap — sharing a single
+> asked-once key.
+>
+> **Three bugs came from driving rather than reading**, which is the through
+> line of this phase: `likelyTrainingDays()` answers with **capitalised**
+> weekday codes, so every history-mode athlete fell silently through to
+> calendar mode (and a unit test written on the same wrong assumption passed);
+> `onCheck()` read the removed effort element and would have erased an answer
+> already given; and `mc-pm-data.js` reached three of the five
+> schedule-bearing pages only through an **async injection**, so a deep-linked
+> deload week built its cards before the record existed and cached that "no"
+> for the whole page load.
+>
+> **Still the owner's, and not code:** Phase 1 step 1, the weekly check-in
+> secret. Until it is set the Sunday check-in has never fired and cannot be
+> proven from a session — recorded rather than reported closed.
+
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 
 ### Decisions locked in (via AskUserQuestion, session 2026-06-27)

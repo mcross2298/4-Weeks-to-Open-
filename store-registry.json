@@ -319,6 +319,13 @@
       "export": false,
       "note": "Base name of the per-page swap keys; see the mc_replacements| prefix."
     },
+    "mc_push_asked_v1": {
+      "owner": "mc-finish.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Roadmap Phase 4 step 5: this app has had its one turn at asking for notification permission. Per-device on purpose \u2014 the permission it guards is a property of this browser, so syncing or restoring it would silence the ask on a device that never made the choice."
+    },
     "mc_replacements_global": {
       "owner": "mc-card-actions.js",
       "storage": "local",

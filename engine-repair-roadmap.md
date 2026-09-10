@@ -759,6 +759,54 @@ deletion outright), and add the missing delete policy on `daily_health`.
 > Lighter control measures 83×45; the effort answer survives a reload.
 > `mc-program-progress.js` grew 91 → **102 assertions**, every local gate is
 > green and `check-journey` is 9/9; `quick-tour.html` documents both.
+>
+> **Step 5 shipped (2026-09-10) — and the ask was never on screen.** The step
+> reads "turn the notification path on and earn the permission". Driving the
+> dashboard rather than reading it found why the path was dead beyond the
+> unset secret: **`#pushChip` does not exist in the document.** The CSS for it,
+> the `initPushChip()` guard chain and the global `onEnablePush()` have all
+> been in `dashboard.html` since the push work landed, but the ELEMENT was
+> never authored — `getElementById('pushChip')` returned null on every load,
+> and the `if (chip)` guard swallowed it. So the app has never once asked for
+> notification permission. Verified in a browser, not inferred.
+>
+> **Two asks now, and they are one ask between them.** The welcome moment is
+> the chip, finally rendered — as a real `<button>`, so Enter and Space work —
+> and shown only once the athlete has **finished at least one workout**, since
+> asking a first-time visitor to accept notifications before they have trained
+> is the ask people refuse. The second is the moment the step names: right
+> under the new records on the Session Complete recap, naming the record it
+> would have told them about, on the user gesture that opened the recap
+> (browsers require one). Both write `mc_push_asked_v1` **before** calling the
+> browser's dialog — whatever the athlete answers there, this app has had its
+> one turn — so neither nags and they never compete.
+>
+> `mc-push.js` is loaded **on demand** by the recap rather than added to 78
+> workout pages: the service worker already precaches it, so it is a cache hit
+> offline too, and nothing loads it for the athletes who never see the prompt.
+>
+> **Content.** The PR push said "your best lift ever", which is true of every
+> PR and so says nothing. It now carries the number it beat and the difference,
+> which is the part worth reading on a lock screen and was already in hand at
+> the call site. The seven-day milestone copy was corrected in step 1, since a
+> streak of prescribed sessions is not "seven days in a row".
+>
+> **Not closed, and it is not code.** Phase 1 step 1 — the repository secret
+> the weekly check-in workflow guards on — is still unset, so the Sunday
+> check-in has still never fired and cannot be proven from a session. Every
+> other part of this step is verified live: the chip is hidden with no
+> training history, appears after one finished workout (354×94 at 390, 284×122
+> at 320), and is suppressed once asked; the post-PR offer appears through the
+> real `_FW.confirm()` flow with a 96×44 control and is suppressed once asked;
+> no console errors and no overflow at 320 or 390.
+>
+> **A pre-existing defect surfaced by the new copy, not fixed here.** The
+> recap's PR chips take their name from `deSlug()`, which rebuilds a display
+> name from the lowercased, 24-char-truncated history slug — so a lift renders
+> as "Bb Flat Bench Press". The push itself is unaffected (`mc-setlog.js` reads
+> the authored name off the card), but the recap and now this prompt both show
+> the mangled form. Fixing it means carrying the authored name into the log
+> entry, which is a data-shape change and wants its own step.
 
 ---
 
