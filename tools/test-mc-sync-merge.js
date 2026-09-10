@@ -603,6 +603,76 @@ async function runAsyncTests() {
     ok('a remote-only swap arrives', out2['squat'] === 'Hack Squat', JSON.stringify(out2));
   }
 
+  /* ======================================================================
+     Phase 3.2 (audit EN-9, EN-10) — conflicts that could not be resolved.
+     ====================================================================== */
+
+  // --- EN-9: first-writer-wins on an EDITED record ------------------------
+  // mc_collections_v1 is the one arrayById store edited IN PLACE: same id,
+  // new contents. Whichever copy happened to be local won, forever, so a
+  // rename made on one device silently lost.
+  {
+    const older = { id: 'c1', name: 'Push Day', updatedAt: '2026-01-01T00:00:00.000Z' };
+    const newer = { id: 'c1', name: 'Push Day (renamed)', updatedAt: '2026-06-01T00:00:00.000Z' };
+    const a = M.mergeArrayByIdTs([older], [newer]);
+    ok('EN-9 a remote EDIT beats a stale local copy', a[0].name === 'Push Day (renamed)', JSON.stringify(a));
+    const b = M.mergeArrayByIdTs([newer], [older]);
+    ok('EN-9 and a local edit beats a stale remote copy', b[0].name === 'Push Day (renamed)', JSON.stringify(b));
+    ok('EN-9 the record is not duplicated', a.length === 1 && b.length === 1, '');
+  }
+  // The field names actually used by these stores must be readable, or the
+  // switch to timestamp resolution scores everything 0 and quietly keeps the
+  // old behaviour.
+  {
+    const a = M.mergeArrayByIdTs(
+      [{ id: 'x', v: 'old', createdAt: '2026-01-01T00:00:00.000Z' }],
+      [{ id: 'x', v: 'new', createdAt: '2026-05-01T00:00:00.000Z' }]);
+    ok('EN-9 createdAt is read as a timestamp', a[0].v === 'new', JSON.stringify(a));
+    const b = M.mergeArrayByIdTs(
+      [{ id: 'y', v: 'old', date: '2026-01-01T00:00:00.000Z' }],
+      [{ id: 'y', v: 'new', date: '2026-05-01T00:00:00.000Z' }]);
+    ok('EN-9 an ISO date is read as a timestamp', b[0].v === 'new', JSON.stringify(b));
+  }
+  ok('EN-9 mergeStore routes the arrayById stores to timestamp resolution',
+     M.mergeStore('arrayByIdTs',
+       [{ id: 'z', v: 'old', date: '2026-01-01T00:00:00.000Z' }],
+       [{ id: 'z', v: 'new', date: '2026-05-01T00:00:00.000Z' }], null)[0].v === 'new', '');
+
+  // --- EN-10: the five-session cap fell on ENCOUNTER order ----------------
+  // A device holding five OLD sessions, merging one NEW session from the
+  // other device, kept the five old ones and dropped the new one.
+  {
+    const day = (label, ts, sn) => ({ d: label, ts, sets: { [sn]: { w: '100', r: '5' } } });
+    const local = { 'p|x': [day('Jan 5', 5000, 1), day('Jan 4', 4000, 1), day('Jan 3', 3000, 1),
+                            day('Jan 2', 2000, 1), day('Jan 1', 1000, 1)] };
+    const remote = { 'p|x': [day('Jun 1', 9000, 1)] };
+    const out = M.mergeSetlog(local, remote)['p|x'];
+    ok('EN-10 the NEWEST session survives the cap', out.some(s => s.d === 'Jun 1'),
+       JSON.stringify(out.map(s => s.d)));
+    ok('EN-10 and the OLDEST is the one dropped', !out.some(s => s.d === 'Jan 1'),
+       JSON.stringify(out.map(s => s.d)));
+    ok('EN-10 the cap still holds at 5', out.length === 5, String(out.length));
+    ok('EN-10 the result is newest-first', out[0].d === 'Jun 1', JSON.stringify(out.map(s => s.d)));
+  }
+  {
+    // A list where not every entry carries a stamp keeps TODAY's exact
+    // behaviour rather than guessing a year for the ones that don't.
+    const local = { 'p|x': [{ d: 'Jan 5', sets: { 1: { w: '1' } } }, { d: 'Jan 4', sets: {} }] };
+    const remote = { 'p|x': [{ d: 'Jun 1', ts: 9000, sets: {} }] };
+    const out = M.mergeSetlog(local, remote)['p|x'];
+    ok('EN-10 a mixed list is left in encounter order', out[0].d === 'Jan 5',
+       JSON.stringify(out.map(s => s.d)));
+  }
+  {
+    // sets from both sides still union, and no `ts` is invented on a legacy entry
+    const local = { 'p|x': [{ d: 'Jan 5', sets: { 1: { w: '100' } } }] };
+    const remote = { 'p|x': [{ d: 'Jan 5', sets: { 2: { w: '110' } } }] };
+    const out = M.mergeSetlog(local, remote)['p|x'];
+    ok('EN-10 sets from both devices still union', out[0].sets[1] && out[0].sets[2],
+       JSON.stringify(out[0].sets));
+    ok('EN-10 no ts is invented on a legacy entry', !('ts' in out[0]), JSON.stringify(out[0]));
+  }
+
   if (fail) { console.error(`\ntest-mc-sync-merge: ${pass} passed, ${fail} FAILED`); process.exit(1); }
   console.log(`test-mc-sync-merge: all ${pass} assertions passed`);
 }

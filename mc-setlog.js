@@ -148,7 +148,12 @@
       if (!s[r.k]) s[r.k] = [];
       var sess = s[r.k][0];
       if (!sess || sess.d !== r.d) {
-        sess = { d: r.d, sets: {} };
+        // EN-10: `d` is a day LABEL with no year, so a merge across two
+        // devices had nothing to order by and its five-session cap fell on
+        // encounter order — dropping a NEW session in favour of five old
+        // ones. A numeric stamp is what makes that resolvable; see
+        // mc-sync.js's mergeSetlog().
+        sess = { d: r.d, sets: {}, ts: Date.now() };
         s[r.k].unshift(sess);
         s[r.k] = s[r.k].slice(0, 5);
       }
@@ -1828,7 +1833,7 @@
           if (!s[k]) s[k] = [];
           var sess = s[k][0];
           if (!sess || sess.d !== d) {
-            sess = { d: d, sets: {} };
+            sess = { d: d, sets: {}, ts: Date.now() };   // EN-10, see above
             s[k].unshift(sess);
             s[k] = s[k].slice(0, 5);
           }

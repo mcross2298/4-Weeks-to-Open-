@@ -78,12 +78,12 @@
     'mc_setlog_v1':          'setlog',
     'mc_custom_workouts_v1': 'arrayByIdTs',
     'mc_custom_programs_v1': 'arrayByIdTs',
-    'mc_collections_v1':     'arrayById',
+    'mc_collections_v1':     'arrayByIdTs',
     'mc_workout_log_v1':     'workoutLog',
-    'mc_cond_log_v1':        'arrayById',
-    'mc_body_v1':            'arrayById',
-    'mc_vitals_v1':          'arrayById',
-    'mc_max_v1':             'arrayById',
+    'mc_cond_log_v1':        'arrayByIdTs',
+    'mc_body_v1':            'arrayByIdTs',
+    'mc_vitals_v1':          'arrayByIdTs',
+    'mc_max_v1':             'arrayByIdTs',
     'mc_activity':           'activity',
     'mc_daily_v1':           'dictByTs',
     'mc_plan_targets_v1':    'dictByTs',
@@ -277,6 +277,14 @@
     if (e.updatedAt) { var t = Date.parse(e.updatedAt); if (!isNaN(t)) return t; }
     if (typeof e.ts === 'number') return e.ts;
     if (e.created) { var c = Date.parse(e.created); if (!isNaN(c)) return c; }
+    // EN-9: two more field names the arrayById stores actually use. Every one
+    // of them carries an ISO `date` (mc_body_v1, mc_vitals_v1, mc_max_v1,
+    // mc_cond_log_v1) and mc_collections_v1 stamps `createdAt` — none of which
+    // this function read, so switching those stores to timestamp resolution
+    // without this would have scored every entry 0 and silently kept the old
+    // first-writer-wins behaviour.
+    if (e.createdAt) { var u = Date.parse(e.createdAt); if (!isNaN(u)) return u; }
+    if (e.date) { var d = Date.parse(e.date); if (!isNaN(d)) return d; }
     return 0;
   }
   function mergeArrayByIdTs(local, remote) {
@@ -322,11 +330,29 @@
       var order = [], byDay = {};
       la.concat(ra).forEach(function (s) {
         if (!s || !s.d) return;
-        if (!byDay[s.d]) { byDay[s.d] = { d: s.d, sets: {} }; order.push(s.d); }
+        if (!byDay[s.d]) { byDay[s.d] = { d: s.d, sets: {}, ts: 0 }; order.push(s.d); }
         var sets = s.sets || {};
         for (var sn in sets) if (byDay[s.d].sets[sn] == null) byDay[s.d].sets[sn] = sets[sn];
+        // carry the newest timestamp either side has for this day
+        if (typeof s.ts === 'number' && s.ts > byDay[s.d].ts) byDay[s.d].ts = s.ts;
       });
-      out[k] = order.map(function (d) { return byDay[d]; }).slice(0, 5);
+      // EN-10: the cap used to fall on ENCOUNTER order — local's days first,
+      // then whatever remote added. So a device holding five OLD sessions
+      // merging one NEW session from the other device kept the five old ones
+      // and dropped the new one. Sort by real recency first.
+      //
+      // A session entry is { d: "Jan 5", sets: {…} }: a day LABEL with no year
+      // and, historically, no timestamp at all. mc-setlog.js stamps a numeric
+      // `ts` on new entries now, so this reorders only when EVERY entry in the
+      // list carries one. A mixed list keeps today's exact behaviour rather
+      // than guessing a year for the ones that don't — the condition becomes
+      // true on its own as sessions age out.
+      var days = order.map(function (d) { return byDay[d]; });
+      if (days.length > 1 && days.every(function (x) { return x.ts > 0; })) {
+        days.sort(function (a, b) { return b.ts - a.ts; });   // newest first
+      }
+      days.forEach(function (x) { if (!x.ts) delete x.ts; }); // don't invent a field
+      out[k] = days.slice(0, 5);
     }
     return out;
   }

@@ -40,6 +40,12 @@
   function save(c) {
     var a = read();
     if (!c.id) { c.id = uid(); c.createdAt = new Date().toISOString(); }
+    // EN-9: this is the one arrayById store that is EDITED IN PLACE — same id,
+    // new contents. Without an edit timestamp there is nothing for the sync
+    // layer to resolve by, so a rename made on the tablet lost to whichever
+    // stale copy the other device happened to hold. "Resolve by timestamp"
+    // is impossible until something writes one; this writes it.
+    c.updatedAt = new Date().toISOString();
     var i = a.findIndex(function (x) { return x.id === c.id; });
     if (i >= 0) a[i] = c; else a.unshift(c);
     write(a); sync();

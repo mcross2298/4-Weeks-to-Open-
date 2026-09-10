@@ -56,13 +56,13 @@
     "mc_body_v1": {
       "owner": "mc-body.js",
       "storage": "local",
-      "sync": "arrayById",
+      "sync": "arrayByIdTs",
       "export": true
     },
     "mc_vitals_v1": {
       "owner": "mc-vitals.js",
       "storage": "local",
-      "sync": "arrayById",
+      "sync": "arrayByIdTs",
       "export": true,
       "note": "Manual daily wellness entry (restingHr/sleepHrs/readiness) — flagship-immersive-roadmap.md H3. Not consumed by mc-readiness.js's per-muscle formula; see that phase's own note."
     },
@@ -83,13 +83,13 @@
     "mc_collections_v1": {
       "owner": "mc-collections.js",
       "storage": "local",
-      "sync": "arrayById",
+      "sync": "arrayByIdTs",
       "export": true
     },
     "mc_cond_log_v1": {
       "owner": "mc-cond.js",
       "storage": "local",
-      "sync": "arrayById",
+      "sync": "arrayByIdTs",
       "export": true
     },
     "mc_cond_src_prog": {
@@ -213,7 +213,7 @@
     "mc_max_v1": {
       "owner": "mc-maxout.js",
       "storage": "local",
-      "sync": "arrayById",
+      "sync": "arrayByIdTs",
       "export": true
     },
     "mc_offline_prefetch_v1": {
