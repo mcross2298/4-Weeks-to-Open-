@@ -151,6 +151,70 @@ deletion outright), and add the missing delete policy on `daily_health`.
 6. **Close the two backend gaps.** Migration half of Phase 0.4, plus enabling
    leaked-password protection. Fixes `P2-04`, `P2-05`, `EN-13`.
 
+> **`1.2` and `1.4` shipped (2026-09-10).** The whole of `1.2` turned out to be
+> a deployment defect, not a code one: **the repository already contained
+> complete, competent implementations** of both functions under
+> `supabase/functions/`, and they had simply never been deployed to the slugs
+> the client calls. Those exact files are now live at `push-notify` and
+> `coach-claude`, byte-identical to what is committed here. The
+> starter-template copies at `quick-service` and `hyper-function` are left in
+> place rather than deleted, so nothing is destroyed before the real ones are
+> confirmed working on a device.
+>
+> **A correction, recorded because the lesson is the point.** The first attempt
+> at this step *rewrote* both functions from scratch without reading what was
+> already there, and deployed those instead. The rewrite discarded real work —
+> the original `push-notify` clamps title and body length and lists the
+> `x-client-info`/`apikey` CORS headers a Supabase client actually sends;
+> `coach-claude` carries a full forced-tool-use schema with grounding rules
+> that keep the model from inventing an exercise, and an `emptyReport()` shape
+> so the frontend never special-cases a missing field. All of it was thrown
+> away and then restored. The audit said these functions were *the unmodified
+> starter template*; that was true of what was DEPLOYED and false of what was
+> in the repository, and the two were never checked against each other.
+>
+> The one client-side change that was genuinely needed stands: `sendPush()` now
+> checks the response status. It called `res.json()` on a 404 and resolved
+> successfully, which is why the failure was silent for the life of the
+> feature.
+>
+> **The attribution fix needed no new script tag, and measuring is what found
+> that.** The roadmap offered "load the classifier on the logging pages, or
+> classify server-side". Neither was necessary: `mc-muscle-map.js` is already
+> loaded on all 79 pages that load `mc-setlog.js` (checked, zero missing), and
+> `MC_MUSCLES.classify()` is the same taxonomy the recovery curve, the heatmap
+> and the volume stats already use — so the cloud now agrees with the client
+> instead of adding a third opinion. `program_id` had a second, simpler bug:
+> it read `window.activeProg`, a dashboard-local variable that does not exist
+> on a workout page, so the `||` fell through to `''` every time. It reads the
+> persisted `mc_active_prog` store now, the same one `mc-theme.js` uses.
+>
+> **Dry-running the classifier over the real logged names before backfilling
+> caught a live bug that reading the regexes would not have.** Two of the 39
+> distinct names came back as **Shoulders** — `Barbell Squat (shoulder width)`
+> and `Leg Press (feet shoulder width)` — because the classifier read the
+> stance cue in the parentheses as the movement. `classify()` now drops
+> parentheses before matching, since a parenthetical on an exercise name is
+> always a cue and never the movement; the taxonomy itself is untouched, so
+> nothing that was already right could reshuffle. `gen-schedules.js --check`
+> caught the knock-on immediately: one Modality Matrix leg day had been
+> carrying `shoulders` in its muscle scope, which the Readiness Brief dims by.
+> `ss`'s hand-typed scope had the same spurious entry and is corrected, and
+> `H4b`'s note calling it a narrow false positive "left as-is" is rewritten
+> rather than left to mislead.
+>
+> **Backfilled 120 of 120 rows**, using the app's own classifier through a
+> `vm` sandbox rather than a second regex written in SQL — a taxonomy
+> reimplemented in the database is exactly the drift this project has a
+> single-implementation gate for. Seven distinct groups now, where every row
+> was null. `program_id` stays null on the historical rows and that is
+> deliberate: there is no way to know retroactively which program a past
+> session belonged to, and inventing one would be worse than a null.
+>
+> **Still open in Phase 1, and both are the owner's:** `1.1`, the check-in
+> secret, and the leaked-password setting from `1.6`. Neither is code — see
+> the handoff table.
+
 ---
 
 ## Phase 2 — Core engine and program logic realignment
