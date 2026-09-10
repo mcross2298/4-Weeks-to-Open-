@@ -6,6 +6,18 @@
    'arrayById' (same pattern as mc_body_v1). One entry per log; all three
    fields are optional per entry.
 
+   NOT the same thing as the daily_health Supabase table, and audit P2-06 read
+   it that way — "two homes for one signal", with a recommendation to point
+   this client at that table or retire it. Measured against the live schema,
+   they are two DIFFERENT signals: daily_health's columns are all
+   device-measured (steps, resting_heart_rate, hrv_ms, sleep_hours,
+   active_calories) and this store is a manual self-report. Two of five fields
+   overlap; `readiness` is subjective with no device equivalent, and steps /
+   HRV / active calories have no manual one. The `source:'manual'` stamped on
+   every entry above is this design anticipating the second source rather than
+   duplicating it. daily_health is the WEARABLE ingest H3 deferred pending a
+   platform-support spike; see supabase/daily-health.sql for the full record.
+
    Deliberately NOT wired into mc-readiness.js's per-muscle recovery formula
    — that function is real, already tested (tools/test-mc-readiness.js) and
    consumed everywhere (dashboard readiness board, mc-quick-pump.js's Full
