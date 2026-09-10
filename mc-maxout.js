@@ -14,12 +14,19 @@
    ========================================================================== */
 (function () {
   var MAX_KEY = 'mc_max_v1';
-  var WL_KEY = 'mc_workout_log_v1';
   var BAR = 45;
 
   var $ = function (id) { return document.getElementById(id); };
   function esc(s) { return String(s == null ? '' : s).replace(/</g, '&lt;'); }
-  function round5(x) { return Math.max(BAR, Math.round(x / 5) * 5); }
+  // FIX-03 (audit L-04): round5, applyEquipCoeff and the Epley estimate each
+  // propagated NaN from a NaN/undefined/Infinite input, straight into the
+  // warm-up ladder, which has no guard of its own — so the athlete was shown
+  // "NaN lb" rungs rather than an error. Every one is total now.
+  function round5(x) {
+    x = Number(x);
+    if (!isFinite(x) || x <= 0) return BAR;
+    return Math.max(BAR, Math.round(x / 5) * 5);
+  }
 
   // Equipment coefficient: Cable/Machine estimates get ×0.85 to offset machine-assisted leverage.
   function equipCat(name) {
@@ -38,12 +45,25 @@
   // Cable/Machine e1RM estimates get discounted ×0.85 to offset machine-assisted
   // leverage; Smith and everything else (including Barbell) is unchanged.
   function applyEquipCoeff(e1, equip) {
-    return (equip === 'Cable' || equip === 'Machine') ? Math.round(e1 * 0.85) : e1;
+    e1 = Number(e1);
+    if (!isFinite(e1) || e1 <= 0) return 0;
+    // Plate-Loaded added here (audit EN-11): it is 26 catalog entries and
+    // holds the heavy anchor, cluster and drop positions of an entire
+    // flagship phase, so leaving it undiscounted overstated exactly the lifts
+    // the coefficient exists for.
+    return (equip === 'Cable' || equip === 'Machine' || equip === 'Plate-Loaded')
+      ? Math.round(e1 * 0.85) : e1;
   }
 
+  // FIX-04 (audit L-03): one shared, TOTAL reader. The local copy this
+  // replaced caught malformed text and nothing else, so valid JSON of the
+  // wrong shape threw straight through it. See mc-log-read.js.
   function logs() {
-    try { return JSON.parse(localStorage.getItem(WL_KEY) || '[]') || []; }
-    catch (e) { return []; }
+    // typeof-guarded: mc-maxout.js and this file's siblings are require()'d
+    // from tools/ in Node, where a bare `window` is a ReferenceError.
+    return (typeof window !== 'undefined' && window.MC_LOG && window.MC_LOG.readWorkoutLog)
+      ? window.MC_LOG.readWorkoutLog()
+      : [];
   }
   function maxes() {
     try { return JSON.parse(localStorage.getItem(MAX_KEY) || '[]') || []; }
@@ -64,22 +84,37 @@
     try { if (window.MC_SYNC && MC_SYNC.push) MC_SYNC.push(); } catch (e) {}
   }
 
+  // FIX-04: an entry's own set list needs the same treatment as the log —
+  // `(e.sets || [])` throws on an object, and on a null member one level in.
+  function setsOf(entry) {
+    if (typeof window !== 'undefined' && window.MC_LOG && window.MC_LOG.readSets) {
+      return window.MC_LOG.readSets(entry);
+    }
+    var s = entry && entry.sets;
+    if (!Array.isArray(s)) return [];
+    return s.filter(function (x) { return x && typeof x === 'object'; });
+  }
+
   // best weighted set per exercise name across the workout log → e1RM
   function liftIndex() {
     var by = {};
     logs().forEach(function (e) {
-      (e.sets || []).forEach(function (s) {
-        var w = parseFloat(s.weight) || 0, r = parseInt(s.reps, 10) || 1;
-        if (!w) return;
+      setsOf(e).forEach(function (s) {
+        var w = parseFloat(s.weight), r = parseInt(s.reps, 10);
+        // A negative weight used to yield a negative estimated max, and
+        // negative reps an estimate BELOW the working weight (audit L-05).
+        if (!isFinite(w) || w <= 0) return;
+        if (!isFinite(r) || r < 1) r = 1;
         var k = String(s.name || '').trim();
         if (!k) return;
         var e1 = Math.round(w * (1 + Math.min(r, 12) / 30));
+        if (!isFinite(e1)) return;
         if (!by[k] || e1 > by[k].e1) by[k] = { name: k, e1: e1, sessions: 0 };
       });
     });
     logs().forEach(function (e) {
       var seen = {};
-      (e.sets || []).forEach(function (s) {
+      setsOf(e).forEach(function (s) {
         var k = String(s.name || '').trim();
         if (by[k] && !seen[k]) { by[k].sessions++; seen[k] = 1; }
       });

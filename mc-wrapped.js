@@ -10,6 +10,16 @@
    ("Save card") for sharing anywhere. Fully offline.
    ========================================================================== */
 (function () {
+
+  // FIX-04 (audit L-03): `(e.sets || [])` guards a MISSING set list and
+  // nothing else — an object where an array belongs throws
+  // `.forEach is not a function`, and a null member throws one level in.
+  // One-line delegation to the single implementation in mc-log-read.js
+  // rather than a seventh private copy of the filtering itself.
+  function setsOf(e) {
+    return (typeof window !== 'undefined' && window.MC_LOG && window.MC_LOG.readSets)
+      ? window.MC_LOG.readSets(e) : [];
+  }
   var $ = function (id) { return document.getElementById(id); };
   var DAY = 24 * 3600 * 1000;
 
@@ -55,7 +65,7 @@
       s.workouts++;
       s.prs += e.prs || 0;
       var seen = {};
-      (e.sets || []).forEach(function (set) {
+      setsOf(e).forEach(function (set) {
         s.sets++;
         var w = parseFloat(set.weight) || 0, r = parseInt(set.reps, 10) || 0;
         s.tonnage += w * r;

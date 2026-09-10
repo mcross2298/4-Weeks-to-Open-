@@ -93,8 +93,10 @@ node tools/test-mc-offline-prefetch.js # program prefetch: Save-Data/2G + real-s
 node tools/test-mc-sync-runtime.js     # mc-sync.js real pull/push/reload cycle (S1-S5)
 node tools/test-mc-persist.js          # storage-persistence request, mc-finish.js (L6 partial)
 node tools/check-gesture-contract.js   # overscroll-behavior + touch-action on hot tap targets (U1, U3)
-# needs a static server + Playwright (see verify.yml); drives two real tabs
+node tools/test-mc-numeric-guards.js   # every exported calculation is finite + non-negative (FIX-03, L-03..L-06)
+# these two need a static server + Playwright (see verify.yml)
 node tools/test-mc-setlog-concurrency.js http://localhost:8080  # two-tab set-log durability (FIX-01, L-01)
+node tools/test-mc-store-resilience.js http://localhost:8080    # corrupt-store shapes, 5 pages (FIX-04, L-03)
 python3 tools/build-sw.py --check      # committed sw.js matches the tree
 python3 tools/check-script-manifest.py --check   # clone pages load identical module lists
 node tools/gen-schedules.js --check    # mm/hv schedule records match mm-data.js + hv-block.html

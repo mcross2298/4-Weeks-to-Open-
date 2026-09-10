@@ -23,6 +23,16 @@
    One standalone "anchor" compound, then as many pairs as fit.
    ========================================================================== */
 (function () {
+
+  // FIX-04 (audit L-03): `(e.sets || [])` guards a MISSING set list and
+  // nothing else — an object where an array belongs throws
+  // `.forEach is not a function`, and a null member throws one level in.
+  // One-line delegation to the single implementation in mc-log-read.js
+  // rather than a seventh private copy of the filtering itself.
+  function setsOf(e) {
+    return (typeof window !== 'undefined' && window.MC_LOG && window.MC_LOG.readSets)
+      ? window.MC_LOG.readSets(e) : [];
+  }
   if (window.MCQuickPump) return;
 
   var CW_KEY = 'mc_custom_workouts_v1';
@@ -62,9 +72,15 @@
     return null;
   }
 
+  // FIX-04 (audit L-03): one shared, TOTAL reader. The local copy this
+  // replaced caught malformed text and nothing else, so valid JSON of the
+  // wrong shape threw straight through it. See mc-log-read.js.
   function workoutLog() {
-    try { return JSON.parse(localStorage.getItem('mc_workout_log_v1') || '[]') || []; }
-    catch (e) { return []; }
+    // typeof-guarded: mc-maxout.js and this file's siblings are require()'d
+    // from tools/ in Node, where a bare `window` is a ReferenceError.
+    return (typeof window !== 'undefined' && window.MC_LOG && window.MC_LOG.readWorkoutLog)
+      ? window.MC_LOG.readWorkoutLog()
+      : [];
   }
 
   // Muscles trained within the trailing `hours` — a set is over the whole
@@ -75,7 +91,7 @@
     var trained = {};
     workoutLog().forEach(function (e) {
       if (new Date(e.date || 0).getTime() < cutoff) return;
-      (e.sets || []).forEach(function (s) {
+      setsOf(e).forEach(function (s) {
         var cat = catalogEntry(s.name);
         if (cat && cat.muscle) trained[cat.muscle] = true;
       });
@@ -91,7 +107,7 @@
     var counts = {};
     workoutLog().forEach(function (e) {
       if (new Date(e.date || 0).getTime() < cutoff) return;
-      (e.sets || []).forEach(function (s) {
+      setsOf(e).forEach(function (s) {
         var cat = catalogEntry(s.name);
         if (cat && cat.muscle) counts[cat.muscle] = (counts[cat.muscle] || 0) + 1;
       });
@@ -157,7 +173,7 @@
     var nl = (name || '').toLowerCase();
     var log = workoutLog();
     for (var i = 0; i < log.length; i++) {
-      var sets = log[i].sets || [];
+      var sets = setsOf(log[i]);
       for (var j = 0; j < sets.length; j++) {
         var s = sets[j];
         if ((s.name || '').toLowerCase() === nl && parseFloat(s.weight) > 0) return parseFloat(s.weight);

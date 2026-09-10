@@ -201,16 +201,37 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 <script src="mc-pm-data.js"></script>
 <script src="mc-program-store.js"></script>
 <script src="mc-program-pub.js"></script>
+<script src="mc-log-read.js"></script>
 <script>
 const WL_KEY = 'mc_workout_log_v1';
 const SL_KEY = 'mc_setlog_v1';
 
+// FIX-04 (audit L-03): a SEVENTH copy of the same five-line reader, and it
+// had the same hole — an object where the array belongs came straight back
+// and LOGS.forEach threw, so this page rendered blank. Found by TEST 3, not
+// by the sweep that collapsed the six module-level copies, because this one
+// lives in a page rather than a module.
 function getLogs(){
-  try{ return JSON.parse(localStorage.getItem(WL_KEY)||'[]'); }catch(e){ return []; }
+  if (window.MC_LOG && window.MC_LOG.readWorkoutLog) return window.MC_LOG.readWorkoutLog();
+  try{
+    const v = JSON.parse(localStorage.getItem(WL_KEY)||'[]');
+    return Array.isArray(v) ? v.filter(e=>e&&typeof e==='object') : [];
+  }catch(e){ return []; }
+}
+
+// Same problem one level down: entry.sets is whatever was written, so a null
+// member threw on s.name while rendering the card (audit L-03).
+function setsOf(log){
+  if (window.MC_LOG && window.MC_LOG.readSets) return window.MC_LOG.readSets(log);
+  const s = log && log.sets;
+  return Array.isArray(s) ? s.filter(x=>x&&typeof x==='object') : [];
 }
 
 function getSetLogs(){
-  try{ return JSON.parse(localStorage.getItem(SL_KEY)||'{}'); }catch(e){ return {}; }
+  try{
+    const v = JSON.parse(localStorage.getItem(SL_KEY)||'{}');
+    return (v && typeof v==='object' && !Array.isArray(v)) ? v : {};
+  }catch(e){ return {}; }
 }
 
 const DAILY_KEY = 'mc_daily_v1';
@@ -344,13 +365,14 @@ function renderSessionCard(kind, idx, prog){
       </div>`;
   }
   const log = LOGS[idx];
-  const setsHtml = (log.sets||[]).slice(0,4).map(s=>`
+  const logSets = setsOf(log);
+  const setsHtml = logSets.slice(0,4).map(s=>`
     <div class="set-row">
       <span class="set-ex">${s.name}</span>
       <span class="set-data">${s.weight?s.weight+' lb':'—'} × ${s.reps||'—'}</span>
       ${s.pr?'<span class="set-pr">PR</span>':''}
     </div>`).join('');
-  const moreSets = (log.sets||[]).length > 4 ? `<div style="font-size:11px;color:var(--muted);padding:6px 10px;">+${log.sets.length-4} more sets</div>` : '';
+  const moreSets = logSets.length > 4 ? `<div style="font-size:11px;color:var(--muted);padding:6px 10px;">+${logSets.length-4} more sets</div>` : '';
   // Completed sessions open the real read-only Completed Workout page
   // (the exact workout card that was completed, not a list-summary sheet) —
   // only 'daily' (in-progress) entries still use the bottom-sheet path below.
@@ -362,7 +384,7 @@ function renderSessionCard(kind, idx, prog){
       </div>
       <div class="log-meta-row">
         <span class="log-tag gold">${prog.name}</span>
-        <span class="log-tag">${(log.sets||[]).length} set${(log.sets||[]).length!==1?'s':''}</span>
+        <span class="log-tag">${logSets.length} set${logSets.length!==1?'s':''}</span>
         ${log.duration?`<span class="log-tag">⏱ ${log.duration}</span>`:''}
         ${log.prs?`<span class="log-tag gold">🏆 ${log.prs} PR${log.prs>1?'s':''}</span>`:''}
       </div>
@@ -571,7 +593,7 @@ function renderProgramsTab(){
         totalSets += DAILY[it.idx].doneSets||0;
       } else {
         const log = LOGS[it.idx];
-        totalSets += (log.sets||[]).length;
+        totalSets += setsOf(log).length;
         finishedDates.add(formatDate(log.date));
       }
     });
@@ -636,7 +658,7 @@ function render(){
 
   let totalSets = 0, totalPRs = 0;
   LOGS.forEach(log=>{
-    if(log.sets) totalSets += log.sets.length;
+    totalSets += setsOf(log).length;
     if(log.prs) totalPRs += log.prs;
   });
   document.getElementById('statTotal').textContent = LOGS.length;

@@ -29,12 +29,27 @@
    file, since Stats' own Weekly Review still uses it.
    ========================================================================== */
 (function () {
-  var WL_KEY = 'mc_workout_log_v1';
+
+  // FIX-04 (audit L-03): `(e.sets || [])` guards a MISSING set list and
+  // nothing else — an object where an array belongs throws
+  // `.forEach is not a function`, and a null member throws one level in.
+  // One-line delegation to the single implementation in mc-log-read.js
+  // rather than a seventh private copy of the filtering itself.
+  function setsOf(e) {
+    return (typeof window !== 'undefined' && window.MC_LOG && window.MC_LOG.readSets)
+      ? window.MC_LOG.readSets(e) : [];
+  }
   var DAY = 24 * 3600 * 1000;
 
+  // FIX-04 (audit L-03): one shared, TOTAL reader. The local copy this
+  // replaced caught malformed text and nothing else, so valid JSON of the
+  // wrong shape threw straight through it. See mc-log-read.js.
   function logs() {
-    try { return JSON.parse(localStorage.getItem(WL_KEY) || '[]') || []; }
-    catch (e) { return []; }
+    // typeof-guarded: mc-maxout.js and this file's siblings are require()'d
+    // from tools/ in Node, where a bare `window` is a ReferenceError.
+    return (typeof window !== 'undefined' && window.MC_LOG && window.MC_LOG.readWorkoutLog)
+      ? window.MC_LOG.readWorkoutLog()
+      : [];
   }
 
   function startOfDay(d) { var x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
@@ -44,7 +59,7 @@
     entries.forEach(function (e) {
       s.sessions++;
       s.prs += e.prs || 0;
-      (e.sets || []).forEach(function (set) {
+      setsOf(e).forEach(function (set) {
         s.sets++;
         var w = parseFloat(set.weight) || 0, r = parseInt(set.reps, 10) || 0;
         s.tonnage += w * r;
@@ -87,7 +102,7 @@
       var sets = 0;
       entries.forEach(function (e) {
         var t = new Date(e.date || 0).getTime();
-        if (t >= d0 && t < d1) sets += (e.sets || []).length;
+        if (t >= d0 && t < d1) sets += setsOf(e).length;
       });
       perDay.push({ label: new Date(d0).toLocaleDateString('en-US', { weekday: 'narrow' }), value: sets });
     }

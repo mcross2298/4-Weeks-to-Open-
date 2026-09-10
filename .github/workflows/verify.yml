@@ -139,6 +139,15 @@ jobs:
       - name: Storage-persistence request test (mc-finish.js, finding L6 partial)
         run: node tools/test-mc-persist.js
 
+      - name: Numeric boundary contract (TEST 4)
+        # engine-repair roadmap Phase 0.3 / audit L-03..L-06. Calls the real
+        # exported calculations with the inputs real stored data produces and
+        # asserts every result is finite and non-negative. On the pre-fix tree
+        # this reported 97 failures: a NaN chain into the warm-up ladder,
+        # negative tonnage beside a positive calorie figure, an Infinite
+        # tonnage, and 680,444 kcal for a session left open.
+        run: node tools/test-mc-numeric-guards.js
+
       - name: Gesture contract (overscroll-behavior + touch-action — findings U1/U3)
         # A source check, like check-topbar-inset.js below — a real Android
         # pull-to-refresh or the native double-tap-to-zoom timer can't be
@@ -302,6 +311,14 @@ jobs:
           # it, so the gate fails on an unfixed build every run rather than
           # whenever scheduling happens to expose the race.
           if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-setlog-concurrency.js http://localhost:8080; then EXIT=1; fi
+          # Hostile-shape resilience (Phase 0.3 / audit L-03, FIX-04). Seeds a
+          # corrupt store before the page loads. The shape that matters is not
+          # malformed text -- every JSON.parse here is already wrapped, and that
+          # case is kept only as a control. It is valid JSON of the wrong shape,
+          # which went straight through the try/catch and left the dashboard,
+          # the stats page and the history page half-rendered. Six failing page
+          # loads on the pre-fix tree, zero after.
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-store-resilience.js http://localhost:8080; then EXIT=1; fi
           # Light-mode contrast ratchet (audit G-04/G-3.1). Shares this job
           # because it needs the same Playwright install. Per-page budgets in
           # tools/contrast-budgets.json can only shrink; re-baseline with

@@ -85,7 +85,17 @@
     catch (e) { return fallback; }
   }
 
-  function workoutLog() { return readJSON(WL_KEY, []); }
+  // FIX-04 (audit L-03): readJSON() returns whatever valid JSON it finds, so
+  // an object where an array belongs came straight through and every caller's
+  // .forEach threw. Route through the one total reader when it is present.
+  function workoutLog() {
+    if (typeof window !== 'undefined' && window.MC_LOG && window.MC_LOG.readWorkoutLog) {
+      return window.MC_LOG.readWorkoutLog();
+    }
+    var v = readJSON(WL_KEY, []);
+    if (!Array.isArray(v)) return [];
+    return v.filter(function (e) { return e && typeof e === 'object'; });
+  }
 
   // Latest logged bodyweight, same store/shape mc-macros.js's own
   // latestWeightLb() reads — duplicated rather than imported so this module
@@ -99,23 +109,55 @@
     return DEFAULT_BODYWEIGHT_LB;
   }
 
+  // ---- FIX-03 (audit L-03, L-05, L-06): make the numeric layer total ------
+  // These three run inside the completion recap and the dashboard strain
+  // ring, so one bad member breaks the screen shown at the end of every
+  // workout. `(sets || [])` guards a missing list and nothing else: an object
+  // where an array belongs throws `.forEach is not a function`, and a null
+  // member throws on `s.weight`. Both shapes were reached with real stored
+  // data, not constructed ones.
+  //
+  // The clamps are a separate defect (L-05, L-06) and not cosmetic. A negative
+  // weight used to yield negative tonnage beside a POSITIVE calorie figure,
+  // because the metabolic multiplier is floored — confidently wrong output
+  // rather than an error. A 1e308 entry produced an Infinite tonnage next to a
+  // finite calorie count. And session length had no ceiling at all, so a
+  // session left open overnight grew calories linearly forever.
+  var MAX_SET_WEIGHT_LB = 5000;   // past a loaded sled; nothing real is heavier
+  var MAX_SET_REPS = 1000;
+  var MAX_SESSION_MIN = 480;      // eight hours; longer is a session left open
+
+  function setList(sets) {
+    if (typeof window !== 'undefined' && window.MC_LOG && window.MC_LOG.readSets) {
+      return window.MC_LOG.readSets({ sets: sets });
+    }
+    if (!Array.isArray(sets)) return [];
+    return sets.filter(function (s) { return s && typeof s === 'object'; });
+  }
+
   function parseDurationMin(entry) {
     var m = /(\d+)/.exec(String(entry && entry.duration || ''));
-    if (m) return Math.max(1, parseInt(m[1], 10));
+    if (m) {
+      var n = parseInt(m[1], 10);
+      if (!isFinite(n)) return 0;
+      return Math.max(1, Math.min(MAX_SESSION_MIN, n));
+    }
     return entry && /<\s*1\s*min/i.test(entry.duration || '') ? 1 : 0;
   }
 
   function sessionTonnage(sets) {
     var t = 0;
-    (sets || []).forEach(function (s) {
-      var w = parseFloat(s.weight) || 0, r = parseInt(s.reps, 10) || 0;
-      t += w * r;
+    setList(sets).forEach(function (s) {
+      var w = parseFloat(s.weight), r = parseInt(s.reps, 10);
+      if (!isFinite(w) || !isFinite(r)) return;
+      t += Math.max(0, Math.min(w, MAX_SET_WEIGHT_LB)) *
+           Math.max(0, Math.min(r, MAX_SET_REPS));
     });
-    return t;
+    return isFinite(t) ? t : 0;
   }
 
   function nearFailureSetCount(sets) {
-    return (sets || []).filter(function (s) {
+    return setList(sets).filter(function (s) {
       return s.rpe === 'F' || parseFloat(s.rpe) >= 9.5;
     }).length;
   }
@@ -229,11 +271,17 @@
   // bodyweight override skips the localStorage read for callers (mc-finish.js)
   // that already have it, matching session()'s own convention.
   function proteinTarget(bodyweightLb) {
-    var bw = bodyweightLb || latestBodyweightLb();
+    // FIX-03: a non-numeric argument used to survive the `||` fallback (a
+    // string is truthy) and carry NaN all the way to the returned figure,
+    // which the Refuel row then rendered.
+    var bw = Number(bodyweightLb);
+    if (!isFinite(bw) || bw <= 0) bw = latestBodyweightLb();
     var strain = today().strain;
     var base = bw * PROTEIN_G_PER_LB;
     var bonus = strain != null ? (strain / STRAIN_MAX) * PROTEIN_STRAIN_BONUS_MAX_G : 0;
-    var clamped = Math.max(PROTEIN_MIN_G, Math.min(PROTEIN_MAX_G, base + bonus));
+    var total = base + bonus;
+    if (!isFinite(total)) total = PROTEIN_MIN_G;
+    var clamped = Math.max(PROTEIN_MIN_G, Math.min(PROTEIN_MAX_G, total));
     return Math.round(clamped / 5) * 5;
   }
 

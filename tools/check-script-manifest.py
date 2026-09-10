@@ -146,6 +146,46 @@ CAPABILITY_TRIGGER = "mc-setlog.js"
 # exercise-card modules.
 NOT_ACTUALLY_WORKOUT_PAGES = {"workout-logs.html", "mc-cardio.html", "cat-gainz.html"}
 
+# --- FIX-04 (engine-repair roadmap Phase 0.3, audit L-03) -------------------
+# Six modules carried the same five-line mc_workout_log_v1 reader and all six
+# had the same hole, so the reader now lives once in mc-log-read.js and each
+# consumer delegates to it. Delegation is only safe while the dependency is
+# actually on the page: a consumer whose page is missing the tag would read
+# an empty log and render an empty screen with no error at all — the same
+# silent-failure shape this roadmap exists to remove. So the dependency is a
+# declared contract, checked, rather than a convention nobody can see.
+LOG_READER = "mc-log-read.js"
+LOG_CONSUMERS = [
+    "mc-stats.js",
+    "mc-recap.js",
+    "mc-calendar.js",
+    "mc-exercise-trends.js",
+    "mc-maxout.js",
+    "mc-quick-pump.js",
+    "mc-strain.js",
+    "mc-wrapped.js",
+    "mc-cond.js",
+]
+
+
+def check_log_reader_contract():
+    problems = []
+    pages = sorted(glob.glob("*.html"))
+    consumer_pages = []
+    for f in pages:
+        loaded = set(manifest(ROOT / f))
+        used = [m for m in LOG_CONSUMERS if m in loaded]
+        if not used:
+            continue
+        consumer_pages.append(f)
+        if LOG_READER not in loaded:
+            problems.append(
+                f"[log-reader] {f} loads {', '.join(used)} but not {LOG_READER} — "
+                f"the shared reader they delegate to. The page would show an "
+                f"empty history with no error."
+            )
+    return problems, len(consumer_pages)
+
 
 def check_capability_contract():
     problems = []
@@ -242,6 +282,10 @@ def main():
     print(f"\nCapability contract: {cap_count} page(s) load {CAPABILITY_TRIGGER} "
           f"(workout pages), checked against {len(REQUIRED_MODULES)} required module(s).")
 
+    log_problems, log_count = check_log_reader_contract()
+    print(f"Log-reader contract: {log_count} page(s) load a workout-log consumer, "
+          f"checked for {LOG_READER}.")
+
     if problems:
         print("\nSCRIPT-MANIFEST DRIFT:\n")
         print("\n\n".join(problems))
@@ -254,7 +298,13 @@ def main():
     else:
         print("Every workout page carries the full required module set — no gaps.")
 
-    if (problems or cap_problems) and args.check:
+    if log_problems:
+        print("\nLOG-READER CONTRACT VIOLATIONS:\n")
+        print("\n".join(log_problems))
+    else:
+        print("Every workout-log consumer has its reader — no silent empty history.")
+
+    if (problems or cap_problems or log_problems) and args.check:
         sys.exit(1)
 
 
