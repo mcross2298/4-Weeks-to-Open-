@@ -104,6 +104,40 @@ if (!storesBlock) {
     fail('store-registry.json and mc-sync.js STORES disagree:', [...missing, ...extra, ...differ]);
   }
 
+  // ---- 2b: registry PREFIXES vs mc-sync.js PREFIX_STORES ---------------------
+  // The export half of this pairing has always been checked (see 3 below), but
+  // the sync half could not be: mc-sync.js had no prefix map at all, which is
+  // why a page-scoped exercise swap never left the device that made it (audit
+  // P2-03, roadmap Phase 3.1). Now that it has one, the same rule applies —
+  // a prefix the registry says syncs must be in PREFIX_STORES, with the same
+  // strategy name, or the declaration is a claim nothing keeps true.
+  // Declared as a hoisted FUNCTION returning the map, not a `var` — see
+  // mc-sync.js's own comment on why (the Node export hook runs first).
+  const preBlock = syncSrc.match(/function PREFIX_STORES\(\)\s*\{\s*return \{([\s\S]*?)\};/);
+  const actualPrefixSync = {};
+  if (preBlock) {
+    for (const m of preBlock[1].matchAll(/'([^']+)':\s*'([^']+)'/g)) actualPrefixSync[m[1]] = m[2];
+  }
+  const wantPrefixSync = {};
+  for (const [k, v] of Object.entries(prefixes)) if (v.sync) wantPrefixSync[k] = v.sync;
+  if (!preBlock && Object.keys(wantPrefixSync).length) {
+    fail('Could not locate PREFIX_STORES in mc-sync.js, but the registry declares a syncing prefix:',
+         Object.keys(wantPrefixSync));
+  } else {
+    const pMissingSync = Object.keys(wantPrefixSync).filter(k => !(k in actualPrefixSync))
+      .map(k => `${k} (registry says sync:'${wantPrefixSync[k]}', absent from PREFIX_STORES)`);
+    const pExtraSync = Object.keys(actualPrefixSync).filter(k => !(k in wantPrefixSync))
+      .map(k => `${k} (in PREFIX_STORES, but registry says sync:false)`);
+    const pDiffer = Object.keys(wantPrefixSync).filter(k => k in actualPrefixSync && actualPrefixSync[k] !== wantPrefixSync[k])
+      .map(k => `${k} (registry '${wantPrefixSync[k]}' vs PREFIX_STORES '${actualPrefixSync[k]}')`);
+    if (pMissingSync.length || pExtraSync.length || pDiffer.length) {
+      fail('store-registry.json prefixes and mc-sync.js PREFIX_STORES disagree:',
+           [...pMissingSync, ...pExtraSync, ...pDiffer]);
+    }
+    // a prefix strategy needs routing in mergeStore() exactly like a fixed one
+    Object.values(wantPrefixSync).forEach(st => { wantSync['(prefix) ' + st] = st; });
+  }
+
   // ---- 5: strategies must actually be routed --------------------------------
   const dispatcher = syncSrc.match(/function mergeStore\([\s\S]*?\n  \}/);
   if (!dispatcher) {

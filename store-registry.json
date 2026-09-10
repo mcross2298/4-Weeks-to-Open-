@@ -56,13 +56,13 @@
     "mc_body_v1": {
       "owner": "mc-body.js",
       "storage": "local",
-      "sync": "arrayById",
+      "sync": "arrayByIdTs",
       "export": true
     },
     "mc_vitals_v1": {
       "owner": "mc-vitals.js",
       "storage": "local",
-      "sync": "arrayById",
+      "sync": "arrayByIdTs",
       "export": true,
       "note": "Manual daily wellness entry (restingHr/sleepHrs/readiness) — flagship-immersive-roadmap.md H3. Not consumed by mc-readiness.js's per-muscle formula; see that phase's own note."
     },
@@ -83,13 +83,13 @@
     "mc_collections_v1": {
       "owner": "mc-collections.js",
       "storage": "local",
-      "sync": "arrayById",
+      "sync": "arrayByIdTs",
       "export": true
     },
     "mc_cond_log_v1": {
       "owner": "mc-cond.js",
       "storage": "local",
-      "sync": "arrayById",
+      "sync": "arrayByIdTs",
       "export": true
     },
     "mc_cond_src_prog": {
@@ -148,25 +148,25 @@
     "mc_ex_favs": {
       "owner": "exercise-library.html",
       "storage": "local",
-      "sync": false,
+      "sync": "stringSetBase",
       "export": true
     },
     "mc_ex_notes": {
       "owner": "mc-card-actions.js",
       "storage": "local",
-      "sync": false,
+      "sync": "dictBase",
       "export": true
     },
     "mc_ex_order": {
       "owner": "mc-card-actions.js",
       "storage": "local",
-      "sync": false,
+      "sync": "dictBase",
       "export": true
     },
     "mc_ex_tempo": {
       "owner": "mc-card-actions.js",
       "storage": "local",
-      "sync": false,
+      "sync": "dictBase",
       "export": true
     },
     "mc_foodapi_cache_v1": {
@@ -213,7 +213,7 @@
     "mc_max_v1": {
       "owner": "mc-maxout.js",
       "storage": "local",
-      "sync": "arrayById",
+      "sync": "arrayByIdTs",
       "export": true
     },
     "mc_offline_prefetch_v1": {
@@ -233,7 +233,7 @@
     "mc_personal_intensifiers": {
       "owner": "program-overrides.js",
       "storage": "local",
-      "sync": false,
+      "sync": "dictBase",
       "export": true
     },
     "mc_personal_theme_v1": {
@@ -315,7 +315,7 @@
     "mc_replacements_global": {
       "owner": "mc-card-actions.js",
       "storage": "local",
-      "sync": false,
+      "sync": "dictBase",
       "export": true
     },
     "mc_resume_toast_shown": {
@@ -412,7 +412,7 @@
     "mc_replacements|": {
       "owner": "mc-card-actions.js",
       "storage": "local",
-      "sync": false,
+      "sync": "dictBase",
       "export": true,
       "note": "Per-page exercise swaps. Dynamic key per page id, so only matchable by prefix."
     },

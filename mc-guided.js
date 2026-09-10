@@ -2,7 +2,7 @@
    mc-guided.js — guided linear workout mode (Tier 4 Phase 5)
    --------------------------------------------------------------------------
    Opt-in overlay that works on ANY page using the shared exercise-card
-   convention (.ex-card / .ss-card, as rendered by every flagship/influencer
+   convention (.ex-card / .ss-card / .ex-item, as rendered by every flagship/influencer
    program day page plus run-workout.html/run-program.html) — no per-page
    wiring needed, the same principle mc-suggest.js already uses by attaching
    wherever .mcl-toggle exists. Loaded dynamically by mc-setlog.js (see the
@@ -25,7 +25,15 @@
 (function () {
   if (window.MC_GUIDED) return;
 
-  var STEP_SEL = '.ex-card, .ss-card';
+  // Phase 3.5: .ex-item belongs here too. mc-setlog.js's own unit selector is
+  // '.ex-card, .ss-ex, .ex-item', so the eight frequency pages get a real set
+  // logger -- and got no guided-mode entry button at all, silently, because this
+  // selector never named their row shape. Measured by driving all 79 pages that
+  // load mc-setlog.js: 63 offered guided mode, 8 rendered .ex-item rows and no
+  // entry, 8 are pickers that render no cards at all (correctly no entry).
+  // An .ex-item is never nested inside a card on any of them, so listing all
+  // three cannot double-count a step.
+  var STEP_SEL = '.ex-card, .ss-card, .ex-item';
   var active = false;
   var steps = [];
   var current = 0;
@@ -90,15 +98,15 @@
       '.mc-guided-dim{opacity:0.35;filter:saturate(0.6);transition:opacity .2s,filter .2s;}' +
       '.mc-guided-current{transition:box-shadow .2s;box-shadow:0 0 0 2px var(--accent,#d4af37),0 8px 28px -10px rgba(0,0,0,.6);border-radius:14px;}' +
       '.mcgd-entry{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 14px;' +
-        'padding:11px 16px;border-radius:12px;background:rgba(212,175,55,0.12);' +
+        'padding:11px 16px;min-height:44px;box-sizing:border-box;border-radius:12px;background:rgba(212,175,55,0.12);' +
         'border:1px solid rgba(212,175,55,0.3);color:#d4af37;font-size:13px;font-weight:800;' +
         'cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
       /* top offset clears mc-summary.css's .prog-bar-wrap.mcs-stat sticky bar
          (46px, only present once a session is active) with a safety margin */
       '.mcgd-exit{position:fixed;top:calc(58px + env(safe-area-inset-top));right:10px;z-index:170;' +
-        'padding:8px 13px;border-radius:20px;background:rgba(10,10,11,.85);color:#e2e8f0;' +
+        'padding:8px 13px;min-height:44px;box-sizing:border-box;display:none;align-items:center;border-radius:22px;background:rgba(10,10,11,.85);color:#e2e8f0;' +
         'border:1px solid rgba(255,255,255,.15);font-size:12px;font-weight:800;cursor:pointer;' +
-        'backdrop-filter:blur(8px);-webkit-tap-highlight-color:transparent;display:none;}' +
+        'backdrop-filter:blur(8px);-webkit-tap-highlight-color:transparent;}' +
       '.mcgd-scrim{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,0);pointer-events:none;' +
         'transition:background .25s;}' +
       '.mcgd-scrim.show{background:rgba(0,0,0,0.55);}';
@@ -126,7 +134,7 @@
     active = true;
     if (entryBtn) entryBtn.style.display = 'none';
     if (!exitBtn) buildExit();
-    exitBtn.style.display = 'block';
+    exitBtn.style.display = 'flex';
     if (!scrim) buildScrim();
     // resume at the first not-yet-complete step rather than always index 0
     current = steps.length - 1;
