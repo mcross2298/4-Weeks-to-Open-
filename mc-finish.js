@@ -815,6 +815,12 @@
       try{
         document.dispatchEvent(new CustomEvent('mc:workout-finished',{detail:{entry:entry,pageId:pageId}}));
       }catch(e){}
+      // Roadmap Phase 4 step 3: "lighter session" was a decision about THIS
+      // session. Clearing it on completion means the next workout in the same
+      // tab is prescribed in full again, rather than inheriting a choice the
+      // athlete made hours ago. The four-hour window in mc-setlog.js is the
+      // backstop for a session that is never finished, not the primary rule.
+      try{ sessionStorage.removeItem('mc_deload_v1'); }catch(e){}
       // Celebratory recap instead of just a button flash
       showDone(entry);
       // Flash confirmation on the bar too

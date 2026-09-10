@@ -37,7 +37,7 @@
    this session to verify motion timing against). Never blocks the logging
    flow it precedes — Begin, Skip, and a backdrop tap all just proceed.
 
-   window.MC_READINESS_BRIEF.show({ dayTitle, icon, accent, scope, onBegin })
+   window.MC_READINESS_BRIEF.show({ dayTitle, icon, accent, scope, deload, onBegin })
    `scope`: optional array of MC_MUSCLES group ids today's day trains; omit
    or pass [] for the full undimmed map. onBegin() fires exactly once,
    however the brief was dismissed. If the data this needs (MC_CHART/
@@ -125,6 +125,15 @@
       '<div class="rb-fig">' + window.MC_CHART.bodyMap(bodyData, { view: 'back', width: 110 }) + '<div class="rb-fig-cap">Back</div></div>' +
     '</div>';
 
+    // Is today already a scheduled deload? The caller knows the week; it passes
+    // the answer rather than this file re-resolving a program record it has no
+    // other reason to read.
+    var deloadHtml = cfg.deload
+      ? '<div class="rb-deload">Deload week — today is prescribed lighter.</div>'
+      : '';
+    var lowRecovery = (score != null && score < 50);
+    var offerLighter = !!(worst || lowRecovery || cfg.deload);
+
     var overlay = document.createElement('div');
     overlay.className = 'fw-modal-overlay open rb-overlay';
     overlay.innerHTML =
@@ -135,8 +144,20 @@
         ringHtml +
         figHtml +
         advisoryHtml +
+        deloadHtml +
         '<div class="fw-modal-btns rb-btns">' +
           '<button type="button" class="fw-cancel" id="rbSkip">Skip</button>' +
+          // Roadmap Phase 4 step 3 (audit PG-2): the brief can now change the
+          // session, not just describe it. One tap, and mc-setlog.js builds one
+          // working set fewer per exercise — the same reduction a scheduled
+          // deload week applies, through the same code path, so the two cannot
+          // drift into meaning different things. Offered only when there is a
+          // real reason to: a group MC_READY itself calls overreached, a
+          // Recovery Score below its own low band, or a deload week. Shown
+          // unconditionally it would just be a third button to ignore.
+          (offerLighter
+            ? '<button type="button" class="fw-cancel rb-lighter" id="rbLighter">Lighter</button>'
+            : '') +
           '<button type="button" class="fw-confirm" id="rbBegin">Begin</button>' +
         '</div>' +
       '</div>';
@@ -155,6 +176,16 @@
     var skipBtn = overlay.querySelector('#rbSkip'), beginBtn = overlay.querySelector('#rbBegin');
     if (skipBtn) skipBtn.addEventListener('click', dismiss);
     if (beginBtn) beginBtn.addEventListener('click', dismiss);
+    var lighterBtn = overlay.querySelector('#rbLighter');
+    if (lighterBtn) lighterBtn.addEventListener('click', function () {
+      // sessionStorage, not local: this is a decision about TODAY'S session,
+      // scoped to the tab that is about to open the workout page, and it
+      // carries a timestamp so it cannot quietly govern tomorrow either.
+      try {
+        sessionStorage.setItem('mc_deload_v1', JSON.stringify({ ts: Date.now(), reason: 'readiness' }));
+      } catch (e3) {}
+      dismiss();
+    });
   }
 
   window.MC_READINESS_BRIEF = { show: show };

@@ -223,6 +223,11 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 .rb-fig{text-align:center;}
 .rb-fig-cap{font-size:var(--fs-2xs);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2);margin-top:4px;}
 .rb-note{font-size:var(--fs-xs);font-weight:700;color:var(--danger,#f87171);text-align:center;margin:10px 0 4px;}
+/* Roadmap Phase 4 step 3: the deload line states the program's own plan, so it
+   reads as information (cyan, like the week bar's badge) and not as a warning
+   the way .rb-note does. */
+.rb-deload{font-size:var(--fs-xs);font-weight:800;color:#22d3ee;text-align:center;margin:10px 0 4px;}
+.rb-lighter{min-height:44px;}
 /* base.css's .fw-cancel/.fw-confirm 44px-tall padding is scoped to
    #fwModalBtns/#fwRecapBtns on purpose (those classes are also reused by an
    unrelated post-save "Done" button); .rb-btns gets the same padding boost
@@ -2204,7 +2209,12 @@ function renderDayModule(cfg){
       P.setCursor(cfg.prog.id,d,cfg.def);
       var m=meta(w)||{};
       if(window.MC_READINESS_BRIEF){
-        MC_READINESS_BRIEF.show({dayTitle:m.title,icon:m.icon,accent:accent,scope:m.muscles,onBegin:function(){open(d,w);}});
+        // Roadmap Phase 4 step 3: the brief is told whether today falls in a
+        // deload week. It is resolved here because this is where the record
+        // and the day number already are — the brief is a renderer.
+        MC_READINESS_BRIEF.show({dayTitle:m.title,icon:m.icon,accent:accent,scope:m.muscles,
+          deload:!!(P.isDeloadWeek&&P.isDeloadWeek(rec,P.weekOf(rec,d))),
+          onBegin:function(){open(d,w);}});
       } else {
         open(d,w);
       }

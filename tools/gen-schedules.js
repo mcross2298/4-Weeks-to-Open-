@@ -162,10 +162,19 @@ function buildMM() {
     phases.push({ weeks: weeksPerPhase, days: order });
   });
 
+  const weeks = weeksPerPhase * ids.length;
   return {
-    weeks: weeksPerPhase * ids.length,
+    weeks: weeks,
     perWeek: perWeek,
     rest: rest,
+    // Roadmap Phase 4 step 3 (audit PG-2): the last week of the block is a
+    // deload. It is emitted as DATA rather than left as a "last week" rule in
+    // a renderer, so a program can declare none or later declare several, and
+    // so mc-program-progress.js never has to invent one. Deliberately the last
+    // week of the BLOCK and not of each phase: this block is three five-week
+    // phases, but the High-Volume block below is four phases of ONE week each,
+    // where per-phase would make every week a deload.
+    deloadWeeks: [weeks],
     phases: phases,
     days: days
   };
@@ -221,7 +230,8 @@ function buildHV() {
     phases.push({ weeks: 1, days: order, rest: thisRest });
   });
 
-  return { weeks: WEEKS.length, perWeek: perWeek, rest: rest, phases: phases, days: days };
+  return { weeks: WEEKS.length, perWeek: perWeek, rest: rest,
+           deloadWeeks: [WEEKS.length], phases: phases, days: days };
 }
 
 // ---- splice into mc-pm-data.js -------------------------------------------

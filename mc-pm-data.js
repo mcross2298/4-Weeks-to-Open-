@@ -79,6 +79,12 @@
       // is nothing to classify — empty, not guessed.
       schedule: {
         weeks: 6, perWeek: 7, rest: [6, 7],
+        // The last week of the block is a deload (roadmap Phase 4 step 3,
+        // audit PG-2). Hand-typed here for the same reason the rest of this
+        // block is: `ss` is deliberately not machine-generated (see
+        // tools/gen-schedules.js's own header) — that tool emits the same
+        // [weeks] for mm and hv.
+        deloadWeeks: [6],
         days: [
           { id: 'legs',           title: 'Legs',              icon: '🦵', tags: ['Quads', 'Hamstrings', 'Calves'],       ex: 8, sets: 30, min: 75, muscles: ['calves', 'legs'] },
           { id: 'chest',          title: 'Chest',             icon: '💪', tags: ['Chest', 'Push'],                       ex: 8, sets: 32, min: 80, muscles: ['chest'] },
@@ -97,6 +103,9 @@
         "perWeek": 7,
         "rest": [
           5
+        ],
+        "deloadWeeks": [
+          15
         ],
         "phases": [
           {
@@ -420,6 +429,9 @@
         "rest": [
           3,
           6
+        ],
+        "deloadWeeks": [
+          4
         ],
         "phases": [
           {

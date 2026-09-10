@@ -79,6 +79,7 @@
     var week = cfg.week || 1;
     var days = P.weekFrom(rec, week);
     var lastWeek = rec.weeks || 1;
+    var deload = !!(P.isDeloadWeek && P.isDeloadWeek(rec, week));
 
     var prevDisabled = week <= 1 ? ' disabled' : '';
     var nextDisabled = week >= lastWeek ? ' disabled' : '';
@@ -87,11 +88,17 @@
       '<div class="mwb-head">' +
       '<button type="button" class="mwb-arrow" data-week="' + (week - 1) + '"' + prevDisabled +
       ' aria-label="Previous week">' + ARROW_L + '</button>' +
-      '<div class="mwb-title" aria-live="polite">Week ' + week + '</div>' +
+      '<div class="mwb-title" aria-live="polite">Week ' + week +
+        // Roadmap Phase 4 step 3 (audit PG-2). Read off the record's own
+        // declared list, never derived as "the last week" here — this file is
+        // a pure renderer and a program with no declared deload must not have
+        // one invented for it.
+        (deload ? '<span class="mwb-deload">Deload</span>' : '') + '</div>' +
       '<button type="button" class="mwb-arrow" data-week="' + (week + 1) + '"' + nextDisabled +
       ' aria-label="Next week">' + ARROW_R + '</button>' +
       '</div>' +
-      '<div class="mwb-row" role="group" aria-label="Week ' + week + ' schedule">' +
+      '<div class="mwb-row" role="group" aria-label="Week ' + week +
+        (deload ? ' (deload week)' : '') + ' schedule">' +
       days.map(function (d) { return pill(d, cfg.activeDay); }).join('') +
       '</div>' +
       '</div>';

@@ -446,8 +446,53 @@
     return null;
   }
 
-  // RPE chip cycle: – → 8 → 8.5 → 9 → 9.5 → 10 → F (to failure) → –
-  var RPE_STEPS = ['', '8', '8.5', '9', '9.5', '10', 'F'];
+  // EN-7 (roadmap Phase 4 step 4). The old control cycled seven values on
+  // every row: '', 8, 8.5, 9, 9.5, 10, F. Six choices — and every consumer in
+  // the app tests one predicate over them, `rpe === 'F' || parseFloat(rpe) >=
+  // 9.5` (mc-suggest.js's progression hold, mc-strain.js's session load,
+  // mc-readiness.js's recovery curve), so six choices only ever produced TWO
+  // outcomes. Reaching "to failure" cost six taps and effort was recorded on
+  // 1.6% of sets.
+  //
+  // Three choices, asked once, on the exercise the athlete has just finished.
+  // The stored values stay inside the old vocabulary so existing logs, the
+  // Supabase `rpe` column and all three consumers keep working untouched: 8
+  // and 9 are below the near-failure threshold, F is at it.
+  var EFFORT_CHOICES = [
+    { rpe: '8', label: 'Easy',       hint: 'Three or more reps left in the tank' },
+    { rpe: '9', label: 'Solid',      hint: 'One or two reps left' },
+    { rpe: 'F', label: 'To failure', hint: 'Nothing left — this holds the weight where it is' }
+  ];
+
+  // What the last set of this exercise currently records, if anything.
+  function storedEffort(exId, sn) {
+    var l = lset(exId, sn);
+    return (l && l.rpe) || '';
+  }
+
+  // Reflect the stored answer onto the buttons, and only ask once the whole
+  // exercise is logged — an effort question in front of an unstarted card is
+  // noise, and asking mid-exercise asks about the wrong set.
+  function paintEffort(card, exId) {
+    var row = card.querySelector('.mcl-effort');
+    if (!row) return;
+    var cid = cssId(exId);
+    var rows = card.querySelectorAll('.mcl-row[id^="mclr-' + cid + '-"]');
+    var done = 0;
+    Array.prototype.forEach.call(rows, function (r) {
+      if (r.querySelector('.mcl-ck.done')) done++;
+    });
+    var ready = rows.length > 0 && done === rows.length;
+    if (row.classList.contains('on') !== ready) row.classList.toggle('on', ready);
+    var cur = storedEffort(exId, rows.length);
+    Array.prototype.forEach.call(row.querySelectorAll('.mcl-effort-btn'), function (b) {
+      var on = !!cur && b.dataset.rpe === cur;
+      if (b.classList.contains('set') !== on) {
+        b.classList.toggle('set', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      }
+    });
+  }
 
   // ---- parse the prescribed "sets" string --------------------------------
   // ONE resolution, read by both setCount() and repFor(): a prescription
@@ -767,6 +812,57 @@
   //
   // A cluster scheme puts N reps bubbles INSIDE one row, so it never changes
   // the row count — only working sets plus appended drop rows do.
+  // ---- reduced volume (roadmap Phase 4 step 3, audit PG-2) ----------------
+  // Two things can make today lighter, and they meet here so the row count,
+  // mc-finish.js's completion denominator (plannedSetCount below) and the
+  // card's own note can never disagree with each other:
+  //
+  //   'readiness'  the athlete accepted a lighter session in the pre-session
+  //                brief. A tab-scoped intent, so it lives in sessionStorage
+  //                and expires — it is a decision about TODAY, not a setting.
+  //   'deload'     the program's own block schedules a deload this week. No
+  //                flagship program had one before this step, including the
+  //                fifteen-week one. Derived on the page, from the program's
+  //                declared deloadWeeks — never from "it's the last week".
+  //
+  // Resolved once per page load and cached: the answer cannot change mid-
+  // session, and planFor() is called on every card on every render pass.
+  var REDUCED_KEY = 'mc_deload_v1';
+  var REDUCED_WINDOW_MS = 4 * 60 * 60 * 1000;
+  var OFF = { on: false, reason: '' };
+  var _flag = null;      // sessionStorage intent — answerable immediately
+  var _deload = null;    // program schedule — needs MC_PROGRAM_DAY + MC_PM_DATA
+  function reducedVolume() {
+    if (_flag === null) {
+      _flag = false;
+      try {
+        var f = JSON.parse(sessionStorage.getItem(REDUCED_KEY) || 'null');
+        if (f && isFinite(f.ts) && (Date.now() - f.ts) < REDUCED_WINDOW_MS) _flag = true;
+      } catch (e) {}
+    }
+    if (_flag) return { on: true, reason: 'readiness' };
+    if (_deload === null) {
+      var D = window.MC_PROGRAM_DAY, P = window.MC_PROGRAM_PROGRESS;
+      var cur = null;
+      try { cur = D && D.current && D.current(); } catch (e2) {}
+      // NOT cached while the answer is unknowable. mc-pm-data.js used to reach
+      // three of these five pages only through an async injection, so the first
+      // build ran before the record existed — and caching that "no" made a
+      // deload week silently prescribe full volume for the whole page load.
+      // The pages now load the data synchronously before this file; this guard
+      // is the second line, so a mis-ordered page degrades to full volume for
+      // one pass instead of permanently.
+      if (!cur || !cur.prog || !P || !P.isDeloadWeek || !window.MC_PM_DATA) return OFF;
+      _deload = false;
+      try {
+        var src = window.MC_PM_DATA.program(cur.prog);
+        var def = src && P.defFromSchedule(src.schedule);
+        if (def && P.isDeloadWeek(P.get(cur.prog, def), cur.week)) _deload = true;
+      } catch (e3) {}
+    }
+    return _deload ? { on: true, reason: 'deload' } : OFF;
+  }
+
   function planFor(card, setsStr) {
     if (setsStr == null) setsStr = setsOf(card);
     var nmEl = card.querySelector('.ex-name, .ss-name, .lift-name, .var-name');
@@ -774,8 +870,15 @@
     var work = drop.is ? stripDrop(setsStr) : setsStr;
     var n = setCount(work);
     var nd = drop.is ? drop.drops.length : 0;   // number of appended drop rows
+    var stated = statesSetCount(work);
+    // One working set fewer, floored at one. Drop rows are untouched — a drop
+    // set IS the reduction on that exercise. And a prescription that never
+    // stated a set count is left alone (P2-12): trimming a default the program
+    // did not ask for would be inventing a number twice over.
+    var cut = 0;
+    if (stated && n > 1 && reducedVolume().on) { cut = 1; n -= 1; }
     return { nmEl: nmEl, drop: drop, work: work, n: n, nd: nd, total: n + nd,
-             stated: statesSetCount(work) };
+             stated: stated, cut: cut };
   }
   function plannedSetCount(card) {
     try { return planFor(card).total; } catch (e) { return 0; }
@@ -830,10 +933,13 @@
       } catch (ue) {}
       return;
     }
-    var rpeEl = row.querySelector('.mcl-rpe');
     var wVal = w ? w.value.trim() : '';
     var rVal = clusterRVal(row);
-    var rpeVal = rpeEl ? (rpeEl.dataset.rpe || '') : '';
+    // EN-7: effort is no longer a per-row control, so it is CARRIED FORWARD
+    // from what this set already recorded rather than read off the row. Reading
+    // the removed element here would have written '' on every re-check and
+    // silently erased an answer the athlete had already given.
+    var rpeVal = storedEffort(exId, sn);
     save(exId, sn, wVal, rVal, rpeVal);
     // Now committed for real — checking always solidifies a ghosted
     // suggestion (typing is not required), and the pending draft is
@@ -934,6 +1040,11 @@
     // progress bar, live-summary %, activity log) picks it up without the
     // athlete also needing to tap the whole card as a separate gesture.
     card.classList.toggle('checked', allDone);
+
+    // EN-7: the effort question appears when the exercise is finished, so it
+    // is repainted wherever completion is recomputed — including restoreSets(),
+    // which routes through here (audit S2).
+    paintEffort(card, exId);
 
     var stripCount = card.querySelector('.mcl-strip-count-' + cid);
     if (stripCount) stripCount.textContent = done + '/' + rows.length + ' Sets';
@@ -1166,8 +1277,7 @@
     wrap.className = 'mcl-wrap';
     // R2: the column-header row (SET/WEIGHT/REPS/RPE) was deleted — 23px on
     // every card, times every exercise on the page. The row-number divs
-    // (1, 2, 3…) already read as "set" positionally, the RPE chip carries
-    // its own descriptive title attribute, and the weight/reps inputs' own
+    // (1, 2, 3…) already read as "set" positionally, and the weight/reps inputs' own
     // placeholder text ("lb" / "reps" when nothing else fills it) already
     // does the labeling job the header row was duplicating — "the inputs'
     // own placeholders, which is where a mobile form puts them anyway."
@@ -1185,7 +1295,6 @@
       var seedWeight = (i === 0 && !last) ? parseFloat(card.dataset && card.dataset.mcSeedWeight) : 0;
       var wPh = (last && last.w) ? (last.w + ' lb') : (seedWeight ? (seedWeight + ' lb') : 'lb');
       var rPh = isDropRow ? (dropTarget === 'AMRAP' ? 'AMRAP' : dropTarget) : (pr || (last && last.r ? last.r : 'reps'));
-      var rpe = (last && last.rpe) || '';
       // One-tap fill values: focusing an empty field drops in last session's
       // weight (and the prescribed / last reps) so the athlete confirms instead
       // of retyping. Carry-down (below) keeps later sets' fill in sync with set 1.
@@ -1240,8 +1349,13 @@
                   (wFill !== '' ? ' data-fill="' + wFill + '"' : '') +
                   (wGhost ? ' data-ghost="1"' : '') + '>' +
                 repsCellHtml +
-                '<div class="mcl-rpe' + (rpe ? ' set' : '') + '" data-rpe="' + rpe + '" ' +
-                  'title="Rate of Perceived Exertion — tap to cycle, F = to failure">' + (rpe || '–') + '</div>' +
+                // EN-7 (roadmap Phase 4 step 4): the per-row RPE chip is gone.
+                // It cycled seven values on EVERY row — six taps to reach "to
+                // failure" — and effort was recorded on 1.6% of sets. Every
+                // consumer (mc-suggest.js, mc-strain.js, mc-readiness.js) tests
+                // the SAME predicate, `rpe === 'F' || parseFloat(rpe) >= 9.5`,
+                // so six choices only ever produced two outcomes. One
+                // three-choice question on the finished exercise now, below.
                 '<button type="button" class="mcl-ck set-check" role="checkbox" aria-checked="false" ' +
                   'aria-label="Set ' + sn + '" data-sn="' + sn + '">☐</button>' +
                 clusterRowHtml +
@@ -1265,22 +1379,52 @@
         onCheck(card, exId, parseInt(ck.dataset.sn, 10), rs);
       });
     });
-    Array.prototype.forEach.call(wrap.querySelectorAll('.mcl-rpe'), function (chip) {
-      chip.addEventListener('click', function (e) {
+    // EN-7: ONE effort question, on the finished exercise. Three choices, each
+    // a real <button> at the 44px floor — the old chip was a non-semantic
+    // <div> and so unreachable by keyboard, which Volume II Phase 6 fixed for
+    // the rest-timer and set-check controls and missed here.
+    //
+    // The answer is stored on the LAST set, in the same vocabulary the log
+    // already carries, so nothing downstream changes shape: 8 and 9 sit below
+    // the 9.5 near-failure threshold every consumer tests, F is at it. Only
+    // "To failure" holds progression back, which is what near-failure means.
+    // Say WHY the row count is short, on the card the athlete is looking at.
+    // A silently shorter prescription reads as a bug, and the two reasons want
+    // different words: one is the program's plan, the other is today's choice.
+    if (plan.cut) {
+      var cutNote = document.createElement('div');
+      cutNote.className = 'mcl-cut';
+      cutNote.textContent = reducedVolume().reason === 'deload'
+        ? 'Deload week — one working set lighter'
+        : 'Lighter session — one working set fewer';
+      wrap.appendChild(cutNote);
+    }
+
+    var effortRow = document.createElement('div');
+    effortRow.className = 'mcl-effort';
+    effortRow.innerHTML =
+      '<span class="mcl-effort-q">How did that feel?</span>' +
+      '<div class="mcl-effort-opts">' +
+        EFFORT_CHOICES.map(function (c) {
+          return '<button type="button" class="mcl-effort-btn" data-rpe="' + c.rpe + '" ' +
+                 'aria-pressed="false" title="' + c.hint + '">' + c.label + '</button>';
+        }).join('') +
+      '</div>';
+    wrap.appendChild(effortRow);
+    paintEffort(card, exId);
+    Array.prototype.forEach.call(effortRow.querySelectorAll('.mcl-effort-btn'), function (btn) {
+      btn.addEventListener('click', function (e) {
         e.stopPropagation(); e.preventDefault();
-        var i = RPE_STEPS.indexOf(chip.dataset.rpe || '');
-        var next = RPE_STEPS[(i + 1) % RPE_STEPS.length];
-        chip.dataset.rpe = next;
-        chip.textContent = next || '–';
-        chip.classList.toggle('set', !!next);
-        // already-checked set: persist the tweak immediately
-        var row = chip.closest('.mcl-row');
-        var ck = row && row.querySelector('.mcl-ck');
-        if (ck && ck.classList.contains('done')) {
-          var w = row.querySelector('.mcl-w');
-          save(exId, parseInt(ck.dataset.sn, 10), w ? w.value.trim() : '', clusterRVal(row), next);
-          updateHist(card, exId);
-        }
+        setActiveCard(card);
+        // Tapping the selected answer again clears it — the athlete can undo a
+        // mis-tap without a fourth "none of these" button taking up a row.
+        var cur = storedEffort(exId, total);
+        var next = (cur === btn.dataset.rpe) ? '' : btn.dataset.rpe;
+        var lastRow = card.querySelector('#mclr-' + cid + '-' + total);
+        var w = lastRow && lastRow.querySelector('.mcl-w');
+        save(exId, total, w ? w.value.trim() : '', lastRow ? clusterRVal(lastRow) : '', next);
+        paintEffort(card, exId);
+        updateHist(card, exId);
       });
     });
 

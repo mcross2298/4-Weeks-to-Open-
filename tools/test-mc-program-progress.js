@@ -317,5 +317,43 @@ const SS = {
   eq('11w ...and has no phase for any week', flat.P.phaseForWeek(frec, 3), null);
 }
 
+// ── 12. deload weeks (roadmap Phase 4 step 3, audit PG-2) ───────────────────
+{
+  const { P } = load({});
+  const withDeload = Object.assign({}, SS, { deloadWeeks: [6] });
+  const rec = P.get('ss', withDeload);
+
+  eq('12a the declared deload week is carried onto the record', rec.deloadWeeks.join(), '6');
+  ok('12b and reads back as a deload', P.isDeloadWeek(rec, 6));
+  ok('12c an ordinary week does not', !P.isDeloadWeek(rec, 5));
+  ok('12d nor does week 1', !P.isDeloadWeek(rec, 1));
+
+  // A program that declares none must never have one INVENTED for it — the
+  // F1b lesson: normalizing an absent schedule once rendered a 7-day 2-rest
+  // week as a real prescription.
+  const plain = P.get('ss', SS);
+  eq('12e a program with no declared deload has none', plain.deloadWeeks.length, 0);
+  ok('12f ...and no week reads as one', !P.isDeloadWeek(plain, 6));
+
+  // Out-of-range entries are dropped rather than answered for.
+  const silly = P.get('ss', Object.assign({}, SS, { deloadWeeks: [0, 6, 99] }));
+  eq('12g out-of-range deload weeks are dropped', silly.deloadWeeks.join(), '6');
+
+  // AUTHORED, like phases: a stored record must not be able to contradict the
+  // program's own prescription, so the list is re-derived on every read.
+  const stored = load({ 'mc_program_progress_v1': JSON.stringify({ ss: { deloadWeeks: [2], completed: {} } }) });
+  const back = stored.P.get('ss', withDeload);
+  eq('12h a stored list never overrides the definition', back.deloadWeeks.join(), '6');
+  ok('12i ...so the athlete cannot move the program\'s deload', !stored.P.isDeloadWeek(back, 2));
+
+  // Multi-phase blocks answer the same way — the list is weeks of the BLOCK.
+  const mm = P.get('mm', {
+    weeks: 15, perWeek: 7, rest: [5], deloadWeeks: [15],
+    order: ['p1a'], phases: [{ weeks: 15, order: ['p1a'] }]
+  });
+  ok('12j the last week of a 15-week block is its deload', P.isDeloadWeek(mm, 15));
+  ok('12k ...and week 10, the end of a phase, is not', !P.isDeloadWeek(mm, 10));
+}
+
 console.log((fail ? '✗' : '✓') + ' mc-program-progress: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

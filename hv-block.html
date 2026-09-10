@@ -748,6 +748,12 @@ if(typeof updateProgress!=="undefined") updateProgress();
 <script src="mc-summary.js"></script>
 <script src="mc-muscle-map.js"></script>
 <script src="mc-readiness.js"></script>
+<!-- Roadmap Phase 4 step 3: the deload week is read off the program's own
+     schedule record, so mc-setlog.js needs mc-pm-data.js LOADED, not
+     injected asynchronously later. Without this tag the record arrived
+     after the first cards were built and a deload week silently
+     prescribed full volume. -->
+<script src="mc-pm-data.js"></script>
 <script src="mc-setlog.js"></script>
 <script src="mc-session.js"></script>
 <script src="mc-classify.js"></script>
