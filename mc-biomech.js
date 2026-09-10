@@ -44,17 +44,16 @@
     'Cable': 0.90, 'Barbell': 1.00, 'Dumbbell': 0.82, 'Bodyweight': 1.00
   };
 
-  // ---- equipment inference from the exercise name -------------------------
+  // ---- equipment ----------------------------------------------------------
+  // Delegated to mc-classify.js, the ONE resolver (audit P2-13/P2-14). The
+  // copy that used to live here did not know "BW " meant bodyweight, so
+  // "BW Calf Raises", "BW Walking Lunges" and "BW Glute Bridge" all fell
+  // through to the Barbell default — a bodyweight movement offered as a
+  // barbell substitute, and given a barbell's leverage factor in the weight
+  // conversion below.
   function equipOf(name) {
-    var s = ' ' + String(name || '').toLowerCase() + ' ';
-    if (/hammer strength|plate.?loaded|hack squat|t-?bar|pendulum|prowler|sled/.test(s)) return 'Plate-Loaded';
-    if (/smith/.test(s)) return 'Smith';
-    if (/\bcable\b|pulldown|pull-?down|pushdown|push-?down|rope |lat pull|face pull|cable cross/.test(s)) return 'Cable';
-    if (/\bmachine\b|pec deck|leg press|leg extension|leg curl|chest press machine|pec-deck|abductor|adductor machine|seated calf|assisted/.test(s)) return 'Machine';
-    if (/barbell|\bbb\b|landmine|ez-?bar|ez bar|trap bar|deadlift|^squat| squat\b/.test(s)) return 'Barbell';
-    if (/dumbbell|\bdb\b/.test(s)) return 'Dumbbell';
-    if (/push-?up|pull-?up|chin-?up|\bdip\b|bodyweight|plank|sit-?up|hanging|nordic/.test(s)) return 'Bodyweight';
-    return 'Barbell'; // safe default — most named lifts are barbell movements
+    var C = (typeof window !== 'undefined' && window.MC_CLASSIFY) || null;
+    return C ? C.equipCat(name) : 'Barbell';
   }
 
   // ---- movement-pattern inference ----------------------------------------
@@ -66,26 +65,48 @@
     // pulls
     if (/pulldown|pull-?down|pull-?up|chin-?up|lat pull/.test(s)) return 'vertical-pull';
     if (/face pull|rear delt|reverse fly|reverse pec|rear-delt/.test(s)) return 'rear-delt';
-    if (/\brow\b|rows\b|row\b/.test(s)) return 'horizontal-pull';
+    // shrug BEFORE the row rule: `row` matched first, so the `upright row`
+    // half of this branch was unreachable and an upright row was filed as a
+    // horizontal pull — a different movement at a different station, which is
+    // what alternatives() then offered as a substitute for it.
     if (/shrug|upright row/.test(s)) return 'shrug';
+    if (/\brows?\b/.test(s)) return 'horizontal-pull';
     // presses / push
     if (/lateral|side raise|lat raise|side lateral/.test(s)) return 'lateral-raise';
-    if (/overhead|shoulder press|military|ohp|arnold press/.test(s)) return 'vertical-push';
+    // `overhead` alone claimed every overhead TRICEPS movement for the
+    // shoulder press. "Overhead Dumbbell Extension" and "Overhead Rope
+    // Extension" are elbow extension performed overhead, not a press.
+    if (/overhead|shoulder press|military|ohp|arnold press/.test(s) &&
+        !/extension|skull|kickback|tricep/.test(s)) return 'vertical-push';
     if (/incline/.test(s) && /press|bench/.test(s)) return 'incline-push';
     if (/decline/.test(s) && /press|bench/.test(s)) return 'horizontal-push';
     if (/(bench|chest) press|chest press|\bpress\b/.test(s) && (m.indexOf('chest') >= 0 || /bench/.test(s))) return 'horizontal-push';
     if (/push-?up/.test(s)) return 'horizontal-push';
-    if (/\bfly\b|flye|pec deck|pec-deck|cable cross|crossover/.test(s)) return 'chest-fly';
+    // `\bfly\b` missed the plural, and "Flies" is how this app's own programs
+    // spell it — so "Slight Incline DB Flies" had pattern 'other' and no
+    // substitute could ever match it.
+    if (/\bfl(?:y|ies)\b|flye|pec deck|pec-deck|cable cross|crossover/.test(s)) return 'chest-fly';
     // arms
-    if (/curl/.test(s) && (m.indexOf('bicep') >= 0 || /bicep|preacher|hammer curl|spider/.test(s)) && !/leg curl/.test(s)) return 'elbow-flexion';
-    if (/pushdown|push-?down|tricep|skull|overhead extension|kickback|\bdip\b|close grip|close-grip|jm press/.test(s)) return 'elbow-extension';
+    // A CURL is elbow flexion whatever grip it uses. The old rule demanded a
+    // bicep keyword as well, so "Barbell Curls (close grip)" and "Close Grip
+    // Barbell Curl" fell through to the branch below — where `close grip`
+    // filed them as TRICEPS work.
+    if (/curl/.test(s) && !/leg curl|ham curl|hamstring curl|nordic|glute-?ham/.test(s)) return 'elbow-flexion';
+    // `close grip` on its own is a grip modifier, not a triceps movement:
+    // a close-grip BENCH is, a close-grip row is not. It is named explicitly
+    // now instead of matching any lift that happens to carry the words.
+    if (/pushdown|push-?down|tricep|skull|overhead[a-z\s-]*extension|kickback|\bdip\b|close.?grip bench|jm press/.test(s)) return 'elbow-extension';
     // legs
     if (/leg curl|ham curl|hamstring curl|nordic|glute-?ham|ghr/.test(s)) return 'knee-flexion';
     if (/leg extension|knee extension/.test(s)) return 'knee-extension';
     if (/deadlift|rdl|romanian|good morning|hip thrust|hip-?thrust|back extension|hyperextension|pull-?through|kettlebell swing/.test(s)) return 'hip-hinge';
     if (/lunge|split squat|bulgarian|step-?up|step up/.test(s)) return 'lunge';
-    if (/squat|leg press|hack/.test(s)) return 'squat';
+    // calf BEFORE squat: a "Leg Press Calf Raise" and a "Smith Machine Squat
+    // Calf Raise" are calf work performed at that station, and the squat rule
+    // claimed them — so the substitute picker searched for squats to replace a
+    // calf raise with, and found nothing that shared its muscle.
     if (/calf|calve|toe press|tibialis/.test(s)) return 'calf';
+    if (/squat|leg press|hack/.test(s)) return 'squat';
     if (/abduct/.test(s)) return 'hip-abduction';
     if (/adduct/.test(s)) return 'hip-adduction';
     // core
@@ -100,7 +121,9 @@
   function muscleOf(name, pattern) {
     var s = ' ' + String(name || '').toLowerCase() + ' ';
     if (/bicep|preacher|spider|hammer curl/.test(s)) return 'Biceps';
-    if (/tricep|pushdown|skull|kickback|close grip|\bdip\b/.test(s)) return 'Triceps';
+    // `close grip` used to sit in this list and pulled every close-grip curl
+    // and close-grip row into Triceps.
+    if (/tricep|pushdown|skull|kickback|overhead[a-z\s-]*extension|close.?grip bench|\bdip\b/.test(s)) return 'Triceps';
     if (/calf|calve|tibialis/.test(s)) return 'Calves';
     // posterior chain & legs BEFORE the broad "Back" keyword check, so e.g.
     // "Romanian Deadlift" -> Hamstrings and "Smith Machine Squat" -> Quads
@@ -109,8 +132,20 @@
     if (/hip thrust|hip-?thrust|\bglute/.test(s)) return 'Glutes';
     if (/squat|leg press|leg extension|knee extension|\blunge|hack|split squat|step-?up|goblet/.test(s)) return 'Quads';
     if (/lateral|side raise|delt|shoulder|overhead|military|arnold|upright row/.test(s)) return 'Shoulders';
-    if (/chest|bench|pec|fly|push-?up/.test(s)) return 'Chest';
-    if (/row|pulldown|pull-?up|chin|lat |back ext|deadlift|shrug/.test(s)) return 'Back';
+    // `fly` missed the plural, and "Flies" is how this app's own programs
+    // spell it: "Slight Incline DB Flies" came back Other/other, so it had no
+    // substitutes at all.
+    if (/chest|bench|pec|fl(?:y|ies)|flye|push-?up/.test(s)) return 'Chest';
+    // `lat ` — space-suffixed, no word boundary — matches inside "flat".
+    // "Flat Press", "Flat Machine Press" and "Flat DB Press" were classified
+    // as BACK. It only escaped notice on "Flat Bench Press" because the chest
+    // rule above catches that one first.
+    // `chin`, unbounded, matches the substring inside ma-CHIN-e. That is how
+    // "Flat Machine Press" reached Back even after the `lat ` repair above,
+    // and it is the SECOND time this exact pattern has been found in this
+    // repository — flagship-immersive H4b fixed it in mc-muscle-map.js and
+    // corrected 28 catalog classifications; nobody looked here.
+    if (/row|pulldown|pull-?up|\bchins?\b|chin-?up|\blats?\b|back ext|deadlift|shrug/.test(s)) return 'Back';
     if (/crunch|sit-?up|plank|ab |core|woodchop|pallof/.test(s)) return 'Core';
     var byPat = {
       'horizontal-push': 'Chest', 'incline-push': 'Chest', 'chest-fly': 'Chest',
@@ -143,6 +178,17 @@
   }
 
   function classify(name, muscle) {
+    // An explicitly supplied muscle wins (the pool passes the catalog's own
+    // value when it builds). Otherwise consult the CATALOG before guessing
+    // from the name — same authority mc-muscle-map.js now reads, so the two
+    // taxonomies are two projections of one record rather than two
+    // independent opinions (audit P2-14). The keyword rules below are the
+    // fallback for a name the catalog does not carry, which is most workout
+    // cards, since programs write their own variant wording.
+    if (!muscle) {
+      var C = (typeof window !== 'undefined' && window.MC_CLASSIFY) || null;
+      if (C) muscle = C.catalogMuscle(name) || '';
+    }
     var pattern = patternOf(name, muscle);
     var mus = muscle ? normMuscle(muscle) : muscleOf(name, pattern);
     return { pattern: pattern, equipment: equipOf(name), muscle: mus };

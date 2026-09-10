@@ -53,11 +53,25 @@
   }
   function norm(s) { return String(s == null ? '' : s).trim().toLowerCase(); }
 
-  function catalogEquip(name) {
+  // The catalog record for a name, or null. This is the shared authority both
+  // muscle taxonomies project from (audit P2-14): mc-muscle-map.js needs the
+  // coarse group an athlete reads on the Stats hub, mc-biomech.js needs the
+  // fine bucket that decides whether one lift can substitute for another, and
+  // before this they each guessed independently from the name. One record,
+  // two projections, and the regexes demoted to a fallback for names the
+  // catalog does not carry.
+  function entry(name) {
     var map = catalog();
-    if (!map) return '';
-    var hit = map[norm(name)];
+    if (!map) return null;
+    return map[norm(name)] || null;
+  }
+  function catalogEquip(name) {
+    var hit = entry(name);
     return (hit && hit.equipment) || '';
+  }
+  function catalogMuscle(name) {
+    var hit = entry(name);
+    return (hit && hit.muscle) || '';
   }
 
   // ---- keyword fallback ----------------------------------------------------
@@ -105,7 +119,9 @@
   var API = {
     EQUIP: EQUIP,
     equipCat: equipCat,
+    entry: entry,
     catalogEquip: catalogEquip,
+    catalogMuscle: catalogMuscle,
     keywordEquip: keywordEquip,
     usesBarbell: usesBarbell,
     isLeverageAssisted: isLeverageAssisted
