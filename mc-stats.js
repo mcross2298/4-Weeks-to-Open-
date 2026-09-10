@@ -9,6 +9,19 @@
      • PR timeline           sets flagged pr:true by mc-finish.js
    ========================================================================== */
 (function () {
+
+  // ---- cluster reps: one implementation, in mc-log-read.js (audit P2-08) ---
+  // Resolved LAZILY, never captured at parse time: <script> order across ~140
+  // pages does not guarantee mc-log-read.js has run when this file parses.
+  // These are thin delegators, not a second copy of the arithmetic — the same
+  // shape this file already uses for logs()/setsOf(), and the reason
+  // check-single-impl.js is not the right tool for them.
+  function _mcLog() {
+    if (typeof window !== 'undefined' && window.MC_LOG) return window.MC_LOG;
+    try { return require('./mc-log-read.js'); } catch (e) { return null; }
+  }
+  function repsTotal(v) { var L = _mcLog(); return L ? L.repsTotal(v) : 0; }
+  function repsTop(v)   { var L = _mcLog(); return L ? L.repsTop(v) : 0; }
   var ACT_KEY = 'mc_activity';
   var DAY = 24 * 3600 * 1000;
 
@@ -211,7 +224,8 @@
       var m = byKey[d.getFullYear() + '-' + d.getMonth()];
       if (!m) return;
       setsOf(e).forEach(function (s) {
-        var t = (parseFloat(s.weight) || 0) * (parseInt(s.reps, 10) || 0);
+        // P2-08: "5+5+6" is a cluster set, not 5 reps — see mc-log-read.js.
+        var t = (parseFloat(s.weight) || 0) * repsTotal(s.reps);
         if (t) { m.value += t; any = true; }
       });
     });

@@ -15,6 +15,19 @@
    ========================================================================== */
 (function () {
 
+  // ---- cluster reps: one implementation, in mc-log-read.js (audit P2-08) ---
+  // Resolved LAZILY, never captured at parse time: <script> order across ~140
+  // pages does not guarantee mc-log-read.js has run when this file parses.
+  // These are thin delegators, not a second copy of the arithmetic — the same
+  // shape this file already uses for logs()/setsOf(), and the reason
+  // check-single-impl.js is not the right tool for them.
+  function _mcLog() {
+    if (typeof window !== 'undefined' && window.MC_LOG) return window.MC_LOG;
+    try { return require('./mc-log-read.js'); } catch (e) { return null; }
+  }
+  function repsTotal(v) { var L = _mcLog(); return L ? L.repsTotal(v) : 0; }
+  function repsTop(v)   { var L = _mcLog(); return L ? L.repsTop(v) : 0; }
+
   // FIX-04 (audit L-03): `(e.sets || [])` guards a MISSING set list and
   // nothing else — an object where an array belongs throws
   // `.forEach is not a function`, and a null member throws one level in.
@@ -49,9 +62,13 @@
       var best = null, reps = 0;
       setsOf(e).forEach(function (s) {
         if (norm(s.name) !== key && norm(s.name).indexOf(key) !== 0) return;
-        var w = parseFloat(s.weight) || 0, r = parseInt(s.reps, 10) || 0;
+        // P2-08: the two readings a cluster set needs. Total reps is the
+        // VOLUME answer for the "Total reps" series; the e1RM below is a
+        // STRENGTH claim, and Epley off a rested 5+5+6 as though it were one
+        // 16-rep set would invent a max the athlete never lifted.
+        var w = parseFloat(s.weight) || 0, r = repsTotal(s.reps);
         reps += r;
-        if (!best || w > best.w) best = { w: w, r: r };
+        if (!best || w > best.w) best = { w: w, r: repsTop(s.reps) };
       });
       if (!best) return;
       var d = new Date(e.date || 0);

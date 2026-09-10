@@ -13,6 +13,19 @@
    Rest cues between heavy sets come from mc-timer.js (3 min suggested).
    ========================================================================== */
 (function () {
+
+  // ---- cluster reps: one implementation, in mc-log-read.js (audit P2-08) ---
+  // Resolved LAZILY, never captured at parse time: <script> order across ~140
+  // pages does not guarantee mc-log-read.js has run when this file parses.
+  // These are thin delegators, not a second copy of the arithmetic — the same
+  // shape this file already uses for logs()/setsOf(), and the reason
+  // check-single-impl.js is not the right tool for them.
+  function _mcLog() {
+    if (typeof window !== 'undefined' && window.MC_LOG) return window.MC_LOG;
+    try { return require('./mc-log-read.js'); } catch (e) { return null; }
+  }
+  function repsTotal(v) { var L = _mcLog(); return L ? L.repsTotal(v) : 0; }
+  function repsTop(v)   { var L = _mcLog(); return L ? L.repsTop(v) : 0; }
   var MAX_KEY = 'mc_max_v1';
   var BAR = 45;
 
@@ -100,7 +113,9 @@
     var by = {};
     logs().forEach(function (e) {
       setsOf(e).forEach(function (s) {
-        var w = parseFloat(s.weight), r = parseInt(s.reps, 10);
+        // P2-08: the TOP mini-set, not the sum. A cluster is rested mid-set,
+        // so an Epley estimate off its total reps would overstate the max.
+        var w = parseFloat(s.weight), r = repsTop(s.reps);
         // A negative weight used to yield a negative estimated max, and
         // negative reps an estimate BELOW the working weight (audit L-05).
         if (!isFinite(w) || w <= 0) return;

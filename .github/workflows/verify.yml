@@ -119,6 +119,17 @@ jobs:
           node tools/test-mc-setlog-plan.js
           node tools/check-set-schemes.js
 
+      - name: Cluster-set reps are summed, not truncated (roadmap Phase 2.3)
+        # mc-setlog.js stores a cluster set as "5+5+6", one value per mini-set.
+        # Seven modules ran parseInt over it and read 5, so tonnage, strain and
+        # weekly volume counted a third of the work — and the progression
+        # classifier judged the set short every time, which meant a cluster
+        # lift could never progress. 48 cluster prescriptions are authored
+        # here. Two readers, because the right answer differs: repsTotal for
+        # volume, repsTop for an Epley estimate that must not treat a rested
+        # cluster as one long straight set.
+        run: node tools/test-mc-cluster-reps.js
+
       - name: PMC week-3/4 intensifier rotation (roadmap Phase 2.5)
         # The rotation that builds weeks 3 and 4 of Project Muscle Confusion
         # used to return ONE replacement badge, so the most common pairing in

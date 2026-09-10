@@ -2,6 +2,19 @@
    Contracts kept: window._FW, mc_workout_log_v1 entry shape. */
 /* ── FINISH-WORKOUT MODULE ── */
 (function(){
+
+  // ---- cluster reps: one implementation, in mc-log-read.js (audit P2-08) ---
+  // Resolved LAZILY, never captured at parse time: <script> order across ~140
+  // pages does not guarantee mc-log-read.js has run when this file parses.
+  // These are thin delegators, not a second copy of the arithmetic — the same
+  // shape this file already uses for logs()/setsOf(), and the reason
+  // check-single-impl.js is not the right tool for them.
+  function _mcLog() {
+    if (typeof window !== 'undefined' && window.MC_LOG) return window.MC_LOG;
+    try { return require('./mc-log-read.js'); } catch (e) { return null; }
+  }
+  function repsTotal(v) { var L = _mcLog(); return L ? L.repsTotal(v) : 0; }
+  function repsTop(v)   { var L = _mcLog(); return L ? L.repsTop(v) : 0; }
   var WL_KEY='mc_workout_log_v1';
   var SL_KEY='mc_setlog_v1';
   var SS_KEY='mc_session_summary_v1';
@@ -141,7 +154,9 @@
   function sessionTonnage(sets){
     var t=0;
     (sets||[]).forEach(function(s){
-      var w=parseFloat(s.weight)||0, r=parseInt(s.reps,10)||0;
+      // P2-08: a cluster set stores one value per mini-set ("5+5+6") and
+      // parseInt stops at the first '+', so tonnage counted a third of it.
+      var w=parseFloat(s.weight)||0, r=repsTotal(s.reps);
       t+=w*r;
     });
     return t;

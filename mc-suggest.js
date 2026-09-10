@@ -77,17 +77,55 @@
     return 'Barbell';
   }
 
+  // The prescribed top rep target for the scheme ("4x12" -> 12, "12,10,8,8" ->
+  // 8, the last one). 0 means THERE IS NO TARGET, and every caller below
+  // already treats that as "nothing to judge" rather than "target zero".
+  //
+  // Two families used to come back with a confident number that the program
+  // never prescribed, and both then drove the "did every set hit the target"
+  // comparison (audit P2-09, P2-12):
+  //
+  //   open-ended work   "4×AMRAP", "3×failure" — the SET COUNT was read as the
+  //                     rep target. Fixed in mc-setlog.js's loneRep(), so this
+  //                     function now gets '' and correctly answers 0.
+  //   unstated count    "100-200 reps", "AMRAP in 2 min", "21s" — no set count
+  //                     anywhere, so the row list is mc-setlog.js's 3-row
+  //                     DEFAULT and the target is whichever number happened to
+  //                     be in the text. A finisher written as a rep range is
+  //                     not a progression input, so it is refused outright.
+  //
+  // Note what is deliberately NOT refused: "4×10-12" states its sets and its
+  // floor, so 10 is a real target to beat. Only a range with no set count at
+  // all — the finisher shape — is rejected.
   function topRep(setsStr) {
-    // prescribed top reps for the scheme ("4x12" → 12, "12,10,8,8" → 8 (last))
     if (!setsStr) return 0;
     var u = window.MCSetlogUtil;
     if (u && u.repFor) {
-      var n = u.setCount ? u.setCount(setsStr) : 3;
-      var last = parseInt(u.repFor(setsStr, n - 1), 10);
+      var work = u.stripDrop ? u.stripDrop(setsStr) : setsStr;
+      if (u.statesSetCount && !u.statesSetCount(work)) return 0;
+      var n = u.setCount ? u.setCount(work) : 3;
+      var last = parseInt(u.repFor(work, n - 1), 10);
       return isNaN(last) ? 0 : last;
     }
     var m = setsStr.match(/[x×]\s*(\d+)/i);
     return m ? parseInt(m[1], 10) : 0;
+  }
+
+  // Reps actually performed on one logged set. A CLUSTER set stores one value
+  // per mini-set joined with '+' ("5+5+6" — mc-setlog.js's clusterRVal), and
+  // parseInt stops at the first '+' and reads 5. Against any target above that
+  // the set is short every single time, so a cluster exercise is judged a
+  // failed session forever and can never progress — audit P2-08, 48 distinct
+  // cluster prescriptions in this tree. mc-log-read.js owns the reader; this
+  // is a call, not a fourth copy of the arithmetic.
+  function repsOf(v) {
+    var L = (typeof window !== 'undefined') && window.MC_LOG;
+    if (L && L.repsTotal) return L.repsLogged(v) ? L.repsTotal(v) : NaN;
+    var parts = String(v == null ? '' : v).split('+')
+      .map(function (x) { return parseInt(x, 10); })
+      .filter(function (x) { return isFinite(x); });
+    if (!parts.length) return NaN;
+    return parts.reduce(function (a, b) { return a + b; }, 0);
   }
 
   function historyKey(exId) {
@@ -125,10 +163,10 @@
     var target = topRep(setsStr);
     if (target > 0) {
       var allHit = sets.every(function (s) {
-        var r = parseInt(s.r, 10);
+        var r = repsOf(s.r);
         return !s.w || isNaN(r) || r >= target;   // unlogged reps don't block
       });
-      var anyLogged = sets.some(function (s) { return !isNaN(parseInt(s.r, 10)); });
+      var anyLogged = sets.some(function (s) { return !isNaN(repsOf(s.r)); });
       if (anyLogged && !allHit) return { status: 'repeat', w: W };
       if (anyLogged && allHit) return { status: 'progress', w: W };
     }
@@ -296,6 +334,7 @@
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
       computeIncrement: computeIncrement, topRep: topRep, equipCat: equipCat,
+      repsOf: repsOf,
       classifySession: classifySession, detectPlateau: detectPlateau, suggestFor: suggestFor,
       writeTarget: writeTarget, deloadWeight: deloadWeight
     };

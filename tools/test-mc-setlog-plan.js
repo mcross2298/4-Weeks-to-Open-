@@ -201,5 +201,55 @@ function totalRows(scheme) {
   });
 }
 
+/* ==========================================================================
+   Phase 2.3 — open-ended work, and prescriptions that state no set count
+   (audit P2-09, P2-12). Every string quoted below is authored in this tree.
+   ========================================================================== */
+
+// P2-09: the reps sit after an N× multiplier, and when they are open-ended
+// there is no rep target at all — the multiplier is not one. Twelve authored
+// prescriptions used to ask each row for as many reps as there were sets, so
+// "3×failure" prescribed 3 reps and "5×AMRAP" prescribed 5.
+[['4×AMRAP', 4], ['3×failure', 3], ['5×AMRAP', 5], ['4× AMRAP', 4],
+ ['3xfailure each', 3], ['3×AMRAP reps', 3], ['4xfailure', 4]].forEach(c => {
+  ok('P2-09 "' + c[0] + '" renders ' + c[1] + ' rows', SL.setCount(c[0]) === c[1], 'got ' + SL.setCount(c[0]));
+  ok('P2-09 "' + c[0] + '" prescribes NO rep target',
+     String(SL.repFor(c[0], 0) || '') === '', 'got "' + SL.repFor(c[0], 0) + '"');
+});
+
+// Same defect through a different door: an open-ended prescription with a
+// number somewhere in its prose. "AMRAP in 2 min" asked for 2 reps.
+['AMRAP in 2 min', 'AMRAP (50–100 reps)', 'AMRAP (target 100–200 reps)', 'AMRAP × 3'].forEach(str => {
+  ok('P2-09 "' + str + '" prescribes NO rep target',
+     String(SL.repFor(str, 0) || '') === '', 'got "' + SL.repFor(str, 0) + '"');
+});
+
+// A trailing "sets" makes the number a set count, never a rep target.
+ok('P2-09 "10–12 each motion × 3 sets" does not prescribe 3 reps',
+   String(SL.repFor('10–12 each motion × 3 sets', 0) || '') === '',
+   'got "' + SL.repFor('10–12 each motion × 3 sets', 0) + '"');
+
+// The half that proves the fix narrowed nothing it should not have.
+[['4x10', '10'], ['4×10 / 12 per side', '10'], ['21s', '21'], ['100–200 reps', '100'],
+ ['12 + 6× Cluster at 12 reps', '12']].forEach(c => {
+  ok('"' + c[0] + '" still targets ' + c[1], String(SL.repFor(c[0], 0)) === c[1],
+     'got "' + SL.repFor(c[0], 0) + '"');
+});
+// A leg carrying real numbers still supplies the targets when the OTHER leg is
+// open-ended: the AMRAP is a second station, not this card's prescription.
+ok('"15, 12, 10 / 3× AMRAP" still targets 15 on row 1',
+   String(SL.repFor('15, 12, 10 / 3× AMRAP', 0)) === '15');
+
+// P2-12: which prescriptions declare a set count at all. When one does not,
+// the row list is this file's 3-row DEFAULT — surfaced on the logger, and
+// refused by mc-suggest.js as a progression input.
+[['4x10', true], ['12,10,8,8', true], ['3 sets', true], ['25/20/20/15/12', true],
+ ['AMRAP, AMRAP, AMRAP, AMRAP', true], ['4×AMRAP', true],
+ ['100–200 reps', false], ['AMRAP in 2 min', false], ['21s', false],
+ ['Pyramid', false], ['—', false], ['', false]].forEach(c => {
+  ok('P2-12 statesSetCount("' + c[0] + '") is ' + c[1], SL.statesSetCount(c[0]) === c[1],
+     'got ' + SL.statesSetCount(c[0]));
+});
+
 console.log(`test-mc-setlog-plan: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -11,6 +11,19 @@
    ========================================================================== */
 (function () {
 
+  // ---- cluster reps: one implementation, in mc-log-read.js (audit P2-08) ---
+  // Resolved LAZILY, never captured at parse time: <script> order across ~140
+  // pages does not guarantee mc-log-read.js has run when this file parses.
+  // These are thin delegators, not a second copy of the arithmetic — the same
+  // shape this file already uses for logs()/setsOf(), and the reason
+  // check-single-impl.js is not the right tool for them.
+  function _mcLog() {
+    if (typeof window !== 'undefined' && window.MC_LOG) return window.MC_LOG;
+    try { return require('./mc-log-read.js'); } catch (e) { return null; }
+  }
+  function repsTotal(v) { var L = _mcLog(); return L ? L.repsTotal(v) : 0; }
+  function repsTop(v)   { var L = _mcLog(); return L ? L.repsTop(v) : 0; }
+
   // FIX-04 (audit L-03): `(e.sets || [])` guards a MISSING set list and
   // nothing else — an object where an array belongs throws
   // `.forEach is not a function`, and a null member throws one level in.
@@ -67,7 +80,8 @@
       var seen = {};
       setsOf(e).forEach(function (set) {
         s.sets++;
-        var w = parseFloat(set.weight) || 0, r = parseInt(set.reps, 10) || 0;
+        // P2-08: cluster sets store "5+5+6"; parseInt counted only the first.
+        var w = parseFloat(set.weight) || 0, r = repsTotal(set.reps);
         s.tonnage += w * r;
         if (set.pr && w && (!s.topPr || w > s.topPr.w)) s.topPr = { name: set.name, w: w };
         var k = String(set.name || '').trim();
