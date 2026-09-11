@@ -318,15 +318,33 @@
   }
 
   // setlog: { "page|exId": [ {d, sets:{sn:{w,r}}}, ... ] }  (newest-first, 5 max)
-  // Merge sessions by day label d, union set numbers; keep local order, cap 5.
+  // Merge sessions by day d, union set numbers, cap 5 by real recency.
+  //
+  // FIX-06 (roadmap Phase 5.1): `d` is an ISO YYYY-MM-DD key now. This
+  // function is the one place two DEVICES meet, so it is also the one place
+  // where a device still running the old build sends a year-less "Sep 11"
+  // for a day this one already holds as "2026-09-11". Dating both sides
+  // BEFORE bucketing is what stops that becoming two sessions for one
+  // training day, each holding half the sets. The upgrade itself comes from
+  // mc-log-read.js so it is the same implementation mc-setlog.js reads
+  // through, not a second copy living in the sync layer.
+  function _mcLog() {
+    if (typeof window !== 'undefined' && window.MC_LOG) return window.MC_LOG;
+    try { return require('./mc-log-read.js'); } catch (e) { return null; }
+  }
+  function datedSessions(arr) {
+    var L = _mcLog();
+    return (L && L.normalizeSessions) ? L.normalizeSessions(arr)
+                                      : (Array.isArray(arr) ? arr : []);
+  }
   function mergeSetlog(local, remote) {
     local = local || {}; remote = remote || {};
     var out = {}, keys = {}, k;
     for (k in local) keys[k] = 1;
     for (k in remote) keys[k] = 1;
     for (k in keys) {
-      var la = Array.isArray(local[k]) ? local[k] : [];
-      var ra = Array.isArray(remote[k]) ? remote[k] : [];
+      var la = datedSessions(local[k]);
+      var ra = datedSessions(remote[k]);
       var order = [], byDay = {};
       la.concat(ra).forEach(function (s) {
         if (!s || !s.d) return;
@@ -341,15 +359,31 @@
       // merging one NEW session from the other device kept the five old ones
       // and dropped the new one. Sort by real recency first.
       //
-      // A session entry is { d: "Jan 5", sets: {…} }: a day LABEL with no year
-      // and, historically, no timestamp at all. mc-setlog.js stamps a numeric
-      // `ts` on new entries now, so this reorders only when EVERY entry in the
-      // list carries one. A mixed list keeps today's exact behaviour rather
-      // than guessing a year for the ones that don't — the condition becomes
-      // true on its own as sessions age out.
+      // EN-10 could only order a list in which EVERY entry carried the numeric
+      // `ts` mc-setlog.js had just started stamping, which a store holding any
+      // older session did not — so the common case stayed on encounter order
+      // and the cap kept dropping the wrong session. FIX-06 dates `d` itself,
+      // and datedSessions() above resolves a legacy label FROM that same `ts`
+      // when one exists, so the ordering key is now present on effectively
+      // every entry rather than only on the newest few. `ts` remains the
+      // tiebreaker: it is finer than a day, and two devices can both hold the
+      // same day. An entry whose label was unreadable keeps its encounter
+      // position rather than being sorted to an arbitrary end.
       var days = order.map(function (d) { return byDay[d]; });
-      if (days.length > 1 && days.every(function (x) { return x.ts > 0; })) {
-        days.sort(function (a, b) { return b.ts - a.ts; });   // newest first
+      // Declared HERE, not at module scope. This file's module.exports hook
+      // sits above its own `if (window.__mcSync) return;` guards and relies on
+      // function-declaration hoisting to capture the merge functions — so on
+      // the Node/vm path the guard returns before any module-level `var`
+      // INITIALISER runs, and a regex held in one is `undefined` by the time a
+      // test calls in. Phase 2.5 hit the identical trap in mc-pmc-confusion.js;
+      // the sandboxed suite caught this one on its first run too.
+      var isoDay = /^\d{4}-\d{2}-\d{2}$/;
+      var dated = days.every(function (x) { return isoDay.test(x.d); });
+      if (days.length > 1 && (dated || days.every(function (x) { return x.ts > 0; }))) {
+        days.sort(function (a, b) {
+          if (dated && a.d !== b.d) return a.d < b.d ? 1 : -1;   // newest first
+          return b.ts - a.ts;
+        });
       }
       days.forEach(function (x) { if (!x.ts) delete x.ts; }); // don't invent a field
       out[k] = days.slice(0, 5);

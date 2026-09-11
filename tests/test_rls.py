@@ -20,7 +20,9 @@ gate that fails for want of a credential gets turned off.
     SUPABASE_DB_URL=postgresql://... pytest tests/test_rls.py -q
 """
 
+import json
 import os
+import pathlib
 
 import pytest
 
@@ -200,3 +202,85 @@ def test_rls_is_enabled(service, table):
         "select relrowsecurity from pg_class where oid = %s::regclass", (f"public.{table}",)
     )
     assert service.fetchone()[0], f"row-level security is OFF on {table}"
+
+
+# ---------------------------------------------------------------------------
+# roadmap Phase 5.4 (audit L-08) — what the WORLD can read.
+#
+# Five public tables are readable with no session at all, by design: the two
+# override tables, the two published-program tables and the food lookup. The
+# audit counted 67 rows in program_overrides and asked for a one-time check
+# that none of them carries licensed program text. A one-time check rots, and
+# the reason it would is specific: `tools/build-market.py` strips licensed
+# content from the public BUILD, and a database row is not a file, so nothing
+# in that pipeline has ever looked here. An owner editing a licensed page in
+# PM mode writes its text straight into a world-readable row.
+#
+# So it is a test instead, reading the SAME manifest build-market.py reads —
+# never a second hand-typed list of programs and brand terms, which would be
+# free to disagree with the one the build enforces.
+# ---------------------------------------------------------------------------
+
+# Column lists read off the live schema, not guessed: published_exercises has
+# no "exercise" column at all (name / muscle / master / programs), and getting
+# that wrong is an error at query time rather than a quiet miss.
+WORLD_READABLE = {
+    "program_overrides": ["page_id", "orig_name", "patch"],
+    "naming_overrides": ["scope", "scope_id", "patch"],
+    "published_programs": ["id", "program"],
+    "published_exercises": ["name", "muscle", "master", "programs"],
+}
+
+_MANIFEST = json.loads(
+    (pathlib.Path(__file__).resolve().parents[1] / "content-manifest.json").read_text()
+)
+BRAND_TERMS = _MANIFEST["brand_terms"]
+LICENSED_FILES = sorted(
+    {f for group in _MANIFEST["licensed"].values() for f in group["files"]}
+)
+
+
+@pytest.mark.parametrize("table", sorted(WORLD_READABLE))
+def test_public_table_is_readable_without_a_session(anonymous, table):
+    """The premise of every case below: these really are world-readable.
+
+    If a policy change made one of them private the leak tests would pass by
+    reading nothing, which is the way this kind of suite goes quietly green.
+    """
+    anonymous.execute(f"select count(*) from public.{table}")
+    assert anonymous.fetchone()[0] >= 0
+
+
+@pytest.mark.parametrize("table,columns", sorted(WORLD_READABLE.items()))
+def test_public_rows_carry_no_brand_term(anonymous, table, columns):
+    haystack = " || ' ' || ".join(f"coalesce({c}::text,'')" for c in columns)
+    matches = []
+    for term in BRAND_TERMS:
+        anonymous.execute(
+            f"select count(*) from public.{table} where ({haystack}) ilike %s",
+            (f"%{term}%",),
+        )
+        n = anonymous.fetchone()[0]
+        if n:
+            matches.append(f"{n} row(s) matching {term!r}")
+    assert not matches, (
+        f"{table} is world-readable and carries licensed brand text: "
+        + "; ".join(matches)
+    )
+
+
+def test_no_override_row_targets_a_licensed_page(anonymous):
+    """The structural half: a row attached to a licensed PAGE leaks that
+
+    program's prescription whatever words it happens to use.
+    """
+    anonymous.execute(
+        "select page_id, count(*) from public.program_overrides "
+        "where page_id = any(%s) group by page_id",
+        (LICENSED_FILES,),
+    )
+    rows = anonymous.fetchall()
+    assert not rows, (
+        "program_overrides is world-readable and holds edits to licensed pages: "
+        + ", ".join(f"{p} ({n})" for p, n in rows)
+    )

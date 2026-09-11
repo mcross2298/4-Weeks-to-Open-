@@ -732,6 +732,40 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
    discard reads as the default action instead of Log workout. */
 #fwModalBtns.fw-emph .fw-cancel,#fwRecapBtns.fw-emph .fw-cancel{flex:2;background:#FFFFFF;color:#000000;}
 #fwModalBtns.fw-emph .fw-confirm,#fwRecapBtns.fw-emph .fw-confirm{flex:1;background:var(--ink-4);color:#fff;}
+/* ---- roadmap Phase 5.3 / manual scenario M7: a full store, visibly ------
+   Every localStorage write in this app is wrapped in a catch. When the store
+   is full that catch made the failure INVISIBLE: the checkbox ticked, the
+   count went up, the screen said the set was logged, and nothing was written.
+   Phase 0 added a warning on the set-log path and it has never once been
+   seen, because the function it called (MC_TOAST) is defined nowhere in the
+   tree and the `if (window.MC_TOAST)` guard swallowed it — the same shape as
+   the #pushChip element Phase 4.5 found, and the reason this one is a plain
+   element built by mc-setlog.js rather than a call into something else.
+
+   Top-pinned rather than a toast: a toast that fades is exactly wrong for a
+   message the athlete has to act on, and they are mid-set and not looking at
+   the screen when it fires. Sits at the sw-update tier, under --z-modal, so
+   a dialog still covers it. */
+.mc-quota{position:fixed;top:0;left:0;right:0;z-index:var(--z-sw-update);
+  display:flex;align-items:flex-start;gap:10px;
+  padding:12px 16px 14px;
+  background:var(--ink-3);border-bottom:1px solid var(--danger);
+  box-shadow:var(--elev-1);}
+.mc-quota-body{flex:1 1 auto;min-width:0;}
+.mc-quota-title{font-size:var(--fs-sm);font-weight:800;color:var(--danger);
+  letter-spacing:0.02em;}
+.mc-quota-msg{font-size:var(--fs-xs);font-weight:400;color:var(--text);
+  line-height:1.5;margin-top:3px;}
+.mc-quota-msg a{color:var(--accent);}
+/* 44px floor, the same min-height pattern .back-link uses (W-I2). A dismiss
+   that is the only way OUT of a fixed banner is exactly the control the
+   journey gate keeps finding under the floor. */
+.mc-quota-x{flex:0 0 auto;min-width:44px;min-height:44px;margin:-6px -8px -6px 0;
+  display:flex;align-items:center;justify-content:center;
+  appearance:none;background:none;border:0;cursor:pointer;
+  color:var(--muted);font-size:var(--fs-lg);font-weight:700;border-radius:var(--r-sm);}
+.mc-quota-x:active{transform:scale(0.95);}
+
 .fw-auto-banner{position:fixed;top:0;left:0;right:0;background:rgba(52,211,153,0.12);border-bottom:1px solid rgba(52,211,153,0.3);padding:12px 16px;text-align:center;font-size:var(--fs-sm);font-weight:800;color:var(--success);z-index:var(--z-banner);display:none;letter-spacing:0.02em;cursor:pointer;}
 .fw-auto-banner.show{display:block;}
 
@@ -1209,6 +1243,7 @@ html[data-theme="light"] #fwModalBtns.fw-emph .fw-cancel,html[data-theme="light"
   /* Fixed top furniture */
   .prog-bar-wrap{top:env(safe-area-inset-top);}
   .fw-auto-banner{padding-top:calc(12px + env(safe-area-inset-top));}
+  .mc-quota{padding-top:calc(12px + env(safe-area-inset-top));}
 }
 /* Fixed bottom furniture that isn't already inset. The floating rest timer is
    lifted clear of the nav when one is present (mc-nav.css), so only the

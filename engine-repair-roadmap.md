@@ -826,6 +826,105 @@ deletion outright), and add the missing delete policy on `daily_health`.
    (`L-08`).
 5. **Wire the new gates into CI** — all five suites into `verify.yml`.
 
+> **Phase 5 shipped (2026-09-11) — all five steps.** Three decisions were taken
+> with the owner up front. Two of the five steps needed no code at all, and
+> finding that out first is what kept the phase small.
+>
+> **Step 5 was already done.** All five Phase 0 suites have been in
+> `verify.yml` since Phase 0 (lines 216, 234, 399, 407, 415), the pytest job
+> already skipping behind its own secret. What this step actually added is the
+> ONE gate Phase 5 itself introduces, `tools/test-mc-day-key.js`.
+>
+> **Step 4 measured clean, and then became a test anyway.** Five tables are
+> readable with no session at all; `program_overrides` holds the audit's 67
+> rows across six page ids, **none of them a licensed page**, and a brand-term
+> scan of both override tables over all ten terms returned **zero**. A
+> one-time confirmation would rot, and the reason it would is specific:
+> `build-market.py` strips licensed content from FILES, and a database row is
+> not a file, so nothing in that pipeline has ever looked here — an owner
+> editing a licensed page in PM mode writes its text straight into a
+> world-readable row. `tests/test_rls.py` now reads `content-manifest.json`
+> directly, so the terms and pages it checks are the same list the build
+> enforces rather than a second copy free to disagree. Both predicates were
+> run against a planted row and fire; against the real data they read zero.
+>
+> **`5.1` — the day key carries a year.** `mc_setlog_v1` stamped every session
+> with `toLocaleDateString('en-US', {month:'short', day:'numeric'})` — `Sep 11`,
+> a display LABEL used as a primary key. It collides with itself annually, it
+> is locale- and timezone-shaped, and it **cannot be ordered**, which is why
+> `EN-10` had to patch `mergeSetlog`'s five-session cap with a separate numeric
+> `ts` and could only reorder a list in which every entry carried one — a store
+> holding any older session did not, so the common case stayed on encounter
+> order and the cap kept dropping the wrong session.
+>
+> `mc-log-read.js` owns the dated key and the upgrade, because it is the one
+> module both the browser and the `vm`-sandboxed suites can reach. A legacy
+> label is dated from its own `ts` when EN-10 stamped one and otherwise from
+> the **most recent past occurrence**; one it cannot read is returned
+> **untouched**, never replaced with a guess. `Feb 29` walks back to a year in
+> which that date exists rather than rolling to Mar 1.
+>
+> **Migrating in the READ path is the decision that kept this small.** `st()`
+> hands every caller an already-dated store, so `mc-setlog.js`'s eight
+> comparison sites did not change at all and the store on disk converges on the
+> first save — no one-shot migration to sequence, and a legacy entry arriving
+> later from sync is upgraded on the next read rather than slipping past a
+> migration that already ran.
+>
+> **Four modules read that store through their own private copy of the read**,
+> and every one had to be dated too: `mc-suggest.js`, `mc-finish.js` (three
+> sites), `mc-live-tracker.js`, and `mergeSetlog` itself. That was verified,
+> not assumed: with the normaliser neutered on a real page — dated "today",
+> legacy store — a real `_FW.confirm()` banked a finished workout containing
+> **zero sets**, and two with it. Changing `dayStamp()` alone would have
+> shipped exactly that.
+>
+> **A `var` at module scope is `undefined` on the Node path, and the sandboxed
+> suite caught it on its first run.** `mc-sync.js`'s `module.exports` hook sits
+> above its own `if (window.__mcSync) return;` guards and relies on
+> function-declaration hoisting; the guard returns before any module-level
+> `var` INITIALISER runs, so a regex held in one threw the moment a test called
+> in. Phase 2.5 hit the identical trap in `mc-pmc-confusion.js`. A second gap
+> was closed in the same file: the merge suite's sandbox has no `require`, so
+> `mergeSetlog`'s guard would have resolved to null and the tests would have
+> exercised the **un-normalised** path while reporting a pass — it now loads
+> the real `mc-log-read.js` into the same context, as a page does.
+>
+> **A fixture that was always nonsense.** The EN-10 cases used `ts: 1000..9000`
+> — five seconds past the epoch — harmless while `ts` was only ever compared
+> against another `ts`, and wrong the moment a legacy label could be dated from
+> it: all five sessions collapsed onto 1 Jan 1970 and unioned into one. They
+> carry real stamps now, and the "a mixed list keeps encounter order" assertion
+> is **replaced** rather than repaired, because that behaviour is precisely
+> what FIX-06 removes.
+>
+> **`5.2` — the ceilings, only once they are real.** 200 finished workouts and
+> 5 sessions per exercise are both hard bounds that nothing ever stated. The
+> history page names the first at 200, and the exercise progress sheet names
+> whichever bounds it — silent at 199 logs and 4 sessions, verified at both
+> sides of both thresholds. The per-exercise depth is keyed through
+> `MCSetlogUtil.exIdOf`/`histKey`, never by re-slugging the name, and is simply
+> not claimed on a page with no cards (`stats.html` opens the same sheet).
+>
+> **`5.3` — Phase 0's warning had never once been shown.** Phase 0 left a
+> stopgap on the set-log write that called `MC_TOAST` behind an
+> `if (window.MC_TOAST)` guard. **`MC_TOAST` is defined nowhere in the tree**,
+> so the guard swallowed it — the same shape as the `#pushChip` element Phase
+> 4.5 found. The banner builds its own element and depends on nothing.
+> Verified by filling localStorage until the browser really refused: it
+> renders, carries `role="alert"`, its dismiss measures exactly 44×44 at both
+> 390 and 320, nothing overflows sideways, and dismissing removes it.
+> `MCSetlogUtil.writeStore()` is published and the workout-log and in-progress
+> session writes route through it.
+>
+> **What that measurement corrected about M7 itself.** With storage genuinely
+> full, the set-log write **still landed** — replacing an existing key frees
+> its old bytes first, so a small delta write fits. The real exposure is
+> narrower than "a full device loses every set": it needs a write that GROWS
+> past the remaining headroom, which is the first set of a new session, a
+> newly banked workout, or a sync pull. Worth knowing before anyone reads M7
+> as broader than it is.
+
 ---
 
 ## Gates introduced by this roadmap
@@ -836,7 +935,8 @@ deletion outright), and add the missing delete policy on `daily_health`.
 | `TEST 2` | `tools/test-mc-crash-recovery.js` | Persistent profile, `SIGKILL`, relaunch; sets restored and not duplicated. Graceful-close control in the same run. |
 | `TEST 3` | `tools/test-mc-store-resilience.js` | Five corruption shapes across five pages; zero uncaught exceptions. |
 | `TEST 4` | `tools/test-mc-numeric-guards.js` | Hostile numeric input against the real exports; every result finite and non-negative. |
-| `TEST 5` | `tests/test_rls.py` | The seven cross-user attacks, parametrised, inside a rolled-back transaction. The one place `pytest` is the right tool — the database layer has no JavaScript to test against. |
+| `TEST 5` | `tests/test_rls.py` | The seven cross-user attacks, parametrised, inside a rolled-back transaction. The one place `pytest` is the right tool — the database layer has no JavaScript to test against. **Phase 5.4** adds the other question a database connection is the only way to ask: what the WORLD can read. Four world-readable tables, scanned for every brand term and licensed page in `content-manifest.json` — the same list `build-market.py` enforces over files, applied to the rows that pipeline has never looked at. |
+| `FIX-06` | `tools/test-mc-day-key.js` | The dated day key and the legacy-label upgrade, against `mc-log-read.js`'s real exports. Every year-inferring case passes an explicit `now`, so the suite asserts the same thing on every day of the year rather than passing in September and failing in March. |
 
 Each is written to **fail on the current build and pass after its matching
 fix**, which is the only way to know a gate works. That is the same discipline
@@ -863,7 +963,7 @@ and wired into `verify.yml`.
 | Error resilience | **Fail** | `TEST 3` green. |
 | Numeric safety | **Fail** | `TEST 4` green. |
 | Database integrity | Partial | Migration applied, `TEST 5` green, an account can actually be deleted. |
-| Access control | **Pass** | Seven attacks repelled. Keep it passing with `TEST 5` in CI. |
+| Access control | **Pass** | Seven attacks repelled. Keep it passing with `TEST 5` in CI. Phase 5.4 adds the world-readable scan to the same suite: 67 override rows, zero on a licensed page, zero brand-term hits. |
 | Offline | **Pass** | Verified in pass 2: page served, day rendered, set logged with the network cut. |
 | Notifications | **Fail** | Fix or disable before launch. A dead feature is better than a broken one. |
 | Multi-device | Unverified | Manual M3 and M4 on two real signed-in devices. Not testable from an agent session in any pass. |
@@ -892,7 +992,15 @@ and wired into `verify.yml`.
 | `mc-maxout.js` | edit | Make `round5()` and `applyEquipCoeff()` total; add Plate-Loaded to the discount | 0.3 |
 | `mc-data.js` | edit | Export the shared `readWorkoutLog()` | 0.3 |
 | `mc-stats.js`, `mc-recap.js`, `mc-calendar.js`, `mc-exercise-trends.js`, `mc-maxout.js` | edit | Delete the five local log readers, call the shared one | 0.3 |
-| `mc-sync.js` | edit | Sort by date before the five-session cap; resolve conflicts by timestamp | 5.1 |
+| `mc-sync.js` | edit | Date both sides in `mergeSetlog` before bucketing; sort by the dated key, `ts` as tiebreaker | 5.1 |
+| `mc-log-read.js` | edit | `dayKey()`/`dayLabel()`/`normalizeDay()`/`normalizeSessions()` — the dated key and its migration, in the one module both the browser and the `vm` suites reach | 5.1 |
+| `mc-setlog.js` | edit | `st()` migrates on read; `dayStamp()` dates; `writeStore()` published; the quota banner | 5.1, 5.3 |
+| `mc-suggest.js`, `mc-finish.js`, `mc-live-tracker.js` | edit | Date the store in each of the private readers before comparing | 5.1 |
+| `mc-session.js`, `mc-finish.js` | edit | Route the session and workout-log writes through `MCSetlogUtil.writeStore()` | 5.3 |
+| `workout-logs.html`, `mc-exercise-trends.js`, `base.css` | edit | The two retention ceilings at the cap; the quota banner's styles | 5.2, 5.3 |
+| `tools/test-mc-day-key.js` | new | `FIX-06` | 5.1 |
+| `tools/test-mc-sync-merge.js` | edit | Load `mc-log-read.js` into the sandbox; real epoch fixtures | 5.1 |
+| `tests/test_rls.py` | edit | The world-readable leak scan, read from `content-manifest.json` | 5.4 |
 | `supabase/phase12-launch-hardening.sql` | new | Dedup, unique constraint, cascade FK, health delete policy | 0.4 |
 | `tools/test-mc-setlog-concurrency.js` | new | `TEST 1` | 0.1 |
 | `tools/test-mc-crash-recovery.js` | new | `TEST 2` | 0.2 |

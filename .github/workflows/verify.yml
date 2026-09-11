@@ -215,6 +215,15 @@ jobs:
         # tonnage, and 680,444 kcal for a session left open.
         run: node tools/test-mc-numeric-guards.js
 
+      - name: Dated set-log day key (FIX-06)
+        # engine-repair roadmap Phase 5.1. mc_setlog_v1 stamped every session
+        # with a display LABEL used as a primary key ("Sep 11") -- it collides
+        # with itself annually, cannot be ordered, and is locale-shaped. This
+        # runs mc-log-read.js's real dated key and its legacy-upgrade path,
+        # passing an explicit `now` wherever a year is inferred so the suite
+        # asserts the same thing on every day of the year.
+        run: node tools/test-mc-day-key.js
+
       - name: Row-level security regression suite (TEST 5)
         # engine-repair roadmap Phase 0.4. The database is the one layer here
         # with no JavaScript to test against, and the one where a mistake is a
@@ -223,6 +232,14 @@ jobs:
         # every one was repelled -- the only clean result in three passes. This
         # encodes them so a later policy edit cannot quietly reopen them. Every
         # case runs inside a rolled-back transaction and touches no real data.
+        #
+        # Phase 5.4 (audit L-08) adds the other question this connection is the
+        # only way to ask: what the WORLD can read. Five tables are readable
+        # with no session at all, and build-market.py's licensed-content strip
+        # runs over FILES, so nothing in that pipeline has ever looked at a
+        # database row. The new cases read content-manifest.json directly, so
+        # the brand terms and licensed pages they check are the same list the
+        # build enforces rather than a second copy free to disagree.
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |

@@ -75,9 +75,55 @@
   }
 
   // ---- storage (shape-compatible with the Finish-Workout module) ---------
-  function st() { try { return JSON.parse(localStorage.getItem(SK) || '{}'); } catch (e) { return {}; } }
+  // FIX-06 (roadmap Phase 5.1): the day key carries a year now. The whole
+  // migration happens HERE, in the one read path, rather than at 8 comparison
+  // sites: st() hands every caller a store whose session keys are already
+  // ISO, so `sess.d === dayStamp()` keeps working unchanged and a legacy
+  // "Sep 11" cannot be compared against a dated key and read as a different
+  // day. withStore() writes that same normalised object back, so the store on
+  // disk converges on the first save without a separate one-shot migration
+  // to sequence, and a legacy entry arriving later from sync is upgraded on
+  // the next read rather than slipping past a migration that already ran.
+  //
+  // JSON.parse already walks the whole structure, so the extra pass is a
+  // constant factor on something that was O(n) to begin with — and it is
+  // in-memory only, so the storageReads figure the K-3.1 perf budget watches
+  // is untouched.
+  function _mcLog() {
+    // Resolved lazily, never captured at parse time — the same reason
+    // mc-exercise-trends.js does this. mc-log-read.js is on all 79 pages that
+    // load this file (checked), but <script> order across them is not a
+    // contract this file can rely on at parse time.
+    if (typeof window !== 'undefined' && window.MC_LOG) return window.MC_LOG;
+    try { return require('./mc-log-read.js'); } catch (e) { return null; }
+  }
+  function st() {
+    var v;
+    try { v = JSON.parse(localStorage.getItem(SK) || '{}'); } catch (e) { return {}; }
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return {};
+    var L = _mcLog();
+    if (L && L.normalizeSessions) {
+      for (var k in v) if (Array.isArray(v[k])) v[k] = L.normalizeSessions(v[k]);
+    }
+    return v;
+  }
   function ek(id) { return PID + '|' + id; }
-  function dayStamp() { return new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+  function dayStamp() {
+    var L = _mcLog();
+    // No silent fallback to the old label: a page that somehow lacks
+    // mc-log-read.js must not start writing a SECOND key format into a store
+    // every other page reads as dated. The local ISO format is one line and
+    // deliberately not routed through check-single-impl.js — it is a format
+    // of last resort, not a second implementation anyone calls.
+    if (L && L.dayKey) return L.dayKey();
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
+           '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function dayLabel(d) {
+    var L = _mcLog();
+    return (L && L.dayLabel) ? L.dayLabel(d) : String(d == null ? '' : d);
+  }
 
   // ---- FIX-01 (audit L-01): serialise every write to the shared store -----
   // save() used to read the WHOLE store, mutate it and write it back with no
@@ -148,11 +194,14 @@
       if (!s[r.k]) s[r.k] = [];
       var sess = s[r.k][0];
       if (!sess || sess.d !== r.d) {
-        // EN-10: `d` is a day LABEL with no year, so a merge across two
-        // devices had nothing to order by and its five-session cap fell on
-        // encounter order — dropping a NEW session in favour of five old
-        // ones. A numeric stamp is what makes that resolvable; see
-        // mc-sync.js's mergeSetlog().
+        // EN-10 / FIX-06: `d` WAS a day label with no year, so a merge across
+        // two devices had nothing to order by and its five-session cap fell
+        // on encounter order — dropping a NEW session in favour of five old
+        // ones. EN-10 added the numeric `ts` below as the first half of the
+        // repair; Phase 5.1 finished it by dating `d` itself, so the ordering
+        // no longer depends on every entry in the list happening to carry a
+        // stamp. `ts` stays: it is what dates a LEGACY entry during the
+        // upgrade, and it is finer than a day. See mc-sync.js's mergeSetlog().
         sess = { d: r.d, sets: {}, ts: Date.now() };
         s[r.k].unshift(sess);
         s[r.k] = s[r.k].slice(0, 5);
@@ -170,18 +219,88 @@
     try { if (_bc) _bc.postMessage({ forget: pre, ts: Date.now() }); } catch (e) {}
   }
 
+  // ---- roadmap Phase 5.3 (manual scenario M7): a full store, visibly ------
+  // Every localStorage write in this app sits inside a catch, and a full
+  // store therefore failed SILENTLY: the row ticked, the count went up, the
+  // screen said the set was logged, and nothing reached disk. Phase 0 left a
+  // stopgap here that called MC_TOAST — a function that is defined NOWHERE in
+  // the tree, behind an `if (window.MC_TOAST)` guard that swallowed it. So
+  // the warning Phase 0 believed it had added has never once been shown. Same
+  // shape as the #pushChip element Phase 4.5 found: a guard around something
+  // that was never built. This one therefore builds its own element and
+  // depends on nothing.
+  //
+  // Published as MCSetlogUtil.writeStore() so the other writers on the
+  // session path share it rather than each growing a private copy — the same
+  // reasoning check-single-impl.js applies to the readers.
+  function isQuotaError(e) {
+    if (!e) return false;
+    // Chrome/Safari: code 22. Firefox: 1014 with its own name. Safari in a
+    // private window throws QuotaExceededError at a quota of zero, which is
+    // the same message to the athlete: this device will not keep the set.
+    if (e.code === 22 || e.code === 1014) return true;
+    return e.name === 'QuotaExceededError' ||
+           e.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+           e.name === 'QUOTA_EXCEEDED_ERR';
+  }
+
+  var _quotaShown = false;
+  function warnStorageFull(quota) {
+    // One banner per page load, not one per set — and dismissing it is
+    // final for that load rather than re-arming on the next failed write,
+    // which would put it back on screen every few seconds while the athlete
+    // is mid-session. A reload re-arms it.
+    if (_quotaShown) return;
+    if (typeof document === 'undefined' || !document.body) return;
+    _quotaShown = true;
+    var el = document.createElement('div');
+    el.className = 'mc-quota';
+    el.setAttribute('role', 'alert');
+    var body = document.createElement('div');
+    body.className = 'mc-quota-body';
+    var title = document.createElement('div');
+    title.className = 'mc-quota-title';
+    title.textContent = quota ? 'Storage full — this set was not saved'
+                              : 'This browser is not saving your sets';
+    var msg = document.createElement('div');
+    msg.className = 'mc-quota-msg';
+    // Built as nodes, not innerHTML: the only variable part is the link, and
+    // an alert about losing data is the last place to introduce a parse path.
+    msg.appendChild(document.createTextNode(quota
+      ? 'Keep training — your sets still reach the cloud if you are signed in. To fix it on this device, '
+      : 'Private browsing and blocked site data both do this. Your sets still reach the cloud if you are signed in. You can '));
+    var a = document.createElement('a');
+    a.href = 'dashboard.html';
+    a.textContent = 'export a backup and clear old logs';
+    msg.appendChild(a);
+    msg.appendChild(document.createTextNode(' from your account panel.'));
+    var x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'mc-quota-x';
+    x.setAttribute('aria-label', 'Dismiss storage warning');
+    x.textContent = '\u2715';
+    x.addEventListener('click', function () {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    });
+    body.appendChild(title); body.appendChild(msg);
+    el.appendChild(body); el.appendChild(x);
+    document.body.appendChild(el);
+  }
+
+  // Returns true when the value actually reached disk. Callers that care can
+  // act on false; callers that don't at least no longer report success.
+  function writeStore(key, value) {
+    try { localStorage.setItem(key, value); return true; }
+    catch (e) { warnStorageFull(isQuotaError(e)); return false; }
+  }
+
   function withStore(mutate, opts) {
     var replay = !(opts && opts.replay === false);
     function run() {
       var s = st();
       try { if (mutate) mutate(s); } catch (e) { return; }
       if (replay) replayRecent(s);
-      try { localStorage.setItem(SK, JSON.stringify(s)); }
-      catch (e) {
-        // Phase 5 will surface this properly (audit M7). Until then the
-        // failure at least stops pretending the write landed.
-        try { if (window.MC_TOAST) MC_TOAST('Storage full — set not saved'); } catch (te) {}
-      }
+      writeStore(SK, JSON.stringify(s));   // Phase 5.3: warns for real now
     }
     if (typeof navigator !== 'undefined' && navigator.locks && navigator.locks.request) {
       return navigator.locks.request(SK, run).catch(function () { run(); });
@@ -236,6 +355,9 @@
     Object.keys(p).forEach(function (k) {
       if (!p[k] || (now - (p[k].ts || 0)) > PENDING_MAX_AGE) { delete p[k]; changed = true; }
     });
+    // Deliberately NOT writeStore(): this write only ever SHRINKS the store,
+    // so a quota failure here loses nothing and warning about it would point
+    // the athlete at the one write that was trying to free space.
     if (changed) try { localStorage.setItem(PK, JSON.stringify(p)); } catch (e) {}
     return p;
   }
@@ -245,11 +367,11 @@
     var p = readPending(), k = pendingKey(exId, sn);
     if (!w && !r) { delete p[k]; }
     else { p[k] = { w: w || '', r: r || '', ts: Date.now() }; }
-    try { localStorage.setItem(PK, JSON.stringify(p)); } catch (e) {}
+    writeStore(PK, JSON.stringify(p));
   }
   function clearPending(exId, sn) {
     var p = readPending(), k = pendingKey(exId, sn);
-    if (p[k]) { delete p[k]; try { localStorage.setItem(PK, JSON.stringify(p)); } catch (e) {} }
+    if (p[k]) { delete p[k]; writeStore(PK, JSON.stringify(p)); }
   }
   function histText(exId) {
     var sess = lsess(exId); if (!sess) return '';
@@ -258,8 +380,11 @@
       var w = parseFloat(sess.sets[k].w) || 0;
       if (w && (!top || w > top.w)) top = { w: w, rpe: sess.sets[k].rpe };
     });
-    if (!top) return sess.d;
-    return 'Last: ' + top.w + ' lb' + (top.rpe ? ' @' + top.rpe : '') + ' · ' + sess.d;
+    // FIX-06: `d` is a dated key now, so the athlete-facing text formats it
+    // back to the "Sep 11" this cue has always read. The displayed string is
+    // byte-identical to the pre-fix one; only the stored value changed.
+    if (!top) return dayLabel(sess.d);
+    return 'Last: ' + top.w + ' lb' + (top.rpe ? ' @' + top.rpe : '') + ' · ' + dayLabel(sess.d);
   }
 
   // ---- active-exercise highlight ------------------------------------------
@@ -1671,7 +1796,7 @@
   var _stCache = null;
   function trendFor(exId) {
     var hist = (_stCache || (_stCache = st()))[ek(exId)] || [];   // newest-first, capped at 5
-    var today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    var today = dayStamp();   // FIX-06: st() already dated every sess.d above
     var tops = [];
     for (var i = 0; i < hist.length && tops.length < 3; i++) {
       var sess = hist[i];
@@ -1853,6 +1978,9 @@
                                     // card's rows before restoring checks onto it
     firstIncompleteUnit: firstIncompleteUnit,  // VOC-A2: lets mc-session.js find
                                     // where to land a genuinely fresh visit
+    writeStore: writeStore,          // Phase 5.3: the ONE storage write that
+                                     // reports a full device instead of
+                                     // swallowing it (manual scenario M7)
     withStore: withStore,            // FIX-01: the ONE guarded read-modify-write
     forgetRecent: forgetRecent,      // ...and the way a discard tells it to stop
                                     // replaying the sets it just removed

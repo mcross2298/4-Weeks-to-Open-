@@ -223,6 +223,12 @@ render();
 </script>
 <script src="mc-nav.js"></script>
 <script src="mc-supabase.js"></script>
+<!-- FIX-06 (roadmap Phase 5.1): mergeSetlog() dates a legacy year-less day
+     key through mc-log-read.js before bucketing, so a device still on the old
+     build cannot split one training day into two half-filled sessions. These
+     four pages load mc-sync.js without rendering exercise cards, so they were
+     the only ones where that upgrade had nothing to resolve to. -->
+<script src="mc-log-read.js"></script>
 <script src="mc-sync.js"></script>
 <script src="mc-sw-update.js"></script>
 </body>
