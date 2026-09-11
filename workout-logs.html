@@ -147,6 +147,10 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 .wl-sheet-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
 .wl-empty-note{font-size:12px;color:var(--muted);line-height:1.6;background:#0d0d0d;
   border-radius:10px;padding:12px;margin-bottom:6px;}
+/* roadmap Phase 5.2 (audit L-07) — rendered only once the 200-workout cap is
+   actually reached, so it is information and not a permanent disclaimer. */
+.wl-retention{font-size:12px;color:var(--muted);line-height:1.6;background:#0d0d0d;
+  border-radius:10px;padding:12px;margin:14px 0 2px;border-left:2px solid var(--accent);}
 .wl-resume-btn{display:block;width:100%;text-align:center;padding:13px;border-radius:12px;
   background:linear-gradient(90deg,#22d3ee,#34d399);color:#04121f;font-weight:900;
   font-size:14px;text-decoration:none;margin-top:14px;}
@@ -536,8 +540,24 @@ function renderSessionsTab(){
   // cleared WL_KEY — a session tracked live but never explicitly Finished
   // (mc_daily_v1) stuck around forever with no way to clear it at all once
   // LOGS was already empty.
+  html += retentionNote();
   if(LOGS.length || DAILY.length) html += `<button class="clear-btn" onclick="clearLogs()">🗑 Clear All Workout Logs</button>`;
   content.innerHTML = html;
+}
+
+// ---- roadmap Phase 5.2 (audit L-07): the ceiling, once it is real ---------
+// mc-finish.js keeps the last 200 finished workouts and drops the 201st off
+// the end of the list. That is a reasonable bound and an INVISIBLE one: the
+// athlete's oldest session simply stops being here one day, with nothing on
+// screen that ever said it would. Shown only at the cap, so an athlete with
+// four logged workouts is not handed a caveat about a limit they are nowhere
+// near — the same reasoning the empty states use.
+const WL_CAP = 200;
+function retentionNote(){
+  if(LOGS.length < WL_CAP) return '';
+  return `<div class="wl-retention">This device keeps your last ${WL_CAP} finished workouts.
+    You are at that limit, so each new one now replaces the oldest. Export a backup
+    from your account panel to keep them permanently.</div>`;
 }
 
 // ---- Programs tab (aggregate per program, expand for nested sessions) -----

@@ -25,6 +25,13 @@
 
    Load order: this file has no dependencies and every consumer calls it at
    runtime, not at parse time, so its tag only has to be on the same page.
+
+   It also owns the DAY KEY (FIX-06, roadmap Phase 5.1) — see the block above
+   the window export. That lives here rather than in mc-setlog.js for one
+   practical reason: mc-setlog.js, mc-sync.js, mc-suggest.js, mc-finish.js and
+   mc-live-tracker.js all need it, and this is the only one of the six that is
+   both a plain <script> on every page that logs sets AND require()-able from
+   Node, so the browser and the vm-sandboxed suites read the same code.
    ========================================================================== */
 (function () {
   var WL_KEY = 'mc_workout_log_v1';
@@ -148,6 +155,121 @@
     return applyEquipCoeff(raw, C ? C.equipCat(name) : 'Barbell');
   }
 
+  // ---- FIX-06 (roadmap Phase 5.1): a day key that carries a year ----------
+  // mc_setlog_v1 stamped every session with
+  //   new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'})
+  // which is "Sep 11" — a DISPLAY LABEL used as a primary key. Three things
+  // break on it, and only the first is obvious:
+  //
+  //   1. It collides with itself every 365 days. Two sessions a year apart
+  //      land in the same bucket and their set numbers union together, so a
+  //      set logged last September silently becomes part of this one.
+  //   2. It cannot be ordered. mc-sync.js's five-session cap has to decide
+  //      which sessions to drop when two devices merge, and a label gives it
+  //      nothing to sort by — EN-10 could only patch that by adding a
+  //      separate numeric `ts` and reordering when EVERY entry happened to
+  //      carry one, which a store with any older session does not.
+  //   3. It is locale- and timezone-shaped. The same instant renders a
+  //      different key under a different locale, so the athlete who travels
+  //      gets a second bucket for one training day.
+  //
+  // The key is ISO `YYYY-MM-DD` in LOCAL time (never toISOString(), which is
+  // UTC — a 7pm session on the US east coast would file under tomorrow).
+  // `dayLabel()` turns it back into the "Sep 11" the athlete reads, so the
+  // display text is unchanged; only the stored value moved.
+  //
+  // Nothing is orphaned: normalizeDay() upgrades a legacy label in place. It
+  // prefers the entry's own `ts` when EN-10 stamped one, and otherwise
+  // resolves "Sep 11" to the most recent PAST Sep 11, which is right for
+  // every entry the five-session cap can still be holding. A label it cannot
+  // parse is returned untouched rather than replaced with a guess — an
+  // unreadable date is recoverable, an invented one is not.
+  var ISO_DAY_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+  var LEGACY_DAY_RE = /^([A-Za-z]{3,9})\.?\s+(\d{1,2})$/;
+  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+  function dayKey(d) {
+    var dt = (d instanceof Date) ? d : (d == null ? new Date() : new Date(d));
+    if (!dt || isNaN(dt.getTime())) return '';
+    return dt.getFullYear() + '-' + pad2(dt.getMonth() + 1) + '-' + pad2(dt.getDate());
+  }
+
+  function dayLabel(d) {
+    var m = ISO_DAY_RE.exec(String(d == null ? '' : d));
+    if (!m) return String(d == null ? '' : d);   // a legacy label already reads right
+    var mi = parseInt(m[2], 10) - 1;
+    if (mi < 0 || mi > 11) return String(d);
+    return MONTHS[mi] + ' ' + parseInt(m[3], 10);
+  }
+
+  function monthIndex(word) {
+    var w = String(word || '').slice(0, 3).toLowerCase();
+    for (var i = 0; i < MONTHS.length; i++) {
+      if (MONTHS[i].toLowerCase() === w) return i;
+    }
+    return -1;
+  }
+
+  function normalizeDay(d, ts, now) {
+    var s = String(d == null ? '' : d).trim();
+    if (ISO_DAY_RE.test(s)) return s;
+    if (typeof ts === 'number' && isFinite(ts) && ts > 0) {
+      var k = dayKey(new Date(ts));
+      if (k) return k;
+    }
+    var m = LEGACY_DAY_RE.exec(s);
+    if (!m) return s;                            // unreadable: never invent one
+    var mi = monthIndex(m[1]), day = parseInt(m[2], 10);
+    if (mi < 0 || !(day >= 1 && day <= 31)) return s;
+    var ref = (now instanceof Date && !isNaN(now.getTime())) ? now : new Date();
+    var todayMs = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate()).getTime();
+    // Walk back a year at a time: the first candidate that is both a REAL
+    // date (Feb 29 is not, three years in four — Date rolls it to Mar 1) and
+    // not in the future. Bounded so a nonsense input cannot spin.
+    for (var back = 0; back < 8; back++) {
+      var cand = new Date(ref.getFullYear() - back, mi, day);
+      if (cand.getMonth() !== mi || cand.getDate() !== day) continue;   // rolled over
+      if (cand.getTime() <= todayMs) return dayKey(cand);
+    }
+    return s;
+  }
+
+  // One session list for one exercise, upgraded to dated keys. Two entries
+  // can land on the same day once the year is known — a legacy "Sep 11" and
+  // a freshly written "2026-09-11" are the same training day — so they are
+  // UNIONED rather than one silently shadowing the other. The newest-first
+  // entry's set wins on a conflict, which is the same precedence
+  // mergeSetlog() already applies.
+  function normalizeSessions(list, now) {
+    if (!Array.isArray(list)) return [];
+    var out = [], byDay = {};
+    list.forEach(function (s) {
+      if (!s || typeof s !== 'object') return;
+      var d = normalizeDay(s.d, s.ts, now);
+      var prev = byDay[d];
+      if (!prev) {
+        s.d = d;
+        byDay[d] = s;
+        out.push(s);
+        return;
+      }
+      var sets = s.sets || {};
+      if (!prev.sets) prev.sets = {};
+      for (var sn in sets) if (prev.sets[sn] == null) prev.sets[sn] = sets[sn];
+      if (typeof s.ts === 'number' && s.ts > (prev.ts || 0)) prev.ts = s.ts;
+    });
+    // Sortable for the first time — but only when EVERY key is dated. A list
+    // still holding an unparseable label keeps its encounter order rather
+    // than having that entry sorted to an arbitrary end.
+    if (out.length > 1 && out.every(function (x) { return ISO_DAY_RE.test(x.d); })) {
+      out.sort(function (a, b) { return a.d < b.d ? 1 : (a.d > b.d ? -1 : 0); });
+    }
+    return out;
+  }
+
   if (typeof window !== 'undefined') {
     window.MC_LOG = window.MC_LOG || {};
     window.MC_LOG.readWorkoutLog = readWorkoutLog;
@@ -158,6 +280,10 @@
     window.MC_LOG.e1rm = e1rm;
     window.MC_LOG.applyEquipCoeff = applyEquipCoeff;
     window.MC_LOG.EPLEY_REP_CAP = EPLEY_REP_CAP;
+    window.MC_LOG.dayKey = dayKey;
+    window.MC_LOG.dayLabel = dayLabel;
+    window.MC_LOG.normalizeDay = normalizeDay;
+    window.MC_LOG.normalizeSessions = normalizeSessions;
   }
 
   // Node-side hook so tools/test-mc-numeric-guards.js can call the real
@@ -166,7 +292,9 @@
     module.exports = {
       readWorkoutLog: readWorkoutLog, readSets: readSets,
       repsTotal: repsTotal, repsTop: repsTop, repsLogged: repsLogged,
-      e1rm: e1rm, applyEquipCoeff: applyEquipCoeff, EPLEY_REP_CAP: EPLEY_REP_CAP
+      e1rm: e1rm, applyEquipCoeff: applyEquipCoeff, EPLEY_REP_CAP: EPLEY_REP_CAP,
+      dayKey: dayKey, dayLabel: dayLabel,
+      normalizeDay: normalizeDay, normalizeSessions: normalizeSessions
     };
   }
 })();

@@ -157,9 +157,21 @@
 
   // All logged sessions for an exercise (newest first), excluding today's
   // still-in-progress one.
+  //
+  // FIX-06 (roadmap Phase 5.1): this file reads mc_setlog_v1 through its own
+  // private store(), not mc-setlog.js's st(), so it does its OWN upgrade of
+  // the legacy year-less day label before comparing. Skipping that would be
+  // the quiet failure: a legacy "Sep 11" never equals today's dated key, so
+  // an in-progress session logged before the upgrade would be graded as a
+  // COMPLETED one and the athlete would be told to add weight mid-workout.
+  // Both the upgrade and the day key itself come from mc-log-read.js, so
+  // there is one implementation, not a second copy that can drift from it.
   function completedSessions(exId) {
+    var L = (typeof window !== 'undefined' && window.MC_LOG) ? window.MC_LOG : null;
     var hist = store()[historyKey(exId)] || [];
-    var today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    if (L && L.normalizeSessions) hist = L.normalizeSessions(hist);
+    var today = (L && L.dayKey) ? L.dayKey()
+      : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     return hist.filter(function (s) { return s && s.d !== today; });
   }
 

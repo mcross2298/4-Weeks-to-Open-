@@ -30,7 +30,16 @@
     try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; }
     catch (e) { return {}; }
   }
-  function writeAll(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
+  // Phase 5.3: the in-progress session snapshot is what restores a reload and
+  // what the dashboard's resume banner reads, so a silent quota failure here
+  // loses the workout the athlete is standing in. Routed through
+  // MCSetlogUtil.writeStore() — resolved at CALL time, since mc-setlog.js's
+  // tag is not guaranteed to have run when this file parses.
+  function writeAll(s) {
+    var v; try { v = JSON.stringify(s); } catch (e) { return; }
+    if (window.MCSetlogUtil && MCSetlogUtil.writeStore) { MCSetlogUtil.writeStore(KEY, v); return; }
+    try { localStorage.setItem(KEY, v); } catch (e) {}
+  }
   function prune(s) {
     var now = Date.now();
     Object.keys(s).forEach(function (k) {

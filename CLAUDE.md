@@ -98,6 +98,7 @@ node tools/test-mc-pmc-confusion.js    # PMC week-3/4 intensifier rotation (Phas
 node tools/test-mc-cluster-reps.js     # cluster sets are summed, not truncated (Phase 2.3, P2-08)
 node tools/test-mc-classify.js         # one equipment resolver + the progression arithmetic on it (Phase 2.4)
 node tools/test-mc-muscle-classify.js  # one muscle taxonomy, catalog-first (Phase 2.2, DB-*/P2-14)
+node tools/test-mc-day-key.js          # dated set-log day key + the legacy-label upgrade (Phase 5.1, FIX-06)
 # these need a static server + Playwright (see verify.yml)
 node tools/test-mc-exercise-identity.js http://localhost:8080   # history keys name the exercise, not its position (Phase 2.1, EN-1/EN-8)
 node tools/test-mc-setlog-concurrency.js http://localhost:8080  # two-tab set-log durability (FIX-01, L-01)
@@ -105,6 +106,7 @@ node tools/test-mc-store-resilience.js http://localhost:8080    # corrupt-store 
 node tools/test-mc-crash-recovery.js http://localhost:8080      # process kill + cloud rehydrate (FIX-02, L-02)
 # needs a direct Postgres URL; SKIPS without one rather than failing
 SUPABASE_DB_URL=... pytest tests/test_rls.py   # 7 cross-user attacks + the phase-12 constraints (TEST 5)
+                                              # plus the Phase 5.4 world-readable leak scan
 python3 tools/build-sw.py --check      # committed sw.js matches the tree
 python3 tools/check-script-manifest.py --check   # clone pages load identical module lists
 node tools/gen-schedules.js --check    # mm/hv schedule records match mm-data.js + hv-block.html
@@ -1521,6 +1523,78 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > **Still the owner's, and not code:** Phase 1 step 1, the weekly check-in
 > secret. Until it is set the Sunday check-in has never fired and cannot be
 > proven from a session — recorded rather than reported closed.
+
+> **Phase 5 shipped (2026-09-11) — all five steps, and the roadmap is closed.**
+> Three decisions taken with the owner. **Two steps needed no code**, and
+> establishing that first is what kept the phase small: all five Phase 0 suites
+> have been in `verify.yml` since Phase 0, and the world-readable override rows
+> measured clean — 67 rows across six page ids, **none of them a licensed
+> page**, zero brand-term hits across both override tables.
+>
+> **`5.1` — the day key carries a year (`FIX-06`).** `mc_setlog_v1` stamped
+> every session with `Sep 11`, a display LABEL used as a primary key: it
+> collides with itself annually, it is locale- and timezone-shaped, and it
+> **cannot be ordered** — which is why `EN-10` had to patch the five-session
+> cap with a separate numeric `ts` and could only reorder a list in which
+> EVERY entry carried one, so a store holding any older session stayed on
+> encounter order and the cap kept dropping the wrong session.
+> `mc-log-read.js` owns the dated key and the upgrade (the one module both the
+> browser and the `vm`-sandboxed suites reach). A legacy label is dated from
+> its own `ts` when one exists and otherwise from the **most recent past
+> occurrence**; one it cannot read is returned **untouched**, never replaced
+> with a guess.
+>
+> **Migrating in the READ path is what kept it small:** `st()` hands every
+> caller an already-dated store, so `mc-setlog.js`'s eight comparison sites did
+> not change at all, the disk store converges on the first save, and a legacy
+> entry arriving later from sync is upgraded on the next read rather than
+> slipping past a migration that already ran.
+>
+> **Four modules read that store through their own private copy of the read**
+> and every one had to be dated too. That was verified rather than assumed:
+> with the normaliser neutered on a real page, a real `_FW.confirm()` banked a
+> finished workout containing **zero sets**, and two with it. Changing
+> `dayStamp()` alone would have shipped exactly that.
+>
+> **The sandboxed suite caught a bug on its first run, and it is one this repo
+> has now met twice.** A module-level `var` holding a regex is `undefined` on
+> `mc-sync.js`'s Node path: its `module.exports` hook sits above its own
+> `if (window.__mcSync) return;` guards and relies on function-declaration
+> hoisting, so the guard returns before any `var` INITIALISER runs. Phase 2.5
+> hit the identical trap in `mc-pmc-confusion.js`. A second gap closed in the
+> same file: the merge sandbox has no `require`, so `mergeSetlog` would have
+> resolved its guard to null and the suite would have exercised the
+> **un-normalised** path while reporting a pass.
+>
+> **A fixture that was always nonsense.** The `EN-10` cases used
+> `ts: 1000..9000` — five seconds past the epoch — harmless while `ts` was only
+> compared against another `ts`, and wrong the moment a label could be dated
+> from it: all five sessions collapsed onto 1 Jan 1970.
+>
+> **`5.2` — the ceilings, only once they are real.** 200 finished workouts and
+> 5 sessions per exercise are hard bounds nothing ever stated. The history page
+> names the first at 200; the progress sheet names whichever bounds it. Silent
+> at 199 logs and 4 sessions, verified at both sides of both thresholds.
+>
+> **`5.3` — Phase 0's warning had never once been shown.** Its stopgap called
+> `MC_TOAST` behind an `if (window.MC_TOAST)` guard, and **`MC_TOAST` is
+> defined nowhere in the tree** — the same shape as the `#pushChip` element
+> Phase 4.5 found. The banner builds its own element and depends on nothing;
+> verified by filling localStorage until the browser really refused (dismiss
+> exactly 44×44 at 390 and 320, `role="alert"`, no sideways overflow).
+> **That measurement corrected M7 itself:** with storage genuinely full the
+> set-log write **still landed**, because replacing an existing key frees its
+> old bytes first. The real exposure needs a write that GROWS past the
+> remaining headroom — a new session's first set, a newly banked workout, or a
+> sync pull — which is narrower than "a full device loses every set".
+>
+> **`5.4` — a measurement became a gate.** A one-time confirmation would rot
+> for a specific reason: `build-market.py` strips licensed content from FILES,
+> and a database row is not a file, so an owner editing a licensed page in PM
+> mode writes its text straight into a world-readable row. `tests/test_rls.py`
+> reads `content-manifest.json` directly, so its terms and pages are the same
+> list the build enforces. Both predicates fire on a planted row and read zero
+> on the real data.
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 

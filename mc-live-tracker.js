@@ -168,12 +168,20 @@
   function loggedExerciseCountToday(pid) {
     try {
       var store = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}');
-      var today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      // FIX-06 (roadmap Phase 5.1): dated session keys, upgraded on read here
+      // the same way mc-finish.js and mc-suggest.js do — this is the third of
+      // the three private readers of this store. Without it the live tracker
+      // reports zero exercises trained for a session logged before the
+      // upgrade, and the dashboard's progress ring reads empty mid-workout.
+      var L = (typeof window !== 'undefined' && window.MC_LOG) ? window.MC_LOG : null;
+      var today = (L && L.dayKey) ? L.dayKey()
+        : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       var prefix = pid + '|';
       var n = 0;
       Object.keys(store).forEach(function (k) {
         if (k.indexOf(prefix) !== 0) return;
-        var sess = store[k][0];
+        var list = (L && L.normalizeSessions) ? L.normalizeSessions(store[k]) : store[k];
+        var sess = list && list[0];
         if (sess && sess.d === today && sess.sets && Object.keys(sess.sets).length) n++;
       });
       return n;

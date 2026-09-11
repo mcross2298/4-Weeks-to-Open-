@@ -15,6 +15,22 @@
   }
   function repsTotal(v) { var L = _mcLog(); return L ? L.repsTotal(v) : 0; }
   function repsTop(v)   { var L = _mcLog(); return L ? L.repsTop(v) : 0; }
+  // FIX-06 (roadmap Phase 5.1): mc_setlog_v1's session key carries a year now.
+  // This file reads that store in three places through its OWN copy of the
+  // read, not mc-setlog.js's st(), so it upgrades a legacy year-less label
+  // here before comparing. It is the highest-stakes of the private readers:
+  // a mismatch does not misgrade a suggestion, it banks a finished workout
+  // with ZERO sets and discards nothing. Same two delegators as above, so
+  // there is one implementation of the day key in the tree, not a second.
+  function dayToday() {
+    var L = _mcLog();
+    return (L && L.dayKey) ? L.dayKey()
+      : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+  function datedSessions(arr) {
+    var L = _mcLog();
+    return (L && L.normalizeSessions) ? L.normalizeSessions(arr) : (arr || []);
+  }
   var WL_KEY='mc_workout_log_v1';
   var SL_KEY='mc_setlog_v1';
   var SS_KEY='mc_session_summary_v1';
@@ -103,12 +119,12 @@
   function getSessionSets(){
     try{
       var store=JSON.parse(localStorage.getItem(SL_KEY)||'{}');
-      var today=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      var today=dayToday();
       var sets=[];
       Object.keys(store).forEach(function(k){
         if(!k.startsWith(pageId+'|'))return;
         var exName=k.split('|')[1]||k;
-        var sess=store[k][0];
+        var sess=datedSessions(store[k])[0];
         if(sess&&sess.d===today){
           Object.keys(sess.sets).forEach(function(sn){
             var s=sess.sets[sn];
@@ -223,8 +239,16 @@
     try{
       var logs=JSON.parse(localStorage.getItem(WL_KEY)||'[]');
       logs.unshift(entry);
-      logs=logs.slice(0,200);// keep last 200 workouts
-      localStorage.setItem(WL_KEY,JSON.stringify(logs));
+      logs=logs.slice(0,200);// keep last 200 workouts (surfaced — Phase 5.2)
+      // Phase 5.3: banking a finished workout is the single write in this app
+      // it is least acceptable to lose silently. Routed through the shared
+      // guarded writer so a full device says so instead of the athlete
+      // finding the session missing from their history days later.
+      if(window.MCSetlogUtil&&MCSetlogUtil.writeStore){
+        MCSetlogUtil.writeStore(WL_KEY,JSON.stringify(logs));
+      } else {
+        localStorage.setItem(WL_KEY,JSON.stringify(logs));
+      }
     }catch(e){}
     clearTodaysDailyEntry();
     return entry;
@@ -770,11 +794,12 @@
       try{
         var sessAll=JSON.parse(localStorage.getItem('mc_session_v1')||'{}');
         var slAll=JSON.parse(localStorage.getItem(SL_KEY)||'{}');
-        var today=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        var today=dayToday();
         var removedSets={};
         Object.keys(slAll).forEach(function(k){
           if(k.indexOf(pageId+'|')!==0)return;
-          if(slAll[k][0]&&slAll[k][0].d===today)removedSets[k]=slAll[k][0];
+          var top=datedSessions(slAll[k])[0];
+          if(top&&top.d===today)removedSets[k]=top;
         });
         var snapshot={
           pageId:pageId,
@@ -799,7 +824,11 @@
         // shared store the set logger writes, so it takes the same lock. A
         // second tab logging a set while this one discards would otherwise
         // lose one of the two writes, exactly as two loggers did.
-        var today2=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        // The mutate below runs inside MCSetlogUtil.withStore(), which hands
+        // it a store st() has already dated — so this only has to speak the
+        // same language. The non-locking fallback path further down reads raw
+        // localStorage, which is why datedSessions() guards that one too.
+        var today2=dayToday();
         var mutate=function(sl){
           Object.keys(sl).forEach(function(k){
             if(k.indexOf(pageId+'|')!==0)return;
@@ -816,6 +845,10 @@
         }
         else{
           var sl=JSON.parse(localStorage.getItem(SL_KEY)||'{}');
+          // FIX-06: no st() on this path, so date the keys before mutate()
+          // compares them — otherwise a discard on a store written before the
+          // upgrade quietly removes nothing and reports success.
+          Object.keys(sl).forEach(function(k){ sl[k]=datedSessions(sl[k]); });
           mutate(sl);
           localStorage.setItem(SL_KEY,JSON.stringify(sl));
         }

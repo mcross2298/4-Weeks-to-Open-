@@ -22,6 +22,13 @@ const path = require('path');
 const vm = require('vm');
 
 const SRC = fs.readFileSync(path.resolve(__dirname, '../mc-sync.js'), 'utf8');
+// FIX-06 (roadmap Phase 5.1): mergeSetlog() dates a legacy year-less day key
+// through mc-log-read.js before bucketing. In a browser that module is a
+// <script> on the same page; the sandbox has no `require`, so without loading
+// it here mergeSetlog's own guard would resolve to null and these tests would
+// exercise the UN-normalised path while reporting a pass. Load the real file
+// into the same context, exactly as a page does.
+const LOGSRC = fs.readFileSync(path.resolve(__dirname, '../mc-log-read.js'), 'utf8');
 
 let pass = 0, fail = 0;
 function ok(name, cond) { if (cond) { pass++; } else { fail++; console.error('::error::' + name); } }
@@ -39,6 +46,10 @@ function loadMerge() {
   };
   sandbox.window.__mcSync = false; // MC_SB is null -> guard returns before doing any real work
   vm.createContext(sandbox);
+  vm.runInContext(LOGSRC, sandbox);   // publishes window.MC_LOG, as a page does
+  if (!sandbox.window.MC_LOG || !sandbox.window.MC_LOG.normalizeSessions) {
+    throw new Error('mc-log-read.js did not publish normalizeSessions into the sandbox');
+  }
   vm.runInContext(SRC, sandbox);
   return sandbox.module.exports;
 }
@@ -641,27 +652,70 @@ async function runAsyncTests() {
   // --- EN-10: the five-session cap fell on ENCOUNTER order ----------------
   // A device holding five OLD sessions, merging one NEW session from the
   // other device, kept the five old ones and dropped the new one.
+  // FIX-06 dated `d` itself, so these fixtures carry REAL epoch stamps that
+  // agree with their labels. The originals used ts: 1000..9000 — five seconds
+  // past the epoch — which was harmless while `ts` was only ever compared
+  // against another `ts`, and became wrong the moment a legacy label could be
+  // DATED from it: all five collapsed onto 1 Jan 1970 and unioned into one
+  // session. The fixture was always nonsense; nothing read it closely enough
+  // to matter until now.
+  const ms = (y, m, d) => new Date(y, m - 1, d, 12).getTime();
   {
     const day = (label, ts, sn) => ({ d: label, ts, sets: { [sn]: { w: '100', r: '5' } } });
-    const local = { 'p|x': [day('Jan 5', 5000, 1), day('Jan 4', 4000, 1), day('Jan 3', 3000, 1),
-                            day('Jan 2', 2000, 1), day('Jan 1', 1000, 1)] };
-    const remote = { 'p|x': [day('Jun 1', 9000, 1)] };
+    const local = { 'p|x': [day('Jan 5', ms(2026, 1, 5), 1), day('Jan 4', ms(2026, 1, 4), 1),
+                            day('Jan 3', ms(2026, 1, 3), 1), day('Jan 2', ms(2026, 1, 2), 1),
+                            day('Jan 1', ms(2026, 1, 1), 1)] };
+    const remote = { 'p|x': [day('Jun 1', ms(2026, 6, 1), 1)] };
     const out = M.mergeSetlog(local, remote)['p|x'];
-    ok('EN-10 the NEWEST session survives the cap', out.some(s => s.d === 'Jun 1'),
+    ok('EN-10 the NEWEST session survives the cap', out.some(s => s.d === '2026-06-01'),
        JSON.stringify(out.map(s => s.d)));
-    ok('EN-10 and the OLDEST is the one dropped', !out.some(s => s.d === 'Jan 1'),
+    ok('EN-10 and the OLDEST is the one dropped', !out.some(s => s.d === '2026-01-01'),
        JSON.stringify(out.map(s => s.d)));
     ok('EN-10 the cap still holds at 5', out.length === 5, String(out.length));
-    ok('EN-10 the result is newest-first', out[0].d === 'Jun 1', JSON.stringify(out.map(s => s.d)));
+    ok('EN-10 the result is newest-first', out[0].d === '2026-06-01',
+       JSON.stringify(out.map(s => s.d)));
   }
   {
-    // A list where not every entry carries a stamp keeps TODAY's exact
-    // behaviour rather than guessing a year for the ones that don't.
-    const local = { 'p|x': [{ d: 'Jan 5', sets: { 1: { w: '1' } } }, { d: 'Jan 4', sets: {} }] };
-    const remote = { 'p|x': [{ d: 'Jun 1', ts: 9000, sets: {} }] };
+    // EN-10 could only reorder a list in which EVERY entry carried a stamp, so
+    // a mixed list kept encounter order and the cap kept dropping the wrong
+    // session. FIX-06 removes that condition: an entry with no `ts` is dated
+    // from its own label instead. The stamped entry here is deliberately years
+    // old, because a label with no stamp resolves to the most recent PAST
+    // occurrence — always within the last year — so the expected order holds
+    // whatever date this suite runs on.
+    const local = { 'p|x': [{ d: 'Jun 1', ts: ms(2020, 6, 1), sets: {} },
+                            { d: 'Jan 5', sets: { 1: { w: '1' } } }] };
+    const out = M.mergeSetlog(local, {})['p|x'];
+    ok('FIX-06 every merged session comes back dated',
+       out.every(s => /^\d{4}-\d{2}-\d{2}$/.test(s.d)), JSON.stringify(out.map(s => s.d)));
+    ok('FIX-06 an unstamped entry is ordered by its own dated label, not encounter order',
+       out[0].d !== '2020-06-01', JSON.stringify(out.map(s => s.d)));
+  }
+  {
+    // A label this build cannot read is left exactly as it was rather than
+    // replaced with a guess, and the list it is in keeps encounter order.
+    const local = { 'p|x': [{ d: 'Mon 1/5', sets: { 1: { w: '1' } } },
+                            { d: 'Wed 1/7', sets: {} }] };
+    const out = M.mergeSetlog(local, {})['p|x'];
+    ok('FIX-06 an unreadable label is never replaced with a guess',
+       out[0].d === 'Mon 1/5' && out[1].d === 'Wed 1/7', JSON.stringify(out.map(s => s.d)));
+  }
+  {
+    // The cross-version case this whole normalisation exists for: one device
+    // still on the old build sends a year-less label for a day this one
+    // already holds as a dated key. Without dating both sides first that is
+    // two sessions for one training day, each carrying half the sets.
+    const today = new Date();
+    const iso = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') +
+                '-' + String(today.getDate()).padStart(2, '0');
+    const label = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const local = { 'p|x': [{ d: iso, ts: today.getTime(), sets: { 1: { w: '100' } } }] };
+    const remote = { 'p|x': [{ d: label, sets: { 2: { w: '110' } } }] };
     const out = M.mergeSetlog(local, remote)['p|x'];
-    ok('EN-10 a mixed list is left in encounter order', out[0].d === 'Jan 5',
-       JSON.stringify(out.map(s => s.d)));
+    ok('FIX-06 an old-build device and a new one converge on ONE session',
+       out.length === 1, JSON.stringify(out.map(s => s.d)));
+    ok('FIX-06 ...and that session holds both devices\' sets',
+       out[0] && out[0].sets[1] && out[0].sets[2], JSON.stringify(out[0]));
   }
   {
     // sets from both sides still union, and no `ts` is invented on a legacy entry

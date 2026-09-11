@@ -111,6 +111,7 @@
         '</div>' +
         '<div class="mct-chart" id="mctChart"></div>' +
         '<div class="mct-meta" id="mctMeta"></div>' +
+        '<div class="mct-cap" id="mctCap"></div>' +
       '</div>';
     document.body.appendChild(overlay);
 
@@ -142,14 +143,64 @@
       '.mct-tab.on{color:#fbbf24;border-color:rgba(212,175,55,0.45);background:rgba(212,175,55,0.12);}' +
       '.mct-chart{min-height:120px;}' +
       '.mct-meta{margin-top:10px;font-size:11px;font-weight:700;color:#64748b;text-align:center;}' +
+      '.mct-cap{margin-top:10px;font-size:11px;font-weight:400;line-height:1.6;color:#94a3b8;' +
+        'border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;}' +
       '.mct-empty{padding:28px 0;text-align:center;color:#64748b;font-size:13px;font-weight:700;}';
     document.head.appendChild(st);
+  }
+
+  // ---- roadmap Phase 5.2 (audit L-07): the two ceilings, once they are real
+  // Both of this app's history stores drop data at a fixed depth and neither
+  // ever said so: mc_workout_log_v1 keeps 200 finished workouts (so it bounds
+  // the curve above), and mc_setlog_v1 keeps 5 sessions PER EXERCISE (so it
+  // bounds the "Last: …" cue and the weight the progression suggests). This
+  // is the screen an athlete reaches when asking where their history went, so
+  // it is where both belong — but only once a cap is actually hit. Below it,
+  // a permanent disclaimer is noise about a limit nobody is near.
+  var WL_CAP = 200, SESS_CAP = 5;
+
+  // The per-exercise depth is keyed by mc-setlog.js's own identity derivation,
+  // never by re-slugging the name here — a second copy of that derivation is
+  // exactly what EN-1/EN-8 and check-single-impl.js exist to prevent. It needs
+  // a rendered card, so on a page with none (stats.html opens this sheet from
+  // its muscle legend) the per-exercise half is simply not claimed.
+  function sessionDepth(name) {
+    var U = window.MCSetlogUtil;
+    if (!U || !U.histKey || !U.exIdOf) return -1;
+    var want = String(name || '').trim().toLowerCase(), card = null;
+    var cards = document.querySelectorAll('.ex-card, .ss-ex, .ex-item, .lift-card');
+    for (var i = 0; i < cards.length; i++) {
+      var nm = cards[i].querySelector('.ex-name, .ss-name, .lift-name');
+      if (nm && nm.textContent.trim().toLowerCase() === want) { card = cards[i]; break; }
+    }
+    if (!card) return -1;
+    var store;
+    try { store = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}'); } catch (e) { return -1; }
+    var list = store && store[U.histKey(U.exIdOf(card))];
+    return Array.isArray(list) ? list.length : -1;
+  }
+
+  function capNote() {
+    var out = [];
+    if (logs().length >= WL_CAP) {
+      out.push('This device keeps your last ' + WL_CAP + ' finished workouts, and you are ' +
+        'at that limit — each new one now replaces the oldest, so this curve stops there.');
+    }
+    if (sessionDepth(curName) >= SESS_CAP) {
+      out.push('Set-by-set history for this exercise keeps the last ' + SESS_CAP +
+        ' sessions. Older ones are gone from this device, though finished workouts ' +
+        'stay in the chart above.');
+    }
+    if (!out.length) return '';
+    return out.join(' ') + ' Export a backup from your account panel to keep everything.';
   }
 
   function draw() {
     var series = seriesFor(curName);
     var chart = document.getElementById('mctChart');
     var meta = document.getElementById('mctMeta');
+    var cap = document.getElementById('mctCap');
+    if (cap) { cap.textContent = capNote(); cap.hidden = !cap.textContent; }
     if (!series.length) {
       chart.innerHTML = '<div class="mct-empty">No finished workouts with this exercise yet.<br>' +
         'Log sets and tap Finish Workout — the trend builds from there.</div>';
