@@ -2796,12 +2796,6 @@ body.cond-elite .fw-auto-banner{
   color:var(--c-ember);
 }
 
-/* swap badge */
-body.cond-elite .swap-badge{
-  background:var(--c-accent);
-  color:#fff;
-}
-
 /* ───────── reduced motion: strip glow text-shadows ───────── */
 @media (prefers-reduced-motion:reduce){
   body.cond-elite .timer-big,
@@ -3169,9 +3163,6 @@ body.cond-elite .fw-auto-banner{
   border-bottom:1px solid rgba(52,211,153,0.3);
   color:#34d399;
 }
-
-/* ---- swap badge ---- */
-body.cond-elite .swap-badge{background:var(--c-accent);color:#fff;}
 
 /* ---- inputs (defensive, in case any are injected) ---- */
 body.cond-elite input{
