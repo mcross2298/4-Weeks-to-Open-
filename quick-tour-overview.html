@@ -187,7 +187,29 @@ body{background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;p
    this page stayed dark-mode-colored on a light ground. Re-scoping the
    tokens here, matching base.css's own html[data-theme="light"] convention,
    fixes it at the source instead of chasing it selector by selector. */
-html[data-theme="light"]{--text:#1c1a17;--muted:#6b6459;--muted2:#8a8377;}
+html[data-theme="light"]{--text:#1c1a17;--muted:#6b6459;--muted2:#8a8377;
+  /* The rest of this page's own :root, which outranks base.css's light token
+     flip. --gold especially: the brand gold is tuned for the near-black ground
+     and measures 1.88:1 on Sand (base.css says so in its own --accent comment),
+     so every eyebrow, CTA label and arrow here was barely legible in light
+     mode. Same darkened hue base.css uses. Nothing here changes dark mode. */
+  --bg:#f5f2ec;--surface:#faf7f0;--surface2:#f0ece3;
+  --border:rgba(28,26,23,0.08);--border2:rgba(28,26,23,0.12);
+  --gold:#826919;--gold-dim:rgba(130,105,25,0.12);--gold-glow:rgba(130,105,25,0.22);}
+html[data-theme="light"] .cta-nm,
+html[data-theme="light"] .topbar-title,
+html[data-theme="light"] .hero h1{color:#1c1a17;}
+html[data-theme="light"] .cta.solid .cta-nm{color:#f5f2ec;}
+/* The remaining slate-on-cream text — a Tailwind slate-300 body colour used
+   for the hero, section bodies, tick rows, jump chips and the coach note, all
+   1.33-1.39:1 on Sand. The block above only ever covered .card/.sec p/.coach. */
+html[data-theme="light"] .hero p,
+html[data-theme="light"] .jump,
+html[data-theme="light"] .sec p.body,
+html[data-theme="light"] .ticks li,
+html[data-theme="light"] .stat-chip,
+html[data-theme="light"] .coach p{color:#3d4756;}
+html[data-theme="light"] .card-tx b{color:#1c1a17;}
 html[data-theme="light"] .card,
 html[data-theme="light"] .jump,
 html[data-theme="light"] .swatch,
@@ -202,6 +224,17 @@ html[data-theme="light"] .card-tx b,
 html[data-theme="light"] h1{color:#1c1a17;}
 html[data-theme="light"] .sec span,
 html[data-theme="light"] .ticks span{color:#3d4756;}
+
+/* Downloads this page as a real .pdf (mc-pdf.js). Marked .no-pdf so the button
+   doesn't print itself into the file it just made. */
+.es-export{display:flex;align-items:center;justify-content:center;gap:5px;flex-shrink:0;
+  min-height:44px;padding:0 12px;border-radius:var(--r-md);white-space:nowrap;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+  color:var(--gold);font-family:inherit;font-size:var(--fs-xs);font-weight:700;}
+.es-export:active{opacity:0.65;}
+.es-export[disabled]{opacity:0.5;}
+@media (max-width:380px){.es-export{padding:0 9px;font-size:var(--fs-3xs);}}
+html[data-theme="light"] .es-export{background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.12);}
 </style>
 <link rel="stylesheet" href="mc-light.css">
 </head>
@@ -213,6 +246,7 @@ html[data-theme="light"] .ticks span{color:#3d4756;}
     <div class="topbar-title">Executive Summary</div>
     <div class="topbar-sub">The full app, end to end — one read</div>
   </div>
+  <button type="button" class="es-export no-pdf" id="esExport">⬇ Export PDF</button>
 </div>
 
 <div class="wrap">
@@ -434,10 +468,58 @@ html[data-theme="light"] .ticks span{color:#3d4756;}
       <div class="cta-body"><div class="cta-lbl">Hands-on version</div><div class="cta-nm">Take the 3-minute guided tour</div></div>
       <div class="cta-arrow">→</div>
     </a>
+    <a class="cta" href="quick-tour-full.html">
+      <div class="cta-ico">🧾</div>
+      <div class="cta-body"><div class="cta-lbl">Every step, still one read</div><div class="cta-nm">The whole tour on one page</div></div>
+      <div class="cta-arrow">→</div>
+    </a>
     <a class="cta solid" href="dashboard.html"><div class="cta-nm">⚡ Go to my Dashboard</div></a>
   </div>
 
 </div>
+<script src="mc-pdf.js"></script>
+<script>
+(function () {
+  'use strict';
+  var btn = document.getElementById('esExport');
+  var page = document.querySelector('.wrap');
+  if (!btn || !page || !window.MC_PDF) return;
+
+  btn.addEventListener('click', function () {
+    btn.disabled = true;
+    var was = btn.textContent;
+    btn.textContent = 'Building\u2026';
+    /* Let the disabled state paint before the writer blocks the thread. */
+    setTimeout(function () {
+      try {
+        MC_PDF.save(page, {
+          title: 'MC Training',
+          subtitle: 'Executive Summary \u00b7 the full app, end to end',
+          meta: 'Generated ' + new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+          footer: 'MC Training \u00b7 Executive Summary',
+          filename: 'mc-training-executive-summary',
+          styles: {
+            'sec-title': 'h2',
+            'sec-lede': 'p',
+            'card-name': 'h3',
+            'card-tag': 'eyebrow',
+            'card-tx': 'p',
+            'eyebrow': 'eyebrow',
+            'cta-lbl': 'eyebrow',
+            'cta-nm': 'p',
+            'stat-chip': 'bullet',
+            'tier': 'h3'
+          },
+          skip: /(^|\s)(topbar|jump-row|jump|swatches|swatch|sw|sec-num|hero-glow)(\s|$)/
+        });
+      } finally {
+        btn.disabled = false;
+        btn.textContent = was;
+      }
+    }, 30);
+  });
+})();
+</script>
 <script src="mc-sw-update.js"></script>
 </body>
 </html>
