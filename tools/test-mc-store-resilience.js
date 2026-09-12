@@ -21,6 +21,15 @@
    This is the gate that would have caught the three throwing modules the
    audit found by hand.
 
+   A sixth shape was added later, for a gap the first five didn't cover.
+   `nullMember` proves a MISSING or null `sets` field is safe; it never
+   tests a PRESENT, non-null field of the wrong type. `scalarSets` does —
+   an entry whose `sets` is a string, not an array — which is exactly the
+   shape that let mc-readiness.js's lastStimulus() keep reading `e.sets`
+   directly for a fifth call site after FIX-04's sweep had already moved
+   every other reader onto mc-log-read.js's readSets() (post-implementation
+   verification pass, finding V-01, 2026-09-12).
+
    Usage:
      node tools/test-mc-store-resilience.js <baseUrl>
      MC_CHROMIUM=/path/to/chromium node tools/test-mc-store-resilience.js ...
@@ -36,12 +45,13 @@ if (!baseUrl) {
 const WL = 'mc_workout_log_v1';
 const SL = 'mc_setlog_v1';
 
-// Five shapes, chosen from what the stores can actually hold rather than from
+// Six shapes, chosen from what the stores can actually hold rather than from
 // what is easy to construct.
 const SHAPES = {
   malformed:  { [WL]: '[[[', [SL]: '{oops' },                       // control: must stay clean
   wrongType:  { [WL]: '{}', [SL]: '[]' },                           // threw before FIX-04
   nullMember: { [WL]: '[null,{"sets":null},{"sets":[null]}]', [SL]: '{"a|b":null}' },
+  scalarSets: { [WL]: '[{"date":"2026-01-01T00:00:00.000Z","sets":"chest day, 3 sets logged"}]' }, // V-01: a valid, dated entry with sets as a non-null scalar — one level past nullMember's coverage
   absurd:     { [WL]: '[{"date":"x","duration":"99999999 min","sets":[{"name":"X","weight":1e308,"reps":-5}]}]' },
   deep:       { [WL]: JSON.stringify([{ date: new Date().toISOString(), duration: '60 min',
                  sets: Array.from({ length: 500 }, () => ({ name: 'X', weight: 100, reps: 10 })) }]) }
