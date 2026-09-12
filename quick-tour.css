@@ -1,0 +1,237 @@
+/* Quick Tour — shared by quick-tour.html (one step at a time) and
+   quick-tour-full.html (all of it as one document). It lived inline in the
+   tour until the second page existed; two copies of 184 lines of layout is
+   how the two views start looking like different products.
+
+   Leaving the inline block also put it in front of check-design-tokens.js for
+   the first time — see the SCENE FRAME rule for the one real finding that
+   surfaced, and tools/design-token-budgets.json for the debt it recorded. */
+*{box-sizing:border-box;margin:0;padding:0;font-family:var(--font-ui);-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0a0a0a;--surface:#111;--surface2:#161616;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.1);
+  --gold:#d4af37;--gold-dim:rgba(212,175,55,0.15);--gold-glow:rgba(212,175,55,0.25);
+  --text:#fff;--muted:#9ca3af;--muted2:var(--muted);
+  --ctrl-h:78px;
+}
+body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(--ctrl-h);overflow-x:hidden;}
+
+/* ── TOP BAR ── */
+.topbar{
+  display:flex;align-items:center;gap:12px;padding:18px 16px 12px;
+  position:sticky;top:0;z-index:20;
+  background:var(--bg);
+}
+@supports (padding: env(safe-area-inset-top)) {
+  .topbar{padding-top:calc(18px + env(safe-area-inset-top));}
+}
+/* Header is OPAQUE, and the soft fade lives BELOW it (roadmap: header bleed).
+   It used to be `linear-gradient(<bg> 80%, transparent)` -- a fade INSIDE the
+   bar, so the bottom fifth of the header itself was see-through and scrolling
+   content read straight through the chrome. On a notched device in standalone
+   the bar grows by the inset, so that see-through band grew with it (15px ->
+   27px at a 59px inset). Same dissolve, moved to a scrim that hangs below the
+   bar, where there is no chrome to read through. */
+.topbar::after{
+  content:'';position:absolute;left:0;right:0;top:100%;height:18px;
+  background:linear-gradient(to bottom,var(--bg),transparent);
+  pointer-events:none;
+}
+
+/* .back is now shared in base.css (W3-3, VOC/VOA Kaizen audit) -- this page
+   loads base.css so no local copy is needed. */
+.topbar-info{flex:1;min-width:0;}
+.topbar-title{font-size:17px;font-weight:900;letter-spacing:-0.02em;}
+.topbar-sub{font-size:var(--fs-xs);color:var(--muted2);margin-top:1px;}
+.skip{font-size:var(--fs-xs);font-weight:800;color:var(--muted2);text-decoration:none;letter-spacing:0.04em;padding:8px;}
+
+/* ── PROGRESS ── */
+.progress-wrap{padding:2px 16px 14px;}
+.progress-track{height:5px;border-radius:3px;background:rgba(255,255,255,0.07);overflow:hidden;}
+.progress-fill{height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,#8a6a10,var(--gold));transition:width 0.35s cubic-bezier(.4,0,.2,1);}
+.progress-meta{display:flex;justify-content:space-between;margin-top:8px;font-size:var(--fs-2xs);font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted2);}
+.progress-meta .pm-step{color:var(--gold);}
+
+/* ── EXEC SUMMARY DRILL-IN ── */
+.exec-link{
+  display:flex;align-items:center;gap:11px;text-decoration:none;
+  max-width:560px;margin:0 auto 16px;padding:12px 14px;
+  background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));
+  border:1px solid rgba(212,175,55,0.3);border-radius:14px;
+}
+.exec-link:active{background:rgba(212,175,55,0.16);}
+.exec-ico{font-size:var(--fs-3xl);flex-shrink:0;}
+.exec-body{flex:1;min-width:0;}
+.exec-lbl{font-size:var(--fs-3xs);font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);}
+.exec-nm{font-size:var(--fs-sm);font-weight:800;color:#fff;margin-top:1px;line-height:1.35;}
+.exec-arrow{color:var(--gold);font-size:var(--fs-xl);flex-shrink:0;}
+.exec-wrap{padding:0 16px;}
+
+/* ── SLIDE ── */
+.deck{max-width:560px;margin:0 auto;padding:0 16px;}
+.slide{display:none;animation:slideIn 0.34s cubic-bezier(.2,.7,.2,1);}
+.slide.active{display:block;}
+@keyframes slideIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+.eyebrow{font-size:var(--fs-2xs);font-weight:900;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.slide-title{font-size:25px;font-weight:900;letter-spacing:-0.02em;line-height:1.15;margin-bottom:6px;}
+.slide-tagline{font-size:var(--fs-sm);color:var(--muted);line-height:1.5;margin-bottom:18px;}
+
+/* ── VIDEO / SCENE FRAME ── */
+.scene{
+  position:relative;border-radius:18px;overflow:hidden;margin-bottom:18px;
+  /* This gradient used to be two bespoke blue-biased near-blacks on a warm
+     ground — the same shape premium-design-roadmap.md's P5 found on the card
+     surface, and invisible until this stylesheet left the tour's inline
+     <style> and entered check-design-tokens.js's view. Remapped onto the warm
+     ink ramp by measured luminance, not by eye. */
+  background:linear-gradient(135deg,var(--ink-2),var(--ink-1));
+  border:1px solid var(--scene-c,rgba(212,175,55,0.28));
+  box-shadow:0 8px 30px rgba(0,0,0,0.45);
+  aspect-ratio:16/10;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;padding:20px;
+}
+.scene-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 30% 30%,var(--scene-glow,rgba(212,175,55,0.12)) 0%,transparent 62%);}
+.scene-glyph{font-size:54px;line-height:1;margin-bottom:12px;filter:drop-shadow(0 4px 14px rgba(0,0,0,0.5));}
+.scene-caption{font-size:var(--fs-sm);font-weight:800;color:#e2e8f0;letter-spacing:0.01em;max-width:80%;line-height:1.45;}
+.scene-clip{
+  position:absolute;left:12px;bottom:12px;display:inline-flex;align-items:center;gap:6px;
+  font-size:var(--fs-3xs);font-weight:800;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--muted);background:rgba(0,0,0,0.45);border:1px solid var(--border2);
+  border-radius:20px;padding:4px 10px;backdrop-filter:blur(6px);
+}
+.scene-clip .dot{width:7px;height:7px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px #ef4444;animation:rec 1.6s ease-in-out infinite;}
+@keyframes rec{0%,100%{opacity:1;}50%{opacity:0.25;}}
+.scene-play{
+  position:absolute;right:12px;bottom:12px;width:40px;height:40px;border-radius:50%;
+  background:rgba(212,175,55,0.16);border:1.5px solid rgba(212,175,55,0.45);
+  display:flex;align-items:center;justify-content:center;font-size:var(--fs-lg);color:var(--gold);
+}
+
+/* ── NARRATION ── */
+.narration{
+  background:var(--surface);border:1px solid var(--border2);border-radius:14px;
+  padding:14px 16px;margin-bottom:16px;position:relative;
+}
+.narration::before{content:'🎙️ COACH';position:absolute;top:-9px;left:14px;font-size:var(--fs-3xs);font-weight:900;letter-spacing:0.12em;color:var(--gold);background:var(--bg);padding:0 7px;}
+.narration p{font-size:var(--fs-md);line-height:1.6;color:#e2e8f0;margin-top:4px;}
+
+/* ── STEPS ── */
+.steps-label{font-size:var(--fs-2xs);font-weight:900;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted2);margin:0 0 10px;display:flex;align-items:center;gap:8px;}
+.steps-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.1),transparent);}
+.steps{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+.step{display:flex;gap:11px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 13px;}
+.step-n{
+  flex-shrink:0;width:22px;height:22px;border-radius:7px;
+  background:var(--gold-dim);border:1px solid rgba(212,175,55,0.3);
+  color:var(--gold);font-size:var(--fs-xs);font-weight:900;
+  display:flex;align-items:center;justify-content:center;margin-top:1px;
+}
+.step-tx{font-size:var(--fs-sm);line-height:1.5;color:#cbd5e1;}
+.step-tx b{color:#fff;font-weight:800;}
+.step-tx .tap{color:var(--gold);font-weight:800;}
+
+/* ── PRO TIP ── */
+.tip{
+  display:flex;gap:10px;align-items:flex-start;
+  background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.25);
+  border-radius:var(--r-md);padding:11px 13px;margin-bottom:18px;
+}
+.tip-ico{font-size:var(--fs-xl);flex-shrink:0;line-height:1.4;}
+.tip-tx{font-size:12.5px;line-height:1.55;color:#a7f3d0;}
+.tip-tx b{color:#6ee7b7;font-weight:800;}
+
+/* ── INLINE CTA (jump into the real screen) ── */
+.try-cta{
+  display:flex;align-items:center;gap:10px;text-decoration:none;
+  background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.3);
+  border-radius:14px;padding:13px 15px;margin-bottom:8px;
+}
+.try-cta:active{background:rgba(212,175,55,0.14);}
+.try-cta-ico{font-size:19px;}
+.try-cta-body{flex:1;min-width:0;}
+.try-cta-lbl{font-size:var(--fs-3xs);font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);}
+.try-cta-nm{font-size:13.5px;font-weight:800;color:#fff;margin-top:1px;}
+.try-cta-arrow{color:var(--gold);font-size:var(--fs-xl);flex-shrink:0;}
+
+/* ── FINISH CARD (last slide) ── */
+.finish-cta{
+  display:block;width:100%;text-align:center;text-decoration:none;
+  padding:15px;border-radius:14px;background:var(--gold);color:#000;
+  font-size:var(--fs-lg);font-weight:900;letter-spacing:0.03em;margin-top:6px;
+}
+.finish-cta:active{opacity:0.85;}
+.finish-list{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:18px;}
+.finish-list li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.5;color:#cbd5e1;}
+.finish-list .chk{color:var(--gold);font-weight:900;flex-shrink:0;}
+
+/* ── BOTTOM CONTROLS ── */
+.controls{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;height:var(--ctrl-h);
+  background:rgba(10,10,10,0.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid rgba(255,255,255,0.08);
+  display:flex;align-items:center;gap:12px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+}
+.nav-btn{
+  flex:1;height:50px;border-radius:13px;border:1px solid var(--border2);
+  background:var(--surface);color:#fff;font-size:var(--fs-md);font-weight:800;letter-spacing:0.02em;
+  cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:opacity 0.15s,transform 0.1s;
+}
+.nav-btn:active{transform:scale(0.98);}
+.nav-btn.primary{background:var(--gold);color:#000;border-color:var(--gold);flex:1.4;}
+.nav-btn:disabled{opacity:0.32;cursor:not-allowed;}
+
+/* ── DOT NAV ── */
+/* W3-2: 18 dots must stay single-row at 320px, so the real hit box (the
+   button itself, what check-journey.js's chrome ratchet measures via
+   getBoundingClientRect) can't grow past ~12-26px wide without wrapping or
+   overlapping neighbors -- but height has no such ceiling, so it goes to
+   the full 44px floor. The 8px (22px active) visual dot moves to ::after,
+   centered in the bigger invisible button box, so the look is unchanged. */
+.dots{display:flex;justify-content:center;gap:3px;flex-wrap:wrap;padding:4px 0 22px;}
+.dot-nav{width:12px;height:44px;background:transparent;cursor:pointer;transition:width 0.2s;border:none;padding:0;display:flex;align-items:center;justify-content:center;}
+.dot-nav::after{content:'';width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.14);transition:all 0.2s;}
+.dot-nav.active{width:26px;}
+.dot-nav.active::after{background:var(--gold);width:22px;height:8px;border-radius:var(--r-xs);}
+.dot-nav.seen::after{background:rgba(212,175,55,0.4);}
+
+/* ── LIGHT MODE ──────────────────────────────────────────────────────────────
+   This stylesheet declares its own :root (--bg/--text/--muted/--gold above),
+   which outranks base.css's html[data-theme="light"] token flip — so on the
+   Sand ground the page kept handing out white text, slate captions and the
+   brand gold, which base.css's own comment measures at 1.88:1 on cream.
+
+   It was survivable while only ONE slide was on screen at a time: the light
+   ratchet counted about seven failures here and the budget was six. Rendering
+   every slide at once (quick-tour-full.html) turned the same defect into 105,
+   which is how it was found — the page was always this broken in light mode,
+   one slide's worth at a time.
+
+   Same shape and the same darkened accent as quick-tour-overview.html's block
+   and base.css's own; nothing here changes dark mode. ────────────────────── */
+html[data-theme="light"]{
+  --bg:#f5f2ec;--surface:#faf7f0;--surface2:#f0ece3;
+  --border:rgba(28,26,23,0.08);--border2:rgba(28,26,23,0.12);
+  --gold:#826919;--gold-dim:rgba(130,105,25,0.12);--gold-glow:rgba(130,105,25,0.22);
+  --text:#1c1a17;--muted:#6b6459;--muted2:#8a8377;
+}
+html[data-theme="light"] .topbar-title,
+html[data-theme="light"] .slide-title,
+html[data-theme="light"] .step-tx b,
+html[data-theme="light"] .tip-tx b,
+html[data-theme="light"] .narration p b{color:#1c1a17;}
+html[data-theme="light"] .scene-caption,
+html[data-theme="light"] .narration p,
+html[data-theme="light"] .step-tx,
+html[data-theme="light"] .finish-list li span:last-child,
+html[data-theme="light"] .tip-tx{color:#3d4756;}
+html[data-theme="light"] .scene{background:linear-gradient(135deg,var(--ink-9),var(--ink-10));}
+html[data-theme="light"] .scene-glyph,
+html[data-theme="light"] .try-cta-nm,
+html[data-theme="light"] .exec-nm{color:#1c1a17;}
+html[data-theme="light"] .finish-cta{color:#1c1a17;}
+/* The Back control: #fff on the cream controls bar, 1.07:1. .primary keeps its
+   own colours — dark ink on gold works on either ground. */
+html[data-theme="light"] .nav-btn{color:#1c1a17;}
+html[data-theme="light"] .nav-btn.primary{color:#f5f2ec;}

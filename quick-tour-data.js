@@ -1,0 +1,366 @@
+/* Quick Tour content — the slides themselves, and the one function that turns
+   a slide into markup.
+
+   These were inline in quick-tour.html until quick-tour-full.html existed. Data
+   and renderer ship together on purpose: the renderer is the only reader of a
+   slide's shape, so a field added to one and not the other is the drift worth
+   preventing, and both pages now get it from the same place.
+
+   Each slide: {eyebrow, title, tagline, scene:{glyph,caption,color,glow},
+   narration, steps:[], finish?:[], tip?, cta?:{label,name,href,ico}, last?} */
+(function () {
+  'use strict';
+
+  const SLIDES = [
+    {
+      eyebrow:'Welcome',
+      title:"Welcome to MC Training",
+      tagline:"Your pocket gym — programs, set logging, PRs, and custom workouts, all offline-ready. This 3-minute tour gets you moving with zero guesswork.",
+      scene:{glyph:'💪',caption:'10 programs · 500+ exercises · set & PR tracking · macro tracker',color:'rgba(212,175,55,0.3)',glow:'rgba(212,175,55,0.14)'},
+      narration:"Welcome in. Whether you came to lift heavy, chase a pump, build your own session, or track your macros — everything lives one or two taps from your dashboard. Swipe or hit Next, and I'll walk you through it.",
+      steps:[
+        {tx:"Use <span class='tap'>Next →</span> / <b>← Back</b> below, the dots, or swipe left/right."},
+        {tx:"Tap any gold <span class='tap'>Open it</span> card to jump straight into the real screen and try it live."},
+        {tx:"Rather read it all at once? <b>The whole tour — every step on one page</b> is linked at the top, and the <b>Executive Summary</b> beside it exports to PDF."},
+      {tx:"Hit <b>Skip</b> anytime — you can relaunch this tour from the dashboard's <b>Quick Tour</b> tile whenever you want."}
+      ]
+    },
+    {
+      eyebrow:'Module 1 · Home base',
+      title:"Your Dashboard at a glance",
+      tagline:"The dashboard is your hub. Three zones, one bottom tab bar — learn these and you can reach anything.",
+      scene:{glyph:'⚡',caption:'Current Program · Training Tools · bottom tabs',color:'rgba(212,175,55,0.3)',glow:'rgba(212,175,55,0.14)'},
+      narration:"Start at the top: your Current Program hero card, with the search icon right beside the calendar and theme toggle. Below the hero, the Training Tools grid — Library, Logs, Build Your Own, Program Guide, and this tour. And pinned to the bottom: Dashboard, Programs, and Conditioning. That bar follows you everywhere.",
+      steps:[
+        {tx:"<b>Top-right — Search:</b> tap the 🔍 icon on any tab to search across every program and the full exercise catalog at once — tap a result to jump straight there."},
+        {tx:"<b>Top — Current Program:</b> the program you've pinned shows here with its splits."},
+        {tx:"<b>Middle — Training Tools:</b> your 2×2 grid of power tools (plus this Quick Tour)."},
+        {tx:"<b>Bottom tabs:</b> <span class='tap'>⚡ Dashboard</span> · <span class='tap'>🏋️ Programs</span> · <span class='tap'>🔥 Conditioning</span> — always one tap away."},
+        {tx:"<b>🤖 Coach Note:</b> tap to expand this collapsed card for a short AI read on your last 30 days — a headline summary plus chips for any per-lift flags, muscle-volume warnings, and swap ideas. Signed-in only; refreshes once a day."},
+        {tx:"If your coach uses PM Mode to assign you a program or macro goals, a <b>🎯 “Your coach has a suggestion”</b> card appears here — tap Accept to apply it, or ✕ to dismiss. Nothing changes on your account unless you tap Accept."},
+        {tx:"<b>🍳 Recipes:</b> tap the utensils icon next to the theme toggle to open Mike's Cookbook — recipes, meal planning, and the same macro tracker, without leaving your workout flow."},
+        {tx:"Signed in with your week planned in Mike's Cookbook? A compact <b>Today strip</b> appears above Current Program — today's planned meals and your calorie goal in one glance. Tap it to jump straight into Nutrition."},
+        {tx:"<b>Weekly pulse strip:</b> a one-line readout below your Programs rail — your overall <b>readiness</b> % (averaged recovery across every muscle group, color-coded green/amber/red) and how many workouts you've logged this week. Tap it to jump into Stats for the full breakdown. Appears once you've logged a session or two; nothing to set up."},
+        {tx:"<b>Exercise freshness dots:</b> a small colored dot shows up next to an exercise's name on any workout page — green fresh, amber still recovering, red recently hammered — built from your actual logged sets and how long ago you trained that muscle."},
+        {tx:"<b>Stats → Weekly Review:</b> tap into Stats for the full picture — Workouts/Sets/Tonnage/PRs for any week, a 7-day spark, and a muscle-group panel underneath. Browse ‹ › to step through past weeks: the current week shows your live 9-chip Readiness grid, while past weeks show that week's actual volume-by-muscle split instead (recovery % only ever means \"right now,\" so history shows what you trained, not a retroactive readiness reading)."},
+        {tx:"<b>Stats → Muscle Map:</b> further up the same Stats page, a front/back body map replaces the old bar list — toggle <b>Recovery</b> (today's recovery % per muscle group) or <b>Volume</b> (last 30 days' sets per group). Tap any muscle chip below the map to jump into that muscle's most-trained exercise and see its trend."},
+        {tx:"<b>Daily Vitals:</b> a teal strip on the dashboard — tap <b>Log</b> to enter resting heart rate, sleep hours, and a 1–5 readiness rating (all optional, a few taps, no keyboard needed for two of the three). It builds its own Recovery Score ring, shown right there and inside the pre-session Readiness Brief (see Module 3b). Strip stays hidden until you log your first entry."},
+      ],
+      tip:"On any other screen, the same bottom bar brings you home — you can't get lost."
+    },
+    {
+      eyebrow:'Module 2 · Set your focus',
+      title:"Pin your Current Program",
+      tagline:"Pinning a program puts it front-and-center on your dashboard so today's training is always one tap away.",
+      scene:{glyph:'📌',caption:'Tap “See all” → choose a program → Set as Active',color:'rgba(212,175,55,0.3)',glow:'rgba(212,175,55,0.14)'},
+      narration:"See that hero card at the top? Tap “See all,” and a sheet slides up with every program. Pick the one you're running, hit Set as Active Program, and it pins to your dashboard — split chips and all. Change it anytime; it remembers your choice.",
+      steps:[
+        {tx:"On the dashboard, tap <span class='tap'>See all</span> (top-right of <b>Current Program</b>)."},
+        {tx:"In the sheet, tap a program — the checkmark confirms your pick."},
+        {tx:"Tap <span class='tap'>Set as Active Program</span>. Your hero card updates instantly."}
+      ],
+      cta:{ico:'📌',label:'Try it now',name:'Open the dashboard & pin a program',href:'dashboard.html'}
+    },
+    {
+      eyebrow:'Module 3 · Find your workout',
+      title:"Browse Programs & open a workout",
+      tagline:"The Programs tab is your menu of training styles"+
+        /* MARKET:STRIP influencer-tour START */
+        " — from heavy strength to daily pump"+
+        /* MARKET:STRIP influencer-tour END */
+        ".",
+      scene:{glyph:'🏋️',caption:'Programs tab → category → split → today’s workout',color:'rgba(139,92,246,0.35)',glow:'rgba(139,92,246,0.14)'},
+      narration:"Tap Programs on the bottom bar. You'll see the color-coded programs — Flagship tier: Strength & Supersets, Project Muscle Confusion, Mike Cross' Favorites, Everything Under the Kitchen Sink, The Modality Matrix, and the High-Volume Training Template"+
+        /* MARKET:STRIP influencer-tour START */
+        "; Influencer tier: STNDR, Daily Pump, Daily Gainz, PSU Football"+
+        /* MARKET:STRIP influencer-tour END */
+        ". Tap one, pick a split, and you're on the workout page with every exercise laid out.",
+      steps:[
+        {tx:"Tap <span class='tap'>🏋️ Programs</span> in the bottom bar."},
+        {tx:"Tap a <b>category card</b>"+
+          /* MARKET:STRIP influencer-tour START */
+          " (e.g. Daily Pump)"+
+          /* MARKET:STRIP influencer-tour END */
+          " to see its splits."},
+        {tx:"Pick a <b>split / day</b> to open that workout, ready to log."},
+        {tx:"Can't decide? Most category pages have a <span class='tap'>🎲 Surprise Me</span> button near the top — tap it to jump straight into a random split or workout from that program."}
+      ],
+      cta:{ico:'🏋️',label:'Try it now',name:'Browse all the programs',href:'dashboard.html?tab=programs'}
+    },
+    {
+      eyebrow:'Module 3b · Your place in a program',
+      title:"The day-by-day schedule",
+      tagline:"Your active program shows up on Home as the day you're actually on — not as a list of every workout.",
+      scene:{glyph:'📅',caption:'Home: week strip → today’s card → Start → next day, automatically',color:'rgba(225,29,72,0.35)',glow:'rgba(225,29,72,0.13)'},
+      narration:"Set a program active and the Home screen becomes it. Under the week heading there's a row of seven pills — one per day of that week. A number means you haven't trained it, a check means it's banked, and a moon means it's a rest day. The card underneath is that day: what you're training, how many exercises and sets, roughly how long, and a Start button. Finish the workout and it moves you to the next day on its own. The arrows either side of the week heading page forward and back through the whole block, and tapping any pill jumps straight to that day. The program's own page is still there for everything about the program rather than about today — see the next module.",
+      steps:[
+        {tx:"Make <b>Strength &amp; Supersets</b> your active program, then open <b>Home</b>."},
+        {tx:"Tap any <b>day pill</b> under the week heading to jump the card to that day."},
+        {tx:"Use <span class='tap'>‹</span> and <span class='tap'>›</span> to page through the weeks of the block. The last week of a block is a <b>deload</b> — it carries a badge beside the week number, and every exercise that week is built with one working set fewer, with the card saying so. It's the program's own plan, not something you have to remember to take."},
+        {tx:"Tap <span class='tap'>Start Day N</span> and a quick <b>Readiness Brief</b> opens first — your Recovery Score ring (if you've logged one, see Module 1) alongside a front/back map showing how recovered today's actual muscle groups are. A \"Today: Chest · Back\" line names which ones, and everything else on the map dims — it's not blank, it just isn't part of today. Tap <b>Begin</b> to head into the workout, or <b>Skip</b> — it never blocks you, just a heads-up before you load the bar. When something is genuinely off — a muscle group still overreached, a low Recovery Score, or a scheduled deload week — a third <b>Lighter</b> button appears: one tap and every exercise in that session is built with one working set fewer, and each card says why. It only shows up when there is a reason for it."},
+        {tx:"<b>Notifications</b> are asked for once, and only after you've earned something worth being told about — a 🔔 chip on Home once you've finished a workout, or right under your new records on the Session Complete screen. Tap <b>Notify me</b> and you'll get a push the next time you beat a lift, plus a Sunday nudge if the week slipped. Say no and the app doesn't ask again."},
+        {tx:"Finish the workout and the completion screen adds a <b>muscle map reveal</b> — which regions you actually trained today, shaded by how much work each one got, with a <b>Save card</b> button to keep or share it. Then the app advances you to the next day automatically."},
+        {tx:"Landed on a <b>rest day</b>? You'll get a recovery card with what's next — and a <b>Train anyway</b> button if you'd rather not wait."},
+        {tx:"Tap <span class='tap'>☰</span> top-right for the program menu: workout logs, calendar, and — under <b>Workout schedule</b> and <b>Reorder days</b> — the controls to move your rest days and reshuffle a week to fit your real life."}
+      ],
+      cta:{ico:'📅',label:'Try it now',name:'Open your dashboard',href:'dashboard.html'}
+    },
+    {
+      eyebrow:'Module 3c · The program page',
+      title:"Overview and Program list",
+      tagline:"Tapping a program opens its landing page: what it is on one tab, every workout in it on the other.",
+      scene:{glyph:'📘',caption:'Overview · Program list — identity on one side, workouts on the other',color:'rgba(225,29,72,0.35)',glow:'rgba(225,29,72,0.13)'},
+      narration:"Home is about today. A program's own page is about the program. Every program has one, and they all work the same way. It opens on <b>Overview</b> — who the program is for, which equipment it leans on, and the program's full written guide, right there on the page rather than a link away. Switch to <b>Program list</b> for every workout in that program as a tappable row. Programs the app tracks day by day show more on both tabs: the week's real training and rest days on Overview, and on the list a day number, roughly how long each session takes, a green check once you've banked it, and Reorder days for reshuffling a week. Tapping a checked row opens exactly what you lifted that day. Programs built as a library of splits show the splits first and drill in to their workouts.",
+      steps:[
+        {tx:"Open <b>Strength &amp; Supersets</b> from the Programs tab — it lands on <b>Overview</b>."},
+        {tx:"Read <b>The week</b>: your actual training and rest days, with a check on each one you've banked."},
+        {tx:"Keep scrolling for <b>The program guide</b> — the whole thing: how the split works, its set styles, its rules. No second page to find."},
+        {tx:"Tap <span class='tap'>Program list</span> for the workouts — each row shows <b>Day N</b> and its rough duration."},
+        {tx:"Tap a row to train it. Tap a <b>checked</b> row instead and you get that day's log."},
+        {tx:"Tap <span class='tap'>Reorder days</span> to drag this week's workouts into a different order — other weeks are left alone."},
+        {tx:"Now open a <b>library</b> program like Everything Under the Kitchen Sink: same two tabs, but Program list shows its <b>splits</b> first and drills into each one's workouts."}
+      ],
+      cta:{ico:'📘',label:'Try it now',name:'Open Strength & Supersets',href:'cat-strength.html'}
+    },
+    {
+      eyebrow:'Module 4 · ⭐ Core skill',
+      title:"Log your sets + rest timer",
+      tagline:"This is the heartbeat of the app. A training day is a compact list — tap an exercise to open it, log weight and reps, check it off, rest auto-starts.",
+      scene:{glyph:'✅',caption:'Tap the exercise → enter weight & reps → tap ✓ → rest timer fires',color:'rgba(52,211,153,0.35)',glow:'rgba(52,211,153,0.12)'},
+      narration:"Open a training day and you get the whole session as a tidy list — one row per exercise, each showing its number, its name and a running set count. Tap the exercise you’re on and it opens in place, logger and all; everything else stays folded away, so you only ever see the one you’re actually lifting. Punch in your weight and reps, then tap the check. Two things happen: the set locks in, and your prescribed rest timer kicks off automatically. Finish an exercise and the app moves with you — that one folds back up with a green ✓ and the next one opens on its own, no tap needed. Last time's top weight shows right on the card, so you always know what to beat. Drop sets and AMRAP rows are built in too — look for the ∞ symbol.",
+      steps:[
+        {tx:"Tap any <b>exercise row</b> in the day to open it — the logger comes up with it. Only one exercise is open at a time; the rest stay folded to a single row showing <b>“2/5 Sets”</b> so you can see your progress through the day at a glance."},
+        {tx:"A <span class='tap'>ⓘ</span> in the card's header means that exercise has a <b>coaching cue</b> from the program — tap it to read the cue, tap again to tuck it away. Cards without a cue don't show the button at all, so if it's there, there's something to read."},
+        {tx:"Type your <b>Weight</b> and <b>Reps</b> for the set."},
+        {tx:"Tap the <span class='tap'>✓</span> checkbox — the set saves and the <b>rest timer auto-starts</b>."},
+        {tx:"While you rest, the countdown shows in exactly <b>two</b> places: a <b>rest row</b> that appears right under the set you just logged (with <b>−15s</b> / <b>+15s</b> to buy or give back time), and the <b>strip at the top of the screen</b>, which swaps your elapsed session time for the countdown so it's still there after you scroll. The <span class='tap'>⏱️ Rest: 90 sec</span> chip on the card is <b>not</b> a countdown — it's the rest your program prescribes for that exercise, and it stays put so you can always see the target. Tap it to start or stop a rest yourself, handy for warm-up sets you don't log."},
+        {tx:"A <b>“+ DROP”</b> or <b>“+ AMRAP”</b> row appears automatically when the program calls for it."},
+        {tx:"On the card's rep scheme, a <b>∞ symbol</b> marks a drop set or burnout round taken to failure — one ∞ per AMRAP set, so <b>“12 · 10 · 8 · ∞ ∞”</b> means two back-to-back AMRAP drops after the working sets. In the Log Sets table itself, that row's Reps box still says <b>“AMRAP”</b> — type in exactly how many reps you completed."},
+        {tx:"A <b>🧩 Cluster</b> exercise breaks each working set into mini-sets — the Log Sets row shows a rep bubble per mini-set (e.g. <b>5 + 5 + 5</b>) instead of one box, prefilled with the target so you only edit the ones that came up short (like a <b>5 + 5 + 3</b> last mini-set). Tap the <b>🧩 Cluster</b> badge or note on the card itself to adjust the whole breakdown mid-session — it's your own personal adjustment and never changes what the program publishes."},
+        {tx:"Tap <span class='tap'>🎬</span> on the rest timer to switch to <b>Video view</b> — a full-screen countdown with an <b>Up Next</b> card showing what's coming. Tap <span class='tap'>☰ List view</span> to switch back; the app remembers whichever you picked last."},
+        {tx:"Prefer one exercise at a time? Tap <span class='tap'>🎯 Start Guided Mode</span> above your first exercise — it dims everything but the exercise you're on and auto-advances the moment you finish its sets."},
+        {tx:"Hands full loading a bar? Tap the <span class='tap'>🎙️</span> button (bottom-right on any workout page) to turn on <b>voice control</b>, then just say it: <b>“log 10 reps”</b> checks off your next set, <b>“start timer”</b> starts the rest clock, <b>“skip rest”</b> ends it early. Opt-in only — off until you tap it, and it stays off across sessions until you turn it back on."}
+      ],
+      tip:"The card shows <b>“Last: X lb · date”</b> plus a green <b>“Suggested: X lb”</b> — the app's planned load for today, computed from how last session went (all reps hit → move up; near-max → hold; short → repeat). Weight and reps boxes come pre-filled with your suggested numbers in a faint, italic <b>“ghost”</b> style — that's a suggestion, not a logged value yet. Tap the box to select it (type over it to change the number, or just leave it and tap ✓ to accept it as-is) — either way it solidifies to a normal, confirmed value the instant you touch it. Stall on the same weight for 4 sessions straight and the app doesn't just flag it — it automatically prefills a <b>−10% deload</b> next time, so the plateau actually breaks instead of sitting there as a badge you have to act on yourself. And remember: ∞ in the rep scheme is just shorthand for AMRAP — always log your real rep count in the Log Sets box."
+    },
+    {
+      eyebrow:'Module 5 · Customize',
+      title:"Replace, Reorder & Notes — all in the ⋮ menu",
+      tagline:"Every per-exercise action lives in one place: the ⋮ button in the corner of each card. Swap the movement, reorder your lineup, leave a note, set a tempo, check your progress, or add an intensifier.",
+      scene:{glyph:'⋮',caption:'Replace · Reorder · Notes · Add Tempo — one menu, top-right of every card',color:'rgba(212,175,55,0.32)',glow:'rgba(212,175,55,0.14)'},
+      narration:"Tap the ⋮ in the top-right corner of any exercise card. Everything you can do to that exercise is in there — replace the movement, reorder your lineup, leave a note, add a tempo, pull up your progress history, or turn on a drop, cluster or superset. A gold dot on the ⋮ means that exercise already has a note or a tempo saved.",
+      steps:[
+        {tx:"<b>🔁 Replace exercise</b> — shows your top 3 closest matches (same muscle + movement first), each tagged with its equipment and a weight to start at. Pick one and the card swaps in place. Fewer than 3 exact matches? Signed-in trainees get a couple of AI-suggested options filled in too, tagged <b>✨ AI</b> so it's clear which is which."},
+        {tx:"<b>↕️ Reorder exercises</b> — use the <span class='tap'>▲ ▼</span> arrows; your order sticks."},
+        {tx:"<b>📝 Notes</b> — leave a per-exercise note that saves right onto it. The ⋮ shows a gold dot once a note is saved."},
+        {tx:"Same menu for <b>⏱️ Add Tempo</b>, <b>📈 Exercise progress</b>, and drop/cluster/superset controls."}
+      ],
+      tip:"A weight tagged <b>“from your log”</b> is a real number you've lifted before; <b>“≈”</b> is a starting estimate — trust the real one, treat the estimate as set-1 only. Pick the same swap again later and it moves to the top, marked <b>“Used before.”</b> Every active substitution — and an <b>Revert</b> for each — lives under <b>Stats → My Substitutions</b>."
+    },
+    {
+      eyebrow:'Module 6 · ⭐ Core skill',
+      title:"Finish Workout, PRs & live summary",
+      tagline:"As you check off sets, a live stat strip tracks your session. Finishing logs it — PRs and all.",
+      scene:{glyph:'🏆',caption:'Live timer + sets done → Summary → Finish → PRs logged',color:'rgba(212,175,55,0.32)',glow:'rgba(212,175,55,0.14)'},
+      narration:"The moment you check your first set, a timer and a sets-done counter come alive at the top. Tap Summary anytime to see your session take shape. When you're done, hit Finish Workout — the app saves the session, counts your sets, and flags any personal records you just set. That's how PRs get earned.",
+      steps:[
+        {tx:"Check off sets — the <b>sticky stat strip</b> tracks duration + total sets live."},
+        {tx:"Tap <span class='tap'>Summary</span> to expand your in-progress session card."},
+        {tx:"Tap <span class='tap'>Finish / Exit</span>, then <b>Log workout</b> on the confirm dialog — <b>PRs are detected and saved automatically</b>. Changed your mind, or opened it by accident? <b>Exit &amp; discard</b> asks you to confirm exactly how many sets you're about to lose, then backs out with nothing saved to your history. Discarded by mistake? The dashboard offers a one-tap <b>Restore discarded workout</b> banner right after — it goes away once you log a new workout, so use it right away."},
+        {tx:"The Session Complete screen adds a gold <b>Strain ring</b> with your estimated <b>calories burned</b> in the middle — a real estimate from the weight you actually moved, your logged bodyweight, and session length, not a flat guess. The ring reads your <b>strain for the day (0–21)</b> against your own recent training, not anyone else's — it needs a few sessions of history before it can compare, so it starts quiet on a brand-new account and fills in as you log more."},
+        {tx:"Right below that, a gold <b>Refuel</b> card recommends a single-feeding <b>protein target</b> (plus the session's calories) sized to what you just did — harder sessions bump the number up. Tap <span class='tap'>Find a recipe →</span> to jump straight into Mike's Cookbook with a search already sized to hit it."}
+      ],
+      tip:"Beat a previous best and it's tagged with a gold <b>🏆 PR</b> in your logs — no manual tracking."
+    },
+    {
+      eyebrow:'Module 7 · Your history',
+      title:"Workout Logs & progress",
+      tagline:"Every session lands here, split into 🏋️ Program Workouts and 📋 Individual / Standalone so your structured training and quick one-off workouts never blur together — and that split now recognizes your own custom multi-day programs too, not just the flagship ones. Tap a completed card to open the exact workout, set by set, or switch to Programs to see real X-of-Y completion progress.",
+      scene:{glyph:'📊',caption:'Workouts · Sets Logged · PRs Set — your full training record',color:'rgba(212,175,55,0.3)',glow:'rgba(212,175,55,0.12)'},
+      narration:"From the dashboard, open Workout Logs. Up top: three running totals — workouts, sets logged, and PRs set. Below, the Sessions tab splits into two sections — Program Workouts and Individual / Standalone — each newest first, with the weights you actually moved. Tap a completed card and it opens that exact workout as its own read-only page — every exercise, every set, not a generic summary. Switch to the Programs tab and the same sessions regroup by program instead of by day, each with a real completion bar (X completed of Y), so you can see how far through each program you actually are; tap a program card to expand its nested list of sessions. This is your proof of work and your roadmap for next time.",
+      steps:[
+        {tx:"Dashboard → <span class='tap'>📊 Workout Logs</span> tile."},
+        {tx:"Read your <b>three-stat bar</b>: Workouts · Sets Logged · PRs Set."},
+        {tx:"Scroll the <b>Sessions</b> tab — split into <b>🏋️ Program Workouts</b> and <b>📋 Individual / Standalone</b> so structured training and quick one-off workouts stay separate. Live sessions appear even before you tap Finish."},
+        {tx:"Tap a <span class='tap'>completed card</span> and it opens that exact workout, exercise by exercise, set by set — not a generic recap. Sessions still in progress open a <b>Resume</b> sheet instead."},
+        {tx:"Switch to the <span class='tap'>🏋️ Programs</span> tab to see the same history grouped by program — a real <b>completion bar</b> (X completed of Y) per program, including any custom program or custom workout you built yourself. Tap a program card to expand its nested sessions."},
+        {tx:"Made a mistake, or just want to clear out a stray session? <b>Long-press any card</b> (Sessions tab or an expanded program's nested list) to delete just that one — no need to wipe your whole history."},
+        {tx:"Every exercise card on every workout page carries its own <b>rep-progression trend line</b> — your logged weight × reps for that exact movement across recent sessions, so you can see the line going up without digging through old logs."},
+        {tx:"Want to test where you actually stand? The dashboard's Training Tools grid also has <span class='tap'>🥇 Max-Out Calculator</span> — run a heavy set and it Epley-estimates your real 1-rep max, no need to load up to an actual failure attempt."},
+        {tx:"And <span class='tap'>🎁 MC Wrapped</span>, right next to it — your training summed up on one card, ready to save and send."}
+      ],
+      cta:{ico:'📊',label:'Try it now',name:'Open your Workout Logs',href:'workout-logs.html'}
+    },
+    {
+      eyebrow:'Module 8 · ⭐ Make it yours',
+      title:"Build Your Own workout",
+      tagline:"Want a custom session? Search the library, pick exercises, set your reps, save — and run it like any program.",
+      scene:{glyph:'🔧',caption:'Search → add exercises → Review (N) → set sets/reps → Create → Start',color:'rgba(52,211,153,0.32)',glow:'rgba(34,211,238,0.12)'},
+      narration:"Tap Build Your Own. Name your workout, then search or filter 500+ exercises by muscle group. Tap to add each one — they check off right in the list, no separate panel fighting you for scroll room. When you're ready, tap the “Review (N)” pill at the bottom to pull up your picks, set sets/reps/tempo (and drop, superset, or cluster if you want them) for each, then hit Create Workout. It's saved under My Custom Workouts, and Start logs sets exactly like every built-in program.",
+      steps:[
+        {tx:"Dashboard → <span class='tap'>🔧 Build Your Own</span> tile."},
+        {tx:"Name it, then <b>search or filter by muscle</b> and tap exercises to add — added ones get a ✓."},
+        {tx:"Tap the <span class='tap'>Review (N) →</span> pill to open your picks, set <b>sets, reps & intensifiers</b> per exercise, then tap <span class='tap'>✅ Create Workout</span>."},
+        {tx:"Tap <span class='tap'>▶ Start Workout</span> — full set logging & PRs, just like the rest."}
+      ],
+      cta:{ico:'🔧',label:'Try it now',name:'Build a custom workout',href:'build-workout.html'}
+    },
+    {
+      eyebrow:'Module 9 · ⭐ Make it yours',
+      title:"Quick Pump — 30 or 45 minutes, no planning",
+      tagline:"Short on time? Quick Pump builds a fresh, station-anchored session sized to exactly how many minutes you've got — or trims the workout you're already on.",
+      scene:{glyph:'⚡',caption:'Pick 30/45 min → Generate → Start Workout',color:'rgba(249,115,22,0.32)',glow:'rgba(220,38,38,0.12)'},
+      narration:"Tap Quick Pump from the dashboard. Choose 30 or 45 minutes, optionally a focus like Push, Pull, Legs, or Core, then hit Generate — it pulls a fresh mix of exercises from every program's library, paired into station-anchored supersets so you're never walking across the gym. Don't like the mix? Regenerate. Happy with it? Start Workout logs sets and PRs exactly like any other session. Already mid-workout and running short on time? Look for the ⏱ Short on time? button — it trims the workout you're already on down to fit, instead of building a new one.",
+      steps:[
+        {tx:"Dashboard → <span class='tap'>⚡ Quick Pump</span> tile."},
+        {tx:"Pick <b>30 or 45 minutes</b>, and an optional <b>focus</b> (Full Body, Push, Pull, Legs, Core)."},
+        {tx:"Tap <span class='tap'>🎲 Generate Workout</span> — review the preview, tap <span class='tap'>🔄 Regenerate</span> for a different mix, or <span class='tap'>▶ Start Workout</span> to go."},
+        {tx:"Already on a workout page and short on time? Tap <span class='tap'>⏱ Short on time?</span> near the bottom, pick 30 or 45 minutes, and it trims that same workout down instead."}
+      ],
+      tip:"If a session that short still won't fit, Quick Pump will suggest a fast Conditioning Corner routine instead — sometimes a quick circuit beats rushing through a lift. It's also history-aware now: it leans away from any muscle you trained in the last 48 hours, a Full Body pump fills in whichever muscles got the least volume this week, and if you've logged a weight for an exercise before, it's prefilled and ready to confirm — no starting from zero.",
+      cta:{ico:'⚡',label:'Try it now',name:'Generate a Quick Pump session',href:'quick-pump.html'}
+    },
+    {
+      eyebrow:'Module 10 · Reference tools',
+      title:"Library, Guide & Conditioning",
+      tagline:"Three more tools round out your toolkit — browse exercises, read the rules, and finish with conditioning.",
+      scene:{glyph:'📚',caption:'Exercise Library · Program Guide · Conditioning tab',color:'rgba(212,175,55,0.3)',glow:'rgba(212,175,55,0.12)'},
+      narration:"Quick hits. The Exercise Library lets you search every movement, grouped by muscle, with tap-to-expand variations. The Program Guide explains the rules, set styles, and rep ranges behind every program. And the Conditioning tab — bottom bar, the flame — is where cardio, conditioning, and core finishers live.",
+      steps:[
+        {tx:"<span class='tap'>📚 Exercise Library</span> — search & filter every exercise by muscle group."},
+        {tx:"<span class='tap'>📋 Program Guide</span> — methodology, set styles & rep ranges per program."},
+        {tx:"<span class='tap'>🔥 Conditioning</span> tab — cardio & core to finish a lift or run standalone."}
+      ],
+      cta:{ico:'📚',label:'Try it now',name:'Open the Exercise Library',href:'exercise-library.html'}
+    },
+    {
+      eyebrow:'Module 11 · Fuel the work',
+      title:"Track macros in the Nutrition tab",
+      tagline:"Lifting is half the job — the 🍎 Nutrition tab tracks calories, protein, fat and carbs against your goals, day by day.",
+      scene:{glyph:'🍎',caption:'Daily kcal · P/F/C rings · day calendar · food search + barcode',color:'rgba(239,68,68,0.32)',glow:'rgba(239,68,68,0.12)'},
+      narration:"Tap the apple on the bottom bar. Up top, a week calendar — tap any day to log against it. Below, your daily totals as rings filling toward your goals for calories, protein, fat and carbs. Set those goals once with the gear, then search a huge food database — or tap the barcode icon and scan a label to pull a food in instantly.",
+      steps:[
+        {tx:"Tap <span class='tap'>🍎 Nutrition</span> in the bottom bar."},
+        {tx:"Tap the <span class='tap'>⚙ gear</span> to set or auto-calculate your <b>calorie & macro goals</b>."},
+        {tx:"Tap a day in the <b>week calendar</b> — the rings show how close you are to each goal."},
+        {tx:"Tap <span class='tap'>Search food database</span>, or hit the <span class='tap'>▦ barcode</span> icon to scan a label."},
+        {tx:"Or tap <span class='tap'>💬 Describe what you ate</span> and just type it naturally — e.g. \"two eggs and a bagel\" — it splits out each food, matches it to the database, and lets you adjust quantity and log them all in one go."},
+        {tx:"Signed in with your week planned in Mike's Cookbook? A <b>“Today's Planned Meals”</b> card shows what's already on the menu — tap <span class='tap'>Log</span> on any meal to add it in one tap, no searching."}
+      ],
+      tip:"The barcode scanner reads a label and auto-fills the food's full nutrition — no typing. No match? Manual entry has a one-tap link to add the product to Open Food Facts so it's found next time. And when the day still has calories left, a <b>“Cook to hit your remaining macros”</b> card links straight into Mike's Cookbook with exactly what's left — it answers with recipes that fit, and on a heavy leg day it leans the suggestions carb-forward to help you replenish. Train on a given day and you'll see a <b>“+200 kcal today — you trained”</b> line on top of your usual target — no need to separately track training vs. rest days yourself. And in the goals calculator, the Activity suggestion is now based on your real logged sessions and tonnage this week, not just a guess. Once a week, if your logged intake and bodyweight trend say your calorie target's out of sync with your goal, an <b>“Adjust your calorie target?”</b> card offers a ±100 kcal tweak — Apply it in one tap, or Not now to skip it. The two apps share one sign-in, so a meal you plan in Mike's Cookbook shows up right here — the planned card also totals your planned calories & protein against today's goal, so you can see how the day's shaping up before you've eaten a bite.",
+      cta:{ico:'🍎',label:'Try it now',name:'Open the Nutrition tracker',href:'dashboard.html?tab=nutrition'}
+    },
+    {
+      eyebrow:'Module 12 · Dial in the details',
+      title:"Nutrition facts, your serving size",
+      tagline:"Every food opens a tappable nutrition-facts sheet — flip between grams and oz, key in your exact amount, and the macros recalc live.",
+      scene:{glyph:'🔢',caption:'Tap a food → UOM toggle (g / oz) → keypad qty → Log Food',color:'rgba(52,211,153,0.32)',glow:'rgba(52,211,153,0.12)'},
+      narration:"Tap any food and its nutrition-facts sheet slides up: calories, the macro breakdown, and the micronutrients beneath. Toggle the unit between grams and ounces, or stick with the standard serving. Then use the keypad to enter exactly how much you ate — type 3 for three servings, or punch in the grams — and everything updates as you go. When it's right, tap Log Food.",
+      steps:[
+        {tx:"Tap any food (from search, a scan, or your day) to open its <b>nutrition-facts sheet</b>."},
+        {tx:"Toggle <span class='tap'>grams</span> / <span class='tap'>oz</span> / serving — the macros recalculate instantly."},
+        {tx:"Use the <b>keypad</b> to enter a custom quantity or a multiple (e.g. <b>3 ×</b> a 2-tbsp serving)."},
+        {tx:"Tap <span class='tap'>Log Food</span> to drop it into your day's timeline."}
+      ],
+      tip:"Calories, protein, fat and carbs all update <b>live</b> as you change the unit or quantity — what you see is what gets logged."
+    },
+    {
+      eyebrow:'Module 13 · Your go-to foods',
+      title:"Favorites — log your staples fast",
+      tagline:"The foods you eat every day shouldn't need a search every time. Star them once and quick-log from your Favorites library.",
+      scene:{glyph:'⭐',caption:'☆ on any food → Favorites library → tap → Log Food',color:'rgba(212,175,55,0.32)',glow:'rgba(212,175,55,0.14)'},
+      narration:"See that star on the nutrition-facts sheet? Tap it to save the food to your Favorites. Then, from the star in the Nutrition header, open your Favorites library — your most-eaten foods and any saved meals, ready to go. Tap one, confirm the amount, and Log Food. Your daily staples go in with two taps instead of a fresh search every time.",
+      steps:[
+        {tx:"On any nutrition-facts sheet, tap the <span class='tap'>☆ star</span> to favorite the food."},
+        {tx:"Open <span class='tap'>★ Favorites</span> from the Nutrition tab header."},
+        {tx:"Switch between your favorite <b>Foods</b> and saved <b>Meals</b>."},
+        {tx:"Tap a favorite and hit <span class='tap'>Log Food</span> to add it to today instantly."}
+      ],
+      cta:{ico:'⭐',label:'Try it now',name:'Open your food Favorites',href:'dashboard.html?tab=nutrition'}
+    },
+    {
+      eyebrow:'Module 14 · Take it anywhere',
+      title:"Install & train offline",
+      tagline:"MC Training is a PWA — add it to your home screen and it works in the gym with zero signal.",
+      scene:{glyph:'📲',caption:'Add to Home Screen → launches full-screen → works offline',color:'rgba(212,175,55,0.3)',glow:'rgba(212,175,55,0.14)'},
+      narration:"Last thing. This app installs. Tap your avatar and look for the Install section in the account sheet — on Android that's a one-tap Install app button, on iOS it walks you through Share → Add to Home Screen. Either way it launches full-screen like a native app, and it works offline. The moment you set a program active, its pages start saving in the background — you don't have to open every day by hand first. Dead gym signal? Your programs, logging, and PRs keep working. An update banner taps you to refresh when there's something new.",
+      steps:[
+        {tx:"Tap your <b>avatar</b>, open the <span class='tap'>Install</span> section, and follow the prompt for your device."},
+        {tx:"Launch from the icon — it opens <b>full-screen, no browser bar</b>."},
+        {tx:"Set a program active and its pages start saving for offline automatically — look for <b>Available offline ✓</b> on your hero card."},
+        {tx:"Train <b>offline</b>; tap the green <b>🔄 Update available</b> banner whenever it appears."},
+        {tx:"Turn on notifications and, once a week, you'll get a short <b>check-in push</b> — workouts logged, bodyweight trend, nutrition adherence — even on days you don't open the app."}
+      ],
+      tip:"Your logs, PRs, and custom workouts are saved <b>on your device</b> — private and instant."
+    },
+    {
+      eyebrow:'You’re ready',
+      title:"That’s the whole app 💪",
+      tagline:"You can now find a workout, log every set, earn PRs, review your history, build your own, and track your macros. Time to train.",
+      scene:{glyph:'🔥',caption:'Pin · Log · Finish · Review · Build · Fuel — you’ve got it all',color:'rgba(212,175,55,0.35)',glow:'rgba(212,175,55,0.16)'},
+      narration:"That's it — you're tour-complete. Pin a program, log your sets, finish strong, and watch those PRs stack up — then fuel it all in the Nutrition tab. Replay this tour anytime from the dashboard. Now go put in the work.",
+      finish:[
+        "Pin your Current Program from the dashboard",
+        "Log sets with weight, reps & auto rest timer",
+        "Finish Workout to bank your PRs",
+        "Review everything in Workout Logs",
+        "Build & run your own custom workouts",
+        "Track macros, scan barcodes & log favorite foods"
+      ],
+      cta:{ico:'⚡',label:'Start training',name:'Go to my Dashboard',href:'dashboard.html'},
+      last:true
+    }
+  ];
+
+  function sceneHTML(s){
+    return '<div class="scene" style="--scene-c:'+s.scene.color+';--scene-glow:'+s.scene.glow+'">'
+      +'<div class="scene-glow"></div>'
+      +'<div class="scene-glyph">'+s.scene.glyph+'</div>'
+      +'<div class="scene-caption">'+s.scene.caption+'</div>'
+      +'<div class="scene-clip"><span class="dot"></span>Tour clip</div>'
+      +'<div class="scene-play">▶</div>'
+      +'</div>';
+  }
+
+  /* The markup for one slide's contents. The element that wraps it belongs to
+     the page: the step tour wraps it in a .slide, the one-page version in a
+     plain <section>. Everything inside is identical by construction, which is
+     the point of it living here. */
+  function slideBodyHTML(s){
+    var h='';
+    h+='<div class="eyebrow">'+s.eyebrow+'</div>';
+    h+='<h1 class="slide-title">'+s.title+'</h1>';
+    h+='<p class="slide-tagline">'+s.tagline+'</p>';
+    h+=sceneHTML(s);
+    h+='<div class="narration"><p>'+s.narration+'</p></div>';
+    if(s.steps&&s.steps.length){
+      h+='<div class="steps-label">Step by step</div><ol class="steps">';
+      s.steps.forEach(function(st,n){
+        h+='<li class="step"><div class="step-n">'+(n+1)+'</div><div class="step-tx">'+st.tx+'</div></li>';
+      });
+      h+='</ol>';
+    }
+    if(s.finish&&s.finish.length){
+      h+='<div class="steps-label">You can now</div><ul class="finish-list">';
+      s.finish.forEach(function(f){ h+='<li><span class="chk">✓</span><span>'+f+'</span></li>'; });
+      h+='</ul>';
+    }
+    if(s.tip){
+      h+='<div class="tip"><div class="tip-ico">💡</div><div class="tip-tx"><b>Pro tip:</b> '+s.tip+'</div></div>';
+    }
+    if(s.cta){
+      var cls=s.last?'finish-cta':'try-cta';
+      if(s.last){
+        h+='<a class="finish-cta" href="'+s.cta.href+'" onclick="markDone()">'+s.cta.ico+' '+s.cta.name+' →</a>';
+      } else {
+        h+='<a class="try-cta" href="'+s.cta.href+'">'
+          +'<div class="try-cta-ico">'+s.cta.ico+'</div>'
+          +'<div class="try-cta-body"><div class="try-cta-lbl">'+s.cta.label+'</div><div class="try-cta-nm">'+s.cta.name+'</div></div>'
+          +'<div class="try-cta-arrow">→</div></a>';
+      }
+    }
+    return h;
+  }
+
+  window.MC_TOUR = { SLIDES: SLIDES, slideBodyHTML: slideBodyHTML };
+})();

@@ -201,8 +201,9 @@ workflow below, so a green CI run does not exercise them.
 to use — update the matching onboarding doc in the same piece of work:
 
 - **App-wide feature** (dashboard, Conditioning Corner, calendar, macros
-  search, substitute picker, etc.) → update **`quick-tour.html`** and/or
-  **`quick-tour-overview.html`**.
+  search, substitute picker, etc.) → update **`quick-tour-data.js`** (the
+  tour's slides live there now, not in `quick-tour.html` — see the section
+  below) and/or **`quick-tour-overview.html`**.
 - **Program-specific feature** (a new day type, a new intensifier, a change to
   how a specific program's split/structure works) → update that program's own
   **`<id>-instructions.html`** guide (e.g. `mc-instructions.html`,
@@ -228,6 +229,70 @@ that existing guide copy is now wrong, update or remove that section rather
 than leaving stale copy. This is independent of the planning rule above —
 even a change small enough to skip the artifact/roadmap still needs its
 guide entry if it's user-facing.
+
+---
+
+## Quick Tour & Executive Summary — the three files behind them
+
+`quick-tour.html` is the step tour, `quick-tour-overview.html` the Executive
+Summary. Two files now sit under them:
+
+- **`quick-tour-data.js`** (`window.MC_TOUR`) — the `SLIDES` array **and**
+  `slideBodyHTML(s)`, the one function that turns a slide into markup. Data and
+  renderer ship together because the renderer is the only reader of a slide's
+  shape; a field added to one and not the other is the drift worth preventing.
+  **Two CI gates read the tour's prose here, not in the page**:
+  `tools/check-tour-coverage.js` (feature keywords) and the tour claims in
+  `tools/check-docs.js` — reading only `quick-tour.html` would have failed on
+  every feature the moment the text moved. Move the prose, move the gate.
+- **`quick-tour.css`** — the 184 lines of layout that were inline in
+  `quick-tour.html`, so the step tour and the one-page view cannot look like
+  different products.
+- **`quick-tour-full.html`** — every slide as one scrollable document, with a
+  contents list. One step at a time is right for a first open and wrong for
+  looking something up later. Linked from the tour's top beside the Executive
+  Summary link, and from the Summary's foot.
+
+**Leaving the inline `<style>` put 184 lines in front of
+`tools/check-design-tokens.js` for the first time**, which is worth knowing
+before moving any other page's CSS out: the gate scans tracked `.css` files
+only, so every inline block in this tree is unmeasured. It found two real cool
+dark neutrals (a bespoke blue-biased gradient on the scene frame, the same
+shape `premium-design-roadmap.md`'s `P5` found on the card surface), now
+remapped onto `--ink-*` by measured luminance. 22 `font-size` and 3
+`border-radius` literals had exact `--fs-*`/`--r-*` equivalents and were
+converted with zero pixels moved; the remaining 7 sizes, 10 radii and 2 hexes
+have no token and **raised the ratchet** (`tools/design-token-budgets.json`:
+90/147/84 → 97/149/94). That increase is previously-unscanned CSS entering the
+gate's view, not new declarations — tokenizing the rest is its own change.
+
+**The bigger find: the tour had no light theme at all.** Its own `:root`
+declares `--bg`/`--text`/`--muted`/`--gold`, which outranks `base.css`'s
+`html[data-theme="light"]` token flip, so on the Sand ground it kept handing
+out white text, slate captions and the brand gold — which `base.css`'s own
+`--accent` comment measures at **1.88:1** on cream. It survived because only
+ONE slide is on screen at a time: `check-contrast.js` counted 7 findings and
+the budget was 6. Rendering all 18 at once turned the same defect into **105**.
+Both pages now carry a light block (`quick-tour-overview.html` had one that
+never covered its own `--gold` or its slate body text). Measured three times,
+stable: `quick-tour.html` 7 → **0**, `quick-tour-overview.html` 15 → **0**,
+`quick-tour-full.html` **0**, and all three budgets are lowered to 0 by hand —
+not with `--update`, which `P4` records as untrustworthy from an agent sandbox.
+
+- **`mc-pdf.js`** (`window.MC_PDF`) — a hand-rolled PDF 1.4 writer behind the
+  Executive Summary's **Export PDF** button. No library, no build step, the two
+  Core-14 fonts every reader already has, so nothing is embedded or fetched and
+  it works with zero signal from the SW cache. It reads the page off the **live
+  DOM** rather than re-describing it: that page is hand-authored prose that
+  changes whenever the app does (the Documentation currency rule above), and a
+  second copy inside a generator is exactly the drift that rule prevents.
+  `.no-pdf` opts an element out; a per-call `styles` map says which class is a
+  heading, and `skip` drops chrome. Two things to know before changing it: text
+  is written as **WinAnsi bytes**, so anything outside that encoding is folded
+  or dropped (`FOLD` — this app's copy is full of emoji, and a dropped glyph
+  beats a byte a reader rejects); and the xref offsets are counted in **string
+  length**, which is only also the byte length because every character is ≤ 0xFF
+  by then — a UTF-8 `Blob` would silently invalidate all of them.
 
 ---
 
