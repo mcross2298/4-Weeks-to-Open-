@@ -1596,6 +1596,53 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > list the build enforces. Both predicates fire on a planted row and read zero
 > on the real data.
 
+> **Post-implementation verification pass (2026-09-12) — the fourth artifact
+> in this series** (`https://claude.ai/code/artifact/2273a26c-7694-432e-ba73-2fabcaaebfc1`).
+> Phase 0–5 re-verified against the real source, the committed gates, headless
+> Chromium and the live Supabase project: **51 gates executed, 51 passed,
+> 1,008 counted assertions**; the Phase 0.4 migration, the Phase 1.4 backfill
+> and the Phase 5.4 leak scan all read back out of `pg_catalog` rather than
+> trusted from their notes. **Three committed gates could not run here** and
+> are named as gaps, not reported clean: `tests/test_rls.py` (no
+> `SUPABASE_DB_URL`), and both ratchets (the font constraint below). 14 new
+> findings, none blocking.
+>
+> **Three are worth knowing before touching the log layer.** `mc-readiness.js:81`
+> is a **fifth `sets` reader `FIX-04` never migrated** — it reads
+> `(e.sets || []).filter` directly while four sibling modules delegate to
+> `mc-log-read.js`'s `readSets()` and carry a comment saying the bare guard
+> covers a missing list "**and nothing else**"; `check-single-impl.js` can't
+> see it (unmigrated CALL SITE, not a duplicate declaration) and
+> `test-mc-store-resilience.js`'s fixtures can't either (they cover
+> `"sets":null` and `[null]`, never a wrong non-null scalar). No live trigger
+> — every writer in the app emits an array — so it's queued, not urgent.
+> `dashboard.html:2817`'s `loadWrapped()` targets **six element ids authored
+> nowhere**, throws unguarded on 2827 for any athlete with a finished workout,
+> and an empty `catch` swallows it — **the third instance of the `#pushChip` /
+> `MC_TOAST` shape**, and the first found by sweeping for the shape rather
+> than meeting it. The same sweep found `MCSwap` (assigned nowhere, six
+> guarded call sites on three pages, so substitution is silently unavailable
+> there) and a dead read at `mc-summary.js:277`.
+>
+> **And one correction in the roadmap is itself wrong:**
+> `supabase/daily-health.sql` records "no writer anywhere — not in the app,
+> not in an Edge Function", but an **`upsert-health` Edge Function has been
+> ACTIVE since late June**, deployed with no committed source — so a search of
+> `pg_proc` and of the repository both missed it. The decision to keep the
+> table stands; the remaining work is a client caller, not a pipeline.
+> Related: **4 of 11 deployed function slugs have no committed source**, and
+> **9 of 17 FKs into `auth.users` still read `NO ACTION`**, so account
+> deletion is complete for a trainee and blocked for an owner/PM/tester.
+>
+> **The font constraint was reproduced, not cited** (a fourth re-derivation
+> avoided): `curl` reaches `fonts.googleapis.com` and returns 200 while
+> headless Chromium's request for the same stylesheet **fails** and
+> `document.fonts.size` reads 0. Also worth knowing when running the browser
+> gates from a session: Playwright isn't resolvable by default and the
+> pre-installed Chromium's build id doesn't match what a current Playwright
+> expects — `MC_CHROMIUM` fixes it for the tools that honour it, but
+> `tools/smoke-test-pages.js` does **not** read that override.
+
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 
 ### Decisions locked in (via AskUserQuestion, session 2026-06-27)
