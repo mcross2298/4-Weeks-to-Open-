@@ -990,7 +990,7 @@ and wired into `verify.yml`.
 | `mc-supabase.js` | edit | `getSessionSets()`; `logSet()` insert → upsert; delete on uncheck | 0.2, 0.4 |
 | `mc-strain.js` | edit | Guard `sessionTonnage()` against null members and non-arrays; clamp weight, reps, duration | 0.3 |
 | `mc-maxout.js` | edit | Make `round5()` and `applyEquipCoeff()` total; add Plate-Loaded to the discount | 0.3 |
-| `mc-data.js` | edit | Export the shared `readWorkoutLog()` | 0.3 |
+| `mc-log-read.js` | edit | Export the shared `readWorkoutLog()` | 0.3 |
 | `mc-stats.js`, `mc-recap.js`, `mc-calendar.js`, `mc-exercise-trends.js`, `mc-maxout.js` | edit | Delete the five local log readers, call the shared one | 0.3 |
 | `mc-sync.js` | edit | Date both sides in `mergeSetlog` before bucketing; sort by the dated key, `ts` as tiebreaker | 5.1 |
 | `mc-log-read.js` | edit | `dayKey()`/`dayLabel()`/`normalizeDay()`/`normalizeSessions()` — the dated key and its migration, in the one module both the browser and the `vm` suites reach | 5.1 |
@@ -1047,3 +1047,136 @@ and that confirmation would be false.
 Nothing in the audit modified the repository or the database: the SQL ran
 inside rolled-back transactions and every browser test used a throwaway
 profile.
+
+---
+
+## Post-implementation verification pass (2026-09-12)
+
+> **Fourth artifact in this series —
+> `https://claude.ai/code/artifact/2273a26c-7694-432e-ba73-2fabcaaebfc1`** —
+> a verification pass over Phase 0–5 run against the real source, the
+> committed gate suite, headless Chromium and the live Supabase project.
+> **51 gates executed, 51 passed, 1,008 counted assertions.** Three committed
+> gates could not run here and are named as gaps rather than reported clean:
+> `tests/test_rls.py` (no `SUPABASE_DB_URL` in the environment),
+> `check-contrast.js` and `check-visual-ratchet.js` (the font constraint
+> below). 14 new findings, **none blocking launch**; 9 earlier findings
+> reconciled.
+>
+> **The database half was read back out of `pg_catalog`, not trusted from the
+> Phase 0.4 note**, and it holds: `workout_logs_set_uniq` present,
+> `user_sync`'s FK reading `ON DELETE CASCADE`, `daily_health` carrying four
+> policies including DELETE, **0 duplicate groups across 120 rows**, RLS
+> enabled on **16 of 16** tables. Phase 1.4's backfill reads **120/120 rows
+> carrying `muscle`**, 7 groups over 39 exercises, `program_id` null on all
+> 120 as intended. Phase 5.4's leak predicate was reproduced directly:
+> **0 hits across 4 world-readable tables × 10 brand terms**, over the same
+> 67 override rows / 6 page ids the phase recorded. Phase 1.2's functions are
+> ACTIVE at version 2 on the slugs the client posts to.
+>
+> **`TEST 1`–`TEST 4` and the journey gate were re-proved by driving, not
+> read.** Two-tab race 10/10 persisted, cloud rehydrate restoring 4 of 4 sets
+> with their ticks, 25 corrupt-store page loads clean, journey 9/9 with the
+> subsystem pass 3/3.
+>
+> ### Three findings worth carrying forward
+>
+> **`V-01` — the fifth log reader `FIX-04` missed.** Four modules carry an
+> identical comment recording the contract ("guards a MISSING set list **and
+> nothing else**") and honour it by delegating to `mc-log-read.js`'s
+> `readSets()`. **`mc-readiness.js:81` still reads `(e.sets || []).filter`
+> directly**, in `lastStimulus()`, with no enclosing `try`.
+> `check-single-impl.js` cannot catch it — the defect is an unmigrated CALL
+> SITE, not a duplicate declaration — and **`test-mc-store-resilience.js`'s
+> fixtures cannot see it either**: `nullMember` covers `{"sets":null}` and
+> `{"sets":[null]}`, and no shape gives an entry a wrong non-null scalar.
+> Scope honestly: `mc-finish.js:235` and `mc-cond.js:83` always write an
+> array, so there is **no live trigger from app-written data** — the exposure
+> is a sync pull from an older build, a restored backup, or corruption, and it
+> would take out the per-muscle recovery read the body map, the Readiness
+> Brief and the recovery curve all consume. One line plus one fixture.
+>
+> **`V-02` — the third instance of one defect shape, found by sweeping for
+> the shape.** `dashboard.html:2817`'s `loadWrapped()` targets **six element
+> ids authored nowhere in the tree**; line 2827 is unguarded, so it throws for
+> any athlete with a finished workout, and the empty `catch` at 2851 swallows
+> it. Confirmed by driving with three seeded workouts, not by reading.
+> Severity is low only because the visible "Wrapped" tile links to
+> `wrapped.html`, which works — this is orphaned code from when the inline
+> card became a link. **It is the same shape as Phase 4.5's `#pushChip` and
+> Phase 5.3's `MC_TOAST`**, both fixed one instance at a time by passes that
+> never swept for the class. Two more came out of the same sweep: `MCSwap` is
+> assigned nowhere yet drives six guarded call sites on three pages (`V-07` —
+> exercise substitution silently unavailable there), and
+> `mc-summary.js:277` writes the live set count into an id that module never
+> authors (`V-08`).
+>
+> **`R-08` — a correction in this roadmap that is itself wrong.**
+> `supabase/daily-health.sql` records "There is NO upsert function" and "no
+> writer anywhere — not in the app, not in an Edge Function." **An
+> `upsert-health` Edge Function has been ACTIVE since late June**: POST-only,
+> resolves the caller from their own JWT, upserts on `user_id,date`. The
+> narrow claim is true — no health function exists in `public`, which holds
+> only `handle_updated_at` and `rls_auto_enable` — and that is what caused the
+> error: "upsert function" was ambiguous between a Postgres and an Edge
+> function, and the correction searched `pg_proc` and the repository. **The
+> function is in neither: it is deployed with no committed source.** The
+> decision to keep the table stands and correction 2 (device-measured columns
+> vs manual self-report, 2 of 5 overlapping) was re-verified and holds. What
+> changes is the remaining work — the ingest endpoint is built and live, so
+> what is missing is a client caller, not a pipeline. Filed with `V-05`:
+> **4 of 11 deployed slugs have no committed source** (`upsert-health`,
+> `fetch-recipe-source`, and the two starter templates at `quick-service` /
+> `hyper-function`, whose display names are "push-notify" and "coach-claude",
+> so a function listing shows each real function twice).
+>
+> ### Also logged
+>
+> `V-03` **9 of 17 FKs into `auth.users` still read `NO ACTION`** — Phase
+> 0.4's scope was correct (all five athlete-data tables cascade) but the
+> go-live criterion "an account can actually be deleted" holds for a trainee
+> and not for an owner, PM or tester, every one of those nine being an
+> authorship or role column. `V-11` **`push_subscriptions` holds 0 rows** — the
+> notification path has never completed once, which with Phase 1.1's unset
+> secret is the highest-rated residual risk in the artifact. `V-10`
+> `storageReads` sits above its stored budget on all three perf probe pages
+> (28 vs 26, 19 vs 17 twice), inside the 1.5× ceiling but drifting in the
+> same direction on all three. `V-12` the handoff table above named
+> `mc-data.js` for `readWorkoutLog()`; it lives in `mc-log-read.js`, and the
+> row is corrected in the same change as this entry.
+>
+> ### The font constraint, reproduced rather than cited
+>
+> `P4` and `W-I3` both record it; this pass measured it again so it is not
+> re-derived a fourth time. **`curl` reaches `fonts.googleapis.com` and
+> returns 200 while headless Chromium's request for the same stylesheet
+> fails and `document.fonts.size` reads 0.** The constraint is the *browser's*
+> network, not the machine's — which is exactly what checking with `curl`
+> hides. So the contrast and visual ratchets are deliberately **not certified
+> from this session**; enforcing runs belong in CI, and
+> `contrast-budgets-dark.json` still needs one `--dark --update` run from
+> there before that gate can fail at all (`V-13`; the 587 counted dark
+> failures remain unacted).
+>
+> ### One environment note that cost real time
+>
+> Playwright is not resolvable by default here, and the pre-installed
+> Chromium's build id does not match what a current Playwright expects.
+> `MC_CHROMIUM` fixes it for the tools that honour it;
+> `tools/smoke-test-pages.js` does **not** read that override, so it needs the
+> build-id directory names to exist instead.
+>
+> ### A false positive of this pass's own, recorded rather than dropped
+>
+> Driving the dashboard with a seeded log threw
+> `(e.sets || []).filter is not a function`. Before filing it as a live crash
+> I checked what writes that store: the fixture used `sets: <number>`, a shape
+> **the app never produces**. The crash was mine; the unmigrated reader it lit
+> up is `V-01`, and is real. Also ruled out: `window.MC_WEEK` (an optional
+> hook `program-overrides.js` documents, with a working `?w=N` fallback),
+> five browser APIs flagged by the same never-assigned sweep
+> (`AudioContext`, `SpeechRecognition`, `PublicKeyCredential`,
+> `BarcodeDetector`, `Worker` — correct feature detection), and `RECIPES`
+> (the cookbook's global, read by the same-origin bridge by design).
+>
+> **Nothing in this pass modified the database.** Every query was a read.
