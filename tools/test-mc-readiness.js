@@ -42,6 +42,15 @@ global.window = {
   }
 };
 
+// mc-readiness.js reads each session's set list through the one shared
+// reader (FIX-04, and V-01 for this file specifically — it was the one
+// delegator the original sweep missed). Every page that loads it also loads
+// mc-log-read.js first — enforced by tools/check-script-manifest.py's
+// LOG_CONSUMERS list — so the harness composes the same pair rather than
+// testing the module in a shape no real page runs (same convention as
+// tools/test-mc-quick-pump.js).
+global.window.MC_LOG = require(path.resolve(__dirname, '../mc-log-read.js'));
+
 const ready = require(path.resolve(__dirname, '../mc-readiness.js'));
 
 function setLog(entries) { kv['mc_workout_log_v1'] = JSON.stringify(entries); }

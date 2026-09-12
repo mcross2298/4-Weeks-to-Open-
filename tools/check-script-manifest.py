@@ -165,6 +165,8 @@ LOG_CONSUMERS = [
     "mc-strain.js",
     "mc-wrapped.js",
     "mc-cond.js",
+    "mc-readiness.js",  # V-01, post-implementation verification pass 2026-09-12:
+                        # the one delegator FIX-04's original sweep missed
 ]
 
 

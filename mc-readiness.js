@@ -56,6 +56,18 @@
 
   function workoutLog() { return readJSON(WL_KEY, []); }
 
+  // FIX-04 (audit L-03): `(e.sets || [])` guards a MISSING set list and
+  // nothing else — an object where an array belongs throws
+  // `.filter is not a function`, and a null member throws one level in.
+  // One-line delegation to the single implementation in mc-log-read.js
+  // rather than a sixth private copy of the filtering itself. (This was
+  // the one call site FIX-04's original sweep missed — post-implementation
+  // verification pass, finding V-01, 2026-09-12.)
+  function setsOf(e) {
+    return (isBrowser && window.MC_LOG && window.MC_LOG.readSets)
+      ? window.MC_LOG.readSets(e) : [];
+  }
+
   function classify(name) {
     try {
       if (isBrowser && window.MC_MUSCLES) return window.MC_MUSCLES.classify(name).id;
@@ -78,7 +90,7 @@
     for (var i = 0; i < log.length; i++) {
       var e = log[i];
       if (!e || !e.date) continue;
-      var matching = (e.sets || []).filter(function (s) { return classify(s.name) === muscleId; });
+      var matching = setsOf(e).filter(function (s) { return classify(s.name) === muscleId; });
       if (!matching.length) continue;
       var nearFailure = matching.filter(function (s) {
         return s.rpe === 'F' || parseFloat(s.rpe) >= 9.5;
