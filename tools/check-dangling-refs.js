@@ -391,11 +391,14 @@ function main() {
     fail = true;
     console.error(`\ncheck-dangling-refs: ${danglingGlobals.length} global(s) read but assigned nowhere\n`);
     for (const g of danglingGlobals) {
-      console.error(`  window.${g}`);
+      console.error('  window.' + g);   // concatenated, not interpolated: a
+      // `window.${g}` template makes this file's OWN source read as a
+      // reference to a global named $, which then passes only because the
+      // minified vendor bundle happens to assign a symbol of that name.
       globals.read.get(g).forEach((site) => console.error(`      read at ${site}`));
     }
     console.error(`
-  Nothing assigns these, so \`if (window.X)\` is always false and the branch
+  Nothing assigns these, so the guard around each is always false and the branch
   behind it is dead (Phase 5.3's MC_TOAST, V-07's MCSwap). Build it, load the
   module that provides it, or delete the branch. A real platform API belongs
   in HOST_GLOBALS, a genuinely external one in FOREIGN_GLOBALS, and a
