@@ -82,7 +82,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
    scale without a design decision; each sits between two steps or is a non-body
    glyph, and snapping would visibly shift the Onyx layout):
      • Display / heading half-steps: 19px (.topbar-title, .sec-title,
-       .prog-rail-title), 22px (.hero-name, .wrapped-stat-num), 23px
+       .prog-rail-title), 22px (.hero-name), 23px
        (#scr-dashboard .hero-name), 26px (#scr-* .topbar-title), 28px
        (.custom-empty-icon), 17px (.hero-ring-num, .cond-name, .cat-name).
      • Onyx UI micro-labels below --fs-3xs (10px): 8.5px (.hero-ring-lbl),
@@ -338,39 +338,6 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
   background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.25);
   border-radius:8px;padding:5px 10px;white-space:nowrap;
 }
-
-/* ── MC WRAPPED CARD ── */
-.wrapped-card{
-  margin:0 18px 20px;
-  background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(30,30,40,0));
-  border:1px solid rgba(212,175,55,0.22);border-radius:20px;padding:18px 18px 16px;
-  display:none;
-}
-.wrapped-card.visible{display:block;}
-.wrapped-header{
-  display:flex;align-items:center;gap:10px;margin-bottom:14px;
-}
-.wrapped-title{font-size:var(--fs-lg);font-weight:900;color:var(--gold);letter-spacing:0.02em;flex:1;}
-.wrapped-refresh{
-  font-size:var(--fs-2xl);cursor:pointer;color:var(--muted2);
-  background:none;border:none;padding:4px;line-height:1;
-}
-.wrapped-grid{
-  display:grid;grid-template-columns:1fr 1fr;gap:10px;
-}
-.wrapped-stat{
-  background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:12px 14px;
-}
-.wrapped-stat-num{font-size:22px;font-weight:900;color:var(--text);line-height:1;}
-.wrapped-stat-lbl{font-size:var(--fs-3xs);font-weight:700;color:var(--muted2);letter-spacing:0.06em;margin-top:3px;text-transform:uppercase;}
-.wrapped-muscle{
-  grid-column:1/-1;
-  display:flex;align-items:center;gap:12px;
-}
-.wrapped-muscle-bar{
-  flex:1;height:4px;background:var(--border2);border-radius:2px;overflow:hidden;
-}
-.wrapped-muscle-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 0.5s;}
 
 /* ── CLIENT ASSIGNMENT CARD (roadmap 4.5) ── */
 .client-assign-card{
@@ -912,10 +879,10 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 
 /* Light-touch retheme for sections not pictured in the reference (kept in
    place per the approved plan — just blended into the new dark surface) */
-#scr-dashboard .coach-section,#scr-dashboard .wrapped-card,#scr-dashboard .push-chip{
+#scr-dashboard .coach-section,#scr-dashboard .push-chip{
   background:var(--o-surface);border-color:var(--o-surface-border);
 }
-#scr-dashboard .coach-label,#scr-dashboard .wrapped-title{font-family:var(--font-display);}
+#scr-dashboard .coach-label{font-family:var(--font-display);}
 
 /* ══════════════════════════════════════════════════════════════
    ONYX — Programs screen redesign (continuation of the dashboard
@@ -2813,45 +2780,12 @@ function maybeCheckStreak(){
   }catch(e){}
 }
 
-// ── MC Wrapped — training stats card ────────────────────────────────────────
-function loadWrapped(){
-  try{
-    var log=JSON.parse(localStorage.getItem('mc_workout_log_v1')||'[]');
-    var days=new Set();
-    (Array.isArray(log)?log:[]).forEach(function(e){if(e.date)days.add(new Date(e.date).toDateString());});
-    var dayCount=days.size;
-    if(dayCount===0) return; // hide card when no data
-    var card=document.getElementById('wrappedCard');
-    if(card) card.classList.add('visible');
-
-    document.getElementById('wDays').textContent=dayCount;
-
-    // Active program name (short)
-    try{
-      var prog=JSON.parse(localStorage.getItem('mc_active_prog')||'null');
-      var progEl=document.getElementById('wProgram');
-      if(progEl) progEl.textContent=prog&&prog.name?prog.name.slice(0,12):'—';
-    }catch(e){}
-
-    // Sets + top muscle from Supabase (non-blocking)
-    if(window.MC_SB&&MC_SB.getWeeklyVolume){
-      MC_SB.getWeeklyVolume(365).then(function(counts){
-        var total=Object.values(counts).reduce(function(a,b){return a+b;},0);
-        var setsEl=document.getElementById('wSets');
-        if(setsEl) setsEl.textContent=total||'—';
-        if(!total) return;
-        var top=Object.entries(counts).sort(function(a,b){return b[1]-a[1];})[0];
-        if(!top) return;
-        var muscleEl=document.getElementById('wMuscle');
-        if(muscleEl) muscleEl.textContent=top[0].split(' ')[0]; // first word
-        var bar=document.getElementById('wMuscleBar');
-        if(bar) bar.style.width=Math.round(top[1]/total*100)+'%';
-      }).catch(function(){});
-    }
-  }catch(e){}
-}
-// Render on load after scripts settle
-setTimeout(loadWrapped,1500);
+// MC Wrapped is a PAGE (wrapped.html), reached from the tool card above.
+// The inline card it used to render here was removed when that page landed;
+// loadWrapped() outlived its markup and targeted six ids authored nowhere,
+// throwing on the first of them for any athlete with a finished workout and
+// having it swallowed by its own empty catch. Deleted with its CSS — see
+// tools/check-dangling-refs.js, the gate that now fails on the shape.
 </script>
 <script src="mc-onboarding.js"></script>
 <script src="mc-supabase.js"></script>
@@ -2883,8 +2817,6 @@ setTimeout(loadWrapped,1500);
   var n=EXERCISES.filter(function(e){return !skip[e.muscle];}).length;
   var dash=document.getElementById('libCountDash');
   if(dash)dash.textContent=n+' exercises by muscle group';
-  var el=document.getElementById('libCount');
-  if(el)el.textContent=n+' exercises · search by muscle group · save replacements';
 })();
 </script>
 </body>

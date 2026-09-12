@@ -1180,3 +1180,100 @@ profile.
 > (the cookbook's global, read by the same-origin bridge by design).
 >
 > **Nothing in this pass modified the database.** Every query was a read.
+
+---
+
+## Post-audit CI addendum (2026-09-12) — sweep for the class, not the instance
+
+> **Objective.** The verification pass above found `V-02`/`V-07`/`V-08` by
+> *sweeping for a defect shape* rather than by meeting one instance of it, and
+> said so plainly: the two earlier instances — Phase 4.5's `#pushChip` element
+> and Phase 5.3's `MC_TOAST` function — were "fixed one instance at a time by
+> passes that never swept for the class." Three passes have now each found a
+> fresh instance of the same shape. **A sweep that is not committed as a gate
+> is a sweep that has to be re-run by hand, by somebody who remembers to.**
+> This addendum commits it.
+>
+> **The shape.** Code reaches for a thing that does not exist — an element id
+> authored nowhere, or a global assigned nowhere — behind a guard (`if (el)`,
+> `if (window.X)`) or an empty `catch`. It never throws where anyone can see
+> it, so the feature is simply, silently absent. Every instance found so far
+> was invisible to every committed gate: `check-single-impl.js` sees duplicate
+> DECLARATIONS, not references to nothing; `check-script-manifest.py` sees
+> module load order, not the symbols inside; a console-error sweep sees
+> nothing because the guard is doing its job.
+>
+> **Scope.** One new gate, `tools/check-dangling-refs.js`, in two passes —
+> element ids and globals — plus the live instances it finds, so it lands as a
+> hard fail on a clean tree rather than as a ratchet seeded at today's count.
+> `V-10` (perf `storageReads` drift), `V-13` (the dark-contrast baseline) and
+> `V-03`/`V-05`/`V-11` (database and Edge Function residuals) are **not** in
+> this addendum: the first two are ratchet re-baselines that need a CI
+> environment to run honestly (the font constraint above), and the last three
+> are not CI work at all.
+
+### What shipped
+
+> **`tools/check-dangling-refs.js`**, wired into `verify.yml` beside
+> `check-single-impl.js`, and the nine live references it found. It is a hard
+> fail on a clean tree, not a ratchet seeded at today's count — for the reason
+> `check-design-tokens.js` records for its own lists: a ratchet would let a
+> DIFFERENT dangling reference be swapped in for one already counted and still
+> pass. **Proven to fail on six planted shapes** (a new dangling id, a new
+> dangling global, an authored id, a composed-prefix id, a
+> comment-only reference, and the same names in real code) before landing.
+>
+> **The sweep found three the verification pass had not.** `#libCount`, a
+> second and non-existent id read immediately beside the real `#libCountDash`.
+> `window.MC_TEMPO_OPTIONS`, which is **not** a defect — a page hook
+> `mc-card-actions.js` documents, whose unset case is that module's own
+> eight-entry default. That distinction is the one the gate has to get right,
+> so `OPTIONAL_HOOKS` is its own named category, and its rule is written down:
+> an entry whose "when unset" is "nothing happens" does not belong there.
+>
+> **And following `MCSwap` outward found a subsystem that was never built.**
+> `V-07` reads as six guarded call sites; it is more than that.
+> `driveway-demolition.html`, `hell-week.html` and `the-500.html` each publish
+> `MC_SWAP_MOVEMENTS` and `MC_SWAP_ONCHANGE`, carry `.swap-badge` CSS in their
+> own `<style>` (and twice more in `conditioning-elite.css`), and route every
+> rendered exercise name through a `swapName()`/`exName()` helper — all of it
+> consuming an `MCSwap` provided by **`mc-subs.js`, named in one page's own
+> comment, which has never existed in this repository's history.** None of the
+> three loads any substitution module either, so no swap could be created there
+> by any route. Deleted whole, the way the dead `_T` rest timer was; every
+> rendered name is identical, verified live at 320 and 390 on all three.
+>
+> **The V-02 throw is invisible to a console-error sweep**, which is worth
+> recording because it is the second time this repository has concluded a gate
+> must read the source rather than watch the browser. Driving the **pre-fix**
+> dashboard with three seeded finished workouts reports **zero errors** — the
+> empty `catch` swallows it. Instrumenting `getElementById` instead showed the
+> real sequence: `wrappedCard`, `wDays`, `Cannot set properties of null`, and
+> `wProgram` never reached. The function was dead at its second statement for
+> every athlete with a finished workout, and nothing could see it.
+>
+> **The gate's comment stripper is verified, not trusted.** It re-parses every
+> stripped `.js` file and aborts as a named TOOL FAULT if stripping broke one,
+> rather than reporting a tree it mis-parsed as clean. That fired on its first
+> run: a flat "consume to the next backtick" pass closes the OUTER template
+> literal on the first NESTED one, and it had eaten 16KB of the vendored
+> Supabase bundle. Stripping is load-bearing rather than cosmetic — `MC_TOAST`
+> survives in this tree only inside the comment recording its own removal, and
+> a gate that counted it would report a defect that was already fixed. Vendored
+> bundles now contribute assignments and never reads: their exports are real,
+> their internals are not this repository's contract, and policing them meant
+> allowlisting somebody else's wallet probe.
+>
+> **One thing the gate deliberately does not do.** It catches read-but-never-
+> assigned. The mirror image — `MC_SWAP_MOVEMENTS`, assigned by three pages and
+> read by nothing — is a much noisier class (every published API looks like it
+> until its consumer is found) and is not gated. It was caught here only
+> because it sat next to a reference that was.
+>
+> **Verified:** the full local gate list green (static gates, generators and
+> `--check` pairs, 22 `vm`-sandboxed suites, the tracked-`.js` syntax sweep),
+> `check-journey.js` 9/9 with its subsystem pass 3/3 — which drives `the-500`'s
+> interval timer, one of the three edited pages — its chrome pass over
+> `dashboard.html`, and the real-inset pass on 9 pages. All four edited pages
+> driven at 320 and 390: correct names rendered, zero script faults, no
+> sideways overflow, zero `.swap-badge` elements anywhere.

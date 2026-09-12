@@ -274,8 +274,9 @@
   }
 
   function updateStatBar(t){
-    var setsEl=document.getElementById('mcsSetsLive');
-    if(setsEl) setsEl.textContent=t.doneSets;
+    // No #mcsSetsLive read here: this module authors no such element and no
+    // page in the tree does either, so it only ever wrote into null. The live
+    // set count is rendered by render() into .sum-total-val, from the same t.
     var fill=document.getElementById('progFill');
     if(fill&&t.exTotal) fill.style.width=Math.round((t.exDone/t.exTotal)*100)+'%';
   }

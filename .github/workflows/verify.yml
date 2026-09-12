@@ -324,6 +324,19 @@ jobs:
         # page-local copy of either from being reintroduced silently.
         run: node tools/check-single-impl.js
 
+      - name: Dangling-reference check (no element id or global is read but never provided — post-audit CI addendum)
+        # Three separate passes each found a fresh instance of one shape: code
+        # reaching for a thing that does not exist, behind a guard or an empty
+        # catch, so the feature is silently ABSENT with a clean console.
+        # Phase 4.5's #pushChip meant the app had never asked for notification
+        # permission; Phase 5.3's MC_TOAST meant the full-storage warning had
+        # never been shown; the verification pass found six more ids, a whole
+        # swap subsystem whose module was never built, and a dead read. No
+        # other gate can see it — check-single-impl.js catches a duplicate
+        # DECLARATION, not a reference to nothing, and a console-error sweep
+        # catches nothing because the guard is doing its job.
+        run: node tools/check-dangling-refs.js
+
       - name: Store coverage check (store-registry.json vs mc-sync.js / mc-export.js — audit G-01/G-02)
         # Sync coverage, export coverage and the code's actual key usage were
         # three hand-maintained lists with nothing comparing them. They had

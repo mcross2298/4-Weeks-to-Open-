@@ -120,6 +120,7 @@ node tools/check-exports.js            # global-namespace convention (MC_SNAKE /
 node tools/check-program-data.js       # note-field + day-type vocabulary, fleet-wide
 node tools/check-one-timer.js          # no orphan/duplicate/missing rest-timer implementation
 node tools/check-single-impl.js        # declared shared functions exist exactly once tree-wide
+node tools/check-dangling-refs.js      # no element id or global is read but provided nowhere (post-audit CI addendum)
 node tools/check-store-coverage.js     # store-registry.json vs mc-sync.js STORES / mc-export.js KEYS
 node tools/check-topbar-inset.js       # sticky .topbar pins at top:0, absorbs the inset as padding, opaque
 node tools/check-design-tokens.js      # font-weight on-scale; radius/size/hex ratchets; no cool dark neutral; no glob-closed CSS comment
@@ -1642,6 +1643,59 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > pre-installed Chromium's build id doesn't match what a current Playwright
 > expects — `MC_CHROMIUM` fixes it for the tools that honour it, but
 > `tools/smoke-test-pages.js` does **not** read that override.
+
+> **Post-audit CI addendum shipped (2026-09-12) — `tools/check-dangling-refs.js`.**
+> The verification pass above found `V-02`/`V-07`/`V-08` by sweeping for a
+> defect SHAPE rather than by meeting an instance, and named the problem
+> plainly: Phase 4.5's `#pushChip` and Phase 5.3's `MC_TOAST` were each
+> "fixed one instance at a time by passes that never swept for the class."
+> **Three passes, three fresh instances.** A sweep that is not committed as a
+> gate has to be re-run by hand, by somebody who remembers to — so it is
+> committed. The gate has two passes: every literal `getElementById('x')` /
+> `querySelector('#x')` must have an author of that id somewhere in the tree,
+> and every `window.X` read must have an assignment, with three explicit,
+> individually-reasoned lists (platform APIs, foreign globals, documented page
+> hooks) rather than a count ratchet — a ratchet would let a DIFFERENT
+> dangling reference be swapped in for one already counted and still pass.
+> Proven to fail on six planted shapes before landing.
+>
+> **The sweep found three the verification pass had not**, which is the whole
+> argument for a gate over a pass: `#libCount` (a second, non-existent id
+> beside the real `#libCountDash`), `window.MC_TEMPO_OPTIONS` — correctly NOT
+> a defect, a documented page hook whose unset case is the module's own
+> default, and the reason `OPTIONAL_HOOKS` exists as a category — and,
+> following `MCSwap` outward, **a whole swap subsystem that was never built**:
+> three conditioning pages publish `MC_SWAP_MOVEMENTS`/`MC_SWAP_ONCHANGE`,
+> carry `.swap-badge` CSS in their own `<style>` and twice more in
+> `conditioning-elite.css`, and route every exercise name through
+> `swapName()`/`exName()` — all of it consuming an `MCSwap` that **`mc-subs.js`,
+> named in one page's own comment, would have provided. That file has never
+> existed in this repository's history.** Deleted whole, the way the dead `_T`
+> rest timer was; the rendered names are identical, verified live.
+>
+> **Two findings about verification method, not about the code.**
+> `loadWrapped()`'s throw is invisible to a console-error sweep: the empty
+> `catch` swallows it, so driving the pre-fix dashboard with three seeded
+> workouts reports **zero errors**. Instrumenting `getElementById` instead
+> showed the real sequence — `wrappedCard`, `wDays`, `Cannot set properties of
+> null`, and `wProgram` never reached, the function dead at its second
+> statement. That is why this gate is a **source** check, for the same reason
+> `check-topbar-inset.js` and `check-journey.js`'s safe-area pass are.
+> And the gate's own comment stripper is **verified rather than trusted**: it
+> re-parses every stripped `.js` file and fails as a named TOOL FAULT if
+> stripping broke one. That fired for real on its first run — a flat
+> "consume to the next backtick" pass closes the OUTER template literal on the
+> first NESTED one and ate 16KB of the vendored Supabase bundle. Stripping is
+> load-bearing, not cosmetic: `MC_TOAST` survives in this tree only inside the
+> comment recording its removal, and a gate that counted it would report an
+> already-fixed defect.
+>
+> **Deliberately not in this addendum:** `V-10` (perf `storageReads` drift) and
+> `V-13` (the dark-contrast baseline) are ratchet re-baselines that need a CI
+> environment to run honestly, per the font constraint recorded above; `V-03`,
+> `V-05` and `V-11` are database and Edge Function residuals, not CI work.
+
+---
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
 
