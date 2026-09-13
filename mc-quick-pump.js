@@ -361,7 +361,8 @@
       preferReadiness: preferReadiness,
       recentlyTrainedMuscles: recentlyTrainedMuscles,
       weeklySetsByMuscle: weeklySetsByMuscle,
-      lastWeightFor: lastWeightFor
+      lastWeightFor: lastWeightFor,
+      pickAnchor: pickAnchor
     };
   }
 })();

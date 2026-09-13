@@ -72,6 +72,9 @@ jobs:
         # this is real integration surface, not just a Phase 2.4 leftover.
         run: node tools/test-mc-quick-pump.js
 
+      - name: Quick Pump compound-anchor selection vs. the real catalog (audit F-05)
+        run: node tools/test-mc-quick-pump-catalog.js
+
       - name: Cross-app bridge regression tests (mc-bridge.js read layer + mc-sync.js merge logic)
         run: |
           node tools/test-mc-bridge.js
