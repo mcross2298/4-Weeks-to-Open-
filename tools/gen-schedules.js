@@ -105,6 +105,29 @@ function musclesFor(names) {
   return Array.from(set).sort();
 }
 
+// Audit F-03: the last week of a block may be declared a deload only if
+// doing so doesn't contradict the block's OWN prescribed volume. Measured
+// against the real data this generator reads: High-Volume's four weeks climb
+// 146 -> 196 -> 210 -> 238 sets, so flagging week 4 called the block's own
+// heaviest week its unload — a genuinely escalating block has no week that
+// deserves the label "lighter than what came before it". The Modality
+// Matrix's three phases run an identical 172 sets/week throughout, so its
+// final week TIES every other week rather than exceeding them; the
+// flag-triggered -1-set-per-exercise reduction is what makes it lighter,
+// the same mechanism `ss`'s own hand-authored week 6 already uses (also
+// flat at 138 sets/week pre-reduction) — nothing here contradicts that,
+// intentional, working pattern.
+//
+// The rule: the final week may deload only if at least one OTHER week's
+// volume is >= its own — i.e. it is not a sole, new peak. `weekVolumes` is
+// each week's raw prescribed total, in order, BEFORE any deload reduction.
+function lastWeekMayDeload(weekVolumes) {
+  const last = weekVolumes[weekVolumes.length - 1];
+  return weekVolumes.some(function (v, i) {
+    return i < weekVolumes.length - 1 && v >= last;
+  });
+}
+
 // ---- mm: three phases, read from mm-data.js -------------------------------
 function buildMM() {
   const ctx = { window: {} };
@@ -118,7 +141,7 @@ function buildMM() {
   if (!weeksPerPhase) die('mm-data.js exposed no WEEK_THEMES');
 
   let perWeek = null, rest = null;
-  const phases = [], days = [];
+  const phases = [], days = [], weekVolumes = [];
 
   ids.forEach(function (pid) {
     const prog = D.PROGRAMS[pid];
@@ -135,11 +158,16 @@ function buildMM() {
     }
 
     const order = [];
+    let phaseVolume = 0;
     list.forEach(function (d, i) {
       if (d.type === 'rest') return;
       const id = pid + '-' + (i + 1);
       order.push(id);
       const ex = d.exercises || [];
+      const sets = ex.reduce(function (n, e) {
+        return n + setsOf(e.w && e.w[0] && e.w[0].sets);
+      }, 0);
+      phaseVolume += sets;
       days.push({
         id: id,
         title: d.session,
@@ -149,9 +177,7 @@ function buildMM() {
         // Week 1 figures, the convention F0 set for ss: a per-week set count
         // would need 15 triples per day and would drift from the authored
         // prescription rather than describe it.
-        sets: ex.reduce(function (n, e) {
-          return n + setsOf(e.w && e.w[0] && e.w[0].sets);
-        }, 0),
+        sets: sets,
         // Exercise identity (not just its per-week scheme) is fixed across
         // all 5 weeks of a phase, so unlike ex/sets this needs no "week 1"
         // caveat — the same list trains the same muscles every week.
@@ -160,6 +186,10 @@ function buildMM() {
       });
     });
     phases.push({ weeks: weeksPerPhase, days: order });
+    // Same volume every week of the phase (the day list itself doesn't vary
+    // week to week — see the muscles comment above), so it repeats once per
+    // week the phase spans, in block-week order.
+    for (let w = 0; w < weeksPerPhase; w++) weekVolumes.push(phaseVolume);
   });
 
   const weeks = weeksPerPhase * ids.length;
@@ -174,7 +204,11 @@ function buildMM() {
     // week of the BLOCK and not of each phase: this block is three five-week
     // phases, but the High-Volume block below is four phases of ONE week each,
     // where per-phase would make every week a deload.
-    deloadWeeks: [weeks],
+    //
+    // lastWeekMayDeload() (audit F-03) gates it: this block's three phases
+    // prescribe an identical 172 sets/week throughout, so week 15 ties every
+    // other week rather than contradicting the block's own trend.
+    deloadWeeks: lastWeekMayDeload(weekVolumes) ? [weeks] : [],
     phases: phases,
     days: days
   };
@@ -198,7 +232,7 @@ function buildHV() {
   if (!Array.isArray(WEEKS) || !WEEKS.length) die('hv-block.html: WEEKS is not a non-empty array');
 
   let perWeek = null, rest = null;
-  const phases = [], days = [];
+  const phases = [], days = [], weekVolumes = [];
 
   WEEKS.forEach(function (w, wi) {
     const list = w.days || [];
@@ -208,18 +242,21 @@ function buildHV() {
     if (list.length !== perWeek) die('hv week ' + (wi + 1) + ' has ' + list.length + ' days, week 1 has ' + perWeek);
 
     const order = [];
+    let weekVolume = 0;
     list.forEach(function (d, i) {
       if (d.type === 'rest') return;
       const id = 'hv-w' + (wi + 1) + '-' + (i + 1);
       order.push(id);
       const ex = d.exercises || [];
+      const sets = ex.reduce(function (n, e) { return n + setsOf(e.sets); }, 0);
+      weekVolume += sets;
       days.push({
         id: id,
         title: d.session,
         icon: d.icon,
         tags: [d.meta || ('Week ' + (wi + 1))],
         ex: ex.length,
-        sets: ex.reduce(function (n, e) { return n + setsOf(e.sets); }, 0),
+        sets: sets,
         muscles: musclesFor(ex.map(function (e) { return e.name; })),
         href: 'hv-block.html?week=' + (wi + 1) + '&day=' + (i + 1)
       });
@@ -228,10 +265,19 @@ function buildHV() {
     // ([3,6] in week 1, [6,7] in week 2), which is why the record shape carries
     // it per phase rather than once per program.
     phases.push({ weeks: 1, days: order, rest: thisRest });
+    weekVolumes.push(weekVolume);
   });
 
+  // lastWeekMayDeload() (audit F-03): this block ESCALATES by its own design
+  // (146 -> 196 -> 210 -> 238 sets across its four weeks — "compound-dominant,
+  // into full supersets, into high-set pyramids, into bodyweight density" per
+  // the program's own description), so its final week is the block's own
+  // heaviest, not its lightest. Flagging it a deload previously had the app
+  // badge the hardest week of the block "prescribed lighter" and apply the
+  // -1-set-per-exercise reduction to it — still 30% above week 1 afterward.
   return { weeks: WEEKS.length, perWeek: perWeek, rest: rest,
-           deloadWeeks: [WEEKS.length], phases: phases, days: days };
+           deloadWeeks: lastWeekMayDeload(weekVolumes) ? [WEEKS.length] : [],
+           phases: phases, days: days };
 }
 
 // ---- splice into mc-pm-data.js -------------------------------------------
@@ -253,18 +299,26 @@ function splice(src, progId, block) {
   return src.slice(0, i) + body + src.slice(j + close.length);
 }
 
-const PM = path.join(ROOT, 'mc-pm-data.js');
-const before = fs.readFileSync(PM, 'utf8');
-let after = before;
-after = splice(after, 'mm', buildMM());
-after = splice(after, 'hv', buildHV());
+// Guarded so tools/test-mc-gen-schedules.js can require() buildMM/buildHV/
+// lastWeekMayDeload directly (against the real mm-data.js/hv-block.html
+// sources — both read from disk relative to ROOT, not to the caller's cwd)
+// without triggering a write, the way require()-ing this file always used to.
+if (require.main === module) {
+  const PM = path.join(ROOT, 'mc-pm-data.js');
+  const before = fs.readFileSync(PM, 'utf8');
+  let after = before;
+  after = splice(after, 'mm', buildMM());
+  after = splice(after, 'hv', buildHV());
 
-if (CHECK) {
-  if (after !== before) {
-    die('mc-pm-data.js schedule blocks are stale — regenerate with `node tools/gen-schedules.js`');
+  if (CHECK) {
+    if (after !== before) {
+      die('mc-pm-data.js schedule blocks are stale — regenerate with `node tools/gen-schedules.js`');
+    }
+    console.log('gen-schedules: mm + hv schedule blocks match their source data');
+    process.exit(0);
   }
-  console.log('gen-schedules: mm + hv schedule blocks match their source data');
-  process.exit(0);
+  fs.writeFileSync(PM, after);
+  console.log('gen-schedules: wrote mm + hv schedule blocks to mc-pm-data.js');
 }
-fs.writeFileSync(PM, after);
-console.log('gen-schedules: wrote mm + hv schedule blocks to mc-pm-data.js');
+
+module.exports = { buildMM: buildMM, buildHV: buildHV, lastWeekMayDeload: lastWeekMayDeload };

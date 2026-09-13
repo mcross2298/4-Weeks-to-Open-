@@ -98,6 +98,7 @@ node tools/test-mc-pmc-confusion.js    # PMC week-3/4 intensifier rotation (Phas
 node tools/test-mc-cluster-reps.js     # cluster sets are summed, not truncated (Phase 2.3, P2-08)
 node tools/test-mc-classify.js         # one equipment resolver + the progression arithmetic on it (Phase 2.4)
 node tools/test-mc-muscle-classify.js  # one muscle taxonomy, catalog-first (Phase 2.2, DB-*/P2-14)
+node tools/test-mc-biomech.js          # substitute-picker movement-pattern coverage + catalog-master fallback (audit F-02)
 node tools/test-mc-day-key.js          # dated set-log day key + the legacy-label upgrade (Phase 5.1, FIX-06)
 # these need a static server + Playwright (see verify.yml)
 node tools/test-mc-exercise-identity.js http://localhost:8080   # history keys name the exercise, not its position (Phase 2.1, EN-1/EN-8)
@@ -110,6 +111,7 @@ SUPABASE_DB_URL=... pytest tests/test_rls.py   # 7 cross-user attacks + the phas
 python3 tools/build-sw.py --check      # committed sw.js matches the tree
 python3 tools/check-script-manifest.py --check   # clone pages load identical module lists
 node tools/gen-schedules.js --check    # mm/hv schedule records match mm-data.js + hv-block.html
+node tools/test-mc-gen-schedules.js    # deload-week eligibility rule — no block's own peak week gets flagged (audit F-03)
 python3 tools/apply-head-contract.py --check     # canonical <head> block + PWA tags on every page
 node tools/test-head-boot-guard.js     # real generated head-boot script: cold-launch guard + error capture (L7, S6)
 node tools/check-program-colors.js     # mc-pm-data.js vs dashboard.html vs mc-theme.js
