@@ -83,6 +83,7 @@ node tools/test-mc-maxout.js           # 1RM/Epley math
 node tools/test-mc-strain.js           # session-kcal + 0-21 daily-strain math
 node tools/test-mc-readiness.js        # per-muscle recovery-curve math
 node tools/test-mc-quick-pump.js       # history-aware selection incl. mc-readiness.js integration
+node tools/test-mc-quick-pump-catalog.js  # compound-anchor selection vs. the real catalog (audit F-05)
 node tools/test-mc-bridge.js           # cross-app bridge read layer
 node tools/test-mc-sync-merge.js       # mc-sync.js merge logic
 node tools/test-mc-program-progress.js # per-program day model (continuous days, rest-as-data)

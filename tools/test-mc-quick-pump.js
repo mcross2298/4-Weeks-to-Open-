@@ -17,15 +17,20 @@ function check(desc, actual, expected) {
   }
 }
 
+// Movement values use the real catalog's own 6-value vocabulary (Isolation,
+// Hinge, Pull, Carry, Push, Squat) — audit F-05 found the previous fixture
+// used a fictional 'Compound' value that satisfies pickAnchor()'s
+// `!== 'Isolation'` predicate by accident, so the anchor-selection path was
+// never actually exercised against the values the real catalog produces.
 var CATALOG = [
-  { name: 'Bench Press', muscle: 'Chest', equipment: 'Barbell', movement: 'Compound' },
-  { name: 'Incline DB Press', muscle: 'Chest', equipment: 'Dumbbell', movement: 'Compound' },
+  { name: 'Bench Press', muscle: 'Chest', equipment: 'Barbell', movement: 'Push' },
+  { name: 'Incline DB Press', muscle: 'Chest', equipment: 'Dumbbell', movement: 'Push' },
   { name: 'Cable Fly', muscle: 'Chest', equipment: 'Cable', movement: 'Isolation' },
-  { name: 'Overhead Press', muscle: 'Shoulders', equipment: 'Barbell', movement: 'Compound' },
+  { name: 'Overhead Press', muscle: 'Shoulders', equipment: 'Barbell', movement: 'Push' },
   { name: 'Lateral Raise', muscle: 'Shoulders', equipment: 'Dumbbell', movement: 'Isolation' },
   { name: 'Tricep Pushdown', muscle: 'Triceps', equipment: 'Cable', movement: 'Isolation' },
-  { name: 'Barbell Row', muscle: 'Back', equipment: 'Barbell', movement: 'Compound' },
-  { name: 'Lat Pulldown', muscle: 'Back', equipment: 'Cable', movement: 'Compound' },
+  { name: 'Barbell Row', muscle: 'Back', equipment: 'Barbell', movement: 'Pull' },
+  { name: 'Lat Pulldown', muscle: 'Back', equipment: 'Cable', movement: 'Pull' },
   { name: 'DB Curl', muscle: 'Biceps', equipment: 'Dumbbell', movement: 'Isolation' }
 ];
 
@@ -144,6 +149,29 @@ check('generate(): carries a local weight seed onto the matching exercise',
 var nonMatch = built.exercises.filter(function (e) { return e.name !== 'Bench Press'; });
 check('generate(): exercises with no logged history get no seedWeight field',
   nonMatch.every(function (e) { return e.seedWeight === undefined; }), true);
+
+// ---- pickAnchor() (audit F-05) --------------------------------------------
+// pickAnchor() opens a session on a real compound lift (movement !==
+// 'Isolation') when one is available in the candidate pool, using the
+// catalog's actual vocabulary rather than a placeholder that always passes.
+var chestPool = CATALOG.filter(function (e) { return e.muscle === 'Chest'; });
+for (var pa = 0; pa < 20; pa++) {
+  var anchor = qp.pickAnchor(chestPool);
+  check('pickAnchor: picks a non-Isolation lift when the pool has one (run ' + pa + ')',
+    anchor.movement !== 'Isolation', true);
+}
+
+// an all-Isolation pool has no compound to prefer -> falls back to the full
+// candidate list rather than returning nothing
+var allIsolation = [
+  { name: 'Cable Fly', muscle: 'Chest', movement: 'Isolation' },
+  { name: 'Pec Deck', muscle: 'Chest', movement: 'Isolation' }
+];
+for (var ai = 0; ai < 10; ai++) {
+  var isoAnchor = qp.pickAnchor(allIsolation);
+  check('pickAnchor: falls back to the full pool when nothing is non-Isolation (run ' + ai + ')',
+    allIsolation.indexOf(isoAnchor) !== -1, true);
+}
 
 delete global.window;
 delete global.localStorage;
