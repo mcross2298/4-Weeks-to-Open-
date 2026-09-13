@@ -202,6 +202,20 @@ jobs:
         #   node tools/gen-schedules.js
         run: node tools/gen-schedules.js --check
 
+      - name: Deload-week eligibility rule (audit F-03)
+        # The last week of a block used to be flagged a deload UNCONDITIONALLY
+        # — literally "guessed from it's the last week", the exact thing the
+        # Executive Summary's own copy says this feature does not do. High-
+        # Volume Training Template escalates 146 -> 196 -> 210 -> 238 sets
+        # across its four weeks by its own design, so week 4 was the block's
+        # own heaviest week, badged "prescribed lighter" after the automatic
+        # -1-set-per-exercise reduction still left it ~30% above week 1.
+        # lastWeekMayDeload() only allows the flag when the final week is NOT
+        # a sole, new peak — proven against every volume shape (flat,
+        # escalating, descending, dip-then-rise, rise-then-fall, single-week)
+        # and against the real hv/mm records this same generator produces.
+        run: node tools/test-mc-gen-schedules.js
+
       - name: Service-worker strategy test (stale-while-revalidate — audit LS-4)
         # Also covers findings L1 (ignoreSearch on query-string navigations),
         # L3 (cache-poisoning guard), L4 (font cache never caches a failed

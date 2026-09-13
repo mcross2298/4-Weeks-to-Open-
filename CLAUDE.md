@@ -111,6 +111,7 @@ SUPABASE_DB_URL=... pytest tests/test_rls.py   # 7 cross-user attacks + the phas
 python3 tools/build-sw.py --check      # committed sw.js matches the tree
 python3 tools/check-script-manifest.py --check   # clone pages load identical module lists
 node tools/gen-schedules.js --check    # mm/hv schedule records match mm-data.js + hv-block.html
+node tools/test-mc-gen-schedules.js    # deload-week eligibility rule — no block's own peak week gets flagged (audit F-03)
 python3 tools/apply-head-contract.py --check     # canonical <head> block + PWA tags on every page
 node tools/test-head-boot-guard.js     # real generated head-boot script: cold-launch guard + error capture (L7, S6)
 node tools/check-program-colors.js     # mc-pm-data.js vs dashboard.html vs mc-theme.js

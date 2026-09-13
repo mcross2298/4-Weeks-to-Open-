@@ -430,9 +430,7 @@
           3,
           6
         ],
-        "deloadWeeks": [
-          4
-        ],
+        "deloadWeeks": [],
         "phases": [
           {
             "weeks": 1,
