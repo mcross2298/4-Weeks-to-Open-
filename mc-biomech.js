@@ -135,10 +135,9 @@
     if (/pushdown|push-?down|tricep|skull|overhead[a-z\s-]*extension|kickback|\bdips?\b|close.?grip.*bench|jm press/.test(s)) return 'elbow-extension';
     // legs
     if (/leg curl|ham curl|hamstring curl|nordic|glute-?ham|ghr/.test(s)) return 'knee-flexion';
-    // "Quad Extension(s)" is how this app's own programs actually render the
-    // leg-extension machine on-page (cat-strength.html, arnold-legacy.html,
-    // legs-s3-pump.html, pmc-legs-quad.html) — "quad" for "quadriceps" — none
-    // of which is the exact spelling the catalog itself carries.
+    // "Quad Extension(s)" is how this app's own flagship and licensed
+    // program pages actually render the leg-extension machine on-page
+    // ("quad" for "quadriceps") — not the exact spelling the catalog carries.
     if (/leg extension|knee extension|quad extension/.test(s)) return 'knee-extension';
     // A bare "Rope Extension" carries neither "tricep" nor "overhead" — the
     // only remaining Triceps-tagged "extension" record with no matching
