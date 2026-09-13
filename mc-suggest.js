@@ -176,7 +176,7 @@
   }
 
   // Classify one logged session against the day's prescribed rep target:
-  //   'hold'     — 2+ sets at RPE ≥ 9.5 / failure
+  //   'hold'     — any set at RPE ≥ 9.5 / failure
   //   'repeat'   — reps fell short of the target
   //   'progress' — every logged set hit the target, no near-max sets
   //   'match'    — weight logged but no rep target to compare against
@@ -196,10 +196,22 @@
     if (!weights.length) return null;                 // bodyweight / unweighted
     var W = Math.max.apply(null, weights);
 
+    // EN-7 (roadmap Phase 4 step 4) replaced a seven-value per-SET dial with
+    // three buttons asked once per EXERCISE (Easy/Solid/To failure), and
+    // mc-setlog.js's effort control writes 'rpe' onto exactly one row — the
+    // exercise's last set — because one answer now describes the whole
+    // exercise, not one set of it. This threshold predates that redesign,
+    // when a per-set dial could plausibly mark several rows near failure and
+    // a single grindy top single wasn't meant to hold the whole exercise.
+    // With at most one row able to carry 'rpe' today, requiring two silently
+    // made "To failure" unreachable: verified live, a 4x4 session with the
+    // terminal set answered 'F' classified 'progress' (add weight) instead of
+    // 'hold'. Any qualifying set now holds — a legacy session logged under
+    // the old per-set dial still holds correctly, since 2+ implies 1+.
     var hardSets = sets.filter(function (s) {
       return s.rpe === 'F' || parseFloat(s.rpe) >= 9.5;
     }).length;
-    if (hardSets >= 2) return { status: 'hold', w: W };
+    if (hardSets >= 1) return { status: 'hold', w: W };
 
     var target = topRep(setsStr);
     if (target > 0) {

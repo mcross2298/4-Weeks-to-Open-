@@ -59,6 +59,24 @@ function loggedSet(w, r, rpe) { return { w: w, r: r, rpe: rpe }; }
 check('classifySession: hold when 2+ sets are RPE>=9.5/F',
   suggest.classifySession(session('Jan 1', { 0: loggedSet(135, 8, 'F'), 1: loggedSet(135, 8, 'F'), 2: loggedSet(135, 8, 8) }), '3x8').status,
   'hold');
+
+// mc-setlog.js's effort control (EN-7, roadmap Phase 4 step 4) writes 'rpe'
+// onto exactly ONE row — the exercise's last set — since the redesign asks
+// the effort question once per exercise, not once per set. A fixture with
+// rpe on every row (like the one above) can never fail on a >=1 vs >=2
+// threshold, so it would have stayed green through the live regression this
+// covers: verified against the real source, `hardSets >= 2` classified a
+// terminal-set-only "To failure" answer as 'progress' (add weight) instead
+// of 'hold'.
+check('classifySession: hold when ONLY the terminal set carries RPE F (the real UI shape)',
+  suggest.classifySession(session('Jan 1', { 0: loggedSet(135, 4, undefined), 1: loggedSet(135, 4, undefined), 2: loggedSet(135, 4, undefined), 3: loggedSet(135, 4, 'F') }), '4x4').status,
+  'hold');
+check('classifySession: hold when the terminal set alone is RPE>=9.5 (numeric)',
+  suggest.classifySession(session('Jan 1', { 0: loggedSet(135, 4, undefined), 1: loggedSet(135, 4, 9.5) }), '2x4').status,
+  'hold');
+check('classifySession: Easy (rpe 8) does not trigger hold and falls through to target check',
+  suggest.classifySession(session('Jan 1', { 0: loggedSet(135, 8, undefined), 1: loggedSet(135, 8, '8') }), '2x8').status,
+  'progress');
 check('classifySession: repeat when reps fall short of target',
   suggest.classifySession(session('Jan 1', { 0: loggedSet(135, 6, 8), 1: loggedSet(135, 6, 8) }), '2x8').status,
   'repeat');
