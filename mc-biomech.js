@@ -63,7 +63,13 @@
     var s = ' ' + String(name || '').toLowerCase() + ' ';
     var m = String(muscle || '').toLowerCase();
     // pulls
-    if (/pulldown|pull-?down|pull-?up|chin-?up|lat pull/.test(s)) return 'vertical-pull';
+    // pull-?up/chin-?up only tolerated a hyphen, not a space: "Weighted Pull
+    // Up (hammer grip)" and "Chin Ups" (both real catalog names) fell all the
+    // way through to 'other'. "Rack Chins on Smith Machine" needed its own
+    // clause since "chins" isn't followed by "up" at all — and a bare `chin`
+    // is unsafe on its own: unbounded, it matches inside ma-CHIN-e, the same
+    // trap this repo's classifiers have hit repeatedly (audit H4b/Phase 2).
+    if (/pulldown|pull-?down|pull[\s-]?ups?|chin[\s-]?ups?|\brack chins?\b|lat pull/.test(s)) return 'vertical-pull';
     if (/face pull|rear delt|reverse fly|reverse pec|rear-delt/.test(s)) return 'rear-delt';
     // shrug BEFORE the row rule: `row` matched first, so the `upright row`
     // half of this branch was unreachable and an upright row was filed as a
@@ -73,6 +79,13 @@
     if (/\brows?\b/.test(s)) return 'horizontal-pull';
     // presses / push
     if (/lateral|side raise|lat raise|side lateral/.test(s)) return 'lateral-raise';
+    // A front raise is a different plane of motion from a lateral raise
+    // (sagittal vs. frontal) — folding it into 'lateral-raise' would offer a
+    // side raise as an "equivalent" swap for it, the exact kind of movement-
+    // mismatch strict matching exists to prevent. 13 catalog records spell
+    // this "Front Raise (...)" with no other pattern keyword in the name at
+    // all, and were 'other' with zero real alternatives.
+    if (/front raise/.test(s)) return 'front-raise';
     // `overhead` alone claimed every overhead TRICEPS movement for the
     // shoulder press. "Overhead Dumbbell Extension" and "Overhead Rope
     // Extension" are elbow extension performed overhead, not a press.
@@ -81,6 +94,24 @@
     if (/incline/.test(s) && /press|bench/.test(s)) return 'incline-push';
     if (/decline/.test(s) && /press|bench/.test(s)) return 'horizontal-push';
     if (/(bench|chest) press|chest press|\bpress\b/.test(s) && (m.indexOf('chest') >= 0 || /bench/.test(s))) return 'horizontal-push';
+    // A bench press written with no "press" anywhere — "Barbell Bench",
+    // "100-Rep Barbell Bench", "Pin Rack Bench" are all real catalog names
+    // for a flat-bench chest press, station + equipment only, no verb.
+    // Excludes anything bench-SUPPORTED rather than bench-AS-station (a curl
+    // or forearm exercise performed sitting on a bench) and the one
+    // bodyweight "superman" miscategorized under Chest, which is a rear-
+    // delt/back-extension movement, not a press.
+    // `close.?grip` excluded too: a close-grip bench is a triceps press, not
+    // a chest one, and that distinction is made explicitly a few lines below
+    // — this rule would otherwise win first and reclassify it.
+    if (/\bbench\b/.test(s) && !/curl|forearm|superman|close.?grip/.test(s) &&
+        (m.indexOf('chest') >= 0 || /barbell|dumbbell|\bdb\b|smith|pin rack/.test(s))) {
+      return 'horizontal-push';
+    }
+    // "Single Arm Hammer Strength Incline" has no `master` record to fall
+    // back to (unlike its sibling "Hammer Strength Incline Press", already
+    // caught above) and no "press"/"bench" of its own either.
+    if (/hammer strength incline/.test(s)) return 'incline-push';
     if (/push-?up/.test(s)) return 'horizontal-push';
     // `\bfly\b` missed the plural, and "Flies" is how this app's own programs
     // spell it — so "Slight Incline DB Flies" had pattern 'other' and no
@@ -92,13 +123,29 @@
     // Barbell Curl" fell through to the branch below — where `close grip`
     // filed them as TRICEPS work.
     if (/curl/.test(s) && !/leg curl|ham curl|hamstring curl|nordic|glute-?ham/.test(s)) return 'elbow-flexion';
+    // "21s" (and its DB/apostrophe spellings) is a bicep-curl rep protocol
+    // named by its rep scheme rather than by "curl" — verified against the
+    // whole catalog: no non-biceps record contains "21" anywhere in its name.
+    if (/\b21'?s?\b/.test(s)) return 'elbow-flexion';
     // `close grip` on its own is a grip modifier, not a triceps movement:
     // a close-grip BENCH is, a close-grip row is not. It is named explicitly
     // now instead of matching any lift that happens to carry the words.
-    if (/pushdown|push-?down|tricep|skull|overhead[a-z\s-]*extension|kickback|\bdip\b|close.?grip bench|jm press/.test(s)) return 'elbow-extension';
+    // `.*` between "grip" and "bench" (not just one optional char) so an
+    // equipment word in between — "Close-Grip Barbell Bench" — still counts.
+    if (/pushdown|push-?down|tricep|skull|overhead[a-z\s-]*extension|kickback|\bdips?\b|close.?grip.*bench|jm press/.test(s)) return 'elbow-extension';
     // legs
     if (/leg curl|ham curl|hamstring curl|nordic|glute-?ham|ghr/.test(s)) return 'knee-flexion';
-    if (/leg extension|knee extension/.test(s)) return 'knee-extension';
+    // "Quad Extension(s)" is how this app's own programs actually render the
+    // leg-extension machine on-page (cat-strength.html, arnold-legacy.html,
+    // legs-s3-pump.html, pmc-legs-quad.html) — "quad" for "quadriceps" — none
+    // of which is the exact spelling the catalog itself carries.
+    if (/leg extension|knee extension|quad extension/.test(s)) return 'knee-extension';
+    // A bare "Rope Extension" carries neither "tricep" nor "overhead" — the
+    // only remaining Triceps-tagged "extension" record with no matching
+    // keyword above. Scoped to an explicitly-supplied Triceps muscle (never
+    // guessed), and placed after the knee-extension check so a mistagged
+    // "Quad Extension" resolves there first rather than here.
+    if (m.indexOf('tricep') >= 0 && /extension/.test(s)) return 'elbow-extension';
     if (/deadlift|rdl|romanian|good morning|hip thrust|hip-?thrust|back extension|hyperextension|pull-?through|kettlebell swing/.test(s)) return 'hip-hinge';
     if (/lunge|split squat|bulgarian|step-?up|step up/.test(s)) return 'lunge';
     // calf BEFORE squat: a "Leg Press Calf Raise" and a "Smith Machine Squat
@@ -150,6 +197,7 @@
     var byPat = {
       'horizontal-push': 'Chest', 'incline-push': 'Chest', 'chest-fly': 'Chest',
       'vertical-push': 'Shoulders', 'lateral-raise': 'Shoulders', 'rear-delt': 'Shoulders',
+      'front-raise': 'Shoulders',
       'horizontal-pull': 'Back', 'vertical-pull': 'Back', 'shrug': 'Back',
       'elbow-flexion': 'Biceps', 'elbow-extension': 'Triceps',
       'squat': 'Quads', 'lunge': 'Quads', 'knee-extension': 'Quads',
@@ -185,11 +233,34 @@
     // independent opinions (audit P2-14). The keyword rules below are the
     // fallback for a name the catalog does not carry, which is most workout
     // cards, since programs write their own variant wording.
-    if (!muscle) {
-      var C = (typeof window !== 'undefined' && window.MC_CLASSIFY) || null;
-      if (C) muscle = C.catalogMuscle(name) || '';
-    }
+    var C = (typeof window !== 'undefined' && window.MC_CLASSIFY) || null;
+    if (!muscle && C) muscle = C.catalogMuscle(name) || '';
     var pattern = patternOf(name, muscle);
+    // Catalog-first, regex-fallback again (P2-14's own reasoning, applied
+    // here for the first time). exercise-catalog.js's own header explains
+    // why this is needed: many mechanical variants are named by station +
+    // angle alone and share a `master` record for the movement itself —
+    // "Incline DB (Incline)", "Machine Chest (Hammer)", "Shoulder (Seated)"
+    // defer to "Incline DB Press" / "Machine Chest Press" / "Shoulder Press".
+    // patternOf()'s keyword rules need the movement word IN the string, and
+    // a bare variant name often has none — 109 of 580 catalog exercises
+    // resolved to no pattern at all, with zero real alternatives, because of
+    // this and the gaps patternOf() itself now also closes directly.
+    //
+    // Only consulted when the raw name resolves to NOTHING, so this can only
+    // RECOVER a pattern, never override one a more specific keyword already
+    // matched. That guard matters: this catalog has one exercise whose own
+    // `master` is itself mis-grouped ("Seated Double Arm DB Front Raise" ->
+    // master "Forearm Pulldown", a real nomenclature error, not this file's
+    // to fix) — it never reaches this branch because its raw name already
+    // resolves via the front-raise rule above.
+    if (pattern === 'other' && C && C.entry) {
+      var rec = C.entry(name);
+      if (rec && rec.master && rec.master !== name) {
+        var masterPattern = patternOf(rec.master, muscle);
+        if (masterPattern !== 'other') pattern = masterPattern;
+      }
+    }
     var mus = muscle ? normMuscle(muscle) : muscleOf(name, pattern);
     return { pattern: pattern, equipment: equipOf(name), muscle: mus };
   }

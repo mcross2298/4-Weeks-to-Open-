@@ -166,6 +166,22 @@ jobs:
         # unbounded, matching the substring inside "machine".
         run: node tools/test-mc-muscle-classify.js
 
+      - name: Substitute-picker movement coverage (audit F-02)
+        # tieredCandidates() requires BOTH pattern and muscle to match, and
+        # 109 of 580 catalog exercises resolved to no pattern at all —
+        # tier1 then matched every one of those 109 against EACH OTHER purely
+        # because they shared the placeholder value 'other', so "DB Pullover"
+        # (a pull) and "Dips" (a press) were both offered "Barbell Bench" as
+        # their top-ranked "equivalent" swap. Pins the vocabulary patternOf()
+        # was missing (a bare "Bench" with no "press", front raise as its own
+        # pattern distinct from lateral-raise, "21s", "quad extension",
+        # space/plural-tolerant pull-up/chin-up/dip/close-grip-bench), the
+        # catalog-`master` fallback in classify() this needed for names given
+        # by station + angle alone ("Incline DB (Incline)", "Shoulder
+        # (Seated)"), and the one catalog `master` that is itself mis-grouped
+        # — proven never to reach that fallback rather than assumed safe.
+        run: node tools/test-mc-biomech.js
+
       - name: PMC week-3/4 intensifier rotation (roadmap Phase 2.5)
         # The rotation that builds weeks 3 and 4 of Project Muscle Confusion
         # used to return ONE replacement badge, so the most common pairing in
