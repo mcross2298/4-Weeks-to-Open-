@@ -100,6 +100,7 @@ node tools/test-mc-cluster-reps.js     # cluster sets are summed, not truncated 
 node tools/test-mc-classify.js         # one equipment resolver + the progression arithmetic on it (Phase 2.4)
 node tools/test-mc-muscle-classify.js  # one muscle taxonomy, catalog-first (Phase 2.2, DB-*/P2-14)
 node tools/test-mc-biomech.js          # substitute-picker movement-pattern coverage + catalog-master fallback (audit F-02)
+node tools/test-mc-catalog-integrity.js # exercise-catalog.js equipment/master field corrections (audit F-08)
 node tools/test-mc-day-key.js          # dated set-log day key + the legacy-label upgrade (Phase 5.1, FIX-06)
 # these need a static server + Playwright (see verify.yml)
 node tools/test-mc-exercise-identity.js http://localhost:8080   # history keys name the exercise, not its position (Phase 2.1, EN-1/EN-8)
