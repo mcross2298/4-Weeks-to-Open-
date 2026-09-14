@@ -34,16 +34,20 @@
         angle alone, with the movement itself only in a shared `master`
         ("Incline DB Press" / "Machine Chest Press" / "Shoulder Press").
 
-   THE ONE LANDMINE
-   -----------------
-   This catalog has exactly one exercise whose own `master` is itself
-   mis-grouped: "Seated Double Arm DB Front Raise (hammer grip)" -> master
-   "Forearm Pulldown" (a real nomenclature error, filed separately, not
-   this file's to fix). Blindly trusting `master` would have reclassified a
-   front raise as a lat pulldown. It doesn't, because the front-raise rule
-   already resolves this record's RAW name before the master fallback is
-   ever consulted — proven below by asserting its pattern directly, not by
-   asserting the landmine can't happen.
+   THE ONE LANDMINE (fixed by audit F-08, guard kept on a synthetic fixture)
+   --------------------------------------------------------------------------
+   This catalog used to carry exactly one exercise whose own `master` was
+   itself mis-grouped: "Seated Double Arm DB Front Raise (hammer grip)" ->
+   master "Forearm Pulldown". Blindly trusting `master` would have
+   reclassified a front raise as a lat pulldown; it didn't, because the
+   front-raise rule already resolves a record's RAW name before the master
+   fallback is ever consulted. Audit F-08 fixed the mis-grouping itself
+   (master is now "Front Raise", its real sibling group), which is correct
+   for the data but means the real record can no longer demonstrate the
+   override-precedence bug — its master and its raw-name pattern now agree.
+   The mechanism is still tested below, on an injected synthetic fixture
+   built to the landmine's exact shape, so a future data fix can never
+   silently disable this guard the way it just would have here.
 
    Loading order matters and is reproduced exactly as a page does it
    (mc-card-actions.js's own init(): exercise-catalog.js and mc-biomech.js
@@ -177,17 +181,36 @@ ok('a bare "Rope Extension" resolves when its muscle is explicitly Triceps',
    bio('Rope Extension', 'Triceps').pattern === 'elbow-extension', 'got ' + bio('Rope Extension', 'Triceps').pattern);
 
 /* ---- 3. the landmine: a mis-grouped `master` must never win ------------- */
-
-var landmine = byName('Seated Double Arm DB Front Raise (hammer grip)');
-ok('the landmine record exists in the real catalog (fixture sanity check)', !!landmine);
-ok('the landmine record\'s own master IS mis-grouped (fixture sanity check, not this file\'s bug)',
-   !!(landmine && landmine.master === 'Forearm Pulldown'), 'got master=' + (landmine && landmine.master));
-ok('…but classify() never reaches it: the raw name resolves via front-raise BEFORE any master fallback runs',
+// The real catalog's own landmine — "Seated Double Arm DB Front Raise
+// (hammer grip)" grouped under master "Forearm Pulldown" — was fixed by
+// audit F-08 (now correctly under master "Front Raise"), so it can no
+// longer demonstrate the override-precedence bug: its master and its own
+// raw-name pattern now agree. The mechanism this guards is still real, so
+// it's tested with an injected synthetic fixture instead of depending on a
+// real record staying wrong forever — a fixed data bug should never
+// silently disable the regression guard that used to ride on it.
+var landmine = {
+  name: 'ZZZ Test Fixture Front Raise (landmine)',
+  muscle: 'Shoulders',
+  equipment: 'Dumbbell',
+  movement: 'Isolation',
+  master: 'ZZZ Test Fixture Lat Pulldown Master' // would resolve to vertical-pull if wrongly trusted
+};
+EXERCISES.push(landmine);
+ok('…classify() never reaches a mis-grouped master: the raw name resolves via front-raise BEFORE any master fallback runs',
    bio(landmine.name, landmine.muscle).pattern === 'front-raise',
    'got ' + bio(landmine.name, landmine.muscle).pattern + ' (would be vertical-pull if the master had won)');
-ok('…so its muscle stays Shoulders, not whatever "Forearm Pulldown" would imply',
+ok('…so its muscle stays Shoulders, not whatever the wrong master would imply',
    bio(landmine.name, landmine.muscle).muscle === 'Shoulders',
    'got ' + bio(landmine.name, landmine.muscle).muscle);
+EXERCISES.pop();
+
+/* ---- 3b. audit F-08's fix: the real record now resolves correctly under
+   its OWN corrected master, verified against the live catalog ------------ */
+var fixedFrontRaise = byName('Seated Double Arm DB Front Raise (hammer grip)');
+ok('audit F-08: "Seated Double Arm DB Front Raise (hammer grip)" is no longer grouped under Forearm Pulldown',
+   !!(fixedFrontRaise && fixedFrontRaise.master === 'Front Raise'),
+   'got master=' + (fixedFrontRaise && fixedFrontRaise.master));
 
 /* ---- 4. movement-equivalence: the substitute picker's own strict rule --- */
 // Same assertion the executive-summaries audit ran live: a horizontal press

@@ -181,9 +181,14 @@ jobs:
         # space/plural-tolerant pull-up/chin-up/dip/close-grip-bench), the
         # catalog-`master` fallback in classify() this needed for names given
         # by station + angle alone ("Incline DB (Incline)", "Shoulder
-        # (Seated)"), and the one catalog `master` that is itself mis-grouped
-        # — proven never to reach that fallback rather than assumed safe.
+        # (Seated)"), and (via an injected synthetic fixture, since audit
+        # F-08 fixed the one real catalog record that used to demonstrate
+        # it) a mis-grouped `master` proven never to override a pattern the
+        # raw name already resolved.
         run: node tools/test-mc-biomech.js
+
+      - name: Exercise-catalog data-integrity fixes (audit F-08)
+        run: node tools/test-mc-catalog-integrity.js
 
       - name: PMC week-3/4 intensifier rotation (roadmap Phase 2.5)
         # The rotation that builds weeks 3 and 4 of Project Muscle Confusion
