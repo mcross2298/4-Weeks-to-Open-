@@ -1424,7 +1424,24 @@
       // (mc_workout_log_v1), set-1-only, and never overrides real history.
       var seedWeight = (i === 0 && !last) ? parseFloat(card.dataset && card.dataset.mcSeedWeight) : 0;
       var wPh = (last && last.w) ? (last.w + ' lb') : (seedWeight ? (seedWeight + ' lb') : 'lb');
-      var rPh = isDropRow ? (dropTarget === 'AMRAP' ? 'AMRAP' : dropTarget) : (pr || (last && last.r ? last.r : 'reps'));
+      // An open-ended WORKING row must say so, the same way a drop row already
+      // does. Only the drop branch used to produce the literal 'AMRAP', so a
+      // prescription that is open-ended all the way through ("3×AMRAP",
+      // "AMRAP × 3", "×failure") fell through to the generic 'reps' — on the
+      // Pos-10 bodyweight finisher, which the Weekly Layout Standard makes
+      // mandatory on every training day, so it is the app's MOST COMMON AMRAP
+      // and the one place the cue went missing. Measured on 10 pages: 11 cards.
+      //
+      // The tempting fix is to make repFor() return a number for an open rep
+      // token; that is the exact bug the isOpenRep work removed ("4×AMRAP"
+      // asking for 4 reps). So the target stays empty and only the PLACEHOLDER
+      // changes. That is safe because nothing reads a single row's placeholder:
+      // onCheck() takes clusterRVal(row), whose one-box branch returns
+      // mini[0].value, and tap-to-fill reads data-fill (rFill), a separate
+      // variable. Display only, by construction.
+      var openWork = !pr && /(^|[^a-z])(amrap|∞|failure|fail|max)\b/i.test(String(work == null ? '' : work));
+      var rPh = isDropRow ? (dropTarget === 'AMRAP' ? 'AMRAP' : dropTarget)
+                          : (pr || (openWork ? 'AMRAP' : (last && last.r ? last.r : 'reps')));
       // One-tap fill values: focusing an empty field drops in last session's
       // weight (and the prescribed / last reps) so the athlete confirms instead
       // of retyping. Carry-down (below) keeps later sets' fill in sync with set 1.

@@ -1,0 +1,2 @@
+
+dark-mode contrast: no baseline yet (contrast-budgets-dark.json doesn't exist) — measured 160 finding(s) across 141 pages, informational only. Seed it from a real CI run (not an agent sandbox — see this file's header) with: node tools/check-contrast.js <url> --dark --update

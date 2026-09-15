@@ -63,6 +63,17 @@ jobs:
       - name: Session energy/strain math regression tests (real source, not a duplicated copy)
         run: node tools/test-mc-strain.js
 
+      # The nutrition goal calculator had no coverage at all until the go-live
+      # assessment added this: every other exported calculation in the app
+      # (suggest, maxout, strain, readiness, log-read) already had a suite, and
+      # this one produces the calorie and macro targets the athlete eats to.
+      # Checks BMR/TDEE/target/split against the published Mifflin-St Jeor and
+      # Atwater formulas rather than against the module itself. It found a real
+      # guard gap on its first run: a negative bodyweight (the form had no
+      # `min`) prescribed -220 g protein.
+      - name: Nutrition goal-calculator math (published Mifflin-St Jeor / Atwater)
+        run: node tools/test-mc-macrocalc.js
+
       - name: Muscle readiness math regression tests (real source, not a duplicated copy)
         run: node tools/test-mc-readiness.js
 
@@ -489,6 +500,15 @@ jobs:
           # squat's logged weight sat in the same bucket as a lat pulldown's.
           # Needs a browser: the identity is derived from the rendered card.
           if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-exercise-identity.js http://localhost:8080; then EXIT=1; fi
+          # A personal record belongs to the LIFT, not to the page it was logged
+          # on. mc-finish.js derived "previous best" from this page's set-log key
+          # alone, so one exercise carried a separate, invisible history per
+          # program: seeding a 300 lb best under one page and logging 150 lb of
+          # the same lift on another banked prs:1 -- and, in the other
+          # direction, real PRs went unflagged when the prior best lived
+          # elsewhere. Needs a browser because the defect was in which KEYS the
+          # arithmetic was handed, so it has to drive the real completion point.
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-pr-scope.js http://localhost:8080; then EXIT=1; fi
           # Light-mode contrast ratchet (audit G-04/G-3.1). Shares this job
           # because it needs the same Playwright install. Per-page budgets in
           # tools/contrast-budgets.json can only shrink; re-baseline with

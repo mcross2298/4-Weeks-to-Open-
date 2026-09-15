@@ -1,0 +1,91 @@
+=== JS syntax check (all tracked .js) ===
+js syntax failures: 0
+PASS  test-naming
+PASS  validate-overrides
+PASS  test-mc-suggest
+PASS  test-mc-maxout
+PASS  test-mc-strain
+PASS  test-mc-readiness
+PASS  test-mc-quick-pump
+PASS  test-mc-quick-pump-catalog
+PASS  test-mc-bridge
+PASS  test-mc-sync-merge
+PASS  test-mc-program-progress
+PASS  test-mc-program-tabs
+PASS  test-mc-sw
+PASS  test-mc-sw-update
+PASS  test-mc-offline-prefetch
+PASS  test-mc-sync-runtime
+PASS  test-mc-persist
+PASS  check-gesture-contract
+PASS  test-mc-numeric-guards
+PASS  test-mc-pmc-confusion
+PASS  test-mc-cluster-reps
+PASS  test-mc-classify
+PASS  test-mc-muscle-classify
+PASS  test-mc-biomech
+PASS  test-mc-catalog-integrity
+PASS  test-mc-day-key
+PASS  test-mc-program-day
+PASS  build-sw --check
+PASS  check-script-manifest
+PASS  gen-schedules --check
+PASS  test-mc-gen-schedules
+PASS  apply-head-contract --check
+PASS  test-head-boot-guard
+PASS  check-program-colors
+PASS  gen-program-css --check
+PASS  check-day-colors
+PASS  validate-programs
+PASS  check-exports
+PASS  check-program-data
+PASS  check-one-timer
+PASS  check-single-impl
+PASS  check-dangling-refs
+PASS  check-store-coverage
+PASS  check-topbar-inset
+PASS  check-design-tokens
+PASS  build-market --check
+FAIL  check-tour-coverage (rc=1)
+node:internal/modules/cjs/loader:1386
+  throw err;
+  ^
+
+Error: Cannot find module '/home/user/4-Weeks-to-Open-/tools/check-tour-coverage.js'
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+    at Function._load (node:internal/modules/cjs/loader:1192:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+}
+
+Node.js v22.22.2
+FAIL  check-docs (rc=1)
+node:internal/modules/cjs/loader:1386
+  throw err;
+  ^
+
+Error: Cannot find module '/home/user/4-Weeks-to-Open-/tools/check-docs.js'
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+    at Function._load (node:internal/modules/cjs/loader:1192:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+}
+
+Node.js v22.22.2
+
+STATIC GATES: 46 passed, 2 failed
+FAILED:
+  check-tour-coverage
+  check-docs

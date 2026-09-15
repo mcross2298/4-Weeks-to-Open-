@@ -1,0 +1,108 @@
+
+### mm-p1.html — 10 cards
+  ok    mm-p1.html "Low-Incline DB Press (drop" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    mm-p1.html "Push-Up (bodyweight finish" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    mm-p1.html drove 13 rows across 3 cards; 13 sets stored
+  ok    mm-p1.html no NaN/undefined/Infinity in any stored value
+
+### kitchen-sink.html — 10 cards
+  ok    kitchen-sink.html "Cable Chest Fly" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    kitchen-sink.html "Push-Ups" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    kitchen-sink.html drove 11 rows across 3 cards; 11 sets stored
+  ok    kitchen-sink.html no NaN/undefined/Infinity in any stored value
+
+### pmc-back.html — 8 cards
+  ok    pmc-back.html drove 13 rows across 3 cards; 13 sets stored
+  ok    pmc-back.html no NaN/undefined/Infinity in any stored value
+
+### s3-back-traps.html — 9 cards
+  ok    s3-back-traps.html "Pull-Ups" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    s3-back-traps.html drove 15 rows across 3 cards; 15 sets stored
+  ok    s3-back-traps.html no NaN/undefined/Infinity in any stored value
+
+### chest-tri-pump.html — 10 cards
+  ok    chest-tri-pump.html drove 12 rows across 3 cards; 12 sets stored
+  ok    chest-tri-pump.html no NaN/undefined/Infinity in any stored value
+
+### legacy-prep.html — 199 cards
+  ok    legacy-prep.html "Decline Cable Flies" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Barbell or Smith Machine B" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Hammer Strength Incline Pr" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Tricep Pushdown" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Straight Arm Lat Pulldowns" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "T-Bar Row" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Close Grip Cable Rows" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Straight Bar Cable Curl" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Seated Barbell/Smith Shoul" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Single Arm Cable Raises" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Machine or DB Side Lateral" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Dips" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Decline Machine Press" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Lying Leg Curl" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Standing Calf Raise" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Rope Tricep Extension" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Dips" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Machine Preacher Curl" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Barbell Spider Curls" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Alternating Hammer Curls" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Pec Deck" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Hammer Strength Decline Pr" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Rope Tricep Pushdowns" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Seated Dip Machine" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Machine Preacher Curl" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "T-Bar Row" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Incline DB Row" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Lying Leg Curl" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Medium Stance Leg Press" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Pull-ups" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Close Grip Bench" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Hack Squat" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Medium Stance Leg Press" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Medium Grip Leaning Away L" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Single Arm Hammer Strength" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Standing Side Lateral Rais" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Cross Body Rear Delt Cable" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Machine Preacher Curl" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Seated Dip Machine or Dips" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Diamond Pushups" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Seated Cable Chest Flies" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Pec Deck" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Lat Pulldown Leaning Away" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Underhand Lat Pulldown" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Leg Extensions" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Hack Squat (medium to clos" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Hack Squat Sissy Squat" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Seated Hammer Strength Sho" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Cable Rope Front Raises" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Pull-ups" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Single Arm Hammer Strength" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Seated Cable Rows" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "DB Skullcrushers" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Straight Bar Cable Pushdow" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "EZ Bar Medium Grip" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html "Bench Dips" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    legacy-prep.html drove 16 rows across 3 cards; 16 sets stored
+  ok    legacy-prep.html no NaN/undefined/Infinity in any stored value
+
+### hv-block.html — 6 cards
+  ok    hv-block.html "Cable Crossover" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    hv-block.html drove 14 rows across 3 cards; 14 sets stored
+  ok    hv-block.html no NaN/undefined/Infinity in any stored value
+
+### iron-engine.html — 10 cards
+  ok    iron-engine.html "Cable Bar Pushdown" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    iron-engine.html "Push-Ups" AMRAP row asks for reps rather than inventing a target  [AMRAP]
+  ok    iron-engine.html drove 11 rows across 3 cards; 11 sets stored
+  ok    iron-engine.html no NaN/undefined/Infinity in any stored value
+
+### psu-strength.html — 3 cards
+  ok    psu-strength.html drove 15 rows across 3 cards; 15 sets stored
+  ok    psu-strength.html no NaN/undefined/Infinity in any stored value
+
+### 2on-1off.html — 8 cards
+  ok    2on-1off.html drove 13 rows across 3 cards; 13 sets stored
+  ok    2on-1off.html no NaN/undefined/Infinity in any stored value
+
+
+PHASE C — set types encountered: {"amrap":64,"cluster":0,"drop":12,"tempo":1,"superset":0,"triset":0}
+84 passed, 0 failed

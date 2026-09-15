@@ -128,8 +128,13 @@ async function openTab(ctx, errors, label) {
     if (/Failed to load resource/i.test(m.text())) return;
     errors.push(`${label}: ${m.text()}`);
   });
-  await pg.goto(baseUrl + PAGE, { waitUntil: 'networkidle' });
-  await waitForStrips(pg);
+  // Land on a NEUTRAL document, not the workout page. A tab opened straight
+  // onto the workout page while the store still holds the previous pass's sets
+  // restores them into its in-memory session, and navigating that tab away
+  // persists them again — and that write is lock-guarded (see the LOCK pass),
+  // so it has no ordering relationship with clearStore() and can land just
+  // after it. resetTab() is what loads the page, once the store is empty.
+  await pg.goto(baseUrl + NEUTRAL, { waitUntil: 'load' });
   return pg;
 }
 
@@ -161,7 +166,9 @@ const NEUTRAL = '/manifest.json';
 
 async function resetTab(pg) {
   await pg.goto(baseUrl + NEUTRAL, { waitUntil: 'load' });
-  await clearStore(pg);
+  if (!(await clearStoreSettled(pg))) {
+    throw new Error('could not clear mc_* storage — a queued write keeps landing after the clear');
+  }
   await pg.goto(baseUrl + PAGE, { waitUntil: 'networkidle' });
   await waitForStrips(pg);
 }
@@ -178,6 +185,24 @@ async function clearStore(pg) {
     try { localStorage.clear(); } catch (e) {}
     try { sessionStorage.clear(); } catch (e) {}
   });
+}
+
+// Clearing ONCE is not enough, and the reason is the app behaving correctly.
+// A set-log write is serialised behind a cross-tab lock (that is what the LOCK
+// pass proves), so a write another tab queued as it was navigated away can land
+// just after our clear returns. Clearing once and trusting it made this gate
+// report "setup is not clean" on runs where the app had lost nothing — a flaky
+// red on the one gate guarding the app's highest-severity risk, which is how a
+// gate stops being believed. So clear until the store actually reads empty.
+async function clearStoreSettled(pg) {
+  for (var attempt = 0; attempt < 6; attempt++) {
+    await clearStore(pg);
+    await pg.waitForTimeout(250);
+    var left = await pg.evaluate(() =>
+      Object.keys(localStorage).filter((k) => k.indexOf('mc_') === 0).length);
+    if (left === 0) return true;
+  }
+  return false;
 }
 
 /* ---- the three passes ---------------------------------------------------- */

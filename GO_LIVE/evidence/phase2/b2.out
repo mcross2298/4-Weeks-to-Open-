@@ -1,0 +1,17 @@
+.........xxx...............x..................................x...xx..........x
+
+PHASE B — full session round trip on 79 workout pages
+round trip complete: 71
+renders no session at all (picker / landing / needs seeded data): 8
+REAL FAILURES: 0
+
+
+--- no session rendered (expected for pickers; verify each is really a picker) ---
+cat-gainz.html  NO-CARDS (dayRows=0 dayCards=0 exCards=0)
+cat-pmc.html  NO-CARDS (dayRows=0 dayCards=0 exCards=0)
+cat-strength.html  NO-CARDS (dayRows=0 dayCards=0 exCards=0)
+mc-cardio.html  NO-CARDS (dayRows=0 dayCards=0 exCards=0)
+pmc-workout.html  NO-CARDS (dayRows=0 dayCards=0 exCards=0)
+run-program.html  NO-CARDS (dayRows=0 dayCards=0 exCards=0)
+run-workout.html  NO-CARDS (dayRows=0 dayCards=0 exCards=0)
+workout-logs.html  NO-CARDS (dayRows=0 dayCards=0 exCards=0)

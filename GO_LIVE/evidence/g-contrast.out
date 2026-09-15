@@ -1,0 +1,9 @@
+  hv-block.html: improved to 4 (budget 7) — lower the budget in tools/contrast-budgets.json
+  iron-engine.html: improved to 1 (budget 4) — lower the budget in tools/contrast-budgets.json
+  kitchen-sink-s3.html: improved to 1 (budget 4) — lower the budget in tools/contrast-budgets.json
+  kitchen-sink.html: improved to 1 (budget 3) — lower the budget in tools/contrast-budgets.json
+  pmc-home.html: improved to 0 (budget 14) — lower the budget in tools/contrast-budgets.json
+  pmc-s7-giant.html: improved to 1 (budget 24) — lower the budget in tools/contrast-budgets.json
+  program-guide.html: improved to 4 (budget 13) — lower the budget in tools/contrast-budgets.json
+  workout-logs.html: improved to 4 (budget 6) — lower the budget in tools/contrast-budgets.json
+Light-mode contrast OK — 141 pages, 273 finding(s), none over budget; 8 page(s) improved and can have their budget lowered.

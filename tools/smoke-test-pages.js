@@ -170,7 +170,13 @@ async function checkPage(context, path) {
 }
 
 (async () => {
-  const browser = await chromium.launch();
+  // Honour MC_CHROMIUM like every other browser gate in tools/. Without it this
+  // tool is the one page-render check that cannot run outside CI: a session's
+  // pre-installed Chromium build id never matches what a freshly-installed
+  // Playwright expects, so launch() fails on a browser that is sitting on disk.
+  const browser = await chromium.launch(
+    process.env.MC_CHROMIUM ? { executablePath: process.env.MC_CHROMIUM } : {}
+  );
   const context = await browser.newContext();
   // Third-party requests aren't reachable in CI and aren't the point of
   // this check — block them so they don't register as noise.
