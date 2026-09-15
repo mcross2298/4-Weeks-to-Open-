@@ -13,7 +13,9 @@ Every fix below was reproduced first, root-caused, fixed, then re-run against th
 | 6 | `tools/test-mc-setlog-concurrency.js` | Tabs open on a neutral document; the clear repeats until the store actually reads empty (DEF-01) | **6 consecutive runs, 6 passed** — control 5/5, race 10/10 every run |
 | 7 | `tools/smoke-test-pages.js` | Honours `MC_CHROMIUM` like every sibling gate (DEF-06) | Ran for real: **38 pages, zero console errors, no duplicate ids** |
 | 8 | `tools/test-mc-strain.js` | Pins the MET saturation boundary (100 lb/min) and the inert near-failure bonus as stated assertions (DEF-02 countermeasure) | Suite passes; a constant change now fails CI instead of going silently inert |
-| 9 | `CLAUDE.md` | Corrects the claim that two CI gates read the Quick Tour's prose (neither file has ever existed); adds the five gates missing from the canonical list (DEF-07) | `git log --all` on both paths returns nothing; `build-market.py --check` still passes |
+| 9 | `GO_LIVE/scenarios/indep-1rm-math.js` | Expectations become a frozen golden table rather than a restated Epley formula, so the single-estimator gate holds (DEF-10) | `test-mc-maxout` fails on the old file, passes on the new; validator 141 → **169** assertions |
+| 10 | `GO_LIVE/scenarios/s4-*.js` | Probe the real globals (`MCQuickPump` on `quick-pump.html`; `mc-maxout.js` publishes none), move the throwaway key out of the `mc_*` namespace, and test offline logging on an already-open page (DEF-10) | `check-dangling-refs` and `check-store-coverage` green; **Quick Pump genuinely exercised**; S4 23/26 → **33/33** |
+| 11 | `CLAUDE.md` | Corrects the claim that two CI gates read the Quick Tour's prose (neither file has ever existed); adds the five gates missing from the canonical list (DEF-07) | `git log --all` on both paths returns nothing; `build-market.py --check` still passes |
 
 ## Regression sweep after the changes
 

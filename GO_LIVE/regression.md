@@ -60,7 +60,7 @@ certificate verification is **not** the fix and was not done.
 | S1 workout logger | **20 / 20** | re-run after the `mc-finish.js` change — no regression |
 | S2 PR & progression | **16 / 16** | independently computed expectations; re-run after the fix |
 | S3 timer & accessibility | **28 / 34** | 6 remaining are unreachable-input hardening (below) |
-| S4 PWA / nutrition / tools | **23 / 26** | 3 investigated: 2 harness artifacts, 1 correct behaviour |
+| S4 PWA / nutrition / tools | **33 / 33** | after DEF-10's corrections; was 23/26 |
 | Independent 1RM math | **141 / 141** | vs the published Epley formula |
 | Independent strain math | **14 / 14** | vs `MET × kg × h`; surfaced DEF-02 |
 | Independent macro math | **119 / 119** | vs Mifflin-St Jeor / Atwater; promoted to a 230-assertion CI gate |
@@ -87,3 +87,20 @@ the delegated handler passes `parseInt(btn.dataset.secs, 10) || 0`, `mc-setlog.j
 `TMR.parseSeconds(...) || rs`, and `cat-gainz.html` passes a computed number — all finite and
 non-negative. Filed as P3 hardening; a one-line clamp at entry would close it and match the
 "finite and non-negative" invariant the repo already holds its calculations to.
+
+## The CI round on PR #351
+
+The first CI run went red, and every one of the three failures was correct — see `DEF-10`. All three
+gates sweep **tracked** `.js` files, and the local sweep had run while `GO_LIVE/scenarios/` was still
+untracked, so none of them could see it. The lesson is small and worth keeping: **run the fleet-wide
+scans after `git add`, not before**, or they are blind to exactly the files being added.
+
+| Gate | What it caught | Resolution |
+|---|---|---|
+| `test-mc-maxout` | A second Epley implementation in the independent validator | Frozen golden table instead — satisfies the gate and is the better test |
+| `check-dangling-refs` | `window.MC_QUICK_PUMP` and `window.MC_MAXOUT` assigned nowhere — the assessment's own guessed names | Real globals used; Quick Pump now genuinely exercised |
+| `check-store-coverage` | `mc_setlog_probe_v1`, an undeclared key in a governed namespace | Renamed out of the `mc_*` namespace |
+
+After the fixes: JS syntax 163/163, all 46 canonical static gates plus the 4 CI-only node gates green,
+`check-dangling-refs` resolving 497 element ids and 161 globals across 315 files, and all three
+independent validators passing (169 / 119 / 14).

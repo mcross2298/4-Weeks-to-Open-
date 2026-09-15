@@ -43,13 +43,13 @@ passed · **I** independently validated against a published formula · **—** n
 | Replace / reorder / notes | | ✓ | | `test-mc-biomech`, `check-single-impl` |
 | AI exercise suggestions | | | | signed-in only — **not exercised** |
 | Build Your Own | ✓ | ✓ | | page renders and accepts input |
-| Quick Pump / Short-on-time | | ✓ | | `test-mc-quick-pump`, `test-mc-quick-pump-catalog` (module not published on dashboard) |
+| Quick Pump / Short-on-time | ✓ | ✓ | | **driven on `quick-pump.html`**: 30-min Full Body = 5 exercises, 45-min = 9, Chest focus = 5, all named and prescribed; plus `test-mc-quick-pump`, `test-mc-quick-pump-catalog` |
 | Program Guide | ✓ | ✓ | | 2,443 chars rendered |
 | **Nutrition / macro tracking** | ✓ | ✓ | ✓ | rings render; goals persist a reload |
 | **Goal calculator** | ✓ | ✓ | ✓ | **230 assertions vs Mifflin-St Jeor / Atwater**; **DEF-04/05 found + fixed** |
 | Food search / barcode / NL entry | | | | needs a live food API — **not exercised** |
 | Nutrition facts sheet / favorites | | | | behind a sheet — **not exercised** |
-| **Offline-first operation** | ~ | ✓ | | SW registers, **131 entries precached**, offline set-log persists; **real offline reload unverifiable — DEF-09** |
+| **Offline-first operation** | ~ | ✓ | | SW registers, **131 entries precached**; with the network dropped mid-session a set logs and persists (1 → 2) and the rest timer keeps running; **offline NAVIGATION unverifiable — DEF-09** |
 | PWA installation | ✓ | ✓ | | manifest, 192+512 icons, standalone, `viewport-fit=cover`, iOS meta, `check-topbar-inset` |
 | Account / sync | | ✓ | | `test-mc-sync-runtime`, `test-mc-sync-merge`; **no two-device test** |
 | Export / import | | ✓ | | `check-store-coverage` (registry vs `mc-export.js` KEYS) |
@@ -68,5 +68,5 @@ passed · **I** independently validated against a published formula · **—** n
 | Real gym user (phone, moving) | ✓ | S1.2/S1.5, S3.6 — reload, leave and return, timer across scroll and navigation |
 | Custom user | ~ | S4.5 — Build Your Own renders; a full custom build was not driven |
 | Coach | — | PM mode is biometric/owner-gated; not exercised |
-| Offline user | ~ | S4.3 — set logged with the network down persists; offline reload blocked by DEF-09 |
+| Offline user | ~ | S4.3 — signal drops mid-session: the set logs, persists and the timer runs; offline navigation blocked by DEF-09 |
 | Chaos user | ✓ | S1.3/S1.4, S3.2/S3.4, S4.7 — duplicate taps, hostile values, timer spam, full storage |

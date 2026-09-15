@@ -75,7 +75,7 @@ const warned=await pg.evaluate(()=>{
   if(!(window.MCSetlogUtil&&window.MCSetlogUtil.writeStore)) return {no:'no guarded writer'};
   const big='y'.repeat(3*1024*1024);        // 3MB — cannot fit in a full store
   let threw=null;
-  try{ window.MCSetlogUtil.writeStore('mc_setlog_probe_v1', big); }catch(e){ threw=e.name; }
+  try{ window.MCSetlogUtil.writeStore('__golive_write_probe', big); }catch(e){ threw=e.name; }
   return {threw};});
 await pg.waitForTimeout(1500);
 const ui=await pg.evaluate(()=>{const a=document.querySelector('[role=alert]');

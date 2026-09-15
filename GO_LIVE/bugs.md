@@ -126,3 +126,21 @@ Severity per the protocol's own scale. Every entry names what was observed, not 
 | What is NOT verified | A real offline reload of a program page, offline cold launch, the update banner against a real new SW, and reconnect/sync — none of it, in either direction, from anywhere but the deployed origin. |
 | Fix | **Not fixed — recommended.** Deriving the gate from `self.location.origin` keeps production behaviour byte-identical (same-origin requests still match), makes offline verifiable on localhost and on any future custom domain, and removes a silent failure mode if the app ever moves off `github.io`. It touches generated code with a CI gate, so it wants the owner's sign-off. |
 | Status | **OPEN — recommendation; offline is an unverified axis of this assessment** |
+
+---
+
+## DEF-10 — P2 — the committed evidence tripped three fleet-wide gates the moment it was tracked
+
+| | |
+|---|---|
+| Scenario | Commit `GO_LIVE/scenarios/*.js` and let CI run |
+| Observed | Three gates that had passed locally went red, because all three sweep **tracked** `.js` files and the scenario scripts were untracked when the local sweep ran: `test-mc-maxout` (*"a second Epley estimate exists outside mc-log-read.js"*), `check-dangling-refs` (*"2 global(s) read but assigned nowhere"*), `check-store-coverage` (*"`mc_setlog_probe_v1` used in code but not declared"*). |
+| Root cause and fix, one at a time | |
+| **1. Second Epley implementation** | `test-mc-maxout.js` sweeps every tracked file for a second 1RM estimator — roadmap Phase 4.2 collapsed two disagreeing ones (a cable pushdown read 71 on one screen and 100 on another). It exempts `mc-log-read.js` and `tools/`: app code gets one implementation, test code may restate it. The validator sat outside both. **Not fixed by excluding it** — the expectations became a **frozen golden table** derived once from the published Epley equation, which satisfies the gate *and* is the better test, since a restated formula can silently track a source edit while a frozen number cannot. 141 → **169 assertions**. |
+| **2. Two globals read but assigned nowhere** | The gate caught the assessment making exactly the mistake it exists to catch. `window.MC_QUICK_PUMP` and `window.MC_MAXOUT` **do not exist**: Quick Pump publishes `window.MCQuickPump`, and `mc-maxout.js` publishes no global at all. That guess is why S4 originally reported *"Quick Pump is not published"* — a wrong probe, not a missing feature. Pointed at the real global on its real page (`quick-pump.html`, not the dashboard), **Quick Pump is now genuinely exercised for the first time**: 5 exercises for 30 min, 9 for 45 min, 5 for a Chest focus, every one named and prescribed. |
+| **3. An undeclared `mc_*` key** | The s4b probe wrote `mc_setlog_probe_v1`. `store-registry.json` governs that namespace, and a throwaway test key has no business in it — renamed to `__golive_write_probe`. |
+| Status | **FIXED** — all three gates green; `check-dangling-refs` now resolves 497 ids and 161 globals across 315 files |
+
+### A claim of mine that this round corrected
+
+`S4.3` originally tried to reach a workout page *by navigating while offline*, which cannot succeed on this origin (DEF-09) — so the navigation failed and **the offline set-logging assertion never ran**, even though the first draft of this report stated it had. Rewritten to the realistic case: load the page online, drop the network, then log. Now genuinely measured — **1 → 2 sets persisted with the network down, and the rest timer keeps running**. S4 went 23/26 with 3 unexplained to **33/33**.
