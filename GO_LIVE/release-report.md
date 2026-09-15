@@ -9,8 +9,15 @@
 ## Executive verdict
 
 ```text
-CONDITIONAL GO — full GO LIVE withheld on three named conditions
+CONDITIONAL GO — full GO LIVE withheld on two named conditions
 ```
+
+> **Updated 2026-09-15 after Phase 2, the full-scale sweep.** Phase 1's verdict rested on a sampled
+> engine test; Phase 2 drove the surface Phase 1 had named as unverified. Coverage moved from 38 to
+> **all 142** pages rendered, from 9 to **71 of 79** workout pages completing a full session, and the
+> live RLS attacks — one of Phase 1's three conditions — **now run and all pass**, so that condition
+> is closed. Four more defects were found; two are fixed, one is gated, one is reported with a
+> reproduction. Detail in `bugs.md` (`DEF-11`–`DEF-14`).
 
 **P0 defects: 0.** **P1 defects: 1 open, and it is not code.**
 
@@ -30,9 +37,10 @@ as a pass:
 2. **Real offline behaviour cannot be observed off the production origin.** `sw.js`'s fetch handler
    is gated to `https://mcross2298.github.io`, so on localhost it is inert. One real offline reload
    on the deployed site closes this in minutes. *(DEF-09, P2)*
-3. **Live row-level security was not re-run.** `tests/test_rls.py` needs `SUPABASE_DB_URL`. Strong
-   substitute evidence exists (all 16 tables RLS-enabled, advisor reports no missing policies), but
-   the 7 cross-user attacks themselves did not execute. *(gap, not a finding)*
+3. ~~**Live row-level security was not re-run.**~~ **CLOSED by Phase 2** — 12 cross-user attacks
+   executed directly against the project (read, update, delete, forge a row owned by another user,
+   self-grant admin, self-grant tester, non-admin override write), every one blocked, database
+   verified untouched afterwards.
 
 One further item is the owner's call rather than a defect: the session calorie ring is insensitive to
 tonnage and to effort for essentially every real session *(DEF-02, P2)*.
@@ -46,6 +54,9 @@ tonnage and to effort for essentially every real session *(DEF-02, P2)*.
 | Features discovered | ~120 declared capabilities across the Executive Summary's 8 sections; protocol §1 names 61 product areas |
 | Inventory | 142 HTML pages · 163 JS modules · 14 stylesheets · 78 tools · 16 Supabase tables (all RLS-enabled) |
 | Committed gates executed | **60** — 58 passed, 1 informational-only, 1 not runnable here (green in CI on this commit) |
+| Pages rendered in a real browser | **142 of 142** — zero uncaught throws, zero non-resource console errors, zero duplicate element ids, zero sideways overflow at 390px *(Phase 2)* |
+| Workout pages driven through a complete session | **71 of 79** — log → persist → reload → survive → finish → bank, **zero failures**; the other 8 render no session by design *(Phase 2)* |
+| Live cross-user attacks | **12, all blocked** *(Phase 2)* |
 | JS parsed | **163 / 163** tracked files, zero syntax failures |
 | Scenario sets driven | **8** (5 browser campaigns + 3 independent-formula validators), all committed and re-runnable |
 | Scenario assertions | **96** driven in a real browser (87 pass; 6 unreachable-input hardening, 3 harness artifacts resolved) |
@@ -73,8 +84,13 @@ Full detail with root cause and proof in `GO_LIVE/bugs.md`. Summary:
 | DEF-05 | P3 | The nutrition goal calculator had no CI coverage at all | **FIXED** — new 230-assertion gate |
 | DEF-06 | P3 | The fleet-wide render smoke test could not run outside CI | **FIXED** — now honours `MC_CHROMIUM` |
 | DEF-07 | P3 | CLAUDE.md documented two CI gates that have never existed | **FIXED** (documentation) |
+| DEF-11 | P3 | An all-AMRAP working row asked for "reps" — on the mandatory Pos-10 finisher | **FIXED** |
+| DEF-12 | P2 | The 🧩 cluster breakdown does nothing until the page is reloaded | **OPEN — reported** |
+| DEF-13 | P2 | The three Nutrition entry controls are 38px, covered by no budget | **FIXED (gated)** |
+| DEF-14 | P2 | The rest-day subtitle was 1.44:1 in dark mode on 9 pages | **FIXED** |
 
-**Five defects fixed, three gates added or repaired, four items left open with each one named.**
+**Across both phases: 8 defects fixed, 4 gates added or repaired, 4 items left open with each one
+named.** Phase 2 also closed the live-RLS gap.
 
 ---
 
@@ -126,10 +142,17 @@ correct half of the formula. The sub-44px chrome controls are ratcheted and trac
 `TMR.start()` input gap is unreachable from every live call site, which I verified rather than
 assumed.
 
-**Conditions to convert this to GO LIVE:** close DEF-08; verify one real offline reload on the
-deployed origin; run `tests/test_rls.py` once with a database URL; and take a decision — either way —
-on DEF-02. None of the four requires new engineering. All four require evidence this session could
-not produce.
+**Conditions to convert this to GO LIVE, after Phase 2:** close DEF-08 (the weekly check-in), and
+verify one real offline reload on the deployed origin. Two decisions sit alongside them rather than
+blocking: DEF-02 (the calorie formula's calibration) and DEF-12 (when to touch the set-persistence
+path to make the cluster breakdown apply mid-session). The live-RLS condition is closed.
+
+**What Phase 2 changed about my confidence.** Phase 1's "zero P0" meant zero P0 *in what was
+exercised*, and that was a fair caveat to make. It is a much smaller caveat now: every page in the
+tree renders clean, every workout page that renders a session completes one, and the data layer held
+under twelve deliberate attacks. The four new defects are all presentation or affordance — none of
+them loses a set. The remaining unknown is concentrated in one place, and it is the same place it was
+before: **the signed-in surface**, which needs an invite I do not have.
 
 > **GO LIVE means the product survives reality.** It survives everything reality could be simulated
 > to throw at it here. Four things reality has not been asked yet.

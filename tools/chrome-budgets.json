@@ -38,5 +38,13 @@
   "back icon button @ 390": {
     "w": 44,
     "h": 44
+  },
+  "nutrition header icon @ 320": {
+    "w": 38,
+    "h": 38
+  },
+  "nutrition header icon @ 390": {
+    "w": 38,
+    "h": 38
   }
 }

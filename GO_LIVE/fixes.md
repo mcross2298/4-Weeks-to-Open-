@@ -32,3 +32,27 @@ Every fix below was reproduced first, root-caused, fixed, then re-run against th
 | S1 logger campaign (re-run post-fix) | **20/20** |
 | S2 PR campaign (re-run post-fix) | **16/16** |
 | `verify.yml` YAML validity | parses clean |
+
+
+---
+
+## Phase 2 fixes (2026-09-15)
+
+| # | File(s) | Change | Proof |
+|---|---|---|---|
+| 12 | `mc-setlog.js` | An open-ended **working** row shows `AMRAP` instead of the generic `reps`; only drop rows did before (DEF-11) | Same 10-page drive: findings 11 → 0, passes 73 → 84, **stored-set counts identical page by page** — the fix moves no data |
+| 13 | `tools/check-journey.js` + `tools/chrome-budgets.json` | `.ntx-ico` (the Nutrition ◎/★/⚙ entry controls) added to the fleet-wide chrome ratchet, plus `dashboard.html?tab=nutrition` as a measured page (DEF-13) | 10 → **12** control/viewport pairs; budget hand-seeded at the measured 38×38 (fixed px, so no font caveat); **proven to fail** on a planted shrink |
+| 14 | 9 program pages | `.rest-sub` `#1e293b` → `var(--muted, #94a3b8)` — slate-800 on black was **1.44:1** (DEF-14) | Dark-mode invisible-text findings **3 → 0** across 26 pages; light mode unchanged and within budget; `check-design-tokens` passes |
+
+### Phase 2 regression sweep
+
+| Suite | Result |
+|---|---|
+| JS syntax, all tracked files | **0 failures** |
+| 46 canonical static gates + 4 CI-only node gates | **50 pass** |
+| `check-journey` (now 12 chrome pairs) | **9/9 journeys, 3/3 subsystems, 9-page real-inset pass** |
+| `test-mc-exercise-identity` · `test-mc-pr-scope` · `test-mc-setlog-concurrency` · `test-mc-store-resilience` · `test-mc-crash-recovery` | **pass** |
+| `smoke-test-pages` | **pass** |
+| Light-mode contrast | 141 pages, 273 findings, **none over budget** |
+| Every page renders | **142/142** clean |
+| Every workout page completes a session | **71/71** of those that render one |

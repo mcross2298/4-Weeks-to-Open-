@@ -496,10 +496,23 @@ const CHROME_SELECTORS = [
   { sel: '.topbar-icon', name: 'topbar icon' },
   { sel: '.dot-nav',     name: 'tour step dot' },
   { sel: '.back',        name: 'back icon button' },
+  // Go-live Phase 2: the Nutrition tab's three header icons — ◎ jump to today,
+  // ★ the favorites library, ⚙ the goal calculator — measure 38x38 at both 390
+  // and 320. They are the ONLY way into favorites and into the calculator that
+  // sets every macro target, and no budget covered them: this list had the nav
+  // tab, the back link, the topbar icon and the tour dot. Ratcheted rather than
+  // hard-failed for the same reason W-I1 gave for the other four — they are
+  // already under the floor, so asserting >=44 would be red from birth. Their
+  // size is a fixed `width:38px;height:38px` in mc-macros.js, not text metrics,
+  // so unlike the contrast and visual ratchets this budget can be seeded from
+  // an agent sandbox without the Google Fonts caveat.
+  { sel: '.ntx-ico',     name: 'nutrition header icon' },
 ];
 // One page per selector-owning stylesheet; 2on-1off.html carries both
 // .mc-nav-tab and .back-link so three pages, not four, are enough.
-const CHROME_PAGES = ['2on-1off.html', 'dashboard.html', 'quick-tour.html'];
+const CHROME_PAGES = ['2on-1off.html', 'dashboard.html', 'quick-tour.html',
+  // the Nutrition tab renders on demand, so .ntx-ico only exists with the tab open
+  'dashboard.html?tab=nutrition'];
 const CHROME_VIEWPORTS = { '390': { width: 390, height: 844 }, '320': { width: 320, height: 568 } };
 const CHROME_BUDGET_FILE = path.resolve(__dirname, 'chrome-budgets.json');
 const CHROME_EPSILON = 0.3;   // sub-pixel float jitter, not a real regression
