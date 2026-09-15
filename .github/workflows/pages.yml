@@ -60,8 +60,13 @@ jobs:
         # matching build-market.py's own MANIFEST exclusion — the manifest is
         # build tooling, not a shipped asset.
         run: |
+          # rm -rf, not rm -f: a scratch entry may be a DIRECTORY of internal
+          # evidence (GO_LIVE/ is the first), and `rm -f` silently leaves a
+          # directory in place — which the artifact step then uploads whole,
+          # since it packs `path: '.'`. The manifest's own definition of scratch
+          # is "ships to NEITHER build", so honour it whatever the entry is.
           python3 -c "import json; print(chr(10).join(json.load(open('content-manifest.json'))['scratch']))" \
-            | xargs -d '\n' -r rm -f
+            | xargs -d '\n' -r rm -rf
           rm -f ./*.dc.html content-manifest.json
       - name: Setup Pages
         uses: actions/configure-pages@v5

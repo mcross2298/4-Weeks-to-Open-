@@ -104,6 +104,7 @@ node tools/test-mc-catalog-integrity.js # exercise-catalog.js equipment/master f
 node tools/test-mc-day-key.js          # dated set-log day key + the legacy-label upgrade (Phase 5.1, FIX-06)
 # these need a static server + Playwright (see verify.yml)
 node tools/test-mc-exercise-identity.js http://localhost:8080   # history keys name the exercise, not its position (Phase 2.1, EN-1/EN-8)
+node tools/test-mc-pr-scope.js http://localhost:8080            # a PR belongs to the LIFT, not the page it was logged on (go-live assessment)
 node tools/test-mc-setlog-concurrency.js http://localhost:8080  # two-tab set-log durability (FIX-01, L-01)
 node tools/test-mc-store-resilience.js http://localhost:8080    # corrupt-store shapes, 5 pages (FIX-04, L-03)
 node tools/test-mc-crash-recovery.js http://localhost:8080      # process kill + cloud rehydrate (FIX-02, L-02)
@@ -120,6 +121,10 @@ node tools/check-program-colors.js     # mc-pm-data.js vs dashboard.html vs mc-t
 python3 tools/gen-program-css.py --check  # dashboard.html .cat-card/.rail-card CSS vs mc-pm-data.js
 node tools/check-day-colors.js         # governed training-day palette
 node tools/validate-programs.js        # multi-week intensifier coverage (mm-p1/p2/p3.html)
+node tools/check-set-schemes.js        # rendered set/rep scheme vocabulary
+node tools/test-mc-setlog-plan.js      # planned-set count derived from the prescription
+node tools/test-mc-streak.js           # one streak, counting prescribed training days (Phase 4.1)
+node tools/test-mc-macrocalc.js        # nutrition goal calculator vs published Mifflin-St Jeor / Atwater
 node tools/check-exports.js            # global-namespace convention (MC_SNAKE / MCPascal)
 node tools/check-program-data.js       # note-field + day-type vocabulary, fleet-wide
 node tools/check-one-timer.js          # no orphan/duplicate/missing rest-timer implementation
@@ -245,10 +250,16 @@ Summary. Two files now sit under them:
   `slideBodyHTML(s)`, the one function that turns a slide into markup. Data and
   renderer ship together because the renderer is the only reader of a slide's
   shape; a field added to one and not the other is the drift worth preventing.
-  **Two CI gates read the tour's prose here, not in the page**:
-  `tools/check-tour-coverage.js` (feature keywords) and the tour claims in
-  `tools/check-docs.js` — reading only `quick-tour.html` would have failed on
-  every feature the moment the text moved. Move the prose, move the gate.
+  **Correction (go-live assessment, 2026-09-15): the two CI gates this section
+  used to claim read the tour's prose do not exist.** It named
+  `tools/check-tour-coverage.js` (feature keywords) and tour claims inside
+  `tools/check-docs.js`; neither file is in the tree and `git log --all` shows
+  neither ever was, so no workflow references them. The reasoning was sound —
+  a gate that reads only `quick-tour.html` would have broken the moment the
+  prose moved into `quick-tour-data.js` — but the gate was never written, which
+  means **the Documentation currency rule above has no automated enforcement
+  today**. Treat keeping the tour current as a review responsibility, not
+  something CI will catch, until such a gate is actually built.
 - **`quick-tour.css`** — the 184 lines of layout that were inline in
   `quick-tour.html`, so the step tour and the one-page view cannot look like
   different products.

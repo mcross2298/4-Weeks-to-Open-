@@ -46,13 +46,21 @@
     return fallback || list[0];
   }
   function num(v, d) { var n = parseFloat(v); return isFinite(n) ? n : (d || 0); }
+  // Body measurements cannot be negative, and the Weight/Age/Height fields are
+  // bare <input type="number"> with no `min` — so a typed or pasted "-200"
+  // reached the arithmetic intact and came back out as a prescription of
+  // -220 g protein and -70 g fat on a 90 kcal target. The calculator is an
+  // EXPORTED calculation, which this repo already holds to "finite and
+  // non-negative" everywhere else (tools/test-mc-numeric-guards.js), so the
+  // floor belongs here as well as on the form.
+  function meas(v, d) { return Math.max(0, num(v, d)); }
 
   // ---- step 1: BMR (Mifflin-St Jeor) --------------------------------------
   // weightLb → kg internally. sex 'female' subtracts the constant.
   function bmr(profile) {
-    var kg = num(profile.weightLb) / LB_PER_KG;
-    var cm = num(profile.heightCm);
-    var age = num(profile.age);
+    var kg = meas(profile.weightLb) / LB_PER_KG;
+    var cm = meas(profile.heightCm);
+    var age = meas(profile.age);
     var base = 10 * kg + 6.25 * cm - 5 * age;
     return (profile.sex === 'female') ? (base - 161) : (base + 5);
   }
@@ -67,10 +75,10 @@
   // left (never negative). Rounded to whole grams.
   function splitFromCalories(kcal, weightLb, goalId) {
     var goal = lookup(GOALS, goalId);
-    var lb = num(weightLb);
+    var lb = meas(weightLb);
     var p = Math.round(lb * goal.proteinPerLb);
     var f = Math.round(lb * FAT_PER_LB);
-    var carbKcal = num(kcal) - (p * 4) - (f * 9);
+    var carbKcal = Math.max(0, num(kcal)) - (p * 4) - (f * 9);
     var c = Math.max(0, Math.round(carbKcal / 4));
     return { p: p, f: f, c: c };
   }
@@ -80,7 +88,7 @@
     var b = bmr(profile);
     var t = b * lookup(ACTIVITY, profile.activity).mult;
     var goal = lookup(GOALS, profile.goal);
-    var kcal = Math.round((t * (1 + goal.adjust)) / 10) * 10;   // round to 10
+    var kcal = Math.max(0, Math.round((t * (1 + goal.adjust)) / 10) * 10);   // round to 10
     var split = splitFromCalories(kcal, profile.weightLb, profile.goal);
     return {
       bmr: Math.round(b),

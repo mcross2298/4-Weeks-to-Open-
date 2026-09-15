@@ -775,12 +775,12 @@
         '<button data-v="female" class="' + (p.sex === 'female' ? 'on' : '') + '">Female</button>' +
       '</div>' +
       '<div class="nt-grid2">' +
-        '<label class="nt-field"><span>Age</span><input id="ntAge" type="number" inputmode="numeric" value="' + (p.age || '') + '" placeholder="30"></label>' +
-        '<label class="nt-field"><span>Weight (lb)</span><input id="ntWt" type="number" inputmode="decimal" value="' + (p.weightLb || latestWeightLb() || '') + '" placeholder="180"></label>' +
+        '<label class="nt-field"><span>Age</span><input id="ntAge" type="number" min="0" inputmode="numeric" value="' + (p.age || '') + '" placeholder="30"></label>' +
+        '<label class="nt-field"><span>Weight (lb)</span><input id="ntWt" type="number" inputmode="decimal" min="0" value="' + (p.weightLb || latestWeightLb() || '') + '" placeholder="180"></label>' +
       '</div>' +
       '<div class="nt-grid2">' +
-        '<label class="nt-field"><span>Height (ft)</span><input id="ntFt" type="number" inputmode="numeric" value="' + ftStart + '"></label>' +
-        '<label class="nt-field"><span>Height (in)</span><input id="ntIn" type="number" inputmode="numeric" value="' + inStart + '"></label>' +
+        '<label class="nt-field"><span>Height (ft)</span><input id="ntFt" type="number" min="0" inputmode="numeric" value="' + ftStart + '"></label>' +
+        '<label class="nt-field"><span>Height (in)</span><input id="ntIn" type="number" min="0" inputmode="numeric" value="' + inStart + '"></label>' +
       '</div>' +
       '<label class="nt-field"><span>Activity</span><select id="ntAct">' +
         MCMacroCalc.ACTIVITY.map(function (a) { return '<option value="' + a.id + '"' + (p.activity === a.id ? ' selected' : '') + '>' + a.label + ' — ' + a.sub + '</option>'; }).join('') +

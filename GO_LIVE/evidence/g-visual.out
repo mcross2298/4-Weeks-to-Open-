@@ -1,0 +1,7 @@
+::error file=kitchen-sink.html::visual ratchet — page dimensions changed (390x1099 -> 390x1108). If deliberate, re-baseline with --update.
+::error file=kitchen-sink-s3.html::visual ratchet — page dimensions changed (390x1101 -> 390x1113). If deliberate, re-baseline with --update.
+::error file=kitchen-sink-s4.html::visual ratchet — page dimensions changed (390x1163 -> 390x1160). If deliberate, re-baseline with --update.
+::error file=kitchen-sink-s5.html::visual ratchet — page dimensions changed (390x937 -> 390x935). If deliberate, re-baseline with --update.
+::error file=kitchen-sink-s6.html::visual ratchet — page dimensions changed (390x1153 -> 390x1188). If deliberate, re-baseline with --update.
+
+5 page(s) failed the visual ratchet.

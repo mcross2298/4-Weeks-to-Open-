@@ -65,6 +65,38 @@ if (!(nearFailure.kcal > moderate.kcal)) {
 var extreme = strain.session({ duration: '5 min', sets: sets(50000, 5) }, 180);
 checkClose('session(): MET is clamped even under an extreme tonnage rate', extreme.kcal, 5 * 9.0 * (180 / 2.20462) / 60, 5);
 
+// ---- where the MET clamp actually bites, stated rather than assumed --------
+// The RPE case above notes in passing that it has to use a deliberately light
+// tonnage "because that one's rate already saturates the MET clamp". That
+// parenthetical is the whole behaviour of this formula on real data, so pin it
+// instead of leaving it as a comment:
+//
+//   met = 5.0 + (tonnage / durationMin) / 25, clamped to [3.5, 9.0]
+//   => the ceiling is reached at a tonnage rate of (9.0 - 5.0) * 25 = 100 lb/min
+//   => a 60-minute session saturates above 6,000 lb of total tonnage
+//
+// Measured against real prescriptions, essentially every logged session is far
+// past that: 20 sets of 135 lb x 10 in an hour is 27,000 lb, 4.5x the boundary.
+// Above it, kcal is bodyweight x duration ALONE — tonnage and the near-failure
+// bonus both stop moving the number, even though the Executive Summary
+// describes the ring as "based on the weight you actually moved". The clamp
+// itself is right (an unclamped MET of 41 would be nonsense); it is the
+// sensitivity RANGE that sits below where athletes train, and recalibrating it
+// changes every historical reading, so it is the owner's call and not a test's.
+// What these assertions guarantee is that the regime is deliberate: change a
+// constant and this fails, rather than the feature quietly going inert.
+var SAT_RATE_LB_PER_MIN = 100;
+var satBoundary = strain.session({ duration: '60 min', sets: sets(SAT_RATE_LB_PER_MIN * 60, 5, 8) }, 180);
+var wellPast     = strain.session({ duration: '60 min', sets: sets(SAT_RATE_LB_PER_MIN * 60 * 4, 5, 8) }, 180);
+checkClose('session(): the MET ceiling is reached at a 100 lb/min tonnage rate',
+  satBoundary.kcal, 9.0 * (180 / 2.20462) * 1.0, 3);
+check('session(): past the ceiling, four times the tonnage returns the same kcal',
+  wellPast.kcal, satBoundary.kcal);
+var pastPlain = strain.session({ duration: '60 min', sets: sets(54000, 5, 8) }, 180);
+var pastHard  = strain.session({ duration: '60 min', sets: sets(54000, 5, 'F') }, 180);
+check('session(): past the ceiling, the near-failure bonus is inert (documented, not desired)',
+  pastHard.kcal, pastPlain.kcal);
+
 // ---- today() / trailing(): baseline + strain normalization ----------------
 function resetLog(entries) {
   kv['mc_workout_log_v1'] = JSON.stringify(entries);

@@ -115,6 +115,33 @@
     return n;
   }
 
+  // Heaviest weight ever logged for each exercise id, across every page, from
+  // sessions dated before today. The set-log key is `<pageId>|<exerciseId>`, so
+  // the exercise is the part after the first '|' — and since Phase 2.1 that id
+  // is derived from the exercise NAME, which is what makes it comparable
+  // between pages in the first place.
+  //
+  // Known narrower case left alone: a page listing the same exercise twice
+  // keys the second one `<exId>-2`, and those are still counted as separate
+  // lifts here. Folding the occurrence suffix in is a second behaviour change
+  // and wants its own measurement.
+  function prevBestByExercise(store,today){
+    var best={};
+    Object.keys(store).forEach(function(k){
+      var i=k.indexOf('|');
+      if(i<0)return;
+      var exId=k.slice(i+1);
+      datedSessions(store[k]).forEach(function(sess){
+        if(!sess||!sess.sets||sess.d===today)return;   // today is never a previous best
+        Object.keys(sess.sets).forEach(function(sn){
+          var w=parseFloat((sess.sets[sn]||{}).w);
+          if(isFinite(w)&&w>(best[exId]||0))best[exId]=w;
+        });
+      });
+    });
+    return best;
+  }
+
   // Get all logged set data for this session
   function getSessionSets(){
     try{
@@ -134,18 +161,35 @@
           });
         }
       });
-      // Detect PRs — compare to previous sessions
+      // Detect PRs — compare against every PRIOR session of this exercise,
+      // on every page, not just the page being finished.
+      //
+      // This used to read store[pageId+'|'+exId] alone, so a "personal record"
+      // meant "your best on THIS PAGE". The same lift is prescribed by several
+      // programs (one catalog, ten programs), and each program page owns its
+      // own key — so an athlete who benched 300 lb under one program had that
+      // history invisible to every other program, and a 150 lb set was banked
+      // with a gold PR. Measured: seed 300 lb under kitchen-sink, log 150 lb on
+      // mm-p1, and the finished workout came back prs:1.
+      //
+      // The app already held the correct notion one layer down — mc-setlog.js's
+      // signed-in push path asks MC_SB.getMaxWeight(exName), which is scoped to
+      // the EXERCISE — so the recap and the push notification disagreed about
+      // the same set. Both now mean "your best for this lift".
+      //
+      // Two rules are kept deliberately:
+      //   * a prior session must exist, or a first-ever log would read as a
+      //     record (audit G-03's false-positive guard — that is what made the
+      //     old history.length<2 check necessary, and it still applies once
+      //     the history is gathered from every page);
+      //   * a session dated TODAY is never a "previous best", on any page, so
+      //     logging 200 then 205 in one session still flags 205 and the 200
+      //     does not block it.
+      var priorMax=prevBestByExercise(store,today);
       sets.forEach(function(s){
-        var k=pageId+'|'+s.name;
-        var history=store[k]||[];
-        if(history.length<2)return;
-        var prevMax=0;
-        history.slice(1).forEach(function(sess){
-          Object.values(sess.sets).forEach(function(set){
-            if(parseFloat(set.w)>prevMax)prevMax=parseFloat(set.w);
-          });
-        });
-        if(parseFloat(s.weight)>prevMax&&prevMax>0)s.pr=true;
+        var prevMax=priorMax[s.name];
+        if(!(prevMax>0))return;               // no prior session anywhere for this lift
+        if(parseFloat(s.weight)>prevMax)s.pr=true;
       });
       return sets;
     }catch(e){return[];}
