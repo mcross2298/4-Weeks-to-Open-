@@ -85,11 +85,12 @@ Full detail with root cause and proof in `GO_LIVE/bugs.md`. Summary:
 | DEF-06 | P3 | The fleet-wide render smoke test could not run outside CI | **FIXED** — now honours `MC_CHROMIUM` |
 | DEF-07 | P3 | CLAUDE.md documented two CI gates that have never existed | **FIXED** (documentation) |
 | DEF-11 | P3 | An all-AMRAP working row asked for "reps" — on the mandatory Pos-10 finisher | **FIXED** |
-| DEF-12 | P2 | The 🧩 cluster breakdown does nothing until the page is reloaded | **OPEN — reported** |
+| DEF-12 | P2 | The 🧩 cluster breakdown does nothing until the page is reloaded | **OPEN (code) / CLOSED (claim)** — owner chose the copy fix; the app no longer advertises it |
+| DEF-15 | P2 | A cluster edit on `run-workout.html` un-checks a set already logged (store intact) | **OPEN — folds into DEF-12's fix** |
 | DEF-13 | P2 | The three Nutrition entry controls are 38px, covered by no budget | **FIXED (gated)** |
 | DEF-14 | P2 | The rest-day subtitle was 1.44:1 in dark mode on 9 pages | **FIXED** |
 
-**Across both phases: 8 defects fixed, 4 gates added or repaired, 4 items left open with each one
+**Across all three passes: 8 defects fixed, 4 gates added or repaired, 5 items left open with each one
 named.** Phase 2 also closed the live-RLS gap.
 
 ---
@@ -146,6 +147,38 @@ assumed.
 verify one real offline reload on the deployed origin. Two decisions sit alongside them rather than
 blocking: DEF-02 (the calorie formula's calibration) and DEF-12 (when to touch the set-persistence
 path to make the cluster breakdown apply mid-session). The live-RLS condition is closed.
+
+---
+
+## Closeout status — asked to close this assessment (2026-09-17)
+
+**It does not close yet, and the reason is one item, not a long list.**
+
+DEF-12's *claim* is closed: the owner chose the copy fix, and the app no longer advertises behaviour
+it does not have (verified by driving all three tour surfaces, not by grepping). That pass also found
+**DEF-15** by checking a code comment rather than trusting it — `run-workout.html`'s cluster edit
+un-checks a set the athlete already logged. No data is lost (the store holds it; a reload brings it
+back), and it folds into DEF-12's own `rebuildRows(card)` fix rather than being separate work.
+
+What actually blocks the stamp:
+
+| | Blocks GO LIVE? | Whose |
+|---|---|---|
+| **DEF-08** — the weekly check-in has never fired; 10/10 runs failed, `push_subscriptions` empty | **Yes — P1** | Owner: set the secret and prove one run, or drop the §7 claim |
+| **DEF-09** — no real offline reload verified on the deployed origin | **Yes** | Owner: one reload on the live site |
+| DEF-02 — calorie calibration | No — decision | Owner |
+| DEF-12 / DEF-15 — the repaint gap | No — cosmetic, no data loss | Whenever the set logger is next opened deliberately |
+
+**So: two owner actions, neither of them code, neither performable from a session.** Everything this
+assessment could close from here is closed. The verdict stays **CONDITIONAL GO** — not because the
+engine is weak, but because a protocol whose instruction is "certify based on evidence" cannot count
+an untested axis as a pass, and offline is this product's stated differentiator.
+
+**The honest summary of the whole effort:** every page in the tree renders clean, every workout page
+that renders a session completes one, the data layer held under twelve deliberate cross-user attacks,
+and the one shared-module defect this work exposed in Mike's Cookbook is fixed there too. The
+remaining unknown is concentrated where it has been all along — the **signed-in surface**, which
+needs an invite, and the **deployed origin**, which needs a phone.
 
 **What Phase 2 changed about my confidence.** Phase 1's "zero P0" meant zero P0 *in what was
 exercised*, and that was a fair caveat to make. It is a much smaller caveat now: every page in the

@@ -190,7 +190,8 @@ finally run.
 | Athlete-visible effect | Mid-workout, the athlete taps 🧩, types a breakdown, saves, and the card looks identical. The reasonable conclusion is that it did not work. The setting is not lost — it applies from the next load. |
 | **Not fixed — deliberately** | A correct fix is a rebuild-and-repaint path: drop the card's `.mcl-wrap`, rebuild, then re-mark the sets already logged. The repaint half lives in **`mc-session.js`'s `restoreSets()`**, which is module-private and not exported, and `buildRows()` itself only restores *typed-but-unchecked* values (`getPending`), not checked ones. So the fix needs new plumbing across the two modules that own set persistence — the highest-severity code in this app, which the card-integration roadmap deliberately changes one serialized PR at a time. A wrong version of this fix loses a logged set mid-workout, which is strictly worse than the bug. |
 | Recommended shape | Export a `rebuildRows(card)` from `mc-setlog.js` that removes the wrap, rebuilds, re-applies the stored sets for that `exId` (mc-setlog already owns `mc_setlog_v1`), restores the open/collapsed state, and calls `updateCountByCard`; then call it from `applyIntensifier()` when the cluster value actually changes. Verify with a logged set present before the change, not just an empty card. |
-| Status | **OPEN — reported with a reproduction; owner's call on when to touch the persistence path** |
+| Owner decision (2026-09-16) | **Fix the promise, not the persistence path — for now.** Presented as two options; the owner chose the copy fix. The damage today is a broken promise, not broken data: the setting *is* saved, it just doesn't repaint until the next load, so an athlete who taps 🧩 and sees no change reasonably concludes it failed. Both places that promised the mid-session case now describe the real behaviour — `quick-tour-data.js`'s cluster slide (which `quick-tour.html` and `quick-tour-full.html` both render, so there is one copy, not three) and `quick-tour-overview.html`'s Cluster sets bullet. The rebuild-and-repaint work above is **not cancelled** — it stays the real fix, unblocked for whenever the set logger is next opened deliberately. |
+| Status | **OPEN (code) / CLOSED (claim)** — the app no longer advertises behaviour it doesn't have. The repaint gap itself is unchanged and still wants the `rebuildRows(card)` shape above. |
 
 ---
 
@@ -228,6 +229,24 @@ notably, the two controls `W-I3` named at 1.00:1, `.coach-icon` (🤖) and
 `.lift-name`. Those two are gradient-backed, so this pass **can neither confirm
 nor refute** W-I3's reading of them; it can only say a gradient-aware probe does
 not reproduce it. The 3 that survived are one real defect, fixed above.
+
+---
+
+## DEF-15 — P2 — a cluster edit on `run-workout.html` un-checks a set the athlete already logged
+
+| | |
+|---|---|
+| Feature | 🧩 Cluster edit on the custom-workout runner (`run-workout.html`'s own `openClusterEdit()` / `clusterBadge()`, a separate implementation from the program pages' `program-overrides.js` path) |
+| Found | While executing DEF-12's copy fix (2026-09-16) — two code comments still promised the mid-session case, and checking whether `run-workout.html` shared DEF-12's bug meant driving it |
+| Scenario | Seed a custom workout with a `5+5+5` cluster → open Log Sets → fill and **check one set** → tap the 🧩 badge → change the last mini-set to `3` → Done. `GO_LIVE/scenarios/phase3/def15-run-workout-cluster.js` |
+| Expected | The split updates and the set already logged stays logged |
+| Observed | The split **does** update — `data-mc-cluster` goes `5+5+5` → `5+5+3` live, so this page does **not** have DEF-12's symptom. But the rebuilt rows come back **unchecked**: DOM checked rows `1` → **0**, badge `1/3` → **`0/3 Sets`**. The set is **still in `mc_setlog_v1`** (verified: store count `1` → `1`), so **no data is lost** — the screen just stops showing it until the next load. |
+| Root cause | Each cluster handler calls `saveWorkoutClusterEdit(wk)` then `render()`. `saveWorkoutClusterEdit()` only writes localStorage (its comment claimed it also re-stamped the card and dropped the Log Sets panel — it never did; the repaint comes from `render()`). The full re-render rebuilds the rows, and **nothing re-runs `mc-session.js`'s `restoreSets()`** afterwards, so checked state is not re-applied. Same shape as the pre-existing reload bug `F3-1` fixed on the day pages — cards rebuilt after `restoreSets()` has already run. |
+| Athlete-visible effect | Mid-workout, adjusting a cluster appears to **wipe the set you just did**. Worse than DEF-12's "looks like nothing happened", because this looks like something was destroyed. It wasn't — a reload brings it back. |
+| Relationship to DEF-12 | **Same underlying gap, opposite symptom.** DEF-12: the value never reaches the rows. DEF-15: the value reaches the rows but the logged state doesn't survive the rebuild. Both need the one thing DEF-12 names — a rebuild path that re-applies stored sets. `restoreSets()` being module-private is the blocker in both. |
+| **Not fixed — deliberately, same reasoning as DEF-12** | The fix is DEF-12's `rebuildRows(card)` shape, which re-applies the stored sets for that `exId` after rebuilding. Doing it here first would mean writing that plumbing anyway, on the persistence path, which the card-integration roadmap changes one serialized PR at a time. Countermeasures applied instead: the misleading comment above `saveWorkoutClusterEdit()` now describes what the function really does and names this defect, and the scenario is committed so the regression is re-runnable. |
+| Why no gate caught it | `check-journey.js` drives sessions but never edits an intensifier; `run-workout.html` needs a seeded custom workout before it renders a card at all (which is why `S4b` had to drive it specially), so it is outside every default probe list. |
+| Status | **OPEN — reported with a committed reproduction; fold into DEF-12's fix, not a separate change** |
 
 ---
 
