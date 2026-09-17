@@ -1085,13 +1085,56 @@
  },
  {
   "page": "legacy-prep.html",
-  "step": "openLogger",
-  "dayRows": 26,
-  "dayVia": "day-header",
+  "step": "finish",
+  "dayRows": 0,
+  "dayVia": "already-open",
   "cards": 199,
-  "loggerOpen": false,
-  "plannedRows": 0,
-  "verdict": "NO-LOGGER"
+  "loggerOpen": "opened",
+  "plannedRows": 5,
+  "checkedOk": 3,
+  "blocked": [],
+  "keys": [
+   "mclr-x-decline-cable-flies"
+  ],
+  "setsBefore": 3,
+  "sessionBefore": true,
+  "setsAfter": 3,
+  "exKeys": [
+   "legacy-prep|x-decline-cable-flies"
+  ],
+  "dayKeys": [
+   "2026-09-17"
+  ],
+  "dayKeysDated": true,
+  "checkedInDom": 3,
+  "finishVia": "api",
+  "banked": 1,
+  "bankedSets": [
+   {
+    "name": "x-decline-cable-flies",
+    "setNum": 1,
+    "weight": "100",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-decline-cable-flies",
+    "setNum": 2,
+    "weight": "105",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-decline-cable-flies",
+    "setNum": 3,
+    "weight": "110",
+    "reps": "8",
+    "pr": false
+   }
+  ],
+  "thrown": [],
+  "consoleErr": [],
+  "verdict": "PASS"
  },
  {
   "page": "legs-pump.html",
@@ -3032,7 +3075,7 @@
    "2026-09-17"
   ],
   "dayKeysDated": true,
-  "checkedInDom": 0,
+  "checkedInDom": 3,
   "finishVia": "api",
   "banked": 1,
   "bankedSets": [
@@ -3060,7 +3103,7 @@
   ],
   "thrown": [],
   "consoleErr": [],
-  "verdict": "FAIL"
+  "verdict": "PASS"
  },
  {
   "page": "pmc-workout.html",
@@ -3533,7 +3576,7 @@
    "2026-09-17"
   ],
   "dayKeysDated": true,
-  "checkedInDom": 0,
+  "checkedInDom": 3,
   "finishVia": "api",
   "banked": 1,
   "bankedSets": [
@@ -3561,7 +3604,7 @@
   ],
   "thrown": [],
   "consoleErr": [],
-  "verdict": "FAIL"
+  "verdict": "PASS"
  },
  {
   "page": "s4-push.html",

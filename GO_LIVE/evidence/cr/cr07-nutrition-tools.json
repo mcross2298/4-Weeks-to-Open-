@@ -1,0 +1,194 @@
+[
+ {
+  "id": "N-01",
+  "label": "the goal calculator is reachable on the page and matches Mifflin-St Jeor",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "independent 1874.7, app 1874.6847400200709"
+ },
+ {
+  "id": "N-02",
+  "label": "the day total reconciles against Atwater exactly",
+  "ok": true,
+  "got": 633,
+  "want": 633,
+  "note": "66p / 21f / 45c = 633 kcal"
+ },
+ {
+  "id": "N-03",
+  "label": "the nutrition tab shows the logged day back, totalled",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "{\"showsTotal\":true,\"namesAFood\":true,\"mentionsProtein\":true,\"sample\":\"Nutrition Daily macros · goals · food log Today ◎ ★ ⚙ ‹ MON 14 TUE 15 WED 16 THU 17 FRI 18 SAT 19 SUN 20 › 🔥 633 /2600 P 66 /200 F 21 /80 C 45 /260 › 🍽 TODAY'\"}"
+ },
+ {
+  "id": "N-04",
+  "label": "the nutrition tab throws nothing",
+  "ok": true,
+  "got": 0,
+  "want": 0,
+  "note": ""
+ },
+ {
+  "id": "T-01",
+  "label": "Max-Out estimates a 1RM from a heavy set (225x5)",
+  "ok": true,
+  "got": 263,
+  "want": 263,
+  "note": "Epley, computed independently"
+ },
+ {
+  "id": "T-02",
+  "label": "the Max-Out page presents real inputs",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "{\"hasInputs\":1,\"mentionsWarm\":true}"
+ },
+ {
+  "id": "T-03",
+  "label": "Max-Out throws nothing",
+  "ok": true,
+  "got": 0,
+  "want": 0,
+  "note": ""
+ },
+ {
+  "id": "T-04",
+  "label": "Quick Pump offers its time choices",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "{\"module\":true,\"buttons\":3,\"body\":\"← Dashboard\\n⚡ QUICK PUMP\\n30 or 45 minutes. Let's go.\\nA fresh, station-anchored session pulled from every program's exerc\"}"
+ },
+ {
+  "id": "T-05a",
+  "label": "Quick Pump has a Generate control",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": ""
+ },
+ {
+  "id": "T-05",
+  "label": "Quick Pump generates a real session on Generate",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "{\"cards\":0,\"namesExercises\":true}"
+ },
+ {
+  "id": "T-06",
+  "label": "Quick Pump throws nothing",
+  "ok": true,
+  "got": 0,
+  "want": 0,
+  "note": ""
+ },
+ {
+  "id": "T-07",
+  "label": "the Exercise Library renders movements",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "{\"catalog\":580,\"rendered\":340,\"searchBox\":1}"
+ },
+ {
+  "id": "T-08",
+  "label": "the library offers search",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": ""
+ },
+ {
+  "id": "T-09",
+  "label": "typing a query returns real matches",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "{\"count\":37,\"namesASquat\":true}"
+ },
+ {
+  "id": "T-10",
+  "label": "a no-results query still says something rather than going blank",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "{\"count\":0,\"saysSomething\":true}"
+ },
+ {
+  "id": "T-11",
+  "label": "the library throws nothing",
+  "ok": true,
+  "got": 0,
+  "want": 0,
+  "note": ""
+ },
+ {
+  "id": "T-12",
+  "label": "Build Your Own presents a name field, a pickable list and a save",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "{\"nameField\":2,\"addable\":542,\"save\":1}"
+ },
+ {
+  "id": "T-13",
+  "label": "Build Your Own throws nothing",
+  "ok": true,
+  "got": 0,
+  "want": 0,
+  "note": ""
+ },
+ {
+  "id": "T-14",
+  "label": "Guided Mode has an entry control on a workout page",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "{\"present\":true,\"w\":332,\"h\":44,\"text\":\"🎯 Start Guided Mode\"}"
+ },
+ {
+  "id": "T-15",
+  "label": "the Guided Mode entry clears the 44px touch floor",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "332x44"
+ },
+ {
+  "id": "T-16",
+  "label": "and once inside, the way OUT is present and 44px",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "{\"exit\":true,\"w\":120,\"h\":44}"
+ },
+ {
+  "id": "T-17",
+  "label": "Guided Mode throws nothing",
+  "ok": true,
+  "got": 0,
+  "want": 0,
+  "note": ""
+ },
+ {
+  "id": "T-18",
+  "label": "a finished workout appears in Workout Logs",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "{\"mentionsSets\":true,\"hasEntry\":1,\"totals\":[\"1\",\"3\",\"0\",\"1\",\"6\",\"09\"]}"
+ },
+ {
+  "id": "T-19",
+  "label": "Workout Logs throws nothing",
+  "ok": true,
+  "got": 0,
+  "want": 0,
+  "note": ""
+ }
+]
