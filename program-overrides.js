@@ -331,8 +331,18 @@
   // `o` is null we remove anything we previously injected. A cluster carries
   // its rep scheme onto data-mc-cluster/-rest so mc-setlog.js's Log Sets panel
   // can render the matching mini-set bubbles; the badge/note become tappable
-  // so any user can adjust the breakdown mid-session (openClusterPersonalEdit
-  // below) — always written to the PERSONAL store, never the PM-published one.
+  // (openClusterPersonalEdit below) — always written to the PERSONAL store,
+  // never the PM-published one.
+  //
+  // This comment used to say the athlete could adjust the breakdown
+  // "mid-session". It cannot, on these pages, and the go-live assessment
+  // measured it (GO_LIVE/bugs.md, DEF-12): the attribute below IS stamped and
+  // mc_personal_intensifiers IS written, but mc-setlog.js reads
+  // card.dataset.mcCluster only inside buildRows(), which opens with
+  // `if (host.querySelector('.mcl-wrap')) return;` — the rows already exist, so
+  // nothing re-reads it. The new split applies from the NEXT load. The tour and
+  // Executive Summary now say so; fixing the repaint needs a rebuild path
+  // across mc-setlog.js/mc-session.js and is still open.
   function applyIntensifier(card, kind, o, baseKey) {
     var badgeText = kind === 'drop' ? '↘️ Drop Set' : '🧩 Cluster';
     var noteText  = !o ? '' : (kind === 'drop' ? dropLine(o) : clusterLine(o));

@@ -208,11 +208,21 @@ function openClusterEdit(anchor, i){
     });
   }, 0);
 }
-// Persist the edited cluster scheme back into the saved custom workout, then
-// re-stamp the live card's data attributes + drop its existing Log Sets
-// panel so mc-setlog.js's MutationObserver rebuilds it with the new reps —
-// not-yet-logged mini-sets pick up the new targets; already-checked sets keep
-// whatever was actually logged (mc-setlog.js never touches saved history).
+// Persist the edited cluster scheme back into the saved custom workout. That is
+// ALL this function does — the repaint comes from each caller's own render()
+// call, not from here. This comment used to claim the function re-stamped the
+// card's data attributes and dropped its Log Sets panel so mc-setlog.js would
+// rebuild; it never did either, and the description survived because the page
+// repaints anyway for a different reason.
+//
+// Driven and measured (GO_LIVE/bugs.md, DEF-15): the full render() DOES reach
+// the card here — data-mc-cluster goes 5+5+5 -> 5+5+3 live, so this page does
+// not have DEF-12's symptom. What it does have is a display regression on the
+// way through: the already-checked set is still in mc_setlog_v1 (verified, so
+// no data is lost) but the rebuilt rows come back UNCHECKED and the badge reads
+// 0/3 instead of 1/3, because nothing re-runs mc-session.js's restoreSets()
+// after this re-render. Same shape as the pre-existing reload bug F3-1 fixed on
+// the day pages.
 function saveWorkoutClusterEdit(wk){
   var all; try{ all = JSON.parse(localStorage.getItem(CW_KEY)||'[]'); }catch(e){ all = []; }
   var idx = all.findIndex(function(w){ return w.id===wk.id; });
