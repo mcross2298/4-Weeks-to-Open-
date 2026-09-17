@@ -51,7 +51,7 @@ const fs = require('fs');
 
       rec.step = 'openDay';
       const day = await D.openDay(page, 0);
-      rec.dayRows = day.listed;
+      rec.dayRows = day.listed; rec.dayVia = day.via;
 
       rec.step = 'cards';
       rec.cards = await D.cards(page);
@@ -59,7 +59,7 @@ const fs = require('fs');
 
       rec.step = 'openLogger';
       rec.loggerOpen = await D.openLogger(page, 0);
-      rec.plannedRows = await page.locator('.mcl-row').count();
+      rec.plannedRows = await page.locator('.mcl-row').filter({ visible: true }).count();
       if (!rec.plannedRows) { rec.verdict = 'NO-LOGGER'; rows.push(rec); await c.close(); continue; }
 
       rec.step = 'log';
@@ -89,6 +89,11 @@ const fs = require('fs');
       /* FIX-06: the day key must carry a year. A bare "Sep 17" collides with
          itself annually and cannot be ordered. Asserted per page, not sampled. */
       rec.dayKeysDated = kk.dayKeys.every(d => /^\d{4}-\d{2}-\d{2}$/.test(d));
+      /* Count restored ticks across the whole document, not only the visible
+         card. On a multi-card page the card that is ACTIVE after a reload is
+         not necessarily the one that was logged, so a visible-only count reads
+         0 while the restore is in fact correct — a driver artefact, not a
+         defect, and one worth not re-introducing. */
       rec.checkedInDom = await page.locator('.mcl-ck[aria-checked="true"]').count();
 
       rec.step = 'finish';

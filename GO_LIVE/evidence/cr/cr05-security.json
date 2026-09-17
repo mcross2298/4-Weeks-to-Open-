@@ -1,0 +1,64 @@
+[
+ {
+  "id": "S-01",
+  "label": "the Program Manager does not hand editing to an unauthenticated device",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "contenteditable=0, gated-copy=false, enabled publish buttons=0"
+ },
+ {
+  "id": "S-02",
+  "label": "no credential store is marked exportable or syncable",
+  "ok": true,
+  "got": [],
+  "want": [],
+  "note": "1 credential-shaped store(s) declared"
+ },
+ {
+  "id": "S-03",
+  "label": "no service-role key or name is shipped to the browser",
+  "ok": true,
+  "got": [],
+  "want": [],
+  "note": ""
+ },
+ {
+  "id": "S-04",
+  "label": "forging owner/admin flags in localStorage does not unlock the owner surface",
+  "ok": true,
+  "got": 0,
+  "want": 0,
+  "note": "client-side flags must not be the authority"
+ },
+ {
+  "id": "S-05",
+  "label": "a workout page contacts no third-party host beyond its own backend and fonts",
+  "ok": true,
+  "got": [],
+  "want": [],
+  "note": "contacted: https://fonts.googleapis.com, https://dhlxmoyjfxohbeiexwnr.supabase.co"
+ },
+ {
+  "id": "S-06",
+  "label": "no licensed content or brand term is reachable from the public Rolodex build",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "leak check passed: no licensed content or brand term reachable from the market build (41 licensed files excluded)"
+ },
+ {
+  "id": "S-07",
+  "label": "every root document is classified scratch or shippable (no accidental disclosure)",
+  "ok": true,
+  "got": [],
+  "want": [],
+  "note": "23 root .md files"
+ },
+ {
+  "id": "S-08",
+  "label": "live cross-user row-level-security attacks",
+  "ok": null,
+  "unverified": "tests/test_rls.py needs SUPABASE_DB_URL (a direct Postgres URL). This session has none, and the egress proxy denies CONNECT to the project host, so the suite would SKIP rather than run. Reported as unverified; the prior assessment executed 12 such attacks and recorded all blocked."
+ }
+]

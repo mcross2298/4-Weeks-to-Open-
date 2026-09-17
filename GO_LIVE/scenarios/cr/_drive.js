@@ -20,12 +20,36 @@ const { sleep } = require('./_harness');
 /* Open a day on a page that presents a day LIST (F3 family). Pages that serve
    a single day have no rows and are already open — that is not a failure. */
 async function openDay(page, idx = 0) {
-  const rows = await page.locator('.mc-day-row').count();
-  if (!rows) return { listed: 0, opened: false };
-  const n = Math.min(idx, rows - 1);
-  await page.locator('.mc-day-row').nth(n).click();
-  await sleep(700);
-  return { listed: rows, opened: true, index: n };
+  /* Two day mechanisms exist across the fleet and only one of them is the F3
+     day list. Pages converted by F3-1..F3-4 render `.mc-day-row`; the rest
+     (legacy-prep.html among them, 26 days) still use a `.day-header` toggle
+     with one day already open. Trying only the first leaves every row on those
+     pages inside a display:none ancestor. */
+  const listRows = await page.locator('.mc-day-row').count();
+  if (listRows) {
+    const n = Math.min(idx, listRows - 1);
+    await page.locator('.mc-day-row').nth(n).click();
+    await sleep(700);
+    return { listed: listRows, opened: true, index: n, via: 'day-list' };
+  }
+  /* "A day is already open" is decided by a visible CARD, not a visible row:
+     since R3 every card rests as a strip, so a fully open day can legitimately
+     have zero rows with a layout box. Testing rows made this helper click a
+     .day-header that was already expanded — which toggles it SHUT, leaving the
+     page with nothing open and the driver reporting a defect that was its own. */
+  const openCards = await page.locator('.ex-card, .ss-ex, .ex-item').filter({ visible: true }).count();
+  const openStrips = await page.locator('.mcl-strip').filter({ visible: true }).count();
+  if (openCards > 0 || openStrips > 0) {
+    return { listed: 0, opened: false, via: 'already-open' };
+  }
+  const heads = page.locator('.day-header');
+  const n = await heads.count();
+  if (n) {
+    await heads.nth(Math.min(idx, n - 1)).click({ timeout: 4000 }).catch(() => {});
+    await sleep(700);
+    return { listed: n, opened: true, index: idx, via: 'day-header' };
+  }
+  return { listed: 0, opened: false, via: 'none' };
 }
 
 async function cards(page) { return page.locator('.ex-card, .ss-ex, .ex-item').count(); }
@@ -41,22 +65,26 @@ async function cards(page) { return page.locator('.ex-card, .ss-ex, .ex-item').c
    Therefore: if rows are already built, the logger is open — clicking anything
    is wrong. Only when no row exists do we tap a strip, and only a visible one. */
 async function openLogger(page, idx = 0) {
-  if (await page.locator('.mcl-row').count() > 0) return 'already-open';
-  const strips = page.locator('.mcl-strip:visible');
+  /* VISIBLE rows, not any rows. On a multi-day page every day's loggers are
+     built, so a bare .mcl-row count is non-zero even when all of them sit in a
+     collapsed day — which made the first version of this helper report
+     "already open" and then type into an element no thumb could reach. */
+  if (await page.locator('.mcl-row').filter({ visible: true }).count() > 0) return 'already-open';
+  const strips = page.locator('.mcl-strip').filter({ visible: true });
   const n = await strips.count();
   if (n === 0) return false;
   try {
     await strips.nth(Math.min(idx, n - 1)).click({ timeout: 4000 });
   } catch (e) { return 'click-blocked:' + String(e.message).split('\n')[0].slice(0, 80); }
   await sleep(500);
-  return await page.locator('.mcl-row').count() > 0 ? 'opened' : 'opened-no-rows';
+  return await page.locator('.mcl-row').filter({ visible: true }).count() > 0 ? 'opened' : 'opened-no-rows';
 }
 
 /* Log one working set: type a weight, type reps, tap the check.
    Returns the row id so the caller can assert against the store by KEY rather
    than by position — position is exactly what Phase 2.1 proved unsafe. */
 async function logSet(page, rowIdx, weight, reps) {
-  const rows = page.locator('.mcl-row');
+  const rows = page.locator('.mcl-row').filter({ visible: true });
   const total = await rows.count();
   if (rowIdx >= total) return null;
   const row = rows.nth(rowIdx);

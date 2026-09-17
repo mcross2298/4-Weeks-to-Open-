@@ -1,0 +1,144 @@
+[
+ {
+  "id": "C-01",
+  "label": "a partially completed exercise persists exactly what was done",
+  "ok": true,
+  "got": 1,
+  "want": 1,
+  "note": "1 of 26 planned rows"
+ },
+ {
+  "id": "C-02",
+  "label": "three sets logged as fast as a thumb allows all land",
+  "ok": true,
+  "got": 3,
+  "want": 3,
+  "note": ""
+ },
+ {
+  "id": "C-03",
+  "label": "a double-tap on a logged set returns it to logged, not duplicated",
+  "ok": true,
+  "got": 3,
+  "want": 3,
+  "note": "toggle off then on must not create a 4th set"
+ },
+ {
+  "id": "C-04",
+  "label": "an edit after logging is the value that persists",
+  "ok": true,
+  "got": {
+   "w": "115",
+   "r": "6"
+  },
+  "want": {
+   "w": "115",
+   "r": "6"
+  },
+  "note": ""
+ },
+ {
+  "id": "C-05",
+  "label": "a set checked with no weight still records the rep work",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "stored {\"w\":\"\",\"r\":\"5\"}"
+ },
+ {
+  "id": "C-06",
+  "label": "hostile numeric input cannot produce a negative or non-finite session load",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "stored {\"w\":\"-500\",\"r\":\"-9\"} -> {\"kcal\":0,\"strain\":null}"
+ },
+ {
+  "id": "C-07",
+  "label": "navigating away and back loses nothing",
+  "ok": true,
+  "got": 2,
+  "want": 2,
+  "note": ""
+ },
+ {
+  "id": "C-08",
+  "label": "a browser refresh mid-session loses nothing",
+  "ok": true,
+  "got": 2,
+  "want": 2,
+  "note": ""
+ },
+ {
+  "id": "C-10",
+  "label": "closing and reopening the app restores the session",
+  "ok": true,
+  "got": 2,
+  "want": 2,
+  "note": ""
+ },
+ {
+  "id": "C-10b",
+  "label": "and the reopened session shows its sets as done",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "2 ticked"
+ },
+ {
+  "id": "C-11",
+  "label": "an abandoned session is offered back on the dashboard (Smart Resume)",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": ""
+ },
+ {
+  "id": "T-01",
+  "label": "tapping a rest chip starts the one timer",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": ""
+ },
+ {
+  "id": "T-02",
+  "label": "exactly one timer float exists",
+  "ok": true,
+  "got": 1,
+  "want": 1,
+  "note": ""
+ },
+ {
+  "id": "T-03",
+  "label": "rapid timer creation never produces a second float",
+  "ok": true,
+  "got": 1,
+  "want": 1,
+  "note": "the single-timer rule (TMR) under abuse"
+ },
+ {
+  "id": "T-04",
+  "label": "the timer keeps running while the athlete scrolls",
+  "ok": true,
+  "got": 1,
+  "want": 1,
+  "note": ""
+ },
+ {
+  "id": "T-05",
+  "label": "a cancelled timer stops",
+  "ok": true,
+  "got": false,
+  "want": false,
+  "note": ""
+ },
+ {
+  "id": "T-06",
+  "label": "every rest chip is a real <button> (keyboard + screen reader reachable)",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "7/7"
+ }
+]
