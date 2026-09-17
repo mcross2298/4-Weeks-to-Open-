@@ -1,3 +1,23 @@
+# GO LIVE multi-app run — 2026-09-17 — regression
+
+**MC Training.** 51 committed non-browser gates green. Browser gates re-run after every fix:
+`test-mc-exercise-identity` (47), `test-mc-pr-scope` (7), `test-mc-setlog-concurrency`,
+`test-mc-store-resilience` (30 page loads, 0 errors), `test-mc-crash-recovery` (which exercises the
+rerouted cloud path — "rows ticked: 4"), `check-journey` 9/9 complete journeys, and the new
+`test-mc-restore-fidelity` 100/100.
+
+**Cross' Finances.** All seven CI gates: `run-tests` 333/333, `token-drift`, `a11y`
+(17 routes x 2 viewports x 2 themes), `sw-shell`, `plaid-invariants`, `doc-drift`, `sync-drift`.
+
+**Mike's Cookbook.** 25 CI gates plus `check-a11y`. `smoke-test.js` could not run here and is NOT
+reported as passing — it waits for `networkidle`, which never settles behind this sandbox's proxy.
+
+**The two new gates were proven in both directions** before landing: they catch a planted new defect,
+and the cookbook validator's allowlists fail when an entry goes stale ("remove it from the list").
+
+
+---
+
 # GO LIVE — regression results
 
 Baseline `main` @ `905286f`, CI green (`pages.yml` #357, which calls `verify.yml`). That green run is

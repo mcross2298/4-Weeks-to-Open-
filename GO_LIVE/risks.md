@@ -1,3 +1,32 @@
+# GO LIVE multi-app run — 2026-09-17 — residual risk
+
+## Blockers (owner action)
+
+- **`DEF-08`** — the weekly check-in has never worked. 10/10 scheduled runs failed, 2026-07-12 to
+  2026-09-13, every one in 5-8 seconds at the workflow's own `WEEKLY_CHECKIN_SECRET` guard.
+  Set the repository secret and the matching Supabase `CRON_SECRET`, prove one run — or remove the
+  claim from the specification.
+- **`DEF-CB-01` / `DEF-CB-02`** — 18 cookbook records contradict themselves. The correct values are
+  an authoring decision; update the two named allowlists in `tools/validate-recipes.js` once decided.
+
+## Accepted risks
+
+- The portable half of `DEF-FIN-01` is unported. `household-finance` (`main` @ `c7ca218`) carries the
+  identical unguarded `data.rules` iteration and the identical `if (v < 3)` gating. Recorded in that
+  repo's sync manifest as needing a port; not fixed here because it was outside this session's scope.
+- Seven of the ten cookbook scaling anomalies are 6-8x overshoots that may be deliberate re-authoring.
+
+## Known limitations — not measured
+
+Real-device QA (iOS Safari, Android Chrome, installed PWA); true multi-device sync reconciliation;
+offline reload; live RLS; the cookbook smoke test; Cooking Mode's step-by-step UI and the weekly
+planner's three generator modes (driven only at the store/API layer); font-dependent visual and
+contrast ratchets (`fonts.googleapis.com` is reachable by `curl` but blocked to headless Chromium
+here — re-derived this run rather than cited).
+
+
+---
+
 # GO LIVE — remaining risk
 
 ## Release blockers

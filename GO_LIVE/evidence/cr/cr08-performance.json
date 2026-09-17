@@ -1,0 +1,98 @@
+[
+ {
+  "id": "PF-01",
+  "label": "a long session logs and keeps every set (30 logged)",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "store holds 30 of 30 logged"
+ },
+ {
+  "id": "PF-02",
+  "label": "querySelectorAll per logged set stays bounded",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "90/set"
+ },
+ {
+  "id": "PF-03",
+  "label": "localStorage reads per logged set stay bounded",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "66/set"
+ },
+ {
+  "id": "PF-04",
+  "label": "localStorage writes per logged set stay bounded",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "6/set"
+ },
+ {
+  "id": "PF-05",
+  "label": "mutation records delivered per logged set stay bounded",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "121/set"
+ },
+ {
+  "id": "PF-06",
+  "label": "the DOM does not grow without bound during a session",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "873 -> 925 nodes"
+ },
+ {
+  "id": "PF-07",
+  "label": "JS heap growth over a 30-set session stays under 40 MB",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "9.5 -> 9.5 MB"
+ },
+ {
+  "id": "PF-08",
+  "label": "history renders with 300 workouts / 9000 sets seeded",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "434 ms to first meaningful paint"
+ },
+ {
+  "id": "PF-09",
+  "label": "a year of history does not explode the DOM",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "6698 nodes"
+ },
+ {
+  "id": "PF-10",
+  "label": "a heavy dataset throws nothing",
+  "ok": true,
+  "got": 0,
+  "want": 0,
+  "note": ""
+ },
+ {
+  "id": "PF-11",
+  "label": "the stats page survives the same dataset",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "2699 ms"
+ },
+ {
+  "id": "PF-12",
+  "label": "stats throws nothing on a heavy dataset",
+  "ok": true,
+  "got": 0,
+  "want": 0,
+  "note": ""
+ }
+]
