@@ -155,9 +155,21 @@
       var row = document.getElementById(rowId);
       if (!row) { done = false; return; }
       var ck = row.querySelector('.mcl-ck');
-      if (ck && !ck.classList.contains('done')) {
+      var wasDone = !!(ck && ck.classList.contains('done'));
+      // DEF-CR-01: this used to set the tick class and text and nothing else,
+      // so a restored row kept build()'s PRESCRIPTION in its inputs, ghosted —
+      // an athlete who reloaded mid-session saw 205x9 come back as 205x5, and
+      // unchecking/re-checking that row committed the ghost for real.
+      // mc-setlog.js owns the row, the ghost contract and the count, so the
+      // repaint lives there and both restore paths call the one copy.
+      if (window.MCSetlogUtil && window.MCSetlogUtil.paintLoggedRow) {
+        window.MCSetlogUtil.paintLoggedRow(row);
+      } else if (ck && !wasDone) {
         ck.classList.add('done'); ck.textContent = '✓';
+        ck.setAttribute('aria-checked', 'true');
         row.classList.add('done-row');
+      }
+      if (!wasDone) {
         var card = row.closest(CARD_SEL);
         if (card && touchedCards.indexOf(card) === -1) touchedCards.push(card);
       }

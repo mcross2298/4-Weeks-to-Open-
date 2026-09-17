@@ -1,0 +1,34 @@
+[
+ {
+  "page": "2on-1off.html",
+  "step": "openLogger",
+  "dayRows": 6,
+  "cards": 8,
+  "verdict": "ERROR",
+  "error": "locator.click: Timeout 30000ms exceeded."
+ },
+ {
+  "page": "3on-1off-high-freq.html",
+  "step": "openLogger",
+  "dayRows": 4,
+  "cards": 7,
+  "verdict": "ERROR",
+  "error": "locator.click: Timeout 30000ms exceeded."
+ },
+ {
+  "page": "5on-2off.html",
+  "step": "openLogger",
+  "dayRows": 5,
+  "cards": 9,
+  "verdict": "ERROR",
+  "error": "locator.click: Timeout 30000ms exceeded."
+ },
+ {
+  "page": "arnold-legacy.html",
+  "step": "openLogger",
+  "dayRows": 0,
+  "cards": 181,
+  "verdict": "ERROR",
+  "error": "locator.click: Timeout 30000ms exceeded."
+ }
+]
