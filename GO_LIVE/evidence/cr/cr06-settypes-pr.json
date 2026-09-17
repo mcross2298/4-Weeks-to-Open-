@@ -1,0 +1,106 @@
+[
+ {
+  "id": "PR-01",
+  "label": "a heavier top set than any previous session IS a record",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "prior best 200 lb, logged 225 lb"
+ },
+ {
+  "id": "PR-02",
+  "label": "a lighter set than the standing best is NOT a record",
+  "ok": true,
+  "got": false,
+  "want": false,
+  "note": "prior best 250 lb, logged 225 lb"
+ },
+ {
+  "id": "PR-03",
+  "label": "equalling the best is not beating it",
+  "ok": true,
+  "got": false,
+  "want": false,
+  "note": "prior best 225 lb, logged 225 lb"
+ },
+ {
+  "id": "PR-04",
+  "label": "a first-ever set of a lift is a baseline, not a record (G-03)",
+  "ok": true,
+  "got": false,
+  "want": false,
+  "note": "prior best none lb, logged 135 lb"
+ },
+ {
+  "id": "ST-01",
+  "label": "an AMRAP set stores the reps actually achieved, not the prescription",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "stored {\"w\":\"95\",\"r\":\"23\"}"
+ },
+ {
+  "id": "ST-02",
+  "label": "a 23-rep AMRAP does not inflate the 1RM estimate (Epley capped at 12)",
+  "ok": true,
+  "got": 133,
+  "want": 133,
+  "note": "uncapped Epley would claim 168 lb"
+ },
+ {
+  "id": "ST-03a",
+  "label": "a cluster can be configured through the app's own override API",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "card key Incline DB Press"
+ },
+ {
+  "id": "ST-03b",
+  "label": "DEF-12 holds: the cluster does NOT repaint mid-session (documented limitation)",
+  "ok": true,
+  "got": 0,
+  "want": 0,
+  "note": "buildRows() returns early when .mcl-wrap already exists"
+ },
+ {
+  "id": "ST-03c",
+  "label": "each working set renders one bubble per mini-set",
+  "ok": true,
+  "got": 3,
+  "want": 3,
+  "note": "declared 5+4+3; 15 bubbles across the card (one set of 3 per working set)"
+ },
+ {
+  "id": "ST-03d",
+  "label": "a cluster stores every mini-set, not just the first",
+  "ok": true,
+  "got": "5+4+3",
+  "want": "5+4+3",
+  "note": ""
+ },
+ {
+  "id": "ST-04",
+  "label": "cluster reps total 12, not 5 (P2-08: parseInt read a third of the work)",
+  "ok": true,
+  "got": 12,
+  "want": 12,
+  "note": ""
+ },
+ {
+  "id": "ST-04b",
+  "label": "but a 1RM estimate uses the TOP mini-set (5), never the summed 12",
+  "ok": true,
+  "got": 5,
+  "want": 5,
+  "note": "a cluster is rested mid-set; Epley off 12 would invent a max nobody lifted"
+ },
+ {
+  "id": "ST-05",
+  "label": "each superset leg logs under its own exercise key, not a shared one",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "legs=[\"Cable Mid-Chest Fly\",\"Cable High-to-Low Fly\",\"Cable Rope Curl\"] keys=[\"mclr-x-cable-mid-chest-fly\",\"mclr-x-cable-high-to-low-fly\",\"mclr-x-cable-rope-curl\",\"mclr-x-seated-ez-bar-curl\"]"
+ }
+]

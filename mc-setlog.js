@@ -1972,6 +1972,79 @@
     updateCount(card, exIdOf(card));
   }
 
+  // ---- DEF-CR-01: ONE way to repaint a set that is already logged ---------
+  // Two restore paths existed and they had drifted apart:
+  //
+  //   mc-setlog.js  paintRestored()   cloud rehydrate — value + ghost-clear + aria
+  //   mc-session.js restoreSets()     local reload    — tick class and text ONLY
+  //
+  // The local path is the COMMON one: every pull-to-refresh, every accidental
+  // reload, and the service worker's own forced reload on a deploy all take it.
+  // Because it never repainted the inputs, a restored row kept whatever build()
+  // had written there — the PRESCRIPTION, styled .mcl-ghost. So an athlete who
+  // reloaded mid-session saw a completed 205 lb x 9 rendered back as 205 x 5.
+  //
+  // mc_setlog_v1 was never wrong; only the screen was. But the lie did not stay
+  // cosmetic: the ghost is a live input, so unchecking and re-checking that row
+  // ran onCheck() over the ghost and committed it — 9 really did become 5, and
+  // from there into tonnage, session kcal, PR detection and banked history.
+  //
+  // This is the single implementation both paths now call. Values come from the
+  // caller when it has them (cloud rows carry their own), otherwise from TODAY's
+  // entry in mc_setlog_v1. They are never read back out of the DOM, because the
+  // DOM is precisely what could not be trusted here.
+  function paintLoggedRow(row, vals) {
+    if (!row) return false;
+    var card = row.closest('.ex-card, .ss-ex, .ex-item, .lift-card');
+    if (!vals) {
+      // Derive the set number from the row id's trailing index, and the
+      // exercise id from the owning card via exIdOf — the ONE identity
+      // derivation (EN-1). cssId() is lossy, so the row id is never inverted.
+      var m = /-(\d+)$/.exec(row.id || '');
+      if (!m || !card) return false;
+      var sn = m[1];
+      var hist = st()[ek(exIdOf(card))];
+      if (!Array.isArray(hist)) return false;
+      var today = dayStamp(), entry = null;
+      for (var i = 0; i < hist.length; i++) {
+        if (hist[i] && hist[i].d === today) { entry = hist[i]; break; }
+      }
+      if (!entry || !entry.sets) return false;
+      vals = entry.sets[sn];
+      if (!vals) return false;
+    }
+    var solid = function (inp, v) {
+      if (!inp || v == null || v === '') return;
+      inp.value = String(v);
+      inp.classList.remove('mcl-ghost');
+      delete inp.dataset.ghost;
+    };
+    solid(row.querySelector('.mcl-w'), vals.w);
+    // A cluster stores its mini-sets as "5+5+5" and renders one input each.
+    // Splitting keeps a cluster's restored row as truthful as a straight set's;
+    // a mini count that no longer matches the prescription is left alone rather
+    // than smeared across the wrong bubbles.
+    var minis = row.querySelectorAll('.mcl-rmini');
+    if (minis.length) {
+      var parts = String(vals.r == null ? '' : vals.r).split('+');
+      if (parts.length === minis.length) {
+        for (var k = 0; k < minis.length; k++) solid(minis[k], parts[k].trim());
+      }
+    } else {
+      solid(row.querySelector('.mcl-r:not(.mcl-rmini)'), vals.r);
+    }
+    var ck = row.querySelector('.mcl-ck');
+    if (ck) {
+      ck.classList.add('done');
+      ck.textContent = '\u2713';
+      // restoreSets() never set this, so every restored set announced itself to
+      // a screen reader as "not checked" while showing a visible tick.
+      ck.setAttribute('aria-checked', 'true');
+    }
+    row.classList.add('done-row');
+    return true;
+  }
+
   // shared parsing helpers for mc-suggest.js (and future analytics) — avoids
   // re-implementing the prescribed-scheme parser anywhere else
   window.MCSetlogUtil = {
@@ -1984,6 +2057,11 @@
                                       // prescription never stated
 
     updateCountByCard: updateCountByCard,
+    paintLoggedRow: paintLoggedRow,  // DEF-CR-01: the ONE repaint of an
+                                     // already-logged row, so the local reload
+                                     // path and the cloud rehydrate path cannot
+                                     // show the athlete two different sessions
+
     sessionId: SESSION_ID,   // A-5: lets mc-finish.js purge exactly this
                               // page-load's Supabase workout_logs rows on discard
     activateCard: setActiveCard,  // §3.4: lets mc-session.js re-open the card
@@ -2177,17 +2255,11 @@
       if (window.MCSetlogUtil && MCSetlogUtil.ensureRowsBuilt) MCSetlogUtil.ensureRowsBuilt(card);
       var row = document.getElementById('mclr-' + cssId(e.exId) + '-' + e.sn);
       if (!row) return;
-      var w = row.querySelector('.mcl-w'), r = row.querySelector('.mcl-r:not(.mcl-rmini)');
-      if (w && e.w) { w.value = e.w; w.classList.remove('mcl-ghost'); delete w.dataset.ghost; }
-      if (r && e.r) { r.value = e.r; r.classList.remove('mcl-ghost'); delete r.dataset.ghost; }
-      var ck = row.querySelector('.mcl-ck');
-      if (ck && !ck.classList.contains('done')) {
-        ck.classList.add('done');
-        ck.textContent = '✓';
-        ck.setAttribute('aria-checked', 'true');
-        row.classList.add('done-row');
-        if (cards.indexOf(card) === -1) cards.push(card);
-      }
+      var wasDone = !!row.querySelector('.mcl-ck.done');
+      // DEF-CR-01: same repaint the local reload path uses. The cloud row
+      // carries its own values, so they are passed rather than re-read.
+      paintLoggedRow(row, { w: e.w, r: e.r });
+      if (!wasDone && cards.indexOf(card) === -1) cards.push(card);
     });
     if (window.MCSetlogUtil && MCSetlogUtil.updateCountByCard) {
       cards.forEach(function (c) { MCSetlogUtil.updateCountByCard(c); });

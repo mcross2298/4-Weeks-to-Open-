@@ -1,0 +1,176 @@
+[
+ {
+  "id": "P-01",
+  "label": "a web app manifest is linked and parses",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": ""
+ },
+ {
+  "id": "P-02",
+  "label": "display is standalone (launches without a browser bar)",
+  "ok": true,
+  "got": "standalone",
+  "want": "standalone",
+  "note": ""
+ },
+ {
+  "id": "P-03",
+  "label": "the manifest names the app",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "Mike Cross Training"
+ },
+ {
+  "id": "P-04",
+  "label": "a maskable icon is declared (Android adaptive icons)",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "[\"any any\",\"192x192 any\",\"512x512 any\",\"192x192 maskable\",\"512x512 maskable\"]"
+ },
+ {
+  "id": "P-05",
+  "label": "a 512px icon is declared (install prompt + splash)",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": ""
+ },
+ {
+  "id": "P-06",
+  "label": "theme-color is set (status bar tint in standalone)",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "#0a0a0a"
+ },
+ {
+  "id": "P-07",
+  "label": "viewport-fit=cover is set (notch/safe-area opt-in)",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": ""
+ },
+ {
+  "id": "P-08",
+  "label": "the service worker registers",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "\"http://localhost:8080/\""
+ },
+ {
+  "id": "P-09",
+  "label": "a cache is populated on first visit",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "131 entries in 1 cache(s)"
+ },
+ {
+  "id": "P-10",
+  "label": "sw.js declares a non-trivial app-shell precache",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "138 URLs referenced"
+ },
+ {
+  "id": "P-11",
+  "label": "sets log with the signal cut (dead gym, offline-first claim)",
+  "ok": true,
+  "got": 3,
+  "want": 3,
+  "note": "checked=true/true"
+ },
+ {
+  "id": "P-12",
+  "label": "a workout can be FINISHED and banked while offline",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "finish reachable=true"
+ },
+ {
+  "id": "P-13",
+  "label": "reconnecting does not drop the offline work",
+  "ok": true,
+  "got": 3,
+  "want": 3,
+  "note": ""
+ },
+ {
+  "id": "P-14",
+  "label": "offline RELOAD of a cached page",
+  "ok": null,
+  "unverified": "sw.js's fetch handler is gated to https://mcross2298.github.io, so on localhost it never intercepts. A true offline reload is only observable on the deployed origin. One offline reload there closes this."
+ },
+ {
+  "id": "P-15",
+  "label": "the SW update module is loaded (new-version prompt path)",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": ""
+ },
+ {
+  "id": "P-16",
+  "label": "the page is controlled by the service worker after first load",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": ""
+ },
+ {
+  "id": "P-17@320",
+  "label": "no sideways overflow at 320px",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "+0px"
+ },
+ {
+  "id": "P-18@320",
+  "label": "every in-session control clears the 44px touch floor at 320px",
+  "ok": true,
+  "got": 0,
+  "want": 0,
+  "note": "54 controls measured"
+ },
+ {
+  "id": "P-17@390",
+  "label": "no sideways overflow at 390px",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "+0px"
+ },
+ {
+  "id": "P-18@390",
+  "label": "every in-session control clears the 44px touch floor at 390px",
+  "ok": true,
+  "got": 0,
+  "want": 0,
+  "note": "54 controls measured"
+ },
+ {
+  "id": "P-17@430",
+  "label": "no sideways overflow at 430px",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "+0px"
+ },
+ {
+  "id": "P-18@430",
+  "label": "every in-session control clears the 44px touch floor at 430px",
+  "ok": true,
+  "got": 0,
+  "want": 0,
+  "note": "54 controls measured"
+ }
+]

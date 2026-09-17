@@ -118,6 +118,7 @@
     "MASTER_ROADMAP_VOC_VOA_KAIZEN.md",
     "engine-repair-roadmap.md",
     "CLAUDE.md",
+    "claude_code_go_live_protocol.md",
     "GO_LIVE"
   ],
   "shippable": [],

@@ -261,7 +261,14 @@ const G_READ = /window\.([A-Za-z_$][\w$]*)/g;
 
 function trackedFiles() {
   return execSync("git ls-files '*.js' '*.html'", { cwd: ROOT, encoding: 'utf8' })
-    .trim().split('\n').filter(Boolean);
+    .trim().split('\n').filter(Boolean)
+    // GO_LIVE/ is scratch-listed release-assessment evidence that reaches
+    // neither build. Its scenarios deliberately PROBE for globals to find out
+    // whether a feature is present -- `window.MC_QUICK_PUMP || window.MCQuickPump`
+    // is the question being asked, not a dead branch in shipping code. Scanning
+    // them would report the assessment's own instrumentation as app defects,
+    // which is exactly the noise that gets a gate switched off.
+    .filter(f => !f.startsWith('GO_LIVE/'));
 }
 
 function lineOf(src, index) { return src.slice(0, index).split('\n').length; }

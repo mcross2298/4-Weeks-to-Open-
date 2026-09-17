@@ -509,6 +509,19 @@ jobs:
           # elsewhere. Needs a browser because the defect was in which KEYS the
           # arithmetic was handed, so it has to drive the real completion point.
           if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-pr-scope.js http://localhost:8080; then EXIT=1; fi
+          # Restore fidelity (GO LIVE clean-room run, DEF-CR-01). A restored set
+          # must show what the athlete PERFORMED, not what the program
+          # prescribed. Two restore paths had drifted: mc-setlog.js's cloud
+          # rehydrate repainted values, cleared the ghost and set aria;
+          # mc-session.js's LOCAL reload -- the path every refresh and every SW
+          # update reload takes -- set the tick class and nothing else. So a
+          # completed 205 lb x 9 came back as 205 x 5, styled .mcl-ghost, and
+          # because the ghost is a live input, unchecking and re-checking that
+          # row committed the prescription for real. 44 assertions failed on the
+          # pre-fix tree across all four engine families, 0 after. Needs a
+          # browser: the defect lives between two modules and a rendered
+          # input's ghost state, which is why every other gate here missed it.
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-restore-fidelity.js http://localhost:8080; then EXIT=1; fi
           # Light-mode contrast ratchet (audit G-04/G-3.1). Shares this job
           # because it needs the same Playwright install. Per-page budgets in
           # tools/contrast-budgets.json can only shrink; re-baseline with

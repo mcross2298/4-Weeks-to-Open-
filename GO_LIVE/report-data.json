@@ -1,0 +1,1697 @@
+{
+ "scenarios": {
+  "cr02": [
+   {
+    "id": "C-01",
+    "label": "a partially completed exercise persists exactly what was done",
+    "ok": true,
+    "note": "1 of 26 planned rows",
+    "unverified": null
+   },
+   {
+    "id": "C-02",
+    "label": "three sets logged as fast as a thumb allows all land",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-03",
+    "label": "a double-tap on a logged set returns it to logged, not duplicated",
+    "ok": true,
+    "note": "toggle off then on must not create a 4th set",
+    "unverified": null
+   },
+   {
+    "id": "C-04",
+    "label": "an edit after logging is the value that persists",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-05",
+    "label": "a set checked with no weight still records the rep work",
+    "ok": true,
+    "note": "stored {\"w\":\"\",\"r\":\"5\"}",
+    "unverified": null
+   },
+   {
+    "id": "C-06",
+    "label": "hostile numeric input cannot produce a negative or non-finite session load",
+    "ok": true,
+    "note": "stored {\"w\":\"-500\",\"r\":\"-9\"} -> {\"kcal\":0,\"strain\":null}",
+    "unverified": null
+   },
+   {
+    "id": "C-07",
+    "label": "navigating away and back loses nothing",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-08",
+    "label": "a browser refresh mid-session loses nothing",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-10",
+    "label": "closing and reopening the app restores the session",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-10b",
+    "label": "and the reopened session shows its sets as done",
+    "ok": true,
+    "note": "2 ticked",
+    "unverified": null
+   },
+   {
+    "id": "C-11",
+    "label": "an abandoned session is offered back on the dashboard (Smart Resume)",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "T-01",
+    "label": "tapping a rest chip starts the one timer",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "T-02",
+    "label": "exactly one timer float exists",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "T-03",
+    "label": "rapid timer creation never produces a second float",
+    "ok": true,
+    "note": "the single-timer rule (TMR) under abuse",
+    "unverified": null
+   },
+   {
+    "id": "T-04",
+    "label": "the timer keeps running while the athlete scrolls",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "T-05",
+    "label": "a cancelled timer stops",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "T-06",
+    "label": "every rest chip is a real <button> (keyboard + screen reader reachable)",
+    "ok": true,
+    "note": "7/7",
+    "unverified": null
+   }
+  ],
+  "cr03": [
+   {
+    "id": "P-01",
+    "label": "a web app manifest is linked and parses",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "P-02",
+    "label": "display is standalone (launches without a browser bar)",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "P-03",
+    "label": "the manifest names the app",
+    "ok": true,
+    "note": "Mike Cross Training",
+    "unverified": null
+   },
+   {
+    "id": "P-04",
+    "label": "a maskable icon is declared (Android adaptive icons)",
+    "ok": true,
+    "note": "[\"any any\",\"192x192 any\",\"512x512 any\",\"192x192 maskable\",\"512x512 maskable\"]",
+    "unverified": null
+   },
+   {
+    "id": "P-05",
+    "label": "a 512px icon is declared (install prompt + splash)",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "P-06",
+    "label": "theme-color is set (status bar tint in standalone)",
+    "ok": true,
+    "note": "#0a0a0a",
+    "unverified": null
+   },
+   {
+    "id": "P-07",
+    "label": "viewport-fit=cover is set (notch/safe-area opt-in)",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "P-08",
+    "label": "the service worker registers",
+    "ok": true,
+    "note": "\"http://localhost:8080/\"",
+    "unverified": null
+   },
+   {
+    "id": "P-09",
+    "label": "a cache is populated on first visit",
+    "ok": true,
+    "note": "131 entries in 1 cache(s)",
+    "unverified": null
+   },
+   {
+    "id": "P-10",
+    "label": "sw.js declares a non-trivial app-shell precache",
+    "ok": true,
+    "note": "138 URLs referenced",
+    "unverified": null
+   },
+   {
+    "id": "P-11",
+    "label": "sets log with the signal cut (dead gym, offline-first claim)",
+    "ok": true,
+    "note": "checked=true/true",
+    "unverified": null
+   },
+   {
+    "id": "P-12",
+    "label": "a workout can be FINISHED and banked while offline",
+    "ok": true,
+    "note": "finish reachable=true",
+    "unverified": null
+   },
+   {
+    "id": "P-13",
+    "label": "reconnecting does not drop the offline work",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "P-14",
+    "label": "offline RELOAD of a cached page",
+    "ok": null,
+    "note": "",
+    "unverified": "sw.js's fetch handler is gated to https://mcross2298.github.io, so on localhost it never intercepts. A true offline reload is only observable on the deployed origin. One offline reload there closes this."
+   },
+   {
+    "id": "P-15",
+    "label": "the SW update module is loaded (new-version prompt path)",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "P-16",
+    "label": "the page is controlled by the service worker after first load",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "P-17@320",
+    "label": "no sideways overflow at 320px",
+    "ok": true,
+    "note": "+0px",
+    "unverified": null
+   },
+   {
+    "id": "P-18@320",
+    "label": "every in-session control clears the 44px touch floor at 320px",
+    "ok": true,
+    "note": "54 controls measured",
+    "unverified": null
+   },
+   {
+    "id": "P-17@390",
+    "label": "no sideways overflow at 390px",
+    "ok": true,
+    "note": "+0px",
+    "unverified": null
+   },
+   {
+    "id": "P-18@390",
+    "label": "every in-session control clears the 44px touch floor at 390px",
+    "ok": true,
+    "note": "54 controls measured",
+    "unverified": null
+   },
+   {
+    "id": "P-17@430",
+    "label": "no sideways overflow at 430px",
+    "ok": true,
+    "note": "+0px",
+    "unverified": null
+   },
+   {
+    "id": "P-18@430",
+    "label": "every in-session control clears the 44px touch floor at 430px",
+    "ok": true,
+    "note": "54 controls measured",
+    "unverified": null
+   }
+  ],
+  "cr04": [
+   {
+    "id": "A-01",
+    "label": "every set checkbox is a real <button>",
+    "ok": true,
+    "note": "26/26",
+    "unverified": null
+   },
+   {
+    "id": "A-02",
+    "label": "every set checkbox carries role=checkbox",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "A-03",
+    "label": "every set checkbox carries aria-checked",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "A-04",
+    "label": "every set checkbox carries an accessible name",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "A-05",
+    "label": "every rest chip is a real <button> with a name",
+    "ok": true,
+    "note": "buttons 7/7, labelled 7/7",
+    "unverified": null
+   },
+   {
+    "id": "A-06",
+    "label": "aria-checked flips false -> true when a set is logged",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "A-07",
+    "label": "aria-checked flips back to false when a set is un-logged",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "A-08",
+    "label": "a set checkbox can take keyboard focus",
+    "ok": true,
+    "note": "mcl-ck set-check",
+    "unverified": null
+   },
+   {
+    "id": "A-09",
+    "label": "Enter logs the set (native button semantics)",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "A-10",
+    "label": "Space toggles it too",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "A-11",
+    "label": "the collapsed card strip announces its set count",
+    "ok": true,
+    "note": "{\"label\":\"Expand Incline DB Press, 2 of 5 sets logged\",\"text\":\"1Incline DB Press2/5 Sets\u203a\"}",
+    "unverified": null
+   },
+   {
+    "id": "A-12",
+    "label": "no zero-size element sits in the keyboard tab order",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "A-13",
+    "label": "the reduced-motion media query is seen by the page",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "A-14",
+    "label": "nothing animates long under prefers-reduced-motion",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "A-15",
+    "label": "reduced motion introduces no runtime error",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   }
+  ],
+  "cr05": [
+   {
+    "id": "S-01",
+    "label": "the Program Manager does not hand editing to an unauthenticated device",
+    "ok": true,
+    "note": "contenteditable=0, gated-copy=false, enabled publish buttons=0",
+    "unverified": null
+   },
+   {
+    "id": "S-02",
+    "label": "no credential store is marked exportable or syncable",
+    "ok": true,
+    "note": "1 credential-shaped store(s) declared",
+    "unverified": null
+   },
+   {
+    "id": "S-03",
+    "label": "no service-role key or name is shipped to the browser",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "S-04",
+    "label": "forging owner/admin flags in localStorage does not unlock the owner surface",
+    "ok": true,
+    "note": "client-side flags must not be the authority",
+    "unverified": null
+   },
+   {
+    "id": "S-05",
+    "label": "a workout page contacts no third-party host beyond its own backend and fonts",
+    "ok": true,
+    "note": "contacted: https://fonts.googleapis.com, https://dhlxmoyjfxohbeiexwnr.supabase.co",
+    "unverified": null
+   },
+   {
+    "id": "S-06",
+    "label": "no licensed content or brand term is reachable from the public Rolodex build",
+    "ok": true,
+    "note": "leak check passed: no licensed content or brand term reachable from the market build (41 licensed files excluded)",
+    "unverified": null
+   },
+   {
+    "id": "S-07",
+    "label": "every root document is classified scratch or shippable (no accidental disclosure)",
+    "ok": true,
+    "note": "23 root .md files",
+    "unverified": null
+   },
+   {
+    "id": "S-08",
+    "label": "live cross-user row-level-security attacks",
+    "ok": null,
+    "note": "",
+    "unverified": "tests/test_rls.py needs SUPABASE_DB_URL (a direct Postgres URL). This session has none, and the egress proxy denies CONNECT to the project host, so the suite would SKIP rather than run. Reported as unverified; the prior assessment executed 12 such attacks and recorded all blocked."
+   }
+  ],
+  "cr06": [
+   {
+    "id": "PR-01",
+    "label": "a heavier top set than any previous session IS a record",
+    "ok": true,
+    "note": "prior best 200 lb, logged 225 lb",
+    "unverified": null
+   },
+   {
+    "id": "PR-02",
+    "label": "a lighter set than the standing best is NOT a record",
+    "ok": true,
+    "note": "prior best 250 lb, logged 225 lb",
+    "unverified": null
+   },
+   {
+    "id": "PR-03",
+    "label": "equalling the best is not beating it",
+    "ok": true,
+    "note": "prior best 225 lb, logged 225 lb",
+    "unverified": null
+   },
+   {
+    "id": "PR-04",
+    "label": "a first-ever set of a lift is a baseline, not a record (G-03)",
+    "ok": true,
+    "note": "prior best none lb, logged 135 lb",
+    "unverified": null
+   },
+   {
+    "id": "ST-01",
+    "label": "an AMRAP set stores the reps actually achieved, not the prescription",
+    "ok": true,
+    "note": "stored {\"w\":\"95\",\"r\":\"23\"}",
+    "unverified": null
+   },
+   {
+    "id": "ST-02",
+    "label": "a 23-rep AMRAP does not inflate the 1RM estimate (Epley capped at 12)",
+    "ok": true,
+    "note": "uncapped Epley would claim 168 lb",
+    "unverified": null
+   },
+   {
+    "id": "ST-03a",
+    "label": "a cluster can be configured through the app's own override API",
+    "ok": true,
+    "note": "card key Incline DB Press",
+    "unverified": null
+   },
+   {
+    "id": "ST-03b",
+    "label": "DEF-12 holds: the cluster does NOT repaint mid-session (documented limitation)",
+    "ok": true,
+    "note": "buildRows() returns early when .mcl-wrap already exists",
+    "unverified": null
+   },
+   {
+    "id": "ST-03c",
+    "label": "each working set renders one bubble per mini-set",
+    "ok": true,
+    "note": "declared 5+4+3; 15 bubbles across the card (one set of 3 per working set)",
+    "unverified": null
+   },
+   {
+    "id": "ST-03d",
+    "label": "a cluster stores every mini-set, not just the first",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "ST-04",
+    "label": "cluster reps total 12, not 5 (P2-08: parseInt read a third of the work)",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "ST-04b",
+    "label": "but a 1RM estimate uses the TOP mini-set (5), never the summed 12",
+    "ok": true,
+    "note": "a cluster is rested mid-set; Epley off 12 would invent a max nobody lifted",
+    "unverified": null
+   },
+   {
+    "id": "ST-05",
+    "label": "each superset leg logs under its own exercise key, not a shared one",
+    "ok": true,
+    "note": "legs=[\"Cable Mid-Chest Fly\",\"Cable High-to-Low Fly\",\"Cable Rope Curl\"] keys=[\"mclr-x-cable-mid-chest-fly\",\"mclr-x-cable-high-to-low-fly\",\"mclr-x-cable-rope-curl\",\"mclr-x-seated-ez-bar-curl\"]",
+    "unverified": null
+   }
+  ],
+  "cr07": [
+   {
+    "id": "N-01",
+    "label": "the goal calculator is reachable on the page and matches Mifflin-St Jeor",
+    "ok": true,
+    "note": "independent 1874.7, app 1874.6847400200709",
+    "unverified": null
+   },
+   {
+    "id": "N-02",
+    "label": "the day total reconciles against Atwater exactly",
+    "ok": true,
+    "note": "66p / 21f / 45c = 633 kcal",
+    "unverified": null
+   },
+   {
+    "id": "N-03",
+    "label": "the nutrition tab shows the logged day back, totalled",
+    "ok": true,
+    "note": "{\"showsTotal\":true,\"namesAFood\":true,\"mentionsProtein\":true,\"sample\":\"Nutrition Daily macros \u00b7 goals \u00b7 food log Today \u25ce \u2605 \u2699 \u2039 MON 14 TUE 15 WED 16 THU 17 FRI 18 SAT 19 SUN 20 \u203a \ud83d\udd25 633 /2600 P 66 /200 F 21 /80 C 45 /260 \u203a \ud83c\udf7d TODAY'\"}",
+    "unverified": null
+   },
+   {
+    "id": "N-04",
+    "label": "the nutrition tab throws nothing",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "T-01",
+    "label": "Max-Out estimates a 1RM from a heavy set (225x5)",
+    "ok": true,
+    "note": "Epley, computed independently",
+    "unverified": null
+   },
+   {
+    "id": "T-02",
+    "label": "the Max-Out page presents real inputs",
+    "ok": true,
+    "note": "{\"hasInputs\":1,\"mentionsWarm\":true}",
+    "unverified": null
+   },
+   {
+    "id": "T-03",
+    "label": "Max-Out throws nothing",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "T-04",
+    "label": "Quick Pump offers its time choices",
+    "ok": true,
+    "note": "{\"module\":true,\"buttons\":3,\"body\":\"\u2190 Dashboard\\n\u26a1 QUICK PUMP\\n30 or 45 minutes. Let's go.\\nA fresh, station-anchored session pulled from every program's exerc\"}",
+    "unverified": null
+   },
+   {
+    "id": "T-05a",
+    "label": "Quick Pump has a Generate control",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "T-05",
+    "label": "Quick Pump generates a real session on Generate",
+    "ok": true,
+    "note": "{\"cards\":0,\"namesExercises\":true}",
+    "unverified": null
+   },
+   {
+    "id": "T-06",
+    "label": "Quick Pump throws nothing",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "T-07",
+    "label": "the Exercise Library renders movements",
+    "ok": true,
+    "note": "{\"catalog\":580,\"rendered\":340,\"searchBox\":1}",
+    "unverified": null
+   },
+   {
+    "id": "T-08",
+    "label": "the library offers search",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "T-09",
+    "label": "typing a query returns real matches",
+    "ok": true,
+    "note": "{\"count\":37,\"namesASquat\":true}",
+    "unverified": null
+   },
+   {
+    "id": "T-10",
+    "label": "a no-results query still says something rather than going blank",
+    "ok": true,
+    "note": "{\"count\":0,\"saysSomething\":true}",
+    "unverified": null
+   },
+   {
+    "id": "T-11",
+    "label": "the library throws nothing",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "T-12",
+    "label": "Build Your Own presents a name field, a pickable list and a save",
+    "ok": true,
+    "note": "{\"nameField\":2,\"addable\":542,\"save\":1}",
+    "unverified": null
+   },
+   {
+    "id": "T-13",
+    "label": "Build Your Own throws nothing",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "T-14",
+    "label": "Guided Mode has an entry control on a workout page",
+    "ok": true,
+    "note": "{\"present\":true,\"w\":332,\"h\":44,\"text\":\"\ud83c\udfaf Start Guided Mode\"}",
+    "unverified": null
+   },
+   {
+    "id": "T-15",
+    "label": "the Guided Mode entry clears the 44px touch floor",
+    "ok": true,
+    "note": "332x44",
+    "unverified": null
+   },
+   {
+    "id": "T-16",
+    "label": "and once inside, the way OUT is present and 44px",
+    "ok": true,
+    "note": "{\"exit\":true,\"w\":120,\"h\":44}",
+    "unverified": null
+   },
+   {
+    "id": "T-17",
+    "label": "Guided Mode throws nothing",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "T-18",
+    "label": "a finished workout appears in Workout Logs",
+    "ok": true,
+    "note": "{\"mentionsSets\":true,\"hasEntry\":1,\"totals\":[\"1\",\"3\",\"0\",\"1\",\"6\",\"09\"]}",
+    "unverified": null
+   },
+   {
+    "id": "T-19",
+    "label": "Workout Logs throws nothing",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   }
+  ],
+  "cr08": [
+   {
+    "id": "PF-01",
+    "label": "a long session logs and keeps every set (30 logged)",
+    "ok": true,
+    "note": "store holds 30 of 30 logged",
+    "unverified": null
+   },
+   {
+    "id": "PF-02",
+    "label": "querySelectorAll per logged set stays bounded",
+    "ok": true,
+    "note": "90/set",
+    "unverified": null
+   },
+   {
+    "id": "PF-03",
+    "label": "localStorage reads per logged set stay bounded",
+    "ok": true,
+    "note": "66/set",
+    "unverified": null
+   },
+   {
+    "id": "PF-04",
+    "label": "localStorage writes per logged set stay bounded",
+    "ok": true,
+    "note": "6/set",
+    "unverified": null
+   },
+   {
+    "id": "PF-05",
+    "label": "mutation records delivered per logged set stay bounded",
+    "ok": true,
+    "note": "121/set",
+    "unverified": null
+   },
+   {
+    "id": "PF-06",
+    "label": "the DOM does not grow without bound during a session",
+    "ok": true,
+    "note": "873 -> 925 nodes",
+    "unverified": null
+   },
+   {
+    "id": "PF-07",
+    "label": "JS heap growth over a 30-set session stays under 40 MB",
+    "ok": true,
+    "note": "9.5 -> 9.5 MB",
+    "unverified": null
+   },
+   {
+    "id": "PF-08",
+    "label": "history renders with 300 workouts / 9000 sets seeded",
+    "ok": true,
+    "note": "434 ms to first meaningful paint",
+    "unverified": null
+   },
+   {
+    "id": "PF-09",
+    "label": "a year of history does not explode the DOM",
+    "ok": true,
+    "note": "6698 nodes",
+    "unverified": null
+   },
+   {
+    "id": "PF-10",
+    "label": "a heavy dataset throws nothing",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "PF-11",
+    "label": "the stats page survives the same dataset",
+    "ok": true,
+    "note": "2699 ms",
+    "unverified": null
+   },
+   {
+    "id": "PF-12",
+    "label": "stats throws nothing on a heavy dataset",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   }
+  ],
+  "fin01": [
+   {
+    "id": "F-00",
+    "label": "the synthetic month replaces the real household data (safety rule)",
+    "ok": true,
+    "note": "{\"ok\":true,\"tx\":8}",
+    "unverified": null
+   },
+   {
+    "id": "F-01",
+    "label": "month spend equals the independent sum of the ledger",
+    "ok": true,
+    "note": "8 transactions",
+    "unverified": null
+   },
+   {
+    "id": "F-02",
+    "label": "spend by category matches the independent breakdown",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "F-03",
+    "label": "spend by person matches the independent breakdown",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "F-04",
+    "label": "the category breakdown sums back to the month total",
+    "ok": true,
+    "note": "zero-sum: no category may invent or lose money",
+    "unverified": null
+   },
+   {
+    "id": "F-05",
+    "label": "the person breakdown sums back to the month total",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "F-06",
+    "label": "budget total matches the independent sum",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "F-07",
+    "label": "income total matches the independent sum",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "F-08",
+    "label": "surplus is income minus budget, independently computed",
+    "ok": true,
+    "note": "7000 - 3230",
+    "unverified": null
+   },
+   {
+    "id": "F-09",
+    "label": "Safe to Spend equals budget - spent - unposted fixed - in-flight",
+    "ok": true,
+    "note": "3230 - 3140 - 80 (Internet unposted) - 0 pending",
+    "unverified": null
+   },
+   {
+    "id": "F-10",
+    "label": "Safe to Spend is finite and not NaN",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "F-10b",
+    "label": "both transfers were actually recorded (so F-11..F-14 mean something)",
+    "ok": true,
+    "note": "a malformed transfer would make the double-count test vacuously pass",
+    "unverified": null
+   },
+   {
+    "id": "F-11",
+    "label": "a savings transfer and a card payment do not become spend",
+    "ok": true,
+    "note": "moved 500 to savings and paid 990 to the card; spend must not move",
+    "unverified": null
+   },
+   {
+    "id": "F-12",
+    "label": "and neither moves Safe to Spend",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "F-13",
+    "label": "transfers are never written into data.transactions",
+    "ok": true,
+    "note": "the structural defence against double counting",
+    "unverified": null
+   },
+   {
+    "id": "F-14",
+    "label": "card servicing recognises the payoff, and attributes it to the hub",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "F-14b",
+    "label": "the card was serviced in full \u2014 the payoff equals the card spend",
+    "ok": true,
+    "note": "a payoff smaller than the spend would leave a carried balance",
+    "unverified": null
+   },
+   {
+    "id": "F-15",
+    "label": "card spend for the month equals the independent card subtotal",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "F-15b",
+    "label": "hub spend plus card spend accounts for every transaction, with none unlinked",
+    "ok": true,
+    "note": "zero-sum across accounts",
+    "unverified": null
+   },
+   {
+    "id": "F-16",
+    "label": "the savings roll-up reports what the goals actually hold",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "F-16b",
+    "label": "goal percentage is saved/target, independently computed",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "F-17",
+    "label": "debt payoff returns a finite, positive horizon at the stated payment",
+    "ok": true,
+    "note": "{\"months\":6,\"date\":\"2027-03-17\",\"interest\":60.174862611350136,\"balance\":990}",
+    "unverified": null
+   },
+   {
+    "id": "F-17b",
+    "label": "payoff months match an independent amortisation at 22.9% APR",
+    "ok": true,
+    "note": "balance 990, payment 200/mo -> 6 months",
+    "unverified": null
+   },
+   {
+    "id": "F-17c",
+    "label": "and the payoff actually charges interest (it is not treated as 0% APR)",
+    "ok": true,
+    "note": "interest 60.17",
+    "unverified": null
+   },
+   {
+    "id": "F-17d",
+    "label": "a higher APR costs more interest than a lower one",
+    "ok": true,
+    "note": "29.9% -> 80.26, 9.9% -> 25",
+    "unverified": null
+   },
+   {
+    "id": "F-17e",
+    "label": "a payment too small to cover interest reports \"never\", not a wrong number",
+    "ok": true,
+    "note": "{\"months\":null,\"date\":null,\"interest\":null,\"balance\":990}",
+    "unverified": null
+   },
+   {
+    "id": "F-18",
+    "label": "paying MORE clears the debt sooner, never later",
+    "ok": true,
+    "note": "monotonicity: an extra payment cannot lengthen the payoff",
+    "unverified": null
+   },
+   {
+    "id": "F-19",
+    "label": "net worth is assets minus liabilities, independently computed",
+    "ok": true,
+    "note": "5000 hub + 8000 HYSA, less a 990 card",
+    "unverified": null
+   },
+   {
+    "id": "F-19b",
+    "label": "net worth is internally consistent (assets - debts === net)",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "F-20",
+    "label": "the monthly report agrees with the ledger it summarises",
+    "ok": true,
+    "note": "the report may not disagree with the transactions",
+    "unverified": null
+   },
+   {
+    "id": "F-21",
+    "label": "no runtime error during the full reconciliation",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   }
+  ],
+  "fin02": [
+   {
+    "id": "I-01",
+    "label": "CSV parses the right number of rows (header + 3)",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "I-02",
+    "label": "a quoted comma inside a field does not split it",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "I-03",
+    "label": "a doubled quote decodes to one literal quote",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "I-04",
+    "label": "amounts survive parsing as written",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "I-05",
+    "label": "an empty file does not throw",
+    "ok": true,
+    "note": "0 row(s)",
+    "unverified": null
+   },
+   {
+    "id": "I-06",
+    "label": "a header-only file does not throw",
+    "ok": true,
+    "note": "1 row(s)",
+    "unverified": null
+   },
+   {
+    "id": "I-07",
+    "label": "ragged rows do not throw",
+    "ok": true,
+    "note": "2 row(s)",
+    "unverified": null
+   },
+   {
+    "id": "I-08",
+    "label": "an unterminated quote does not throw",
+    "ok": true,
+    "note": "2 row(s)",
+    "unverified": null
+   },
+   {
+    "id": "I-09",
+    "label": "binary junk does not throw",
+    "ok": true,
+    "note": "1 row(s)",
+    "unverified": null
+   },
+   {
+    "id": "I-10",
+    "label": "a very long single line does not throw",
+    "ok": true,
+    "note": "2 row(s)",
+    "unverified": null
+   },
+   {
+    "id": "I-11",
+    "label": "re-importing the same row is flagged as a likely duplicate",
+    "ok": true,
+    "note": "{\"id\":\"t1\",\"date\":\"2026-05-05\",\"category\":\"Groceries\",\"description\":\"Giant Foods\",\"amount\":120,\"who\":\"Shared\",\"account\":",
+    "unverified": null
+   },
+   {
+    "id": "I-12",
+    "label": "a different amount on the same day is NOT a duplicate",
+    "ok": true,
+    "note": "a real second trip must not be swallowed",
+    "unverified": null
+   },
+   {
+    "id": "I-13",
+    "label": "the same amount two months earlier is NOT a duplicate",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "I-14",
+    "label": "an import adds exactly the rows it claims",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "I-15",
+    "label": "undoing that import removes exactly those rows and no others",
+    "ok": true,
+    "note": "a partial or over-eager undo is data loss",
+    "unverified": null
+   },
+   {
+    "id": "R-01",
+    "label": "a learned merchant rule applies to the same merchant at another store number",
+    "ok": true,
+    "note": "{\"id\":\"7fe3195e-5aaa-420d-94df-324f8cb60aeb\",\"match\":\"WEGMANS PHILADELPHIA\",\"category\":\"Groceries\",\"who\":\"Shared\",\"tag\":null}",
+    "unverified": null
+   },
+   {
+    "id": "R-02",
+    "label": "and to the exact string it was learned from",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "R-03",
+    "label": "an unrelated merchant does not pick up that rule",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "R-04",
+    "label": "editing a rule replaces it rather than stacking a second one",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "S-01",
+    "label": "a split preserves the transaction total exactly",
+    "ok": true,
+    "note": "a split that changes the total invents or destroys money",
+    "unverified": null
+   },
+   {
+    "id": "S-02",
+    "label": "and splitting does not change the month total",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "S-03",
+    "label": "a one-part \"split\" is rejected rather than silently accepted",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "S-04",
+    "label": "a split that does not sum to the transaction is rejected outright",
+    "ok": true,
+    "note": "1500 + 400 against a 2000 charge would invent or lose 100",
+    "unverified": null
+   },
+   {
+    "id": "X-01",
+    "label": "a zero-amount transaction cannot break the month's arithmetic",
+    "ok": true,
+    "note": "spend 2120, safe 580",
+    "unverified": null
+   },
+   {
+    "id": "X-02",
+    "label": "a negative amount (a refund) cannot break the month's arithmetic",
+    "ok": true,
+    "note": "spend 2070, safe 630",
+    "unverified": null
+   },
+   {
+    "id": "X-03",
+    "label": "a huge amount cannot break the month's arithmetic",
+    "ok": true,
+    "note": "spend 100002119, safe -99999419",
+    "unverified": null
+   },
+   {
+    "id": "X-04",
+    "label": "a tiny amount cannot break the month's arithmetic",
+    "ok": true,
+    "note": "spend 2120.001, safe 579.9989999999998",
+    "unverified": null
+   },
+   {
+    "id": "X-05",
+    "label": "a malformed date cannot break the month's arithmetic",
+    "ok": true,
+    "note": "spend 2120, safe 580",
+    "unverified": null
+   },
+   {
+    "id": "X-06",
+    "label": "a far-future date cannot break the month's arithmetic",
+    "ok": true,
+    "note": "spend 2120, safe 580",
+    "unverified": null
+   },
+   {
+    "id": "X-07",
+    "label": "a missing category cannot break the month's arithmetic",
+    "ok": true,
+    "note": "spend 2145, safe 555",
+    "unverified": null
+   },
+   {
+    "id": "X-08",
+    "label": "a deleted/unknown category cannot break the month's arithmetic",
+    "ok": true,
+    "note": "spend 2145, safe 555",
+    "unverified": null
+   },
+   {
+    "id": "X-09",
+    "label": "a missing account cannot break the month's arithmetic",
+    "ok": true,
+    "note": "spend 2145, safe 555",
+    "unverified": null
+   },
+   {
+    "id": "X-10",
+    "label": "a NaN amount cannot break the month's arithmetic",
+    "ok": true,
+    "note": "spend 2120, safe 580",
+    "unverified": null
+   },
+   {
+    "id": "X-11",
+    "label": "the integrity check reports a deliberately broken row rather than ignoring it",
+    "ok": true,
+    "note": "[\"1 transaction(s) with an invalid date\",\"1 transaction(s) with a non-numeric amount\",\"1 transaction(s) with a category not on the fixed list\",\"1 transaction(s) with an unknown Who\",\"Mike has income on file but no Direct",
+    "unverified": null
+   },
+   {
+    "id": "X-12",
+    "label": "five consecutive reloads do not corrupt or lose the ledger",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "X-13",
+    "label": "no runtime error across the whole import and chaos campaign",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   }
+  ],
+  "cb01": [
+   {
+    "id": "C-00",
+    "label": "the catalog loads",
+    "ok": true,
+    "note": "318 recipes",
+    "unverified": null
+   },
+   {
+    "id": "C-01",
+    "label": "every recipe's stated calories agree with its own macros (Atwater)",
+    "ok": false,
+    "note": "chicken-enchilada-quinoa/serving_6: stated 484 kcal, Atwater 411 (48p/7f/39c)\n          crockpot-pizza-chicken-bowls/serving_6: stated 452 kcal, Atwater 353 (50p/5f/27c)\n          creamy-cajun-chicken-potatoes/serving_5: stated 489 kcal, Atwater 376 (51p/4f/34c)\n          honey-garlic-chicken-rice/serving_6: stated 478 kcal, Atwater 387 (49p/3f/41c)\n          buffalo-chicken-tender-salad/serving_3",
+    "unverified": null
+   },
+   {
+    "id": "C-02",
+    "label": "no macro is missing, negative or non-finite",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-03",
+    "label": "per-serving macros do not change when the recipe is scaled",
+    "ok": true,
+    "note": "cooking twice as much does not change what ONE serving contains\n          ",
+    "unverified": null
+   },
+   {
+    "id": "C-04",
+    "label": "every offered serving size has an ingredient list behind it",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-05",
+    "label": "every offered serving size has a macro profile behind it",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-06",
+    "label": "the native serving size is one of the offered options",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-07",
+    "label": "scaling up never reduces an ingredient, once units are normalised",
+    "ok": false,
+    "note": "1520 comparable pairs; 44 cross-dimension pairs skipped\n          lemon-herb-pork-tenderloins-broccoli \"Extra-virgin olive oil\": 6 -> 48 vol, more than 2x the linear 12\n          shepherds-pie \"Garlic cloves\": 3  at 2 servings but 2  at 4 (3 -> 2 count:)\n          cheesy-beef-taco-potato-bowls \"Paprika\": 0.125 -> 1 vol, more than 2x the linear 0.25\n          korean-beef-fried-rice \"Rice vinegar\": ",
+    "unverified": null
+   },
+   {
+    "id": "C-07b",
+    "label": "the comparison actually compared something",
+    "ok": true,
+    "note": "1520 pairs",
+    "unverified": null
+   },
+   {
+    "id": "C-08",
+    "label": "a protein target resolves to the scale that reaches it",
+    "ok": true,
+    "note": "jalapeno-chicken-bake: 70g/serving, target 105g -> scale 1.5",
+    "unverified": null
+   },
+   {
+    "id": "C-09",
+    "label": "and the achieved macros are that scale applied to the per-serving profile",
+    "ok": true,
+    "note": "{\"calories\":964.5,\"protein_g\":105,\"fat_g\":52.5,\"carbs_g\":18}",
+    "unverified": null
+   },
+   {
+    "id": "C-10",
+    "label": "a zero target does not produce an infinite or negative scale",
+    "ok": true,
+    "note": "{\"scale\":null,\"achieved\":null,\"exact\":false,\"driver\":\"protein_g\",\"wanted\":[\"protein_g\"]}",
+    "unverified": null
+   },
+   {
+    "id": "C-11",
+    "label": "no target at all returns null rather than guessing",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-12@1",
+    "label": "total for 1 servings is per-serving x 1",
+    "ok": true,
+    "note": "jalapeno-chicken-bake: 643 kcal/serving",
+    "unverified": null
+   },
+   {
+    "id": "C-12@2",
+    "label": "total for 2 servings is per-serving x 2",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-12@3",
+    "label": "total for 3 servings is per-serving x 3",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-12@4",
+    "label": "total for 4 servings is per-serving x 4",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-12@5",
+    "label": "total for 5 servings is per-serving x 5",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-12@6",
+    "label": "total for 6 servings is per-serving x 6",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-12@8",
+    "label": "total for 8 servings is per-serving x 8",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-12@10",
+    "label": "total for 10 servings is per-serving x 10",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-12@12",
+    "label": "total for 12 servings is per-serving x 12",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-13",
+    "label": "every recipe id is unique",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-14",
+    "label": "every recipe has a title",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "C-15",
+    "label": "the catalog loads with no runtime error",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   }
+  ],
+  "cb02": [
+   {
+    "id": "K-01",
+    "label": "an exact title search puts that recipe first",
+    "ok": true,
+    "note": "[\"Jalape\u00f1o Chicken Bake\"]",
+    "unverified": null
+   },
+   {
+    "id": "K-02",
+    "label": "a partial word returns many matches",
+    "ok": true,
+    "note": "128 results",
+    "unverified": null
+   },
+   {
+    "id": "K-03",
+    "label": "an ingredient search finds recipes that use it",
+    "ok": true,
+    "note": "10 results",
+    "unverified": null
+   },
+   {
+    "id": "K-04",
+    "label": "two ingredients narrow rather than widen",
+    "ok": true,
+    "note": "chicken 128, bacon 10, both 5",
+    "unverified": null
+   },
+   {
+    "id": "K-05",
+    "label": "search is case-insensitive",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "K-06",
+    "label": "an unaccented query still finds the accented title",
+    "ok": true,
+    "note": "24 results",
+    "unverified": null
+   },
+   {
+    "id": "K-07",
+    "label": "a transposed-letter typo still finds something (fuzzy)",
+    "ok": true,
+    "note": "126 results, top: [\"Air Fryer Garlic Parmesan Chicken Bites\",\"Alabama White BBQ Chicken Marinade\",\"Avocado Lime Chicken Salad\"]",
+    "unverified": null
+   },
+   {
+    "id": "K-08",
+    "label": "a nonsense query returns nothing rather than everything",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "K-09",
+    "label": "an empty query returns the whole catalog, not an error",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "K-10:\"   \"",
+    "label": "an unusual query does not throw",
+    "ok": true,
+    "note": "318 results",
+    "unverified": null
+   },
+   {
+    "id": "K-10:\"!!!\"",
+    "label": "an unusual query does not throw",
+    "ok": true,
+    "note": "318 results",
+    "unverified": null
+   },
+   {
+    "id": "K-10:\"\ud83c\udf36\ufe0f\"",
+    "label": "an unusual query does not throw",
+    "ok": true,
+    "note": "318 results",
+    "unverified": null
+   },
+   {
+    "id": "K-10:\"\\\"; DROP TABL",
+    "label": "an unusual query does not throw",
+    "ok": true,
+    "note": "0 results",
+    "unverified": null
+   },
+   {
+    "id": "K-10:\"aaaaaaaaaaaaa",
+    "label": "an unusual query does not throw",
+    "ok": true,
+    "note": "0 results",
+    "unverified": null
+   },
+   {
+    "id": "K-11",
+    "label": "the two planned recipes do share at least one ingredient",
+    "ok": true,
+    "note": "jalapeno-chicken-bake + broccoli-bacon-slaw: shared [\"uncured bacon\",\"salt\",\"pepper\"]",
+    "unverified": null
+   },
+   {
+    "id": "K-12",
+    "label": "a shared ingredient is merged, not listed twice",
+    "ok": true,
+    "note": "6 grocery rows for 18 distinct ingredient names across both recipes",
+    "unverified": null
+   },
+   {
+    "id": "K-13",
+    "label": "the grocery list is non-empty and well formed",
+    "ok": true,
+    "note": "[{\"aisle\":\"Produce\",\"rows\":[{\"key\":\"Produce|fresh spinach leave\",\"item\":\"Fresh spinach leaves\",\"qty\":\"2 cups\",\"mealUids\":[null],\"derived\":null,\"need\":{\"qty\":96,\"unit\":\"tsp\"}},{\"key\":\"Produce|fresh mushroom\",\"item\":\"Fresh",
+    "unverified": null
+   },
+   {
+    "id": "K-14",
+    "label": "quantities parse fractions, mixed numbers and plain integers",
+    "ok": true,
+    "note": "{\"half\":0.5,\"mixed\":1.5,\"plain\":3,\"junk\":null}",
+    "unverified": null
+   },
+   {
+    "id": "K-15",
+    "label": "an unparseable quantity (\"to taste\") does not become a number",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "K-16",
+    "label": "two timers can run at once",
+    "ok": true,
+    "note": "MAX_TIMERS = 8",
+    "unverified": null
+   },
+   {
+    "id": "K-17",
+    "label": "each timer keeps its own label and duration",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "K-18",
+    "label": "a zero-second timer is refused rather than ringing instantly",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "K-19",
+    "label": "a negative timer is refused",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "K-20",
+    "label": "a NaN timer is refused",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "K-21",
+    "label": "an absurd duration is clamped rather than accepted whole",
+    "ok": true,
+    "note": "86400",
+    "unverified": null
+   },
+   {
+    "id": "K-22",
+    "label": "rapid creation never exceeds the declared cap",
+    "ok": true,
+    "note": "8 of max 8",
+    "unverified": null
+   },
+   {
+    "id": "K-23",
+    "label": "a timer pauses, resumes and cancels",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "K-24",
+    "label": "a running timer survives a reload (the phone locked mid-cook)",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   },
+   {
+    "id": "K-25",
+    "label": "and it counts down in wall-clock time, not from zero again",
+    "ok": true,
+    "note": "899s left of 900",
+    "unverified": null
+   },
+   {
+    "id": "K-26",
+    "label": "the clock formatter renders sensibly",
+    "ok": true,
+    "note": "shape check only \u2014 the exact format is a product choice",
+    "unverified": null
+   },
+   {
+    "id": "K-27",
+    "label": "every cross-app bridge read answers on an empty device rather than throwing",
+    "ok": true,
+    "note": "{\"todaysMeals\":{\"ok\":true,\"v\":\"[]\"},\"macroTargets\":{\"ok\":true,\"v\":\"null\"},\"recentActivity\":{\"ok\":true,\"v\":\"{\\\"trainedToday\\\":false,\\\"streak\\\":0,\\\"workoutsThisWeek\\\":0,\\\"recentWorkouts\\\":[]}\"},\"today\":",
+    "unverified": null
+   },
+   {
+    "id": "K-28",
+    "label": "a workout logged by MC Training is visible to the cookbook",
+    "ok": true,
+    "note": "{\"activity\":{\"trainedToday\":false,\"streak\":0,\"workoutsThisWeek\":1,\"recentWorkouts\":[{\"id\":\"w1\",\"name\":\"Push day\",\"date\":\"2026-09-17\",\"prs\":0,\"duration\":\"60 min\"}]},\"workouts\":[{\"id\":\"w1\",\"name\":\"Push ",
+    "unverified": null
+   },
+   {
+    "id": "K-29",
+    "label": "no runtime error across the whole kitchen campaign",
+    "ok": true,
+    "note": "",
+    "unverified": null
+   }
+  ]
+ },
+ "fleet": {
+  "pagesRendered": 142,
+  "pagesClean": 142,
+  "domNodes": 82624,
+  "sessionPages": 79,
+  "sessionPass": 71,
+  "sessionNoSession": 8,
+  "sessionFail": 0,
+  "noSessionPages": [
+   "cat-gainz.html",
+   "cat-pmc.html",
+   "cat-strength.html",
+   "mc-cardio.html",
+   "pmc-workout.html",
+   "run-program.html",
+   "run-workout.html",
+   "workout-logs.html"
+  ]
+ }
+}

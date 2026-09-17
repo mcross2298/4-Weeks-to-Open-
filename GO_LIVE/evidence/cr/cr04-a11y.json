@@ -1,0 +1,128 @@
+[
+ {
+  "id": "A-01",
+  "label": "every set checkbox is a real <button>",
+  "ok": true,
+  "got": 26,
+  "want": 26,
+  "note": "26/26"
+ },
+ {
+  "id": "A-02",
+  "label": "every set checkbox carries role=checkbox",
+  "ok": true,
+  "got": 26,
+  "want": 26,
+  "note": ""
+ },
+ {
+  "id": "A-03",
+  "label": "every set checkbox carries aria-checked",
+  "ok": true,
+  "got": 26,
+  "want": 26,
+  "note": ""
+ },
+ {
+  "id": "A-04",
+  "label": "every set checkbox carries an accessible name",
+  "ok": true,
+  "got": 26,
+  "want": 26,
+  "note": ""
+ },
+ {
+  "id": "A-05",
+  "label": "every rest chip is a real <button> with a name",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "buttons 7/7, labelled 7/7"
+ },
+ {
+  "id": "A-06",
+  "label": "aria-checked flips false -> true when a set is logged",
+  "ok": true,
+  "got": [
+   "false",
+   "true"
+  ],
+  "want": [
+   "false",
+   "true"
+  ],
+  "note": ""
+ },
+ {
+  "id": "A-07",
+  "label": "aria-checked flips back to false when a set is un-logged",
+  "ok": true,
+  "got": "false",
+  "want": "false",
+  "note": ""
+ },
+ {
+  "id": "A-08",
+  "label": "a set checkbox can take keyboard focus",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "mcl-ck set-check"
+ },
+ {
+  "id": "A-09",
+  "label": "Enter logs the set (native button semantics)",
+  "ok": true,
+  "got": "true",
+  "want": "true",
+  "note": ""
+ },
+ {
+  "id": "A-10",
+  "label": "Space toggles it too",
+  "ok": true,
+  "got": "false",
+  "want": "false",
+  "note": ""
+ },
+ {
+  "id": "A-11",
+  "label": "the collapsed card strip announces its set count",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": "{\"label\":\"Expand Incline DB Press, 2 of 5 sets logged\",\"text\":\"1Incline DB Press2/5 Sets›\"}"
+ },
+ {
+  "id": "A-12",
+  "label": "no zero-size element sits in the keyboard tab order",
+  "ok": true,
+  "got": 0,
+  "want": 0,
+  "note": ""
+ },
+ {
+  "id": "A-13",
+  "label": "the reduced-motion media query is seen by the page",
+  "ok": true,
+  "got": true,
+  "want": true,
+  "note": ""
+ },
+ {
+  "id": "A-14",
+  "label": "nothing animates long under prefers-reduced-motion",
+  "ok": true,
+  "got": 0,
+  "want": 0,
+  "note": ""
+ },
+ {
+  "id": "A-15",
+  "label": "reduced motion introduces no runtime error",
+  "ok": true,
+  "got": 0,
+  "want": 0,
+  "note": ""
+ }
+]

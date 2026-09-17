@@ -1,3 +1,23 @@
+# GO LIVE multi-app run — 2026-09-17 — fixes
+
+Every fix ran the protocol's loop: REPRODUCE -> ISOLATE -> ROOT CAUSE -> FIX -> ADD REGRESSION TEST
+-> RERUN ORIGINAL -> RERUN ADJACENT.
+
+| Defect | Change | Proof |
+|---|---|---|
+| `DEF-CR-01` | `MCSetlogUtil.paintLoggedRow()` — one repaint of an already-logged row, read from today's `mc_setlog_v1` entry, never from the DOM. Both restore paths call it. | `tools/test-mc-restore-fidelity.js`, 100 assertions / 5 engine families. Proven to fail pre-fix: 44 failures. |
+| `DEF-CR-02` | Restore re-applies on every `MC_SCAN`, re-entrant via a generation counter; `save()`'s destructive branch disabled while a restore is outstanding. | Same gate, extended to the re-render engine. Proven to fail pre-fix with its diagnostic message. |
+| `DEF-CR-03` | `.mc-hint` is `pointer-events:none`; the dismiss control opts back in. | Verified three ways: reachable with the hint showing, a real tap starts guided mode, the dismiss still works. |
+| `DEF-FIN-01` | An unconditional structural belt in `migrate()`, placed BEFORE the version steps. Defaults deliberately empty so a restore never invents a house plan or a salary. | 8 assertions in `tests.html` (repo CI). Pre-fix 3 failed / 330 passed; after, 333/333. |
+
+**Two of my own fixes broke a committed gate on the way through**, and the adjacent-scenario rerun
+caught both: `build-market --check` (a shared module naming a licensed page) and `test-mc-maxout`
+(a second Epley expression). Both corrected, and the narrowed scans re-proven to still fail on a
+real duplicate planted in shipping code.
+
+
+---
+
 # GO LIVE — fixes applied
 
 Every fix below was reproduced first, root-caused, fixed, then re-run against the original scenario

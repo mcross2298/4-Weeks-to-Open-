@@ -81,12 +81,48 @@
   var session = null;        // live state for this PID
   var saveT = null;
 
+  // DEF-CR-02: restore must survive a RE-RENDER, and an empty DOM is not
+  // evidence that nothing is in progress.
+  //
+  // Measured on the largest multi-day page in the tree (26 days, 199 cards,
+  // 112 rows): log three sets, reload, and mc_session_v1 is {} within a second
+  // and never comes back -- still {} and zero ticks twelve seconds later.
+  // mc_setlog_v1 keeps the sets, so no history is lost, but the page reads as
+  // untouched and the athlete cannot see what they have already done.
+  // (The page is named in tools/test-mc-restore-fidelity.js, which does not
+  // ship; a shared module must not name a licensed page -- build-market.py's
+  // leak scan rejects it, correctly.)
+  //
+  // The first guess was that save() beat restore to an empty DOM. It did not:
+  // window.MCSession.startedTs was set, so init() found the record and
+  // restoreSets() ran and SUCCEEDED. What happens is worse and more specific --
+  // this engine REBUILDS its day cards after that first paint. The rows restore
+  // ticked are then thrown away with the old DOM, restoreSets() has already
+  // latched as done and never runs again, and save(), firing on the rebuild's
+  // own mutations, reads the fresh tick-free DOM as "nothing in progress" and
+  // deletes the record. So the state is not merely un-painted; it is destroyed,
+  // and no later restore can recover it.
+  //
+  // Two things are therefore needed, and neither alone is sufficient:
+  //   1. restore re-applies whenever cards are re-rendered. MC_SCAN is the
+  //      shared "cards just rendered" signal (S5a) that this file already uses
+  //      to defer init() on a day-list page, so restore subscribes to it too.
+  //   2. the destructive branch is disabled while a restore is outstanding, so
+  //      the window between a rebuild and its re-restore cannot delete the
+  //      record. It stays disabled if restore ran out of retries without
+  //      succeeding: a record whose rows never rendered is still the only
+  //      pointer to what was ticked. Records still expire through prune()'s
+  //      MAX_AGE, and finishing a workout clears its own record explicitly.
+  var restoreSettled = true;   // no stored session -> nothing to wait for
+
   function save() {
     clearTimeout(saveT);
     saveT = setTimeout(function () {
       var snap = capture();
       var hasTimer = session && session.timer && session.timer.endTs > Date.now();
       if (!snap.cards.length && !snap.sets.length && !hasTimer) {
+        // DEF-CR-02: only "nothing in progress" once restore has settled.
+        if (!restoreSettled) return;
         // nothing in progress — drop any stale record for this page
         var s0 = prune(readAll());
         if (s0[PID]) { delete s0[PID]; writeAll(s0); }
@@ -155,9 +191,21 @@
       var row = document.getElementById(rowId);
       if (!row) { done = false; return; }
       var ck = row.querySelector('.mcl-ck');
-      if (ck && !ck.classList.contains('done')) {
+      var wasDone = !!(ck && ck.classList.contains('done'));
+      // DEF-CR-01: this used to set the tick class and text and nothing else,
+      // so a restored row kept build()'s PRESCRIPTION in its inputs, ghosted —
+      // an athlete who reloaded mid-session saw 205x9 come back as 205x5, and
+      // unchecking/re-checking that row committed the ghost for real.
+      // mc-setlog.js owns the row, the ghost contract and the count, so the
+      // repaint lives there and both restore paths call the one copy.
+      if (window.MCSetlogUtil && window.MCSetlogUtil.paintLoggedRow) {
+        window.MCSetlogUtil.paintLoggedRow(row);
+      } else if (ck && !wasDone) {
         ck.classList.add('done'); ck.textContent = '✓';
+        ck.setAttribute('aria-checked', 'true');
         row.classList.add('done-row');
+      }
+      if (!wasDone) {
         var card = row.closest(CARD_SEL);
         if (card && touchedCards.indexOf(card) === -1) touchedCards.push(card);
       }
@@ -167,6 +215,22 @@
     }
     return done;
   }
+  // DEF-CR-02: one restore attempt, polled because logger rows render
+  // asynchronously (mc-setlog retries up to ~2.6s). Re-entrant: a rebuild can
+  // start a fresh attempt while an older one is still polling, and the older
+  // one must not clear the flag on the newer one's behalf.
+  var restoreGen = 0;
+  function runRestore() {
+    restoreSettled = false;
+    var gen = ++restoreGen, tries = 0;
+    (function tryRestore() {
+      if (gen !== restoreGen) return;               // superseded by a newer attempt
+      if (restoreSets()) { restoreSettled = true; restoreActiveCard(); return; }
+      if (++tries > 12) { restoreActiveCard(); return; }   // gave up: stay latched
+      setTimeout(tryRestore, 400);
+    })();
+  }
+
   function restoreTimer() {
     if (!session || !session.timer) return;
     var remain = Math.round((session.timer.endTs - Date.now()) / 1000);
@@ -294,12 +358,21 @@
 
     if (session) {
       restoreCards();
-      // logger rows render asynchronously (mc-setlog retries up to ~2.6s)
-      var tries = 0;
-      (function tryRestore() {
-        if (restoreSets() || ++tries > 12) { restoreActiveCard(); return; }
-        setTimeout(tryRestore, 400);
-      })();
+      runRestore();
+      // DEF-CR-02: some engines rebuild their day cards after the first paint,
+      // discarding the rows restore just ticked. MC_SCAN is the shared signal
+      // that cards have just rendered, so re-apply on every one of them. The
+      // work is idempotent -- restoreSets() skips a row already marked done --
+      // so a scan on an unchanged DOM costs a query and nothing else.
+      if (window.MC_SCAN && MC_SCAN.subscribe) {
+        MC_SCAN.subscribe(function () {
+          if (!session || !session.sets || !session.sets.length) return;
+          var painted = document.querySelectorAll('.mcl-ck.done').length;
+          if (painted >= session.sets.length) return;   // already whole
+          runRestore();
+        });
+        if (MC_SCAN.start) MC_SCAN.start();
+      }
       if (typeof TMR !== 'undefined') TMR.__mcsRestoring = true;
       restoreTimer();
       if (typeof TMR !== 'undefined') TMR.__mcsRestoring = false;

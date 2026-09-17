@@ -1,3 +1,26 @@
+# GO LIVE multi-app run — 2026-09-17 — defects
+
+Full records with scenario, expected, observed, root cause, fix and regression test are in
+[`go_live_report.html`](go_live_report.html) (Defect matrix tab).
+
+| ID | Sev | App | Feature | Status |
+|---|---|---|---|---|
+| `DEF-CR-01` | P1 | MC Training | Session restore showed the prescription, not the performance | FIXED + gate |
+| `DEF-CR-02` | P1 | MC Training | A mid-session reload destroyed the session record on the re-render engine | FIXED + gate |
+| `DEF-CR-03` | P3 | MC Training | A first-run hint swallowed the tap that starts Guided Mode | FIXED |
+| `DEF-FIN-01` | P1 | Cross' Finances | A legitimate backup could not be restored | FIXED + gate |
+| `DEF-CB-01` | P3 | Cookbook | 8 recipes' calories disagree with their own macros by 15-24% | REPORTED + gate |
+| `DEF-CB-02` | P3 | Cookbook | 10 ingredients do not scale sanely; 3 REDUCE when the recipe doubles | REPORTED + gate |
+| `DEF-08` | P1 | MC Training | Weekly check-in: 10/10 scheduled runs failed since 12 July | OPEN — owner action |
+
+**Correction to the record.** `DEF-CR-01` was initially characterised as silent data corruption.
+That was wrong. `mc_setlog_v1` was correct throughout and the tick was visible; only the displayed
+values were the prescription rather than the performance. The corruption path is real but narrower
+— it needs an uncheck/re-check after the reload.
+
+
+---
+
 # GO LIVE — defects found (MC Training, Phase 1 assessment, 2026-09-15)
 
 Baseline: `main` @ `905286f` (CI green: pages.yml run #357, which runs `verify.yml`).

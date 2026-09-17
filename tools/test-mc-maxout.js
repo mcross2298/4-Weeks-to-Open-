@@ -96,7 +96,14 @@ function decomment(src) {
   return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '');
 }
 const strays = tracked.filter(function (f) {
-  if (f === 'mc-log-read.js' || f.startsWith('tools/')) return false;
+  // tools/ is the gates themselves. GO_LIVE/ is release-assessment evidence:
+  // it is scratch-listed in content-manifest.json so it reaches neither build,
+  // and its whole job is to check the app's arithmetic against the published
+  // formula written out INDEPENDENTLY -- a validator that imported the app's
+  // own e1rm would be grading the app against itself, which is the one thing
+  // the GO LIVE protocol forbids. Excluding it keeps this check aimed at what
+  // it is for: a second Epley in code that actually ships.
+  if (f === 'mc-log-read.js' || f.startsWith('tools/') || f.startsWith('GO_LIVE/')) return false;
   let src;
   try { src = fs.readFileSync(path.join(ROOT, f), 'utf8'); } catch (e) { return false; }
   return EPLEY.test(decomment(src));

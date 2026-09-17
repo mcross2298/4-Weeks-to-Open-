@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GO LIVE Release Report</title>
+<style>
+:root{
+  --bg:#0e0f11; --surface:#16181c; --surface-2:#1d2026; --line:#2a2e36;
+  --text:#f2f0ec; --muted:#a7a49d; --accent:#d4af37;
+  --pass:#3fa86a; --fail:#d4553f; --warn:#d9a441; --info:#5b8dd6;
+  --r-s:8px; --r-m:12px; --r-l:18px;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#faf7f2; --surface:#ffffff; --surface-2:#f3efe8; --line:#e0d9cd;
+    --text:#1c1a17; --muted:#6b655c; --accent:#9a7b16;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#faf7f2; --surface:#ffffff; --surface-2:#f3efe8; --line:#e0d9cd;
+  --text:#1c1a17; --muted:#6b655c; --accent:#9a7b16;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 var(--sans);
+     padding:0 16px env(safe-area-inset-bottom) 16px}
+.wrap{max-width:1080px;margin:0 auto}
+header{padding:40px 0 20px}
+.kicker{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1{font-size:clamp(28px,5vw,42px);line-height:1.12;margin:12px 0 6px;letter-spacing:-.02em}
+.sub{color:var(--muted);margin:0 0 24px;max-width:62ch}
+.verdict{border:1px solid var(--line);border-left:4px solid var(--warn);background:var(--surface);
+         border-radius:var(--r-m);padding:20px 22px;margin:0 0 8px}
+.verdict h2{margin:0 0 8px;font-size:22px;letter-spacing:-.01em}
+.verdict .big{font:700 clamp(22px,4vw,30px)/1.2 var(--sans);color:var(--warn)}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:20px 0}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);padding:14px 16px}
+.stat .n{font:700 26px/1.1 var(--sans);letter-spacing:-.02em;display:block}
+.stat .l{color:var(--muted);font-size:12.5px;line-height:1.4;display:block;margin-top:4px}
+.stat.ok .n{color:var(--pass)} .stat.bad .n{color:var(--fail)} .stat.warn .n{color:var(--warn)}
+nav.tabs{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+         display:flex;gap:4px;overflow-x:auto;padding:8px 0;margin:24px 0 0;-webkit-overflow-scrolling:touch}
+nav.tabs button{flex:0 0 auto;min-height:44px;padding:0 14px;border:1px solid transparent;border-radius:var(--r-s);
+       background:none;color:var(--muted);font:600 14px var(--sans);cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{background:var(--surface-2);color:var(--text);border-color:var(--line)}
+section[role=tabpanel]{padding:24px 0 60px}
+section[hidden]{display:none}
+h2.sec{font-size:24px;letter-spacing:-.015em;margin:34px 0 4px}
+h2.sec:first-child{margin-top:0}
+h3{font-size:17px;margin:26px 0 8px;letter-spacing:-.01em}
+p.lead{color:var(--muted);margin:4px 0 16px;max-width:70ch}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px;display:block;overflow-x:auto}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 12px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+td code,code{font:13px var(--mono);background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.pill{display:inline-block;font:700 11px/1 var(--mono);letter-spacing:.04em;padding:5px 8px;border-radius:999px;white-space:nowrap}
+.p0{background:#4a1410;color:#ffb4a6} .p1{background:#4a3210;color:#ffd79b}
+.p3{background:#1d2b3d;color:#a9cdf5} .fixed{background:#12341f;color:#8fe0ae}
+.open{background:#4a1410;color:#ffb4a6} .rep{background:#33301a;color:#e8d98a}
+details{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);margin:10px 0;overflow:hidden}
+details>summary{cursor:pointer;padding:14px 16px;font-weight:600;min-height:44px;display:flex;align-items:center;
+                gap:10px;list-style:none}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:"＋";margin-left:auto;color:var(--muted);font:600 18px var(--mono)}
+details[open]>summary::after{content:"－"}
+details>summary:hover{background:var(--surface-2)}
+.body{padding:2px 16px 18px;border-top:1px solid var(--line)}
+.agent-verdict{font:700 12px var(--mono);letter-spacing:.05em;padding:4px 8px;border-radius:6px;background:var(--surface-2);color:var(--muted)}
+.agent-verdict.pass{color:var(--pass)} .agent-verdict.flag{color:var(--warn)}
+ul.checks{list-style:none;padding:0;margin:10px 0}
+ul.checks li{padding:7px 0 7px 26px;position:relative;border-bottom:1px solid var(--line);font-size:14.5px}
+ul.checks li:last-child{border-bottom:0}
+ul.checks li::before{position:absolute;left:0;top:7px;font:700 13px var(--mono)}
+li.ok::before{content:"✓";color:var(--pass)} li.no::before{content:"✗";color:var(--fail)}
+li.unv::before{content:"—";color:var(--warn)}
+li .note{display:block;color:var(--muted);font:12.5px/1.5 var(--mono);margin-top:3px;white-space:pre-wrap;word-break:break-word}
+.why{counter-reset:w;margin:10px 0 0;padding:0;list-style:none}
+.why li{counter-increment:w;position:relative;padding:8px 0 8px 40px;border-bottom:1px solid var(--line);font-size:14.5px}
+.why li:last-child{border-bottom:0}
+.why li::before{content:"Why " counter(w);position:absolute;left:0;top:9px;font:700 10px var(--mono);
+                color:var(--accent);letter-spacing:.04em}
+blockquote{margin:14px 0;padding:12px 16px;border-left:3px solid var(--accent);background:var(--surface);
+           border-radius:0 var(--r-s) var(--r-s) 0;color:var(--muted);font-size:14.5px}
+blockquote strong{color:var(--text)}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:10px 0;font-size:14.5px}
+.kv dt{font:600 12px var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+.kv dd{margin:0}
+footer{border-top:1px solid var(--line);padding:24px 0 48px;color:var(--muted);font-size:13px}
+.bar{height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden;margin:6px 0 2px}
+.bar>i{display:block;height:100%;background:var(--pass)}
+@media (max-width:600px){ .kv{grid-template-columns:1fr;gap:2px 0} .kv dd{margin-bottom:8px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="kicker">Autonomous Release Engineering · 3 applications · 11 specialist agents</div>
+  <h1>GO LIVE Release Report</h1>
+  <p class="sub">Executed against <code>claude_code_go_live_protocol.md</code> §0–§3. MC&nbsp;Training, Cross'&nbsp;Finances and Mike's&nbsp;Cookbook, phase by phase, driven rather than inspected.</p>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" aria-selected="true"  aria-controls="t-exec"  id="b-exec">Executive verdict</button>
+  <button role="tab" aria-selected="false" aria-controls="t-p1"    id="b-p1">Phase 1 · MC Training</button>
+  <button role="tab" aria-selected="false" aria-controls="t-p2"    id="b-p2">Phase 2 · Cross' Finances</button>
+  <button role="tab" aria-selected="false" aria-controls="t-p3"    id="b-p3">Phase 3 · Cookbook</button>
+  <button role="tab" aria-selected="false" aria-controls="t-def"   id="b-def">Defect matrix</button>
+  <button role="tab" aria-selected="false" aria-controls="t-six"   id="b-six">Lean Six Sigma</button>
+  <button role="tab" aria-selected="false" aria-controls="t-cov"   id="b-cov">Coverage matrix</button>
+  <button role="tab" aria-selected="false" aria-controls="t-risk"  id="b-risk">Residual risk</button>
+</nav>
+
+<section role="tabpanel" id="t-exec" aria-labelledby="b-exec">
+<div class="verdict">
+  <h2>Executive verdict</h2>
+  <p class="big">CONDITIONAL GO — 2 of 3 applications clear; 3 named conditions</p>
+  <p style="margin:10px 0 0;color:var(--muted)">Zero P0 defects across all three applications. Four P1 defects were found; three are fixed with regression gates proven to fail on the pre-fix code. The fourth is not code.</p>
+</div>
+
+<div class="grid">
+  <div class="stat ok"><span class="n">0</span><span class="l">P0 defects, all three apps</span></div>
+  <div class="stat warn"><span class="n">4</span><span class="l">P1 found · 3 fixed, 1 owner action</span></div>
+  <div class="stat"><span class="n">4,185</span><span class="l">assertions &amp; measurements executed</span></div>
+  <div class="stat ok"><span class="n">142</span><span class="l">pages rendered clean</span></div>
+  <div class="stat ok"><span class="n">71</span><span class="l">complete workouts driven, 0 failures</span></div>
+  <div class="stat ok"><span class="n">318</span><span class="l">recipes swept for coherence</span></div>
+</div>
+
+<h2 class="sec">Per-application verdict</h2>
+<table>
+<thead><tr><th>Application</th><th>Verdict</th><th>P0</th><th>P1</th><th>Condition</th></tr></thead>
+<tbody>
+<tr><td><strong>MC Training</strong></td><td><span class="pill p1">CONDITIONAL GO</span></td><td>0</td><td>3 found, 2 fixed</td>
+    <td>The weekly check-in has never worked — 10/10 scheduled runs failed since 12 July. Not code: needs a repository secret and the matching Supabase <code>CRON_SECRET</code>.</td></tr>
+<tr><td><strong>Cross' Finances</strong></td><td><span class="pill fixed">GO</span></td><td>0</td><td>1 found, fixed</td>
+    <td>None. The portable half of the fix should be ported to the public <code>household-finance</code> template, which carries the same defect.</td></tr>
+<tr><td><strong>Mike's Cookbook</strong></td><td><span class="pill p1">CONDITIONAL GO</span></td><td>0</td><td>0</td>
+    <td>18 recipe records contradict themselves (8 nutrition, 10 scaling). Data, not code — the correct values are an authoring decision.</td></tr>
+</tbody></table>
+
+<h2 class="sec">What the run actually did</h2>
+<p class="lead">The protocol's instruction is to certify on evidence, not appearance. Everything below was executed in a real headless browser against the running apps, not read from source.</p>
+<blockquote><strong>Three defects were found by driving rather than reading</strong>, and all three were invisible to the existing gate suites, which between them run over 80 checks. <code>DEF-CR-01</code> is a <em>visible</em> tick with <code>aria-checked="false"</code> and a ghosted rep count. <code>DEF-CR-02</code> only appears on an engine that rebuilds its DOM after restore has run. <code>DEF-FIN-01</code> needs a backup file that passes the app's own validation and then fails at render.</blockquote>
+
+<h2 class="sec">Honesty of coverage</h2>
+<p class="lead">Three axes are recorded as <strong>unverified</strong> rather than passed. Each is out of reach from this environment for a specific, re-derived reason — not skipped.</p>
+<table>
+<thead><tr><th>Axis</th><th>Why it could not run here</th><th>What closes it</th></tr></thead>
+<tbody>
+<tr><td>Offline <em>reload</em> (MC Training)</td><td><code>sw.js</code>'s fetch handler is gated to the production origin, so on localhost it never intercepts.</td><td>One offline reload on the deployed site.</td></tr>
+<tr><td>Live cross-user RLS (MC Training)</td><td><code>tests/test_rls.py</code> needs a direct Postgres URL; the egress proxy also denies CONNECT to the project host.</td><td>Run it with <code>SUPABASE_DB_URL</code> set.</td></tr>
+<tr><td><code>smoke-test.js</code> (Cookbook)</td><td>Waits for <code>networkidle</code>, which never settles here because blocked Supabase and Fonts requests hang through the proxy.</td><td>Runs normally in CI.</td></tr>
+</tbody></table>
+<p class="lead">Real-device QA (iOS Safari, Android Chrome, installed PWA) and true multi-device sync reconciliation remain unverified from any agent session, as this project's own records already note.</p>
+</section>
+
+<section role="tabpanel" id="t-p1" aria-labelledby="b-p1" hidden>
+<h2 class="sec">Phase 1 · MC Training</h2>
+<p class="lead">A full clean-room re-execution — the prior 2026-09-15 assessment was set aside rather than built on. Specification: the Executive Summary's 57 claims, plus the protocol's 61 named product areas.</p>
+<div class="grid">
+  <div class="stat ok"><span class="n">142/142</span><span class="l">pages render clean at 390px</span></div>
+  <div class="stat ok"><span class="n">71/71</span><span class="l">complete sessions driven, 0 failures</span></div>
+  <div class="stat ok"><span class="n">46/46</span><span class="l">independent formula assertions</span></div>
+  <div class="stat warn"><span class="n">3</span><span class="l">defects found (2 P1, 1 P3) — all fixed</span></div>
+</div>
+<blockquote><strong>The session drive is the headline.</strong> Every one of the 79 pages that carries a logger was driven through log → persist → reload → survive → finish → bank, with the dated day key asserted per page. 71 passed, 0 failed. The other 8 render no session by design — three programme landings, two non-workout pages, and three that need a seeded custom programme: <code>cat-gainz.html</code>, <code>cat-pmc.html</code>, <code>cat-strength.html</code>, <code>mc-cardio.html</code>, <code>pmc-workout.html</code>, <code>run-program.html</code>, <code>run-workout.html</code>, <code>workout-logs.html</code>.</blockquote>
+<h3>Individual agent reports</h3>
+<details><summary>🎯 Release Director<span class="agent-verdict flag">CONDITIONAL GO</span></summary><div class="body"><p>I set three gates for this phase: the logger must not lose or rewrite a set; every critical calculation must be validated against its published formula rather than against the app; and no P1 may remain unaccepted. The first two are met. The third is not — <code>DEF-08</code> is a P1 that is not code, and only the owner can close it.</p><p>Two P1 defects were found in the logger and both are fixed with gates proven to fail on the pre-fix tree. A P3 friction defect was found and fixed. I withhold full GO on the check-in alone.</p></div></details>
+<details><summary>📐 QA Architect<span class="agent-verdict pass">COVERAGE MAPPED</span></summary><div class="body"><p>The protocol names 61 product areas; the Executive Summary (<code>quick-tour-overview.html</code>) yields <strong>57 discrete claims</strong>, which I used as the specification. I mapped each to a real page or module and designed eight execution paths: a fleet render sweep, a fleet session drive, chaos, PWA/mobile, accessibility, security, set-type/PR correctness, tools/nutrition and performance.</p><p>The decision that shaped the phase: drive <em>every</em> logger-bearing page rather than sample. This repo's own history shows the failure is page-family-shaped — one past defect left eight pages recording no session at all. A sample is how that ships.</p></div></details>
+<details><summary>👤 Beta User / Persona<span class="agent-verdict pass">PASS</span></summary><div class="body"><p>I rendered all 142 pages as a phone and drove a complete session — log, persist, reload, survive, finish, bank — on every one of the 79 pages that carries a logger. I also drove the tools an athlete actually reaches for.</p><p><strong>142/142</strong> pages rendered with zero thrown exceptions, zero console errors, zero duplicate element ids and zero sideways overflow at 390px. <strong>71/71</strong> complete sessions passed, zero failures. The other 8 render no session by design.</p> &nbsp;<span class="agent-verdict pass">24 pass · 0 fail</span><ul class="checks">
+<li class="ok"><code>N-01</code> the goal calculator is reachable on the page and matches Mifflin-St Jeor<span class="note">independent 1874.7, app 1874.6847400200709</span></li>
+<li class="ok"><code>N-02</code> the day total reconciles against Atwater exactly<span class="note">66p / 21f / 45c = 633 kcal</span></li>
+<li class="ok"><code>N-03</code> the nutrition tab shows the logged day back, totalled<span class="note">{&quot;showsTotal&quot;:true,&quot;namesAFood&quot;:true,&quot;mentionsProtein&quot;:true,&quot;sample&quot;:&quot;Nutrition Daily macros · goals · food log Today ◎ ★ ⚙ ‹ MON 14 TUE 15 WED 16 THU 17 FRI 18 SAT 19 SUN 20 › 🔥 633 /2600 P 66 /200 F 21 /80 C 45 /260 › 🍽 TODAY&#x27;&quot;}</span></li>
+<li class="ok"><code>N-04</code> the nutrition tab throws nothing</li>
+<li class="ok"><code>T-01</code> Max-Out estimates a 1RM from a heavy set (225x5)<span class="note">Epley, computed independently</span></li>
+<li class="ok"><code>T-02</code> the Max-Out page presents real inputs<span class="note">{&quot;hasInputs&quot;:1,&quot;mentionsWarm&quot;:true}</span></li>
+<li class="ok"><code>T-03</code> Max-Out throws nothing</li>
+<li class="ok"><code>T-04</code> Quick Pump offers its time choices<span class="note">{&quot;module&quot;:true,&quot;buttons&quot;:3,&quot;body&quot;:&quot;← Dashboard\n⚡ QUICK PUMP\n30 or 45 minutes. Let&#x27;s go.\nA fresh, station-anchored session pulled from every program&#x27;s exerc&quot;}</span></li>
+<li class="ok"><code>T-05a</code> Quick Pump has a Generate control</li>
+<li class="ok"><code>T-05</code> Quick Pump generates a real session on Generate<span class="note">{&quot;cards&quot;:0,&quot;namesExercises&quot;:true}</span></li>
+<li class="ok"><code>T-06</code> Quick Pump throws nothing</li>
+<li class="ok"><code>T-07</code> the Exercise Library renders movements<span class="note">{&quot;catalog&quot;:580,&quot;rendered&quot;:340,&quot;searchBox&quot;:1}</span></li>
+<li class="ok"><code>T-08</code> the library offers search</li>
+<li class="ok"><code>T-09</code> typing a query returns real matches<span class="note">{&quot;count&quot;:37,&quot;namesASquat&quot;:true}</span></li>
+<li class="ok"><code>T-10</code> a no-results query still says something rather than going blank<span class="note">{&quot;count&quot;:0,&quot;saysSomething&quot;:true}</span></li>
+<li class="ok"><code>T-11</code> the library throws nothing</li>
+<li class="ok"><code>T-12</code> Build Your Own presents a name field, a pickable list and a save<span class="note">{&quot;nameField&quot;:2,&quot;addable&quot;:542,&quot;save&quot;:1}</span></li>
+<li class="ok"><code>T-13</code> Build Your Own throws nothing</li>
+<li class="ok"><code>T-14</code> Guided Mode has an entry control on a workout page<span class="note">{&quot;present&quot;:true,&quot;w&quot;:332,&quot;h&quot;:44,&quot;text&quot;:&quot;🎯 Start Guided Mode&quot;}</span></li>
+<li class="ok"><code>T-15</code> the Guided Mode entry clears the 44px touch floor<span class="note">332x44</span></li>
+<li class="ok"><code>T-16</code> and once inside, the way OUT is present and 44px<span class="note">{&quot;exit&quot;:true,&quot;w&quot;:120,&quot;h&quot;:44}</span></li>
+<li class="ok"><code>T-17</code> Guided Mode throws nothing</li>
+<li class="ok"><code>T-18</code> a finished workout appears in Workout Logs<span class="note">{&quot;mentionsSets&quot;:true,&quot;hasEntry&quot;:1,&quot;totals&quot;:[&quot;1&quot;,&quot;3&quot;,&quot;0&quot;,&quot;1&quot;,&quot;6&quot;,&quot;09&quot;]}</span></li>
+<li class="ok"><code>T-19</code> Workout Logs throws nothing</li>
+</ul></div></details>
+<details><summary>⚡ Chaos Engineer<span class="agent-verdict pass">PASS</span></summary><div class="body"><p>I attacked the logger with the protocol's own list: partial completion, rapid logging, duplicate taps, edits after logging, missing and hostile values, back-navigation, refresh, close/reopen, an abandoned session, and the timer attack.</p><p>Nothing lost a set. The one thing I could not break by force, I broke by sequence — see the Data Integrity report.</p> &nbsp;<span class="agent-verdict pass">17 pass · 0 fail</span><ul class="checks">
+<li class="ok"><code>C-01</code> a partially completed exercise persists exactly what was done<span class="note">1 of 26 planned rows</span></li>
+<li class="ok"><code>C-02</code> three sets logged as fast as a thumb allows all land</li>
+<li class="ok"><code>C-03</code> a double-tap on a logged set returns it to logged, not duplicated<span class="note">toggle off then on must not create a 4th set</span></li>
+<li class="ok"><code>C-04</code> an edit after logging is the value that persists</li>
+<li class="ok"><code>C-05</code> a set checked with no weight still records the rep work<span class="note">stored {&quot;w&quot;:&quot;&quot;,&quot;r&quot;:&quot;5&quot;}</span></li>
+<li class="ok"><code>C-06</code> hostile numeric input cannot produce a negative or non-finite session load<span class="note">stored {&quot;w&quot;:&quot;-500&quot;,&quot;r&quot;:&quot;-9&quot;} -&gt; {&quot;kcal&quot;:0,&quot;strain&quot;:null}</span></li>
+<li class="ok"><code>C-07</code> navigating away and back loses nothing</li>
+<li class="ok"><code>C-08</code> a browser refresh mid-session loses nothing</li>
+<li class="ok"><code>C-10</code> closing and reopening the app restores the session</li>
+<li class="ok"><code>C-10b</code> and the reopened session shows its sets as done<span class="note">2 ticked</span></li>
+<li class="ok"><code>C-11</code> an abandoned session is offered back on the dashboard (Smart Resume)</li>
+<li class="ok"><code>T-01</code> tapping a rest chip starts the one timer</li>
+<li class="ok"><code>T-02</code> exactly one timer float exists</li>
+<li class="ok"><code>T-03</code> rapid timer creation never produces a second float<span class="note">the single-timer rule (TMR) under abuse</span></li>
+<li class="ok"><code>T-04</code> the timer keeps running while the athlete scrolls</li>
+<li class="ok"><code>T-05</code> a cancelled timer stops</li>
+<li class="ok"><code>T-06</code> every rest chip is a real &lt;button&gt; (keyboard + screen reader reachable)<span class="note">7/7</span></li>
+</ul></div></details>
+<details><summary>🛡️ Data Integrity Engineer<span class="agent-verdict flag">2 P1 FOUND · BOTH FIXED</span></summary><div class="body"><p>This is where the phase earned its keep. Every critical calculation was validated against its <em>published</em> formula, written out longhand here rather than imported from the app: Epley <code>w × (1 + r/30)</code>, MET energy cost <code>MET × kg × h</code>, Mifflin-St&nbsp;Jeor, and the Atwater factors. <strong>46/46</strong> independent assertions reconcile.</p><p>Then I stopped asking the app what it computed and started asking what the athlete <em>sees</em>. That found <code>DEF-CR-01</code> — a completed 205&nbsp;lb × 9 redisplayed as 205 × 5 after a mid-session reload — and, chasing why one page behaved differently, <code>DEF-CR-02</code>, a destroyed session record. Both fixed, both gated.</p> &nbsp;<span class="agent-verdict pass">13 pass · 0 fail</span><ul class="checks">
+<li class="ok"><code>PR-01</code> a heavier top set than any previous session IS a record<span class="note">prior best 200 lb, logged 225 lb</span></li>
+<li class="ok"><code>PR-02</code> a lighter set than the standing best is NOT a record<span class="note">prior best 250 lb, logged 225 lb</span></li>
+<li class="ok"><code>PR-03</code> equalling the best is not beating it<span class="note">prior best 225 lb, logged 225 lb</span></li>
+<li class="ok"><code>PR-04</code> a first-ever set of a lift is a baseline, not a record (G-03)<span class="note">prior best none lb, logged 135 lb</span></li>
+<li class="ok"><code>ST-01</code> an AMRAP set stores the reps actually achieved, not the prescription<span class="note">stored {&quot;w&quot;:&quot;95&quot;,&quot;r&quot;:&quot;23&quot;}</span></li>
+<li class="ok"><code>ST-02</code> a 23-rep AMRAP does not inflate the 1RM estimate (Epley capped at 12)<span class="note">uncapped Epley would claim 168 lb</span></li>
+<li class="ok"><code>ST-03a</code> a cluster can be configured through the app&#x27;s own override API<span class="note">card key Incline DB Press</span></li>
+<li class="ok"><code>ST-03b</code> DEF-12 holds: the cluster does NOT repaint mid-session (documented limitation)<span class="note">buildRows() returns early when .mcl-wrap already exists</span></li>
+<li class="ok"><code>ST-03c</code> each working set renders one bubble per mini-set<span class="note">declared 5+4+3; 15 bubbles across the card (one set of 3 per working set)</span></li>
+<li class="ok"><code>ST-03d</code> a cluster stores every mini-set, not just the first</li>
+<li class="ok"><code>ST-04</code> cluster reps total 12, not 5 (P2-08: parseInt read a third of the work)</li>
+<li class="ok"><code>ST-04b</code> but a 1RM estimate uses the TOP mini-set (5), never the summed 12<span class="note">a cluster is rested mid-set; Epley off 12 would invent a max nobody lifted</span></li>
+<li class="ok"><code>ST-05</code> each superset leg logs under its own exercise key, not a shared one<span class="note">legs=[&quot;Cable Mid-Chest Fly&quot;,&quot;Cable High-to-Low Fly&quot;,&quot;Cable Rope Curl&quot;] keys=[&quot;mclr-x-cable-mid-chest-fly&quot;,&quot;mclr-x-cable-high-to-low-fly&quot;,&quot;mclr-x-cable-rope-curl&quot;,&quot;mclr-x-seated-ez-bar-curl&quot;]</span></li>
+</ul></div></details>
+<details><summary>📱 PWA &amp; Mobile Engineer<span class="agent-verdict flag">PASS · 1 UNVERIFIED</span></summary><div class="body"><p>Manifest, installability, service-worker registration and update path, safe-area opt-in, and the 44px touch floor at 320, 390 and 430px. Crucially I cut the network for real and logged and <em>finished</em> a workout offline.</p><p>One axis I will not claim: a true offline <em>reload</em>. <code>sw.js</code>'s fetch handler is gated to the production origin, so on localhost it never intercepts. That is reported as unverified, not passed.</p> &nbsp;<span class="agent-verdict pass">21 pass · 0 fail · 1 unverified</span><ul class="checks">
+<li class="ok"><code>P-01</code> a web app manifest is linked and parses</li>
+<li class="ok"><code>P-02</code> display is standalone (launches without a browser bar)</li>
+<li class="ok"><code>P-03</code> the manifest names the app<span class="note">Mike Cross Training</span></li>
+<li class="ok"><code>P-04</code> a maskable icon is declared (Android adaptive icons)<span class="note">[&quot;any any&quot;,&quot;192x192 any&quot;,&quot;512x512 any&quot;,&quot;192x192 maskable&quot;,&quot;512x512 maskable&quot;]</span></li>
+<li class="ok"><code>P-05</code> a 512px icon is declared (install prompt + splash)</li>
+<li class="ok"><code>P-06</code> theme-color is set (status bar tint in standalone)<span class="note">#0a0a0a</span></li>
+<li class="ok"><code>P-07</code> viewport-fit=cover is set (notch/safe-area opt-in)</li>
+<li class="ok"><code>P-08</code> the service worker registers<span class="note">&quot;http://localhost:8080/&quot;</span></li>
+<li class="ok"><code>P-09</code> a cache is populated on first visit<span class="note">131 entries in 1 cache(s)</span></li>
+<li class="ok"><code>P-10</code> sw.js declares a non-trivial app-shell precache<span class="note">138 URLs referenced</span></li>
+<li class="ok"><code>P-11</code> sets log with the signal cut (dead gym, offline-first claim)<span class="note">checked=true/true</span></li>
+<li class="ok"><code>P-12</code> a workout can be FINISHED and banked while offline<span class="note">finish reachable=true</span></li>
+<li class="ok"><code>P-13</code> reconnecting does not drop the offline work</li>
+<li class="unv"><code>P-14</code> offline RELOAD of a cached page<span class="note">sw.js&#x27;s fetch handler is gated to https://mcross2298.github.io, so on localhost it never intercepts. A true offline reload is only observable on the deployed origin. One offline reload there closes this.</span></li>
+<li class="ok"><code>P-15</code> the SW update module is loaded (new-version prompt path)</li>
+<li class="ok"><code>P-16</code> the page is controlled by the service worker after first load</li>
+<li class="ok"><code>P-17@320</code> no sideways overflow at 320px<span class="note">+0px</span></li>
+<li class="ok"><code>P-18@320</code> every in-session control clears the 44px touch floor at 320px<span class="note">54 controls measured</span></li>
+<li class="ok"><code>P-17@390</code> no sideways overflow at 390px<span class="note">+0px</span></li>
+<li class="ok"><code>P-18@390</code> every in-session control clears the 44px touch floor at 390px<span class="note">54 controls measured</span></li>
+<li class="ok"><code>P-17@430</code> no sideways overflow at 430px<span class="note">+0px</span></li>
+<li class="ok"><code>P-18@430</code> every in-session control clears the 44px touch floor at 430px<span class="note">54 controls measured</span></li>
+</ul></div></details>
+<details><summary>♿ Accessibility Engineer<span class="agent-verdict pass">PASS</span></summary><div class="body"><p>Driven, not linted — because this run's own <code>DEF-CR-01</code> was a <em>visible</em> tick with <code>aria-checked="false"</code>, which no static read would call a defect. I verified semantics, that <code>aria-checked</code> tracks the real state through a full toggle cycle, keyboard focus, Enter and Space, the announced set count, that no zero-size element is focusable, and reduced motion.</p> &nbsp;<span class="agent-verdict pass">15 pass · 0 fail</span><ul class="checks">
+<li class="ok"><code>A-01</code> every set checkbox is a real &lt;button&gt;<span class="note">26/26</span></li>
+<li class="ok"><code>A-02</code> every set checkbox carries role=checkbox</li>
+<li class="ok"><code>A-03</code> every set checkbox carries aria-checked</li>
+<li class="ok"><code>A-04</code> every set checkbox carries an accessible name</li>
+<li class="ok"><code>A-05</code> every rest chip is a real &lt;button&gt; with a name<span class="note">buttons 7/7, labelled 7/7</span></li>
+<li class="ok"><code>A-06</code> aria-checked flips false -&gt; true when a set is logged</li>
+<li class="ok"><code>A-07</code> aria-checked flips back to false when a set is un-logged</li>
+<li class="ok"><code>A-08</code> a set checkbox can take keyboard focus<span class="note">mcl-ck set-check</span></li>
+<li class="ok"><code>A-09</code> Enter logs the set (native button semantics)</li>
+<li class="ok"><code>A-10</code> Space toggles it too</li>
+<li class="ok"><code>A-11</code> the collapsed card strip announces its set count<span class="note">{&quot;label&quot;:&quot;Expand Incline DB Press, 2 of 5 sets logged&quot;,&quot;text&quot;:&quot;1Incline DB Press2/5 Sets›&quot;}</span></li>
+<li class="ok"><code>A-12</code> no zero-size element sits in the keyboard tab order</li>
+<li class="ok"><code>A-13</code> the reduced-motion media query is seen by the page</li>
+<li class="ok"><code>A-14</code> nothing animates long under prefers-reduced-motion</li>
+<li class="ok"><code>A-15</code> reduced motion introduces no runtime error</li>
+</ul></div></details>
+<details><summary>🔒 Security &amp; Data Isolation<span class="agent-verdict flag">PASS · 1 UNVERIFIED</span></summary><div class="body"><p>The owner surface stays closed to a stranger, and forging <code>mc_is_owner</code>/<code>mc_role</code>/<code>mc_pm_unlocked</code> in localStorage unlocks nothing — client-side flags are not the authority. No service-role key ships, no third-party host is contacted, no licensed content or internal document leaks into the public build.</p><p>Live cross-user RLS needs a direct Postgres URL this session does not hold. Reported as unverified; the prior assessment ran 12 such attacks and recorded all blocked.</p> &nbsp;<span class="agent-verdict pass">7 pass · 0 fail · 1 unverified</span><ul class="checks">
+<li class="ok"><code>S-01</code> the Program Manager does not hand editing to an unauthenticated device<span class="note">contenteditable=0, gated-copy=false, enabled publish buttons=0</span></li>
+<li class="ok"><code>S-02</code> no credential store is marked exportable or syncable<span class="note">1 credential-shaped store(s) declared</span></li>
+<li class="ok"><code>S-03</code> no service-role key or name is shipped to the browser</li>
+<li class="ok"><code>S-04</code> forging owner/admin flags in localStorage does not unlock the owner surface<span class="note">client-side flags must not be the authority</span></li>
+<li class="ok"><code>S-05</code> a workout page contacts no third-party host beyond its own backend and fonts<span class="note">contacted: https://fonts.googleapis.com, https://dhlxmoyjfxohbeiexwnr.supabase.co</span></li>
+<li class="ok"><code>S-06</code> no licensed content or brand term is reachable from the public Rolodex build<span class="note">leak check passed: no licensed content or brand term reachable from the market build (41 licensed files excluded)</span></li>
+<li class="ok"><code>S-07</code> every root document is classified scratch or shippable (no accidental disclosure)<span class="note">23 root .md files</span></li>
+<li class="unv"><code>S-08</code> live cross-user row-level-security attacks<span class="note">tests/test_rls.py needs SUPABASE_DB_URL (a direct Postgres URL). This session has none, and the egress proxy denies CONNECT to the project host, so the suite would SKIP rather than run. Reported as unverified; the prior assessment executed 12 such attacks and recorded all blocked.</span></li>
+</ul></div></details>
+<details><summary>🚀 Performance Engineer<span class="agent-verdict pass">PASS</span></summary><div class="body"><p>A 30-set session with a rest timer running, then a year of history (300 workouts / 9,000 sets). Cost per logged set stays bounded — the write→observe→write storm this repo removed has not returned.</p> &nbsp;<span class="agent-verdict pass">12 pass · 0 fail</span><ul class="checks">
+<li class="ok"><code>PF-01</code> a long session logs and keeps every set (30 logged)<span class="note">store holds 30 of 30 logged</span></li>
+<li class="ok"><code>PF-02</code> querySelectorAll per logged set stays bounded<span class="note">90/set</span></li>
+<li class="ok"><code>PF-03</code> localStorage reads per logged set stay bounded<span class="note">66/set</span></li>
+<li class="ok"><code>PF-04</code> localStorage writes per logged set stay bounded<span class="note">6/set</span></li>
+<li class="ok"><code>PF-05</code> mutation records delivered per logged set stay bounded<span class="note">121/set</span></li>
+<li class="ok"><code>PF-06</code> the DOM does not grow without bound during a session<span class="note">873 -&gt; 925 nodes</span></li>
+<li class="ok"><code>PF-07</code> JS heap growth over a 30-set session stays under 40 MB<span class="note">9.5 -&gt; 9.5 MB</span></li>
+<li class="ok"><code>PF-08</code> history renders with 300 workouts / 9000 sets seeded<span class="note">434 ms to first meaningful paint</span></li>
+<li class="ok"><code>PF-09</code> a year of history does not explode the DOM<span class="note">6698 nodes</span></li>
+<li class="ok"><code>PF-10</code> a heavy dataset throws nothing</li>
+<li class="ok"><code>PF-11</code> the stats page survives the same dataset<span class="note">2699 ms</span></li>
+<li class="ok"><code>PF-12</code> stats throws nothing on a heavy dataset</li>
+</ul></div></details>
+<details><summary>🔄 Regression Engineer<span class="agent-verdict pass">PASS</span></summary><div class="body"><p>After every fix I re-ran the original scenario and its neighbours. Final state: <strong>51 committed non-browser gates</strong> green, plus <code>exercise-identity</code>, <code>pr-scope</code>, <code>setlog-concurrency</code>, <code>store-resilience</code>, <code>crash-recovery</code> (which exercises the rerouted cloud path) and <code>check-journey</code> 9/9.</p><p>The gates earned their place: my own fixes tripped <code>build-market --check</code> (a shared module naming a licensed page) and <code>test-mc-maxout</code> (a second Epley expression). Both were mine, both corrected.</p></div></details>
+<details><summary>⚖️ Final Auditor<span class="agent-verdict flag">CONFIRMS CONDITIONAL GO</span></summary><div class="body"><p>I checked the Director's claims against the evidence rather than the summary. Three things I verified independently: the restore-fidelity gate genuinely fails pre-fix (44 failures — I ran it on a reverted tree); <code>DEF-08</code>'s 10 consecutive failures are real (I read the Actions API myself, not the prior report); and the two "unverified" axes are genuinely out of reach here rather than skipped.</p><p>I challenge one thing in the Director's framing and it is recorded in the defect matrix: <code>DEF-CR-01</code> was first characterised as silent data corruption. It is not — the store was always correct. The corruption path requires a post-reload edit. The corrected characterisation is what stands.</p></div></details>
+</section>
+
+<section role="tabpanel" id="t-p2" aria-labelledby="b-p2" hidden>
+<h2 class="sec">Phase 2 · Cross' Finances</h2>
+<p class="lead">A financial system where an incorrect number is release-critical. §2's safety rule governed everything: no real money, no bank mutation, no production action.</p>
+<blockquote><strong>Safety first, in code.</strong> This repository's <code>seed()</code> and its reference workbook hold real budget, income and account figures for two named people. Every scenario <em>replaces</em> the store with a wholly synthetic month before measuring anything, and no real value is read, computed on, or reported. The first assertion in the suite checks that the replacement actually happened, so a failed swap cannot let a test run against real data unnoticed.</blockquote>
+<div class="grid">
+  <div class="stat ok"><span class="n">67/67</span><span class="l">scenario assertions</span></div>
+  <div class="stat ok"><span class="n">333/333</span><span class="l">money-math tests (repo CI)</span></div>
+  <div class="stat ok"><span class="n">0</span><span class="l">reconciliation discrepancies</span></div>
+  <div class="stat warn"><span class="n">1</span><span class="l">P1 found — fixed</span></div>
+</div>
+<h3>Zero-sum reconciliation</h3>
+<p class="lead">An independent expected-state ledger was built first, then the whole system reconciled against it. No step consulted the app for its expected value.</p>
+<table>
+<thead><tr><th>Step</th><th>Independently computed</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td>Transactions → month total</td><td>Sum of 8 invented rows</td><td>matches</td></tr>
+<tr><td>→ Category &amp; person breakdowns</td><td>Each sums back to the month total</td><td>matches, zero-sum</td></tr>
+<tr><td>→ Accounts</td><td>Hub + card spend accounts for every row, none unlinked</td><td>matches</td></tr>
+<tr><td>→ Budget &amp; surplus</td><td>income − budget, longhand</td><td>matches</td></tr>
+<tr><td>→ Safe to Spend</td><td>budget − spent − unposted fixed − in-flight</td><td>matches</td></tr>
+<tr><td>→ Transfers (the double-count test)</td><td>A $500 sweep and a $990 card payoff must move <em>neither</em> spend nor Safe to Spend</td><td>neither moved; neither entered <code>data.transactions</code></td></tr>
+<tr><td>→ Savings goals</td><td>saved / target</td><td>matches</td></tr>
+<tr><td>→ Debt payoff</td><td>Longhand amortisation: 6 months at 22.9% on $990 at $200/mo</td><td>matches, interest &gt; 0, monotonic</td></tr>
+<tr><td>→ Net worth</td><td>assets − liabilities</td><td>matches, internally consistent</td></tr>
+<tr><td>→ Monthly report</td><td>Must agree with the ledger it summarises</td><td>matches</td></tr>
+</tbody></table>
+<h3>Individual agent reports</h3>
+<details><summary>🎯 Release Director<span class="agent-verdict pass">GO</span></summary><div class="body"><p>The gate for a financial app is simple and absolute: no unexplained reconciliation discrepancy, and no P0. One P1 was found in the restore path and fixed. The full ledger reconciles against an independently built model with zero discrepancies. I certify GO.</p></div></details>
+<details><summary>📐 QA Architect<span class="agent-verdict pass">COVERAGE MAPPED</span></summary><div class="body"><p>§2 names 33 product areas. I designed two paths: a full synthetic month reconciled end to end, and an imports/rules/chaos campaign. The governing constraint came first — this repo holds <strong>real figures for two named people</strong>, so every scenario replaces the store with invented data before measuring, and no real value is read or reported.</p></div></details>
+<details><summary>👤 Beta User / Persona<span class="agent-verdict pass">PASS</span></summary><div class="body"><p>A complete month: paycheck, recurring bills, groceries, card spending, a savings transfer, an unexpected expense, a card payment, a utility, month-end close. Then the recovery path a real person reaches for — restore from backup — which is where the defect was.</p></div></details>
+<details><summary>⚡ Chaos Engineer<span class="agent-verdict pass">PASS</span></summary><div class="body"><p>Ten hostile amounts, dates and states — zero, negative, huge, tiny, NaN, malformed and far-future dates, a missing category, a deleted category, a missing account — none can make the month's arithmetic non-finite. Six malformed import files, duplicate imports, and five consecutive reloads.</p> &nbsp;<span class="agent-verdict pass">36 pass · 0 fail</span><ul class="checks">
+<li class="ok"><code>I-01</code> CSV parses the right number of rows (header + 3)</li>
+<li class="ok"><code>I-02</code> a quoted comma inside a field does not split it</li>
+<li class="ok"><code>I-03</code> a doubled quote decodes to one literal quote</li>
+<li class="ok"><code>I-04</code> amounts survive parsing as written</li>
+<li class="ok"><code>I-05</code> an empty file does not throw<span class="note">0 row(s)</span></li>
+<li class="ok"><code>I-06</code> a header-only file does not throw<span class="note">1 row(s)</span></li>
+<li class="ok"><code>I-07</code> ragged rows do not throw<span class="note">2 row(s)</span></li>
+<li class="ok"><code>I-08</code> an unterminated quote does not throw<span class="note">2 row(s)</span></li>
+<li class="ok"><code>I-09</code> binary junk does not throw<span class="note">1 row(s)</span></li>
+<li class="ok"><code>I-10</code> a very long single line does not throw<span class="note">2 row(s)</span></li>
+<li class="ok"><code>I-11</code> re-importing the same row is flagged as a likely duplicate<span class="note">{&quot;id&quot;:&quot;t1&quot;,&quot;date&quot;:&quot;2026-05-05&quot;,&quot;category&quot;:&quot;Groceries&quot;,&quot;description&quot;:&quot;Giant Foods&quot;,&quot;amount&quot;:120,&quot;who&quot;:&quot;Shared&quot;,&quot;account&quot;:</span></li>
+<li class="ok"><code>I-12</code> a different amount on the same day is NOT a duplicate<span class="note">a real second trip must not be swallowed</span></li>
+<li class="ok"><code>I-13</code> the same amount two months earlier is NOT a duplicate</li>
+<li class="ok"><code>I-14</code> an import adds exactly the rows it claims</li>
+<li class="ok"><code>I-15</code> undoing that import removes exactly those rows and no others<span class="note">a partial or over-eager undo is data loss</span></li>
+<li class="ok"><code>R-01</code> a learned merchant rule applies to the same merchant at another store number<span class="note">{&quot;id&quot;:&quot;7fe3195e-5aaa-420d-94df-324f8cb60aeb&quot;,&quot;match&quot;:&quot;WEGMANS PHILADELPHIA&quot;,&quot;category&quot;:&quot;Groceries&quot;,&quot;who&quot;:&quot;Shared&quot;,&quot;tag&quot;:null}</span></li>
+<li class="ok"><code>R-02</code> and to the exact string it was learned from</li>
+<li class="ok"><code>R-03</code> an unrelated merchant does not pick up that rule</li>
+<li class="ok"><code>R-04</code> editing a rule replaces it rather than stacking a second one</li>
+<li class="ok"><code>S-01</code> a split preserves the transaction total exactly<span class="note">a split that changes the total invents or destroys money</span></li>
+<li class="ok"><code>S-02</code> and splitting does not change the month total</li>
+<li class="ok"><code>S-03</code> a one-part &quot;split&quot; is rejected rather than silently accepted</li>
+<li class="ok"><code>S-04</code> a split that does not sum to the transaction is rejected outright<span class="note">1500 + 400 against a 2000 charge would invent or lose 100</span></li>
+<li class="ok"><code>X-01</code> a zero-amount transaction cannot break the month&#x27;s arithmetic<span class="note">spend 2120, safe 580</span></li>
+<li class="ok"><code>X-02</code> a negative amount (a refund) cannot break the month&#x27;s arithmetic<span class="note">spend 2070, safe 630</span></li>
+<li class="ok"><code>X-03</code> a huge amount cannot break the month&#x27;s arithmetic<span class="note">spend 100002119, safe -99999419</span></li>
+<li class="ok"><code>X-04</code> a tiny amount cannot break the month&#x27;s arithmetic<span class="note">spend 2120.001, safe 579.9989999999998</span></li>
+<li class="ok"><code>X-05</code> a malformed date cannot break the month&#x27;s arithmetic<span class="note">spend 2120, safe 580</span></li>
+<li class="ok"><code>X-06</code> a far-future date cannot break the month&#x27;s arithmetic<span class="note">spend 2120, safe 580</span></li>
+<li class="ok"><code>X-07</code> a missing category cannot break the month&#x27;s arithmetic<span class="note">spend 2145, safe 555</span></li>
+<li class="ok"><code>X-08</code> a deleted/unknown category cannot break the month&#x27;s arithmetic<span class="note">spend 2145, safe 555</span></li>
+<li class="ok"><code>X-09</code> a missing account cannot break the month&#x27;s arithmetic<span class="note">spend 2145, safe 555</span></li>
+<li class="ok"><code>X-10</code> a NaN amount cannot break the month&#x27;s arithmetic<span class="note">spend 2120, safe 580</span></li>
+<li class="ok"><code>X-11</code> the integrity check reports a deliberately broken row rather than ignoring it<span class="note">[&quot;1 transaction(s) with an invalid date&quot;,&quot;1 transaction(s) with a non-numeric amount&quot;,&quot;1 transaction(s) with a category not on the fixed list&quot;,&quot;1 transaction(s) with an unknown Who&quot;,&quot;Mike has income on file but no Direct</span></li>
+<li class="ok"><code>X-12</code> five consecutive reloads do not corrupt or lose the ledger</li>
+<li class="ok"><code>X-13</code> no runtime error across the whole import and chaos campaign</li>
+</ul></div></details>
+<details><summary>🛡️ Data Integrity Engineer<span class="agent-verdict flag">1 P1 FOUND · FIXED</span></summary><div class="body"><p>I built an independent expected-state ledger and reconciled the whole system against it: Transactions → Accounts → Budget → Safe to Spend → Savings Goals → Debt → Net Worth → Monthly Report. <strong>Zero discrepancies.</strong></p><p>The two results I would single out: a savings sweep and a card payoff move neither spend nor Safe to Spend and never enter <code>data.transactions</code> — the structural defence against double counting holds. And debt payoff matches a longhand amortisation exactly: 6 months at 22.9% on $990 at $200/mo, interest strictly positive, monotonic in both rate and payment, with a correct "never" below the interest threshold.</p> &nbsp;<span class="agent-verdict pass">31 pass · 0 fail</span><ul class="checks">
+<li class="ok"><code>F-00</code> the synthetic month replaces the real household data (safety rule)<span class="note">{&quot;ok&quot;:true,&quot;tx&quot;:8}</span></li>
+<li class="ok"><code>F-01</code> month spend equals the independent sum of the ledger<span class="note">8 transactions</span></li>
+<li class="ok"><code>F-02</code> spend by category matches the independent breakdown</li>
+<li class="ok"><code>F-03</code> spend by person matches the independent breakdown</li>
+<li class="ok"><code>F-04</code> the category breakdown sums back to the month total<span class="note">zero-sum: no category may invent or lose money</span></li>
+<li class="ok"><code>F-05</code> the person breakdown sums back to the month total</li>
+<li class="ok"><code>F-06</code> budget total matches the independent sum</li>
+<li class="ok"><code>F-07</code> income total matches the independent sum</li>
+<li class="ok"><code>F-08</code> surplus is income minus budget, independently computed<span class="note">7000 - 3230</span></li>
+<li class="ok"><code>F-09</code> Safe to Spend equals budget - spent - unposted fixed - in-flight<span class="note">3230 - 3140 - 80 (Internet unposted) - 0 pending</span></li>
+<li class="ok"><code>F-10</code> Safe to Spend is finite and not NaN</li>
+<li class="ok"><code>F-10b</code> both transfers were actually recorded (so F-11..F-14 mean something)<span class="note">a malformed transfer would make the double-count test vacuously pass</span></li>
+<li class="ok"><code>F-11</code> a savings transfer and a card payment do not become spend<span class="note">moved 500 to savings and paid 990 to the card; spend must not move</span></li>
+<li class="ok"><code>F-12</code> and neither moves Safe to Spend</li>
+<li class="ok"><code>F-13</code> transfers are never written into data.transactions<span class="note">the structural defence against double counting</span></li>
+<li class="ok"><code>F-14</code> card servicing recognises the payoff, and attributes it to the hub</li>
+<li class="ok"><code>F-14b</code> the card was serviced in full — the payoff equals the card spend<span class="note">a payoff smaller than the spend would leave a carried balance</span></li>
+<li class="ok"><code>F-15</code> card spend for the month equals the independent card subtotal</li>
+<li class="ok"><code>F-15b</code> hub spend plus card spend accounts for every transaction, with none unlinked<span class="note">zero-sum across accounts</span></li>
+<li class="ok"><code>F-16</code> the savings roll-up reports what the goals actually hold</li>
+<li class="ok"><code>F-16b</code> goal percentage is saved/target, independently computed</li>
+<li class="ok"><code>F-17</code> debt payoff returns a finite, positive horizon at the stated payment<span class="note">{&quot;months&quot;:6,&quot;date&quot;:&quot;2027-03-17&quot;,&quot;interest&quot;:60.174862611350136,&quot;balance&quot;:990}</span></li>
+<li class="ok"><code>F-17b</code> payoff months match an independent amortisation at 22.9% APR<span class="note">balance 990, payment 200/mo -&gt; 6 months</span></li>
+<li class="ok"><code>F-17c</code> and the payoff actually charges interest (it is not treated as 0% APR)<span class="note">interest 60.17</span></li>
+<li class="ok"><code>F-17d</code> a higher APR costs more interest than a lower one<span class="note">29.9% -&gt; 80.26, 9.9% -&gt; 25</span></li>
+<li class="ok"><code>F-17e</code> a payment too small to cover interest reports &quot;never&quot;, not a wrong number<span class="note">{&quot;months&quot;:null,&quot;date&quot;:null,&quot;interest&quot;:null,&quot;balance&quot;:990}</span></li>
+<li class="ok"><code>F-18</code> paying MORE clears the debt sooner, never later<span class="note">monotonicity: an extra payment cannot lengthen the payoff</span></li>
+<li class="ok"><code>F-19</code> net worth is assets minus liabilities, independently computed<span class="note">5000 hub + 8000 HYSA, less a 990 card</span></li>
+<li class="ok"><code>F-19b</code> net worth is internally consistent (assets - debts === net)</li>
+<li class="ok"><code>F-20</code> the monthly report agrees with the ledger it summarises<span class="note">the report may not disagree with the transactions</span></li>
+<li class="ok"><code>F-21</code> no runtime error during the full reconciliation</li>
+</ul></div></details>
+<details><summary>📱 PWA &amp; Mobile Engineer<span class="agent-verdict pass">PASS (repo gates)</span></summary><div class="body"><p>This repo owns its own gates and they cover this domain: <code>check-sw-shell</code> verifies the service-worker shell matches <code>index.html</code> (46 entries, all resolving), and <code>check-a11y</code> drives 17 routes × 2 viewports × 2 themes for contrast and touch targets. Both pass. I did not duplicate them.</p></div></details>
+<details><summary>♿ Accessibility Engineer<span class="agent-verdict pass">PASS (repo gate)</span></summary><div class="body"><p><code>check-a11y.mjs</code> — 17 routes × 2 viewports × 2 themes, contrast and touch targets clean, no JS errors. It is a stronger sweep than I would have written fresh, so I ran it rather than replacing it.</p></div></details>
+<details><summary>🔒 Security &amp; Data Isolation<span class="agent-verdict pass">PASS</span></summary><div class="body"><p>The safety rule was the security control here: no real money, no bank mutation, no production action. <code>check-plaid-invariants</code> confirms 11 tables all RLS-enabled, 8 migrations in order, 49 client column references resolving. And the repo is private on purpose — I confirmed nothing in my changes weakens that.</p></div></details>
+<details><summary>🚀 Performance Engineer<span class="agent-verdict pass">PASS</span></summary><div class="body"><p>No performance defect surfaced. The store is a single local blob with no network on the critical path; five consecutive reloads with a full month loaded showed no degradation or corruption.</p></div></details>
+<details><summary>🔄 Regression Engineer<span class="agent-verdict pass">PASS</span></summary><div class="body"><p>All seven CI gates pass: <code>run-tests</code> (333/333), <code>token-drift</code>, <code>a11y</code>, <code>sw-shell</code>, <code>plaid-invariants</code>, <code>doc-drift</code>, <code>sync-drift</code>. The last needed the sibling repo checked out, which I did.</p></div></details>
+<details><summary>⚖️ Final Auditor<span class="agent-verdict pass">CONFIRMS GO</span></summary><div class="body"><p>I verified the fix fails-before/passes-after myself (3 failed / 330 passed pre-fix; 333/333 after) and checked the cross-repo claim by reading <code>household-finance</code>'s own <code>main</code>: it carries the identical unguarded <code>for (const r of data.rules)</code> and the identical <code>if (v &lt; 3)</code> gating. That is correctly recorded as needing a port rather than quietly baselined away — the manifest's own note warns that silent baselining is how the public repo previously lost features.</p></div></details>
+</section>
+
+<section role="tabpanel" id="t-p3" aria-labelledby="b-p3" hidden>
+<h2 class="sec">Phase 3 · Mike's Cookbook</h2>
+<p class="lead">§3's standard, verbatim: <em>could a real person put their phone on the kitchen counter, make dinner using this application from beginning to end, and trust it not to lose, miscalculate or confuse anything?</em></p>
+<div class="grid">
+  <div class="stat ok"><span class="n">318</span><span class="l">recipes swept, not sampled</span></div>
+  <div class="stat ok"><span class="n">33/33</span><span class="l">kitchen campaign assertions</span></div>
+  <div class="stat warn"><span class="n">18</span><span class="l">self-contradicting records found</span></div>
+  <div class="stat ok"><span class="n">0</span><span class="l">engine defects</span></div>
+</div>
+<blockquote><strong>The engine passes; the data does not, in eighteen places.</strong> Search, the grocery merge, the timers and the cross-app bridge all behave. But 8 recipes state calories that disagree with their own macros by 15–24%, and 10 ingredients do not scale sanely — three of them <em>reduce</em> when the recipe doubles.</blockquote>
+<h3>The three that reduce</h3>
+<table>
+<thead><tr><th>Recipe</th><th>Ingredient</th><th>At the smaller tier</th><th>At the larger tier</th></tr></thead>
+<tbody>
+<tr><td><code>shepherds-pie</code></td><td>Garlic cloves</td><td>3 (2 servings)</td><td><strong>2</strong> (4 servings)</td></tr>
+<tr><td><code>garlic-shrimp-fried-rice</code></td><td>Soy sauce</td><td>1½ tbsp</td><td><strong>1 tbsp</strong></td></tr>
+<tr><td><code>blackened-chicken-tenders-cane-sauce</code></td><td>Garlic powder</td><td>⅙ tsp</td><td><strong>⅛ tsp</strong></td></tr>
+</tbody></table>
+<p class="lead">A cook following the larger version under-seasons. These are not fixed: which number is right is an authoring decision, and §0.10 requires recording an ambiguous specification rather than changing product behaviour arbitrarily. They are instead <em>named</em> in a new gate, so no unnamed instance can appear and a corrected one must be removed from the list.</p>
+<h3>Individual agent reports</h3>
+<details><summary>🎯 Release Director<span class="agent-verdict flag">CONDITIONAL GO</span></summary><div class="body"><p>§3's standard is whether a real person could cook a meal end to end and trust the app not to lose, miscalculate or confuse anything. The engine meets it. The <em>data</em> does not, in eighteen specific places, and those are authoring decisions I will not make on the owner's behalf. GO is conditional on reviewing them.</p></div></details>
+<details><summary>📐 QA Architect<span class="agent-verdict pass">COVERAGE MAPPED</span></summary><div class="body"><p>§3 names 39 product areas. I chose a fleet sweep over all <strong>318 recipes</strong> rather than a sample, for the reason that decided Phase 1 too: an authoring slip lives in exactly one record.</p></div></details>
+<details><summary>👤 Beta User / Persona<span class="agent-verdict pass">PASS</span></summary><div class="body"><p>Search behaves the way a cook uses it: exact titles, partial words, a bare ingredient, two ingredients narrowing rather than widening, case-insensitivity, an unaccented query finding an accented title, and a transposed-letter typo still landing on chicken recipes. Nonsense returns nothing; empty returns the catalogue.</p> &nbsp;<span class="agent-verdict pass">33 pass · 0 fail</span><ul class="checks">
+<li class="ok"><code>K-01</code> an exact title search puts that recipe first<span class="note">[&quot;Jalapeño Chicken Bake&quot;]</span></li>
+<li class="ok"><code>K-02</code> a partial word returns many matches<span class="note">128 results</span></li>
+<li class="ok"><code>K-03</code> an ingredient search finds recipes that use it<span class="note">10 results</span></li>
+<li class="ok"><code>K-04</code> two ingredients narrow rather than widen<span class="note">chicken 128, bacon 10, both 5</span></li>
+<li class="ok"><code>K-05</code> search is case-insensitive</li>
+<li class="ok"><code>K-06</code> an unaccented query still finds the accented title<span class="note">24 results</span></li>
+<li class="ok"><code>K-07</code> a transposed-letter typo still finds something (fuzzy)<span class="note">126 results, top: [&quot;Air Fryer Garlic Parmesan Chicken Bites&quot;,&quot;Alabama White BBQ Chicken Marinade&quot;,&quot;Avocado Lime Chicken Salad&quot;]</span></li>
+<li class="ok"><code>K-08</code> a nonsense query returns nothing rather than everything</li>
+<li class="ok"><code>K-09</code> an empty query returns the whole catalog, not an error</li>
+<li class="ok"><code>K-10:&quot;   &quot;</code> an unusual query does not throw<span class="note">318 results</span></li>
+<li class="ok"><code>K-10:&quot;!!!&quot;</code> an unusual query does not throw<span class="note">318 results</span></li>
+<li class="ok"><code>K-10:&quot;🌶️&quot;</code> an unusual query does not throw<span class="note">318 results</span></li>
+<li class="ok"><code>K-10:&quot;\&quot;; DROP TABL</code> an unusual query does not throw<span class="note">0 results</span></li>
+<li class="ok"><code>K-10:&quot;aaaaaaaaaaaaa</code> an unusual query does not throw<span class="note">0 results</span></li>
+<li class="ok"><code>K-11</code> the two planned recipes do share at least one ingredient<span class="note">jalapeno-chicken-bake + broccoli-bacon-slaw: shared [&quot;uncured bacon&quot;,&quot;salt&quot;,&quot;pepper&quot;]</span></li>
+<li class="ok"><code>K-12</code> a shared ingredient is merged, not listed twice<span class="note">6 grocery rows for 18 distinct ingredient names across both recipes</span></li>
+<li class="ok"><code>K-13</code> the grocery list is non-empty and well formed<span class="note">[{&quot;aisle&quot;:&quot;Produce&quot;,&quot;rows&quot;:[{&quot;key&quot;:&quot;Produce|fresh spinach leave&quot;,&quot;item&quot;:&quot;Fresh spinach leaves&quot;,&quot;qty&quot;:&quot;2 cups&quot;,&quot;mealUids&quot;:[null],&quot;derived&quot;:null,&quot;need&quot;:{&quot;qty&quot;:96,&quot;unit&quot;:&quot;tsp&quot;}},{&quot;key&quot;:&quot;Produce|fresh mushroom&quot;,&quot;item&quot;:&quot;Fresh</span></li>
+<li class="ok"><code>K-14</code> quantities parse fractions, mixed numbers and plain integers<span class="note">{&quot;half&quot;:0.5,&quot;mixed&quot;:1.5,&quot;plain&quot;:3,&quot;junk&quot;:null}</span></li>
+<li class="ok"><code>K-15</code> an unparseable quantity (&quot;to taste&quot;) does not become a number</li>
+<li class="ok"><code>K-16</code> two timers can run at once<span class="note">MAX_TIMERS = 8</span></li>
+<li class="ok"><code>K-17</code> each timer keeps its own label and duration</li>
+<li class="ok"><code>K-18</code> a zero-second timer is refused rather than ringing instantly</li>
+<li class="ok"><code>K-19</code> a negative timer is refused</li>
+<li class="ok"><code>K-20</code> a NaN timer is refused</li>
+<li class="ok"><code>K-21</code> an absurd duration is clamped rather than accepted whole<span class="note">86400</span></li>
+<li class="ok"><code>K-22</code> rapid creation never exceeds the declared cap<span class="note">8 of max 8</span></li>
+<li class="ok"><code>K-23</code> a timer pauses, resumes and cancels</li>
+<li class="ok"><code>K-24</code> a running timer survives a reload (the phone locked mid-cook)</li>
+<li class="ok"><code>K-25</code> and it counts down in wall-clock time, not from zero again<span class="note">899s left of 900</span></li>
+<li class="ok"><code>K-26</code> the clock formatter renders sensibly<span class="note">shape check only — the exact format is a product choice</span></li>
+<li class="ok"><code>K-27</code> every cross-app bridge read answers on an empty device rather than throwing<span class="note">{&quot;todaysMeals&quot;:{&quot;ok&quot;:true,&quot;v&quot;:&quot;[]&quot;},&quot;macroTargets&quot;:{&quot;ok&quot;:true,&quot;v&quot;:&quot;null&quot;},&quot;recentActivity&quot;:{&quot;ok&quot;:true,&quot;v&quot;:&quot;{\&quot;trainedToday\&quot;:false,\&quot;streak\&quot;:0,\&quot;workoutsThisWeek\&quot;:0,\&quot;recentWorkouts\&quot;:[]}&quot;},&quot;today&quot;:</span></li>
+<li class="ok"><code>K-28</code> a workout logged by MC Training is visible to the cookbook<span class="note">{&quot;activity&quot;:{&quot;trainedToday&quot;:false,&quot;streak&quot;:0,&quot;workoutsThisWeek&quot;:1,&quot;recentWorkouts&quot;:[{&quot;id&quot;:&quot;w1&quot;,&quot;name&quot;:&quot;Push day&quot;,&quot;date&quot;:&quot;2026-09-17&quot;,&quot;prs&quot;:0,&quot;duration&quot;:&quot;60 min&quot;}]},&quot;workouts&quot;:[{&quot;id&quot;:&quot;w1&quot;,&quot;name&quot;:&quot;Push </span></li>
+<li class="ok"><code>K-29</code> no runtime error across the whole kitchen campaign</li>
+</ul></div></details>
+<details><summary>⚡ Chaos Engineer<span class="agent-verdict pass">PASS</span></summary><div class="body"><p>Five hostile queries including an emoji and a SQL-injection string: none throws. The timer attack is in the Data Integrity report — it is the load-bearing one for a kitchen.</p></div></details>
+<details><summary>🛡️ Data Integrity Engineer<span class="agent-verdict flag">2 DATA DEFECTS FOUND</span></summary><div class="body"><p>Two things a kitchen companion cannot get wrong: what the food contains, and what happens when you cook more of it. Neither was checked before this run.</p><p><strong>8 recipes' stated calories disagree with their own macros by 15–24%</strong> under Atwater. <strong>10 ingredients do not scale sanely</strong>, three of which <em>reduce</em> when the recipe doubles — shepherd's pie asks for 3 garlic cloves at two servings and 2 at four.</p><p>A methodological note that matters: my first pass reported 131 scaling findings. 121 were false — the catalogue legitimately changes units between tiers (8&nbsp;oz → 1&nbsp;lb <em>is</em> double). Normalising units first, with conversion factors written from the definitions rather than read from the app's own converter, left the 10 real ones.</p> &nbsp;<span class="agent-verdict flag">23 pass · 2 fail</span><ul class="checks">
+<li class="ok"><code>C-00</code> the catalog loads<span class="note">318 recipes</span></li>
+<li class="no"><code>C-01</code> every recipe&#x27;s stated calories agree with its own macros (Atwater)<span class="note">chicken-enchilada-quinoa/serving_6: stated 484 kcal, Atwater 411 (48p/7f/39c)
+          crockpot-pizza-chicken-bowls/serving_6: stated 452 kcal, Atwater 353 (50p/5f/27c)
+          creamy-cajun-chicken-potatoes/serving_5: stated 489 kcal, Atwater 376 (51p/4f/34c)
+          honey-garlic-chicken-rice/serving_6: stated 478 kcal, Atwater 387 (49p/3f/41c)
+          buffalo-chicken-tender-salad/serving_3</span></li>
+<li class="ok"><code>C-02</code> no macro is missing, negative or non-finite</li>
+<li class="ok"><code>C-03</code> per-serving macros do not change when the recipe is scaled<span class="note">cooking twice as much does not change what ONE serving contains
+          </span></li>
+<li class="ok"><code>C-04</code> every offered serving size has an ingredient list behind it</li>
+<li class="ok"><code>C-05</code> every offered serving size has a macro profile behind it</li>
+<li class="ok"><code>C-06</code> the native serving size is one of the offered options</li>
+<li class="no"><code>C-07</code> scaling up never reduces an ingredient, once units are normalised<span class="note">1520 comparable pairs; 44 cross-dimension pairs skipped
+          lemon-herb-pork-tenderloins-broccoli &quot;Extra-virgin olive oil&quot;: 6 -&gt; 48 vol, more than 2x the linear 12
+          shepherds-pie &quot;Garlic cloves&quot;: 3  at 2 servings but 2  at 4 (3 -&gt; 2 count:)
+          cheesy-beef-taco-potato-bowls &quot;Paprika&quot;: 0.125 -&gt; 1 vol, more than 2x the linear 0.25
+          korean-beef-fried-rice &quot;Rice vinegar&quot;: </span></li>
+<li class="ok"><code>C-07b</code> the comparison actually compared something<span class="note">1520 pairs</span></li>
+<li class="ok"><code>C-08</code> a protein target resolves to the scale that reaches it<span class="note">jalapeno-chicken-bake: 70g/serving, target 105g -&gt; scale 1.5</span></li>
+<li class="ok"><code>C-09</code> and the achieved macros are that scale applied to the per-serving profile<span class="note">{&quot;calories&quot;:964.5,&quot;protein_g&quot;:105,&quot;fat_g&quot;:52.5,&quot;carbs_g&quot;:18}</span></li>
+<li class="ok"><code>C-10</code> a zero target does not produce an infinite or negative scale<span class="note">{&quot;scale&quot;:null,&quot;achieved&quot;:null,&quot;exact&quot;:false,&quot;driver&quot;:&quot;protein_g&quot;,&quot;wanted&quot;:[&quot;protein_g&quot;]}</span></li>
+<li class="ok"><code>C-11</code> no target at all returns null rather than guessing</li>
+<li class="ok"><code>C-12@1</code> total for 1 servings is per-serving x 1<span class="note">jalapeno-chicken-bake: 643 kcal/serving</span></li>
+<li class="ok"><code>C-12@2</code> total for 2 servings is per-serving x 2</li>
+<li class="ok"><code>C-12@3</code> total for 3 servings is per-serving x 3</li>
+<li class="ok"><code>C-12@4</code> total for 4 servings is per-serving x 4</li>
+<li class="ok"><code>C-12@5</code> total for 5 servings is per-serving x 5</li>
+<li class="ok"><code>C-12@6</code> total for 6 servings is per-serving x 6</li>
+<li class="ok"><code>C-12@8</code> total for 8 servings is per-serving x 8</li>
+<li class="ok"><code>C-12@10</code> total for 10 servings is per-serving x 10</li>
+<li class="ok"><code>C-12@12</code> total for 12 servings is per-serving x 12</li>
+<li class="ok"><code>C-13</code> every recipe id is unique</li>
+<li class="ok"><code>C-14</code> every recipe has a title</li>
+<li class="ok"><code>C-15</code> the catalog loads with no runtime error</li>
+</ul></div></details>
+<details><summary>📱 PWA &amp; Mobile Engineer<span class="agent-verdict flag">PASS · 1 UNVERIFIED</span></summary><div class="body"><p>Timers survive a reload counting in wall-clock time — 899,477&nbsp;ms before, 898,368&nbsp;ms after — which is the behaviour that matters when a phone locks mid-cook. <code>build-sw.py --check</code> and <code>test-sw-strategy</code> pass.</p><p><code>tools/smoke-test.js</code> could not run here and is <em>not</em> reported as passing: it waits for <code>networkidle</code>, which never settles in this sandbox because blocked Supabase and Google&nbsp;Fonts requests hang through the egress proxy. The same page loads fine under <code>domcontentloaded</code> — 318 recipes, zero runtime errors.</p></div></details>
+<details><summary>♿ Accessibility Engineer<span class="agent-verdict pass">PASS (repo gate)</span></summary><div class="body"><p><code>tools/check-a11y.mjs</code> passes. I ran the repo's own gate rather than writing a weaker duplicate.</p></div></details>
+<details><summary>🔒 Security &amp; Data Isolation<span class="agent-verdict pass">PASS</span></summary><div class="body"><p>The cross-app bridge is the sensitive surface here — it reads MC Training's stores. Every read answers on an empty device rather than throwing, and a workout logged by MC Training is visible to the cookbook with no cross-user path involved: both apps are same-origin on one device, and the bridge is read-only.</p></div></details>
+<details><summary>🚀 Performance Engineer<span class="agent-verdict pass">PASS</span></summary><div class="body"><p>318 recipes with detail shards load and search without a runtime error; a fuzzy query resolves once per token against the vocabulary rather than per recipe. No performance defect surfaced.</p></div></details>
+<details><summary>🔄 Regression Engineer<span class="agent-verdict pass">PASS</span></summary><div class="body"><p>25 CI gates pass plus <code>check-a11y</code>. The two new validator checks were proven in both directions before landing: they catch a planted new defect, and they fail when an allowlist entry goes stale.</p></div></details>
+<details><summary>⚖️ Final Auditor<span class="agent-verdict flag">CONFIRMS CONDITIONAL GO</span></summary><div class="body"><p>I pushed hardest on the decision <em>not</em> to fix the data. I am satisfied it is right: whether shepherd's pie wants 6 cloves at four servings, or 3 was wrong at two, is not inferable — and §0.10 requires recording an ambiguous specification rather than changing product behaviour arbitrarily.</p><p>I also checked that the allowlist is not a way of passing them. It is not: it names each record, fails on any unnamed one, and fails again if a listed record is fixed but left in the list. That is a ratchet that can only tighten.</p></div></details>
+</section>
+
+<section role="tabpanel" id="t-def" aria-labelledby="b-def" hidden><h2 class="sec">Defect matrix</h2><p class="lead">Every confirmed defect, with the scenario that found it, the root cause, the fix and the regression test. Expand any row for the full record.</p><details><summary><span class="pill p1">P1</span> <code>DEF-CR-01</code> Workout logger — session restore<span class="pill fixed">FIXED</span></summary>
+<div class="body"><dl class="kv">
+<dt>App</dt><dd>MC Training</dd>
+<dt>Scenario</dt><dd>Log 3 sets at 205 lb x 9 reps, reload mid-session, reopen the day.</dd>
+<dt>Expected</dt><dd>The completed sets read back as what was performed: 205 x 9.</dd>
+<dt>Observed</dt><dd>They read 205 x 5 — the programme&#x27;s prescribed reps, styled .mcl-ghost. Reproduced on all four rendering-engine families.</dd>
+<dt>Root cause</dt><dd>Two restore paths had drifted. mc-setlog.js paintRestored() (cloud rehydrate) repainted values, cleared the ghost and set aria-checked. mc-session.js restoreSets() (the LOCAL reload path every refresh takes) set the tick class and nothing else, so the row kept build()&#x27;s prescription.</dd>
+<dt>Impact</dt><dd>mc_setlog_v1 was always correct; only the screen lied. But the ghost is a live input, so unchecking and re-checking that row committed the prescription — 9 became 5 for real, and flowed into tonnage, session kcal, PR detection and banked history.</dd>
+<dt>Fix</dt><dd>MCSetlogUtil.paintLoggedRow() is now the one repaint of an already-logged row, reading values from today&#x27;s mc_setlog_v1 entry rather than from the DOM. Both restore paths call it. It also sets aria-checked, which restoreSets() never did.</dd>
+<dt>Regression test</dt><dd>tools/test-mc-restore-fidelity.js — 100 assertions across 5 engine families, wired into verify.yml. Proven to fail on the pre-fix tree (44 failures).</dd>
+</dl></div></details>
+<details><summary><span class="pill p1">P1</span> <code>DEF-CR-02</code> Smart Resume / session state<span class="pill fixed">FIXED</span></summary>
+<div class="body"><dl class="kv">
+<dt>App</dt><dd>MC Training</dd>
+<dt>Scenario</dt><dd>Log 3 sets on the largest multi-day page (26 days, 199 cards, 112 rows), reload.</dd>
+<dt>Expected</dt><dd>The session record survives and the ticks come back.</dd>
+<dt>Observed</dt><dd>mc_session_v1 is {} within a second and never returns — still {} and zero ticks twelve seconds later.</dd>
+<dt>Root cause</dt><dd>This engine REBUILDS its day cards after the first paint. restoreSets() had already latched as done, so the ticked rows went with the old DOM; save(), firing on the rebuild&#x27;s own mutations, read the fresh tick-free DOM as &#x27;nothing in progress&#x27; and DELETED the record.</dd>
+<dt>Impact</dt><dd>mc_setlog_v1 keeps the sets, so no history is lost — but the page reads as untouched and the athlete cannot see what they have already done. The tick marks and open-card position are gone for good.</dd>
+<dt>Fix</dt><dd>Restore re-applies on every MC_SCAN (the shared &#x27;cards just rendered&#x27; signal), re-entrant via a generation counter; and save()&#x27;s destructive branch is disabled while a restore is outstanding, staying disabled if restore exhausted its retries.</dd>
+<dt>Regression test</dt><dd>Same gate, extended to the re-render engine — the only shape that exposes it. Proven to fail pre-fix with the diagnostic it is meant to give.</dd>
+</dl></div></details>
+<details><summary><span class="pill p3">P3</span> <code>DEF-CR-03</code> Guided Mode<span class="pill fixed">FIXED</span></summary>
+<div class="body"><dl class="kv">
+<dt>App</dt><dd>MC Training</dd>
+<dt>Scenario</dt><dd>Open a workout day on a fresh device and tap &#x27;🎯 Start Guided Mode&#x27;.</dd>
+<dt>Expected</dt><dd>Guided Mode starts.</dd>
+<dt>Observed</dt><dd>The tap lands on the first-run coaching hint instead. elementFromPoint at the button&#x27;s centre returned .mc-hint-txt; Playwright&#x27;s click times out, while a programmatic click starts guided mode correctly.</dd>
+<dt>Root cause</dt><dd>MC_HINTS draws its one-time callout beside the control that triggered it, and on a workout page that places it over the Guided Mode entry. Nothing broke loudly — the hint&#x27;s own outside-click handler simply dismissed it.</dd>
+<dt>Impact</dt><dd>A first-time athlete taps the control, the tip disappears, and nothing else happens. Tapping again works; the hint is once-per-device and auto-dismisses after 6s, so the window is narrow.</dd>
+<dt>Fix</dt><dd>.mc-hint is pointer-events:none with the ✕ opting back in. The same tap now reaches the control underneath AND still dismisses the hint.</dd>
+<dt>Regression test</dt><dd>Verified three ways: the entry is reachable with the hint showing, a real tap starts guided mode, and the ✕ still dismisses.</dd>
+</dl></div></details>
+<details><summary><span class="pill p1">P1</span> <code>DEF-FIN-01</code> Restore from backup / cloud / sync<span class="pill fixed">FIXED</span></summary>
+<div class="body"><dl class="kv">
+<dt>App</dt><dd>Cross&#x27; Finances</dd>
+<dt>Scenario</dt><dd>Restore a backup stamped version 3 that passes the app&#x27;s own restore validation (transactions, budget and goals all arrays).</dd>
+<dt>Expected</dt><dd>The backup restores and the app renders.</dd>
+<dt>Observed</dt><dd>App.render() throws — &quot;Cannot read properties of undefined (reading &#x27;targetDate&#x27;)&quot; and &quot;(reading &#x27;2026-09&#x27;)&quot;. If the payload also lacks `rules`, replace() itself throws and the restore fails outright.</dd>
+<dt>Root cause</dt><dd>migrate()&#x27;s container backfills are version-GATED, so a payload that merely CLAIMS a version skips them. And the v&lt;12 step iterates data.rules with no || [] guard — the only iteration in the function without one. migrate()&#x27;s own header describes exactly this failure mode and defends against it for six keys; the plan objects and month-keyed containers never got that treatment.</dd>
+<dt>Impact</dt><dd>Reaches the household through every restore path — Store.replace() is what &#x27;Restore backup&#x27;, &#x27;Restore cloud backup&#x27; and an incoming sync row all call. A broken app during the one operation reached for when something has already gone wrong.</dd>
+<dt>Fix</dt><dd>An unconditional structural belt placed BEFORE the version steps. Idempotent and purely structural; defaults are deliberately EMPTY rather than seed()&#x27;s, so a restore never invents a house plan or a salary the household did not enter.</dd>
+<dt>Regression test</dt><dd>8 assertions in tests.html (run in CI by scripts/run-tests.mjs), proven to fail pre-fix — 3 failed / 330 passed — and 333/333 after.</dd>
+</dl></div></details>
+<details><summary><span class="pill p3">P3</span> <code>DEF-CB-01</code> Recipe nutrition data<span class="pill rep">REPORTED — owner decision</span></summary>
+<div class="body"><dl class="kv">
+<dt>App</dt><dd>Mike&#x27;s Cookbook</dd>
+<dt>Scenario</dt><dd>Reconcile every one of 318 recipes&#x27; stated calories against its own macros under Atwater (4/4/9).</dd>
+<dt>Expected</dt><dd>Stated calories agree with the recipe&#x27;s own protein/fat/carbs, within whole-gram rounding.</dd>
+<dt>Observed</dt><dd>8 macro profiles are 15–24% apart, every one overstating, every one in a 3/5/6-serving tier.</dd>
+<dt>Root cause</dt><dd>Authoring, not code — the calorie figure and the macro figures come from different sources for these records.</dd>
+<dt>Impact</dt><dd>A macro-conscious cook logging one of these gets a day total that does not reconcile with itself.</dd>
+<dt>Fix</dt><dd>NOT FIXED, deliberately: which number is right is an authoring decision a checker may not infer, and §0.10 requires recording an ambiguous specification rather than changing behaviour arbitrarily.</dd>
+<dt>Regression test</dt><dd>tools/validate-recipes.js now checks it with a named allowlist of the 8, so no NEW one can appear and a fixed one must be removed from the list. Proven both ways.</dd>
+</dl></div></details>
+<details><summary><span class="pill p3">P3</span> <code>DEF-CB-02</code> Recipe scaling data<span class="pill rep">REPORTED — owner decision</span></summary>
+<div class="body"><dl class="kv">
+<dt>App</dt><dd>Mike&#x27;s Cookbook</dd>
+<dt>Scenario</dt><dd>Compare ingredient quantities between the smallest and largest authored tier, units normalised.</dd>
+<dt>Expected</dt><dd>Scaling up never uses less of an ingredient.</dd>
+<dt>Observed</dt><dd>10 anomalies. Three REDUCE: shepherd&#x27;s pie asks 3 garlic cloves at 2 servings and 2 at 4; garlic shrimp fried rice 1½ tbsp soy sauce → 1 tbsp; blackened chicken tenders ⅙ tsp garlic powder → ⅛ tsp. Seven jump 6–8× at a 2× scale.</dd>
+<dt>Root cause</dt><dd>Authoring. Unit changes account for most apparent cases (8 oz → 1 lb IS double) — normalising units first removed 121 of 131 first-pass findings.</dd>
+<dt>Impact</dt><dd>A cook following the larger version under-seasons.</dd>
+<dt>Fix</dt><dd>NOT FIXED, deliberately — same reasoning as DEF-CB-01.</dd>
+<dt>Regression test</dt><dd>Same validator, second named allowlist. A planted shrinking ingredient is caught; a stale entry fails with &#x27;remove it from the list&#x27;.</dd>
+</dl></div></details>
+<details><summary><span class="pill p1">P1</span> <code>DEF-08</code> Weekly check-in push notification<span class="pill open">OPEN — owner action</span></summary>
+<div class="body"><dl class="kv">
+<dt>App</dt><dd>MC Training</dd>
+<dt>Scenario</dt><dd>Independently re-check every scheduled run of .github/workflows/weekly-checkin.yml.</dd>
+<dt>Expected</dt><dd>A weekly recap reaches trainees, as §7 of the Executive Summary promises.</dd>
+<dt>Observed</dt><dd>10 of 10 scheduled runs FAILED, 2026-07-12 through 2026-09-13. It has never once succeeded.</dd>
+<dt>Root cause</dt><dd>The workflow guards on secrets.WEEKLY_CHECKIN_SECRET and exits 1 with a named error when it is unset. Every run died in 5–8 seconds, consistent with the guard rather than the curl.</dd>
+<dt>Impact</dt><dd>A feature the product&#x27;s own specification sells has never worked.</dd>
+<dt>Fix</dt><dd>NOT CODE. Needs the repository secret set, plus the matching CRON_SECRET on the Supabase project. Neither can be done from this session, and neither should be.</dd>
+<dt>Regression test</dt><dd>Re-verified independently this run via the Actions API — carried forward from the 2026-09-15 assessment, still open.</dd>
+</dl></div></details></section>
+<section role="tabpanel" id="t-six" aria-labelledby="b-six" hidden>
+<h2 class="sec">Lean Six Sigma</h2>
+<p class="lead">Metrics are stated with their definitions, because a DPMO quoted without its denominator is decoration.</p>
+
+<h3>DPMO — defects per million opportunities</h3>
+<p class="lead"><strong>Unit:</strong> one executed assertion or measurement. <strong>Opportunity:</strong> one unit. <strong>Defect:</strong> a genuine product defect, counted once at the level it was fixed — not once per failing assertion, which would inflate a single root cause into dozens.</p>
+<table>
+<thead><tr><th>Phase</th><th>Opportunities</th><th>Defects found</th><th>Remaining</th></tr></thead>
+<tbody>
+<tr><td>Phase 1 · MC Training</td><td>1,819</td><td>4</td><td>1 (owner action)</td></tr>
+<tr><td>Phase 2 · Cross' Finances</td><td>400</td><td>1</td><td>0</td></tr>
+<tr><td>Phase 3 · Mike's Cookbook</td><td>1,966</td><td>2</td><td>2 (owner decision)</td></tr>
+<tr><td><strong>Total</strong></td><td><strong>4,185</strong></td><td><strong>7</strong></td><td><strong>3</strong></td></tr>
+</tbody></table>
+<div class="grid">
+  <div class="stat warn"><span class="n">1672.6</span><span class="l">As-found DPMO<br>(defects discovered this run)</span></div>
+  <div class="stat ok"><span class="n">716.8</span><span class="l">As-shipped DPMO<br>(remaining, all owner-owned)</span></div>
+  <div class="stat"><span class="n">4.4σ+</span><span class="l">Approximate short-term sigma level at the as-found rate</span></div>
+</div>
+<blockquote>The as-found rate is the meaningful process number; the as-shipped rate is near zero mostly because the defects that remain are ones an agent <em>may not</em> close — a missing secret and eighteen authoring decisions. Reading the second number alone would flatter the process.</blockquote>
+
+<h3>Muda — waste identified and removed</h3>
+<table>
+<thead><tr><th>Waste</th><th>Where</th><th>Removed</th></tr></thead>
+<tbody>
+<tr><td><strong>Defects</strong> (rework at the user)</td><td>A mid-session reload silently substituted prescribed reps for performed reps; a second engine destroyed the session record entirely.</td><td>Both fixed at the cause — one repaint implementation, not two — with gates.</td></tr>
+<tr><td><strong>Motion</strong> (wasted user action)</td><td>The first tap on "Start Guided Mode" did nothing but dismiss a tooltip covering it.</td><td>The hint no longer eats the tap; one tap now does what it looks like it does.</td></tr>
+<tr><td><strong>Waiting</strong></td><td>Restore-from-backup left the app unrenderable — the recovery path itself needed recovery.</td><td>Structural belt in <code>migrate()</code>; restore renders with zero errors.</td></tr>
+<tr><td><strong>Over-processing</strong> (in this run)</td><td>18 findings my own harness produced that were not product defects — wrong field names, wrong selectors, unit-blind comparisons.</td><td>Every one traced and corrected <em>before</em> being reported. None reached this document as a defect.</td></tr>
+</tbody></table>
+<blockquote><strong>The largest single source of waste in this run was my own instrumentation.</strong> One example is worth stating plainly: the cookbook scaling check first reported <strong>131</strong> defects. <strong>121 were false</strong> — the catalogue legitimately changes units between tiers, and 8&nbsp;oz → 1&nbsp;lb <em>is</em> double. Normalising units first left 10 real findings. A report that had shipped the first number would have been worse than useless.</blockquote>
+
+<h3>One-piece flow</h3>
+<p class="lead">Each phase was completed and certified before the next began, and each defect ran the full <code>REPRODUCE → ISOLATE → ROOT CAUSE → FIX → REGRESSION TEST → RERUN → RERUN ADJACENT</code> loop before the next was opened. Two of my own fixes broke a committed gate on the way through (<code>build-market --check</code>, <code>test-mc-maxout</code>); both were caught by the adjacent-scenario rerun, which is the step that exists for exactly that.</p>
+
+<h3>5 Whys — root cause analysis</h3>
+<details><summary><code>DEF-CR-01</code></summary><div class="body"><ol class="why"><li>A completed set redisplayed the prescribed reps, not the performed reps, after a mid-session reload.</li><li>Because the row&#x27;s inputs still held what build() put there — the prescription, styled as a ghost suggestion.</li><li>Because the local reload path never repainted the inputs; it only added the tick class and text.</li><li>Because there were TWO restore implementations and only the cloud one repainted values, cleared the ghost and set aria-checked.</li><li>Because nothing required them to be one implementation. check-single-impl.js guards exactly this class of drift for makeRestTimer and applyReplacements — restore was never added to its list.</li></ol></div></details><details><summary><code>DEF-CR-02</code></summary><div class="body"><ol class="why"><li>A mid-session reload left the page reading as untouched, with the session record gone.</li><li>Because save() deleted the record, having read a tick-free DOM as &#x27;nothing in progress&#x27;.</li><li>Because the DOM was genuinely tick-free at that moment — the engine had just rebuilt its day cards.</li><li>Because restoreSets() had already painted the OLD cards and latched as done, so nothing re-applied it to the new ones.</li><li>Because restore was modelled as a one-shot at init, while this engine&#x27;s DOM has more than one generation per page load.</li></ol></div></details><details><summary><code>DEF-FIN-01</code></summary><div class="body"><ol class="why"><li>Restoring a legitimate backup left the app unable to render.</li><li>Because readers indexed data.house, data.closes and others that the payload did not carry.</li><li>Because migrate() never created them for that payload.</li><li>Because those backfills sit inside version-GATED steps, and the payload claimed a version at or above the gate.</li><li>Because &#x27;claims a version&#x27; was treated as &#x27;has that version&#x27;s shape&#x27;. migrate()&#x27;s own header identifies this exact trap and defends against it — for six keys, chosen one at a time as each was met, rather than as a class.</li></ol></div></details><details><summary><code>DEF-CB-01 / CB-02</code></summary><div class="body"><ol class="why"><li>Eighteen recipes carry nutrition or scaling figures that contradict themselves.</li><li>Because the calorie figure and the macro figures, and the two serving tiers, were authored from different sources.</li><li>Because nothing compared them after authoring.</li><li>Because validate-recipes.js checked structure — fields present, ids unique, every recipe reachable — but never arithmetic.</li><li>Because &#x27;valid&#x27; had been defined as well-formed rather than self-consistent. A record can satisfy every structural rule and still tell the cook two different things.</li></ol></div></details><details><summary><code>DEF-08</code></summary><div class="body"><ol class="why"><li>The weekly check-in has never reached a trainee.</li><li>Because all 10 scheduled runs failed, every one in 5–8 seconds.</li><li>Because the workflow exits at its own guard when WEEKLY_CHECKIN_SECRET is unset.</li><li>Because the secret was never set after the workflow merged.</li><li>Because the workflow shipped and its two manual configuration steps did not — and nothing failed loudly enough on a Sunday to prompt anyone. A scheduled job that fails quietly is indistinguishable from one that never ran.</li></ol></div></details>
+<blockquote><strong>The pattern across all five.</strong> Four of the five bottom out in the same place: a rule that was applied to the instances someone happened to meet, rather than to the class. One repaint implementation existed and a second grew beside it. Six keys were defended and the seventh was not. Structure was validated and arithmetic was not. Each fix in this run therefore closes the class — a single repaint both paths call, an unconditional belt rather than another gated key, a checker that compares numbers rather than another named field.</blockquote>
+</section>
+<section role="tabpanel" id="t-cov" aria-labelledby="b-cov" hidden>
+<h2 class="sec">Feature-coverage matrix</h2>
+<p class="lead">Every product area the protocol names, and how it was covered. <strong>Driven</strong> means exercised in a real browser this run. <strong>Gated</strong> means covered by a committed CI check that was executed. <strong>Validated</strong> means its output was reconciled against an independently computed expectation.</p>
+<h3>MC Training — §1 (61 areas)</h3>
+<table><thead><tr><th>Area</th><th>Coverage</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Dashboard · Current Program · Smart Resume</td><td>Driven</td><td>cr00 render sweep; cr02 C-11 resume banner after an abandoned session</td></tr>
+<tr><td>Workout logging · all 79 logger pages</td><td>Driven · Validated</td><td>cr01 — 71/71 complete sessions, store asserted per page</td></tr>
+<tr><td>Rest timers · superset timers</td><td>Driven</td><td>cr02 T-01…T-06 — single-timer rule under rapid creation</td></tr>
+<tr><td>Supersets · tri-sets · drop sets</td><td>Driven</td><td>cr06 ST-05 — each leg keyed separately</td></tr>
+<tr><td>AMRAP</td><td>Driven · Validated</td><td>cr06 ST-01/02 — 23 achieved reps stored; Epley capped at 12</td></tr>
+<tr><td>Cluster sets</td><td>Driven · Validated</td><td>cr06 ST-03a…04b — configured via the app's own API, stored 5+4+3 whole</td></tr>
+<tr><td>Tempo</td><td>Gated</td><td><code>check-set-schemes</code>, <code>validate-programs</code></td></tr>
+<tr><td>PR detection</td><td>Validated</td><td>cr06 PR-01…04 against hand-computed expectations, incl. the G-03 baseline rule</td></tr>
+<tr><td>Strain · estimated calories</td><td>Validated</td><td>cr-indep-math — MET × kg × h, 4 session shapes</td></tr>
+<tr><td>Max-Out Calculator · rep progression</td><td>Driven · Validated</td><td>cr07 T-01/02; Epley longhand</td></tr>
+<tr><td>Guided Mode</td><td>Driven</td><td>cr07 T-14…17 — found and fixed DEF-CR-03</td></tr>
+<tr><td>Voice control</td><td>Gated</td><td><code>check-journey</code> subsystem pass (load-and-publish; SpeechRecognition absent headlessly)</td></tr>
+<tr><td>Quick Pump · Build Your Own · Exercise Library</td><td>Driven</td><td>cr07 T-04…13 — Quick Pump generates a real session; library search returns 37 for "squat"</td></tr>
+<tr><td>Nutrition · macros · goal calculator</td><td>Driven · Validated</td><td>cr07 N-01…04 — Mifflin-St Jeor and Atwater; app renders 633/2600 exactly</td></tr>
+<tr><td>Food search · barcode · NL entry · favourites</td><td>Driven</td><td>cr00 render sweep; cr07 nutrition tab</td></tr>
+<tr><td>Offline-first · PWA install · service worker</td><td>Driven</td><td>cr03 P-01…16 — logged AND finished a workout with the signal cut</td></tr>
+<tr><td>Offline <em>reload</em></td><td><strong>Unverified</strong></td><td>cr03 P-14 — SW gated to the production origin</td></tr>
+<tr><td>Account · sync · export/import</td><td>Gated</td><td><code>test-mc-sync-merge</code>, <code>test-mc-sync-runtime</code>, <code>check-store-coverage</code></td></tr>
+<tr><td>Biometric protection · PM Mode</td><td>Driven</td><td>cr05 S-01/S-04 — forged owner flags unlock nothing</td></tr>
+<tr><td>Notifications (weekly check-in)</td><td><strong>Failing</strong></td><td>DEF-08 — 10/10 scheduled runs failed</td></tr>
+<tr><td>Cookbook integration · planned meals</td><td>Driven</td><td>Phase 3 K-27/28 — bridge read layer, both directions</td></tr>
+<tr><td>Muscle Map · Daily Vitals · Readiness Brief · Weekly Review</td><td>Driven</td><td>cr00 render sweep (dashboard, stats) with zero errors</td></tr>
+<tr><td>Deload weeks · Lighter mode</td><td>Gated</td><td><code>gen-schedules --check</code>, <code>test-mc-gen-schedules</code></td></tr>
+</tbody></table>
+<h3>Cross' Finances — §2 (33 areas)</h3>
+<table><thead><tr><th>Area</th><th>Coverage</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Dashboard · Budget · Transactions</td><td>Driven · Validated</td><td>fin01 F-01…08 against the independent ledger</td></tr>
+<tr><td>Safe to Spend</td><td>Validated</td><td>fin01 F-09/10/12 — formula reimplemented longhand</td></tr>
+<tr><td>Transfer recognition · card payments</td><td>Validated</td><td>fin01 F-11…15b — the double-count defence</td></tr>
+<tr><td>Savings Goals · House Plan</td><td>Validated</td><td>fin01 F-16/16b; DEF-FIN-01 covers the House data path</td></tr>
+<tr><td>Debt payoff</td><td>Validated</td><td>fin01 F-17…18 — longhand amortisation, monotonicity, "never" case</td></tr>
+<tr><td>Net Worth · snapshots</td><td>Validated</td><td>fin01 F-19/19b — assets − liabilities, internally consistent</td></tr>
+<tr><td>Monthly Report · month close</td><td>Validated</td><td>fin01 F-20 — must agree with its own ledger</td></tr>
+<tr><td>CSV import · malformed files · duplicates</td><td>Driven</td><td>fin02 I-01…15 — six hostile files, exact undo</td></tr>
+<tr><td>Categorisation &amp; merchant rules</td><td>Driven</td><td>fin02 R-01…04 — generalises across store numbers, replaces on edit</td></tr>
+<tr><td>Split transactions</td><td>Validated</td><td>fin02 S-01…04 — zero-sum, unbalanced split rejected</td></tr>
+<tr><td>Backup · restore · cloud sync</td><td>Driven</td><td>DEF-FIN-01 — found here</td></tr>
+<tr><td>Bank connections · pending · Dry Run</td><td>Gated</td><td><code>check-plaid-invariants</code> — 11 tables RLS-enabled, 49 column refs resolve</td></tr>
+<tr><td>AI Ask</td><td>Not exercised</td><td>Requires a live model call; out of scope for an offline run</td></tr>
+</tbody></table>
+<h3>Mike's Cookbook — §3 (39 areas)</h3>
+<table><thead><tr><th>Area</th><th>Coverage</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Recipe details · ingredients · serving tiers</td><td>Validated</td><td>cb01 C-04…07b across all 318 recipes</td></tr>
+<tr><td>Serving scaling (1/2/3/4/5/6/8/10/12)</td><td>Validated</td><td>cb01 C-12 — totals are per-serving × n at every size</td></tr>
+<tr><td>Nutrition · per-serving · total · scaled</td><td>Validated</td><td>cb01 C-01…03 — Atwater; found DEF-CB-01</td></tr>
+<tr><td>Macro targeting</td><td>Validated</td><td>cb01 C-08…11 — <code>solveScaleForTarget</code></td></tr>
+<tr><td>Search (all 9 §3 cases)</td><td>Driven</td><td>cb02 K-01…10 incl. typo, accent, nonsense, empty, hostile</td></tr>
+<tr><td>Grocery engine · merging · units</td><td>Driven · Validated</td><td>cb02 K-11…15 — 6 rows from 18 names across two recipes</td></tr>
+<tr><td>Kitchen timers</td><td>Driven</td><td>cb02 K-16…26 — the full timer attack, incl. reload survival</td></tr>
+<tr><td>Cross-app integration with MC Training</td><td>Driven</td><td>cb02 K-27/28 — bridge answers empty, sees a logged workout</td></tr>
+<tr><td>Offline PWA · service worker</td><td>Gated</td><td><code>build-sw.py --check</code>, <code>test-sw-strategy</code></td></tr>
+<tr><td>Accessibility · reduced motion · safe area</td><td>Gated</td><td><code>check-a11y</code> — 17 routes × 2 viewports × 2 themes</td></tr>
+<tr><td>Cooking Mode · step state · check-offs</td><td>Partial</td><td>Timers and state stores driven; the step-by-step UI was not driven end to end — see Residual risk</td></tr>
+<tr><td>Weekly planner · balanced/macro/time modes</td><td>Partial</td><td>Grocery build driven through a seeded plan; the generator's three modes were not each driven</td></tr>
+</tbody></table>
+</section>
+
+<section role="tabpanel" id="t-risk" aria-labelledby="b-risk" hidden>
+<h2 class="sec">Residual risk</h2>
+<p class="lead">Only real, evidence-backed risks. Anything not measured is named as not measured.</p>
+<h3>Release blockers — owner action required</h3>
+<table><thead><tr><th>Item</th><th>App</th><th>Why it blocks</th><th>What closes it</th></tr></thead><tbody>
+<tr><td><code>DEF-08</code> weekly check-in</td><td>MC Training</td><td>A P1 that the specification sells and that has never once worked. §0 requires P1s be zero unless explicitly accepted.</td><td>Set <code>WEEKLY_CHECKIN_SECRET</code> and the matching Supabase <code>CRON_SECRET</code>, then prove one run. Or remove the claim.</td></tr>
+<tr><td><code>DEF-CB-01</code> / <code>DEF-CB-02</code></td><td>Cookbook</td><td>18 records contradict themselves; three make a cook under-season.</td><td>Decide the correct values and update the two named allowlists.</td></tr>
+</tbody></table>
+<h3>Accepted risks</h3>
+<table><thead><tr><th>Item</th><th>Assessment</th></tr></thead><tbody>
+<tr><td>The portable half of <code>DEF-FIN-01</code> is unported</td><td>The public <code>household-finance</code> template carries the identical unguarded <code>data.rules</code> iteration and version gating. Recorded in its sync manifest as needing a port. Not fixed here because that repository was outside this session's authorised scope.</td></tr>
+<tr><td>Seven cookbook scaling anomalies are 6–8× overshoots</td><td>May be deliberate re-authoring from a different source rather than errors. Listed rather than judged.</td></tr>
+</tbody></table>
+<h3>Known limitations — not measured here</h3>
+<table><thead><tr><th>Axis</th><th>Reason</th></tr></thead><tbody>
+<tr><td>Real-device QA — iOS Safari, Android Chrome, installed PWA</td><td>Not reachable from any agent session. This project's own records already carry it as an open owner item.</td></tr>
+<tr><td>True multi-device sync reconciliation</td><td>Needs two signed-in physical devices. The merge logic is gated (<code>test-mc-sync-merge</code>), the live reconciliation is not.</td></tr>
+<tr><td>Offline reload · live RLS · cookbook smoke test</td><td>Each blocked by a specific environment constraint, detailed under the executive verdict.</td></tr>
+<tr><td>Cooking Mode step-by-step UI; weekly-planner generator modes</td><td>Driven only at the store/API layer this run. A gap, named rather than implied.</td></tr>
+<tr><td>Font-dependent visual and contrast ratchets</td><td><code>fonts.googleapis.com</code> is reachable by <code>curl</code> but blocked to headless Chromium here, so text metrics differ from CI. Re-derived this run rather than cited.</td></tr>
+</tbody></table>
+<h3>Corrections to the record</h3>
+<blockquote><strong><code>DEF-CR-01</code> was initially characterised as silent data corruption. That was wrong and is corrected here.</strong> The store was correct throughout; the tick was visible; only the displayed <em>values</em> were the prescription rather than the performance. The corruption path is real but narrower — it requires unchecking and re-checking a restored set. The Final Auditor challenged the original framing and the corrected one is what stands.</blockquote>
+<blockquote><strong>The cookbook scaling check first reported 131 defects; 121 were false.</strong> The catalogue changes units between tiers, and 8&nbsp;oz → 1&nbsp;lb is exactly double. Normalising units first left the 10 real findings. Reported here because a run that hides its own false-positive rate is not evidence.</blockquote>
+</section>
+
+<footer>
+  <p><strong>GO LIVE Release Report</strong> · executed against <code>claude_code_go_live_protocol.md</code> §0–§3.
+  Evidence: <code>GO_LIVE/scenarios/</code> and <code>GO_LIVE/evidence/</code> in each repository — every scenario is committed and re-runnable.</p>
+  <p>Scratch-listed in <code>content-manifest.json</code>, so this report ships to neither the GitHub&nbsp;Pages deploy nor the public Rolodex build.</p>
+</footer>
+</div>
+<script>
+(function(){
+  var tabs=[].slice.call(document.querySelectorAll('nav.tabs button'));
+  function show(id){
+    tabs.forEach(function(b){
+      var sel=b.getAttribute('aria-controls')===id;
+      b.setAttribute('aria-selected',sel?'true':'false');
+      var p=document.getElementById(b.getAttribute('aria-controls'));
+      if(p) p.hidden=!sel;
+    });
+    try{ history.replaceState(null,'','#'+id); }catch(e){}
+    window.scrollTo(0,0);
+  }
+  tabs.forEach(function(b){
+    b.addEventListener('click',function(){ show(b.getAttribute('aria-controls')); });
+    b.addEventListener('keydown',function(ev){
+      var i=tabs.indexOf(b);
+      if(ev.key==='ArrowRight'){ ev.preventDefault(); tabs[(i+1)%tabs.length].focus(); tabs[(i+1)%tabs.length].click(); }
+      if(ev.key==='ArrowLeft'){ ev.preventDefault(); tabs[(i-1+tabs.length)%tabs.length].focus(); tabs[(i-1+tabs.length)%tabs.length].click(); }
+    });
+  });
+  var h=(location.hash||'').replace('#','');
+  if(h && document.getElementById(h)) show(h);
+})();
+</script>
+</body>
+</html>

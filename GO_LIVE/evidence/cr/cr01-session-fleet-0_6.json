@@ -1,0 +1,314 @@
+[
+ {
+  "page": "2on-1off.html",
+  "step": "finish",
+  "dayRows": 6,
+  "cards": 8,
+  "loggerOpen": "already-open",
+  "plannedRows": 5,
+  "checkedOk": 3,
+  "blocked": [],
+  "keys": [
+   "mclr-x-box-jumps"
+  ],
+  "setsBefore": 3,
+  "sessionBefore": true,
+  "setsAfter": 3,
+  "exKeys": [
+   "2on-1off|x-box-jumps"
+  ],
+  "dayKeys": [
+   "2026-09-17"
+  ],
+  "dayKeysDated": true,
+  "checkedInDom": 0,
+  "finishVia": "api",
+  "banked": 1,
+  "bankedSets": [
+   {
+    "name": "x-box-jumps",
+    "setNum": 1,
+    "weight": "100",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-box-jumps",
+    "setNum": 2,
+    "weight": "105",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-box-jumps",
+    "setNum": 3,
+    "weight": "110",
+    "reps": "8",
+    "pr": false
+   }
+  ],
+  "thrown": [],
+  "consoleErr": [],
+  "verdict": "FAIL"
+ },
+ {
+  "page": "3on-1off-high-freq.html",
+  "step": "finish",
+  "dayRows": 4,
+  "cards": 7,
+  "loggerOpen": "already-open",
+  "plannedRows": 3,
+  "checkedOk": 3,
+  "blocked": [],
+  "keys": [
+   "mclr-x-bodyweight-pull-ups-to-f"
+  ],
+  "setsBefore": 3,
+  "sessionBefore": true,
+  "setsAfter": 3,
+  "exKeys": [
+   "3on-1off-high-freq|x-bodyweight-pull-ups-to-f"
+  ],
+  "dayKeys": [
+   "2026-09-17"
+  ],
+  "dayKeysDated": true,
+  "checkedInDom": 0,
+  "finishVia": "api",
+  "banked": 1,
+  "bankedSets": [
+   {
+    "name": "x-bodyweight-pull-ups-to-f",
+    "setNum": 1,
+    "weight": "100",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-bodyweight-pull-ups-to-f",
+    "setNum": 2,
+    "weight": "105",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-bodyweight-pull-ups-to-f",
+    "setNum": 3,
+    "weight": "110",
+    "reps": "8",
+    "pr": false
+   }
+  ],
+  "thrown": [],
+  "consoleErr": [],
+  "verdict": "FAIL"
+ },
+ {
+  "page": "5on-2off.html",
+  "step": "finish",
+  "dayRows": 5,
+  "cards": 9,
+  "loggerOpen": "already-open",
+  "plannedRows": 3,
+  "checkedOk": 3,
+  "blocked": [],
+  "keys": [
+   "mclr-x-hiit-cardio"
+  ],
+  "setsBefore": 3,
+  "sessionBefore": true,
+  "setsAfter": 3,
+  "exKeys": [
+   "5on-2off|x-hiit-cardio"
+  ],
+  "dayKeys": [
+   "2026-09-17"
+  ],
+  "dayKeysDated": true,
+  "checkedInDom": 0,
+  "finishVia": "api",
+  "banked": 1,
+  "bankedSets": [
+   {
+    "name": "x-hiit-cardio",
+    "setNum": 1,
+    "weight": "100",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-hiit-cardio",
+    "setNum": 2,
+    "weight": "105",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-hiit-cardio",
+    "setNum": 3,
+    "weight": "110",
+    "reps": "8",
+    "pr": false
+   }
+  ],
+  "thrown": [],
+  "consoleErr": [],
+  "verdict": "FAIL"
+ },
+ {
+  "page": "arnold-legacy.html",
+  "step": "finish",
+  "dayRows": 0,
+  "cards": 181,
+  "loggerOpen": "already-open",
+  "plannedRows": 252,
+  "checkedOk": 3,
+  "blocked": [],
+  "keys": [
+   "mclr-x-seated-close-grip-cable-"
+  ],
+  "setsBefore": 3,
+  "sessionBefore": true,
+  "setsAfter": 3,
+  "exKeys": [
+   "arnold-legacy|x-seated-close-grip-cable-"
+  ],
+  "dayKeys": [
+   "2026-09-17"
+  ],
+  "dayKeysDated": true,
+  "checkedInDom": 0,
+  "finishVia": "api",
+  "banked": 1,
+  "bankedSets": [
+   {
+    "name": "x-seated-close-grip-cable-",
+    "setNum": 1,
+    "weight": "100",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-seated-close-grip-cable-",
+    "setNum": 2,
+    "weight": "105",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-seated-close-grip-cable-",
+    "setNum": 3,
+    "weight": "110",
+    "reps": "8",
+    "pr": false
+   }
+  ],
+  "thrown": [],
+  "consoleErr": [],
+  "verdict": "FAIL"
+ },
+ {
+  "page": "back-traps-pump.html",
+  "step": "finish",
+  "dayRows": 0,
+  "cards": 8,
+  "loggerOpen": "already-open",
+  "plannedRows": 6,
+  "checkedOk": 3,
+  "blocked": [],
+  "keys": [
+   "mclr-x-lat-pull-down-_wide-grip"
+  ],
+  "setsBefore": 3,
+  "sessionBefore": true,
+  "setsAfter": 3,
+  "exKeys": [
+   "back-traps-pump|x-lat-pull-down-(wide-grip"
+  ],
+  "dayKeys": [
+   "2026-09-17"
+  ],
+  "dayKeysDated": true,
+  "checkedInDom": 0,
+  "finishVia": "api",
+  "banked": 1,
+  "bankedSets": [
+   {
+    "name": "x-lat-pull-down-(wide-grip",
+    "setNum": 1,
+    "weight": "100",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-lat-pull-down-(wide-grip",
+    "setNum": 2,
+    "weight": "105",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-lat-pull-down-(wide-grip",
+    "setNum": 3,
+    "weight": "110",
+    "reps": "8",
+    "pr": false
+   }
+  ],
+  "thrown": [],
+  "consoleErr": [],
+  "verdict": "FAIL"
+ },
+ {
+  "page": "bis-tris-pump.html",
+  "step": "finish",
+  "dayRows": 0,
+  "cards": 9,
+  "loggerOpen": "already-open",
+  "plannedRows": 5,
+  "checkedOk": 3,
+  "blocked": [],
+  "keys": [
+   "mclr-x-barbell-curl-_shoulder-w"
+  ],
+  "setsBefore": 3,
+  "sessionBefore": true,
+  "setsAfter": 3,
+  "exKeys": [
+   "bis-tris-pump|x-barbell-curl-(shoulder-w"
+  ],
+  "dayKeys": [
+   "2026-09-17"
+  ],
+  "dayKeysDated": true,
+  "checkedInDom": 0,
+  "finishVia": "api",
+  "banked": 1,
+  "bankedSets": [
+   {
+    "name": "x-barbell-curl-(shoulder-w",
+    "setNum": 1,
+    "weight": "100",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-barbell-curl-(shoulder-w",
+    "setNum": 2,
+    "weight": "105",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-barbell-curl-(shoulder-w",
+    "setNum": 3,
+    "weight": "110",
+    "reps": "8",
+    "pr": false
+   }
+  ],
+  "thrown": [],
+  "consoleErr": [],
+  "verdict": "FAIL"
+ }
+]

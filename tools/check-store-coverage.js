@@ -54,7 +54,13 @@ const prefixList = Object.keys(prefixes);
 
 const sourceFiles = execSync('git ls-files "*.js" "*.html"', { cwd: ROOT, encoding: 'utf8' })
   .split('\n').filter(Boolean)
-  .filter(f => !f.startsWith('tools/'));       // tools describe stores, don't own them
+  // tools/ describe stores, they don't own them. GO_LIVE/ is scratch-listed
+  // release-assessment evidence that reaches neither build, and its security
+  // scenario deliberately FORGES keys the app does not own (mc_is_owner,
+  // mc_role, mc_pm_unlocked) to prove that a client-side flag cannot unlock the
+  // owner surface. Declaring those in store-registry.json would be a lie: they
+  // are the attack, not a store.
+  .filter(f => !f.startsWith('tools/') && !f.startsWith('GO_LIVE/'));
 
 // ---- 1 + 4: code usage vs registry ---------------------------------------
 const usedKeys = new Map();                     // key -> first file seen in

@@ -1,3 +1,81 @@
+# GO LIVE multi-app run — 2026-09-17
+
+**Interactive report: [`go_live_report.html`](go_live_report.html)** — start there. This file is the
+markdown record the protocol requires; the HTML report carries the same evidence with the
+33 individual agent reports (11 agents x 3 phases) expandable.
+
+**Protocol:** `claude_code_go_live_protocol.md` §0 + §1 + §2 + §3, executed phase by phase.
+**Scope:** MC Training (this repo), Cross' Finances (`Cross-Household-`), Mike's Cookbook (`Mikes-Cookbook`).
+
+## Executive verdict
+
+```text
+CONDITIONAL GO — 2 of 3 applications clear; 3 named conditions
+```
+
+| Application | Verdict | P0 | P1 | Condition |
+|---|---|---|---|---|
+| MC Training | CONDITIONAL GO | 0 | 3 found, 2 fixed | `DEF-08` — the weekly check-in has never worked. Not code. |
+| Cross' Finances | **GO** | 0 | 1 found, fixed | None. The portable half should be ported to `household-finance`. |
+| Mike's Cookbook | CONDITIONAL GO | 0 | 0 | 18 recipe records contradict themselves. Data, not code. |
+
+**4,185 assertions and measurements executed.** As-found DPMO 1,672.6 (~4.4 sigma);
+as-shipped 716.8, and every remaining defect is one an agent may not close.
+
+## Phase 1 — MC Training (clean-room re-execution)
+
+- 142/142 pages render with zero thrown exceptions, console errors, duplicate ids or overflow at 390px.
+- **71/71 complete workout sessions driven** — log, persist, reload, survive, finish, bank — 0 failures.
+  The other 8 logger-bearing pages render no session by design.
+- 46/46 independent formula assertions (Epley, MET x kg x h, Mifflin-St Jeor, Atwater), each written
+  longhand from the published formula rather than imported from the app.
+- 109 scenario assertions across chaos, PWA/mobile, accessibility, security, set types/PR,
+  tools/nutrition and performance.
+- 51 committed non-browser gates plus 6 browser gates re-run green after every fix.
+- **Defects:** `DEF-CR-01` (P1, fixed), `DEF-CR-02` (P1, fixed), `DEF-CR-03` (P3, fixed),
+  `DEF-08` (P1, OPEN — owner action).
+
+## Phase 2 — Cross' Finances
+
+All scenarios use synthetic data only. This repository's `seed()` and reference workbook hold real
+figures for two named people; the store is replaced with an invented month before anything is
+measured, and the first assertion checks the replacement actually happened.
+
+- 67/67 scenario assertions; 333/333 money-math tests (the repo's own CI suite).
+- **Zero reconciliation discrepancies** across Transactions -> Accounts -> Budget -> Safe to Spend ->
+  Savings Goals -> Debt -> Net Worth -> Monthly Report, against an independently built ledger.
+- Transfers and card payments move neither spend nor Safe to Spend, and never enter
+  `data.transactions` — the structural double-count defence holds.
+- Debt payoff matches a longhand amortisation exactly, monotonic in both rate and payment.
+- **Defect:** `DEF-FIN-01` (P1, fixed).
+
+## Phase 3 — Mike's Cookbook
+
+- All 318 recipes swept, not sampled. 33/33 kitchen campaign assertions; 25 CI gates plus `check-a11y`.
+- Search, grocery merging, the timer attack and the cross-app bridge all pass.
+- **Defects:** `DEF-CB-01` (8 nutrition records) and `DEF-CB-02` (10 scaling records), both
+  REPORTED not fixed — the correct values are an authoring decision. Both are now gated with named
+  allowlists so no unnamed instance can appear.
+
+## Unverified axes — named, not skipped
+
+| Axis | Why |
+|---|---|
+| Offline *reload* (MC Training) | `sw.js`'s fetch handler is gated to the production origin. |
+| Live cross-user RLS | Needs a direct Postgres URL this session does not hold. |
+| `smoke-test.js` (Cookbook) | Waits for `networkidle`, which never settles behind this sandbox's egress proxy. |
+| Real-device QA; multi-device sync | Not reachable from any agent session. |
+
+## Final Auditor
+
+The certification is confirmed, with one correction to the Release Director's original framing:
+`DEF-CR-01` was first characterised as silent data corruption. It is not — the store was correct
+throughout, and the corruption path requires a post-reload edit. The corrected characterisation is
+what stands, and it is recorded in `bugs.md` and in the HTML report rather than quietly amended.
+
+
+---
+
 # GO LIVE — release report: MC Training
 
 **Assessment date:** 2026-09-15 · **Baseline:** `main` @ `905286f` (CI green, `pages.yml` #357)

@@ -1,0 +1,214 @@
+[
+ {
+  "page": "mc-s3-chest.html",
+  "step": "finish",
+  "dayRows": 0,
+  "dayVia": "already-open",
+  "cards": 6,
+  "loggerOpen": "already-open",
+  "plannedRows": 5,
+  "checkedOk": 3,
+  "blocked": [],
+  "keys": [
+   "mclr-x-barbell-bench-or-db-benc"
+  ],
+  "setsBefore": 3,
+  "sessionBefore": true,
+  "setsAfter": 3,
+  "exKeys": [
+   "mc-s3-chest|x-barbell-bench-or-db-benc"
+  ],
+  "dayKeys": [
+   "2026-09-17"
+  ],
+  "dayKeysDated": true,
+  "checkedInDom": 3,
+  "finishVia": "api",
+  "banked": 1,
+  "bankedSets": [
+   {
+    "name": "x-barbell-bench-or-db-benc",
+    "setNum": 1,
+    "weight": "100",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-barbell-bench-or-db-benc",
+    "setNum": 2,
+    "weight": "105",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-barbell-bench-or-db-benc",
+    "setNum": 3,
+    "weight": "110",
+    "reps": "8",
+    "pr": false
+   }
+  ],
+  "thrown": [],
+  "consoleErr": [],
+  "verdict": "PASS"
+ },
+ {
+  "page": "mc-s3-legs-back.html",
+  "step": "finish",
+  "dayRows": 0,
+  "dayVia": "already-open",
+  "cards": 7,
+  "loggerOpen": "already-open",
+  "plannedRows": 9,
+  "checkedOk": 3,
+  "blocked": [],
+  "keys": [
+   "mclr-x-barbell-good-mornings"
+  ],
+  "setsBefore": 3,
+  "sessionBefore": true,
+  "setsAfter": 3,
+  "exKeys": [
+   "mc-s3-legs-back|x-barbell-good-mornings"
+  ],
+  "dayKeys": [
+   "2026-09-17"
+  ],
+  "dayKeysDated": true,
+  "checkedInDom": 3,
+  "finishVia": "api",
+  "banked": 1,
+  "bankedSets": [
+   {
+    "name": "x-barbell-good-mornings",
+    "setNum": 1,
+    "weight": "100",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-barbell-good-mornings",
+    "setNum": 2,
+    "weight": "105",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-barbell-good-mornings",
+    "setNum": 3,
+    "weight": "110",
+    "reps": "8",
+    "pr": false
+   }
+  ],
+  "thrown": [],
+  "consoleErr": [],
+  "verdict": "PASS"
+ },
+ {
+  "page": "mc-s3-legs.html",
+  "step": "finish",
+  "dayRows": 0,
+  "dayVia": "already-open",
+  "cards": 5,
+  "loggerOpen": "already-open",
+  "plannedRows": 5,
+  "checkedOk": 3,
+  "blocked": [],
+  "keys": [
+   "mclr-x-barbell-squats-_shoulder"
+  ],
+  "setsBefore": 3,
+  "sessionBefore": true,
+  "setsAfter": 3,
+  "exKeys": [
+   "mc-s3-legs|x-barbell-squats-(shoulder"
+  ],
+  "dayKeys": [
+   "2026-09-17"
+  ],
+  "dayKeysDated": true,
+  "checkedInDom": 3,
+  "finishVia": "api",
+  "banked": 1,
+  "bankedSets": [
+   {
+    "name": "x-barbell-squats-(shoulder",
+    "setNum": 1,
+    "weight": "100",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-barbell-squats-(shoulder",
+    "setNum": 2,
+    "weight": "105",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-barbell-squats-(shoulder",
+    "setNum": 3,
+    "weight": "110",
+    "reps": "8",
+    "pr": false
+   }
+  ],
+  "thrown": [],
+  "consoleErr": [],
+  "verdict": "PASS"
+ },
+ {
+  "page": "mc-s3-shoulders-tris.html",
+  "step": "finish",
+  "dayRows": 0,
+  "dayVia": "already-open",
+  "cards": 8,
+  "loggerOpen": "already-open",
+  "plannedRows": 9,
+  "checkedOk": 3,
+  "blocked": [],
+  "keys": [
+   "mclr-x-seated-side-lateral-rais"
+  ],
+  "setsBefore": 3,
+  "sessionBefore": true,
+  "setsAfter": 3,
+  "exKeys": [
+   "mc-s3-shoulders-tris|x-seated-side-lateral-rais"
+  ],
+  "dayKeys": [
+   "2026-09-17"
+  ],
+  "dayKeysDated": true,
+  "checkedInDom": 3,
+  "finishVia": "api",
+  "banked": 1,
+  "bankedSets": [
+   {
+    "name": "x-seated-side-lateral-rais",
+    "setNum": 1,
+    "weight": "100",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-seated-side-lateral-rais",
+    "setNum": 2,
+    "weight": "105",
+    "reps": "8",
+    "pr": false
+   },
+   {
+    "name": "x-seated-side-lateral-rais",
+    "setNum": 3,
+    "weight": "110",
+    "reps": "8",
+    "pr": false
+   }
+  ],
+  "thrown": [],
+  "consoleErr": [],
+  "verdict": "PASS"
+ }
+]

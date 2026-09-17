@@ -1,0 +1,159 @@
+{
+ "defects": [
+  {
+   "id": "DEF-CR-01",
+   "phase": "MC Training",
+   "sev": "P1",
+   "feature": "Workout logger \u2014 session restore",
+   "scenario": "Log 3 sets at 205 lb x 9 reps, reload mid-session, reopen the day.",
+   "expected": "The completed sets read back as what was performed: 205 x 9.",
+   "observed": "They read 205 x 5 \u2014 the programme's prescribed reps, styled .mcl-ghost. Reproduced on all four rendering-engine families.",
+   "root": "Two restore paths had drifted. mc-setlog.js paintRestored() (cloud rehydrate) repainted values, cleared the ghost and set aria-checked. mc-session.js restoreSets() (the LOCAL reload path every refresh takes) set the tick class and nothing else, so the row kept build()'s prescription.",
+   "impact": "mc_setlog_v1 was always correct; only the screen lied. But the ghost is a live input, so unchecking and re-checking that row committed the prescription \u2014 9 became 5 for real, and flowed into tonnage, session kcal, PR detection and banked history.",
+   "fix": "MCSetlogUtil.paintLoggedRow() is now the one repaint of an already-logged row, reading values from today's mc_setlog_v1 entry rather than from the DOM. Both restore paths call it. It also sets aria-checked, which restoreSets() never did.",
+   "test": "tools/test-mc-restore-fidelity.js \u2014 100 assertions across 5 engine families, wired into verify.yml. Proven to fail on the pre-fix tree (44 failures).",
+   "status": "FIXED"
+  },
+  {
+   "id": "DEF-CR-02",
+   "phase": "MC Training",
+   "sev": "P1",
+   "feature": "Smart Resume / session state",
+   "scenario": "Log 3 sets on the largest multi-day page (26 days, 199 cards, 112 rows), reload.",
+   "expected": "The session record survives and the ticks come back.",
+   "observed": "mc_session_v1 is {} within a second and never returns \u2014 still {} and zero ticks twelve seconds later.",
+   "root": "This engine REBUILDS its day cards after the first paint. restoreSets() had already latched as done, so the ticked rows went with the old DOM; save(), firing on the rebuild's own mutations, read the fresh tick-free DOM as 'nothing in progress' and DELETED the record.",
+   "impact": "mc_setlog_v1 keeps the sets, so no history is lost \u2014 but the page reads as untouched and the athlete cannot see what they have already done. The tick marks and open-card position are gone for good.",
+   "fix": "Restore re-applies on every MC_SCAN (the shared 'cards just rendered' signal), re-entrant via a generation counter; and save()'s destructive branch is disabled while a restore is outstanding, staying disabled if restore exhausted its retries.",
+   "test": "Same gate, extended to the re-render engine \u2014 the only shape that exposes it. Proven to fail pre-fix with the diagnostic it is meant to give.",
+   "status": "FIXED"
+  },
+  {
+   "id": "DEF-CR-03",
+   "phase": "MC Training",
+   "sev": "P3",
+   "feature": "Guided Mode",
+   "scenario": "Open a workout day on a fresh device and tap '\ud83c\udfaf Start Guided Mode'.",
+   "expected": "Guided Mode starts.",
+   "observed": "The tap lands on the first-run coaching hint instead. elementFromPoint at the button's centre returned .mc-hint-txt; Playwright's click times out, while a programmatic click starts guided mode correctly.",
+   "root": "MC_HINTS draws its one-time callout beside the control that triggered it, and on a workout page that places it over the Guided Mode entry. Nothing broke loudly \u2014 the hint's own outside-click handler simply dismissed it.",
+   "impact": "A first-time athlete taps the control, the tip disappears, and nothing else happens. Tapping again works; the hint is once-per-device and auto-dismisses after 6s, so the window is narrow.",
+   "fix": ".mc-hint is pointer-events:none with the \u2715 opting back in. The same tap now reaches the control underneath AND still dismisses the hint.",
+   "test": "Verified three ways: the entry is reachable with the hint showing, a real tap starts guided mode, and the \u2715 still dismisses.",
+   "status": "FIXED"
+  },
+  {
+   "id": "DEF-FIN-01",
+   "phase": "Cross' Finances",
+   "sev": "P1",
+   "feature": "Restore from backup / cloud / sync",
+   "scenario": "Restore a backup stamped version 3 that passes the app's own restore validation (transactions, budget and goals all arrays).",
+   "expected": "The backup restores and the app renders.",
+   "observed": "App.render() throws \u2014 \"Cannot read properties of undefined (reading 'targetDate')\" and \"(reading '2026-09')\". If the payload also lacks `rules`, replace() itself throws and the restore fails outright.",
+   "root": "migrate()'s container backfills are version-GATED, so a payload that merely CLAIMS a version skips them. And the v<12 step iterates data.rules with no || [] guard \u2014 the only iteration in the function without one. migrate()'s own header describes exactly this failure mode and defends against it for six keys; the plan objects and month-keyed containers never got that treatment.",
+   "impact": "Reaches the household through every restore path \u2014 Store.replace() is what 'Restore backup', 'Restore cloud backup' and an incoming sync row all call. A broken app during the one operation reached for when something has already gone wrong.",
+   "fix": "An unconditional structural belt placed BEFORE the version steps. Idempotent and purely structural; defaults are deliberately EMPTY rather than seed()'s, so a restore never invents a house plan or a salary the household did not enter.",
+   "test": "8 assertions in tests.html (run in CI by scripts/run-tests.mjs), proven to fail pre-fix \u2014 3 failed / 330 passed \u2014 and 333/333 after.",
+   "status": "FIXED"
+  },
+  {
+   "id": "DEF-CB-01",
+   "phase": "Mike's Cookbook",
+   "sev": "P3",
+   "feature": "Recipe nutrition data",
+   "scenario": "Reconcile every one of 318 recipes' stated calories against its own macros under Atwater (4/4/9).",
+   "expected": "Stated calories agree with the recipe's own protein/fat/carbs, within whole-gram rounding.",
+   "observed": "8 macro profiles are 15\u201324% apart, every one overstating, every one in a 3/5/6-serving tier.",
+   "root": "Authoring, not code \u2014 the calorie figure and the macro figures come from different sources for these records.",
+   "impact": "A macro-conscious cook logging one of these gets a day total that does not reconcile with itself.",
+   "fix": "NOT FIXED, deliberately: which number is right is an authoring decision a checker may not infer, and \u00a70.10 requires recording an ambiguous specification rather than changing behaviour arbitrarily.",
+   "test": "tools/validate-recipes.js now checks it with a named allowlist of the 8, so no NEW one can appear and a fixed one must be removed from the list. Proven both ways.",
+   "status": "REPORTED \u2014 owner decision"
+  },
+  {
+   "id": "DEF-CB-02",
+   "phase": "Mike's Cookbook",
+   "sev": "P3",
+   "feature": "Recipe scaling data",
+   "scenario": "Compare ingredient quantities between the smallest and largest authored tier, units normalised.",
+   "expected": "Scaling up never uses less of an ingredient.",
+   "observed": "10 anomalies. Three REDUCE: shepherd's pie asks 3 garlic cloves at 2 servings and 2 at 4; garlic shrimp fried rice 1\u00bd tbsp soy sauce \u2192 1 tbsp; blackened chicken tenders \u2159 tsp garlic powder \u2192 \u215b tsp. Seven jump 6\u20138\u00d7 at a 2\u00d7 scale.",
+   "root": "Authoring. Unit changes account for most apparent cases (8 oz \u2192 1 lb IS double) \u2014 normalising units first removed 121 of 131 first-pass findings.",
+   "impact": "A cook following the larger version under-seasons.",
+   "fix": "NOT FIXED, deliberately \u2014 same reasoning as DEF-CB-01.",
+   "test": "Same validator, second named allowlist. A planted shrinking ingredient is caught; a stale entry fails with 'remove it from the list'.",
+   "status": "REPORTED \u2014 owner decision"
+  },
+  {
+   "id": "DEF-08",
+   "phase": "MC Training",
+   "sev": "P1",
+   "feature": "Weekly check-in push notification",
+   "scenario": "Independently re-check every scheduled run of .github/workflows/weekly-checkin.yml.",
+   "expected": "A weekly recap reaches trainees, as \u00a77 of the Executive Summary promises.",
+   "observed": "10 of 10 scheduled runs FAILED, 2026-07-12 through 2026-09-13. It has never once succeeded.",
+   "root": "The workflow guards on secrets.WEEKLY_CHECKIN_SECRET and exits 1 with a named error when it is unset. Every run died in 5\u20138 seconds, consistent with the guard rather than the curl.",
+   "impact": "A feature the product's own specification sells has never worked.",
+   "fix": "NOT CODE. Needs the repository secret set, plus the matching CRON_SECRET on the Supabase project. Neither can be done from this session, and neither should be.",
+   "test": "Re-verified independently this run via the Actions API \u2014 carried forward from the 2026-09-15 assessment, still open.",
+   "status": "OPEN \u2014 owner action"
+  }
+ ],
+ "agents": [
+  [
+   "Release Director",
+   "\ud83c\udfaf",
+   "Sets release gates, orchestrates the phase workflow, owns the GO/NO-GO."
+  ],
+  [
+   "QA Architect",
+   "\ud83d\udcd0",
+   "Maps the feature-coverage matrix and designs execution paths."
+  ],
+  [
+   "Beta User / Persona",
+   "\ud83d\udc64",
+   "Realistic journeys, happy paths and bad input; UI friction (Muda)."
+  ],
+  [
+   "Chaos Engineer",
+   "\u26a1",
+   "Attacks live state transitions: duplication, reloads, offline, interruption."
+  ],
+  [
+   "Data Integrity Engineer",
+   "\ud83d\udee1\ufe0f",
+   "Persistence, storage mutations, independent calculation accuracy."
+  ],
+  [
+   "PWA & Mobile Engineer",
+   "\ud83d\udcf1",
+   "Offline-first, service worker, viewport, safe area, touch, standalone."
+  ],
+  [
+   "Accessibility Engineer",
+   "\u267f",
+   "Focus, keyboard, dynamic updates, semantics, contrast, reduced motion."
+  ],
+  [
+   "Security & Data Isolation",
+   "\ud83d\udd12",
+   "Auth guards, client-side trust, RLS, sensitive data handling."
+  ],
+  [
+   "Performance Engineer",
+   "\ud83d\ude80",
+   "Render cost, long sessions, heavy datasets, memory."
+  ],
+  [
+   "Regression Engineer",
+   "\ud83d\udd04",
+   "Re-runs previously passed critical paths after every fix."
+  ],
+  [
+   "Final Auditor",
+   "\u2696\ufe0f",
+   "Independently scrutinises the evidence and challenges the certification."
+  ]
+ ]
+}
