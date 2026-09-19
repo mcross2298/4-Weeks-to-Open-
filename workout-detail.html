@@ -103,7 +103,10 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 const WL_KEY = 'mc_workout_log_v1';
 
 function getLogs(){
-  try{ return JSON.parse(localStorage.getItem(WL_KEY)||'[]'); }catch(e){ return []; }
+  // L-03: valid JSON of the wrong shape threw and blanked this page.
+  var v; try{ v = JSON.parse(localStorage.getItem(WL_KEY)||'[]'); }catch(e){ return []; }
+  if(!Array.isArray(v)) return [];
+  return v.filter(function(e){ return e && typeof e === 'object'; });
 }
 
 // Same resolution as workout-logs.html (kept in sync deliberately — see that

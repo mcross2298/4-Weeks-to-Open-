@@ -282,6 +282,7 @@
     };
     try{
       var logs=JSON.parse(localStorage.getItem(WL_KEY)||'[]');
+      if(!Array.isArray(logs)) logs=[];   // L-03: else unshift() throws into the silent catch and the session is never saved
       logs.unshift(entry);
       logs=logs.slice(0,200);// keep last 200 workouts (surfaced — Phase 5.2)
       // Phase 5.3: banking a finished workout is the single write in this app

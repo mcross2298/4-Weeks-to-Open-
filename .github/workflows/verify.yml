@@ -386,6 +386,23 @@ jobs:
         # catches nothing because the guard is doing its job.
         run: node tools/check-dangling-refs.js
 
+      - name: Log-reader shape check (every parse of mc_workout_log_v1 guards its shape — L-03)
+        # `JSON.parse(...) || []` catches malformed TEXT and not a wrong SHAPE,
+        # so valid JSON of the wrong type walks straight through: an object
+        # where an array belongs throws "forEach is not a function" and a null
+        # member throws "Cannot read properties of null". A wrong shape is
+        # reachable — mc-sync.js pulls this store from the cloud, so one bad
+        # write on any device reaches every other one.
+        # The read paths blank the stats and history screens. The WRITE paths
+        # are worse and are why this gate exists at all: mc-finish.js and four
+        # workout pages call .unshift()/.push() on the parsed value, so a
+        # wrong-shaped store throws mid-save and the workout the athlete just
+        # finished is silently discarded.
+        # One shared reader is not the fix here — see the tool's own header for
+        # why (no module is loaded on all the consumer pages), so the
+        # duplication stays and this gate holds it safe.
+        run: node tools/check-log-readers.js
+
       - name: Store coverage check (store-registry.json vs mc-sync.js / mc-export.js — audit G-01/G-02)
         # Sync coverage, export coverage and the code's actual key usage were
         # three hand-maintained lists with nothing comparing them. They had

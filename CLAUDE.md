@@ -130,6 +130,7 @@ node tools/check-program-data.js       # note-field + day-type vocabulary, fleet
 node tools/check-one-timer.js          # no orphan/duplicate/missing rest-timer implementation
 node tools/check-single-impl.js        # declared shared functions exist exactly once tree-wide
 node tools/check-dangling-refs.js      # no element id or global is read but provided nowhere (post-audit CI addendum)
+node tools/check-log-readers.js        # every parse of mc_workout_log_v1 guards its shape (L-03)
 node tools/check-store-coverage.js     # store-registry.json vs mc-sync.js STORES / mc-export.js KEYS
 node tools/check-topbar-inset.js       # sticky .topbar pins at top:0, absorbs the inset as padding, opaque
 node tools/check-design-tokens.js      # font-weight on-scale; radius/size/hex ratchets; no cool dark neutral; no glob-closed CSS comment
@@ -1774,6 +1775,45 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > `V-13` (the dark-contrast baseline) are ratchet re-baselines that need a CI
 > environment to run honestly, per the font constraint recorded above; `V-03`,
 > `V-05` and `V-11` are database and Edge Function residuals, not CI work.
+
+> **Log-reader shape gate shipped (2026-09-19) — `tools/check-log-readers.js`.**
+> `L-03` was filed as a READ-path defect: the same five-line reader of
+> `mc_workout_log_v1` was copy-pasted around the tree and every copy wrote
+> `JSON.parse(...) || []`, which catches malformed TEXT and not a wrong SHAPE,
+> so valid JSON of the wrong type blanked the stats and history screens. The
+> shape is reachable rather than theoretical — `mc-sync.js` pulls this store
+> from the cloud, so one bad write on any device reaches every other one.
+>
+> **Sweeping for the shape found the write paths, and those are worse.** Six of
+> the eleven unguarded sites call `.unshift()` or `.push()` on the parsed value
+> — `mc-finish.js` (the shared completion path for 78 pages), `mc-cond.js`, and
+> four workout pages. Driven for real against `main` with the store seeded as an
+> object, a bare string and a number, `_FW.confirm()` left the store **byte-
+> identical** in all three cases: **the workout the athlete just finished was
+> discarded, and nothing was reported** — `mc-finish.js` wraps that write in an
+> empty `catch`, so the throw never reaches the console. The same probe passes
+> on all four fixtures with the guards in. That is the `loadWrapped()` lesson
+> again (a swallowed throw is invisible to a console-error sweep), met through a
+> different door.
+>
+> **One shared reader is not the fix here**, and the reason is recorded in the
+> tool's own header rather than rediscovered: the only modules loaded on all the
+> consumer pages are `mc-haptics.js`, `mc-nav.js` and `mc-sw-update.js`, none of
+> which is a sane home for a data reader — and `mc-data.js`, the
+> obvious-sounding candidate, is the 23-page split dataset loaded by **none** of
+> them, the same mistake that left `MC_EXCATALOG` absent on 76 of 79 logging
+> pages. So the duplication stays and the gate holds it safe: 11 unguarded sites
+> across 10 files on `main`, 13 sites across 12 files all guarded after. Proven
+> to fail on the pre-fix tree before landing.
+>
+> **The gate is deliberately windowed, not per-file.** A first draft matched
+> `Array.isArray` anywhere in the file, which would pass a file whose reader
+> stayed unguarded next to an unrelated guard elsewhere — a gate that cannot
+> fail. The window is also symmetric, because the guard is legitimately written
+> on either side of the parse. And it strips comments first: `mc-log-read.js`'s
+> header QUOTES the old buggy reader to explain what it replaced, and counting
+> that as a live call site is a false positive — the same `decomment()` step
+> `check-design-tokens.js` already needed.
 
 ---
 

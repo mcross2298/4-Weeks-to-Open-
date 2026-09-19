@@ -636,7 +636,7 @@ window.addEventListener('beforeunload', persist);
         time:new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),
         duration:fmtClock(m.elapsed), rounds:m.roundsDone+'/'+m.rounds, reps:m.reps,
         sets:[], prs:0, setsChecked:m.exDone};
-      try{ var logs=JSON.parse(localStorage.getItem(WL_KEY)||'[]'); logs.unshift(entry); logs=logs.slice(0,200); localStorage.setItem(WL_KEY,JSON.stringify(logs)); }catch(e){}
+      try{ var logs=JSON.parse(localStorage.getItem(WL_KEY)||'[]'); if(!Array.isArray(logs)) logs=[]; logs.unshift(entry); logs=logs.slice(0,200); localStorage.setItem(WL_KEY,JSON.stringify(logs)); }catch(e){}
       window._FW.close();
       var btn=document.querySelector('.fw-btn'); if(btn){ btn.textContent='✓ Saved!'; btn.style.background='#34d399'; }
       var b=document.getElementById('fwAutoBanner'); if(b) b.classList.remove('show');

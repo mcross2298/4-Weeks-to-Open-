@@ -803,6 +803,7 @@ buildTimerFloat();
       };
       try{
         var logs=JSON.parse(localStorage.getItem(WL_KEY)||'[]');
+        if(!Array.isArray(logs)) logs=[];   // L-03: else unshift() throws into the silent catch and the session is never saved
         logs.unshift(entry); logs=logs.slice(0,200);
         localStorage.setItem(WL_KEY,JSON.stringify(logs));
       }catch(e){}
