@@ -386,6 +386,20 @@ jobs:
         # catches nothing because the guard is doing its job.
         run: node tools/check-dangling-refs.js
 
+      - name: Push-chain check (the notification opt-in must be reachable end to end — Phase 1.1)
+        # Every link in this chain is written as an optional guard, which is
+        # correct defensive style and means the whole feature can break with a
+        # clean console: a dropped <script> tag, a renamed lazy-load path, a
+        # renamed export or a missing SW listener all end in `.catch(fn(){})`.
+        # That is the #pushChip / MC_TOAST / MCSwap / loadWrapped() shape for
+        # the fifth time, and check-dangling-refs.js cannot see it, because
+        # window.MC_PUSH IS assigned — the question it does not ask is whether
+        # the page that CALLS it ever loads that file.
+        # It matters more than the call-site count suggests: the pipeline has
+        # never delivered a notification (push_subscriptions read 0 rows), so
+        # there is no working behaviour anyone would notice losing.
+        run: node tools/check-push-chain.js
+
       - name: Log-reader shape check (every parse of mc_workout_log_v1 guards its shape — L-03)
         # `JSON.parse(...) || []` catches malformed TEXT and not a wrong SHAPE,
         # so valid JSON of the wrong type walks straight through: an object

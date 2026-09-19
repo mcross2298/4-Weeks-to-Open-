@@ -215,6 +215,62 @@ deletion outright), and add the missing delete policy on `daily_health`.
 > secret, and the leaked-password setting from `1.6`. Neither is code — see
 > the handoff table.
 
+> **Phase 1 closed out (2026-09-19) — and two of its entries above were stale.**
+> Re-read against the real source and the live project rather than against this
+> file's own notes, which is what found them.
+>
+> **`1.5` had already shipped and was never recorded here.** `MC_SB.logSet()`
+> is a real `upsert` keyed on `onConflict: 'user_id,session_id,exercise,
+> set_number'` — the exact columns `phase12-launch-hardening.sql` constrains —
+> and `unlogSet()` is genuinely WIRED into `mc-setlog.js`'s uncheck branch
+> (line ~1050), not merely defined. That distinction is the one worth checking
+> in this repository: `MCSwap`, `#pushChip` and `MC_TOAST` were all *defined or
+> styled* and reached by nobody.
+>
+> **`1.6` is half done, not open.** The migration landed and holds: the live
+> project reads **120 rows, 0 duplicate groups**, `workout_logs_set_uniq`
+> present, `user_sync`'s FK `ON DELETE CASCADE`, and four policies on
+> `daily_health` including DELETE. `1.4`'s backfill also holds — **120 of 120
+> rows carry a muscle, 0 null**. `program_id` is still 0 filled, which is the
+> deliberate decision recorded above, not a regression. The only part of `1.6`
+> outstanding is leaked-password protection, still `WARN` on the live security
+> advisor and still an Auth dashboard setting, not SQL.
+>
+> **So every line of Phase 1 CODE is done.** What is left is `1.1` and that
+> setting.
+>
+> **`1.1` is smaller than it looks and also bigger.** Smaller: the client half
+> is complete and was verified by driving it, not by reading it — the chip is
+> correctly hidden before a first workout, appears after one at **53px** (clears
+> the 44px floor), and the chain `requestAndSubscribe()` → `pushManager.
+> subscribe()` → `MC_SB.savePushSubscription()` is unbroken, with `sw.js`
+> carrying both `push` and `notificationclick` listeners and a VAPID key that
+> decodes to a valid 65-byte `0x04` P-256 point. Bigger: **`push_subscriptions`
+> holds 0 rows.** Setting the secret will therefore produce a check-in run that
+> **succeeds and sends nothing**, and a green workflow is exactly the evidence
+> that would be mistaken for the feature working. Proving `1.1` needs a real
+> device to accept the prompt first, then the run — in that order.
+>
+> **A correction about method, because it cost a test.** The first drive of the
+> opt-in granted notification permission to the browser context, and the chip
+> did not appear. That was the harness, not the app: `initPushChip()` returns
+> early when `getState()==='granted'`, which is correct — there is nothing to
+> ask for. The real `default` state is what had to be measured.
+>
+> **`tools/check-push-chain.js` is committed for the reason the sweep exists.**
+> Every link in this chain is an optional guard ending in `.catch(function(){})`,
+> so a dropped script tag or renamed path yields an athlete who taps "Notify me"
+> and gets nothing, with a clean console — the fifth instance of that shape, and
+> one `check-dangling-refs.js` structurally cannot see, since `window.MC_PUSH`
+> IS assigned; the unasked question is whether the CALLING page loads it.
+> **Proving it found two holes in the gate itself**, which is the argument for
+> proving rather than reviewing: a `MC_PUSH\s*\.` caller pattern missed
+> `mc-finish.js` entirely (it reaches the module as a VALUE and calls through a
+> local alias), so the one hardcoded path string most needing a check was never
+> checked; and a bare-name test for the DB writer was satisfied by the GUARD
+> line above the call while the call itself had been renamed away. Both fixed,
+> then all eight regression shapes re-proven to fail.
+
 ---
 
 ## Phase 2 — Core engine and program logic realignment
