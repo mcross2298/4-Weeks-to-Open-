@@ -2295,7 +2295,9 @@ function heroDayCount(prog){
   const since=Date.parse(prog.startedAt);
   const daySet=new Set();
   try{
-    (JSON.parse(localStorage.getItem('mc_workout_log_v1')||'[]')||[]).forEach(function(e){
+    // L-03: valid JSON of the wrong shape walks past `|| '[]'`; a null member throws on e.date.
+    var wlRaw=JSON.parse(localStorage.getItem('mc_workout_log_v1')||'[]');
+    (Array.isArray(wlRaw)?wlRaw.filter(Boolean):[]).forEach(function(e){
       const t=Date.parse(e.date)||0;
       if(t>=since) daySet.add(new Date(t).toDateString());
     });
@@ -2331,7 +2333,9 @@ function heroNextLift(p){
   // 2) most recently finished split for this program → next in rotation
   let lastIdx=-1,lastTs=0;
   try{
-    (JSON.parse(localStorage.getItem('mc_workout_log_v1')||'[]')||[]).forEach(e=>{
+    // L-03: valid JSON of the wrong shape walks past `|| '[]'`; a null member throws on e.date.
+    const wlRaw=JSON.parse(localStorage.getItem('mc_workout_log_v1')||'[]');
+    (Array.isArray(wlRaw)?wlRaw.filter(Boolean):[]).forEach(e=>{
       const t=Date.parse(e.date)||0;
       splits.forEach((s,i)=>{if(t>lastTs&&heroSplitMatches(s,e.workoutName)){lastTs=t;lastIdx=i;}});
     });

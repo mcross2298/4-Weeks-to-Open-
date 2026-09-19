@@ -172,7 +172,8 @@
   }
   function trainedToday() {
     try {
-      var log = JSON.parse(localStorage.getItem('mc_workout_log_v1') || '[]') || [];
+      var log = JSON.parse(localStorage.getItem('mc_workout_log_v1') || '[]');
+      if (!Array.isArray(log)) log = [];   // L-03: wrong shape, not malformed text
       var tk = todayKey();
       return log.some(function (e) { return e.date && keyFromDate(new Date(e.date)) === tk; });
     } catch (e) { return false; }

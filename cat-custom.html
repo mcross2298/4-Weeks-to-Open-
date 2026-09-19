@@ -304,7 +304,9 @@ html[data-theme="light"] .sched-banner{color:var(--muted);}
     var set = {};
     var cutoff = Date.now() - 7 * 24 * 3600 * 1000;
     try {
-      (JSON.parse(localStorage.getItem('mc_workout_log_v1') || '[]') || []).forEach(function (e) {
+      // L-03: valid JSON of the wrong shape walks past `|| '[]'`; a null member throws on e.pageId.
+      var wlRaw = JSON.parse(localStorage.getItem('mc_workout_log_v1') || '[]');
+      (Array.isArray(wlRaw) ? wlRaw.filter(Boolean) : []).forEach(function (e) {
         if ((e.pageId || '').indexOf('cprog-' + p.id + '-') === 0 &&
             new Date(e.date || 0).getTime() >= cutoff) set[e.pageId] = true;
       });

@@ -383,6 +383,7 @@ function finishWorkout(){
   });
   var done = document.querySelectorAll('.ex-card.checked, .ss-ex.checked').length;
   var log; try{ log = JSON.parse(localStorage.getItem(WL_KEY)||'[]'); }catch(e){ log = []; }
+  if(!Array.isArray(log)) log = [];   // L-03: else push() throws and the workout is never saved
   log.push({
     date: new Date().toISOString(),
     time: new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),
