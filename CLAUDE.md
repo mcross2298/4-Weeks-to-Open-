@@ -131,6 +131,7 @@ node tools/check-one-timer.js          # no orphan/duplicate/missing rest-timer 
 node tools/check-single-impl.js        # declared shared functions exist exactly once tree-wide
 node tools/check-dangling-refs.js      # no element id or global is read but provided nowhere (post-audit CI addendum)
 node tools/check-log-readers.js        # every parse of mc_workout_log_v1 guards its shape (L-03)
+node tools/check-push-chain.js         # the notification opt-in chain is reachable end to end (Phase 1.1)
 node tools/check-store-coverage.js     # store-registry.json vs mc-sync.js STORES / mc-export.js KEYS
 node tools/check-topbar-inset.js       # sticky .topbar pins at top:0, absorbs the inset as padding, opaque
 node tools/check-design-tokens.js      # font-weight on-scale; radius/size/hex ratchets; no cool dark neutral; no glob-closed CSS comment
