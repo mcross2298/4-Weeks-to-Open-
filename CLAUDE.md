@@ -1319,9 +1319,10 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >
 > **A real, unfixed finding surfaced building the gate, not yet acted on.**
 > That throwaway measurement still counted **587 dark-mode contrast
-> failures across all 140 pages** (310 on light) — including outright
-> invisible controls (`.coach-icon` on `dashboard.html`, black-on-black,
-> 1.00:1; `.lift-name` on `psu-strength.html`, white-on-white) and a
+> failures across all 140 pages** (310 on light) — including what looked like
+> outright invisible controls (`.coach-icon` on `dashboard.html`,
+> black-on-black, 1.00:1; `.lift-name` on `psu-strength.html`,
+> white-on-white) and a
 > recurring pattern across 30+ pages: `rgb(51,65,85)` / `rgb(71,85,105)` —
 > Tailwind slate-700/600 — on `.tab`, `.day-meta`, `.a-rep`, `.wt-label`,
 > `.wtab`, `.stat-label`. `premium-design-roadmap.md`'s `P3` swept for
@@ -1329,6 +1330,38 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > are the same hexes reappearing through selectors that sweep never
 > reached. Fixing them is a separate change from building the gate that can
 > now see them — logged here so it isn't lost.
+>
+> **Correction (2026-09-19): both named "invisible controls" were measurement
+> artifacts, and the 587 figure should not be treated as a defect count.**
+> Checked against rendered pixels rather than computed style. `.coach-icon` is
+> the emoji 🤖 — an emoji paints from the system colour font and ignores CSS
+> `color` entirely, so its 1.00:1 is meaningless; its screenshot spans a
+> luminance range of 212. `.lift-name` is not white-on-white: the painted
+> background is `.lift-header`'s navy `linear-gradient`, and the real ratio is
+> **15.29:1**. The gate's `bgOf()` reads `backgroundColor` only and walked
+> straight past the gradient to a white ancestor beneath it.
+>
+> Three distinct defects in the INSTRUMENT were found and are recorded in
+> `tools/check-contrast.js`'s own header: it measured emoji by `color`; it
+> measured text inside `opacity:0` ancestors (`opacity` is not an inherited
+> property, so a per-element check passes every child of a closed overlay);
+> and it ignores `background-image` on **5,191 of 12,890** measured elements
+> (40.3%, across 133 of 142 pages). The first two are fixed — both only ever
+> REMOVE findings, so no budget can break. Their measured impact is very
+> different and both numbers are stated because only one of them is large:
+> the emoji fix removes **552 of 2,823 light-mode findings (19.6%)**, while
+> the hidden-ancestor fix removes **1 (0.0%)** — most hidden overlays in this
+> tree use `display:none`, which the old filter already caught. It is kept
+> anyway because it is the exact error that produced the retracted
+> "invisible CTA" above, and a blind spot that costs an hour of investigation
+> is worth closing even when it is rare. The gradient half is
+> **deliberately not fixed**: compositing was prototyped and moved 95 of 142
+> pages UP, which would fail every budget on landing, and it needs a judgement
+> this gate cannot make alone (which point of a ramp the text sits on).
+>
+> **The budgets are now slack** and the gate will say so per page
+> ("improved to N — lower the budget"). Re-baseline with `--update` from real
+> CI, never from an agent sandbox, for the font reason recorded above.
 
 > **Companion flagship plan:** [`flagship-immersive-roadmap.md`](flagship-immersive-roadmap.md)
 > (opened 2026-09-02, `H0–H5`) — a spatial muscle-visualization + biometric-
