@@ -132,6 +132,7 @@ node tools/check-single-impl.js        # declared shared functions exist exactly
 node tools/check-dangling-refs.js      # no element id or global is read but provided nowhere (post-audit CI addendum)
 node tools/check-log-readers.js        # every parse of mc_workout_log_v1 — and every read of an entry's own .sets — guards its shape (L-03)
 node tools/check-push-chain.js         # the notification opt-in chain is reachable end to end (Phase 1.1)
+node tools/check-docs-currency.js      # the tour renders; every non-licensed program has its guide; module list pinned
 node tools/check-store-coverage.js     # store-registry.json vs mc-sync.js STORES / mc-export.js KEYS
 node tools/check-topbar-inset.js       # sticky .topbar pins at top:0, absorbs the inset as padding, opaque
 node tools/check-design-tokens.js      # font-weight on-scale; radius/size/hex ratchets; no cool dark neutral; no glob-closed CSS comment
@@ -258,10 +259,39 @@ Summary. Two files now sit under them:
   `tools/check-docs.js`; neither file is in the tree and `git log --all` shows
   neither ever was, so no workflow references them. The reasoning was sound —
   a gate that reads only `quick-tour.html` would have broken the moment the
-  prose moved into `quick-tour-data.js` — but the gate was never written, which
-  means **the Documentation currency rule above has no automated enforcement
-  today**. Treat keeping the tour current as a review responsibility, not
-  something CI will catch, until such a gate is actually built.
+  prose moved into `quick-tour-data.js` — but the gate was never written.
+  **`tools/check-docs-currency.js` (2026-09-20) closes that hole**, in three
+  passes and deliberately not as a keyword grep:
+
+  1. **Tour integrity, executed rather than inspected.** This file's own header
+     says data and renderer ship together because "a field added to one and not
+     the other is the drift worth preventing" — and nothing tested that. The
+     gate loads `quick-tour-data.js` in a `vm` (the `test-mc-bridge.js`
+     technique), asserts every slide carries the fields the renderer reads, and
+     then RUNS `slideBodyHTML()` over all 18. A renderer that throws on a real
+     slide is the drift, and only executing it finds that. It corrected its own
+     first draft on contact with the data: the closing slide has no `steps`,
+     because it carries `finish` instead, so the rule is "one or the other".
+  2. **Program guide coverage.** `program-guide.html` builds its links at
+     runtime (`href="' + p.id + '-instructions.html"`), so there is no static
+     list to compare and the only thing that can be wrong is a missing FILE —
+     the page renders a link straight to a 404. Licensed programs are scoped
+     out by reading `content-manifest.json`'s own `licensed` keys, the same
+     reasoning `tests/test_rls.py` records for reading that file directly: a
+     second copy of the list is free to drift from the one the build enforces,
+     and a brand term hardcoded into a shared tool is what
+     `build-market.py --check` exists to catch.
+  3. **A new-module tripwire, not a classifier.** A gate that tried to decide
+     which of the 95 `mc-*.js` modules are user-facing would be guessing, and a
+     wrong guess silently exempts a real feature forever. So it does not guess:
+     it pins the list, and a module appearing or disappearing fails with one
+     instruction — decide whether it is user-facing, update the tour if it is,
+     then update the list. That is the only part of "remember to update the
+     docs" a static gate can honestly enforce.
+
+  Proven to fail on five shapes before landing: a slide missing a required
+  field, a renderer that throws, `window.MC_TOUR` renamed away, a new shared
+  module, and a flagship program losing its guide page.
 - **`quick-tour.css`** — the 184 lines of layout that were inline in
   `quick-tour.html`, so the step tour and the one-page view cannot look like
   different products.
@@ -1207,6 +1237,24 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > **day list**, so no exercise card is rendered at rest and
 > `check-visual-ratchet.js` cannot see a card-level change at all. It still
 > guards the day list; it no longer guards the component gallery it is named for.
+>
+> **Closed (2026-09-20).** Re-measured first and the blind spot is exactly as
+> filed: all five pages render **zero** `.ex-card`, `.mcl-strip` and `.mcl-row`
+> at rest, and `?day=1` gives each of them 5 cards, 10 strips and 21 rows. All
+> five are structurally identical in day mode, so ONE day-mode entry restores
+> component coverage; `PAGES` entries are now `{url, name}` because a baseline
+> needs a filename a query string cannot supply.
+>
+> **The baseline itself cannot be written from here**, and that was proven on
+> this tree rather than argued: re-running the gate in an agent sandbox against
+> the CI-written baselines fails all five on HEIGHT alone (1099→1108,
+> 1101→1113, 1163→1160, 937→935, 1153→1188) — the `P4` font constraint, in
+> pixels. So the new entry carries `seed: true`: a missing baseline **reports
+> and skips** instead of failing, the same `NO_BASELINE` shape `W-I3` already
+> used for `contrast-budgets-dark.json`, and one `--update` run from real CI
+> turns it into a real guard. The tolerance is scoped to entries that declare
+> it — a missing baseline is still a hard failure for every other page, proven
+> by removing one — so it cannot spread by accident.
 >
 > **`P4`'s constraint, sharpened:** `curl` reaches `fonts.googleapis.com` from an
 > agent sandbox and returns **200** — headless **Chromium does not**

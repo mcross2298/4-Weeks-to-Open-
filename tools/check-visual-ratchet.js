@@ -44,8 +44,37 @@ const ROOT = path.resolve(__dirname, '..');
 const BASELINE_DIR = path.join(__dirname, 'visual-baselines');
 const MISMATCH_PCT = 0.5; // percent of pixels allowed to differ before failing
 
-const PAGES = ['kitchen-sink.html', 'kitchen-sink-s3.html', 'kitchen-sink-s4.html',
-  'kitchen-sink-s5.html', 'kitchen-sink-s6.html'];
+// Each entry is { url, name }: the URL to shoot and the baseline's filename,
+// kept apart because a baseline needs a name a query string cannot supply.
+//
+// THE DAY-MODE ENTRY EXISTS BECAUSE THIS GATE STOPPED GUARDING WHAT IT IS
+// NAMED FOR. Since F3-3 the kitchen-sink pages open as a DAY LIST, so no
+// exercise card is rendered at rest -- measured on all five, zero `.ex-card`,
+// zero `.mcl-strip`, zero `.mcl-row` -- and premium-design-roadmap.md's P5
+// found this the hard way: a change that rewrote the card surface moved
+// exactly 0 pixels on all five baselines. That is not luck, it is the tool
+// being unable to see a card at all. With ?day=1 each page renders 5 cards,
+// 10 strips and 21 rows, so ONE day-mode entry restores component coverage;
+// the five day lists stay, because they are a real screen worth guarding too.
+const PAGES = [
+  { url: 'kitchen-sink.html',    name: 'kitchen-sink' },
+  { url: 'kitchen-sink-s3.html', name: 'kitchen-sink-s3' },
+  { url: 'kitchen-sink-s4.html', name: 'kitchen-sink-s4' },
+  { url: 'kitchen-sink-s5.html', name: 'kitchen-sink-s5' },
+  { url: 'kitchen-sink-s6.html', name: 'kitchen-sink-s6' },
+  // All five are structurally identical in day mode, so one is enough.
+  // `seed` marks an entry whose baseline has never been written: a missing
+  // PNG reports and skips instead of failing, the same NO_BASELINE shape
+  // check-contrast.js's --dark pass already uses, and for the same reason --
+  // a screenshot baseline CANNOT be generated from an agent sandbox, where
+  // fonts.googleapis.com is blocked at the browser level (P4). Proven on this
+  // tree, not assumed: re-running this gate here against the CI-written
+  // baselines fails all five on HEIGHT alone (1099->1108, 1101->1113,
+  // 1163->1160, 937->935, 1153->1188). Drop `seed` once the PNG is committed
+  // from a real CI --update run; a missing baseline is a hard failure for
+  // every entry without it, so this tolerance cannot spread by accident.
+  { url: 'kitchen-sink.html?day=1', name: 'kitchen-sink-day1', seed: true },
+];
 
 const base = process.argv[2];
 const update = process.argv.includes('--update');
@@ -64,12 +93,14 @@ if (!base) {
   const page = await ctx.newPage();
 
   let failed = 0;
-  for (const pg of PAGES) {
+  const unseeded = [];
+  for (const entry of PAGES) {
+    const pg = entry.url;
     await page.goto(base.replace(/\/$/, '') + '/' + pg, { waitUntil: 'domcontentloaded', timeout: 20000 });
     try { await page.waitForLoadState('networkidle', { timeout: 8000 }); } catch (e) { /* measure anyway */ }
     await page.waitForTimeout(300);
     const shot = await page.screenshot({ fullPage: true });
-    const baselinePath = path.join(BASELINE_DIR, pg.replace('.html', '.png'));
+    const baselinePath = path.join(BASELINE_DIR, entry.name + '.png');
 
     if (update) {
       fs.writeFileSync(baselinePath, shot);
@@ -78,6 +109,13 @@ if (!base) {
     }
 
     if (!fs.existsSync(baselinePath)) {
+      if (entry.seed) {
+        // Declared-but-unseeded: report and skip. See PAGES' own note.
+        console.log('  ' + pg + ': NO BASELINE yet (' + shot.length + ' bytes measured) — ' +
+          'run --update from real CI to seed it, then drop `seed` from its PAGES entry');
+        unseeded.push(pg);
+        continue;
+      }
       console.error('::error file=' + pg + '::no visual baseline at ' + path.relative(ROOT, baselinePath) +
         ' — generate one with: node tools/check-visual-ratchet.js <url> --update');
       failed++;
@@ -101,7 +139,7 @@ if (!base) {
     const pct = (mismatched / (width * height)) * 100;
 
     if (pct > MISMATCH_PCT) {
-      const diffPath = path.join(BASELINE_DIR, pg.replace('.html', '.diff.png'));
+      const diffPath = path.join(BASELINE_DIR, entry.name + '.diff.png');
       fs.writeFileSync(diffPath, PNG.sync.write(diff));
       console.error('::error file=' + pg + '::visual ratchet regressed — ' + mismatched +
         ' px changed (' + pct.toFixed(2) + '%, budget ' + MISMATCH_PCT +
@@ -118,6 +156,10 @@ if (!base) {
   if (update) {
     console.log('\n  Baselines written — ' + PAGES.length + ' page(s).');
     return;
+  }
+  if (unseeded.length) {
+    console.log('\n  ' + unseeded.length + ' entr(ies) have no baseline yet and were skipped: ' +
+      unseeded.join(', ') + '. They guard nothing until seeded from CI.');
   }
   if (failed) {
     console.error('\n' + failed + ' page(s) failed the visual ratchet.');
