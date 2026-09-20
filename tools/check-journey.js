@@ -507,12 +507,21 @@ const CHROME_SELECTORS = [
   // so unlike the contrast and visual ratchets this budget can be seeded from
   // an agent sandbox without the Google Fonts caveat.
   { sel: '.ntx-ico',     name: 'nutrition header icon' },
+  // W-I2: the two controls CLAUDE.md records as "caught by no gate today".
+  // .mc-surprise-btn is fleet-wide (mc-surprise.css) and measured 35px tall;
+  // .inst-header-link measured 31px and has exactly ONE markup consumer left
+  // (cat-pmc.html) now that cat-strength.html's three dead copies are gone --
+  // which is why one page is enough to prove both.
+  { sel: '.mc-surprise-btn',  name: 'surprise me button' },
+  { sel: '.inst-header-link', name: 'program guide link' },
 ];
 // One page per selector-owning stylesheet; 2on-1off.html carries both
 // .mc-nav-tab and .back-link so three pages, not four, are enough.
 const CHROME_PAGES = ['2on-1off.html', 'dashboard.html', 'quick-tour.html',
   // the Nutrition tab renders on demand, so .ntx-ico only exists with the tab open
-  'dashboard.html?tab=nutrition'];
+  'dashboard.html?tab=nutrition',
+  // carries both .mc-surprise-btn and .inst-header-link
+  'cat-pmc.html'];
 const CHROME_VIEWPORTS = { '390': { width: 390, height: 844 }, '320': { width: 320, height: 568 } };
 const CHROME_BUDGET_FILE = path.resolve(__dirname, 'chrome-budgets.json');
 const CHROME_EPSILON = 0.3;   // sub-pixel float jitter, not a real regression
@@ -935,6 +944,15 @@ async function runSubsystemPass(browser) {
   // an entry chrome-budgets.json has never seen) is fine. Only a SHRINK
   // fails, which is what makes this safe to land before W-I2's fix and a
   // real floor once that fix crosses 44 on a given control.
+  //
+  // W-I2 note: two entries in chrome-budgets.json record `h` only. Their
+  // widths come from their LABEL TEXT, and the W-I2 baseline was raised by
+  // hand rather than with --update, because an agent sandbox cannot reach
+  // fonts.googleapis.com (see premium-design-roadmap.md's P4) and a
+  // fallback-font width would be a number CI never measures. `undefined`
+  // makes the width comparison NaN, so it simply never fires; the height --
+  // the half that was under the floor at 31px and 35px -- ratchets normally.
+  // A --update run from real CI fills both back in.
   let chromeFailed = 0;
   for (const [key, size] of Object.entries(chromeMeasured)) {
     const prior = chromeBudgets[key];
@@ -944,8 +962,10 @@ async function runSubsystemPass(browser) {
     if (shrankW || shrankH) {
       chromeFailed++;
       console.error('\n✗ CHROME-CONTROL: ' + key);
+      // an h-only prior (see the W-I2 note above) has no width to print
+      const priorTxt = prior.w == null ? prior.h + 'px tall' : prior.w + 'x' + prior.h + 'px';
       console.error('    ::error::' + key + ' measured ' + size.w + 'x' + size.h +
-        'px, smaller than the recorded ' + prior.w + 'x' + prior.h + 'px — a real regression, not drift.');
+        'px, smaller than the recorded ' + priorTxt + ' — a real regression, not drift.');
     }
   }
   if (chromeFailed) {

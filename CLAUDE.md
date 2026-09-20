@@ -1297,6 +1297,46 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > `tools/chrome-budgets.json`; proved the ratchet both holds clean and
 > fails on a real regression before landing.
 >
+> **W-I2 shipped (2026-09-20) — and both of its named targets were already
+> fixed.** `.mc-nav-tab` and `.back-link` measure 44px tall at 390 and 320 on
+> `main`; the "125 pages / 114 pages" reach counts are a static class-usage
+> count, not a measurement, and they kept this initiative open long after the
+> defect was gone. The four controls really under the floor were others:
+> **`.topbar-icon` 40 → 44** — its rule said `36px` while **all 12 markup sites
+> carried an inline `width:40px;height:40px` that outranked it**, so changing
+> the rule alone would have moved nothing (`P3`'s "a rule reaches only code that
+> asks for it", through a different door); **`.ntx-ico` 38 → 44**, the only way
+> into favorites and into the macro calculator; and **`.mc-surprise-btn` 35 → 44**
+> plus **`.inst-header-link` 31 → 44** — the two this file recorded as "caught
+> by no gate today", now measured by one (`CHROME_SELECTORS` 4 → 6,
+> `cat-pmc.html` added to `CHROME_PAGES`).
+>
+> **Two finds came from driving, not reading.** `.inst-header-link` had **three
+> dead rules in `cat-strength.html`** (F3 moved that page's guide link into
+> `.pd-links`; nothing has rendered the class there since), deleted along with
+> that page's now-redundant 44px override. And the dashboard topbar **sliced its
+> greeting mid-glyph at 320**: `.topbar-left` shrinks, but the title/sub block
+> inside it is a flex item with `min-width:auto`, so it keeps its full 156px
+> content width inside an 86px parent and is cut by that parent's
+> `overflow:hidden` — `.topbar-title`'s ellipsis never engages because the title
+> is never the thing that overflows. Pre-existing (screenshotted identical on
+> `main`), made 16px worse by the bigger icons, so fixed here: `min-width:0` on
+> the inner block, and the decorative avatar yields below 360px (86 → 140px for
+> the greeting).
+>
+> **`W-I5`'s premise does not reproduce:** it claims `.topbar-icon` narrows
+> 34.9 → 26.6px between 390 and 320; measured, it is **40x40 at both** — the
+> inline size is fixed, so it cannot narrow with viewport. Re-measure before
+> scoping it.
+>
+> **Still under the floor, deliberately:** the tour step dot's WIDTH (12px). 18
+> dots cannot each be 44px in a 320px row, its height is already 44, and
+> prev/next reach every slide — a geometric ceiling, not an unfixed defect, and
+> `quick-tour.css`'s own `W3-2` comment already says so. Two budget entries are
+> recorded as **height only**, because their widths are text-derived and this
+> baseline was raised by hand rather than with `--update` (the Google Fonts
+> constraint above). Proven to fail on a real 44 → 35 regression before landing.
+>
 > **W-I3 shipped (2026-08-30):** `tools/check-contrast.js` gained `--dark`,
 > reusing its light-mode probe and ratchet mechanics against a second
 > budget file (`contrast-budgets-dark.json`) — dark is the app's own

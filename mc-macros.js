@@ -1483,7 +1483,9 @@
       '.ntx-head{display:flex;align-items:center;justify-content:space-between;margin:0 2px 12px;}' +
       '.ntx-head-date{font-size:16px;font-weight:900;color:var(--text);letter-spacing:-0.01em;}' +
       '.ntx-head-actions{display:flex;gap:8px;}' +
-      '.ntx-ico{width:38px;height:38px;border-radius:11px;border:1px solid var(--border2);background:var(--surface2);' +
+      /* W-I2: 44x44, the app's touch floor. These three are the only way
+         into favorites and into the calculator that sets every macro target. */
+      '.ntx-ico{width:44px;height:44px;border-radius:11px;border:1px solid var(--border2);background:var(--surface2);' +
         'color:var(--text);font-size:16px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;}' +
       /* calendar */
       '.ntx-cal{display:flex;align-items:center;gap:2px;margin-bottom:14px;}' +

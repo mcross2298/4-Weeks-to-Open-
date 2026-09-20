@@ -929,6 +929,58 @@ a fix that no gate holds is a fix that regresses.
 into `base.css` in `F3-2`. *Value:* highest fix-to-reach ratio in the audit;
 per-page patching is exactly how six divergent `makeRestTimer` bodies arose.
 
+> **W-I2 shipped (2026-09-20) — and BOTH of its named targets were already
+> fixed, which is why measuring first mattered.** `.mc-nav-tab` and
+> `.back-link` measure **44px tall at 390 and at 320 on `main` today**; the
+> reach counts above (125 / 114 pages) are a static class-usage count, not a
+> measurement, and they were carrying this initiative long after the defect
+> they described was gone. The four controls actually under the floor were
+> different ones, and the fix is four rules, not a consolidation:
+>
+> - **`.topbar-icon` 40 → 44.** The CSS rule said `36px` and **every one of the
+>   12 markup sites carried an inline `width:40px;height:40px` that outranked
+>   it** — so changing the rule alone would have moved nothing. This is `P3`'s
+>   lesson through a different door: a token (or a rule) reaches only code that
+>   asks for it. The inline pair is deleted and the size lives in one place.
+> - **`.ntx-ico` 38 → 44** (`mc-macros.js`) — the only way into favorites and
+>   into the calculator that sets every macro target.
+> - **`.mc-surprise-btn` 35 → 44** (`mc-surprise.css`, fleet-wide) and
+>   **`.inst-header-link` 31 → 44**. These are the two
+>   `program-day-view-roadmap.md` filed as "known, not fixed ... caught by no
+>   gate today", and they are now **in** the gate: `CHROME_SELECTORS` grew to
+>   six and `cat-pmc.html` joined `CHROME_PAGES`. `cat-strength.html`'s
+>   page-scoped 44px override is deleted as redundant.
+>
+> **Two things fell out of doing it rather than reading it.** `.inst-header-link`
+> had **three dead rules in `cat-strength.html`** — `F3` moved that page's guide
+> link into `.pd-links` and nothing has rendered the class there since, so
+> `cat-pmc.html` is its only consumer; they are deleted. And the dashboard
+> topbar at 320px turned out to **slice its greeting mid-glyph**: `.topbar-left`
+> shrinks correctly, but the title/sub block inside it is a flex item with
+> `min-width:auto`, so it keeps its full 156px content width inside an 86px
+> parent and is cut by that parent's `overflow:hidden` — the `.topbar-title`
+> ellipsis never engages, because the title element is never the thing that
+> overflows. Pre-existing (identical on `main`, screenshotted both ways), and
+> four 44px icons made it 16px worse, so it is fixed here: `min-width:0` on the
+> inner block, and the **decorative** avatar yields below 360px, returning 54px
+> to the greeting (86 → 140px measured).
+>
+> **`W-I5`'s premise does not reproduce.** It states `.topbar-icon` "narrows
+> 34.9 → 26.6px between 390 and 320". Measured on `main` in headless Chromium
+> at both widths, it is **40x40 at each** — the inline style above is fixed, so
+> it cannot narrow with viewport. Whatever produced 34.9/26.6 is not this
+> selector on this tree. `W-I5` should be re-measured before it is scoped.
+>
+> **The ratchet is now a floor on four more controls**, and two of the six
+> remaining pairs are the tour step dot's WIDTH, which is a geometric ceiling
+> rather than an unfixed defect: 18 dots cannot each be 44px wide in a 320px
+> row, its height is already 44, and prev/next reach every slide, so it is not
+> the only way anywhere. `quick-tour.css`'s own `W3-2` comment already records
+> this. Two budget entries are recorded as **height only** — their widths come
+> from label text, and this baseline was raised by hand rather than with
+> `--update`, because an agent sandbox cannot reach `fonts.googleapis.com`
+> (`P4`). Proven to fail on a real 44 → 35 regression before landing.
+
 **W-I3 · Dark-mode contrast gate** — *answers A3* · **M**
 `check-contrast.js` is a **light-mode ratchet**; dark-mode contrast is unmeasured
 end to end, which the repo's own `P3`/`P5` notes state plainly — and dark is the
@@ -1108,7 +1160,7 @@ two it is.
 | ID | Repository | Initiative | Effort | Gate? |
 |---|---|---|---|---|
 | W-I1 | 4-Weeks-to-Open- | Chrome-control journey pass | M | adds |
-| W-I2 | 4-Weeks-to-Open- | Shared chrome consolidation | S | — |
+| W-I2 | 4-Weeks-to-Open- | Shared chrome consolidation | S | **shipped** — see its section |
 | W-I3 | 4-Weeks-to-Open- | Dark-mode contrast gate | M | adds |
 | W-I4 | 4-Weeks-to-Open- | Perf-probe integrity | S | fixes |
 | W-I5 | 4-Weeks-to-Open- | Topbar scrolls, not compresses | S | — |
