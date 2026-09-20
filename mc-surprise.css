@@ -5,7 +5,12 @@
    ========================================================================== */
 .mc-surprise-btn{
   display:inline-flex;align-items:center;gap:7px;
-  margin-top:10px;padding:9px 16px;border-radius:12px;
+  /* W-I2: 44px touch floor. It rendered 35px tall on every page carrying it;
+     min-height rather than a taller padding so the icon+label stay centred and
+     the chip's horizontal proportions are unchanged. cat-strength.html carried
+     a page-scoped copy of exactly this fix (program-day-view-roadmap.md's
+     "known, not fixed" note) -- that override is now redundant and removed. */
+  margin-top:10px;padding:9px 16px;border-radius:12px;min-height:44px;box-sizing:border-box;
   background:rgba(255,255,255,0.06);
   border:1px solid var(--sp-accent,rgba(255,255,255,0.3));
   color:var(--sp-accent,#e6c579);

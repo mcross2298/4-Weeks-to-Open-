@@ -42,7 +42,9 @@
 .subtitle{font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:12px;}
 .header-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0;}
 .header-pill{background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.25);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:800;color:#c084fc;letter-spacing:0.08em;text-transform:uppercase;}
-.inst-header-link{display:inline-flex;align-items:center;gap:8px;margin-top:14px;text-decoration:none;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);color:#c084fc;font-size:11px;font-weight:800;padding:8px 16px;border-radius:20px;letter-spacing:0.06em;transition:all 0.15s;}
+/* W-I2: 44px touch floor. This rendered 31px tall; min-height keeps the pill's
+   horizontal proportions and centres the label rather than padding it taller. */
+.inst-header-link{display:inline-flex;align-items:center;gap:8px;margin-top:14px;text-decoration:none;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);color:#c084fc;font-size:11px;font-weight:800;padding:8px 16px;border-radius:20px;letter-spacing:0.06em;transition:all 0.15s;min-height:44px;box-sizing:border-box;}
 .inst-header-link:active{background:rgba(139,92,246,0.22);}
 /* Resume banner */
 .resume-banner{display:none;margin:16px 16px 0;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);border-radius:14px;padding:12px 16px;cursor:pointer;transition:all 0.15s;}

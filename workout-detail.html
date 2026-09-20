@@ -184,7 +184,15 @@ function render(){
   }
 
   const prog = resolveProgram(log.pageId||'');
-  const sets = log.sets||[];
+  // L-03, one level down: getLogs() guards the ARRAY and its members, but a
+  // member's own `sets` field is whatever was written. mc_workout_log_v1 is
+  // cloud-synced, so one bad write on any device reaches every other, and an
+  // object here made groupByExercise() throw `.forEach is not a function` --
+  // driven and measured, this page rendered COMPLETELY BLANK (#page innerHTML
+  // 0 bytes) with one console error. MC_LOG.readSets is the single guarded
+  // reader; this page already loads mc-log-read.js.
+  const sets = (window.MC_LOG && MC_LOG.readSets) ? MC_LOG.readSets(log)
+             : (Array.isArray(log.sets) ? log.sets.filter(Boolean) : []);
   const exercises = groupByExercise(sets);
   const tonnage = sets.reduce((t,s)=>t+((parseFloat(s.weight)||0)*(parseInt(s.reps,10)||0)),0);
 

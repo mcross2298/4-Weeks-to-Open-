@@ -69,8 +69,8 @@ serial chain, one PR at a time. The only contention-free items (`A-6`, `A-9`,
 | **S5a** | `A-13` render signal — migrate onto `MC_SCAN` | signed off | ✅ shipped |
 | **S5b** | `R3` collapse-by-default (`A-14` split out) | signed off | ✅ shipped |
 | **S5c-0** | completion accounting off DOM counts — **live bug fix**, unblocks `A-14` | none | ✅ shipped |
-| **S5c** | `A-14` lazy build — blocked until S5c-0 lands | needs S5c-0 | blocked |
-| **S6** | `A-15` CI budget, `A-12` vendored SDKs, `A-16` delta sync | none | |
+| **S5c** | `A-14` lazy build + restore-on-build | needs S5c-0 | ✅ shipped (in `029d56c4`, 2026-08-22) |
+| **S6** | `A-15` CI budget, `A-12` vendored SDKs, `A-16` delta sync | none | ✅ all three shipped — see the closing note |
 
 ### Ordering rules this encodes
 
@@ -715,3 +715,32 @@ keep on a comment is worth recording.
 before it is safe: `mc-session.js`'s `restoreSets()` finds rows by
 `getElementById`, so an unbuilt card's check-marks are silently dropped on a
 mid-session reload.
+
+> **Correction (2026-09-20): restore-on-build shipped, and so did all of S6 —
+> this table was three items stale.** `A-14`'s lazy build AND its
+> restore-on-build both landed on 2026-08-22, inside commit `029d56c4`, which
+> is titled for `A-16` and carries `S5c` with it: `mc-setlog.js` publishes
+> `MCSetlogUtil.ensureRowsBuilt(card)` and `mc-session.js`'s `restoreSets()`
+> calls it for the owning card **before** `getElementById(rowId)`, so the row
+> exists by the time it is looked up.
+>
+> **Verified by driving it, not by reading it.** `s3-back-traps.html` loads
+> with 9 cards and rows built for exactly one of them (`[5,0,0,0,0,0,0,0,0]`).
+> Opening **card 8**, logging a set and reloading: rows in that card **0 → 5**,
+> one restored tick, badge `1/5`, zero console errors — and `rowsInDom` stays
+> **5**, so card 0's rows are still unbuilt. The restore targets the one card
+> that needs it rather than re-building the day, which is the whole point of
+> `A-14`.
+>
+> **S6's three items are all live too**, none of them recorded here:
+> `A-15` is `tools/measure-session.js --check` over three probe pages in
+> `verify.yml` (budgets in `tools/perf-budgets.json`); `A-16` is the
+> per-page-row delta sync in `mc-sync.js` (`'mc_setlog_v1|<page>'`), the same
+> commit; and `A-12` shipped as the Kaizen audit's `F-I2` — `supabase-vendor.js`
+> is vendored same-origin, injected on demand by `mc-supabase.js`'s `loadSDK()`,
+> and held out of the eager precache by `build-sw.py`'s `LAZY_ASSETS`, so the
+> 213 KB is paid only by pages that touch auth or sync.
+>
+> Nothing needed fixing; what was wrong was this table. Recorded rather than
+> quietly ticked, because "blocked" here is exactly what kept `A-14` on an open
+> work list a month after it shipped.

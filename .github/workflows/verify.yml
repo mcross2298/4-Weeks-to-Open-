@@ -400,6 +400,20 @@ jobs:
         # there is no working behaviour anyone would notice losing.
         run: node tools/check-push-chain.js
 
+      - name: Documentation-currency check (Quick Tour renders; every program has a guide)
+        # CLAUDE.md's Documentation currency rule had NO automated enforcement,
+        # and for months CLAUDE.md claimed two gates provided it that have
+        # never existed in this repository. Three passes: the tour's data and
+        # renderer are loaded in a vm and slideBodyHTML() is RUN over every
+        # real slide (the drift quick-tour-data.js's own header says shipping
+        # them together exists to prevent, previously untested); every
+        # non-licensed program has the <id>-instructions.html that
+        # program-guide.html builds its href for at runtime; and the shared
+        # module list is pinned, so a new mc-*.js forces a decision about
+        # whether the tour needs updating. Licensed programs are scoped out
+        # via content-manifest.json itself, not a second copy of the list.
+        run: node tools/check-docs-currency.js
+
       - name: Log-reader shape check (every parse of mc_workout_log_v1 guards its shape — L-03)
         # `JSON.parse(...) || []` catches malformed TEXT and not a wrong SHAPE,
         # so valid JSON of the wrong type walks straight through: an object
@@ -415,6 +429,11 @@ jobs:
         # One shared reader is not the fix here — see the tool's own header for
         # why (no module is loaded on all the consumer pages), so the
         # duplication stays and this gate holds it safe.
+        # Pass 2 covers the same defect one level down: a log ENTRY's own
+        # `sets` field. Pass 1 guards the array and says nothing about a
+        # member's set list, which is whatever was written — and driven for
+        # real, workout-detail.html rendered completely blank on 4 of 6 seeded
+        # store shapes.
         run: node tools/check-log-readers.js
 
       - name: Store coverage check (store-registry.json vs mc-sync.js / mc-export.js — audit G-01/G-02)

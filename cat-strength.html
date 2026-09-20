@@ -40,23 +40,17 @@
 /* Program links row (F0). The .pd-topbar chrome that sat here went to
    dashboard.html with the day module; only this links row is page-owned now. */
 .pd-links{display:flex;gap:8px;flex-wrap:wrap;padding:0 12px 16px;}
-/* Both of these render ~35px tall from their own shared rules, under the
-   app's 44pt touch floor. Raised here, scoped to this block, rather than in
-   mc-surprise.css / the .inst-header-link rule: .mc-surprise-btn is a
-   fleet-wide component on many pages and .inst-header-link is used in the
-   dark program headers elsewhere on this page, so widening either would
-   reflow surfaces this change never tested. The underlying fleet-wide
-   shortfall is pre-existing and is called out in the PR, not silently
-   inherited here. */
-.pd-links .inst-header-link,
-.pd-links .mc-surprise-btn{min-height:44px;padding-top:0;padding-bottom:0;}
+/* The page-scoped 44px override that sat here is gone: W-I2 raised
+   .mc-surprise-btn to the floor in mc-surprise.css itself, so a second copy
+   here could only drift from it. The .inst-header-link half of that override
+   went with this page's own three .inst-header-link rules -- F3 moved the
+   guide link into .pd-links and nothing on this page has rendered that class
+   since; cat-pmc.html is its only remaining consumer. */
 .dash-title{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.02em;line-height:1.1;margin-bottom:4px;}
 .dash-title span{color:#a855f7;}
 .subtitle{font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:12px;}
 .header-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0;}
 .header-pill{background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.25);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:800;color:#c084fc;letter-spacing:0.08em;text-transform:uppercase;}
-.inst-header-link{display:inline-flex;align-items:center;gap:8px;margin-top:14px;text-decoration:none;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);color:#c084fc;font-size:11px;font-weight:800;padding:8px 16px;border-radius:20px;letter-spacing:0.06em;transition:all 0.15s;}
-.inst-header-link:active{background:rgba(139,92,246,0.22);}
 /* Resume banner */
 .resume-banner{display:none;margin:16px 16px 0;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);border-radius:14px;padding:12px 16px;cursor:pointer;transition:all 0.15s;}
 .resume-banner.visible{display:flex;align-items:center;gap:12px;}
@@ -179,7 +173,6 @@ html[data-theme="light"] body{background:#f5f2ec;color:#1c1a17;}
 html[data-theme="light"] .dash-title{color:#1c1a17;}
 html[data-theme="light"] .dash-title span{color:#7c3aed;}
 html[data-theme="light"] .header-pill{background:rgba(139,92,246,0.14);color:#7c3aed;}
-html[data-theme="light"] .inst-header-link{color:#7c3aed;}
 html[data-theme="light"] .resume-banner{background:rgba(139,92,246,0.08);}
 html[data-theme="light"] .resume-label,
 html[data-theme="light"] .resume-arrow{color:#7c3aed;}

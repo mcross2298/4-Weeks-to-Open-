@@ -8,8 +8,8 @@
     "h": 44
   },
   "topbar icon @ 320": {
-    "w": 40,
-    "h": 40
+    "w": 44,
+    "h": 44
   },
   "tour step dot @ 320": {
     "w": 12,
@@ -28,8 +28,8 @@
     "h": 44
   },
   "topbar icon @ 390": {
-    "w": 40,
-    "h": 40
+    "w": 44,
+    "h": 44
   },
   "tour step dot @ 390": {
     "w": 12,
@@ -40,11 +40,23 @@
     "h": 44
   },
   "nutrition header icon @ 320": {
-    "w": 38,
-    "h": 38
+    "w": 44,
+    "h": 44
   },
   "nutrition header icon @ 390": {
-    "w": 38,
-    "h": 38
+    "w": 44,
+    "h": 44
+  },
+  "surprise me button @ 320": {
+    "h": 44
+  },
+  "program guide link @ 320": {
+    "h": 44
+  },
+  "surprise me button @ 390": {
+    "h": 44
+  },
+  "program guide link @ 390": {
+    "h": 44
   }
 }

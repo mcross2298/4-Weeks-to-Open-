@@ -130,8 +130,9 @@ node tools/check-program-data.js       # note-field + day-type vocabulary, fleet
 node tools/check-one-timer.js          # no orphan/duplicate/missing rest-timer implementation
 node tools/check-single-impl.js        # declared shared functions exist exactly once tree-wide
 node tools/check-dangling-refs.js      # no element id or global is read but provided nowhere (post-audit CI addendum)
-node tools/check-log-readers.js        # every parse of mc_workout_log_v1 guards its shape (L-03)
+node tools/check-log-readers.js        # every parse of mc_workout_log_v1 — and every read of an entry's own .sets — guards its shape (L-03)
 node tools/check-push-chain.js         # the notification opt-in chain is reachable end to end (Phase 1.1)
+node tools/check-docs-currency.js      # the tour renders; every non-licensed program has its guide; module list pinned
 node tools/check-store-coverage.js     # store-registry.json vs mc-sync.js STORES / mc-export.js KEYS
 node tools/check-topbar-inset.js       # sticky .topbar pins at top:0, absorbs the inset as padding, opaque
 node tools/check-design-tokens.js      # font-weight on-scale; radius/size/hex ratchets; no cool dark neutral; no glob-closed CSS comment
@@ -258,10 +259,39 @@ Summary. Two files now sit under them:
   `tools/check-docs.js`; neither file is in the tree and `git log --all` shows
   neither ever was, so no workflow references them. The reasoning was sound —
   a gate that reads only `quick-tour.html` would have broken the moment the
-  prose moved into `quick-tour-data.js` — but the gate was never written, which
-  means **the Documentation currency rule above has no automated enforcement
-  today**. Treat keeping the tour current as a review responsibility, not
-  something CI will catch, until such a gate is actually built.
+  prose moved into `quick-tour-data.js` — but the gate was never written.
+  **`tools/check-docs-currency.js` (2026-09-20) closes that hole**, in three
+  passes and deliberately not as a keyword grep:
+
+  1. **Tour integrity, executed rather than inspected.** This file's own header
+     says data and renderer ship together because "a field added to one and not
+     the other is the drift worth preventing" — and nothing tested that. The
+     gate loads `quick-tour-data.js` in a `vm` (the `test-mc-bridge.js`
+     technique), asserts every slide carries the fields the renderer reads, and
+     then RUNS `slideBodyHTML()` over all 18. A renderer that throws on a real
+     slide is the drift, and only executing it finds that. It corrected its own
+     first draft on contact with the data: the closing slide has no `steps`,
+     because it carries `finish` instead, so the rule is "one or the other".
+  2. **Program guide coverage.** `program-guide.html` builds its links at
+     runtime (`href="' + p.id + '-instructions.html"`), so there is no static
+     list to compare and the only thing that can be wrong is a missing FILE —
+     the page renders a link straight to a 404. Licensed programs are scoped
+     out by reading `content-manifest.json`'s own `licensed` keys, the same
+     reasoning `tests/test_rls.py` records for reading that file directly: a
+     second copy of the list is free to drift from the one the build enforces,
+     and a brand term hardcoded into a shared tool is what
+     `build-market.py --check` exists to catch.
+  3. **A new-module tripwire, not a classifier.** A gate that tried to decide
+     which of the 95 `mc-*.js` modules are user-facing would be guessing, and a
+     wrong guess silently exempts a real feature forever. So it does not guess:
+     it pins the list, and a module appearing or disappearing fails with one
+     instruction — decide whether it is user-facing, update the tour if it is,
+     then update the list. That is the only part of "remember to update the
+     docs" a static gate can honestly enforce.
+
+  Proven to fail on five shapes before landing: a slide missing a required
+  field, a renderer that throws, `window.MC_TOUR` renamed away, a new shared
+  module, and a flagship program losing its guide page.
 - **`quick-tour.css`** — the 184 lines of layout that were inline in
   `quick-tour.html`, so the step tour and the one-page view cannot look like
   different products.
@@ -1049,6 +1079,25 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > runtime delta 0%. `A-14` is unblocked on the total but still needs
 > restore-on-build, since `restoreSets()` finds rows by `getElementById`.
 >
+> **Correction (2026-09-20): `A-14` (S5c) and all three `S6` items shipped
+> long ago; the roadmap table was three rows stale.** `A-14`'s lazy build AND
+> its restore-on-build both landed 2026-08-22 in commit `029d56c4` — titled for
+> `A-16`, and carrying `S5c` with it. `mc-setlog.js` publishes
+> `MCSetlogUtil.ensureRowsBuilt(card)`, and `mc-session.js`'s `restoreSets()`
+> calls it for the owning card **before** `getElementById(rowId)`.
+> **Verified by driving, not by reading:** `s3-back-traps.html` loads with 9
+> cards and rows built for one (`[5,0,0,0,0,0,0,0,0]`); logging a set on
+> **card 8** and reloading takes that card 0 → 5 rows with one restored tick
+> and the badge at `1/5`, zero console errors — while `rowsInDom` stays 5, so
+> card 0 is still unbuilt and the restore targets only the card that needs it.
+> `S6` likewise: `A-15` is `measure-session.js --check` over three probe pages
+> in `verify.yml`, `A-16` is the per-page-row delta sync in `mc-sync.js`, and
+> `A-12` shipped as the Kaizen audit's `F-I2` — `supabase-vendor.js` vendored
+> same-origin, injected on demand by `mc-supabase.js`'s `loadSDK()`, and held
+> out of the eager precache by `build-sw.py`'s `LAZY_ASSETS`. Nothing needed
+> fixing; the table did. Recorded rather than quietly ticked, because "blocked"
+> is what kept `A-14` on an open work list a month after it shipped.
+>
 > **`A-17` (the `defer` sweep) is blocked and was pulled out of S4b.** Its
 > premise — "the modules all self-initialise on `DOMContentLoaded`, so
 > `defer` preserves order" — is true module-to-module and ignores inline
@@ -1157,6 +1206,18 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > after. It is the most bespoke surface in the app, so it wants its own step
 > rather than a silent fix inside a phase aimed at other files.
 >
+> **Correction (2026-09-20): it got that step, and this note has been stale
+> since.** Commit `cac157c2` (2026-08-29, "Dashboard: join the ramp — Home was
+> the one screen `P1` could not reach") did exactly what the paragraph above
+> asks for. Measured now: `dashboard.html` declares `--text:var(--ink-11)`,
+> `--muted:var(--ink-8)`, `--muted2:var(--ink-7)` in dark and
+> `--ink-3`/`--ink-7`/`--ink-6` in light — every one of them a ramp read, not a
+> literal — it no longer overrides `--body-bg` at all, and a grep for
+> `--text:#` / `--muted:#` / `--body-bg:#` on that file returns nothing. It
+> still tunes `--muted` one step from `base.css`'s default, which is the
+> opposite of insulated: that is a local choice expressed ON the ramp, which is
+> what `P1` was for.
+>
 > **`P5` shipped (2026-08-29, PR #313) — the card surface, and the gate that finds the
 > next one.** Asked whether the refit reached the exercise cards, the measured
 > answer split in two: the card's **type** went warm (name `rgb(250,247,240)`,
@@ -1188,6 +1249,24 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > **day list**, so no exercise card is rendered at rest and
 > `check-visual-ratchet.js` cannot see a card-level change at all. It still
 > guards the day list; it no longer guards the component gallery it is named for.
+>
+> **Closed (2026-09-20).** Re-measured first and the blind spot is exactly as
+> filed: all five pages render **zero** `.ex-card`, `.mcl-strip` and `.mcl-row`
+> at rest, and `?day=1` gives each of them 5 cards, 10 strips and 21 rows. All
+> five are structurally identical in day mode, so ONE day-mode entry restores
+> component coverage; `PAGES` entries are now `{url, name}` because a baseline
+> needs a filename a query string cannot supply.
+>
+> **The baseline itself cannot be written from here**, and that was proven on
+> this tree rather than argued: re-running the gate in an agent sandbox against
+> the CI-written baselines fails all five on HEIGHT alone (1099→1108,
+> 1101→1113, 1163→1160, 937→935, 1153→1188) — the `P4` font constraint, in
+> pixels. So the new entry carries `seed: true`: a missing baseline **reports
+> and skips** instead of failing, the same `NO_BASELINE` shape `W-I3` already
+> used for `contrast-budgets-dark.json`, and one `--update` run from real CI
+> turns it into a real guard. The tolerance is scoped to entries that declare
+> it — a missing baseline is still a hard failure for every other page, proven
+> by removing one — so it cannot spread by accident.
 >
 > **`P4`'s constraint, sharpened:** `curl` reaches `fonts.googleapis.com` from an
 > agent sandbox and returns **200** — headless **Chromium does not**
@@ -1296,6 +1375,46 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > proves the rule for every page that loads the same CSS. Budgets in
 > `tools/chrome-budgets.json`; proved the ratchet both holds clean and
 > fails on a real regression before landing.
+>
+> **W-I2 shipped (2026-09-20) — and both of its named targets were already
+> fixed.** `.mc-nav-tab` and `.back-link` measure 44px tall at 390 and 320 on
+> `main`; the "125 pages / 114 pages" reach counts are a static class-usage
+> count, not a measurement, and they kept this initiative open long after the
+> defect was gone. The four controls really under the floor were others:
+> **`.topbar-icon` 40 → 44** — its rule said `36px` while **all 12 markup sites
+> carried an inline `width:40px;height:40px` that outranked it**, so changing
+> the rule alone would have moved nothing (`P3`'s "a rule reaches only code that
+> asks for it", through a different door); **`.ntx-ico` 38 → 44**, the only way
+> into favorites and into the macro calculator; and **`.mc-surprise-btn` 35 → 44**
+> plus **`.inst-header-link` 31 → 44** — the two this file recorded as "caught
+> by no gate today", now measured by one (`CHROME_SELECTORS` 4 → 6,
+> `cat-pmc.html` added to `CHROME_PAGES`).
+>
+> **Two finds came from driving, not reading.** `.inst-header-link` had **three
+> dead rules in `cat-strength.html`** (F3 moved that page's guide link into
+> `.pd-links`; nothing has rendered the class there since), deleted along with
+> that page's now-redundant 44px override. And the dashboard topbar **sliced its
+> greeting mid-glyph at 320**: `.topbar-left` shrinks, but the title/sub block
+> inside it is a flex item with `min-width:auto`, so it keeps its full 156px
+> content width inside an 86px parent and is cut by that parent's
+> `overflow:hidden` — `.topbar-title`'s ellipsis never engages because the title
+> is never the thing that overflows. Pre-existing (screenshotted identical on
+> `main`), made 16px worse by the bigger icons, so fixed here: `min-width:0` on
+> the inner block, and the decorative avatar yields below 360px (86 → 140px for
+> the greeting).
+>
+> **`W-I5`'s premise does not reproduce:** it claims `.topbar-icon` narrows
+> 34.9 → 26.6px between 390 and 320; measured, it is **40x40 at both** — the
+> inline size is fixed, so it cannot narrow with viewport. Re-measure before
+> scoping it.
+>
+> **Still under the floor, deliberately:** the tour step dot's WIDTH (12px). 18
+> dots cannot each be 44px in a 320px row, its height is already 44, and
+> prev/next reach every slide — a geometric ceiling, not an unfixed defect, and
+> `quick-tour.css`'s own `W3-2` comment already says so. Two budget entries are
+> recorded as **height only**, because their widths are text-derived and this
+> baseline was raised by hand rather than with `--update` (the Google Fonts
+> constraint above). Proven to fail on a real 44 → 35 regression before landing.
 >
 > **W-I3 shipped (2026-08-30):** `tools/check-contrast.js` gained `--dark`,
 > reusing its light-mode probe and ratchet mechanics against a second
@@ -1810,6 +1929,47 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > environment to run honestly, per the font constraint recorded above; `V-03`,
 > `V-05` and `V-11` are database and Edge Function residuals, not CI work.
 
+> **Backend residuals closed (2026-09-20) — account deletion, and the Edge
+> Function nobody could find.** Both are `V-05`/`V-03` from the verification
+> pass above, and measuring first changed what the right fix was in one case
+> and what the number was in the other.
+>
+> **`supabase/phase13-account-deletion.sql` — applied, and a blanket CASCADE
+> would have been a serious mistake.** 26 foreign keys reference `auth.users`;
+> the 9 reading `NO ACTION` are all in `public`, and they are two different
+> kinds of thing. `admins.user_id` and `testers.user_id` are **membership**
+> rows — the row IS the person, meaningless once the account is gone, and both
+> are `NOT NULL`, so CASCADE is both right and the only option that works. The
+> other seven (`updated_by` ×5, `added_by`, `by`) are **authorship** columns on
+> content that must outlive its author: cascading them would delete every
+> published program, every published exercise, every program override and the
+> entire publish audit log the moment an owner account was removed. They are
+> all nullable, and **no policy in `public` reads any of them** (`pg_policies`,
+> zero rows), so they are pure audit metadata → `SET NULL`. Applied to the live
+> project and read back out of `pg_catalog` rather than trusted: 9 CASCADE, 7
+> SET NULL, **zero NO ACTION**. The migration deletes no rows by itself and is
+> reversible. Security advisors unchanged (the one pre-existing
+> leaked-password WARN is an Auth dashboard setting, not SQL).
+>
+> **`supabase/functions/upsert-health/index.ts` — committed from the live
+> deployment**, byte-for-byte, nothing cleaned up on the way in. It has been
+> ACTIVE since 2026-06-28 with no source here, which is exactly why two
+> separate passes concluded `daily_health` had "no writer anywhere": a search
+> of `pg_proc` and a search of this repository each come up empty, and a
+> deployed function lives in neither. `daily-health.sql`'s own comment is
+> corrected in place rather than rewritten, since the DECISION it records still
+> stands — the table still has zero rows because nothing CALLS that function,
+> and the missing piece is a client (`H3`'s Shortcuts/Apple Health bridge), not
+> a pipeline.
+>
+> **The "4 of 11 deployed slugs have no committed source" figure is now 2 of
+> 9**, and only ONE of those two is this repository's: `fetch-recipe-source` is
+> **Mike's Cookbook's** function — its own header says so, it fetches recipe
+> URLs for `mc-import.js` — and belongs in that repo, so committing it here
+> would be filing it in the wrong place. Both projects share one Supabase
+> instance, which is why a slug list read from the API is not the same thing as
+> a list of this app's functions.
+>
 > **Log-reader shape gate shipped (2026-09-19) — `tools/check-log-readers.js`.**
 > `L-03` was filed as a READ-path defect: the same five-line reader of
 > `mc_workout_log_v1` was copy-pasted around the tree and every copy wrote
@@ -1848,6 +2008,49 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > header QUOTES the old buggy reader to explain what it replaced, and counting
 > that as a live call site is a false positive — the same `decomment()` step
 > `check-design-tokens.js` already needed.
+>
+> **Pass 2 added (2026-09-20) — the same defect ONE LEVEL DOWN, and it was
+> live.** Pass 1 guards the log ARRAY and says nothing about a member's own
+> `sets` field, which is likewise whatever was written. Driven against `main`
+> with `mc_workout_log_v1` seeded six ways, **`workout-detail.html` rendered
+> completely blank on four of them** — object, bare string, number, and an
+> array with a null member — `#page` innerHTML **0 bytes**, one console error,
+> no other symptom. `null` alone was fine, which is exactly why `|| []` looked
+> like a guard. All six render after the fix.
+>
+> Unlike pass 1 there IS a shared implementation to delegate to here:
+> `mc-log-read.js`'s `readSets()`, and every consumer page already loads that
+> file (checked — all 77 `mc-finish.js` pages, the dashboard, and
+> `workout-detail.html`).
+>
+> **Three things the sweep corrected about its own scope.** (1) `sets` is a
+> generic field name: sweeping the whole tree flagged `psu-strength.html`'s
+> `lift.sets`, that page's authored PRESCRIPTION matrix, which has nothing to
+> do with a logged session — so pass 2 runs only over files that NAME this
+> store. (2) A bare `Array.isArray` in the window is not a guard for THIS
+> value: `mc-bridge.js` guards the log array six lines above its unguarded
+> `.sets` read, and the first draft accepted that and called the file clean;
+> the guard must now mention `sets`. (3) `mc-bridge.js` reads the store through
+> a generic `read(WLOG_KEY)` helper, so **pass 1's regex has never matched that
+> file at all** — its four call sites happen to be correct, but that was never
+> something this gate had verified.
+>
+> **`mc-finish.js:642` is NOT a defect** and is listed as such, so a fourth
+> sweep does not re-open it: `showDone(entry)` is handed the entry
+> `saveWorkout()` built three statements earlier, a local variable rather than
+> a store read.
+>
+> **`mc-bridge.js` is named as PENDING rather than fixed**, because it is
+> byte-identity-checked against Mikes-Cookbook on deploy (`cross-repo-drift`),
+> so changing it here alone turns the main deploy red until the matching
+> cookbook commit lands. The throw is real and reproduced —
+> `todaysDayType()` raises `(e.sets || []).forEach is not a function` — but
+> `mc-macros.js` wraps its only caller in a try/catch returning null, so the
+> cost is a silently lost day type in the macro generator, not a blank screen.
+> The list may only SHRINK: an entry that stops being an offender fails the
+> gate until it is removed, so a stale exemption cannot quietly excuse the next
+> defect. Proven to fail on all four shapes — reverted fix, a planted new
+> reader, a stale exemption, and a wrong-scope guard — before landing.
 
 ---
 
