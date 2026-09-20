@@ -1206,6 +1206,18 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > after. It is the most bespoke surface in the app, so it wants its own step
 > rather than a silent fix inside a phase aimed at other files.
 >
+> **Correction (2026-09-20): it got that step, and this note has been stale
+> since.** Commit `cac157c2` (2026-08-29, "Dashboard: join the ramp — Home was
+> the one screen `P1` could not reach") did exactly what the paragraph above
+> asks for. Measured now: `dashboard.html` declares `--text:var(--ink-11)`,
+> `--muted:var(--ink-8)`, `--muted2:var(--ink-7)` in dark and
+> `--ink-3`/`--ink-7`/`--ink-6` in light — every one of them a ramp read, not a
+> literal — it no longer overrides `--body-bg` at all, and a grep for
+> `--text:#` / `--muted:#` / `--body-bg:#` on that file returns nothing. It
+> still tunes `--muted` one step from `base.css`'s default, which is the
+> opposite of insulated: that is a local choice expressed ON the ramp, which is
+> what `P1` was for.
+>
 > **`P5` shipped (2026-08-29, PR #313) — the card surface, and the gate that finds the
 > next one.** Asked whether the refit reached the exercise cards, the measured
 > answer split in two: the card's **type** went warm (name `rgb(250,247,240)`,
