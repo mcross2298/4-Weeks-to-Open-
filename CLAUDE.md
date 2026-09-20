@@ -1049,6 +1049,25 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > runtime delta 0%. `A-14` is unblocked on the total but still needs
 > restore-on-build, since `restoreSets()` finds rows by `getElementById`.
 >
+> **Correction (2026-09-20): `A-14` (S5c) and all three `S6` items shipped
+> long ago; the roadmap table was three rows stale.** `A-14`'s lazy build AND
+> its restore-on-build both landed 2026-08-22 in commit `029d56c4` — titled for
+> `A-16`, and carrying `S5c` with it. `mc-setlog.js` publishes
+> `MCSetlogUtil.ensureRowsBuilt(card)`, and `mc-session.js`'s `restoreSets()`
+> calls it for the owning card **before** `getElementById(rowId)`.
+> **Verified by driving, not by reading:** `s3-back-traps.html` loads with 9
+> cards and rows built for one (`[5,0,0,0,0,0,0,0,0]`); logging a set on
+> **card 8** and reloading takes that card 0 → 5 rows with one restored tick
+> and the badge at `1/5`, zero console errors — while `rowsInDom` stays 5, so
+> card 0 is still unbuilt and the restore targets only the card that needs it.
+> `S6` likewise: `A-15` is `measure-session.js --check` over three probe pages
+> in `verify.yml`, `A-16` is the per-page-row delta sync in `mc-sync.js`, and
+> `A-12` shipped as the Kaizen audit's `F-I2` — `supabase-vendor.js` vendored
+> same-origin, injected on demand by `mc-supabase.js`'s `loadSDK()`, and held
+> out of the eager precache by `build-sw.py`'s `LAZY_ASSETS`. Nothing needed
+> fixing; the table did. Recorded rather than quietly ticked, because "blocked"
+> is what kept `A-14` on an open work list a month after it shipped.
+>
 > **`A-17` (the `defer` sweep) is blocked and was pulled out of S4b.** Its
 > premise — "the modules all self-initialise on `DOMContentLoaded`, so
 > `defer` preserves order" — is true module-to-module and ignores inline
