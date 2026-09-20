@@ -415,6 +415,11 @@ jobs:
         # One shared reader is not the fix here — see the tool's own header for
         # why (no module is loaded on all the consumer pages), so the
         # duplication stays and this gate holds it safe.
+        # Pass 2 covers the same defect one level down: a log ENTRY's own
+        # `sets` field. Pass 1 guards the array and says nothing about a
+        # member's set list, which is whatever was written — and driven for
+        # real, workout-detail.html rendered completely blank on 4 of 6 seeded
+        # store shapes.
         run: node tools/check-log-readers.js
 
       - name: Store coverage check (store-registry.json vs mc-sync.js / mc-export.js — audit G-01/G-02)

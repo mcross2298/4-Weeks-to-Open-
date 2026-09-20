@@ -130,7 +130,7 @@ node tools/check-program-data.js       # note-field + day-type vocabulary, fleet
 node tools/check-one-timer.js          # no orphan/duplicate/missing rest-timer implementation
 node tools/check-single-impl.js        # declared shared functions exist exactly once tree-wide
 node tools/check-dangling-refs.js      # no element id or global is read but provided nowhere (post-audit CI addendum)
-node tools/check-log-readers.js        # every parse of mc_workout_log_v1 guards its shape (L-03)
+node tools/check-log-readers.js        # every parse of mc_workout_log_v1 — and every read of an entry's own .sets — guards its shape (L-03)
 node tools/check-push-chain.js         # the notification opt-in chain is reachable end to end (Phase 1.1)
 node tools/check-store-coverage.js     # store-registry.json vs mc-sync.js STORES / mc-export.js KEYS
 node tools/check-topbar-inset.js       # sticky .topbar pins at top:0, absorbs the inset as padding, opaque
@@ -1888,6 +1888,49 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > header QUOTES the old buggy reader to explain what it replaced, and counting
 > that as a live call site is a false positive — the same `decomment()` step
 > `check-design-tokens.js` already needed.
+>
+> **Pass 2 added (2026-09-20) — the same defect ONE LEVEL DOWN, and it was
+> live.** Pass 1 guards the log ARRAY and says nothing about a member's own
+> `sets` field, which is likewise whatever was written. Driven against `main`
+> with `mc_workout_log_v1` seeded six ways, **`workout-detail.html` rendered
+> completely blank on four of them** — object, bare string, number, and an
+> array with a null member — `#page` innerHTML **0 bytes**, one console error,
+> no other symptom. `null` alone was fine, which is exactly why `|| []` looked
+> like a guard. All six render after the fix.
+>
+> Unlike pass 1 there IS a shared implementation to delegate to here:
+> `mc-log-read.js`'s `readSets()`, and every consumer page already loads that
+> file (checked — all 77 `mc-finish.js` pages, the dashboard, and
+> `workout-detail.html`).
+>
+> **Three things the sweep corrected about its own scope.** (1) `sets` is a
+> generic field name: sweeping the whole tree flagged `psu-strength.html`'s
+> `lift.sets`, that page's authored PRESCRIPTION matrix, which has nothing to
+> do with a logged session — so pass 2 runs only over files that NAME this
+> store. (2) A bare `Array.isArray` in the window is not a guard for THIS
+> value: `mc-bridge.js` guards the log array six lines above its unguarded
+> `.sets` read, and the first draft accepted that and called the file clean;
+> the guard must now mention `sets`. (3) `mc-bridge.js` reads the store through
+> a generic `read(WLOG_KEY)` helper, so **pass 1's regex has never matched that
+> file at all** — its four call sites happen to be correct, but that was never
+> something this gate had verified.
+>
+> **`mc-finish.js:642` is NOT a defect** and is listed as such, so a fourth
+> sweep does not re-open it: `showDone(entry)` is handed the entry
+> `saveWorkout()` built three statements earlier, a local variable rather than
+> a store read.
+>
+> **`mc-bridge.js` is named as PENDING rather than fixed**, because it is
+> byte-identity-checked against Mikes-Cookbook on deploy (`cross-repo-drift`),
+> so changing it here alone turns the main deploy red until the matching
+> cookbook commit lands. The throw is real and reproduced —
+> `todaysDayType()` raises `(e.sets || []).forEach is not a function` — but
+> `mc-macros.js` wraps its only caller in a try/catch returning null, so the
+> cost is a silently lost day type in the macro generator, not a blank screen.
+> The list may only SHRINK: an entry that stops being an offender fails the
+> gate until it is removed, so a stale exemption cannot quietly excuse the next
+> defect. Proven to fail on all four shapes — reverted fix, a planted new
+> reader, a stale exemption, and a wrong-scope guard — before landing.
 
 ---
 
