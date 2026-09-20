@@ -48,6 +48,19 @@
 -- of them permanently null, and contradict H3's locked decision. Zero rows
 -- today, and no writer anywhere — not in the app, not in an Edge Function.
 --
+-- CORRECTION (2026-09-20): the last clause is wrong, and it was wrong when it
+-- was written. An `upsert-health` Edge Function has been ACTIVE since
+-- 2026-06-28 and its only job is to write THIS table. Both passes that checked
+-- missed it the same way: it had no committed source, so searching pg_proc and
+-- searching this repository each came up empty, and a deployed function lives
+-- in neither. Its source is now committed at
+-- supabase/functions/upsert-health/index.ts.
+--
+-- What remains true is the part that matters: the table still has zero rows,
+-- because nothing CALLS that function. The missing piece is a client (the iOS
+-- Shortcuts / Apple Health bridge H3 flags for a platform-support spike), not
+-- a pipeline. The DECISION above stands unchanged.
+--
 -- Apply: paste into the Supabase SQL editor. Safe to re-run.
 -- ==========================================================================
 

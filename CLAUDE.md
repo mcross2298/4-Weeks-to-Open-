@@ -1869,6 +1869,47 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > environment to run honestly, per the font constraint recorded above; `V-03`,
 > `V-05` and `V-11` are database and Edge Function residuals, not CI work.
 
+> **Backend residuals closed (2026-09-20) — account deletion, and the Edge
+> Function nobody could find.** Both are `V-05`/`V-03` from the verification
+> pass above, and measuring first changed what the right fix was in one case
+> and what the number was in the other.
+>
+> **`supabase/phase13-account-deletion.sql` — applied, and a blanket CASCADE
+> would have been a serious mistake.** 26 foreign keys reference `auth.users`;
+> the 9 reading `NO ACTION` are all in `public`, and they are two different
+> kinds of thing. `admins.user_id` and `testers.user_id` are **membership**
+> rows — the row IS the person, meaningless once the account is gone, and both
+> are `NOT NULL`, so CASCADE is both right and the only option that works. The
+> other seven (`updated_by` ×5, `added_by`, `by`) are **authorship** columns on
+> content that must outlive its author: cascading them would delete every
+> published program, every published exercise, every program override and the
+> entire publish audit log the moment an owner account was removed. They are
+> all nullable, and **no policy in `public` reads any of them** (`pg_policies`,
+> zero rows), so they are pure audit metadata → `SET NULL`. Applied to the live
+> project and read back out of `pg_catalog` rather than trusted: 9 CASCADE, 7
+> SET NULL, **zero NO ACTION**. The migration deletes no rows by itself and is
+> reversible. Security advisors unchanged (the one pre-existing
+> leaked-password WARN is an Auth dashboard setting, not SQL).
+>
+> **`supabase/functions/upsert-health/index.ts` — committed from the live
+> deployment**, byte-for-byte, nothing cleaned up on the way in. It has been
+> ACTIVE since 2026-06-28 with no source here, which is exactly why two
+> separate passes concluded `daily_health` had "no writer anywhere": a search
+> of `pg_proc` and a search of this repository each come up empty, and a
+> deployed function lives in neither. `daily-health.sql`'s own comment is
+> corrected in place rather than rewritten, since the DECISION it records still
+> stands — the table still has zero rows because nothing CALLS that function,
+> and the missing piece is a client (`H3`'s Shortcuts/Apple Health bridge), not
+> a pipeline.
+>
+> **The "4 of 11 deployed slugs have no committed source" figure is now 2 of
+> 9**, and only ONE of those two is this repository's: `fetch-recipe-source` is
+> **Mike's Cookbook's** function — its own header says so, it fetches recipe
+> URLs for `mc-import.js` — and belongs in that repo, so committing it here
+> would be filing it in the wrong place. Both projects share one Supabase
+> instance, which is why a slug list read from the API is not the same thing as
+> a list of this app's functions.
+>
 > **Log-reader shape gate shipped (2026-09-19) — `tools/check-log-readers.js`.**
 > `L-03` was filed as a READ-path defect: the same five-line reader of
 > `mc_workout_log_v1` was copy-pasted around the tree and every copy wrote
