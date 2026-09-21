@@ -225,6 +225,24 @@ html[data-theme="light"] h1{color:#1c1a17;}
 html[data-theme="light"] .sec span,
 html[data-theme="light"] .ticks span{color:#3d4756;}
 
+/* The hero band keeps its dark navy gradient in BOTH themes -- .hero's
+   background is never re-declared under html[data-theme="light"] -- so its text
+   has to stay light in both. The two blocks above darkened .hero h1 and .hero p
+   along with the rest of this page's prose, which put near-black ink on a
+   near-black band: 1.04:1 and 1.93:1, effectively invisible.
+
+   It survived because the contrast gate could not see it. bgOf() read
+   backgroundColor only, so on a transparent h1 it walked straight past the
+   gradient to the cream body underneath and measured dark-on-cream, which
+   passes comfortably. tools/check-contrast.js now reads the gradient's own
+   colour stops (and takes the worst), which is what surfaced this.
+
+   These come last on purpose: html[data-theme="light"] h1 above also matches
+   .hero h1, so removing the hero from the darkened lists would not have been
+   enough -- the generic rule would darken it again. */
+html[data-theme="light"] .hero h1{color:#f5f2ec;}
+html[data-theme="light"] .hero p{color:#cbd5e1;}
+
 /* Downloads this page as a real .pdf (mc-pdf.js). Marked .no-pdf so the button
    doesn't print itself into the file it just made. */
 .es-export{display:flex;align-items:center;justify-content:center;gap:5px;flex-shrink:0;

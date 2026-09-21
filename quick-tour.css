@@ -13,6 +13,38 @@
   --gold:#d4af37;--gold-dim:rgba(212,175,55,0.15);--gold-glow:rgba(212,175,55,0.25);
   --text:#fff;--muted:#9ca3af;--muted2:var(--muted);
   --ctrl-h:78px;
+
+  /* COMPONENT TOKENS for this view's own type and corners.
+     Every value below is off the global type and radius scales and has no step on
+     them, so the choice was: snap to the nearest step and move type on a
+     user-facing page, or name the values where they are. Named, per the
+     owner's call -- the rendering is byte-identical to before, and these stop
+     being anonymous numbers scattered through the file. They deliberately sit
+     BESIDE the global scale rather than on it: the tour is one screen with
+     its own display sizing, and widening the app-wide scale to fit one view
+     is how a scale stops meaning anything.
+     If the tour is ever restyled, these are the knobs.
+
+     Writing THIS comment tripped check-design-tokens.js's glob-terminator
+     rule -- the fourth instance in this repo, and the first the GATE caught
+     rather than someone debugging a silently-broken page. The sentence above
+     originally named the two scales with an asterisk against a slash, which
+     is a comment terminator: it would have closed here, dumped the rest of
+     this prose into the CSS parser and eaten the next rule, with no error.
+     The scales are named in words instead. */
+  --tour-fs-hero:54px;      /* the scene glyph -- the one display element */
+  --tour-fs-title:25px;     /* slide title */
+  --tour-fs-bar:17px;       /* top-bar title */
+  --tour-fs-cta-ico:19px;   /* the try-it card's leading icon */
+  --tour-fs-cta-nm:13.5px;  /* the try-it card's label, and the finish list */
+  --tour-fs-note:12.5px;    /* the tip line -- the smallest text here */
+
+  --tour-r-card:14px;       /* the repeated card corner: scene, step, tip, cta */
+  --tour-r-scene:18px;      /* the scene frame, one step softer than a card */
+  --tour-r-pill:20px;       /* the scene caption pill */
+  --tour-r-btn:13px;        /* the two footer buttons */
+  --tour-r-chip:7px;        /* the step-row number chip */
+  --tour-r-track:3px;       /* the progress bar and its fill */
 }
 body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(--ctrl-h);overflow-x:hidden;}
 
@@ -41,14 +73,14 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 /* .back is now shared in base.css (W3-3, VOC/VOA Kaizen audit) -- this page
    loads base.css so no local copy is needed. */
 .topbar-info{flex:1;min-width:0;}
-.topbar-title{font-size:17px;font-weight:900;letter-spacing:-0.02em;}
+.topbar-title{font-size:var(--tour-fs-bar);font-weight:900;letter-spacing:-0.02em;}
 .topbar-sub{font-size:var(--fs-xs);color:var(--muted2);margin-top:1px;}
 .skip{font-size:var(--fs-xs);font-weight:800;color:var(--muted2);text-decoration:none;letter-spacing:0.04em;padding:8px;}
 
 /* ── PROGRESS ── */
 .progress-wrap{padding:2px 16px 14px;}
-.progress-track{height:5px;border-radius:3px;background:rgba(255,255,255,0.07);overflow:hidden;}
-.progress-fill{height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,#8a6a10,var(--gold));transition:width 0.35s cubic-bezier(.4,0,.2,1);}
+.progress-track{height:5px;border-radius:var(--tour-r-track);background:rgba(255,255,255,0.07);overflow:hidden;}
+.progress-fill{height:100%;width:0;border-radius:var(--tour-r-track);background:linear-gradient(90deg,#8a6a10,var(--gold));transition:width 0.35s cubic-bezier(.4,0,.2,1);}
 .progress-meta{display:flex;justify-content:space-between;margin-top:8px;font-size:var(--fs-2xs);font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted2);}
 .progress-meta .pm-step{color:var(--gold);}
 
@@ -57,7 +89,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   display:flex;align-items:center;gap:11px;text-decoration:none;
   max-width:560px;margin:0 auto 16px;padding:12px 14px;
   background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));
-  border:1px solid rgba(212,175,55,0.3);border-radius:14px;
+  border:1px solid rgba(212,175,55,0.3);border-radius:var(--tour-r-card);
 }
 .exec-link:active{background:rgba(212,175,55,0.16);}
 .exec-ico{font-size:var(--fs-3xl);flex-shrink:0;}
@@ -74,12 +106,12 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 @keyframes slideIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
 
 .eyebrow{font-size:var(--fs-2xs);font-weight:900;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
-.slide-title{font-size:25px;font-weight:900;letter-spacing:-0.02em;line-height:1.15;margin-bottom:6px;}
+.slide-title{font-size:var(--tour-fs-title);font-weight:900;letter-spacing:-0.02em;line-height:1.15;margin-bottom:6px;}
 .slide-tagline{font-size:var(--fs-sm);color:var(--muted);line-height:1.5;margin-bottom:18px;}
 
 /* ── VIDEO / SCENE FRAME ── */
 .scene{
-  position:relative;border-radius:18px;overflow:hidden;margin-bottom:18px;
+  position:relative;border-radius:var(--tour-r-scene);overflow:hidden;margin-bottom:18px;
   /* This gradient used to be two bespoke blue-biased near-blacks on a warm
      ground — the same shape premium-design-roadmap.md's P5 found on the card
      surface, and invisible until this stylesheet left the tour's inline
@@ -92,13 +124,13 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   align-items:center;justify-content:center;text-align:center;padding:20px;
 }
 .scene-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 30% 30%,var(--scene-glow,rgba(212,175,55,0.12)) 0%,transparent 62%);}
-.scene-glyph{font-size:54px;line-height:1;margin-bottom:12px;filter:drop-shadow(0 4px 14px rgba(0,0,0,0.5));}
+.scene-glyph{font-size:var(--tour-fs-hero);line-height:1;margin-bottom:12px;filter:drop-shadow(0 4px 14px rgba(0,0,0,0.5));}
 .scene-caption{font-size:var(--fs-sm);font-weight:800;color:#e2e8f0;letter-spacing:0.01em;max-width:80%;line-height:1.45;}
 .scene-clip{
   position:absolute;left:12px;bottom:12px;display:inline-flex;align-items:center;gap:6px;
   font-size:var(--fs-3xs);font-weight:800;letter-spacing:0.08em;text-transform:uppercase;
   color:var(--muted);background:rgba(0,0,0,0.45);border:1px solid var(--border2);
-  border-radius:20px;padding:4px 10px;backdrop-filter:blur(6px);
+  border-radius:var(--tour-r-pill);padding:4px 10px;backdrop-filter:blur(6px);
 }
 .scene-clip .dot{width:7px;height:7px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px #ef4444;animation:rec 1.6s ease-in-out infinite;}
 @keyframes rec{0%,100%{opacity:1;}50%{opacity:0.25;}}
@@ -110,7 +142,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 
 /* ── NARRATION ── */
 .narration{
-  background:var(--surface);border:1px solid var(--border2);border-radius:14px;
+  background:var(--surface);border:1px solid var(--border2);border-radius:var(--tour-r-card);
   padding:14px 16px;margin-bottom:16px;position:relative;
 }
 .narration::before{content:'🎙️ COACH';position:absolute;top:-9px;left:14px;font-size:var(--fs-3xs);font-weight:900;letter-spacing:0.12em;color:var(--gold);background:var(--bg);padding:0 7px;}
@@ -122,7 +154,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .steps{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
 .step{display:flex;gap:11px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 13px;}
 .step-n{
-  flex-shrink:0;width:22px;height:22px;border-radius:7px;
+  flex-shrink:0;width:22px;height:22px;border-radius:var(--tour-r-chip);
   background:var(--gold-dim);border:1px solid rgba(212,175,55,0.3);
   color:var(--gold);font-size:var(--fs-xs);font-weight:900;
   display:flex;align-items:center;justify-content:center;margin-top:1px;
@@ -138,31 +170,31 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   border-radius:var(--r-md);padding:11px 13px;margin-bottom:18px;
 }
 .tip-ico{font-size:var(--fs-xl);flex-shrink:0;line-height:1.4;}
-.tip-tx{font-size:12.5px;line-height:1.55;color:#a7f3d0;}
+.tip-tx{font-size:var(--tour-fs-note);line-height:1.55;color:#a7f3d0;}
 .tip-tx b{color:#6ee7b7;font-weight:800;}
 
 /* ── INLINE CTA (jump into the real screen) ── */
 .try-cta{
   display:flex;align-items:center;gap:10px;text-decoration:none;
   background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.3);
-  border-radius:14px;padding:13px 15px;margin-bottom:8px;
+  border-radius:var(--tour-r-card);padding:13px 15px;margin-bottom:8px;
 }
 .try-cta:active{background:rgba(212,175,55,0.14);}
-.try-cta-ico{font-size:19px;}
+.try-cta-ico{font-size:var(--tour-fs-cta-ico);}
 .try-cta-body{flex:1;min-width:0;}
 .try-cta-lbl{font-size:var(--fs-3xs);font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);}
-.try-cta-nm{font-size:13.5px;font-weight:800;color:#fff;margin-top:1px;}
+.try-cta-nm{font-size:var(--tour-fs-cta-nm);font-weight:800;color:#fff;margin-top:1px;}
 .try-cta-arrow{color:var(--gold);font-size:var(--fs-xl);flex-shrink:0;}
 
 /* ── FINISH CARD (last slide) ── */
 .finish-cta{
   display:block;width:100%;text-align:center;text-decoration:none;
-  padding:15px;border-radius:14px;background:var(--gold);color:#000;
+  padding:15px;border-radius:var(--tour-r-card);background:var(--gold);color:#000;
   font-size:var(--fs-lg);font-weight:900;letter-spacing:0.03em;margin-top:6px;
 }
 .finish-cta:active{opacity:0.85;}
 .finish-list{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:18px;}
-.finish-list li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.5;color:#cbd5e1;}
+.finish-list li{display:flex;gap:10px;align-items:flex-start;font-size:var(--tour-fs-cta-nm);line-height:1.5;color:#cbd5e1;}
 .finish-list .chk{color:var(--gold);font-weight:900;flex-shrink:0;}
 
 /* ── BOTTOM CONTROLS ── */
@@ -173,7 +205,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   display:flex;align-items:center;gap:12px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
 }
 .nav-btn{
-  flex:1;height:50px;border-radius:13px;border:1px solid var(--border2);
+  flex:1;height:50px;border-radius:var(--tour-r-btn);border:1px solid var(--border2);
   background:var(--surface);color:#fff;font-size:var(--fs-md);font-weight:800;letter-spacing:0.02em;
   cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;
   transition:opacity 0.15s,transform 0.1s;

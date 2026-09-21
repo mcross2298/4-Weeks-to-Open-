@@ -77,6 +77,13 @@ const CHECK = opt('check', null);
 const UPDATE_CHECK = opt('update-check', null);
 const CHECK_FILE = CHECK || UPDATE_CHECK;
 const BUDGET_MULT = 1.5;
+// V-10. A budget more than this far above what the page actually costs has
+// stopped being a floor: anything could regress into the gap and still pass.
+// The gate cannot fix that itself -- every metric it compares is a RATE
+// (R.rest.perSecond), so the honest numbers can only be written by a run on CI
+// hardware, never from an agent sandbox. So it reports instead, the same way
+// tools/check-contrast.js says "improved to N -- lower the budget".
+const SLACK_AT = 0.75;
 const BUDGET_METRICS = ['mutationRecords', 'observerCallbacks', 'querySelectorAll', 'storageReads'];
 
 /* Viewports: the UX report's recommendation — design to the 15/16, treat the
@@ -383,12 +390,15 @@ async function layout(page) {
       console.log('    ' + report.page + ': no budget entry — skipped (not a committed probe page)');
     } else {
       let over = false;
+      const slack = [];
       for (const k of BUDGET_METRICS) {
         const budget = entry[k];
         const actual = R.rest.perSecond[k];
         const ceiling = Math.round(budget * BUDGET_MULT * 10) / 10;
         const bad = actual > ceiling;
         if (bad) over = true;
+        // V-10: a ratchet nobody re-baselines quietly stops being a floor. Say so.
+        if (!bad && budget > 0 && actual < budget * SLACK_AT) slack.push(k + ' ' + budget + ' -> ' + actual);
         console.log('    ' + k.padEnd(20) + pad(actual, 10) + '  vs budget ' + pad(budget, 8) +
           '  (ceiling ' + ceiling + ')' + (bad ? '  OVER BUDGET' : ''));
       }
@@ -398,6 +408,11 @@ async function layout(page) {
         process.exitCode = 1;
       } else {
         console.log('    within budget.');
+        if (slack.length && !UPDATE_CHECK) {
+          console.log('    SLACK — these budgets no longer bound anything; re-baseline from CI');
+          console.log('    with --update-check so the ratchet is a real floor again:');
+          slack.forEach(l => console.log('        ' + l));
+        }
         if (UPDATE_CHECK) {
           budgets[report.page] = {};
           for (const k of BUDGET_METRICS) budgets[report.page][k] = R.rest.perSecond[k];

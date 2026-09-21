@@ -1273,6 +1273,155 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > (`ERR_ABORTED`, `document.fonts` empty, Manrope and the fallback both measuring
 > 172px). The constraint is not "the network is blocked", it is "the *browser's*
 > network is blocked", which no amount of checking with `curl` will reveal.
+>
+> **RETIRED (2026-09-21) — `tools/font-cache.js`.** The sharpened statement above
+> is correct and the inference drawn from it four separate times was not. "The
+> browser's network is blocked" does not imply "a ratchet cannot be baselined
+> here"; it implies the browser should not be the thing doing the fetching.
+> **Node can reach that host.** So the module fetches the CSS and the woff2
+> faces with `https`, caches them outside the repo, and serves them into the
+> page through a Playwright route. Measured on `dashboard.html`:
+>
+> | | `document.fonts.size` | Archivo | Manrope | fallback |
+> |---|---|---|---|---|
+> | without | 0 | 247.58 | 247.58 | 247.58 |
+> | with | 45 | 219.22 | 215.38 | 247.58 |
+>
+> Three distinct widths instead of one measurement repeated three times, and the
+> page's own height moves 1546 → 1522. **It is also the right thing for CI,**
+> which could always reach Google: routing from a local cache makes a budget a
+> function of this repository rather than of a third-party CDN's uptime and
+> font revisions.
+>
+> **CONFIRMED ON CI (2026-09-21, run 185 on `3960c629`): the whole point of
+> this module held.** The claim being tested is that a baseline WRITTEN in an
+> agent sandbox is valid on CI hardware once fonts are routed. Both contrast
+> gates ran there — they sit behind an `EXIT -eq 0` guard, so the earlier
+> failure had short-circuited them and nothing had measured it — and both
+> passed against the numbers committed from here, on a different Playwright
+> Chromium build. That is the equivalence proven rather than asserted, and it
+> is also what bounds it: a COUNT of failing elements is portable, the
+> rasterised measurements in the reverted bullet below are not.
+>
+> **What it unblocked, all of it verified by an enforcing run afterwards, never
+> by the `--update` alone:**
+> - **The light budgets, re-baselined** — 329 → **299** findings. 23 pages fell,
+>   17 rose. The falls include every one of the five improvements `P4` recorded
+>   as "unbanked until someone re-baselines from CI": `pmc-s7-giant` 24 → 1,
+>   `pmc-home` 14 → 0, `pmc-instructions` 6 → 0, `program-guide` 13 → 3,
+>   `psu-strength` 18 → 9.
+> - **`contrast-budgets-dark.json` seeded — `W-I3` is closed.** 141 pages, 74
+>   findings, and `verify.yml`'s `--dark` step now fails the build instead of
+>   only reporting. Note the number against the throwaway sandbox measurement
+>   `W-I3` recorded: **587**. That figure was never a defect count — the emoji
+>   and hidden-ancestor fixes in the gate removed most of it — and it should not
+>   be quoted again.
+> - **`chrome-budgets.json` — attempted, and REVERTED. This one does not
+>   work, and the failure is the useful part.** `check-journey.js`'s `W-I2`
+>   note says "a `--update` run from real CI fills both back in", so the font
+>   cache was wired into that gate too and the widths measured:
+>   `surprise me button` **139.2**, `program guide link` **252.1**, and
+>   `back link` 80.5 → **73.7** (80.5 being the system fallback's wider
+>   glyphs). Every local gate was green. **CI's `Headless render smoke test`
+>   job then failed**, and `check-journey` is the only gate in that step this
+>   change touched.
+>
+>   The reason is a real boundary, not an accident: **a text-derived width is
+>   reproducible within one browser build, not across two.** CI installs its
+>   own Playwright Chromium; this sandbox runs `/opt/pw-browsers/chromium`
+>   (141.0.7390.37). Text shaping and hinting differ between builds by
+>   fractions of a pixel, and `CHROME_EPSILON` is **0.3**. Pinning 73.7 from
+>   here is the same error as baselining the pixel ratchet from here — which
+>   was correctly refused two paragraphs down, then committed anyway through a
+>   different door, because a *number* felt safer than a *screenshot*. It is
+>   not: both are per-build rasterisation.
+>
+>   **That diagnosis was an inference, not a quotation, and it is worth saying
+>   how weak the evidence was**: the Actions log API truncates to the last
+>   ~9.6KB — HTTP noise from a later passing gate — the check run carried no
+>   annotations, and the blob log host is unreachable from here, so the failing
+>   line was never read. `check-journey` was simply the only gate in that step
+>   the change touched. Reverting it turned CI green on the next run, which
+>   confirms it after the fact. **If a failure in that job ever has to be
+>   diagnosed again, add a per-gate `FAILED: <gate>` echo first** — that step
+>   runs eight browser gates under `if ! …; then EXIT=1; fi`, so every later
+>   gate's output pushes the real error out of the readable window.
+>
+>   So the journey gate takes **no font wiring** and those entries stay
+>   height-only. The W-I2 note stands as written, with one correction — the
+>   run that fills them in must be the run that ENFORCES them, on the same
+>   machine, which means CI itself and not any environment that merely has
+>   the fonts.
+>
+> **What it does NOT unblock, measured rather than assumed.** Anything whose
+> baseline is a RASTERISED quantity — a screenshot, or a text-derived width.
+> The pixel-exact visual ratchet still cannot be baselined from here. Layout now matches CI —
+> all five baseline heights agree exactly — but **glyph rasterisation does
+> not**: 91.59% of pixels identical, 5.09% differing by ≤64 levels, and
+> **3.32% by more than 64** (max 249) across 36 of 55 row bands, on ordinary
+> prose. `check-visual-ratchet.js` keeps its `seed: true` entry and takes no
+> font wiring. The distinction worth carrying: **layout equivalence is not
+> rasterisation equivalence**, and a gate that compares numbers can accept the
+> first while a gate that compares pixels needs the second. Sharpened by the
+> `chrome-budgets` revert above: "compares numbers" is not the test either —
+> a COUNT (how many elements fail a contrast ratio) survives a build change,
+> a MEASUREMENT of rendered text does not.
+>
+> **`V-10` was never a font problem, and the note recording it as one was
+> wrong.** Every metric `measure-session.js` gates on is a **rate**
+> (`R.rest.perSecond`), so it is a function of CPU speed and an honest baseline
+> can only be written by CI hardware — fonts would not have changed that. The
+> budgets are genuinely stale: `mm-p1` `querySelectorAll` **301.8 vs 149**,
+> `bro-split` **347.8 vs 108.9** — more than 2x slack, so they bound nothing.
+> The gate cannot fix that itself, so it now **reports** it, the way
+> `check-contrast.js` already says "improved to N — lower the budget"
+> (`SLACK_AT`, 0.75). It correctly stays silent on `psu-strength`, whose 64
+> against 67 is tight.
+>
+> **The trap that nearly made all of this a lie.** Playwright matches routes
+> **last-registered-first**, and every browser gate here already aborts
+> `fonts.googleapis.com` because it was unreachable. The first wiring into
+> `check-journey.js` installed the cache ABOVE that abort, so the abort won and
+> the run measured the fallback while reporting fonts were on. The giveaway was
+> that the "with fonts" run came back **byte-identical** to the run without —
+> which is the same shape as `check-journey.js`'s own safe-area check passing on
+> known-broken CSS because it was testing its own override. Both orderings on
+> one page: install-then-abort `fonts.size 0`, abort-then-install `fonts.size 45`.
+> `font-cache.js`'s header says INSTALL LAST for this reason.
+
+> **Gradient backgrounds — the contrast gate's last blind spot, closed
+> (2026-09-21).** `W-I3`'s correction left this deliberately unfixed: `bgOf()`
+> read `backgroundColor` only and ignored `background-image` on **5,191 of
+> 12,890** measured elements (40.3%), and a prototype that composited them moved
+> 95 of 142 pages up. Two objections were recorded, and both are answered rather
+> than waived. *Which point of a ramp does the text sit on?* — `bgCandidates()`
+> collects the gradient's own colour **stops** and scores the text against the
+> **worst** of them. That needs no judgement and cannot under-report. *It would
+> fail every budget on landing* — true of a prototype landing alone, not of one
+> landing **with** its re-baseline, which is what happened here.
+>
+> **It immediately found a fix that had overshot into the defect it was fixing.**
+> `quick-tour-overview.html`'s light block darkened `.hero h1` to `#1c1a17` and
+> `.hero p` to `#3d4756` along with the rest of the page's prose — but `.hero`
+> keeps its dark navy gradient in light mode, because that background is never
+> re-declared under `html[data-theme="light"]`. The result was near-black ink on
+> a near-black band, **1.04:1 and 1.93:1**, effectively invisible. It survived
+> review and survived the gate because the gate walked past the gradient to the
+> cream body underneath and measured dark-on-cream, which passes comfortably.
+> Fixed here (the hero text is light in both themes, and the rules must come
+> last because the generic `html[data-theme="light"] h1` also matches
+> `.hero h1`), so that page holds at **0**.
+>
+> **The 17 pages whose budget rose are real, newly-visible defects, not
+> artifacts** — checked against rendered pixels, not inferred. The recurring
+> shape is the same one: **a page-branded dark hero gradient, which does not
+> change between themes, under light-theme ink that does.** On
+> `faint-instructions.html` the title measures 1.19:1 and **both** gradient
+> stops fail (2.12:1 and 1.15:1), so it is not a worst-stop overestimate. They
+> are ratcheted rather than fixed, deliberately: the fix is a light-theme
+> colour decision per hero, several of those pages are licensed-program guides
+> that are out of scope here, and `W-I1` records why a gate that is red from
+> birth gets turned off. They are now measured, which they were not before.
 
 > **Header safe-area + bleed fix (2026-08-24).** The app header read as
 > unfixed and see-through in the installed PWA: content scrolled visibly
