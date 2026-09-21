@@ -1293,6 +1293,16 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > function of this repository rather than of a third-party CDN's uptime and
 > font revisions.
 >
+> **CONFIRMED ON CI (2026-09-21, run 185 on `3960c629`): the whole point of
+> this module held.** The claim being tested is that a baseline WRITTEN in an
+> agent sandbox is valid on CI hardware once fonts are routed. Both contrast
+> gates ran there — they sit behind an `EXIT -eq 0` guard, so the earlier
+> failure had short-circuited them and nothing had measured it — and both
+> passed against the numbers committed from here, on a different Playwright
+> Chromium build. That is the equivalence proven rather than asserted, and it
+> is also what bounds it: a COUNT of failing elements is portable, the
+> rasterised measurements in the reverted bullet below are not.
+>
 > **What it unblocked, all of it verified by an enforcing run afterwards, never
 > by the `--update` alone:**
 > - **The light budgets, re-baselined** — 329 → **299** findings. 23 pages fell,
@@ -1325,6 +1335,17 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   was correctly refused two paragraphs down, then committed anyway through a
 >   different door, because a *number* felt safer than a *screenshot*. It is
 >   not: both are per-build rasterisation.
+>
+>   **That diagnosis was an inference, not a quotation, and it is worth saying
+>   how weak the evidence was**: the Actions log API truncates to the last
+>   ~9.6KB — HTTP noise from a later passing gate — the check run carried no
+>   annotations, and the blob log host is unreachable from here, so the failing
+>   line was never read. `check-journey` was simply the only gate in that step
+>   the change touched. Reverting it turned CI green on the next run, which
+>   confirms it after the fact. **If a failure in that job ever has to be
+>   diagnosed again, add a per-gate `FAILED: <gate>` echo first** — that step
+>   runs eight browser gates under `if ! …; then EXIT=1; fi`, so every later
+>   gate's output pushes the real error out of the readable window.
 >
 >   So the journey gate takes **no font wiring** and those entries stay
 >   height-only. The W-I2 note stands as written, with one correction — the
