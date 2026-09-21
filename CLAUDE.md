@@ -1306,25 +1306,45 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   `W-I3` recorded: **587**. That figure was never a defect count — the emoji
 >   and hidden-ancestor fixes in the gate removed most of it — and it should not
 >   be quoted again.
-> - **`chrome-budgets.json`'s four height-only entries filled in.**
->   `check-journey.js`'s own `W-I2` note said "a `--update` run from real CI
->   fills both back in"; `surprise me button` is **139.2** wide and
->   `program guide link` **252.1**, at both viewports. In the same run
->   `back link` went 80.5 → **73.7** — not a regression but a **change of
->   basis**: 80.5 was the system fallback's wider glyphs, which is what CI was
->   also measuring because it aborts the font request too. The ratchet fails
->   only on a SHRINK, so a fail-open run measuring the wider fallback still
->   passes; the font path cannot break the gate by being unavailable.
+> - **`chrome-budgets.json` — attempted, and REVERTED. This one does not
+>   work, and the failure is the useful part.** `check-journey.js`'s `W-I2`
+>   note says "a `--update` run from real CI fills both back in", so the font
+>   cache was wired into that gate too and the widths measured:
+>   `surprise me button` **139.2**, `program guide link` **252.1**, and
+>   `back link` 80.5 → **73.7** (80.5 being the system fallback's wider
+>   glyphs). Every local gate was green. **CI's `Headless render smoke test`
+>   job then failed**, and `check-journey` is the only gate in that step this
+>   change touched.
 >
-> **What it does NOT unblock, measured rather than assumed.** The pixel-exact
-> visual ratchet still cannot be baselined from here. Layout now matches CI —
+>   The reason is a real boundary, not an accident: **a text-derived width is
+>   reproducible within one browser build, not across two.** CI installs its
+>   own Playwright Chromium; this sandbox runs `/opt/pw-browsers/chromium`
+>   (141.0.7390.37). Text shaping and hinting differ between builds by
+>   fractions of a pixel, and `CHROME_EPSILON` is **0.3**. Pinning 73.7 from
+>   here is the same error as baselining the pixel ratchet from here — which
+>   was correctly refused two paragraphs down, then committed anyway through a
+>   different door, because a *number* felt safer than a *screenshot*. It is
+>   not: both are per-build rasterisation.
+>
+>   So the journey gate takes **no font wiring** and those entries stay
+>   height-only. The W-I2 note stands as written, with one correction — the
+>   run that fills them in must be the run that ENFORCES them, on the same
+>   machine, which means CI itself and not any environment that merely has
+>   the fonts.
+>
+> **What it does NOT unblock, measured rather than assumed.** Anything whose
+> baseline is a RASTERISED quantity — a screenshot, or a text-derived width.
+> The pixel-exact visual ratchet still cannot be baselined from here. Layout now matches CI —
 > all five baseline heights agree exactly — but **glyph rasterisation does
 > not**: 91.59% of pixels identical, 5.09% differing by ≤64 levels, and
 > **3.32% by more than 64** (max 249) across 36 of 55 row bands, on ordinary
 > prose. `check-visual-ratchet.js` keeps its `seed: true` entry and takes no
 > font wiring. The distinction worth carrying: **layout equivalence is not
 > rasterisation equivalence**, and a gate that compares numbers can accept the
-> first while a gate that compares pixels needs the second.
+> first while a gate that compares pixels needs the second. Sharpened by the
+> `chrome-budgets` revert above: "compares numbers" is not the test either —
+> a COUNT (how many elements fail a contrast ratio) survives a build change,
+> a MEASUREMENT of rendered text does not.
 >
 > **`V-10` was never a font problem, and the note recording it as one was
 > wrong.** Every metric `measure-session.js` gates on is a **rate**

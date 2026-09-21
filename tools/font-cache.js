@@ -30,6 +30,19 @@
    Google outage or a font revision cannot move a budget under anyone's feet.
    The cache is fetched once per run and reused.
 
+   WHAT THIS IS NOT FOR. Fonts make a gate's input the real typeface; they do
+   not make a RASTERISED measurement portable. A count (how many elements fail
+   a contrast ratio) survives a change of browser build; the measured width of
+   rendered text does not -- shaping and hinting differ between Chromium
+   builds by fractions of a pixel. check-journey.js was wired to this module
+   so its two text-derived width budgets could finally be filled in; every
+   local gate went green and CI then failed, because CI installs its own
+   Playwright Chromium and this sandbox runs /opt/pw-browsers/chromium, while
+   that gate's CHROME_EPSILON is 0.3. The wiring was reverted. Use this module
+   for gates whose baseline is a count or a colour, not for one whose baseline
+   is pixels -- that includes check-visual-ratchet.js, which deliberately takes
+   no font wiring either.
+
    FAIL-OPEN BY DESIGN. If the fetch cannot happen (no network at all), the
    handler installs nothing and the page renders exactly as it does today.
    A gate that cannot get fonts still runs; it simply measures what it always

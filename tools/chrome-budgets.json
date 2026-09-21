@@ -4,7 +4,7 @@
     "h": 44
   },
   "back link @ 320": {
-    "w": 73.7,
+    "w": 80.5,
     "h": 44
   },
   "topbar icon @ 320": {
@@ -19,24 +19,12 @@
     "w": 44,
     "h": 44
   },
-  "nutrition header icon @ 320": {
-    "w": 44,
-    "h": 44
-  },
-  "surprise me button @ 320": {
-    "w": 139.2,
-    "h": 44
-  },
-  "program guide link @ 320": {
-    "w": 252.1,
-    "h": 44
-  },
   "bottom nav tab @ 390": {
     "w": 78,
     "h": 44
   },
   "back link @ 390": {
-    "w": 73.7,
+    "w": 80.5,
     "h": 44
   },
   "topbar icon @ 390": {
@@ -51,16 +39,24 @@
     "w": 44,
     "h": 44
   },
+  "nutrition header icon @ 320": {
+    "w": 44,
+    "h": 44
+  },
   "nutrition header icon @ 390": {
     "w": 44,
     "h": 44
   },
+  "surprise me button @ 320": {
+    "h": 44
+  },
+  "program guide link @ 320": {
+    "h": 44
+  },
   "surprise me button @ 390": {
-    "w": 139.2,
     "h": 44
   },
   "program guide link @ 390": {
-    "w": 252.1,
     "h": 44
   }
 }
