@@ -59,6 +59,15 @@
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
+const fontCache = require('./font-cache');
+// One cache per process, installed on every context this tool opens.
+let _mcFonts = null;
+async function useFonts(ctx) {
+  if (!_mcFonts) _mcFonts = await fontCache.prepare();
+  await _mcFonts.install(ctx);
+  return _mcFonts;
+}
+
 
 const baseUrl = (process.argv[2] || '').replace(/\/$/, '');
 if (!baseUrl || baseUrl.startsWith('--')) {
@@ -550,6 +559,9 @@ async function runChromePass(browser) {
       viewport: CHROME_VIEWPORTS[vpKey], deviceScaleFactor: 2, isMobile: true, hasTouch: true });
     await ctx.route('**://fonts.googleapis.com/**', r => r.abort());
     await ctx.route('**://cdn.jsdelivr.net/**', r => r.abort());
+    await useFonts(ctx);   // AFTER the aborts: Playwright matches routes last-registered-first,
+                           // so a googleapis abort registered below would win and
+                           // silently give this pass the system fallback again.
     for (const page of CHROME_PAGES) {
       const pg = await ctx.newPage();
       try {
@@ -828,6 +840,9 @@ async function runSubsystemPass(browser) {
   await ctx.route('**://fonts.googleapis.com/**', r => r.abort());
   await ctx.route('**://cdn.jsdelivr.net/**', r => r.abort());
   await ctx.route('**://*.supabase.co/**', r => r.abort());
+  await useFonts(ctx);   // AFTER the aborts: Playwright matches routes last-registered-first,
+                         // so a googleapis abort registered below would win and
+                         // silently give this pass the system fallback again.
   const out = [];
   for (const entry of GUIDED_PAGES) out.push(await runGuidedPass(ctx, entry));
   out.push(await runIntervalPass(ctx));
@@ -874,6 +889,9 @@ async function runSubsystemPass(browser) {
     // Third-party requests aren't reachable in CI and aren't the point.
     await ctx.route('**://fonts.googleapis.com/**', r => r.abort());
     await ctx.route('**://cdn.jsdelivr.net/**', r => r.abort());
+    await useFonts(ctx);   // AFTER the aborts: Playwright matches routes last-registered-first,
+                           // so a googleapis abort registered below would win and
+                           // silently give this pass the system fallback again.
     for (const entry of PAGES) results.push(await runJourney(ctx, entry, vpName));
     // One real-inset pass per page, at the baseline viewport only — the inset
     // is what this tests, not the width, so sweeping widths would just re-run

@@ -37,29 +37,43 @@
    disagreed on 11 pages under that condition (premium-design-roadmap.md's
    own P4 finding). A baseline captured under that constraint would commit
    wrong counts, not real ones. So --dark --update writes the file when it
-   runs from wherever fonts.googleapis.com is actually reachable (a real CI
-   runner); until that file exists, --dark reports every page's count but
-   never fails the build — see NO_BASELINE below.
+   runs from wherever fonts.googleapis.com is actually reachable; until that
+   file exists, --dark reports every page's count but never fails the build —
+   see NO_BASELINE below.
 
-   KNOWN LIMITATION, measured and deliberately not fixed here: bgOf() reads
-   `backgroundColor` only and ignores `background-image`, so text painted on a
-   gradient is attributed to whichever ancestor happens to carry an opaque
-   backgroundColor underneath it. Swept fleet-wide: 5,191 of 12,890 measured
-   text elements (40.3%), on 133 of 142 pages, resolve to a background that is
-   not what is painted. It is wrong in BOTH directions, so the counts below are
-   not a safe basis for "how accessible is this app" — only for "has this page
-   got worse". Ground truth from rendered pixels on a visible case:
-   psu-strength.html's .lift-name reads 1.00:1 (white on white) here, while the
-   painted background is a navy gradient and the real ratio is 15.29:1.
+   FONTS. This gate renders in the real webfonts via tools/font-cache.js, which
+   fetches them with Node (which can reach the CDN) and routes them into the
+   browser (which cannot). That matters here because text metrics decide
+   layout, and layout decides which elements exist to measure. Measured: two
+   runs on an unchanged tree used to disagree on 11 pages and now produce
+   BYTE-IDENTICAL budget files, and every committed visual baseline — written
+   by real CI — matches this environment's render to the pixel in height.
+   Note the limit of that claim: layout matches CI, GLYPH RASTERISATION does
+   not (3.3% of pixels differ by >64 levels), which is why the pixel-exact
+   visual ratchet still cannot be baselined from here and this gate can.
 
-   Compositing the gradient stops was prototyped and is NOT monotonic — it
-   moved 95 of 142 pages UP in light mode, which would fail every budget the
-   instant it landed ("red from birth", the trap check-journey.js's own
-   CRITICAL comment warns about). It also needs a judgement call this gate
-   cannot make alone: which point of a gradient the text actually sits on. So
-   it wants its own change, with a CI re-baseline, rather than riding along
-   with the two corrections above, which only ever REMOVE findings and so
-   cannot break an existing budget.
+   GRADIENTS — fixed (2026-09-21), and the two objections that held it back
+   are answered rather than worked around. Until now bgOf() read
+   `backgroundColor` only and ignored `background-image`, so text painted on a
+   gradient was attributed to whichever ancestor happened to carry an opaque
+   colour underneath it: 5,191 of 12,890 measured text elements (40.3%), on 133
+   of 142 pages, resolved to a background that is not what is painted, wrong in
+   BOTH directions. bgCandidates() now reads the computed gradient's colour
+   stops (see its own comment for why stops and not rendered pixels, and why
+   the WORST stop is the right one rather than a judgement call).
+
+   The two blockers, and what changed:
+
+     "It needs a judgement — which point of the gradient is the text on?"
+     It does not. Text has to be legible along its whole run, so the stop that
+     gives the LOWEST contrast is the conservative answer, and an element that
+     clears its worst stop clears the gradient everywhere.
+
+     "It is not monotonic — it moved 95 of 142 pages UP, red from birth."
+     Still true, which is exactly why it lands WITH a re-baseline in the same
+     change rather than ahead of one. That re-baseline was previously
+     impossible from an agent sandbox; tools/font-cache.js removes that
+     constraint for this gate specifically — see the note above.
 
      node tools/check-contrast.js <baseUrl>                  # CI, light mode
      node tools/check-contrast.js <baseUrl> --update         # rewrite light budgets
@@ -70,6 +84,7 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
+const fontCache = require('./font-cache');
 
 const ROOT = path.resolve(__dirname, '..');
 const MIN_RATIO = 3.0;            // WCAG AA large-text floor
@@ -119,14 +134,63 @@ const PROBE = (minRatio) => {
     const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
     return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
   }
-  function bgOf(el) {
+  // Every colour stop in a computed background-image. Computed values
+  // normalise colours to rgb()/rgba(), so no colour-name or hex parsing is
+  // needed here -- the browser has already done it.
+  function stopsOf(bgImage) {
+    if (!bgImage || bgImage === 'none') return [];
+    const out = [];
+    const re = /rgba?\(([^)]+)\)/g;
+    let m;
+    while ((m = re.exec(bgImage))) {
+      const c = parse('rgb' + (m[1].split(',').length > 3 ? 'a' : '') + '(' + m[1] + ')');
+      // A translucent stop does not determine the painted colour on its own --
+      // whatever is underneath shows through it -- so it is not a candidate.
+      if (c && c.a > 0.5) out.push(c);
+    }
+    return out;
+  }
+  // Returns the CANDIDATE backgrounds this text could be sitting on, worst
+  // case included, rather than a single colour.
+  //
+  // A background-image PAINTS OVER the element's own backgroundColor, so it is
+  // checked first. Reading backgroundColor only -- what this did before -- made
+  // text on a gradient resolve to whichever ancestor happened to carry an
+  // opaque colour underneath it, which was wrong in BOTH directions: measured
+  // fleet-wide, 5,191 of 12,890 text elements (40.3%) on 133 of 142 pages. The
+  // ground-truth case: psu-strength.html's .lift-name read 1.00:1 (white on
+  // white) while the painted background is a navy gradient and the true ratio
+  // is 15.29:1.
+  //
+  // WHY STOPS AND NOT PIXELS. Sampling the rendered pixels was the obvious
+  // alternative and is rejected deliberately: glyph and gradient rasterisation
+  // is NOT portable between environments -- measured, this sandbox and CI
+  // produce identical layout (every committed visual baseline matches to the
+  // pixel in height) but 3.3% of pixels differ by more than 64 levels. A gate
+  // whose findings depend on the rasteriser would give a different answer per
+  // runner. Computed colour stops are exact and identical everywhere.
+  //
+  // WHY THE WORST STOP. The open question recorded against this fix was "which
+  // point of a gradient the text actually sits on", treated as a judgement the
+  // gate could not make. It does not have to: text must be legible along its
+  // whole run, so the conservative answer -- the stop that gives the LOWEST
+  // contrast -- is both defensible and free of judgement. An element that
+  // passes against its worst stop passes everywhere on that gradient.
+  //
+  // A background-image with no parseable stop (a url(), or stops that are all
+  // translucent) resolves nothing, so the walk continues to the layer beneath
+  // exactly as it did before.
+  function bgCandidates(el) {
     let n = el;
     while (n && n !== document.documentElement) {
-      const c = parse(getComputedStyle(n).backgroundColor);
-      if (c && c.a > 0.5) return c;
+      const cs = getComputedStyle(n);
+      const stops = stopsOf(cs.backgroundImage);
+      if (stops.length) return stops;
+      const c = parse(cs.backgroundColor);
+      if (c && c.a > 0.5) return [c];
       n = n.parentElement;
     }
-    return parse(getComputedStyle(document.body).backgroundColor) || { r: 255, g: 255, b: 255, a: 1 };
+    return [parse(getComputedStyle(document.body).backgroundColor) || { r: 255, g: 255, b: 255, a: 1 }];
   }
   // An emoji glyph paints from the system colour font and IGNORES CSS `color`,
   // so comparing `color` against the background says nothing about whether it
@@ -162,9 +226,16 @@ const PROBE = (minRatio) => {
     const r = el.getBoundingClientRect();
     if (r.width < 4 || r.height < 4) continue;
     const fg = parse(cs.color); if (!fg || fg.a < 0.5) continue;
-    const bg = bgOf(el);
-    const L1 = rel(fg), L2 = rel(bg);
-    const ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+    // Worst candidate wins: on a gradient the text has to clear its hardest
+    // point, not its easiest.
+    const cands = bgCandidates(el);
+    const L1 = rel(fg);
+    let ratio = Infinity, bg = cands[0];
+    for (const c of cands) {
+      const L2 = rel(c);
+      const r2 = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+      if (r2 < ratio) { ratio = r2; bg = c; }
+    }
     if (ratio < minRatio) {
       bad++;
       if (worst.length < 3) {
@@ -186,6 +257,14 @@ const pages = fs.readdirSync(ROOT)
     process.env.MC_CHROMIUM ? { executablePath: process.env.MC_CHROMIUM } : {}
   );
   const ctx = await browser.newContext();
+  // Render in the REAL webfonts. Text metrics are what this gate measures
+  // against, and without this every page falls back to system-ui, so the
+  // numbers describe a rendering no user ever sees -- which is why four
+  // earlier passes recorded that these budgets "cannot be baselined from an
+  // agent sandbox". See tools/font-cache.js for the measurement that showed
+  // the constraint was the BROWSER's network, not the network.
+  const fonts = await fontCache.prepare();
+  await fonts.install(ctx);
   const p = await ctx.newPage();
   p.on('pageerror', () => {});
 
