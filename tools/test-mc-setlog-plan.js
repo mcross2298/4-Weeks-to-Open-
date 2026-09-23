@@ -23,7 +23,7 @@
    broken marked, so a future rewrite cannot quietly restore either bug:
 
      N x multiplier   "4x10 / 12 per side"       4 rows   (was already right)
-     cluster inner    "4x6, + Cluster 6/6/6"     4 rows   (was already right)
+     cluster clause   "4x6, + Cluster 6/6/6"     4 working rows (+3 appended cluster rows)
      leg separator    "12, 12, 10 / 10, 10, 8"   3 rows   (was 5 — FIXED)
      set separator    "25/20/20/15/12"           5 rows   (was 8 — FIXED)
 
@@ -79,9 +79,10 @@ function totalRows(scheme) {
   eq('1g failure reps',                SL.setCount('3xfailure'), 3);
   eq('1h ascii x, two legs',           SL.setCount('4×10 / 4×4'), 4);
 
-  // A cluster puts its mini-sets INSIDE one row, so it never adds rows. The
-  // rep target must be the working rep (6), not the digits of "4×6" run
-  // together — which is what a comma-split-first parser produced.
+  // The multiplier settles the WORKING count at 4 before the cluster clause is
+  // looked at (its micro-sets are appended rows — see 9n). The rep target must
+  // be the working rep (6), not the digits of "4×6" run together — which is
+  // what a comma-split-first parser produced.
   eq('1i cluster row count',   SL.setCount('4×6, + Cluster 6/6/6'), 4);
   eq('1j cluster rep target',  targets('4×6, + Cluster 6/6/6'), ['6', '6', '6', '6']);
   eq('1k tempo is not a rep',  targets('4×8 @ 4-0-1, + Cluster 10/10/10'),
@@ -181,6 +182,39 @@ function totalRows(scheme) {
   eq('9d cluster-round notation',   totalRows('15, 12, 12 → 3×10'), 6);
   eq('9e working sets parse clean under a drop',
      targets(SL.stripDrop('12,10,8,8 drop 15')), ['12', '10', '8', '8']);
+}
+
+// ── 9b. every appended set a prescription names is a row of its own ─────────
+// Each of these undercounted before: the extra sets were either dropped
+// entirely (a chained or slash drop counted one row; "+ Cluster 6/6/6" and
+// "then 5×10" counted none), or folded into the WORKING list as one row with
+// a wrong target ("2× Drop (15 sec break)" asked for 15 reps). Every
+// performed set that has no row can never be logged, and shrinks
+// mc-finish.js's completion denominator by the same amount.
+{
+  eq('9f comma drop list',          totalRows('12,10,8,8 drop 10,10'), 6);
+  eq('9g chained drops',            totalRows('10, 8, 6, 6 drop 8 drop 10 drop 12'), 7);
+  eq('9h … same as the comma form', SL.parseDrop('', '10, 8, 6, 6 drop 8 drop 10 drop 12').drops,
+     SL.parseDrop('', '10, 8, 6, 6 drop 8, 10, 12').drops);
+  eq('9i slash-separated drops',    totalRows('4×4 drop 6/8'), 6);
+  eq('9j multiplier drop, no target', totalRows('10, 10, 10 + 2× Drop'), 5);
+  eq('9k … targets AMRAP',          SL.parseDrop('', '10, 10, 10 + 2× Drop').drops, ['AMRAP', 'AMRAP']);
+  eq('9l plural "Drops"',           totalRows('12, 12, 10, 8, 2× Drops'), 6);
+  eq('9m a break is not a rep target', targets(SL.stripDrop('15, 12, 10, 2× Drop (15 sec break)')),
+     ['15', '12', '10']);
+  eq('9n trailing cluster list',    totalRows('4×6, + Cluster 6/6/6'), 7);
+  eq('9o … pyramid form agrees',    totalRows('12, 10, 8, 6, + Cluster 8/10/12'), 7);
+  eq('9p … cluster targets',        SL.parseDrop('', '4×6, + Cluster 6/6/6').drops, ['6', '6', '6']);
+  eq('9q N× cluster at R reps',     totalRows('12, 10, 8, 3× Cluster at 6 reps'), 6);
+  eq('9r N× cluster, listed reps',  SL.parseDrop('', '15, 12, 10, 3× Cluster 8-6-4 reps').drops, ['8', '6', '4']);
+  eq('9s N× cluster, no reps',      totalRows('20, 15, 15, 12, 2× Cluster'), 6);
+  eq('9t lone working set before a cluster is ONE set', totalRows('12 + 6× Cluster at 12 reps'), 7);
+  eq('9u cluster kind is reported', SL.parseDrop('', '4×6, + Cluster 6/6/6').kind, 'cluster');
+  eq('9v "then N×M" block',         totalRows('5x5 then 5x10'), 10);
+  eq('9w back-off set',             totalRows('8, 6, 4, 4 + 1× back-off 12 reps'), 5);
+  // data-mc-cluster (bubbles inside every working row) is a different thing
+  // and must stay row-neutral — no clause in the string, no extra rows.
+  eq('9x no clause, no extras',     SL.parseDrop('', '4×6').is, false);
 }
 
 // ── 10. every row target is drawn from its own prescription ────────────────
