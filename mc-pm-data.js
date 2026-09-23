@@ -152,7 +152,7 @@
               "Phase 1"
             ],
             "ex": 10,
-            "sets": 43,
+            "sets": 46,
             "muscles": [
               "chest"
             ],
@@ -167,7 +167,7 @@
               "Phase 1"
             ],
             "ex": 10,
-            "sets": 43,
+            "sets": 46,
             "muscles": [
               "biceps",
               "chest",
@@ -184,7 +184,7 @@
               "Phase 1"
             ],
             "ex": 10,
-            "sets": 43,
+            "sets": 46,
             "muscles": [
               "calves",
               "legs"
@@ -200,7 +200,7 @@
               "Phase 1"
             ],
             "ex": 10,
-            "sets": 43,
+            "sets": 46,
             "muscles": [
               "back",
               "shoulders"
@@ -242,7 +242,7 @@
               "Phase 2"
             ],
             "ex": 10,
-            "sets": 43,
+            "sets": 46,
             "muscles": [
               "legs"
             ],
@@ -257,7 +257,7 @@
               "Phase 2"
             ],
             "ex": 10,
-            "sets": 43,
+            "sets": 46,
             "muscles": [
               "chest",
               "triceps"
@@ -273,7 +273,7 @@
               "Phase 2"
             ],
             "ex": 10,
-            "sets": 43,
+            "sets": 46,
             "muscles": [
               "back",
               "biceps",
@@ -290,7 +290,7 @@
               "Phase 2"
             ],
             "ex": 10,
-            "sets": 43,
+            "sets": 46,
             "muscles": [
               "chest",
               "shoulders",
@@ -333,7 +333,7 @@
               "Phase 3"
             ],
             "ex": 10,
-            "sets": 43,
+            "sets": 46,
             "muscles": [
               "chest",
               "shoulders",
@@ -350,7 +350,7 @@
               "Phase 3"
             ],
             "ex": 10,
-            "sets": 43,
+            "sets": 46,
             "muscles": [
               "back",
               "biceps",
@@ -367,7 +367,7 @@
               "Phase 3"
             ],
             "ex": 10,
-            "sets": 43,
+            "sets": 46,
             "muscles": [
               "legs"
             ],
@@ -382,7 +382,7 @@
               "Phase 3"
             ],
             "ex": 10,
-            "sets": 43,
+            "sets": 46,
             "muscles": [
               "biceps",
               "chest",
@@ -498,7 +498,7 @@
               "3 Pyramids · 1 Static · 1 Drop · 1 Cluster"
             ],
             "ex": 6,
-            "sets": 28,
+            "sets": 31,
             "muscles": [
               "chest"
             ],
@@ -512,7 +512,7 @@
               "3 Pyramids · 1 Static · 1 Drop · 1 Cluster"
             ],
             "ex": 6,
-            "sets": 31,
+            "sets": 34,
             "muscles": [
               "biceps",
               "triceps"
@@ -527,7 +527,7 @@
               "3 Pyramids · 1 Static · 1 Drop · 1 Cluster"
             ],
             "ex": 6,
-            "sets": 28,
+            "sets": 31,
             "muscles": [
               "legs"
             ],
@@ -541,7 +541,7 @@
               "3 Pyramids · 1 Static · 1 Drop · 1 Cluster"
             ],
             "ex": 6,
-            "sets": 31,
+            "sets": 34,
             "muscles": [
               "shoulders"
             ],
@@ -555,7 +555,7 @@
               "3 Pyramids · 1 Static · 1 Drop · 1 Cluster"
             ],
             "ex": 6,
-            "sets": 28,
+            "sets": 31,
             "muscles": [
               "back",
               "shoulders"
@@ -570,7 +570,7 @@
               "3 Pyramids · 4 Supersets · 120 sec Rest"
             ],
             "ex": 8,
-            "sets": 38,
+            "sets": 41,
             "muscles": [
               "biceps",
               "chest"
@@ -585,7 +585,7 @@
               "3 Pyramids · 4 Supersets · 120 sec Rest"
             ],
             "ex": 8,
-            "sets": 41,
+            "sets": 44,
             "muscles": [
               "shoulders",
               "triceps"
@@ -600,7 +600,7 @@
               "3 Pyramids · 4 Supersets · 120 sec Rest"
             ],
             "ex": 8,
-            "sets": 38,
+            "sets": 41,
             "muscles": [
               "calves",
               "legs"
@@ -615,7 +615,7 @@
               "3 Pyramids · 4 Supersets · 120 sec Rest"
             ],
             "ex": 8,
-            "sets": 41,
+            "sets": 44,
             "muscles": [
               "back"
             ],
@@ -629,7 +629,7 @@
               "3 Pyramids · 4 Supersets · 120 sec Rest"
             ],
             "ex": 8,
-            "sets": 38,
+            "sets": 41,
             "muscles": [
               "back",
               "chest",
@@ -645,7 +645,7 @@
               "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster"
             ],
             "ex": 8,
-            "sets": 42,
+            "sets": 45,
             "muscles": [
               "chest",
               "shoulders"
@@ -660,7 +660,7 @@
               "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster"
             ],
             "ex": 8,
-            "sets": 42,
+            "sets": 45,
             "muscles": [
               "biceps",
               "triceps"
@@ -675,7 +675,7 @@
               "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster"
             ],
             "ex": 8,
-            "sets": 42,
+            "sets": 45,
             "muscles": [
               "back",
               "shoulders"
@@ -690,7 +690,7 @@
               "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster"
             ],
             "ex": 8,
-            "sets": 42,
+            "sets": 45,
             "muscles": [
               "legs"
             ],
@@ -704,7 +704,7 @@
               "Pyramid/Reverse-Pyramid · 1 Superset · 1 Drop · 1 Cluster"
             ],
             "ex": 8,
-            "sets": 42,
+            "sets": 45,
             "muscles": [
               "back",
               "biceps",

@@ -634,7 +634,8 @@
   // the multiplier settles the count before any slash is looked at:
   //
   //   1. "4×10 / 12 per side"       N× multiplier   -> 4 rows  (always right)
-  //   2. "4×6, + Cluster 6/6/6"     cluster inner   -> 4 rows  (always right)
+  //   2. "4×6, + Cluster 6/6/6"     cluster clause  -> 4 working rows (its 3
+  //                                 micro-sets are appended by parseDrop)
   //   3. "12, 12, 10 / 10, 10, 8"   leg separator   -> 3 rows  (was 5)
   //   4. "25/20/20/15/12"           set separator   -> 5 rows  (was 8)
   //
@@ -878,8 +879,11 @@
       while ((t = tok.exec(str))) drops.push(t[1] ? t[1] : 'AMRAP');
       return drops;
     }
-    function finish(tokenStr, mult) {
+    function finish(tokenStr, mult, kind) {
       var drops = tokensFrom(tokenStr);
+      // A clause that names its extra sets but no rep target at all
+      // ("…, 2× Cluster") still prescribes them: one untargeted row each.
+      if (!drops.length && mult) drops = [''];
       if (!drops.length) return { is: false, drops: [] };
       // A leading "N× " multiplier on a SINGLE-token drop clause repeats that
       // token N times ("2× Drop AMRAP" == two successive AMRAP drops).
@@ -887,7 +891,7 @@
         var one = drops[0]; drops = [];
         for (var i = 0; i < mult; i++) drops.push(one);
       }
-      return { is: true, drops: drops };
+      return { is: true, drops: drops, kind: kind || 'drop' };
     }
     var m;
     // arrow: "12, 10, 8, 8 → AMRAP, AMRAP" (trailing, end of string)
@@ -900,26 +904,67 @@
     // plus-multiplier, no "drop" word: "…, + 2×AMRAP"
     m = hay.match(/\+\s*(\d+)\s*[x×]\s*(?:amrap\b|∞)\s*$/i);
     if (m) return finish('AMRAP', parseInt(m[1], 10));
+    // "…, then 5×10" — a second block of N sets, each targeting the same reps.
+    // Before the list form below, which would read only the block's set count.
+    m = hay.match(/\bthen\b\s*(\d+)\s*[x×]\s*(\d+)\s*$/i);
+    if (m) return finish(m[2], parseInt(m[1], 10), 'then');
     // "…, then AMRAP"
     m = hay.match(/\bthen\b\s*((?:amrap|∞|\d+)(?:\s*,\s*(?:amrap|∞|\d+))*)\s*$/i);
-    if (m) return finish(m[1], 0);
+    if (m) return finish(m[1], 0, 'then');
+    // Trailing cluster micro-sets. A cluster here is performed AFTER the
+    // working sets ("heavy 4×6 then 3 clusters of 6 · 15 sec between"), and
+    // every micro-set is logged as its own row — the convention the Kitchen
+    // Sink "→ 3×10" form already followed ("Total: 6 sets"), and the one the
+    // per-set rest columns on these programs enumerate. Two notations:
+    //   "4×6, + Cluster 6/6/6"            one row per listed micro-set
+    //   "12, 10, 8, 3× Cluster at 6 reps" N rows of R ("8-6-6 reps" lists them)
+    // Distinct from data-mc-cluster, which splits EVERY working set into
+    // bubbles inside one row and never changes the row count.
+    m = hay.match(/\+\s*cluster\b\s*(\d+(?:\s*\/\s*\d+)*)\s*$/i);
+    if (m) return finish(m[1], 0, 'cluster');
+    m = hay.match(/(\d+)\s*[x×]\s*clusters?\b(?:\s*(?:at\s*)?(\d+(?:\s*-\s*\d+)*)\s*reps?)?\s*$/i);
+    if (m) {
+      var cl = m[2] ? m[2].split('-') : [];
+      return cl.length > 1 ? finish(m[2], 0, 'cluster')
+                           : finish(m[2] || '', parseInt(m[1], 10), 'cluster');
+    }
+    // "…, + 1× back-off 12 reps"
+    m = hay.match(/\+\s*(\d+)\s*[x×]\s*back-?off\b\D*(\d+)?/i);
+    if (m) return finish(m[2] || '', parseInt(m[1], 10), 'backoff');
     // word "drop", optionally "N× drop …" — tokens must immediately follow
-    // "drop": one or more of set/AMRAP/∞/number, comma-separated.
-    m = hay.match(/(?:(\d+)\s*[x×]\s*)?\bdrop\b\s*((?:set|amrap|∞|\d+)(?:\s*,\s*(?:set|amrap|∞|\d+))*)/i);
+    // "drop": one or more of set/AMRAP/∞/number. Successive drops may be
+    // separated by a comma, a slash, or the word "drop" again — "drop 8, 10,
+    // 12", "drop 8 drop 10 drop 12" and "drop 6/8" are the same prescription
+    // written three ways, and only the first used to count past one row.
+    m = hay.match(/(?:(\d+)\s*[x×]\s*)?\bdrops?\b\s*((?:set|amrap|∞|\d+)(?:\s*(?:,|\/|\bdrop\b)\s*(?:set|amrap|∞|\d+))*)/i);
     if (m) return finish(m[2], m[1] ? parseInt(m[1], 10) : 0);
+    // "…, 2× Drop" / "2× Drops" / "2× Drop (15 sec break)" — the multiplier
+    // states how many drops and no rep target follows, so each is taken to
+    // failure. Unmatched, the clause fell into the WORKING-set list as one
+    // row, and a "(15 sec break)" became a 15-rep target.
+    m = hay.match(/(\d+)\s*[x×]\s*drops?\b/i);
+    if (m) return finish('AMRAP', parseInt(m[1], 10));
     return { is: false, drops: [] };
   }
   // Strip the trailing drop clause (whichever of the four notations matched)
   // so the WORKING sets parse cleanly ("12,10,8,8 drop 15" → "12,10,8,8";
   // "12, 10, 8, 8 → AMRAP, AMRAP" → "12, 10, 8, 8"; no more garbled targets).
   function stripDrop(s) {
-    return (s || '')
+    var out = (s || '')
       .replace(/\s*→\s*(?:amrap|∞|\d+)(?:\s*,\s*(?:amrap|∞|\d+))*\s*$/i, '')
       .replace(/\s*→\s*\d+\s*[x×]\s*\d+\s*$/i, '')
       .replace(/[,+ ]*\+\s*\d+\s*[x×]\s*(?:amrap\b|∞)\s*$/i, '')
+      .replace(/[, ]*\bthen\b\s*\d+\s*[x×]\s*\d+\s*$/i, '')
       .replace(/[, ]*\bthen\b\s*(?:amrap|∞|\d+)(?:\s*,\s*(?:amrap|∞|\d+))*\s*$/i, '')
-      .replace(/[,+ ]*(?:\d+\s*[x×]\s*)?\bdrop\b.*$/i, '')
+      .replace(/[,+ ]*\+\s*cluster\b.*$/i, '')
+      .replace(/[,+ ]*\d+\s*[x×]\s*clusters?\b.*$/i, '')
+      .replace(/[,+ ]*\+\s*\d+\s*[x×]\s*back-?off\b.*$/i, '')
+      .replace(/[,+ ]*(?:\d+\s*[x×]\s*)?\bdrops?\b.*$/i, '')
       .trim();
+    // "12 + 6× Cluster at 12 reps" leaves a bare "12": ONE working set, not a
+    // prescription that never stated a count (which setCount() defaults to 3).
+    if (/^\d+$/.test(out) && out !== String(s || '').trim()) out = '1×' + out;
+    return out;
   }
 
   // ---- planned row count (S5c-0) -----------------------------------------
@@ -1370,7 +1415,17 @@
     var clusterRestLabel = card.dataset.mcClusterRest || '';
 
     var dropTag = '', dropTitle = '';
-    if (drop.is) {
+    if (drop.is && drop.kind === 'cluster') {
+      dropTag = '+ ' + nd + ' CLUSTER';
+      dropTitle = 'Cluster — ' + nd + ' mini-set' + (nd > 1 ? 's' : '') +
+                  ' after your working sets, short rest between';
+    } else if (drop.is && drop.kind === 'backoff') {
+      dropTag = nd > 1 ? ('+ ' + nd + ' BACK-OFF') : '+ BACK-OFF';
+      dropTitle = 'Back-off — lighter set' + (nd > 1 ? 's' : '') + ' after your working sets';
+    } else if (drop.is && drop.kind === 'then' && !dropAmrap) {
+      dropTag = '+ ' + nd + ' SETS';
+      dropTitle = nd + ' more set' + (nd > 1 ? 's' : '') + ' after your first block';
+    } else if (drop.is) {
       dropTag = nd > 1 ? ('+ ' + nd + ' DROPS') : (dropAmrap ? '+ AMRAP' : '+ DROP');
       dropTitle = nd > 1
         ? ('Drop sets — ' + nd + ' successive drops after your working sets')
@@ -1440,7 +1495,7 @@
       // mini[0].value, and tap-to-fill reads data-fill (rFill), a separate
       // variable. Display only, by construction.
       var openWork = !pr && /(^|[^a-z])(amrap|∞|failure|fail|max)\b/i.test(String(work == null ? '' : work));
-      var rPh = isDropRow ? (dropTarget === 'AMRAP' ? 'AMRAP' : dropTarget)
+      var rPh = isDropRow ? (dropTarget === 'AMRAP' ? 'AMRAP' : (dropTarget || 'reps'))
                           : (pr || (openWork ? 'AMRAP' : (last && last.r ? last.r : 'reps')));
       // One-tap fill values: focusing an empty field drops in last session's
       // weight (and the prescribed / last reps) so the athlete confirms instead
