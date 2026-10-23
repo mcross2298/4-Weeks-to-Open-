@@ -2201,6 +2201,70 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > defect. Proven to fail on all four shapes — reverted fix, a planted new
 > reader, a stale exemption, and a wrong-scope guard — before landing.
 
+> **Companion flagship-readiness plan:** [`flagship-readiness-roadmap.md`](flagship-readiness-roadmap.md)
+> (opened 2026-10-23 against `main @ 27fc096`) is the repository copy of a
+> three-phase audit run with the owner across three `AskUserQuestion` rounds:
+> a health audit, a program-engine and tab-by-tab master audit, and a
+> real-world gym-readiness stress audit. Each was published as an artifact;
+> standalone copies, runnable acceptance scenarios and captured evidence live
+> in `GO_LIVE/flagship-audit/`. It has 40 defects (`D-01`–`D-40`), each with a
+> `file:line` root cause, and phases `R1`–`R7`, `C`, `G`/`I` and `E`/`J`. Each
+> phase opens with its own `AskUserQuestion` check-in, per the multi-phase rule.
+> Scratch-listed (`content-manifest.json`), so it never ships to the public
+> Rolodex build.
+>
+> **What it found that no gate in this file sees.** None of the gates logs a
+> set and then does something else.
+> - **A week, phase or cycle tab round trip deletes the live session on all 7
+>   tabbed engines.** The `DEF-CR-02` re-render restore exists, but
+>   `mc-session.js` wires it only inside `if (session)`. A page with no record
+>   at load never gets it, and `save()` then deletes the record at zero ticks.
+> - **The suggested load never reaches the one-tap prefill.** `S2`'s ghost puts
+>   text in every field's value, and `mc-suggest.js` skips any field that isn't
+>   empty. Two independently correct changes collide, the same shape the
+>   journey gate exists for.
+> - **Set logging:** an unticked set is still saved at Finish, and a running
+>   rest timer is never persisted. The custom workout's own Finish saves
+>   **zero** sets, because it reads the pre-`2.1` key.
+> - **History** shows storage keys. `slugOf()`'s 24-character truncation makes
+>   **12 keys shared by 34 catalog exercises**.
+> - **Data loss:** restoring an older backup overwrites newer workouts. A pull
+>   brings a deleted workout back, because `mergeWorkoutLog()` is a pure union.
+>
+> **`B5`'s offline constraint has a workaround.** `B5` recorded that `sw.js`'s
+> production-origin guard makes a true offline reload observable only on the
+> deployed origin. `fa-offline-sw.js` serves a copy of the tree *as* that
+> origin, using a throwaway self-signed certificate, a local HTTPS server and
+> Chromium's `--host-resolver-rules`. The real service worker then installs
+> and controls the page. It confirmed that logging and finishing a workout
+> works offline. It also found that **a deploy evicts the prefetched program
+> pages while "Available offline ✓" stays**: `activate` purges the old cache,
+> and the prefetch record has no tie to `CACHE_NAME`.
+>
+> **The touch floor moves to 48px with 8px spacing**, the owner's UI standard.
+> That replaces the 44pt floor this file cites throughout. Until `R6` lands
+> the gates still enforce 44; `R6` raises `check-journey.js` and
+> `CHROME_SELECTORS` together, seeded as a ratchet.
+>
+> **The scenarios are acceptance tests, not CI gates.** Each asserts the
+> decided behaviour, so on the audited tree the open defects print as FAIL:
+>
+> | Scenario | Pass | Note |
+> |---|---|---|
+> | `fa-engines.js` | 3 of 14 | |
+> | `fa-repro.js` | 2 of 23 | the 2 passes are controls |
+> | `fa-offline-sw.js` | 3 of 7 | the 3 passes are controls |
+>
+> They stay out of `verify.yml` on purpose (`W-I1`); wire each check in as its
+> fix turns it green. `fa-kill-window.js` is a measurement, not a check. A set
+> ticked 0.3 s or 1.5 s before a hard kill was lost; at 3 s and 6 s it was
+> kept. That is one trial per delay on one Chromium build.
+>
+> **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
+> increment rule" is corrected to **18 plus 1**. Two items are still the
+> owner's, not code: `WEEKLY_CHECKIN_SECRET` is still unset (per the 18 Oct
+> workflow log), and leaked-password protection is off.
+
 ---
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2

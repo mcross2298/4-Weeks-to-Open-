@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Repository copy of the published artifact https://claude.ai/artifact/4fdtxhosnkwn7rJspwuDgs
+     (Phase 1 — health audit, captured 2026-10-23). The published page is the reviewed
+     original; this copy only adds the document skeleton the artifact host supplies. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MC Training Health Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: one reading column, styled as the app's own session sheet — the warm ink ramp, gold accent and Archivo/Manrope pairing the product already ships. Dark-first. */
+:root{
+  --bg:#000000; --surface:#0b0b0a; --raised:#141312; --line:#2a2724; --line-soft:#1c1a17;
+  --text:#faf7f0; --text-2:#cfc9bf; --muted:#8a8377;
+  --accent:#d4af37; --accent-ink:#1a1200; --accent-tint:rgba(212,175,55,.12);
+  --crit:#ff6b6b; --crit-tint:rgba(255,107,107,.12);
+  --high:#f0a03c; --high-tint:rgba(240,160,60,.12);
+  --med:#86b4e6; --med-tint:rgba(134,180,230,.12);
+  --low:#a39b8e; --low-tint:rgba(163,155,142,.12);
+  --ok:#4cc38a; --ok-tint:rgba(76,195,138,.12);
+  --f-display:"Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --fs-xs:12px; --fs-sm:13.5px; --fs-md:15.5px; --fs-lg:19px; --fs-xl:26px; --fs-2xl:clamp(30px,6vw,46px);
+  --r-sm:8px; --r-md:14px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
+  --bg:#f5f2ec; --surface:#faf7f0; --raised:#efe9db; --line:#d9d2c3; --line-soft:#e6e0d3;
+  --text:#1c1a17; --text-2:#4a453f; --muted:#6b6459;
+  --accent:#826919; --accent-ink:#faf7f0; --accent-tint:rgba(130,105,25,.12);
+  --crit:#b3261e; --crit-tint:rgba(179,38,30,.10);
+  --high:#9a5200; --high-tint:rgba(154,82,0,.10);
+  --med:#2b5f9e; --med-tint:rgba(43,95,158,.10);
+  --low:#6b6459; --low-tint:rgba(107,100,89,.10);
+  --ok:#1d7a4f; --ok-tint:rgba(29,122,79,.10);
+  color-scheme:light; } }
+:root[data-theme="light"]{
+  --bg:#f5f2ec; --surface:#faf7f0; --raised:#efe9db; --line:#d9d2c3; --line-soft:#e6e0d3;
+  --text:#1c1a17; --text-2:#4a453f; --muted:#6b6459;
+  --accent:#826919; --accent-ink:#faf7f0; --accent-tint:rgba(130,105,25,.12);
+  --crit:#b3261e; --crit-tint:rgba(179,38,30,.10);
+  --high:#9a5200; --high-tint:rgba(154,82,0,.10);
+  --med:#2b5f9e; --med-tint:rgba(43,95,158,.10);
+  --low:#6b6459; --low-tint:rgba(107,100,89,.10);
+  --ok:#1d7a4f; --ok-tint:rgba(29,122,79,.10);
+  color-scheme:light; }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--f-body);font-size:var(--fs-md);line-height:1.6;
+  -webkit-font-smoothing:antialiased;}
+.wrap{max-width:860px;margin:0 auto;padding-block:40px 80px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));
+  display:flex;flex-direction:column;gap:56px;}
+section{display:flex;flex-direction:column;gap:20px;min-width:0}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.015em;line-height:1.15}
+h1{font-size:var(--fs-2xl);font-weight:900}
+h2{font-size:var(--fs-xl);font-weight:800}
+h3{font-size:var(--fs-lg);font-weight:800}
+p{margin:0;max-width:66ch}
+.lede{color:var(--text-2);font-size:17px}
+.eyebrow{font-size:var(--fs-xs);font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+.muted{color:var(--muted)}
+code,.mono{font-family:var(--f-mono);font-size:.88em;background:var(--raised);border:1px solid var(--line-soft);
+  padding:1px 5px;border-radius:5px;overflow-wrap:anywhere}
+a{color:var(--accent);text-underline-offset:3px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+hr{border:0;border-top:1px solid var(--line);margin:0}
+
+/* contents */
+.toc{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:var(--fs-sm);font-weight:700}
+.toc a{color:var(--text-2);text-decoration:none;padding:10px 0;min-height:44px;display:inline-flex;align-items:center}
+.toc a:hover{color:var(--accent)}
+
+/* score */
+.score{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:28px;align-items:start;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:24px}
+.score-num{font-family:var(--f-display);font-weight:900;font-size:72px;line-height:1;letter-spacing:-.04em;
+  font-variant-numeric:tabular-nums;color:var(--text)}
+.score-num small{font-size:22px;color:var(--muted);letter-spacing:0;font-weight:700}
+.score-tag{margin-top:10px;font-weight:800;color:var(--high);font-size:var(--fs-sm);letter-spacing:.04em;text-transform:uppercase}
+.score-note{margin-top:10px;font-size:var(--fs-xs);color:var(--muted);line-height:1.5}
+.rubric{display:flex;flex-direction:column;gap:12px;min-width:0}
+.rrow{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:4px 12px;align-items:center}
+.rrow .lbl{font-size:var(--fs-sm);font-weight:700;color:var(--text-2)}
+.rrow .val{font-variant-numeric:tabular-nums;font-weight:800;text-align:right;font-size:var(--fs-sm)}
+.bar{grid-column:1 / -1;height:6px;background:var(--line-soft);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px;background:var(--accent)}
+.bar i.lo{background:var(--crit)} .bar i.mid{background:var(--high)}
+@media (max-width:620px){ .score{grid-template-columns:1fr} }
+
+/* stat strip */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat{padding:16px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat + .stat{border-left:1px solid var(--line)}
+.stat b{font-family:var(--f-display);font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.stat span{font-size:var(--fs-xs);color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+@media (max-width:560px){ .stats{grid-template-columns:repeat(2,minmax(0,1fr))} .stat:nth-child(3){border-left:0} .stat:nth-child(n+3){border-top:1px solid var(--line)} }
+
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  padding:4px 9px;border-radius:999px;white-space:nowrap}
+.chip.crit{color:var(--crit);background:var(--crit-tint)} .chip.high{color:var(--high);background:var(--high-tint)}
+.chip.med{color:var(--med);background:var(--med-tint)} .chip.low{color:var(--low);background:var(--low-tint)}
+.chip.ok{color:var(--ok);background:var(--ok-tint)} .chip.acc{color:var(--accent);background:var(--accent-tint)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+
+/* pain point */
+.pp{border-top:1px solid var(--line);padding-top:24px;display:flex;flex-direction:column;gap:14px}
+.pp-head{display:grid;grid-template-columns:48px minmax(0,1fr);gap:14px;align-items:start}
+.pp-rank{font-family:var(--f-display);font-weight:900;font-size:34px;line-height:1;color:var(--muted);font-variant-numeric:tabular-nums}
+.voc{font-size:17px;color:var(--text);font-weight:600;border-left:2px solid var(--line);padding-left:14px;max-width:62ch}
+.voc::before{content:"Simulated athlete voice";display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.kv{display:grid;grid-template-columns:120px minmax(0,1fr);gap:8px 16px;font-size:var(--fs-sm)}
+.kv dt{color:var(--muted);font-weight:800;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding-top:3px}
+.kv dd{margin:0;color:var(--text-2);min-width:0}
+@media (max-width:560px){ .kv{grid-template-columns:1fr;gap:2px} .kv dd{margin-bottom:10px} }
+
+/* set-row evidence: echoes the app's own logger rows */
+.setlog{border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;background:var(--surface)}
+.setlog-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 92px;gap:12px;padding:12px 14px;align-items:center;font-size:var(--fs-sm)}
+.setlog-row + .setlog-row{border-top:1px solid var(--line-soft)}
+.setlog-row.h{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--raised)}
+.setlog-row .n{font-variant-numeric:tabular-nums;font-weight:800;text-align:right}
+.setlog-row .bad{color:var(--crit)} .setlog-row .good{color:var(--ok)}
+.setlog-wrap{overflow-x:auto}
+.setlog-wrap .setlog{min-width:420px}
+
+/* steps */
+ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:10px}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;font-size:var(--fs-sm);color:var(--text-2)}
+ol.steps li::before{content:counter(s);font-family:var(--f-display);font-weight:900;color:var(--accent);font-variant-numeric:tabular-nums;
+  width:24px;height:24px;border:1px solid var(--accent-tint);background:var(--accent-tint);border-radius:6px;display:grid;place-items:center;font-size:12px}
+ol.steps b{color:var(--text)}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-md)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:var(--fs-sm)}
+th,td{text-align:left;padding:11px 14px;vertical-align:top}
+th{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--raised)}
+tr + tr td{border-top:1px solid var(--line-soft)}
+td{color:var(--text-2)} td b{color:var(--text)}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* two-col lists */
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:640px){ .grid2{grid-template-columns:1fr} }
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.panel h3{font-size:16px}
+.panel ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:var(--fs-sm);color:var(--text-2)}
+
+/* design recs */
+.rec{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding:18px 0;border-top:1px solid var(--line-soft)}
+.rec:first-of-type{border-top:0}
+.rec-top{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:baseline;justify-content:space-between}
+.rec h3{font-size:17px}
+.rec p{font-size:var(--fs-sm);color:var(--text-2)}
+.swatchline{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:var(--fs-xs);color:var(--muted)}
+.sw{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--r-sm);font-weight:800;font-style:italic;font-size:15px;border:1px dashed}
+.sw.before{background:#f5f2ec;color:#cfc9bf;border-color:rgba(138,131,119,.35)}
+.sw.after{background:#f5f2ec;color:#6b6459;border-color:rgba(107,100,89,.55)}
+
+/* roadmap */
+.phase{display:grid;grid-template-columns:64px minmax(0,1fr);gap:16px;padding:20px 0;border-top:1px solid var(--line)}
+.phase-id{font-family:var(--f-display);font-weight:900;font-size:30px;line-height:1;color:var(--accent)}
+.phase-id small{display:block;font-size:11px;letter-spacing:.1em;color:var(--muted);margin-top:6px;font-family:var(--f-body);font-weight:800;text-transform:uppercase}
+.phase h3{margin-bottom:6px}
+.phase ul{margin:8px 0 0;padding-left:18px;font-size:var(--fs-sm);color:var(--text-2);display:flex;flex-direction:column;gap:5px}
+.gate{margin-top:10px;font-size:var(--fs-xs);color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
+.gate b{color:var(--text-2)}
+@media (max-width:520px){ .phase{grid-template-columns:1fr;gap:8px} }
+
+.callout{background:var(--accent-tint);border:1px solid var(--accent-tint);border-radius:var(--r-md);padding:16px 18px;font-size:var(--fs-sm);color:var(--text-2)}
+.callout b{color:var(--text)}
+footer{font-size:var(--fs-xs);color:var(--muted);border-top:1px solid var(--line);padding-top:18px;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion: reduce){ *{scroll-behavior:auto!important} }
+html{scroll-behavior:smooth}
+</style>
+<style>body{margin:0}</style>
+</head>
+<body>
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:16px">
+  <div class="eyebrow">4-Weeks-to-Open- · audit of main @ 27fc096 · 23 Oct 2026</div>
+  <h1>MC Training health audit</h1>
+  <p class="lede">The app is mature and heavily guarded. Every static gate passes, and the hard engineering problems from earlier audits hold up when driven. The new defects sit where no gate looks: a page with its own copy of shared logic, the sync rule for deletes, CSS injected from JavaScript, and form values in light mode. Two of them lose an athlete's data.</p>
+  <nav class="toc" aria-label="Contents">
+    <a href="#summary">Executive summary</a><a href="#pain">Top 5 pain points</a><a href="#plan">Action plan</a>
+    <a href="#system">System findings</a><a href="#design">Design upgrades</a><a href="#roadmap">Roadmap</a><a href="#method">Method</a>
+  </nav>
+</header>
+
+<!-- ============ EXECUTIVE SUMMARY ============ -->
+<section id="summary">
+  <div class="eyebrow">Executive summary</div>
+  <div class="score">
+    <div>
+      <div class="score-num">68<small> / 100</small></div>
+      <div class="score-tag">Solid core · fix data first</div>
+      <div class="score-note">This is my judgment on the rubric shown here, not a measured metric. It's an unweighted average of seven areas, each scored out of 10.</div>
+    </div>
+    <div class="rubric" role="list">
+      <div class="rrow" role="listitem"><span class="lbl">Test &amp; CI coverage</span><span class="val">9.0</span><div class="bar"><i style="width:90%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Offline, PWA &amp; storage resilience</span><span class="val">8.5</span><div class="bar"><i style="width:85%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Accessibility &amp; touch ergonomics</span><span class="val">7.0</span><div class="bar"><i class="mid" style="width:70%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Performance (repeat fast · first visit slow)</span><span class="val">6.5</span><div class="bar"><i class="mid" style="width:65%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Visual consistency</span><span class="val">6.5</span><div class="bar"><i class="mid" style="width:65%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Data integrity &amp; correctness</span><span class="val">6.0</span><div class="bar"><i class="mid" style="width:60%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Observability &amp; operations</span><span class="val">4.0</span><div class="bar"><i class="lo" style="width:40%"></i></div></div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b>52/52</b><span>Static gates pass</span></div>
+    <div class="stat"><b>7/8</b><span>Browser gates pass*</span></div>
+    <div class="stat"><b>38/38</b><span>Pages, 0 console errors</span></div>
+    <div class="stat"><b>6</b><span>New confirmed defects</span></div>
+  </div>
+  <p class="muted" style="font-size:var(--fs-xs)">*The one failing gate, <code>check-journey</code>, fails only on a back link's text width (76.8px against a recorded 80.5px). The link is a full 44px tall. CLAUDE.md records that text widths differ between this sandbox's Chromium build and CI's, so I don't count it as a regression.</p>
+
+  <div class="grid2">
+    <div class="panel">
+      <h3>What holds up</h3>
+      <ul>
+        <li>Two-tab logging, crash recovery from the cloud and five corrupted-storage shapes all pass when driven.</li>
+        <li>Set inputs are 16px (so iOS doesn't zoom on tap) and 44px tall. Checkboxes are 44×44.</li>
+        <li>Checking a set starts the rest timer automatically, with a 64×44 ±15s row.</li>
+        <li>Custom <em>programs</em> save correctly: 2 sets, an id and a duration, all present.</li>
+        <li>Contrast stays within budget in both themes (299 light / 74 dark findings).</li>
+        <li>Supabase has 1 security warning, a dashboard toggle.</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>What needs you</h3>
+      <ul>
+        <li><b>Set the <code>WEEKLY_CHECKIN_SECRET</code> repo secret.</b> Every run I checked failed, the latest on 18 Oct, and the check-in has never sent a push.</li>
+        <li><b>Turn on leaked-password protection</b> in Supabase Auth.</li>
+        <li>Real-device QA (iOS Safari, an installed PWA, two signed-in devices). That can't be done from a sandbox.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAIN POINTS ============ -->
+<section id="pain">
+  <div class="eyebrow">VOA / VOC simulation</div>
+  <h2>Top 5 pain points</h2>
+  <p class="muted">Ranked by harm × reach. I ran each journey in headless Chromium at 390 and 320px, logging real sets through the real modules. "Confirmed" means I watched it happen. "Read in code" means I traced it in source but didn't drive it.</p>
+
+  <!-- 1 -->
+  <article class="pp">
+    <div class="pp-head"><div class="pp-rank">1</div>
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+        <h3>Custom workouts save zero sets</h3>
+        <div class="chips"><span class="chip crit">Critical · data loss</span><span class="chip acc">Confirmed by driving</span><span class="chip low">Every custom workout</span></div>
+      </div></div>
+    <p class="voc">I logged every set, tapped the big Finish button, and my history says "0 sets recorded".</p>
+    <div class="setlog-wrap"><div class="setlog">
+      <div class="setlog-row h"><span>Control on run-workout.html</span><span>Reads key</span><span style="text-align:right">Sets banked</span></div>
+      <div class="setlog-row"><span>Bottom bar · 🏁 Finish Workout</span><span class="mono">custom-abc|cw0-bench-press</span><span class="n bad">0 of 2</span></div>
+      <div class="setlog-row"><span>Top toolbar · End workout</span><span class="mono">custom-abc|x-bench-press</span><span class="n good">2 of 2</span></div>
+    </div></div>
+    <dl class="kv">
+      <dt>Root cause</dt><dd><code>run-workout.html</code> has its own <code>finishWorkout()</code>, which reads the set log by <code>card.dataset.id</code>. Phase 2.1 (EN-1/EN-8) moved every logger key to the name-derived <code>nameId()</code>. This one bespoke reader was never updated, so it finds nothing. The page now has two completion controls that disagree, and the larger one is the broken one.</dd>
+      <dt>Also wrong</dt><dd>The entry has no <code>id</code> (the sync dedupe key) and no duration. It's added with <code>push()</code> to a newest-first store. It never fires <code>mc:workout-finished</code>, so streak, program progress and the Session Complete recap all skip it. It uses <code>alert()</code>, and the button is 34px tall.</dd>
+      <dt>Why no gate saw it</dt><dd><code>check-journey</code> drives 9 engine pages, none of them this one. The identity test checks PMC pages. Each page passes on its own.</dd>
+    </dl>
+  </article>
+
+  <!-- 2 -->
+  <article class="pp">
+    <div class="pp-head"><div class="pp-rank">2</div>
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+        <h3>Deleted workouts come back</h3>
+        <div class="chips"><span class="chip high">High · broken promise</span><span class="chip acc">Confirmed on the real merge</span><span class="chip low">Signed-in users</span></div>
+      </div></div>
+    <p class="voc">I deleted that test workout. The dialog said it can't be undone. Next time I opened the app, it was back.</p>
+    <div class="setlog-wrap"><div class="setlog">
+      <div class="setlog-row h"><span>Local after delete</span><span>Cloud (and last-synced copy)</span><span style="text-align:right">Merged result</span></div>
+      <div class="setlog-row"><span class="mono">[A]</span><span class="mono">[A, B]</span><span class="n bad">[B, A]</span></div>
+      <div class="setlog-row"><span>Clear All → <span class="mono">null</span></span><span class="mono">[A, B]</span><span class="n bad">[B, A]</span></div>
+    </div></div>
+    <dl class="kv">
+      <dt>Root cause</dt><dd><code>mergeWorkoutLog()</code> in <code>mc-sync.js</code> is a pure union. It receives the last-synced copy but ignores it, and deletes are never recorded. <code>deleteFinished()</code> and <code>clearLogs()</code> in <code>workout-logs.html</code> only filter the local copy, so the next pull restores the entry and the next push re-uploads it. The tested <code>mergeArrayByIdTs</code> in the same file already handles deletion records for other stores.</dd>
+    </dl>
+  </article>
+
+  <!-- 3 -->
+  <article class="pp">
+    <div class="pp-head"><div class="pp-rank">3</div>
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+        <h3>The session screen says the same thing three times</h3>
+        <div class="chips"><span class="chip med">Medium · every set</span><span class="chip acc">Screenshots + measurement</span><span class="chip low">All program pages</span></div>
+      </div></div>
+    <p class="voc">Mid-set I'm hunting for my numbers. There are three timers, buttons I never use, and a red 5×5 that looks like an error.</p>
+    <dl class="kv">
+      <dt>Evidence</dt><dd>
+        While resting, the screen shows rest time in the toolbar (<span class="mono">1:29 REST</span>), in the inline row (<span class="mono">1:29 REST REMAINING</span>), and as a 52px <span class="mono">Rest: 90 sec</span> chip on the card. The open card also carries a 44px Replace / Reorder row that repeats the ⋯ menu beside it. The prescription pill is red. Completed values are struck through, which makes the number you just lifted harder to read. In <b>light mode</b> the suggested next-set weight measures <b>1.47:1</b>, which is effectively invisible (<code>.mcl-ghost</code> keeps the dark-mode <code>--ink-8</code>).</dd>
+      <dt>Root cause</dt><dd>Each surface was added by a separate, correct change (M3 toolbar, inline rest row, S4 card header), and none of them removed the older one. The ghost rule's comment says the logger "stays dark-styled regardless of html[data-theme]". That stopped being true when the panel picked up light styling. The contrast gate reads text nodes, not input values, so it can't see this.</dd>
+    </dl>
+  </article>
+
+  <!-- 4 -->
+  <article class="pp">
+    <div class="pp-head"><div class="pp-rank">4</div>
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+        <h3>Building a workout starts with paperwork</h3>
+        <div class="chips"><span class="chip med">Medium · creation flow</span><span class="chip acc">Screenshot + source</span><span class="chip low">build-workout.html</span></div>
+      </div></div>
+    <p class="voc">I wanted to pick some exercises. I got a name field, two dropdowns and a paragraph about collections first.</p>
+    <dl class="kv">
+      <dt>Evidence</dt><dd>About 650px of form (your saved workouts, name, program, collection) sits above the exercise search at 390px. That's most of the first screen. The page uses teal section labels, sky-blue links and a blue header gradient, so it misses the "one accent per screen" decision the premium-design roadmap locked. The copy shows three different catalog sizes: the search says "450+", the list shows "542", and the catalog holds 580. Share and Start are 38px tall.</dd>
+      <dt>Root cause</dt><dd>The builder predates the <code>P0–P3</code> refit and the warm ink ramp. Its CSS lives inline in the page, outside <code>check-design-tokens.js</code>'s view. The field order follows what gets saved, not how an athlete thinks about a workout.</dd>
+    </dl>
+  </article>
+
+  <!-- 5 -->
+  <article class="pp">
+    <div class="pp-head"><div class="pp-rank">5</div>
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+        <h3>Small targets and two navigation systems</h3>
+        <div class="chips"><span class="chip med">Medium · ergonomics</span><span class="chip acc">Measured at 390 + 320</span><span class="chip low">Fleet-wide</span></div>
+      </div></div>
+    <p class="voc">The dismiss X is tiny, the week tabs are cramped, and the bottom bar changes depending on which screen I'm on.</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Control</th><th>Measured</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td><b>Hint dismiss</b> <code>.mc-hint-x</code></td><td class="num">15 × 17</td><td>Every session page probed</td></tr>
+        <tr><td><b>Week / phase / day tabs</b></td><td class="num">37–42 tall</td><td>kitchen-sink, iron-engine, psu-strength, bro-split</td></tr>
+        <tr><td><b>Week arrows</b> <code>#weekPrev/#weekNext</code></td><td class="num">32 × 32</td><td>stats.html</td></tr>
+        <tr><td><b>Section links</b> See all · All logs · Browse all</td><td class="num">16 tall</td><td>dashboard.html</td></tr>
+        <tr><td><b>History tabs</b> Sessions · Programs</td><td class="num">38 tall</td><td>workout-logs.html</td></tr>
+      </tbody>
+    </table></div>
+    <dl class="kv">
+      <dt>Also</dt><dd>The dashboard's bottom bar uses line icons, uppercase labels and <span class="mono">History ↗</span>. Every other page uses emoji icons and <span class="mono">Stats</span>, and emoji render differently on each OS. At 390px the dashboard header cuts off the greeting ("Good aft…") and the date, because five icon buttons, the avatar and a lock share one row. 36 text nodes on <code>stats.html</code> are under 11px.</dd>
+      <dt>Root cause</dt><dd>W-I2 raised the controls the chrome gate measures. These are in places the gate doesn't measure (<code>CHROME_SELECTORS</code> lists 6 classes).</dd>
+    </dl>
+  </article>
+</section>
+
+<!-- ============ ACTION PLAN ============ -->
+<section id="plan">
+  <div class="eyebrow">Targeted action plan</div>
+  <h2>How each pain point gets fixed</h2>
+  <p class="muted">These follow the decisions you made in alignment: data integrity first, retire the bespoke Finish, deletes apply everywhere, and all four design tracks are in scope.</p>
+
+  <div class="grid2">
+    <div class="panel"><h3>1 · Custom workouts: one completion path</h3>
+      <ol class="steps">
+        <li><span>Delete <code>run-workout.html</code>'s <code>.fw-bar</code> and <code>finishWorkout()</code>. Once the page's own bar is gone, <code>mc-finish.js</code>'s inject guard leaves <b>End workout</b> as the only path, the same one custom programs already use correctly.</span></li>
+        <li><span>Confirm <code>getWorkoutName()</code> returns the workout's name. It does today: the driven run banked "Test Push". The <code>custom: true</code> marker can go, because nothing reads it.</span></li>
+        <li><span><b>Optional recovery:</b> custom entries already saved with 0 sets can be backfilled from <code>mc_setlog_v1</code>, which still holds those sets under <code>x-</code> keys for the last 5 sessions per exercise.</span></li>
+        <li><span><b>Add a gate:</b> extend the journey run to <code>run-workout.html</code> and <code>run-program.html</code>, finishing through every visible Finish control and asserting the set count saved.</span></li>
+      </ol></div>
+    <div class="panel"><h3>2 · Deletes that stay deleted</h3>
+      <ol class="steps">
+        <li><span>Delete and Clear All write a deletion record <code>{id, deleted:true, deletedAt}</code> instead of just filtering the entry out.</span></li>
+        <li><span>Switch <code>mergeWorkoutLog</code> to newest-wins by id, so deletion records carry across devices. Reuse <code>mergeArrayByIdTs</code>'s logic, keeping the <code>pageId|date</code> fallback for older entries without an id.</span></li>
+        <li><span>Filter deletion records once, in <code>readWorkoutLog()</code> in <code>mc-log-read.js</code>, which <code>check-single-impl</code> already holds to a single implementation.</span></li>
+        <li><span>The 200 cap counts live entries only. Drop deletion records after 30 days. Add merge cases to <code>test-mc-sync-merge.js</code>.</span></li>
+      </ol></div>
+    <div class="panel"><h3>3 · A calmer session screen</h3>
+      <ol class="steps">
+        <li><span>Show one rest readout. Keep the inline row. The toolbar shows elapsed time and sets, and the card's rest chip becomes a small label until the timer starts.</span></li>
+        <li><span>Move Replace and Reorder into the ⋯ menu, freeing a 44px row on every open card.</span></li>
+        <li><span>Make the prescription pill neutral ink and reserve red for failure and destructive actions.</span></li>
+        <li><span>Mark completed values with the check and a row tint, not strikethrough. Give the light-mode ghost value <code>--ink-6</code>: 5.23:1 on cream, computed from the two hex values.</span></li>
+      </ol></div>
+    <div class="panel"><h3>4 · Builder, exercises first</h3>
+      <ol class="steps">
+        <li><span>Open on search and muscle filters. Selected exercises gather in the existing review tray.</span></li>
+        <li><span>Ask for the name, program and collection in the tray's Save step, with a suggested name from the main muscles.</span></li>
+        <li><span>Move the page onto the warm ramp and the gold accent. Remove teal, sky blue and the blue header.</span></li>
+        <li><span>Show one exercise count, computed from <code>EXERCISES.length</code>. Raise Share and Start to 44px.</span></li>
+      </ol></div>
+    <div class="panel"><h3>5 · Touch &amp; navigation</h3>
+      <ol class="steps">
+        <li><span>Give the hint ✕ a 44×44 hit area (the glyph can stay small), and make the tabs, stats arrows and section links at least 44 tall.</span></li>
+        <li><span>Add those selectors to <code>CHROME_SELECTORS</code> so they're held at 44 from then on.</span></li>
+        <li><span>Use one bottom nav everywhere, with the dashboard's line icons. Decide whether the fifth tab is History or Stats; that's your call.</span></li>
+        <li><span>Move the theme and nutrition icons into the account sheet or an overflow menu, so the greeting fits at 390.</span></li>
+      </ol></div>
+    <div class="panel"><h3>Owner actions (no code)</h3>
+      <ol class="steps">
+        <li><span>Add <b><code>WEEKLY_CHECKIN_SECRET</code></b> under the repo's Actions secrets, matching the Edge Function's expected value, then trigger the workflow once by hand.</span></li>
+        <li><span>Turn on <b>leaked-password protection</b> in Supabase Auth settings.</span></li>
+        <li><span>Run the real-device checklist: iOS Safari tab, installed PWA, and two signed-in devices for the delete fix.</span></li>
+      </ol></div>
+  </div>
+</section>
+
+<!-- ============ SYSTEM FINDINGS ============ -->
+<section id="system">
+  <div class="eyebrow">Codebase health</div>
+  <h2>System findings</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th style="width:96px">Severity</th><th>Finding</th><th style="width:150px">How known</th></tr></thead>
+    <tbody>
+      <tr><td><span class="chip high">High</span></td><td><b>The weekly check-in has never sent.</b> The 18 Oct log reads "WEEKLY_CHECKIN_SECRET repo secret is not set". Every run listed has failed.</td><td>Workflow log</td></tr>
+      <tr><td><span class="chip med">Medium</span></td><td><b>Field errors never leave the device.</b> Every page records errors into a 20-entry <code>mc_errors_v1</code> buffer, and nothing reads or sends it.</td><td>Source + registry</td></tr>
+      <tr><td><span class="chip med">Medium</span></td><td><b>Import replaces instead of merging.</b> <code>importJSON()</code> overwrites each store with no confirmation, and storage-full failures are silently skipped while it reports success. Restoring an old backup on a local-only device drops any newer workouts.</td><td>Read in code</td></tr>
+      <tr><td><span class="chip med">Medium</span></td><td><b>History stops at 200 workouts, in the cloud too.</b> <code>mergeWorkoutLog</code> trims the merged list to 200 before pushing, so older sessions leave the cloud copy as well. At 5 sessions a week that's roughly 40 weeks.</td><td>Read in code</td></tr>
+      <tr><td><span class="chip med">Medium</span></td><td><b>First visits are heavy.</b> 38–53 separate scripts, 1.2–1.5 MB, first paint at 2.5–4.1s and full load at 6.8–8.5s, on emulated 1.6 Mbps / 150 ms. Repeat visits come from the service-worker cache.</td><td>Emulated, not a device</td></tr>
+      <tr><td><span class="chip med">Medium</span></td><td><b>The design-token gate has blind spots.</b> It reads <code>.css</code> files and hex colors only. 30 modules inject CSS from JavaScript (119 slate hex values, including <code>mc-timer.js</code> and <code>mc-finish.js</code>), inline page styles hold 446 more, and <code>rgba()</code> cool darks pass, including the bottom nav's <code>rgba(8,10,16,.96)</code> on every page.</td><td>Grep counts</td></tr>
+      <tr><td><span class="chip low">Low</span></td><td><b>An orphan set-logger keeps polling.</b> <code>cat-gainz.html</code> carries a legacy set-logger. With no <code>#app</code> on the page, <code>watchForCards()</code> re-runs every 100 ms for as long as the page is open, guarding code that never runs. It also writes year-less day keys and skips the cross-tab lock.</td><td>Driven + source</td></tr>
+      <tr><td><span class="chip low">Low</span></td><td><b>Four pages write the workout log themselves.</b> <code>run-workout</code>, plus three conditioning pages that skip the Phase 5.3 storage-full warning.</td><td>Grep</td></tr>
+      <tr><td><span class="chip low">Low</span></td><td><b>Supabase advisors.</b> Leaked-password protection is off (warning). There are 17 unused indexes (info) and duplicate permissive policies on <code>pm_clients</code> and <code>testers</code> (warning, performance).</td><td>Live advisors</td></tr>
+      <tr><td><span class="chip low">Low</span></td><td><b>Label ambiguity.</b> The Modality Matrix landing says "6x per week" (4 lifting + 2 conditioning days), while its card says "4-Day Split".</td><td>Screenshot + data</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><b>The pattern behind most of these:</b> each gate measures the place a past defect was found, so new defects turn up one level over. Bespoke page logic sits beside the shared module the gates test. A store's delete path sits beside the merge path that has tests. CSS comes from JavaScript beside the stylesheets the token gate reads. Light mode applies to an input value beside the text nodes the contrast gate reads. The roadmap closes each gap with a gate, not only a fix.</div>
+</section>
+
+<!-- ============ DESIGN ============ -->
+<section id="design">
+  <div class="eyebrow">Proactive design &amp; usability</div>
+  <h2>Design upgrades</h2>
+  <div>
+    <div class="rec">
+      <div class="rec-top"><h3>Let the number you're about to lift lead</h3><span class="chip acc">Session</span></div>
+      <p>The ghosted suggestion is the most useful number on the screen mid-set. In light mode it's the least legible one. Keep it italic and dashed so it still reads as a suggestion, but at a readable ink:</p>
+      <div class="swatchline"><span class="sw before">185</span> <span>today · <b>1.47:1</b></span> <span class="sw after">185</span> <span>proposed <code>--ink-6</code> · <b>5.23:1</b></span></div>
+    </div>
+    <div class="rec">
+      <div class="rec-top"><h3>Use color only where it means something</h3><span class="chip acc">Visual language</span></div>
+      <p>Gold marks what's active or what you can act on. Red means failure or destruction. Everything else is ink. Make the prescription pill, the blue active week tab and the builder's teal and sky-blue labels neutral, so a red element always means something is wrong.</p>
+    </div>
+    <div class="rec">
+      <div class="rec-top"><h3>One page title, not two</h3><span class="chip acc">Hierarchy</span></div>
+      <p><code>workout-logs.html</code> shows "Workout Logs" in the top bar and again as a 36px hero, and the stats page does the same. The heroes push your history and numbers below the first screen. Keep the top bar title, shrink the hero to one line of context, and let the data start higher.</p>
+    </div>
+    <div class="rec">
+      <div class="rec-top"><h3>Extend the token gate before migrating</h3><span class="chip acc">Architecture</span></div>
+      <p><code>P3</code> established that tokens only reach code that asks for them. Teach <code>check-design-tokens.js</code> to read CSS strings inside <code>mc-*.js</code>, inline <code>&lt;style&gt;</code> blocks, and <code>rgba()</code>/<code>hsl()</code> values. Seed a per-file ratchet at today's counts, then migrate the session surface first (<code>mc-timer.js</code>, <code>mc-finish.js</code>, <code>mc-account.js</code>), measured by luminance as <code>P3</code> did.</p>
+    </div>
+    <div class="rec">
+      <div class="rec-top"><h3>Infer the active program from history</h3><span class="chip acc">Dashboard</span></div>
+      <p>An athlete with a history but no pinned program gets "No active program set". When the last finished workouts belong to a program that has a schedule record, offer it as a one-tap "Continue The Modality Matrix?" instead of an empty state.</p>
+    </div>
+    <div class="rec">
+      <div class="rec-top"><h3>See errors from the field</h3><span class="chip acc">Operations</span></div>
+      <p>Let signed-in users send their error buffer, as an opt-in beacon into an insert-only Supabase table, so you learn about crashes before an athlete does. It needs a new table, so it gets its own decision gate, as <code>H3</code> did.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ROADMAP ============ -->
+<section id="roadmap">
+  <div class="eyebrow">Implementation roadmap</div>
+  <h2>Phases, in order</h2>
+  <p class="muted">Each phase gets its own <code>AskUserQuestion</code> check-in before it starts, per CLAUDE.md's rule for multi-phase work. Per the Planning rule, this artifact counts as the discovery artifact for the roadmap. User-facing changes update <code>quick-tour-data.js</code> or the program guides in the same piece of work.</p>
+
+  <div class="phase"><div class="phase-id">A<small>Data</small></div><div>
+    <h3>Data integrity</h3><p class="muted" style="font-size:var(--fs-sm)">Fixes pain points 1 and 2, plus the backup and duplicate-writer findings.</p>
+    <ul>
+      <li>A1 · Retire the custom Finish in <code>run-workout.html</code>, with optional backfill of 0-set entries.</li>
+      <li>A2 · Workout-log deletion records in <code>mc-sync.js</code>, <code>workout-logs.html</code> and <code>mc-log-read.js</code>.</li>
+      <li>A3 · Import confirms "this replaces data on this device", merges the workout log by default, and reports skipped stores.</li>
+      <li>A4 · Remove the orphan logger from <code>cat-gainz.html</code> (a licensed page, so <code>build-market --check</code> applies).</li>
+      <li>A5 · New gate: only <code>mc-finish.js</code>, <code>mc-cond.js</code> and named conditioning pages may write <code>mc_workout_log_v1</code>, and all through the guarded writer.</li>
+    </ul>
+    <div class="gate"><b>Done when:</b> the run-workout journey saves N of N sets through every control, merge tests cover delete across devices, and the single-writer gate fails on a planted write.</div>
+  </div></div>
+
+  <div class="phase"><div class="phase-id">B<small>See</small></div><div>
+    <h3>Visibility</h3><p class="muted" style="font-size:var(--fs-sm)">Close the gaps that let pain points 1 and 3 ship.</p>
+    <ul>
+      <li>B1 · Journey coverage for <code>run-workout</code> and <code>run-program</code>, finishing through each control.</li>
+      <li>B2 · Contrast probe for input <em>values</em>, including ghost state, in light and dark.</li>
+      <li>B3 · Opt-in error beacon. It needs a new Supabase table, so it asks you first.</li>
+      <li>B4 · Per-gate <code>FAILED: &lt;gate&gt;</code> echo in <code>verify.yml</code>'s browser step, as CLAUDE.md already recommends.</li>
+    </ul>
+    <div class="gate"><b>Done when:</b> each new check fails on the pre-fix tree and passes after.</div>
+  </div></div>
+
+  <div class="phase"><div class="phase-id">C<small>Session</small></div><div>
+    <h3>Session screen declutter</h3><p class="muted" style="font-size:var(--fs-sm)">Pain point 3.</p>
+    <ul>
+      <li>One rest readout, Replace/Reorder moved into ⋯, neutral prescription pill, completed values readable.</li>
+      <li>Light-mode ghost value onto a measured token, and the stale comment corrected.</li>
+    </ul>
+    <div class="gate"><b>Done when:</b> <code>check-journey</code> 9/9, the visual ratchet re-baselined from CI, open-card height measured before and after, and every session control at least 44px.</div>
+  </div></div>
+
+  <div class="phase"><div class="phase-id">D<small>Tokens</small></div><div>
+    <h3>Token gate + migration</h3><p class="muted" style="font-size:var(--fs-sm)">The blind spots, then the roughly 565 slate values.</p>
+    <ul>
+      <li>D1 · Gate reads JS-injected CSS, inline <code>&lt;style&gt;</code> and <code>rgba()</code>. Seeded as a ratchet so it doesn't fail on day one.</li>
+      <li>D2 · Migrate the session surface first, then the account and PM sheets, then the inline page styles, family by family.</li>
+    </ul>
+    <div class="gate"><b>Done when:</b> the ratchet only shrinks, and both contrast gates hold or improve.</div>
+  </div></div>
+
+  <div class="phase"><div class="phase-id">E<small>Touch</small></div><div>
+    <h3>Touch &amp; navigation consistency</h3><p class="muted" style="font-size:var(--fs-sm)">Pain point 5.</p>
+    <ul>
+      <li>Raise the five control families above to 44px, add them to <code>CHROME_SELECTORS</code>, and use one bottom nav with line icons.</li>
+      <li>Fix the dashboard header so the greeting fits at 390 and 320.</li>
+    </ul>
+    <div class="gate"><b>Done when:</b> the measured sweep reports 0 interactive controls under 44px on the 13 screens in this audit (owner-only PM controls excepted).</div>
+  </div></div>
+
+  <div class="phase"><div class="phase-id">F<small>Build</small></div><div>
+    <h3>Builder redesign</h3><p class="muted" style="font-size:var(--fs-sm)">Pain point 4. User-facing, so the Quick Tour updates in the same change.</p>
+    <ul>
+      <li>Exercises-first flow, save details in the tray, warm ramp and gold accent, one count.</li>
+    </ul>
+    <div class="gate"><b>Done when:</b> a new workout can be built, saved and started without scrolling past a form, and the started workout saves its sets (which also re-checks A1).</div>
+  </div></div>
+
+  <div class="phase"><div class="phase-id">G<small>Speed</small></div><div>
+    <h3>First-visit performance <span class="chip low" style="vertical-align:middle">needs a decision</span></h3>
+    <p class="muted" style="font-size:var(--fs-sm)"><code>defer</code> was dropped (A-17). The likely route is a generated, committed core bundle with a <code>--check</code> gate, the same pattern as <code>build-sw.py</code>. That changes the no-build-step stance, so it's your call before any code.</p>
+  </div></div>
+</section>
+
+<!-- ============ METHOD ============ -->
+<section id="method">
+  <div class="eyebrow">Method &amp; limits</div>
+  <h2>What was run, and what wasn't</h2>
+  <div class="grid2">
+    <div class="panel"><h3>Run in this session</h3>
+      <ul>
+        <li>Every static gate in CI's list, plus <code>node --check</code> on all tracked JS.</li>
+        <li>Browser gates against a local static server: journey, concurrency, store resilience, crash recovery, exercise identity, PR scope, restore fidelity, contrast light and dark, and a 38-page smoke test.</li>
+        <li>Driven journeys: custom workout (both Finish controls), custom program, rest timer, and a touch-target and type sweep of 13 screens at 390 and 320.</li>
+        <li><code>mergeStore('workoutLog', …)</code> executed from the real <code>mc-sync.js</code> in a vm sandbox.</li>
+        <li>Supabase security and performance advisors, and the weekly check-in workflow log.</li>
+      </ul></div>
+    <div class="panel"><h3>Not verified here</h3>
+      <ul>
+        <li>Real iOS and Android devices, the installed PWA, and true offline. The service worker only runs on the production origin.</li>
+        <li>Live sign-in and two-device sync. Supabase traffic was blocked in the browser runs.</li>
+        <li>Import over an existing history (read in code, not driven).</li>
+        <li>Browser storage eviction for users who aren't signed in and haven't installed the app. Worth checking against WebKit's current policy.</li>
+        <li>The first-visit timings come from emulated throttling, not a real network.</li>
+      </ul></div>
+  </div>
+  <footer>
+    <span>Audit of <code>mcross2298/4-Weeks-to-Open-</code> at commit <code>27fc096</code>. No code was changed for this audit.</span>
+    <span>Severity reflects my judgment of harm × reach. Rankings will move once real-device QA reports back.</span>
+  </footer>
+</section>
+
+</div>
+
+</body>
+</html>

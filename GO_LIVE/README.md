@@ -1,3 +1,12 @@
+# Flagship audit (2026-10-23)
+
+[`flagship-audit/`](flagship-audit/README.md) holds a later three-phase audit: health,
+program engines and gym readiness. It has its three HTML reports, runnable acceptance
+scenarios and captured evidence. The plan it feeds is the root
+[`flagship-readiness-roadmap.md`](../flagship-readiness-roadmap.md).
+
+---
+
 # GO_LIVE — multi-app release assessment evidence
 
 **Start with [`go_live_report.html`](go_live_report.html)** — the consolidated interactive report:

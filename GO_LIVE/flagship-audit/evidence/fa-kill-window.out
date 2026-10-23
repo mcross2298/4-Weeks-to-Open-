@@ -1,0 +1,8 @@
+Flagship audit — set survival vs time between tick and hard kill (http://localhost:8080)
+
+     300 ms  →  LOST
+    1500 ms  →  LOST
+    3000 ms  →  kept
+    6000 ms  →  kept
+
+Measurement only; one trial per delay. iOS WebKit flush timing may differ.

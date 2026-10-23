@@ -1,0 +1,28 @@
+Flagship audit — browser reproductions against http://localhost:8080
+
+  PASS  C-01 control: a refresh restores ticked sets — expected: 2/… on the session counter
+  PASS  C-02 control: an exercise can be logged out of order — expected: 1/… on the session counter
+  FAIL  R-01 tab round trip keeps the session on mm-p2 — expected: ≥1 set in mc_session_v1 | observed: 0 sets (record deleted)
+  FAIL  R-01 tab round trip keeps the session on kitchen-sink — expected: ≥1 set in mc_session_v1 | observed: 0 sets (record deleted)
+  FAIL  R-01 tab round trip keeps the session on iron-engine — expected: ≥1 set in mc_session_v1 | observed: 0 sets (record deleted)
+  FAIL  R-01 tab round trip keeps the session on hv-block — expected: ≥1 set in mc_session_v1 | observed: 0 sets (record deleted)
+  FAIL  R-01 tab round trip keeps the session on cat-strength — expected: ≥1 set in mc_session_v1 | observed: 0 sets (record deleted)
+  FAIL  R-01 tab round trip keeps the session on psu-strength — expected: ≥1 set in mc_session_v1 | observed: 0 sets (record deleted)
+  FAIL  R-01 tab round trip keeps the session on bro-split — expected: ≥1 set in mc_session_v1 | observed: 0 sets (record deleted)
+  FAIL  R-02 custom workout Finish saves logged sets — expected: 2 sets saved | observed: 0 sets saved
+  FAIL  R-03 untick removes the set — expected: 1 set saved | observed: 2 sets saved
+  FAIL  R-04 rest timer survives a refresh — expected: timer stored, running and visible after reload | observed: stored=null, running=false, visible=false
+  FAIL  R-05 typed weight survives a refresh — expected: 142.5 | observed: (empty)
+  FAIL  R-06 wake lock from the first set — expected: ≥1 wake-lock request after set 1 | observed: 0 requests
+  FAIL  R-07 wake lock re-acquired after an interruption — expected: a new request after returning | observed: requests before=1, after return=1
+  FAIL  R-08 suggested load reaches the prefill — expected: top set prefills 195 | observed: top set prefills 185
+  FAIL  R-09 swap: substitute sets keep their own history — expected: original lift's history holds sets 1,2 only | observed: sets 1,2,3
+  FAIL  R-10 swap does not leak into another program — expected: 0 replaced cards on kitchen-sink | observed: 1 replaced
+  FAIL  R-11 history shows exercise names — expected: names like "Incline DB Press" | observed: ["x-incline-db-press"]
+  FAIL  R-12 exercise keys do not collide — expected: 0 shared keys | observed: 12 keys shared by 34 exercises
+        (informational) exercises whose stored key classifies to a different muscle than their name: 187 of 580
+  FAIL  R-13 older backup keeps newer workouts — expected: "FA newest" still present | observed: 3 workouts: ["FA #3","FA #2","FA #1"]
+  FAIL  R-14 Back returns to the day list — expected: mm-p1 day list | observed: dashboard.html (0 day rows)
+  FAIL  R-15 exercise sheet: Escape closes, page behind locked — expected: page did not scroll; sheet closed | observed: page scrolled 500px; sheet still open
+
+23 checks: 2 pass, 21 fail  (each FAIL is an open item in flagship-readiness-roadmap.md)

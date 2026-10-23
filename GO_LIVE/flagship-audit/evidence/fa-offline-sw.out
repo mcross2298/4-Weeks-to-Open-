@@ -1,0 +1,9 @@
+  PASS  S-01 control: the service worker installs and controls the page — expected: controlled
+  PASS  S-02 control: the prefetched program loads offline — expected: mm-p1, mm-p2, cat-mm load
+  PASS  S-03 control: a workout can be logged and finished offline — expected: 2 sets saved
+  FAIL  S-04 History, Stats and the exercise library load offline — expected: all three load | observed: offline page, offline page, offline page
+  FAIL  S-05 going offline records no error noise — expected: 0 "Failed to update a ServiceWorker" errors | observed: 4 recorded
+  FAIL  S-06 "Available offline" matches the cache after a deploy — expected: claim only when cached | observed: claims available=true, mm-p2 cached=false
+  FAIL  S-07 the program still loads offline after a deploy — expected: both load | observed: offline page, offline page
+
+7 checks: 3 pass, 4 fail  (each FAIL is an open item in flagship-readiness-roadmap.md, phase R3)

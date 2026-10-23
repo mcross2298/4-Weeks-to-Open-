@@ -1,0 +1,18 @@
+Flagship audit — engine checks (decisions: per-set, top of range, ×0.5 increments)
+
+  FAIL  E-01 rep range targets the top of the range (4×10-12) — expected: 12 | observed: 10
+  FAIL  E-02 rep range targets the top of the range (4×8-10) — expected: 10 | observed: 8
+  FAIL  E-03 10,10,10,10 on 4×10-12 does not progress — expected: repeat | observed: progress
+  FAIL  E-04 pyramid 12,10,8,8 done as 8,8,8,8 does not progress — expected: repeat | observed: progress
+  FAIL  E-05 2 of 5 prescribed sets logged holds the weight — expected: repeat | observed: progress
+  PASS  E-06 all sets at the top of the range progresses (control) — expected: progress
+  FAIL  E-07 Leg Press steps half the big-lift jump — expected: 5 | observed: 2.5
+  FAIL  E-08 Hack Squat steps half the big-lift jump — expected: 5 | observed: 2.5
+  FAIL  E-09 cable/machine/plate-loaded lifts off the ×0.5 rule (catalog of 580) — expected: 0 | observed: 18
+  FAIL  E-09b a bench used as a prop is not a big lift (Reverse Incline Bench Concentration Curls) — expected: 5 | observed: 10
+  PASS  E-09c a real bench stays a big lift (Close-Grip Barbell Bench, control) — expected: 10
+  FAIL  E-10 a true single is its own max (315 × 1) — expected: 315 | observed: 326
+  PASS  E-11 Epley control (225 × 5) — expected: 263
+  FAIL  E-12 a workout deleted on this device stays deleted after a pull — expected: a | observed: b,a
+
+14 checks: 3 pass, 11 fail  (each FAIL is an open item in flagship-readiness-roadmap.md)
