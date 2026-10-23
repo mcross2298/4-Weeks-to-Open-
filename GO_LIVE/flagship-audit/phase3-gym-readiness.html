@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Repository copy of the published artifact https://claude.ai/artifact/6ZMwVdJcpnM4KnzkjCQtda
+     (Phase 3 — gym readiness, captured 2026-10-23). The published page is the reviewed
+     original; this copy only adds the document skeleton the artifact host supplies. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MC Training Gym Readiness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: one reading column in the app's own session-sheet dress (warm ink ramp, gold accent, Archivo + Manrope); a filterable scenario ledger and a to-scale thumb-zone figure carry the evidence. Dark-first. */
+:root{
+  --bg:#000000; --surface:#0b0b0a; --raised:#141312; --line:#2a2724; --line-soft:#1c1a17;
+  --text:#faf7f0; --text-2:#cfc9bf; --muted:#8a8377;
+  --accent:#d4af37; --accent-tint:rgba(212,175,55,.13);
+  --crit:#ff6b6b; --crit-tint:rgba(255,107,107,.13);
+  --high:#f0a03c; --high-tint:rgba(240,160,60,.13);
+  --med:#86b4e6; --med-tint:rgba(134,180,230,.13);
+  --low:#a39b8e; --low-tint:rgba(163,155,142,.13);
+  --ok:#4cc38a; --ok-tint:rgba(76,195,138,.13);
+  --z-hard:rgba(255,107,107,.16); --z-stretch:rgba(240,160,60,.13); --z-easy:rgba(76,195,138,.12);
+  --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --fs-xs:12px; --fs-sm:13.5px; --fs-md:15.5px; --fs-lg:19px; --fs-xl:26px; --fs-2xl:clamp(30px,6vw,46px);
+  --r-sm:8px; --r-md:14px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
+  --bg:#f5f2ec; --surface:#faf7f0; --raised:#efe9db; --line:#d9d2c3; --line-soft:#e6e0d3;
+  --text:#1c1a17; --text-2:#4a453f; --muted:#6b6459; --accent:#826919; --accent-tint:rgba(130,105,25,.12);
+  --crit:#b3261e; --crit-tint:rgba(179,38,30,.10); --high:#9a5200; --high-tint:rgba(154,82,0,.10);
+  --med:#2b5f9e; --med-tint:rgba(43,95,158,.10); --low:#6b6459; --low-tint:rgba(107,100,89,.10);
+  --ok:#1d7a4f; --ok-tint:rgba(29,122,79,.10);
+  --z-hard:rgba(179,38,30,.10); --z-stretch:rgba(154,82,0,.09); --z-easy:rgba(29,122,79,.09); color-scheme:light; } }
+:root[data-theme="light"]{
+  --bg:#f5f2ec; --surface:#faf7f0; --raised:#efe9db; --line:#d9d2c3; --line-soft:#e6e0d3;
+  --text:#1c1a17; --text-2:#4a453f; --muted:#6b6459; --accent:#826919; --accent-tint:rgba(130,105,25,.12);
+  --crit:#b3261e; --crit-tint:rgba(179,38,30,.10); --high:#9a5200; --high-tint:rgba(154,82,0,.10);
+  --med:#2b5f9e; --med-tint:rgba(43,95,158,.10); --low:#6b6459; --low-tint:rgba(107,100,89,.10);
+  --ok:#1d7a4f; --ok-tint:rgba(29,122,79,.10);
+  --z-hard:rgba(179,38,30,.10); --z-stretch:rgba(154,82,0,.09); --z-easy:rgba(29,122,79,.09); color-scheme:light; }
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--f-body);font-size:var(--fs-md);line-height:1.6;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:900px;margin:0 auto;padding-block:32px 88px;
+  padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:60px}
+section{display:flex;flex-direction:column;gap:20px;min-width:0;scroll-margin-top:72px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.015em;line-height:1.15}
+h1{font-size:var(--fs-2xl);font-weight:900} h2{font-size:var(--fs-xl);font-weight:800} h3{font-size:var(--fs-lg);font-weight:800}
+p{margin:0;max-width:68ch}
+.lede{color:var(--text-2);font-size:17px}
+.eyebrow{font-size:var(--fs-xs);font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+.muted{color:var(--muted)} .small{font-size:var(--fs-xs)}
+code,.mono{font-family:var(--f-mono);font-size:.87em;background:var(--raised);border:1px solid var(--line-soft);padding:1px 5px;border-radius:5px;overflow-wrap:anywhere}
+a{color:var(--accent);text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.series{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:var(--fs-sm);font-weight:700}
+.series a{display:inline-flex;align-items:center;min-height:44px}
+.series span{display:inline-flex;align-items:center;min-height:44px;color:var(--text)}
+
+.secnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-inline:calc(-1 * max(16px, env(safe-area-inset-left,0px)));padding-inline:max(16px, env(safe-area-inset-left,0px))}
+.secnav-in{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.secnav-in::-webkit-scrollbar{display:none}
+.secnav a{flex:0 0 auto;display:inline-flex;align-items:center;min-height:48px;padding:0 12px;font-size:var(--fs-sm);font-weight:800;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap}
+.secnav a.on{color:var(--text);border-bottom-color:var(--accent)}
+
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.chip.fail{color:var(--crit);background:var(--crit-tint)} .chip.warn{color:var(--high);background:var(--high-tint)}
+.chip.gap{color:var(--med);background:var(--med-tint)} .chip.pass{color:var(--ok);background:var(--ok-tint)}
+.chip.acc{color:var(--accent);background:var(--accent-tint)} .chip.low{color:var(--low);background:var(--low-tint)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+
+/* rating */
+.rating{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:28px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:24px}
+.rnum{font-family:var(--f-display);font-weight:900;font-size:76px;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.rnum small{font-size:22px;color:var(--muted);letter-spacing:0;font-weight:700}
+.stars{position:relative;display:inline-block;font-size:26px;letter-spacing:4px;line-height:1;margin-top:12px}
+.stars .bg{color:var(--line)} .stars .fg{position:absolute;inset:0 auto 0 0;overflow:hidden;white-space:nowrap;color:var(--accent)}
+.rtag{margin-top:10px;font-weight:800;color:var(--high);font-size:var(--fs-sm);letter-spacing:.04em;text-transform:uppercase}
+.rubric{display:flex;flex-direction:column;gap:11px;min-width:0}
+.rrow{display:grid;grid-template-columns:minmax(0,1fr) 40px;gap:4px 12px;align-items:center}
+.rrow .lbl{font-size:var(--fs-sm);font-weight:700;color:var(--text-2)}
+.rrow .val{font-variant-numeric:tabular-nums;font-weight:800;text-align:right;font-size:var(--fs-sm)}
+.bar{grid-column:1/-1;height:6px;background:var(--line-soft);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--high);border-radius:3px}
+.bar i.lo{background:var(--crit)} .bar i.hi{background:var(--accent)}
+@media (max-width:640px){ .rating{grid-template-columns:1fr} }
+
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat{padding:16px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat+.stat{border-left:1px solid var(--line)}
+.stat b{font-family:var(--f-display);font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.stat span{font-size:var(--fs-xs);color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.stat.fail b{color:var(--crit)} .stat.pass b{color:var(--ok)} .stat.warn b{color:var(--high)} .stat.gap b{color:var(--med)}
+@media (max-width:620px){ .stats{grid-template-columns:repeat(2,minmax(0,1fr))} .stat:nth-child(odd){border-left:0} .stat:nth-child(n+3){border-top:1px solid var(--line)} .stat:first-child{grid-column:1/-1} .stat:nth-child(2){border-left:0} .stat:nth-child(3){border-left:1px solid var(--line)} .stat:nth-child(4){border-left:0} .stat:nth-child(5){border-left:1px solid var(--line)} }
+
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:660px){ .grid2{grid-template-columns:1fr} }
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.panel h3{font-size:16px}
+.panel ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:var(--fs-sm);color:var(--text-2)}
+
+/* finding cards */
+.find{border-top:1px solid var(--line);padding-top:20px;display:flex;flex-direction:column;gap:12px}
+.find h3{font-size:18px}
+.kv{display:grid;grid-template-columns:118px minmax(0,1fr);gap:8px 16px;font-size:var(--fs-sm)}
+.kv dt{color:var(--muted);font-weight:800;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding-top:3px}
+.kv dd{margin:0;color:var(--text-2);min-width:0}
+@media (max-width:560px){ .kv{grid-template-columns:1fr;gap:2px} .kv dd{margin-bottom:10px} }
+
+/* filters + ledger */
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.fbtn{min-height:48px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--text-2);font:inherit;font-size:var(--fs-sm);font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.fbtn[aria-pressed="true"]{background:var(--accent-tint);border-color:var(--accent);color:var(--text)}
+.fbtn .ct{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:700}
+.sel{min-height:48px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--text);font:inherit;font-size:var(--fs-sm);font-weight:700}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-md)}
+table{border-collapse:collapse;width:100%;font-size:var(--fs-sm)}
+.ledger{min-width:760px}
+th,td{text-align:left;padding:10px 12px;vertical-align:top}
+th{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--raised)}
+tbody tr+tr td{border-top:1px solid var(--line-soft)}
+td{color:var(--text-2)} td b{color:var(--text)}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.grp td{background:var(--raised);font-family:var(--f-display);font-weight:800;color:var(--text);font-size:var(--fs-sm)}
+.empty{padding:18px;color:var(--muted);font-size:var(--fs-sm)}
+
+/* setlog-style evidence */
+.setlog-wrap{overflow-x:auto}
+.setlog{border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;background:var(--surface);min-width:440px}
+.slr{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 110px;gap:12px;padding:11px 14px;align-items:center;font-size:var(--fs-sm)}
+.slr+.slr{border-top:1px solid var(--line-soft)}
+.slr.h{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--raised)}
+.slr .n{font-variant-numeric:tabular-nums;font-weight:800;text-align:right}
+.bad{color:var(--crit)} .good{color:var(--ok)}
+
+/* kill window */
+.kill{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.kcell{border-radius:var(--r-sm);padding:10px 6px;text-align:center;font-size:var(--fs-xs);font-weight:800;display:flex;flex-direction:column;gap:2px}
+.kcell b{font-family:var(--f-display);font-size:16px;font-variant-numeric:tabular-nums}
+.kcell.lost{background:var(--crit-tint);color:var(--crit)} .kcell.kept{background:var(--ok-tint);color:var(--ok)}
+@media (max-width:520px){ .kill{grid-template-columns:repeat(4,minmax(0,1fr))} }
+
+/* thumb figure */
+.thumb{display:grid;grid-template-columns:minmax(0,230px) minmax(0,1fr);gap:24px;align-items:start}
+.thumb svg{width:100%;max-width:230px;height:auto;display:block}
+.thumb .z-hard{fill:var(--z-hard)} .thumb .z-stretch{fill:var(--z-stretch)} .thumb .z-easy{fill:var(--z-easy)}
+.thumb .frame{fill:none;stroke:var(--line);stroke-width:4}
+.thumb .ctl{fill:var(--surface);stroke:var(--accent);stroke-width:3}
+.thumb .ctl.top{stroke:var(--crit)}
+.thumb .lbl{fill:var(--text);font:800 17px var(--f-body)}
+.thumb .zl{fill:var(--muted);font:800 15px var(--f-body);letter-spacing:.08em}
+@media (max-width:560px){ .thumb{grid-template-columns:1fr} .thumb svg{margin:0 auto} }
+
+/* roadmap */
+.phase{border-top:1px solid var(--line)}
+.phase>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:14px;align-items:center;padding:18px 0;min-height:56px}
+.phase>summary::-webkit-details-marker{display:none}
+.pid{font-family:var(--f-display);font-weight:900;font-size:28px;line-height:1;color:var(--accent)}
+.ptitle{font-family:var(--f-display);font-weight:800;font-size:var(--fs-lg)}
+.ptitle small{display:block;font-family:var(--f-body);font-weight:600;font-size:var(--fs-sm);color:var(--muted);letter-spacing:0}
+.caret{width:28px;height:28px;display:grid;place-items:center;color:var(--muted);transition:transform .2s}
+.phase[open] .caret{transform:rotate(90deg)}
+.pbody{padding:0 0 20px 70px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:560px){ .pbody{padding-left:0} .phase>summary{grid-template-columns:44px minmax(0,1fr) auto} }
+ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:9px}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;font-size:var(--fs-sm);color:var(--text-2)}
+ol.steps li::before{content:counter(s);font-family:var(--f-display);font-weight:900;color:var(--accent);font-variant-numeric:tabular-nums;width:26px;height:26px;background:var(--accent-tint);border-radius:6px;display:grid;place-items:center;font-size:12px}
+ol.steps b{color:var(--text)}
+.gate{font-size:var(--fs-xs);color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
+.gate b{color:var(--text-2)}
+.callout{background:var(--accent-tint);border-radius:var(--r-md);padding:16px 18px;font-size:var(--fs-sm);color:var(--text-2)}
+.callout b{color:var(--text)}
+footer{font-size:var(--fs-xs);color:var(--muted);border-top:1px solid var(--line);padding-top:18px;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} .caret{transition:none} }
+</style>
+<style>body{margin:0}</style>
+</head>
+<body>
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:16px">
+  <div class="eyebrow">4-Weeks-to-Open- · main @ 27fc096 · Phase 3 · 23 Oct 2026</div>
+  <h1>MC Training gym readiness</h1>
+  <p class="lede">The app logs sets well under ordinary use: one tap accepts a fully prefilled set, an exercise can be done out of order, and a whole workout can be logged with no signal. It isn't yet dependable for the interruptions a real gym brings: a phone call, a locked screen, a peek at next week, a deploy, a borrowed bench. This page records 54 stress scenarios, each run in a real browser against the real modules.</p>
+  <div class="series" aria-label="Audit series">
+    <a href="https://claude.ai/artifact/4fdtxhosnkwn7rJspwuDgs">Phase 1 · Health audit</a>
+    <a href="https://claude.ai/artifact/EVshNAH1dQB3bnTAQfp7qb">Phase 2 · Master audit</a>
+    <span>Phase 3 · Gym readiness (this page)</span>
+  </div>
+</header>
+
+<nav class="secnav" aria-label="Sections"><div class="secnav-in" id="secnav">
+  <a href="#rating">Rating</a><a href="#resiliency">Resiliency</a><a href="#ledger">Scenario ledger</a><a href="#flow">In-gym flow</a><a href="#data">Data mobility</a><a href="#standards">UI standards</a><a href="#plan">Polish plan</a><a href="#method">Method</a>
+</div></nav>
+
+<!-- ================= RATING ================= -->
+<section id="rating">
+  <div class="eyebrow">Flagship readiness rating</div>
+  <div class="rating">
+    <div>
+      <div class="rnum">53<small> / 100</small></div>
+      <div class="stars" aria-label="About 2.6 of 5 stars"><span class="bg">★★★★★</span><span class="fg" style="width:53%">★★★★★</span></div>
+      <div class="rtag">Functional · not yet flagship</div>
+      <p class="small muted" style="margin-top:12px">This is my judgment on the eight areas at right, not a measured metric. It's an unweighted average. It sits below Phase 2's code-health score of 68 because it measures behavior under real gym disruptions rather than at rest.</p>
+    </div>
+    <div class="rubric" role="list">
+      <div class="rrow" role="listitem"><span class="lbl">Set capture under disruption</span><span class="val">6.0</span><div class="bar"><i class="hi" style="width:60%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Mid-session flexibility</span><span class="val">6.0</span><div class="bar"><i class="hi" style="width:60%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">One-handed ergonomics (your 48px standard)</span><span class="val">6.0</span><div class="bar"><i class="hi" style="width:60%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Prefill &amp; progression accuracy</span><span class="val">5.5</span><div class="bar"><i style="width:55%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Offline reliability</span><span class="val">5.0</span><div class="bar"><i style="width:50%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">History &amp; data mobility</span><span class="val">5.0</span><div class="bar"><i style="width:50%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Session continuity (ticks, timer, typed values)</span><span class="val">4.5</span><div class="bar"><i class="lo" style="width:45%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Screen awake &amp; rest alerts</span><span class="val">4.0</span><div class="bar"><i class="lo" style="width:40%"></i></div></div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b>54</b><span>Scenarios run</span></div>
+    <div class="stat pass"><b>16</b><span>Pass</span></div>
+    <div class="stat fail"><b>22</b><span>Fail</span></div>
+    <div class="stat warn"><b>12</b><span>Warn</span></div>
+    <div class="stat gap"><b>4</b><span>Gap</span></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel"><h3>What a lifter would notice</h3><ul>
+      <li><b>The screen locks between early sets.</b> No wake lock is held during the first exercise, and none after a phone call.</li>
+      <li><b>Tapping a week tab erases the session.</b> On all 7 tabbed engines, ticks, the resume banner and crash recovery go with it.</li>
+      <li><b>History shows <code>x-incline-db-press</code></b> instead of exercise names, for every real workout.</li>
+      <li><b>"Suggested: 195 lb", but one tap logs 185.</b> The suggestion never reaches the prefill.</li>
+      <li><b>After a deploy, the program isn't offline any more,</b> while the dashboard still says "Available offline ✓".</li>
+    </ul></div>
+    <div class="panel"><h3>Decisions you made for this phase</h3><ul>
+      <li>Keep the screen on for the whole session, re-acquired after interruptions, with a setting to turn it off.</li>
+      <li>Swaps are today-only by default with an opt-in "keep", and the substitute's sets go to its own history.</li>
+      <li>Adopt your 48px target and 8px spacing standard, and move the CI gates from 44 to 48.</li>
+      <li>This PR carries all three audits and the roadmap. Fixes ship phase by phase.</li>
+      <li class="muted">Defaults I chose (say if you disagree): CSV export, merge-safe import with confirmation, a backup nudge plus share-sheet save for signed-out users, and an optional IndexedDB crash journal.</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- ================= RESILIENCY ================= -->
+<section id="resiliency">
+  <div class="eyebrow">Session resiliency &amp; edge-case vulnerabilities</div>
+  <h2>What survives an interruption</h2>
+
+  <article class="find">
+    <h3>A peek at next week deletes today's session</h3>
+    <div class="chips"><span class="chip fail">Fail · 7 of 7 tabbed engines</span><span class="chip acc">Driven + root-caused</span></div>
+    <div class="setlog-wrap"><div class="setlog">
+      <div class="slr h"><span>mm-p1 · 2 sets logged, then…</span><span>Session record</span><span style="text-align:right">After reload</span></div>
+      <div class="slr"><span>Reload only (control)</span><span class="mono">2 sets</span><span class="n good">2 / 46</span></div>
+      <div class="slr"><span>W1 → W2 → W1, then reload</span><span class="mono">deleted</span><span class="n bad">0 / 46</span></div>
+    </div></div>
+    <dl class="kv"><dt>Root cause</dt><dd><code>mc-session.js</code> wires its re-render guard (DEF-CR-02) only inside <code>if (session) { … }</code>, meaning only when a record already existed at page load. A workout started fresh on that load has no guard. The week change re-renders the cards without ticks, <code>save()</code> captures zero ticks, and it runs <code>delete s0[PID]</code>. The sets survive in <code>mc_setlog_v1</code>, so they still bank on Finish, but with <code>setsChecked: 0</code>.</dd></dl>
+  </article>
+
+  <article class="find">
+    <h3>A refresh mid-rest loses the timer, and a refresh mid-typing loses the number</h3>
+    <div class="chips"><span class="chip fail">Fail</span><span class="chip acc">Driven + root-caused</span></div>
+    <dl class="kv">
+      <dt>Rest timer</dt><dd>The stored timer reads <code>null</code> the instant a rest starts. <code>wrapTimers()</code> records the timer and then calls the original <code>TMR.start()</code>, which begins with <code>this.stop()</code>. That is the <em>wrapped</em> stop, so it nulls the record it was just given. The file header promises "a still-running rest timer (re-armed from its wall-clock end time)". Even if the record survived, the restore path (<code>TMR.setTime</code>) only updates the floating timer, and set-log pages hide that float in favor of the inline row.</dd>
+      <dt>Typed weight</dt><dd>A weight typed but not yet ticked is saved to <code>mc_setlog_pending_v1</code> only on <code>blur</code>. I typed 142.5, waited, and reloaded with the field still focused. The pending store was <code>{}</code>, and the field came back empty.</dd>
+      <dt>What works</dt><dd>Ticked sets, the open exercise, the 5/46 counter and the elapsed clock all came back after a refresh. A deploy that lands mid-workout is held until no set is ticked.</dd>
+    </dl>
+  </article>
+
+  <article class="find">
+    <h3>The screen is free to lock mid-session</h3>
+    <div class="chips"><span class="chip fail">Fail</span><span class="chip acc">Wake-lock calls recorded</span></div>
+    <div class="setlog-wrap"><div class="setlog">
+      <div class="slr h"><span>mm-p1, 5×5 opener</span><span>Wake-lock requests</span><span style="text-align:right">Session clock</span></div>
+      <div class="slr"><span>Sets 1–4 (rest running each time)</span><span class="mono">0</span><span class="n bad">00:00</span></div>
+      <div class="slr"><span>Set 5 completes the exercise</span><span class="mono">1</span><span class="n">starts</span></div>
+      <div class="slr"><span>Call or text (page hidden), then back</span><span class="mono">released, never re-requested</span><span class="n bad">lost</span></div>
+    </div></div>
+    <dl class="kv">
+      <dt>Root cause</dt><dd>Three gaps stack up. The session lock starts in <code>mc-summary.js</code>'s <code>startTimer()</code>, which runs only once <code>exDone &gt; 0</code>, meaning a whole exercise is finished. The per-rest lock in <code>mc-live-tracker.js</code> only re-checks when <code>#timerFloat</code>'s class changes, and the inline rest row means that float never changes on set-log pages. <code>onShow()</code> re-acquires only while a rest is running, so a session lock lost to an interruption stays lost. <code>mc-interval.js</code> already re-acquires on every return, so the fix has a model in the tree.</dd>
+      <dt>Rest-end cue</dt><dd>It fires exactly once when the page returns (vibrate plus three tones), with no double alert. Nothing fires while the phone is locked, and there's no notification fallback. On iPhone, <code>navigator.vibrate</code> is a no-op, and the Web Audio beep is likely muted by the silent switch. That last point needs a real device to confirm.</dd>
+    </dl>
+  </article>
+
+  <article class="find">
+    <h3>Every deploy quietly takes the program offline</h3>
+    <div class="chips"><span class="chip fail">Fail</span><span class="chip acc">Real service worker, mirrored origin</span></div>
+    <div class="setlog-wrap"><div class="setlog">
+      <div class="slr h"><span>Offline, served by sw.js</span><span>Before deploy</span><span style="text-align:right">After deploy</span></div>
+      <div class="slr"><span>Dashboard</span><span class="good">loads + banner</span><span class="n good">loads</span></div>
+      <div class="slr"><span>mm-p1 (today's workout)</span><span class="good">loads</span><span class="n bad">offline page</span></div>
+      <div class="slr"><span>mm-p2, cat-mm (prefetched)</span><span class="good">loads</span><span class="n bad">offline page</span></div>
+      <div class="slr"><span>History, Stats, Library, Builder</span><span class="bad">offline page</span><span class="n bad">offline page</span></div>
+      <div class="slr"><span>Dashboard's "Available offline ✓"</span><span>true</span><span class="n bad">still shown</span></div>
+    </div></div>
+    <dl class="kv">
+      <dt>Root cause</dt><dd><code>sw.js</code>'s <code>activate</code> deletes every cache except the new <code>CACHE_NAME</code>, and each deploy bumps that name (currently v183). Only <code>dashboard.html</code> and <code>index.html</code> are precached. <code>mc-offline-prefetch.js</code> records "done" per program for 14 days, with no tie to the cache version, so <code>ensure()</code> declines to refetch. The dashboard paints the stale record as "Available offline ✓".</dd>
+      <dt>Also</dt><dd>Logging and finishing a whole workout offline works (2 sets saved). Per-set cloud inserts made offline are dropped rather than retried. The store-level sync catches up, but PR baselines and crash recovery read the per-set table. Offline, the updater's rejected <code>reg.update()</code> calls logged 6 unhandled errors into a 20-entry error buffer.</dd>
+    </dl>
+  </article>
+
+  <article class="find">
+    <h3>A hard crash has a two-second window</h3>
+    <div class="chips"><span class="chip warn">Narrow · signed-out only</span><span class="chip acc">SIGKILL on a persistent profile</span></div>
+    <div class="kill" role="list" aria-label="Set survival by time between the tick and the kill">
+      <div class="kcell lost" role="listitem"><b>0.3 s</b>lost</div>
+      <div class="kcell lost" role="listitem"><b>1.5 s</b>lost</div>
+      <div class="kcell kept" role="listitem"><b>3 s</b>kept</div>
+      <div class="kcell kept" role="listitem"><b>6 s</b>kept</div>
+      <div class="kcell kept" role="listitem"><b>10 s</b>kept</div>
+      <div class="kcell kept" role="listitem"><b>20 s</b>kept</div>
+      <div class="kcell kept" role="listitem"><b>35 s</b>kept</div>
+    </div>
+    <p class="small muted">Time between ticking a set and killing every browser process, one trial each, Chromium 141. Browsers flush local storage to disk asynchronously, and iOS WebKit's timing may differ. Signed-in athletes recover from the cloud: the committed crash test restored 4 of 4 sets. Signed-out athletes have no copy.</p>
+  </article>
+</section>
+
+<!-- ================= LEDGER ================= -->
+<section id="ledger">
+  <div class="eyebrow">Scenario ledger</div>
+  <h2>All 54 stress scenarios</h2>
+  <p class="muted">Each row was driven in headless Chromium (390×844, touch) against the real modules, unless its evidence says otherwise.</p>
+  <div class="filters" role="group" aria-label="Filter scenarios by outcome">
+    <button class="fbtn" data-lf="all" aria-pressed="true">All <span class="ct" data-lc="all"></span></button>
+    <button class="fbtn" data-lf="fail" aria-pressed="false">Fail <span class="ct" data-lc="fail"></span></button>
+    <button class="fbtn" data-lf="warn" aria-pressed="false">Warn <span class="ct" data-lc="warn"></span></button>
+    <button class="fbtn" data-lf="gap" aria-pressed="false">Gap <span class="ct" data-lc="gap"></span></button>
+    <button class="fbtn" data-lf="pass" aria-pressed="false">Pass <span class="ct" data-lc="pass"></span></button>
+    <label class="small muted" for="la" style="margin-left:auto">Area</label>
+    <select class="sel" id="la" aria-label="Filter by area">
+      <option value="all">All areas</option><option value="interrupt">Interruptions</option><option value="screen">Screen &amp; rest alerts</option><option value="offline">Offline</option><option value="flow">In-gym flow</option><option value="prefill">Prefill &amp; progression</option><option value="ergo">Ergonomics</option><option value="data">Data &amp; history</option>
+    </select>
+  </div>
+  <div class="tbl-wrap"><table class="ledger" id="ltable">
+    <thead><tr><th style="width:210px">Scenario</th><th>Observed</th><th style="width:86px">Result</th></tr></thead>
+    <tbody>
+      <tr class="grp" data-g="interrupt"><td colspan="3">Interruptions &amp; continuity</td></tr>
+      <tr data-s="pass" data-a="interrupt"><td><b>Refresh mid-session</b></td><td>Ticks, open exercise, counter (5/46) and elapsed clock restored</td><td><span class="chip pass">Pass</span></td></tr>
+      <tr data-s="fail" data-a="interrupt"><td><b>Refresh mid-rest</b></td><td>Stored timer is <code>null</code> the instant a rest starts; nothing restores</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="fail" data-a="interrupt"><td><b>Killed while typing a weight</b></td><td>Pending store stays <code>{}</code> until the field blurs; the typed 142.5 was lost</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="fail" data-a="interrupt"><td><b>Week / phase / cycle tab round trip</b></td><td>Session record deleted on mm-p2, kitchen-sink, iron-engine, hv-block, cat-strength, psu-strength and bro-split</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="fail" data-a="interrupt"><td><b>Hard kill within 1.5 s of a tick</b></td><td>Set lost when signed out. It survived when the kill came 3 s or more after the tick.</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="pass" data-a="interrupt"><td><b>Hard kill, signed in</b></td><td>Cloud rehydrate restores sets and ticks (committed gate)</td><td><span class="chip pass">Pass</span></td></tr>
+      <tr data-s="pass" data-a="interrupt"><td><b>Deploy arrives mid-workout</b></td><td>Reload held while any set is ticked; applied once idle</td><td><span class="chip pass">Pass</span></td></tr>
+      <tr data-s="warn" data-a="interrupt"><td><b>Deploy after a week-tab wipe</b></td><td>The hold reads ticks on screen. Once they're wiped, the page looks idle and can be reloaded.</td><td><span class="chip warn">Warn</span></td></tr>
+      <tr data-s="pass" data-a="interrupt"><td><b>Interval timer reload</b></td><td>Snapshot restores the step; wake lock re-acquired on return</td><td><span class="chip pass">Pass</span></td></tr>
+
+      <tr class="grp" data-g="screen"><td colspan="3">Screen awake &amp; rest alerts</td></tr>
+      <tr data-s="fail" data-a="screen"><td><b>Screen awake, first exercise</b></td><td>0 wake-lock requests across sets 1–4; session clock reads 00:00</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="fail" data-a="screen"><td><b>Screen awake after a call</b></td><td>Lock released when hidden, never requested again</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="fail" data-a="screen"><td><b>Rest start on set-log pages</b></td><td>The per-rest trigger watches <code>#timerFloat</code>'s class, which never changes there</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="pass" data-a="screen"><td><b>Rest ends while backgrounded</b></td><td>Cue fires exactly once on return (vibrate + 3 tones), no double alert</td><td><span class="chip pass">Pass</span></td></tr>
+      <tr data-s="gap" data-a="screen"><td><b>Rest ends while the phone is locked</b></td><td>No notification path; in-page ticks are suspended</td><td><span class="chip gap">Gap</span></td></tr>
+      <tr data-s="warn" data-a="screen"><td><b>iPhone cue channels</b></td><td><code>navigator.vibrate</code> is a no-op on iOS; the Web Audio beep may be muted by the silent switch (not verified on a device)</td><td><span class="chip warn">Warn</span></td></tr>
+      <tr data-s="warn" data-a="screen"><td><b>Video rest view</b></td><td>112px countdown reads well, but every control is 35–42px, the "SEC" label sits under m:ss, and Done does the same thing as Cancel</td><td><span class="chip warn">Warn</span></td></tr>
+      <tr data-s="fail" data-a="screen"><td><b>Floating timer controls</b></td><td>Conditioning and Max Out pages: 34px icon buttons; 24px cue toggles with 10px text</td><td><span class="chip fail">Fail</span></td></tr>
+
+      <tr class="grp" data-g="offline"><td colspan="3">Offline (real service worker)</td></tr>
+      <tr data-s="pass" data-a="offline"><td><b>App shell offline</b></td><td>Dashboard loads, offline banner shown</td><td><span class="chip pass">Pass</span></td></tr>
+      <tr data-s="pass" data-a="offline"><td><b>Prefetched program offline</b></td><td>Landing, guide and all three Modality Matrix phase pages load</td><td><span class="chip pass">Pass</span></td></tr>
+      <tr data-s="pass" data-a="offline"><td><b>Log and finish offline</b></td><td>Workout saved locally with both sets</td><td><span class="chip pass">Pass</span></td></tr>
+      <tr data-s="fail" data-a="offline"><td><b>History, Stats, Library, Builder offline</b></td><td>Offline fallback page; none precached, prefetch skips them</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="fail" data-a="offline"><td><b>Program pages after a deploy</b></td><td>Evicted with the old cache; "Available offline ✓" still shown; no refetch for 14 days</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="fail" data-a="offline"><td><b>Offline set → per-set cloud table</b></td><td>Insert failure swallowed, never retried (store-level sync does catch up)</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="warn" data-a="offline"><td><b>Offline error noise</b></td><td>6 unhandled update rejections in one short session, into a 20-entry error buffer</td><td><span class="chip warn">Warn</span></td></tr>
+      <tr data-s="warn" data-a="offline"><td><b>Weak signal ("lie-fi")</b></td><td>The banner keys only off <code>navigator.onLine</code> (not tested on a device)</td><td><span class="chip warn">Warn</span></td></tr>
+
+      <tr class="grp" data-g="flow"><td colspan="3">In-gym flow</td></tr>
+      <tr data-s="pass" data-a="flow"><td><b>Do a later exercise first</b></td><td>Tap its strip (312×48) and log; counter and session track it</td><td><span class="chip pass">Pass</span></td></tr>
+      <tr data-s="pass" data-a="flow"><td><b>Swap keeps progress</b></td><td>Ticks (2/5) and the session survive a mid-exercise swap</td><td><span class="chip pass">Pass</span></td></tr>
+      <tr data-s="fail" data-a="flow"><td><b>Swap history attribution</b></td><td>Set 3 on the substitute (70×8) went into the original lift's key</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="fail" data-a="flow"><td><b>Swap scope</b></td><td>Written to <code>mc_replacements_global</code>; leaked into kitchen-sink's page the next visit</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="warn" data-a="flow"><td><b>Reorder mid-session</b></td><td>Arrows only on the open card, 36×36; Done 80×37; the new order is permanent</td><td><span class="chip warn">Warn</span></td></tr>
+      <tr data-s="gap" data-a="flow"><td><b>Extra set or skip</b></td><td>No add-set row, no skip marker</td><td><span class="chip gap">Gap</span></td></tr>
+
+      <tr class="grp" data-g="prefill"><td colspan="3">Prefill &amp; progression</td></tr>
+      <tr data-s="pass" data-a="prefill"><td><b>Per-set prefill</b></td><td>Last session's weight per set (135/155/175/185), prescribed reps per set (12/12/10/8)</td><td><span class="chip pass">Pass</span></td></tr>
+      <tr data-s="pass" data-a="prefill"><td><b>One-tap logging</b></td><td>Ticking a ghost row stores its values</td><td><span class="chip pass">Pass</span></td></tr>
+      <tr data-s="fail" data-a="prefill"><td><b>Suggestion reaches the prefill</b></td><td>"Suggested: 195 lb", yet the top set prefills 185, even after a reload</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="fail" data-a="prefill"><td><b>Untick removes the set</b></td><td>Still saved at Finish: 2 sets banked against <code>setsChecked: 1</code></td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="warn" data-a="prefill"><td><b>Weightless barbell set</b></td><td>A first session accepts a tick with no weight</td><td><span class="chip warn">Warn</span></td></tr>
+
+      <tr class="grp" data-g="ergo"><td colspan="3">One-handed ergonomics</td></tr>
+      <tr data-s="pass" data-a="ergo"><td><b>Thumb reach</b></td><td>Next set's ✓, weight and ±15s sit at y 461–565 of 844</td><td><span class="chip pass">Pass</span></td></tr>
+      <tr data-s="fail" data-a="ergo"><td><b>48px targets (your standard)</b></td><td>25 of 32 on-screen controls under 48; 0 under 44</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="fail" data-a="ergo"><td><b>8px between targets</b></td><td>31 pairs closer than 8px; adjacent set rows 3–7px apart</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="fail" data-a="ergo"><td><b>13px minimum text</b></td><td>35 visible text nodes under 13px on the active session screen</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="pass" data-a="ergo"><td><b>Numeric entry</b></td><td>16px inputs (no iOS zoom), decimal and numeric keypads, ghost text selected on focus</td><td><span class="chip pass">Pass</span></td></tr>
+      <tr data-s="warn" data-a="ergo"><td><b>Keyboard flow</b></td><td>No <code>enterkeyhint</code>; Enter can't tick a set; inputs have no label</td><td><span class="chip warn">Warn</span></td></tr>
+      <tr data-s="warn" data-a="ergo"><td><b>Press feedback</b></td><td>The set checkbox has no <code>:active</code> state (cards, strips and ±15s do)</td><td><span class="chip warn">Warn</span></td></tr>
+
+      <tr class="grp" data-g="data"><td colspan="3">Data &amp; history</td></tr>
+      <tr data-s="pass" data-a="data"><td><b>Backup round trip</b></td><td>Export, wipe, import: every exported store byte-identical</td><td><span class="chip pass">Pass</span></td></tr>
+      <tr data-s="fail" data-a="data"><td><b>Restore an older backup</b></td><td>The newer workout was silently erased (4 → 3), no confirmation</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="gap" data-a="data"><td><b>CSV export</b></td><td>JSON only</td><td><span class="chip gap">Gap</span></td></tr>
+      <tr data-s="gap" data-a="data"><td><b>Backup nudge, signed out</b></td><td>Backup status hidden; no reminder; export sits in a sheet headed "Sign in"</td><td><span class="chip gap">Gap</span></td></tr>
+      <tr data-s="fail" data-a="data"><td><b>History names</b></td><td>Finished sets store the key, so History and Detail show <code>x-incline-db-press</code></td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="fail" data-a="data"><td><b>Key collisions</b></td><td>24-character truncation: 12 groups, 34 catalog exercises share keys</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="fail" data-a="data"><td><b>Muscle attribution</b></td><td>187 of 580 exercises classify differently from their stored key</td><td><span class="chip fail">Fail</span></td></tr>
+      <tr data-s="warn" data-a="data"><td><b>Retention</b></td><td>200 workouts (the cloud copy is trimmed too); 5 sessions per exercise</td><td><span class="chip warn">Warn</span></td></tr>
+      <tr data-s="pass" data-a="data"><td><b>Storage footprint</b></td><td>About 750 KB at the caps (about 1.5 MB as UTF-16) of a ~5 MB budget shared with Mike's Cookbook, whose share is unmeasured</td><td><span class="chip pass">Pass</span></td></tr>
+      <tr data-s="warn" data-a="data"><td><b>Storage persistence</b></td><td><code>persist()</code> result ignored; Safari tab users may face 7-day eviction (not verified)</td><td><span class="chip warn">Warn</span></td></tr>
+      <tr data-s="warn" data-a="data"><td><b>Program title</b></td><td>The Modality Matrix tab title still says "12-Week Program"</td><td><span class="chip warn">Warn</span></td></tr>
+    </tbody>
+  </table>
+  <div class="empty" id="lempty" hidden>No scenarios match those filters.</div>
+  </div>
+</section>
+
+<!-- ================= FLOW ================= -->
+<section id="flow">
+  <div class="eyebrow">In-gym flow &amp; ergonomics</div>
+  <h2>Swaps, prefill and one thumb</h2>
+
+  <article class="find">
+    <h3>A swap keeps your place, then writes to the wrong history</h3>
+    <div class="setlog-wrap"><div class="setlog">
+      <div class="slr h"><span>mm-p1 · Incline DB Press</span><span>History key written</span><span style="text-align:right">Card shows</span></div>
+      <div class="slr"><span>Sets 1–2 at 60×5</span><span class="mono">x-incline-db-press</span><span class="n">2 / 5</span></div>
+      <div class="slr"><span>Swap → Alternating DB Slight Incline Press</span><span class="mono">mc_replacements_global</span><span class="n good">2 / 5 kept</span></div>
+      <div class="slr"><span>Set 3 on the substitute, 70×8</span><span class="mono bad">x-incline-db-press</span><span class="n">3 / 5</span></div>
+      <div class="slr"><span>Next visit to kitchen-sink.html</span><span class="mono">same global swap</span><span class="n bad">swapped there too</span></div>
+    </div></div>
+    <dl class="kv"><dt>Root cause</dt><dd>Phase 2.1 roots identity in the <em>original authored name</em> (<code>origNameOf()</code>), so the key never follows a swap. <code>applySwap()</code> writes globally by default. Your decision: today-only by default, an opt-in "keep", and the substitute's sets keyed to the substitute.</dd></dl>
+  </article>
+
+  <article class="find">
+    <h3>The prefill is right, except the part the engine computes</h3>
+    <div class="setlog-wrap"><div class="setlog">
+      <div class="slr h"><span>iron-engine · 12·12·10·8, all reps hit</span><span>Prefill shown</span><span style="text-align:right">Expected</span></div>
+      <div class="slr"><span>Sets 1–3</span><span class="mono">135 · 155 · 175</span><span class="n good">same</span></div>
+      <div class="slr"><span>Top set (header: "Suggested: 195 lb")</span><span class="mono bad">185</span><span class="n">195</span></div>
+    </div></div>
+    <dl class="kv"><dt>Root cause</dt><dd><code>mc-suggest.js</code> applies its planned load only to an <em>empty</em> weight field (<code>if (inp.value.trim()) return;</code>). Since S2, the logger fills each field's <em>value</em> with a ghost of last session's number, so no field is ever empty. Fixing the progression rules (Phase 2, roadmap B) would change the label and still not what one tap logs.</dd></dl>
+  </article>
+
+  <article class="find">
+    <h3>Where the controls sit for one thumb</h3>
+    <div class="thumb">
+      <svg viewBox="0 0 390 844" role="img" aria-labelledby="thumbT thumbD">
+        <title id="thumbT">Thumb zones on a 390 by 844 screen with measured control positions</title>
+        <desc id="thumbD">Top quarter is hard to reach, 25 to 45 percent is a stretch, below that is easy. End workout, week tabs and the exercise menu sit in the hard zone; the next set's weight, reps, tick and rest adjust controls sit in the easy zone.</desc>
+        <rect class="z-hard" x="0" y="0" width="390" height="211"/>
+        <rect class="z-stretch" x="0" y="211" width="390" height="169"/>
+        <rect class="z-easy" x="0" y="380" width="390" height="464"/>
+        <text class="zl" x="14" y="200">HARD</text><text class="zl" x="14" y="370">STRETCH</text><text class="zl" x="14" y="830">EASY</text>
+        <rect class="ctl top" x="268" y="9" width="110" height="44" rx="10"/><text class="lbl" x="150" y="38">End workout</text>
+        <rect class="ctl top" x="16" y="72" width="67" height="50" rx="10"/><text class="lbl" x="92" y="104">Week tabs</text>
+        <rect class="ctl top" x="310" y="139" width="44" height="44" rx="10"/><text class="lbl" x="218" y="168">Exercise ⋯</text>
+        <rect class="ctl" x="41" y="461" width="64" height="44" rx="10"/><rect class="ctl" x="287" y="461" width="64" height="44" rx="10"/><text class="lbl" x="128" y="489">−15s · +15s</text>
+        <rect class="ctl" x="69" y="521" width="116" height="44" rx="10"/><rect class="ctl" x="192" y="521" width="116" height="44" rx="10"/><rect class="ctl" x="314" y="521" width="44" height="44" rx="10"/>
+        <text class="lbl" x="69" y="596">weight · reps · ✓</text>
+        <rect class="frame" x="2" y="2" width="386" height="840" rx="40"/>
+      </svg>
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+        <p style="font-size:var(--fs-sm);color:var(--text-2)">Measured positions on mm-p1 mid-rest, drawn to scale. The controls used every set sit in the easy zone, which is the right call. The ones up top are used less often, but End workout is one of them, and so is the ⋯ menu, which holds swap.</p>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Control</th><th>Size</th><th>vs 48px</th></tr></thead>
+          <tbody>
+            <tr><td>Set ✓ checkbox</td><td class="num">44 × 44</td><td><span class="chip fail">Under</span></td></tr>
+            <tr><td>Weight / reps inputs</td><td class="num">116 × 44</td><td><span class="chip fail">Under</span></td></tr>
+            <tr><td>Rest −15s / +15s</td><td class="num">64 × 44</td><td><span class="chip fail">Under</span></td></tr>
+            <tr><td>Exercise strip</td><td class="num">312 × 48</td><td><span class="chip pass">Meets</span></td></tr>
+            <tr><td>Gap between set rows</td><td class="num">3–7 px</td><td><span class="chip fail">Under 8</span></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  </article>
+</section>
+
+<!-- ================= DATA ================= -->
+<section id="data">
+  <div class="eyebrow">Data mobility &amp; history</div>
+  <h2>Can an athlete lose their history?</h2>
+  <div class="grid2">
+    <div class="panel"><h3>Backup &amp; restore</h3><ul>
+      <li><b>Round trip exact.</b> Export → wipe → import restored every exported store byte for byte (verified on a 4-store backup).</li>
+      <li><b>Older backup erases newer work.</b> Restoring a 3-workout backup on a device holding 4 left 3, with no confirmation. <code>importJSON()</code> replaces each store wholesale.</li>
+      <li><b>JSON only.</b> There's no CSV for a spreadsheet or another app.</li>
+      <li><b>Hard to find.</b> Export sits below the fold of the avatar sheet, under a "Sign in" heading. Signed-out athletes see no backup status and get no reminder.</li>
+    </ul></div>
+    <div class="panel"><h3>History integrity</h3><ul>
+      <li><b>Names.</b> Finished sets store the history key, so every real workout reads <code>x-incline-db-press</code> in History and Detail. The committed tests seed readable names, which is why no gate sees it.</li>
+      <li><b>Collisions.</b> Keys are truncated to 24 characters, so 34 catalog exercises share 12 keys. A <em>Slight Incline Dumbbell Fly</em> shares history with the <em>Press</em>.</li>
+      <li><b>Muscle drift.</b> Classifying the stored key instead of the name moves 187 of 580 exercises. Barbell Deadlift reads as legs, and Face Pulls drop to "other".</li>
+      <li><b>Retention.</b> 200 workouts (the cloud is trimmed too) and 5 sessions per exercise.</li>
+    </ul></div>
+  </div>
+  <div class="callout"><b>Storage is not the constraint.</b> At the caps, training data is about 750 KB (about 1.5 MB counted as UTF-16) of a ~5 MB per-origin budget. That budget is shared with Mike's Cookbook, which runs on the same origin; its share wasn't measured. The real exposure is a signed-out athlete with one device. Invite-only accounts mean that's most athletes, and their only copy is local. Safari may also evict a browser-tab install's storage after 7 days without use; that's WebKit's published policy as I understand it, not verified here.</div>
+</section>
+
+<!-- ================= STANDARDS ================= -->
+<section id="standards">
+  <div class="eyebrow">Your UI standards checklist</div>
+  <h2>Active session screen, scored against workout-ui-standards</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Standard</th><th style="width:90px">Status</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><b>Touch targets ≥ 48px</b></td><td><span class="chip fail">Fail</span></td><td>25 of 32 on-screen controls under 48 (0 under 44); floating and video timer controls 24–42px</td></tr>
+      <tr><td><b>viewport-fit=cover</b></td><td><span class="chip pass">Pass</span></td><td>Every page, via the head contract (141 pages)</td></tr>
+      <tr><td><b>Safe-area insets on sticky elements</b></td><td><span class="chip pass">Pass</span></td><td><code>check-topbar-inset</code> plus the journey gate's source check</td></tr>
+      <tr><td><b>Bottom padding clears sticky bars</b></td><td><span class="chip pass">Pass</span></td><td>Journey gate: no control unreachable at any scroll position, 9 of 9</td></tr>
+      <tr><td><b>Typography (≥ 13px mid-workout)</b></td><td><span class="chip fail">Fail</span></td><td>35 nodes under 13px: rest label 9.5px, week labels 9px, End workout 12.5px</td></tr>
+      <tr><td><b>Spacing (8px grid, 8px apart)</b></td><td><span class="chip fail">Fail</span></td><td>Set rows 3–7px apart (row padding cut to 1px in S3); ⓘ and ⋯ 4px apart</td></tr>
+      <tr><td><b>Color contrast</b></td><td><span class="chip warn">Warn</span></td><td>Budgets hold in both themes; light-mode suggested weight is 1.47:1</td></tr>
+      <tr><td><b>:active tap states</b></td><td><span class="chip warn">Warn</span></td><td>Cards, strips and ±15s have them; the set checkbox doesn't</td></tr>
+      <tr><td><b>Completion states</b></td><td><span class="chip pass">Pass</span></td><td>Tick, strip count, done styling; completed cards stay in the DOM</td></tr>
+      <tr><td><b>Sticky header + back-to-top (10+ exercises)</b></td><td><span class="chip fail">Fail</span></td><td>Sticky session toolbar yes; no back-to-top anywhere (Modality Matrix days have 10 exercises)</td></tr>
+      <tr><td><b>Scroll restoration (landings)</b></td><td><span class="chip fail">Fail</span></td><td>None in the tree; the dashboard also resets scroll on tab switch</td></tr>
+      <tr><td><b>Offline fallback</b></td><td><span class="chip pass">Pass</span></td><td>Themed fallback page generated by <code>sw.js</code> (no separate file, same effect)</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small muted">Clear to deliver: <b>No</b>. Five standards fail, two warn.</p>
+</section>
+
+<!-- ================= PLAN ================= -->
+<section id="plan">
+  <div class="eyebrow">Flagship polish action plan</div>
+  <h2>From functional to five stars</h2>
+  <p class="muted">Ordered by what costs an athlete the most. Each phase opens with an <code>AskUserQuestion</code> check-in, per CLAUDE.md's multi-phase rule; this page serves as its discovery artifact. Each phase notes which Phase 2 roadmap phase it overlaps (A–J). Every step lists the gate that proves it, written so the gate fails on today's code first.</p>
+
+  <details class="phase" open><summary><span class="pid">R1</span><span class="ptitle">Never lose a set or a tick<small>Overlaps A · session continuity &amp; capture</small></span><span class="caret" aria-hidden="true">›</span></summary><div class="pbody">
+    <ol class="steps">
+      <li><span><b>Guard every re-render.</b> Subscribe the re-restore to <code>MC_SCAN</code> whether or not a record existed at load, and never delete a record while today's <code>mc_setlog_v1</code> holds sets for this page.</span></li>
+      <li><span><b>Persist the rest timer.</b> Record the timer <em>after</em> the original <code>start()</code> runs. On restore, mount the inline row, not just the float.</span></li>
+      <li><span><b>Keep what was typed.</b> Save the pending value on <code>input</code> (debounced), and flush on <code>visibilitychange</code> and <code>pagehide</code>.</span></li>
+      <li><span><b>Untick means delete.</b> Remove the set from the local store as well as the cloud, so Finish saves only ticked sets.</span></li>
+      <li><span><b>Phase 2 carry-overs:</b> the custom-workout Finish (A2), deletion records (A3) and merge-safe import (A4).</span></li>
+      <li><span><b>Optional crash journal.</b> An IndexedDB write with <code>durability:'strict'</code> per set closes the ~2 s window for signed-out athletes. Verify on iOS first.</span></li>
+    </ol>
+    <div class="gate"><b>Done when:</b> journey tests for refresh-mid-rest, refresh-while-typing, a week-tab round trip on all 7 engines, and untick-then-finish each fail today and pass after.</div></div></details>
+
+  <details class="phase"><summary><span class="pid">R2</span><span class="ptitle">Screen stays on, rest always lands<small>New · your whole-session decision</small></span><span class="caret" aria-hidden="true">›</span></summary><div class="pbody">
+    <ol class="steps">
+      <li><span><b>Lock from the first logged set</b> until Finish, not from the first finished exercise. Start the session clock at the same moment.</span></li>
+      <li><span><b>Re-acquire on every return</b> while a session is active, the way <code>mc-interval.js</code> already does.</span></li>
+      <li><span><b>Drive locks from timer state</b> (<code>TMR.start</code>/<code>stop</code>), not from the float's class. Point the catch-up alert at <code>TMR</code> too.</span></li>
+      <li><span><b>Add a "Keep screen on during workouts" setting</b> (default on), stored with the timer cue preferences.</span></li>
+      <li><span><b>Make rest end visible.</b> Add a full-width color change at zero, so a silent iPhone still shows it.</span></li>
+      <li><span><b>Fix the video view:</b> controls to 48, "SEC" only under seconds, and Done and Cancel either distinct or merged.</span></li>
+    </ol>
+    <div class="gate"><b>Done when:</b> a wake-lock stub records a request on set 1, another after a simulated return, and a release at Finish.</div></div></details>
+
+  <details class="phase"><summary><span class="pid">R3</span><span class="ptitle">Offline you can trust<small>New · real service-worker findings</small></span><span class="caret" aria-hidden="true">›</span></summary><div class="pbody">
+    <ol class="steps">
+      <li><span><b>Survive deploys.</b> In <code>activate</code>, carry same-origin HTML from the old cache into the new one, or key the prefetch record to <code>CACHE_NAME</code> and re-run it after <code>controllerchange</code>.</span></li>
+      <li><span><b>Make History, Stats, Library and the builder available offline</b> by precaching or prefetching them.</span></li>
+      <li><span><b>Check the cache, not a record.</b> "Available offline ✓" confirms <code>caches.match()</code> for the program's pages.</span></li>
+      <li><span><b>Queue offline set inserts</b> and retry them when back online, or have PR baselines read the local store first.</span></li>
+      <li><span><b>Catch update rejections</b> when offline, and show the banner on failed fetches as well as on <code>navigator.onLine</code>.</span></li>
+    </ol>
+    <div class="gate"><b>Done when:</b> a committed version of this audit's mirrored-origin scenario passes in CI: install, prefetch, simulated deploy, offline.</div></div></details>
+
+  <details class="phase"><summary><span class="pid">R4</span><span class="ptitle">Prefill and history you can trust<small>Overlaps B · identity and suggestions</small></span><span class="caret" aria-hidden="true">›</span></summary><div class="pbody">
+    <ol class="steps">
+      <li><span><b>The suggestion becomes the ghost.</b> On "progress" or "deload", the planned load replaces the ghost on the sets it was computed from.</span></li>
+      <li><span><b>Store a readable name with each finished set</b> (<code>name</code> for display, plus the key separately), and show names in History. Resolve existing entries' names from the catalog and page names where possible.</span></li>
+      <li><span><b>Collision-proof keys.</b> Stop truncating new keys, and migrate the way Phase 2.1 did: legacy keys stay readable, and nothing is mixed.</span></li>
+      <li><span><b>Classify by name, not key,</b> which corrects 187 of 580.</span></li>
+      <li><span><b>Apply Phase 2's progression rules</b> (per-set, top of range, ×0.5 increments), so the corrected suggestion is the one that gets logged.</span></li>
+    </ol>
+    <div class="gate"><b>Done when:</b> one tap on the top set logs the suggested load; History shows "Incline DB Press"; a collision test over the 580-name catalog reports 0.</div></div></details>
+
+  <details class="phase"><summary><span class="pid">R5</span><span class="ptitle">Flexible mid-session<small>New · your today-only swap decision</small></span><span class="caret" aria-hidden="true">›</span></summary><div class="pbody">
+    <ol class="steps">
+      <li><span><b>Make swaps today-only</b> (session-scoped), with "Keep this swap" to make one permanent. History shows "swapped from …".</span></li>
+      <li><span><b>Key a substitute's sets to the substitute,</b> never the original lift.</span></li>
+      <li><span><b>Add "+ Add set" and "Skip exercise"</b> without breaking the planned-set denominator.</span></li>
+      <li><span><b>Reorder:</b> arrows on every card at 48px, and a "today only" versus "keep this order" choice.</span></li>
+    </ol>
+    <div class="gate"><b>Done when:</b> the swap scenario writes set 3 under the substitute, the swap is gone the next day unless kept, and no other program page changes.</div></div></details>
+
+  <details class="phase"><summary><span class="pid">R6</span><span class="ptitle">Ergonomics to your standard<small>Overlaps H · 48px + 8px, your decision</small></span><span class="caret" aria-hidden="true">›</span></summary><div class="pbody">
+    <ol class="steps">
+      <li><span><b>Raise the gates first.</b> Move <code>check-journey</code> and <code>CHROME_SELECTORS</code> from a 44 to a 48 floor and add an 8px spacing check, seeded as a ratchet so the gates aren't red on day one.</span></li>
+      <li><span><b>Set controls to 48:</b> checkbox 48×48, inputs and ±15s 48 tall, rows at least 8px apart.</span></li>
+      <li><span><b>Timers:</b> the floating timer's icons and cue toggles to 48 with 13px text; reorder arrows and Done to 48.</span></li>
+      <li><span><b>A 13px text floor</b> across the session screen, a press state on the set checkbox, and <code>enterkeyhint</code> on inputs.</span></li>
+      <li><span><b>Back-to-top</b> on 10-exercise days and <b>scroll restoration</b> on landings, per the skill. Update the Quick Tour where controls move.</span></li>
+    </ol>
+    <div class="gate"><b>Done when:</b> the session sweep reports 0 controls under 48 and 0 pairs closer than 8px on the 9 journey pages.</div></div></details>
+
+  <details class="phase"><summary><span class="pid">R7</span><span class="ptitle">Data mobility<small>Overlaps A4 · defaults you can override</small></span><span class="caret" aria-hidden="true">›</span></summary><div class="pbody">
+    <ol class="steps">
+      <li><span><b>CSV export:</b> one row per set (date, workout, exercise name, set, weight, reps, effort). Offer the share sheet where supported, so iOS can save to Files.</span></li>
+      <li><span><b>Merge-safe import:</b> preview what will change, confirm, and merge the workout log by id. Never drop newer entries silently.</span></li>
+      <li><span><b>Backup nudge for signed-out athletes:</b> "Last backup: never / 14 days ago" on the dashboard, with one tap to save. Surface the <code>persist()</code> result.</span></li>
+      <li><span><b>Retention:</b> lift the 200-workout cap or archive older workouts compactly, and stop trimming the cloud copy. Fix the "12-Week" title.</span></li>
+    </ol>
+    <div class="gate"><b>Done when:</b> restoring an older backup keeps the newer workout, and a CSV round-trips the same set count as the JSON.</div></div></details>
+
+  <div class="callout"><b>Needs a real device. These can't be proven from a sandbox:</b> (1) iPhone on silent, Spotify playing, screen locked through a rest: does anything alert? (2) An installed iOS PWA killed in the background mid-rest: what survives? (3) Safari tab install after a week unused: is local storage intact? (4) A real basement with signal bars but no data: does the banner appear? (5) The <code>WEEKLY_CHECKIN_SECRET</code> and leaked-password settings from Phase 1 are still open.</div>
+</section>
+
+<!-- ================= METHOD ================= -->
+<section id="method">
+  <div class="eyebrow">Method &amp; limits</div>
+  <h2>How this was tested</h2>
+  <div class="grid2">
+    <div class="panel"><h3>Run in this audit</h3><ul>
+      <li>A real <code>sw.js</code> on a mirror of the production origin: a local HTTPS copy served as <code>mcross2298.github.io</code> through Chromium's host resolver. It covered install, prefetch, going offline, logging and finishing a workout, and a simulated deploy (cache v183 → v184).</li>
+      <li>Hard kills: SIGKILL to every process on a persistent profile at 7 delays after a tick, then relaunch and read storage.</li>
+      <li>Backgrounding: a simulated hidden/visible cycle with a 150-second clock jump, with recording stubs for wake lock, vibration and audio tones.</li>
+      <li>Week-tab round trips on 7 engines; mid-exercise swaps, reorders and out-of-order logging; seeded prefill histories; export → wipe → import through the real account sheet.</li>
+      <li>Measured target size, spacing, thumb position and text size at 390×844, and classifier drift over all 580 catalog names using the logger's exact key rule.</li>
+    </ul></div>
+    <div class="panel"><h3>Not verified here</h3><ul>
+      <li>iOS behavior: the silent switch, audio while music plays, background suspension timing, and WebKit's storage flush and eviction.</li>
+      <li>Real network conditions. Offline was a stopped server plus browser offline mode.</li>
+      <li>Simulated backgrounding doesn't suspend timers the way a phone does. The end cue fired while "hidden" here; on a phone it fires on return.</li>
+      <li>Kill timing is one trial per delay on one Chromium build.</li>
+      <li>Live sign-in and the Supabase round trip were blocked in browser runs.</li>
+      <li>Mike's Cookbook's share of the shared storage budget.</li>
+    </ul></div>
+  </div>
+  <footer>
+    <span>Audit of <code>mcross2298/4-Weeks-to-Open-</code> at <code>27fc096</code>. No application code was changed.</span>
+    <span>Scores and severities are my judgment of harm × reach. Device testing may move several "Warn" rows either way.</span>
+  </footer>
+</section>
+
+</div>
+
+<script>
+(function(){
+  var store = { get:function(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set:function(k,v){ try{ localStorage.setItem(k,v); }catch(e){} } };
+  var rows = Array.prototype.slice.call(document.querySelectorAll('#ltable tbody tr'));
+  var data = rows.filter(function(r){ return r.hasAttribute('data-s'); });
+  var groups = rows.filter(function(r){ return r.classList.contains('grp'); });
+  var btns = Array.prototype.slice.call(document.querySelectorAll('[data-lf]'));
+  var area = document.getElementById('la');
+  var lf = store.get('gyr_lf') || 'all';
+  var la = store.get('gyr_la') || 'all';
+  if (area.querySelector('option[value="' + la + '"]')) area.value = la; else la = 'all';
+  (function(){ var c = {all:data.length, fail:0, warn:0, gap:0, pass:0};
+    data.forEach(function(r){ c[r.getAttribute('data-s')]++; });
+    Object.keys(c).forEach(function(k){ var el = document.querySelector('[data-lc="' + k + '"]'); if (el) el.textContent = c[k]; }); })();
+  function apply(){
+    var shown = 0, has = {};
+    data.forEach(function(r){
+      var ok = (lf === 'all' || r.getAttribute('data-s') === lf) && (la === 'all' || r.getAttribute('data-a') === la);
+      r.hidden = !ok; if (ok) { shown++; has[r.getAttribute('data-a')] = true; }
+    });
+    groups.forEach(function(g){ g.hidden = !has[g.getAttribute('data-g')]; });
+    btns.forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-lf') === lf)); });
+    document.getElementById('lempty').hidden = shown > 0;
+  }
+  btns.forEach(function(b){ b.addEventListener('click', function(){ lf = b.getAttribute('data-lf'); store.set('gyr_lf', lf); apply(); }); });
+  area.addEventListener('change', function(){ la = area.value; store.set('gyr_la', la); apply(); });
+  apply();
+
+  var links = Array.prototype.slice.call(document.querySelectorAll('#secnav a'));
+  var secs = links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){ if (e.isIntersecting) { var i = secs.indexOf(e.target); links.forEach(function(a, j){ a.classList.toggle('on', i === j); }); } });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    secs.forEach(function(s){ if (s) io.observe(s); });
+  }
+})();
+</script>
+
+</body>
+</html>

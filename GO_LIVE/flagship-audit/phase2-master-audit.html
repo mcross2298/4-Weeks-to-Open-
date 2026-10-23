@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Repository copy of the published artifact https://claude.ai/artifact/EVshNAH1dQB3bnTAQfp7qb
+     (Phase 2 — master audit (version 2, with the Phase 3 increment correction), captured 2026-10-23). The published page is the reviewed
+     original; this copy only adds the document skeleton the artifact host supplies. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MC Training Master Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: a single reading column dressed as the app's own session sheet (warm ink ramp, gold accent, Archivo + Manrope), with filterable ledgers for the matrix and the screen audit. Dark-first. */
+:root{
+  --bg:#000000; --surface:#0b0b0a; --raised:#141312; --line:#2a2724; --line-soft:#1c1a17;
+  --text:#faf7f0; --text-2:#cfc9bf; --muted:#8a8377;
+  --accent:#d4af37; --accent-ink:#1a1200; --accent-tint:rgba(212,175,55,.13);
+  --crit:#ff6b6b; --crit-tint:rgba(255,107,107,.13);
+  --high:#f0a03c; --high-tint:rgba(240,160,60,.13);
+  --med:#86b4e6; --med-tint:rgba(134,180,230,.13);
+  --low:#a39b8e; --low-tint:rgba(163,155,142,.13);
+  --ok:#4cc38a; --ok-tint:rgba(76,195,138,.13);
+  --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --fs-xs:12px; --fs-sm:13.5px; --fs-md:15.5px; --fs-lg:19px; --fs-xl:26px; --fs-2xl:clamp(30px,6vw,46px);
+  --r-sm:8px; --r-md:14px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
+  --bg:#f5f2ec; --surface:#faf7f0; --raised:#efe9db; --line:#d9d2c3; --line-soft:#e6e0d3;
+  --text:#1c1a17; --text-2:#4a453f; --muted:#6b6459;
+  --accent:#826919; --accent-ink:#faf7f0; --accent-tint:rgba(130,105,25,.12);
+  --crit:#b3261e; --crit-tint:rgba(179,38,30,.10); --high:#9a5200; --high-tint:rgba(154,82,0,.10);
+  --med:#2b5f9e; --med-tint:rgba(43,95,158,.10); --low:#6b6459; --low-tint:rgba(107,100,89,.10);
+  --ok:#1d7a4f; --ok-tint:rgba(29,122,79,.10); color-scheme:light; } }
+:root[data-theme="light"]{
+  --bg:#f5f2ec; --surface:#faf7f0; --raised:#efe9db; --line:#d9d2c3; --line-soft:#e6e0d3;
+  --text:#1c1a17; --text-2:#4a453f; --muted:#6b6459;
+  --accent:#826919; --accent-ink:#faf7f0; --accent-tint:rgba(130,105,25,.12);
+  --crit:#b3261e; --crit-tint:rgba(179,38,30,.10); --high:#9a5200; --high-tint:rgba(154,82,0,.10);
+  --med:#2b5f9e; --med-tint:rgba(43,95,158,.10); --low:#6b6459; --low-tint:rgba(107,100,89,.10);
+  --ok:#1d7a4f; --ok-tint:rgba(29,122,79,.10); color-scheme:light; }
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--f-body);font-size:var(--fs-md);line-height:1.6;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:900px;margin:0 auto;padding-block:32px 88px;
+  padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:60px}
+section{display:flex;flex-direction:column;gap:20px;min-width:0;scroll-margin-top:72px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.015em;line-height:1.15}
+h1{font-size:var(--fs-2xl);font-weight:900} h2{font-size:var(--fs-xl);font-weight:800} h3{font-size:var(--fs-lg);font-weight:800}
+p{margin:0;max-width:68ch}
+.lede{color:var(--text-2);font-size:17px}
+.eyebrow{font-size:var(--fs-xs);font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+.muted{color:var(--muted)} .small{font-size:var(--fs-xs)}
+code,.mono{font-family:var(--f-mono);font-size:.87em;background:var(--raised);border:1px solid var(--line-soft);padding:1px 5px;border-radius:5px;overflow-wrap:anywhere}
+a{color:var(--accent);text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+
+/* sticky section nav */
+.secnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-inline:calc(-1 * max(16px, env(safe-area-inset-left,0px)));padding-inline:max(16px, env(safe-area-inset-left,0px))}
+.secnav-in{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.secnav-in::-webkit-scrollbar{display:none}
+.secnav a{flex:0 0 auto;display:inline-flex;align-items:center;min-height:44px;padding:0 12px;font-size:var(--fs-sm);font-weight:800;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap}
+.secnav a.on{color:var(--text);border-bottom-color:var(--accent)}
+
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.chip.crit{color:var(--crit);background:var(--crit-tint)} .chip.high{color:var(--high);background:var(--high-tint)}
+.chip.med{color:var(--med);background:var(--med-tint)} .chip.low{color:var(--low);background:var(--low-tint)}
+.chip.ok{color:var(--ok);background:var(--ok-tint)} .chip.acc{color:var(--accent);background:var(--accent-tint)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+
+/* health index */
+.health{display:grid;grid-template-columns:minmax(0,230px) minmax(0,1fr);gap:28px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:24px}
+.hnum{font-family:var(--f-display);font-weight:900;font-size:76px;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.hnum small{font-size:22px;color:var(--muted);letter-spacing:0;font-weight:700}
+.htag{margin-top:10px;font-weight:800;color:var(--high);font-size:var(--fs-sm);letter-spacing:.04em;text-transform:uppercase}
+.arch{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);display:flex;align-items:baseline;gap:10px}
+.arch b{font-family:var(--f-display);font-size:30px;font-weight:900;font-variant-numeric:tabular-nums}
+.arch span{font-size:var(--fs-xs);color:var(--muted);font-weight:700;line-height:1.35}
+.rubric{display:flex;flex-direction:column;gap:11px;min-width:0}
+.rrow{display:grid;grid-template-columns:minmax(0,1fr) 40px;gap:4px 12px;align-items:center}
+.rrow .lbl{font-size:var(--fs-sm);font-weight:700;color:var(--text-2)}
+.rrow .val{font-variant-numeric:tabular-nums;font-weight:800;text-align:right;font-size:var(--fs-sm)}
+.bar{grid-column:1/-1;height:6px;background:var(--line-soft);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.bar i.mid{background:var(--high)} .bar i.lo{background:var(--crit)}
+@media (max-width:640px){ .health{grid-template-columns:1fr} }
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat{padding:16px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat+.stat{border-left:1px solid var(--line)}
+.stat b{font-family:var(--f-display);font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.stat span{font-size:var(--fs-xs);color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+@media (max-width:560px){ .stats{grid-template-columns:repeat(2,minmax(0,1fr))} .stat:nth-child(3){border-left:0} .stat:nth-child(n+3){border-top:1px solid var(--line)} }
+
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:660px){ .grid2{grid-template-columns:1fr} }
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.panel h3{font-size:16px}
+.panel ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:var(--fs-sm);color:var(--text-2)}
+
+/* pain points */
+.pp{border-top:1px solid var(--line);padding-top:24px;display:flex;flex-direction:column;gap:14px}
+.pp-head{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;align-items:start}
+.pp-rank{font-family:var(--f-display);font-weight:900;font-size:34px;line-height:1;color:var(--muted);font-variant-numeric:tabular-nums}
+.voc{font-size:17px;font-weight:600;border-left:2px solid var(--line);padding-left:14px;max-width:62ch}
+.voc::before{content:"Simulated athlete voice";display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.kv{display:grid;grid-template-columns:118px minmax(0,1fr);gap:8px 16px;font-size:var(--fs-sm)}
+.kv dt{color:var(--muted);font-weight:800;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding-top:3px}
+.kv dd{margin:0;color:var(--text-2);min-width:0}
+@media (max-width:560px){ .kv{grid-template-columns:1fr;gap:2px} .kv dd{margin-bottom:10px} }
+.setlog-wrap{overflow-x:auto}
+.setlog{border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;background:var(--surface);min-width:440px}
+.slr{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 96px;gap:12px;padding:11px 14px;align-items:center;font-size:var(--fs-sm)}
+.slr+.slr{border-top:1px solid var(--line-soft)}
+.slr.h{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--raised)}
+.slr .n{font-variant-numeric:tabular-nums;font-weight:800;text-align:right}
+.bad{color:var(--crit)} .good{color:var(--ok)}
+
+/* filter bar */
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.fbtn{min-height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--text-2);font:inherit;font-size:var(--fs-sm);font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.fbtn[aria-pressed="true"]{background:var(--accent-tint);border-color:var(--accent);color:var(--text)}
+.fbtn .ct{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:700}
+.search{min-height:44px;flex:1 1 200px;min-width:0;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--text);font:inherit;font-size:var(--fs-sm)}
+.search::placeholder{color:var(--muted)}
+
+/* matrix table */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-md)}
+table{border-collapse:collapse;width:100%;font-size:var(--fs-sm)}
+.matrix{min-width:820px}
+th,td{text-align:left;padding:10px 12px;vertical-align:top}
+th{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--raised);position:sticky;top:0}
+tbody tr+tr td{border-top:1px solid var(--line-soft)}
+td{color:var(--text-2)} td b{color:var(--text)}
+td.num{font-variant-numeric:tabular-nums}
+tr.grp td{background:var(--raised);font-family:var(--f-display);font-weight:800;color:var(--text);font-size:var(--fs-sm);letter-spacing:.01em}
+.empty{padding:18px;color:var(--muted);font-size:var(--fs-sm)}
+
+/* screens */
+.screens{display:flex;flex-direction:column;gap:10px}
+.sgroup{font-family:var(--f-display);font-weight:800;font-size:var(--fs-sm);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:14px}
+details.scr{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md)}
+details.scr>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px 14px;min-height:56px}
+details.scr>summary::-webkit-details-marker{display:none}
+.sname{font-weight:800;color:var(--text);font-size:15px}
+.sname small{display:block;font-weight:600;color:var(--muted);font-size:var(--fs-xs);font-family:var(--f-mono)}
+.sbody{padding:0 14px 14px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.cell{background:var(--raised);border-radius:var(--r-sm);padding:10px;min-width:0;display:flex;flex-direction:column;gap:4px}
+.cell .k{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cell .v{font-size:var(--fs-sm);color:var(--text-2)}
+.cell.ok .k{color:var(--ok)} .cell.warn .k{color:var(--high)} .cell.bad .k{color:var(--crit)}
+.sbody .wide{grid-column:1/-1}
+@media (max-width:700px){ .sbody{grid-template-columns:repeat(2,minmax(0,1fr))} }
+
+/* design recs */
+.rec{display:flex;flex-direction:column;gap:8px;padding:18px 0;border-top:1px solid var(--line-soft)}
+.rec:first-of-type{border-top:0}
+.rec-top{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:baseline;justify-content:space-between}
+.rec h3{font-size:17px}
+.rec p{font-size:var(--fs-sm);color:var(--text-2)}
+.sw{display:inline-flex;align-items:center;padding:6px 12px;border-radius:var(--r-sm);font-weight:800;font-style:italic;font-size:15px;border:1px dashed}
+.sw.before{background:#f5f2ec;color:#cfc9bf;border-color:rgba(138,131,119,.35)}
+.sw.after{background:#f5f2ec;color:#6b6459;border-color:rgba(107,100,89,.55)}
+.swline{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:var(--fs-xs);color:var(--muted)}
+
+/* roadmap */
+.phase{border-top:1px solid var(--line)}
+.phase>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:14px;align-items:center;padding:18px 0;min-height:56px}
+.phase>summary::-webkit-details-marker{display:none}
+.pid{font-family:var(--f-display);font-weight:900;font-size:30px;line-height:1;color:var(--accent)}
+.ptitle{font-family:var(--f-display);font-weight:800;font-size:var(--fs-lg)}
+.ptitle small{display:block;font-family:var(--f-body);font-weight:600;font-size:var(--fs-sm);color:var(--muted);letter-spacing:0}
+.caret{width:28px;height:28px;display:grid;place-items:center;color:var(--muted);transition:transform .2s}
+.phase[open] .caret{transform:rotate(90deg)}
+.pbody{padding:0 0 20px 70px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:560px){ .pbody{padding-left:0} .phase>summary{grid-template-columns:44px minmax(0,1fr) auto} }
+ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:9px}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;font-size:var(--fs-sm);color:var(--text-2)}
+ol.steps li::before{content:counter(s);font-family:var(--f-display);font-weight:900;color:var(--accent);font-variant-numeric:tabular-nums;width:26px;height:26px;background:var(--accent-tint);border-radius:6px;display:grid;place-items:center;font-size:12px}
+ol.steps b{color:var(--text)}
+.gate{font-size:var(--fs-xs);color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
+.gate b{color:var(--text-2)}
+.callout{background:var(--accent-tint);border-radius:var(--r-md);padding:16px 18px;font-size:var(--fs-sm);color:var(--text-2)}
+.callout b{color:var(--text)}
+footer{font-size:var(--fs-xs);color:var(--muted);border-top:1px solid var(--line);padding-top:18px;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} .caret{transition:none} }
+</style>
+<style>body{margin:0}</style>
+</head>
+<body>
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:16px">
+  <div class="eyebrow">4-Weeks-to-Open- · main @ 27fc096 · two-phase audit · 23 Oct 2026</div>
+  <h1>MC Training master audit</h1>
+  <p class="lede">The engineering underneath is strong: 52 static gates pass, the Modality Matrix meets every structural rule I could render, and the storage layer survives concurrency, crashes and corruption. The problems are at the seams. Re-rendering a page erases the session it mirrors, the progression engine judges sessions too generously, and sheets don't behave like an app's. Three of the defects cost an athlete data.</p>
+</header>
+
+<nav class="secnav" aria-label="Sections"><div class="secnav-in" id="secnav">
+  <a href="#summary">Summary</a><a href="#pain">Pain points</a><a href="#matrix">Parameter matrix</a><a href="#screens">Tab by tab</a><a href="#design">Design upgrades</a><a href="#roadmap">Roadmap</a><a href="#method">Method</a>
+</div></nav>
+
+<!-- ================= SUMMARY ================= -->
+<section id="summary">
+  <div class="eyebrow">Executive summary &amp; health index</div>
+  <div class="health">
+    <div>
+      <div class="hnum">68<small> / 100</small></div>
+      <div class="htag">Strong core · fix state &amp; precision first</div>
+      <div class="arch"><b>8.0</b><span>Architecture score / 10<br>single implementations, gate culture, no build step</span></div>
+      <p class="small muted" style="margin-top:12px">These scores are my judgment, not a measured metric. The health index is the unweighted average of the eight areas on the right.</p>
+    </div>
+    <div class="rubric" role="list">
+      <div class="rrow" role="listitem"><span class="lbl">Test &amp; CI coverage</span><span class="val">9.0</span><div class="bar"><i style="width:90%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Offline, PWA &amp; storage resilience</span><span class="val">8.5</span><div class="bar"><i style="width:85%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Architecture &amp; modularity</span><span class="val">8.0</span><div class="bar"><i style="width:80%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Program &amp; parameter precision</span><span class="val">6.5</span><div class="bar"><i class="mid" style="width:65%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Accessibility &amp; touch ergonomics</span><span class="val">6.5</span><div class="bar"><i class="mid" style="width:65%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Visual consistency</span><span class="val">6.5</span><div class="bar"><i class="mid" style="width:65%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Data integrity &amp; session state</span><span class="val">5.0</span><div class="bar"><i class="lo" style="width:50%"></i></div></div>
+      <div class="rrow" role="listitem"><span class="lbl">Observability &amp; operations</span><span class="val">4.0</span><div class="bar"><i class="lo" style="width:40%"></i></div></div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b>52/52</b><span>Static gates pass</span></div>
+    <div class="stat"><b>7/8</b><span>Browser gates pass*</span></div>
+    <div class="stat"><b>3</b><span>Data-loss defects</span></div>
+    <div class="stat"><b>14</b><span>Parameter mismatches</span></div>
+  </div>
+  <p class="small muted">*The one failing browser gate fails only on a back link's text <em>width</em>. CLAUDE.md records that as a known difference between this sandbox's Chromium build and CI's. The link is 44px tall.</p>
+
+  <div class="grid2">
+    <div class="panel"><h3>Key takeaways</h3><ul>
+      <li><b>Session state is copied from the screen.</b> Anything that re-renders the cards, such as a week tab, erases the session record. All 7 of 7 tabbed engines tested do it.</li>
+      <li><b>The progression engine is too generous.</b> It targets the bottom of rep ranges, judges pyramids against their last set, and counts partial sessions as wins.</li>
+      <li><b>Program content mostly matches its rules.</b> The Modality Matrix passes all structural checks. Strength &amp; Supersets' deload week and High-Volume's headline claim don't match their content.</li>
+      <li><b>Sheets aren't app-grade.</b> Of 11 overlays, 1 closes on Escape and 1 locks the page behind it, and the phone's Back gesture leaves the page.</li>
+    </ul></div>
+    <div class="panel"><h3>Decisions you made</h3><ul>
+      <li>Fix data integrity first.</li>
+      <li>Progression: per-set, top of range. Partial sessions hold.</li>
+      <li>Increments: follow the ×0.5 spec, and tighten the big-lift pattern.</li>
+      <li>Deload: a real deload, cutting a third to half of working sets and capping intensity.</li>
+      <li>Back gesture: one shared sheet and navigation contract.</li>
+      <li>Retire the custom-workout Finish button. Deletes apply everywhere. All four design tracks are in scope.</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- ================= PAIN POINTS ================= -->
+<section id="pain">
+  <div class="eyebrow">VOA / VOC simulation</div>
+  <h2>Top 5 pain points</h2>
+  <p class="muted">Ranked by harm × reach. Each journey was driven in headless Chromium at 390 and 320px, logging real sets through the real modules. A "confirmed" chip means I watched it happen.</p>
+
+  <article class="pp"><div class="pp-head"><div class="pp-rank">1</div><div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+    <h3>Peeking at next week erases today's workout</h3>
+    <div class="chips"><span class="chip crit">Critical · session loss</span><span class="chip acc">Confirmed on 7 / 7 engines</span></div></div></div>
+    <p class="voc">I tapped W2 to see what's coming, went back to W1, and every tick was gone. Reloading didn't bring them back.</p>
+    <div class="setlog-wrap"><div class="setlog">
+      <div class="slr h"><span>mm-p1 · log 2 sets, then…</span><span>Session record</span><span style="text-align:right">After reload</span></div>
+      <div class="slr"><span>Reload only (control)</span><span class="mono">mm-p1 · 2 sets</span><span class="n good">2 / 46</span></div>
+      <div class="slr"><span>W1 → W2 → W1, then reload</span><span class="mono">deleted</span><span class="n bad">0 / 46</span></div>
+    </div></div>
+    <dl class="kv">
+      <dt>Reach</dt><dd>mm-p2, kitchen-sink, iron-engine, hv-block, cat-strength, psu-strength and bro-split all wiped the record on a tab round trip. Every program with week, phase or cycle tabs is affected.</dd>
+      <dt>Root cause</dt><dd><code>mc-session.js</code>'s <code>save()</code> rebuilds the session from the ticks currently on screen. The week change re-renders the cards without ticks, so <code>save()</code> concludes nothing is in progress and runs <code>delete s0[PID]</code>. The sets survive in <code>mc_setlog_v1</code>, so a finished workout still saves them, but with <code>setsChecked: 0</code>. The ticks, the dashboard resume banner, crash recovery and the elapsed clock are lost.</dd>
+    </dl>
+  </article>
+
+  <article class="pp"><div class="pp-head"><div class="pp-rank">2</div><div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+    <h3>Custom workouts save zero sets</h3>
+    <div class="chips"><span class="chip crit">Critical · data loss</span><span class="chip acc">Confirmed by driving</span></div></div></div>
+    <p class="voc">I logged every set, tapped the big Finish button, and history says "0 sets recorded".</p>
+    <div class="setlog-wrap"><div class="setlog">
+      <div class="slr h"><span>Control on run-workout.html</span><span>Reads key</span><span style="text-align:right">Saved</span></div>
+      <div class="slr"><span>Bottom bar · 🏁 Finish Workout</span><span class="mono">custom-abc|cw0-bench-press</span><span class="n bad">0 of 2</span></div>
+      <div class="slr"><span>Top toolbar · End workout</span><span class="mono">custom-abc|x-bench-press</span><span class="n good">2 of 2</span></div>
+    </div></div>
+    <dl class="kv"><dt>Root cause</dt><dd>The page's own <code>finishWorkout()</code> still reads the pre-Phase-2.1 key. The entry it writes also has no sync <code>id</code>, no duration and no <code>mc:workout-finished</code> event. Custom <em>programs</em> use the shared path and save correctly (2 sets, an id and a duration).</dd></dl>
+  </article>
+
+  <article class="pp"><div class="pp-head"><div class="pp-rank">3</div><div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+    <h3>"Add weight" arrives before it's earned</h3>
+    <div class="chips"><span class="chip high">High · every session</span><span class="chip acc">Real engine, test vectors</span></div></div></div>
+    <p class="voc">I only got the bottom of the rep range, or quit after two sets, and the app still told me to go heavier.</p>
+    <div class="setlog-wrap"><div class="setlog">
+      <div class="slr h"><span>Last session</span><span>Should be</span><span style="text-align:right">Engine said</span></div>
+      <div class="slr"><span>4×10-12 · did 10,10,10,10</span><span>repeat (top is 12)</span><span class="n bad">progress</span></div>
+      <div class="slr"><span>12,10,8,8 · did 8,8,8,8</span><span>repeat (sets 1–2 short)</span><span class="n bad">progress</span></div>
+      <div class="slr"><span>5×5 · logged 2 of 5 sets</span><span>hold</span><span class="n bad">+5 lb</span></div>
+      <div class="slr"><span>Leg Press (machine)</span><span>+5 lb (spec ×0.5)</span><span class="n bad">+2.5 lb</span></div>
+    </div></div>
+    <dl class="kv"><dt>Root cause</dt><dd><code>topRep()</code> in <code>mc-suggest.js</code> returns the floor of a range and the <em>last</em> rep of a pyramid. <code>classifySession()</code> compares every set to that one number and ignores sets that weren't logged. <code>computeIncrement()</code> sets every leverage-assisted lift to a flat 2.5 lb instead of halving the barbell step, which affects 18 cable, machine and plate-loaded big lifts (corrected in Phase 3 from an earlier count of 25). The existing test asserts that behavior, so it passes.</dd></dl>
+  </article>
+
+  <article class="pp"><div class="pp-head"><div class="pp-rank">4</div><div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+    <h3>Deleted workouts come back</h3>
+    <div class="chips"><span class="chip high">High · signed-in users</span><span class="chip acc">Real merge function</span></div></div></div>
+    <p class="voc">I deleted a test workout. The dialog said it can't be undone, and the next time I opened the app it was back.</p>
+    <dl class="kv"><dt>Root cause</dt><dd><code>mergeWorkoutLog()</code> is a pure union that ignores the last-synced copy, and deletes are never recorded. Running it with local [A] against cloud [A, B] gives [B, A], and "Clear All" comes back the same way. The tested <code>mergeArrayByIdTs</code> in the same file already handles deletions for other stores.</dd></dl>
+  </article>
+
+  <article class="pp"><div class="pp-head"><div class="pp-rank">5</div><div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+    <h3>Sheets and navigation don't behave like an app</h3>
+    <div class="chips"><span class="chip med">Medium · every screen</span><span class="chip acc">11 overlays measured</span></div></div></div>
+    <p class="voc">I swiped back to close a menu and got thrown out of my workout. When I scroll inside a sheet, the workout behind it scrolls too.</p>
+    <div class="setlog-wrap"><div class="setlog">
+      <div class="slr h"><span>Contract (11 overlays)</span><span>Expected</span><span style="text-align:right">Passing</span></div>
+      <div class="slr"><span>Announces as a dialog</span><span>all</span><span class="n bad">3</span></div>
+      <div class="slr"><span>Moves focus inside</span><span>all</span><span class="n bad">4</span></div>
+      <div class="slr"><span>Escape closes it</span><span>all</span><span class="n bad">1</span></div>
+      <div class="slr"><span>Locks the page behind</span><span>all</span><span class="n bad">1</span></div>
+      <div class="slr"><span>Back gesture closes it / returns to the day list</span><span>all</span><span class="n bad">0</span></div>
+    </div></div>
+    <dl class="kv"><dt>Root cause</dt><dd>Each module builds its own overlay. Nothing in the tree listens for <code>popstate</code> or locks body scroll. Leaving the workout builder also drops your selected exercises. The dashboard, History and Stats forget their tab and scroll position.</dd></dl>
+  </article>
+</section>
+
+<!-- ================= MATRIX ================= -->
+<section id="matrix">
+  <div class="eyebrow">Program &amp; parameter verification</div>
+  <h2>Verification matrix</h2>
+  <p class="muted">Each row compares expected with actual. Expected values come from CLAUDE.md, a module's own header, a program's published claim or a standard formula. Actual values come from running the real module in Node or rendering the real page. A "tests" source means an existing committed test covers the row and passed in this audit.</p>
+  <div class="filters" role="group" aria-label="Filter the matrix">
+    <button class="fbtn" data-mf="all" aria-pressed="true">All <span class="ct" data-mc="all"></span></button>
+    <button class="fbtn" data-mf="fail" aria-pressed="false">Mismatch <span class="ct" data-mc="fail"></span></button>
+    <button class="fbtn" data-mf="note" aria-pressed="false">Latent / note <span class="ct" data-mc="note"></span></button>
+    <button class="fbtn" data-mf="pass" aria-pressed="false">Pass <span class="ct" data-mc="pass"></span></button>
+    <input class="search" id="mq" type="search" placeholder="Filter by engine, program or parameter" aria-label="Filter matrix rows by text">
+  </div>
+  <div class="tbl-wrap"><table class="matrix" id="mtable">
+    <thead><tr><th style="width:150px">Parameter</th><th>Expected (source)</th><th>Actual</th><th style="width:96px">Status</th><th style="width:170px">Resolution</th></tr></thead>
+    <tbody>
+      <tr class="grp"><td colspan="5">Progression engine · mc-suggest.js</td></tr>
+      <tr data-s="pass"><td><b>Fixed scheme target</b></td><td>4x12 → 12 (header)</td><td class="num">12</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="fail"><td><b>Rep-range target</b></td><td>4×10-12 → 12 (double progression, your decision)</td><td class="num">10</td><td><span class="chip crit">Mismatch</span></td><td>Top of range</td></tr>
+      <tr data-s="fail"><td><b>Rep-range target</b></td><td>4×8-10 → 10</td><td class="num">8</td><td><span class="chip crit">Mismatch</span></td><td>Top of range</td></tr>
+      <tr data-s="fail"><td><b>Pyramid judgement</b></td><td>12,10,8,8 done as 8,8,8,8 → repeat</td><td>progress</td><td><span class="chip crit">Mismatch</span></td><td>Per-set targets</td></tr>
+      <tr data-s="fail"><td><b>Partial session</b></td><td>2 of 5 sets logged → hold</td><td>progress, +5 lb suggested</td><td><span class="chip crit">Mismatch</span></td><td>Hold when short</td></tr>
+      <tr data-s="pass"><td><b>Full range hit</b></td><td>4×10-12 done as 12s → progress</td><td>progress</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="pass"><td><b>Missed rep</b></td><td>5x5 done as 5,5,5,4 → repeat</td><td>repeat</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="pass"><td><b>"To failure" holds</b></td><td>any F → hold (Phase 4.3)</td><td>hold (≥1 row)</td><td><span class="chip ok">Pass</span></td><td>— (source + tests)</td></tr>
+      <tr data-s="pass"><td><b>Increment · barbell big lift</b></td><td>Barbell Bench → 10 lb</td><td class="num">10</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="pass"><td><b>Increment · dumbbell</b></td><td>per hand, capped at 5</td><td class="num">5</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="pass"><td><b>Increment · cable isolation</b></td><td>5 × 0.5 = 2.5</td><td class="num">2.5</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="fail"><td><b>Increment · Leg Press</b></td><td>10 × 0.5 = 5 (CLAUDE.md Task 3.3)</td><td class="num">2.5</td><td><span class="chip crit">Mismatch</span></td><td>Follow ×0.5</td></tr>
+      <tr data-s="fail"><td><b>Increment · Hack Squat</b></td><td>10 × 0.5 = 5</td><td class="num">2.5</td><td><span class="chip crit">Mismatch</span></td><td>Follow ×0.5</td></tr>
+      <tr data-s="fail"><td><b>Increment · catalog sweep</b></td><td>0 of 580 differ from spec</td><td>18 cable/machine/plate-loaded big lifts step 2.5 instead of 5, and 1 barbell curl steps 10 because "bench" is a prop. Corrected in Phase 3: the earlier figure of 25 also counted 7 cable "bench" names such as Incline Bench Cable Fly, which are correct under a refined big-lift rule.</td><td><span class="chip crit">Mismatch</span></td><td>×0.5 + tighter pattern</td></tr>
+      <tr data-s="pass"><td><b>Increment · Smith</b></td><td>behaves like barbell (10 / 5)</td><td class="num">10</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="pass"><td><b>Deload weight</b></td><td>−10%, rounded to plate step: 225 → 205 · cable 100 → 90</td><td class="num">205 · 90</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="pass"><td><b>Plateau signal</b></td><td>3 non-progress → plateau, 4 → deload hint</td><td>as specified</td><td><span class="chip ok">Pass</span></td><td>— (tests)</td></tr>
+
+      <tr class="grp"><td colspan="5">Strength estimates · mc-log-read.js, mc-maxout.js</td></tr>
+      <tr data-s="pass"><td><b>Epley e1RM</b></td><td>w(1 + r/30): 225×5 → 263</td><td class="num">263</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="pass"><td><b>Rep cap + machine ×0.85</b></td><td>cable 100×20 → 140 × 0.85 = 119</td><td class="num">119</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="fail"><td><b>Single-rep set</b></td><td>a 315 × 1 single → 315</td><td class="num">326 (+3.3%)</td><td><span class="chip high">Mismatch</span></td><td>Return w at r = 1</td></tr>
+      <tr data-s="note"><td><b>Max Out opener</b></td><td>97.5% of e1RM, at or below a proven max</td><td>320 after a 315 single</td><td><span class="chip med">Note</span></td><td>Fixed by the r = 1 rule</td></tr>
+
+      <tr class="grp"><td colspan="5">Rest timer · mc-timer.js</td></tr>
+      <tr data-s="pass"><td><b>Every authored rest</b></td><td>71 distinct strings, 2,470 uses</td><td>all parse as written</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="pass"><td><b>No-rest marker</b></td><td>"—" → no timer (548 uses)</td><td class="num">0</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="pass"><td><b>Auto-start on check</b></td><td>prescribed rest starts on tick</td><td>90 s inline row, ±15 s</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="note"><td><b>Clock format</b></td><td>"1:30" → 90 s</td><td class="num">1 s</td><td><span class="chip med">Latent</span></td><td>Parse m:ss</td></tr>
+      <tr data-s="note"><td><b>Decimal minutes</b></td><td>"1.5 min" → 90 s</td><td class="num">300 s</td><td><span class="chip med">Latent</span></td><td>Parse decimals</td></tr>
+      <tr data-s="note"><td><b>Range</b></td><td>"2-3 min" → ?</td><td>180 (upper bound)</td><td><span class="chip low">Note</span></td><td>Document</td></tr>
+
+      <tr class="grp"><td colspan="5">Logger &amp; set accounting · mc-setlog.js</td></tr>
+      <tr data-s="pass"><td><b>Planned rows = prescription</b></td><td>row count from the scheme</td><td>121 assertions + scheme check</td><td><span class="chip ok">Pass</span></td><td>— (tests)</td></tr>
+      <tr data-s="pass"><td><b>Cluster reps</b></td><td>"5+5+6" sums to 16</td><td>49 assertions</td><td><span class="chip ok">Pass</span></td><td>— (tests)</td></tr>
+      <tr data-s="note"><td><b>Effort labels vs RIR scale</b></td><td>RPE 8 ≈ 2 RIR, RPE 9 ≈ 1 RIR</td><td>"Easy · 3+ left" stored as 8, "Solid · 1–2 left" as 9</td><td><span class="chip low">Note</span></td><td>Relabel or remap</td></tr>
+      <tr data-s="note"><td><b>RIR tracking</b></td><td>—</td><td>not tracked, and no program prescribes an RPE or RIR target</td><td><span class="chip low">Gap</span></td><td>None needed today</td></tr>
+      <tr data-s="note"><td><b>Units</b></td><td>—</td><td>pounds only, every engine</td><td><span class="chip low">Gap</span></td><td>Out of scope</td></tr>
+
+      <tr class="grp"><td colspan="5">The Modality Matrix · mm-data.js / mm-engine.js</td></tr>
+      <tr data-s="pass"><td><b>10 exercises / day</b></td><td>every day × every week</td><td>10, all 20 renders</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="pass"><td><b>Blueprint &amp; 2/4/4 mix</b></td><td>tags per position, tri-sets 3 sets</td><td>validate-programs + render</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="pass"><td><b>Feature lifts</b></td><td>positions 2, 5, 6, 8 vary by week</td><td>exactly [2, 5, 6, 8]</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="pass"><td><b>Pos 1 low-rep anchor</b></td><td>5×5 every week</td><td>5×5 in W1–W5</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="pass"><td><b>Theme in set field</b></td><td>W2 pyramid · W3 @ tempo · W4 high-rep</td><td>15·12·10·8·6 · 5×10 @ 4-0-1 · 5×20</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="pass"><td><b>W5 tri-set collapse</b></td><td>Ex 3 alone, Ex 4–5 superset</td><td>rendered as specified</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="fail"><td><b>Pos 4 TUT anchor</b></td><td>fixed 3 s negative / 2 s pause, structural</td><td>notes only (behind ⓘ). "2 s pause" in 6 of 60 cells, structural tempo in 0 of 60.</td><td><span class="chip high">Mismatch</span></td><td>Tempo badge on Pos 4</td></tr>
+      <tr data-s="pass"><td><b>Deload not on a peak</b></td><td>week 15 is the block's end</td><td>gen-schedules test</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+
+      <tr class="grp"><td colspan="5">High-Volume Training Template · hv-block.html</td></tr>
+      <tr data-s="pass"><td><b>Rest pattern by week</b></td><td>[3,6] · [6,7] · [3,7] · [4]</td><td>rendered training days match</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="fail"><td><b>"5–6 sets" claim</b></td><td>every exercise 5–6 sets</td><td>40 of 158 outside (25%)</td><td><span class="chip med">Mismatch</span></td><td>Fix the copy</td></tr>
+      <tr data-s="fail"><td><b>"15–25 reps" claim</b></td><td>every rep target 15–25</td><td>68 of 158 outside (43%), mostly drop and cluster finishers</td><td><span class="chip med">Mismatch</span></td><td>Fix the copy</td></tr>
+
+      <tr class="grp"><td colspan="5">Strength &amp; Supersets · cat-strength.html</td></tr>
+      <tr data-s="fail"><td><b>Day hero set counts</b></td><td>match the logger's plan</td><td>Legs 30 vs 32 · Back 32 vs 34 · Arms 32 vs 35</td><td><span class="chip med">Mismatch</span></td><td>Generate from page</td></tr>
+      <tr data-s="fail"><td><b>Week 6 deload</b></td><td>lighter than week 5</td><td>authored heavier (5×5 → 6×4, finisher 50–100 → 100–200); rows −9 to −18%</td><td><span class="chip crit">Mismatch</span></td><td>Real deload render</td></tr>
+      <tr data-s="fail"><td><b>Deload depth</b></td><td>"a real deload" (Phase 4)</td><td>one working set fewer per exercise</td><td><span class="chip high">Mismatch</span></td><td>Cut ⅓–½, cap intensity</td></tr>
+
+      <tr class="grp"><td colspan="5">Rule scope &amp; other engines</td></tr>
+      <tr data-s="pass"><td><b>Intensifier rule scope</b></td><td>applies when exercises stay fixed</td><td>iron-engine and kitchen-sink rotate exercises weekly, so exempt</td><td><span class="chip ok">Pass</span></td><td>—</td></tr>
+      <tr data-s="note"><td><b>Validator comment</b></td><td>set mix listed in position order</td><td>comment misordered; the array <code>[5,5,3,3,3,4,4,4,4,3]</code> is right</td><td><span class="chip low">Doc nit</span></td><td>Fix comment</td></tr>
+      <tr data-s="note"><td><b>Strain near-failure bump</b></td><td>"2+ sets at RPE ≥ 9.5"</td><td>since Phase 4.3 this means 2+ <em>exercises</em></td><td><span class="chip low">Note</span></td><td>Align to ≥ 1</td></tr>
+      <tr data-s="pass"><td><b>Macro calculator</b></td><td>Mifflin–St Jeor, Atwater</td><td>230 assertions</td><td><span class="chip ok">Pass</span></td><td>— (tests)</td></tr>
+      <tr data-s="pass"><td><b>Streak</b></td><td>counts prescribed training days</td><td>35 assertions</td><td><span class="chip ok">Pass</span></td><td>— (tests)</td></tr>
+      <tr data-s="pass"><td><b>Readiness bands</b></td><td>≥ 70 fresh · 40–69 · &lt; 40</td><td>tests pass</td><td><span class="chip ok">Pass</span></td><td>— (tests)</td></tr>
+    </tbody>
+  </table>
+  <div class="empty" id="mempty" hidden>No rows match that filter.</div>
+  </div>
+</section>
+
+<!-- ================= SCREENS ================= -->
+<section id="screens">
+  <div class="eyebrow">Tab-by-tab compliance</div>
+  <h2>Every tab, sheet and sub-view</h2>
+  <p class="muted">Measured at 390 and 320px. <b>Touch</b> counts visible controls under 44px. <b>State</b> is what survives a tab switch, leaving and coming back, or a reload. <b>Overlay</b> covers dialog semantics, Escape, focus and the page behind. No screen scrolled sideways, and none threw a JS error.</p>
+  <div class="filters" role="group" aria-label="Filter screens">
+    <button class="fbtn" data-sf="all" aria-pressed="true">All <span class="ct" data-sc="all"></span></button>
+    <button class="fbtn" data-sf="bad" aria-pressed="false">Needs work <span class="ct" data-sc="bad"></span></button>
+    <button class="fbtn" data-sf="warn" aria-pressed="false">Minor <span class="ct" data-sc="warn"></span></button>
+    <button class="fbtn" data-sf="ok" aria-pressed="false">Compliant <span class="ct" data-sc="ok"></span></button>
+  </div>
+
+  <div class="screens" id="screenList">
+    <div class="sgroup">Dashboard tabs</div>
+    <details class="scr" data-s="warn"><summary><span class="sname">Home<small>dashboard.html</small></span><span class="chip high">Minor</span></summary><div class="sbody">
+      <div class="cell warn"><span class="k">Touch</span><span class="v">Section links ("See all", "All logs", "Browse all") are 16px tall</span></div>
+      <div class="cell warn"><span class="k">Layout</span><span class="v">At 390 the greeting truncates ("Good aft…") behind 5 icons</span></div>
+      <div class="cell warn"><span class="k">State</span><span class="v">Scroll resets to 0 on tab switch, the tab isn't in the URL, and a reload returns to Home</span></div>
+      <div class="cell ok"><span class="k">Stability</span><span class="v">Layout shift 0, no console errors</span></div></div></details>
+    <details class="scr" data-s="ok"><summary><span class="sname">Programs<small>dashboard.html?tab=programs</small></span><span class="chip ok">Compliant</span></summary><div class="sbody">
+      <div class="cell ok"><span class="k">Touch</span><span class="v">0 under 44</span></div><div class="cell warn"><span class="k">Type</span><span class="v">19 text nodes under 11px</span></div>
+      <div class="cell ok"><span class="k">Layout</span><span class="v">no overflow</span></div><div class="cell warn"><span class="k">State</span><span class="v">forgets scroll position</span></div></div></details>
+    <details class="scr" data-s="ok"><summary><span class="sname">Conditioning<small>dashboard.html?tab=conditioning</small></span><span class="chip ok">Compliant</span></summary><div class="sbody">
+      <div class="cell ok"><span class="k">Touch</span><span class="v">0 under 44</span></div><div class="cell ok"><span class="k">Type</span><span class="v">5 nodes under 11px</span></div>
+      <div class="cell ok"><span class="k">Layout</span><span class="v">no overflow</span></div><div class="cell ok"><span class="k">Errors</span><span class="v">none</span></div></div></details>
+    <details class="scr" data-s="bad"><summary><span class="sname">Nutrition<small>dashboard.html?tab=nutrition</small></span><span class="chip crit">Needs work</span></summary><div class="sbody">
+      <div class="cell bad"><span class="k">Touch</span><span class="v">7 under 44: date arrows 24×48, scan 34×34, hour rows 34 tall</span></div>
+      <div class="cell warn"><span class="k">Type</span><span class="v">17 nodes under 11px</span></div>
+      <div class="cell bad"><span class="k">Overlay</span><span class="v">Add-food sheet: no dialog role, Escape does nothing, page scrolls behind</span></div>
+      <div class="cell warn"><span class="k">State</span><span class="v">a reload drops you back on Home</span></div></div></details>
+
+    <div class="sgroup">Programs &amp; the active session</div>
+    <details class="scr" data-s="warn"><summary><span class="sname">Program landing<small>cat-*.html</small></span><span class="chip high">Minor</span></summary><div class="sbody">
+      <div class="cell warn"><span class="k">Touch</span><span class="v">"← Programs" link 16 tall, guide link 35</span></div>
+      <div class="cell warn"><span class="k">Copy</span><span class="v">MM reads "6x per week" (4 lift + 2 conditioning) against its "4-Day Split" card</span></div>
+      <div class="cell warn"><span class="k">Hierarchy</span><span class="v">two primary calls to action (Browse workouts, Start Phase 1)</span></div>
+      <div class="cell ok"><span class="k">Layout</span><span class="v">no overflow at 320</span></div></div></details>
+    <details class="scr" data-s="bad"><summary><span class="sname">Day list → day view<small>F3 engines</small></span><span class="chip crit">Needs work</span></summary><div class="sbody">
+      <div class="cell bad"><span class="k">Navigation</span><span class="v">Back from an open day exits to the dashboard, skipping the list</span></div>
+      <div class="cell ok"><span class="k">Touch</span><span class="v">rows ≥ 70px, ← All days is 44</span></div>
+      <div class="cell ok"><span class="k">Deep link</span><span class="v">?day= and ?week= work, clamped</span></div>
+      <div class="cell ok"><span class="k">State</span><span class="v">set restore on reopen works, unless a week tab was used</span></div></div></details>
+    <details class="scr" data-s="bad"><summary><span class="sname">Active logger<small>.ex-card · mc-setlog.js</small></span><span class="chip crit">Needs work</span></summary><div class="sbody">
+      <div class="cell bad"><span class="k">State</span><span class="v">A week, phase or cycle tab round trip deletes the session (pain point 1)</span></div>
+      <div class="cell ok"><span class="k">Touch</span><span class="v">inputs 16px and 44 tall, checkbox 44×44</span></div>
+      <div class="cell warn"><span class="k">Clarity</span><span class="v">rest shown 3 times, Replace/Reorder duplicate ⋯, red 5×5 pill, struck-through values</span></div>
+      <div class="cell bad"><span class="k">Contrast</span><span class="v">light-mode suggested weight 1.47:1</span></div>
+      <div class="cell warn wide"><span class="k">Feedback</span><span class="v">Beating a previous best mid-set (70 against 60) shows no PR mark. The haptic and screen-reader response are the same as any other set.</span></div></div></details>
+    <details class="scr" data-s="ok"><summary><span class="sname">Rest timer<small>mc-timer.js inline row</small></span><span class="chip ok">Compliant</span></summary><div class="sbody">
+      <div class="cell ok"><span class="k">Behavior</span><span class="v">starts on tick at the prescribed rest</span></div><div class="cell ok"><span class="k">Touch</span><span class="v">±15 s at 64×44</span></div>
+      <div class="cell ok"><span class="k">A11y</span><span class="v">announces start, 10 s and done</span></div><div class="cell warn"><span class="k">Parser</span><span class="v">"1:30" and "1.5 min" would mis-parse (latent)</span></div></div></details>
+    <details class="scr" data-s="bad"><summary><span class="sname">Card ⋯ menu, Replace, Tempo, Exercise progress<small>mc-card-actions.js · mc-exercise-trends.js</small></span><span class="chip crit">Needs work</span></summary><div class="sbody">
+      <div class="cell bad"><span class="k">Overlay</span><span class="v">no dialog role, focus stays behind, Escape does nothing</span></div>
+      <div class="cell bad"><span class="k">Scroll</span><span class="v">the workout scrolls 500px behind each sheet</span></div>
+      <div class="cell ok"><span class="k">Touch</span><span class="v">Cancel 344×47</span></div>
+      <div class="cell warn"><span class="k">Progress sheet</span><span class="v">no close button, 3 controls under 44</span></div></div></details>
+    <details class="scr" data-s="bad"><summary><span class="sname">Finish modal &amp; recap<small>mc-finish.js · fw-recap-overlay</small></span><span class="chip crit">Needs work</span></summary><div class="sbody">
+      <div class="cell bad"><span class="k">Overlay</span><span class="v">no dialog role, Escape does nothing, page scrolls behind</span></div>
+      <div class="cell ok"><span class="k">Touch</span><span class="v">both buttons 45 tall</span></div>
+      <div class="cell warn"><span class="k">Layout</span><span class="v">"Exit &amp; discard" sits beside "Log workout" (discard does confirm)</span></div>
+      <div class="cell ok"><span class="k">Data</span><span class="v">saves id, duration and sets correctly</span></div></div></details>
+
+    <div class="sgroup">Build your own</div>
+    <details class="scr" data-s="bad"><summary><span class="sname">Workout builder<small>build-workout.html</small></span><span class="chip crit">Needs work</span></summary><div class="sbody">
+      <div class="cell bad"><span class="k">State</span><span class="v">Leaving the page drops your selected exercises (3 → 0)</span></div>
+      <div class="cell warn"><span class="k">Flow</span><span class="v">about 650px of form before the exercise search</span></div>
+      <div class="cell warn"><span class="k">Visual</span><span class="v">teal and sky-blue labels, blue header; counts read 450+ / 542 / 580</span></div>
+      <div class="cell warn"><span class="k">Touch</span><span class="v">Share and Start 38 tall</span></div></div></details>
+    <details class="scr" data-s="bad"><summary><span class="sname">Run custom workout<small>run-workout.html</small></span><span class="chip crit">Needs work</span></summary><div class="sbody">
+      <div class="cell bad"><span class="k">Data</span><span class="v">The bottom Finish button saves 0 sets (pain point 2)</span></div>
+      <div class="cell bad"><span class="k">Touch</span><span class="v">Finish 34 tall, counter 38 wide</span></div>
+      <div class="cell warn"><span class="k">Feedback</span><span class="v">uses a native alert() on finish</span></div>
+      <div class="cell ok"><span class="k">Logger</span><span class="v">set rows behave like program pages</span></div></div></details>
+    <details class="scr" data-s="bad"><summary><span class="sname">Program builder<small>build-program.html</small></span><span class="chip crit">Needs work</span></summary><div class="sbody">
+      <div class="cell bad"><span class="k">Touch</span><span class="v">Delete-day 🗑 is 28×32. It's destructive and under the floor.</span></div>
+      <div class="cell warn"><span class="k">Touch</span><span class="v">week buttons 41 tall, day name 37, "+ Add exercise" 40</span></div>
+      <div class="cell ok"><span class="k">State</span><span class="v">the typed name survived a round trip (browser form restore)</span></div>
+      <div class="cell ok"><span class="k">Layout</span><span class="v">no overflow</span></div></div></details>
+    <details class="scr" data-s="ok"><summary><span class="sname">Run custom program<small>run-program.html</small></span><span class="chip ok">Compliant</span></summary><div class="sbody">
+      <div class="cell ok"><span class="k">Data</span><span class="v">2 sets, id and duration saved through the shared path</span></div><div class="cell ok"><span class="k">Errors</span><span class="v">none</span></div>
+      <div class="cell ok"><span class="k">Identity</span><span class="v">per-day page id</span></div><div class="cell warn"><span class="k">Tests</span><span class="v">not covered by any journey gate</span></div></div></details>
+
+    <div class="sgroup">History &amp; analytics</div>
+    <details class="scr" data-s="bad"><summary><span class="sname">Workout history<small>workout-logs.html</small></span><span class="chip crit">Needs work</span></summary><div class="sbody">
+      <div class="cell bad"><span class="k">Data</span><span class="v">deletes resurrect for signed-in users (pain point 4)</span></div>
+      <div class="cell warn"><span class="k">Touch</span><span class="v">Sessions/Programs tabs 38 tall, Clear All 42</span></div>
+      <div class="cell warn"><span class="k">State</span><span class="v">the chosen tab resets on reload</span></div>
+      <div class="cell warn"><span class="k">Hierarchy</span><span class="v">title repeated in the bar and the hero, about 450px before the first card</span></div></div></details>
+    <details class="scr" data-s="ok"><summary><span class="sname">Workout detail<small>workout-detail.html</small></span><span class="chip ok">Compliant</span></summary><div class="sbody">
+      <div class="cell ok"><span class="k">Robustness</span><span class="v">renders all 6 corrupt-store shapes</span></div><div class="cell warn"><span class="k">Touch</span><span class="v">empty-state button 41</span></div>
+      <div class="cell ok"><span class="k">Layout</span><span class="v">no overflow</span></div><div class="cell ok"><span class="k">Errors</span><span class="v">none</span></div></div></details>
+    <details class="scr" data-s="warn"><summary><span class="sname">Stats<small>stats.html</small></span><span class="chip high">Minor</span></summary><div class="sbody">
+      <div class="cell warn"><span class="k">Touch</span><span class="v">week arrows 32×32, Recovery/Volume 40, Log weight 35</span></div>
+      <div class="cell warn"><span class="k">Type</span><span class="v">36 text nodes under 11px</span></div>
+      <div class="cell warn"><span class="k">State</span><span class="v">Volume resets to Recovery on reload</span></div>
+      <div class="cell bad"><span class="k">Overlay</span><span class="v">bodyweight sheet: Escape does nothing, page scrolls 306px behind</span></div></div></details>
+    <details class="scr" data-s="warn"><summary><span class="sname">Wrapped<small>wrapped.html</small></span><span class="chip high">Minor</span></summary><div class="sbody">
+      <div class="cell warn"><span class="k">Touch</span><span class="v">3 period tabs 35 tall</span></div><div class="cell ok"><span class="k">Layout</span><span class="v">no overflow</span></div>
+      <div class="cell ok"><span class="k">Errors</span><span class="v">none</span></div><div class="cell ok"><span class="k">Type</span><span class="v">0 under 11px</span></div></div></details>
+    <details class="scr" data-s="ok"><summary><span class="sname">Max Out test day<small>max-out.html</small></span><span class="chip ok">Compliant</span></summary><div class="sbody">
+      <div class="cell ok"><span class="k">Touch</span><span class="v">0 under 44</span></div><div class="cell warn"><span class="k">Math</span><span class="v">the opener can exceed a proven single (matrix)</span></div>
+      <div class="cell warn"><span class="k">Dialogs</span><span class="v">retry uses a native confirm()</span></div><div class="cell ok"><span class="k">Layout</span><span class="v">no overflow</span></div></div></details>
+
+    <div class="sgroup">Library, tools &amp; settings</div>
+    <details class="scr" data-s="ok"><summary><span class="sname">Exercise library<small>exercise-library.html</small></span><span class="chip ok">Compliant</span></summary><div class="sbody">
+      <div class="cell ok"><span class="k">Touch</span><span class="v">0 under 44</span></div><div class="cell ok"><span class="k">State</span><span class="v">search query kept on return</span></div>
+      <div class="cell ok"><span class="k">Type</span><span class="v">0 under 11px</span></div><div class="cell ok"><span class="k">Layout</span><span class="v">no overflow</span></div></div></details>
+    <details class="scr" data-s="warn"><summary><span class="sname">Quick Pump<small>quick-pump.html</small></span><span class="chip high">Minor</span></summary><div class="sbody">
+      <div class="cell warn"><span class="k">Touch</span><span class="v">5 focus chips 35 tall, conditioning link 15</span></div><div class="cell ok"><span class="k">Selection</span><span class="v">catalog tests pass</span></div>
+      <div class="cell ok"><span class="k">Layout</span><span class="v">no overflow</span></div><div class="cell ok"><span class="k">Errors</span><span class="v">none</span></div></div></details>
+    <details class="scr" data-s="warn"><summary><span class="sname">Conditioning timer · Import · Collections<small>conditioning-timer · import · collections</small></span><span class="chip high">Minor</span></summary><div class="sbody">
+      <div class="cell warn"><span class="k">Touch</span><span class="v">"← Conditioning" and "← Dashboard" links 17 tall</span></div><div class="cell ok"><span class="k">Collections</span><span class="v">0 under 44</span></div>
+      <div class="cell ok"><span class="k">Layout</span><span class="v">no overflow</span></div><div class="cell ok"><span class="k">Errors</span><span class="v">none</span></div></div></details>
+    <details class="scr" data-s="bad"><summary><span class="sname">Account &amp; settings sheet<small>mc-account.js</small></span><span class="chip crit">Needs work</span></summary><div class="sbody">
+      <div class="cell bad"><span class="k">Touch</span><span class="v">8 under 44, including 32px accent swatches and density buttons</span></div>
+      <div class="cell bad"><span class="k">Overlay</span><span class="v">no dialog role, no close button, Escape does nothing, page scrolls behind</span></div>
+      <div class="cell bad"><span class="k">Backup</span><span class="v">import overwrites with no confirmation (read in code)</span></div>
+      <div class="cell warn"><span class="k">Visual</span><span class="v">slate colors injected from JS, outside the token gate</span></div></div></details>
+    <details class="scr" data-s="warn"><summary><span class="sname">Global search · Program picker · Vitals<small>mc-global-search · dashboard · mc-vitals</small></span><span class="chip high">Minor</span></summary><div class="sbody">
+      <div class="cell warn"><span class="k">Search</span><span class="v">✕ is 36×36, no dialog role, page scrolls behind. Escape works.</span></div>
+      <div class="cell warn"><span class="k">Picker</span><span class="v">dialog role and scroll lock are good, but Escape does nothing and focus stays outside</span></div>
+      <div class="cell warn"><span class="k">Vitals</span><span class="v">dialog role is good, but Escape does nothing and the page scrolls 280px</span></div>
+      <div class="cell ok"><span class="k">Layout</span><span class="v">no overflow</span></div></div></details>
+    <details class="scr" data-s="ok"><summary><span class="sname">Quick tour · Program guide<small>quick-tour · program-guide</small></span><span class="chip ok">Compliant</span></summary><div class="sbody">
+      <div class="cell ok"><span class="k">Dots</span><span class="v">26 wide by design (18 steps can't each be 44 wide at 320)</span></div><div class="cell warn"><span class="k">Skip</span><span class="v">31 tall</span></div>
+      <div class="cell ok"><span class="k">Guide</span><span class="v">0 under 44</span></div><div class="cell ok"><span class="k">Contrast</span><span class="v">budgets at 0</span></div></div></details>
+  </div>
+  <div class="empty" id="sempty" hidden>No screens match that filter.</div>
+</section>
+
+<!-- ================= DESIGN ================= -->
+<section id="design">
+  <div class="eyebrow">Proactive design &amp; usability</div>
+  <h2>Design upgrades</h2>
+  <div>
+    <div class="rec"><div class="rec-top"><h3>Give the PR its moment</h3><span class="chip acc">Micro-interaction</span></div>
+      <p>The best moment in a session currently looks like every other set. When a logged weight beats the lift's local best, mark the row gold with a "PR" chip, use a distinct double-pulse haptic, and announce "New personal record, 70 pounds" through the existing timer live region. The local best is already in <code>mc_setlog_v1</code>, so this needs no network and works signed out.</p></div>
+    <div class="rec"><div class="rec-top"><h3>One sheet contract for every overlay</h3><span class="chip acc">Interaction</span></div>
+      <p>One small shared module, which every overlay calls when it opens and closes, handles <code>role="dialog"</code> and <code>aria-modal</code>, moves focus in and returns it, closes on Escape, locks the page behind (<code>overflow:hidden</code> plus <code>overscroll-behavior:contain</code>) and pushes a history entry so Back closes the sheet. Opening a day pushes an entry too. Eleven hand-built overlays converge on one behavior.</p></div>
+    <div class="rec"><div class="rec-top"><h3>Let the next set's number lead</h3><span class="chip acc">Dark &amp; light contrast</span></div>
+      <p>The suggested weight is the most useful number mid-set, and in light mode it's the least legible. Keep it italic and dashed, at a readable ink:</p>
+      <div class="swline"><span class="sw before">185</span><span>today · <b>1.47:1</b></span><span class="sw after">185</span><span>proposed <code>--ink-6</code> · <b>5.23:1</b></span></div></div>
+    <div class="rec"><div class="rec-top"><h3>Use color only where it means something</h3><span class="chip acc">Visual language</span></div>
+      <p>Gold marks what's active or actionable. Red means failure or destruction. Everything else is ink. Make the red prescription pill, the blue active week tab and the builder's teal and sky-blue labels neutral. Keep true black (<code>--ink-0</code>) as the OLED ground, and move the bottom nav's cool <code>rgba(8,10,16)</code> onto the warm ramp.</p></div>
+    <div class="rec"><div class="rec-top"><h3>Calm the session screen</h3><span class="chip acc">Hierarchy</span></div>
+      <p>Show one rest readout instead of three. Move Replace and Reorder into ⋯, which frees a 44px row on every open card. Mark finished values with the tick and a row tint, not strikethrough. Keep the tempo for the Pos 4 TUT anchor visible as a badge in the card header rather than behind ⓘ.</p></div>
+    <div class="rec"><div class="rec-top"><h3>A type floor of 11px</h3><span class="chip acc">Typography</span></div>
+      <p>Stats has 36 text nodes under 11px, Programs 19 and Nutrition 17. Map those labels onto the existing <code>--fs-*</code> scale with an 11px minimum, and widen letter-spacing on uppercase labels instead of shrinking them.</p></div>
+    <div class="rec"><div class="rec-top"><h3>Remember where people were</h3><span class="chip acc">State</span></div>
+      <p>Put the dashboard tab in the URL and restore each tab's scroll. Remember the History tab and the Stats Recovery/Volume choice per device in <code>localStorage</code>, declared in <code>store-registry.json</code>. Keep a workout-builder draft so a half-picked workout survives leaving the page.</p></div>
+    <div class="rec"><div class="rec-top"><h3>Extend the token gate before migrating</h3><span class="chip acc">Architecture</span></div>
+      <p>Teach <code>check-design-tokens.js</code> to read CSS strings in 30 JS modules (119 slate values), inline page styles (446) and <code>rgba()</code>. Seed it as a per-file ratchet, then migrate the session surface first, measured by luminance.</p></div>
+    <div class="rec"><div class="rec-top"><h3>Replace native dialogs</h3><span class="chip acc">Consistency</span></div>
+      <p><code>alert()</code> on custom finish, <code>confirm()</code> on deletes, Max Out retries and Replace all break the app's visual language and can't be styled for dark mode. Route them through the new sheet contract.</p></div>
+  </div>
+</section>
+
+<!-- ================= ROADMAP ================= -->
+<section id="roadmap">
+  <div class="eyebrow">Master refinement roadmap</div>
+  <h2>Phases, in order</h2>
+  <p class="muted">The order follows your decisions: data first. Each phase opens with an <code>AskUserQuestion</code> check-in, per CLAUDE.md's rule for multi-phase work, and this artifact serves as its discovery artifact. Any user-facing change updates <code>quick-tour-data.js</code> or the program's guide page in the same piece of work. A new store goes into <code>store-registry.json</code> in the same change.</p>
+
+  <details class="phase" open><summary><span class="pid">A</span><span class="ptitle">Data integrity &amp; session state<small>Pain points 1, 2 and 4, plus backup safety</small></span><span class="caret" aria-hidden="true">›</span></summary><div class="pbody">
+    <ol class="steps">
+      <li><span><b>A1 · The session survives a re-render.</b> After any card render (the <code>MC_SCAN</code> signal), repaint today's sets from <code>mc_setlog_v1</code> using the existing <code>paintLoggedRow()</code>. <code>save()</code> must never delete a record while today's set log still holds sets for this page.</span></li>
+      <li><span><b>A2 · One custom-workout finish.</b> Remove <code>run-workout.html</code>'s <code>.fw-bar</code> and <code>finishWorkout()</code>. Optionally backfill entries saved with 0 sets from the set log.</span></li>
+      <li><span><b>A3 · Deletes stay deleted.</b> Write deletion records <code>{id, deleted, deletedAt}</code>, merge by newest id, and filter deletions in <code>readWorkoutLog()</code>. Count only live entries toward the 200 cap.</span></li>
+      <li><span><b>A4 · Safer import.</b> Confirm "replaces data on this device", merge the workout log by default, and report stores that couldn't be written.</span></li>
+      <li><span><b>A5 · Single-writer gate.</b> Only <code>mc-finish.js</code>, <code>mc-cond.js</code> and named conditioning pages may write <code>mc_workout_log_v1</code>, all through the guarded writer. Also remove the orphan logger from <code>cat-gainz.html</code>.</span></li>
+    </ol>
+    <div class="gate"><b>Done when:</b> a new journey test does tick → week round trip → reload and asserts N of N on all 7 engines; run-workout saves N of N through every visible control; merge tests cover deletes across devices; each new gate fails on the pre-fix tree.</div></div></details>
+
+  <details class="phase"><summary><span class="pid">B</span><span class="ptitle">Progression engine precision<small>Pain point 3, using the rules you chose</small></span><span class="caret" aria-hidden="true">›</span></summary><div class="pbody">
+    <ol class="steps">
+      <li><span><b>Per-set targets.</b> <code>topRep()</code> becomes a per-set target list. Ranges use the top (4×10-12 → 12). A pyramid compares each set with its own rep.</span></li>
+      <li><span><b>Partial sessions hold.</b> If fewer working sets were logged than prescribed, the result is "repeat", not "progress".</span></li>
+      <li><span><b>×0.5 increments.</b> Leverage-assisted equipment gets half the barbell step, so Leg Press and Hack Squat go to 5. Tighten the big-lift pattern so "bench" used as a prop doesn't qualify. Rewrite the existing test that asserts 2.5.</span></li>
+      <li><span><b>A single is the max.</b> <code>e1rm(w, 1)</code> returns w, so the Max Out opener can't exceed a proven single.</span></li>
+      <li><span><b>Docs.</b> Update the <code>mc-suggest.js</code> header and CLAUDE.md Task 3.3, and correct the misordered set-mix comment in the validator.</span></li>
+    </ol>
+    <div class="gate"><b>Done when:</b> every Mismatch row in the progression and strength-estimate groups of the matrix passes as a committed test vector in <code>test-mc-suggest.js</code> and <code>test-mc-numeric-guards.js</code>.</div></div></details>
+
+  <details class="phase"><summary><span class="pid">C</span><span class="ptitle">Program content &amp; deloads<small>The program rows of the matrix</small></span><span class="caret" aria-hidden="true">›</span></summary><div class="pbody">
+    <ol class="steps">
+      <li><span><b>A real deload.</b> In declared deload weeks, cut a third to half of working sets through the one existing code path, and cap intensity cues (no escalated AMRAP targets). Strength &amp; Supersets week 6 renders lighter than week 5.</span></li>
+      <li><span><b>Extend the peak-week check</b> in <code>test-mc-gen-schedules.js</code> to hand-written schedules, so no program flags its own heaviest week.</span></li>
+      <li><span><b>Pos 4 TUT anchor.</b> Show a structural tempo badge (3 s negative, 2 s pause) on Pos 4 in all 60 Modality Matrix cells, with a validator check.</span></li>
+      <li><span><b>Strength &amp; Supersets record.</b> Derive exercise and set counts from the page (the <code>gen-schedules.js</code> pattern) so the day hero matches the logger.</span></li>
+      <li><span><b>Copy.</b> High-Volume becomes "4-Week Block · Mostly 15–25 Reps". The Modality Matrix landing names "4 lift + 2 conditioning". Effort labels align to the RIR scale. Update each program's guide page.</span></li>
+    </ol>
+    <div class="gate"><b>Done when:</b> <code>validate-programs</code>, <code>gen-schedules --check</code> and <code>check-program-data</code> pass with the new rules, and the Strength &amp; Supersets week 6 render measures lighter than week 5.</div></div></details>
+
+  <details class="phase"><summary><span class="pid">D</span><span class="ptitle">Navigation &amp; sheet contract<small>Pain point 5, using the shared contract you chose</small></span><span class="caret" aria-hidden="true">›</span></summary><div class="pbody">
+    <ol class="steps">
+      <li><span><b>A shared sheet module</b> that pushes a history entry, closes on Escape, handles focus, sets dialog semantics and locks the page behind. Add it to <code>check-docs-currency</code>'s module list.</span></li>
+      <li><span><b>Migrate all 11 overlays</b> to it, and replace <code>alert()</code>/<code>confirm()</code> with in-app sheets.</span></li>
+      <li><span><b>Opening a day pushes history,</b> so Back returns to the day list.</span></li>
+      <li><span><b>Remember state:</b> the dashboard tab in the URL with scroll restore, the History tab, the Stats toggle and a workout-builder draft.</span></li>
+    </ol>
+    <div class="gate"><b>Done when:</b> an overlay probe reports 11 of 11 on dialog role, focus, Escape, scroll lock and Back, and the Back gesture from a day lands on its list.</div></div></details>
+
+  <details class="phase"><summary><span class="pid">E</span><span class="ptitle">Visibility<small>Close the gaps that let these ship</small></span><span class="caret" aria-hidden="true">›</span></summary><div class="pbody">
+    <ol class="steps">
+      <li><span>Add journey coverage for run-workout, run-program and the week-tab round trip.</span></li>
+      <li><span>Add a contrast probe for input values in ghost state, in both themes.</span></li>
+      <li><span>Add an opt-in error beacon. It needs a new Supabase table, so it asks you first.</span></li>
+      <li><span>Echo <code>FAILED: &lt;gate&gt;</code> per gate in <code>verify.yml</code>'s browser step.</span></li>
+    </ol></div></details>
+
+  <details class="phase"><summary><span class="pid">F</span><span class="ptitle">Session screen &amp; PR moment<small>Design upgrades</small></span><span class="caret" aria-hidden="true">›</span></summary><div class="pbody">
+    <ol class="steps"><li><span>One rest readout, Replace/Reorder moved into ⋯, a neutral prescription pill and tinted finished rows.</span></li><li><span>Light-mode ghost value at 5.23:1.</span></li><li><span>The in-session PR mark, haptic and announcement.</span></li></ol>
+    <div class="gate"><b>Done when:</b> <code>check-journey</code> passes 9 of 9, the visual ratchet is re-baselined from CI, and open-card height is measured before and after.</div></div></details>
+
+  <details class="phase"><summary><span class="pid">G</span><span class="ptitle">Token gate &amp; migration<small>Design upgrades</small></span><span class="caret" aria-hidden="true">›</span></summary><div class="pbody">
+    <ol class="steps"><li><span>The gate reads JS-injected CSS, inline styles and <code>rgba()</code>, seeded as a ratchet.</span></li><li><span>Migrate the session surface, then the sheets, then inline page styles.</span></li><li><span>Set an 11px type floor on the <code>--fs-*</code> scale.</span></li></ol></div></details>
+
+  <details class="phase"><summary><span class="pid">H</span><span class="ptitle">Touch &amp; navigation consistency<small>Tab-by-tab findings</small></span><span class="caret" aria-hidden="true">›</span></summary><div class="pbody">
+    <ol class="steps"><li><span>Bring every control flagged in the tab-by-tab section to 44, starting with the destructive delete-day 🗑 and Finish. Add their selectors to <code>CHROME_SELECTORS</code>.</span></li><li><span>Use one bottom nav with line icons, and fix the dashboard header so it fits at 390 and 320.</span></li></ol></div></details>
+
+  <details class="phase"><summary><span class="pid">I</span><span class="ptitle">Builder redesign<small>Exercises first</small></span><span class="caret" aria-hidden="true">›</span></summary><div class="pbody">
+    <ol class="steps"><li><span>Open on search. Ask for name, program and collection at Save. Move onto the warm ramp and gold accent, and show one exercise count. Update the Quick Tour in the same change.</span></li></ol></div></details>
+
+  <details class="phase"><summary><span class="pid">J</span><span class="ptitle">First-visit performance <span class="chip low" style="vertical-align:middle">Needs your decision</span><small>38–53 scripts and 1.2–1.5 MB on a first visit</small></span><span class="caret" aria-hidden="true">›</span></summary><div class="pbody">
+    <p class="small muted">A generated, committed core bundle with a <code>--check</code> gate, on the <code>build-sw.py</code> pattern, would change the no-build-step stance. It's your call before any code.</p></div></details>
+
+  <div class="callout"><b>Owner actions (no code):</b> set the <code>WEEKLY_CHECKIN_SECRET</code> repo secret (the weekly check-in has never sent; the latest failure was 18 Oct). Turn on leaked-password protection in Supabase Auth. Run the real-device checklist on iOS Safari, an installed PWA and two signed-in devices.</div>
+</section>
+
+<!-- ================= METHOD ================= -->
+<section id="method">
+  <div class="eyebrow">Method &amp; limits</div>
+  <h2>What was run, and what wasn't</h2>
+  <div class="grid2">
+    <div class="panel"><h3>Run in this audit</h3><ul>
+      <li>All 52 static gates. Browser gates against a local server: journey, concurrency, store resilience, crash recovery, identity, PR scope, restore fidelity, contrast in light and dark, and a 38-page smoke test.</li>
+      <li><code>mc-suggest</code>, <code>mc-log-read</code>, <code>mc-maxout</code> and <code>mc-classify</code> run in Node against test vectors and all 580 catalog names.</li>
+      <li>The real <code>TMR.parseSeconds</code> run in-page over every rest string in the tree.</li>
+      <li>Rendered prescriptions for every week × day of mm-p1, iron-engine, hv-block, kitchen-sink and cat-strength (106 renders).</li>
+      <li>Week-tab round trips on 7 engines, 11 overlays, 28 screens at 390 and 320, state round trips and a PR probe.</li>
+      <li>Supabase security and performance advisors, and the weekly check-in workflow log.</li>
+    </ul></div>
+    <div class="panel"><h3>Not verified here</h3><ul>
+      <li>Real iOS and Android devices, the installed PWA and true offline. The service worker only runs on the production origin.</li>
+      <li>Live sign-in and two-device sync. Supabase traffic was blocked in the browser runs.</li>
+      <li>The Back-gesture finding uses browser history. An iOS edge swipe in an installed PWA should behave the same, but that's unconfirmed.</li>
+      <li>Import over existing history was read in code, not driven.</li>
+      <li>The licensed-program pages beyond the shared engines were not rendered week by week.</li>
+      <li>The RIR scale reference is the commonly used RIR-based RPE convention. Check the exact mapping you want before relabeling.</li>
+    </ul></div>
+  </div>
+  <footer>
+    <span>Audit of <code>mcross2298/4-Weeks-to-Open-</code> at <code>27fc096</code>. No code was changed.</span>
+    <span>Severity reflects my judgment of harm × reach. The first audit's page stays published; this page supersedes it.</span>
+  </footer>
+</section>
+
+</div>
+
+<script>
+(function(){
+  var store = {
+    get: function(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+    set: function(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+  };
+
+  // ---- matrix filter ----
+  var mrows = Array.prototype.slice.call(document.querySelectorAll('#mtable tbody tr'));
+  var mbtns = Array.prototype.slice.call(document.querySelectorAll('[data-mf]'));
+  var mq = document.getElementById('mq');
+  var mf = store.get('mca_mf') || 'all';
+  function countM(){
+    var c = {all:0, fail:0, note:0, pass:0};
+    mrows.forEach(function(r){ var s=r.getAttribute('data-s'); if(!s) return; c.all++; c[s]++; });
+    Object.keys(c).forEach(function(k){ var el=document.querySelector('[data-mc="'+k+'"]'); if(el) el.textContent=c[k]; });
+  }
+  function applyM(){
+    var q = (mq.value||'').trim().toLowerCase(), shown=0;
+    var groupHas = new Map(), lastGrp=null;
+    mrows.forEach(function(r){
+      if(r.classList.contains('grp')){ lastGrp=r; groupHas.set(r,false); return; }
+      var ok = (mf==='all' || r.getAttribute('data-s')===mf) && (!q || r.textContent.toLowerCase().indexOf(q)!==-1 || (lastGrp && lastGrp.textContent.toLowerCase().indexOf(q)!==-1));
+      r.hidden = !ok; if(ok){ shown++; if(lastGrp) groupHas.set(lastGrp,true); }
+    });
+    groupHas.forEach(function(v,g){ g.hidden=!v; });
+    mbtns.forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-mf')===mf)); });
+    document.getElementById('mempty').hidden = shown>0;
+  }
+  mbtns.forEach(function(b){ b.addEventListener('click', function(){ mf=b.getAttribute('data-mf'); store.set('mca_mf',mf); applyM(); }); });
+  mq.addEventListener('input', applyM);
+  countM(); applyM();
+
+  // ---- screens filter ----
+  var scr = Array.prototype.slice.call(document.querySelectorAll('#screenList details.scr'));
+  var groups = Array.prototype.slice.call(document.querySelectorAll('#screenList .sgroup'));
+  var sbtns = Array.prototype.slice.call(document.querySelectorAll('[data-sf]'));
+  var sf = store.get('mca_sf') || 'all';
+  (function(){ var c={all:scr.length,bad:0,warn:0,ok:0}; scr.forEach(function(d){ c[d.getAttribute('data-s')]++; });
+    Object.keys(c).forEach(function(k){ var el=document.querySelector('[data-sc="'+k+'"]'); if(el) el.textContent=c[k]; }); })();
+  function applyS(){
+    var shown=0;
+    scr.forEach(function(d){ var ok = sf==='all' || d.getAttribute('data-s')===sf; d.hidden=!ok; if(ok) shown++; });
+    groups.forEach(function(g){ var n=g.nextElementSibling, any=false; while(n && !n.classList.contains('sgroup')){ if(!n.hidden) any=true; n=n.nextElementSibling; } g.hidden=!any; });
+    sbtns.forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-sf')===sf)); });
+    document.getElementById('sempty').hidden = shown>0;
+  }
+  sbtns.forEach(function(b){ b.addEventListener('click', function(){ sf=b.getAttribute('data-sf'); store.set('mca_sf',sf); applyS(); }); });
+  applyS();
+
+  // ---- section nav highlight ----
+  var links = Array.prototype.slice.call(document.querySelectorAll('#secnav a'));
+  var secs = links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(e.isIntersecting){ var i=secs.indexOf(e.target); links.forEach(function(a,j){ a.classList.toggle('on', i===j); }); } });
+    }, {rootMargin:'-30% 0px -60% 0px'});
+    secs.forEach(function(s){ if(s) io.observe(s); });
+  }
+})();
+</script>
+
+</body>
+</html>
