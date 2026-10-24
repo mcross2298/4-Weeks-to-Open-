@@ -25,6 +25,8 @@
      • set-count-per-position matches the documented 2/4/4 mix (5,5 · 4,4,4,4
        · 3,3,3,3) and holds in every week — "tri-sets are always 3 sets" is
        exactly positions 3-5 of that mix
+     • Pos 4, the TUT anchor, carries a structural tut: { down: 3, pause: 2 }
+       (flagship readiness C, D-26) and no other position does
      • the week's theme is visible in the FEATURE lifts' (positions 2,5,6,8)
        set field itself: a real pyramid (distinct values) in the Pyramid
        week, literal "@" tempo notation in the Tempo week, a paired/AMRAP
@@ -113,7 +115,19 @@ function validateProgram(programId, weekThemes, days) {
       err(label + ': expected exactly 10 exercises, got ' + (day.exercises ? day.exercises.length : 0));
       return;
     }
+    // Pos 4 is the TUT anchor: fixed 3 s negatives / 2 s pauses every week
+    // (CLAUDE.md). It is DATA on the exercise (`tut`), rendered as a badge in
+    // every week, so it cannot live only in a coaching note again (D-26: 6 of
+    // 60 cells mentioned the pause, none prescribed it).
+    const anchor = day.exercises[3];
+    if (!anchor || !anchor.tut || anchor.tut.down !== 3 || anchor.tut.pause !== 2) {
+      err(label + ' Pos 4 "' + (anchor && anchor.name) + '": the TUT anchor must carry tut: { down: 3, pause: 2 } (got ' +
+        JSON.stringify(anchor && anchor.tut) + ')');
+    }
     day.exercises.forEach(function (ex, pos) {
+      if (pos !== 3 && ex.tut) {
+        err(label + ' Pos ' + (pos + 1) + ' "' + ex.name + '": only the Pos 4 TUT anchor carries a structural tut');
+      }
       if (!Array.isArray(ex.w) || ex.w.length !== weekCount) {
         err(label + ' Pos ' + (pos + 1) + ' "' + ex.name + '": w[] length ' +
           (ex.w ? ex.w.length : 0) + ' !== WEEK_THEMES.length (' + weekCount + ')');

@@ -2362,6 +2362,25 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   the OS dialogs. A test that answered a native dialog has to click
 >   `[data-mcsh-ok]` now.
 
+> **C shipped (2026-10-24), all five steps.** Strength & Supersets week 6 now
+> builds lighter than week 5 on every day. Four things to know before touching
+> deloads, schedules or the Modality Matrix data:
+> - **A deload is `reduceFor()` in `mc-setlog.js`**, the one place a reduced
+>   day changes a row count. It keeps `floor(2n/3)` working sets, drops the
+>   drop rows and caps effort on the card. Lighter is still one set fewer, and
+>   the deload outranks it. The answer is cached per open program and week,
+>   because three engines change week in place.
+> - **`ss` is generated now.** Edit `cat-strength.html` (`PMC_SPLITS`, and
+>   `PMC_SPLIT_META.cycle`'s `rest`/`deloadWeeks`), then run
+>   `node tools/gen-schedules.js`. Never edit its block in `mc-pm-data.js`.
+> - **`gen-schedules --check` checks every deload as built:** lighter than
+>   every other week of its block and at least a third lighter than the
+>   lightest. Week-1 day figures are not the measure; the per-week
+>   prescription is.
+> - **Pos 4 carries `tut: { down: 3, pause: 2 }`** in `mm-data.js`, and
+>   `validate-programs.js` requires it. A tempo badge with a label longer than
+>   digits needs `data-tempo-label`, or `mc-group-split.js` cuts it.
+
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the
 > owner's, not code: `WEEKLY_CHECKIN_SECRET` is still unset (per the 18 Oct

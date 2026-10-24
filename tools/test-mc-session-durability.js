@@ -51,6 +51,15 @@
                 skipped the .ex-item family outright; mc-summary.js's
                 auto-built summary never started the session on a first set.
 
+   Flagship readiness C ("program content and deloads"):
+
+     DELOAD     switching INTO a declared deload week on the page cuts at
+                least a third of the planned sets and says so on the card;
+                switching back restores the full week (the answer was cached
+                once per page load, so an in-page switch built full volume).
+     TUT        the Modality Matrix's Pos 4 tempo anchor shows on the card in
+                every week (D-26).
+
    CONTROL     a plain refresh restores ticked sets. If it fails, the harness
                is broken and nothing below means anything.
 
@@ -480,6 +489,45 @@ async function step(name, fn) {
     await p.locator('.mc-day-back').click(); await sleep(700);
     await p.goBack(); await sleep(1500);
     check(/dashboard\.html/.test(p.url()), 'DAY-BACK after the on-screen "All days", one Back leaves the page (the spent entry is stepped over)', p.url());
+    await c.close();
+  });
+
+  // ---- C ("program content and deloads") -----------------------------------
+  // A declared deload week builds a real deload (D-25), including when the
+  // athlete switches into it on the page rather than loading it: the answer
+  // used to be cached once per page load, so week 5 -> week 6 built full
+  // volume (34 rows of a 33-row week 5) until a reload.
+  const planned = (p) => p.evaluate(() => [...document.querySelectorAll('.ex-card,.ss-ex')]
+    .reduce((n, c) => n + window.MCSetlogUtil.plannedSetCount(c), 0));
+  for (const [url, into, back] of [['/cat-strength.html?day=legs&week=5', 6, 5], ['/mm-p3.html?week=4&day=1', 5, 4]]) {
+    await step('DELOAD ' + url, async () => {
+      const c = await ctx(browser); const p = await page(c, errs, 'deload');
+      await p.goto(BASE + url); await sleep(1500);
+      const full = await planned(p);
+      await p.locator('.wtab').nth(into - 1).click(); await sleep(1200);
+      const dl = await planned(p);
+      const note = await p.evaluate(() => (document.querySelector('.mcl-cut-deload') || {}).textContent || '');
+      await p.locator('.wtab').nth(back - 1).click(); await sleep(1200);
+      const again = await planned(p);
+      check(full > 0 && dl * 3 <= full * 2, 'DELOAD ' + url + ' switching into the deload week cuts at least a third (' + full + ' -> ' + dl + ')');
+      check(/Deload week/.test(note) && /short of failure/.test(note), 'DELOAD the card says it is a deload and caps the effort', note);
+      check(again === full, 'DELOAD switching back out restores the full week (' + again + ')');
+      await c.close();
+    });
+  }
+
+  // Pos 4 is the Modality Matrix's TUT anchor (D-26): its tempo shows on the
+  // card in every week, including inside the tri-set group mc-group-split.js
+  // builds (whose digit match cut "3s down · 2s pause" to "3").
+  await step('TUT', async () => {
+    const c = await ctx(browser); const p = await page(c, errs, 'tut');
+    let seen = 0;
+    for (const w of [1, 2, 3, 4, 5]) {
+      await p.goto(BASE + '/mm-p2.html?week=' + w + '&day=2'); await sleep(700);
+      const t = await p.evaluate(() => [...document.querySelectorAll('.a-ss-tempo, .a-pill.tempo')].map((e) => e.textContent));
+      if (t.some((x) => /3s down · 2s pause/.test(x))) seen++;
+    }
+    check(seen === 5, 'TUT the Pos 4 tempo badge is on the card in all 5 weeks (' + seen + ')');
     await c.close();
   });
 

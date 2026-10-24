@@ -233,6 +233,9 @@
   function cardTempos(card) {
     var tempoEls = card.querySelectorAll('.a-pill.tempo, .tempo-chip');
     return Array.prototype.map.call(tempoEls, function (c) {
+      // A badge that names its own label (mm-engine.js's Pos 4 TUT anchor,
+      // "3s down · 2s pause") keeps it; the digit match would cut it to "3".
+      if (c.getAttribute('data-tempo-label')) return c.getAttribute('data-tempo-label');
       var m = c.textContent.match(/[\d:]+/); return m ? m[0] : '';
     }).filter(Boolean);
   }

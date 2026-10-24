@@ -333,8 +333,9 @@ window.MC_TEMPO_ENABLED = true;
 
 /**
  * Strength & Supersets — workout data (designer: Mike Cross)
- * 6-week cycle · 5 training days. Legs authored for Weeks 1–6; the other days
- * are scaffolded (comingSoon) until their tables are added.
+ * 6-week cycle · 5 training days, every day authored for weeks 1–6. Week 6 is
+ * the deload: it is authored at full weight and mc-setlog.js cuts it at render
+ * (a third to half of each exercise's working sets, no drop sets).
  * Daily shape: 3 heavy compounds (4–8 reps, ≥1 pyramid) → 2 supersets
  * (3–4 sets, 12–30 reps) → 1 AMRAP finisher. Tempo is NOT prescribed here —
  * it is an optional add-in applied per-exercise via the ⋮ menu.
@@ -344,6 +345,7 @@ const PMC_SPLITS = {
   'legs': {
     id:'legs', file:'cat-strength.html', split:'Strength & Supersets',
     title:'Legs', icon:'🦵', color:'#e11d48', bg:'#2a0710',
+    tags:['Quads', 'Hamstrings', 'Calves'],
     backUrl:'cat-strength.html', type:'standard',
     data:{
   1:[
@@ -423,6 +425,7 @@ const PMC_SPLITS = {
   'chest': {
     id:'chest', file:'cat-strength.html', split:'Strength & Supersets',
     title:'Chest', icon:'💪', color:'#e11d48', bg:'#2a0710',
+    tags:['Chest', 'Push'],
     backUrl:'cat-strength.html', type:'standard',
     data:{
   1:[
@@ -502,6 +505,7 @@ const PMC_SPLITS = {
   'back_shoulders': {
     id:'back_shoulders', file:'cat-strength.html', split:'Strength & Supersets',
     title:'Back & Shoulders', icon:'🔙', color:'#e11d48', bg:'#2a0710',
+    tags:['Back', 'Delts', 'Pull'],
     backUrl:'cat-strength.html', type:'standard',
     data:{
   1:[
@@ -581,6 +585,7 @@ const PMC_SPLITS = {
   'arms_forearms': {
     id:'arms_forearms', file:'cat-strength.html', split:'Strength & Supersets',
     title:'Arms & Forearms', icon:'💥', color:'#e11d48', bg:'#2a0710',
+    tags:['Biceps', 'Triceps', 'Forearms'],
     backUrl:'cat-strength.html', type:'standard',
     data:{
   1:[
@@ -670,6 +675,7 @@ const PMC_SPLITS = {
   'cardio_calves': {
     id:'cardio_calves', file:'cat-strength.html', split:'Strength & Supersets',
     title:'Calves & Cardio', icon:'🏃', color:'#e11d48', bg:'#2a0710',
+    tags:['Calves', 'Cardio'],
     backUrl:'cat-strength.html', type:'standard',
     data:{
   // Each week = exactly 3 calf exercises in 2 groupings:
@@ -719,7 +725,11 @@ const PMC_SPLITS = {
 };
 
 const PMC_SPLIT_META = {
-  'cycle': { name:'The 6-Week Cycle', color:'#e11d48', workouts:['legs','chest','back_shoulders','arms_forearms','cardio_calves'] },
+  // rest + deloadWeeks are the block's own shape (5-on 2-off, week 6 is the
+  // deload). tools/gen-schedules.js reads them from here, with the day data
+  // above, to write mc-pm-data.js's `ss` schedule record.
+  'cycle': { name:'The 6-Week Cycle', color:'#e11d48', workouts:['legs','chest','back_shoulders','arms_forearms','cardio_calves'],
+             rest:[6, 7], deloadWeeks:[6] },
 };
 
 // ══════════════════════════════════════════════════════════════

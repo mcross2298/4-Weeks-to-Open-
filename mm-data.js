@@ -64,7 +64,7 @@
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"anchor 3×10 · superset week — minimal rest into the next move" },
       ]},
       /* Ex 4 — TRI-SET B · TUT ANCHOR (3 sec negatives, fixed every week) */
-      { name: "DB Hex Press (flat, DBs touching)", w: [
+      { name: "DB Hex Press (flat, DBs touching)", tut: { down: 3, pause: 2 }, w: [
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives every rep · squeeze DBs together throughout" },
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives · 2 sec stretch pause at base · constant inward pressure" },
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives · mechanical drop from Decline · same DBs" },
@@ -153,7 +153,7 @@
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"anchor 3×10 · superset week — minimal rest into the next move" },
       ]},
       /* Ex 4 — TRI-SET B · TUT ANCHOR (3 sec negatives, fixed every week) */
-      { name: "Seated DB Overhead Tricep Extension (bilateral)", w: [
+      { name: "Seated DB Overhead Tricep Extension (bilateral)", tut: { down: 3, pause: 2 }, w: [
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives every rep · elbows tight · full overhead stretch" },
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives · 2 sec stretch pause overhead · controlled" },
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives · squeeze at lockout · elbows stay narrow" },
@@ -242,7 +242,7 @@
         { sets:"3×10 each", rest:"—", tag:"TRI-SET", note:"anchor 3×10 each · superset week — minimal rest into the next move" },
       ]},
       /* Ex 4 — TRI-SET B · TUT ANCHOR (3 sec negatives, fixed every week) */
-      { name: "DB Step-Up (to bench height)", w: [
+      { name: "DB Step-Up (to bench height)", tut: { down: 3, pause: 2 }, w: [
         { sets:"3×10 each", rest:"—", tag:"TRI-SET", note:"3 sec negatives on the lower every step · heel drive throughout" },
         { sets:"3×10 each", rest:"—", tag:"TRI-SET", note:"3 sec negatives · 2 sec hold at top · drive through heel" },
         { sets:"3×10 each", rest:"—", tag:"TRI-SET", note:"3 sec negatives · controlled step · no momentum" },
@@ -331,7 +331,7 @@
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"anchor 3×10 · superset week — minimal rest into the next move" },
       ]},
       /* Ex 4 — TRI-SET B · TUT ANCHOR (2 sec pause + slow negatives, fixed every week) */
-      { name: "Prone Incline DB Rear Delt Fly (face down on incline bench)", w: [
+      { name: "Prone Incline DB Rear Delt Fly (face down on incline bench)", tut: { down: 3, pause: 2 }, w: [
         { sets:"3×12", rest:"—", tag:"TRI-SET", note:"2 sec peak squeeze + 3 sec negatives · elbows slightly soft · stay prone" },
         { sets:"3×12", rest:"—", tag:"TRI-SET", note:"2 sec peak squeeze + 3 sec negatives · controlled arc · light load" },
         { sets:"3×12", rest:"—", tag:"TRI-SET", note:"2 sec peak squeeze + 3 sec negatives · rear delt isolation" },
@@ -434,7 +434,7 @@
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"anchor 3×10 · superset week — minimal rest into the next move on the same bar" },
       ]},
       /* Ex 4 — TRI-SET B · TUT ANCHOR (3 sec negatives, fixed every week) */
-      { name: "Barbell Reverse Lunge (bar on back)", w: [
+      { name: "Barbell Reverse Lunge (bar on back)", tut: { down: 3, pause: 2 }, w: [
         { sets:"3×10 each", rest:"—", tag:"TRI-SET", note:"3 sec negatives on the lower · same bar on back · drive through front heel" },
         { sets:"3×10 each", rest:"—", tag:"TRI-SET", note:"3 sec negatives · 2 sec pause at the bottom · controlled step back" },
         { sets:"3×10 each", rest:"—", tag:"TRI-SET", note:"3 sec negatives · no momentum · torso tall" },
@@ -525,7 +525,7 @@
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"anchor 3×10 · superset week — minimal rest into the next move on the same EZ-bar" },
       ]},
       /* Ex 4 — TRI-SET B · TUT ANCHOR (3 sec negatives, fixed every week) */
-      { name: "EZ-Bar Skull Crusher (same EZ-bar)", w: [
+      { name: "EZ-Bar Skull Crusher (same EZ-bar)", tut: { down: 3, pause: 2 }, w: [
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives every rep · same EZ-bar · elbows stacked · controlled to forehead" },
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives · 2 sec stretch pause behind head · elbows tight" },
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives · squeeze at lockout · no elbow flare" },
@@ -616,7 +616,7 @@
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"anchor 3×10 · superset week — minimal rest into the next move on the same bar" },
       ]},
       /* Ex 4 — TRI-SET B · TUT ANCHOR (3 sec negatives, fixed every week) */
-      { name: "Barbell Shrug (same bar)", w: [
+      { name: "Barbell Shrug (same bar)", tut: { down: 3, pause: 2 }, w: [
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives every rep · same bar · shrug straight up · 2 sec peak squeeze" },
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives · full depression at the bottom · no rolling" },
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives · squeeze traps hard at top" },
@@ -707,7 +707,7 @@
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"anchor 3×10 · superset week — minimal rest into the next move on the same bar" },
       ]},
       /* Ex 4 — TRI-SET B · TUT ANCHOR (3 sec negatives, fixed every week) */
-      { name: "Barbell Front Raise (same bar)", w: [
+      { name: "Barbell Front Raise (same bar)", tut: { down: 3, pause: 2 }, w: [
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives every rep · same bar · raise to eye level · no swing" },
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives · 2 sec hold at top · strict front delt" },
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives · controlled · no momentum" },
@@ -811,7 +811,7 @@
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"anchor 3×10 · superset week — minimal rest, swap the attachment for the next move" },
       ]},
       /* Ex 4 — TRI-SET B · TUT ANCHOR (3 sec negatives, fixed every week) */
-      { name: "Cable Incline Press (same column)", w: [
+      { name: "Cable Incline Press (same column)", tut: { down: 3, pause: 2 }, w: [
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives every rep · same column · drive up · constant tension" },
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives · 2 sec stretch pause · controlled" },
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives · squeeze at lockout · upper-chest focus" },
@@ -902,7 +902,7 @@
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"anchor 3×10 · superset week — minimal rest, swap the attachment for the next move" },
       ]},
       /* Ex 4 — TRI-SET B · TUT ANCHOR (3 sec negatives, fixed every week) */
-      { name: "Cable Straight-Arm Pulldown (same column)", w: [
+      { name: "Cable Straight-Arm Pulldown (same column)", tut: { down: 3, pause: 2 }, w: [
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives every rep · same column · lats drive the bar down · constant tension" },
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives · 2 sec stretch pause overhead · controlled" },
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives · squeeze the lats at the bottom · soft elbows" },
@@ -993,7 +993,7 @@
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"anchor 3×10 · superset week — minimal rest, swap the attachment for the next move" },
       ]},
       /* Ex 4 — TRI-SET B · TUT ANCHOR (3 sec negatives, fixed every week) */
-      { name: "Cable Glute Kickback (same column)", w: [
+      { name: "Cable Glute Kickback (same column)", tut: { down: 3, pause: 2 }, w: [
         { sets:"3×10 each", rest:"—", tag:"TRI-SET", note:"3 sec negatives every rep · same column · drive heel back · 2 sec glute squeeze" },
         { sets:"3×10 each", rest:"—", tag:"TRI-SET", note:"3 sec negatives · 2 sec hold at full extension · controlled" },
         { sets:"3×10 each", rest:"—", tag:"TRI-SET", note:"3 sec negatives · no swing · glute focus" },
@@ -1084,7 +1084,7 @@
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"anchor 3×10 · superset week — minimal rest, swap the attachment for the next move" },
       ]},
       /* Ex 4 — TRI-SET B · TUT ANCHOR (3 sec negatives, fixed every week) */
-      { name: "Cable Front Raise (same column)", w: [
+      { name: "Cable Front Raise (same column)", tut: { down: 3, pause: 2 }, w: [
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives every rep · same column · raise to eye level · no swing" },
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives · 2 sec hold at top · strict front delt" },
         { sets:"3×10", rest:"—", tag:"TRI-SET", note:"3 sec negatives · controlled · no momentum" },
