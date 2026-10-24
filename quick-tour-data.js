@@ -204,13 +204,13 @@
       eyebrow:'Module 8 · ⭐ Make it yours',
       title:"Build Your Own workout",
       tagline:"Want a custom session? Search the library, pick exercises, set your reps, save — and run it like any program.",
-      scene:{glyph:'🔧',caption:'Search → add exercises → Review (N) → set sets/reps → Create → Start',color:'rgba(52,211,153,0.32)',glow:'rgba(34,211,238,0.12)'},
-      narration:"Tap Build Your Own. Name your workout, then search or filter 500+ exercises by muscle group. Tap to add each one — they check off right in the list, no separate panel fighting you for scroll room. When you're ready, tap the “Review (N)” pill at the bottom to pull up your picks, set sets/reps/tempo (and drop, superset, or cluster if you want them) for each, then hit Create Workout. It's saved under My Custom Workouts, and Start logs sets exactly like every built-in program.",
+      scene:{glyph:'🔧',caption:'Search → add exercises → Review (N) → Save → Start',color:'rgba(212,175,55,0.3)',glow:'rgba(212,175,55,0.14)'},
+      narration:"Tap Build Your Own. It opens straight on the exercise search: type, or filter by muscle, and tap exercises to add them — they check off right in the list. When you're ready, tap the “Review (N)” pill at the bottom. Set sets, reps and tempo for each pick (and a drop, superset or cluster if you want one). The name is already filled in from the muscles you chose — keep it or type your own — then hit Save workout and tap Start workout right there. Your saved workouts sit in the My custom workouts row at the top, and Start logs sets exactly like every built-in program.",
       steps:[
         {tx:"Dashboard → <span class='tap'>🔧 Build Your Own</span> tile."},
-        {tx:"Name it, then <b>search or filter by muscle</b> and tap exercises to add — added ones get a ✓."},
-        {tx:"Tap the <span class='tap'>Review (N) →</span> pill to open your picks, set <b>sets, reps & intensifiers</b> per exercise, then tap <span class='tap'>✅ Create Workout</span>."},
-        {tx:"Tap <span class='tap'>▶ Start Workout</span> — full set logging & PRs, just like the rest."}
+        {tx:"<b>Search or filter by muscle</b> and tap exercises to add — added ones get a ✓."},
+        {tx:"Tap the <span class='tap'>Review (N) →</span> pill: set <b>sets, reps & intensifiers</b> per exercise. The <b>name is filled in</b> from your main muscles — change it if you like, pick a program or collection if you want, then tap <span class='tap'>Save workout</span>."},
+        {tx:"Tap <span class='tap'>▶ Start workout</span> in the same sheet — full set logging & PRs, just like the rest. Saved ones live under <b>My custom workouts</b> at the top of the page."}
       ],
       cta:{ico:'🔧',label:'Try it now',name:'Build a custom workout',href:'build-workout.html'}
     },

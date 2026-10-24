@@ -18,46 +18,53 @@
 <script>/* MC head boot (audit G-02/G-03) — PWA cold-launch guard + theme, before first paint */try{if((window.navigator.standalone===true||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches))&&!sessionStorage.getItem('mc_launched')){sessionStorage.setItem('mc_launched','1');var _p=(location.pathname.split('/').pop()||'').toLowerCase();if(_p!==''&&_p!=='index.html'&&_p!=='dashboard.html'){var _hasLive=false;try{var _sess=JSON.parse(localStorage.getItem('mc_session_v1')||'{}');var _rec=_sess[_p.replace('.html','')];_hasLive=!!(_rec&&(Date.now()-(_rec.lastTs||0))<43200000);}catch(e){}if(!_hasLive)location.replace('dashboard.html');}}}catch(e){}try{var _lk=document.documentElement.getAttribute('data-theme-lock');var _l=!_lk&&localStorage.getItem('mc_theme_mode')==='light';if(_l)document.documentElement.setAttribute('data-theme','light');var _m=document.querySelector('meta[name="theme-color"]');if(_m)_m.setAttribute('content',_l?'#f5f2ec':'#0a0a0a');}catch(e){}try{var _erK='mc_errors_v1',_erMax=20;function _erRec(e){try{var a=JSON.parse(localStorage.getItem(_erK)||'[]');if(!Array.isArray(a))a=[];a.unshift(e);if(a.length>_erMax)a.length=_erMax;localStorage.setItem(_erK,JSON.stringify(a));}catch(_){}}window.addEventListener('error',function(ev){_erRec({t:Date.now(),k:'error',m:(ev&&ev.message)||'Unknown error',s:(ev&&ev.filename)||'',l:(ev&&ev.lineno)||0,p:(location.pathname.split('/').pop()||'')});});window.addEventListener('unhandledrejection',function(ev){var r=ev&&ev.reason;_erRec({t:Date.now(),k:'unhandledrejection',m:(r&&(r.message||String(r)))||'Unhandled rejection',p:(location.pathname.split('/').pop()||'')});});}catch(e){}</script>
 <!-- MC:HEAD END -->
 <style>
+/* Flagship readiness I: the builder on the warm ink ramp with the one gold
+   accent. The blue header, teal/cyan gradients and sky-blue labels are gone;
+   superset violet and cluster cyan stay, because they are the app's set-type
+   grammar on every card. Controls meet the owner's 48px / 8px / 13px floor. */
 *{box-sizing:border-box;margin:0;padding:0;font-family:"Segoe UI",system-ui,sans-serif;}
 body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#ede7d9;}
-.header{background:linear-gradient(90deg,#0d1f3c,#050d1a);padding:60px 20px 22px;border-bottom:1px solid rgba(212,175,55,0.15);position:relative;}
+.header{background:linear-gradient(160deg,rgba(212,175,55,0.10),#0b0b0a 70%);padding:60px 20px 18px;border-bottom:1px solid rgba(212,175,55,0.15);position:relative;}
 .back-link{position:absolute;top:18px;left:18px;color:#d4af37;text-decoration:none;font-size:13px;font-weight:700;background:rgba(212,175,55,0.12);padding:6px 14px;border-radius:20px;border:1px solid rgba(212,175,55,0.35);min-height:44px;display:inline-flex;align-items:center;box-sizing:border-box;}
 .header-inner{max-width:680px;margin:0 auto;}
 .eyebrow{font-size:11px;font-weight:800;letter-spacing:0.25em;color:#d4af37;text-transform:uppercase;margin-bottom:8px;}
-.title{font-size:var(--fs-title);font-weight:var(--fw-black);color:#fff;margin-bottom:10px;}
+.title{font-size:var(--fs-title);font-weight:var(--fw-black);color:#fff;margin-bottom:8px;}
 .subtitle{font-size:13px;color:var(--muted);font-weight:600;}
 .content{max-width:680px;margin:0 auto;padding:0 16px;}
-.sec-label{font-size:11px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;color:#34d399;margin:22px 0 10px;}
-.name-input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:13px 16px;color:#ede7d9;font-size:15px;font-weight:700;outline:none;}
+.bw-sec{font-size:12px;font-weight:900;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px;}
+.name-input{width:100%;min-height:48px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:13px 16px;color:#ede7d9;font-size:15px;font-weight:700;outline:none;}
 .name-input::placeholder{color:var(--muted2);}
-.search-wrap{position:sticky;top:0;z-index:10;background:#050d1a;padding:12px 0 8px;}
+/* My workouts: one row that opens, so the page opens on search, not a list */
+.bw-mine{width:100%;min-height:48px;margin-top:14px;display:flex;align-items:center;gap:10px;padding:0 14px;border-radius:12px;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);color:var(--text);font:inherit;font-size:14px;font-weight:800;cursor:pointer;text-align:left;}
+.bw-mine .bw-mine-n{margin-left:auto;font-size:13px;color:var(--muted);font-weight:700;}
+.bw-mine .bw-chev{color:var(--muted);transition:transform .15s;}
+.bw-mine[aria-expanded="true"] .bw-chev{transform:rotate(90deg);}
+#savedList{margin-top:8px;}
+#savedList[hidden]{display:none;}
+.search-wrap{position:sticky;top:0;z-index:10;background:#0a0a0a;padding:12px 0 8px;}
 .search-rel{position:relative;}
 .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
-.search-box{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 16px 12px 40px;color:#ede7d9;font-size:14px;font-weight:600;outline:none;}
+.search-box{width:100%;min-height:48px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 16px 12px 40px;color:#ede7d9;font-size:15px;font-weight:600;outline:none;}
 .search-box::placeholder{color:var(--muted2);}
-.filter-wrap{display:flex;gap:6px;overflow-x:auto;padding:10px 0 6px;-webkit-overflow-scrolling:touch;}
+.filter-wrap{display:flex;gap:8px;overflow-x:auto;padding:10px 0 6px;-webkit-overflow-scrolling:touch;}
 .filter-wrap::-webkit-scrollbar{display:none;}
-.filter-btn{flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:var(--muted);font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;letter-spacing:0.04em;min-height:44px;display:inline-flex;align-items:center;box-sizing:border-box;}
-.filter-btn.active{background:rgba(212,175,55,0.2);border-color:rgba(212,175,55,0.5);color:#fbbf24;}
-.results-count{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:8px 0;}
-.ex-list{display:flex;flex-direction:column;gap:6px;}
-.ex-row{background:#0d1f3c;border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
-.ex-row:active{background:#112240;}
-.ex-row.added{border-color:rgba(52,211,153,0.5);background:rgba(52,211,153,0.08);}
+.filter-btn{flex-shrink:0;padding:0 16px;border-radius:24px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:var(--muted);font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;letter-spacing:0.02em;min-height:48px;display:inline-flex;align-items:center;box-sizing:border-box;}
+.filter-btn.active{background:rgba(212,175,55,0.18);border-color:rgba(212,175,55,0.5);color:#e6c579;}
+.results-count{font-size:13px;color:var(--muted);font-weight:700;letter-spacing:0.04em;padding:8px 0;}
+.ex-list{display:flex;flex-direction:column;gap:8px;}
+.ex-row{min-height:52px;background:#141312;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.ex-row:active{background:#1c1a17;}
+.ex-row.added{border-color:rgba(212,175,55,0.5);background:rgba(212,175,55,0.08);}
 .ex-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.ex-nm{flex:1;font-size:13px;font-weight:700;color:var(--text);line-height:1.4;}
-.ex-progs{font-size:11px;color:var(--muted2);font-weight:600;margin-top:2px;}
-.ex-add{font-size:18px;font-weight:900;color:#34d399;width:24px;text-align:center;flex-shrink:0;}
-.ex-row.added .ex-add{color:#34d399;}
+.ex-nm{flex:1;font-size:14px;font-weight:700;color:var(--text);line-height:1.4;}
+.ex-add{font-size:20px;font-weight:900;color:#d4af37;width:28px;text-align:center;flex-shrink:0;}
 .empty-state{text-align:center;padding:40px 20px;color:var(--muted2);}
-/* selected tray — a small "Review (N)" pill (always visible once something is
-   selected, sits above the fixed bottom nav) opens a full bottom-sheet modal
-   holding the actual config UI, instead of a config panel permanently fighting
-   the exercise search list for scroll space. */
+/* "Review (N) →" — opens the sheet that holds the plan AND the save step */
 .review-pill{position:fixed;left:50%;transform:translateX(-50%);z-index:150;
-  display:flex;align-items:center;gap:8px;padding:12px 20px;border-radius:26px;
-  background:linear-gradient(90deg,#22d3ee,#34d399);color:#04121f;
-  font-size:14px;font-weight:900;letter-spacing:0.02em;border:none;cursor:pointer;
+  display:flex;align-items:center;gap:8px;min-height:48px;padding:0 22px;border-radius:26px;
+  background:#d4af37;color:#141312;
+  font-size:15px;font-weight:900;letter-spacing:0.02em;border:none;cursor:pointer;
   box-shadow:0 6px 22px rgba(0,0,0,0.45);-webkit-tap-highlight-color:transparent;}
 .review-pill:active{transform:translateX(-50%) scale(0.97);}
 .bw-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,0.85);
@@ -65,75 +72,107 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#ede7d9;}
   display:flex;align-items:flex-end;justify-content:center;
   opacity:0;pointer-events:none;transition:opacity 0.2s;}
 .bw-overlay.open{opacity:1;pointer-events:auto;}
-.tray{width:100%;max-width:680px;background:#050d1a;border-top:1px solid rgba(52,211,153,0.25);
+.tray{width:100%;max-width:680px;background:#0b0b0a;border-top:1px solid rgba(212,175,55,0.25);
   border-radius:22px 22px 0 0;padding:8px 16px calc(16px + env(safe-area-inset-bottom,0px));
-  box-shadow:0 -8px 30px rgba(0,0,0,0.5);max-height:88vh;overflow-y:auto;
+  box-shadow:0 -8px 30px rgba(0,0,0,0.5);max-height:90vh;overflow-y:auto;
   transform:translateY(16px);transition:transform 0.2s;}
 .bw-overlay.open .tray{transform:translateY(0);}
 .bw-handle{width:36px;height:4px;background:rgba(255,255,255,0.18);border-radius:2px;
+  /* the 12px padding is tap area, not bar: paint the 4px bar only */
+  background-clip:content-box;
   margin:0 auto 10px;padding:12px 0;box-sizing:content-box;cursor:pointer;
   -webkit-tap-highlight-color:transparent;}
 .tray-inner{max-width:680px;margin:0 auto;}
 .tray-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.tray-title{font-size:12px;font-weight:900;letter-spacing:0.06em;color:#34d399;text-transform:uppercase;}
-.tray-clear{font-size:11px;font-weight:700;color:var(--muted);background:none;border:none;cursor:pointer;}
-.create-btn{width:100%;margin-top:10px;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:900;letter-spacing:0.03em;cursor:pointer;background:linear-gradient(90deg,#22d3ee,#34d399);color:#04121f;-webkit-tap-highlight-color:transparent;}
+.tray-title{font-size:13px;font-weight:900;letter-spacing:0.06em;color:#e6c579;text-transform:uppercase;}
+.tray-clear{min-height:48px;padding:0 12px;font-size:13px;font-weight:700;color:var(--muted);background:none;border:none;cursor:pointer;}
+.create-btn{width:100%;min-height:52px;margin-top:12px;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:900;letter-spacing:0.03em;cursor:pointer;background:#d4af37;color:#141312;-webkit-tap-highlight-color:transparent;}
 .create-btn:disabled{opacity:0.4;cursor:not-allowed;filter:grayscale(0.5);}
 .create-btn:active:not(:disabled){transform:scale(0.98);}
-.sel-list{display:flex;flex-direction:column;gap:6px;max-height:34vh;overflow-y:auto;}
-.sel-item{display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:9px 10px;}
+.sel-list{display:flex;flex-direction:column;gap:8px;max-height:40vh;overflow-y:auto;}
+.sel-item{display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px;}
 .sel-top{display:flex;align-items:center;gap:8px;}
-.sel-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-.sel-nm{flex:1;font-size:12px;font-weight:700;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.sel-inp{width:48px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 6px;color:#ede7d9;font-size:12px;font-weight:700;text-align:center;outline:none;}
-.sel-sel{flex:1 1 96px;min-width:96px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 8px;color:#ede7d9;font-size:12px;font-weight:700;outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;}
-.sel-sel option{background:#0d1f3c;color:#ede7d9;}
-.sel-x{font-size:16px;color:#f87171;background:none;border:none;cursor:pointer;padding:0 4px;flex-shrink:0;}
+.sel-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.sel-nm{flex:1;font-size:14px;font-weight:700;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sel-inp{width:56px;min-height:48px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:6px;color:#ede7d9;font-size:15px;font-weight:700;text-align:center;outline:none;}
+.sel-sel{flex:1 1 120px;min-width:120px;min-height:48px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:6px 10px;color:#ede7d9;font-size:13px;font-weight:700;outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;}
+.sel-sel option{background:#141312;color:#ede7d9;}
+.sel-x{width:48px;height:48px;font-size:18px;color:#f87171;background:none;border:none;cursor:pointer;flex-shrink:0;}
 /* reorder controls — let any two exercises be placed adjacent so the user
    chooses which pair forms a superset, instead of being locked to a neighbour */
-.sel-move{font-size:12px;line-height:1;color:#a8a196;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);border-radius:7px;padding:5px 7px;cursor:pointer;flex-shrink:0;font-family:inherit;}
-.sel-move:hover:not(:disabled){border-color:#22d3ee;color:#67e8f9;}
+.sel-move{width:48px;height:48px;font-size:14px;line-height:1;color:#a8a196;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);border-radius:10px;cursor:pointer;flex-shrink:0;font-family:inherit;}
+.sel-move:hover:not(:disabled){border-color:rgba(212,175,55,0.5);color:#e6c579;}
 .sel-move:disabled{opacity:0.3;cursor:not-allowed;}
-.sel-hint{font-size:11px;color:var(--muted);font-weight:600;line-height:1.5;margin-top:9px;}
-.sel-hint b{color:#a855f7;}
-.sel-lbl{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;}
-/* superset + drop-set controls */
-/* Off (default) state is a neutral, clearly-inactive "opt in" button so a
-   freshly-added exercise never *looks* like it's already a superset. The
-   purple ⚡ active look is reserved for when the link is explicitly toggled on. */
-.sel-ss{font-size:11px;font-weight:800;border-radius:8px;padding:5px 9px;cursor:pointer;font-family:inherit;flex-shrink:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);color:#a8a196;}
+.sel-hint{font-size:13px;color:var(--muted);font-weight:600;line-height:1.5;margin-top:10px;}
+.sel-hint b{color:#c084fc;}
+.sel-lbl{font-size:13px;color:var(--muted);font-weight:700;}
+/* superset + drop-set controls. Off is a neutral opt-in; the violet ⚡ look
+   is reserved for a link that is on, the same violet as a superset card. */
+.sel-ss{min-height:48px;font-size:13px;font-weight:800;border-radius:10px;padding:0 12px;cursor:pointer;font-family:inherit;flex-shrink:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);color:#a8a196;}
 .sel-ss:hover{border-color:rgba(168,85,247,0.5);color:#c084fc;}
 .sel-ss.on{background:#a855f7;border-color:#a855f7;color:#0a0810;}
-.sel-sshint{font-size:11px;color:var(--muted2);flex-shrink:0;padding:0 4px;font-weight:800;}
 .sel-item.ss-linked{border-color:rgba(168,85,247,0.4);background:rgba(168,85,247,0.07);}
-.sel-sslink{font-size:10px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:#c084fc;}
+.sel-sslink{font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:#c084fc;}
 .sel-drops{align-items:center;}
-.sel-drop{flex:1 1 130px;min-width:130px;}
-.sel-dropadd{font-size:11px;font-weight:800;border-radius:8px;padding:6px 9px;cursor:pointer;font-family:inherit;flex-shrink:0;background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.3);color:#67e8f9;}
-.sel-grouptag{font-size:10px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#fbbf24;}
-.cluster-toggle{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#22d3ee;cursor:pointer;flex-shrink:0;}
-.cluster-toggle input[type=checkbox]{accent-color:#22d3ee;width:15px;height:15px;cursor:pointer;}
-.cluster-config{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;width:100%;}
-.cluster-plus{font-size:13px;font-weight:700;color:#22d3ee;}
-.cluster-rep{width:38px;min-width:38px;}
-.cluster-count{flex:0 0 auto;min-width:80px;}
+.sel-drop{flex:1 1 140px;min-width:140px;}
+.sel-dropadd{min-height:48px;font-size:13px;font-weight:800;border-radius:10px;padding:0 12px;cursor:pointer;font-family:inherit;flex-shrink:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);color:#cfc9bf;}
+.sel-grouptag{font-size:12px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#e6c579;}
+.cluster-toggle{display:flex;align-items:center;gap:8px;min-height:48px;font-size:13px;font-weight:700;color:#22d3ee;cursor:pointer;flex-shrink:0;}
+.cluster-toggle input[type=checkbox]{accent-color:#22d3ee;width:22px;height:22px;cursor:pointer;}
+.cluster-config{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px;width:100%;}
+.cluster-plus{font-size:14px;font-weight:700;color:#22d3ee;}
+.cluster-rep{width:48px;min-width:48px;}
+.cluster-count{flex:0 0 auto;min-width:120px;}
 .cluster-editor{flex-direction:column;align-items:flex-start;}
+/* the save step, at the foot of the sheet */
+.bw-save{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;gap:8px;}
+.bw-save label{font-size:12px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-top:4px;}
+.bw-save label span{letter-spacing:0;text-transform:none;font-weight:700;}
+.bw-done{display:none;flex-direction:column;gap:8px;margin-top:4px;}
+.bw-done.show{display:flex;}
+.bw-done-msg{font-size:15px;font-weight:800;color:var(--text);}
+.bw-done-row{display:flex;gap:8px;}
+.bw-done-row>*{flex:1;}
 /* saved workouts */
-.saved-card{background:#0d1f3c;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;margin-bottom:8px;}
-.saved-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
-.saved-name{flex:1;font-size:15px;font-weight:800;color:#fff;}
-.saved-meta{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:10px;}
+.saved-card{background:#141312;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;margin-bottom:8px;}
+.saved-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
+.saved-name{flex:1;font-size:15px;font-weight:800;color:var(--text);}
+.saved-meta{font-size:13px;color:var(--muted);font-weight:600;margin-bottom:10px;}
 .saved-actions{display:flex;gap:8px;}
-.run-btn{flex:1;text-align:center;text-decoration:none;padding:10px;border-radius:10px;background:linear-gradient(90deg,#22d3ee,#34d399);color:#04121f;font-size:13px;font-weight:900;}
-.del-btn{padding:10px 14px;border-radius:10px;background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.35);color:#f87171;font-size:13px;font-weight:800;cursor:pointer;}
-.no-saved{font-size:12px;color:var(--muted);font-weight:600;padding:6px 0 14px;}
-select.name-input{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%2364748b' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;}
-select.name-input option{background:#0d1f3c;color:#ede7d9;}
-.assign-hint{font-size:11px;color:var(--muted);font-weight:600;line-height:1.5;margin-top:7px;}
-.assign-hint strong{color:#7dd3fc;}
-.saved-flag{font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:6px;background:rgba(56,189,248,0.16);color:#7dd3fc;border:1px solid rgba(56,189,248,0.3);}
-.saved-flag.prog{background:rgba(52,211,153,0.14);color:#34d399;border-color:rgba(52,211,153,0.3);}
-.saved-flag.col{background:rgba(168,85,247,0.16);color:#d8b4fe;border-color:rgba(168,85,247,0.32);}
+.run-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;min-height:48px;text-align:center;text-decoration:none;padding:0 12px;border-radius:12px;background:#d4af37;color:#141312;font-size:14px;font-weight:900;border:none;cursor:pointer;font-family:inherit;}
+.del-btn{min-height:48px;padding:0 14px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);color:#cfc9bf;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;}
+.del-btn.danger{background:rgba(248,113,113,0.12);border-color:rgba(248,113,113,0.35);color:#f87171;}
+.no-saved{font-size:13px;color:var(--muted);font-weight:600;padding:6px 0 14px;}
+select.name-input{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%23797267' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;}
+select.name-input option{background:#141312;color:#ede7d9;}
+.assign-hint{font-size:13px;color:var(--muted);font-weight:600;line-height:1.5;}
+.assign-hint strong,.assign-hint a{color:#e6c579;}
+.assign-hint a{display:inline-flex;align-items:center;min-height:48px;font-weight:800;}
+.saved-flag{font-size:12px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,0.06);color:#cfc9bf;border:1px solid rgba(255,255,255,0.12);}
+.saved-flag.prog{background:rgba(212,175,55,0.12);color:#e6c579;border-color:rgba(212,175,55,0.3);}
+/* Sand (light) — the builder-only classes; shared ones are in mc-light.css */
+html[data-theme="light"] .header{background:linear-gradient(160deg,rgba(212,175,55,0.14),#f5f2ec 70%);border-bottom-color:rgba(28,26,23,0.08);}
+html[data-theme="light"] .search-wrap{background:#f5f2ec;}
+html[data-theme="light"] .bw-mine{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.12);}
+html[data-theme="light"] .ex-row.added{border-color:rgba(130,105,25,0.45);background:rgba(212,175,55,0.12);}
+html[data-theme="light"] .filter-btn.active{background:rgba(212,175,55,0.16);border-color:rgba(130,105,25,0.45);color:#826919;}
+html[data-theme="light"] .tray-title,
+html[data-theme="light"] .sel-grouptag,
+html[data-theme="light"] .assign-hint strong,
+html[data-theme="light"] .assign-hint a,
+html[data-theme="light"] .saved-flag.prog{color:#826919;}
+html[data-theme="light"] .bw-save{border-top-color:rgba(28,26,23,0.1);}
+html[data-theme="light"] .bw-handle{background-color:rgba(28,26,23,0.2);}
+html[data-theme="light"] .saved-flag{background:rgba(28,26,23,0.05);border-color:rgba(28,26,23,0.12);color:#4a453f;}
+html[data-theme="light"] .del-btn{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);color:#4a453f;}
+html[data-theme="light"] .del-btn.danger{color:#b91c1c;border-color:rgba(185,28,28,0.3);background:rgba(185,28,28,0.06);}
+html[data-theme="light"] .sel-dropadd,
+html[data-theme="light"] .sel-move,
+html[data-theme="light"] .sel-ss:not(.on){background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);color:#4a453f;}
+html[data-theme="light"] .sel-sslink,
+html[data-theme="light"] .sel-hint b{color:#7c3aed;}
+html[data-theme="light"] .cluster-toggle,
+html[data-theme="light"] .cluster-plus{color:#0e7490;}
 </style>
 <link rel="stylesheet" href="base.css?v=68"/>
 <link rel="stylesheet" href="mc-nav.css"/>
@@ -151,24 +190,17 @@ select.name-input option{background:#0d1f3c;color:#ede7d9;}
 </div>
 
 <div class="content">
-  <div class="sec-label">My Custom Workouts</div>
-  <div id="savedList"></div>
-
-  <div class="sec-label">Create a New Workout</div>
-  <input type="text" class="name-input" id="wkName" placeholder="Workout name (e.g. Sunday Push)" maxlength="48"/>
-
-  <div class="sec-label">Assign to program <span style="color:var(--muted);font-weight:700;">— optional</span></div>
-  <select class="name-input" id="wkProgram"></select>
-  <div class="assign-hint" id="assignHint">Leave as <strong>Bonus</strong> and this workout is auto-collected into your <strong>Bonus Workouts</strong> card — no manual linking.</div>
-
-  <div class="sec-label">Add to collection <span style="color:var(--muted);font-weight:700;">— optional</span></div>
-  <select class="name-input" id="wkCollection"></select>
-  <div class="assign-hint">Group it into a <strong>Collection</strong> (folder). <a href="collections.html" style="color:#7dd3fc;">Manage collections →</a></div>
+  <!-- Flagship readiness I: the page opens on search. Saved workouts are one
+       row that opens, and the save details live in the review sheet. -->
+  <button type="button" class="bw-mine" id="mineToggle" aria-expanded="false" aria-controls="savedList" onclick="toggleMine()">
+    <span>My custom workouts</span><span class="bw-mine-n" id="mineCount"></span><span class="bw-chev" aria-hidden="true">›</span>
+  </button>
+  <div id="savedList" hidden></div>
 
   <div class="search-wrap">
     <div class="search-rel">
       <span class="search-icon">&#128269;</span>
-      <input type="text" class="search-box" id="searchBox" placeholder="Search 450+ exercises..." oninput="renderList()"/>
+      <input type="search" class="search-box" id="searchBox" placeholder="Search exercises..." oninput="renderList()" aria-label="Search exercises" enterkeyhint="search"/>
     </div>
     <div class="filter-wrap" id="filterWrap"></div>
   </div>
@@ -179,24 +211,45 @@ select.name-input option{background:#0d1f3c;color:#ede7d9;}
 </div>
 
 <!-- "Review (N) →" pill: always visible once something is selected, opens the
-     bottom-sheet below instead of a config panel permanently docked on
-     screen and fighting the exercise search list for scroll space. -->
+     sheet below: the plan, then the save step. -->
 <button class="review-pill" id="reviewPill" style="display:none;" onclick="openReviewSheet()">
   Review <span id="pillCount">0</span> <span aria-hidden="true">→</span>
 </button>
 
 <!-- selected-exercises bottom sheet -->
 <div class="bw-overlay" id="trayOverlay" onclick="if(event.target===this)closeReviewSheet();">
-  <div class="tray" id="tray">
+  <div class="tray" id="tray" role="dialog" aria-modal="true" aria-labelledby="trayTitle">
     <div class="bw-handle" id="trayHandle"></div>
     <div class="tray-inner">
-      <div class="tray-hd">
-        <div class="tray-title" id="trayTitle">0 exercises selected</div>
-        <button class="tray-clear" onclick="clearSelected()">Clear</button>
+      <div id="trayPlan">
+        <div class="tray-hd">
+          <div class="tray-title" id="trayTitle">0 exercises selected</div>
+          <button class="tray-clear" onclick="clearSelected()">Clear</button>
+        </div>
+        <div class="sel-list" id="selList"></div>
+        <div class="sel-hint" id="selHint" style="display:none;">Tip: use <b>▲▼</b> to reorder, then <b>🔗 Make superset</b> to link <i>any</i> two exercises into a superset / tri-set.</div>
+
+        <div class="bw-save">
+          <label for="wkName">Name</label>
+          <input type="text" class="name-input" id="wkName" placeholder="Workout name (e.g. Sunday Push)" maxlength="48" enterkeyhint="done"/>
+          <label for="wkProgram">Program <span>— optional</span></label>
+          <select class="name-input" id="wkProgram"></select>
+          <div class="assign-hint" id="assignHint">Leave as <strong>Bonus</strong> and this workout is auto-collected into your <strong>Bonus Workouts</strong> card — no manual linking.</div>
+          <label for="wkCollection">Collection <span>— optional</span></label>
+          <select class="name-input" id="wkCollection"></select>
+          <div class="assign-hint">Group it into a <strong>Collection</strong> (folder). <a href="collections.html">Manage collections →</a></div>
+          <button class="create-btn" id="createBtn" onclick="createWorkout()">Save workout</button>
+        </div>
       </div>
-      <div class="sel-list" id="selList"></div>
-      <div class="sel-hint" id="selHint" style="display:none;">Tip: use <b>▲▼</b> to reorder, then <b>🔗 Make superset</b> to link <i>any</i> two exercises into a superset / tri-set.</div>
-      <button class="create-btn" id="createBtn" onclick="createWorkout()">✅ Create Workout</button>
+
+      <!-- after Save: start it from here, without leaving the sheet -->
+      <div class="bw-done" id="trayDone" role="status">
+        <div class="bw-done-msg" id="doneMsg">Saved.</div>
+        <div class="bw-done-row">
+          <a class="run-btn" id="doneStart" href="#">▶ Start workout</a>
+        </div>
+        <button class="del-btn" type="button" onclick="buildAnother()">Build another</button>
+      </div>
     </div>
   </div>
 </div>
@@ -427,6 +480,9 @@ function buildFilters(){
   }).join('');
 }
 function setFilter(m){ activeFilter = m; buildFilters(); renderList(); }
+// One count (flagship readiness I): the same rule as Home's library tile,
+// computed, so the placeholder, the results line and the tile agree.
+function libraryCount(){ return EXERCISES.filter(visible).length; }
 
 function isSelected(name){ return selected.some(function(s){ return s.name===name; }); }
 
@@ -515,6 +571,7 @@ function openReviewSheet(){
 }
 function closeReviewSheet(){
   document.getElementById('trayOverlay').classList.remove('open');
+  resetSheet();
 }
 (function(){
   var handle = document.getElementById('trayHandle');
@@ -545,8 +602,8 @@ function saveDraft(){
     var name = (document.getElementById('wkName')||{}).value || '';
     var prog = (document.getElementById('wkProgram')||{}).value || '';
     var coll = (document.getElementById('wkCollection')||{}).value || '';
-    if(!selected.length && !name.trim()){ localStorage.removeItem(DRAFT_KEY); return; }
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({ name:name, program:prog, collection:coll, selected:selected, ts:Date.now() }));
+    if(!selected.length && !(nameTouched && name.trim())){ localStorage.removeItem(DRAFT_KEY); return; }
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ name:name, nameTouched:nameTouched, program:prog, collection:coll, selected:selected, ts:Date.now() }));
   }catch(e){}
 }
 function restoreDraft(){
@@ -554,12 +611,28 @@ function restoreDraft(){
     var d = JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');
     if(!d || typeof d!=='object' || !Array.isArray(d.selected)) return;
     selected = d.selected.filter(function(s){ return s && typeof s==='object' && typeof s.name==='string'; });
-    var n = document.getElementById('wkName'); if(n && d.name) n.value = d.name;
+    nameTouched = !!d.nameTouched;
+    var n = document.getElementById('wkName'); if(n && d.name && nameTouched) n.value = d.name;
     var ps = document.getElementById('wkProgram'); if(ps && d.program){ ps.value = d.program; if(typeof updateAssignHint==='function') updateAssignHint(); }
     var cs = document.getElementById('wkCollection'); if(cs && d.collection) cs.value = d.collection;
   }catch(e){}
 }
+// Flagship readiness I: a name from the main muscles ("Chest & Triceps"),
+// filled in until the athlete types their own, so Save needs no typing.
+var nameTouched = false;
+function suggestedName(){
+  var n = {}, order = [];
+  selected.forEach(function(s){ var m = s.muscle || 'Workout'; if(!(m in n)){ n[m] = 0; order.push(m); } n[m]++; });
+  order.sort(function(a, b){ return n[b] - n[a] || order.indexOf(a) - order.indexOf(b); });
+  if(!order.length) return '';
+  return order.length === 1 ? order[0] + ' Day' : order[0] + ' & ' + order[1];
+}
+function syncSuggestedName(){
+  var el = document.getElementById('wkName');
+  if(el && !nameTouched) el.value = suggestedName();
+}
 function renderTray(){
+  syncSuggestedName();
   saveDraft();
   var pill = document.getElementById('reviewPill');
   var pillCount = document.getElementById('pillCount');
@@ -588,26 +661,26 @@ function renderTray(){
     var firstOfGroup = (i===0 || grp[i]!==grp[i-1]);
     var groupTag = (gSize>1 && firstOfGroup) ? '<div class="sel-grouptag">⚡ '+groupLabel(gSize)+'</div>' : '';
     var ssBtn = i===0
-      ? '<span class="sel-sshint" title="The first exercise starts a group">—</span>'
+      ? ''
       : '<button type="button" class="sel-ss'+(ssActive?' on':'')+'" onclick="toggleSuperset('+i+')" title="'
         + (ssActive ? 'Linked as a superset with the exercise above — click to unlink' : 'Link this with the exercise above as a superset (superset → tri-set → giant set)')
         + '">' + (ssActive ? '⚡ Superset' : '🔗 Make superset') + '</button>';
-    var moveBtns = '<button class="sel-move" onclick="moveSel('+i+',-1)" '+(i===0?'disabled':'')+' title="Move up — reorder to pick superset partners">▲</button>'
-      + '<button class="sel-move" onclick="moveSel('+i+',1)" '+(i===selected.length-1?'disabled':'')+' title="Move down — reorder to pick superset partners">▼</button>';
+    var moveBtns = '<button class="sel-move" onclick="moveSel('+i+',-1)" '+(i===0?'disabled':'')+' aria-label="Move up" title="Move up — reorder to pick superset partners">▲</button>'
+      + '<button class="sel-move" onclick="moveSel('+i+',1)" '+(i===selected.length-1?'disabled':'')+' aria-label="Move down" title="Move down — reorder to pick superset partners">▼</button>';
     return '<div class="sel-item'+(ssActive?' ss-linked':'')+'">'
       + groupTag
       + (ssActive?'<div class="sel-sslink">⚡ Linked with '+esc(selected[i-1].name)+'</div>':'')
       + '<div class="sel-top">'
       +   moveBtns
       +   '<div class="sel-nm">'+esc(s.name)+'</div>'
-      +   ssBtn
-      +   '<button class="sel-x" onclick="removeSel('+i+')">✕</button>'
+      +   '<button class="sel-x" onclick="removeSel('+i+')" aria-label="Remove '+esc(s.name)+'">✕</button>'
       + '</div>'
       + '<div class="sel-controls">'
-      +   '<input class="sel-inp" type="number" min="1" max="12" value="'+esc(s.sets)+'" onchange="updSel('+i+',\'sets\',this.value)" title="sets"/>'
+      +   '<input class="sel-inp" type="number" inputmode="numeric" min="1" max="12" value="'+esc(s.sets)+'" onchange="updSel('+i+',\'sets\',this.value)" aria-label="Sets"/>'
       +   '<span class="sel-lbl">sets</span>'
-      +   '<input class="sel-inp" type="text" value="'+esc(s.reps)+'" onchange="updSel('+i+',\'reps\',this.value)" title="reps"/>'
+      +   '<input class="sel-inp" type="text" value="'+esc(s.reps)+'" onchange="updSel('+i+',\'reps\',this.value)" aria-label="Reps"/>'
       +   '<span class="sel-lbl">reps</span>'
+      +   ssBtn
       +   tempoSelect(i, s.tempo)
       +   restSelect(i, s.rest)
       + '</div>'
@@ -624,7 +697,7 @@ function renderTray(){
 window.addEventListener('resize', syncTraySpace);
 
 function createWorkout(){
-  var name = (document.getElementById('wkName').value||'').trim();
+  var name = (document.getElementById('wkName').value||'').trim() || suggestedName();
   // R5 / D-16: in-app notices (mc-sheet.js), not the OS dialog.
   if(!name){ (window.MC_SHEET ? MC_SHEET.alert('Give your workout a name first.') : Promise.resolve(window.alert('Give your workout a name first.'))).then(function(){ document.getElementById('wkName').focus(); }); return; }
   if(!selected.length){ (window.MC_SHEET ? MC_SHEET.alert('Add at least one exercise.') : Promise.resolve(window.alert('Add at least one exercise.'))); return; }
@@ -651,13 +724,27 @@ function createWorkout(){
   setSaved(saved);
   try{ if(window.MC_SYNC && MC_SYNC.push) MC_SYNC.push(); }catch(e){}
   selected = [];
+  nameTouched = false;
   document.getElementById('wkName').value = '';
   try{ localStorage.removeItem(DRAFT_KEY); }catch(e){}
   var ps = document.getElementById('wkProgram'); if(ps){ ps.value=''; updateAssignHint(); }
   var cs = document.getElementById('wkCollection'); if(cs){ cs.value=''; }
   renderList(); renderTray(); renderSaved();
-  window.scrollTo({ top:0, behavior:'smooth' });
+  // Flagship readiness I: build -> save -> start without leaving the sheet.
+  showSaved(wk);
 }
+function showSaved(wk){
+  document.getElementById('trayPlan').style.display = 'none';
+  document.getElementById('doneMsg').textContent = '\u201c' + wk.name + '\u201d saved \u2014 ' + wk.exercises.length + ' exercise' + (wk.exercises.length !== 1 ? 's' : '') + '.';
+  document.getElementById('doneStart').href = 'run-workout.html?id=' + encodeURIComponent(wk.id);
+  document.getElementById('trayDone').classList.add('show');
+  document.getElementById('trayOverlay').classList.add('open');
+}
+function resetSheet(){
+  document.getElementById('trayDone').classList.remove('show');
+  document.getElementById('trayPlan').style.display = '';
+}
+function buildAnother(){ closeReviewSheet(); }
 
 function delWorkout(id){
   var q='Delete this workout?';
@@ -673,10 +760,18 @@ function shareWorkout(id){
   if(w && window.MCShare) MCShare.shareWorkout(w);
 }
 
+function toggleMine(){
+  var b = document.getElementById('mineToggle'), el = document.getElementById('savedList');
+  var open = b.getAttribute('aria-expanded') !== 'true';
+  b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  el.hidden = !open;
+}
 function renderSaved(){
   var el = document.getElementById('savedList');
   var saved = getSaved();
-  if(!saved.length){ el.innerHTML = '<div class="no-saved">No custom workouts yet — build one below. 👇</div>'; return; }
+  var mc = document.getElementById('mineCount');
+  if(mc) mc.textContent = saved.length ? String(saved.length) : 'none yet';
+  if(!saved.length){ el.innerHTML = '<div class="no-saved">No custom workouts yet — pick exercises below to build one.</div>'; return; }
   el.innerHTML = saved.map(function(w){
     var d = new Date(w.created);
     var when = d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
@@ -690,12 +785,13 @@ function renderSaved(){
       + '<div class="saved-actions">'
       +   '<a class="run-btn" href="run-workout.html?id='+encodeURIComponent(w.id)+'">▶ Start Workout</a>'
       +   '<button class="del-btn" onclick="shareWorkout(\''+w.id+'\')">📤 Share</button>'
-      +   '<button class="del-btn" onclick="delWorkout(\''+w.id+'\')">Delete</button>'
+      +   '<button class="del-btn danger" onclick="delWorkout(\''+w.id+'\')">Delete</button>'
       + '</div></div>';
   }).join('');
 }
 
 buildFilters();
+document.getElementById('searchBox').placeholder = 'Search ' + libraryCount() + ' exercises…';
 buildProgramOptions();
 buildCollectionOptions();
 restoreDraft();
@@ -704,7 +800,7 @@ renderTray();
 renderSaved();
 ['wkName','wkProgram','wkCollection'].forEach(function(id){
   var el = document.getElementById(id);
-  if(el) el.addEventListener(id==='wkName'?'input':'change', saveDraft);
+  if(el) el.addEventListener(id==='wkName'?'input':'change', function(){ if(id==='wkName') nameTouched = !!el.value.trim(); saveDraft(); });
 });
 </script>
 <script src="mc-share.js"></script>

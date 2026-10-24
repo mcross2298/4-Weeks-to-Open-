@@ -2434,6 +2434,14 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   equal-luminance hue shift.** It measured 0% here while 2–25% of pixels
 >   moved. It guards layout and big colour changes, not a palette's warmth.
 
+> **I shipped (2026-10-24).** The workout builder (`build-workout.html`) is
+> exercises first: it opens on search, and the name, program and collection
+> are asked in the review sheet's Save step. The name is pre-filled from the
+> main muscles, and ▶ Start workout appears in the same sheet after Save.
+> Warm ramp and gold accent, superset violet and cluster cyan kept, 48px
+> controls. The placeholder count uses Home's rule (catalog minus
+> cardio/core), so the two always agree.
+
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the
 > owner's, not code: `WEEKLY_CHECKIN_SECRET` is still unset (per the 18 Oct
