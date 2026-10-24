@@ -37,7 +37,9 @@ Deliberately no framework and no build step:
   `mc-*.js` vanilla-JS modules (~90 files, one page per workout/split/tool).
   No bundler, no `package.json` — CI installs Playwright into a scratch
   prefix outside the repo (`/tmp/pw-ci`) only when a job needs a headless
-  browser.
+  browser. Two committed, generated bundles (`workout-core.js`,
+  `workout-logger.js`, from `tools/bundles.json` via
+  `tools/build-bundles.js`) carry the 24 modules most workout pages load.
 - **Data:** `mc-pm-data.js` (10 programs — 6 flagship, 4 licensed-influencer)
   and `exercise-catalog.js` (580 deduplicated exercises, each tagged
   `equipment` + `movement`) are the two catalog sources of truth.
@@ -2444,6 +2446,29 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > Warm ramp and gold accent, superset violet and cluster cyan kept, 48px
 > controls. The placeholder count uses Home's rule (catalog minus
 > cardio/core), so the two always agree.
+
+> **E shipped (2026-10-24); its table is the owner's to run.** Field errors
+> now leave the device: `mc-error-beacon.js` (on Home) sends new
+> `mc_errors_v1` entries to `public.client_errors`, signed-in athletes only, at
+> most every 10 minutes, each once, the source cut to a file name.
+> `supabase/phase14-client-errors.sql` is **not applied**; until it is, the
+> insert fails and the entries wait. Every browser gate in `verify.yml`'s smoke
+> step now echoes `FAILED: <gate>`.
+
+> **J shipped (2026-10-24).** `workout-core.js` and `workout-logger.js` are
+> generated bundles of 24 shared modules, committed, from `tools/bundles.json`.
+> Four things to know before touching a shared module:
+> - **Edit the member, then run `node tools/build-bundles.js`.** Never edit a
+>   bundle. `--check` in CI fails on a stale bundle, a page still carrying a
+>   whole run as separate tags, or a page loading a bundle and a member.
+> - **A member must stay declaration-free at top level** (one IIFE, or one
+>   `window.X =` assignment). Each is wrapped in its own `try/catch` so one
+>   module's load error cannot stop the rest; a top-level `const` inside that
+>   block would vanish from the global scope, so the generator refuses it.
+> - **Gates read members, not bundles.** A new source-scanning gate should skip
+>   `tools/bundle-outputs.js`'s names, or it will count each module twice.
+> - **Measured on emulated Slow 3G:** first paint 12.0 → 7.4 s where the bundles
+>   apply; bytes barely move (no minification). `mm-p1/p2/p3` are not bundled.
 
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the
