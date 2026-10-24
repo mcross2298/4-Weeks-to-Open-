@@ -62,8 +62,10 @@ html[data-theme="light"] .cd-label{color:#6b6459;}
    bare completion screen, i.e. directly on the light body, so they must go
    dark. Titles that live INSIDE a still-dark bespoke card (.mx-ex on
    .mx-stage, .wr-title/.wr-main on .wr-card, #ivStep on #ivStage, .imp-name
-   on .imp-card, .saved-name on .saved-card, .col-card .cnm) are deliberately
-   omitted — those cards stay dark, so their white text is correct. */
+   on .imp-card, .col-card .cnm) are deliberately omitted — those cards stay
+   dark, so their white text is correct. (.saved-name used to be listed here,
+   but .saved-card went Sand further down this sheet and its name went
+   invisible; build-workout.html now reads var(--text) for it.) */
 html[data-theme="light"] .topbar-title,
 html[data-theme="light"] .mx-done-title,
 html[data-theme="light"] .iv-name,
@@ -332,7 +334,9 @@ html[data-theme="light"] .results-count,
 html[data-theme="light"] .ex-progs,
 html[data-theme="light"] .sel-lbl{color:var(--muted);}
 html[data-theme="light"] .filter-btn{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.12);color:var(--muted);}
-html[data-theme="light"] .tray{background:linear-gradient(180deg,rgba(245,242,236,0.4),#faf7f0 30%);border-top-color:rgba(5,150,105,0.25);}
+/* Opaque from the top: the 40%-alpha start let the sheet's dark backdrop
+   show through as a grey band across its head (found in flagship readiness I). */
+html[data-theme="light"] .tray{background:linear-gradient(180deg,#f5f2ec,#faf7f0 30%);border-top-color:rgba(130,105,25,0.3);}
 
 /* ── build-program ────────────────────────────────────────────────── */
 /* .dx-name retrofitted to var(--text); .dx-del was already var(--muted)
@@ -452,10 +456,12 @@ html[data-theme="light"] .ex-muscle-tag{color:#5b6f8b;}
 html[data-theme="light"] .fav-btn{color:#6b6459;}
 
 /* ── build-workout.html (548 findings) ────────────────────────────────
-   One class, 539 instances: the add-exercise affordance on every row. */
-html[data-theme="light"] .ex-add,
+   One class, 539 instances: the add-exercise affordance on every row.
+   Flagship readiness I moved the builder to the gold accent, so its add
+   mark is the light theme's gold; .sec-label (Quick Pump) keeps its green.
+   The Save / Start buttons are gold with dark ink in both themes. */
+html[data-theme="light"] .ex-add{color:#826919;}
 html[data-theme="light"] .sec-label{color:#187a56;}
-html[data-theme="light"] .create-btn{color:#f5f2ec;}
 
 /* ── quick-tour-overview.html + pm-mode-overview.html (365 findings) ──
    Structurally identical pages — same class names, different accent

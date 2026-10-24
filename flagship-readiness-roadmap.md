@@ -444,6 +444,25 @@ Defect: D-32, plus the Phase 1 design items (one bottom nav, builder exercises-f
 - **`#2d3748`** (the placeholder slate) still needs a readable value chosen for it.
 - **The visual ratchet's day-mode entry is still unseeded** (`seed: true`).
 
+**I · scope (opened 2026-10-24, its own PR after G).** `build-workout.html`, from the Phase 1 audit's pain point 4. The done criterion: a new workout can be built, saved and started without scrolling past a form.
+1. **Exercises first.** The page opens on search and the muscle filters. Saved workouts become one compact row above them that expands, rather than a list pushing the search down.
+2. **Save details in the tray.** Name, program and collection move from the top of the page into the review sheet's Save step. The name is pre-filled from the main muscles selected (for example "Chest & Triceps") until the athlete types their own.
+3. **Start from the tray.** After Save, the sheet shows ▶ Start workout for the workout just made, so build → save → start never leaves the sheet.
+4. **Warm ramp, gold accent.** The blue header, teal/cyan gradients and sky-blue labels go. Superset violet and cluster cyan stay: they are the app's set-type grammar.
+5. **One count.** The search placeholder and the results line use the same number as Home's tile (the catalog minus cardio and core), computed rather than typed. Today they read "450+", "542" and the catalog holds 580.
+6. **The owner's 48 / 8 / 13 standard** on the page's own controls: Start, Share, Delete, the filter chips, the review pill and the tray's row controls.
+
+**I shipped (2026-10-24), all six points.** The done criterion holds, driven at 390 and 320:
+- **Built, saved and started without scrolling past a form.** The page opens on search; the search box sits at 270px with nothing between it and the header except the one-row "My custom workouts". Three exercises were added and opened in Review. The name read "Chest & Triceps" with nothing typed. Save showed ▶ Start workout in the same sheet, and the started workout rendered 3 cards and banked its logged set at Finish (A1 re-checked).
+- **One count:** the placeholder and results line read 542, the same as Home's tile, computed from `EXERCISES`.
+- **The draft** (R5) still saves and restores, and now records whether the name was typed. A suggested name is re-derived rather than frozen.
+- **Controls:** every control in the sheet is 48px. The three exceptions are the cluster checkboxes, whose 48px label is the tap target. The superset button moved to the sets/reps row, because four 48px controls and a name do not fit one row at 320.
+- **Light contrast** on the page fell 4 → 0 (dark 0 → 0); the budget is lowered by hand.
+- **Pre-existing defects found by looking, fixed here:**
+  - The sheet's drag handle painted its 12px tap padding, so it rendered as a grey square.
+  - In light mode, a saved workout's name was white on cream; `mc-light.css` still listed `.saved-name` as "on a dark card" after `.saved-card` went Sand.
+  - The light sheet's background started at 40% opacity, so the backdrop showed through as a grey band.
+
 ### E · Visibility · J · First-visit performance
 Defects: D-35, D-40.
 - The error beacon needs a new Supabase table, so it asks first.
