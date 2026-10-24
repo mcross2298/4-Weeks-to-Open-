@@ -317,6 +317,65 @@
   }
   function lset(exId, sn) { var sess = lsess(exId); return sess ? sess.sets[sn] || null : null; }
 
+  // ---- the in-session PR moment (flagship readiness R6) --------------------
+  // A new best used to be noticed only by a push notification -- signed in,
+  // after a cloud round trip, on the lock screen rather than the set that
+  // earned it. This is the local moment: the row, a haptic and an
+  // announcement, from this device's own history, so it needs no account.
+  //
+  // The same rule as the cloud PR (audit G-03): a first-ever log of a lift is
+  // a baseline, not a record, so there must be an EARLIER session to beat.
+  // And the bar is the best of the earlier sessions AND today's other sets,
+  // so a second set at the same new weight is not a second PR.
+  function prCheck(exId, sn, wVal) {
+    var w = parseFloat(wVal);
+    if (!(w > 0)) return null;
+    var d = dayStamp(), hist = st()[ek(exId)], prev = null, today = 0;
+    (Array.isArray(hist) ? hist : []).forEach(function (sess) {
+      if (!sess || sess.d === d || !sess.sets || typeof sess.sets !== 'object') return;
+      Object.keys(sess.sets).forEach(function (k) {
+        var v = parseFloat(sess.sets[k] && sess.sets[k].w);
+        if (v > 0 && (prev === null || v > prev)) prev = v;
+      });
+    });
+    if (prev === null) return null;
+    var cur = lsess(exId);
+    if (cur && cur.d === d) Object.keys(cur.sets || {}).forEach(function (k) {
+      if (+k === sn) return;
+      var v = parseFloat(cur.sets[k] && cur.sets[k].w);
+      if (v > today) today = v;
+    });
+    return w > Math.max(prev, today) ? { w: w, prev: prev } : null;
+  }
+  function announce(msg) {
+    var live = document.getElementById('mclLive');
+    if (!live) {
+      live = document.createElement('div');
+      live.id = 'mclLive';
+      live.setAttribute('aria-live', 'polite');
+      live.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;';
+      document.body.appendChild(live);
+    }
+    live.textContent = '';
+    setTimeout(function () { live.textContent = msg; }, 50);
+  }
+  function markPR(row, pr, name) {
+    clearPR(row);
+    row.classList.add('mcl-pr');
+    var line = document.createElement('div');
+    line.className = 'mcl-pr-line';
+    line.textContent = '\uD83C\uDFC6 New best \u2014 ' + pr.w + ' lb, up from ' + pr.prev;
+    row.appendChild(line);
+    announce('New personal record' + (name ? ' on ' + name : '') + ': ' + pr.w +
+             ' pounds, up from ' + pr.prev + '.');
+  }
+  function clearPR(row) {
+    if (!row || !row.classList.contains('mcl-pr')) return;
+    row.classList.remove('mcl-pr');
+    var line = row.querySelector('.mcl-pr-line');
+    if (line) line.parentNode.removeChild(line);
+  }
+
   // ---- A-10: typed-but-unchecked values survive a reload -------------------
   // Nothing persisted a weight/reps field until the checkbox was tapped —
   // onCheck() was the only path into storage. An interrupted set (a mid-
@@ -1211,6 +1270,7 @@
       // unconfirmed again — re-arm the pending snapshot from whatever is in
       // the fields right now, same as if it had never been checked.
       setPending(exId, sn, w ? w.value.trim() : '', rEl ? rEl.value.trim() : '');
+      clearPR(row);
       // FIX-05 (audit EN-6): remove the cloud row too. Unchecking used to be
       // local-only, so the row stayed in workout_logs forever and kept
       // winning the all-time maximum — a mistyped weight was uncorrectable.
@@ -1233,6 +1293,7 @@
     // the removed element here would have written '' on every re-check and
     // silently erased an answer the athlete had already given.
     var rpeVal = storedEffort(exId, sn);
+    var pr = row.classList.contains('mcl-row-amrap') ? null : prCheck(exId, sn, wVal);
     save(exId, sn, wVal, rVal, rpeVal, displayNameOf(card), swapFromOf(card));
     // Now committed for real — checking always solidifies a ghosted
     // suggestion (typing is not required), and the pending draft is
@@ -1301,8 +1362,9 @@
     } catch (e) {}
     ck.classList.add('done'); ck.textContent = '✓'; ck.setAttribute('aria-checked', 'true');
     row.classList.add('done-row');
-    // Light confirming tap on check.
-    MC_HAPTICS.tap();
+    // Light confirming tap on check -- or the PR pattern, on a new best.
+    if (pr) { markPR(row, pr, displayNameOf(card)); MC_HAPTICS.pr(); }
+    else MC_HAPTICS.tap();
     updateHist(card, exId);
     updateCount(card, exId);
     if (rs > 0 && typeof TMR !== 'undefined' && TMR.start) {
@@ -1658,12 +1720,17 @@
       // rest-timer it triggers) is identical to a normal working set.
       var isClusterRow = !isDropRow && clusterParts.length > 0;
       var repsCellHtml, clusterRowHtml = '';
+      // R6: the inputs had no label at all; a screen reader announced "edit
+      // text". Named by set, and enterkeyhint gives the keyboard a Next /
+      // Done key that the keydown handler below acts on.
+      var rowLbl = isDropRow ? 'Drop set' + (nd > 1 ? ' ' + (dropIdx + 1) : '') : 'Set ' + sn;
       if (isClusterRow) {
         var lastParts = (last && last.r && last.r.indexOf('+') !== -1) ? last.r.split('+') : null;
         repsCellHtml = '<div class="mcl-rcell"></div>';
         var bubbles = clusterParts.map(function (target, k) {
           var v = (lastParts && lastParts[k] !== undefined) ? lastParts[k].trim() : target;
-          return '<input class="mcl-inp mcl-r mcl-rmini" type="number" inputmode="numeric" value="' + v + '" title="Mini-set ' + (k + 1) + ' reps">';
+          return '<input class="mcl-inp mcl-r mcl-rmini" type="number" inputmode="numeric" value="' + v + '" title="Mini-set ' + (k + 1) + ' reps"' +
+            ' enterkeyhint="' + (k === clusterParts.length - 1 ? 'done' : 'next') + '" aria-label="' + rowLbl + ', mini-set ' + (k + 1) + ' reps">';
         }).join('<span class="mcl-cluster-plus">+</span>');
         clusterRowHtml = '<div class="mcl-cluster-row">' +
           '<span class="mcl-cluster-lbl">🧩 Cluster' + (clusterRestLabel ? ' · ' + clusterRestLabel : '') + '</span>' +
@@ -1671,6 +1738,7 @@
         '</div>';
       } else {
         repsCellHtml = '<input class="mcl-inp mcl-r' + (rGhost ? ' mcl-ghost' : '') + '" type="number" inputmode="numeric" placeholder="' + rPh + '"' +
+          ' enterkeyhint="done" aria-label="' + rowLbl + ' reps"' +
           (rValue !== '' ? ' value="' + rValue + '"' : '') +
           (rFill !== '' ? ' data-fill="' + rFill + '"' : '') +
           (rGhost ? ' data-ghost="1"' : '') + '>';
@@ -1679,6 +1747,7 @@
       html += '<div class="mcl-row' + (isDropRow ? ' mcl-row-amrap' : '') + '" id="mclr-' + cid + '-' + sn + '">' +
                 '<div class="mcl-num">' + (isDropRow ? '↓' : sn) + '</div>' +
                 '<input class="mcl-inp mcl-w' + (wGhost ? ' mcl-ghost' : '') + '" type="number" inputmode="decimal" placeholder="' + wPh + '"' +
+                  ' enterkeyhint="next" aria-label="' + rowLbl + ' weight, pounds"' +
                   (wValue !== '' ? ' value="' + wValue + '"' : '') +
                   (wFill !== '' ? ' data-fill="' + wFill + '"' : '') +
                   (wGhost ? ' data-ghost="1"' : '') + '>' +
@@ -1827,6 +1896,22 @@
       });
       inp.addEventListener('blur', function () { clearTimeout(draftT); persistDraft(); });
     });
+    // R6: Enter (the keyboard's Next / Done) moves weight -> reps and, on the
+    // last field of a row, logs the set -- a set could not be ticked from the
+    // keyboard at all before. A row already logged is left alone, so Done on
+    // an edited finished set never unticks it.
+    wrap.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' || !e.target.classList || !e.target.classList.contains('mcl-inp')) return;
+      var row = e.target.closest('.mcl-row');
+      if (!row) return;
+      e.preventDefault();
+      var fields = Array.prototype.slice.call(row.querySelectorAll('.mcl-inp'));
+      var at = fields.indexOf(e.target);
+      if (at > -1 && at < fields.length - 1) { fields[at + 1].focus(); return; }
+      var ck = row.querySelector('.mcl-ck');
+      if (ck && !ck.classList.contains('done')) ck.click();
+      e.target.blur();
+    });
     // Carry-down: typing set 1's weight updates the fill/placeholder of every
     // later still-empty working set (drop rows excluded — weight is stripped).
     // A ghosted later set is still just a suggestion the athlete has not
@@ -1861,9 +1946,16 @@
       actions.innerHTML = '<span class="mcl-skip-note">Skipped today</span>' +
         '<button type="button" class="mcl-act" data-mcl-act="unskip">Undo skip</button>';
     } else {
-      actions.innerHTML = '<button type="button" class="mcl-act" data-mcl-act="add">+ Add set</button>' +
-        (plan.added ? '<button type="button" class="mcl-act" data-mcl-act="remove" aria-label="Remove the added set">− Added set</button>' : '') +
-        '<button type="button" class="mcl-act mcl-act-skip" data-mcl-act="skip">Skip exercise</button>';
+      // R6: Replace / Reorder share this row (owner's call: they stay on the
+      // card, one tap away when equipment is taken). mc-card-actions.js owns
+      // both; without it the row is just + Set / Skip.
+      var CA = window.MC_CARD_ACTIONS;
+      actions.innerHTML =
+        (CA ? '<button type="button" class="mcl-act" data-mcl-act="replace" aria-label="Replace this exercise">Replace</button>' +
+              '<button type="button" class="mcl-act" data-mcl-act="reorder" aria-label="Reorder exercises">Reorder</button>' : '') +
+        '<button type="button" class="mcl-act" data-mcl-act="add" aria-label="Add a set">+ Set</button>' +
+        (plan.added ? '<button type="button" class="mcl-act" data-mcl-act="remove" aria-label="Remove the added set">− Set</button>' : '') +
+        '<button type="button" class="mcl-act mcl-act-skip" data-mcl-act="skip" aria-label="Skip this exercise">Skip</button>';
     }
     wrap.appendChild(actions);
     actions.addEventListener('click', function (e) {
@@ -1871,6 +1963,11 @@
       if (!b) return;
       e.stopPropagation(); e.preventDefault();
       var a = adjFor(exId), act = b.dataset.mclAct;
+      if (act === 'replace' || act === 'reorder') {
+        var ca = window.MC_CARD_ACTIONS;
+        if (ca && ca[act]) ca[act](card);
+        return;
+      }
       if (act === 'add') setAdj(exId, { add: (a.add || 0) + 1 });
       else if (act === 'remove') {
         // never remove a row that has a set logged on it

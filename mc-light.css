@@ -152,7 +152,11 @@ html[data-theme="light"] .mcl-effort-btn.set{color:var(--accent,#8a6d1a);border-
 html[data-theme="light"] .mcl-ck{border-color:rgba(28,26,23,0.18);color:#8a8377;}
 html[data-theme="light"] .mcl-ck.done{background:rgba(52,211,153,0.16);border-color:rgba(5,150,105,0.4);color:#047857;}
 html[data-theme="light"] .mcl-row.done-row{background:rgba(52,211,153,0.08);}
-html[data-theme="light"] .mcl-row.done-row .mcl-inp{border-color:rgba(5,150,105,0.22);}
+html[data-theme="light"] .mcl-row.done-row .mcl-inp{border-color:rgba(5,150,105,0.28);color:#047857;}
+/* D-31: the suggested (ghost) value kept the dark theme's --ink-8 #cfc9bf,
+   1.47:1 on the light ground. --ink-6 measures 5.23:1 there. */
+html[data-theme="light"] .mcl-pr-line{color:#826919;}
+html[data-theme="light"] .mcl-inp.mcl-ghost{color:#6b6459;border-color:rgba(28,26,23,0.28);}
 html[data-theme="light"] .mcl-amrap{background:rgba(251,146,60,0.14);color:#c2410c;border-color:rgba(251,146,60,0.4);}
 html[data-theme="light"] .mcl-row-amrap{background:rgba(251,146,60,0.06);}
 html[data-theme="light"] .mcl-row-amrap .mcl-r::placeholder{color:#c2410c;opacity:0.85;}
@@ -389,6 +393,7 @@ html[data-theme="light"] .mcl-hist{color:#826919;}
    1.44:1 it was invisible rather than de-emphasised. Pending reps sit at the
    3:1 floor; the live and completed states keep their existing treatment. */
 html[data-theme="light"] .a-rep{color:#9d8a60;}
+html[data-theme="light"] .a-hdr .a-rep{color:#6b6459;}
 html[data-theme="light"] .a-drop-arrow{color:#e0243f;}
 
 /* conditioning suggestion card — mc-cond-suggest.js (11 pages) */

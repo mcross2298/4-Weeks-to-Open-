@@ -443,9 +443,47 @@
     drawOverview();
     drawList();
     showTab('overview');
+    restoreView();
+
+    // ── where the athlete was (flagship readiness R6) ──────────────────────
+    // Back from a workout used to land on Overview at the top of the page,
+    // so the list they had scrolled through was lost every time. The tab,
+    // the open group and the scroll position are kept for this browsing
+    // session and restored on Back / reload only: a fresh visit from a link
+    // still opens on Overview, the way a landing should.
+    function viewKey() { return location.pathname.split('/').pop() || 'index.html'; }
+    function readViews() {
+      try { var v = JSON.parse(sessionStorage.getItem(VIEW_KEY) || '{}'); return (v && typeof v === 'object') ? v : {}; }
+      catch (e) { return {}; }
+    }
+    function saveView() {
+      try {
+        var all = readViews();
+        all[viewKey()] = { tab: state.tab, group: state.openGroup, y: Math.round(window.scrollY || 0) };
+        sessionStorage.setItem(VIEW_KEY, JSON.stringify(all));
+      } catch (e) {}
+    }
+    function restoreView() {
+      var nav = null;
+      try { nav = performance.getEntriesByType('navigation')[0]; } catch (e) {}
+      if (!nav || (nav.type !== 'back_forward' && nav.type !== 'reload')) return;
+      var v = readViews()[viewKey()];
+      if (!v) return;
+      if (v.group && pList) { state.openGroup = v.group; drawList(); }
+      if (v.tab === 'list' && pList) showTab('list');
+      if (v.y > 0) {
+        try { history.scrollRestoration = 'manual'; } catch (e) {}
+        requestAnimationFrame(function () { window.scrollTo(0, v.y); });
+      }
+    }
+    var saveT = null;
+    window.addEventListener('scroll', function () { clearTimeout(saveT); saveT = setTimeout(saveView, 200); }, { passive: true });
+    window.addEventListener('pagehide', saveView);
+    root.addEventListener('click', function () { setTimeout(saveView, 0); });
 
     return { refresh: refresh, showTab: showTab, model: function () { return listModel(cfg, state); } };
   }
+  var VIEW_KEY = 'mc_ui_landing_v1';
 
   window.MC_PROGRAM_TABS = {
     mount: mount,
