@@ -70,6 +70,14 @@
     }, 1000);
   }
 
+  // Flagship readiness R2 / D-06: the session starts at the FIRST LOGGED SET.
+  // It used to start at exDone > 0 — a whole exercise .checked — so the
+  // session clock and the whole-session wake lock both waited for the end of
+  // the first exercise, and the screen could sleep through all of it.
+  function sessionStarted(t){
+    return t.exDone>0||!!document.querySelector('.mcl-ck.done, .set-check.done');
+  }
+
   /* ── small utils ─────────────────────────────────────────────────── */
   function esc(s) {
     return String(s == null ? '' : s)
@@ -356,7 +364,7 @@
     });
 
     updateStatBar(t);
-    if(t.exDone>0) startTimer();
+    if(sessionStarted(t)) startTimer();
   }
 
   /* =========================================================================
@@ -395,6 +403,10 @@
     var sig=pct+'|'+cards().map(function(c){
       return cardName(c)+(c.classList.contains('checked')?'1':'0');
     }).join('~')+'|'+todayLineText();
+    // R2: ahead of the unchanged-signature return. The signature tracks whole
+    // exercises, so the FIRST SET of a session never changes it and the
+    // session clock and lock never started on an auto-built summary.
+    if(sessionStarted(t)) startTimer();
     if(host.__mcsSig===sig)return;
     host.__mcsSig=sig;
 
@@ -423,7 +435,6 @@
     host.classList.toggle('mcs-complete',pct===100&&t.exTotal>0);
     saveDaily(t,pct);
     updateStatBar(t);
-    if(t.exDone>0) startTimer();
   }
 
   /* ── auto-build empty host when page ships no summary ──────────── */

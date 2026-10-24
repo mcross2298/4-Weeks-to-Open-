@@ -590,6 +590,11 @@ jobs:
           # banked zero sets, and restoring an older backup erased newer
           # workouts. 18 of 22 checks fail on the pre-R1 tree; its refresh
           # control passes on both, so a broken harness cannot read as a pass.
+          # R2 adds the wake lock, the rest-end bar and a day-list entry on
+          # three engine families (9 of 11 new checks fail on the pre-R2 tree):
+          # a running rest never took the lock on a set-row page, because it was
+          # inferred from a hidden float's class, and nothing was wired at all
+          # when the session was entered from the day list.
           if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-session-durability.js http://localhost:8080; then echo "FAILED: test-mc-session-durability"; EXIT=1; fi
           # Light-mode contrast ratchet (audit G-04/G-3.1). Shares this job
           # because it needs the same Playwright install. Per-page budgets in

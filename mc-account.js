@@ -56,7 +56,12 @@
       '.acct-density{display:flex;gap:8px;margin-bottom:4px;}' +
       '.acct-density-opt{flex:1;border:1px solid rgba(255,255,255,0.14);border-radius:10px;padding:9px;' +
         'background:rgba(255,255,255,0.04);color:#94a3b8;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;}' +
-      '.acct-density-opt.on{background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.5);color:#e2e8f0;}';
+      '.acct-density-opt.on{background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.5);color:#e2e8f0;}' +
+      '.acct-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:48px;' +
+        'border:1px solid rgba(255,255,255,0.14);border-radius:12px;padding:10px 14px;background:rgba(255,255,255,0.04);' +
+        'color:#e2e8f0;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left;}' +
+      '.acct-toggle-state{flex-shrink:0;font-size:12px;font-weight:800;color:#94a3b8;}' +
+      '.acct-toggle[aria-checked="true"] .acct-toggle-state{color:#34d399;}';
     var st = document.createElement('style');
     st.textContent = css;
     document.head.appendChild(st);
@@ -95,6 +100,7 @@
       body.querySelector('#acctPw').addEventListener('keydown', function (e) { if (e.key === 'Enter') doSignIn(); });
     }
     appendAppearanceSection(body);
+    appendWorkoutSection(body);
     appendInstallSection(body);
     appendBackupSection(body);
   }
@@ -174,6 +180,38 @@
     });
     wrap.querySelector('#acctApptReset').addEventListener('click', function () {
       MC_THEME.personal.set({ accent: null, density: null });
+      render();
+    });
+  }
+
+  // Flagship readiness R2 / step 4: "Keep screen on during workouts" (default
+  // on). It lives here because this is the one settings surface every athlete
+  // can reach: the timer's own gear tray sits inside the rest float, which is
+  // hidden on every page with set rows (M3b), so a switch only there would be
+  // unreachable during a normal session. The tray carries it too.
+  //
+  // This page does not load mc-timer.js, so MC_PREFS is not here; the store is
+  // read and written with the same merge-one-key rule MC_PREFS.set() applies,
+  // and mc-live-tracker.js reads the key at call time on the workout page.
+  function readPrefs() {
+    try { return JSON.parse(localStorage.getItem('mc_prefs_v1') || '{}') || {}; } catch (e) { return {}; }
+  }
+  function appendWorkoutSection(body) {
+    var on = readPrefs().keepAwake !== false;
+    var wrap = document.createElement('div');
+    wrap.innerHTML =
+      '<div style="border-top:1px solid rgba(255,255,255,0.1);margin:18px 0 14px;"></div>' +
+      '<div class="acct-sub">Workouts — on this device.</div>' +
+      '<button type="button" class="acct-toggle" id="acctKeepAwake" role="switch" aria-checked="' + on + '">' +
+        '<span>Keep screen on during workouts<br><span style="font-size:12px;font-weight:600;color:#94a3b8;">' +
+        'From your first set until you finish. Off: only while a rest counts down.</span></span>' +
+        '<span class="acct-toggle-state">' + (on ? 'On' : 'Off') + '</span>' +
+      '</button>';
+    body.appendChild(wrap);
+    wrap.querySelector('#acctKeepAwake').addEventListener('click', function () {
+      var p = readPrefs();
+      p.keepAwake = !(p.keepAwake !== false);
+      try { localStorage.setItem('mc_prefs_v1', JSON.stringify(p)); } catch (e) {}
       render();
     });
   }

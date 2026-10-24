@@ -31,6 +31,26 @@
      DELETE     a deleted workout leaves a deletion record (D-24's sync half
                 is unit-tested in test-mc-sync-merge.js).
 
+   Flagship readiness R2 ("screen stays on, rest always lands") rides the same
+   journeys, with navigator.wakeLock and page visibility stubbed so a lock can
+   be counted and an interruption simulated:
+
+     WAKE       one logged set holds the screen even with no rest running, and
+                the session clock starts there (D-06: both waited for a whole
+                exercise); a hide/show re-acquires it with no rest running
+                (D-07: only a running rest re-acquired); Finish releases it and
+                stops the rest; "Keep screen on" off holds it only during a rest.
+     REST-END   a rest reaching zero shows a full-width bar a silent phone
+                cannot miss. It must never take a tap and must leave End
+                workout reachable (its first draft covered it; check-journey
+                caught that), and it clears when the rest ends.
+     DAY-LIST   the same lock when the session is entered the normal way —
+                from the day list, not a ?day= deep link — on all three F3
+                engine families. mc-live-tracker.js returned at load when no
+                card existed yet (the "cards at load" trap, a sixth time), and
+                skipped the .ex-item family outright; mc-summary.js's
+                auto-built summary never started the session on a first set.
+
    CONTROL     a plain refresh restores ticked sets. If it fails, the harness
                is broken and nothing below means anything.
 
@@ -258,6 +278,112 @@ async function step(name, fn) {
     check(r.left === 0 && r.rec.length === 2, 'DELETE removes both (one with no id) and records each deletion', JSON.stringify(r));
     await c.close();
   });
+
+  // ---- R2 -----------------------------------------------------------------
+  const WAKE_STUB = () => {
+    window.__wl = []; let cur = null;
+    window.__held = () => !!(cur && !cur._r);
+    Object.defineProperty(navigator, 'wakeLock', { configurable: true, value: { request: () => {
+      window.__wl.push('request'); const s = new EventTarget();
+      s.release = () => { if (!s._r) { s._r = 1; s.dispatchEvent(new Event('release')); window.__wl.push('release'); } return Promise.resolve(); };
+      cur = s; return Promise.resolve(s);
+    } } });
+    window.__hidden = false;
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => window.__hidden });
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => (window.__hidden ? 'hidden' : 'visible') });
+    window.__hide = () => { window.__hidden = true; document.dispatchEvent(new Event('visibilitychange')); if (cur) cur.release(); };
+    window.__show = () => { window.__hidden = false; document.dispatchEvent(new Event('visibilitychange')); };
+  };
+
+  await step('WAKE', async () => {
+    const c = await ctx(browser, WAKE_STUB); const p = await page(c, errs, 'wake');
+    await p.goto(BASE + '/mm-p1.html?day=1'); await sleep(1800);
+    const before = await p.evaluate(() => ({ req: window.__wl.length, clock: (document.getElementById('mcsTimerVal') || {}).textContent }));
+    check(before.req === 0, 'WAKE nothing holds the screen before the first set', JSON.stringify(before));
+    const card = p.locator('.ex-card').first();
+    await logSet(card, 0, 60, 5); await sleep(900);
+    await p.evaluate(() => TMR.stop()); await sleep(500);
+    check(await p.evaluate(() => window.__held()), 'WAKE one logged set holds the screen with no rest running');
+    await sleep(2100);
+    const clock = await p.evaluate(() => (document.getElementById('mcsTimerVal') || {}).textContent || '');
+    check(clock && clock !== '00:00', 'WAKE the session clock starts at the first set', 'clock reads "' + clock + '"');
+    await p.evaluate(() => window.__hide()); await sleep(200);
+    await p.evaluate(() => window.__show()); await sleep(500);
+    check(await p.evaluate(() => window.__held()), 'WAKE an interruption with no rest running re-acquires the lock');
+    await logSet(card, 1, 60, 5); await sleep(400);
+    const resting = await p.evaluate(() => TMR.isRunning());
+    await p.evaluate(() => window._FW && _FW.confirm()); await sleep(800);
+    const after = await p.evaluate(() => ({ held: window.__held(), running: TMR.isRunning() }));
+    check(resting && !after.held && !after.running, 'WAKE Finish releases the lock and ends a running rest',
+      'rest running before=' + resting + ', after=' + JSON.stringify(after));
+    await c.close();
+  });
+
+  await step('WAKE off', async () => {
+    const c = await ctx(browser, () => { localStorage.setItem('mc_prefs_v1', JSON.stringify({ keepAwake: false })); });
+    await c.addInitScript(WAKE_STUB);
+    const p = await page(c, errs, 'wake-off');
+    await p.goto(BASE + '/mm-p1.html?day=1'); await sleep(1800);
+    await logSet(p.locator('.ex-card').first(), 0, 60, 5); await sleep(700);
+    const during = await p.evaluate(() => window.__held());
+    await p.evaluate(() => TMR.stop()); await sleep(500);
+    const afterRest = await p.evaluate(() => window.__held());
+    check(during && !afterRest, 'WAKE "Keep screen on" off holds the screen only while a rest runs',
+      'during rest=' + during + ', after rest=' + afterRest);
+    await c.close();
+  });
+
+  await step('REST-END', async () => {
+    const c = await ctx(browser); const p = await page(c, errs, 'rest-end');
+    await p.goto(BASE + '/mm-p1.html?day=1'); await sleep(1800);
+    await p.evaluate(() => TMR.start(document.querySelector('.ex-card .rest-timer'), 2, 'Rest')); await sleep(3300);
+    const b = await p.evaluate(() => { const e = document.getElementById('mcRestEnd'); if (!e) return null;
+      const r = e.getBoundingClientRect();
+      const tb = document.querySelector('.prog-bar-wrap.mcs-stat, #progBarWrap');
+      const t = tb && tb.getBoundingClientRect();
+      const under = t && t.height > 0 && t.bottom > 0 && t.top < 1 ? Math.round(t.bottom) : 0;
+      return { show: e.classList.contains('show'), w: r.width, h: r.height, top: Math.round(r.top), expectTop: under }; });
+    // Full width, at least 48 tall, directly under the session toolbar (or at
+    // the very top when the toolbar is not on screen).
+    check(b && b.show && b.w >= 389 && b.h >= 48 && Math.abs(b.top - b.expectTop) <= 1,
+      'REST-END a full-width bar shows under the toolbar when the rest reaches zero', JSON.stringify(b));
+    if (b && b.show) {
+      const hit = await p.evaluate(() => {
+        const bar = document.getElementById('mcRestEnd').getBoundingClientRect();
+        const atBar = document.elementFromPoint(bar.left + bar.width / 2, bar.top + bar.height / 2);
+        const end = document.getElementById('mcsEnd');
+        let endOk = true;
+        if (end && end.offsetParent !== null) {
+          const er = end.getBoundingClientRect();
+          const at = document.elementFromPoint(er.left + er.width / 2, er.top + er.height / 2);
+          endOk = !!(at && (at === end || end.contains(at)));
+        }
+        return { barTakesTap: !!(atBar && atBar.id === 'mcRestEnd'), endOk };
+      });
+      check(!hit.barTakesTap && hit.endOk, 'REST-END the bar never takes a tap and leaves End workout reachable', JSON.stringify(hit));
+      await p.evaluate(() => TMR.stop()); await sleep(300);
+      check(!(await p.evaluate(() => document.getElementById('mcRestEnd').classList.contains('show'))),
+        'REST-END the bar clears when the rest ends');
+    }
+    await c.close();
+  });
+
+  for (const pg of ['mm-p1.html', 'kitchen-sink.html', '2on-1off.html']) {
+    await step('DAY-LIST ' + pg, async () => {
+      const c = await ctx(browser, WAKE_STUB); const p = await page(c, errs, 'daylist-' + pg);
+      await p.goto(BASE + '/' + pg); await sleep(1600);
+      if (!(await p.locator('.mc-day-row').count())) { bad('DAY-LIST ' + pg + ' — no day list; the harness no longer matches the page'); await c.close(); return; }
+      await p.locator('.mc-day-row').first().click(); await sleep(1500);
+      const r = p.locator('.mcl-row:visible').first(); const i = r.locator('input');
+      await i.nth(0).fill('60'); await i.nth(1).fill('5'); await r.locator('.mcl-ck').click(); await sleep(1000);
+      const during = await p.evaluate(() => window.__held());
+      await p.evaluate(() => TMR.stop()); await sleep(600);
+      const o = await p.evaluate(() => ({ held: window.__held(), activity: !!(JSON.parse(localStorage.getItem('mc_activity') || '{}').last) }));
+      check(during && o.held && o.activity, 'DAY-LIST ' + pg + ': entered from the day list, the screen is held and the session recorded',
+        'during rest=' + during + ', after rest=' + o.held + ', activity=' + o.activity);
+      await c.close();
+    });
+  }
 
   check(errs.length === 0, 'no page errors on any journey', errs.slice(0, 5).join(' | '));
   await browser.close();

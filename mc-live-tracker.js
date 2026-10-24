@@ -5,10 +5,12 @@
    module is portable across every workout page (and harmless on others):
 
    1) LIVE TRACKER (keep-awake + alert)
-      • Holds a screen Wake Lock while a rest timer is running (detected via the
-        page's #timerFloat.visible), so the screen never locks mid-rest and the
-        page's existing buzz/countdown keeps ticking. Re-acquired on tab return
-        (wake locks auto-release when a page is hidden).
+      • Holds a screen Wake Lock for the whole session, from the first logged
+        set to Finish (flagship readiness R2), and always while a rest timer is
+        running. "Keep screen on during workouts" (mc_prefs_v1.keepAwake,
+        default on) governs the session half; a running rest always holds it.
+        Re-acquired on every return to the page (wake locks auto-release when a
+        page is hidden: a call, a text, an app switch).
       • Catch-up alert: if the rest interval elapsed while the tab was hidden
         (so the page's 0-tick buzz was throttled/missed), fire a single
         vibrate + beep when the user returns. No double-buzz: this only fires
@@ -28,8 +30,11 @@
 
   var ACT_KEY  = 'mc_activity';
   var EXPIRE_MS = 36 * 3600 * 1000;          // resume window — keep identical to mc-resume.js
-  var CARD_SEL = '.ex-card, .ss-ex, .lift-card';
-  var DONE_SEL = '.ex-card.checked, .ss-ex.checked, .lift-card.checked';
+  // R2: .ex-item is the eight-page frequency family's unit (mc-setlog.js and
+  // mc-summary.js both count it). Without it those pages were never a
+  // "workout page" here, so they got no wake lock and no activity record.
+  var CARD_SEL = '.ex-card, .ss-ex, .ex-item, .lift-card';
+  var DONE_SEL = '.ex-card.checked, .ss-ex.checked, .ex-item.checked, .lift-card.checked';
   var PAGE_ID  = (location.pathname.split('/').pop() || 'index.html');
 
   // ---- storage ------------------------------------------------------------
@@ -106,30 +111,33 @@
   function release() {
     try { if (wakeLock) { wakeLock.release(); wakeLock = null; } } catch (e) {}
   }
+  // R2: the session half honours "Keep screen on during workouts". Read at
+  // call time, so a change in the account sheet or the timer tray applies on
+  // the next sync without a reload (mc:prefs-changed, below).
+  function keepAwakePref() {
+    try {
+      if (typeof MC_PREFS !== 'undefined' && MC_PREFS.get) return MC_PREFS.get().keepAwake !== false;
+      var p = JSON.parse(localStorage.getItem('mc_prefs_v1') || '{}') || {};
+      return p.keepAwake !== false;
+    } catch (e) { return true; }
+  }
   function syncLock() {
-    if (timerRunning() || sessionActive) { wantLock = true; acquire(); }
+    if (timerRunning() || (sessionActive && keepAwakePref())) { wantLock = true; acquire(); }
     else { wantLock = false; release(); }
   }
 
   // ====================================================================== //
   //  CATCH-UP ALERT                                                        //
   // ====================================================================== //
-  // remaining seconds parsed from the page's #timerFloat readout
+  // R2: remaining seconds from TMR's own clock. This used to parse the text
+  // of #timerFloatTime — and since M3b the float is hidden on every page with
+  // set rows, where the tick stops writing it, so the parse read a value
+  // frozen at the rest's starting length and the catch-up decision was made
+  // on a number that was never the time left.
   function currentRemaining() {
-    var t = document.getElementById('timerFloatTime');
-    if (!t) return null;
-    var s = (t.textContent || '').trim();
-    if (/done/i.test(s)) return 0;
-    var neg = s.charAt(0) === '+';
-    s = s.replace('+', '');
-    var secs;
-    if (s.indexOf(':') !== -1) {
-      var p = s.split(':'); secs = (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0);
-    } else {
-      secs = parseInt(s, 10);
-    }
-    if (isNaN(secs)) return null;
-    return neg ? -secs : secs;
+    if (typeof TMR === 'undefined' || !TMR.remaining) return null;
+    var r = TMR.remaining();
+    return (typeof r === 'number' && isFinite(r)) ? r : null;
   }
 
   var hideSnap = null;   // { rem, t } captured when the tab is hidden mid-rest
@@ -145,10 +153,19 @@
   function onShow() {
     if (hideSnap) {
       var elapsed = (Date.now() - hideSnap.t) / 1000;
-      if (hideSnap.rem > 0 && elapsed >= hideSnap.rem) buzz();   // ended while away
+      if (hideSnap.rem > 0 && elapsed >= hideSnap.rem) {          // ended while away
+        buzz();
+        // ...and SHOW it: a silent phone delivers neither the beep nor the
+        // buzz, so the cue the athlete can count on is the visual one.
+        try { if (typeof TMR !== 'undefined' && TMR.restEndCue) TMR.restEndCue(); } catch (e) {}
+      }
       hideSnap = null;
     }
-    if (wantLock && timerRunning()) acquire();
+    // R2 / D-07: re-acquire on EVERY return while anything wants the screen
+    // on — a session, not only a running rest. A call, a text or an app switch
+    // releases the lock, and it used to come back only if a rest happened to
+    // be running at the moment the athlete returned.
+    syncLock();
   }
 
   // ====================================================================== //
@@ -285,31 +302,36 @@
   // ====================================================================== //
   //  INIT                                                                  //
   // ====================================================================== //
+  var inited = false;
   function init() {
-    if (isWorkoutPage()) {
+    if (inited) return;
+    // R2: the "cards at load" trap, a sixth time. Every F3 page opens on its
+    // DAY LIST, with no exercise card in the DOM until a day is tapped, and
+    // this returned on that — so a session entered the normal way got no
+    // rest-time wake lock and wrote no activity record (the dashboard's
+    // resume banner reads it). Deferred instead, off the shared "cards just
+    // rendered" signal, exactly as mc-session.js has done since F3-1.
+    if (!isWorkoutPage()) {
+      if (document.querySelector('.day-card') && window.MC_SCAN && MC_SCAN.subscribe) {
+        MC_SCAN.subscribe(function () { if (!inited && isWorkoutPage()) init(); });
+        if (MC_SCAN.start) MC_SCAN.start();
+      }
+      return;
+    }
+    inited = true;
+    {
       // any tap primes/unlocks audio so the catch-up beep can play (the rest-timer tap counts)
       document.addEventListener('pointerdown', primeAudio, { passive: true });
-      // Watch #timerFloat.visible via MutationObserver (event-driven, replaces
-      // the former 1s setInterval poll). A 250ms debounce absorbs any rapid
-      // class mutations during the countdown without missing the visible toggle.
-      var _syncDbt = null;
-      function debounceSync() { clearTimeout(_syncDbt); _syncDbt = setTimeout(syncLock, 250); }
-      function watchFloat() {
-        var f = document.getElementById('timerFloat');
-        if (f) {
-          new MutationObserver(debounceSync).observe(f, { attributes: true, attributeFilter: ['class'] });
-        } else {
-          var ins = new MutationObserver(function () {
-            var el = document.getElementById('timerFloat');
-            if (!el) return;
-            ins.disconnect();
-            new MutationObserver(debounceSync).observe(el, { attributes: true, attributeFilter: ['class'] });
-            syncLock();
-          });
-          ins.observe(document.body, { childList: true, subtree: true });
-        }
-      }
-      watchFloat();
+      // R2 / D-06: driven by TMR's own state. This watched #timerFloat's
+      // .visible class, which M3b stopped setting on every page with set rows
+      // (the inline rest row replaced the float there), so a rest never asked
+      // for the lock on those pages — the first exercise of every session ran
+      // with the screen free to sleep. mc-timer.js announces every start and
+      // stop instead, and a pref change re-syncs the same way.
+      document.addEventListener('mc:rest-state', syncLock);
+      document.addEventListener('mc:prefs-changed', function (e) {
+        if (e && e.detail && e.detail.key === 'keepAwake') syncLock();
+      });
       syncLock();
       window.addEventListener('pagehide', logSession);
       document.addEventListener('visibilitychange', function () { document.hidden ? onHide() : onShow(); });
