@@ -19,7 +19,7 @@
 <!-- MC:HEAD END -->
 <style>
 :root{--accent:#34d399;--accent-rgb:52,211,153;}
-.header{background:linear-gradient(135deg,#052e1c,#06080f);}
+.header{background:linear-gradient(135deg,#052e1c,#080807);}
 </style>
 <link rel="stylesheet" href="base.css?v=68"/>
 <link rel="stylesheet" href="mc-card-actions.css"/>
@@ -50,7 +50,7 @@
 .day-card.open .day-header{background:rgba(var(--day-rgb,52,211,153),0.06);}
 .day-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:#fff;}
 .day-info{flex:1;}
-.day-session{font-weight:800;font-size:14px;color:#e2e8f0;letter-spacing:-0.01em;}
+.day-session{font-weight:800;font-size:14px;color:#ede7d9;letter-spacing:-0.01em;}
 .day-meta{font-size:11px;color:var(--muted);margin-top:2px;}
 .day-toggle{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.05);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.08);transition:all 0.2s;}
 .day-card.open .day-toggle{color:#fff;}
@@ -59,7 +59,7 @@
 /* ── REST DAY ── */
 .rest-day{background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .rest-label{font-weight:800;font-size:13px;color:var(--muted2);letter-spacing:0.06em;}
-.rest-sub{font-size:11px;color:var(--muted, #94a3b8);}
+.rest-sub{font-size:11px;color:var(--muted, #a8a196);}
 /* ── TAG BANNERS ── */
 .ex-tag{font-size:11px;font-weight:900;letter-spacing:0.14em;padding:5px 14px;text-transform:uppercase;position:relative;}
 .ex-tag.superset{background:rgba(52,211,153,0.1);color:#34d399;border-bottom:1px solid rgba(52,211,153,0.15);}
@@ -71,7 +71,7 @@
 .divider{color:#1e3a30;font-size:11px;font-weight:600;}
 .notes-row{font-size:11px;color:var(--muted);margin-top:4px;}
 .rest-line{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted);}
-.editable{cursor:text;border-bottom:1px dashed rgba(52,211,153,0.4);padding-bottom:1px;display:inline-block;color:#e2e8f0;}
+.editable{cursor:text;border-bottom:1px dashed rgba(52,211,153,0.4);padding-bottom:1px;display:inline-block;color:#ede7d9;}
 .editable:hover{background:rgba(52,211,153,0.08);border-radius:3px;}
 html[data-theme="light"] .tabs-bar{background:#f5f2ec;}
 html[data-theme="light"] .phase-note{background:rgba(52,211,153,0.08);color:#0d6e4f;}
@@ -176,7 +176,7 @@ function amrapToInfinity(s,isMultiLeg){
 }
 
 function renderReps(sets){
-  if(!sets||sets==="—")return '<span style="color:#9ca3af;font-style:italic">—</span>';
+  if(!sets||sets==="—")return '<span style="color:#a8a297;font-style:italic">—</span>';
   if(sets.toLowerCase().includes("amrap in")||sets.toLowerCase().includes("100 reps")){
     return `<div style="font-size:12px;color:#34d399;font-weight:700">${escapeHtml(sets)}</div>`;
   }

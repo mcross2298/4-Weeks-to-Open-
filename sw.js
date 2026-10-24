@@ -246,7 +246,7 @@ function offlineShell(bodyHtml) {
         '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' +
         '<title>MC Training — Offline</title>' +
         '<style>' +
-        ':root{--bg:#0a0a0a;--card:#141414;--text:#e2e8f0;--muted:#64748b;--accent:#d4af37;--border:rgba(255,255,255,0.1);}' +
+        ':root{--bg:#0a0a0a;--card:#141414;--text:#ede7d9;--muted:#797267;--accent:#d4af37;--border:rgba(255,255,255,0.1);}' +
         '@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#f5f2ec;--card:#faf7f0;--text:#1c1a17;--muted:#6b6459;--accent:#8a6d1a;--border:rgba(0,0,0,0.1);}}' +
         ':root[data-theme="light"]{--bg:#f5f2ec;--card:#faf7f0;--text:#1c1a17;--muted:#6b6459;--accent:#8a6d1a;--border:rgba(0,0,0,0.1);}' +
         '*{box-sizing:border-box;}' +

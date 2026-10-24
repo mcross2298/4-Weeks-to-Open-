@@ -23,10 +23,10 @@
   --font-display:'Archivo',system-ui,sans-serif;
   --font-ui:'Manrope',system-ui,sans-serif;
   --bg:#070708;
-  --panel:#0e0e10;
-  --text:#e8edf4;
-  --muted:#7c8aa0;
-  --muted2:#54607a;
+  --panel:#0f0e0d;
+  --text:#f1ece1;
+  --muted:#8f887c;
+  --muted2:#665f55;
   --hairline:rgba(255,255,255,0.07);
   /* Concept A is accent-driven so each program keeps its own hue.
      In production these come from the page's :root (gold / orange / green …).
@@ -80,7 +80,7 @@ body{
    ╚══════════════════════════════════════════════════════════════╝ */
 .a-card{
   position:relative;border-radius:16px;margin-bottom:14px;overflow:hidden;
-  background:linear-gradient(180deg,#0d0f12,#0a0b0d);
+  background:linear-gradient(180deg,#0f0f0e,#0b0b0a);
   border:1px solid rgba(var(--accent-rgb),0.16);
   box-shadow:0 10px 34px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
 }
@@ -113,7 +113,7 @@ body{
 .a-leg + .a-leg{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,0.07);}
 .a-rep{
   font-size:26px;font-weight:900;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;
-  color:#3a4661;line-height:1;
+  color:#4a463f;line-height:1;
 }
 .a-rep.live{
   color:#fff;
@@ -150,11 +150,11 @@ body{
    ╚══════════════════════════════════════════════════════════════╝ */
 .b-card{
   margin-bottom:14px;border-radius:14px;overflow:hidden;
-  background:#0c0d0e;border:2px solid #23262d;
+  background:#0d0d0c;border:2px solid #282623;
 }
 .b-bar{ /* solid header band */
   display:flex;align-items:center;gap:10px;padding:12px 14px;
-  background:#101216;border-bottom:2px solid #23262d;
+  background:#131211;border-bottom:2px solid #282623;
 }
 .b-num{
   font-size:14px;font-weight:900;width:30px;height:30px;flex-shrink:0;border-radius:8px;
@@ -172,25 +172,25 @@ body{
 /* split grid — row-based so layout adapts without duplicate cells */
 .b-row{display:grid;grid-template-columns:1fr 1fr;}
 .b-row.single{grid-template-columns:1fr;}
-.b-row + .b-row{border-top:2px solid #23262d;}
-.b-row .b-box + .b-box{border-left:2px solid #23262d;}
+.b-row + .b-row{border-top:2px solid #282623;}
+.b-row .b-box + .b-box{border-left:2px solid #282623;}
 .b-box{padding:11px 14px;}
 .b-k{font-size:9.5px;font-weight:900;letter-spacing:0.16em;color:var(--muted2);text-transform:uppercase;margin-bottom:6px;}
 .b-reps{display:flex;flex-wrap:wrap;gap:5px;}
 .b-chip{
   font-size:14px;font-weight:900;font-variant-numeric:tabular-nums;
   min-width:30px;padding:5px 8px;border-radius:7px;text-align:center;
-  background:#16181d;border:1.5px solid #2b2f38;color:var(--text);
+  background:#191815;border:1.5px solid #322e2b;color:var(--text);
 }
 .b-chip.first{border-color:var(--hivis);color:var(--hivis);}
 .b-chip.special{background:rgba(249,115,22,0.14);border-color:var(--hivis);color:#fdba74;min-width:auto;}
 .b-legtag{width:100%;font-size:9px;font-weight:900;letter-spacing:0.12em;color:var(--muted2);text-transform:uppercase;margin-top:8px;}
 .b-big{font-size:20px;font-weight:900;letter-spacing:-0.02em;color:var(--text);font-variant-numeric:tabular-nums;}
 .b-big .u{font-size:12px;color:var(--muted);font-weight:800;margin-left:3px;}
-.b-tempo{display:inline-block;font-family:"SF Mono",ui-monospace,monospace;font-size:14px;font-weight:800;color:var(--text);letter-spacing:0.02em;padding:4px 9px;border-radius:7px;background:#16181d;border:1.5px solid #2b2f38;}
+.b-tempo{display:inline-block;font-family:"SF Mono",ui-monospace,monospace;font-size:14px;font-weight:800;color:var(--text);letter-spacing:0.02em;padding:4px 9px;border-radius:7px;background:#191815;border:1.5px solid #322e2b;}
 .b-log{
   display:flex;align-items:center;justify-content:center;gap:8px;
-  padding:12px;border-top:2px solid #23262d;cursor:pointer;
+  padding:12px;border-top:2px solid #282623;cursor:pointer;
   font-size:11px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;color:var(--hivis);
 }
 .b-card.is-ss .b-log{color:#c084fc;}

@@ -172,7 +172,7 @@
         '<span class="mx-e1">est. ' + l.e1 + ' lb</span>' +
         '<span class="mx-arrow">→</span></div>';
     }).join('') :
-      '<div style="padding:24px 4px;color:#64748b;font-weight:700;font-size:13px;">' +
+      '<div style="padding:24px 4px;color:#797267;font-weight:700;font-size:13px;">' +
       (lifts.length ? 'No matches.' :
         'No weighted history yet — log a few sessions first so the ladder has something to build from.') +
       '</div>';

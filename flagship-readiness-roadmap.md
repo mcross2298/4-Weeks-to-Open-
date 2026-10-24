@@ -405,6 +405,40 @@ Defects: D-36, D-39.
 ### G · Token gate and migration · I · Builder redesign
 Defect: D-32, plus the Phase 1 design items (one bottom nav, builder exercises-first, color semantics).
 
+**G shipped (2026-10-24).** Two decisions were taken with the owner: **G first, with I as its own PR**, and **History is the bottom nav's fifth tab**.
+
+- **The gate (D-32).** `tools/check-design-tokens.js` gained a sixth pass. It reads `.css`, `.html` and `.js` with comments stripped, and both hex and `rgb()`/`rgba()`.
+  - **The test is a property of the value.** A colour fails if it is blue-leaning with chroma of 44 or less, unless it is one of the hues that do a job: a green, cyan or violet lean, or a dark navy.
+  - Every match is a **hard fail** unless the value is named in `COOL_SEMANTIC` or `COOL_PENDING`.
+  - It was proven to fail on three planted shapes before landing: a JS-injected hex, an inline `rgba()`, and a stylesheet `rgba()` with spaces. A value quoted in a comment does not count.
+- **What the gate found.** It counted **915 cool neutral literals across 153 files**, against **zero** in the stylesheets the old gate could see. The audit's "119 + 446" undercounted, because it named slate hexes only. Most were the slate mid-tones (`#94a3b8` ×244, `#e2e8f0` ×209, `#64748b` ×82), plus the bottom nav's `rgba(8,10,16)`.
+- **The migration.** Each value moved to the warm ramp's colour of the **same WCAG relative luminance**, so every contrast ratio it takes part in is unchanged. Only the blue cast goes.
+  - A literal rather than a `var(--ink-*)`, because several pages do not load `base.css`. P2 recorded that an undefined `var()` drops the whole declaration.
+  - `tools/gen-program-css.py` emitted one of them itself, so the generator now carries the warm value.
+  - **Left alone on purpose:**
+    - `#334155`, the rest-day slate the 7-day standard governs (all 47 uses are that accent; it is now in `COOL_SEMANTIC`).
+    - `#2d3748`, still `COOL_PENDING`: it needs a readable value, not a luminance match.
+    - The declared semantic grounds.
+    - One cyan chip tint the first pass caught wrongly. That is why the predicate has a cyan-lean clause.
+- **Measured.**
+  - **Visual ratchet:** 0% changed at its own threshold on all six of its pages. At threshold 0, 2–25% of pixels moved, so the change did render; it is below what the ratchet treats as a regression, by design.
+  - **Dark contrast:** 56 → 56.
+  - **Light contrast:** 281 → 262 (see below).
+- **Colour semantics.** The Modality Matrix week tab and week-theme label were hard-coded blue / red / green per phase. Gold marks what's active, and red is reserved for failure, so all three now read `--accent`. The light theme already darkens it to 4.72:1. (The red prescription pill was R6.)
+- **One bottom nav.**
+  - `mc-nav.js` uses the dashboard's line icons, and its fifth tab is **History** (`workout-logs.html`). The page you are on is lit in the dashboard's active gold. Tabs are 48px (44 before), and the chrome ratchet is raised to 48 so they cannot shrink back.
+  - The dashboard's own History tab opened `stats.html`, a label that did not match its destination; it now opens History.
+  - Stats moved to two places: a **Stats** card in Home's Training Tools and a 48px **Stats** link at the top of History.
+- **Found by looking, fixed here:**
+  - **History had no light header.** Its top bar, hero, stats strip, tabs and log cards kept their dark grounds while `mc-light.css` darkened the ink, so the page title rendered near-black on near-black. Because History is now a nav tab, it got a full light block.
+  - **Home's tool-card subtitles were about 2.4:1 in light mode.** They now use `--ink-6`, 5.23:1.
+  - Light contrast **281 → 262**: `dashboard.html` and `index.html` 8 → 0, `workout-logs.html` 4 → 1. The three budgets are lowered by hand.
+
+**Known residuals, not fixed here:**
+- **The back link and week tabs are still 44.** They sit on the visual ratchet's day-list baselines with the nav, and this change kept under the ratchet's 0.5% without a re-baseline (0.35–0.48% measured here). Raising them will need one.
+- **`#2d3748`** (the placeholder slate) still needs a readable value chosen for it.
+- **The visual ratchet's day-mode entry is still unseeded** (`seed: true`).
+
 ### E · Visibility · J · First-visit performance
 Defects: D-35, D-40.
 - The error beacon needs a new Supabase table, so it asks first.

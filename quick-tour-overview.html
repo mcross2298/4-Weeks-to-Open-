@@ -23,7 +23,7 @@
   --bg:#0a0a0a;--surface:#111;--surface2:#161616;
   --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.1);
   --gold:#d4af37;--gold-dim:rgba(212,175,55,0.15);--gold-glow:rgba(212,175,55,0.25);
-  --text:#fff;--muted:#9ca3af;--muted2:var(--muted);
+  --text:#fff;--muted:#a8a297;--muted2:var(--muted);
 }
 body{background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;padding-bottom:40px;}
 .wrap{max-width:560px;margin:0 auto;padding:0 16px;}
@@ -71,7 +71,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;p
 .hero-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 25% 25%,rgba(212,175,55,0.14) 0%,transparent 62%);}
 .eyebrow{font-size:11px;font-weight:900;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
 .hero h1{font-size:26px;font-weight:900;letter-spacing:-0.02em;line-height:1.15;margin-bottom:10px;position:relative;}
-.hero p{font-size:14px;line-height:1.6;color:#cbd5e1;position:relative;}
+.hero p{font-size:14px;line-height:1.6;color:#d9d3c8;position:relative;}
 .stat-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;position:relative;}
 .stat-chip{
   display:inline-flex;align-items:center;gap:6px;
@@ -84,7 +84,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;p
 .jump-row{display:flex;gap:8px;overflow-x:auto;padding:2px 0 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
 .jump-row::-webkit-scrollbar{display:none;}
 .jump{
-  flex-shrink:0;font-size:12px;font-weight:800;color:#cbd5e1;text-decoration:none;
+  flex-shrink:0;font-size:12px;font-weight:800;color:#d9d3c8;text-decoration:none;
   background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:7px 13px;
 }
 .jump:active{border-color:var(--gold);color:var(--gold);}
@@ -100,7 +100,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;p
 }
 .sec-title{font-size:19px;font-weight:900;letter-spacing:-0.02em;}
 .sec-lede{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:14px;}
-.sec p.body{font-size:13.5px;line-height:1.6;color:#cbd5e1;margin-bottom:12px;}
+.sec p.body{font-size:13.5px;line-height:1.6;color:#d9d3c8;margin-bottom:12px;}
 .sec b{color:#fff;font-weight:800;}
 .sec .gold{color:var(--gold);font-weight:800;}
 
@@ -122,12 +122,12 @@ body{background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;p
   color:var(--rail,var(--gold));background:rgba(255,255,255,0.04);
   border:1px solid var(--border2);border-radius:14px;padding:2px 8px;
 }
-.card-tx{font-size:12.5px;line-height:1.55;color:#9ca3af;}
-.card-tx b{color:#e2e8f0;font-weight:800;}
+.card-tx{font-size:12.5px;line-height:1.55;color:#a8a297;}
+.card-tx b{color:#ede7d9;font-weight:800;}
 
 /* ── CHECK LIST ── */
 .ticks{list-style:none;display:flex;flex-direction:column;gap:8px;margin-top:4px;}
-.ticks li{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.55;color:#cbd5e1;}
+.ticks li{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.55;color:#d9d3c8;}
 .ticks .chk{color:var(--gold);font-weight:900;flex-shrink:0;}
 .ticks b{color:#fff;font-weight:800;}
 
@@ -137,7 +137,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;p
   padding:14px 16px;margin-top:14px;position:relative;
 }
 .coach::before{content:'🎙️ COACH';position:absolute;top:-9px;left:14px;font-size:10px;font-weight:900;letter-spacing:0.12em;color:var(--gold);background:var(--bg);padding:0 7px;}
-.coach p{font-size:13.5px;line-height:1.6;color:#e2e8f0;margin-top:4px;}
+.coach p{font-size:13.5px;line-height:1.6;color:#ede7d9;margin-top:4px;}
 
 /* ── DIVIDER LABEL ── */
 .tier{font-size:11px;font-weight:900;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted2);margin:16px 0 10px;display:flex;align-items:center;gap:8px;}
@@ -149,7 +149,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;p
 .swatch{
   display:inline-flex;align-items:center;gap:7px;
   background:var(--surface);border:1px solid var(--border2);border-radius:20px;
-  padding:5px 12px 5px 7px;font-size:11.5px;font-weight:800;color:#cbd5e1;
+  padding:5px 12px 5px 7px;font-size:11.5px;font-weight:800;color:#d9d3c8;
 }
 .swatch .sw{width:14px;height:14px;border-radius:50%;box-shadow:0 0 8px currentColor;}
 
@@ -208,7 +208,7 @@ html[data-theme="light"] .jump,
 html[data-theme="light"] .sec p.body,
 html[data-theme="light"] .ticks li,
 html[data-theme="light"] .stat-chip,
-html[data-theme="light"] .coach p{color:#3d4756;}
+html[data-theme="light"] .coach p{color:#4b453f;}
 html[data-theme="light"] .card-tx b{color:#1c1a17;}
 html[data-theme="light"] .card,
 html[data-theme="light"] .jump,
@@ -217,13 +217,13 @@ html[data-theme="light"] .coach{background:#faf7f0;border-color:rgba(28,26,23,0.
 html[data-theme="light"] .card,
 html[data-theme="light"] .card-tx,
 html[data-theme="light"] .sec p,
-html[data-theme="light"] .coach{color:#3d4756;}
+html[data-theme="light"] .coach{color:#4b453f;}
 html[data-theme="light"] .sec b,
 html[data-theme="light"] .ticks b,
 html[data-theme="light"] .card-tx b,
 html[data-theme="light"] h1{color:#1c1a17;}
 html[data-theme="light"] .sec span,
-html[data-theme="light"] .ticks span{color:#3d4756;}
+html[data-theme="light"] .ticks span{color:#4b453f;}
 
 /* The hero band keeps its dark navy gradient in BOTH themes -- .hero's
    background is never re-declared under html[data-theme="light"] -- so its text
@@ -241,7 +241,7 @@ html[data-theme="light"] .ticks span{color:#3d4756;}
    .hero h1, so removing the hero from the darkened lists would not have been
    enough -- the generic rule would darken it again. */
 html[data-theme="light"] .hero h1{color:#f5f2ec;}
-html[data-theme="light"] .hero p{color:#cbd5e1;}
+html[data-theme="light"] .hero p{color:#d9d3c8;}
 
 /* Downloads this page as a real .pdf (mc-pdf.js). Marked .no-pdf so the button
    doesn't print itself into the file it just made. */
@@ -304,8 +304,8 @@ html[data-theme="light"] .es-export{background:rgba(0,0,0,0.04);border-color:rgb
     <p class="sec-lede">Three zones, one bottom tab bar. Learn these and you can reach anything in the app in one or two taps.</p>
     <ul class="ticks">
       <li><span class="chk">✓</span><span><b>Current Program hero card</b> — pin the program you're running and it sits front-and-center with its splits, phase pills, and a ring showing where you are. Tap “See all” to swap it anytime; it remembers your pick.</span></li>
-      <li><span class="chk">✓</span><span><b>Training Tools grid</b> — Exercise Library, Build Your Own, Quick Pump, Program Builder, Program Guide, the Max-Out Calculator, MC Wrapped, and the Quick Tour. Your power tools, all in one block.</span></li>
-      <li><span class="chk">✓</span><span><b>Bottom tabs</b> — <span class="gold">⚡ Dashboard · 🏋️ Programs · 🔥 Conditioning · 🍎 Nutrition · 📊 History</span>. That bar follows you everywhere, so you can't get lost — History is the one tab that leaves this screen for its own page (Stats).</span></li>
+      <li><span class="chk">✓</span><span><b>Training Tools grid</b> — Exercise Library, Build Your Own, Quick Pump, Program Builder, Program Guide, the Max-Out Calculator, Stats, MC Wrapped, and the Quick Tour. Your power tools, all in one block.</span></li>
+      <li><span class="chk">✓</span><span><b>Bottom tabs</b> — <span class="gold">Dashboard · Programs · Conditioning · Nutrition · History</span>, with the same line icons on every screen, so the bar never changes under your thumb. The tab you're on is lit in gold. History is the one tab that leaves the dashboard for its own page; <b>Stats</b> sits in Training Tools and at the top of History.</span></li>
       <li><span class="chk">✓</span><span><b>Smart resume</b> — leave mid-session and a resume banner brings you right back where you left off, every set intact.</span></li>
       <li><span class="chk">✓</span><span><b>🤖 Coach Note</b> — tap to expand a collapsed card and get a short AI-written read on your last 30 days: a headline summary plus chips for any per-lift flags, muscle-volume warnings, and exercise-swap ideas worth a look. Signed-in only; refreshes once a day.</span></li>
       <li><span class="chk">✓</span><span><b>🎯 Coach suggestions</b> — if your coach assigns you a program or macro goals from PM Mode, a dismissible card appears here. Tap Accept to apply it yourself — nothing changes on your account unless you do.</span></li>
@@ -380,7 +380,7 @@ html[data-theme="light"] .es-export{background:rgba(0,0,0,0.04);border-color:rgb
   <!-- ── 3 · CONDITIONING ── -->
   <div class="sec" id="conditioning">
     <div class="sec-head"><div class="sec-num">3</div><div class="sec-title">Conditioning Corner</div></div>
-    <p class="sec-lede">The 🔥 tab on your bottom bar. Cardio, core, and the gauntlets — run them standalone or bolt one onto the end of a lift.</p>
+    <p class="sec-lede">The Conditioning tab on your bottom bar. Cardio, core, and the gauntlets — run them standalone or bolt one onto the end of a lift.</p>
     <ul class="ticks">
       <li><span class="chk">✓</span><span><b>Not for the Faint of Heart</b> — 9 challenge workouts built for conditioning and mental toughness: <b>The 500</b> (a 300-lunge, pushup-ladder monster), <b>Hell Week</b> (a 90–120 minute multi-phase gauntlet), <b>Driveway Demolition</b>, <b>Turn &amp; Burn</b>, the <b>45-Minute Burner</b>, <b>Popeye</b> forearm isolators, a 3-phase <b>Boxing Routine</b>, <b>Battle Ropes</b> across 5 difficulty levels, and the <b>Full Body Pyramid</b>. Push until you can't.</span></li>
       <li><span class="chk">✓</span><span><b>Cardio &amp; Core</b> — a full reference list of conditioning movements to finish any session strong.</span></li>

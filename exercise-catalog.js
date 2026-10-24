@@ -593,6 +593,6 @@ var EXERCISES=[
 {"name":"Turkish Get Up","muscle":"Full Body","equipment":"Dumbbell","movement":"Carry","programs":[],"master":null},
 {"name":"Spider Crawl","muscle":"Full Body","equipment":"Bodyweight","movement":"Carry","programs":[],"master":null},
 ];
-var MUSCLE_COLORS={"Back":"#22d3ee","Chest":"#f472b6","Shoulders":"#60a5fa","Biceps":"#a78bfa","Triceps":"#fb923c","Legs - Quads":"#4ade80","Legs - Hamstrings":"#34d399","Legs - Glutes":"#86efac","Calves":"#fde68a","Core":"#f87171","Forearms":"#94a3b8","Cardio":"#f59e0b","Full Body":"#e879f9","Adductors":"#67e8f9"};
+var MUSCLE_COLORS={"Back":"#22d3ee","Chest":"#f472b6","Shoulders":"#60a5fa","Biceps":"#a78bfa","Triceps":"#fb923c","Legs - Quads":"#4ade80","Legs - Hamstrings":"#34d399","Legs - Glutes":"#86efac","Calves":"#fde68a","Core":"#f87171","Forearms":"#a8a196","Cardio":"#f59e0b","Full Body":"#e879f9","Adductors":"#67e8f9"};
 var MUSCLE_ICONS={"Back":"&#128281;","Chest":"&#129521;","Shoulders":"&#127956;","Biceps":"&#128170;","Triceps":"&#128165;","Legs - Quads":"&#129461;","Legs - Hamstrings":"&#127825;","Legs - Glutes":"&#127825;","Calves":"&#129462;","Core":"&#128293;","Forearms":"&#128295;","Cardio":"&#127939;","Full Body":"&#9889;","Adductors":"&#8592;"};
 window.EXERCISES=EXERCISES;window.MUSCLE_COLORS=MUSCLE_COLORS;window.MUSCLE_ICONS=MUSCLE_ICONS;

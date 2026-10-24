@@ -18,7 +18,7 @@
 <script>/* MC head boot (audit G-02/G-03) — PWA cold-launch guard + theme, before first paint */try{if((window.navigator.standalone===true||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches))&&!sessionStorage.getItem('mc_launched')){sessionStorage.setItem('mc_launched','1');var _p=(location.pathname.split('/').pop()||'').toLowerCase();if(_p!==''&&_p!=='index.html'&&_p!=='dashboard.html'){var _hasLive=false;try{var _sess=JSON.parse(localStorage.getItem('mc_session_v1')||'{}');var _rec=_sess[_p.replace('.html','')];_hasLive=!!(_rec&&(Date.now()-(_rec.lastTs||0))<43200000);}catch(e){}if(!_hasLive)location.replace('dashboard.html');}}}catch(e){}try{var _lk=document.documentElement.getAttribute('data-theme-lock');var _l=!_lk&&localStorage.getItem('mc_theme_mode')==='light';if(_l)document.documentElement.setAttribute('data-theme','light');var _m=document.querySelector('meta[name="theme-color"]');if(_m)_m.setAttribute('content',_l?'#f5f2ec':'#0a0a0a');}catch(e){}try{var _erK='mc_errors_v1',_erMax=20;function _erRec(e){try{var a=JSON.parse(localStorage.getItem(_erK)||'[]');if(!Array.isArray(a))a=[];a.unshift(e);if(a.length>_erMax)a.length=_erMax;localStorage.setItem(_erK,JSON.stringify(a));}catch(_){}}window.addEventListener('error',function(ev){_erRec({t:Date.now(),k:'error',m:(ev&&ev.message)||'Unknown error',s:(ev&&ev.filename)||'',l:(ev&&ev.lineno)||0,p:(location.pathname.split('/').pop()||'')});});window.addEventListener('unhandledrejection',function(ev){var r=ev&&ev.reason;_erRec({t:Date.now(),k:'unhandledrejection',m:(r&&(r.message||String(r)))||'Unhandled rejection',p:(location.pathname.split('/').pop()||'')});});}catch(e){}</script>
 <!-- MC:HEAD END -->
 <style>
-.header{background:linear-gradient(135deg,#0d1f3c,#06080f);}
+.header{background:linear-gradient(135deg,#0d1f3c,#080807);}
 </style>
 <link rel="stylesheet" href="base.css?v=68"/>
 <link rel="stylesheet" href="mc-card-actions.css"/>
@@ -34,7 +34,7 @@
 /* ── WEEK TABS (weeks-to-open only) ── */
 .tabs-bar{background:#0a0a0a;border-bottom:1px solid rgba(var(--accent-rgb),0.1);padding:0 12px;position:sticky;top:0;z-index:8;}
 .tabs{max-width:680px;margin:0 auto;display:flex;overflow-x:auto;}
-.tab{flex:1;padding:12px 8px;border:none;cursor:pointer;font-weight:900;font-size:12px;background:transparent;color:#94a3b8;border-bottom:3px solid transparent;white-space:nowrap;text-align:center;letter-spacing:0.05em;}
+.tab{flex:1;padding:12px 8px;border:none;cursor:pointer;font-weight:900;font-size:12px;background:transparent;color:#a8a196;border-bottom:3px solid transparent;white-space:nowrap;text-align:center;letter-spacing:0.05em;}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
 .hint{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;text-align:center;opacity:0.6;}
 /* ── DAY ACCORDION ── */
@@ -43,7 +43,7 @@
 .day-card.open .day-header{background:rgba(var(--day-rgb),0.06);}
 .day-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:#fff;}
 .day-info{flex:1;}
-.day-session{font-weight:800;font-size:14px;color:#e2e8f0;letter-spacing:-0.01em;}
+.day-session{font-weight:800;font-size:14px;color:#ede7d9;letter-spacing:-0.01em;}
 .day-meta{font-size:11px;color:var(--muted);margin-top:2px;}
 .day-toggle{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.05);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.08);transition:all 0.2s;}
 .day-card.open .day-toggle{color:#fff;}
@@ -53,7 +53,7 @@
 /* ── REST DAY ── */
 .rest-day{background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .rest-label{font-weight:800;font-size:13px;color:var(--muted2);letter-spacing:0.06em;}
-.rest-sub{font-size:11px;color:var(--muted, #94a3b8);}
+.rest-sub{font-size:11px;color:var(--muted, #a8a196);}
 /* ── TAG BANNERS ── */
 .ex-tag{font-size:11px;font-weight:900;letter-spacing:0.14em;padding:5px 14px;text-transform:uppercase;position:relative;}
 .ex-tag.superset{background:rgba(251,191,36,0.12);color:#fbbf24;border-bottom:1px solid rgba(251,191,36,0.15);}
@@ -71,7 +71,7 @@
   font-size:11px;font-weight:700;color:#22d3ee;font-family:monospace;
   border:1px solid rgba(6,182,212,0.18);backdrop-filter:blur(4px);
 }
-.editable{cursor:text;border-bottom:1px dashed rgba(var(--accent-rgb),0.4);padding-bottom:1px;display:inline-block;color:#e2e8f0;}
+.editable{cursor:text;border-bottom:1px dashed rgba(var(--accent-rgb),0.4);padding-bottom:1px;display:inline-block;color:#ede7d9;}
 .editable:hover{background:rgba(var(--accent-rgb),0.08);border-radius:3px;}
 </style>
 <link rel="stylesheet" href="mc-light.css">
@@ -279,7 +279,7 @@ function amrapToInfinity(s,isMultiLeg){
 }
 
 function renderReps(sets){
-  if(!sets||sets==="—")return '<span style="color:#9ca3af;font-style:italic">—</span>';
+  if(!sets||sets==="—")return '<span style="color:#a8a297;font-style:italic">—</span>';
   const parts=sets.split("/").map(s=>s.trim());
   return '<div class="reps-wrap">'+parts.map((part,pi)=>{
     const reps=part.split(",").map(r=>r.trim());

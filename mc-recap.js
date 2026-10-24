@@ -146,8 +146,8 @@
         'background:var(--card-bg,#0f0f0f);border:1px solid rgba(255,255,255,0.07);border-radius:14px;' +
         'text-decoration:none;}' +
       '.pulse-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}' +
-      '.pulse-val{font-size:12px;font-weight:800;color:var(--text,#e2e8f0);}' +
-      '.pulse-sep{color:#64748b;font-size:12px;}' +
+      '.pulse-val{font-size:12px;font-weight:800;color:var(--text,#ede7d9);}' +
+      '.pulse-sep{color:#797267;font-size:12px;}' +
       '.pulse-link{margin-left:auto;font-size:12px;font-weight:800;color:var(--accent,#d4af37);flex-shrink:0;}';
     document.head.appendChild(st);
   }

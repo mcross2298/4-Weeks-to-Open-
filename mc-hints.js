@@ -46,12 +46,12 @@
       // back in, because a dismiss button nobody can press is worse.
       '.mc-hint{position:absolute;z-index:230;max-width:240px;pointer-events:none;' +
         'display:flex;align-items:flex-start;gap:8px;padding:10px 10px 10px 12px;' +
-        'background:#0e0e0e;color:#e2e8f0;border:1px solid rgba(251,191,36,0.4);border-radius:11px;' +
+        'background:#0e0e0e;color:#ede7d9;border:1px solid rgba(251,191,36,0.4);border-radius:11px;' +
         'box-shadow:0 8px 24px rgba(0,0,0,0.45);font-size:12.5px;font-weight:600;line-height:1.4;' +
         'opacity:0;transform:translateY(6px);transition:opacity 0.2s ease,transform 0.2s ease;}' +
       '.mc-hint.show{opacity:1;transform:translateY(0);}' +
       '.mc-hint-txt{flex:1;min-width:0;}' +
-      '.mc-hint-x{flex-shrink:0;appearance:none;border:0;background:none;color:#94a3b8;pointer-events:auto;' +
+      '.mc-hint-x{flex-shrink:0;appearance:none;border:0;background:none;color:#a8a196;pointer-events:auto;' +
         'font-size:13px;line-height:1;cursor:pointer;padding:2px;-webkit-tap-highlight-color:transparent;}' +
       'html[data-theme="light"] .mc-hint{background:#fff;color:#1c1a17;border-color:rgba(217,119,6,0.4);' +
         'box-shadow:0 8px 24px rgba(0,0,0,0.14);}' +

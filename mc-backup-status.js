@@ -33,13 +33,13 @@
     var txt, color;
     if (st.pending > 0) {
       txt = '☁️ Backing up…';
-      color = '#94a3b8';
+      color = '#a8a196';
     } else if (st.lastPush || st.lastPull) {
       txt = '☁️ Backed up · ' + ago(Math.max(st.lastPush, st.lastPull));
       color = '#34d399';
     } else {
       txt = '☁️ Sync ready';
-      color = '#94a3b8';
+      color = '#a8a196';
     }
     el.style.display = 'block';
     el.style.cssText += ';display:block;text-align:center;font-size:11px;font-weight:700;'

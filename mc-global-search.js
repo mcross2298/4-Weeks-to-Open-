@@ -94,23 +94,23 @@
       '.mcgs-bar{display:flex;align-items:center;gap:10px;padding:14px 16px;' +
         'padding-top:calc(14px + env(safe-area-inset-top));border-bottom:1px solid rgba(255,255,255,0.08);}' +
       '.mcgs-input{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);' +
-        'border-radius:12px;padding:12px 14px;color:#e2e8f0;font-size:16px;font-weight:600;outline:none;' +
+        'border-radius:12px;padding:12px 14px;color:#ede7d9;font-size:16px;font-weight:600;outline:none;' +
         'font-family:inherit;}' +
-      '.mcgs-input::placeholder{color:#475569;}' +
+      '.mcgs-input::placeholder{color:#59534b;}' +
       '.mcgs-close{flex-shrink:0;width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.06);' +
-        'border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;font-size:16px;display:flex;' +
+        'border:1px solid rgba(255,255,255,0.1);color:#ede7d9;font-size:16px;display:flex;' +
         'align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
       '.mcgs-results{flex:1;overflow-y:auto;padding:6px 10px calc(20px + env(safe-area-inset-bottom));}' +
       '.mcgs-sec-label{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;' +
-        'color:#475569;padding:14px 10px 6px;}' +
+        'color:#59534b;padding:14px 10px 6px;}' +
       '.mcgs-row{display:flex;align-items:center;gap:12px;padding:12px 10px;border-radius:12px;' +
         'text-decoration:none;-webkit-tap-highlight-color:transparent;}' +
       '.mcgs-row:active{background:rgba(255,255,255,0.06);}' +
       '.mcgs-row-ico{font-size:18px;flex-shrink:0;width:28px;text-align:center;}' +
       '.mcgs-row-body{min-width:0;flex:1;}' +
-      '.mcgs-row-name{display:block;font-size:14px;font-weight:700;color:#e2e8f0;overflow-wrap:break-word;}' +
-      '.mcgs-row-sub{display:block;font-size:12px;color:#64748b;font-weight:600;margin-top:2px;}' +
-      '.mcgs-msg{padding:24px 12px;color:#475569;font-size:13px;font-weight:600;text-align:center;}';
+      '.mcgs-row-name{display:block;font-size:14px;font-weight:700;color:#ede7d9;overflow-wrap:break-word;}' +
+      '.mcgs-row-sub{display:block;font-size:12px;color:#797267;font-weight:600;margin-top:2px;}' +
+      '.mcgs-msg{padding:24px 12px;color:#59534b;font-size:13px;font-weight:600;text-align:center;}';
     document.head.appendChild(st);
   }
 

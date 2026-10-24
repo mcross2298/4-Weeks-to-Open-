@@ -181,7 +181,7 @@
         '</div>' +
         (d.exercises.length
           ? rows
-          : '<div style="font-size:12px;color:#475569;font-weight:700;padding:4px 0;">No exercises yet.</div>') +
+          : '<div style="font-size:12px;color:#59534b;font-weight:700;padding:4px 0;">No exercises yet.</div>') +
         '<button class="add-ex" onclick="MCPB.openPicker(' + di + ')">＋ Add exercise</button>' +
       '</div>';
     }).join('');
@@ -204,7 +204,7 @@
     (window.EXERCISES || []).forEach(function (e, i) {
       if (pkFilter !== 'All' && e.muscle !== pkFilter) return;
       if (q && e.name.toLowerCase().indexOf(q) === -1) return;
-      var col = (window.MUSCLE_COLORS || {})[e.muscle] || '#64748b';
+      var col = (window.MUSCLE_COLORS || {})[e.muscle] || '#797267';
       rows += '<div class="pk-row" data-i="' + i + '">' +
         '<span class="pk-dot" style="background:' + col + ';"></span>' +
         '<span class="pk-nm">' + esc(e.name) + '</span>' +
@@ -216,7 +216,7 @@
       rows = '<button type="button" class="pk-row pk-add-new" data-newex="' + q.replace(/"/g, '&quot;') + '">'
         + '<span class="pk-dot" style="background:' + col + ';box-shadow:0 0 5px ' + col + '44;"></span>'
         + '<span class="pk-nm">＋ Add &ldquo;' + esc(q) + '&rdquo; as new exercise'
-        + '<span style="display:block;font-size:11px;color:#64748b;font-weight:600;margin-top:2px;">' + esc(muscle) + ' &middot; saved to your library</span>'
+        + '<span style="display:block;font-size:11px;color:#797267;font-weight:600;margin-top:2px;">' + esc(muscle) + ' &middot; saved to your library</span>'
         + '</span>'
         + '<span class="pk-add">+</span></button>';
     }

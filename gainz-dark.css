@@ -45,7 +45,7 @@ body{ background:var(--surf-0); }
 }
 .eyebrow{ color:var(--gz-bright); }
 .title{ color:#fff; }
-.hint{ color:#64748b; }                 /* was lime — now a quiet caption     */
+.hint{ color:#797267; }                 /* was lime — now a quiet caption     */
 .schedule{                              /* subtle lime outline, not a block   */
   background:rgba(132,204,22,0.10);
   border:1px solid rgba(132,204,22,0.28);
@@ -54,7 +54,7 @@ body{ background:var(--surf-0); }
 .back-link{
   background:rgba(255,255,255,0.05);
   border:1px solid var(--hair);
-  color:#cbd5e1;
+  color:#d9d3c8;
 }
 
 /* ── day accordion cards ────────────────────────────────────────────────── */
@@ -86,8 +86,8 @@ body{ background:var(--surf-0); }
   box-shadow:0 4px 16px rgba(132,204,22,0.30);
 }
 .day-session{ color:#f0fdf4; font-size:var(--fs-lg); letter-spacing:-0.01em; }
-.day-meta{ color:#7c8a99; }
-.day-toggle{ background:rgba(255,255,255,0.06); color:#94a3b8; }
+.day-meta{ color:#8f877c; }
+.day-toggle{ background:rgba(255,255,255,0.06); color:#a8a196; }
 .day-card.open .day-toggle{ background:var(--gz); color:#08130a; }
 .exercises{ border-top:1px solid var(--hair); }
 
@@ -99,7 +99,7 @@ body{ background:var(--surf-0); }
   transition:background .15s, border-color .15s, opacity .2s;
 }
 .ex-item:active{ background:rgba(132,204,22,0.10); }
-.ex-name{ color:#e2e8f0; }
+.ex-name{ color:#ede7d9; }
 .checkbox{ background:transparent; border:2px solid rgba(132,204,22,0.55); transition:all .15s; }
 
 /* Completed: satisfying, restrained — dim the row, fill + glow the check. */

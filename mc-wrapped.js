@@ -187,10 +187,10 @@
       x.fillStyle = '#ffffff'; x.font = '900 52px system-ui';
       x.fillText(r[1], 170, y);
       if (r[2]) {
-        x.fillStyle = '#94a3b8'; x.font = '600 34px system-ui';
+        x.fillStyle = '#a8a196'; x.font = '600 34px system-ui';
         x.fillText(r[2], 170, y + 46);
       }
-      x.fillStyle = '#e2e8f0';
+      x.fillStyle = '#ede7d9';
       y += r[2] ? 128 : 96;
     });
 

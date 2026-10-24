@@ -210,7 +210,7 @@
       '<div class="pl-hero-inner">' +
       '<div class="pl-topbar">' +
       '<a class="pl-icon-btn pl-back" href="' + escapeHtml(cfg.backHref || 'dashboard.html') + '" aria-label="Back">' +
-      '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e2e2e6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>' +
+      '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e8e2d5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>' +
       '</a>' +
       '<div class="pl-topbar-sp" aria-hidden="true"></div>' +
       '<div class="pl-icon-btn pl-menu" aria-hidden="true">' +

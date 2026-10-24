@@ -28,7 +28,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:60px;}
 .subtitle{font-size:13px;color:var(--muted);font-weight:600;}
 .content{max-width:680px;margin:0 auto;padding:0 16px;}
 .search-wrap{position:sticky;top:0;z-index:10;background:#050d1a;padding:14px 0 10px;border-bottom:1px solid rgba(255,255,255,0.06);}
-.search-box{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 16px 12px 40px;color:#e2e8f0;font-size:16px;font-weight:600;outline:none;}/* 16px: no iOS focus-zoom */
+.search-box{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 16px 12px 40px;color:#ede7d9;font-size:16px;font-weight:600;outline:none;}/* 16px: no iOS focus-zoom */
 .search-box::placeholder{color:var(--muted2);}
 .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
 .search-rel{position:relative;}
@@ -40,7 +40,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:60px;}
 .ex-list{display:flex;flex-direction:column;gap:6px;}
 .ex-item{background:#0d1f3c;border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
 .ex-muscle-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.ex-name{flex:1;font-size:13px;font-weight:700;color:#e2e8f0;line-height:1.4;}
+.ex-name{flex:1;font-size:13px;font-weight:700;color:#ede7d9;line-height:1.4;}
 .ex-programs{font-size:11px;color:var(--muted2);font-weight:600;margin-top:2px;}
 .ex-muscle-tag{font-size:14px;flex-shrink:0;}
 /* Touch floor (roadmap M1/D8): the star was 25x23 -- 202 of them visible at
@@ -65,7 +65,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:60px;}
    be discovered by tapping where you could not see anything, since only
    the favourited state (#d4af37, 7.61:1) ever rendered. #7b8ca6 gives
    4.81:1 and still reads as the unset state against the gold. */
-.fav-btn{flex-shrink:0;background:none;border:none;font-size:19px;line-height:1;color:#7b8ca6;cursor:pointer;padding:0;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:flex-end;margin-block:-11px;margin-inline-start:-19px;-webkit-tap-highlight-color:transparent;transition:color .15s,transform .1s;}
+.fav-btn{flex-shrink:0;background:none;border:none;font-size:19px;line-height:1;color:#918a7e;cursor:pointer;padding:0;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:flex-end;margin-block:-11px;margin-inline-start:-19px;-webkit-tap-highlight-color:transparent;transition:color .15s,transform .1s;}
 .fav-btn.on{color:#d4af37;}
 .fav-btn:active{transform:scale(0.85);}
 .master-group{border-radius:10px;overflow:hidden;border:1px solid rgba(212,175,55,0.2);background:#0d1f3c;}
@@ -78,7 +78,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:60px;}
 .master-group.open .variations{display:flex;}
 .var-item{background:#091525;padding:10px 14px 10px 34px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,0.04);}
 .var-item:last-child{border-bottom:none;}
-.var-name{flex:1;font-size:13px;font-weight:600;color:#94a3b8;line-height:1.4;}
+.var-name{flex:1;font-size:13px;font-weight:600;color:#a8a196;line-height:1.4;}
 .var-programs{font-size:11px;color:#1e3050;font-weight:600;margin-top:2px;}
 .var-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;opacity:0.6;}
 /* .empty-state / .empty-icon / .empty-text now come from base.css (L1 Phase C
@@ -88,7 +88,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:60px;}
 /* Replace mode — arrived via ?replace= so the user can pick a swap */
 .replace-banner{background:linear-gradient(90deg,rgba(34,211,238,0.14),rgba(34,211,238,0.05));border:1px solid rgba(34,211,238,0.3);border-radius:10px;padding:11px 14px;margin:14px 0 0;color:#a5f3fc;font-size:13px;font-weight:700;line-height:1.5;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .replace-banner strong{color:#22d3ee;}
-.replace-banner a{margin-left:auto;color:#94a3b8;font-size:12px;font-weight:800;text-decoration:none;border:1px solid rgba(255,255,255,0.15);padding:5px 12px;border-radius:14px;-webkit-tap-highlight-color:transparent;}
+.replace-banner a{margin-left:auto;color:#a8a196;font-size:12px;font-weight:800;text-decoration:none;border:1px solid rgba(255,255,255,0.15);padding:5px 12px;border-radius:14px;-webkit-tap-highlight-color:transparent;}
 .ex-item.pickable,.var-item.pickable{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .12s,border-color .12s;}
 .ex-item.pickable:active,.var-item.pickable:active{background:#112240;border-color:rgba(34,211,238,0.4);}
 .pick-cue{font-size:11px;font-weight:800;color:#22d3ee;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.28);border-radius:14px;padding:3px 9px;flex-shrink:0;letter-spacing:0.04em;white-space:nowrap;}

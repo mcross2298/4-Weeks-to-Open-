@@ -73,15 +73,27 @@
   window.__mcNav = true;
 
   var HUB = 'dashboard.html';
+  // Flagship readiness G: ONE bottom nav. The dashboard drew its own bar with
+  // line icons and "History" as the fifth tab, while every other page got
+  // this one with emoji and "Stats" -- so the bar changed under the athlete's
+  // thumb depending on the screen (audit pain point 5). These are the
+  // dashboard's own icons, and the owner chose History for the fifth tab;
+  // Stats is reached from History's top bar and Home's Training Tools.
+  var SVG = function (d, extra) {
+    return '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + (extra || '') + '</svg>';
+  };
   var TABS = [
     // ?tab=dashboard (not the bare hub): the dashboard reopens the tab a
     // session was last on when none is named (R5 step 6), and tapping Home
     // here is an explicit choice of Home.
-    { label: 'Dashboard',    ico: '⚡',  href: HUB + '?tab=dashboard' },
-    { label: 'Programs',     ico: '🏋️', href: HUB + '?tab=programs' },
-    { label: 'Conditioning', ico: '🔥', href: HUB + '?tab=conditioning' },
-    { label: 'Nutrition',    ico: '🍎', href: HUB + '?tab=nutrition' },
-    { label: 'Stats',        ico: '📈', href: 'stats.html' }
+    { label: 'Dashboard',    href: HUB + '?tab=dashboard',    ico: SVG('<path d="M4 11l8-7 8 7M6 9.5V20h12V9.5"/>') },
+    { label: 'Programs',     href: HUB + '?tab=programs',     ico: SVG('<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/>') },
+    { label: 'Conditioning', href: HUB + '?tab=conditioning', ico: SVG('<path d="M12 3c1.6 3 4 4.2 4 7.5A4 4 0 0 1 8 11c0-1 .3-1.7.8-2.4C8 9 7 10.3 7 12.5A5 5 0 0 0 17 12.5"/>') },
+    { label: 'Nutrition',    href: HUB + '?tab=nutrition',    ico: SVG('<path d="M12 8c-2-3 1-5 2-5-1 2 .5 3 1.5 4A5 5 0 1 1 8 8.5C9 10 11 10 12 8z"/>') },
+    { label: 'History',      href: 'workout-logs.html',       ico: SVG('<rect x="4" y="5" width="16" height="16" rx="2.5"/><path d="M4 9h16M9 3v3M15 3v3"/>'),
+      // a finished workout's detail page is part of History
+      here: /(^|\/)(workout-logs|workout-detail)\.html$/ }
   ];
 
   function build() {
@@ -91,11 +103,13 @@
     var nav = document.createElement('nav');
     nav.className = 'mc-nav';
     nav.setAttribute('aria-label', 'Primary');
+    var path = location.pathname;
     TABS.forEach(function (t) {
       var a = document.createElement('a');
       a.className = 'mc-nav-tab';
       a.href = t.href;
       a.innerHTML = '<span class="mc-nav-ico">' + t.ico + '</span><span>' + t.label + '</span>';
+      if (t.here && t.here.test(path)) { a.classList.add('is-current'); a.setAttribute('aria-current', 'page'); }
       nav.appendChild(a);
     });
     document.body.appendChild(nav);
@@ -133,8 +147,8 @@
     btn.setAttribute('title', 'Toggle light/dark mode');
     btn.setAttribute('aria-label', 'Toggle light/dark mode');
     btn.innerHTML =
-      '<svg class="theme-icon-dark" width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" stroke="#c9c9cf" stroke-width="2" stroke-linejoin="round"/></svg>' +
-      '<svg class="theme-icon-light" width="17" height="17" viewBox="0 0 24 24" fill="none" style="display:none;"><circle cx="12" cy="12" r="4.5" stroke="#c9c9cf" stroke-width="2"/><path d="M12 2.5v2.5M12 19v2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12H5M19 12h2.5M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8" stroke="#c9c9cf" stroke-width="2" stroke-linecap="round"/></svg>';
+      '<svg class="theme-icon-dark" width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" stroke="#cfc9bf" stroke-width="2" stroke-linejoin="round"/></svg>' +
+      '<svg class="theme-icon-light" width="17" height="17" viewBox="0 0 24 24" fill="none" style="display:none;"><circle cx="12" cy="12" r="4.5" stroke="#cfc9bf" stroke-width="2"/><path d="M12 2.5v2.5M12 19v2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12H5M19 12h2.5M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8" stroke="#cfc9bf" stroke-width="2" stroke-linecap="round"/></svg>';
     btn.addEventListener('click', function () { if (window.MC_APPEARANCE) MC_APPEARANCE.toggle(); });
     btn.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }

@@ -43,18 +43,18 @@
       '.mcis-sheet{width:100%;max-width:480px;margin:0 auto;' +
         'background:#0e0e0e;border:1px solid rgba(255,255,255,0.1);' +
         'border-radius:18px;padding:18px 16px 16px;font-family:inherit;}' +
-      '.mcis-title{font-size:16px;font-weight:800;color:#e2e8f0;margin-bottom:2px;}' +
-      '.mcis-label{font-size:12.5px;font-weight:600;color:#94a3b8;margin-bottom:10px;}' +
+      '.mcis-title{font-size:16px;font-weight:800;color:#ede7d9;margin-bottom:2px;}' +
+      '.mcis-label{font-size:12.5px;font-weight:600;color:#a8a196;margin-bottom:10px;}' +
       '.mcis-input{width:100%;padding:12px;border-radius:12px;' +
         'background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);' +
-        'color:#e2e8f0;font-size:16px;font-family:inherit;outline:none;}' +
+        'color:#ede7d9;font-size:16px;font-family:inherit;outline:none;}' +
       '.mcis-input:focus{border-color:rgba(251,191,36,0.5);}' +
       '.mcis-err{font-size:12px;font-weight:700;color:#f87171;margin-top:8px;min-height:15px;}' +
       '.mcis-btns{display:flex;gap:10px;margin-top:12px;}' +
       '.mcis-btn{flex:1;padding:13px;border-radius:12px;border:none;cursor:pointer;' +
         'font-family:inherit;font-size:14px;font-weight:800;letter-spacing:0.02em;' +
         '-webkit-tap-highlight-color:transparent;}' +
-      '.mcis-cancel{background:rgba(255,255,255,0.07);color:#cbd5e1;}' +
+      '.mcis-cancel{background:rgba(255,255,255,0.07);color:#d9d3c8;}' +
       '.mcis-save{background:#fbbf24;color:#1a1200;}' +
       'html[data-theme="light"] .mcis-overlay{background:rgba(28,26,23,0.35);}' +
       'html[data-theme="light"] .mcis-sheet{background:#f5f2ec;border-color:rgba(28,26,23,0.1);}' +

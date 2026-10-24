@@ -103,9 +103,9 @@
       st.textContent =
         '.bw-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}' +
         '.bw-now{font-size:22px;font-weight:900;color:var(--accent,#d4af37);}' +
-        '.bw-delta{font-size:11px;font-weight:800;color:#94a3b8;}' +
+        '.bw-delta{font-size:11px;font-weight:800;color:#a8a196;}' +
         '.bw-log{margin-left:auto;padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.14);' +
-          'background:rgba(255,255,255,0.06);color:#e2e8f0;font-size:12px;font-weight:800;cursor:pointer;' +
+          'background:rgba(255,255,255,0.06);color:#ede7d9;font-size:12px;font-weight:800;cursor:pointer;' +
           'font-family:inherit;-webkit-tap-highlight-color:transparent;}';
       document.head.appendChild(st);
     }

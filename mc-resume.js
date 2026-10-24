@@ -68,17 +68,17 @@
       '.mcr-body{min-width:0;flex:1;}' +
       '.mcr-lbl{font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#84cc16;}' +
       '.mcr-name{font-size:13px;font-weight:800;color:#f0fdf4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
-      '.mcr-ago{font-size:11px;font-weight:700;color:#94a3b8;margin-top:2px;}' +
+      '.mcr-ago{font-size:11px;font-weight:700;color:#a8a196;margin-top:2px;}' +
       '.mcr-prog{font-size:11px;font-weight:700;color:#a3e635;margin-left:auto;flex-shrink:0;}' +
       // P2-07: the unit, muted so the numbers still read first. The restore
       // banner further down this file has always named its unit ("3 sets");
       // this makes the resume banner consistent with its own sibling.
       '.mcr-prog-unit{font-weight:600;opacity:0.7;}' +
       '.mcr-arrow{color:#d9f99d;font-size:15px;flex-shrink:0;}' +
-      '.mcr-dismiss{background:none;border:0;color:#94a3b8;font-size:15px;line-height:1;' +
+      '.mcr-dismiss{background:none;border:0;color:#a8a196;font-size:15px;line-height:1;' +
         'padding:4px 6px;margin-left:2px;flex-shrink:0;cursor:pointer;' +
         '-webkit-tap-highlight-color:transparent;}' +
-      '.mcr-dismiss:active{color:#e2e8f0;}';
+      '.mcr-dismiss:active{color:#ede7d9;}';
     document.head.appendChild(s);
   }
 

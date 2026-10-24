@@ -46,7 +46,7 @@
 .day-card.open .day-header{background:rgba(var(--day-rgb,249,115,22),0.06);}
 .day-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:#fff;}
 .day-info{flex:1;}
-.day-session{font-weight:800;font-size:14px;color:#e2e8f0;letter-spacing:-0.01em;}
+.day-session{font-weight:800;font-size:14px;color:#ede7d9;letter-spacing:-0.01em;}
 .day-meta{font-size:11px;color:var(--muted);margin-top:2px;}
 .day-toggle{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.05);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.08);transition:all 0.2s;}
 .day-card.open .day-toggle{color:#fff;}
@@ -72,7 +72,7 @@
 .is-cluster{border-left:3px solid rgba(249,115,22,0.6)!important;}
 .is-drop{border-left:3px solid rgba(239,68,68,0.6)!important;}
 .is-finisher{border-left:3px solid rgba(168,85,247,0.6)!important;border-style:dashed!important;}
-.editable{cursor:text;border-bottom:1px dashed rgba(249,115,22,0.4);padding-bottom:1px;display:inline-block;color:#e2e8f0;}
+.editable{cursor:text;border-bottom:1px dashed rgba(249,115,22,0.4);padding-bottom:1px;display:inline-block;color:#ede7d9;}
 .editable:hover{background:rgba(249,115,22,0.08);border-radius:3px;}
 
 /* ── SAND LIGHT MODE (Phase 7) ─────────────────────────────────────────── */
@@ -336,11 +336,11 @@ function cardClass(tag){
 function amrapToInfinity(s){ return String(s).replace(/\bamrap\b/gi,'∞'); }
 
 function renderReps(sets){
-  if(!sets||sets==='—')return'<span style="color:#9ca3af;font-style:italic">—</span>';
+  if(!sets||sets==='—')return'<span style="color:#a8a297;font-style:italic">—</span>';
   if(sets.includes('→')){
     const parts=sets.split('→');
     const baseHtml=renderChips(parts[0].trim(),'#fb923c');
-    const extHtml=`<span style="font-size:11px;font-weight:900;color:#94a3b8;margin:0 4px">→</span>`+renderChips(amrapToInfinity(parts[1].trim()),'#f87171');
+    const extHtml=`<span style="font-size:11px;font-weight:900;color:#a8a196;margin:0 4px">→</span>`+renderChips(amrapToInfinity(parts[1].trim()),'#f87171');
     return`<div class="a-leg">${baseHtml}${extHtml}</div>`;
   }
   const lower=sets.toLowerCase();
@@ -474,7 +474,7 @@ function renderDay(day,dIdx){
     ];
     const actsHtml=acts.map(a=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(51,65,85,0.2);">
       <span style="font-size:18px;flex-shrink:0">${a.icon}</span>
-      <div><div style="font-weight:800;font-size:13px;color:#94a3b8">${a.name}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${a.desc}</div></div>
+      <div><div style="font-weight:800;font-size:13px;color:#a8a196">${a.name}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${a.desc}</div></div>
     </div>`).join('');
     const c=dayChrome(day);
     return backBtn()+`<div class="day-card open" data-d="${dIdx}" style="--day-rgb:${c.rgb}">
@@ -602,7 +602,7 @@ render();
     <div class="sum-row" style="border-bottom-color:#f9731622;"><span class="sum-ico">💪</span><span class="sum-nm">Push Day — Day 1</span><div class="sum-dt"><span class="sum-st" style="color:#f97316;">10 exs</span><span class="sum-rp" style="color:#f97316;">Bench · Cable Tri-Set · Cluster · Drop</span></div></div>
     <div class="sum-row" style="border-bottom-color:#f9731622;"><span class="sum-ico">🏋️</span><span class="sum-nm">Pull Day — Day 2</span><div class="sum-dt"><span class="sum-st" style="color:#f97316;">10 exs</span><span class="sum-rp" style="color:#f97316;">Row · DB Bench Tri-Set · Cluster · Drop</span></div></div>
     <div class="sum-row" style="border-bottom-color:#f9731622;"><span class="sum-ico">🦵</span><span class="sum-nm">Legs Day — Day 3</span><div class="sum-dt"><span class="sum-st" style="color:#f97316;">10 exs</span><span class="sum-rp" style="color:#f97316;">Squat · Leg Press Tri-Set · Cluster · Drop</span></div></div>
-    <div class="sum-row" style="border-bottom-color:#33415522;"><span class="sum-ico">😴</span><span class="sum-nm" style="color:#94a3b8;">Rest Day — Day 4</span><div class="sum-dt"><span class="sum-st" style="color:var(--muted);">Full Rest</span><span class="sum-rp" style="color:var(--muted);">Sleep · Nutrition · Recovery</span></div></div>
+    <div class="sum-row" style="border-bottom-color:#33415522;"><span class="sum-ico">😴</span><span class="sum-nm" style="color:#a8a196;">Rest Day — Day 4</span><div class="sum-dt"><span class="sum-st" style="color:var(--muted);">Full Rest</span><span class="sum-rp" style="color:var(--muted);">Sleep · Nutrition · Recovery</span></div></div>
     <div class="sum-row" style="border-bottom-color:#d9770622;"><span class="sum-ico">⚡</span><span class="sum-nm" style="color:#fbbf24;">Conditioning Day 1 — Day 5</span><div class="sum-dt"><span class="sum-st" style="color:#d97706;">Varies</span><span class="sum-rp" style="color:#d97706;">Select from Conditioning Corner</span></div></div>
     <div class="sum-row" style="border-bottom-color:#d9770622;"><span class="sum-ico">⚡</span><span class="sum-nm" style="color:#fbbf24;">Conditioning Day 2 — Day 6</span><div class="sum-dt"><span class="sum-st" style="color:#d97706;">Varies</span><span class="sum-rp" style="color:#d97706;">Select from Conditioning Corner</span></div></div>
     <div class="sum-row" style="border-bottom-color:#d9770622;"><span class="sum-ico">⚡</span><span class="sum-nm" style="color:#fbbf24;">Conditioning Day 3 — Day 7</span><div class="sum-dt"><span class="sum-st" style="color:#d97706;">Varies</span><span class="sum-rp" style="color:#d97706;">Select from Conditioning Corner</span></div></div>

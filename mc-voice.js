@@ -203,7 +203,7 @@
         'box-shadow:0 4px 16px rgba(0,0,0,0.4);transition:box-shadow 0.2s,border-color 0.2s;}' +
       '.mc-voice-btn.listening{border-color:rgba(248,113,113,0.6);box-shadow:0 0 0 4px rgba(248,113,113,0.15),0 4px 16px rgba(0,0,0,0.4);}' +
       '.mc-voice-toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));' +
-        'transform:translate(-50%,10px);background:#0e0e0e;color:#e2e8f0;border:1px solid rgba(255,255,255,0.1);' +
+        'transform:translate(-50%,10px);background:#0e0e0e;color:#ede7d9;border:1px solid rgba(255,255,255,0.1);' +
         'border-radius:12px;padding:10px 16px;font-size:13px;font-weight:700;z-index:99;' +
         'opacity:0;pointer-events:none;transition:opacity 200ms,transform 200ms;white-space:nowrap;}' +
       '.mc-voice-toast.show{opacity:1;transform:translate(-50%,0);}' +
