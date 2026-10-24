@@ -112,6 +112,34 @@ ok('module.exports captured all 7 merge fns', !!(M && M.mergeArrayById && M.merg
   eq('workoutLog: capped at 200', out.length, 200);
 }
 
+// ---- flagship readiness R1 / D-24: a delete stays deleted ------------------
+{
+  const A = { id: 'a', pageId: 'p', date: '2026-10-20T00:00:00Z' };
+  const B = { id: 'b', pageId: 'p', date: '2026-10-21T00:00:00Z' };
+  const C = { pageId: 'q', date: '2026-10-22T00:00:00Z' };           // legacy, no id
+  const ids = (arr) => arr.map((e) => e.id || (e.pageId + '|' + e.date)).join(',');
+  // No base, no record: still a union, so nothing a user did not delete is lost.
+  eq('D-24: no base, no record -> union', ids(M.mergeWorkoutLog([A], [A, B])), 'b,a');
+  // Base (last server copy) held B, this device no longer does -> deleted here.
+  eq('D-24: removed since the last sync is not pulled back', ids(M.mergeWorkoutLog([A], [A, B], [A, B])), 'a');
+  // Same, with the base as the JSON string the real snapshot holds.
+  eq('D-24: base accepted as a JSON string', ids(M.mergeWorkoutLog([A], [A, B], JSON.stringify([A, B]))), 'a');
+  // B is new on the OTHER device (not in base) -> still arrives.
+  eq('D-24: a new remote workout still arrives', ids(M.mergeWorkoutLog([A], [A, B], [A])), 'b,a');
+  // Deletion record from the other device removes the local copy too.
+  eq('D-24: a deletion record removes the entry on this device',
+     ids(M.mergeWorkoutLog([A, B], [A], null, { b: { ts: 1 } })), 'a');
+  // A legacy entry is deletable by its page|date identity.
+  eq('D-24: a legacy entry is matched by page|date',
+     ids(M.mergeWorkoutLog([A, C], [A, C], null, { 'q|2026-10-22T00:00:00Z': { ts: 1 } })), 'a');
+  // Through the real dispatcher, with the record passed as `extra`.
+  eq('D-24: mergeStore passes deletion records through',
+     ids(M.mergeStore('workoutLog', [A, B], [A, B], null, { a: { ts: 1 } })), 'b');
+  // The record store itself unions by key.
+  eq('D-24: deletion records union across devices',
+     Object.keys(M.mergeDictByTs({ a: { ts: 1 } }, { b: { ts: 2 } })).sort().join(','), 'a,b');
+}
+
 // ---- mergeSetlog: union sessions by day label, union set numbers, cap 5 --
 {
   const local = { 'p|ex1': [

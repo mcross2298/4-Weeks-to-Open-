@@ -191,6 +191,9 @@
   // read stale. Oldest first, so the newest value for a slot wins.
   function replayRecent(s) {
     _recent.slice().sort(function (a, b) { return a.ts - b.ts; }).forEach(function (r) {
+      // R1 / D-03: an untick is a record too (entry null), so a write that
+      // read a stale snapshot cannot put an unticked set back.
+      if (r.entry == null) { dropSet(s, r); return; }
       if (!s[r.k]) s[r.k] = [];
       var sess = s[r.k][0];
       if (!sess || sess.d !== r.d) {
@@ -210,6 +213,20 @@
     });
   }
 
+  // Removes one set from today's session for an exercise. A session left
+  // with no sets is removed too, so history never shows an empty day and the
+  // five-session cap does not spend a slot on one.
+  function dropSet(s, r) {
+    var list = s[r.k];
+    var top = Array.isArray(list) ? list[0] : null;
+    if (!top || top.d !== r.d || !top.sets || !(r.sn in top.sets)) return;
+    delete top.sets[r.sn];
+    if (!Object.keys(top.sets).length) {
+      list.shift();
+      if (!list.length) delete s[r.k];
+    }
+  }
+
   // forget() drops recent records for a page. Discard needs it: without it
   // replayRecent() would faithfully put back the very sets the athlete just
   // threw away, which is the opposite of what discard means.
@@ -220,78 +237,17 @@
   }
 
   // ---- roadmap Phase 5.3 (manual scenario M7): a full store, visibly ------
-  // Every localStorage write in this app sits inside a catch, and a full
-  // store therefore failed SILENTLY: the row ticked, the count went up, the
-  // screen said the set was logged, and nothing reached disk. Phase 0 left a
-  // stopgap here that called MC_TOAST — a function that is defined NOWHERE in
-  // the tree, behind an `if (window.MC_TOAST)` guard that swallowed it. So
-  // the warning Phase 0 believed it had added has never once been shown. Same
-  // shape as the #pushChip element Phase 4.5 found: a guard around something
-  // that was never built. This one therefore builds its own element and
-  // depends on nothing.
-  //
-  // Published as MCSetlogUtil.writeStore() so the other writers on the
-  // session path share it rather than each growing a private copy — the same
-  // reasoning check-single-impl.js applies to the readers.
-  function isQuotaError(e) {
-    if (!e) return false;
-    // Chrome/Safari: code 22. Firefox: 1014 with its own name. Safari in a
-    // private window throws QuotaExceededError at a quota of zero, which is
-    // the same message to the athlete: this device will not keep the set.
-    if (e.code === 22 || e.code === 1014) return true;
-    return e.name === 'QuotaExceededError' ||
-           e.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
-           e.name === 'QUOTA_EXCEEDED_ERR';
-  }
-
-  var _quotaShown = false;
-  function warnStorageFull(quota) {
-    // One banner per page load, not one per set — and dismissing it is
-    // final for that load rather than re-arming on the next failed write,
-    // which would put it back on screen every few seconds while the athlete
-    // is mid-session. A reload re-arms it.
-    if (_quotaShown) return;
-    if (typeof document === 'undefined' || !document.body) return;
-    _quotaShown = true;
-    var el = document.createElement('div');
-    el.className = 'mc-quota';
-    el.setAttribute('role', 'alert');
-    var body = document.createElement('div');
-    body.className = 'mc-quota-body';
-    var title = document.createElement('div');
-    title.className = 'mc-quota-title';
-    title.textContent = quota ? 'Storage full — this set was not saved'
-                              : 'This browser is not saving your sets';
-    var msg = document.createElement('div');
-    msg.className = 'mc-quota-msg';
-    // Built as nodes, not innerHTML: the only variable part is the link, and
-    // an alert about losing data is the last place to introduce a parse path.
-    msg.appendChild(document.createTextNode(quota
-      ? 'Keep training — your sets still reach the cloud if you are signed in. To fix it on this device, '
-      : 'Private browsing and blocked site data both do this. Your sets still reach the cloud if you are signed in. You can '));
-    var a = document.createElement('a');
-    a.href = 'dashboard.html';
-    a.textContent = 'export a backup and clear old logs';
-    msg.appendChild(a);
-    msg.appendChild(document.createTextNode(' from your account panel.'));
-    var x = document.createElement('button');
-    x.type = 'button';
-    x.className = 'mc-quota-x';
-    x.setAttribute('aria-label', 'Dismiss storage warning');
-    x.textContent = '\u2715';
-    x.addEventListener('click', function () {
-      if (el.parentNode) el.parentNode.removeChild(el);
-    });
-    body.appendChild(title); body.appendChild(msg);
-    el.appendChild(body); el.appendChild(x);
-    document.body.appendChild(el);
-  }
-
-  // Returns true when the value actually reached disk. Callers that care can
-  // act on false; callers that don't at least no longer report success.
+  // The guarded writer and its banner live in mc-log-read.js now (flagship
+  // readiness R1 / D-38): three conditioning pages bank workouts without
+  // loading this file, so they wrote with no warning at all. Every page that
+  // writes a session store loads mc-log-read.js, and this resolves it at call
+  // time, as the day key already does. Published as MCSetlogUtil.writeStore()
+  // too, for the callers that already reach for it there.
   function writeStore(key, value) {
-    try { localStorage.setItem(key, value); return true; }
-    catch (e) { warnStorageFull(isQuotaError(e)); return false; }
+    var L = _mcLog();
+    if (L && L.writeStore) return L.writeStore(key, value);
+    // mc-log-read.js missing: still write, and still report the failure.
+    try { localStorage.setItem(key, value); return true; } catch (e) { return false; }
   }
 
   function withStore(mutate, opts) {
@@ -319,6 +275,18 @@
     withStore(null);                   // replayRecent() carries the new entry
   }
 
+  // R1 / D-03: unticking a set used to remove its cloud row and re-arm the
+  // pending draft, and leave the set itself in mc_setlog_v1 — so Finish
+  // banked it anyway, and it fed progression and history as if it had been
+  // lifted. Same path as save(): a recent record (with no entry) broadcast to
+  // peers and replayed into the locked write.
+  function unsave(exId, sn) {
+    var rec = { k: ek(exId), d: dayStamp(), sn: sn, entry: null, ts: Date.now() };
+    noteRecent(rec);
+    try { if (_bc) _bc.postMessage(rec); } catch (e) {}
+    withStore(null);
+  }
+
   function lsess(exId) {
     var k = ek(exId);
     var sess = (st()[k] || [])[0] || null;
@@ -330,7 +298,9 @@
       Object.keys(sess.sets || {}).forEach(function (sn) { out.sets[sn] = sess.sets[sn]; });
     }
     mine.sort(function (a, b) { return a.ts - b.ts; }).forEach(function (r) {
-      if (r.d === out.d) out.sets[r.sn] = r.entry;
+      if (r.d !== out.d) return;
+      if (r.entry == null) delete out.sets[r.sn];
+      else out.sets[r.sn] = r.entry;
     });
     return out;
   }
@@ -368,6 +338,22 @@
     if (!w && !r) { delete p[k]; }
     else { p[k] = { w: w || '', r: r || '', ts: Date.now() }; }
     writeStore(PK, JSON.stringify(p));
+  }
+  // Drafts typed in the last 300ms that have not been written yet. Flushed
+  // synchronously when the page is hidden or torn down: those are exactly
+  // the moments a pending debounce would otherwise never fire.
+  var _draftQueue = (typeof Set !== 'undefined') ? new Set() : null;
+  function _flushDrafts() {
+    if (!_draftQueue || !_draftQueue.size) return;
+    Array.from(_draftQueue).forEach(function (fn) { try { fn(); } catch (e) {} });
+  }
+  if (typeof document !== 'undefined' && document.addEventListener) {
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') _flushDrafts();
+    });
+  }
+  if (typeof window !== 'undefined' && window.addEventListener) {
+    window.addEventListener('pagehide', _flushDrafts);
   }
   function clearPending(exId, sn) {
     var p = readPending(), k = pendingKey(exId, sn);
@@ -1083,7 +1069,14 @@
     if (ck.classList.contains('done')) {
       ck.classList.remove('done'); ck.textContent = '☐'; ck.setAttribute('aria-checked', 'false');
       row.classList.remove('done-row');
+      unsave(exId, sn);
       updateCount(card, exId);
+      updateHist(card, exId);
+      // mc-session.js drops this row from the live session record; it no
+      // longer infers an untick from a row missing from the DOM (D-01).
+      try {
+        document.dispatchEvent(new CustomEvent('mc:set-unchecked', { detail: { rowId: row.id } }));
+      } catch (ee) {}
       // A-10: unchecking re-opens the row for edits, so it is typed-but-
       // unconfirmed again — re-arm the pending snapshot from whatever is in
       // the fields right now, same as if it had never been checked.
@@ -1659,10 +1652,8 @@
       if (inp.dataset.ghost) {
         inp.addEventListener('focus', function () { try { inp.select(); } catch (e) {} }, { once: true });
       }
-      inp.addEventListener('input', function () {
-        if (inp.dataset.ghost) { inp.classList.remove('mcl-ghost'); delete inp.dataset.ghost; }
-      });
-      inp.addEventListener('blur', function () {
+      function persistDraft() {
+        _draftQueue.delete(persistDraft);
         var row = inp.closest('.mcl-row');
         if (!row) return;
         var ckEl = row.querySelector('.mcl-ck');
@@ -1673,7 +1664,19 @@
         var wv = (wEl && !wEl.dataset.ghost) ? wEl.value.trim() : '';
         var rv = (rEl2 && !rEl2.dataset.ghost) ? rEl2.value.trim() : '';
         setPending(exId, ckSn, wv, rv);
+      }
+      // R1 / D-05: the draft was saved on blur only, and a phone that locks,
+      // takes a call or is killed while the field still has focus never
+      // fires blur — so the number the athlete had just typed was gone.
+      // Saved on input now, debounced, and flushed on hide (_flushDrafts).
+      var draftT = null;
+      inp.addEventListener('input', function () {
+        if (inp.dataset.ghost) { inp.classList.remove('mcl-ghost'); delete inp.dataset.ghost; }
+        clearTimeout(draftT);
+        _draftQueue.add(persistDraft);
+        draftT = setTimeout(persistDraft, 300);
       });
+      inp.addEventListener('blur', function () { clearTimeout(draftT); persistDraft(); });
     });
     // Carry-down: typing set 1's weight updates the fill/placeholder of every
     // later still-empty working set (drop rows excluded — weight is stripped).
@@ -2126,6 +2129,9 @@
                                     // checkboxes (see planFor above)
     ensureRowsBuilt: ensureRowsBuilt,  // A-14: lets mc-session.js build a specific
                                     // card's rows before restoring checks onto it
+    rowIdPrefix: function (card) {  // R1 / D-01: lets mc-session.js find a row's
+      return 'mclr-' + cssId(exIdOf(card)) + '-';   // owner by identity when its
+    },                              // stored positional card key went stale
     firstIncompleteUnit: firstIncompleteUnit,  // VOC-A2: lets mc-session.js find
                                     // where to land a genuinely fresh visit
     writeStore: writeStore,          // Phase 5.3: the ONE storage write that

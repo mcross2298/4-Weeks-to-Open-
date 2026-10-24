@@ -599,7 +599,6 @@ boot();
 <script>
 /* ════════ FINISH-WORKOUT MODULE (wired to live metrics) ════════ */
 (function(){
-  var WL_KEY='mc_workout_log_v1';
 
   function inject(){
     document.body.insertAdjacentHTML('beforeend',
@@ -646,12 +645,9 @@ boot();
         duration:fmtClock(m.elapsed),
         pushups:m.totalPushups, ladderSets:m.setsDone, finisher:S.ladder.finisher,
         coreIntervals:m.coreStep, sets:[], prs:0, setsChecked:m.setsDone+m.coreStep};
-      try{
-        var logs=JSON.parse(localStorage.getItem(WL_KEY)||'[]');
-        if(!Array.isArray(logs)) logs=[];   // L-03: else unshift() throws into the silent catch and the session is never saved
-        logs.unshift(entry); logs=logs.slice(0,200);
-        localStorage.setItem(WL_KEY,JSON.stringify(logs));
-      }catch(e){}
+      // R1 / D-38: the one append — it also stamps the id sync dedupes on and
+      // warns when the device is full, which this page's own copy never did.
+      try{ MC_LOG.appendWorkout(entry); }catch(e){}
       window._FW.close();
       var btn=document.querySelector('.fw-btn');
       if(btn){ btn.textContent='✓ Saved!'; btn.style.background='#34d399'; }

@@ -270,6 +270,175 @@
     return out;
   }
 
+  // ---- roadmap Phase 5.3 (manual scenario M7): a full store, visibly ------
+  // Every localStorage write in this app sits inside a catch, and a full
+  // store therefore failed SILENTLY: the row ticked, the count went up, the
+  // screen said the set was logged, and nothing reached disk. Phase 0 left a
+  // stopgap here that called MC_TOAST — a function that is defined NOWHERE in
+  // the tree, behind an `if (window.MC_TOAST)` guard that swallowed it. So
+  // the warning Phase 0 believed it had added has never once been shown. Same
+  // shape as the #pushChip element Phase 4.5 found: a guard around something
+  // that was never built. This one therefore builds its own element and
+  // depends on nothing.
+  //
+  // Published as MC_LOG.writeStore() (and, for existing callers, as
+  // MCSetlogUtil.writeStore()) so the writers on the session path share it
+  // rather than each growing a private copy — the same reasoning
+  // check-single-impl.js applies to the readers. It moved here from
+  // mc-setlog.js in flagship readiness R1 (D-38): three conditioning pages
+  // bank a workout without loading the set logger, so their writes failed
+  // silently. This file is on every page that writes a session store.
+  function isQuotaError(e) {
+    if (!e) return false;
+    // Chrome/Safari: code 22. Firefox: 1014 with its own name. Safari in a
+    // private window throws QuotaExceededError at a quota of zero, which is
+    // the same message to the athlete: this device will not keep the set.
+    if (e.code === 22 || e.code === 1014) return true;
+    return e.name === 'QuotaExceededError' ||
+           e.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+           e.name === 'QUOTA_EXCEEDED_ERR';
+  }
+
+  var _quotaShown = false;
+  function warnStorageFull(quota) {
+    // One banner per page load, not one per set — and dismissing it is
+    // final for that load rather than re-arming on the next failed write,
+    // which would put it back on screen every few seconds while the athlete
+    // is mid-session. A reload re-arms it.
+    if (_quotaShown) return;
+    if (typeof document === 'undefined' || !document.body) return;
+    _quotaShown = true;
+    var el = document.createElement('div');
+    el.className = 'mc-quota';
+    el.setAttribute('role', 'alert');
+    var body = document.createElement('div');
+    body.className = 'mc-quota-body';
+    var title = document.createElement('div');
+    title.className = 'mc-quota-title';
+    title.textContent = quota ? 'Storage full — this set was not saved'
+                              : 'This browser is not saving your sets';
+    var msg = document.createElement('div');
+    msg.className = 'mc-quota-msg';
+    // Built as nodes, not innerHTML: the only variable part is the link, and
+    // an alert about losing data is the last place to introduce a parse path.
+    msg.appendChild(document.createTextNode(quota
+      ? 'Keep training — your sets still reach the cloud if you are signed in. To fix it on this device, '
+      : 'Private browsing and blocked site data both do this. Your sets still reach the cloud if you are signed in. You can '));
+    var a = document.createElement('a');
+    a.href = 'dashboard.html';
+    a.textContent = 'export a backup and clear old logs';
+    msg.appendChild(a);
+    msg.appendChild(document.createTextNode(' from your account panel.'));
+    var x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'mc-quota-x';
+    x.setAttribute('aria-label', 'Dismiss storage warning');
+    x.textContent = '\u2715';
+    x.addEventListener('click', function () {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    });
+    body.appendChild(title); body.appendChild(msg);
+    el.appendChild(body); el.appendChild(x);
+    document.body.appendChild(el);
+  }
+
+  // Returns true when the value actually reached disk. Callers that care can
+  // act on false; callers that don't at least no longer report success.
+  function writeStore(key, value) {
+    try { localStorage.setItem(key, value); return true; }
+    catch (e) { warnStorageFull(isQuotaError(e)); return false; }
+  }
+
+
+  // ---- the ONE writer for mc_workout_log_v1 (flagship readiness R1) -------
+  // D-38: five places appended to this store, each with its own copy of
+  // read-unshift-slice-write; three of them skipped the storage-full warning
+  // and none of them stamped an id on a conditioning entry, which is what
+  // mc-sync.js dedupes on. D-24: a deleted workout came back on the next
+  // pull, because the merge is a union and a removal leaves nothing behind.
+  // So every append, delete and import goes through these functions, and
+  // tools/check-workout-log-writers.js fails CI on any other write.
+  //
+  // Deletion records live in their OWN store rather than as tombstone
+  // entries inside the log. The log has twenty readers — one of them
+  // byte-identical with Mike's Cookbook — and every one of them would have
+  // had to learn to skip a tombstone. A separate map changes no reader.
+  var DEL_KEY = 'mc_workout_log_deleted_v1';   // { workoutKey: { ts } }
+  var LOG_CAP = 200;
+
+  // The identity mc-sync.js's merge already dedupes on: the id, or for an
+  // entry that predates ids, page + timestamp.
+  function workoutKey(e) {
+    return e ? (e.id || ((e.pageId || '') + '|' + (e.date || ''))) : '';
+  }
+
+  function readDeletedWorkouts() {
+    var v;
+    try { v = JSON.parse(localStorage.getItem(DEL_KEY) || '{}'); } catch (e) { return {}; }
+    return (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+  }
+
+  function appendWorkout(entry) {
+    if (!entry || typeof entry !== 'object') return false;
+    if (!entry.id && entry.pageId && entry.date) entry.id = entry.pageId + '|' + entry.date;
+    var log = readWorkoutLog();
+    log.unshift(entry);
+    return writeStore(WL_KEY, JSON.stringify(log.slice(0, LOG_CAP)));
+  }
+
+  // Removes the workouts with these keys and records each deletion, so a
+  // pull from another device cannot bring them back. The record is written
+  // first: if the log write then fails, the workout is still on screen and
+  // the athlete can retry, but a sync can never resurrect a half-deleted one.
+  function deleteWorkouts(keys) {
+    var want = {}, n = 0, now = Date.now();
+    (keys || []).forEach(function (k) { if (k) { want[k] = 1; n++; } });
+    if (!n) return false;
+    var del = readDeletedWorkouts();
+    Object.keys(want).forEach(function (k) { del[k] = { ts: now }; });
+    writeStore(DEL_KEY, JSON.stringify(del));
+    var kept = readWorkoutLog().filter(function (e) { return !want[workoutKey(e)]; });
+    return writeStore(WL_KEY, JSON.stringify(kept));
+  }
+
+  function clearWorkouts() {
+    return deleteWorkouts(readWorkoutLog().map(workoutKey));
+  }
+
+  // Import (D-14): restoring an older backup used to REPLACE the log, so
+  // every workout finished since that backup was erased. A merge by identity
+  // instead: entries are immutable once banked, so the copy already on the
+  // device wins a tie, an entry deleted on this device stays deleted, and the
+  // result is newest first under the same cap. Pure, so the import preview
+  // can show exactly what a confirm will do before anything is written.
+  function mergeWorkoutLogs(local, incoming, deleted) {
+    local = Array.isArray(local) ? local : [];
+    incoming = Array.isArray(incoming) ? incoming : [];
+    deleted = deleted || {};
+    var seen = {}, out = [], added = 0, skippedDeleted = 0, duplicates = 0;
+    local.forEach(function (e) {
+      if (!e || typeof e !== 'object') return;
+      var k = workoutKey(e);
+      if (seen[k]) return;
+      seen[k] = 1; out.push(e);
+    });
+    incoming.forEach(function (e) {
+      if (!e || typeof e !== 'object') return;
+      var k = workoutKey(e);
+      if (deleted[k]) { skippedDeleted++; return; }
+      if (seen[k]) { duplicates++; return; }
+      seen[k] = 1; out.push(e); added++;
+    });
+    out.sort(function (a, b) { return (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0); });
+    var capped = Math.max(0, out.length - LOG_CAP);
+    return { log: out.slice(0, LOG_CAP), added: added, duplicates: duplicates,
+             skippedDeleted: skippedDeleted, dropped: capped };
+  }
+
+  function writeWorkoutLog(arr) {
+    return writeStore(WL_KEY, JSON.stringify((Array.isArray(arr) ? arr : []).slice(0, LOG_CAP)));
+  }
+
   if (typeof window !== 'undefined') {
     window.MC_LOG = window.MC_LOG || {};
     window.MC_LOG.readWorkoutLog = readWorkoutLog;
@@ -284,6 +453,14 @@
     window.MC_LOG.dayLabel = dayLabel;
     window.MC_LOG.normalizeDay = normalizeDay;
     window.MC_LOG.normalizeSessions = normalizeSessions;
+    window.MC_LOG.writeStore = writeStore;
+    window.MC_LOG.workoutKey = workoutKey;
+    window.MC_LOG.readDeletedWorkouts = readDeletedWorkouts;
+    window.MC_LOG.appendWorkout = appendWorkout;
+    window.MC_LOG.deleteWorkouts = deleteWorkouts;
+    window.MC_LOG.clearWorkouts = clearWorkouts;
+    window.MC_LOG.mergeWorkoutLogs = mergeWorkoutLogs;
+    window.MC_LOG.writeWorkoutLog = writeWorkoutLog;
   }
 
   // Node-side hook so tools/test-mc-numeric-guards.js can call the real
@@ -294,7 +471,8 @@
       repsTotal: repsTotal, repsTop: repsTop, repsLogged: repsLogged,
       e1rm: e1rm, applyEquipCoeff: applyEquipCoeff, EPLEY_REP_CAP: EPLEY_REP_CAP,
       dayKey: dayKey, dayLabel: dayLabel,
-      normalizeDay: normalizeDay, normalizeSessions: normalizeSessions
+      normalizeDay: normalizeDay, normalizeSessions: normalizeSessions,
+      workoutKey: workoutKey, mergeWorkoutLogs: mergeWorkoutLogs
     };
   }
 })();

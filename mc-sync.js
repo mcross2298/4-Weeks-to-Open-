@@ -68,11 +68,23 @@
       setAccessToken: function (t) { accessToken = t; }   // test-only setter, bypasses onAuthStateChange timing
     };
   }
+  // Flagship readiness R1 / D-14: a backup import used to REPLACE the set log
+  // with the file's copy, erasing every session since the backup. The import
+  // merges it with the same function a pull uses, so the two cannot disagree
+  // about what "merged" means. Published before the guards for the same
+  // hoisting reason as the Node hook above: an import must work signed out,
+  // when this file returns before any of its sync machinery is set up.
+  if (typeof window !== 'undefined' && !window.MC_MERGE) {
+    window.MC_MERGE = {
+      mergeSetlog: function () { return mergeSetlog.apply(null, arguments); }
+    };
+  }
   if (window.__mcSync) return;
   window.__mcSync = true;
   if (!window.MC_SB || !MC_SB.configured) return;
 
   var TABLE = 'user_sync';
+  var DELETED_KEY = 'mc_workout_log_deleted_v1';   // R1 / D-24, see mergeWorkoutLog()
   // store_key -> merge strategy
   var STORES = {
     'mc_setlog_v1':          'setlog',
@@ -80,6 +92,11 @@
     'mc_custom_programs_v1': 'arrayByIdTs',
     'mc_collections_v1':     'arrayByIdTs',
     'mc_workout_log_v1':     'workoutLog',
+    // Flagship readiness R1 / D-24: { workoutKey: {ts} } — one record per
+    // workout the athlete deleted. Union by key (a deletion is permanent), and
+    // mergeWorkoutLog() drops every keyed entry, so a delete on one device
+    // holds on all of them. Owned by mc-log-read.js's deleteWorkouts().
+    'mc_workout_log_deleted_v1': 'dictByTs',
     'mc_cond_log_v1':        'arrayByIdTs',
     'mc_body_v1':            'arrayByIdTs',
     'mc_vitals_v1':          'arrayByIdTs',
@@ -303,15 +320,46 @@
   // workout log: append-only [{pageId, date, sets, ...}], newest-first, 200 max.
   // Older entries predate the id field, so dedupe on id || pageId|date — two
   // devices that both hold the same finished session converge on one copy.
+  // (mc-log-read.js's workoutKey() is the same rule; this file cannot rely on
+  // that one being loaded, and the vm-sandboxed suites load this one alone.)
+  //
+  // Flagship readiness R1 / D-24: this was a pure union, so a workout deleted
+  // on one device came back on the next pull — the other device, or the
+  // server copy, still held it. Two things now stop that, and they cover
+  // different windows:
+  //   * `deleted` — mc_workout_log_deleted_v1, unioned from both sides. The
+  //     durable rule: a deletion record holds across page loads and devices.
+  //   * `base` — the last copy this page load saw on the server. An entry the
+  //     server held then and this device no longer holds was removed HERE,
+  //     even if no record was written (a store edited by an older build), so
+  //     the remote copy of it is not taken back. Same three-way reasoning as
+  //     mergeStringSetBase() below. With no base (a first pull) this is inert.
   function workoutKey(e) { return e && (e.id || ((e.pageId || '') + '|' + (e.date || ''))); }
-  function mergeWorkoutLog(local, remote) {
+  function keySet(arr) {
+    var o = {};
+    (Array.isArray(arr) ? arr : []).forEach(function (e) { var k = workoutKey(e); if (k) o[k] = 1; });
+    return o;
+  }
+  function mergeWorkoutLog(local, remote, base, deleted) {
     local = Array.isArray(local) ? local : [];
     remote = Array.isArray(remote) ? remote : [];
+    var baseArr = base;
+    if (typeof base === 'string') { try { baseArr = JSON.parse(base); } catch (e) { baseArr = null; } }
+    var inBase = keySet(baseArr), inLocal = keySet(local);
+    var del = (deleted && typeof deleted === 'object') ? deleted : {};
     var seen = {}, out = [];
-    local.concat(remote).forEach(function (e) {
+    local.forEach(function (e) {
       var k = workoutKey(e);
       if (!k) { out.push(e); return; }
-      if (!seen[k]) { seen[k] = 1; out.push(e); }
+      if (del[k] || seen[k]) return;
+      seen[k] = 1; out.push(e);
+    });
+    remote.forEach(function (e) {
+      var k = workoutKey(e);
+      if (!k) { out.push(e); return; }
+      if (del[k] || seen[k]) return;
+      if (inBase[k] && !inLocal[k]) return;          // removed on this device since the last sync
+      seen[k] = 1; out.push(e);
     });
     out.sort(function (a, b) { return new Date(b.date || 0) - new Date(a.date || 0); });
     return out.slice(0, 200);
@@ -625,14 +673,14 @@
     return out;
   }
 
-  function mergeStore(strategy, local, remote, base) {
+  function mergeStore(strategy, local, remote, base, extra) {
     if (strategy === 'stringSetBase') return mergeStringSetBase(local, remote, base);
     if (strategy === 'exerciseByName') return mergeExerciseByName(local, remote);
     if (strategy === 'scalarBase') return mergeScalarBase(local, remote, base);
     if (strategy === 'dictBase')   return mergeDictBase(local, remote, base);
     if (strategy === 'arrayById') return mergeArrayById(local, remote);
     if (strategy === 'arrayByIdTs') return mergeArrayByIdTs(local, remote);
-    if (strategy === 'workoutLog') return mergeWorkoutLog(local, remote);
+    if (strategy === 'workoutLog') return mergeWorkoutLog(local, remote, base, extra);
     if (strategy === 'setlog')    return mergeSetlog(local, remote);
     if (strategy === 'activity')  return mergeActivity(local, remote);
     if (strategy === 'dictByTs')  return mergeDictByTs(local, remote);
@@ -676,7 +724,12 @@
           // snapshot[key] as it was — quotaBlocked[key] (set inside
           // writeVal()) is what keeps push() from uploading the stale,
           // still-unmerged local value over this remote data next cycle.
-          var wrote = remote == null || writeVal(key, mergeStore(strategy, local, remote, snapshot[key]));
+          // R1 / D-24: the workout log merge also needs the deletion records,
+          // from BOTH sides — a delete made on the other device arrives in the
+          // same pull as the entry it deletes.
+          var extra = strategy === 'workoutLog'
+            ? mergeDictByTs(parse(readRaw(DELETED_KEY)), remoteByKey[DELETED_KEY]) : undefined;
+          var wrote = remote == null || writeVal(key, mergeStore(strategy, local, remote, snapshot[key], extra));
           if (readRaw(key) !== before) pulledChange = true;
           if (wrote) snapshot[key] = remote != null ? JSON.stringify(remote) : null;
         }

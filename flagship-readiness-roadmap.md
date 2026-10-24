@@ -151,6 +151,29 @@ Defects: D-01, D-02, D-03, D-04, D-05, D-14 (merge-safe import), D-24, D-37, D-3
 
 Acceptance: R-01 to R-05, R-13, E-12. New journey coverage for refresh mid-rest, refresh while typing, the week round trip and untick-then-finish.
 
+**R1 shipped (2026-10-23), steps 1–8. Step 9 (the IndexedDB journal) is not done.** It's optional, and it needs an iOS check that a sandbox can't run.
+Every R1 acceptance check now passes: R-01 on all 7 engines, R-02 to R-05, R-13 and E-12. `fa-repro.js` goes from 2 to 14 of 23 and `fa-engines.js` from 3 to 4 of 14. The 9 checks still failing belong to R2, R4 and R5.
+The journeys are now a CI gate, `tools/test-mc-session-durability.js`, with 22 checks. On the pre-R1 tree 18 of them fail and its refresh control passes. `tools/check-workout-log-writers.js` is new too. It failed on 8 real write sites before the fix.
+
+- **D-01.** The re-restore is wired whether or not a record existed at load. `save()` no longer infers an untick from the DOM; the stored list shrinks only on an untick (`mc:set-unchecked`), Finish or Discard. Driving bro-split showed a second cause. A tab that re-renders other cards moves the positional owner key (`i0`), so restore built the wrong card. Restore now finds a row's owner from the row id's exercise identity (`MCSetlogUtil.rowIdPrefix`).
+- **D-04.** The rest is recorded after the original `start()`, from TMR's own state, and ±15s moves the stored end too. The restore re-starts the same rest on the same card through `start()`, so the inline row comes back and counts toward the original end.
+- **D-05.** Drafts are saved on `input` (300 ms debounce) and flushed on `visibilitychange`/`pagehide`.
+- **D-03.** An untick writes a removal record through the same locked, broadcast and replayed path as a check. A day left with no sets is removed.
+- **D-02.** `run-workout.html`'s bar and `finishWorkout()` are gone. Custom workouts finish through `mc-finish.js`, with an id and PR flags.
+- **D-24.** Deletions live in their own synced store, `mc_workout_log_deleted_v1` (`dictByTs`), not as tombstones inside the log. The log has twenty readers, one of them byte-identical with Mike's Cookbook, and a separate store changes none of them. `mergeWorkoutLog()` drops recorded keys from both sides. It is also three-way against the last server copy, so a removal made since the last sync isn't pulled back.
+- **D-14.** Import plans first, shows a `confirm()` preview, then applies. The workout log merges by identity and respects deletions. The set log merges with `mc-sync.js`'s own `mergeSetlog`, published as `MC_MERGE`. Every other store is still replaced from the file, and the preview lists them by name.
+- **D-38.** `mc-log-read.js` owns every write: `appendWorkout`, `deleteWorkouts`, `clearWorkouts` and `writeWorkoutLog`. The storage-full writer moved there from `mc-setlog.js`, so the three conditioning pages that don't load the set logger now warn as well.
+- **D-37.** The orphan WAVE3-SETLOG logger is removed from `cat-gainz.html`.
+
+**Found while driving, beyond the register.** On the pre-R1 tree, finishing a workout didn't clear its session record, even with a real tap on Log workout. The ticked page wrote it straight back. It's now cleared on `mc:workout-finished` and stays cleared.
+
+**Known residuals, not fixed here:**
+- **An untick can come back through sync.** `mergeSetlog()` unions set numbers and `mc_setlog_v1` has no deletion records. If the page reloads before the next push, a pull can restore a set that was unticked on a signed-in device. The window is narrow because a push runs on hide, but it is real.
+- **Import replaces every other store.** The preview says so. Making those stores merge-safe is R7 work.
+- **A tick shows on another week.** On the Modality Matrix, a set ticked in week 1 also shows as ticked on week 2's same exercise. A history key names the exercise, not the week. This predates R1 and is unchanged.
+- **The deletion store has no cap.** It holds one small record per deleted workout.
+- **Not verified on a real device.** That covers the timer restore after an iOS background kill, the draft flush on a real lock, and a delete propagating between two signed-in devices (device matrix items 2 and 5).
+
 ### R2 · Screen stays on, rest always lands
 Defects: D-06, D-07.
 1. Take the session lock at the first logged set, and start the session clock then too.

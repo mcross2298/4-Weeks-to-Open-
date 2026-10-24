@@ -108,6 +108,7 @@ node tools/test-mc-pr-scope.js http://localhost:8080            # a PR belongs t
 node tools/test-mc-setlog-concurrency.js http://localhost:8080  # two-tab set-log durability (FIX-01, L-01)
 node tools/test-mc-store-resilience.js http://localhost:8080    # corrupt-store shapes, 5 pages (FIX-04, L-03)
 node tools/test-mc-crash-recovery.js http://localhost:8080      # process kill + cloud rehydrate (FIX-02, L-02)
+node tools/test-mc-session-durability.js http://localhost:8080  # week round trip, mid-rest refresh, focused draft, untick, Finish, import (flagship readiness R1)
 # needs a direct Postgres URL; SKIPS without one rather than failing
 SUPABASE_DB_URL=... pytest tests/test_rls.py   # 7 cross-user attacks + the phase-12 constraints (TEST 5)
                                               # plus the Phase 5.4 world-readable leak scan
@@ -131,6 +132,7 @@ node tools/check-one-timer.js          # no orphan/duplicate/missing rest-timer 
 node tools/check-single-impl.js        # declared shared functions exist exactly once tree-wide
 node tools/check-dangling-refs.js      # no element id or global is read but provided nowhere (post-audit CI addendum)
 node tools/check-log-readers.js        # every parse of mc_workout_log_v1 — and every read of an entry's own .sets — guards its shape (L-03)
+node tools/check-workout-log-writers.js # every write to mc_workout_log_v1 goes through mc-log-read.js (flagship readiness R1, D-38/D-24)
 node tools/check-push-chain.js         # the notification opt-in chain is reachable end to end (Phase 1.1)
 node tools/check-docs-currency.js      # the tour renders; every non-licensed program has its guide; module list pinned
 node tools/check-store-coverage.js     # store-registry.json vs mc-sync.js STORES / mc-export.js KEYS
@@ -2259,6 +2261,25 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > fix turns it green. `fa-kill-window.js` is a measurement, not a check. A set
 > ticked 0.3 s or 1.5 s before a hard kill was lost; at 3 s and 6 s it was
 > kept. That is one trial per delay on one Chromium build.
+>
+> **R1 shipped (2026-10-23), steps 1–8.** Every R1 acceptance check passes
+> (R-01 on all 7 engines, R-02–R-05, R-13, E-12). The journeys are a CI gate
+> now, `tools/test-mc-session-durability.js` (18 of 22 checks fail on the
+> pre-R1 tree). A second new gate, `tools/check-workout-log-writers.js`, makes
+> `mc-log-read.js` the only writer of the workout log. Three things to know
+> before touching this layer again:
+> - `mc-session.js` no longer infers an untick from a row missing from the
+>   DOM. The stored list shrinks only on `mc:set-unchecked`, Finish
+>   (`mc:workout-finished`) or Discard.
+> - Deleted workouts are recorded in their own synced store,
+>   `mc_workout_log_deleted_v1`, not as tombstones inside the log, so none of
+>   the log's twenty readers had to change.
+> - The storage-full writer lives in `mc-log-read.js` now
+>   (`MC_LOG.writeStore`), and `MCSetlogUtil.writeStore` delegates to it.
+>
+> Step 9 (an IndexedDB journal) and the residuals are listed in the roadmap's
+> R1 section. One residual is a sync gap: an untick can still be restored by a
+> pull before the next push, because the set log has no deletion records.
 >
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the

@@ -381,7 +381,7 @@ function renderSessionCard(kind, idx, prog){
   // (the exact workout card that was completed, not a list-summary sheet) —
   // only 'daily' (in-progress) entries still use the bottom-sheet path below.
   return `
-    <div class="log-card" data-kind="finished" data-logid="${log.id||''}" style="--prog-color:${prog.color}" onclick="${LP_GUARD}event.stopPropagation();location.href='workout-detail.html?id='+encodeURIComponent('${log.id||''}')">
+    <div class="log-card" data-kind="finished" data-logid="${MC_LOG.workoutKey(log)}" style="--prog-color:${prog.color}" onclick="${LP_GUARD}event.stopPropagation();location.href='workout-detail.html?id='+encodeURIComponent('${log.id||''}')">
       <div class="log-header">
         <div class="log-name">${log.workoutName||'Workout'}</div>
         <div class="log-date">${log.time||''}</div>
@@ -449,9 +449,16 @@ function openDetail(kind, idx){
 })();
 
 // ---- per-card delete (long-press) ------------------------------------------
-function deleteFinished(logId){
-  if(!confirm('Delete this workout from your history? This cannot be undone.')) return;
-  localStorage.setItem(WL_KEY, JSON.stringify(getLogs().filter(l=>l.id!==logId)));
+// Flagship readiness R1 / D-24: a delete used to filter the entry out and
+// nothing else, so the next pull from any signed-in device brought it back —
+// the sync merge is a union. MC_LOG.deleteWorkouts() records the deletion in
+// a synced store the merge respects. The card carries the same identity the
+// merge uses (id, or page|date for an entry that predates ids), so an old
+// entry with no id is deletable too — it used to match nothing.
+function deleteFinished(key){
+  if(!key) return;
+  if(!confirm('Delete this workout from your history on every device? This cannot be undone.')) return;
+  MC_LOG.deleteWorkouts([key]);
   render();
 }
 function deleteDaily(date, pid){
@@ -695,7 +702,7 @@ function clearLogs(){
   // so "Clear All" visibly did nothing whenever ghost daily entries were
   // what the user was actually trying to clear.
   if(confirm('Clear all workout logs, including in-progress sessions? This cannot be undone.')){
-    localStorage.removeItem(WL_KEY);
+    MC_LOG.clearWorkouts();          // R1 / D-24: recorded, so a sync can't restore them
     localStorage.removeItem(DAILY_KEY);
     render();
   }

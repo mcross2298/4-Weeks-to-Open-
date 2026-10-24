@@ -36,6 +36,7 @@
     'mc_cond_log_v1', 'mc_body_v1', 'mc_vitals_v1', 'mc_max_v1', 'mc_activity',
     'mc_daily_v1', 'mc_plan_targets_v1', 'mc_macros_v1',
     'mc_session_summary_v1',        // synced since B-era; was missing here
+    'mc_workout_log_deleted_v1',    // flagship readiness R1 / D-24
     'mc_custom_exercises_v1',       // G-01
     'mc_active_prog', 'mc_weekly_overrides_v1',
     'mc_program_progress_v1',       // program-day-view-roadmap.md D0
@@ -84,7 +85,103 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
 
-  function importJSON(file) {
+  // Flagship readiness R1 / D-14: restoring a backup REPLACED every store
+  // with the file's copy, with no confirmation — so restoring last month's
+  // backup silently erased every workout finished since. Measured: three
+  // workouts and a backup, one more workout, restore, and the newest was gone.
+  //
+  // Now the import is planned first, shown, and applied only on confirm:
+  //   * the workout log is MERGED by identity (mc-log-read.js's
+  //     mergeWorkoutLogs): every workout on this device is kept, the backup
+  //     adds what is missing, and a workout deleted on this device stays
+  //     deleted. Deletion records from both sides are unioned.
+  //   * the set log is merged with mc-sync.js's own mergeSetlog — the same
+  //     rule a pull applies — so per-set history since the backup survives.
+  //   * every other store is still restored from the file, as before, and the
+  //     preview names them so that is a choice rather than a surprise. Making
+  //     those merge-safe too is R7's data-mobility work, not this step.
+  var WL = 'mc_workout_log_v1', WLD = 'mc_workout_log_deleted_v1', SL = 'mc_setlog_v1';
+
+  function readJSON(k, fallback) {
+    try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? fallback : v; }
+    catch (e) { return fallback; }
+  }
+  function isDict(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+
+  function planImport(data, exportedAt) {
+    var L = window.MC_LOG;
+    var del = {};
+    [readJSON(WLD, {}), data[WLD]].forEach(function (d) {
+      if (isDict(d)) Object.keys(d).forEach(function (k) {
+        if (!del[k] || ((d[k] && d[k].ts) || 0) > ((del[k] && del[k].ts) || 0)) del[k] = d[k];
+      });
+    });
+    var plan = { writes: {}, workouts: null, setlogMerged: false, replaced: [], exportedAt: exportedAt };
+    if (WL in data) {
+      if (!L || !L.mergeWorkoutLogs) throw new Error('This page cannot import workouts safely. Open the dashboard and try again.');
+      var r = L.mergeWorkoutLogs(L.readWorkoutLog(), data[WL], del);
+      plan.workouts = r;
+      plan.workouts.inBackup = Array.isArray(data[WL]) ? data[WL].length : 0;
+      plan.workouts.onDevice = L.readWorkoutLog().length;
+    }
+    if (Object.keys(del).length) plan.writes[WLD] = del;
+    if (SL in data && isDict(data[SL])) {
+      var local = readJSON(SL, {});
+      if (!isDict(local)) local = {};
+      var merged;
+      if (window.MC_MERGE && MC_MERGE.mergeSetlog) merged = MC_MERGE.mergeSetlog(local, data[SL]);
+      else { merged = {}; Object.keys(data[SL]).forEach(function (k) { merged[k] = data[SL][k]; });
+             Object.keys(local).forEach(function (k) { merged[k] = local[k]; }); }   // device wins per exercise
+      plan.writes[SL] = merged;
+      plan.setlogMerged = true;
+    }
+    Object.keys(data).forEach(function (k) {
+      if (!isExportable(k) || k === WL || k === WLD || k === SL) return;
+      plan.writes[k] = data[k];
+      plan.replaced.push(k);
+    });
+    return plan;
+  }
+
+  function describe(plan) {
+    var when = plan.exportedAt ? new Date(plan.exportedAt) : null;
+    var lines = ['Restore from this backup' +
+      (when && !isNaN(when) ? ' (saved ' + when.toLocaleDateString() + ')' : '') + '?', ''];
+    var w = plan.workouts;
+    if (w) {
+      lines.push('Workouts: ' + w.added + ' added from the backup, ' + w.onDevice +
+        ' on this device kept.');
+      if (w.skippedDeleted) lines.push(w.skippedDeleted + ' skipped — you deleted ' +
+        (w.skippedDeleted === 1 ? 'it' : 'them') + ' on this device.');
+      if (w.dropped) lines.push(w.dropped + ' oldest left out — history keeps the latest 200.');
+    }
+    if (plan.setlogMerged) lines.push('Set history: merged. Nothing on this device is removed.');
+    if (plan.replaced.length) {
+      lines.push('', 'Replaced with the backup’s copy (' + plan.replaced.length + '): ' +
+        plan.replaced.map(function (k) { return k.replace(/^mc_/, '').replace(/_v\d+$/, '').replace(/[_|]/g, ' '); }).join(', ') + '.');
+    }
+    return lines.join('\n');
+  }
+
+  function applyPlan(plan) {
+    var L = window.MC_LOG;
+    var ok = true;
+    function put(k, v) {
+      var s = JSON.stringify(v);
+      if (L && L.writeStore) { if (!L.writeStore(k, s)) ok = false; }
+      else { try { localStorage.setItem(k, s); } catch (e) { ok = false; } }
+    }
+    // Deletion records first, for the same reason deleteWorkouts() writes
+    // them first: a partial import must never let a sync resurrect anything.
+    if (plan.writes[WLD]) put(WLD, plan.writes[WLD]);
+    Object.keys(plan.writes).forEach(function (k) { if (k !== WLD) put(k, plan.writes[k]); });
+    if (plan.workouts && !L.writeWorkoutLog(plan.workouts.log)) ok = false;
+    return ok;
+  }
+
+  // opts.confirm: injectable for tests; defaults to the browser's confirm().
+  function importJSON(file, opts) {
+    var ask = (opts && opts.confirm) || function (t) { return window.confirm(t); };
     return new Promise(function (resolve, reject) {
       var reader = new FileReader();
       reader.onerror = function () { reject(new Error('Could not read the file.')); };
@@ -94,11 +191,12 @@
         catch (e) { reject(new Error('Not a valid backup file.')); return; }
         var data = payload && payload.data;
         if (!data || typeof data !== 'object') { reject(new Error('Not a valid backup file.')); return; }
-        Object.keys(data).forEach(function (k) {
-          if (!isExportable(k)) return;   // ignore unrelated keys
-          try { localStorage.setItem(k, JSON.stringify(data[k])); } catch (e) {}
-        });
-        resolve();
+        var plan;
+        try { plan = planImport(data, payload.exportedAt); }
+        catch (e) { reject(e); return; }
+        if (!ask(describe(plan))) { reject(new Error('Import cancelled — nothing was changed.')); return; }
+        if (!applyPlan(plan)) { reject(new Error('Some of the backup could not be saved — this device may be out of storage.')); return; }
+        resolve(plan);
       };
       reader.readAsText(file);
     });

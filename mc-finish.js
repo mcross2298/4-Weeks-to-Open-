@@ -31,7 +31,6 @@
     var L = _mcLog();
     return (L && L.normalizeSessions) ? L.normalizeSessions(arr) : (arr || []);
   }
-  var WL_KEY='mc_workout_log_v1';
   var SL_KEY='mc_setlog_v1';
   var SS_KEY='mc_session_summary_v1';
   // Same absolute cross-app URL mc-macros.js's Nutrition tab already deep-links
@@ -280,21 +279,12 @@
       prs:prs,
       setsChecked:getCheckedSets()
     };
-    try{
-      var logs=JSON.parse(localStorage.getItem(WL_KEY)||'[]');
-      if(!Array.isArray(logs)) logs=[];   // L-03: else unshift() throws into the silent catch and the session is never saved
-      logs.unshift(entry);
-      logs=logs.slice(0,200);// keep last 200 workouts (surfaced — Phase 5.2)
-      // Phase 5.3: banking a finished workout is the single write in this app
-      // it is least acceptable to lose silently. Routed through the shared
-      // guarded writer so a full device says so instead of the athlete
-      // finding the session missing from their history days later.
-      if(window.MCSetlogUtil&&MCSetlogUtil.writeStore){
-        MCSetlogUtil.writeStore(WL_KEY,JSON.stringify(logs));
-      } else {
-        localStorage.setItem(WL_KEY,JSON.stringify(logs));
-      }
-    }catch(e){}
+    // Phase 5.3: banking a finished workout is the single write in this app
+    // it is least acceptable to lose silently, so it goes through the shared
+    // guarded writer and a full device says so. Flagship readiness R1 (D-38):
+    // MC_LOG.appendWorkout() is the one append for this store — it guards
+    // the shape (L-03), keeps the last 200 (surfaced in Phase 5.2) and warns.
+    try{ _mcLog().appendWorkout(entry); }catch(e){}
     clearTodaysDailyEntry();
     return entry;
   }
@@ -734,12 +724,13 @@
     // this module twice produced two of everything.
     if(_injected)return; _injected=true;
     injectDoneCss();
-    // A few pages own their own .fw-bar because it drives page-specific logic
-    // this module cannot replicate (run-workout.html's finishWorkout() writes a
-    // custom-workout log entry). Injecting ours on top of theirs produced two
-    // elements sharing id="fwBar" and two progress counters that disagreed --
-    // getElementById() then silently resolved to whichever came first.
-    // Take the modal and the done overlay regardless; skip only the bar.
+    // A few pages own their own .fw-bar (the conditioning pages' round
+    // counters). Injecting ours on top of theirs produced two elements sharing
+    // id="fwBar" and two progress counters that disagreed -- getElementById()
+    // then silently resolved to whichever came first. Take the modal and the
+    // done overlay regardless; skip only the bar. (run-workout.html used to be
+    // the example here; its own Finish banked zero sets and was retired in
+    // flagship readiness R1 / D-02, so custom workouts finish through this.)
     // M3: the bottom Finish bar is retired. Its two jobs moved into the session
     // toolbar that mc-summary.js builds at the top of the page -- "End workout"
     // and the progress readout (which keeps id="fwProgress", so updateProgress()
@@ -747,8 +738,7 @@
     // and, stacked with the nav and the rest float, put 470px of chrome on
     // screen during a rest period. The modal and the done overlay are still
     // injected: those are the flow "End workout" opens.
-    // A page that authored its own .fw-bar keeps it (run-workout.html's drives
-    // custom-workout logging this module cannot replicate).
+    // A page that authored its own .fw-bar keeps it.
     document.body.insertAdjacentHTML('beforeend', modalHTML+doneHTML);
     // Watch for set check changes. NOT a document click-delegation listener —
     // mc-setlog.js's checkbox handler calls stopPropagation() (so does its

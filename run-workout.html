@@ -68,15 +68,9 @@
 
 <div class="content" id="cards"></div>
 
-<div class="fw-bar" id="fwBar" style="display:none;">
-  <button class="fw-btn" onclick="finishWorkout()">🏁 Finish Workout</button>
-</div>
 
 <script>
 var CW_KEY = 'mc_custom_workouts_v1';
-var SL_KEY = 'mc_setlog_v1';
-var WL_KEY = 'mc_workout_log_v1';
-var PID = window.MC_PID_OVERRIDE;
 
 function getWorkout(){
   var id = window.__CW_ID;
@@ -362,38 +356,16 @@ function render(){
   Array.prototype.forEach.call(cards.querySelectorAll('.ss-ex'), function(c){
     c.addEventListener('click', function(e){ e.stopPropagation(); c.classList.toggle('checked'); });
   });
-  document.getElementById('fwBar').style.display = 'block';
 }
 
-function finishWorkout(){
-  var wk = getWorkout(); if(!wk) return;
-  var sl; try{ sl = JSON.parse(localStorage.getItem(SL_KEY)||'{}'); }catch(e){ sl = {}; }
-  var cards = document.querySelectorAll('.ex-card, .ss-ex');
-  var sets = [];
-  Array.prototype.forEach.call(cards, function(c){
-    var name = (c.querySelector('.ex-name, .ss-name')||{}).textContent || '';
-    var arr = sl[PID + '|' + c.dataset.id];
-    var sess = arr && arr[0];
-    if(sess && sess.sets){
-      Object.keys(sess.sets).forEach(function(sn){
-        var v = sess.sets[sn];
-        if((v.w && v.w!=='') || (v.r && v.r!=='')) sets.push({ name:name, weight:v.w||'', reps:v.r||'' });
-      });
-    }
-  });
-  var done = document.querySelectorAll('.ex-card.checked, .ss-ex.checked').length;
-  var log; try{ log = JSON.parse(localStorage.getItem(WL_KEY)||'[]'); }catch(e){ log = []; }
-  if(!Array.isArray(log)) log = [];   // L-03: else push() throws and the workout is never saved
-  log.push({
-    date: new Date().toISOString(),
-    time: new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),
-    workoutName: wk.name, pageId: PID, sets: sets, prs: 0,
-    duration: '', custom: true
-  });
-  try{ localStorage.setItem(WL_KEY, JSON.stringify(log)); }catch(e){}
-  alert('🏁 "' + wk.name + '" logged — ' + done + '/' + cards.length + ' exercises, ' + sets.length + ' sets recorded.');
-  location.href = 'workout-logs.html';
-}
+// Flagship readiness R1 / D-02: this page had its own Finish bar and
+// finishWorkout(), which read each card's set log under `card.dataset.id` --
+// the positional key Phase 2.1 retired -- so it banked ZERO sets for every
+// custom workout, with no id (so sync could not dedupe it) and no PR flags.
+// Both are gone. mc-finish.js is the one completion path for every workout
+// page, and it already handles this one: MC_PID_OVERRIDE gives it the
+// custom-<id> page id and document.title the workout's name. Finish lives in
+// the session toolbar's "End workout", as it does everywhere else.
 
 render();
 </script>
