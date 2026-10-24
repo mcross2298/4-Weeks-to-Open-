@@ -90,7 +90,7 @@
   font-variant-numeric:tabular-nums;letter-spacing:0.02em;
 }
 .mcs-timer-label{
-  font-size:var(--fs-3xs);font-weight:700;color:var(--ink-6,#6b6459);
+  font-size:var(--fs-sm);font-weight:700;color:var(--ink-6,#6b6459);
   letter-spacing:0.1em;text-transform:uppercase;
 }
 .mcs-sets-wrap{display:flex;align-items:baseline;gap:4px;text-align:right;}
@@ -308,7 +308,7 @@ body.mcs-resting .mcs-timer-label{display:none;}
 body.mcs-resting .mcs-rest{display:inline-flex;}
 .mcs-rest-val{font-size:15px;font-weight:800;letter-spacing:0.01em;
   font-variant-numeric:tabular-nums;color:var(--accent,#e0a82e);}
-.mcs-rest-label{font-size:9.5px;font-weight:700;letter-spacing:0.14em;
+.mcs-rest-label{font-size:var(--fs-sm);font-weight:700;letter-spacing:0.06em;
   text-transform:uppercase;color:var(--muted,var(--ink-7,#8a8377));}
 
 /* progress readout — also the mid-session summary toggle */
@@ -316,19 +316,32 @@ body.mcs-resting .mcs-rest{display:inline-flex;}
    session and open the summary. The bar is 46px with 6px of bottom padding, so
    a 44px box would overflow it; negative block margins keep the tappable box a
    true 44px while the bar stays 46px. Same technique, same reason as M1's
-   exercise-library star. */
-.mcs-setbtn{flex:0 0 auto;min-height:44px;margin-block:-2px;padding:6px 8px;background:none;border:0;
-  font-size:12.5px;font-weight:800;letter-spacing:0.02em;white-space:nowrap;
+   exercise-library star. R6 raised both to the owner's 48px standard with
+   13px text; -4px block margins keep the bar's own height unchanged. */
+.mcs-setbtn{flex:0 0 auto;min-height:48px;min-width:48px;margin-block:-4px;padding:6px 8px;background:none;border:0;
+  font-size:var(--fs-sm);font-weight:800;letter-spacing:0.02em;white-space:nowrap;
   font-variant-numeric:tabular-nums;color:var(--muted,var(--ink-7,#8a8377));cursor:pointer;
   -webkit-tap-highlight-color:transparent;}
 .mcs-setbtn.mcs-btn-open{color:var(--text,var(--ink-11,#faf7f0));}
 
 /* the one terminal action */
-.mcs-endbtn{flex:0 0 auto;min-height:44px;margin-block:-2px;padding:7px 14px;border-radius:999px;
+.mcs-endbtn{flex:0 0 auto;min-height:48px;margin-block:-4px;padding:7px 14px;border-radius:999px;
   background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.22);
-  color:var(--text,var(--ink-11,#faf7f0));font-size:12.5px;font-weight:800;letter-spacing:0.02em;
+  color:var(--text,var(--ink-11,#faf7f0));font-size:var(--fs-sm);font-weight:800;letter-spacing:0.02em;
   white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .mcs-endbtn:active{transform:scale(0.97);}
+
+/* R6: back to top, after the last exercise of a 10-exercise day. */
+.mcs-totop{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;
+  margin:8px 0 16px;border-radius:12px;cursor:pointer;font:inherit;font-size:var(--fs-sm);font-weight:800;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);color:var(--text,var(--ink-11,#faf7f0));
+  -webkit-tap-highlight-color:transparent;}
+.mcs-totop:active{transform:scale(0.98);}
+html[data-theme="light"] .mcs-totop{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);color:#1c1a17;}
+
+/* R6: at 13px the "Elapsed" word no longer fits beside End workout on a
+   320px screen. The running clock reads as elapsed time without it. */
+@media (max-width:359px){.mcs-timer-label{display:none;}}
 
 html[data-theme="light"] .mcs-div{background:rgba(28,26,23,0.16);}
 html[data-theme="light"] .mcs-endbtn{background:rgba(28,26,23,0.06);

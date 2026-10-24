@@ -574,7 +574,8 @@
       // 23 pages across five engine families. Toggled, not one-way: opening a
       // day brings the cards back and this restores the element to whatever
       // mcs-stat-active says, so the summary control still governs it.
-      if(!cards().length){ host.style.display='none'; return; }
+      if(!cards().length){ host.style.display='none'; ensureToTop([]); return; }
+      ensureToTop(cards());
       if(host.style.display==='none') host.style.display='';
       if(host.classList.contains('summary-section')){
         renderMC(host);
@@ -586,6 +587,29 @@
     }finally{
       setTimeout(function(){writing=false;},0);
     }
+  }
+
+  /* Back to top (flagship readiness R6): a 10-exercise day is several
+     screens long, and the way back up was a long swipe. Inline after the last
+     exercise rather than floating, so it can never sit over a control, and
+     only on a day long enough to need it. Written only on change -- this runs
+     inside recompute(), which the body observer re-triggers. */
+  var TO_TOP_AT=10;
+  function ensureToTop(list){
+    var btn=document.getElementById('mcsToTop');
+    if(list.length<TO_TOP_AT){ if(btn&&btn.parentNode)btn.parentNode.removeChild(btn); return; }
+    var last=list[list.length-1];
+    var unit=(last.closest&&last.closest('.ss-card'))||last;
+    if(!btn){
+      btn=document.createElement('button');
+      btn.type='button';btn.id='mcsToTop';btn.className='mcs-totop';
+      btn.textContent='\u2191 Back to top';
+      btn.addEventListener('click',function(){
+        var smooth=!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+        window.scrollTo({top:0,behavior:smooth?'smooth':'auto'});
+      });
+    }
+    if(unit.nextElementSibling!==btn) unit.insertAdjacentElement('afterend',btn);
   }
 
   var tId=null;

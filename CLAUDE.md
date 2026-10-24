@@ -86,6 +86,7 @@ node tools/test-mc-quick-pump.js       # history-aware selection incl. mc-readin
 node tools/test-mc-quick-pump-catalog.js  # compound-anchor selection vs. the real catalog (audit F-05)
 node tools/test-mc-bridge.js           # cross-app bridge read layer
 node tools/test-mc-sync-merge.js       # mc-sync.js merge logic
+node tools/test-mc-archive.js          # workouts past the newest 200 are archived, not dropped; CSV export; backup nudge (R7)
 node tools/test-mc-program-progress.js # per-program day model (continuous days, rest-as-data)
 node tools/test-mc-program-tabs.js     # program-landing list model (adaptive depth, day numbers)
 node tools/test-mc-sw.js               # service-worker fetch strategy (L1, L3, L4, L5)
@@ -2380,6 +2381,39 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > - **Pos 4 carries `tut: { down: 3, pause: 2 }`** in `mm-data.js`, and
 >   `validate-programs.js` requires it. A tempo badge with a label longer than
 >   digits needs `data-tempo-label`, or `mc-group-split.js` cuts it.
+
+> **R6 shipped (2026-10-24), all six steps.** The session surface meets the
+> owner's 48px / 8px / 13px standard on all 9 journey pages (0 / 0 / 0; it
+> was 77 / 69 / 217). Four things to know before touching session UI:
+> - **`check-journey.js`'s `SWEEP` hard-fails** any control under 48px, any
+>   pair under 8px apart and any text under 13px on the toolbar, the rest-end
+>   bar and every exercise unit on screen. Page chrome (week tabs, back link,
+>   nav) is still the CHROME ratchet's: it is on the visual ratchet's day-list
+>   baselines, which need a CI re-baseline.
+> - **Replace / Reorder live in the logger's "today" row** with + Set / Skip
+>   (the owner kept them on the card). `MC_CARD_ACTIONS` in
+>   `mc-card-actions.js` is the bridge; there is no second copy of either.
+> - **One rest readout:** `body.mcs-resting` is set only when there is no
+>   inline rest row, so the toolbar keeps elapsed while the row counts down.
+> - **The in-session PR** is local (`prCheck()` in `mc-setlog.js`): it needs
+>   an earlier session to beat (G-03) and today's other sets count against it.
+
+> **R7 shipped (2026-10-24), all three steps.** Nothing past 200 finished
+> workouts is dropped any more, there is a CSV export, and a signed-out athlete
+> gets a backup reminder. Four things to know before touching the log or backups:
+> - **The newest 200 stay in `mc_workout_log_v1`; older ones go to
+>   `mc_workout_archive_v1`, compacted.** `mc-log-read.js`'s `capLog()` writes
+>   the archive FIRST, so a full device keeps the log long rather than losing
+>   the overflow. Read `MC_LOG.readAllWorkouts()` for anything that wants all
+>   of history (History, detail, Stats, calendar, trend chart, CSV); it dedupes
+>   a workout present in both. Everything else may keep reading the log.
+> - **`mergeWorkoutLog()` no longer cuts at 200.** A pull hands the merged log
+>   to `MC_LOG.rollover()`. The archive syncs untrimmed under its own
+>   `workoutArchive` strategy and honours the same deletion records.
+> - **The compact form is lossless** (`compactWorkout`/`expandWorkout`): unknown
+>   entry and set fields ride along. `tools/test-mc-archive.js` holds it to that.
+> - **Only the JSON backup counts as a backup** (`mc_backup_last_v1`, device-
+>   local). The CSV is for spreadsheets and cannot be restored.
 
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the

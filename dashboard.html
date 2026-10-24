@@ -338,6 +338,17 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 }
 
 /* ── PUSH ALERTS CHIP ── */
+/* R7: the backup reminder (populateBackupNudge below). 48px buttons, 8px apart. */
+.backup-nudge{display:none;margin:0 18px 14px;padding:12px 14px;border-radius:14px;
+  background:var(--surface);border:1px solid var(--border2);}
+.backup-nudge.show{display:block;}
+.bn-text{font-size:var(--fs-sm);color:var(--text);line-height:1.4;}
+.bn-sub{display:block;color:var(--muted);margin-top:2px;}
+.bn-btns{display:flex;gap:8px;margin-top:10px;}
+.bn-btn{flex:1 1 0;min-height:48px;border-radius:10px;border:1px solid var(--border2);background:transparent;
+  color:var(--text);font:inherit;font-size:var(--fs-sm);font-weight:800;cursor:pointer;}
+.bn-btn.bn-go{background:var(--accent);border-color:transparent;color:#111;}
+html[data-theme="light"] .bn-btn.bn-go{color:#fff;}
 .push-chip{
   display:none;align-items:center;gap:8px;
   margin:0 18px 14px;padding:11px 14px;min-height:44px;width:calc(100% - 36px);
@@ -1457,6 +1468,19 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
     </span>
     <span class="push-chip-btn">Turn on</span>
   </button>
+
+  <!-- Flagship readiness R7 / D-36: the backup reminder. A signed-out
+       athlete's training lives on this phone alone. Shown only with 3+
+       finished workouts, no backup file in 14 days, not dismissed in the last
+       7, and nobody signed in (signed-in athletes sync). -->
+  <div class="backup-nudge" id="backupNudge" role="region" aria-label="Back up your training">
+    <div class="bn-text"><b>Back up your training</b>
+      <span class="bn-sub" id="bnSub">Your workouts are only on this device.</span></div>
+    <div class="bn-btns">
+      <button type="button" class="bn-btn bn-go" id="bnGo">Back up now</button>
+      <button type="button" class="bn-btn" id="bnLater">Later</button>
+    </div>
+  </div>
 
   <!-- Daily Vitals strip (flagship-immersive-roadmap.md H3) — manual
        sleep/resting-HR/readiness entry, its own Recovery ring. Hidden with
@@ -2849,6 +2873,29 @@ function maybeCheckStreak(){
 <script src="mc-backup-status.js"></script>
 <script src="mc-export.js"></script>
 <script src="mc-account.js"></script>
+<script>
+/* Flagship readiness R7 / D-36: the backup reminder. Runs after mc-export.js
+   and mc-account.js. Asks the account who is signed in first, so a signed-in
+   athlete (who syncs) is never told their data is on one phone. */
+(function populateBackupNudge(){
+  var el = document.getElementById('backupNudge');
+  if (!el || !window.MCExport || !MCExport.shouldNudge) return;
+  function decide(signedIn){
+    if (!MCExport.shouldNudge(!!signedIn)) { el.classList.remove('show'); return; }
+    var sub = document.getElementById('bnSub');
+    if (sub) sub.textContent = 'Your workouts are only on this device. Last backup: ' + MCExport.lastBackupLabel() + '.';
+    el.classList.add('show');
+  }
+  var who = (window.MC_SB && MC_SB.configured && MC_SB.currentUser) ? MC_SB.currentUser() : null;
+  Promise.resolve(who).then(function(u){ decide(!!u); }, function(){ decide(false); });
+  document.getElementById('bnGo').addEventListener('click', function(){
+    MCExport.exportJSON(); el.classList.remove('show');
+  });
+  document.getElementById('bnLater').addEventListener('click', function(){
+    MCExport.dismissNudge(); el.classList.remove('show');
+  });
+})();
+</script>
 <script src="mc-biometric.js"></script>
 <script src="program-overrides.js"></script>
 <script src="mc-layout.js"></script>

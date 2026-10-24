@@ -429,6 +429,20 @@
       "export": true,
       "note": "Every write goes through mc-log-read.js (appendWorkout / deleteWorkouts / clearWorkouts / writeWorkoutLog); tools/check-workout-log-writers.js fails CI on any other (flagship readiness R1 / D-38). mc-finish.js is the main caller."
     },
+    "mc_workout_archive_v1": {
+      "owner": "mc-log-read.js",
+      "storage": "local",
+      "sync": "workoutArchive",
+      "export": true,
+      "note": "Finished workouts past the log's newest 200, in a compact form (flagship readiness R7 / D-39). The log used to drop them, here and in the cloud copy. Written only by mc-log-read.js (archiveWorkouts / capLog / deleteWorkouts); synced untrimmed."
+    },
+    "mc_backup_last_v1": {
+      "owner": "mc-export.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "When this device last saved a backup file, and when the backup reminder was last dismissed (flagship readiness R7 / D-36). Device state: a backup made on one phone says nothing about another."
+    },
     "mc_builder_draft_v1": {
       "owner": "build-workout.html",
       "storage": "local",
@@ -442,6 +456,13 @@
       "sync": false,
       "export": false,
       "note": "The dashboard tab and per-tab scroll this browsing session was on, so Back from a workout returns there (R5 step 6). A fresh launch opens on Home."
+    },
+    "mc_ui_landing_v1": {
+      "owner": "mc-program-tabs.js",
+      "storage": "session",
+      "sync": false,
+      "export": false,
+      "note": "Each program landing's tab, open group and scroll position this browsing session, restored on Back or reload so a workout's Back button returns to the same place in the list (flagship readiness R6). A fresh visit opens on Overview."
     },
     "mc_ui_history_tab_v1": {
       "owner": "workout-logs.html",

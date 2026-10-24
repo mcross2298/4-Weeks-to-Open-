@@ -90,7 +90,7 @@ ok('module.exports captured all 7 merge fns', !!(M && M.mergeArrayById && M.merg
   eq('arrayByIdTs: newer local edit beats older remote', out.find(e => e.id === 'a').v, 'local-newer');
 }
 
-// ---- mergeWorkoutLog: dedupe by id||pageId|date, sort desc, cap 200 -------
+// ---- mergeWorkoutLog: dedupe by id||pageId|date, sort desc, no cap (R7) ----
 {
   const local = [
     { id: 'p1', pageId: 'a.html', date: '2026-01-01T00:00:00Z' },
@@ -109,7 +109,27 @@ ok('module.exports captured all 7 merge fns', !!(M && M.mergeArrayById && M.merg
   const many = [];
   for (let i = 0; i < 250; i++) many.push({ id: 's' + i, pageId: 'x', date: new Date(2026, 0, 1 + i).toISOString() });
   const out = M.mergeWorkoutLog(many, []);
-  eq('workoutLog: capped at 200', out.length, 200);
+  // Flagship readiness R7 / D-39: the merge used to cut at 200, which dropped
+  // the oldest workouts from the cloud copy and from every device that
+  // pulled it. mc-log-read.js's rollover() now archives the overflow instead.
+  eq('workoutLog: not cut at 200 (R7 archives instead)', out.length, 250);
+}
+
+// ---- mergeWorkoutArchive (R7): union by identity, deletions, newest first ---
+{
+  const a = { id: 'a', pageId: 'p', date: '2025-01-01T00:00:00Z', _x: [], _s: [] };
+  const b = { id: 'b', pageId: 'p', date: '2025-01-02T00:00:00Z', _x: [], _s: [] };
+  const c = { pageId: 'q', date: '2025-01-03T00:00:00Z', _x: [], _s: [] };   // legacy, no id
+  const ids = (arr) => arr.map((e) => e.id || (e.pageId + '|' + e.date)).join(',');
+  ok('module.exports captured mergeWorkoutArchive', typeof M.mergeWorkoutArchive === 'function');
+  eq('archive: union, newest first', ids(M.mergeWorkoutArchive([a], [b, c])), 'q|2025-01-03T00:00:00Z,b,a');
+  eq('archive: duplicates converge', ids(M.mergeWorkoutArchive([a, b], [a, b])), 'b,a');
+  eq('archive: a deletion record removes it on both sides', ids(M.mergeWorkoutArchive([a, b], [b], { a: { ts: 1 } })), 'b');
+  eq('archive: never trimmed', M.mergeWorkoutArchive(
+    Array.from({ length: 300 }, (_, i) => ({ id: 'x' + i, date: new Date(2020, 0, 1 + i).toISOString() })), []).length, 300);
+  eq('archive: a non-array side is empty, not a throw', ids(M.mergeWorkoutArchive({ bad: 1 }, 'x')), '');
+  eq('archive: through the real dispatcher, with deletions as extra',
+     ids(M.mergeStore('workoutArchive', [a, b], [b], null, { b: { ts: 1 } })), 'a');
 }
 
 // ---- flagship readiness R1 / D-24: a delete stays deleted ------------------

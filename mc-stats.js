@@ -42,9 +42,11 @@
   function logs() {
     // typeof-guarded: mc-maxout.js and this file's siblings are require()'d
     // from tools/ in Node, where a bare `window` is a ReferenceError.
-    return (typeof window !== 'undefined' && window.MC_LOG && window.MC_LOG.readWorkoutLog)
-      ? window.MC_LOG.readWorkoutLog()
-      : [];
+    // R7 / D-39: the archive too, so lifetime totals and past months
+    // still count workouts older than the log's newest 200.
+    var L = typeof window !== 'undefined' ? window.MC_LOG : null;
+    if (L && L.readAllWorkouts) return L.readAllWorkouts();
+    return (L && L.readWorkoutLog) ? L.readWorkoutLog() : [];
   }
   function activity() {
     try { return JSON.parse(localStorage.getItem(ACT_KEY) || '{}') || {}; }

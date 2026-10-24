@@ -322,11 +322,85 @@ Defects: D-30, D-31.
 
 Update the Quick Tour where controls move.
 
+**R6 shipped (2026-10-24), all six steps.** The audit's done criterion holds: `check-journey.js`'s new session sweep reports **0 controls under 48px, 0 pairs closer than 8px and 0 text nodes under 13px on all 9 journey pages**. Measured on `main` before the change, the same sweep found 77, 69 and 217 across the nine.
+
+- **Step 1, the gate.** `SWEEP` in `tools/check-journey.js` measures the session surface the way the athlete sees it: the toolbar, the rest-end bar and every exercise unit on screen, with one set logged and its rest running. It hard-fails rather than ratchets, because all nine pages reached zero before it landed. `CRITICAL` and the guided-mode / interval-timer floors moved from 44 to 48 with it. Two scoping choices are deliberate:
+  - **Page chrome stays on the ratchet.** Week tabs, the back link and the bottom nav render on the visual ratchet's day-list baselines, which can only be re-baselined from CI (P4). The CHROME pass now reports against 48 but still fails only on a shrink. The five day-list pages were screenshotted on `main` and on this branch and are pixel-identical.
+  - **Spacing is measured within a layer.** A control scrolling under the pinned toolbar is not its neighbour, and the occlusion pass already covers that case.
+- **Steps 2 and 3, the controls.**
+  - Set controls: the checkbox, inputs, ±15s, effort buttons and the toggle are now 48px. Rows sit 9px apart (they were 3px) and the grid gap is 8.
+  - Card header: the ⋯ and ⓘ are 48px and 8px apart; they were 44px and 4px apart.
+  - Toolbar: both buttons are 48px tall with 13px text.
+  - Other controls now at 48px: the rest chip, the Quick Pump trigger, guided mode's entry and exit, and the interval timer's back and run buttons.
+  - The floating timer's gear, video, adjust, done, cue toggles and presets are 48px with 13px text. D-30 measured them at 24–38px.
+  - Every label on the session surface is 13px or more. `max()` guards the density-scaled ones, because `--density` can be 0.82.
+  - At 320px:
+    - The toolbar drops the word "Elapsed", which no longer fits beside End workout.
+    - A superset leg's logger takes back the 30px its header reserves for ⋯, so its inputs are 63px wide rather than 39px.
+- **Step 4.**
+  - The set checkbox has a press state.
+  - Each input has a label ("Set 2 weight, pounds") and `enterkeyhint`. Next moves from weight to reps, and Done on the last field logs the set. A finished row is never unticked from the keyboard.
+- **Step 5.**
+  - **Back to top:** an inline ↑ Back to top button sits after the last exercise of a day with 10 or more. It is inline rather than floating, so it can never cover a control.
+  - **Landing restore:** each program landing restores its tab, open group and scroll position on Back or reload (`mc_ui_landing_v1`). A fresh visit still opens on Overview.
+- **Step 6, the declutter**, with two decisions taken with the owner:
+  - **Replace / Reorder stay on the card.** The owner put them there (VOC-C1) because the ⋯ menu was too cluttered, and kept them. They now share one row with + Set / Skip at the foot of the open exercise: four "change today" actions in one 48px row instead of two rows. `mc-card-actions.js` publishes `MC_CARD_ACTIONS` so the row calls the same `doReplace()` / `startReorder()` the menu does.
+  - **One rest readout: the inline row.** The toolbar keeps elapsed time while the row under the set counts down. It takes the countdown only where there is no inline row (the float and video views).
+  - **A neutral prescription pill:** no gold glow and no rose drop target. The current set is still the brightest text in it.
+  - **Finished rows are tinted, not faded.** Opacity 0.55 plus a strike-through had made the logged numbers the hardest text on the card to read.
+  - **D-31:** the light-mode ghost value uses `--ink-6`, which measures 5.23:1.
+  - **An in-session PR moment.** A new best weight shows "🏆 New best — 190 lb, up from 185" on the set, with the PR haptic and an announcement. It uses this device's own history, so it needs no account. The rule is the cloud PR's (G-03): a lift's first-ever log is a baseline, not a record. A second set at the same new weight is not a second PR, and an untick clears it.
+- **Measured:** open-card height at 390px is 583 → 596px on `mm-p1`, 509 → 512 on `bro-split` and 590 → 590 on `psu-strength`. Folding the Replace / Reorder row into the actions row pays for the taller rows. Contrast improved without being targeted: light 299 → 281 findings, dark 74 → 56. The budgets are left where they are, for a CI run to lower.
+
+**Known residuals, not fixed here:**
+- **Page chrome under 48:** week tabs, the back link (44 tall) and the bottom nav. Raising them moves the day-list visual baselines, so it needs a CI re-baseline in the same change.
+- **The PR mark is not repainted on reload.** The set and its tick restore; the line under it does not.
+- **iOS's numeric keypad has no return key**, so Next / Done works on Android and hardware keyboards only.
+- **Not verified on a real device.**
+
 ### R7 · Data mobility
 Defects: D-36, D-39.
 1. CSV export: one row per set, using the share sheet where supported.
 2. A backup nudge for signed-out athletes ("Last backup: never / N days ago"), and surface the `persist()` result.
 3. Lift the 200-workout cap or archive older workouts compactly, and stop trimming the cloud copy.
+
+**R7 shipped (2026-10-24), all three steps.** One decision was taken with the owner: **archive** rather than lift the cap, so the newest 200 stay exactly where every reader already looks.
+
+- **Step 3 first, because steps 1 and 2 read it.**
+  - **Two places cut at 200.** `mc-log-read.js`'s writers kept the newest 200 on this device. `mc-sync.js`'s `mergeWorkoutLog()` also cut at 200, so the cloud copy and every device that pulled it lost the oldest workouts too.
+  - **The overflow now moves to `mc_workout_archive_v1` instead of being dropped.** It is a compact form: a table of the lift names each workout uses, then one short row per set. Unknown entry fields and unknown set fields ride along whole, so the round trip is lossless; `tools/test-mc-archive.js` checks it field by field.
+  - **The archive is written first.** If that write fails (a full device), the log keeps all 201 rather than losing one.
+  - **The sync merge no longer cuts at all.**
+    - After a pull, `MC_LOG.rollover()` moves the overflow into the archive.
+    - The archive syncs with its own strategy, `workoutArchive`: a union by the log's identity, honouring the same deletion records, never trimmed.
+  - **Readers:**
+    - The ~20 readers of the log are unchanged and still see the newest 200.
+    - History, workout detail, Stats, the calendar, the exercise trend chart and the CSV read `MC_LOG.readAllWorkouts()` instead, which is the log plus the archive. A workout present in both (a pull can bring an archived one back into the log) is listed once, and the log's copy wins.
+  - **Delete, clear and import reach the archive too.** Import merges it the way it merges the log.
+  - **The two Phase 5.2 notes are gone,** on History and on the trend sheet. Both said "each new one now replaces the oldest", and that is no longer true.
+  - **Measured:** 205 seeded workouts left 200 in the log and 5 in a 1,251-byte archive. History listed all 205, and an archived workout's detail page rendered.
+- **Step 1, CSV.**
+  - `MCExport.exportCSV()` writes one row per set, oldest first: date, time, workout, exercise, set, weight, reps, effort, PR, swapped-from and duration. A workout with no sets (conditioning) gets one row.
+  - It uses the share sheet where the browser can share files, and a download otherwise.
+  - Two details are deliberate:
+    - The date is the athlete's calendar day, not UTC's, so an evening session in the US does not land on tomorrow.
+    - A cell starting with `= + - @` is prefixed with `'` so a spreadsheet does not run it as a formula. Negative numbers are left alone.
+- **Step 2, the backup nudge.**
+  - **Account sheet.** It now says "Last backup on this device: never / today / N days ago", plus what `navigator.storage.persisted()` answered. `mc-finish.js` has asked for persistence since L6; nothing ever said whether the browser agreed, and a refusal is exactly when a backup file matters.
+  - **Home card.** A **Back up your training** card shows when all of these hold:
+    - nobody is signed in;
+    - there are 3 or more finished workouts;
+    - there has been no backup in 14 days;
+    - it was not dismissed in the last 7 days.
+
+    It has two buttons, 48px tall and 8px apart. Back up now saves the file and clears the card; Later snoozes it for a week.
+  - **Only the JSON backup counts as a backup.** A CSV cannot be restored.
+  - **Storage:** the backup time lives in `mc_backup_last_v1`, which is registered, device-local and not exported.
+
+**Known residuals, not fixed here:**
+- **The set log keeps 5 sessions per exercise** (the other half of D-39). It feeds the "Last:" cue and the suggested weight, not history: every finished workout keeps all of its sets, and those are what is archived. The trend sheet still says so when the cap is reached.
+- **The 20 log readers that stay on the newest 200** include the streak, the bridge and readiness, and they only look back weeks. Whether anything else should read the archive is an owner call rather than a defect.
+- **The share sheet with a file is not verified on a real device.** Headless Chromium has no `navigator.share`, so only the download path ran.
 
 ### G · Token gate and migration · I · Builder redesign
 Defect: D-32, plus the Phase 1 design items (one bottom nav, builder exercises-first, color semantics).

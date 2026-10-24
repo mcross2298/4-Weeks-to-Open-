@@ -295,7 +295,7 @@
     // it is least acceptable to lose silently, so it goes through the shared
     // guarded writer and a full device says so. Flagship readiness R1 (D-38):
     // MC_LOG.appendWorkout() is the one append for this store — it guards
-    // the shape (L-03), keeps the last 200 (surfaced in Phase 5.2) and warns.
+    // the shape (L-03), keeps the newest 200 and archives the rest (R7) and warns.
     try{ _mcLog().appendWorkout(entry); }catch(e){}
     clearTodaysDailyEntry();
     return entry;

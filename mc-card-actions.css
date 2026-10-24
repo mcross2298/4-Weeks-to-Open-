@@ -10,10 +10,11 @@
    this against two .mc-arrow buttons in the same corner, so there isn't room
    for a full 44px target on every control; this narrows the gap without
    pushing them into each other (see .mc-reorder-ctrls below). */
-/* 44×44 — 44pt touch floor (R5); was 36×36. */
+/* 48×48 — the owner's standard (flagship readiness R6); was 44, and 36
+   before R5. */
 .mc-meatball{
   position:absolute;top:6px;right:6px;z-index:4;
-  width:44px;height:44px;border-radius:8px;
+  width:48px;height:48px;border-radius:8px;
   display:flex;align-items:center;justify-content:center;
   background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
   color:var(--ink-8,#cfc9bf);font-size:var(--fs-xl);line-height:1;cursor:pointer;
@@ -28,28 +29,8 @@
 .mc-meatball.mc-has-note .mc-dot-ind,
 .mc-meatball.mc-has-tempo .mc-dot-ind{display:block;}
 
-/* ── Promoted quick actions (K-3.4/VOC-C1) ──────────────────────────────
-   Replace / Reorder surfaced out of the meatball menu onto the card face
-   — but only while the card is the one .active card in the day (R3), so
-   the 9 resting cards around it stay uncluttered. (Shipped first as
-   Superset/Drop set; corrected per owner feedback to the two most commonly
-   used meatball actions instead.) */
-.mc-quick-actions{display:none;gap:8px;margin-top:10px;}
-/* Descendant, not direct-child: injectQuickActions() mounts this on
-   card.querySelector(BODY_SEL) || card, and BODY_SEL's nesting depth
-   under .ex-card/.ex-item/.ss-ex varies by template. */
-.ex-card.active .mc-quick-actions,
-.ex-item.active .mc-quick-actions,
-.ss-ex.active .mc-quick-actions{display:flex;}
-.mc-qa-btn{
-  appearance:none;cursor:pointer;flex:1;min-height:44px;
-  display:flex;align-items:center;justify-content:center;gap:6px;
-  border-radius:9px;border:1px solid rgba(255,255,255,0.12);
-  background:rgba(255,255,255,0.05);color:var(--ink-8,#cfc9bf);
-  font-family:inherit;font-size:var(--fs-xs);font-weight:800;
-  -webkit-tap-highlight-color:transparent;transition:background 0.15s;
-}
-.mc-qa-btn:active{background:rgba(255,255,255,0.12);}
+/* The promoted Replace / Reorder row (K-3.4/VOC-C1) moved into mc-setlog.js's
+   "today" row in R6, beside + Set / Skip; it is styled there as .mcl-act. */
 
 /* MARKET:STRIP influencer-refs START */
 /* ── Tempo pill (on-demand add-in · STNDR notation) ── */
@@ -322,8 +303,6 @@
 html[data-theme="light"] .mc-meatball{background:rgba(28,26,23,0.05);border-color:rgba(28,26,23,0.12);color:#6b6459;}
 html[data-theme="light"] .mc-meatball:active{background:rgba(28,26,23,0.1);}
 
-html[data-theme="light"] .mc-qa-btn{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.12);color:#6b6459;}
-html[data-theme="light"] .mc-qa-btn:active{background:rgba(28,26,23,0.1);}
 
 html[data-theme="light"] .mc-tempo-legend{color:#6b6459;}
 html[data-theme="light"] .mc-tempo-opt{background:#faf7f0;border-color:rgba(28,26,23,0.1);}
@@ -402,5 +381,5 @@ html[data-theme="light"] .mc-toast{background:#f5f2ec;color:#1c1a17;border-color
 .mc-qp-trigger.mc-qp-inflow{
   position:static;z-index:auto;left:auto;right:auto;bottom:auto;
   display:flex;align-items:center;justify-content:center;gap:6px;
-  width:100%;margin:0 0 10px;min-height:44px;
+  width:100%;margin:0 0 10px;min-height:48px;
 }

@@ -218,18 +218,50 @@
 
   // Manual backup — available whether signed in or not. Symmetric with
   // Mikes-Cookbook's mc-account.js (Phase 1.3 durability).
+  // Flagship readiness R7 / D-36: when this device last saved a backup, and
+  // whether the browser has agreed to keep this site's data. mc-finish.js
+  // asks for persistent storage after a first finished workout; nothing ever
+  // said whether it was granted, and a refusal is exactly when a backup file
+  // matters most.
   function appendBackupSection(body) {
     if (!window.MCExport) return;
     var wrap = document.createElement('div');
+    var last = MCExport.lastBackupLabel ? MCExport.lastBackupLabel() : null;
     wrap.innerHTML =
       '<div style="border-top:1px solid rgba(255,255,255,0.1);margin:18px 0 14px;"></div>' +
       '<div class="acct-sub">Back up your data as a file, or restore from one — works whether you’re signed in or not.</div>' +
+      (last ? '<div class="acct-sub" id="acctLastBackup" style="margin-top:6px;">Last backup on this device: <b>' + last + '</b></div>' : '') +
+      '<div class="acct-sub" id="acctPersist" style="margin-top:6px;display:none;"></div>' +
       '<button class="acct-btn acct-secondary" id="acctExport" style="margin-top:8px;">Export data</button>' +
       '<button class="acct-btn acct-secondary" id="acctImport" style="margin-top:8px;">Import data</button>' +
+      (MCExport.exportCSV ? '<button class="acct-btn acct-secondary" id="acctCsv" style="margin-top:8px;">Export sets as CSV (spreadsheet)</button>' : '') +
       '<input type="file" id="acctImportFile" accept="application/json" style="display:none">' +
       '<div class="acct-err" id="acctBackupMsg"></div>';
     body.appendChild(wrap);
-    wrap.querySelector('#acctExport').addEventListener('click', function () { MCExport.exportJSON(); });
+    try {
+      if (navigator.storage && navigator.storage.persisted) {
+        navigator.storage.persisted().then(function (on) {
+          var el = wrap.querySelector('#acctPersist');
+          if (!el) return;
+          el.textContent = on
+            ? 'This browser keeps this app’s data, even when the phone is low on space.'
+            : 'This browser may clear this app’s data if the phone runs low on space. A backup file keeps it safe.';
+          el.style.display = '';
+        }).catch(function () {});
+      }
+    } catch (e) {}
+    wrap.querySelector('#acctExport').addEventListener('click', function () {
+      MCExport.exportJSON();
+      var lb = wrap.querySelector('#acctLastBackup b');
+      if (lb && MCExport.lastBackupLabel) lb.textContent = MCExport.lastBackupLabel();
+    });
+    var csvBtn = wrap.querySelector('#acctCsv');
+    if (csvBtn) csvBtn.addEventListener('click', function () {
+      var msg = wrap.querySelector('#acctBackupMsg');
+      MCExport.exportCSV().then(function (how) {
+        if (how === 'downloaded') msg.textContent = '';
+      }).catch(function () { msg.textContent = 'Could not export the CSV.'; });
+    });
     var fileInput = wrap.querySelector('#acctImportFile');
     wrap.querySelector('#acctImport').addEventListener('click', function () { fileInput.click(); });
     fileInput.addEventListener('change', function () {

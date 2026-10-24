@@ -203,7 +203,7 @@ function _mcInlineRestMount(el, durationSecs) {
     '<button type="button" class="mcl-rest-adj" aria-label="Subtract 15 seconds">\u221215s</button>' +
     '<div class="mcl-rest-mid">' +
       '<span class="mcl-rest-val" id="mclRestVal">' + TMR.formatTime(durationSecs) + '</span>' +
-      '<span class="mcl-rest-lbl">rest remaining</span>' +
+      '<span class="mcl-rest-lbl">Rest remaining</span>' +
     '</div>' +
     '<button type="button" class="mcl-rest-adj" aria-label="Add 15 seconds">+15s</button>';
   const adj = row.querySelectorAll('.mcl-rest-adj');
@@ -231,7 +231,13 @@ function applyRestView() {
   // not fit together -- measured at 390px, elapsed + rest + the sets readout +
   // End workout needs 464px against a 390px bar. Swapping is keyed off rest
   // running, not scroll position, so the bar never mutates under a thumb.
-  document.body.classList.toggle('mcs-resting', running);
+  //
+  // Flagship readiness R6 ("one rest readout", the owner's call): when the
+  // inline row is counting down under the set just logged, it IS the readout,
+  // with its -15s/+15s beside it, and the toolbar keeps elapsed. The toolbar
+  // takes the countdown only where there is no inline row (the float and
+  // video views). The rest-end bar still lands when the rest is over.
+  document.body.classList.toggle('mcs-resting', running && !inline);
 }
 
 // Screen-reader announcer — a visually-hidden polite live region. Announces
@@ -776,6 +782,16 @@ function injectTimerEnhCss() {
     '.tf-tray.open{max-height:200px;}' +
     '.timer-float-prefs{margin:6px 0 0!important;flex-wrap:wrap;}' +
     '.timer-presets{margin-top:8px!important;}' +
+    // Flagship readiness R6: the float's own controls to the owner's 48px /
+    // 8px / 13px standard (D-30 measured them at 24-38px: gear and video 34,
+    // adjust and done 38, the cue toggles 24). It shows on pages with no set
+    // rows to put the inline rest under, which is why no journey page sees it.
+    '.tf-gear,.tf-video-btn{width:48px!important;height:48px!important;}' +
+    '.tf-head{gap:8px;}' +
+    '.timer-float-adj,.timer-float-btn,.tf-pref,.timer-preset{min-height:48px;min-width:48px;box-sizing:border-box;}' +
+    '.timer-float-prefs,.timer-presets{gap:8px!important;}' +
+    '.timer-float-label,.timer-float-ex,.tf-pref,.timer-preset{font-size:13px!important;}' +
+    '.tf-pref{padding:4px 12px!important;}' +
     // ── carried-over motion ──
     '@keyframes mcTmrDonePop{0%{transform:scale(.9);opacity:.65}60%{transform:scale(1.05)}100%{transform:scale(1)}}' +
     '.timer-float-time.done{animation:mcTmrDonePop .45s ease-out;}' +
