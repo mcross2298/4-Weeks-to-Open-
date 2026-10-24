@@ -30,6 +30,7 @@
       mergeArrayById: function () { return mergeArrayById.apply(null, arguments); },
       mergeArrayByIdTs: function () { return mergeArrayByIdTs.apply(null, arguments); },
       mergeWorkoutLog: function () { return mergeWorkoutLog.apply(null, arguments); },
+      mergeWorkoutArchive: function () { return mergeWorkoutArchive.apply(null, arguments); },
       mergeSetlog: function () { return mergeSetlog.apply(null, arguments); },
       mergeActivity: function () { return mergeActivity.apply(null, arguments); },
       mergeDictByTs: function () { return mergeDictByTs.apply(null, arguments); },
@@ -97,6 +98,9 @@
     // mergeWorkoutLog() drops every keyed entry, so a delete on one device
     // holds on all of them. Owned by mc-log-read.js's deleteWorkouts().
     'mc_workout_log_deleted_v1': 'dictByTs',
+    // Flagship readiness R7 / D-39: workouts past the log's newest 200,
+    // compacted by mc-log-read.js. Synced untrimmed, so the cloud keeps them.
+    'mc_workout_archive_v1':  'workoutArchive',
     'mc_cond_log_v1':        'arrayByIdTs',
     'mc_body_v1':            'arrayByIdTs',
     'mc_vitals_v1':          'arrayByIdTs',
@@ -317,7 +321,8 @@
     return out;
   }
 
-  // workout log: append-only [{pageId, date, sets, ...}], newest-first, 200 max.
+  // workout log: append-only [{pageId, date, sets, ...}], newest-first (the
+  // newest 200 stay in the log; mc-log-read.js archives the rest, R7).
   // Older entries predate the id field, so dedupe on id || pageId|date — two
   // devices that both hold the same finished session converge on one copy.
   // (mc-log-read.js's workoutKey() is the same rule; this file cannot rely on
@@ -362,7 +367,29 @@
       seen[k] = 1; out.push(e);
     });
     out.sort(function (a, b) { return new Date(b.date || 0) - new Date(a.date || 0); });
-    return out.slice(0, 200);
+    // Flagship readiness R7 / D-39: no cut at 200 here any more. It dropped the
+    // oldest workouts from the cloud copy and from every device that pulled
+    // it. The pull hands the merged log to mc-log-read.js's rollover(), which
+    // keeps the newest 200 in the log and moves the rest to the archive.
+    return out;
+  }
+
+  // mc_workout_archive_v1 (R7): workouts past the log's newest 200, in
+  // mc-log-read.js's compact form. A union by the log's own identity, with
+  // the same deletion records, newest first, and never trimmed: this store is
+  // what makes the cloud copy whole.
+  function mergeWorkoutArchive(local, remote, deleted) {
+    local = Array.isArray(local) ? local : [];
+    remote = Array.isArray(remote) ? remote : [];
+    var del = (deleted && typeof deleted === 'object') ? deleted : {};
+    var seen = {}, out = [];
+    local.concat(remote).forEach(function (e) {
+      var k = workoutKey(e);
+      if (!k || del[k] || seen[k]) return;
+      seen[k] = 1; out.push(e);
+    });
+    out.sort(function (a, b) { return new Date(b.date || 0) - new Date(a.date || 0); });
+    return out;
   }
 
   // setlog: { "page|exId": [ {d, sets:{sn:{w,r}}}, ... ] }  (newest-first, 5 max)
@@ -681,6 +708,7 @@
     if (strategy === 'arrayById') return mergeArrayById(local, remote);
     if (strategy === 'arrayByIdTs') return mergeArrayByIdTs(local, remote);
     if (strategy === 'workoutLog') return mergeWorkoutLog(local, remote, base, extra);
+    if (strategy === 'workoutArchive') return mergeWorkoutArchive(local, remote, extra);
     if (strategy === 'setlog')    return mergeSetlog(local, remote);
     if (strategy === 'activity')  return mergeActivity(local, remote);
     if (strategy === 'dictByTs')  return mergeDictByTs(local, remote);
@@ -727,9 +755,15 @@
           // R1 / D-24: the workout log merge also needs the deletion records,
           // from BOTH sides — a delete made on the other device arrives in the
           // same pull as the entry it deletes.
-          var extra = strategy === 'workoutLog'
+          var extra = (strategy === 'workoutLog' || strategy === 'workoutArchive')
             ? mergeDictByTs(parse(readRaw(DELETED_KEY)), remoteByKey[DELETED_KEY]) : undefined;
           var wrote = remote == null || writeVal(key, mergeStore(strategy, local, remote, snapshot[key], extra));
+          // R7: the merged log may now be past 200; mc-log-read.js moves the
+          // overflow to the archive. Without it (a page that never loads that
+          // file) the log just stays longer until the next page that does.
+          if (wrote && strategy === 'workoutLog' && window.MC_LOG && window.MC_LOG.rollover) {
+            try { window.MC_LOG.rollover(); } catch (e) {}
+          }
           if (readRaw(key) !== before) pulledChange = true;
           if (wrote) snapshot[key] = remote != null ? JSON.stringify(remote) : null;
         }

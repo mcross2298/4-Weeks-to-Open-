@@ -364,6 +364,44 @@ Defects: D-36, D-39.
 2. A backup nudge for signed-out athletes ("Last backup: never / N days ago"), and surface the `persist()` result.
 3. Lift the 200-workout cap or archive older workouts compactly, and stop trimming the cloud copy.
 
+**R7 shipped (2026-10-24), all three steps.** One decision was taken with the owner: **archive** rather than lift the cap, so the newest 200 stay exactly where every reader already looks.
+
+- **Step 3 first, because steps 1 and 2 read it.**
+  - **Two places cut at 200.** `mc-log-read.js`'s writers kept the newest 200 on this device. `mc-sync.js`'s `mergeWorkoutLog()` also cut at 200, so the cloud copy and every device that pulled it lost the oldest workouts too.
+  - **The overflow now moves to `mc_workout_archive_v1` instead of being dropped.** It is a compact form: a table of the lift names each workout uses, then one short row per set. Unknown entry fields and unknown set fields ride along whole, so the round trip is lossless; `tools/test-mc-archive.js` checks it field by field.
+  - **The archive is written first.** If that write fails (a full device), the log keeps all 201 rather than losing one.
+  - **The sync merge no longer cuts at all.**
+    - After a pull, `MC_LOG.rollover()` moves the overflow into the archive.
+    - The archive syncs with its own strategy, `workoutArchive`: a union by the log's identity, honouring the same deletion records, never trimmed.
+  - **Readers:**
+    - The ~20 readers of the log are unchanged and still see the newest 200.
+    - History, workout detail, Stats, the calendar, the exercise trend chart and the CSV read `MC_LOG.readAllWorkouts()` instead, which is the log plus the archive. A workout present in both (a pull can bring an archived one back into the log) is listed once, and the log's copy wins.
+  - **Delete, clear and import reach the archive too.** Import merges it the way it merges the log.
+  - **The two Phase 5.2 notes are gone,** on History and on the trend sheet. Both said "each new one now replaces the oldest", and that is no longer true.
+  - **Measured:** 205 seeded workouts left 200 in the log and 5 in a 1,251-byte archive. History listed all 205, and an archived workout's detail page rendered.
+- **Step 1, CSV.**
+  - `MCExport.exportCSV()` writes one row per set, oldest first: date, time, workout, exercise, set, weight, reps, effort, PR, swapped-from and duration. A workout with no sets (conditioning) gets one row.
+  - It uses the share sheet where the browser can share files, and a download otherwise.
+  - Two details are deliberate:
+    - The date is the athlete's calendar day, not UTC's, so an evening session in the US does not land on tomorrow.
+    - A cell starting with `= + - @` is prefixed with `'` so a spreadsheet does not run it as a formula. Negative numbers are left alone.
+- **Step 2, the backup nudge.**
+  - **Account sheet.** It now says "Last backup on this device: never / today / N days ago", plus what `navigator.storage.persisted()` answered. `mc-finish.js` has asked for persistence since L6; nothing ever said whether the browser agreed, and a refusal is exactly when a backup file matters.
+  - **Home card.** A **Back up your training** card shows when all of these hold:
+    - nobody is signed in;
+    - there are 3 or more finished workouts;
+    - there has been no backup in 14 days;
+    - it was not dismissed in the last 7 days.
+
+    It has two buttons, 48px tall and 8px apart. Back up now saves the file and clears the card; Later snoozes it for a week.
+  - **Only the JSON backup counts as a backup.** A CSV cannot be restored.
+  - **Storage:** the backup time lives in `mc_backup_last_v1`, which is registered, device-local and not exported.
+
+**Known residuals, not fixed here:**
+- **The set log keeps 5 sessions per exercise** (the other half of D-39). It feeds the "Last:" cue and the suggested weight, not history: every finished workout keeps all of its sets, and those are what is archived. The trend sheet still says so when the cap is reached.
+- **The 20 log readers that stay on the newest 200** include the streak, the bridge and readiness, and they only look back weeks. Whether anything else should read the archive is an owner call rather than a defect.
+- **The share sheet with a file is not verified on a real device.** Headless Chromium has no `navigator.share`, so only the download path ran.
+
 ### G · Token gate and migration · I · Builder redesign
 Defect: D-32, plus the Phase 1 design items (one bottom nav, builder exercises-first, color semantics).
 

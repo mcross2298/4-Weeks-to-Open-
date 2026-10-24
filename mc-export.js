@@ -37,6 +37,7 @@
     'mc_daily_v1', 'mc_plan_targets_v1', 'mc_macros_v1',
     'mc_session_summary_v1',        // synced since B-era; was missing here
     'mc_workout_log_deleted_v1',    // flagship readiness R1 / D-24
+    'mc_workout_archive_v1',        // flagship readiness R7 / D-39
     'mc_custom_exercises_v1',       // G-01
     'mc_active_prog', 'mc_weekly_overrides_v1',
     'mc_program_progress_v1',       // program-day-view-roadmap.md D0
@@ -83,6 +84,118 @@
     a.click();
     a.remove();
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    noteBackup();
+  }
+
+  // ---- when this device last saved a backup (flagship readiness R7 / D-36) --
+  // A signed-out athlete's training lives on this one phone, and nothing ever
+  // said when it was last copied off it. Only the JSON backup counts: a CSV
+  // is for reading in a spreadsheet and cannot be restored.
+  var BK_KEY = 'mc_backup_last_v1';   // { ts, dismissedAt }
+  function backupState() {
+    try { var v = JSON.parse(localStorage.getItem(BK_KEY) || '{}'); return (v && typeof v === 'object') ? v : {}; }
+    catch (e) { return {}; }
+  }
+  function saveBackupState(patch) {
+    var v = backupState(), k;
+    for (k in patch) v[k] = patch[k];
+    try { localStorage.setItem(BK_KEY, JSON.stringify(v)); } catch (e) {}
+  }
+  function noteBackup() { saveBackupState({ ts: Date.now() }); }
+  function lastBackup() { var t = backupState().ts; return (typeof t === 'number' && t > 0) ? t : null; }
+  // "never" / "today" / "yesterday" / "N days ago"
+  function lastBackupLabel() {
+    var t = lastBackup();
+    if (!t) return 'never';
+    var days = Math.floor((Date.now() - t) / 86400000);
+    return days <= 0 ? 'today' : days === 1 ? 'yesterday' : days + ' days ago';
+  }
+  // The reminder: signed out, at least 3 finished workouts to lose, no backup
+  // in 14 days, and not dismissed in the last 7. Signed-in athletes sync.
+  var NUDGE_WORKOUTS = 3, NUDGE_AGE_DAYS = 14, NUDGE_SNOOZE_DAYS = 7;
+  function shouldNudge(signedIn) {
+    if (signedIn) return false;
+    var L = window.MC_LOG, n = 0;
+    try { n = L && L.readAllWorkouts ? L.readAllWorkouts().length : 0; } catch (e) { n = 0; }
+    if (n < NUDGE_WORKOUTS) return false;
+    var st = backupState(), now = Date.now();
+    if (st.ts && now - st.ts < NUDGE_AGE_DAYS * 86400000) return false;
+    if (st.dismissedAt && now - st.dismissedAt < NUDGE_SNOOZE_DAYS * 86400000) return false;
+    return true;
+  }
+  function dismissNudge() { saveBackupState({ dismissedAt: Date.now() }); }
+
+  // ---- CSV export (flagship readiness R7 / D-36) ---------------------------
+  // One row per logged set, for a spreadsheet: every finished workout, the
+  // archive included, oldest first so a sheet reads down in time. A workout
+  // with no sets (a conditioning session) gets one row with its duration.
+  var CSV_COLS = ['date', 'time', 'workout', 'exercise', 'set', 'weight_lb', 'reps', 'effort', 'pr', 'swapped_from', 'duration'];
+  function csvCell(v) {
+    var t = v == null ? '' : String(v);
+    // A leading = + - @ makes a spreadsheet run the cell as a formula.
+    if (/^[=+\-@]/.test(t) && !/^-?\d+(\.\d+)?$/.test(t)) t = "'" + t;
+    return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+  }
+  function effortLabel(rpe) {
+    if (!rpe) return '';
+    if (rpe === 'F') return 'to failure';
+    var n = parseFloat(rpe);
+    return isNaN(n) ? String(rpe) : 'RPE ' + n;
+  }
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function buildCSV() {
+    var L = window.MC_LOG;
+    var all = (L && L.readAllWorkouts) ? L.readAllWorkouts() : [];
+    var rows = [CSV_COLS.join(',')];
+    all.slice().reverse().forEach(function (w) {
+      var d = w.date ? new Date(w.date) : null;
+      // The athlete's own calendar day, not UTC's: an evening session in
+      // the US would otherwise land on tomorrow's row.
+      var day = d && !isNaN(d) ? d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) : '';
+      var name = w.workoutName || w.routineName || w.pageId || '';
+      var sets = L.readSets ? L.readSets(w) : (Array.isArray(w.sets) ? w.sets : []);
+      if (!sets.length) {
+        rows.push([day, w.time || '', name, '', '', '', '', '', '', '', w.duration || ''].map(csvCell).join(','));
+        return;
+      }
+      sets.forEach(function (x) {
+        rows.push([day, w.time || '', name, x.name || x.key || '', x.setNum == null ? '' : x.setNum,
+          x.weight == null ? '' : x.weight, x.reps == null ? '' : x.reps, effortLabel(x.rpe),
+          x.pr ? 'yes' : '', x.swappedFrom || '', w.duration || ''].map(csvCell).join(','));
+      });
+    });
+    return rows.join('\r\n') + '\r\n';
+  }
+  // The share sheet where the phone has one (save to Files, mail it, open it
+  // in a sheet app); a download everywhere else. Resolves 'shared',
+  // 'downloaded' or 'cancelled'.
+  function exportCSV() {
+    var t = new Date();
+    var name = 'mc-training-sets-' + t.getFullYear() + '-' + pad2(t.getMonth() + 1) + '-' + pad2(t.getDate()) + '.csv';
+    var csv = buildCSV();
+    var blob = new Blob([csv], { type: 'text/csv' });
+    var file = null;
+    try { file = new File([blob], name, { type: 'text/csv' }); } catch (e) { file = null; }
+    if (file && navigator.canShare && navigator.share) {
+      var ok = false;
+      try { ok = navigator.canShare({ files: [file] }); } catch (e) { ok = false; }
+      if (ok) {
+        return navigator.share({ files: [file], title: 'Training log' }).then(function () { return 'shared'; },
+          function (err) {
+            if (err && err.name === 'AbortError') return 'cancelled';
+            download(blob, name); return 'downloaded';
+          });
+      }
+    }
+    download(blob, name);
+    return Promise.resolve('downloaded');
+  }
+  function download(blob, name) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
 
   // Flagship readiness R1 / D-14: restoring a backup REPLACED every store
@@ -101,6 +214,7 @@
   //     preview names them so that is a choice rather than a surprise. Making
   //     those merge-safe too is R7's data-mobility work, not this step.
   var WL = 'mc_workout_log_v1', WLD = 'mc_workout_log_deleted_v1', SL = 'mc_setlog_v1';
+  var WLA = 'mc_workout_archive_v1';   // R7: merged like the log, never replaced
 
   function readJSON(k, fallback) {
     try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? fallback : v; }
@@ -135,8 +249,15 @@
       plan.writes[SL] = merged;
       plan.setlogMerged = true;
     }
+    // R7: the archive merges by identity like the log, so restoring a backup
+    // never drops older workouts this device holds.
+    if (WLA in data && Array.isArray(data[WLA]) && L && L.mergeArchive) {
+      var localArch = readJSON(WLA, []);
+      plan.writes[WLA] = L.mergeArchive(Array.isArray(localArch) ? localArch : [], data[WLA], del);
+      plan.archiveIn = data[WLA].length;
+    }
     Object.keys(data).forEach(function (k) {
-      if (!isExportable(k) || k === WL || k === WLD || k === SL) return;
+      if (!isExportable(k) || k === WL || k === WLD || k === SL || k === WLA) return;
       plan.writes[k] = data[k];
       plan.replaced.push(k);
     });
@@ -153,8 +274,9 @@
         ' on this device kept.');
       if (w.skippedDeleted) lines.push(w.skippedDeleted + ' skipped — you deleted ' +
         (w.skippedDeleted === 1 ? 'it' : 'them') + ' on this device.');
-      if (w.dropped) lines.push(w.dropped + ' oldest left out — history keeps the latest 200.');
+      if (w.archived) lines.push(w.archived + ' oldest move to your archive of older workouts — nothing is dropped.');
     }
+    if (plan.archiveIn) lines.push('Older workouts: merged with this device’s archive.');
     if (plan.setlogMerged) lines.push('Set history: merged. Nothing on this device is removed.');
     if (plan.replaced.length) {
       lines.push('', 'Replaced with the backup’s copy (' + plan.replaced.length + '): ' +
@@ -207,5 +329,10 @@
     });
   }
 
-  window.MCExport = { exportJSON: exportJSON, importJSON: importJSON };
+  window.MCExport = {
+    exportJSON: exportJSON, importJSON: importJSON,
+    exportCSV: exportCSV, buildCSV: buildCSV,                 // R7 / D-36
+    lastBackup: lastBackup, lastBackupLabel: lastBackupLabel,
+    shouldNudge: shouldNudge, dismissNudge: dismissNudge
+  };
 })();

@@ -55,9 +55,10 @@
   function logs() {
     // typeof-guarded: mc-maxout.js and this file's siblings are require()'d
     // from tools/ in Node, where a bare `window` is a ReferenceError.
-    return (typeof window !== 'undefined' && window.MC_LOG && window.MC_LOG.readWorkoutLog)
-      ? window.MC_LOG.readWorkoutLog()
-      : [];
+    // R7 / D-39: the archive too, so the curve reaches back past 200.
+    var L = typeof window !== 'undefined' ? window.MC_LOG : null;
+    if (L && L.readAllWorkouts) return L.readAllWorkouts();
+    return (L && L.readWorkoutLog) ? L.readWorkoutLog() : [];
   }
 
   function norm(s) { return String(s || '').trim().toLowerCase(); }
@@ -149,15 +150,15 @@
     document.head.appendChild(st);
   }
 
-  // ---- roadmap Phase 5.2 (audit L-07): the two ceilings, once they are real
-  // Both of this app's history stores drop data at a fixed depth and neither
-  // ever said so: mc_workout_log_v1 keeps 200 finished workouts (so it bounds
-  // the curve above), and mc_setlog_v1 keeps 5 sessions PER EXERCISE (so it
-  // bounds the "Last: …" cue and the weight the progression suggests). This
-  // is the screen an athlete reaches when asking where their history went, so
-  // it is where both belong — but only once a cap is actually hit. Below it,
-  // a permanent disclaimer is noise about a limit nobody is near.
-  var WL_CAP = 200, SESS_CAP = 5;
+  // ---- roadmap Phase 5.2 (audit L-07): the ceiling, once it is real
+  // mc_setlog_v1 keeps 5 sessions PER EXERCISE (so it bounds the "Last: …"
+  // cue and the weight the progression suggests), and nothing ever said so.
+  // This is the screen an athlete reaches when asking where their history
+  // went, so it belongs here — but only once the cap is actually hit.
+  // (The 200-workout note that sat beside it is gone: since flagship
+  // readiness R7 the workouts past 200 are archived, not dropped, and the
+  // curve above reads them.)
+  var SESS_CAP = 5;
 
   // The per-exercise depth is keyed by mc-setlog.js's own identity derivation,
   // never by re-slugging the name here — a second copy of that derivation is
@@ -182,10 +183,6 @@
 
   function capNote() {
     var out = [];
-    if (logs().length >= WL_CAP) {
-      out.push('This device keeps your last ' + WL_CAP + ' finished workouts, and you are ' +
-        'at that limit — each new one now replaces the oldest, so this curve stops there.');
-    }
     if (sessionDepth(curName) >= SESS_CAP) {
       out.push('Set-by-set history for this exercise keeps the last ' + SESS_CAP +
         ' sessions. Older ones are gone from this device, though finished workouts ' +

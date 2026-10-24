@@ -107,6 +107,8 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 const WL_KEY = 'mc_workout_log_v1';
 
 function getLogs(){
+  // R7 / D-39: a workout past the newest 200 lives in the archive now.
+  if (window.MC_LOG && window.MC_LOG.readAllWorkouts) return window.MC_LOG.readAllWorkouts();
   // L-03: valid JSON of the wrong shape threw and blanked this page.
   var v; try{ v = JSON.parse(localStorage.getItem(WL_KEY)||'[]'); }catch(e){ return []; }
   if(!Array.isArray(v)) return [];

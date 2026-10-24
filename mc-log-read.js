@@ -447,12 +447,126 @@
     return (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
   }
 
+  // ---- the archive: workouts past the newest 200 (flagship readiness R7) ---
+  // D-39: the log kept the newest 200 finished workouts and DROPPED the rest,
+  // on this device and in the cloud copy alike (mc-sync.js's merge cut to 200
+  // too). About ten months of five days a week, then the oldest went for good.
+  //
+  // Owner's call: the newest 200 stay exactly as they are, so the twenty
+  // readers of the log (History, Stats, the streak, the bridge...) are
+  // unchanged and stay fast; anything older moves into
+  // mc_workout_archive_v1, compacted, which syncs to the cloud UNTRIMMED. So
+  // nothing is lost and the cloud copy is whole again: log + archive.
+  //
+  // Compact form: the same entry, but its `sets` become rows over a table of
+  // the lift names they use, since the same name repeats on every set:
+  //   { ...entry fields, sets: undefined, _x: [[name, key, swappedFrom]...],
+  //     _s: [[nameIdx, setNum, weight, reps, rpe, pr]...] }
+  // Fields this file does not know are kept as written, so a conditioning
+  // entry, or anything a later build adds, survives the round trip.
+  var ARCH_KEY = 'mc_workout_archive_v1';
+  var SET_FIELDS = { name: 1, key: 1, setNum: 1, weight: 1, reps: 1, rpe: 1, pr: 1, swappedFrom: 1 };
+  function compactWorkout(e) {
+    if (!e || typeof e !== 'object' || !Array.isArray(e.sets)) return e;
+    var out = {}, f, names = [], idx = {}, rows = [];
+    for (f in e) if (f !== 'sets') out[f] = e[f];
+    e.sets.forEach(function (x) {
+      if (!x || typeof x !== 'object') return;
+      var id = (x.name || '') + '\u0001' + (x.key || '') + '\u0001' + (x.swappedFrom || '');
+      if (idx[id] == null) { idx[id] = names.length; names.push([x.name || '', x.key || '', x.swappedFrom || '']); }
+      var row = [idx[id], x.setNum == null ? null : x.setNum, x.weight == null ? null : x.weight,
+                 x.reps == null ? null : x.reps, x.rpe || 0, x.pr ? 1 : 0];
+      // A set field this file does not know rides along whole, so the
+      // compaction is lossless for whatever a later build adds.
+      var extra = null, g;
+      for (g in x) if (!SET_FIELDS[g]) { extra = extra || {}; extra[g] = x[g]; }
+      if (extra) row.push(extra);
+      rows.push(row);
+    });
+    out._x = names; out._s = rows;
+    return out;
+  }
+  function expandWorkout(c) {
+    if (!c || typeof c !== 'object' || !Array.isArray(c._s)) return c;
+    var out = {}, f, names = Array.isArray(c._x) ? c._x : [];
+    for (f in c) if (f !== '_x' && f !== '_s') out[f] = c[f];
+    out.sets = c._s.map(function (r) {
+      var n = names[r[0]] || ['', '', ''];
+      var x = { name: n[0], key: n[1], setNum: r[1], weight: r[2], reps: r[3], pr: !!r[5] };
+      if (r[4]) x.rpe = r[4];
+      if (n[2]) x.swappedFrom = n[2];
+      if (r[6] && typeof r[6] === 'object') for (var g in r[6]) x[g] = r[6][g];
+      return x;
+    });
+    out.archived = true;
+    return out;
+  }
+  function readArchiveRaw() {
+    var v;
+    try { v = JSON.parse(localStorage.getItem(ARCH_KEY) || '[]'); } catch (e) { return []; }
+    return Array.isArray(v) ? v.filter(function (e) { return e && typeof e === 'object'; }) : [];
+  }
+  // Every archived workout, expanded to the log's own shape, newest first.
+  function readArchive() { return readArchiveRaw().map(expandWorkout); }
+  // Union into the archive by the log's own identity, newest first. A workout
+  // deleted on this device is not archived. Uncapped on purpose: a full
+  // device warns through writeStore() rather than dropping history quietly.
+  function mergeArchive(arch, entries, deleted) {
+    deleted = deleted || {};
+    var seen = {}, out = [];
+    (entries || []).concat(arch || []).forEach(function (e) {
+      if (!e || typeof e !== 'object') return;
+      var k = workoutKey(e);
+      if (!k || deleted[k] || seen[k]) return;
+      seen[k] = 1; out.push(Array.isArray(e.sets) ? compactWorkout(e) : e);
+    });
+    out.sort(function (a, b) { return (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0); });
+    return out;
+  }
+  function archiveWorkouts(entries) {
+    if (!entries || !entries.length) return true;
+    return writeStore(ARCH_KEY, JSON.stringify(mergeArchive(readArchiveRaw(), entries, readDeletedWorkouts())));
+  }
+  // Keep the newest LOG_CAP in the log, move the rest to the archive. The
+  // archive is written FIRST, so a failure there leaves the log untrimmed
+  // rather than losing the overflow.
+  function capLog(log) {
+    log = Array.isArray(log) ? log : [];
+    if (log.length <= LOG_CAP) return writeStore(WL_KEY, JSON.stringify(log));
+    if (!archiveWorkouts(log.slice(LOG_CAP))) return writeStore(WL_KEY, JSON.stringify(log));
+    return writeStore(WL_KEY, JSON.stringify(log.slice(0, LOG_CAP)));
+  }
+  // mc-sync.js calls this after a pull: its merge no longer cuts at 200, so a
+  // pull that brings the log past the cap is rolled over here, in one place.
+  function rollover() {
+    var log = readWorkoutLog();
+    return log.length > LOG_CAP ? capLog(log) : true;
+  }
+  // A workout by id, wherever it lives (workout-detail.html).
+  function findWorkout(id) {
+    if (!id) return null;
+    var hit = null;
+    readWorkoutLog().some(function (e) { if (workoutKey(e) === id || e.id === id) { hit = e; return true; } return false; });
+    if (hit) return hit;
+    readArchiveRaw().some(function (e) { if (workoutKey(e) === id || e.id === id) { hit = expandWorkout(e); return true; } return false; });
+    return hit;
+  }
+  // Every finished workout, newest first: the log, then the archive. A pull
+  // can bring back into the log a workout this device already archived (the
+  // other device still holds it in its newest 200), so the log's copy wins
+  // and the archive's is skipped rather than listed twice.
+  function readAllWorkouts() {
+    var log = readWorkoutLog(), seen = {};
+    log.forEach(function (e) { seen[workoutKey(e)] = 1; });
+    return log.concat(readArchive().filter(function (e) { return !seen[workoutKey(e)]; }));
+  }
+
   function appendWorkout(entry) {
     if (!entry || typeof entry !== 'object') return false;
     if (!entry.id && entry.pageId && entry.date) entry.id = entry.pageId + '|' + entry.date;
     var log = readWorkoutLog();
     log.unshift(entry);
-    return writeStore(WL_KEY, JSON.stringify(log.slice(0, LOG_CAP)));
+    return capLog(log);
   }
 
   // Removes the workouts with these keys and records each deletion, so a
@@ -466,12 +580,15 @@
     var del = readDeletedWorkouts();
     Object.keys(want).forEach(function (k) { del[k] = { ts: now }; });
     writeStore(DEL_KEY, JSON.stringify(del));
+    // R7: an archived workout can be deleted too (History's older list).
+    var arch = readArchiveRaw(), archKept = arch.filter(function (e) { return !want[workoutKey(e)]; });
+    if (archKept.length !== arch.length) writeStore(ARCH_KEY, JSON.stringify(archKept));
     var kept = readWorkoutLog().filter(function (e) { return !want[workoutKey(e)]; });
     return writeStore(WL_KEY, JSON.stringify(kept));
   }
 
   function clearWorkouts() {
-    return deleteWorkouts(readWorkoutLog().map(workoutKey));
+    return deleteWorkouts(readWorkoutLog().concat(readArchiveRaw()).map(workoutKey));
   }
 
   // Import (D-14): restoring an older backup used to REPLACE the log, so
@@ -499,13 +616,15 @@
       seen[k] = 1; out.push(e); added++;
     });
     out.sort(function (a, b) { return (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0); });
-    var capped = Math.max(0, out.length - LOG_CAP);
-    return { log: out.slice(0, LOG_CAP), added: added, duplicates: duplicates,
-             skippedDeleted: skippedDeleted, dropped: capped };
+    // R7: past the cap is ARCHIVED, not dropped (writeWorkoutLog does it), so
+    // `archived` is how many the preview can say will move there.
+    var over = Math.max(0, out.length - LOG_CAP);
+    return { log: out, added: added, duplicates: duplicates,
+             skippedDeleted: skippedDeleted, archived: over, dropped: 0 };
   }
 
   function writeWorkoutLog(arr) {
-    return writeStore(WL_KEY, JSON.stringify((Array.isArray(arr) ? arr : []).slice(0, LOG_CAP)));
+    return capLog(Array.isArray(arr) ? arr : []);
   }
 
   if (typeof window !== 'undefined') {
@@ -531,6 +650,13 @@
     window.MC_LOG.clearWorkouts = clearWorkouts;
     window.MC_LOG.mergeWorkoutLogs = mergeWorkoutLogs;
     window.MC_LOG.writeWorkoutLog = writeWorkoutLog;
+    window.MC_LOG.readArchive = readArchive;          // R7 / D-39
+    window.MC_LOG.archiveWorkouts = archiveWorkouts;
+    window.MC_LOG.mergeArchive = mergeArchive;
+    window.MC_LOG.rollover = rollover;
+    window.MC_LOG.findWorkout = findWorkout;
+    window.MC_LOG.readAllWorkouts = readAllWorkouts;
+    window.MC_LOG.LOG_CAP = LOG_CAP;
   }
 
   // Node-side hook so tools/test-mc-numeric-guards.js can call the real
@@ -542,7 +668,9 @@
       e1rm: e1rm, applyEquipCoeff: applyEquipCoeff, EPLEY_REP_CAP: EPLEY_REP_CAP,
       dayKey: dayKey, dayLabel: dayLabel,
       normalizeDay: normalizeDay, normalizeSessions: normalizeSessions,
-      workoutKey: workoutKey, mergeWorkoutLogs: mergeWorkoutLogs
+      workoutKey: workoutKey, mergeWorkoutLogs: mergeWorkoutLogs,
+      compactWorkout: compactWorkout, expandWorkout: expandWorkout, mergeArchive: mergeArchive,
+      LOG_CAP: LOG_CAP
     };
   }
 })();

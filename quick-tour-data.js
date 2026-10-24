@@ -299,9 +299,11 @@
         {tx:"Set a program active and its pages start saving for offline automatically — look for <b>Available offline ✓</b> on your hero card. It only shows when the pages really are saved, and an app update keeps them: your program still opens offline the morning after one lands. History, Stats, the Exercise Library and the builders open offline too."},
         {tx:"Gym Wi-Fi that's connected but not getting out shows the red <b>📵 Offline</b> bar, the same as no signal at all. Sets you tick meanwhile are kept on the phone and sent to your account when the connection comes back."},
         {tx:"Train <b>offline</b>; tap the green <b>🔄 Update available</b> banner whenever it appears."},
-        {tx:"Turn on notifications and, once a week, you'll get a short <b>check-in push</b> — workouts logged, bodyweight trend, nutrition adherence — even on days you don't open the app."}
+        {tx:"Turn on notifications and, once a week, you'll get a short <b>check-in push</b> — workouts logged, bodyweight trend, nutrition adherence — even on days you don't open the app."},
+        {tx:"Not signed in? Your training lives on this device alone, so Home shows a <b>Back up your training</b> card once you've finished a few workouts and haven't saved a backup in two weeks. <span class='tap'>Back up now</span> saves the file; <span class='tap'>Later</span> hides it for a week. The account sheet says when you last backed up, and whether this browser has agreed to keep the app's data when the phone is low on space."},
+        {tx:"Want your sets in a spreadsheet? <span class='tap'>Export sets as CSV</span> in the account sheet gives one row per set — date, workout, exercise, weight, reps, effort, PR — through your phone's share sheet."}
       ],
-      tip:"Your logs, PRs, and custom workouts are saved <b>on your device</b> — private and instant."
+      tip:"Your logs, PRs, and custom workouts are saved <b>on your device</b> — private and instant. Nothing is ever trimmed: past 200 finished workouts, the older ones move to an archive that History, Stats and the exercise charts still read, and that syncs to your account in full."
     },
     {
       eyebrow:'You’re ready',
