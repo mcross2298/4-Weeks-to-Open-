@@ -64,7 +64,16 @@ DENY_DIRS = {"tools", "supabase", "templates", ".github", ".git"}
 # shared JS/CSS/manifest/icon asset. Every other .html page is "lazy": not
 # precached, but cached on first visit by the fetch handler's normal
 # network-first-with-cache-fallback strategy (see module docstring).
-EAGER_HTML = {"index.html", "dashboard.html"}
+#
+# Flagship readiness R3 / D-18: History, the workout detail page, Stats, the
+# exercise library and both builders are app screens, not program content —
+# reached from the bottom nav, never from a program landing, so the program
+# prefetch (which blocklists them on purpose) never fetched them and they
+# answered "You are offline" in the gym unless opened online first. Six small
+# HTML files; every script and stylesheet they load is already precached.
+EAGER_HTML = {"index.html", "dashboard.html",
+              "workout-logs.html", "workout-detail.html", "stats.html",
+              "exercise-library.html", "build-workout.html", "build-program.html"}
 
 # The M6 eager/lazy split above only ever applied to .html — every top-level
 # .css/.js file was swept into the eager precache unconditionally, with no

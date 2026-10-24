@@ -292,7 +292,8 @@
       steps:[
         {tx:"Tap your <b>avatar</b>, open the <span class='tap'>Install</span> section, and follow the prompt for your device."},
         {tx:"Launch from the icon — it opens <b>full-screen, no browser bar</b>."},
-        {tx:"Set a program active and its pages start saving for offline automatically — look for <b>Available offline ✓</b> on your hero card."},
+        {tx:"Set a program active and its pages start saving for offline automatically — look for <b>Available offline ✓</b> on your hero card. It only shows when the pages really are saved, and an app update keeps them: your program still opens offline the morning after one lands. History, Stats, the Exercise Library and the builders open offline too."},
+        {tx:"Gym Wi-Fi that's connected but not getting out shows the red <b>📵 Offline</b> bar, the same as no signal at all. Sets you tick meanwhile are kept on the phone and sent to your account when the connection comes back."},
         {tx:"Train <b>offline</b>; tap the green <b>🔄 Update available</b> banner whenever it appears."},
         {tx:"Turn on notifications and, once a week, you'll get a short <b>check-in push</b> — workouts logged, bodyweight trend, nutrition adherence — even on days you don't open the app."}
       ],

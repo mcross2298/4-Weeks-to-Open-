@@ -34,31 +34,46 @@ function assert(cond, msg) {
 }
 const flush = () => new Promise(r => setImmediate(r)); // let un-awaited cache puts settle
 
-function loadSW(fetchImpl, store) {
+// ignoreSearch mirrors the real Cache API: strip the query string before
+// comparing keys. Needed to test L1 below.
+function matchIn(map, req, opts) {
+    const k = key(req);
+    if (map.has(k)) return map.get(k);
+    if (opts && opts.ignoreSearch) {
+        const base = k.split('?')[0];
+        for (const [sk, sv] of map) { if (sk.split('?')[0] === base) return sv; }
+    }
+    return undefined;
+}
+
+// `store` is THIS deploy's cache (CACHE_NAME) and every name the test does not
+// list in `named`. `named` holds the rest by cache name: the R3 carry-over
+// cache, an old deploy's cache for the activate tests, and so on.
+function loadSW(fetchImpl, store, named) {
+    named = named || {};
+    const cacheFor = name => named[name] || store;
     const sandbox = {
         self: { addEventListener() {}, registration: {}, clients: {} },
         clients: {},
         caches: {
-            // cacheFirstFont() (L4) calls .match() on the per-cache object
-            // open() returns, not the top-level caches.match() below — both
-            // read/write the same shared `store` for this test harness.
-            open: async () => ({
-                put: async (req, resp) => { store.set(key(req), resp); },
-                match: async req => store.get(key(req)),
-            }),
-            // ignoreSearch mirrors the real Cache API: strip the query string
-            // before comparing keys. Needed to test L1 below.
+            open: async name => {
+                const m = cacheFor(name);
+                return {
+                    put: async (req, resp) => { m.set(key(req), resp); },
+                    match: async (req, opts) => matchIn(m, req, opts),
+                    keys: async () => Array.from(m.keys()).map(url => ({ url })),
+                };
+            },
+            // Searches EVERY cache, like the real one. R3: the fetch path
+            // must not use it, or the carry-over copy would beat the network.
             match: async (req, opts) => {
-                const k = key(req);
-                if (store.has(k)) return store.get(k);
-                if (opts && opts.ignoreSearch) {
-                    const base = k.split('?')[0];
-                    for (const [sk, sv] of store) { if (sk.split('?')[0] === base) return sv; }
-                }
+                const hit = matchIn(store, req, opts);
+                if (hit) return hit;
+                for (const n of Object.keys(named)) { const h = matchIn(named[n], req, opts); if (h) return h; }
                 return undefined;
             },
-            keys: async () => [],
-            delete: async () => true,
+            keys: async () => Object.keys(named),
+            delete: async name => { const had = name in named; delete named[name]; return had; },
         },
         fetch: fetchImpl,
         Response: class { constructor(body, init) { this.body = body; this.init = init; this.status = (init && init.status) || 200; } clone() { return this; } },
@@ -208,6 +223,56 @@ const fallback = () => ({ status: 200, tag: 'OFFLINE', ok: true, headers: { get:
         const sw = loadSW(async () => { throw new Error('offline'); }, store);
         const r = await sw.cacheFirstFont('font3.woff2');
         assert(r && r.tag === 'CACHED_FONT', '8d: an already-cached font is still served when the network is down');
+    }
+
+    // 9. R3 / D-17: the carry-over cache. A deploy's activate used to delete
+    // every page the athlete had prefetched; it now moves what the new cache
+    // lacks into CARRY_CACHE_NAME, which is read only when the network fails.
+    {
+        const probe = loadSW(async () => netResp('NET'), new Map());
+        // const bindings are not properties of a vm context; evaluate them in it
+        const CARRY = vm.runInContext('CARRY_CACHE_NAME', probe), CUR = vm.runInContext('CACHE_NAME', probe);
+        assert(typeof CARRY === 'string' && CARRY !== CUR, '9: sw.js declares a carry-over cache distinct from CACHE_NAME');
+
+        // a: offline, nothing in this deploy's cache -> the carried copy, not the offline page
+        const carry = new Map([['mm-p2.html', { tag: 'CARRIED' }]]);
+        const sw1 = loadSW(async () => { throw new Error('offline'); }, new Map(), { [CARRY]: carry });
+        assert((await sw1.staleWhileRevalidate('mm-p2.html', fallback, true).response).tag === 'CARRIED',
+            '9a: offline with a carried copy serves it instead of the offline page');
+        assert((await sw1.staleWhileRevalidate('mm-p2.html?day=2', fallback, true).response).tag === 'CARRIED',
+            '9b: a carried page still matches a navigation carrying query params');
+
+        // c: online -> the network wins over the carried copy, and is cached
+        const cur = new Map();
+        const sw2 = loadSW(async () => netResp('NET'), cur, { [CARRY]: new Map([['mm-p2.html', { tag: 'CARRIED' }]]) });
+        const r2 = sw2.staleWhileRevalidate('mm-p2.html', fallback, true);
+        assert((await r2.response).tag === 'NET', '9c: online, the carried copy is never served ahead of the network');
+        await r2.revalidation; await flush();
+        assert(cur.get('mm-p2.html') && cur.get('mm-p2.html').tag === 'NET', '9d: the fresh page lands in this deploy\'s cache');
+
+        // e: this deploy's own copy beats the carried one, offline too
+        const sw3 = loadSW(async () => { throw new Error('offline'); }, new Map([['mm-p2.html', { tag: 'CACHED' }]]),
+            { [CARRY]: new Map([['mm-p2.html', { tag: 'CARRIED' }]]) });
+        assert((await sw3.staleWhileRevalidate('mm-p2.html', fallback, true).response).tag === 'CACHED',
+            '9e: this deploy\'s cache wins over the carried copy');
+
+        // f: activate moves what the new cache lacks, deletes the old cache, keeps fonts + carry
+        const fresh = new Map([['base.css', { tag: 'NEW' }]]);
+        const named = {
+            'mc-training-v99': new Map([['mm-p2.html', { tag: 'V99' }], ['old-only.html', { tag: 'V99' }]]),
+            'mc-training-v100': new Map([['mm-p2.html', { tag: 'V100' }], ['base.css', { tag: 'OLDCSS' }]]),
+            'mc-training-fonts-v1': new Map([['f.woff2', { tag: 'FONT' }]]),
+            [CARRY]: new Map(),
+        };
+        named[CUR] = fresh;
+        const sw4 = loadSW(async () => netResp('NET'), fresh, named);
+        await sw4.retireOldCaches(Object.keys(named));
+        const c = named[CARRY];
+        assert(!('mc-training-v99' in named) && !('mc-training-v100' in named), '9f: old app caches are deleted');
+        assert('mc-training-fonts-v1' in named && CUR in named, '9g: the font cache and this deploy\'s cache survive');
+        assert(c.get('mm-p2.html') && c.get('mm-p2.html').tag === 'V100', '9h: the newest old copy is the one carried (v100 over v99, numeric order)');
+        assert(c.get('old-only.html') && c.get('old-only.html').tag === 'V99', '9i: a page only an older deploy held is carried too');
+        assert(!c.has('base.css'), '9j: nothing this deploy already holds is carried');
     }
 
     if (failures) { console.error(`\ntest-mc-sw: ${failures} FAILED of ${checks}`); process.exit(1); }

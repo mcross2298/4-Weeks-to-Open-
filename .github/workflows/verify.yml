@@ -239,18 +239,27 @@ jobs:
         # Also covers findings L1 (ignoreSearch on query-string navigations),
         # L3 (cache-poisoning guard), L4 (font cache never caches a failed
         # fetch), and L5 (offline asset fallback is network-error-shaped, not
-        # HTML a <script> tag would try to parse).
+        # HTML a <script> tag would try to parse). Flagship readiness R3 /
+        # D-17: the carry-over cache a deploy moves old pages into, read only
+        # when the network fails.
         run: node tools/test-mc-sw.js
 
       - name: Service-worker update lifecycle test (mc-sw-update.js)
         # Findings L2 (controllerchange reload guard: fresh-install and
         # cross-tab mid-workout cases) and U4 (fleet-wide offline banner).
+        # R3 / D-20: a failed update check is handled, and shows the bar.
         run: node tools/test-mc-sw-update.js
 
       - name: Offline program-prefetch test (mc-offline-prefetch.js)
         # Finding L8: respects Save-Data/2G, and only counts a genuinely
-        # successful (resp.ok) fetch as a prefetched page.
+        # successful (resp.ok) fetch as a prefetched page. R3 / D-17: the
+        # record is tied to the cache version and checked against the Cache API.
         run: node tools/test-mc-offline-prefetch.js
+
+      - name: Offline per-set write outbox (mc-supabase.js, flagship readiness R3 / D-19)
+        # A set ticked with no signal is queued and replayed, never dropped,
+        # and an offline untick can never be replayed back in.
+        run: node tools/test-mc-outbox.js
 
       - name: Storage-persistence request test (mc-finish.js, finding L6 partial)
         run: node tools/test-mc-persist.js
@@ -596,6 +605,15 @@ jobs:
           # inferred from a hidden float's class, and nothing was wired at all
           # when the session was entered from the day list.
           if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-session-durability.js http://localhost:8080; then echo "FAILED: test-mc-session-durability"; EXIT=1; fi
+          # Offline with the REAL service worker (flagship readiness R3). sw.js
+          # only acts on the production origin, so this serves a copy of the
+          # checkout AS that origin (throwaway self-signed certificate, a local
+          # HTTPS server, Chromium's host resolver) and drives the real SW:
+          # History/Stats/Library offline, no error noise going offline, and a
+          # simulated deploy that must neither evict the prefetched program nor
+          # leave "Available offline" claiming pages the cache no longer holds.
+          # It does not use the static server above; it starts its own.
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node GO_LIVE/flagship-audit/scenarios/fa-offline-sw.js; then echo "FAILED: fa-offline-sw"; EXIT=1; fi
           # Light-mode contrast ratchet (audit G-04/G-3.1). Shares this job
           # because it needs the same Playwright install. Per-page budgets in
           # tools/contrast-budgets.json can only shrink; re-baseline with

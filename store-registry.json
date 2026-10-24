@@ -428,6 +428,13 @@
       "sync": "workoutLog",
       "export": true,
       "note": "Every write goes through mc-log-read.js (appendWorkout / deleteWorkouts / clearWorkouts / writeWorkoutLog); tools/check-workout-log-writers.js fails CI on any other (flagship readiness R1 / D-38). mc-finish.js is the main caller."
+    },
+    "mc_workout_logs_outbox_v1": {
+      "owner": "mc-supabase.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Per-set cloud writes (workout_logs upserts and deletes) made with no signal, replayed when the network returns (flagship readiness R3 / D-19). Device-local by nature: it holds this device's undelivered writes, and the set itself is already in mc_setlog_v1."
     }
   },
   "prefixes": {

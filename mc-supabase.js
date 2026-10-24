@@ -533,7 +533,84 @@
   // Keyed on the constraint supabase/phase12-launch-hardening.sql adds; until
   // that migration is applied the upsert behaves exactly as the old insert
   // did, so this is safe to ship ahead of it.
+  // ---- the outbox (flagship readiness R3 / D-19) ----------------------------
+  // A set ticked with no signal was dropped: logSet() rejected, the caller's
+  // .catch() swallowed it, and nothing tried again. The local set log kept the
+  // set, but this table is what cross-device prefill, the PR baseline and the
+  // crash rehydrate (FIX-02) read, so a gym with no signal left holes in all
+  // three. A failed write now waits here and is replayed when the network
+  // returns. Both writes are idempotent (an upsert on the row's natural key,
+  // and a delete by it), and the outbox keeps only the LATEST operation per
+  // set, so a set unticked while offline can never be replayed back in.
+  var OUTBOX_KEY = 'mc_workout_logs_outbox_v1';
+  var OUTBOX_MAX = 300;                         // operations, oldest dropped first
+  var OUTBOX_TTL = 7 * 24 * 60 * 60 * 1000;     // a week-old replay is history, not a set
+  function opKey(e) { return (e.session_id || 'unknown') + '|' + (e.exercise || '') + '|' + (e.set_number || 1); }
+  function readOutbox() {
+    try {
+      var v = JSON.parse(localStorage.getItem(OUTBOX_KEY) || '[]');
+      return Array.isArray(v) ? v.filter(function (o) { return o && o.entry && (o.op === 'up' || o.op === 'del'); }) : [];
+    } catch (e) { return []; }
+  }
+  function writeOutbox(list) {
+    try {
+      if (list.length) localStorage.setItem(OUTBOX_KEY, JSON.stringify(list.slice(-OUTBOX_MAX)));
+      else localStorage.removeItem(OUTBOX_KEY);
+    } catch (e) {}
+  }
+  function enqueue(op, entry) {
+    var k = opKey(entry);
+    var list = readOutbox().filter(function (o) { return opKey(o.entry) !== k; });
+    list.push({ op: op, entry: entry, ts: Date.now() });
+    writeOutbox(list);
+  }
+  function dequeue(entry) {
+    var k = opKey(entry);
+    var list = readOutbox(), kept = list.filter(function (o) { return opKey(o.entry) !== k; });
+    if (kept.length !== list.length) writeOutbox(kept);
+  }
+  var _flushing = null;
+  function flushOutbox() {
+    if (_flushing) return _flushing;
+    if ('onLine' in navigator && !navigator.onLine) return Promise.resolve(0);
+    var now = Date.now();
+    var list = readOutbox().filter(function (o) { return !o.ts || now - o.ts < OUTBOX_TTL; });
+    if (!list.length) { writeOutbox([]); return Promise.resolve(0); }
+    var sent = 0;
+    // One at a time, in order: the first failure stops the run and leaves the
+    // rest queued, rather than hammering a network that just went away.
+    _flushing = list.reduce(function (p, o) {
+      return p.then(function (go) {
+        if (!go) return false;
+        var send = o.op === 'up' ? upsertRow(o.entry) : deleteRow(o.entry);
+        return send.then(function (r) {
+          if (r === null) return false;                 // no client or nobody signed in: keep it
+          var cur = readOutbox();                       // re-read: a tick may have landed meanwhile
+          var still = cur.filter(function (x) { return !(opKey(x.entry) === opKey(o.entry) && x.ts === o.ts); });
+          if (still.length !== cur.length) writeOutbox(still);
+          sent++;
+          return true;
+        }, function () { return false; });
+      });
+    }, Promise.resolve(true)).then(function () { _flushing = null; return sent; },
+                                   function () { _flushing = null; return sent; });
+    return _flushing;
+  }
+  try {
+    window.addEventListener('online', function () { flushOutbox(); });
+    setTimeout(function () { flushOutbox(); }, 4000);   // after sign-in has settled
+  } catch (e) {}
+
   function logSet(entry) {
+    return upsertRow(entry).then(function (r) {
+      dequeue(entry);                                   // a direct success supersedes a queued copy
+      return r;
+    }, function (err) {
+      enqueue('up', entry);
+      throw err;
+    });
+  }
+  function upsertRow(entry) {
     return ready.then(function (c) {
       if (!c) return null;
       return currentUser().then(function (u) {
@@ -564,6 +641,14 @@
     if (!entry || !entry.session_id || !entry.exercise || entry.set_number == null) {
       return Promise.resolve(null);
     }
+    // R3: a queued upsert for this set must not outlive the untick.
+    dequeue(entry);
+    return deleteRow(entry).then(null, function (err) {
+      enqueue('del', entry);
+      throw err;
+    });
+  }
+  function deleteRow(entry) {
     return ready.then(function (c) {
       if (!c) return null;
       return currentUser().then(function (u) {
@@ -866,6 +951,7 @@
     getActiveProgram: getActiveProgram,
     logSet: logSet,
     unlogSet: unlogSet,               // FIX-05: the correction path
+    flushOutbox: flushOutbox,         // R3 / D-19: replay sets written with no signal
     getSessionSets: getSessionSets,   // FIX-02: the durable copy, read back
     deleteSessionLog: deleteSessionLog,
     getLastWeight: getLastWeight,

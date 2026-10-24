@@ -240,6 +240,22 @@ Defects: D-17, D-18, D-19, D-20.
 
 Acceptance: S-04 to S-07. `fa-offline-sw.js` is a candidate CI job once green.
 
+**R3 shipped (2026-10-24), all five steps.** S-04 to S-07 pass, and `fa-offline-sw.js` is now a CI gate (it runs in `verify.yml`'s browser job). It gained two checks that pull the D-17 fix apart, S-08 and S-09, and goes from 3 to **9 of 9**; on the pre-R3 sources it scores 3 of 9. One new unit gate, `tools/test-mc-outbox.js` (13 checks, all failing on the pre-R3 `mc-supabase.js`), and three existing ones grow: `test-mc-sw.js` 20 → 31, `test-mc-sw-update.js` 9 → 15, `test-mc-offline-prefetch.js` 8 → 19.
+
+- **D-17, two halves.** In `sw.js`, `activate` no longer just deletes the old deploy's cache: whatever the new cache lacks moves into `mc-training-carry-v1` first, newest deploy last. That cache is read **only when the network fails**, so an online visit always gets the new deploy's page. That needed a second change, which was the real trap: `staleWhileRevalidate()` read with `caches.match()`, which searches **every** cache, so a carried copy would have been served ahead of the network. It now reads `CACHE_NAME` alone. On the page side, `mc-offline-prefetch.js`'s record keeps the URLs it fetched and the app cache it filled, so the next dashboard visit after a deploy fills the new cache again. S-08 proves the first half (offline straight after an update, before the dashboard has run) and S-09 the second.
+- **Step 3.** The dashboard paints "Available offline ✓" from the record first and then from `MCOfflinePrefetch.verify()`, which asks the Cache API. A page missing from the cache also triggers a refetch inside the 14-day window, which the record alone never could.
+- **D-18.** History, the workout detail page, Stats, the Library and both builders are precached (`tools/build-sw.py`'s `EAGER_HTML`, six small HTML files whose scripts were already precached). They are app screens reached from the bottom nav, so the program prefetch, which blocklists them, never fetched them.
+- **D-19.** A per-set cloud write that fails is queued in `mc_workout_logs_outbox_v1` and replayed on `online` and on the next page load. The write was already an upsert on its natural key, so a replay is idempotent. The outbox keeps only the latest operation per set, so a set unticked while offline is replayed as a delete, never back in.
+- **D-20.** `reg.update()` returns a promise, and the `try/catch` around it never caught its rejection. Every offline check became an unhandled rejection that the head boot script recorded, so going offline filled the 20-entry error buffer. The rejection is handled now, no check is made while the browser knows it is offline, and a failed check shows the offline bar. That covers gym Wi-Fi that reports `onLine` but has no route out, which `navigator.onLine` alone cannot see.
+
+**Found running the gate: the harness could not run here at all.** In this agent sandbox Chromium ignores `--no-proxy-server` and tunnels every request through the ambient proxy, so the very first navigation failed with `ERR_TUNNEL_CONNECTION_FAILED`. Playwright's own `proxy` option with a bypass list for the mapped hosts is honoured. Everything else is sent to a dead port, which is what an offline test wants anyway, in CI too.
+
+**Known residuals, not fixed here:**
+- **A set ticked offline gets no PR push later.** The replay writes the row but does not re-run the PR check that sends the lock-screen notification. The record still counts at Finish, which reads the local store.
+- **The carry-over cache is never pruned.** It is bounded by the distinct URLs this device has opened, and only read on a network failure, but it does not shrink.
+- **A write the server refuses for good** (not a network failure) is retried until the outbox's 7-day limit drops it.
+- **Not verified on a real device**, including iOS Safari's storage eviction of an installed PWA's caches.
+
 ### R5 · Flexible mid-session, one sheet contract
 Defects: D-09, D-10, D-15, D-16.
 1. Today-only swaps, with "Keep this swap"; History shows "swapped from …".

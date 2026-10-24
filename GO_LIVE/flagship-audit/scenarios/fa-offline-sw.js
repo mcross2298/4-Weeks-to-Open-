@@ -60,7 +60,14 @@ async function down() { if (server) { server.kill('SIGKILL'); server = null; } a
     executablePath: process.env.MC_CHROMIUM || undefined,
     args: ['--host-resolver-rules=MAP mcross2298.github.io 127.0.0.1:' + PORT +
       ', MAP fonts.googleapis.com 127.0.0.1:9, MAP fonts.gstatic.com 127.0.0.1:9, MAP *.supabase.co 127.0.0.1:9, MAP cdn.jsdelivr.net 127.0.0.1:9',
-      '--ignore-certificate-errors', '--no-proxy-server']
+      '--ignore-certificate-errors'],
+    // Every host this test touches is mapped above, so none of it may go
+    // through a proxy. `--no-proxy-server` is not enough in every
+    // environment (an agent sandbox's Chromium keeps tunnelling through the
+    // ambient proxy and fails with ERR_TUNNEL_CONNECTION_FAILED), while
+    // Playwright's own proxy option is honoured: the mapped hosts bypass it,
+    // and anything unmapped hits a dead port, which is what this test wants.
+    proxy: { server: 'http://127.0.0.1:9', bypass: 'mcross2298.github.io,fonts.googleapis.com,fonts.gstatic.com,*.supabase.co,cdn.jsdelivr.net' }
   });
   const ctx = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 390, height: 844 }, serviceWorkers: 'allow' });
   const page = await ctx.newPage();
@@ -128,7 +135,26 @@ async function down() { if (server) { server.kill('SIGKILL'); server = null; } a
     await page.goto(ORIGIN + 'dashboard.html'); await sleep(1500);
     await safe(() => navigator.serviceWorker.getRegistration().then((r) => r.update()));
     await sleep(7000);
+
+    // The two halves of the R3 fix, apart. S-08: straight after the update,
+    // before the dashboard has re-prefetched anything, the SW's carry-over
+    // cache is all that stands between the athlete and the offline page.
+    await down(); await ctx.setOffline(true);
+    const carried = await visit('mm-p2.html');
+    report('S-08', 'right after a deploy, the carried copy loads offline', carried === 'loaded', 'mm-p2 loads', carried);
+    await ctx.setOffline(false); await up();
+    await page.goto(ORIGIN + 'dashboard.html'); await sleep(1500);
+
     await safe(() => window.MCOfflinePrefetch && MCOfflinePrefetch.ensure({ id: 'mm' })); await sleep(1500);
+    // S-09: the page side re-fills the NEW deploy's own cache, so the program
+    // is fresh again rather than living on the carried copy.
+    const inNew = await safe(async () => {
+      const app = (await caches.keys()).filter((k) => /^mc-training-/.test(k) && !/fonts|carry/.test(k));
+      if (app.length !== 1) return 'app caches: ' + app.join(',');
+      const c = await caches.open(app[0]);
+      return !!(await c.match('mm-p2.html', { ignoreSearch: true }));
+    });
+    report('S-09', 'the next dashboard visit re-fills the new deploy\'s cache', inNew === true, 'mm-p2 in the new app cache', String(inNew));
     const afterDeploy = await cached();
     const claims = await safe(() => !!(window.MCOfflinePrefetch && MCOfflinePrefetch.status('mm')));
     const has = (afterDeploy || []).indexOf('mm-p2.html') !== -1;

@@ -2292,13 +2292,27 @@ function renderHero(){
 // no-ops for custom/published programs and re-crawls, so this is safe to
 // call on every renderHero() pass rather than needing its own change-hook
 // across activeProg's several write sites.
+//
+// Flagship readiness R3 / D-17: the record alone used to drive the line, so it
+// kept saying "Available offline" after a deploy had emptied the cache. The
+// record still paints first (instant, no promise), and verify() then asks the
+// Cache API and corrects it either way.
 function updateHeroOffline(){
   const el=document.getElementById('heroOffline');
   if(!el||!activeProg||!window.MCOfflinePrefetch) return;
-  const paint=(rec)=>{ el.classList.toggle('show', !!(rec&&rec.count)); };
-  paint(MCOfflinePrefetch.status(activeProg.id));
+  const id=activeProg.id;
+  const paint=(on)=>{ el.classList.toggle('show', !!on); };
+  const check=()=>{
+    if(!MCOfflinePrefetch.verify) return;
+    MCOfflinePrefetch.verify(id).then((v)=>{
+      if(v && activeProg && activeProg.id===id) paint(v.total>0 && v.cached>=v.total);
+    });
+  };
+  const rec0=MCOfflinePrefetch.status(id);
+  paint(rec0&&rec0.count);
+  check();
   MCOfflinePrefetch.ensure(activeProg).then((rec)=>{
-    if(activeProg && rec && rec.progId===activeProg.id) paint(rec);
+    if(activeProg && rec && rec.progId===activeProg.id){ paint(rec.count); check(); }
   });
 }
 
