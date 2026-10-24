@@ -179,9 +179,12 @@
     return ok;
   }
 
-  // opts.confirm: injectable for tests; defaults to the browser's confirm().
+  // opts.confirm: injectable for tests. It may return a boolean or a Promise;
+  // the default is the in-app confirm (mc-sheet.js, flagship readiness R5).
   function importJSON(file, opts) {
-    var ask = (opts && opts.confirm) || function (t) { return window.confirm(t); };
+    var ask = (opts && opts.confirm) || function (t) {
+      return window.MC_SHEET ? MC_SHEET.confirm(t, { ok: 'Import' }) : window.confirm(t);
+    };
     return new Promise(function (resolve, reject) {
       var reader = new FileReader();
       reader.onerror = function () { reject(new Error('Could not read the file.')); };
@@ -194,9 +197,11 @@
         var plan;
         try { plan = planImport(data, payload.exportedAt); }
         catch (e) { reject(e); return; }
-        if (!ask(describe(plan))) { reject(new Error('Import cancelled — nothing was changed.')); return; }
-        if (!applyPlan(plan)) { reject(new Error('Some of the backup could not be saved — this device may be out of storage.')); return; }
-        resolve(plan);
+        Promise.resolve(ask(describe(plan))).then(function (ok) {
+          if (!ok) { reject(new Error('Import cancelled — nothing was changed.')); return; }
+          if (!applyPlan(plan)) { reject(new Error('Some of the backup could not be saved — this device may be out of storage.')); return; }
+          resolve(plan);
+        }, reject);
       };
       reader.readAsText(file);
     });

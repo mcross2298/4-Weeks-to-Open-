@@ -283,7 +283,11 @@ async function run(browser, id, title, fn) {
       localStorage.setItem('mc_workout_log_v1', JSON.stringify(L)); });
     await p.reload(); await sleep(1200);
     await p.evaluate(() => document.querySelector('.avatar').click()); await sleep(800);
-    await p.setInputFiles('#acctImportFile', file); await sleep(2500);
+    await p.setInputFiles('#acctImportFile', file); await sleep(1200);
+    // R5: the import preview is the in-app confirm now (mc-sheet.js).
+    const okBtn = p.locator('.mcsh-overlay [data-mcsh-ok]');
+    if (await okBtn.count()) await okBtn.click();
+    await sleep(1500);
     const names = await p.evaluate(() => JSON.parse(localStorage.getItem('mc_workout_log_v1') || '[]').map((e) => e.workoutName));
     report('R-13', 'older backup keeps newer workouts', names.indexOf('FA newest') !== -1, '"FA newest" still present', names.length + ' workouts: ' + JSON.stringify(names));
     await c.close();

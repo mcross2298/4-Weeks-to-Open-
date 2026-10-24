@@ -895,8 +895,12 @@ function updateProgress(){
 
 function toggleDrawer(){ document.getElementById('sumDrawer').classList.toggle('open'); }
 
+// R5 / D-16: the in-app confirm (mc-sheet.js), not the OS dialog.
 function resetSession(){
-  if(!confirm('Reset the whole session? This clears rope timers, burpee scores and the burnout.')) return;
+  var q='Reset the whole session? This clears rope timers, burpee scores and the burnout.';
+  (window.MC_SHEET?MC_SHEET.confirm(q,{ok:'Reset',danger:true}):Promise.resolve(window.confirm(q))).then(function(ok){ if(ok) resetSessionNow(); });
+}
+function resetSessionNow(){
   // rope
   ROPE.split=null; ROPE.log={}; ROPE.timers={};
   document.getElementById('ropeOptA').classList.remove('sel');

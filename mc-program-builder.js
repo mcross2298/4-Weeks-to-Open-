@@ -271,10 +271,11 @@
       renderDays(); validate();
     },
     delDay: function (di) {
-      if (prog.days[di].exercises.length &&
-          !confirm('Delete "' + prog.days[di].name + '" and its exercises?')) return;
-      prog.days.splice(di, 1);
-      renderDays(); validate();
+      function drop() { prog.days.splice(di, 1); renderDays(); validate(); }
+      if (!prog.days[di].exercises.length) { drop(); return; }
+      // R5 / D-16: the in-app confirm (mc-sheet.js), not the OS dialog.
+      var q = 'Delete "' + prog.days[di].name + '" and its exercises?';
+      (window.MC_SHEET ? MC_SHEET.confirm(q, { ok: 'Delete', danger: true }) : Promise.resolve(window.confirm(q))).then(function (ok) { if (ok) drop(); });
     },
     renameDay: function (di, v) { prog.days[di].name = v.trim() || ('Day ' + (di + 1)); validate(); },
     delEx: function (di, xi) { prog.days[di].exercises.splice(xi, 1); renderDays(); validate(); },
@@ -356,10 +357,21 @@
     },
     save: function () {
       if (!validate()) return;
-      prog.days = prog.days.filter(function (d) { return d.exercises.length || confirm('"' + d.name + '" has no exercises — keep it anyway?'); });
-      var saved = MCPrograms.save(prog);
-      applyCreateIntent(saved.id);
-      location.href = 'cat-custom.html?prog=' + saved.id + '&new=1';
+      function finish() {
+        var saved = MCPrograms.save(prog);
+        applyCreateIntent(saved.id);
+        location.href = 'cat-custom.html?prog=' + saved.id + '&new=1';
+      }
+      // One question for all the empty days, not one OS dialog per day.
+      var empty = prog.days.filter(function (d) { return !d.exercises.length; });
+      if (!empty.length) { finish(); return; }
+      var q = empty.length === 1
+        ? '"' + empty[0].name + '" has no exercises. Keep it anyway?'
+        : empty.length + ' days have no exercises (' + empty.map(function (d) { return d.name; }).join(', ') + '). Keep them anyway?';
+      (window.MC_SHEET ? MC_SHEET.confirm(q, { ok: 'Keep', cancel: 'Remove' }) : Promise.resolve(window.confirm(q))).then(function (keep) {
+        if (!keep) prog.days = prog.days.filter(function (d) { return d.exercises.length; });
+        finish();
+      });
     }
   };
 

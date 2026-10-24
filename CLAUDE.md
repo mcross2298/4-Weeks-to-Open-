@@ -109,7 +109,9 @@ node tools/test-mc-pr-scope.js http://localhost:8080            # a PR belongs t
 node tools/test-mc-setlog-concurrency.js http://localhost:8080  # two-tab set-log durability (FIX-01, L-01)
 node tools/test-mc-store-resilience.js http://localhost:8080    # corrupt-store shapes, 5 pages (FIX-04, L-03)
 node tools/test-mc-crash-recovery.js http://localhost:8080      # process kill + cloud rehydrate (FIX-02, L-02)
-node tools/test-mc-session-durability.js http://localhost:8080  # week round trip, mid-rest refresh, focused draft, untick, Finish, import, wake lock, rest-end bar (flagship readiness R1/R2)
+node tools/test-mc-session-durability.js http://localhost:8080  # week round trip, mid-rest refresh, focused draft, untick, Finish, import, wake lock, rest-end bar, add set/skip, reorder, sheets, Back (flagship readiness R1/R2/R5)
+node GO_LIVE/flagship-audit/scenarios/fa-repro.js http://localhost:8080   # the 23 flagship-readiness journeys (R1-R5)
+node GO_LIVE/flagship-audit/scenarios/fa-engines.js                       # progression/max math + deletion-record merge (R1/R4)
 node GO_LIVE/flagship-audit/scenarios/fa-offline-sw.js          # the REAL service worker, served as the production origin: offline screens, deploys (R3); starts its own HTTPS server
 # needs a direct Postgres URL; SKIPS without one rather than failing
 SUPABASE_DB_URL=... pytest tests/test_rls.py   # 7 cross-user attacks + the phase-12 constraints (TEST 5)
@@ -2340,6 +2342,25 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   connected but not getting out.
 > - **The offline harness needs Playwright's `proxy` option** with a bypass list,
 >   because an agent sandbox's Chromium ignores `--no-proxy-server`.
+
+> **R5 shipped (2026-10-24), all six steps.** R-09, R-10, R-14 and R-15 pass;
+> `fa-repro.js` is 23 of 23 and is a CI gate now, as is `fa-engines.js`. Four
+> things to know before touching sheets, swaps or the session plan:
+> - **Every overlay is adopted by `mc-sheet.js`** (loaded by `mc-nav.js`): dialog
+>   role, focus, Escape, scroll lock and a Back entry. A new overlay gets the
+>   contract by matching its `SHEET_SEL` or carrying `data-mc-sheet`, and must
+>   close on a click on its own backdrop. Never call `history.back()` to undo a
+>   closed sheet or day; its entry is marked spent and the next Back steps over it.
+> - **A swap is not a rename.** `data-mc-swap-name` wins in `origNameOf()`, and
+>   `MCSetlogUtil.rekeyCard()` rebuilds the logger under it. Swaps and
+>   reorders are today-only by default (`mc_swaps_today_v1`,
+>   `mc_ex_order_today_v1`); nothing writes `mc_replacements_global` any more.
+> - **Today's + Add set / Skip go through `planFor()`** (`mc_session_adjust_v1`),
+>   so rows, counters and Finish agree. Its read is cached; `planFor()` runs per
+>   card per pass and an uncached read doubled `storageReads` on the perf gate.
+> - **Use `MC_SHEET.confirm()` / `.alert()`** for athlete-facing questions, not
+>   the OS dialogs. A test that answered a native dialog has to click
+>   `[data-mcsh-ok]` now.
 
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the

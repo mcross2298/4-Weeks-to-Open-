@@ -264,7 +264,8 @@ if(typeof updateProgress!=="undefined")updateProgress();
       const origName = nameEl.dataset.orig || nameEl.textContent.trim();
       nameEl.dataset.orig = origName;
       const url = 'exercise-library.html?replace=' + encodeURIComponent(origName);
-      if (confirm('Replace "' + origName.substring(0,40) + '"?\nTap OK to open Exercise Library.')) { window.location.href = url; }
+      var q = 'Replace "' + origName.substring(0,40) + '"? This opens the Exercise Library.';
+      (window.MC_SHEET?MC_SHEET.confirm(q,{ok:'Open library'}):Promise.resolve(window.confirm(q))).then(function (ok) { if (ok) window.location.href = url; });
     }, 600);
   }, {passive: true});
   document.addEventListener('touchend', function() { clearTimeout(pressTimer); }, {passive: true});

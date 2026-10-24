@@ -265,7 +265,7 @@
     return Promise.resolve();
   }
 
-  function save(exId, sn, w, r, rpe, name) {
+  function save(exId, sn, w, r, rpe, name, from) {
     var k = ek(exId), d = dayStamp();
     var entry = { w: w, r: r };
     if (rpe) entry.rpe = rpe;          // optional — older readers ignore it
@@ -275,6 +275,7 @@
     // {d, sets, ts} but copies a set entry whole, so this survives a merge,
     // the cross-tab replay and the locked write with no change to any of them.
     if (name) entry.n = name;
+    if (from) entry.sw = from;         // R5: swapped from — shown in History
     var rec = { k: k, d: d, sn: sn, entry: entry, ts: Date.now() };
     noteRecent(rec);
     try { if (_bc) _bc.postMessage(rec); } catch (e) {}
@@ -1025,6 +1026,52 @@
     return _deload ? { on: true, reason: 'deload' } : OFF;
   }
 
+  // ---- today's adjustments: + Add set, Skip exercise (R5 step 3) ---------
+  // A gym is not a spreadsheet: an athlete adds a set when the last one went
+  // well and skips an exercise when the machine is taken or a joint says no.
+  // Both are TODAY's decision and never touch the program, so they live in a
+  // day-stamped store and read as empty tomorrow.
+  // { d: dayKey, pages: { PID: { exId: { add: N, skip: true } } } }
+  var ADJ_KEY = 'mc_session_adjust_v1';
+  // planFor() runs per card on every render pass, so this is read from
+  // memory: the store is written only by setAdj() in this tab, and another
+  // tab's write arrives as a storage event (K-3.1 perf budget, storageReads).
+  var _adjCache = null;
+  try { window.addEventListener('storage', function (e) { if (!e || e.key === ADJ_KEY || e.key === null) _adjCache = null; }); } catch (e) {}
+  function adjAll() {
+    var d = dayStamp();
+    if (_adjCache && _adjCache.d === d) return _adjCache;
+    var v = null;
+    try { v = JSON.parse(localStorage.getItem(ADJ_KEY) || 'null'); } catch (e) { v = null; }
+    _adjCache = (v && typeof v === 'object' && v.d === d && v.pages && typeof v.pages === 'object') ? v : { d: d, pages: {} };
+    return _adjCache;
+  }
+  function adjFor(exId) {
+    var p = adjAll().pages[PID];
+    var a = p && p[exId];
+    return (a && typeof a === 'object') ? a : {};
+  }
+  function setAdj(exId, patch) {
+    var all = adjAll(), p = all.pages[PID] || (all.pages[PID] = {});
+    var cur = p[exId] || {}, k;
+    for (k in patch) { if (patch[k]) cur[k] = patch[k]; else delete cur[k]; }
+    if (Object.keys(cur).length) p[exId] = cur; else delete p[exId];
+    if (!Object.keys(p).length) delete all.pages[PID];
+    if (Object.keys(all.pages).length) writeStore(ADJ_KEY, JSON.stringify(all));
+    else { try { localStorage.removeItem(ADJ_KEY); } catch (e) {} }
+    _adjCache = all;
+  }
+  // How many of today's sets on this exercise are already logged (the working
+  // rows a skip keeps).
+  function loggedToday(exId) {
+    var hist = st()[ek(exId)], d = dayStamp();
+    if (!Array.isArray(hist)) return 0;
+    for (var i = 0; i < hist.length; i++) {
+      if (hist[i] && hist[i].d === d && hist[i].sets) return Object.keys(hist[i].sets).length;
+    }
+    return 0;
+  }
+
   function planFor(card, setsStr) {
     if (setsStr == null) setsStr = setsOf(card);
     var nmEl = card.querySelector('.ex-name, .ss-name, .lift-name, .var-name');
@@ -1039,8 +1086,23 @@
     // did not ask for would be inventing a number twice over.
     var cut = 0;
     if (stated && n > 1 && reducedVolume().on) { cut = 1; n -= 1; }
-    return { nmEl: nmEl, drop: drop, work: work, n: n, nd: nd, total: n + nd,
-             stated: stated, cut: cut };
+    // R5 step 3: today's adjustments. Added sets are working sets, so they
+    // sit before any drop rows; a skip keeps only the sets already logged.
+    // Both flow through `total`, so the row list, the counter and Finish's
+    // denominator (plannedSetCount) all agree from this one place.
+    var adj = {}, exId = '';
+    try { exId = exIdOf(card); adj = adjFor(exId); } catch (e) { adj = {}; }
+    var added = 0, skipped = false;
+    if (adj.skip) {
+      skipped = true;
+      n = Math.min(n + (adj.add || 0), loggedToday(exId));
+      nd = 0;
+    } else if (adj.add > 0) {
+      added = Math.min(adj.add, 20);
+      n += added;
+    }
+    return { nmEl: nmEl, drop: skipped ? { is: false, drops: [] } : drop, work: work, n: n, nd: nd, total: n + nd,
+             stated: stated, cut: cut, added: added, skipped: skipped };
   }
   function plannedSetCount(card) {
     try { return planFor(card).total; } catch (e) { return 0; }
@@ -1109,7 +1171,7 @@
     // the removed element here would have written '' on every re-check and
     // silently erased an answer the athlete had already given.
     var rpeVal = storedEffort(exId, sn);
-    save(exId, sn, wVal, rVal, rpeVal, displayNameOf(card));
+    save(exId, sn, wVal, rVal, rpeVal, displayNameOf(card), swapFromOf(card));
     // Now committed for real — checking always solidifies a ghosted
     // suggestion (typing is not required), and the pending draft is
     // superseded by the real entry mc_setlog_v1 now holds.
@@ -1248,8 +1310,17 @@
     var toggleEl = card.querySelector('.mcl-toggle');
     if (toggleEl) toggleEl.classList.toggle('mcl-alldone', allDone);
 
+    // R5: a skipped exercise is finished for the handoff and the count, but
+    // is not marked .checked: nothing should report it as trained.
+    var skippedNow = card.dataset.mcSkipped === '1';
+    if (skippedNow) {
+      var skTxt = done ? (done + ' set' + (done === 1 ? '' : 's') + ' · skipped') : 'Skipped';
+      if (el.textContent !== skTxt) el.textContent = skTxt;
+      if (stripCount && stripCount.textContent !== skTxt) stripCount.textContent = skTxt;
+    }
     var wasDone = !!card.__mclDone;
-    card.__mclDone = allDone;
+    card.__mclDone = allDone || skippedNow;
+    if (skippedNow) allDone = allDone || !wasDone;
     if (allDone && !wasDone) {
       clearTimeout(card.__mclCollapseTimer);
       // §3.4 card handoff: collapse the just-finished card, then promote
@@ -1623,7 +1694,7 @@
         var next = (cur === btn.dataset.rpe) ? '' : btn.dataset.rpe;
         var lastRow = card.querySelector('#mclr-' + cid + '-' + total);
         var w = lastRow && lastRow.querySelector('.mcl-w');
-        save(exId, total, w ? w.value.trim() : '', lastRow ? clusterRVal(lastRow) : '', next, displayNameOf(card));
+        save(exId, total, w ? w.value.trim() : '', lastRow ? clusterRVal(lastRow) : '', next, displayNameOf(card), swapFromOf(card));
         paintEffort(card, exId);
         updateHist(card, exId);
       });
@@ -1707,6 +1778,42 @@
       });
     });
 
+    // R5 step 3: today's own changes to this exercise. Skip keeps the sets
+    // already logged and drops the rest; it is undone the same way.
+    if ((card.dataset.mcSkipped || '') !== (plan.skipped ? '1' : '')) {
+      if (plan.skipped) card.dataset.mcSkipped = '1'; else delete card.dataset.mcSkipped;
+    }
+    var actions = document.createElement('div');
+    actions.className = 'mcl-actions';
+    if (plan.skipped) {
+      actions.innerHTML = '<span class="mcl-skip-note">Skipped today</span>' +
+        '<button type="button" class="mcl-act" data-mcl-act="unskip">Undo skip</button>';
+    } else {
+      actions.innerHTML = '<button type="button" class="mcl-act" data-mcl-act="add">+ Add set</button>' +
+        (plan.added ? '<button type="button" class="mcl-act" data-mcl-act="remove" aria-label="Remove the added set">− Added set</button>' : '') +
+        '<button type="button" class="mcl-act mcl-act-skip" data-mcl-act="skip">Skip exercise</button>';
+    }
+    wrap.appendChild(actions);
+    actions.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-mcl-act]');
+      if (!b) return;
+      e.stopPropagation(); e.preventDefault();
+      var a = adjFor(exId), act = b.dataset.mclAct;
+      if (act === 'add') setAdj(exId, { add: (a.add || 0) + 1 });
+      else if (act === 'remove') {
+        // never remove a row that has a set logged on it
+        var lastRow = card.querySelector('#mclr-' + cid + '-' + n);
+        if (lastRow && lastRow.querySelector('.mcl-ck.done')) return;
+        setAdj(exId, { add: Math.max(0, (a.add || 0) - 1) });
+      }
+      else if (act === 'skip') setAdj(exId, { skip: true });
+      else if (act === 'unskip') setAdj(exId, { skip: false });
+      refreshCard(card);
+      // A skip moves on, as finishing an exercise does — after the rebuild,
+      // which would otherwise reopen this card over the hand-off.
+      if (act === 'skip') { card.__mclReopen = false; card.__mclHandoff = true; }
+    });
+
     host.appendChild(toggle);
     host.appendChild(wrap);
     // Strip creation lives in buildStrip() now, called at the top of this
@@ -1745,9 +1852,17 @@
   // a brand-new history bucket and orphan everything logged before the rename.
   // Both load orders converge: if this runs before the painter the visible
   // text IS the original; if the painter ran first the attribute holds it.
+  //
+  // R5 / D-09: a SWAP is not a rename. A rename is the same lift under a new
+  // label and must keep its history; a swap is a different lift, and its sets
+  // used to land in the original's bucket because the rows had already been
+  // built under the original's key. mc-replace.js marks a swapped card with
+  // data-mc-swap-name, which wins here, and rekeyCard() rebuilds its logger.
   function origNameOf(el) {
     if (!el) return '';
     var card = el.closest('.ex-card, .ss-ex, .ex-item, .lift-card');
+    var swapped = card && card.getAttribute('data-mc-swap-name');
+    if (swapped) return swapped;
     var orig = card && card.getAttribute('data-mc-orig-name');
     if (orig) return orig;
     // injectTrend() below already states the rule this guards: NOTHING may be
@@ -1836,12 +1951,57 @@
   // data-id is left alone on the card: the engines use it for their own
   // checkState bookkeeping, and it is page-local session state, not history.
   function exIdOf(card) { return nameId(card); }
+  // R5 / D-09: drop a card's logger so the next pass builds it under the
+  // card's CURRENT identity. Called when a swap is applied or undone. Sets
+  // already logged stay in the store under the key they were logged under —
+  // the original lift's sets stay the original's — and the session record
+  // keeps them (it shrinks only on an untick, Finish or Discard, R1).
+  function rekeyCard(card) {
+    if (!card) return;
+    Array.prototype.forEach.call(card.querySelectorAll('.mcl-strip, .mcl-toggle, .mcl-wrap, .a-trend'), function (n) { n.remove(); });
+    clearTimeout(card.__mclCollapseTimer);
+    card.__mclDone = false;
+    card.__mclR3Init = false;
+    // The card the athlete is on comes back open under its new identity;
+    // a swap made from the sheet happens mid-exercise.
+    card.__mclReopen = card.classList.contains('active');
+    _nameIdx = null;
+    if (window.MC_SCAN && MC_SCAN.schedule) MC_SCAN.schedule(); else setTimeout(run, 0);
+  }
+  // R5 step 3: rebuild a card in place after today's adjustment changed its
+  // row count, keeping every tick: rows are repainted from today's store,
+  // the same way a reload restores them (DEF-CR-01).
+  function refreshCard(card) {
+    card.__mclRepaint = true;
+    rekeyCard(card);
+  }
+  function reopenRekeyed() {
+    document.querySelectorAll(UNIT_SEL_R3).forEach(function (c) {
+      if (c.__mclReopen) { c.__mclReopen = false; setActiveCard(c); }
+      if (c.__mclRepaint) {
+        c.__mclRepaint = false;
+        ensureRowsBuilt(c);
+        Array.prototype.forEach.call(c.querySelectorAll('.mcl-row'), function (r) { paintLoggedRow(r); });
+        updateCountByCard(c);
+      }
+      if (c.__mclHandoff) {
+        c.__mclHandoff = false;
+        var nx = nextIncompleteUnit(c);
+        if (nx) setActiveCard(nx); else setCollapsed(c, true);
+      }
+    });
+  }
   // The name a finished set is banked under: the authored name (it survives
   // a rename through data-mc-orig-name, exactly as the key does), with its
   // whitespace collapsed.
   function displayNameOf(card) {
     var nm = card && card.querySelector('.ex-name, .ss-name, .lift-name, .var-name');
     return nm ? origNameOf(nm).replace(/\s+/g, ' ').trim() : '';
+  }
+  // R5: the lift a substitute stood in for, so History can say so.
+  function swapFromOf(card) {
+    var f = card && card.getAttribute('data-mc-swap-from');
+    return f ? f.replace(/\s+/g, ' ').trim() : '';
   }
 
   // A positional key holds a MIXTURE of exercises, so moving it forward would
@@ -2056,6 +2216,7 @@
     // now; only its `header`/`pick`-type informational cards (no .ex-card
     // class) still render with no logger, by design.
     /* MARKET:STRIP influencer-refs END */
+    reopenRekeyed();                            // R5: after a swap re-keyed a card
     normalizeSupersetTimers();
     collapseNotes();
     _nameIdx = null;                            // index is pass-scoped only
@@ -2202,6 +2363,7 @@
     plannedSetCount: plannedSetCount,  // S5c-0: lets mc-finish.js size a workout
                                     // from the prescription, not from rendered
                                     // checkboxes (see planFor above)
+    rekeyCard: rekeyCard,            // R5 / D-09: mc-replace.js re-keys a swapped card
     ensureRowsBuilt: ensureRowsBuilt,  // A-14: lets mc-session.js build a specific
                                     // card's rows before restoring checks onto it
     rowIdPrefix: function (card) {  // R1 / D-01: lets mc-session.js find a row's

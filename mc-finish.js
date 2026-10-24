@@ -166,6 +166,7 @@
             // the same reader History uses for old entries. The key is kept,
             // separately, because PR detection below compares by key.
             var e={name:setDisplayName(s,exKey),key:exKey,setNum:parseInt(sn),weight:s.w,reps:s.r,pr:false};
+            if(s&&s.sw)e.swappedFrom=s.sw;   // R5: History shows "swapped from …"
             if(s.rpe)e.rpe=s.rpe;
             sets.push(e);
           });
@@ -835,8 +836,14 @@
       var checked=getCheckedSets();
       if(checked>0){
         var noun=checked===1?'set':'sets';
-        if(!confirm('Discard '+checked+' logged '+noun+'? You can restore this from the dashboard right after, but it will be gone if you log a new workout first.'))return;
+        // R5 / D-16: the in-app confirm (mc-sheet.js), not the OS dialog.
+        var msg='Discard '+checked+' logged '+noun+'? You can restore this from the dashboard right after, but it will be gone if you log a new workout first.';
+        (window.MC_SHEET ? MC_SHEET.confirm(msg, {ok:'Discard', danger:true}) : Promise.resolve(window.confirm(msg))).then(function(ok){ if(ok) _FW._discardNow(); });
+        return;
       }
+      _FW._discardNow();
+    },
+    _discardNow:function(){
       try{
         var sessAll=JSON.parse(localStorage.getItem('mc_session_v1')||'{}');
         var slAll=JSON.parse(localStorage.getItem(SL_KEY)||'{}');

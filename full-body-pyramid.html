@@ -570,7 +570,15 @@ function toggleDrawer(){ document.getElementById('sumDrawer').classList.toggle('
 function switchMode(mode){
   if(mode===PY.mode && PY.flat.length) return;
   var inProgress=PY.flat.some(function(s){return s.done;}) || PY.activeIdx>0;
-  if(inProgress && !confirm('Switch to '+mode.toUpperCase()+' pyramid? This resets your current session.')) return;
+  if(inProgress){
+    // R5 / D-16: the in-app confirm (mc-sheet.js), not the OS dialog.
+    var q='Switch to '+mode.toUpperCase()+' pyramid? This resets your current session.';
+    (window.MC_SHEET?MC_SHEET.confirm(q,{ok:'Switch',danger:true}):Promise.resolve(window.confirm(q))).then(function(ok){ if(ok) switchModeNow(mode); });
+    return;
+  }
+  switchModeNow(mode);
+}
+function switchModeNow(mode){
   document.getElementById('tabTimed').classList.toggle('active',mode==='timed');
   document.getElementById('tabReps').classList.toggle('active',mode==='reps');
   if(PY.restTimer) PY.restTimer.pause();
@@ -579,7 +587,10 @@ function switchMode(mode){
   PY.build(mode); PY.render(); updateSummary();
 }
 function resetSession(){
-  if(!confirm('Reset this pyramid session? All logged reps and timers will clear.')) return;
+  var q='Reset this pyramid session? All logged reps and timers will clear.';
+  (window.MC_SHEET?MC_SHEET.confirm(q,{ok:'Reset',danger:true}):Promise.resolve(window.confirm(q))).then(function(ok){ if(ok) resetSessionNow(); });
+}
+function resetSessionNow(){
   if(PY.restTimer) PY.restTimer.pause();
   document.getElementById('restOverlay').classList.remove('show');
   PY.resting=false;

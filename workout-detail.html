@@ -67,6 +67,7 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 .ex-card{background:#111;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:16px;margin-bottom:10px;position:relative;overflow:hidden;}
 .ex-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#34d399;border-radius:0 2px 2px 0;}
 .ex-card-name{font-size:15px;font-weight:800;color:#fff;margin-bottom:10px;line-height:1.3;}
+.ex-card-swap{font-size:13px;font-weight:600;color:var(--muted,#8a8377);margin:-6px 0 10px;}
 .ex-set-rows{display:flex;flex-direction:column;gap:6px;}
 .ex-set-row{display:flex;align-items:center;gap:10px;padding:7px 10px;background:#0d0d0d;border-radius:8px;}
 .ex-set-num{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:0.05em;width:40px;flex-shrink:0;}
@@ -164,13 +165,13 @@ function fmtLb(n){ return Math.round(n).toLocaleString('en-US'); }
 // twice in one workout shares a name, and grouping by name would fold its
 // two blocks into one card with interleaved set numbers.
 function groupByExercise(sets){
-  const order = [], byKey = {}, nameOf = {};
+  const order = [], byKey = {}, nameOf = {}, fromOf = {};
   (sets||[]).forEach(s=>{
     const k = s.key || s.name;
-    if(!byKey[k]){ byKey[k] = []; order.push(k); nameOf[k] = s.name; }
+    if(!byKey[k]){ byKey[k] = []; order.push(k); nameOf[k] = s.name; fromOf[k] = s.swappedFrom || ''; }
     byKey[k].push(s);
   });
-  return order.map(k=>({name:nameOf[k], sets:byKey[k]}));
+  return order.map(k=>({name:nameOf[k], from:fromOf[k], sets:byKey[k]}));
 }
 
 function render(){
@@ -224,7 +225,7 @@ function render(){
       <div class="readonly-note">🔒 This is a completed session — read-only. Exercises are grouped from what was actually logged; original superset/tri-set groupings aren't stored in your history.</div>
       ${exercises.length ? exercises.map(ex=>`
         <div class="ex-card">
-          <div class="ex-card-name">${esc(ex.name)}</div>
+          <div class="ex-card-name">${esc(ex.name)}</div>${ex.from?`<div class="ex-card-swap">Swapped from ${esc(ex.from)}</div>`:''}
           <div class="ex-set-rows">
             ${ex.sets.map((s,i)=>`
               <div class="ex-set-row">

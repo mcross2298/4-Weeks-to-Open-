@@ -258,7 +258,15 @@ async function step(name, fn) {
     p.removeAllListeners('dialog');
     p.on('dialog', (d) => { preview = d.message(); d.accept(); });
     await p.evaluate(() => document.querySelector('.avatar').click()); await sleep(800);
-    await p.setInputFiles('#acctImportFile', file); await sleep(2500);
+    await p.setInputFiles('#acctImportFile', file); await sleep(1200);
+    // R5 / D-16: the preview is the in-app confirm (mc-sheet.js) now, not an
+    // OS dialog; the native handler above stays as the fallback's catcher.
+    if (!preview) {
+      preview = await p.evaluate(() => { const m = document.querySelector('.mcsh-overlay .mcsh-msg'); return m ? m.textContent : ''; });
+      const ok = p.locator('.mcsh-overlay [data-mcsh-ok]');
+      if (await ok.count()) await ok.click();
+    }
+    await sleep(1500);
     const names = await p.evaluate(() => JSON.parse(localStorage.getItem('mc_workout_log_v1') || '[]').map((e) => e.workoutName));
     check(/Workouts:/.test(preview), 'IMPORT a preview is shown before anything is written', JSON.stringify(preview.slice(0, 80)));
     check(names.indexOf('SD newest') !== -1 && names.length === 4, 'IMPORT an older backup keeps the newer workout', JSON.stringify(names));
@@ -384,6 +392,96 @@ async function step(name, fn) {
       await c.close();
     });
   }
+
+  // ---- R5 ("flexible mid-session, one sheet contract") ----------------------
+  await step('ADJUST', async () => {
+    const c = await ctx(browser); const p = await page(c, errs, 'adjust');
+    await p.goto(BASE + '/mm-p1.html?day=1'); await sleep(1800);
+    const card = p.locator('.ex-card').first();
+    const r0 = await card.locator('.mcl-row').count();
+    await logSet(card, 0, 60, 5);
+    await card.locator('[data-mcl-act=add]').click(); await sleep(900);
+    const r1 = await card.locator('.mcl-row').count();
+    const kept = await card.locator('.mcl-row').first().locator('.mcl-ck.done').count();
+    const planned = await p.evaluate(() => MCSetlogUtil.plannedSetCount(document.querySelector('.ex-card')));
+    check(r1 === r0 + 1 && kept === 1 && planned === r0 + 1, 'ADJUST + Add set adds a row, keeps the logged tick and grows the Finish total',
+      'rows ' + r0 + '->' + r1 + ', tick kept ' + kept + ', planned ' + planned);
+    await p.reload(); await sleep(2200);
+    check((await p.locator('.ex-card').first().locator('.mcl-row').count()) === r0 + 1, 'ADJUST the added set is still there after a reload');
+    const card2 = p.locator('.ex-card').nth(1);
+    await card2.locator('.mcl-strip').click().catch(() => {}); await sleep(600);
+    const skippedName = await card2.locator('.ex-name').first().textContent();
+    await card2.locator('[data-mcl-act=skip]').click(); await sleep(1000);
+    const sk = await p.evaluate(() => { const cd = document.querySelectorAll('.ex-card')[1];
+      const a = document.querySelector('.ex-card.active, .ss-ex.active');
+      return { planned: MCSetlogUtil.plannedSetCount(cd), checked: cd.classList.contains('checked'),
+        active: a ? (a.querySelector('.ex-name, .ss-name') || {}).textContent : null }; });
+    check(sk.planned === 0 && !sk.checked, 'ADJUST Skip exercise drops it from the Finish total without marking it trained', JSON.stringify(sk));
+    check(sk.active && sk.active !== skippedName, 'ADJUST a skip moves on to the next exercise', JSON.stringify(sk));
+    await card2.locator('.mcl-strip').click().catch(() => {}); await sleep(600);
+    await card2.locator('[data-mcl-act=unskip]').click(); await sleep(900);
+    check((await card2.locator('.mcl-row').count()) > 0, 'ADJUST Undo skip brings its sets back');
+    await c.close();
+  });
+
+  for (const keep of [false, true]) {
+    await step('REORDER ' + (keep ? 'kept' : 'today'), async () => {
+      const c = await ctx(browser); const p = await page(c, errs, 'reorder');
+      const names = () => p.evaluate(() => [...document.querySelectorAll('.ex-card')].slice(0, 2).map((x) => (x.querySelector('.ex-name') || {}).textContent));
+      await p.goto(BASE + '/mm-p1.html?day=1'); await sleep(1800);
+      const before = await names();
+      await p.locator('.ex-card').first().locator('.mc-meatball').click(); await sleep(400);
+      await p.locator('.mc-item[data-act=reorder]').click(); await sleep(500);
+      const box = await p.locator('.ex-card').first().locator('.mc-down').boundingBox();
+      if (keep) await p.locator('.mc-rb-keep').click();
+      await p.locator('.ex-card').first().locator('.mc-down').click(); await sleep(300);
+      await p.locator('.mc-rb-done').click(); await sleep(300);
+      await p.reload(); await sleep(2000);
+      const moved = await names();
+      await p.evaluate(() => { const v = JSON.parse(localStorage.getItem('mc_ex_order_today_v1') || 'null'); if (v) { v.d = '2000-01-01'; localStorage.setItem('mc_ex_order_today_v1', JSON.stringify(v)); } });
+      await p.reload(); await sleep(2000);
+      const nextDay = await names();
+      check(box && box.height >= 48, 'REORDER the arrows are at least 48px', box ? box.height + 'px' : 'no arrow');
+      check(moved[0] === before[1], 'REORDER ' + (keep ? 'a kept' : "today's") + ' order survives a reload', JSON.stringify(moved));
+      check(keep ? nextDay[0] === before[1] : nextDay[0] === before[0],
+        keep ? 'REORDER a kept order is still there the next day' : 'REORDER a today-only order is gone the next day', JSON.stringify(nextDay));
+      await c.close();
+    });
+  }
+
+  await step('SHEET', async () => {
+    const c = await ctx(browser); const p = await page(c, errs, 'sheet');
+    await p.goto(BASE + '/mm-p1.html?day=1'); await sleep(1800);
+    const open = () => p.evaluate(() => !!document.querySelector('.mc-menu-overlay.open'));
+    await p.locator('.ex-card').first().locator('.mc-meatball').click(); await sleep(400);
+    const a = await p.evaluate(() => { const o = document.querySelector('.mc-menu-overlay.open'); return o && { role: o.getAttribute('role'), modal: o.getAttribute('aria-modal'), focus: o.contains(document.activeElement) }; });
+    check(a && a.role === 'dialog' && a.modal === 'true' && a.focus, 'SHEET a sheet is a modal dialog with focus inside it', JSON.stringify(a));
+    await p.keyboard.press('Escape'); await sleep(300);
+    const back = await p.evaluate(() => !!(document.activeElement && document.activeElement.classList.contains('mc-meatball')));
+    check(!(await open()) && back, 'SHEET Escape closes it and focus returns to the control that opened it');
+    await p.locator('.ex-card').first().locator('.mc-meatball').click(); await sleep(400);
+    await p.goBack(); await sleep(600);
+    check(!(await open()) && /mm-p1\.html/.test(p.url()), 'SHEET Back closes the sheet and stays on the page', p.url());
+    const r = p.evaluate(() => MC_SHEET.confirm('Discard?', { ok: 'Discard', danger: true }));
+    await sleep(300);
+    const z = await p.evaluate(() => { const b = document.querySelector('[data-mcsh-ok]').getBoundingClientRect();
+      const el = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2); return !!(el && el.closest('[data-mcsh-ok]')); });
+    check(z, 'SHEET the in-app confirm sits above the bottom nav (its OK is tappable)');
+    await p.locator('[data-mcsh-ok]').click();
+    check((await r) === true, 'SHEET the in-app confirm resolves true on OK');
+    await c.close();
+  });
+
+  await step('DAY-BACK', async () => {
+    const c = await ctx(browser); const p = await page(c, errs, 'dayback');
+    await p.goto(BASE + '/dashboard.html'); await sleep(800);
+    await p.goto(BASE + '/mm-p1.html'); await sleep(1500);
+    await p.locator('.mc-day-row').first().click(); await sleep(1000);
+    await p.locator('.mc-day-back').click(); await sleep(700);
+    await p.goBack(); await sleep(1500);
+    check(/dashboard\.html/.test(p.url()), 'DAY-BACK after the on-screen "All days", one Back leaves the page (the spent entry is stepped over)', p.url());
+    await c.close();
+  });
 
   check(errs.length === 0, 'no page errors on any journey', errs.slice(0, 5).join(' | '));
   await browser.close();

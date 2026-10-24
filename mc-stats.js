@@ -105,7 +105,14 @@
   // another instead. The chip grid reuses .ready-board/.ready-chip's
   // existing pattern from renderCurrentReadiness() below, which is already
   // a real ≥44px target — same visual language, not a second component.
-  var muscleMapMode = 'recovery'; // in-memory only; a reload always opens on Recovery, per the locked default
+  // H1 locked Recovery as the default. Flagship readiness R5 step 6 asks for
+  // the toggle to be remembered, so it is kept for this browsing session
+  // (sessionStorage): a refresh or a trip back keeps your choice, and a fresh
+  // launch still opens on Recovery.
+  var MAP_MODE_KEY = 'mc_ui_stats_mode_v1';
+  var muscleMapMode = (function () {
+    try { return sessionStorage.getItem(MAP_MODE_KEY) === 'volume' ? 'volume' : 'recovery'; } catch (e) { return 'recovery'; }
+  })();
 
   function exerciseTally(all, cutoff) {
     var byGroup = {};
@@ -204,6 +211,7 @@
     host.querySelectorAll('.mg-toggle button').forEach(function (btn) {
       btn.addEventListener('click', function () {
         muscleMapMode = btn.getAttribute('data-mode');
+        try { sessionStorage.setItem(MAP_MODE_KEY, muscleMapMode); } catch (e) {}
         renderMuscleMap(all);
       });
     });

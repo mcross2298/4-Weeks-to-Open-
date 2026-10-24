@@ -429,6 +429,55 @@
       "export": true,
       "note": "Every write goes through mc-log-read.js (appendWorkout / deleteWorkouts / clearWorkouts / writeWorkoutLog); tools/check-workout-log-writers.js fails CI on any other (flagship readiness R1 / D-38). mc-finish.js is the main caller."
     },
+    "mc_builder_draft_v1": {
+      "owner": "build-workout.html",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "The half-built custom workout (name, program, collection, exercises), so leaving the builder or closing the app does not lose it (flagship readiness R5 step 6). Cleared when the workout is created."
+    },
+    "mc_ui_dash_v1": {
+      "owner": "dashboard.html",
+      "storage": "session",
+      "sync": false,
+      "export": false,
+      "note": "The dashboard tab and per-tab scroll this browsing session was on, so Back from a workout returns there (R5 step 6). A fresh launch opens on Home."
+    },
+    "mc_ui_history_tab_v1": {
+      "owner": "workout-logs.html",
+      "storage": "session",
+      "sync": false,
+      "export": false,
+      "note": "History's Sessions/Programs tab for this browsing session (R5 step 6)."
+    },
+    "mc_ui_stats_mode_v1": {
+      "owner": "mc-stats.js",
+      "storage": "session",
+      "sync": false,
+      "export": false,
+      "note": "The Stats body map's Recovery/Volume toggle for this browsing session (R5 step 6). H1's locked default, Recovery, still applies to a fresh launch."
+    },
+    "mc_ex_order_today_v1": {
+      "owner": "mc-card-actions.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Today-only exercise order per workout container, stamped with the local day (flagship readiness R5 step 4). A kept order goes to mc_ex_order instead."
+    },
+    "mc_session_adjust_v1": {
+      "owner": "mc-setlog.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Today's + Add set / Skip exercise per exercise, stamped with the day key; anything from another day reads as empty (flagship readiness R5 step 3). The sets themselves are in mc_setlog_v1."
+    },
+    "mc_swaps_today_v1": {
+      "owner": "mc-replace.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Today-only exercise swaps, per page, stamped with the local day; anything from another day reads as empty (flagship readiness R5 / D-10). A kept swap goes to mc_replacements|<pageId> instead. Not synced: a swap for today's busy machine belongs to this gym visit."
+    },
     "mc_workout_logs_outbox_v1": {
       "owner": "mc-supabase.js",
       "storage": "local",

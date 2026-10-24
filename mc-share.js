@@ -47,7 +47,8 @@
       navigator.share({ title: title, url: url }).catch(function () {});
       return;
     }
-    var done = function () { alert('🔗 Link copied — send it to anyone with the app.\nThey open it and tap Import.'); };
+    var msg = '🔗 Link copied — send it to anyone with the app.\nThey open it and tap Import.';
+    var done = function () { (window.MC_SHEET ? MC_SHEET.alert(msg) : Promise.resolve(window.alert(msg))); };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(url).then(done, function () { prompt('Copy this link:', url); });
     } else {

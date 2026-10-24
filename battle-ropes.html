@@ -254,7 +254,7 @@ var CFG={
     document.getElementById('cfgRecap').textContent=L.label+' · 8 moves × '+L.rounds+' rounds · '+L.emom.reps+' '+L.emom.exercise+' EMOM · '+L.fin+'-min finisher';
     BR.build(L); BR.render(); updateSummary();
   },
-  reconfigure:function(){ if(!confirm('Change level? This resets your current session.'))return; resetAll(true); }
+  reconfigure:function(){ var q='Change level? This resets your current session.'; (window.MC_SHEET?MC_SHEET.confirm(q,{ok:'Change level',danger:true}):Promise.resolve(window.confirm(q))).then(function(ok){ if(ok) resetAll(true); }); }
 };
 
 /* ── ENGINE ── */
@@ -458,8 +458,12 @@ function updateSummary(){
   document.getElementById('sumStep').textContent='Step '+(BR.complete?total:Math.min(BR.activeIdx+1,total))+' / '+total;
   var fill=document.getElementById('progFill'); if(fill)fill.style.width=Math.round((done/total)*100)+'%';
 }
+// R5 / D-16: the in-app confirm (mc-sheet.js), not the OS dialog.
 function resetAll(toConfig){
-  if(toConfig!==true){ if(!confirm('Reset the session? All timers and reps will clear.'))return; }
+  if(toConfig!==true){ var q='Reset the session? All timers and reps will clear.'; (window.MC_SHEET?MC_SHEET.confirm(q,{ok:'Reset',danger:true}):Promise.resolve(window.confirm(q))).then(function(ok){ if(ok) resetAllNow(toConfig); }); return; }
+  resetAllNow(toConfig);
+}
+function resetAllNow(toConfig){
   if(ROPE.timer)ROPE.timer.pause(); if(EMOM.timer)EMOM.timer.pause();
   var fin=BR._k('fin'); if(fin&&fin.timer)fin.timer.pause();
   document.getElementById('liveScreen').style.display='none';
