@@ -329,6 +329,13 @@ jobs:
         # still lists the right URLs.
         run: python3 tools/build-sw.py --check
 
+      - name: Core bundles match their members (flagship readiness J, D-40)
+        # workout-core.js / workout-logger.js are committed copies of the
+        # modules listed in tools/bundles.json. Fails when a member changed
+        # without regenerating, when a page still carries a whole run as
+        # separate tags, or when a page loads a bundle AND one of its members.
+        run: node tools/build-bundles.js --check
+
       - name: Script-manifest drift check (clone pages load identical module lists — audit LS-3)
         run: python3 tools/check-script-manifest.py --check
 

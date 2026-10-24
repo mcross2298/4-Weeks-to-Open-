@@ -62,7 +62,9 @@ const VERBOSE = process.argv.includes('--list');
 // ── collect every authored prescription, with where it came from ────────────
 function collect() {
   const files = cp.execSync("git ls-files '*.html' '*.js'", { cwd: ROOT, encoding: 'utf8' })
-    .trim().split('\n').filter(Boolean);
+    .trim().split('\n').filter(Boolean)
+    // generated copies of their members (tools/bundles.json, flagship readiness J)
+    .filter(f => !require('./bundle-outputs').isBundle(f));
   const re = /sets\s*:\s*("([^"]*)"|'([^']*)')/g;
   const seen = new Map();
   for (const f of files) {

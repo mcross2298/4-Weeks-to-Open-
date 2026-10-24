@@ -254,6 +254,8 @@ function coolNeutral(r, g, b) {
 }
 const COOL_SCOPE = execSync('git ls-files "*.css" "*.html" "*.js"', { cwd: ROOT, encoding: 'utf8' })
   .split('\n').filter(Boolean)
+  // generated copies of their members (tools/bundles.json, flagship readiness J)
+  .filter(f => !require('./bundle-outputs').isBundle(f))
   .filter(f => !/^(tools|tests|GO_LIVE|supabase)\//.test(f))   // not app code
   .filter(f => !/\.dc\.html$/.test(f))                         // design comps, stripped at deploy
   .filter(f => f !== 'supabase-vendor.js');                     // vendored

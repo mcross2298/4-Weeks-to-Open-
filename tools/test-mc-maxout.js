@@ -90,7 +90,9 @@ const fs = require('fs');
 const { execSync } = require('child_process');
 const ROOT = path.resolve(__dirname, '..');
 const tracked = execSync('git ls-files "*.js" "*.html"', { cwd: ROOT, encoding: 'utf8' })
-  .split('\n').filter(Boolean);
+  .split('\n').filter(Boolean)
+  // generated copies of their members (tools/bundles.json, flagship readiness J)
+  .filter(f => !require('./bundle-outputs').isBundle(f));
 const EPLEY = /\(\s*1\s*\+\s*[A-Za-z0-9_.()\[\], ]*?\/\s*30\s*\)/;
 // Comments are stripped first. The formula is DESCRIBED in prose in several
 // headers, and a scan that reads prose as code reports a file that does not

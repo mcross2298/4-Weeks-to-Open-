@@ -33,6 +33,8 @@ const KEY = 'mc_workout_log_v1';
 
 const files = execSync('git ls-files "*.js" "*.html"', { cwd: ROOT, encoding: 'utf8' })
   .split('\n').filter(Boolean)
+  // generated copies of their members (tools/bundles.json, flagship readiness J)
+  .filter(f => !require('./bundle-outputs').isBundle(f))
   // tools/ describe the store, they do not read it for the UI. GO_LIVE/ is
   // scratch-listed release-assessment evidence, excluded by every other gate
   // in this tree (check-dangling-refs, check-push-chain, check-store-coverage)

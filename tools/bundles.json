@@ -1,0 +1,15 @@
+{
+  "_comment": "Flagship readiness J (D-40). Each bundle is the exact, ordered run of shared modules it replaces. tools/build-bundles.js writes the bundle and swaps the run for one tag on every page that carries it CONTIGUOUSLY and IN THIS ORDER; a page that interleaves anything inside the run keeps its separate tags. Gates that scan source skip these outputs (they are copies of the members), and check-script-manifest.py expands them back into their members.",
+  "bundles": {
+    "workout-core.js": [
+      "mc-replace.js", "mc-log-read.js", "mc-strain.js", "mc-finish.js",
+      "mc-supabase.js", "mc-sync.js", "mc-biometric.js", "program-overrides.js",
+      "mc-hints.js", "mc-card-actions.js", "program-manager.js", "mc-live-tracker.js"
+    ],
+    "workout-logger.js": [
+      "mc-muscle-map.js", "mc-readiness.js", "mc-setlog.js", "mc-session.js",
+      "mc-classify.js", "mc-suggest.js", "mc-chart.js", "mc-exercise-trends.js",
+      "mc-cues-data.js", "mc-cues.js", "mc-rep-progress.js", "mc-superset-hop.js"
+    ]
+  }
+}

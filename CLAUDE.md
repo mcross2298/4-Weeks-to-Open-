@@ -119,6 +119,7 @@ node GO_LIVE/flagship-audit/scenarios/fa-offline-sw.js          # the REAL servi
 SUPABASE_DB_URL=... pytest tests/test_rls.py   # 7 cross-user attacks + the phase-12 constraints (TEST 5)
                                               # plus the Phase 5.4 world-readable leak scan
 python3 tools/build-sw.py --check      # committed sw.js matches the tree
+node tools/build-bundles.js --check    # workout-core.js / workout-logger.js match their members (J / D-40)
 python3 tools/check-script-manifest.py --check   # clone pages load identical module lists
 node tools/gen-schedules.js --check    # mm/hv schedule records match mm-data.js + hv-block.html
 node tools/test-mc-gen-schedules.js    # deload-week eligibility rule — no block's own peak week gets flagged (audit F-03)
@@ -148,6 +149,7 @@ python3 tools/build-market.py --check  # no licensed content leaks into the Rolo
 ```
 
 `tools/dom-parity.js`, `tools/ks-parity.js`, `tools/extract-shared-modules.py`,
+`tools/measure-first-visit.js` (first-visit cost on emulated Slow 3G, J)
 and `tools/add-pwa-meta.py` are manual / one-off tools — not wired into any
 workflow below, so a green CI run does not exercise them.
 

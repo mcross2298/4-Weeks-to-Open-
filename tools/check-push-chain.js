@@ -106,6 +106,8 @@ if (!sbSrc) {
 // ---------------------------------------------------------------------------
 const files = execSync('git ls-files "*.js" "*.html"', { cwd: ROOT, encoding: 'utf8' })
   .split('\n').filter(Boolean)
+  // generated copies of their members (tools/bundles.json, flagship readiness J)
+  .filter(f => !require('./bundle-outputs').isBundle(f))
   .filter(f => !f.startsWith('tools/') && !f.startsWith('GO_LIVE/') && f !== 'mc-push.js');
 
 let callers = 0;

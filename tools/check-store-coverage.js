@@ -54,6 +54,8 @@ const prefixList = Object.keys(prefixes);
 
 const sourceFiles = execSync('git ls-files "*.js" "*.html"', { cwd: ROOT, encoding: 'utf8' })
   .split('\n').filter(Boolean)
+  // generated copies of their members (tools/bundles.json, flagship readiness J)
+  .filter(f => !require('./bundle-outputs').isBundle(f))
   // tools/ describe stores, they don't own them. GO_LIVE/ is scratch-listed
   // release-assessment evidence that reaches neither build, and its security
   // scenario deliberately FORGES keys the app does not own (mc_is_owner,
