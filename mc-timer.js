@@ -205,12 +205,34 @@ function _mcInlineRestMount(el, durationSecs) {
       '<span class="mcl-rest-val" id="mclRestVal">' + TMR.formatTime(durationSecs) + '</span>' +
       '<span class="mcl-rest-lbl">Rest remaining</span>' +
     '</div>' +
-    '<button type="button" class="mcl-rest-adj" aria-label="Add 15 seconds">+15s</button>';
+    '<button type="button" class="mcl-rest-adj" aria-label="Add 15 seconds">+15s</button>' +
+    // The float's 🎬 and ⚙️ were the only way to video view and to the
+    // sound / vibrate / 10s cue toggles, and the float never shows on a page
+    // with set rows (this row replaces it). So on most workout pages neither
+    // could be reached mid-session (flagship readiness R2 residual).
+    '<div class="mcl-rest-tools">' +
+      '<button type="button" class="mcl-rest-tool" data-rest-tool="video">\uD83C\uDFAC Full screen</button>' +
+      '<button type="button" class="mcl-rest-tool" data-rest-tool="cues" aria-expanded="false">\u2699\uFE0F Rest cues</button>' +
+    '</div>' +
+    '<div class="mcl-rest-cues" hidden></div>';
   const adj = row.querySelectorAll('.mcl-rest-adj');
   adj[0].addEventListener('click', function (e) { e.stopPropagation(); TMR.adjust(-15); });
   adj[1].addEventListener('click', function (e) { e.stopPropagation(); TMR.adjust(15); });
+  const cues = row.querySelector('.mcl-rest-cues');
+  row.querySelector('[data-rest-tool="video"]').addEventListener('click', function (e) {
+    e.stopPropagation(); TMR.setRestView('video');
+  });
+  row.querySelector('[data-rest-tool="cues"]').addEventListener('click', function (e) {
+    e.stopPropagation();
+    const open = cues.hidden;
+    if (open) renderPrefToggles(cues);
+    cues.hidden = !open;
+    this.setAttribute('aria-expanded', String(open));
+    this.classList.toggle('on', open);
+  });
   anchor.insertAdjacentElement('afterend', row);
 }
+let _mcRestEl = null;   // what the running rest was started from, for remounting
 
 function applyRestView() {
   const pref = MC_PREFS.get().restView;
@@ -480,6 +502,7 @@ const TMR = {
     // chip; nothing puts that class back.
     const barSeed = document.getElementById('mcsRestVal');
     if (barSeed) barSeed.textContent = this.formatTime(durationSecs);
+    _mcRestEl = el;
     if (MC_PREFS.get().restView === 'list') _mcInlineRestMount(el, durationSecs);
 
     const floatTime = document.getElementById('timerFloatTime');
@@ -651,6 +674,10 @@ const TMR = {
   },
   setRestView(view) {
     MC_PREFS.set('restView', view === 'video' ? 'video' : 'list');
+    // Back from video view mid-rest: the inline row was unmounted when video
+    // opened, so put it back under the same set, at the time remaining.
+    if (view !== 'video' && this.startTime != null && _mcRestEl && !document.getElementById('mclRest'))
+      _mcInlineRestMount(_mcRestEl, Math.max(0, this.remaining ? this.remaining() : this.duration));
     applyRestView();
     _mcTvUnit();
   },
@@ -889,7 +916,12 @@ function buildTimerVideo() {
 }
 // ── cue preference toggles inside the timer float ──
 function renderTimerPrefs() {
-  const host = document.getElementById('timerFloatPrefs');
+  renderPrefToggles(document.getElementById('timerFloatPrefs'));
+}
+// The cue toggles, rendered into any host: the float's tray, or the inline
+// rest row's "Rest cues" panel. One list, so the two cannot offer different
+// settings.
+function renderPrefToggles(host) {
   if (!host) return;
   if (!document.getElementById('mcTimerPrefsCss')) {
     const st = document.createElement('style');
