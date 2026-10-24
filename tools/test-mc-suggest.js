@@ -19,7 +19,13 @@ function check(desc, actual, expected) {
 }
 
 check('Cable step is 2.5 lb', suggest.computeIncrement('Lat Pulldown', 'Cable'), 2.5);
-check('Machine step is 2.5 lb', suggest.computeIncrement('Leg Press', 'Machine'), 2.5);
+// Flagship readiness R4 / D-22: CLAUDE.md Task 3.3's "Cable/Machine ×0.5 step"
+// — half the jump the same lift takes with free weight. A big machine lift
+// (Leg Press) therefore steps 5, a small one (Lat Pulldown) 2.5.
+check('Machine step is HALF the big-lift jump (Leg Press 10 -> 5)', suggest.computeIncrement('Leg Press', 'Machine'), 5);
+check('Machine step is half a small-lift jump (Leg Curl 5 -> 2.5)', suggest.computeIncrement('Leg Curl', 'Machine'), 2.5);
+check('a bench used as a PROP is not a big lift', suggest.computeIncrement('Reverse Incline Bench Concentration Curls', 'Barbell'), 5);
+check('a real bench without "press" stays a big lift', suggest.computeIncrement('Close-Grip Barbell Bench', 'Barbell'), 10);
 check('Dumbbell step is 5 lb', suggest.computeIncrement('DB Row', 'Dumbbell'), 5);
 check('Barbell step is 5 lb for non-BIG lifts', suggest.computeIncrement('Barbell Curl', 'Barbell'), 5);
 check('BIG barbell pattern steps 10 lb', suggest.computeIncrement('Barbell Squat', 'Barbell'), 10);
@@ -55,6 +61,22 @@ global.localStorage = {
 
 function session(d, sets) { return { d: d, sets: sets }; }
 function loggedSet(w, r, rpe) { return { w: w, r: r, rpe: rpe }; }
+
+// ---- R4 / D-21: per set, top of range, partial sessions hold ---------------
+check('R4 topRep is the TOP of a range (4x10-12 -> 12)', suggest.topRep('4×10-12'), 12);
+check('R4 a tempo is not a range (5x5 @ 4-0-1 -> 5)', suggest.topRep('5×5 @ 4-0-1'), 5);
+check('R4 10,10,10,10 on 4x10-12 repeats (floor is not the target)',
+  suggest.classifySession(session('Jan 1', { 1: loggedSet(100, 10), 2: loggedSet(100, 10), 3: loggedSet(100, 10), 4: loggedSet(100, 10) }), '4×10-12').status, 'repeat');
+check('R4 12 on every set of 4x10-12 progresses',
+  suggest.classifySession(session('Jan 1', { 1: loggedSet(100, 12), 2: loggedSet(100, 12), 3: loggedSet(100, 12), 4: loggedSet(100, 12) }), '4×10-12').status, 'progress');
+check('R4 a pyramid is judged per set (8,8,8,8 on 12,10,8,8 repeats)',
+  suggest.classifySession(session('Jan 1', { 1: loggedSet(135, 8), 2: loggedSet(135, 8), 3: loggedSet(135, 8), 4: loggedSet(135, 8) }), '12,10,8,8').status, 'repeat');
+check('R4 a pyramid done as prescribed progresses',
+  suggest.classifySession(session('Jan 1', { 1: loggedSet(135, 12), 2: loggedSet(135, 10), 3: loggedSet(135, 8), 4: loggedSet(135, 8) }), '12,10,8,8').status, 'progress');
+check('R4 2 of 5 prescribed sets logged holds the weight',
+  suggest.classifySession(session('Jan 1', { 1: loggedSet(60, 5), 2: loggedSet(60, 5) }), '5x5').status, 'repeat');
+check('R4 a drop row after the working sets is never judged',
+  suggest.classifySession(session('Jan 1', { 1: loggedSet(100, 10), 2: loggedSet(100, 10), 3: loggedSet(100, 10), 4: loggedSet(60, 6) }), '3×8-10, drop').status, 'progress');
 
 check('classifySession: hold when 2+ sets are RPE>=9.5/F',
   suggest.classifySession(session('Jan 1', { 0: loggedSet(135, 8, 'F'), 1: loggedSet(135, 8, 'F'), 2: loggedSet(135, 8, 8) }), '3x8').status,

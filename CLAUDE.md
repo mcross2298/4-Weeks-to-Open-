@@ -103,7 +103,7 @@ node tools/test-mc-biomech.js          # substitute-picker movement-pattern cove
 node tools/test-mc-catalog-integrity.js # exercise-catalog.js equipment/master field corrections (audit F-08)
 node tools/test-mc-day-key.js          # dated set-log day key + the legacy-label upgrade (Phase 5.1, FIX-06)
 # these need a static server + Playwright (see verify.yml)
-node tools/test-mc-exercise-identity.js http://localhost:8080   # history keys name the exercise, not its position (Phase 2.1, EN-1/EN-8)
+node tools/test-mc-exercise-identity.js http://localhost:8080   # history keys name the exercise, not its position (Phase 2.1, EN-1/EN-8); whole-name keys, readable History, planned-load prefill (R4)
 node tools/test-mc-pr-scope.js http://localhost:8080            # a PR belongs to the LIFT, not the page it was logged on (go-live assessment)
 node tools/test-mc-setlog-concurrency.js http://localhost:8080  # two-tab set-log durability (FIX-01, L-01)
 node tools/test-mc-store-resilience.js http://localhost:8080    # corrupt-store shapes, 5 pages (FIX-04, L-03)
@@ -2300,6 +2300,26 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > `DAY-LIST` checks enter from the day list rather than a `?day=` link. A
 > journey check that only deep-links cannot see this class of bug.
 >
+> **R4 shipped (2026-10-24), all five steps.** R-08, R-11, R-12 and all 14
+> engine checks pass (`fa-engines.js` 4 → 14 of 14). The R4 checks live in
+> `tools/test-mc-exercise-identity.js` (47 → 61). Four things to know before
+> touching identity or progression again:
+> - **A ghost is not a value.** Since `S2` the suggested fill is written into
+>   the field's real `value`, so "is it empty?" is false on every row. Code that
+>   means "not yet confirmed" must test `dataset.ghost`, as `mc-suggest.js`'s
+>   prefill now does.
+> - **Keys are the whole name.** `slugOf()` no longer cuts at 24 characters.
+>   A long name's old bucket is carried forward only when nothing else could
+>   have written there; the catalog's shared prefixes are pinned as
+>   `SHARED_LEGACY` and re-derived by `tools/test-mc-setlog-plan.js`.
+> - **A finished set carries `name` and `key`.** The name comes from `n` on the
+>   `mc_setlog_v1` set entry, which survives `mergeSetlog()` because set entries
+>   are copied whole. Legacy key-named sets are resolved in `MC_LOG.readSets()`
+>   on read, never rewritten, so any reader that goes through it gets names.
+> - **Load `mc-log-read.js` before any inline script that calls it.**
+>   `workout-detail.html` rendered at parse time with the reader nine lines
+>   below, so its guarded path had never run.
+
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the
 > owner's, not code: `WEEKLY_CHECKIN_SECRET` is still unset (per the 18 Oct

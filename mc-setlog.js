@@ -265,10 +265,16 @@
     return Promise.resolve();
   }
 
-  function save(exId, sn, w, r, rpe) {
+  function save(exId, sn, w, r, rpe, name) {
     var k = ek(exId), d = dayStamp();
     var entry = { w: w, r: r };
     if (rpe) entry.rpe = rpe;          // optional — older readers ignore it
+    // R4 / D-11: the lift's readable name, so a finished workout can bank
+    // "Incline DB Press" instead of this key's segment. Kept on the SET, not
+    // the session: mc-sync.js's mergeSetlog() rebuilds each session as
+    // {d, sets, ts} but copies a set entry whole, so this survives a merge,
+    // the cross-tab replay and the locked write with no change to any of them.
+    if (name) entry.n = name;
     var rec = { k: k, d: d, sn: sn, entry: entry, ts: Date.now() };
     noteRecent(rec);
     try { if (_bc) _bc.postMessage(rec); } catch (e) {}
@@ -1103,7 +1109,7 @@
     // the removed element here would have written '' on every re-check and
     // silently erased an answer the athlete had already given.
     var rpeVal = storedEffort(exId, sn);
-    save(exId, sn, wVal, rVal, rpeVal);
+    save(exId, sn, wVal, rVal, rpeVal, displayNameOf(card));
     // Now committed for real — checking always solidifies a ghosted
     // suggestion (typing is not required), and the pending draft is
     // superseded by the real entry mc_setlog_v1 now holds.
@@ -1617,7 +1623,7 @@
         var next = (cur === btn.dataset.rpe) ? '' : btn.dataset.rpe;
         var lastRow = card.querySelector('#mclr-' + cid + '-' + total);
         var w = lastRow && lastRow.querySelector('.mcl-w');
-        save(exId, total, w ? w.value.trim() : '', lastRow ? clusterRVal(lastRow) : '', next);
+        save(exId, total, w ? w.value.trim() : '', lastRow ? clusterRVal(lastRow) : '', next, displayNameOf(card));
         paintEffort(card, exId);
         updateHist(card, exId);
       });
@@ -1760,9 +1766,21 @@
     var text = authored ? (authored.textContent || '') : (el.textContent || '');
     return text.replace(/[\u2713\u2714]/g, '');
   }
+  // R4 / D-12: the slug used to be cut at 24 characters, so every name that
+  // agrees on its first 24 shared one history key — 12 keys across 34 catalog
+  // exercises ("seated-cable-row-(wide-g…" for three different rows), and on
+  // a page that renders one day at a time the occurrence suffix below never
+  // got the chance to tell them apart. Keys are the whole name now. A name of
+  // 24 characters or fewer keys exactly as before; a longer one has its old
+  // key carried forward by migrateLegacyHistory() when that key was never
+  // shared, and left untouched otherwise.
   function slugOf(el) {
-    return origNameOf(el).trim().replace(/\s+/g, '-').toLowerCase().slice(0, 24) || 'ex';
+    return origNameOf(el).trim().replace(/\s+/g, '-').toLowerCase() || 'ex';
   }
+  // The pre-R4 key rule, kept only so migrateLegacyHistory() can find the
+  // bucket an exercise used to write to. Never written to again.
+  var LEGACY_SLUG_LEN = 24;
+  function legacySlugOf(el) { return slugOf(el).slice(0, LEGACY_SLUG_LEN) || 'ex'; }
   // Per-pass occurrence index. nameId() used to issue a document-wide
   // querySelectorAll — and then slugOf() every result — once PER CARD, purely
   // to learn how many earlier cards share this card's slug. That is O(n²) over
@@ -1818,6 +1836,13 @@
   // data-id is left alone on the card: the engines use it for their own
   // checkState bookkeeping, and it is page-local session state, not history.
   function exIdOf(card) { return nameId(card); }
+  // The name a finished set is banked under: the authored name (it survives
+  // a rename through data-mc-orig-name, exactly as the key does), with its
+  // whitespace collapsed.
+  function displayNameOf(card) {
+    var nm = card && card.querySelector('.ex-name, .ss-name, .lift-name, .var-name');
+    return nm ? origNameOf(nm).replace(/\s+/g, ' ').trim() : '';
+  }
 
   // A positional key holds a MIXTURE of exercises, so moving it forward would
   // attribute one lift's sets to another — worse than leaving it. Only a
@@ -1829,6 +1854,47 @@
     if (!raw) return '';
     return /^(?:grp|x)-[a-z]/.test(raw) ? raw : '';
   }
+  // R4 / D-12: the truncated key a long name used to write under, with the
+  // occurrence suffix it would have carried in this document. Returns '' when
+  // that key cannot be trusted to belong to this exercise alone: another name
+  // on the page truncates to the same 24 characters, or the catalog knows
+  // another one that does (a page rendering one day at a time never saw the
+  // other day's name, so the document alone cannot prove the bucket unmixed).
+  // That is Phase 2.1's rule — a bucket that may hold two lifts is left where
+  // it is, not attributed to either.
+  function legacyTruncatedId(card, docBases) {
+    var nm = card.querySelector('.ex-name, .ss-name, .lift-name');
+    if (!nm) return '';
+    var full = slugOf(nm);
+    if (full.length <= LEGACY_SLUG_LEN) return '';   // key never changed
+    var base = legacySlugOf(nm);
+    var names = docBases[base];
+    if (names && names.length > 1) return '';
+    if (catalogShares(base, full)) return '';
+    var cur = exIdOf(card);
+    var occ = cur.slice(('x-' + full).length);       // "" or "-N", same as before
+    return 'x-' + base + occ;
+  }
+  // The 24-character prefixes two or more catalog names share, pinned here
+  // because the catalog reaches most logging pages late or not at all (it is
+  // injected on demand) and this migration runs once, at the first render.
+  // tools/test-mc-setlog-plan.js re-derives the list from exercise-catalog.js
+  // and fails when it drifts. The live catalog, when present, is checked too.
+  var SHARED_LEGACY = ['battle-ropes-\u2014-advanced-', 'incline-db-(slight-incli',
+    'incline-db-curl-(incline', 'overhead-tricep-extensio', 'seated-cable-row-(cable,',
+    'side-lateral-raise-(cabl', 'single-arm-hammer-streng', 'single-arm-tricep-kickba',
+    'slight-incline-dumbbell-', 'smith-machine-calf-raise', 'smith-machine-flat-bench',
+    'tricep-cable-press-down-'];
+  function catalogShares(base, full) {
+    if (SHARED_LEGACY.indexOf(base) !== -1) return true;
+    var cat = Array.isArray(window.EXERCISES) ? window.EXERCISES : null;
+    if (!cat) return false;
+    for (var i = 0; i < cat.length; i++) {
+      var f = String(cat[i] && cat[i].name || '').trim().replace(/\s+/g, '-').toLowerCase();
+      if (f !== full && f.slice(0, LEGACY_SLUG_LEN) === base) return true;
+    }
+    return false;
+  }
   var _migrated = false;
   function migrateLegacyHistory(cards) {
     if (_migrated) return;
@@ -1838,12 +1904,21 @@
     // pages with the most history to carry forward.
     if (!cards || !cards.length) return;
     _migrated = true;
+    var docBases = Object.create(null);
+    document.querySelectorAll('.ex-name, .ss-name, .lift-name').forEach(function (el) {
+      var b = legacySlugOf(el), f = slugOf(el), l = docBases[b] || (docBases[b] = []);
+      if (l.indexOf(f) === -1) l.push(f);
+    });
     var pairs = [];
     for (var i = 0; i < cards.length; i++) {
-      var legacy = legacyNameDerivedId(cards[i]);
-      if (!legacy) continue;
-      var to = ek(exIdOf(cards[i])), from = ek(legacy);
-      if (from !== to) pairs.push([from, to]);
+      var to = ek(exIdOf(cards[i]));
+      // Phase 2.1's name-derived data-id first, then R4's truncated key; the
+      // first one holding history wins, and an existing new key always does.
+      [legacyNameDerivedId(cards[i]), legacyTruncatedId(cards[i], docBases)].forEach(function (legacy) {
+        if (!legacy) return;
+        var from = ek(legacy);
+        if (from !== to) pairs.push([from, to]);
+      });
     }
     if (!pairs.length) return;
     try {
@@ -2274,7 +2349,8 @@
           sess.sets[sn] = {
             w: row.weight_lbs != null ? String(row.weight_lbs) : '',
             r: row.reps != null ? String(row.reps) : '',
-            rpe: row.rpe || undefined
+            rpe: row.rpe || undefined,
+            n: String(row.exercise || '').trim() || undefined
           };
           added.push({ exId: exId, sn: sn, w: sess.sets[sn].w, r: sess.sets[sn].r });
         });

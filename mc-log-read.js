@@ -51,7 +51,71 @@
   function readSets(entry) {
     var s = entry && entry.sets;
     if (!Array.isArray(s)) return [];
-    return s.filter(function (x) { return x && typeof x === 'object'; });
+    return s.filter(function (x) { return x && typeof x === 'object'; })
+      .map(function (x) {
+        if (!isKeyName(x.name)) return x;
+        // A legacy entry: hand back a copy, never the stored object, so no
+        // reader can write the resolved name into the log by accident.
+        var c = {}, f;
+        for (f in x) c[f] = x[f];
+        c.key = x.key || x.name;
+        c.name = setName(x);
+        return c;
+      });
+  }
+
+  // ---- a finished set's readable name (flagship readiness R4 / D-11) -----
+  // mc-finish.js banked each set under the history key's segment
+  // ("x-incline-db-press") and every screen showed it as the name: History,
+  // the detail page, the recap. Muscle attribution classified the key rather
+  // than the lift, and drifted on 187 of 580 catalog exercises (D-13). New
+  // entries carry the real name, plus the key as `key`. Old ones are resolved
+  // here, on read, so every reader that goes through readSets() gets the
+  // name with no change of its own — the way FIX-06 dated the day key in the
+  // read path rather than in eight comparison sites.
+  //
+  // Resolution, best first: the exact catalog name whose history key is this
+  // one, when the catalog is on the page and exactly one name maps to it;
+  // otherwise the key spelled back out, with the abbreviations this app's
+  // names use restored to capitals. A key two catalog names share is never
+  // guessed at — it is spelled out, which is legible and claims nothing.
+  function isKeyName(n) { return typeof n === 'string' && /^x-[a-z0-9]/.test(n); }
+  var _catIdx = null, _catLen = -1;
+  function catalogIndex() {
+    var cat = (typeof window !== 'undefined' && Array.isArray(window.EXERCISES)) ? window.EXERCISES : null;
+    if (!cat) return null;
+    if (_catIdx && _catLen === cat.length) return _catIdx;
+    var idx = Object.create(null);
+    cat.forEach(function (e) {
+      if (!e || typeof e.name !== 'string') return;
+      var full = e.name.trim().replace(/\s+/g, '-').toLowerCase();
+      // both key generations: the 24-character legacy slug and the full one
+      [full, full.slice(0, 24)].forEach(function (k) {
+        if (!(k in idx)) idx[k] = e.name;
+        else if (idx[k] !== e.name) idx[k] = null;   // shared — do not guess
+      });
+    });
+    _catIdx = idx; _catLen = cat.length;
+    return idx;
+  }
+  var ABBR = { db: 'DB', bb: 'BB', ez: 'EZ', kb: 'KB', bw: 'BW', rdl: 'RDL', ohp: 'OHP',
+               sl: 'SL', ssb: 'SSB', trx: 'TRX', amrap: 'AMRAP' };
+  function spellKey(base) {
+    return base.split('-').filter(Boolean).map(function (w) {
+      return ABBR[w] || (w.charAt(0).toUpperCase() + w.slice(1));
+    }).join(' ');
+  }
+  function setName(s) {
+    var n = s && s.name;
+    if (!isKeyName(n)) return typeof n === 'string' ? n : '';
+    var base = n.slice(2);
+    var idx = catalogIndex();
+    if (idx) {
+      if (idx[base]) return idx[base];
+      var bare = base.replace(/-\d+$/, '');          // duplicate-occurrence suffix
+      if (bare !== base && idx[bare]) return idx[bare];
+    }
+    return spellKey(base.replace(/-\d+$/, '')) || n;
   }
 
   // ---- reps on a CLUSTER set (audit P2-08) --------------------------------
@@ -149,6 +213,11 @@
     var w = Number(weight), r = Number(reps);
     if (!isFinite(w) || w <= 0) return 0;
     if (!isFinite(r) || r < 1) r = 1;
+    // Flagship readiness R4 / D-23: a true single IS the max — Epley at r = 1
+    // reported 315 × 1 as 326, a lift the athlete never made. Returned as the
+    // weight lifted, with no equipment discount either: the discount converts
+    // an ESTIMATE, and a single is a measurement.
+    if (r <= 1) return Math.round(w);
     var raw = Math.round(w * (1 + Math.min(r, EPLEY_REP_CAP) / 30));
     if (!isFinite(raw) || raw <= 0) return 0;
     var C = _cls();
@@ -443,6 +512,7 @@
     window.MC_LOG = window.MC_LOG || {};
     window.MC_LOG.readWorkoutLog = readWorkoutLog;
     window.MC_LOG.readSets = readSets;
+    window.MC_LOG.setName = setName;
     window.MC_LOG.repsTotal = repsTotal;
     window.MC_LOG.repsTop = repsTop;
     window.MC_LOG.repsLogged = repsLogged;
@@ -467,7 +537,7 @@
   // implementation rather than a copy of it.
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
-      readWorkoutLog: readWorkoutLog, readSets: readSets,
+      readWorkoutLog: readWorkoutLog, readSets: readSets, setName: setName,
       repsTotal: repsTotal, repsTop: repsTop, repsLogged: repsLogged,
       e1rm: e1rm, applyEquipCoeff: applyEquipCoeff, EPLEY_REP_CAP: EPLEY_REP_CAP,
       dayKey: dayKey, dayLabel: dayLabel,

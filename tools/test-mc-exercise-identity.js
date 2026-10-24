@@ -55,8 +55,10 @@ function ok(name, cond, extra) {
   console.error('::error::' + name + (extra ? '  — ' + extra : ''));
 }
 
-// Two spellings of one lift truncating to the same 24-char slug SHOULD share a
-// history bucket — that is the scheme working, not a collision.
+// Two spellings of one lift that slug to the same key SHOULD share a history
+// bucket — that is the scheme working, not a collision. (Before flagship
+// readiness R4 the slug was cut at 24 characters, so this exemption also
+// covered long spellings; keys are the whole name now — see the R4 block.)
 function sameLift(names) {
   const n = names.map(function (s) { return s.replace(/\([^)]*\)/g, '').replace(/[^a-z0-9]+/gi, '').toLowerCase(); });
   return n.every(function (x) { return x.indexOf(n[0]) === 0 || n[0].indexOf(x) === 0; });
@@ -214,6 +216,110 @@ function sameLift(names) {
   ok('and its typed weight is restored', !!(rt && rt.weight === '135'), rt ? '"' + rt.weight + '"' : '');
   ok('the store key it landed in is name-derived', !!(rt && rt.keys.every(k => /\|x-[a-z0-9]/.test(k))),
      rt ? rt.keys.join(', ') : '');
+
+  /* ---- flagship readiness R4: a key is the whole name, history shows it -- */
+  async function fresh(init) {
+    const c = await b.newContext({ viewport: { width: 390, height: 844 } });
+    if (init) await c.addInitScript(init.fn, init.arg);
+    const pg = await c.newPage();
+    pg.on('pageerror', e => { if (!NET.test(e.message)) errs.push(e.message); });
+    return { c, pg };
+  }
+
+  // R-12 / D-12: over the whole catalog, no two exercise names share a key.
+  // The 24-character slug made 12 keys shared by 34 names.
+  {
+    const { c, pg } = await fresh();
+    await pg.goto(baseUrl + '/mm-p1.html?day=1'); await pg.waitForTimeout(1200);
+    await pg.waitForFunction(() => window.EXERCISES && window.EXERCISES.length > 500 && window.MCSetlogUtil, null, { timeout: 15000 }).catch(() => {});
+    const o = await pg.evaluate(() => {
+      if (!window.EXERCISES || !window.MCSetlogUtil) return null;
+      const g = {};
+      window.EXERCISES.forEach(e => { const d = document.createElement('div'); d.className = 'ex-card';
+        d.innerHTML = '<div class="ex-name"></div>'; d.firstChild.textContent = e.name;
+        const k = MCSetlogUtil.exIdOf(d); (g[k] = g[k] || new Set()).add(e.name); });
+      const shared = Object.values(g).filter(x => x.size > 1);
+      return { shared: shared.length, sample: shared.slice(0, 2).map(x => [...x].join(' | ')), total: window.EXERCISES.length };
+    });
+    ok('R4 R-12 no catalog exercise shares a history key with another', !!(o && o.shared === 0),
+       o ? o.shared + ' shared (of ' + o.total + '): ' + o.sample.join(' ; ') : 'catalog never reached the page');
+    await c.close();
+  }
+
+  // D-12 migration: a long name's pre-R4 bucket is carried to its whole-name
+  // key when nothing else could have written there, and LEFT where it is when
+  // a catalog name shares the prefix — a bucket that may hold two lifts is
+  // attributed to neither (Phase 2.1's rule). The legacy bucket survives both.
+  const LEG = 'mm-p1|x-db-hex-press-(flat,-dbs-', NEW = 'mm-p1|x-db-hex-press-(flat,-dbs-touching)';
+  for (const shared of [false, true]) {
+    const { c, pg } = await fresh({ fn: ([LEG, shared]) => {
+      if (!localStorage.getItem('_r4')) { localStorage.setItem('_r4', '1');
+        localStorage.setItem('mc_setlog_v1', JSON.stringify({ [LEG]: [{ d: '2026-10-16', ts: Date.parse('2026-10-16T10:00:00Z'), sets: { 1: { w: '60', r: '10' } } }] })); }
+      if (shared) window.EXERCISES = [{ name: 'DB Hex Press (flat, dbs touching)' }, { name: 'DB Hex Press (flat, dbs apart)' }];
+    }, arg: [LEG, shared] });
+    await pg.goto(baseUrl + '/mm-p1.html?day=1'); await pg.waitForTimeout(2200);
+    const o = await pg.evaluate(([LEG, NEW]) => { const st = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}');
+      return { legacy: !!st[LEG], moved: !!st[NEW], card: [...document.querySelectorAll('.ex-card, .ss-ex, .ex-item')].some(cd => MCSetlogUtil.exIdOf(cd) === NEW.split('|')[1]) }; }, [LEG, NEW]);
+    if (!o.card) { ok('R4 migration harness: mm-p1 day 1 still renders "DB Hex Press (flat, dbs touching)"', false); await c.close(); continue; }
+    ok(shared ? 'R4 a legacy bucket whose prefix another catalog name shares is NOT carried forward'
+              : 'R4 a long name\'s legacy history is carried to its whole-name key',
+       shared ? !o.moved : o.moved, JSON.stringify(o));
+    ok('R4 the legacy bucket itself is left in place' + (shared ? ' (shared)' : ''), o.legacy, JSON.stringify(o));
+    await c.close();
+  }
+
+  // R-11 / D-11: a finished workout banks the lift's name, keeps the key
+  // beside it, and a PR is still judged against the lift's history on another
+  // page (compared by key).
+  {
+    const { c, pg } = await fresh({ fn: () => { if (!localStorage.getItem('_r4')) { localStorage.setItem('_r4', '1');
+      localStorage.setItem('mc_setlog_v1', JSON.stringify({ 'kitchen-sink|x-incline-db-press': [{ d: '2026-10-16', ts: Date.parse('2026-10-16T10:00:00Z'), sets: { 1: { w: '50', r: '8' } } }] })); } } });
+    await pg.goto(baseUrl + '/mm-p1.html?day=1'); await pg.waitForTimeout(1800);
+    const row = pg.locator('.ex-card').first().locator('.mcl-row').first();
+    await row.locator('.mcl-w').fill('70'); await row.locator('.mcl-r').first().fill('8');
+    await row.locator('.mcl-ck').click(); await pg.waitForTimeout(600);
+    await pg.evaluate(() => window._FW && _FW.confirm()); await pg.waitForTimeout(1800);
+    const s0 = await pg.evaluate(() => ((JSON.parse(localStorage.getItem('mc_workout_log_v1') || '[]')[0] || {}).sets || [])[0] || null);
+    ok('R4 R-11 a finished set is banked under the lift\'s name', !!(s0 && s0.name === 'Incline DB Press'), JSON.stringify(s0));
+    ok('R4 and keeps its history key beside the name', !!(s0 && s0.key === 'x-incline-db-press'), JSON.stringify(s0));
+    ok('R4 a PR is still found against the same lift on another page', !!(s0 && s0.pr === true), JSON.stringify(s0));
+    await c.close();
+  }
+
+  // Legacy entries (banked under the key) read as names on both history
+  // screens, and the stored entry is not rewritten by reading it.
+  {
+    const d = new Date(Date.now() - 864e5).toISOString();
+    const { c, pg } = await fresh({ fn: (d) => { if (!localStorage.getItem('_r4')) { localStorage.setItem('_r4', '1');
+      localStorage.setItem('mc_workout_log_v1', JSON.stringify([{ id: 'mm-p1|' + d, pageId: 'mm-p1', workoutName: 'Legacy', date: d, prs: 0, setsChecked: 2,
+        sets: [{ name: 'x-incline-db-press', setNum: 1, weight: '60', reps: '8' }, { name: 'x-db-rdl', setNum: 1, weight: '50', reps: '10' }] }])); } }, arg: d });
+    await pg.goto(baseUrl + '/workout-logs.html'); await pg.waitForTimeout(1300);
+    const list = await pg.evaluate(() => [...document.querySelectorAll('.set-ex')].map(x => x.textContent));
+    await pg.goto(baseUrl + '/workout-detail.html?id=' + encodeURIComponent('mm-p1|' + d)); await pg.waitForTimeout(1300);
+    const detail = await pg.evaluate(() => [...document.querySelectorAll('.ex-card-name')].map(x => x.textContent));
+    const stored = await pg.evaluate(() => JSON.parse(localStorage.getItem('mc_workout_log_v1'))[0].sets[0].name);
+    ok('R4 History shows a legacy entry by name', list.join('|') === 'Incline DB Press|DB RDL', JSON.stringify(list));
+    ok('R4 the workout detail page shows it by name too', detail.join('|') === 'Incline DB Press|DB RDL', JSON.stringify(detail));
+    ok('R4 reading a legacy entry does not rewrite it', stored === 'x-incline-db-press', stored);
+    await c.close();
+  }
+
+  // R-08 / D-08: the suggested load is what one tap logs. Since S2 the fill is
+  // a ghost value, and the suggestion skipped every non-empty field.
+  {
+    const { c, pg } = await fresh({ fn: () => { if (!localStorage.getItem('_r4')) { localStorage.setItem('_r4', '1');
+      localStorage.setItem('mc_setlog_v1', JSON.stringify({ 'iron-engine|x-bb-flat-bench-press': [{ d: '2026-10-16', ts: Date.parse('2026-10-16T10:00:00Z'),
+        sets: { 1: { w: '135', r: '12' }, 2: { w: '155', r: '12' }, 3: { w: '175', r: '10' }, 4: { w: '185', r: '8' } } }] })); } } });
+    await pg.goto(baseUrl + '/iron-engine.html?day=1&week=1'); await pg.waitForTimeout(2500);
+    const o = await pg.evaluate(() => { const cd = document.querySelector('.ex-card');
+      const sug = ((cd.querySelector('.mcl-suggest') || {}).textContent || '').match(/(\d+(?:\.\d+)?)/);
+      const ws = [...cd.querySelectorAll('.mcl-row:not(.mcl-row-amrap) .mcl-w')];
+      return { sug: sug ? sug[1] : null, vals: ws.map(x => x.value), ghost: ws.map(x => !!x.dataset.ghost) }; });
+    ok('R4 R-08 the top set prefills the suggested load', !!(o.sug && o.vals[o.vals.length - 1] === o.sug), JSON.stringify(o));
+    ok('R4 lighter pyramid sets keep last session\'s weight', o.vals.slice(0, 3).join(',') === '135,155,175', JSON.stringify(o.vals));
+    ok('R4 the planned load stays a ghost until it is confirmed', o.ghost.every(Boolean), JSON.stringify(o.ghost));
+    await c.close();
+  }
 
   ok('no app-level console errors across the sweep', errs.length === 0, errs.slice(0, 3).join(' ~ '));
   await b.close();

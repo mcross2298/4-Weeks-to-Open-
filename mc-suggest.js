@@ -8,9 +8,11 @@
    auto-typed over anything the lifter entered themselves.
 
    Rules (read from mc_setlog_v1 via the same PID namespacing as mc-setlog.js):
-     • last session hit the prescribed top reps at weight W on every logged
-       working set, and no set was rated RPE ≥ 9.5 / F
-         → suggest W + 5 lb  (+10 for squat/press/deadlift/leg-press patterns)
+     • last session logged every prescribed working set and each one hit its
+       own target (top of any range), and no set was rated RPE ≥ 9.5 / F
+         → suggest W + 5 lb  (+10 for squat/press/deadlift/leg-press patterns,
+           halved on cable / machine / plate-loaded, capped 5 per hand on DBs)
+     • fewer working sets logged than prescribed → repeat W
      • two or more sets rated RPE ≥ 9.5 or to-failure → hold W
      • reps fell short of prescription → repeat W
      • no logged history / bodyweight-style entries → no hint
@@ -62,14 +64,23 @@
 
   // big compound movements progress in 10 lb jumps; everything else 5 lb
   var BIG = /squat|deadlift|leg press|bench|overhead press|ohp|barbell press|military/i;
+  // Flagship readiness R4 / D-22: "bench" also matches a bench used as a PROP
+  // for another movement — "Reverse Incline Bench Concentration Curls" stepped
+  // 10 lb like a bench press. A name whose movement is an isolation word is
+  // not a big lift, whatever it is performed on. "Bench press only" would be
+  // too strict the other way: real benches are named without "press"
+  // ("Close-Grip Barbell Bench"). Owner decision, round 2 of the audit.
+  var PROP_MOVEMENT = /\b(fly|flye|flyes|flies|curls?|pushdowns?|push-downs?|extensions?|kickbacks?|raises?|supermans?|crunch(es)?|rows?)\b/i;
+  function isBigLift(name) {
+    var n = name || '';
+    return BIG.test(n) && !PROP_MOVEMENT.test(n);
+  }
 
-  // Equipment-aware progression step: Cable/Machine get a smaller 2.5 lb jump
-  // (mirrors mc-maxout.js's e1RM discount for the same equipment types).
-  // Smith intentionally behaves like Barbell — full 10/5 lb jumps, no discount
-  // — it's a distinct catalog equipment value but not leverage-assisted the
-  // way Cable/Machine are.
+  // Equipment-aware progression step. Smith intentionally behaves like Barbell
+  // — full 10/5 lb jumps, no discount — it's a distinct catalog equipment
+  // value but not leverage-assisted the way Cable/Machine are.
   function computeIncrement(name, equip) {
-    var inc = BIG.test(name || '') ? 10 : 5;
+    var inc = isBigLift(name) ? 10 : 5;
     // A DUMBBELL increment is PER HAND, so the 10 lb compound jump is really a
     // 20 lb jump — and the BIG pattern matches plenty of dumbbell lifts
     // ("DB Bench Press", "DB Overhead Press", "Goblet Squat" via 'squat').
@@ -80,8 +91,14 @@
     // actually has. Plate-Loaded was missing here (audit EN-11) — 26 catalog
     // entries, and it holds the heavy anchor, cluster and drop positions of a
     // whole flagship phase.
+    //
+    // R4 / D-22: CLAUDE.md Task 3.3's rule is "Cable/Machine ×0.5 step" — HALF
+    // the jump the same lift would take with free weight. This was a flat
+    // 2.5 lb, so the big leverage-assisted lifts (Leg Press, Hack Squat, a
+    // plate-loaded press — 18 catalog lifts) stepped a quarter of their
+    // barbell jump instead of half of it.
     var C = _cls();
-    if (C && C.isLeverageAssisted(equip)) inc = 2.5;
+    if (C && C.isLeverageAssisted(equip)) inc = inc * 0.5;
     return inc;
   }
 
@@ -96,40 +113,59 @@
     if (typeof window !== 'undefined' && window.MC_CLASSIFY) return window.MC_CLASSIFY;
     try { return require('./mc-classify.js'); } catch (e) { return null; }
   }
+  // The prescription parser, resolved the same lazy way: mc-setlog.js in a
+  // page, its Node export hook in the unit tests, so both read the REAL parser.
+  function _setlog() {
+    if (typeof window !== 'undefined' && window.MCSetlogUtil && window.MCSetlogUtil.repFor) return window.MCSetlogUtil;
+    try { return require('./mc-setlog.js'); } catch (e) { return null; }
+  }
   function equipOf(name) { var C = _cls(); return C ? C.equipCat(name) : 'Barbell'; }
 
-  // The prescribed top rep target for the scheme ("4x12" -> 12, "12,10,8,8" ->
-  // 8, the last one). 0 means THERE IS NO TARGET, and every caller below
-  // already treats that as "nothing to judge" rather than "target zero".
+  // The prescription's per-set rep TARGETS, top of any range — the shape the
+  // owner chose in round 2 of the flagship audit (R4 / D-21): "4×10-12" is
+  // judged against 12 on every set, not 10, and a pyramid "12,10,8,8" against
+  // 12, 10, 8 and 8 in turn, not its last number on every set. Drop and AMRAP
+  // rows are stripped first, so they are never judged as working sets.
   //
-  // Two families used to come back with a confident number that the program
-  // never prescribed, and both then drove the "did every set hit the target"
-  // comparison (audit P2-09, P2-12):
+  // An empty list means THERE IS NO TARGET, and every caller treats that as
+  // "nothing to judge" rather than "target zero". Two families used to come
+  // back with a confident number the program never prescribed (audit P2-09,
+  // P2-12): open-ended work ("4×AMRAP", "3×failure" — mc-setlog.js's
+  // loneRep() returns '' for those), and a prescription with no set count at
+  // all ("100-200 reps", "AMRAP in 2 min", "21s"), which is a finisher and not
+  // a progression input, so it is refused outright.
   //
-  //   open-ended work   "4×AMRAP", "3×failure" — the SET COUNT was read as the
-  //                     rep target. Fixed in mc-setlog.js's loneRep(), so this
-  //                     function now gets '' and correctly answers 0.
-  //   unstated count    "100-200 reps", "AMRAP in 2 min", "21s" — no set count
-  //                     anywhere, so the row list is mc-setlog.js's 3-row
-  //                     DEFAULT and the target is whichever number happened to
-  //                     be in the text. A finisher written as a rep range is
-  //                     not a progression input, so it is refused outright.
-  //
-  // Note what is deliberately NOT refused: "4×10-12" states its sets and its
-  // floor, so 10 is a real target to beat. Only a range with no set count at
-  // all — the finisher shape — is rejected.
-  function topRep(setsStr) {
-    if (!setsStr) return 0;
-    var u = window.MCSetlogUtil;
-    if (u && u.repFor) {
-      var work = u.stripDrop ? u.stripDrop(setsStr) : setsStr;
-      if (u.statesSetCount && !u.statesSetCount(work)) return 0;
-      var n = u.setCount ? u.setCount(work) : 3;
-      var last = parseInt(u.repFor(work, n - 1), 10);
-      return isNaN(last) ? 0 : last;
+  // Ranges are rewritten to their top before the shared parser reads them,
+  // so this cannot disagree with mc-setlog.js about how many sets there are.
+  // A tempo ("@ 4-0-1") has three numbers and is left alone.
+  var RANGE_RE = /(^|[^\d\-\u2013])(\d+)\s*[-\u2013]\s*(\d+)(?![\d]|\s*[-\u2013]\s*\d)/g;
+  function repTargets(setsStr) {
+    if (!setsStr) return [];
+    var u = _setlog();
+    if (!u || !u.repFor) {
+      var m = String(setsStr).match(/^\s*(\d+)\s*[x\u00d7]\s*(\d+)(?:\s*[-\u2013]\s*(\d+))?/i);
+      if (!m) return [];
+      var t = parseInt(m[3] || m[2], 10), out = [];
+      for (var k = 0; k < parseInt(m[1], 10); k++) out.push(t);
+      return out;
     }
-    var m = setsStr.match(/[x×]\s*(\d+)/i);
-    return m ? parseInt(m[1], 10) : 0;
+    var work = u.stripDrop ? u.stripDrop(setsStr) : setsStr;
+    if (u.statesSetCount && !u.statesSetCount(work)) return [];
+    var n = u.setCount ? u.setCount(work) : 3;
+    var top = String(work).replace(RANGE_RE, function (all, pre, a, b) {
+      return pre + Math.max(parseInt(a, 10), parseInt(b, 10));
+    });
+    var targets = [];
+    for (var i = 0; i < n; i++) {
+      var r = parseInt(u.repFor(top, i), 10);
+      targets.push(isNaN(r) ? 0 : r);
+    }
+    return targets;
+  }
+  // The last working set's target (kept for callers that want one number).
+  function topRep(setsStr) {
+    var t = repTargets(setsStr);
+    return t.length ? t[t.length - 1] : 0;
   }
 
   // Reps actually performed on one logged set. A CLUSTER set stores one value
@@ -213,15 +249,26 @@
     }).length;
     if (hardSets >= 1) return { status: 'hold', w: W };
 
-    var target = topRep(setsStr);
-    if (target > 0) {
-      var allHit = sets.every(function (s) {
-        var r = repsOf(s.r);
-        return !s.w || isNaN(r) || r >= target;   // unlogged reps don't block
-      });
-      var anyLogged = sets.some(function (s) { return !isNaN(repsOf(s.r)); });
-      if (anyLogged && !allHit) return { status: 'repeat', w: W };
-      if (anyLogged && allHit) return { status: 'progress', w: W };
+    // R4 / D-21: per set, against each set's own target, top of range. The
+    // working sets are the first N logged rows in set order (drop and AMRAP
+    // rows sit after them), so a drop's lower reps never count as a miss.
+    var targets = repTargets(setsStr).filter(function (t) { return t > 0; });
+    if (targets.length) {
+      var ordered = Object.keys(sess.sets)
+        .sort(function (a, b) { return parseFloat(a) - parseFloat(b); })
+        .map(function (k) { return sess.sets[k]; });
+      var working = ordered.slice(0, targets.length);
+      var anyLogged = working.some(function (s) { return !isNaN(repsOf(s.r)); });
+      if (anyLogged) {
+        // A session with fewer working sets logged than prescribed HOLDS the
+        // weight: two good sets of a 5×5 are not a 5×5 (owner decision).
+        if (working.length < targets.length) return { status: 'repeat', w: W };
+        var allHit = working.every(function (s, i) {
+          var r = repsOf(s.r);
+          return !s.w || isNaN(r) || r >= targets[i];   // unlogged reps don't block
+        });
+        return { status: allHit ? 'progress' : 'repeat', w: W };
+      }
     }
     return { status: 'match', w: W };
   }
@@ -350,13 +397,25 @@
       // at last session's top weight (the ones it was computed from); lighter
       // pyramid sets keep the last-logged prefill mc-setlog.js already set.
       // Typed values are never overwritten.
-      var wInputs = card.querySelectorAll('.mcl-w');
+      //
+      // R4 / D-08: since S2 the suggested fill is a GHOST — last session's
+      // weight written into the field's real value, marked data-ghost — so
+      // "is the field empty?" was false on every row and this loop never
+      // reached one: the hint said 190 and one tap logged 185. A ghost is a
+      // suggestion the athlete has not confirmed (mc-setlog.js never persists
+      // one), so the planned load replaces it and it stays ghosted. A pending
+      // or typed value carries no data-ghost and is still left alone. Drop
+      // rows are skipped: a drop is lighter by definition, and handing it the
+      // progressed top load would be the wrong number one tap away.
+      var wInputs = card.querySelectorAll('.mcl-row:not(.mcl-row-amrap) .mcl-w');
       Array.prototype.forEach.call(wInputs, function (inp) {
-        if (inp.value.trim()) return;
+        var ghost = !!inp.dataset.ghost;
+        if (inp.value.trim() && !ghost) return;
         var cur = parseFloat(inp.dataset.fill);
         if (!inp.dataset.fill || ((target.status === 'progress' || target.status === 'deload') && cur === target.base)) {
           inp.placeholder = target.w + ' lb' + perHand;
           inp.dataset.fill = String(target.w);
+          if (ghost) inp.value = String(target.w);
         }
       });
     });
@@ -403,7 +462,7 @@
   // (see tools/test-mc-suggest.js) instead of a duplicated inline copy.
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
-      computeIncrement: computeIncrement, topRep: topRep, equipCat: equipOf,
+      computeIncrement: computeIncrement, topRep: topRep, repTargets: repTargets, isBigLift: isBigLift, equipCat: equipOf,
       repsOf: repsOf,
       classifySession: classifySession, detectPlateau: detectPlateau, suggestFor: suggestFor,
       writeTarget: writeTarget, deloadWeight: deloadWeight,

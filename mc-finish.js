@@ -141,6 +141,11 @@
     return best;
   }
 
+  function setDisplayName(s,exKey){
+    if(s&&typeof s.n==='string'&&s.n.trim())return s.n.trim();
+    var L=window.MC_LOG;
+    return (L&&L.setName)?L.setName({name:exKey}):deSlug(exKey);
+  }
   // Get all logged set data for this session
   function getSessionSets(){
     try{
@@ -149,12 +154,18 @@
       var sets=[];
       Object.keys(store).forEach(function(k){
         if(!k.startsWith(pageId+'|'))return;
-        var exName=k.split('|')[1]||k;
+        var exKey=k.split('|')[1]||k;
         var sess=datedSessions(store[k])[0];
         if(sess&&sess.d===today){
           Object.keys(sess.sets).forEach(function(sn){
             var s=sess.sets[sn];
-            var e={name:exName,setNum:parseInt(sn),weight:s.w,reps:s.r,pr:false};
+            // R4 / D-11: bank the lift's NAME, not the history key's segment
+            // ("x-incline-db-press"), which every history screen showed as the
+            // name and muscle attribution classified. mc-setlog.js stores the
+            // name on each set (`n`); a set logged before that resolves through
+            // the same reader History uses for old entries. The key is kept,
+            // separately, because PR detection below compares by key.
+            var e={name:setDisplayName(s,exKey),key:exKey,setNum:parseInt(sn),weight:s.w,reps:s.r,pr:false};
             if(s.rpe)e.rpe=s.rpe;
             sets.push(e);
           });
@@ -186,7 +197,7 @@
       //     does not block it.
       var priorMax=prevBestByExercise(store,today);
       sets.forEach(function(s){
-        var prevMax=priorMax[s.name];
+        var prevMax=priorMax[s.key];
         if(!(prevMax>0))return;               // no prior session anywhere for this lift
         if(parseFloat(s.weight)>prevMax)s.pr=true;
       });
@@ -238,7 +249,7 @@
     var best={};
     (sets||[]).forEach(function(s){
       if(!s.pr)return;
-      var w=parseFloat(s.weight)||0, nm=deSlug(s.name);
+      var w=parseFloat(s.weight)||0, nm=s.name;
       if(!(nm in best)||w>best[nm])best[nm]=w;
     });
     return Object.keys(best).map(function(nm){return {name:nm,weight:best[nm]};});
