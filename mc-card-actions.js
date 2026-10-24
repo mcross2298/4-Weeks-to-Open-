@@ -113,10 +113,41 @@
     }, 5000);
   }
 
-  function getOrder(cKey) { var o = readJSON(ORDER_KEY); return (o[PAGE_ID] && o[PAGE_ID][cKey]) || null; }
-  function setOrder(cKey, arr) {
-    var o = readJSON(ORDER_KEY); if (!o[PAGE_ID]) o[PAGE_ID] = {};
-    o[PAGE_ID][cKey] = arr; writeJSON(ORDER_KEY, o);
+  // Flagship readiness R5 step 4: a reorder is for TODAY unless "Keep this
+  // order" is on, the same rule as a swap. Moving an exercise because its
+  // station is busy used to rewrite that workout's order for good.
+  // ORDER_TODAY_KEY: { d: 'YYYY-MM-DD' (local), pages: { pageId: { containerKey: [names] } } }
+  var ORDER_TODAY_KEY = 'mc_ex_order_today_v1';
+  function localDay() {
+    var t = new Date();
+    return t.getFullYear() + '-' + ('0' + (t.getMonth() + 1)).slice(-2) + '-' + ('0' + t.getDate()).slice(-2);
+  }
+  function todayOrders() {
+    var v = readJSON(ORDER_TODAY_KEY);
+    return (v.d === localDay() && v.pages && typeof v.pages === 'object') ? v : { d: localDay(), pages: {} };
+  }
+  function keptOrder(cKey) { var o = readJSON(ORDER_KEY); return (o[PAGE_ID] && o[PAGE_ID][cKey]) || null; }
+  function todayOrder(cKey) { var t = todayOrders().pages[PAGE_ID]; return (t && t[cKey]) || null; }
+  function getOrder(cKey) { return todayOrder(cKey) || keptOrder(cKey); }
+  function setOrder(cKey, arr, keep) {
+    var t = todayOrders();
+    if (keep) {
+      var o = readJSON(ORDER_KEY); if (!o[PAGE_ID]) o[PAGE_ID] = {};
+      o[PAGE_ID][cKey] = arr; writeJSON(ORDER_KEY, o);
+      if (t.pages[PAGE_ID]) { delete t.pages[PAGE_ID][cKey]; }
+    } else {
+      if (!t.pages[PAGE_ID]) t.pages[PAGE_ID] = {};
+      t.pages[PAGE_ID][cKey] = arr;
+    }
+    if (t.pages[PAGE_ID] && !Object.keys(t.pages[PAGE_ID]).length) delete t.pages[PAGE_ID];
+    if (Object.keys(t.pages).length) writeJSON(ORDER_TODAY_KEY, t);
+    else { try { localStorage.removeItem(ORDER_TODAY_KEY); } catch (e) {} }
+  }
+  // Switching "Keep" off forgets the kept order, so the program's own order
+  // comes back tomorrow; today's stays as arranged.
+  function unkeepOrder(cKey) {
+    var o = readJSON(ORDER_KEY);
+    if (o[PAGE_ID] && o[PAGE_ID][cKey]) { delete o[PAGE_ID][cKey]; writeJSON(ORDER_KEY, o); }
   }
   function getNote(name) { var n = readJSON(NOTES_KEY); return (n[PAGE_ID] && n[PAGE_ID][name]) || ''; }
   function setNote(name, text) {
@@ -201,10 +232,21 @@
     reorderBar = document.createElement('div');
     reorderBar.className = 'mc-reorder-bar';
     reorderBar.innerHTML =
-      '<span class="mc-rb-label">Reorder exercises — use ▲ ▼</span>' +
+      '<span class="mc-rb-label">Reorder — use ▲ ▼</span>' +
+      // R5 step 4: off = today only; on = this workout's order from now on.
+      '<button type="button" class="mc-rb-keep" role="switch" aria-checked="false">' +
+        '<span class="mc-rb-keep-knob" aria-hidden="true"></span>Keep this order</button>' +
       '<button class="mc-rb-done">Done</button>';
     document.body.appendChild(reorderBar);
     reorderBar.querySelector('.mc-rb-done').addEventListener('click', endReorder);
+    reorderBar.querySelector('.mc-rb-keep').addEventListener('click', function () {
+      var btn = this, on = btn.getAttribute('aria-checked') !== 'true';
+      btn.setAttribute('aria-checked', on ? 'true' : 'false');
+      if (!reorderContainer) return;
+      var cKey = containerKey(reorderContainer);
+      if (on) persistOrder(reorderContainer);
+      else { unkeepOrder(cKey); persistOrder(reorderContainer); }
+    });
   }
 
   // K-3.4/VOC-C1: single source of truth for "is Drop/Cluster/Superset
@@ -337,10 +379,11 @@
     var name = cardName(card);
     if (!name) return;
     if (!window.MCBiomech) {           // engine missing → old library flow
-      if (confirm('Replace "' + name.substring(0, 40) + '"?\nTap OK to open Exercise Library.')) {
-        window.location.href = 'exercise-library.html?replace=' + encodeURIComponent(name) +
+      var q = 'Replace "' + name.substring(0, 40) + '"? This opens the Exercise Library.';
+      (window.MC_SHEET ? MC_SHEET.confirm(q, { ok: 'Open library' }) : Promise.resolve(window.confirm(q))).then(function (ok) {
+        if (ok) window.location.href = 'exercise-library.html?replace=' + encodeURIComponent(name) +
           '&from=' + encodeURIComponent(PAGE_ID);
-      }
+      });
       return;
     }
     openSubstitute(card);
@@ -369,8 +412,17 @@
           }
           return;
         }
+        var keepBtn = e.target.closest('[data-sub-keep]');
+        if (keepBtn) {
+          var on = keepBtn.getAttribute('aria-checked') !== 'true';
+          keepBtn.setAttribute('aria-checked', on ? 'true' : 'false');
+          return;
+        }
         var pick = e.target.closest('[data-pick]');
-        if (pick) { applySwap(subCard, pick.dataset.pick, pick.dataset.w); }
+        if (pick) {
+          var kb = subOverlay.querySelector('[data-sub-keep]');
+          applySwap(subCard, pick.dataset.pick, pick.dataset.w, !!(kb && kb.getAttribute('aria-checked') === 'true'));
+        }
       });
     }
     renderSub();
@@ -397,6 +449,11 @@
         '<div class="mc-sub-list" id="mcSubList">' + rows +
           (needMore > 0 ? '<div class="mc-sub-loading" id="mcSubLoading">🔎 Looking for more options…</div>' : '') +
         '</div>' +
+        // R5 / D-10: off by default, so a swap is for today. On, it is kept
+        // for this page (never every program).
+        '<button type="button" class="mc-sub-keep" role="switch" aria-checked="false" data-sub-keep>' +
+          '<span class="mc-sub-keep-txt"><b>Keep this swap</b><span>Off: today only. On: every time on this page.</span></span>' +
+          '<span class="mc-sub-keep-knob" aria-hidden="true"></span></button>' +
         '<button class="mc-item mc-sub-lib" data-sub="library"><span class="mc-ico">📚</span>Browse all for ' + subEsc(info.muscle) + '…</button>' +
         '<button class="mc-item mc-item-cancel" data-sub="cancel">Cancel</button>' +
       '</div>';
@@ -474,37 +531,49 @@
   // Apply the swap: persist (mc-replace.js shape, re-rooted to the immutable
   // original), repaint name + REPLACED badge in place, store + paint the
   // predicted weight, and pre-fill the set logger's empty weight fields.
-  // Persistence chain: writes {origLower: newName} either to this page's
-  // mc_replacements|<pageId> or to mc_replacements_global (see writeToPage
-  // below); on the next page load mc-replace.js::applyReplacements() reads
-  // both and re-paints the swap, so it survives a refresh without any
-  // additional write-back.
-  function applySwap(card, newName, weight) {
+  //
+  // Flagship readiness R5 / D-10: a swap is for TODAY, on THIS page, unless
+  // the sheet's "Keep this swap" switch is on, in which case it is kept for
+  // this page. It used to be written to mc_replacements_global, so swapping a
+  // busy machine once changed that lift on every program page for good. The
+  // global key is still read (mc-replace.js), so a swap kept before this
+  // change keeps working; nothing writes it any more. mc-replace.js owns the
+  // today-only store and re-paints it on reload.
+  //
+  // R5 / D-09: the card is marked with the substitute's identity, so its sets
+  // are keyed to the substitute, not to the lift it stood in for.
+  function applySwap(card, newName, weight, keep) {
     if (!card || !newName) { closeSub(); return; }
     var nameEl = card.querySelector(NAME_SEL); if (!nameEl) { closeSub(); return; }
+    var R = window.MC_REPLACE || null;
     var visible = cardName(card);
     var pageReps = readJSON(REPLACE_KEY);
-    var globalReps = readJSON(GLOBAL_REPLACE_KEY);
-    var effective = Object.assign({}, globalReps, pageReps);
+    var today = R && R.todayMap ? R.todayMap() : {};
+    var effective = R && R.effectiveMap ? R.effectiveMap()
+      : Object.assign({}, readJSON(GLOBAL_REPLACE_KEY), pageReps);
     // re-root: if the current name is itself a replacement target, resolve to
     // the original key (wherever it lives) so a reload chains correctly
     // instead of forking.
     var rootKey = visible.toLowerCase();
+    var origVisible = visible;
     Object.keys(effective).forEach(function (k) {
       if (effective[k] && effective[k].toLowerCase() === rootKey) rootKey = k;
     });
-    // This exercise already has a page-specific override → keep respecting
-    // it. Otherwise write globally by default, so the swap follows this
-    // exercise onto every other program page instead of requiring the same
-    // manual re-decision everywhere it appears (repeated gym-floor
-    // constraints were the actual friction this was fixing).
-    var writeToPage = Object.prototype.hasOwnProperty.call(pageReps, rootKey);
-    var targetKey = writeToPage ? REPLACE_KEY : GLOBAL_REPLACE_KEY;
-    var targetMap = writeToPage ? pageReps : globalReps;
-    var hadRoot = Object.prototype.hasOwnProperty.call(targetMap, rootKey);
-    var prevRootVal = targetMap[rootKey];
-    targetMap[rootKey] = newName;
-    writeJSON(targetKey, targetMap);
+    var swapFrom = card.getAttribute('data-mc-swap-from') || origVisible;
+    // Kept for this page when asked, or when this lift already has a kept
+    // page swap (respect it); otherwise today only. Without mc-replace.js
+    // there is no today store, so the swap lives for this page view alone.
+    var toPage = !!keep || Object.prototype.hasOwnProperty.call(pageReps, rootKey);
+    var prevPage = Object.prototype.hasOwnProperty.call(pageReps, rootKey) ? pageReps[rootKey] : undefined;
+    var prevToday = Object.prototype.hasOwnProperty.call(today, rootKey) ? today[rootKey] : undefined;
+    if (toPage) {
+      pageReps[rootKey] = newName;
+      writeJSON(REPLACE_KEY, pageReps);
+      if (prevToday !== undefined && R && R.writeTodayMap) { delete today[rootKey]; R.writeTodayMap(today); }
+    } else if (R && R.writeTodayMap) {
+      today[rootKey] = newName;
+      R.writeTodayMap(today);
+    }
 
     // weight suggestion store, keyed by the new name (what the card now shows)
     var sug = readJSON(SWAP_SUG_KEY);
@@ -517,6 +586,7 @@
     bumpAccept(rootKey, newKey, 1);
 
     withoutObserver(function () {
+      if (R && R.markSwapped) R.markSwapped(card, newName, swapFrom);
       paintReplaced(card, newName);
       renderSwapPill(card);
       prefillWeight(card, weight);
@@ -525,10 +595,15 @@
 
     // A fat-thumb tap swaps a lift mid-set with no recovery path otherwise —
     // give it a few seconds to undo back to exactly the pre-swap state.
-    toast(newName + ' — swapped', 'Undo', function () {
-      var m2 = readJSON(targetKey);
-      if (hadRoot) m2[rootKey] = prevRootVal; else delete m2[rootKey];
-      writeJSON(targetKey, m2);
+    toast(newName + (toPage ? ' — swapped on this page' : ' — swapped for today'), 'Undo', function () {
+      var p2 = readJSON(REPLACE_KEY);
+      if (prevPage !== undefined) p2[rootKey] = prevPage; else delete p2[rootKey];
+      writeJSON(REPLACE_KEY, p2);
+      if (R && R.todayMap && R.writeTodayMap) {
+        var t2 = R.todayMap();
+        if (prevToday !== undefined) t2[rootKey] = prevToday; else delete t2[rootKey];
+        R.writeTodayMap(t2);
+      }
 
       var sug2 = readJSON(SWAP_SUG_KEY);
       if (hadSug) sug2[newKey] = prevSugVal; else delete sug2[newKey];
@@ -537,7 +612,18 @@
       bumpAccept(rootKey, newKey, -1);
 
       withoutObserver(function () {
-        if (hadRoot) { paintReplaced(card, visible); } else { restorePlain(card, visible); }
+        var still = prevPage !== undefined ? prevPage : prevToday;
+        if (still === undefined && rootKey !== visible.toLowerCase()) {
+          // the card showed an older swap that came from the global key
+          still = (R && R.effectiveMap ? R.effectiveMap() : {})[rootKey];
+        }
+        if (still) {
+          if (R && R.markSwapped) R.markSwapped(card, still, swapFrom);
+          paintReplaced(card, still);
+        } else {
+          if (R && R.clearSwapped) R.clearSwapped(card);
+          restorePlain(card, swapFrom);
+        }
         renderSwapPill(card);
       });
     });
@@ -777,6 +863,11 @@
       Array.prototype.forEach.call(container.querySelectorAll(CARD_SEL), addArrows);
     });
     refreshArrowStates();
+    var kb = reorderBar.querySelector('.mc-rb-keep');
+    if (kb) {
+      var ck = containerKey(container);
+      kb.setAttribute('aria-checked', (keptOrder(ck) && !todayOrder(ck)) ? 'true' : 'false');
+    }
     reorderBar.classList.add('open');
   }
 
@@ -797,13 +888,17 @@
     }
   }
 
+  // R5 step 4: the arrows were 36px, squeezed into the header corner beside
+  // the meatball, where two 48px targets do not fit. In reorder mode they
+  // get their own row at the top of the card instead: 48px, 8px apart.
   function addArrows(card) {
     if (card.querySelector('.mc-reorder-ctrls')) return;
     var ctrls = document.createElement('div');
     ctrls.className = 'mc-reorder-ctrls';
-    ctrls.innerHTML = '<button class="mc-arrow mc-up" aria-label="Move up">▲</button>' +
-                      '<button class="mc-arrow mc-down" aria-label="Move down">▼</button>';
-    (card.querySelector(BODY_SEL) || card).appendChild(ctrls);
+    var nm = cardName(card);
+    ctrls.innerHTML = '<button class="mc-arrow mc-up" aria-label="Move ' + subEsc(nm) + ' up">▲ Up</button>' +
+                      '<button class="mc-arrow mc-down" aria-label="Move ' + subEsc(nm) + ' down">▼ Down</button>';
+    card.insertBefore(ctrls, card.firstChild);
     ctrls.querySelector('.mc-up').addEventListener('click', function (e) { e.stopPropagation(); move(card, -1); });
     ctrls.querySelector('.mc-down').addEventListener('click', function (e) { e.stopPropagation(); move(card, 1); });
   }
@@ -834,7 +929,8 @@
   }
 
   function persistOrder(container) {
-    setOrder(containerKey(container), siblingsOf(container).map(cardName));
+    var kb = reorderBar && reorderBar.querySelector('.mc-rb-keep');
+    setOrder(containerKey(container), siblingsOf(container).map(cardName), !!(kb && kb.getAttribute('aria-checked') === 'true'));
   }
 
   // apply a previously saved order to a container's cards (no-op if already in order)

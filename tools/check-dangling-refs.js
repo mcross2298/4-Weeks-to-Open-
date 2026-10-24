@@ -76,7 +76,7 @@ const HOST_GLOBALS = new Set([
   'ethereum', 'solana',                       // wallet probes in the vendor bundle
   // always-present window members, read qualified for clarity or in a guard
   'addEventListener', 'removeEventListener', 'matchMedia', 'navigator',
-  'confirm', 'innerWidth', 'innerHeight', 'scrollX', 'scrollY',
+  'confirm', 'alert', 'innerWidth', 'innerHeight', 'scrollX', 'scrollY',
   'scrollTo', 'scrollBy',
 ]);
 

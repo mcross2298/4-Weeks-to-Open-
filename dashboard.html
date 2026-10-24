@@ -2126,7 +2126,18 @@ function loadState(){
 }
 
 // ── TABS ──
-function switchTab(tab){
+// Flagship readiness R5 step 6: come back to the tab and the place you left.
+// Leaving the dashboard for a workout and pressing Back used to land on Home,
+// scrolled to the top, whichever tab you had been on. Per browsing session
+// (sessionStorage): a fresh launch still opens on Home.
+var DASH_UI_KEY='mc_ui_dash_v1';
+function dashUi(){ try{ var v=JSON.parse(sessionStorage.getItem(DASH_UI_KEY)||'null'); return (v&&typeof v==='object')?v:{tab:'',y:{}}; }catch(e){ return {tab:'',y:{}}; } }
+function saveDashUi(patch){ try{ var v=dashUi(); if(patch.tab) v.tab=patch.tab; if(patch.y){ v.y=v.y||{}; for(var k in patch.y) v.y[k]=patch.y[k]; } sessionStorage.setItem(DASH_UI_KEY, JSON.stringify(v)); }catch(e){} }
+function currentDashTab(){ var a=document.querySelector('.screen.active'); return a?a.id.replace(/^scr-/,''):''; }
+function switchTab(tab, keepScroll){
+  var from=currentDashTab();
+  if(from) saveDashUi({y:(function(){ var o={}; o[from]=window.scrollY; return o; })()});
+  saveDashUi({tab:tab});
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.tab[role="tab"]').forEach(t=>{
     t.classList.remove('active');
@@ -2138,7 +2149,7 @@ function switchTab(tab){
   active.classList.add('active');
   active.setAttribute('aria-selected','true');
   active.setAttribute('tabindex','0');
-  window.scrollTo(0,0);
+  if(!keepScroll) window.scrollTo(0,0);
 }
 
 // ── HERO ──
@@ -2621,7 +2632,17 @@ if(window.MC_COLLECTIONS) MC_COLLECTIONS.renderDashboardCards();
 // re-render when mc-program-pub.js pulls fresh published programs
 document.addEventListener('mc:published-programs',()=>{renderPublishedPrograms();renderCustomPrograms();loadState();});
 // honor ?tab= deep-link from the global bottom nav (mc-nav.js)
-(function(){var t=new URLSearchParams(location.search).get('tab');if(t&&document.getElementById('scr-'+t))switchTab(t);})();
+// R5 step 6: with no ?tab=, reopen the tab this session was on, and its scroll.
+(function(){
+  var t=new URLSearchParams(location.search).get('tab'), ui=dashUi();
+  if(!t && ui.tab && ui.tab!==currentDashTab()) t=ui.tab;
+  if(t&&document.getElementById('scr-'+t))switchTab(t, true);
+  var y=(ui.y||{})[currentDashTab()];
+  if(y>0) setTimeout(function(){ if(document.documentElement.scrollHeight>y) window.scrollTo(0,y); }, 350);
+  var st=null;
+  window.addEventListener('scroll',function(){ clearTimeout(st); st=setTimeout(function(){ var o={}; o[currentDashTab()]=window.scrollY; saveDashUi({y:o}); },200); },{passive:true});
+  window.addEventListener('pagehide',function(){ var o={}; o[currentDashTab()]=window.scrollY; saveDashUi({y:o}); });
+})();
 
 // ── Coach Claude section (collapsed by default; fetches once per day) ──────
 function toggleCoach(){
@@ -2716,7 +2737,7 @@ function loadCoachNote(){
     var row=el&&el.dataset.row?JSON.parse(el.dataset.row):null;
     if(!row||!row.assigned_program_id) return;
     var sel=allProgs().find(function(p){return p.id===row.assigned_program_id;});
-    if(!sel){ alert('That program is no longer available.'); return; }
+    if(!sel){ (window.MC_SHEET ? MC_SHEET.alert('That program is no longer available.') : Promise.resolve(window.alert('That program is no longer available.'))); return; }
     sel.startedAt=new Date().toISOString();
     activeProg=sel;
     try{localStorage.setItem(STORE,JSON.stringify(activeProg));}catch(e){}

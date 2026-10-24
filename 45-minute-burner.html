@@ -403,8 +403,8 @@ var CFG = {
     updateSummary();
   },
   reconfigure:function(){
-    if(!confirm('Reconfigure? This resets your current session.')) return;
-    resetAll(true);
+    var q='Reconfigure? This resets your current session.';
+    (window.MC_SHEET?MC_SHEET.confirm(q,{ok:'Reconfigure',danger:true}):Promise.resolve(window.confirm(q))).then(function(ok){ if(ok) resetAll(true); });
   }
 };
 
@@ -878,10 +878,16 @@ function updateProgress(){
   var fill=document.getElementById('progFill'); if(fill) fill.style.width=Math.round((done/total)*100)+'%';
 }
 
+// R5 / D-16: the in-app confirm (mc-sheet.js), not the OS dialog.
 function resetAll(toConfig){
   if(toConfig!==true){
-    if(!confirm('Reset the entire workout? All timers and logged reps will clear.')) return;
+    var q='Reset the entire workout? All timers and logged reps will clear.';
+    (window.MC_SHEET?MC_SHEET.confirm(q,{ok:'Reset',danger:true}):Promise.resolve(window.confirm(q))).then(function(ok){ if(ok) resetAllNow(toConfig); });
+    return;
   }
+  resetAllNow(toConfig);
+}
+function resetAllNow(toConfig){
   if(REST.timer) REST.timer.pause();
   document.getElementById('restOverlay').classList.remove('show');
   if(BURPEE.timer){ BURPEE.timer.pause(); BURPEE.timer=null; }

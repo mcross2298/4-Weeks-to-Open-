@@ -245,14 +245,19 @@ html[data-theme="light"] .sched-banner{color:var(--muted);}
   $('shareBtn').addEventListener('click', function () {
     if (window.MCShare) MCShare.shareProgram(p);
   });
+  // R5 / D-16: in-app confirms and notices (mc-sheet.js), not the OS dialog.
+  function ask(q, o) { return (window.MC_SHEET ? MC_SHEET.confirm(q, o) : Promise.resolve(window.confirm(q))); }
+  function tell(q) { return (window.MC_SHEET ? MC_SHEET.alert(q) : Promise.resolve(window.alert(q))); }
   $('delBtn').addEventListener('click', function () {
-    if (!confirm('Delete "' + p.name + '"? Logged history is kept; the program itself is removed.')) return;
-    MCPrograms.remove(p.id);
-    try {
-      var act = JSON.parse(localStorage.getItem('mc_active_prog') || 'null');
-      if (act && act.cprogId === p.id) localStorage.removeItem('mc_active_prog');
-    } catch (e) {}
-    location.href = 'dashboard.html?tab=programs';
+    ask('Delete "' + p.name + '"? Logged history is kept; the program itself is removed.', { ok: 'Delete', danger: true }).then(function (ok) {
+      if (!ok) return;
+      MCPrograms.remove(p.id);
+      try {
+        var act = JSON.parse(localStorage.getItem('mc_active_prog') || 'null');
+        if (act && act.cprogId === p.id) localStorage.removeItem('mc_active_prog');
+      } catch (e) {}
+      location.href = 'dashboard.html?tab=programs';
+    });
   });
 
   // ---- PM-only: publish this program to ALL users (Supabase, RLS-guarded) ----
@@ -276,24 +281,30 @@ html[data-theme="light"] .sched-banner{color:var(--muted);}
     btn.addEventListener('click', function () {
       function fail(e) {
         btn.disabled = false; refreshLabel();
-        alert('Publish failed: ' + ((e && e.message) || 'unknown error') +
-              '\nIf this is a permission error, your account is not in the admins table.');
+        tell('Publish failed: ' + ((e && e.message) || 'unknown error') +
+             '\nIf this is a permission error, your account is not in the admins table.');
       }
       function doPublish() {
         btn.disabled = true; btn.textContent = 'Publishing…';
         MCPub.publish(JSON.parse(JSON.stringify(p))).then(function () {
           btn.disabled = false; refreshLabel();
-          alert('Published — "' + p.name + '" appears in every user\'s Programs tab within ~1 minute.');
+          tell('Published — "' + p.name + '" appears in every user\'s Programs tab within ~1 minute.');
         }, fail);
       }
       if (!MCPub.isPublished(p.id)) {
-        if (confirm('Publish "' + p.name + '" to ALL users?\nIt appears in everyone\'s Programs tab within ~1 minute.')) doPublish();
-      } else if (confirm('"' + p.name + '" is already live.\n\nOK — push this version as an update to all users.\nCancel — more options.')) {
-        doPublish();
-      } else if (confirm('Unpublish "' + p.name + '"?\nIt disappears from everyone\'s Programs tab (their logged history is kept).')) {
-        btn.disabled = true; btn.textContent = 'Removing…';
-        MCPub.unpublish(p.id).then(function () { btn.disabled = false; refreshLabel(); }, fail);
+        ask('Publish "' + p.name + '" to ALL users?\nIt appears in everyone\'s Programs tab within ~1 minute.', { ok: 'Publish' })
+          .then(function (ok) { if (ok) doPublish(); });
+        return;
       }
+      ask('"' + p.name + '" is already live.', { ok: 'Push this version as an update', cancel: 'More options' }).then(function (update) {
+        if (update) { doPublish(); return; }
+        ask('Unpublish "' + p.name + '"?\nIt disappears from everyone\'s Programs tab (their logged history is kept).', { ok: 'Unpublish', danger: true })
+          .then(function (ok) {
+            if (!ok) return;
+            btn.disabled = true; btn.textContent = 'Removing…';
+            MCPub.unpublish(p.id).then(function () { btn.disabled = false; refreshLabel(); }, fail);
+          });
+      });
     });
   })();
 

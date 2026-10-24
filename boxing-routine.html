@@ -364,8 +364,12 @@ function updateSummary(){
   document.getElementById('sumStep').textContent='Step '+(BOX.complete?total:Math.min(BOX.activeIdx+1,total))+' / '+total;
   var fill=document.getElementById('progFill'); if(fill)fill.style.width=Math.round((done/total)*100)+'%';
 }
+// R5 / D-16: the in-app confirm (mc-sheet.js), not the OS dialog.
 function resetAll(){
-  if(!confirm('Reset the whole routine? All timers and logged reps will clear.')) return;
+  var q='Reset the whole routine? All timers and logged reps will clear.';
+  (window.MC_SHEET?MC_SHEET.confirm(q,{ok:'Reset',danger:true}):Promise.resolve(window.confirm(q))).then(function(ok){ if(ok) resetAllNow(); });
+}
+function resetAllNow(){
   BOX.steps.forEach(function(st){ if(st.itimer)st.itimer.pause(); if(st.timer)st.timer.pause(); if(st.up)st.up.reset(); });
   BOX.build(); BOX.render(); updateSummary();
   document.getElementById('doneBanner').classList.remove('show');

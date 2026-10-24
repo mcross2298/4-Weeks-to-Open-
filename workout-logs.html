@@ -71,6 +71,7 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 .log-sets{display:flex;flex-direction:column;gap:6px;}
 .set-row{display:flex;align-items:center;gap:10px;padding:7px 10px;background:#0d0d0d;border-radius:8px;}
 .set-ex{font-size:12px;font-weight:700;color:#e2e8f0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.set-swap{font-weight:600;color:var(--muted,#8a8377);}
 .set-data{font-size:12px;color:#d4af37;font-weight:700;white-space:nowrap;}
 .set-pr{font-size:11px;font-weight:900;background:rgba(212,175,55,0.15);color:#d4af37;border-radius:4px;padding:1px 5px;letter-spacing:0.06em;border:1px solid rgba(212,175,55,0.25);}
 .log-duration{font-size:11px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:5px;}
@@ -372,7 +373,7 @@ function renderSessionCard(kind, idx, prog){
   const logSets = setsOf(log);
   const setsHtml = logSets.slice(0,4).map(s=>`
     <div class="set-row">
-      <span class="set-ex">${s.name}</span>
+      <span class="set-ex">${s.name}${s.swappedFrom?'<span class="set-swap"> · swapped from '+String(s.swappedFrom).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))+'</span>':''}</span>
       <span class="set-data">${s.weight?s.weight+' lb':'—'} × ${s.reps||'—'}</span>
       ${s.pr?'<span class="set-pr">PR</span>':''}
     </div>`).join('');
@@ -455,18 +456,26 @@ function openDetail(kind, idx){
 // a synced store the merge respects. The card carries the same identity the
 // merge uses (id, or page|date for an entry that predates ids), so an old
 // entry with no id is deletable too — it used to match nothing.
+// R5 / D-16: the in-app confirm (mc-sheet.js), not the OS dialog.
+function askDelete(msg){
+  return (window.MC_SHEET ? MC_SHEET.confirm(msg, {ok:'Delete', danger:true}) : Promise.resolve(window.confirm(msg)));
+}
 function deleteFinished(key){
   if(!key) return;
-  if(!confirm('Delete this workout from your history on every device? This cannot be undone.')) return;
-  MC_LOG.deleteWorkouts([key]);
-  render();
+  askDelete('Delete this workout from your history on every device? This cannot be undone.').then(ok=>{
+    if(!ok) return;
+    MC_LOG.deleteWorkouts([key]);
+    render();
+  });
 }
 function deleteDaily(date, pid){
-  if(!confirm('Delete this session from your history? This cannot be undone.')) return;
-  const store = getDaily();
-  delete store[date+'|'+pid];
-  localStorage.setItem(DAILY_KEY, JSON.stringify(store));
-  render();
+  askDelete('Delete this session from your history? This cannot be undone.').then(ok=>{
+    if(!ok) return;
+    const store = getDaily();
+    delete store[date+'|'+pid];
+    localStorage.setItem(DAILY_KEY, JSON.stringify(store));
+    render();
+  });
 }
 // Long-press (not swipe) so it can't fight vertical page scroll or the
 // card's existing tap-to-open handler. Pointer Events cover touch + mouse.
@@ -669,9 +678,12 @@ function toggleProgram(id){
 }
 
 // ---- tab switching ----------------------------------------------------------
-let activeTab = 'sessions';
+// R5 step 6: the tab you were on, for this browsing session.
+const HIST_TAB_KEY = 'mc_ui_history_tab_v1';
+let activeTab = (function(){ try{ return sessionStorage.getItem(HIST_TAB_KEY)==='programs' ? 'programs' : 'sessions'; }catch(e){ return 'sessions'; } })();
 function switchTab(tab){
   activeTab = tab;
+  try{ sessionStorage.setItem(HIST_TAB_KEY, tab); }catch(e){}
   document.getElementById('wlTabSessions').classList.toggle('active', tab==='sessions');
   document.getElementById('wlTabPrograms').classList.toggle('active', tab==='programs');
   if(tab==='sessions') renderSessionsTab(); else renderProgramsTab();
@@ -701,13 +713,17 @@ function clearLogs(){
   // never got finished and just sat there indefinitely) was never touched,
   // so "Clear All" visibly did nothing whenever ghost daily entries were
   // what the user was actually trying to clear.
-  if(confirm('Clear all workout logs, including in-progress sessions? This cannot be undone.')){
+  askDelete('Clear all workout logs, including in-progress sessions? This cannot be undone.').then(ok=>{
+    if(!ok) return;
     MC_LOG.clearWorkouts();          // R1 / D-24: recorded, so a sync can't restore them
     localStorage.removeItem(DAILY_KEY);
     render();
-  }
+  });
 }
 
+// R5 step 6: paint the remembered tab's highlight before the first render.
+document.getElementById('wlTabSessions').classList.toggle('active', activeTab==='sessions');
+document.getElementById('wlTabPrograms').classList.toggle('active', activeTab==='programs');
 render();
 </script>
 <script>

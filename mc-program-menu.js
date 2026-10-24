@@ -299,10 +299,13 @@
         ' completed day' + (done === 1 ? '' : 's') + ' will be cleared and you will go back to Day 1.\n\n' +
         'Your workout history and logged sets are NOT deleted.'
       : 'Restart ' + (cfg.programName || 'this program') + ' back to Day 1?';
-    if (!window.confirm(msg)) return;
-    cfg.rec = P.restart(cfg.progId, cfg.def);
-    close();
-    if (typeof cfg.onChange === 'function') cfg.onChange();
+    // R5 / D-16: the in-app confirm (mc-sheet.js).
+    (window.MC_SHEET ? MC_SHEET.confirm(msg, { ok: 'Restart', danger: true }) : Promise.resolve(window.confirm(msg))).then(function (ok) {
+      if (!ok) return;
+      cfg.rec = P.restart(cfg.progId, cfg.def);
+      close();
+      if (typeof cfg.onChange === 'function') cfg.onChange();
+    });
   }
 
   // `view` (program-flow-roadmap.md F1) lets a caller open straight into one

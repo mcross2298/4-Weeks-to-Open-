@@ -256,6 +256,12 @@ jobs:
         # record is tied to the cache version and checked against the Cache API.
         run: node tools/test-mc-offline-prefetch.js
 
+      - name: Flagship readiness engine acceptance (fa-engines.js)
+        # The progression and max math the owner decided (R4: per set, top of
+        # range, x0.5 increments, a single is its own max) and the deletion-
+        # record merge (R1). Node only, against the real modules.
+        run: node GO_LIVE/flagship-audit/scenarios/fa-engines.js
+
       - name: Offline per-set write outbox (mc-supabase.js, flagship readiness R3 / D-19)
         # A set ticked with no signal is queued and replayed, never dropped,
         # and an offline untick can never be replayed back in.
@@ -614,6 +620,14 @@ jobs:
           # leave "Available offline" claiming pages the cache no longer holds.
           # It does not use the static server above; it starts its own.
           if ! NODE_PATH=/tmp/pw-ci/node_modules node GO_LIVE/flagship-audit/scenarios/fa-offline-sw.js; then echo "FAILED: fa-offline-sw"; EXIT=1; fi
+          # The flagship-readiness acceptance scenarios (flagship-readiness-
+          # roadmap.md), wired in now that every check in them passes: the
+          # roadmap kept them out of CI on purpose (W-I1, "red from birth gets
+          # turned off") until their fixes landed. fa-repro: 23 journeys across
+          # R1-R5 (sessions, tabs, rest, drafts, untick, swaps, history names,
+          # keys, import, Back, sheets). Its Node-only sibling fa-engines runs
+          # in the static job.
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node GO_LIVE/flagship-audit/scenarios/fa-repro.js http://localhost:8080; then echo "FAILED: fa-repro"; EXIT=1; fi
           # Light-mode contrast ratchet (audit G-04/G-3.1). Shares this job
           # because it needs the same Playwright install. Per-page budgets in
           # tools/contrast-budgets.json can only shrink; re-baseline with

@@ -237,6 +237,7 @@ const KNOWN_MODULES = [
   'mc-session.js',
   'mc-setlog.js',
   'mc-share.js',
+  'mc-sheet.js',
   'mc-stats.js',
   'mc-strain.js',
   'mc-streak.js',

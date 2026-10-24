@@ -259,12 +259,13 @@
         renderStep();
       });
       $('mxMiss').addEventListener('click', function () {
-        if (!retried && confirm('Missed at ' + attemptW + ' lb.\n\nOK = one retry after a long rest.\nCancel = call it here.')) {
-          retried = true;
-          renderStep();
-          return;
-        }
-        finish();
+        if (retried) { finish(); return; }
+        // R5 / D-16: the in-app confirm, with the two choices named.
+        var msg = 'Missed at ' + attemptW + ' lb.';
+        (window.MC_SHEET ? MC_SHEET.confirm(msg, { ok: 'One retry after a long rest', cancel: 'Call it here' }) : Promise.resolve(window.confirm(msg))).then(function (again) {
+          if (again) { retried = true; renderStep(); return; }
+          finish();
+        });
       });
     }
   }

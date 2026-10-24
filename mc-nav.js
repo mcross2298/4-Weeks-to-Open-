@@ -28,6 +28,15 @@
     s.src = 'mc-appearance.js';
     (document.head || document.documentElement).appendChild(s);
   }
+  // Flagship readiness R5 (D-15, D-16): the one sheet contract and Back
+  // handling. Loaded from here for the same reason as mc-appearance.js: this
+  // file is on every page that has a sheet or a day list, so no page needs
+  // its own tag. mc-sheet.js guards itself against a second load.
+  if (!document.querySelector('script[src="mc-sheet.js"]')) {
+    var sh = document.createElement('script');
+    sh.src = 'mc-sheet.js';
+    (document.head || document.documentElement).appendChild(sh);
+  }
 })();
 
 // ── SAFE-AREA / NOTCH ────────────────────────────────────────────────────────
@@ -65,7 +74,10 @@
 
   var HUB = 'dashboard.html';
   var TABS = [
-    { label: 'Dashboard',    ico: '⚡',  href: HUB },
+    // ?tab=dashboard (not the bare hub): the dashboard reopens the tab a
+    // session was last on when none is named (R5 step 6), and tapping Home
+    // here is an explicit choice of Home.
+    { label: 'Dashboard',    ico: '⚡',  href: HUB + '?tab=dashboard' },
     { label: 'Programs',     ico: '🏋️', href: HUB + '?tab=programs' },
     { label: 'Conditioning', ico: '🔥', href: HUB + '?tab=conditioning' },
     { label: 'Nutrition',    ico: '🍎', href: HUB + '?tab=nutrition' },

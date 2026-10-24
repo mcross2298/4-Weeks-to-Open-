@@ -228,7 +228,11 @@
   }
 
   function quit() {
-    if (!confirm('End this session? Nothing will be logged.')) return;
+    // R5 / D-16: the in-app confirm (mc-sheet.js).
+    var msg = 'End this session? Nothing will be logged.';
+    (window.MC_SHEET ? MC_SHEET.confirm(msg, { ok: 'End session', danger: true }) : Promise.resolve(window.confirm(msg))).then(function (ok) { if (ok) quitNow(); });
+  }
+  function quitNow() {
     if (tick) { clearInterval(tick); tick = null; }
     unlock();
     clearSnap();

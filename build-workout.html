@@ -536,7 +536,31 @@ function closeReviewSheet(){
   handle.addEventListener('click', closeReviewSheet);
 })();
 
+// Flagship readiness R5 step 6: a half-built workout survives leaving the
+// page, a reload or closing the app. Saved on every tray change and field
+// edit, restored on load, cleared once the workout is created.
+var DRAFT_KEY = 'mc_builder_draft_v1';
+function saveDraft(){
+  try{
+    var name = (document.getElementById('wkName')||{}).value || '';
+    var prog = (document.getElementById('wkProgram')||{}).value || '';
+    var coll = (document.getElementById('wkCollection')||{}).value || '';
+    if(!selected.length && !name.trim()){ localStorage.removeItem(DRAFT_KEY); return; }
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ name:name, program:prog, collection:coll, selected:selected, ts:Date.now() }));
+  }catch(e){}
+}
+function restoreDraft(){
+  try{
+    var d = JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');
+    if(!d || typeof d!=='object' || !Array.isArray(d.selected)) return;
+    selected = d.selected.filter(function(s){ return s && typeof s==='object' && typeof s.name==='string'; });
+    var n = document.getElementById('wkName'); if(n && d.name) n.value = d.name;
+    var ps = document.getElementById('wkProgram'); if(ps && d.program){ ps.value = d.program; if(typeof updateAssignHint==='function') updateAssignHint(); }
+    var cs = document.getElementById('wkCollection'); if(cs && d.collection) cs.value = d.collection;
+  }catch(e){}
+}
 function renderTray(){
+  saveDraft();
   var pill = document.getElementById('reviewPill');
   var pillCount = document.getElementById('pillCount');
   var title = document.getElementById('trayTitle');
@@ -601,8 +625,9 @@ window.addEventListener('resize', syncTraySpace);
 
 function createWorkout(){
   var name = (document.getElementById('wkName').value||'').trim();
-  if(!name){ alert('Give your workout a name first.'); document.getElementById('wkName').focus(); return; }
-  if(!selected.length){ alert('Add at least one exercise.'); return; }
+  // R5 / D-16: in-app notices (mc-sheet.js), not the OS dialog.
+  if(!name){ (window.MC_SHEET ? MC_SHEET.alert('Give your workout a name first.') : Promise.resolve(window.alert('Give your workout a name first.'))).then(function(){ document.getElementById('wkName').focus(); }); return; }
+  if(!selected.length){ (window.MC_SHEET ? MC_SHEET.alert('Add at least one exercise.') : Promise.resolve(window.alert('Add at least one exercise.'))); return; }
   var saved = getSaved();
   var now = new Date().toISOString();
   var program = (document.getElementById('wkProgram')||{}).value || '';
@@ -627,6 +652,7 @@ function createWorkout(){
   try{ if(window.MC_SYNC && MC_SYNC.push) MC_SYNC.push(); }catch(e){}
   selected = [];
   document.getElementById('wkName').value = '';
+  try{ localStorage.removeItem(DRAFT_KEY); }catch(e){}
   var ps = document.getElementById('wkProgram'); if(ps){ ps.value=''; updateAssignHint(); }
   var cs = document.getElementById('wkCollection'); if(cs){ cs.value=''; }
   renderList(); renderTray(); renderSaved();
@@ -634,9 +660,12 @@ function createWorkout(){
 }
 
 function delWorkout(id){
-  if(!confirm('Delete this workout?')) return;
-  setSaved(getSaved().filter(function(w){ return w.id!==id; }));
-  renderSaved();
+  var q='Delete this workout?';
+  (window.MC_SHEET ? MC_SHEET.confirm(q, {ok:'Delete', danger:true}) : Promise.resolve(window.confirm(q))).then(function(ok){
+    if(!ok) return;
+    setSaved(getSaved().filter(function(w){ return w.id!==id; }));
+    renderSaved();
+  });
 }
 
 function shareWorkout(id){
@@ -669,8 +698,14 @@ function renderSaved(){
 buildFilters();
 buildProgramOptions();
 buildCollectionOptions();
+restoreDraft();
 renderList();
+renderTray();
 renderSaved();
+['wkName','wkProgram','wkCollection'].forEach(function(id){
+  var el = document.getElementById(id);
+  if(el) el.addEventListener(id==='wkName'?'input':'change', saveDraft);
+});
 </script>
 <script src="mc-share.js"></script>
 <script src="mc-nav.js"></script>
