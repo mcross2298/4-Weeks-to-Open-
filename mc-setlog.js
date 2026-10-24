@@ -280,7 +280,11 @@
     // the cross-tab replay and the locked write with no change to any of them.
     if (name) entry.n = name;
     if (from) entry.sw = from;         // R5: swapped from — shown in History
-    var rec = { k: k, d: d, sn: sn, entry: entry, ts: Date.now() };
+    // When the tick happened. mc-sync.js's mergeSetlog() compares it with an
+    // untick record (mc_setlog_deleted_v1): a set ticked AFTER its untick
+    // was re-ticked and stays; one ticked before it was taken back.
+    entry.t = Date.now();
+    var rec = { k: k, d: d, sn: sn, entry: entry, ts: entry.t };
     noteRecent(rec);
     try { if (_bc) _bc.postMessage(rec); } catch (e) {}
     withStore(null);                   // replayRecent() carries the new entry
@@ -296,6 +300,26 @@
     noteRecent(rec);
     try { if (_bc) _bc.postMessage(rec); } catch (e) {}
     withStore(null);
+    recordUntick(rec);
+  }
+
+  // An untick used to reach only THIS device's store. mergeSetlog() unions
+  // set numbers, so the other device's copy (or the server's, if this device
+  // reloaded before pushing) put the set straight back on the next pull. The
+  // record travels on its own synced store, the shape mc_workout_log_deleted_v1
+  // uses for deleted workouts: { 'key|day|set': { ts } }. Records older than
+  // the set log can hold are pruned here, so the store stays small.
+  var UNTICK_KEY = 'mc_setlog_deleted_v1';
+  var UNTICK_KEEP_MS = 120 * 86400000;
+  function recordUntick(rec) {
+    try {
+      var m = JSON.parse(localStorage.getItem(UNTICK_KEY) || '{}');
+      if (!m || typeof m !== 'object' || Array.isArray(m)) m = {};
+      var cut = Date.now() - UNTICK_KEEP_MS;
+      Object.keys(m).forEach(function (k) { if (!m[k] || !(m[k].ts > cut)) delete m[k]; });
+      m[rec.k + '|' + rec.d + '|' + rec.sn] = { ts: rec.ts };
+      writeStore(UNTICK_KEY, JSON.stringify(m));
+    } catch (e) {}
   }
 
   function lsess(exId) {
