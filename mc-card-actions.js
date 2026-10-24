@@ -285,7 +285,7 @@
     return out;
   }
   // Menu-only now (the promoted quick-action row uses doReplace/startReorder
-  // directly — see injectQuickActions() above for why those need no shared
+  // directly — see the MC_CARD_ACTIONS note above for why those need no shared
   // dispatcher the way the PM/personal-aware intensifiers still do here).
   function runIntAction(card, act) {
     if (act === 'int-drop') { if (pmActive() && window.MC_PM) MC_PM.openIntensifier(card, 'drop'); else openPersonalIntensifier(card, 'drop'); }
@@ -1041,37 +1041,15 @@
     host.appendChild(btn);
   }
 
-  // K-3.4/VOC-C1: promote two meatball actions to a visible affordance on
-  // the ACTIVE card during a session (CSS gates the row to .active — see
-  // mc-card-actions.css). Originally shipped as Superset/Drop set (the
-  // session-flow actions the audit's transcript called out), then corrected
-  // per owner feedback to Replace/Reorder instead — the two most commonly
-  // used meatball actions in practice, not the two most session-flow-coded
-  // ones. Both call the exact same functions the menu's own "Replace
-  // exercise"/"Reorder exercises" items call (doReplace/startReorder), so
-  // there's no second copy of that logic to drift out of sync with the menu.
-  // Unlike the intensifier actions this replaced, replace/reorder carry no
-  // PM/personal/pairing availability rules in the menu either (both
-  // .mc-item entries render unconditionally in buildChrome(), never
-  // toggled in openMenu()) — so the promoted row needs no availability
-  // computation or per-card caching, just the .active CSS gate.
-  function injectQuickActions(card) {
-    var host = card.querySelector(BODY_SEL) || card;
-    if (host.querySelector(':scope > .mc-quick-actions')) return;
-    var row = document.createElement('div');
-    row.className = 'mc-quick-actions';
-    row.innerHTML =
-      '<button type="button" class="mc-qa-btn" data-qact="replace"><span class="mc-ico">🔁</span>Replace</button>' +
-      '<button type="button" class="mc-qa-btn" data-qact="reorder"><span class="mc-ico">↕️</span>Reorder</button>';
-    row.addEventListener('click', function (e) {
-      var btn = e.target.closest('.mc-qa-btn'); if (!btn) return;
-      e.stopPropagation(); e.preventDefault();
-      if (btn.dataset.qact === 'replace') doReplace(card);
-      else if (btn.dataset.qact === 'reorder') startReorder(card);
-    });
-    host.appendChild(row);
-  }
-
+  // K-3.4/VOC-C1 promoted Replace/Reorder out of the ⋯ menu onto the open
+  // card, at the owner's request (the menu was too cluttered for the two
+  // actions an athlete reaches for when equipment is taken). Flagship
+  // readiness R6 keeps them on the card but in ONE row with R5's + Set /
+  // Skip, which mc-setlog.js renders at the foot of the open exercise --
+  // all four are "change today's plan" actions, and one 48px row of them
+  // costs less height than two. That row calls back in here, through
+  // MC_CARD_ACTIONS below, so there is still exactly one doReplace() and
+  // one startReorder(), shared with the menu's own items.
   // K-3.4/G-11/VOC-C1: "I found eight power tools behind that ⋯ button" —
   // the meatball hides the whole hybrid toolkit (progress, replace, reorder,
   // tempo, notes, drop set, cluster set, superset) behind one unlabeled
@@ -1108,14 +1086,6 @@
     try {
       withoutObserver(function () {
       Array.prototype.forEach.call(cards, injectMeatball);
-      // injectQuickActions() builds the row once per card and is idempotent
-      // (guarded by the .mc-quick-actions existence check); its base
-      // visibility is entirely CSS's job (gated to .active), and Replace/
-      // Reorder need no per-card availability computation to keep fresh
-      // (see injectQuickActions()'s own comment) — so unlike the K-3.4
-      // intensifier version this replaced, there's no per-pass "only touch
-      // the active card" update step needed here at all.
-      Array.prototype.forEach.call(cards, injectQuickActions);
       maybeShowMeatballHint();
       injectQuickPumpTrigger();
       var containers = [];
@@ -1186,6 +1156,10 @@
     setTimeout(scan, 300);
     setTimeout(scan, 800);
   }
+
+  // R6: the open exercise's "today" row (mc-setlog.js) offers Replace and
+  // Reorder beside + Set / Skip; these are the same functions the menu calls.
+  window.MC_CARD_ACTIONS = { replace: doReplace, reorder: startReorder };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();

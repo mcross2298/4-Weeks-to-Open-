@@ -98,14 +98,14 @@
       '.mc-guided-dim{opacity:0.35;filter:saturate(0.6);transition:opacity .2s,filter .2s;}' +
       '.mc-guided-current{transition:box-shadow .2s;box-shadow:0 0 0 2px var(--accent,#d4af37),0 8px 28px -10px rgba(0,0,0,.6);border-radius:14px;}' +
       '.mcgd-entry{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 14px;' +
-        'padding:11px 16px;min-height:44px;box-sizing:border-box;border-radius:12px;background:rgba(212,175,55,0.12);' +
+        'padding:11px 16px;min-height:48px;box-sizing:border-box;border-radius:12px;background:rgba(212,175,55,0.12);' +
         'border:1px solid rgba(212,175,55,0.3);color:#d4af37;font-size:13px;font-weight:800;' +
         'cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
       /* top offset clears mc-summary.css's .prog-bar-wrap.mcs-stat sticky bar
          (46px, only present once a session is active) with a safety margin */
       '.mcgd-exit{position:fixed;top:calc(58px + env(safe-area-inset-top));right:10px;z-index:170;' +
-        'padding:8px 13px;min-height:44px;box-sizing:border-box;display:none;align-items:center;border-radius:22px;background:rgba(10,10,11,.85);color:#e2e8f0;' +
-        'border:1px solid rgba(255,255,255,.15);font-size:12px;font-weight:800;cursor:pointer;' +
+        'padding:8px 13px;min-height:48px;box-sizing:border-box;display:none;align-items:center;border-radius:24px;background:rgba(10,10,11,.85);color:#e2e8f0;' +
+        'border:1px solid rgba(255,255,255,.15);font-size:13px;font-weight:800;cursor:pointer;' +
         'backdrop-filter:blur(8px);-webkit-tap-highlight-color:transparent;}' +
       '.mcgd-scrim{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,0);pointer-events:none;' +
         'transition:background .25s;}' +

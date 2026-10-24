@@ -11,7 +11,7 @@
               reads, observer wake-ups)
 
      LAYOUT   how tall is an exercise card, and does every control clear the
-              44 pt touch floor?   (measured at real iPhone viewports)
+              48px touch standard? (measured at real iPhone viewports)
 
    Both were measured with throwaway scripts during the audits; this is the
    committed version, so a claim about either number can be re-checked instead
@@ -94,9 +94,11 @@ const VIEWPORTS = [
   { name: '375x667', width: 375, height: 667 }
 ];
 
-/* Controls an athlete taps mid-set, against the 44 pt floor. */
+/* Controls an athlete taps mid-set, against the owner's 48px standard
+   (flagship readiness R6; the 44pt floor before). R6 folded the
+   Replace / Reorder row (.mc-qa-btn) into the logger's "today" row, .mcl-act. */
 const TOUCH_TARGETS = [
-  '.rest-timer', '.mcl-toggle', '.mc-qa-btn', '.a-notes',
+  '.rest-timer', '.mcl-toggle', '.mcl-act', '.a-notes',
   '.mc-meatball', '.mcl-inp', '.mcl-effort-btn', '.mcl-ck'
 ];
 
@@ -209,7 +211,7 @@ async function domCensus(page) {
       setRows: document.querySelectorAll('.mcl-row').length,
       inputs: document.querySelectorAll('.mcl-inp').length,
       repMarkers: document.querySelectorAll('.a-rep').length,
-      quickActionRows: document.querySelectorAll('.mc-quick-actions').length
+      todayRows: document.querySelectorAll('.mcl-actions').length
     };
   });
 }
@@ -236,7 +238,7 @@ async function layout(page) {
         const b = el.getBoundingClientRect();
         controls.push({
           selector: sel, width: r1(b.width), height: r1(b.height),
-          meets44: b.width >= 44 && b.height >= 44
+          meets48: b.width >= 48 && b.height >= 48
         });
         break; // one representative per selector
       }
@@ -357,8 +359,8 @@ async function layout(page) {
                 ' of viewport) · inactive avg ' + l.inactiveCardHeightAvg +
                 'px · day ' + l.trainingDayScrollHeight + 'px');
   }
-  const fails = report.layout[VIEWPORTS[0].name].controls.filter((c) => !c.meets44);
-  console.log('    below the 44pt floor: ' +
+  const fails = report.layout[VIEWPORTS[0].name].controls.filter((c) => !c.meets48);
+  console.log('    below the 48px standard: ' +
     (fails.length ? fails.map((c) => c.selector + ' ' + c.width + '×' + c.height).join(', ') : 'none'));
   if (report.consoleErrors.length) {
     console.log('\n  CONSOLE ERRORS (' + report.consoleErrors.length + ')');

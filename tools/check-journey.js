@@ -36,7 +36,9 @@
                (a control you cannot reach is worse than one that looks wrong)
      OVERFLOW  no horizontal scroll at any width
      CHROME    covered viewport within budget, at rest and mid-session
-     TOUCH     every control in CRITICAL is at least 44x44
+     TOUCH     every control in CRITICAL is at least 48x48 (44 until R6)
+    SWEEP     the session surface meets the owner's 48px / 8px / 13px
+              standard (flagship readiness R6) -- see SWEEP below
 
    And a SUBSYSTEM pass (Phase 3.5) drives three features that ship on real
    pages and are driven by nothing else in verify.yml -- guided mode, the
@@ -172,7 +174,9 @@ const MEASURE = (criticalSel) => {
       if (cs.display === 'none' || cs.visibility === 'hidden') return;
       const r = el.getBoundingClientRect();
       if (!r.width || !r.height) return;
-      if (r.width < 44 || r.height < 44) {
+      // 48: the owner's standard (R6). A literal, not SWEEP_FLOOR -- this
+      // function runs in the page, where a Node constant does not exist.
+      if (r.width < 48 || r.height < 48) {
         tooSmall.push(c.name + ' ' + Math.round(r.width) + 'x' + Math.round(r.height));
       }
     });
@@ -185,6 +189,74 @@ const MEASURE = (criticalSel) => {
     occluded: [...new Set(occluded)],
     tooSmall: [...new Set(tooSmall)],
   };
+};
+
+/* ── the session surface at the owner's standard (flagship readiness R6) ────
+   48px targets, 8px between them, 13px text: the owner's UI standard, which
+   replaced the 44pt floor CRITICAL was written against. Measured where the
+   athlete's thumb is mid-set -- the session toolbar, the rest-end bar and
+   every exercise unit on screen with a set logged and the rest running --
+   and nowhere else. Page chrome (week tabs, the back link, the bottom nav)
+   is the CHROME pass's job below, ratcheted, because it renders on the
+   visual-ratchet's day-list baselines and those can only be re-baselined
+   from CI (premium-design-roadmap.md P4).
+
+   Hard assertions, not a ratchet: R6 brought all nine pages to zero before
+   this landed, so there is no "red from birth" to work around. The audit
+   measured 25 of 32 controls under 48, 31 pairs closer than 8px and 35 text
+   nodes under 13px on the first of these pages. */
+const SWEEP_FLOOR = 48, SWEEP_GAP = 8, SWEEP_TEXT = 13;
+const SWEEP = (cfg) => {
+  const vh = innerHeight, vw = innerWidth;
+  const SEL = 'button,a[href],input,select,[role="button"],[role="checkbox"],.mcl-ck,.rest-timer,.mc-meatball';
+  const d = e => e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') +
+    ((typeof e.className === 'string' && e.className) ? '.' + e.className.trim().split(/\s+/).slice(0, 2).join('.') : '');
+  const box = (el) => {
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity === 0) return null;
+    const r = el.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1 || r.bottom <= 0 || r.top >= vh || r.right <= 0 || r.left >= vw) return null;
+    for (let a = el.parentElement; a; a = a.parentElement) if (+getComputedStyle(a).opacity === 0) return null;
+    return r;
+  };
+  const UNIT = '.ss-card, .ex-card, .ex-item';
+  const roots = [...document.querySelectorAll('.mcs-stat-row, #mcRestEnd, ' + UNIT)]
+    .filter(u => !(u.parentElement && u.parentElement.closest(UNIT)));
+  // A pinned bar (the toolbar, the rest-end bar) and the content scrolling
+  // beneath it are not neighbours: the gap between them changes with every
+  // pixel of scroll, and a control passing under the bar is the OCCLUSION
+  // pass's question, not this one. Spacing is measured within each layer.
+  const pinned = (el) => { for (let a = el; a && a !== document.body; a = a.parentElement) {
+    const p = getComputedStyle(a).position; if (p === 'fixed' || p === 'sticky') return true; } return false; };
+  const ctrls = [];
+  roots.forEach(root => { const layer = pinned(root) ? 'pinned' : 'page';
+    root.querySelectorAll(SEL).forEach(el => {
+      if (el.parentElement && el.parentElement.closest(SEL)) return;   // the outer control is the target
+      const r = box(el); if (r) ctrls.push({ n: d(el), r, layer });
+    }); });
+  const small = ctrls.filter(c => c.r.width < cfg.floor - 0.5 || c.r.height < cfg.floor - 0.5)
+    .map(c => c.n + ' ' + Math.round(c.r.width) + 'x' + Math.round(c.r.height));
+  const tight = [];
+  for (let i = 0; i < ctrls.length; i++) for (let j = i + 1; j < ctrls.length; j++) {
+    if (ctrls[i].layer !== ctrls[j].layer) continue;
+    const a = ctrls[i].r, b = ctrls[j].r;
+    const dx = Math.max(a.left, b.left) - Math.min(a.right, b.right);
+    const dy = Math.max(a.top, b.top) - Math.min(a.bottom, b.bottom);
+    const gap = Math.max(dx, dy);           // negative on both = overlapping
+    if (gap < cfg.gap - 0.5) tight.push(ctrls[i].n + ' / ' + ctrls[j].n + ' ' + Math.max(0, gap).toFixed(1) + 'px');
+  }
+  const text = [];
+  roots.forEach(root => {
+    const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let t;
+    while ((t = tw.nextNode())) {
+      if (!t.nodeValue.trim()) continue;
+      const el = t.parentElement; if (!el || !box(el)) continue;
+      const fs = parseFloat(getComputedStyle(el).fontSize);
+      if (fs < cfg.text - 0.05) text.push(d(el) + ' ' + fs + 'px "' + t.nodeValue.trim().slice(0, 16) + '"');
+    }
+  });
+  return { controls: ctrls.length, small: [...new Set(small)], tight: [...new Set(tight)], text: [...new Set(text)] };
 };
 
 const STATE = () => ({
@@ -443,6 +515,16 @@ async function runJourney(ctx, entry, vpName) {
     if (!mid.done) r.failures.push('JOURNEY: checking a set did not record it');
     r.inSession = await pg.evaluate(MEASURE, CRITICAL);
 
+    // The owner's standard, as the athlete sees it: the open exercise just
+    // under the toolbar, one set logged, its rest running.
+    await pg.evaluate(() => {
+      const w = document.querySelector('.mcl-wrap.open');
+      const u = w && w.closest('.ss-card, .ex-card, .ex-item');
+      if (u) { u.scrollIntoView({ block: 'start' }); window.scrollBy(0, -110); }
+    });
+    await pg.waitForTimeout(400);
+    r.sweep = await pg.evaluate(SWEEP, { floor: SWEEP_FLOOR, gap: SWEEP_GAP, text: SWEEP_TEXT });
+
     await pg.evaluate(() => { document.querySelectorAll('.mcl-wrap.open .mcl-ck:not(.done)').forEach(c => c.click()); });
     await pg.waitForTimeout(1800);
 
@@ -606,7 +688,7 @@ async function runChromePass(browser) {
    is the injection itself -- mc-card-actions.js appends the script -- and that
    is what is checked. */
 const SUBSYS_VIEWPORT = { width: 390, height: 844 };
-const GUIDED_FLOOR = 44;
+const GUIDED_FLOOR = 48;   // the owner's standard (flagship readiness R6; 44 before)
 
 // One page per ROW SHAPE, because the shape is what the selector bug turned on:
 // chest-tri-pump renders .ex-card, 2on-1off renders .ex-item. Both are already
@@ -911,8 +993,15 @@ async function runSubsystemPass(browser) {
     for (const phase of ['atRest', 'inSession']) {
       const m = r[phase]; if (!m) continue;
       m.occluded.forEach(o => r.failures.push('OCCLUSION (' + phase + '): ' + o));
-      m.tooSmall.forEach(t => r.failures.push('TOUCH (' + phase + '): ' + t + ' is under 44x44'));
+      m.tooSmall.forEach(t => r.failures.push('TOUCH (' + phase + '): ' + t + ' is under 48x48'));
       if (m.hOverflow > 0) r.failures.push('OVERFLOW (' + phase + '): page scrolls ' + m.hOverflow + 'px sideways');
+    }
+    if (r.sweep) {
+      line.push('48/8/13 ' + r.sweep.small.length + '/' + r.sweep.tight.length + '/' + r.sweep.text.length +
+        ' of ' + r.sweep.controls);
+      r.sweep.small.forEach(t => r.failures.push('TOUCH-48: ' + t + ' is under ' + SWEEP_FLOOR + 'x' + SWEEP_FLOOR));
+      r.sweep.tight.forEach(t => r.failures.push('SPACING-8: ' + t + ' apart'));
+      r.sweep.text.forEach(t => r.failures.push('TEXT-13: ' + t));
     }
     r.errors.slice(0, 4).forEach(e => r.failures.push('ERROR: ' + e));
 
@@ -973,10 +1062,13 @@ async function runSubsystemPass(browser) {
   } else if (Object.keys(chromeMeasured).length) {
     console.log('\ncheck-journey: chrome-control sizes hold or improved on all ' +
       Object.keys(chromeMeasured).length + ' measured control/viewport pairs.');
-    const stillUnder44 = Object.entries(chromeMeasured).filter(([, s]) => s.w < 44 || s.h < 44);
-    if (stillUnder44.length) {
-      console.log('    (' + stillUnder44.length + ' still under the 44px floor — tracked, not yet fixed: ' +
-        stillUnder44.map(([k]) => k).join(', ') + ')');
+    // Reported against the owner's 48px standard (R6). Still a ratchet, not a
+    // floor: these are page chrome on the visual ratchet's day-list baselines,
+    // which only a CI --update can re-baseline (premium-design-roadmap P4).
+    const stillUnder48 = Object.entries(chromeMeasured).filter(([, s]) => s.w < 48 || s.h < 48);
+    if (stillUnder48.length) {
+      console.log('    (' + stillUnder48.length + ' still under the 48px standard — tracked, not yet fixed: ' +
+        stillUnder48.map(([k]) => k).join(', ') + ')');
     }
   }
 

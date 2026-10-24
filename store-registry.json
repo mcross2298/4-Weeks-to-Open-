@@ -443,6 +443,13 @@
       "export": false,
       "note": "The dashboard tab and per-tab scroll this browsing session was on, so Back from a workout returns there (R5 step 6). A fresh launch opens on Home."
     },
+    "mc_ui_landing_v1": {
+      "owner": "mc-program-tabs.js",
+      "storage": "session",
+      "sync": false,
+      "export": false,
+      "note": "Each program landing's tab, open group and scroll position this browsing session, restored on Back or reload so a workout's Back button returns to the same place in the list (flagship readiness R6). A fresh visit opens on Overview."
+    },
     "mc_ui_history_tab_v1": {
       "owner": "workout-logs.html",
       "storage": "session",

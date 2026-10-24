@@ -2381,6 +2381,22 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   `validate-programs.js` requires it. A tempo badge with a label longer than
 >   digits needs `data-tempo-label`, or `mc-group-split.js` cuts it.
 
+> **R6 shipped (2026-10-24), all six steps.** The session surface meets the
+> owner's 48px / 8px / 13px standard on all 9 journey pages (0 / 0 / 0; it
+> was 77 / 69 / 217). Four things to know before touching session UI:
+> - **`check-journey.js`'s `SWEEP` hard-fails** any control under 48px, any
+>   pair under 8px apart and any text under 13px on the toolbar, the rest-end
+>   bar and every exercise unit on screen. Page chrome (week tabs, back link,
+>   nav) is still the CHROME ratchet's: it is on the visual ratchet's day-list
+>   baselines, which need a CI re-baseline.
+> - **Replace / Reorder live in the logger's "today" row** with + Set / Skip
+>   (the owner kept them on the card). `MC_CARD_ACTIONS` in
+>   `mc-card-actions.js` is the bridge; there is no second copy of either.
+> - **One rest readout:** `body.mcs-resting` is set only when there is no
+>   inline rest row, so the toolbar keeps elapsed while the row counts down.
+> - **The in-session PR** is local (`prCheck()` in `mc-setlog.js`): it needs
+>   an earlier session to beat (G-03) and today's other sets count against it.
+
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the
 > owner's, not code: `WEEKLY_CHECKIN_SECRET` is still unset (per the 18 Oct

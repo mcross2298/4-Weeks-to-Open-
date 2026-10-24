@@ -481,7 +481,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .ex-num{
   display:inline-flex;align-items:center;justify-content:center;
   min-width:28px;width:28px;height:28px;border-radius:50%;
-  font-size:var(--fs-xs);font-weight:900;margin-top:1px;flex-shrink:0;
+  font-size:var(--fs-sm);font-weight:900;margin-top:1px;flex-shrink:0;
   background:rgba(var(--accent-rgb),0.18);
   color:var(--accent);
   border:1px solid rgba(var(--accent-rgb),0.28);
@@ -491,19 +491,19 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 /* K-3.3/G-08: last-3-session micro-trend, injected as .ex-name's next
    sibling by mc-setlog.js's injectTrend() — never as its child, since
    .ex-name's textContent is the exercise's identity key elsewhere. */
-.a-trend{font-size:11px;font-weight:800;letter-spacing:0.01em;margin:-3px 0 6px;display:flex;align-items:center;gap:3px;}
+.a-trend{font-size:var(--fs-sm);font-weight:800;letter-spacing:0.01em;margin:-3px 0 6px;display:flex;align-items:center;gap:3px;}
 .a-trend-up{color:var(--success);}
 .a-trend-down{color:var(--danger);}
 .a-trend-flat{color:var(--muted);}
 .ex-tags{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
 .ex-sets{
-  display:inline-block;font-size:var(--fs-xs);font-weight:900;padding:3px 10px;border-radius:6px;letter-spacing:0.01em;
+  display:inline-block;font-size:var(--fs-sm);font-weight:900;padding:3px 10px;border-radius:6px;letter-spacing:0.01em;
   background:rgba(var(--accent-rgb),0.12);
   color:var(--accent);
   border:1px solid rgba(var(--accent-rgb),0.24);
 }
 .ex-note{
-  font-size:var(--fs-2xs);margin-top:5px;font-style:italic;opacity:0.85;line-height:1.4;
+  font-size:var(--fs-sm);margin-top:5px;font-style:italic;opacity:0.85;line-height:1.4;
   color:var(--accent);
 }
 
@@ -519,7 +519,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .ss-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;z-index:1;
   background:linear-gradient(180deg,#a855f7,#6d28d9);box-shadow:0 0 16px rgba(168,85,247,0.55);}
 .ss-header{background:rgba(168,85,247,0.14);padding:8px 14px 8px 18px;border-bottom:1px solid rgba(168,85,247,0.18);}
-.ss-label{font-size:var(--fs-2xs);font-weight:900;letter-spacing:0.18em;color:#c084fc;text-transform:uppercase;}
+.ss-label{font-size:var(--fs-sm);font-weight:900;letter-spacing:0.18em;color:#c084fc;text-transform:uppercase;}
 .ss-ex{display:flex;gap:10px;align-items:flex-start;padding:11px 14px 11px 18px;cursor:pointer;position:relative;}
 /* branch tie — links the shared spine to this leg's number node */
 .ss-ex::after{content:'';position:absolute;left:5px;top:25px;width:13px;height:2px;z-index:2;
@@ -537,7 +537,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .ss-content{flex:1;min-width:0;}
 .ss-name{font-weight:var(--fw-bold);font-size:var(--fs-md);letter-spacing:-0.01em;color:var(--text);line-height:1.3;margin-bottom:6px;overflow-wrap:break-word;word-break:break-word;}
 .ss-divider{display:flex;align-items:center;justify-content:center;padding:4px 0;background:rgba(168,85,247,0.06);}
-.ss-x{font-size:var(--fs-2xs);font-weight:900;color:#a855f7;letter-spacing:0.12em;}
+.ss-x{font-size:var(--fs-sm);font-weight:900;color:#a855f7;letter-spacing:0.12em;}
 /* Tri-set variant — amber structural grammar (parallels the premier .a-card.is-tri) */
 .ss-card.is-tri{border-color:rgba(245,158,11,0.28);}
 .ss-card.is-tri::before{background:linear-gradient(180deg,#fbbf24,#b45309);box-shadow:0 0 14px rgba(245,158,11,0.45);}
@@ -553,7 +553,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 /* Flattened — solid tint only, no border. The color still carries into the
    card's hero rep-number glow via --rep-glow-rgb below, so the badge and the
    big numbers read as one accent instead of two competing decorations. */
-.type-badge{display:inline-block;font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:6px;letter-spacing:0.04em;text-transform:uppercase;}
+.type-badge{display:inline-block;font-size:var(--fs-sm);font-weight:800;padding:3px 8px;border-radius:6px;letter-spacing:0.04em;text-transform:uppercase;}
 .tb-pyramid{background:rgba(249,115,22,0.2);color:#fb923c;}
 .tb-lowrep{background:rgba(239,68,68,0.2);color:var(--danger);}
 .tb-tempo{background:rgba(6,182,212,0.2);color:#22d3ee;}
@@ -617,7 +617,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
    timer) could be swallowed as a zoom gesture instead of two taps. This
    disables double-tap-to-zoom and the 300ms delay on these controls only —
    pinch-zoom and normal page scroll are untouched everywhere else. */
-.rest-timer{appearance:none;-webkit-appearance:none;margin:0;font:inherit;color:inherit;border:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;user-select:none;padding:4px 12px;min-height:44px;border-radius:8px;transition:all var(--duration-fast);position:relative;touch-action:manipulation;}
+.rest-timer{appearance:none;-webkit-appearance:none;margin:0;font:inherit;color:inherit;border:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;user-select:none;padding:4px 12px;min-height:48px;border-radius:8px;transition:all var(--duration-fast);position:relative;touch-action:manipulation;}
 .ex-card.active .rest-timer,.ss-ex.active .rest-timer{min-height:52px;}
 .rest-timer:active{transform:scale(0.96);}
 /* .rest-timer.running / .done / .overtime and @keyframes timerPulse are gone
@@ -630,9 +630,9 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
    applied by every emitter. */
 .rest-timer.idle{background:rgba(107,100,89,0.12);border:1px solid rgba(107,100,89,0.2);}
 .rest-timer-icon{font-size:var(--fs-sm);}
-.rest-timer-label{font-size:var(--fs-2xs);font-weight:800;letter-spacing:0.04em;}
+.rest-timer-label{font-size:var(--fs-sm);font-weight:800;letter-spacing:0.04em;}
 .rest-timer.idle .rest-timer-label{color:var(--muted);}
-.rest-timer-hint{font-size:var(--fs-2xs);color:var(--muted2);margin-top:2px;font-style:italic;}
+.rest-timer-hint{font-size:var(--fs-sm);color:var(--muted2);margin-top:2px;font-style:italic;}
 
 /* ── TIMER FLOAT — full-width bottom bar ────────────────────────── */
 .timer-float{position:fixed;bottom:0;left:0;right:0;width:100%;height:64px;background:rgba(10,10,10,0.97);backdrop-filter:blur(16px);display:none;flex-direction:row;align-items:center;justify-content:space-between;padding:0 20px;gap:12px;border-top:1px solid rgba(255,255,255,0.1);box-shadow:0 -4px 24px rgba(0,0,0,0.6);z-index:var(--z-timer-float);}
@@ -798,7 +798,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .ss-card.a-ss .ss-ex.active{background:rgba(168,85,247,0.09);}
 .ss-card.a-ss .ss-ex.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;z-index:1;
   background:#c084fc;box-shadow:0 0 10px rgba(168,85,247,0.6);}
-.a-idx{font-size:calc(var(--fs-sm) * var(--density));font-weight:900;font-variant-numeric:tabular-nums;
+.a-idx{font-size:max(13px, calc(var(--fs-sm) * var(--density)));font-weight:900;font-variant-numeric:tabular-nums;
   min-width:calc(30px * var(--density));height:calc(30px * var(--density));
   border-radius:var(--r-sm);flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;
   background:rgba(var(--accent-rgb),0.12);color:var(--accent);border:1px solid rgba(var(--accent-rgb),0.3);}
@@ -810,7 +810,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .a-head{flex:1;min-width:0;}
 .a-card .ex-name.a-name{font-size:calc(var(--fs-lg) * var(--density));font-weight:800;line-height:1.25;letter-spacing:-0.01em;margin-bottom:0;color:var(--text);padding-right:0;}
 .a-badges{display:flex;gap:6px;margin-top:calc(7px * var(--density));flex-wrap:wrap;}
-.a-pill{font-size:10.5px;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;padding:calc(3px * var(--density)) calc(7px * var(--density));border-radius:var(--r-xs);}
+.a-pill{font-size:var(--fs-sm);font-weight:900;letter-spacing:0.06em;text-transform:uppercase;padding:calc(3px * var(--density)) calc(7px * var(--density));border-radius:var(--r-xs);}
 .a-pill.grp{background:rgba(168,85,247,0.16);color:#c084fc;border:1px solid rgba(168,85,247,0.32);}
 .a-card.is-tri .a-pill.grp{background:rgba(245,158,11,0.16);color:#fbbf24;border-color:rgba(245,158,11,0.34);}
 .a-card.is-cluster .a-pill.grp{background:rgba(34,211,238,0.16);color:#67e8f9;border-color:rgba(34,211,238,0.34);}
@@ -876,7 +876,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .a-hdr{position:relative;display:flex;flex-wrap:wrap;align-items:center;
   column-gap:calc(10px * var(--density));row-gap:calc(6px * var(--density));
   min-height:52px;
-  padding:calc(9px * var(--density)) 54px calc(7px * var(--density)) calc(18px * var(--density));}
+  padding:calc(9px * var(--density)) 62px calc(7px * var(--density)) calc(18px * var(--density));}
 .a-hdr .a-idx{order:1;}
 /* flex-basis:0, not auto — flexbox breaks lines on HYPOTHETICAL main size, so
    an auto-basis .a-head measured at its full content width filled row 1 by
@@ -896,18 +896,33 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .a-hdr .a-leg{gap:5px;}
 .a-hdr .a-leg + .a-leg{margin-top:2px;padding-top:2px;}
 .a-hdr .a-rep{font-size:calc(var(--fs-lg) * var(--density));}
-.a-hdr .a-rep.special{font-size:calc(var(--fs-xs) * var(--density));}
-.a-hdr .a-sep{font-size:var(--fs-3xs);}
-.a-hdr .a-legtag{font-size:9px;}
+/* 13px floor (the owner's standard, flagship readiness R6): every label an
+   athlete reads mid-set. max() because --density can be 0.82. */
+.a-hdr .a-rep.special{font-size:max(13px, calc(var(--fs-xs) * var(--density)));}
+.a-hdr .a-sep{font-size:var(--fs-sm);}
+.a-hdr .a-legtag{font-size:var(--fs-sm);}
+/* R6 declutter: the prescription reads as ONE neutral pill. It was gold glow
+   on the current set and rose on the drop target, two accent colours beside
+   the name, on every open card. The current set stays the brightest text in
+   it (mc-rep-progress.js still moves .live set by set) and finished sets
+   still go green; only the glow and the second accent go. */
+.a-hdr .a-reps{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);
+  border-radius:var(--r-pill,999px);padding:4px 12px;}
+.a-hdr .a-rep{color:var(--muted);}
+.a-hdr .a-rep.live{color:var(--text);text-shadow:none;animation:none;}
+.a-hdr .a-rep.special{color:var(--muted);text-shadow:none;}
+.a-hdr .a-rep.rep-done{color:var(--success);opacity:0.75;}
 /* ⓘ is rendered only when the exercise actually carries a coaching cue — an
    empty info button on every card would be the band just removed, in a
-   smaller coat. 44x44 per the touch floor established in S1/R5. */
+   smaller coat. 48x48, the owner's standard (R6; 44 under S1/R5). */
 /* Floated out of flow beside the ⋯ meatball (which is already absolute at
-   right:6px), so a 44px control does not set the height of a 30px row. */
-.a-hdr:has(.a-info){padding-right:98px;}
-.a-info{position:absolute;top:6px;right:54px;z-index:4;
+   right:6px), so a 48px control does not set the height of a 30px row.
+   right:62px = 6 + the 48px meatball + the standard's 8px between targets;
+   they sat 4px apart before R6. */
+.a-hdr:has(.a-info){padding-right:118px;}
+.a-info{position:absolute;top:6px;right:62px;z-index:4;
   appearance:none;-webkit-appearance:none;
-  width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+  width:48px;height:48px;display:flex;align-items:center;justify-content:center;
   background:none;border:none;padding:0;margin:0;font:inherit;font-size:var(--fs-xl);line-height:1;
   color:var(--muted2);cursor:pointer;border-radius:var(--r-sm);
   -webkit-tap-highlight-color:transparent;transition:color var(--duration-fast),background var(--duration-fast);}
@@ -923,7 +938,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .a-card .a-timerbar .rest-timer.idle .rest-timer-label{color:var(--accent);}
 .a-notes{margin:0 calc(16px * var(--density)) calc(12px * var(--density)) calc(18px * var(--density));
   padding:calc(7px * var(--density)) calc(10px * var(--density));background:rgba(var(--accent-rgb),0.06);
-  border-left:3px solid rgba(var(--accent-rgb),0.5);border-radius:4px;font-size:var(--fs-2xs);color:var(--text);line-height:1.5;}
+  border-left:3px solid rgba(var(--accent-rgb),0.5);border-radius:4px;font-size:var(--fs-sm);color:var(--text);line-height:1.5;}
 /* Collapsed to one line by default (mc-setlog.js adds the class + tap
    handler); tap toggles .a-notes-open to read the full cue. */
 /* 44pt touch floor (R5) — this is a tap target (tap to expand the cue), so it
@@ -931,7 +946,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
    text-overflow:ellipsis does not apply to an anonymous flex item, and the
    one-line truncation is the whole point of the collapsed state. */
 .a-notes.a-notes-collapsible{cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  position:relative;padding-right:24px;min-height:44px;
+  position:relative;padding-right:24px;min-height:48px;
   padding-top:calc(13px * var(--density));padding-bottom:calc(13px * var(--density));}
 .a-notes.a-notes-collapsible::after{content:'⌄';position:absolute;right:8px;top:50%;
   transform:translateY(-50%);opacity:0.55;font-size:var(--fs-2xs);}
@@ -958,8 +973,8 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .ss-card.a-ss .ss-header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   padding:11px 14px 11px 18px;background:rgba(168,85,247,0.10);
   border-bottom:1px solid rgba(168,85,247,0.18);}
-.ss-card.a-ss .ss-label{font-size:var(--fs-xs);font-weight:900;letter-spacing:0.16em;text-transform:uppercase;color:#c084fc;}
-.ss-card.a-ss .ss-rests{margin-left:auto;font-size:10.5px;font-weight:800;letter-spacing:0.02em;color:#8b7bb0;
+.ss-card.a-ss .ss-label{font-size:var(--fs-sm);font-weight:900;letter-spacing:0.16em;text-transform:uppercase;color:#c084fc;}
+.ss-card.a-ss .ss-rests{margin-left:auto;font-size:var(--fs-sm);font-weight:800;letter-spacing:0.02em;color:#8b7bb0;
   background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.25);border-radius:20px;padding:3px 10px;}
 .ss-card.a-ss .ss-ex{display:flex;align-items:flex-start;gap:11px;padding:13px 14px 12px 18px;cursor:pointer;position:relative;}
 .ss-card.a-ss .ss-num{flex-shrink:0;width:30px;height:30px;border-radius:50%;margin-top:1px;
@@ -970,7 +985,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .ss-card.a-ss .a-ss-reps{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:8px;}
 .ss-card.a-ss .a-ss-sets-hidden{display:none;}
 .ss-card.a-ss .a-rep.live{text-shadow:0 0 18px rgba(168,85,247,0.6);}
-.ss-card.a-ss .ex-note.a-ss-tempo{margin-top:7px;font-size:var(--fs-2xs);font-weight:800;font-style:normal;
+.ss-card.a-ss .ex-note.a-ss-tempo{margin-top:7px;font-size:var(--fs-sm);font-weight:800;font-style:normal;
   font-family:"SF Mono",ui-monospace,monospace;color:#c084fc;opacity:1;letter-spacing:0.02em;}
 .ss-card.a-ss .ex-rest{margin-top:9px;}
 .ss-card.a-ss .ex-rest .rest-timer{width:100%;justify-content:center;}
@@ -978,8 +993,8 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .ss-card.a-ss .ex-rest .rest-timer.idle .rest-timer-label{color:#c084fc;}
 .ss-card.a-ss .ss-divider{display:flex;align-items:center;justify-content:center;gap:10px;
   padding:5px 0;background:rgba(168,85,247,0.06);}
-.ss-card.a-ss .ss-x{font-size:var(--fs-2xs);font-weight:900;letter-spacing:0.16em;color:#a855f7;text-transform:uppercase;}
-.ss-card.a-ss .ss-btw{font-size:var(--fs-2xs);font-weight:800;color:#8b7bb0;
+.ss-card.a-ss .ss-x{font-size:var(--fs-sm);font-weight:900;letter-spacing:0.16em;color:#a855f7;text-transform:uppercase;}
+.ss-card.a-ss .ss-btw{font-size:var(--fs-sm);font-weight:800;color:#8b7bb0;
   background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.25);border-radius:20px;padding:2px 8px;}
 .ss-card.a-ss .ss-ex.checked .ss-num{background:#16a34a;color:#fff;border-color:transparent;}
 .ss-card.a-ss .ss-ex.checked .ss-name{text-decoration:line-through;color:var(--success);}
@@ -1117,6 +1132,9 @@ html[data-theme="light"] .a-rep.live{
 }
 html[data-theme="light"] .a-rep.rep-done{color:#047857;}
 html[data-theme="light"] .a-rep.special{color:#be123c;}
+html[data-theme="light"] .a-hdr .a-reps{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.12);}
+html[data-theme="light"] .a-hdr .a-rep.live{color:#1c1a17;text-shadow:none;}
+html[data-theme="light"] .a-hdr .a-rep.special{color:#6b6459;}
 html[data-theme="light"] .a-sep,
 html[data-theme="light"] .a-legtag{color:#8a8377;}
 
