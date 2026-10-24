@@ -2290,7 +2290,9 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > and clock start at the first ticked set, re-acquire on every return and
 > release at Finish. "Keep screen on during workouts" is
 > `mc_prefs_v1.keepAwake` (default on), with its toggle in the account sheet.
-> A rest reaching zero shows a full-width bar, `#mcRestEnd`. Residual: video
+> A rest reaching zero shows a full-width bar, `#mcRestEnd`, under the
+> session toolbar. It is deliberately not tappable: its first draft covered
+> End workout, which `check-journey.js` caught. Residual: video
 > view and the cue toggles are reachable only from the hidden float.
 > **The "cards at load" trap, a sixth time:** `mc-live-tracker.js` returned at
 > load on an F3 day list, so a session entered by tapping a day got no rest

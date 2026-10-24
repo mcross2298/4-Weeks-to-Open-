@@ -55,24 +55,35 @@ function _mcRestState() {
 // Flagship readiness R2 / step 5: a rest ending has to be SEEN. Sound and
 // vibration are the only cues the app had, and an iPhone on silent with music
 // playing delivers neither — so the end of every rest was invisible unless
-// the athlete happened to be watching the countdown. A full-width bar across
-// the top of the screen, above the video view too, until the rest is
-// dismissed (tap it, or the existing 4s auto-dismiss). It is a real button,
-// so a tap on it is a deliberate "got it", never a stray tap stolen from the
-// page underneath (audit VOC-A1).
+// the athlete happened to be watching the countdown. A full-width bar, shown
+// until the rest is dismissed (the existing 4s auto-dismiss, or any way the
+// athlete ends it).
+//
+// It is deliberately NOT tappable (pointer-events:none) and sits BELOW the
+// session toolbar rather than over it. The first draft was a button across
+// the top of the screen, and check-journey.js caught it covering End workout
+// and the progress control for as long as it showed — a cue that blocks the
+// control that ends the session is worse than no cue. Purely visual, it can
+// never take a tap meant for the page either (audit VOC-A1).
 function _mcRestEndCue(upNext) {
   try {
     injectTimerEnhCss();
     let el = document.getElementById('mcRestEnd');
     if (!el) {
-      el = document.createElement('button');
-      el.type = 'button';
+      el = document.createElement('div');
       el.id = 'mcRestEnd';
       el.className = 'mc-rest-end';
+      el.setAttribute('role', 'status');
       el.setAttribute('aria-live', 'assertive');
-      el.addEventListener('click', function (e) { e.stopPropagation(); TMR.stop(); });
       document.body.appendChild(el);
     }
+    // Under the session toolbar when it is on screen; at the very top (and
+    // clear of the notch) when it is not.
+    const bar = document.querySelector('.prog-bar-wrap.mcs-stat, #progBarWrap');
+    const r = bar && bar.getBoundingClientRect();
+    const below = r && r.height > 0 && r.bottom > 0 && r.top < 1 ? Math.round(r.bottom) : 0;
+    el.style.top = below + 'px';
+    el.classList.toggle('mc-rest-end-under', below > 0);
     el.textContent = 'Rest over' + (upNext ? ' \u2014 ' + upNext : ' \u2014 next set');
     el.classList.add('show');
   } catch (e) {}
@@ -740,10 +751,11 @@ function injectTimerEnhCss() {
     '.tv-list-btn{display:inline-flex;align-items:center;}' +
     // R2 / step 5: the full-width rest-end bar. Literal colours on purpose:
     // the ink ramp flips between themes, and this must read the same in both.
-    '.mc-rest-end{display:none;position:fixed;left:0;right:0;top:0;z-index:160;border:none;' +
-      'padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px;min-height:56px;width:100%;' +
-      'background:#34d399;color:#03271a;font:inherit;font-size:17px;font-weight:900;letter-spacing:0.02em;' +
-      'text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 6px 24px rgba(0,0,0,0.35);}' +
+    '.mc-rest-end{display:none;position:fixed;left:0;right:0;top:0;z-index:160;pointer-events:none;' +
+      'padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px;min-height:56px;box-sizing:border-box;' +
+      'background:#34d399;color:#03271a;font-size:17px;font-weight:900;letter-spacing:0.02em;' +
+      'text-align:center;box-shadow:0 6px 24px rgba(0,0,0,0.35);}' +
+    '.mc-rest-end.mc-rest-end-under{padding-top:14px;}' +
     '.mc-rest-end.show{display:block;animation:mcRestEndIn .25s ease-out;}' +
     '@keyframes mcRestEndIn{from{transform:translateY(-100%)}to{transform:none}}' +
     '@media (prefers-reduced-motion:reduce){.mc-rest-end.show{animation:none;}}' +

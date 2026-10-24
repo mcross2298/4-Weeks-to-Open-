@@ -41,7 +41,9 @@
                 (D-07: only a running rest re-acquired); Finish releases it and
                 stops the rest; "Keep screen on" off holds it only during a rest.
      REST-END   a rest reaching zero shows a full-width bar a silent phone
-                cannot miss, and a tap on it ends the rest.
+                cannot miss. It must never take a tap and must leave End
+                workout reachable (its first draft covered it; check-journey
+                caught that), and it clears when the rest ends.
      DAY-LIST   the same lock when the session is entered the normal way —
                 from the day list, not a ?day= deep link — on all three F3
                 engine families. mc-live-tracker.js returned at load when no
@@ -336,12 +338,32 @@ async function step(name, fn) {
     await p.goto(BASE + '/mm-p1.html?day=1'); await sleep(1800);
     await p.evaluate(() => TMR.start(document.querySelector('.ex-card .rest-timer'), 2, 'Rest')); await sleep(3300);
     const b = await p.evaluate(() => { const e = document.getElementById('mcRestEnd'); if (!e) return null;
-      const r = e.getBoundingClientRect(); return { show: e.classList.contains('show'), w: r.width, h: r.height, top: r.top }; });
-    check(b && b.show && b.w >= 389 && b.h >= 48 && b.top === 0, 'REST-END a full-width bar shows when the rest reaches zero', JSON.stringify(b));
+      const r = e.getBoundingClientRect();
+      const tb = document.querySelector('.prog-bar-wrap.mcs-stat, #progBarWrap');
+      const t = tb && tb.getBoundingClientRect();
+      const under = t && t.height > 0 && t.bottom > 0 && t.top < 1 ? Math.round(t.bottom) : 0;
+      return { show: e.classList.contains('show'), w: r.width, h: r.height, top: Math.round(r.top), expectTop: under }; });
+    // Full width, at least 48 tall, directly under the session toolbar (or at
+    // the very top when the toolbar is not on screen).
+    check(b && b.show && b.w >= 389 && b.h >= 48 && Math.abs(b.top - b.expectTop) <= 1,
+      'REST-END a full-width bar shows under the toolbar when the rest reaches zero', JSON.stringify(b));
     if (b && b.show) {
-      await p.locator('#mcRestEnd').click(); await sleep(300);
-      const st = await p.evaluate(() => ({ running: TMR.isRunning(), shown: document.getElementById('mcRestEnd').classList.contains('show') }));
-      check(!st.running && !st.shown, 'REST-END a tap on the bar ends the rest', JSON.stringify(st));
+      const hit = await p.evaluate(() => {
+        const bar = document.getElementById('mcRestEnd').getBoundingClientRect();
+        const atBar = document.elementFromPoint(bar.left + bar.width / 2, bar.top + bar.height / 2);
+        const end = document.getElementById('mcsEnd');
+        let endOk = true;
+        if (end && end.offsetParent !== null) {
+          const er = end.getBoundingClientRect();
+          const at = document.elementFromPoint(er.left + er.width / 2, er.top + er.height / 2);
+          endOk = !!(at && (at === end || end.contains(at)));
+        }
+        return { barTakesTap: !!(atBar && atBar.id === 'mcRestEnd'), endOk };
+      });
+      check(!hit.barTakesTap && hit.endOk, 'REST-END the bar never takes a tap and leaves End workout reachable', JSON.stringify(hit));
+      await p.evaluate(() => TMR.stop()); await sleep(300);
+      check(!(await p.evaluate(() => document.getElementById('mcRestEnd').classList.contains('show'))),
+        'REST-END the bar clears when the rest ends');
     }
     await c.close();
   });
