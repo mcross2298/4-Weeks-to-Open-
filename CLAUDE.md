@@ -2470,6 +2470,15 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > - **Measured on emulated Slow 3G:** first paint 12.0 → 7.4 s where the bundles
 >   apply; bytes barely move (no minification). `mm-p1/p2/p3` are not bundled.
 
+> **N1–N3 shipped (2026-10-24).** Three residuals closed in one PR. Things to
+> know: an untick writes `mc_setlog_deleted_v1` and every set carries its tick
+> time `t`, so `mergeSetlog()` drops a set unticked on another device (pass the
+> records as its third argument anywhere you merge the set log); the inline
+> rest row carries **Full screen** and **Rest cues**, rendered by the same
+> `renderPrefToggles()` as the float; and the page chrome is at 48 — the week
+> tabs through one `.tabs-bar .tab` rule in `base.css`, which no per-page `.tab`
+> overrides because none sets a height.
+
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the
 > owner's, not code: `WEEKLY_CHECKIN_SECRET` is still unset (per the 18 Oct

@@ -497,6 +497,17 @@ Defects: D-35, D-40.
 - **Not done:** minification (it needs a real JavaScript parser to be safe, which is a build-tool decision), and bundling the Modality Matrix pages (their run would need reordering, and module order is the risk this design avoids).
 - **Editing a member now means regenerating:** `node tools/build-bundles.js`. CI fails until you do.
 
+### N1–N3 · The three residuals after E · J
+
+Taken on the owner's go-ahead, as one PR (#372), after the R-phase residual lists.
+- **N3 · an untick survives sync (R1 residual).** `unsave()` writes `mc_setlog_deleted_v1` (`{'key|day|set': {ts}}`, pruned after 120 days) and `save()` stamps each set's tick time `t`. `mergeSetlog()` drops a set whose tick is not newer than its record, so a set re-ticked later stays; the per-page pull and the backup import union the records from both sides. Six assertions in `test-mc-sync-merge.js`, one of them the defect.
+- **N2 · video view and the cue toggles reachable (R2 residual).** The inline rest row gains **Full screen** and **Rest cues** (48px). Rest cues renders the same toggle list as the float's tray. Back from video view mid-rest remounts the row at the time remaining.
+- **N1 · page chrome at 48 (R6/G residual).** Back link (base.css and 53 per-page copies), week tabs (one `.tabs-bar .tab` rule; they were 42), the back icon, the dashboard topbar icons, PM unlock (36) and See all (16 tall), the landing icon, nutrition icons, Surprise Me, the guide link, the tour dot and Skip (31). `chrome-budgets.json` heights raised by hand, and the week tab is measured now. A one-shot `workflow_dispatch` job re-baselined the visual ratchet from CI, seeding the day-mode entry for the first time, and was then removed.
+
+**Known residuals, not fixed here:**
+- **The dashboard greeting has less room.** It was already cut off at every width; with five 48px controls it goes 92 → 72px at 390 and 84 → 66px at 320. Rearranging that row is a design call.
+- **The untick record keys on the day.** A set unticked on one day and the same set number ticked on a later day are different keys, as intended; a clock skew between devices larger than the gap between a tick and its untick could misorder them.
+
 ### Owner actions (no code)
 - Set the `WEEKLY_CHECKIN_SECRET` repo secret (D-33).
 - Turn on leaked-password protection (D-34).
