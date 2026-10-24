@@ -73,7 +73,9 @@ const PAGES = [
   // 1163->1160, 937->935, 1153->1188). Drop `seed` once the PNG is committed
   // from a real CI --update run; a missing baseline is a hard failure for
   // every entry without it, so this tolerance cannot spread by accident.
-  { url: 'kitchen-sink.html?day=1', name: 'kitchen-sink-day1', seed: true },
+  // Seeded 2026-10-24 by a one-shot CI --update run (flagship readiness N1),
+  // so the flag is gone and a missing PNG fails here like any other.
+  { url: 'kitchen-sink.html?day=1', name: 'kitchen-sink-day1' },
 ];
 
 const base = process.argv[2];
