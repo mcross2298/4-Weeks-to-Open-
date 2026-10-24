@@ -108,7 +108,7 @@ node tools/test-mc-pr-scope.js http://localhost:8080            # a PR belongs t
 node tools/test-mc-setlog-concurrency.js http://localhost:8080  # two-tab set-log durability (FIX-01, L-01)
 node tools/test-mc-store-resilience.js http://localhost:8080    # corrupt-store shapes, 5 pages (FIX-04, L-03)
 node tools/test-mc-crash-recovery.js http://localhost:8080      # process kill + cloud rehydrate (FIX-02, L-02)
-node tools/test-mc-session-durability.js http://localhost:8080  # week round trip, mid-rest refresh, focused draft, untick, Finish, import (flagship readiness R1)
+node tools/test-mc-session-durability.js http://localhost:8080  # week round trip, mid-rest refresh, focused draft, untick, Finish, import, wake lock, rest-end bar (flagship readiness R1/R2)
 # needs a direct Postgres URL; SKIPS without one rather than failing
 SUPABASE_DB_URL=... pytest tests/test_rls.py   # 7 cross-user attacks + the phase-12 constraints (TEST 5)
                                               # plus the Phase 5.4 world-readable leak scan
@@ -2280,6 +2280,23 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > Step 9 (an IndexedDB journal) and the residuals are listed in the roadmap's
 > R1 section. One residual is a sync gap: an untick can still be restored by a
 > pull before the next push, because the set log has no deletion records.
+>
+> **R2 shipped (2026-10-24), all six steps.** R-06 and R-07 pass. The root
+> cause is worth knowing: `mc-live-tracker.js` inferred a running rest from
+> `#timerFloat`'s `.visible` class, which M3b stopped setting on pages with set
+> rows, so a rest never took the wake lock there. Rest state is now an event,
+> `mc:rest-state`, dispatched by `mc-timer.js`; the remaining time is
+> `TMR.remaining()`. Never read either from the float again. The session lock
+> and clock start at the first ticked set, re-acquire on every return and
+> release at Finish. "Keep screen on during workouts" is
+> `mc_prefs_v1.keepAwake` (default on), with its toggle in the account sheet.
+> A rest reaching zero shows a full-width bar, `#mcRestEnd`. Residual: video
+> view and the cue toggles are reachable only from the hidden float.
+> **The "cards at load" trap, a sixth time:** `mc-live-tracker.js` returned at
+> load on an F3 day list, so a session entered by tapping a day got no rest
+> lock and no activity record. It now defers on `MC_SCAN`, and the gate's
+> `DAY-LIST` checks enter from the day list rather than a `?day=` link. A
+> journey check that only deep-links cannot see this class of bug.
 >
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the

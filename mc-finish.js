@@ -908,6 +908,10 @@
           MC_SB.deleteSessionLog(MCSetlogUtil.sessionId).catch(function(){});
         }
       }catch(e){}
+      // R2: a rest left running would keep holding the screen after the
+      // workout is over (in overtime, indefinitely). Ending the workout ends
+      // the rest; then the session lock goes with it.
+      try{if(typeof TMR!=='undefined'&&TMR.isRunning&&TMR.isRunning())TMR.stop();}catch(e){}
       try{if(window.MCActivity&&MCActivity.releaseSessionLock)MCActivity.releaseSessionLock();}catch(e){}
       window._FW.finished=true;
       window._FW.close();
@@ -922,6 +926,10 @@
       window._FW.finished=true;
       var entry=saveWorkout();
       saveSessionSummary(entry);
+      // R2: a rest left running would keep holding the screen after the
+      // workout is over (in overtime, indefinitely). Ending the workout ends
+      // the rest; then the session lock goes with it.
+      try{if(typeof TMR!=='undefined'&&TMR.isRunning&&TMR.isRunning())TMR.stop();}catch(e){}
       try{if(window.MCActivity&&MCActivity.releaseSessionLock)MCActivity.releaseSessionLock();}catch(e){}
       // back up the finished session right away (no-op when signed out)
       try{if(window.MC_SYNC&&MC_SYNC.push)MC_SYNC.push();}catch(e){}

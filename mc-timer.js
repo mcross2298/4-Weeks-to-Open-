@@ -29,13 +29,69 @@ const MC_PREFS = {
   get() {
     let p = {};
     try { p = JSON.parse(localStorage.getItem(this.KEY) || '{}') || {}; } catch (e) {}
-    return { sound: p.sound !== false, haptics: p.haptics !== false, cue10s: p.cue10s !== false, restView: p.restView === 'video' ? 'video' : 'list' };
+    return { sound: p.sound !== false, haptics: p.haptics !== false, cue10s: p.cue10s !== false, restView: p.restView === 'video' ? 'video' : 'list',
+             // Flagship readiness R2: "Keep screen on during workouts", default
+             // on. Off keeps the screen awake only while a rest counts down,
+             // which is what the app did before R2 (mc-live-tracker.js).
+             keepAwake: p.keepAwake !== false };
   },
   set(k, v) {
     const p = this.get(); p[k] = v;
     try { localStorage.setItem(this.KEY, JSON.stringify(p)); } catch (e) {}
+    // Readers that hold state off a pref (the wake lock) re-sync on this
+    // rather than polling the store.
+    try { document.dispatchEvent(new CustomEvent('mc:prefs-changed', { detail: { key: k, value: v } })); } catch (e) {}
   }
 };
+
+// Flagship readiness R2: the rest's state, announced. mc-live-tracker.js used
+// to infer "a rest is running" from #timerFloat's .visible class, which M3b
+// stopped setting on every page with set rows (the inline row replaced the
+// float), so the rest-time wake lock was never requested on those pages.
+function _mcRestState() {
+  try { document.dispatchEvent(new CustomEvent('mc:rest-state', { detail: { running: TMR.startTime != null } })); } catch (e) {}
+}
+
+// Flagship readiness R2 / step 5: a rest ending has to be SEEN. Sound and
+// vibration are the only cues the app had, and an iPhone on silent with music
+// playing delivers neither — so the end of every rest was invisible unless
+// the athlete happened to be watching the countdown. A full-width bar across
+// the top of the screen, above the video view too, until the rest is
+// dismissed (tap it, or the existing 4s auto-dismiss). It is a real button,
+// so a tap on it is a deliberate "got it", never a stray tap stolen from the
+// page underneath (audit VOC-A1).
+function _mcRestEndCue(upNext) {
+  try {
+    injectTimerEnhCss();
+    let el = document.getElementById('mcRestEnd');
+    if (!el) {
+      el = document.createElement('button');
+      el.type = 'button';
+      el.id = 'mcRestEnd';
+      el.className = 'mc-rest-end';
+      el.setAttribute('aria-live', 'assertive');
+      el.addEventListener('click', function (e) { e.stopPropagation(); TMR.stop(); });
+      document.body.appendChild(el);
+    }
+    el.textContent = 'Rest over' + (upNext ? ' \u2014 ' + upNext : ' \u2014 next set');
+    el.classList.add('show');
+  } catch (e) {}
+}
+function _mcRestEndClear() {
+  const el = document.getElementById('mcRestEnd');
+  if (el) el.classList.remove('show');
+}
+
+// The video view's "SEC" caption belongs under a seconds-only readout
+// ("45s"), not under "1:30" or "DONE!".
+function _mcTvUnit() {
+  const v = document.getElementById('timerVideo');
+  if (!v || !v.classList.contains('visible')) return;   // nothing to keep in step
+  const t = document.getElementById('tvTime'), u = v.querySelector('.tv-unit');
+  if (!t || !u) return;
+  const show = /^\+?\d+s$/.test((t.textContent || '').trim());
+  if ((u.style.visibility === 'hidden') === show) u.style.visibility = show ? '' : 'hidden';
+}
 
 // Web Audio contexts start suspended on iOS until a user gesture; keep one
 // primed singleton so cues can actually play (a fresh context mid-countdown
@@ -444,6 +500,8 @@ const TMR = {
       }
     }
     applyRestView();
+    _mcRestEndClear();
+    _mcRestState();
 
     this.interval = setInterval(() => {
       const elapsed = (Date.now() - this.startTime) / 1000;
@@ -499,6 +557,7 @@ const TMR = {
         _mcSetText(floatLabel, 'DONE!');
         if (tvTime) _mcSetCls(tvTime, 'tv-time done');
         if (tvLabel) _mcSetText(tvLabel, 'DONE!');
+        _mcRestEndCue(this.upNext && this.upNext.name);
         if(!this._autoDismiss)this._autoDismiss=setTimeout(()=>this.stop(),4000);
       } else {
         // Overtime
@@ -510,6 +569,7 @@ const TMR = {
         if (tvTime) _mcSetCls(tvTime, 'tv-time overtime');
         if (tvLabel) _mcSetText(tvLabel, 'OVERTIME');
       }
+      _mcTvUnit();
     }, 1000);
   },
 
@@ -526,7 +586,17 @@ const TMR = {
     this.startTime = null;
     _mcInlineRestUnmount();
     applyRestView();
+    _mcRestEndClear();
     if(this._autoDismiss){clearTimeout(this._autoDismiss);this._autoDismiss=null;}
+    _mcRestState();
+  },
+
+  // R2: the catch-up path (mc-live-tracker.js) shows the same cue when a rest
+  // ran out while the page was hidden and the tick's own cue was missed.
+  restEndCue(upNext) { _mcRestEndCue(upNext || (this.upNext && this.upNext.name)); },
+  // Seconds left on the running rest, from TMR's own clock (null if none).
+  remaining() {
+    return this.startTime == null ? null : Math.ceil(this.duration - (Date.now() - this.startTime) / 1000);
   },
 
   toggle(el, durationSecs, exerciseName) {
@@ -557,12 +627,15 @@ const TMR = {
       tv.textContent = this.formatTime(remaining);
       tv.className = 'tv-time' + (remaining <= 0 ? ' overtime' : '');
     }
+    if (remaining > 0) _mcRestEndClear();   // +15s pulled it back out of "over"
+    _mcTvUnit();
     const p = MC_PREFS.get();   // light tick so the tap registers
     if (p.haptics && navigator.vibrate) navigator.vibrate(10);
   },
   setRestView(view) {
     MC_PREFS.set('restView', view === 'video' ? 'video' : 'list');
     applyRestView();
+    _mcTvUnit();
   },
   setTime(secs,label){
     this.stop();
@@ -585,14 +658,18 @@ const TMR = {
     this._cued10=false;
     this._done=false;
     applyRestView();
+    _mcRestEndClear();
+    _mcRestState();
+    _mcTvUnit();
     this.interval=setInterval(()=>{
       const rem=Math.ceil(this.duration-(Date.now()-this.startTime)/1000);
       const ft2=document.getElementById("timerFloat");if(!ft2)return;
       const tt2=ft2.querySelector(".timer-float-time"),tp2=ft2.querySelector(".timer-float-progress"),tl2=ft2.querySelector(".timer-float-label");
       const tv2=document.getElementById('tvTime'),tvl2=document.getElementById('tvLabel');
       if(rem>0){if(rem===10&&this.duration>15&&!this._cued10){this._cued10=true;this.cue10();}if(tt2){tt2.textContent=rem+"s";tt2.className="timer-float-time";}if(tp2){tp2.style.width=Math.round((rem/this.duration)*100)+"%";tp2.className="timer-float-progress";}if(tv2){tv2.textContent=rem+"s";tv2.className="tv-time";}}
-      else if(!this._done){this._done=true;if(tt2){tt2.textContent="DONE!";tt2.className="timer-float-time done";}if(tp2){tp2.style.width="100%";tp2.className="timer-float-progress done";}if(tl2)tl2.textContent="DONE ✓";if(tv2){tv2.textContent="DONE!";tv2.className="tv-time done";}if(tvl2)tvl2.textContent="DONE ✓";this.buzz();if(!TMR._autoDismiss)TMR._autoDismiss=setTimeout(()=>TMR.stop(),4000);}
+      else if(!this._done){this._done=true;if(tt2){tt2.textContent="DONE!";tt2.className="timer-float-time done";}if(tp2){tp2.style.width="100%";tp2.className="timer-float-progress done";}if(tl2)tl2.textContent="DONE ✓";if(tv2){tv2.textContent="DONE!";tv2.className="tv-time done";}if(tvl2)tvl2.textContent="DONE ✓";this.buzz();_mcRestEndCue();if(!TMR._autoDismiss)TMR._autoDismiss=setTimeout(()=>TMR.stop(),4000);}
       else{if(tt2){tt2.textContent="+"+Math.abs(rem)+"s";tt2.className="timer-float-time overtime";}if(tp2)tp2.className="timer-float-progress overtime";if(tv2){tv2.textContent="+"+Math.abs(rem)+"s";tv2.className="tv-time overtime";}}
+      _mcTvUnit();
     },1000);
   }
 };
@@ -658,7 +735,18 @@ function injectTimerEnhCss() {
     '.tv-btn{padding:11px 20px;border-radius:10px;border:none;font-size:13px;font-weight:800;' +
       'letter-spacing:0.04em;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}' +
     '.tv-done{background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3);}' +
-    '.tv-cancel{background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.2);}' +
+    // R2 / step 6: every video-view control clears the owner's 48px floor.
+    '.tv-list-btn,.tv-adj,.tv-btn{min-height:48px;min-width:48px;box-sizing:border-box;}' +
+    '.tv-list-btn{display:inline-flex;align-items:center;}' +
+    // R2 / step 5: the full-width rest-end bar. Literal colours on purpose:
+    // the ink ramp flips between themes, and this must read the same in both.
+    '.mc-rest-end{display:none;position:fixed;left:0;right:0;top:0;z-index:160;border:none;' +
+      'padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px;min-height:56px;width:100%;' +
+      'background:#34d399;color:#03271a;font:inherit;font-size:17px;font-weight:900;letter-spacing:0.02em;' +
+      'text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 6px 24px rgba(0,0,0,0.35);}' +
+    '.mc-rest-end.show{display:block;animation:mcRestEndIn .25s ease-out;}' +
+    '@keyframes mcRestEndIn{from{transform:translateY(-100%)}to{transform:none}}' +
+    '@media (prefers-reduced-motion:reduce){.mc-rest-end.show{animation:none;}}' +
     // ── big glanceable numerals + full-width progress ──
     '.timer-float-time{font-size:54px!important;text-align:center;width:100%;line-height:1;margin:2px 0;transition:color .25s ease;}' +
     '.timer-float-bar{width:100%!important;margin:0!important;}' +
@@ -764,9 +852,11 @@ function buildTimerVideo() {
       <div class="tv-upnext-reps" id="tvUpNextReps"></div>
     </div>
     <div class="tv-actions">
-      <button class="tv-btn tv-done" onclick="TMR.stop()">✓ Done</button>
-      <button class="tv-btn tv-cancel" onclick="TMR.stop()" aria-label="Cancel rest">✕ Cancel</button>
+      <button class="tv-btn tv-done" onclick="TMR.stop()">✓ End rest</button>
     </div>`;
+  // R2 / step 6: "Done" and "Cancel" both called TMR.stop() — two labels for
+  // one action, the second implying a difference that did not exist. One
+  // button now, saying what it does.
   document.body.appendChild(div);
 }
 // ── cue preference toggles inside the timer float ──
@@ -787,7 +877,8 @@ function renderTimerPrefs() {
   const defs = [
     { k: 'sound',   lbl: '🔊 Sound' },
     { k: 'haptics', lbl: '📳 Vibrate' },
-    { k: 'cue10s',  lbl: '⏰ 10s cue' }
+    { k: 'cue10s',  lbl: '⏰ 10s cue' },
+    { k: 'keepAwake', lbl: '☀️ Screen on' }
   ];
   const p = MC_PREFS.get();
   host.innerHTML = '';

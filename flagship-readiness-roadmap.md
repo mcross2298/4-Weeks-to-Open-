@@ -185,6 +185,22 @@ Defects: D-06, D-07.
 
 Acceptance: R-06, R-07, plus a release at Finish.
 
+**R2 shipped (2026-10-24), all six steps.** R-06 and R-07 pass. `fa-repro.js` goes from 14 to 16 of 23, and the 7 still failing belong to R4 and R5. `tools/test-mc-session-durability.js` gains 11 R2 checks and now runs 40. On `main`, 9 of those 11 fail. The "nothing holds the screen before the first set" control passes there too, and the bar-tap check doesn't run there because no bar appears.
+
+- **D-06, the root cause.** `mc-live-tracker.js` decided "a rest is running" from `#timerFloat`'s `.visible` class, and M3b stopped setting that class on every page with set rows. The measurement on `main` makes it plain: with "Keep screen on" off, a running rest held **no** lock on `mm-p1.html`. `mc-timer.js` now announces every start and stop as `mc:rest-state`, and the tracker listens to that. The catch-up alert computes the remaining time from `TMR.remaining()`. It used to parse the float's text, which stays frozen while the float is hidden.
+- **D-06, the session half.** `mc-summary.js` started the session clock and the whole-session lock at `exDone > 0`, a whole exercise checked. Both now start at the first ticked set.
+- **D-07.** `onShow()` re-syncs the lock whenever a session or a rest wants it. It used to do so only while a rest was running.
+- **Release at Finish.** Finish and Discard now stop a running rest first. A rest left in overtime would otherwise have kept holding the screen after the workout ended.
+- **Step 4.** `mc_prefs_v1.keepAwake` defaults to on; turned off, the screen is held only during a rest. The toggle lives in the account sheet, the one settings surface every athlete can reach, and in the timer tray. It is a 48 px `role="switch"`.
+- **Step 5.** A full-width green bar reading "Rest over — next" appears at zero. It is a real button, so a tap means "got it" and ends the rest; it never steals a tap meant for the page (VOC-A1). The catch-up path shows it too.
+- **Step 6.** Every video-view control is now at least 48 px. "SEC" shows only under a seconds readout. Done and Cancel both called `TMR.stop()`, so they are merged into one "End rest" button.
+
+**Found while driving, beyond the register: the "cards at load" trap, a sixth time.** Every gate check above used a `?day=` deep link, and the first draft of R2 passed all of them. Entering the normal way, from the day list, showed a different result. `mc-live-tracker.js`'s `init()` returned when no exercise card existed at load, which an F3 day list always satisfies. So a session entered by tapping a day got no rest-time lock and wrote no activity record, and the dashboard's resume banner reads that record. Both were broken on `main` too, on all three engine families. Separately, the tracker's card selector left out `.ex-item`, so the eight frequency pages were never treated as workout pages at all. A third gap was in `mc-summary.js`: its auto-built summary returned early on an unchanged signature, and that signature only changes when a whole exercise is finished. So on those pages the first set never started the session. All three are fixed: `init()` defers on `MC_SCAN`, exactly as `mc-session.js` has since F3-1. They are gated as `DAY-LIST` checks on `mm-p1`, `kitchen-sink` and `2on-1off`. The gate has 40 checks now, and 9 of the 11 R2 ones fail on `main`.
+
+**Known residuals, not fixed here:**
+- **Video view and the cue toggles are hard to reach.** Both open only from the rest float (🎬 and ⚙️), and the float is hidden on every page with set rows since M3b. On most workout pages an athlete can't switch to video view or reach the sound, vibrate and 10s toggles mid-session. This predates R2; it belongs with R6's control work. The account-sheet toggle avoids the problem only for the new setting.
+- **Not verified on a real device.** That includes whether iOS honours the Screen Wake Lock in an installed PWA. Device matrix item 1 (silent iPhone, music playing, screen locked through a rest) is still the owner's to run.
+
 ### R4 · Prefill, identity and progression you can trust
 Defects: D-08, D-11, D-12, D-13, D-21, D-22, D-23.
 1. The planned load replaces the ghost on the sets it was computed from.
