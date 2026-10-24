@@ -165,11 +165,30 @@
     return b;
   }
 
+  // Flagship readiness R3 / D-20: navigator.onLine is true on gym Wi-Fi that
+  // has no route out, which is the commonest way to be offline in a gym. So a
+  // failed request of our own (the update check below) counts too: the bar
+  // shows until a request succeeds again.
+  var unreachable = false;
+  function setReachable(ok) {
+    if (unreachable === !ok) return;
+    unreachable = !ok;
+    var b = ensureOfflineBanner();
+    if (b && b.id === 'offlineBar') {
+      // dashboard.html drives its own bar from online/offline. This touches it
+      // only when reachability CHANGES, adding the case those events cannot
+      // see and clearing only what it added.
+      if (unreachable) b.classList.add('show');
+      else if (!('onLine' in navigator) || navigator.onLine) b.classList.remove('show');
+      return;
+    }
+    updateOfflineBanner();
+  }
   function updateOfflineBanner() {
     var b = ensureOfflineBanner();
     if (!b || b.id === 'offlineBar') return;   // dashboard.html drives its own bar's visibility
     positionBanner(b);
-    b.classList.toggle('show', 'onLine' in navigator && !navigator.onLine);
+    b.classList.toggle('show', ('onLine' in navigator && !navigator.onLine) || unreachable);
   }
   window.addEventListener('online', updateOfflineBanner);
   window.addEventListener('offline', updateOfflineBanner);
@@ -215,7 +234,21 @@
   }
 
   navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) {
-    function check() { try { reg.update(); } catch (e) {} }
+    // R3 / D-20: update() returns a promise, and a try/catch never caught its
+    // rejection, so every offline check became an unhandled rejection that
+    // the head boot script recorded: going offline filled the 20-entry error
+    // buffer and pushed the real errors out. Not asked at all while the
+    // browser knows it is offline; when it is asked, the answer is the
+    // connectivity signal the banner above uses.
+    function check() {
+      if ('onLine' in navigator && !navigator.onLine) return;
+      try {
+        var p = reg.update();
+        if (p && typeof p.then === 'function') {
+          p.then(function () { setReachable(true); }, function () { setReachable(false); });
+        }
+      } catch (e) {}
+    }
 
     // Check now, on every return to the tab, and periodically — and each of
     // those is also a chance to apply an update that was held during a workout.
@@ -224,6 +257,7 @@
       if (document.visibilityState === 'visible') { check(); applyIfIdle(); }
     });
     window.addEventListener('focus', function () { check(); applyIfIdle(); });
+    window.addEventListener('online', check);   // R3: clear an "unreachable" bar as soon as we can
     setInterval(function () { check(); applyIfIdle(); }, 60000);
 
     // A new worker may already be waiting from a previous check.

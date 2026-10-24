@@ -90,7 +90,8 @@ node tools/test-mc-program-progress.js # per-program day model (continuous days,
 node tools/test-mc-program-tabs.js     # program-landing list model (adaptive depth, day numbers)
 node tools/test-mc-sw.js               # service-worker fetch strategy (L1, L3, L4, L5)
 node tools/test-mc-sw-update.js        # SW update lifecycle + offline banner (L2, U4)
-node tools/test-mc-offline-prefetch.js # program prefetch: Save-Data/2G + real-success check (L8)
+node tools/test-mc-offline-prefetch.js # program prefetch: Save-Data/2G + real-success check (L8); cache-version record + verify() (R3)
+node tools/test-mc-outbox.js           # per-set cloud writes made offline are queued and replayed (R3 / D-19)
 node tools/test-mc-sync-runtime.js     # mc-sync.js real pull/push/reload cycle (S1-S5)
 node tools/test-mc-persist.js          # storage-persistence request, mc-finish.js (L6 partial)
 node tools/check-gesture-contract.js   # overscroll-behavior + touch-action on hot tap targets (U1, U3)
@@ -109,6 +110,7 @@ node tools/test-mc-setlog-concurrency.js http://localhost:8080  # two-tab set-lo
 node tools/test-mc-store-resilience.js http://localhost:8080    # corrupt-store shapes, 5 pages (FIX-04, L-03)
 node tools/test-mc-crash-recovery.js http://localhost:8080      # process kill + cloud rehydrate (FIX-02, L-02)
 node tools/test-mc-session-durability.js http://localhost:8080  # week round trip, mid-rest refresh, focused draft, untick, Finish, import, wake lock, rest-end bar (flagship readiness R1/R2)
+node GO_LIVE/flagship-audit/scenarios/fa-offline-sw.js          # the REAL service worker, served as the production origin: offline screens, deploys (R3); starts its own HTTPS server
 # needs a direct Postgres URL; SKIPS without one rather than failing
 SUPABASE_DB_URL=... pytest tests/test_rls.py   # 7 cross-user attacks + the phase-12 constraints (TEST 5)
                                               # plus the Phase 5.4 world-readable leak scan
@@ -2319,6 +2321,25 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > - **Load `mc-log-read.js` before any inline script that calls it.**
 >   `workout-detail.html` rendered at parse time with the reader nine lines
 >   below, so its guarded path had never run.
+
+> **R3 shipped (2026-10-24), all five steps.** S-04 to S-07 pass, and
+> `fa-offline-sw.js` is a CI gate now (9 of 9; 3 of 9 on the pre-R3 tree). Four
+> things to know before touching the service worker or the offline path:
+> - **Read `CACHE_NAME`, never `caches.match()`, in the fetch path.**
+>   `caches.match()` searches every cache, including `mc-training-carry-v1`,
+>   which holds the previous deploy's pages and must only answer when the
+>   network fails.
+> - **The prefetch record is a hint, not proof.** It names its URLs and the
+>   app cache it filled; `MCOfflinePrefetch.verify()` asks the Cache API, and the
+>   dashboard's "Available offline ✓" is painted from that.
+> - **Per-set cloud writes go through an outbox** (`mc_workout_logs_outbox_v1`,
+>   `tools/test-mc-outbox.js`). It keeps one operation per set, the latest, so an
+>   offline untick replays as a delete.
+> - **`reg.update()` returns a promise.** A `try/catch` does not catch its
+>   rejection. A failed update check is also the app's signal for Wi-Fi that is
+>   connected but not getting out.
+> - **The offline harness needs Playwright's `proxy` option** with a bypass list,
+>   because an agent sandbox's Chromium ignores `--no-proxy-server`.
 
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the

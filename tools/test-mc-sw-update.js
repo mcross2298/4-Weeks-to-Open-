@@ -155,7 +155,7 @@ function loadModuleForOffline(opts) {
         head: { appendChild() {} },
         body: bodyEl,
     };
-    const reg = { update() {}, waiting: null, addEventListener() {} };
+    const reg = { update: opts.update || (() => {}), waiting: null, addEventListener() {} };
     const sw = {
         controller: {},
         addEventListener() {},
@@ -179,6 +179,7 @@ function loadModuleForOffline(opts) {
         fireOnline: () => { nav.onLine = true; (windowListeners.online || []).forEach(cb => cb()); },
         fireOffline: () => { nav.onLine = false; (windowListeners.offline || []).forEach(cb => cb()); },
         offlineBar: () => byId.mcOfflineBar || byId.offlineBar || null,
+        fireFocus: () => { (windowListeners.focus || []).forEach(cb => cb()); },
     };
 }
 
@@ -243,6 +244,31 @@ function loadModuleForOffline(opts) {
         m.fireOnline();
         assert(bar.className === 'offline-bar sentinel',
             '5: the native #offlineBar\'s classList is never touched by this module (dashboard drives it itself)');
+    }
+
+    // ---- R3 / D-20: an update check that fails is handled, and is a signal ----
+    {
+        const unhandled = [];
+        const onUnhandled = (r) => unhandled.push(r);
+        process.on('unhandledRejection', onUnhandled);
+        let fail = true, calls = 0;
+        const m = loadModuleForOffline({ onLine: true, update: () => { calls++; return fail ? Promise.reject(new Error('Failed to update a ServiceWorker')) : Promise.resolve(); } });
+        await flush(); await flush();
+        const bar = m.offlineBar();
+        assert(calls === 1, '6a: the update check runs at registration (ran ' + calls + ')');
+        assert(unhandled.length === 0, '6b: a rejected update() is handled, never an unhandled rejection (' + unhandled.length + ')');
+        assert(!!bar && bar.classList.contains('show'), '6c: a failed update check shows the offline bar while navigator.onLine is still true');
+        fail = false;
+        m.fireFocus(); await flush(); await flush();
+        assert(!bar.classList.contains('show'), '6d: the next successful check clears it');
+        m.fireOffline(); const before = calls; m.fireFocus(); await flush();
+        assert(calls === before, '6e: no update request is made while the browser knows it is offline');
+        process.removeListener('unhandledRejection', onUnhandled);
+    }
+    {
+        const m = loadModuleForOffline({ onLine: true, nativeOfflineBar: true, update: () => Promise.reject(new Error('x')) });
+        await flush(); await flush();
+        assert(m.offlineBar().classList.contains('show'), '6f: the dashboard\'s own bar shows on an unreachable network too');
     }
 
     if (failures) { console.error(`\ntest-mc-sw-update: ${failures} FAILED of ${checks}`); process.exit(1); }

@@ -49,6 +49,18 @@
        Last completed prefetch record for a program id, for the "Available
        offline ✓" line — read directly, no promise, so a page that already
        finished prefetching on a prior visit can show the line immediately.
+       It is a RECORD, not proof: verify() is.
+     verify(progId) -> Promise<{progId, total, cached}|null>
+       Asks the Cache API whether every page the last prefetch fetched is
+       still there (flagship readiness R3, step 3).
+
+   Flagship readiness R3 / D-17: a deploy's service worker used to delete
+   every page this module had fetched while the record lived on for 14 days,
+   so the dashboard said "Available offline ✓" over an empty cache. sw.js now
+   carries the old pages across a deploy, and this side does two things of
+   its own: a record remembers its URLs and the cache version it filled, so a
+   new deploy's cache is filled again on the next dashboard visit; and the
+   line is painted from caches.match(), never from the record alone.
    ========================================================================== */
 (function () {
   "use strict";
@@ -92,6 +104,33 @@
   function status(progId) {
     var s = store()[progId];
     return (s && s.count) ? s : null;
+  }
+
+  // The service worker's own app cache: the one mc-training-* cache that is
+  // neither the font cache nor the carry-over cache. Null when there is not
+  // exactly one (no SW yet, or a new deploy installing beside the old one),
+  // so a version comparison is never made on a guess.
+  function currentCacheName() {
+    if (typeof caches === 'undefined' || !caches.keys) return Promise.resolve(null);
+    return caches.keys().then(function (keys) {
+      var app = keys.filter(function (k) {
+        return /^mc-training-/.test(k) && !/^mc-training-(fonts|carry)-/.test(k);
+      });
+      return app.length === 1 ? app[0] : null;
+    }).catch(function () { return null; });
+  }
+
+  function verify(progId) {
+    var rec = store()[progId];
+    if (!rec || !rec.count || !Array.isArray(rec.urls) || !rec.urls.length) return Promise.resolve(null);
+    if (typeof caches === 'undefined' || !caches.match) return Promise.resolve(null);
+    // Any cache counts, the carry-over one included: the question is whether
+    // the page will load offline, and sw.js serves a carried page then.
+    return Promise.all(rec.urls.map(function (u) {
+      return caches.match(u, { ignoreSearch: true }).then(function (r) { return !!r; }).catch(function () { return false; });
+    })).then(function (hits) {
+      return { progId: progId, total: rec.urls.length, cached: hits.filter(Boolean).length };
+    }).catch(function () { return null; });
   }
 
   function siblingHrefs(exceptId) {
@@ -143,6 +182,7 @@
     });
   }
 
+  // Resolves the URLs that really came back 2xx, in order.
   function prefetchAll(urls) {
     return Promise.all(urls.map(function (url, i) {
       return new Promise(function (resolve) {
@@ -156,12 +196,12 @@
             // actually cached. resp.ok is the real signal (2xx only —
             // this also already excludes an opaque no-cors response, whose
             // status is always 0 and therefore never .ok).
-            resolve(!!(resp && resp.ok));
-          }).catch(function () { resolve(false); });
+            resolve(resp && resp.ok ? url : null);
+          }).catch(function () { resolve(null); });
         }, i * STAGGER_MS);
       });
     })).then(function (results) {
-      return results.filter(Boolean).length;
+      return results.filter(Boolean);
     });
   }
 
@@ -194,20 +234,33 @@
     if (!entry || !entry.href) return Promise.resolve(null);
 
     var id = activeProg.id;
-    var all = store();
-    var prior = all[id];
-    if (prior && prior.count && (Date.now() - prior.ts) < REFRESH_MS) {
-      return Promise.resolve(prior);
-    }
     if (inflight[id]) return inflight[id];
 
-    var run = crawl(entry.href, id).then(function (urls) {
-      return prefetchAll(urls).then(function (n) {
-        var rec = { ts: Date.now(), count: n };
-        var latest = store();          // re-read: another key may have written meanwhile
-        latest[id] = rec;
-        save(latest);
-        return { progId: id, count: n };
+    var run = currentCacheName().then(function (cacheName) {
+      var prior = store()[id];
+      // Still good: recent, filled into the cache that is live now, and every
+      // page is still there. A record from before R3 (no urls) or from an
+      // older deploy's cache is re-run once.
+      var recent = prior && prior.count && (Date.now() - prior.ts) < REFRESH_MS;
+      var sameCache = prior && Array.isArray(prior.urls) && (!cacheName || prior.cache === cacheName);
+      if (!recent || !sameCache) return null;
+      return verify(id).then(function (v) {
+        return (v && v.cached >= v.total) ? prior : null;
+      });
+    }).then(function (stillGood) {
+      if (stillGood) return { progId: id, count: stillGood.count };
+      return crawl(entry.href, id).then(function (urls) {
+        return prefetchAll(urls).then(function (got) {
+          // The cache name is read AFTER the fetches, so the record names the
+          // cache they actually landed in.
+          return currentCacheName().then(function (cacheName) {
+            var rec = { ts: Date.now(), count: got.length, urls: got, cache: cacheName };
+            var latest = store();          // re-read: another key may have written meanwhile
+            latest[id] = rec;
+            save(latest);
+            return { progId: id, count: got.length };
+          });
+        });
       });
     }).catch(function () { return null; }).then(function (result) {
       delete inflight[id];
@@ -217,5 +270,5 @@
     return run;
   }
 
-  window.MCOfflinePrefetch = { ensure: ensure, status: status };
+  window.MCOfflinePrefetch = { ensure: ensure, status: status, verify: verify };
 })();
