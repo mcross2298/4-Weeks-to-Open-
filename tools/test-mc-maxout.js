@@ -70,7 +70,11 @@ check('reps above the cap do not raise the estimate',
 // Audit L-05: a negative weight used to yield a negative max, and negative
 // reps an estimate BELOW the working weight.
 check('a negative weight is zero, not a negative max', log.e1rm(-100, 5, 'Barbell Bench Press'), 0);
-check('negative reps floor at one, never below the working weight', log.e1rm(100, -4, 'Barbell Bench Press'), 103);
+check('negative reps floor at one, never below the working weight', log.e1rm(100, -4, 'Barbell Bench Press'), 100);
+// Flagship readiness R4 / D-23: a true single IS the max, not an Epley estimate
+// above it — and not discounted on a machine either, since it was lifted.
+check('a single is its own max (315 x 1)', log.e1rm(315, 1, 'Barbell Bench Press'), 315);
+check('a machine single is the weight lifted, not discounted', log.e1rm(300, 1, 'Leg Press'), 300);
 check('a NaN weight is zero', log.e1rm(NaN, 5, 'Barbell Bench Press'), 0);
 check('a zero weight is zero', log.e1rm(0, 5, 'Barbell Bench Press'), 0);
 

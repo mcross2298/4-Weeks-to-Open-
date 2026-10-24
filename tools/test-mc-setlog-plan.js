@@ -285,5 +285,33 @@ ok('"15, 12, 10 / 3× AMRAP" still targets 15 on row 1',
      'got ' + SL.statesSetCount(c[0]));
 });
 
+// R4 / D-12: mc-setlog.js pins the 24-character prefixes the catalog's names
+// share (SHARED_LEGACY), because its one-time key migration runs before the
+// catalog reaches most pages. A history bucket under one of those prefixes may
+// hold several lifts, so it is never carried forward. Re-derive the list from
+// exercise-catalog.js itself so a catalog edit cannot leave it stale.
+(function () {
+  const fs = require('fs');
+  const src = fs.readFileSync(path.resolve(__dirname, '../mc-setlog.js'), 'utf8');
+  const m = src.match(/var SHARED_LEGACY = \[([\s\S]*?)\];/);
+  ok('R4 SHARED_LEGACY is declared in mc-setlog.js', !!m);
+  if (!m) return;
+  const pinned = eval('[' + m[1] + ']').slice().sort();
+  const saved = global.window; global.window = {};
+  require(path.resolve(__dirname, '../exercise-catalog.js'));
+  const E = global.window.EXERCISES || [];
+  global.window = saved;
+  const g = {};
+  E.forEach(e => {
+    const f = e.name.trim().replace(/\s+/g, '-').toLowerCase();
+    (g[f.slice(0, 24)] = g[f.slice(0, 24)] || new Set()).add(f);
+  });
+  const derived = Object.keys(g).filter(b => g[b].size > 1).sort();
+  ok('R4 SHARED_LEGACY matches the catalog (' + derived.length + ' shared prefixes)',
+     JSON.stringify(pinned) === JSON.stringify(derived),
+     'pinned ' + JSON.stringify(pinned) + ' vs catalog ' + JSON.stringify(derived));
+  ok('R4 the catalog has 500+ exercises to derive from', E.length > 500, 'got ' + E.length);
+})();
+
 console.log(`test-mc-setlog-plan: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

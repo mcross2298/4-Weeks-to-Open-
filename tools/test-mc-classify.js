@@ -72,8 +72,13 @@ delete global.window;
 });
 ok('EN-11 Plate-Loaded gets the 1RM discount', maxout.applyEquipCoeff(200, 'Plate-Loaded') === 170,
    'got ' + maxout.applyEquipCoeff(200, 'Plate-Loaded'));
-ok('EN-11 Plate-Loaded steps 2.5 lb, not 5', suggest.computeIncrement('Hack Squat', 'Plate-Loaded') === 2.5,
+// R4 / D-22 refined EN-11: plate-loaded is leverage-assisted, so it takes the
+// ×0.5 step — half the BIG-lift jump for a big lift (Hack Squat 10 -> 5),
+// half the small jump otherwise. Before R4 it was a flat 2.5 for every lift.
+ok('EN-11/R4 Plate-Loaded big lift steps half the big jump (5)', suggest.computeIncrement('Hack Squat', 'Plate-Loaded') === 5,
    'got ' + suggest.computeIncrement('Hack Squat', 'Plate-Loaded'));
+ok('EN-11/R4 Plate-Loaded small lift steps half the small jump (2.5)', suggest.computeIncrement('Plate-Loaded Row', 'Plate-Loaded') === 2.5,
+   'got ' + suggest.computeIncrement('Plate-Loaded Row', 'Plate-Loaded'));
 ok('Smith keeps the full estimate — it is not leverage-assisted',
    maxout.applyEquipCoeff(315, 'Smith') === 315);
 
