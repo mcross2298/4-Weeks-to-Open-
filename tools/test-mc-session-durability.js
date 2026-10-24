@@ -143,7 +143,10 @@ async function step(name, fn) {
       return {
         running: typeof TMR !== 'undefined' && TMR.isRunning(),
         endTs: TMR.startTime != null ? TMR.startTime + TMR.duration * 1000 : null,
-        shown: vis(document.getElementById('mclRestVal')) || vis(document.querySelector('#timerFloat.visible')) || vis(document.querySelector('#timerVideo.visible'))
+        shown: [['mclRestVal', ''], ['timerFloat', 'visible'], ['timerVideo', 'visible']].some(([id, cls]) => {
+          const el = document.getElementById(id);
+          return !!el && (!cls || el.classList.contains(cls)) && vis(el);
+        })
       };
     });
     const t = before && before.timer;
