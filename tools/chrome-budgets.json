@@ -5,19 +5,19 @@
   },
   "back link @ 320": {
     "w": 80.5,
-    "h": 44
+    "h": 48
   },
   "topbar icon @ 320": {
-    "w": 44,
-    "h": 44
+    "w": 48,
+    "h": 48
   },
   "tour step dot @ 320": {
     "w": 12,
-    "h": 44
+    "h": 48
   },
   "back icon button @ 320": {
-    "w": 44,
-    "h": 44
+    "w": 48,
+    "h": 48
   },
   "bottom nav tab @ 390": {
     "w": 78,
@@ -25,38 +25,44 @@
   },
   "back link @ 390": {
     "w": 80.5,
-    "h": 44
+    "h": 48
   },
   "topbar icon @ 390": {
-    "w": 44,
-    "h": 44
+    "w": 48,
+    "h": 48
   },
   "tour step dot @ 390": {
     "w": 12,
-    "h": 44
+    "h": 48
   },
   "back icon button @ 390": {
-    "w": 44,
-    "h": 44
+    "w": 48,
+    "h": 48
   },
   "nutrition header icon @ 320": {
-    "w": 44,
-    "h": 44
+    "w": 48,
+    "h": 48
   },
   "nutrition header icon @ 390": {
-    "w": 44,
-    "h": 44
+    "w": 48,
+    "h": 48
   },
   "surprise me button @ 320": {
-    "h": 44
+    "h": 48
   },
   "program guide link @ 320": {
-    "h": 44
+    "h": 48
   },
   "surprise me button @ 390": {
-    "h": 44
+    "h": 48
   },
   "program guide link @ 390": {
-    "h": 44
+    "h": 48
+  },
+  "week tab @ 320": {
+    "h": 48
+  },
+  "week tab @ 390": {
+    "h": 48
   }
 }

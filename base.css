@@ -379,8 +379,13 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
      applies unchanged to every page's own colour/shape variant of this
      rule (see the per-page .back-link duplicates this stylesheet doesn't
      own). */
-  min-height:44px;display:inline-flex;align-items:center;box-sizing:border-box;
+  min-height:48px;display:inline-flex;align-items:center;box-sizing:border-box;
 }
+/* Flagship readiness N1: the owner's 48px floor reaches the page chrome too.
+   Every program page's week/phase tab is a per-page `.tab` rule inside a
+   `.tabs-bar`, and none of them sets a height (12-13px padding made 42px), so
+   one rule here lifts all of them without touching thirty inline copies. */
+.tabs-bar .tab{min-height:48px;box-sizing:border-box;}
 /* The back-link floats absolutely; hero headers need top room so it
    doesn't overlap the eyebrow/title (the .header class reserves 76px). */
 .back-link + .hero{padding-top:64px;}
@@ -396,7 +401,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
    grown the same way, since there is nothing here for them to inherit. */
 .back{
   display:flex;align-items:center;justify-content:center;
-  width:44px;height:44px;border-radius:12px;flex-shrink:0;
+  width:48px;height:48px;border-radius:12px;flex-shrink:0;
   background:var(--surface,#111);border:1px solid var(--border2,rgba(255,255,255,0.1));
   color:var(--gold,var(--accent));font-size:var(--fs-xl);text-decoration:none;
 }

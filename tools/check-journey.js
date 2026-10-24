@@ -596,6 +596,10 @@ const CHROME_SELECTORS = [
   // which is why one page is enough to prove both.
   { sel: '.mc-surprise-btn',  name: 'surprise me button' },
   { sel: '.inst-header-link', name: 'program guide link' },
+  // Flagship readiness N1: every program page's week/phase tab (a per-page
+  // `.tab` in a `.tabs-bar`, lifted to 48 by one base.css rule). Height only:
+  // its width is text, which differs between Chromium builds (see W-I2).
+  { sel: '.tabs-bar .tab',    name: 'week tab' },
 ];
 // One page per selector-owning stylesheet; 2on-1off.html carries both
 // .mc-nav-tab and .back-link so three pages, not four, are enough.
@@ -603,7 +607,9 @@ const CHROME_PAGES = ['2on-1off.html', 'dashboard.html', 'quick-tour.html',
   // the Nutrition tab renders on demand, so .ntx-ico only exists with the tab open
   'dashboard.html?tab=nutrition',
   // carries both .mc-surprise-btn and .inst-header-link
-  'cat-pmc.html'];
+  'cat-pmc.html',
+  // carries .tabs-bar .tab (the only unlicensed member of its clone family)
+  'iron-engine.html'];
 const CHROME_VIEWPORTS = { '390': { width: 390, height: 844 }, '320': { width: 320, height: 568 } };
 const CHROME_BUDGET_FILE = path.resolve(__dirname, 'chrome-budgets.json');
 const CHROME_EPSILON = 0.3;   // sub-pixel float jitter, not a real regression

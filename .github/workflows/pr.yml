@@ -28,3 +28,41 @@ jobs:
       # Optional. Absent on a fork PR, and absent until someone sets it; the
       # RLS suite skips with a warning rather than failing in that case.
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+
+  # TEMPORARY — manual-dispatch-only (flagship readiness N1). Raising the page
+  # chrome to 48px moves the day-list pages the visual ratchet's baselines are
+  # taken from, and the day-mode entry has never been seeded (`seed: true`).
+  # An agent sandbox cannot write pixel baselines (glyph rasterisation differs
+  # between Chromium builds — CLAUDE.md, font-cache notes), so this re-baselines
+  # from inside real CI and pushes the result back to this branch. The same
+  # one-shot pattern as commit 6d71365. Remove it once it has run.
+  rebaseline-visual:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Re-baseline tools/visual-baselines/ from a real environment
+        run: |
+          npm install --no-save --prefix /tmp/pw-ci playwright@latest pixelmatch pngjs
+          /tmp/pw-ci/node_modules/.bin/playwright install --with-deps chromium
+          python3 -m http.server 8080 &
+          SERVER_PID=$!
+          for i in $(seq 1 20); do curl -sf http://localhost:8080/index.html >/dev/null && break; sleep 0.5; done
+          NODE_PATH=/tmp/pw-ci/node_modules node tools/check-visual-ratchet.js http://localhost:8080 --update
+          kill "$SERVER_PID" 2>/dev/null || true
+
+      - name: Commit and push regenerated baselines
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -z "$(git status --porcelain -- tools/visual-baselines/)" ]; then
+            echo "No baseline change measured from this environment — nothing to commit."
+            exit 0
+          fi
+          git add tools/visual-baselines/
+          git commit -m "Re-baseline tools/visual-baselines/ from real CI (flagship readiness N1)"
+          git push origin HEAD:${{ github.ref }}

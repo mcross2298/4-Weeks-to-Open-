@@ -75,7 +75,9 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 .topbar-info{flex:1;min-width:0;}
 .topbar-title{font-size:var(--tour-fs-bar);font-weight:900;letter-spacing:-0.02em;}
 .topbar-sub{font-size:var(--fs-xs);color:var(--muted2);margin-top:1px;}
-.skip{font-size:var(--fs-xs);font-weight:800;color:var(--muted2);text-decoration:none;letter-spacing:0.04em;padding:8px;}
+.skip{font-size:var(--fs-xs);font-weight:800;color:var(--muted2);text-decoration:none;letter-spacing:0.04em;padding:8px;
+  /* N1: the way out of the tour, 31px tall. */
+  min-height:48px;display:inline-flex;align-items:center;box-sizing:border-box;}
 
 /* ── PROGRESS ── */
 .progress-wrap{padding:2px 16px 14px;}
@@ -222,7 +224,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
    the full 44px floor. The 8px (22px active) visual dot moves to ::after,
    centered in the bigger invisible button box, so the look is unchanged. */
 .dots{display:flex;justify-content:center;gap:3px;flex-wrap:wrap;padding:4px 0 22px;}
-.dot-nav{width:12px;height:44px;background:transparent;cursor:pointer;transition:width 0.2s;border:none;padding:0;display:flex;align-items:center;justify-content:center;}
+.dot-nav{width:12px;height:48px;background:transparent;cursor:pointer;transition:width 0.2s;border:none;padding:0;display:flex;align-items:center;justify-content:center;}
 .dot-nav::after{content:'';width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.14);transition:all 0.2s;}
 .dot-nav.active{width:26px;}
 .dot-nav.active::after{background:var(--gold);width:22px;height:8px;border-radius:var(--r-xs);}
