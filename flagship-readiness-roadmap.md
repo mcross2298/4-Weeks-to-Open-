@@ -434,6 +434,11 @@ Defect: D-32, plus the Phase 1 design items (one bottom nav, builder exercises-f
   - **Home's tool-card subtitles were about 2.4:1 in light mode.** They now use `--ink-6`, 5.23:1.
   - Light contrast **281 → 262**: `dashboard.html` and `index.html` 8 → 0, `workout-logs.html` 4 → 1. The three budgets are lowered by hand.
 
+- **A CI hang, found on this PR and fixed in it.** `fa-offline-sw.js`'s S-08 failed once on a CI runner (a navigation error offline straight after a simulated deploy) and then hung the browser job for 2.5 hours until it was cancelled. Two defects in the harness, neither in the app:
+  - It waited a **fixed 7s** for the new service worker. It now waits for the worker to be active with its cache created, up to 45s. It passed 5/5 locally before the change and 2/2 after, in 39s instead of 45.
+  - **`page.evaluate()` has no timeout**, so one promise that never settled held the runner. Every in-page call now has a 20s deadline, proven with a never-settling probe that returned null after 20s, plus an 8-minute watchdog.
+  - The smoke job also gets `timeout-minutes: 60`; it normally takes about 20.
+
 **Known residuals, not fixed here:**
 - **The back link and week tabs are still 44.** They sit on the visual ratchet's day-list baselines with the nav, and this change kept under the ratchet's 0.5% without a re-baseline (0.35–0.48% measured here). Raising them will need one.
 - **`#2d3748`** (the placeholder slate) still needs a readable value chosen for it.

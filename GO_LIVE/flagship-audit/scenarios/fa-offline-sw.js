@@ -51,6 +51,10 @@ async function up() {
 }
 async function down() { if (server) { server.kill('SIGKILL'); server = null; } await sleep(400); }
 
+// A last-resort watchdog: whatever goes wrong, this script ends with a FAIL
+// rather than holding a CI runner until its own timeout.
+setTimeout(() => { console.log('HARNESS TIMEOUT after 8 minutes'); process.exit(2); }, 8 * 60000).unref();
+
 (async () => {
   copyTree();
   execSync('openssl req -x509 -newkey rsa:2048 -nodes -keyout "' + KEY + '" -out "' + CERT + '" -days 2 ' +
@@ -71,10 +75,22 @@ async function down() { if (server) { server.kill('SIGKILL'); server = null; } a
   });
   const ctx = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 390, height: 844 }, serviceWorkers: 'allow' });
   const page = await ctx.newPage();
+  // Every in-page call has a deadline. page.evaluate() has none of its own, so
+  // a promise that never settles (MCOfflinePrefetch.ensure() against a server
+  // that is down, say) used to hang the whole CI step: on PR #369 one failed
+  // check sat for 2.5 hours until the run was cancelled. A call that runs out
+  // of time returns null, which the check reading it reports as a FAIL.
+  const EVAL_MS = 20000;
   const safe = async (fn, arg) => {   // the SW's activation can reload the page mid-call
     for (let i = 0; i < 10; i++) {
-      try { return await page.evaluate(fn, arg); }
-      catch (e) { if (!/destroyed|navigat/i.test(e.message)) throw e; await sleep(800); }
+      try {
+        return await Promise.race([page.evaluate(fn, arg),
+          sleep(EVAL_MS).then(() => { throw new Error('EVAL_TIMEOUT'); })]);
+      } catch (e) {
+        if (e.message === 'EVAL_TIMEOUT') return null;
+        if (!/destroyed|navigat/i.test(e.message)) throw e;
+        await sleep(800);
+      }
     }
     return null;
   };
@@ -130,11 +146,26 @@ async function down() { if (server) { server.kill('SIGKILL'); server = null; } a
     await ctx.setOffline(false);
     const swPath = path.join(TREE, 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf8');
-    fs.writeFileSync(swPath, sw.replace(/mc-training-v(\d+)/, (m, n) => 'mc-training-v' + (Number(n) + 1)));
+    let newCache = null;
+    fs.writeFileSync(swPath, sw.replace(/mc-training-v(\d+)/, (m, n) => (newCache = 'mc-training-v' + (Number(n) + 1))));
     await up();
     await page.goto(ORIGIN + 'dashboard.html'); await sleep(1500);
     await safe(() => navigator.serviceWorker.getRegistration().then((r) => r.update()));
-    await sleep(7000);
+    // Wait for the new worker to have ACTIVATED (its cache exists and nothing
+    // is still installing or waiting) rather than for a fixed time. A flat 7s
+    // was enough here and not always on a CI runner, where S-08 then went
+    // offline mid-handover and saw a navigation error.
+    const deadline = Date.now() + 45000;
+    let settled = false;
+    while (!settled && Date.now() < deadline) {
+      settled = await safe(async (name) => {
+        const r = await navigator.serviceWorker.getRegistration();
+        return !!(r && r.active && !r.installing && !r.waiting && (await caches.keys()).indexOf(name) !== -1);
+      }, newCache);
+      if (!settled) await sleep(1000);
+    }
+    if (!settled) console.log('  note: the new service worker had not settled after 45s');
+    await sleep(1500);
 
     // The two halves of the R3 fix, apart. S-08: straight after the update,
     // before the dashboard has re-prefetched anything, the SW's carry-over
