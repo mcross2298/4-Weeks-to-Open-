@@ -96,7 +96,13 @@ check('classifySession: hold when ONLY the terminal set carries RPE F (the real 
 check('classifySession: hold when the terminal set alone is RPE>=9.5 (numeric)',
   suggest.classifySession(session('Jan 1', { 0: loggedSet(135, 4, undefined), 1: loggedSet(135, 4, 9.5) }), '2x4').status,
   'hold');
-check('classifySession: Easy (rpe 8) does not trigger hold and falls through to target check',
+check('classifySession: Easy (rpe 7) does not trigger hold and falls through to target check',
+  suggest.classifySession(session('Jan 1', { 0: loggedSet(135, 8, undefined), 1: loggedSet(135, 8, '7') }), '2x8').status,
+  'progress');
+check('classifySession: Solid (rpe 8.5) does not trigger hold either',
+  suggest.classifySession(session('Jan 1', { 0: loggedSet(135, 8, undefined), 1: loggedSet(135, 8, '8.5') }), '2x8').status,
+  'progress');
+check('classifySession: an Easy answer logged before the RIR remap (rpe 8) still reads as no hold',
   suggest.classifySession(session('Jan 1', { 0: loggedSet(135, 8, undefined), 1: loggedSet(135, 8, '8') }), '2x8').status,
   'progress');
 check('classifySession: repeat when reps fall short of target',

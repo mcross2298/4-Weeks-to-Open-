@@ -104,7 +104,22 @@
 
     var pillCls = isSS?"grp":isTS?"grp triset":isCL?"grp cluster":isDR?"grp drop":isFN?"grp finisher":"grp";
     var pillLabel = isSS?"⚡ Superset":isTS?"▲ Tri-Set":isCL?"◈ Cluster":isDR?"↘ Drop Set":isFN?"🏁 Finisher":"";
-    var badgeHtml = tag ? '<div class="a-badges"><span class="a-pill '+pillCls+'">'+pillLabel+'</span></div>' : "";
+    // Pos 4's TUT anchor is structural, not a coaching note (flagship
+    // readiness C, D-26): "3 s down · 2 s pause" was in the notes of 6 of the
+    // 60 cells it governs and in the prescription of none. mm-data.js carries
+    // it as data on the exercise, so it shows in every week of every phase;
+    // tools/validate-programs.js fails a training day whose Pos 4 lacks it.
+    // mc-group-split.js lifts this badge into the tri-set's group row, so
+    // the label rides on data-tempo-label for it to keep whole.
+    var tutLabel = (ex.tut && ex.tut.down)
+      ? ex.tut.down + 's down' + (ex.tut.pause ? ' · ' + ex.tut.pause + 's pause' : '') : '';
+    var tutHtml = tutLabel
+      ? '<span class="a-pill tempo" data-tempo-label="' + tutLabel + '" title="Time under tension: ' + ex.tut.down + ' second lowering' +
+          (ex.tut.pause ? ', ' + ex.tut.pause + ' second pause' : '') + ' on every rep">⏱ ' + tutLabel + '</span>'
+      : "";
+    var badgeHtml = (tag || tutHtml)
+      ? '<div class="a-badges">' + (tag ? '<span class="a-pill '+pillCls+'">'+pillLabel+'</span>' : '') + tutHtml + '</div>'
+      : "";
     var noteHtml = note ? '<div class="a-notes">'+esc(note)+'</div>' : "";
 
     var infoHtml = note ? '<button type="button" class="a-info" aria-expanded="false" aria-label="Show coaching note">ⓘ</button>' : "";

@@ -129,10 +129,13 @@
     // the answer rather than this file re-resolving a program record it has no
     // other reason to read.
     var deloadHtml = cfg.deload
-      ? '<div class="rb-deload">Deload week — today is prescribed lighter.</div>'
+      ? '<div class="rb-deload">Deload week — fewer working sets, no drop sets, and every set stops short of failure.</div>'
       : '';
     var lowRecovery = (score != null && score < 50);
-    var offerLighter = !!(worst || lowRecovery || cfg.deload);
+    // Not on a deload day (flagship readiness C): the deload already cuts a
+    // third to half of each exercise's sets, deeper than Lighter's one, and
+    // mc-setlog.js lets the deload win. The button would change nothing.
+    var offerLighter = !cfg.deload && !!(worst || lowRecovery);
 
     var overlay = document.createElement('div');
     overlay.className = 'fw-modal-overlay open rb-overlay';
@@ -149,12 +152,12 @@
           '<button type="button" class="fw-cancel" id="rbSkip">Skip</button>' +
           // Roadmap Phase 4 step 3 (audit PG-2): the brief can now change the
           // session, not just describe it. One tap, and mc-setlog.js builds one
-          // working set fewer per exercise — the same reduction a scheduled
-          // deload week applies, through the same code path, so the two cannot
-          // drift into meaning different things. Offered only when there is a
-          // real reason to: a group MC_READY itself calls overreached, a
-          // Recovery Score below its own low band, or a deload week. Shown
-          // unconditionally it would just be a third button to ignore.
+          // working set fewer per exercise, through the same reduceFor() a
+          // scheduled deload goes through (a deload cuts deeper; see there).
+          // Offered only when there is a real reason to: a group MC_READY
+          // itself calls overreached, or a Recovery Score below its own low
+          // band. Shown unconditionally it would just be a third button to
+          // ignore.
           (offerLighter
             ? '<button type="button" class="fw-cancel rb-lighter" id="rbLighter">Lighter</button>'
             : '') +

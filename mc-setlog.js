@@ -37,7 +37,11 @@
       stripDrop:  function () { return stripDrop.apply(null, arguments); },
       // Added by Phase 2.3 so the "did this prescription state a set count"
       // question is testable against the real implementation.
-      statesSetCount: function () { return statesSetCount.apply(null, arguments); }
+      statesSetCount: function () { return statesSetCount.apply(null, arguments); },
+      // Flagship readiness C / D-25: how a reduced day changes one exercise's
+      // row counts, so the schedule generator's deload check measures what
+      // the logger actually builds instead of a copy of the rule.
+      reduceFor: function () { return reduceFor.apply(null, arguments); }
     };
     return;
   }
@@ -573,19 +577,30 @@
   // 1.6% of sets.
   //
   // Three choices, asked once, on the exercise the athlete has just finished.
-  // The stored values stay inside the old vocabulary so existing logs, the
-  // Supabase `rpe` column and all three consumers keep working untouched: 8
-  // and 9 are below the near-failure threshold, F is at it.
+  // Each stores the RPE its own words mean on the reps-in-reserve scale
+  // (flagship readiness C): RPE 10 - RIR, so "three or more left" is 7 and
+  // "one or two left" is 8.5. They used to store 8 and 9, which are 2 and 1
+  // reps in reserve, so "Easy" recorded a harder set than the athlete said.
+  // All three consumers test `rpe === 'F' || parseFloat(rpe) >= 9.5`, so
+  // nothing they decide changes; only the recorded number becomes true.
   var EFFORT_CHOICES = [
-    { rpe: '8', label: 'Easy',       hint: 'Three or more reps left in the tank' },
-    { rpe: '9', label: 'Solid',      hint: 'One or two reps left' },
-    { rpe: 'F', label: 'To failure', hint: 'Nothing left — this holds the weight where it is' }
+    { rpe: '7',   label: 'Easy',       hint: 'Three or more reps left in the tank (RPE 7 or less)' },
+    { rpe: '8.5', label: 'Solid',      hint: 'One or two reps left (RPE 8–9)' },
+    { rpe: 'F',   label: 'To failure', hint: 'Nothing left — this holds the weight where it is' }
   ];
+  // An answer given before that remap still lights the button it was given
+  // on. Display only: the stored value is never rewritten (storedEffort).
+  var EFFORT_LEGACY = { '8': '7', '9': '8.5' };
 
   // What the last set of this exercise currently records, if anything.
   function storedEffort(exId, sn) {
     var l = lset(exId, sn);
     return (l && l.rpe) || '';
+  }
+  // Which of the three buttons that answer is.
+  function effortChoice(exId, sn) {
+    var v = storedEffort(exId, sn);
+    return EFFORT_LEGACY[v] || v;
   }
 
   // Reflect the stored answer onto the buttons, and only ask once the whole
@@ -602,7 +617,7 @@
     });
     var ready = rows.length > 0 && done === rows.length;
     if (row.classList.contains('on') !== ready) row.classList.toggle('on', ready);
-    var cur = storedEffort(exId, rows.length);
+    var cur = effortChoice(exId, rows.length);
     Array.prototype.forEach.call(row.querySelectorAll('.mcl-effort-btn'), function (b) {
       var on = !!cur && b.dataset.rpe === cur;
       if (b.classList.contains('set') !== on) {
@@ -988,13 +1003,14 @@
   //                fifteen-week one. Derived on the page, from the program's
   //                declared deloadWeeks — never from "it's the last week".
   //
-  // Resolved once per page load and cached: the answer cannot change mid-
-  // session, and planFor() is called on every card on every render pass.
+  // The Lighter intent is read once per page load; the deload answer is
+  // cached per open week (deloadNow below), since planFor() is called on
+  // every card on every render pass.
   var REDUCED_KEY = 'mc_deload_v1';
   var REDUCED_WINDOW_MS = 4 * 60 * 60 * 1000;
   var OFF = { on: false, reason: '' };
   var _flag = null;      // sessionStorage intent — answerable immediately
-  var _deload = null;    // program schedule — needs MC_PROGRAM_DAY + MC_PM_DATA
+  var _deload = false, _deloadKey = null;  // program schedule, per open week
   function reducedVolume() {
     if (_flag === null) {
       _flag = false;
@@ -1003,27 +1019,40 @@
         if (f && isFinite(f.ts) && (Date.now() - f.ts) < REDUCED_WINDOW_MS) _flag = true;
       } catch (e) {}
     }
+    // A scheduled deload outranks Lighter: it is the deeper reduction, and
+    // choosing Lighter on a deload day must never make the day heavier.
+    var deload = deloadNow();
+    if (deload) return { on: true, reason: 'deload' };
     if (_flag) return { on: true, reason: 'readiness' };
-    if (_deload === null) {
-      var D = window.MC_PROGRAM_DAY, P = window.MC_PROGRAM_PROGRESS;
-      var cur = null;
-      try { cur = D && D.current && D.current(); } catch (e2) {}
-      // NOT cached while the answer is unknowable. mc-pm-data.js used to reach
-      // three of these five pages only through an async injection, so the first
-      // build ran before the record existed — and caching that "no" made a
-      // deload week silently prescribe full volume for the whole page load.
-      // The pages now load the data synchronously before this file; this guard
-      // is the second line, so a mis-ordered page degrades to full volume for
-      // one pass instead of permanently.
-      if (!cur || !cur.prog || !P || !P.isDeloadWeek || !window.MC_PM_DATA) return OFF;
-      _deload = false;
-      try {
-        var src = window.MC_PM_DATA.program(cur.prog);
-        var def = src && P.defFromSchedule(src.schedule);
-        if (def && P.isDeloadWeek(P.get(cur.prog, def), cur.week)) _deload = true;
-      } catch (e3) {}
-    }
-    return _deload ? { on: true, reason: 'deload' } : OFF;
+    return OFF;
+  }
+  // Keyed on the open program and week rather than resolved once per page
+  // load: cat-strength.html, hv-block.html and the Modality Matrix pages all
+  // change week in place, so a page opened on week 5 and switched to its
+  // deload week used to build that week at full volume (and the reverse kept
+  // a deload after leaving it) until a reload.
+  function deloadNow() {
+    var D = window.MC_PROGRAM_DAY, P = window.MC_PROGRAM_PROGRESS;
+    var cur = null;
+    try { cur = D && D.current && D.current(); } catch (e2) {}
+    // NOT cached while the answer is unknowable. mc-pm-data.js used to reach
+    // three of these five pages only through an async injection, so the first
+    // build ran before the record existed — and caching that "no" made a
+    // deload week silently prescribe full volume for the whole page load.
+    // The pages now load the data synchronously before this file; this guard
+    // is the second line, so a mis-ordered page degrades to full volume for
+    // one pass instead of permanently.
+    if (!cur || !cur.prog || !P || !P.isDeloadWeek || !window.MC_PM_DATA) return false;
+    var key = cur.prog + '|' + cur.week;
+    if (key === _deloadKey) return _deload;
+    _deloadKey = key;
+    _deload = false;
+    try {
+      var src = window.MC_PM_DATA.program(cur.prog);
+      var def = src && P.defFromSchedule(src.schedule);
+      if (def && P.isDeloadWeek(P.get(cur.prog, def), cur.week)) _deload = true;
+    } catch (e3) {}
+    return _deload;
   }
 
   // ---- today's adjustments: + Add set, Skip exercise (R5 step 3) ---------
@@ -1080,12 +1109,15 @@
     var n = setCount(work);
     var nd = drop.is ? drop.drops.length : 0;   // number of appended drop rows
     var stated = statesSetCount(work);
-    // One working set fewer, floored at one. Drop rows are untouched — a drop
-    // set IS the reduction on that exercise. And a prescription that never
-    // stated a set count is left alone (P2-12): trimming a default the program
-    // did not ask for would be inventing a number twice over.
-    var cut = 0;
-    if (stated && n > 1 && reducedVolume().on) { cut = 1; n -= 1; }
+    // A reduced day, through reduceFor() below: the one place either reason
+    // changes a row count, so the logger, Finish's denominator and the
+    // schedule generator's deload check cannot disagree.
+    var cut = 0, capped = false, rv = reducedVolume();
+    if (rv.on) {
+      var red = reduceFor(rv.reason, n, nd, stated);
+      cut = red.cut; capped = red.capped; n = red.n; nd = red.nd;
+      if (capped) drop = { is: false, drops: [] };
+    }
     // R5 step 3: today's adjustments. Added sets are working sets, so they
     // sit before any drop rows; a skip keeps only the sets already logged.
     // Both flow through `total`, so the row list, the counter and Finish's
@@ -1102,7 +1134,37 @@
       n += added;
     }
     return { nmEl: nmEl, drop: skipped ? { is: false, drops: [] } : drop, work: work, n: n, nd: nd, total: n + nd,
-             stated: stated, cut: cut, added: added, skipped: skipped };
+             stated: stated, cut: cut, capped: capped, reason: rv.on ? rv.reason : '',
+             added: added, skipped: skipped };
+  }
+  // How a reduced day changes ONE exercise (flagship readiness C, D-25).
+  //
+  //   'deload'     the program's own scheduled deload. A real one, as decided
+  //                with the owner: a third to half of the working sets go
+  //                (keep floor(2n/3): 5 -> 3, 4 -> 2, 3 -> 2, 6 -> 4, 8 -> 5),
+  //                and the intensity cues are capped. Drop rows are removed,
+  //                because a drop set is taken to failure and a deload is
+  //                not. Phase 4 cut one set and left the drops. Strength &
+  //                Supersets authors week 6 as its heaviest week (157 rows
+  //                against 142-154), and one set fewer built it at 123, only
+  //                13% under the block's lightest week; this builds 89.
+  //                tools/gen-schedules.js checks every deload on that basis.
+  //   'readiness'  the athlete chose Lighter in the pre-session brief. One
+  //                working set fewer, drops kept: a lighter session, not a
+  //                deload.
+  //
+  // A prescription that never stated a set count is left alone either way
+  // (P2-12): trimming a default the program did not ask for would be
+  // inventing a number twice over. Nor is a single set cut.
+  function reduceFor(reason, n, nd, stated) {
+    var out = { n: n, nd: nd, cut: 0, capped: false };
+    if (reason === 'deload') {
+      if (nd > 0) { out.nd = 0; out.capped = true; }
+      if (stated && n > 1) { out.n = Math.max(1, Math.floor(n * 2 / 3)); out.cut = n - out.n; }
+    } else if (reason === 'readiness') {
+      if (stated && n > 1) { out.n = n - 1; out.cut = 1; }
+    }
+    return out;
   }
   function plannedSetCount(card) {
     try { return planFor(card).total; } catch (e) { return 0; }
@@ -1663,12 +1725,22 @@
     // Say WHY the row count is short, on the card the athlete is looking at.
     // A silently shorter prescription reads as a bug, and the two reasons want
     // different words: one is the program's plan, the other is today's choice.
-    if (plan.cut) {
+    // A deload also says how hard: no set goes to failure, finishers
+    // included. That caps every intensity cue on the card (an escalated
+    // AMRAP target, a "to failure" note) without rewriting the program.
+    if (plan.reason === 'deload') {
+      var dlNote = document.createElement('div');
+      dlNote.className = 'mcl-cut mcl-cut-deload';
+      var dlParts = [];
+      if (plan.cut) dlParts.push(plan.n + ' of ' + (plan.n + plan.cut) + ' working sets');
+      if (plan.capped) dlParts.push('no drop sets');
+      dlParts.push('stop 2–3 reps short of failure on every set, finishers included');
+      dlNote.textContent = 'Deload week — ' + dlParts.join(' · ');
+      wrap.appendChild(dlNote);
+    } else if (plan.cut) {
       var cutNote = document.createElement('div');
       cutNote.className = 'mcl-cut';
-      cutNote.textContent = reducedVolume().reason === 'deload'
-        ? 'Deload week — one working set lighter'
-        : 'Lighter session — one working set fewer';
+      cutNote.textContent = 'Lighter session — one working set fewer';
       wrap.appendChild(cutNote);
     }
 
@@ -1690,7 +1762,7 @@
         setActiveCard(card);
         // Tapping the selected answer again clears it — the athlete can undo a
         // mis-tap without a fourth "none of these" button taking up a row.
-        var cur = storedEffort(exId, total);
+        var cur = effortChoice(exId, total);
         var next = (cur === btn.dataset.rpe) ? '' : btn.dataset.rpe;
         var lastRow = card.querySelector('#mclr-' + cid + '-' + total);
         var w = lastRow && lastRow.querySelector('.mcl-w');

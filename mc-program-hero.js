@@ -110,10 +110,10 @@
       { v: String(sc.weeks), l: sc.weeks === 1 ? 'Week' : 'Weeks' }
     ];
 
-    // Minutes only where the days actually carry a figure. ss is hand-authored
-    // and does; the generated mm/hv records do not, and a third cell invented
-    // from set counts would be a guess dressed as a program fact — so those
-    // programs simply show two cells.
+    // Minutes only where the days actually carry a figure. ss does (its
+    // generated record keeps F0's 2.5 minutes a set); mm/hv do not, and this
+    // file inventing a third cell for them would be a guess dressed as a
+    // program fact — so those programs simply show two cells.
     var mins = [];
     (sc.days || []).forEach(function (d) {
       var n = parseInt(d && d.min, 10);
@@ -126,7 +126,7 @@
     return out;
   }
 
-  /* "15 Weeks \u00B7 3 Phases \u00B7 4-Day Split" -> three value/label cells.
+  /* "15 Weeks \u00B7 3 Phases \u00B7 4 Lift + 2 Conditioning Days" -> three value/label cells.
      A leading numeric token (including ranges like "5\u20136") is the value and
      the remainder is the label; a segment with no leading number becomes a
      single-line cell, since inventing a label for it would be fiction. */
