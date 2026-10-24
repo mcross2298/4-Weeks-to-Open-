@@ -27,7 +27,7 @@
     --surface: #111;
     --border: #1e1e1e;
     --text: #e5e5e5;
-    --muted: #6b7280;
+    --muted: #787165;
     --accent: #84cc16;
     --accent-dim: rgba(132,204,22,0.12);
     --accent-glow: rgba(132,204,22,0.25);
@@ -91,12 +91,12 @@
   /* ── Weekly schedule ── */
   .week-overview { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 10px; }
   .week-overview-label { font-size: 10.5px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
-  .week-overview-sub { font-size: 12px; color: #94a3b8; line-height: 1.5; margin-bottom: 12px; }
+  .week-overview-sub { font-size: 12px; color: #a8a196; line-height: 1.5; margin-bottom: 12px; }
   .week-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
   .week-row:last-child { border-bottom: none; }
   .week-day { font-size: 10.5px; font-weight: 700; color: var(--muted); width: 44px; flex-shrink: 0; letter-spacing: 0.06em; }
   .week-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .week-name { font-weight: 700; color: #e2e8f0; }
+  .week-name { font-weight: 700; color: #ede7d9; }
   .week-tag { font-size: 10.5px; color: var(--muted); margin-left: auto; letter-spacing: 0.04em; }
 
   /* ── Rules banner ── */
@@ -131,7 +131,7 @@
   .start-icon { width: 52px; height: 52px; border-radius: 14px; background: rgba(132,204,22,0.12); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
   .start-body { flex: 1; min-width: 0; }
   .start-eyebrow { font-size: 10.5px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
-  .start-name { font-size: 16px; font-weight: 900; color: #e2e8f0; margin-bottom: 3px; letter-spacing: -0.01em; }
+  .start-name { font-size: 16px; font-weight: 900; color: #ede7d9; margin-bottom: 3px; letter-spacing: -0.01em; }
   .start-desc { font-size: 12px; color: var(--muted); line-height: 1.45; }
   .start-arrow { font-size: 16px; color: var(--muted); flex-shrink: 0; }
 </style>
@@ -196,10 +196,10 @@
     <div class="week-overview-sub">2-On / 1-Off · 6 exercises/day · 3 pyramids (12–25 reps) + 1 static 5×20 + 1 drop set + 1 cluster set per workout</div>
     <div class="week-row"><span class="week-day">DAY 1</span><span class="week-dot" style="background:#ef4444;"></span><span class="week-name">Chest</span><span class="week-tag">6 Exercises</span></div>
     <div class="week-row"><span class="week-day">DAY 2</span><span class="week-dot" style="background:#8b5cf6;"></span><span class="week-name">Arms</span><span class="week-tag">6 Exercises</span></div>
-    <div class="week-row"><span class="week-day">DAY 3</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#94a3b8;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
+    <div class="week-row"><span class="week-day">DAY 3</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#a8a196;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
     <div class="week-row"><span class="week-day">DAY 4</span><span class="week-dot" style="background:#22c55e;"></span><span class="week-name">Legs</span><span class="week-tag">6 Exercises</span></div>
     <div class="week-row"><span class="week-day">DAY 5</span><span class="week-dot" style="background:#eab308;"></span><span class="week-name">Shoulders</span><span class="week-tag">6 Exercises</span></div>
-    <div class="week-row"><span class="week-day">DAY 6</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#94a3b8;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
+    <div class="week-row"><span class="week-day">DAY 6</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#a8a196;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
     <div class="week-row"><span class="week-day">DAY 7</span><span class="week-dot" style="background:#0891b2;"></span><span class="week-name">Back</span><span class="week-tag">6 Exercises</span></div>
   </div>
 
@@ -211,8 +211,8 @@
     <div class="week-row"><span class="week-day">DAY 3</span><span class="week-dot" style="background:#22c55e;"></span><span class="week-name">Legs</span><span class="week-tag">8 Exercises</span></div>
     <div class="week-row"><span class="week-day">DAY 4</span><span class="week-dot" style="background:#0891b2;"></span><span class="week-name">Back</span><span class="week-tag">8 Exercises</span></div>
     <div class="week-row"><span class="week-day">DAY 5</span><span class="week-dot" style="background:#ec4899;"></span><span class="week-name">Rear Delts &amp; Traps</span><span class="week-tag">8 Exercises</span></div>
-    <div class="week-row"><span class="week-day">DAY 6</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#94a3b8;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
-    <div class="week-row"><span class="week-day">DAY 7</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#94a3b8;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
+    <div class="week-row"><span class="week-day">DAY 6</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#a8a196;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
+    <div class="week-row"><span class="week-day">DAY 7</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#a8a196;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
   </div>
 
   <div class="week-overview">
@@ -220,11 +220,11 @@
     <div class="week-overview-sub">3-On / 2-Off · 8 exercises/day as ascending/descending pyramids (12–25 reps) · 1 superset + 1 drop set + 1 cluster set (6–10 reps) per workout</div>
     <div class="week-row"><span class="week-day">DAY 1</span><span class="week-dot" style="background:#f97316;"></span><span class="week-name">Chest &amp; Shoulders</span><span class="week-tag">8 Exercises</span></div>
     <div class="week-row"><span class="week-day">DAY 2</span><span class="week-dot" style="background:#8b5cf6;"></span><span class="week-name">Arms</span><span class="week-tag">8 Exercises</span></div>
-    <div class="week-row"><span class="week-day">DAY 3</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#94a3b8;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
+    <div class="week-row"><span class="week-day">DAY 3</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#a8a196;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
     <div class="week-row"><span class="week-day">DAY 4</span><span class="week-dot" style="background:#0891b2;"></span><span class="week-name">Back &amp; Traps</span><span class="week-tag">8 Exercises</span></div>
     <div class="week-row"><span class="week-day">DAY 5</span><span class="week-dot" style="background:#22c55e;"></span><span class="week-name">Legs</span><span class="week-tag">8 Exercises</span></div>
     <div class="week-row"><span class="week-day">DAY 6</span><span class="week-dot" style="background:#ec4899;"></span><span class="week-name">Rear Delts + Arms</span><span class="week-tag">8 Exercises</span></div>
-    <div class="week-row"><span class="week-day">DAY 7</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#94a3b8;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
+    <div class="week-row"><span class="week-day">DAY 7</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#a8a196;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
   </div>
 
   <div class="week-overview">
@@ -233,7 +233,7 @@
     <div class="week-row"><span class="week-day">DAY 1</span><span class="week-dot" style="background:#f97316;"></span><span class="week-name">Full Body (Circuit)</span><span class="week-tag">8 Exercises</span></div>
     <div class="week-row"><span class="week-day">DAY 2</span><span class="week-dot" style="background:#eab308;"></span><span class="week-name">Core (Circuit)</span><span class="week-tag">8 Exercises</span></div>
     <div class="week-row"><span class="week-day">DAY 3</span><span class="week-dot" style="background:#0891b2;"></span><span class="week-name">Calves &amp; Forearms</span><span class="week-tag">8 Exercises</span></div>
-    <div class="week-row"><span class="week-day">DAY 4</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#94a3b8;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
+    <div class="week-row"><span class="week-day">DAY 4</span><span class="week-dot" style="background:#334155;"></span><span class="week-name" style="color:#a8a196;">Rest Day</span><span class="week-tag">Full Recovery</span></div>
     <div class="week-row"><span class="week-day">DAY 5</span><span class="week-dot" style="background:#f97316;"></span><span class="week-name">Full Body (Circuit)</span><span class="week-tag">8 Exercises</span></div>
     <div class="week-row"><span class="week-day">DAY 6</span><span class="week-dot" style="background:#eab308;"></span><span class="week-name">Core (Circuit)</span><span class="week-tag">8 Exercises</span></div>
     <div class="week-row"><span class="week-day">DAY 7</span><span class="week-dot" style="background:#0891b2;"></span><span class="week-name">Calves &amp; Forearms</span><span class="week-tag">8 Exercises</span></div>

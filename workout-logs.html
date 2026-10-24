@@ -42,11 +42,35 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 .topbar-info{flex:1;}
 .topbar-title{font-size:18px;font-weight:900;letter-spacing:-0.02em;}
 .topbar-sub{font-size:12px;color:var(--muted);margin-top:1px;}
+.wl-stats-link{display:inline-flex;align-items:center;gap:6px;min-height:48px;padding:0 14px;border-radius:12px;
+  border:1px solid rgba(255,255,255,0.1);color:var(--text);font-size:13px;font-weight:800;text-decoration:none;flex-shrink:0;}
+html[data-theme="light"] .wl-stats-link{border-color:rgba(28,26,23,0.12);}
+/* Flagship readiness G: this page had no light header at all. Its top bar,
+   hero and stats strip kept their dark grounds while mc-light.css darkened
+   the ink on them, so "Workout Logs" rendered near-black on near-black in the
+   light theme -- found when History became a bottom-nav tab. */
+html[data-theme="light"] .topbar{background:#f5f2ec;}
+html[data-theme="light"] .topbar::after{background:linear-gradient(to bottom,#f5f2ec,transparent);}
+html[data-theme="light"] .hero{background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(245,242,236,0.6));border-bottom-color:rgba(28,26,23,0.08);}
+html[data-theme="light"] .hero-eyebrow{color:var(--accent,#826919);}
+html[data-theme="light"] .hero-title{color:#1c1a17;}
+html[data-theme="light"] .hero-sub{color:#6b6459;}
+html[data-theme="light"] .stats-bar{background:rgba(28,26,23,0.08);border-bottom-color:rgba(28,26,23,0.08);}
+html[data-theme="light"] .stat{background:#f5f2ec;}
+html[data-theme="light"] .stat-num{color:var(--accent,#826919);}
+html[data-theme="light"] .back{background:rgba(28,26,23,0.05);border-color:rgba(28,26,23,0.12);color:var(--accent,#826919);}
+html[data-theme="light"] .wl-tab{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.12);color:#4a453f;}
+html[data-theme="light"] .wl-tab.active{background:rgba(212,175,55,0.14);border-color:rgba(130,105,25,0.4);color:var(--accent,#826919);}
+html[data-theme="light"] .log-card{background:#faf7f0;border-color:rgba(28,26,23,0.1);}
+html[data-theme="light"] .log-name{color:#1c1a17;}
+html[data-theme="light"] .set-row{background:rgba(28,26,23,0.04);}
+html[data-theme="light"] .set-ex{color:#1c1a17;}
+html[data-theme="light"] .set-data,html[data-theme="light"] .set-pr,html[data-theme="light"] .log-tag.gold{color:var(--accent,#826919);}
 
 .hero{background:linear-gradient(135deg,#0a1628,#020b18);border-bottom:1px solid rgba(212,175,55,0.15);padding:20px 18px 22px;margin-bottom:0;}
 .hero-eyebrow{font-size:11px;font-weight:900;letter-spacing:0.25em;color:#d4af37;text-transform:uppercase;margin-bottom:8px;}
 .hero-title{font-size:26px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;}
-.hero-sub{font-size:13px;color:#6b7280;line-height:1.5;}
+.hero-sub{font-size:13px;color:#787165;line-height:1.5;}
 
 /* Stats bar */
 .stats-bar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);}
@@ -70,7 +94,7 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 .log-tag.gold{background:rgba(212,175,55,0.1);color:#d4af37;border-color:rgba(212,175,55,0.25);}
 .log-sets{display:flex;flex-direction:column;gap:6px;}
 .set-row{display:flex;align-items:center;gap:10px;padding:7px 10px;background:#0d0d0d;border-radius:8px;}
-.set-ex{font-size:12px;font-weight:700;color:#e2e8f0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.set-ex{font-size:12px;font-weight:700;color:#ede7d9;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .set-swap{font-weight:600;color:var(--muted,#8a8377);}
 .set-data{font-size:12px;color:#d4af37;font-weight:700;white-space:nowrap;}
 .set-pr{font-size:11px;font-weight:900;background:rgba(212,175,55,0.15);color:#d4af37;border-radius:4px;padding:1px 5px;letter-spacing:0.06em;border:1px solid rgba(212,175,55,0.25);}
@@ -122,7 +146,7 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
 
 .prog-progress{margin-top:10px;}
 .prog-progress-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;}
-.prog-progress-count{font-size:12px;font-weight:800;color:#e2e8f0;}
+.prog-progress-count{font-size:12px;font-weight:800;color:#ede7d9;}
 .prog-progress-pct{font-size:12px;font-weight:900;color:var(--prog-color,#d4af37);}
 .prog-bar-track{height:6px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden;}
 .prog-bar-fill{height:100%;border-radius:3px;background:var(--prog-color,#d4af37);transition:width 0.3s;}
@@ -167,6 +191,9 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
     <div class="topbar-title">Workout Logs</div>
     <div class="topbar-sub">Completed workouts</div>
   </div>
+  <!-- Flagship readiness G: History is the bottom nav's fifth tab now (the
+       owner's choice), so Stats is reached from here and from Home's tools. -->
+  <a href="stats.html" class="wl-stats-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Stats</a>
 </div>
 
 <div class="hero">
@@ -263,7 +290,7 @@ function dailyEntries(){
 // bucket below rather than being guessed at (this file ships to the public
 // market build too, so it deliberately never hardcodes a licensed program's
 // own filenames to special-case them — see tools/build-market.py's leak scan).
-const STANDALONE_PROG = {id:'bonus', name:'📋 Individual / Standalone', color:'#94a3b8'};
+const STANDALONE_PROG = {id:'bonus', name:'📋 Individual / Standalone', color:'#a8a196'};
 const CW_KEY = 'mc_custom_workouts_v1';
 function getCustomWorkout(id){
   try{

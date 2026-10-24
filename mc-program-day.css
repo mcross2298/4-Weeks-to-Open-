@@ -22,7 +22,7 @@
 .mwb-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
 .mwb-title{
   flex:1;text-align:center;font-family:'Archivo',system-ui,sans-serif;
-  font-size:16px;font-weight:800;color:#f1f5f9;letter-spacing:-0.01em;
+  font-size:16px;font-weight:800;color:#f7f4ee;letter-spacing:-0.01em;
 }
 /* Roadmap Phase 4 step 3: the deload badge sits beside the week number rather
    than replacing it — the athlete still needs to know which week it is. */
@@ -36,7 +36,7 @@
   width:44px;height:44px;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
   background:transparent;border:none;border-radius:12px;
-  color:#e2e8f0;cursor:pointer;font-family:inherit;
+  color:#ede7d9;cursor:pointer;font-family:inherit;
   -webkit-tap-highlight-color:transparent;transition:background .12s ease,opacity .12s ease;
 }
 .mwb-arrow:active{background:rgba(255,255,255,0.08);}
@@ -69,21 +69,21 @@
 .mwb-day-lbl{
   font-family:'Archivo',system-ui,sans-serif;
   font-size:10px;font-weight:800;letter-spacing:0.08em;
-  color:#64748b;text-transform:uppercase;
+  color:#797267;text-transform:uppercase;
 }
 .mwb-day-mark{
   width:26px;height:26px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   font-size:12px;font-weight:800;line-height:1;
   background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
-  color:#94a3b8;
+  color:#a8a196;
   transition:background .12s ease,border-color .12s ease,color .12s ease;
 }
 .mwb-day.is-done .mwb-day-mark{
   background:rgba(52,211,153,0.16);border-color:rgba(52,211,153,0.4);color:#34d399;
 }
 .mwb-day.is-rest .mwb-day-mark{
-  background:rgba(148,163,184,0.1);border-color:rgba(148,163,184,0.22);color:#64748b;
+  background:rgba(168,161,150,0.1);border-color:rgba(168,161,150,0.22);color:#797267;
 }
 .mwb-day.is-active .mwb-day-lbl{color:#fff;}
 .mwb-day.is-active .mwb-day-mark{
@@ -154,8 +154,8 @@
   color:#fff;margin:0 0 8px;overflow-wrap:anywhere;
 }
 .mdh-tags{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:12px;}
-.mdh-tag{font-size:12px;font-weight:600;color:#94a3b8;}
-.mdh-tag-sep{font-size:12px;color:#475569;}
+.mdh-tag{font-size:12px;font-weight:600;color:#a8a196;}
+.mdh-tag-sep{font-size:12px;color:#59534b;}
 
 .mdh-stats{
   display:grid;grid-template-columns:repeat(3,1fr);
@@ -171,7 +171,7 @@
   font-family:'Archivo',system-ui,sans-serif;
   font-size:21px;font-weight:800;color:#fff;line-height:1.15;
 }
-.mdh-stat-l{font-size:12px;color:#94a3b8;margin-top:2px;}
+.mdh-stat-l{font-size:12px;color:#a8a196;margin-top:2px;}
 
 .mdh-cta{display:flex;gap:9px;}
 .mdh-btn{
@@ -188,18 +188,18 @@
 .mdh-btn-ghost{
   background:rgba(255,255,255,0.06);
   border:1px solid rgba(255,255,255,0.12);
-  color:#e2e8f0;
+  color:#ede7d9;
 }
 
 /* ── rest hero ───────────────────────────────────────────────────────────── */
 .mdh-rest .mdh-art{height:132px;}
-.mdh-rest-since{font-size:14px;color:#cbd5e1;margin-bottom:12px;}
+.mdh-rest-since{font-size:14px;color:#d9d3c8;margin-bottom:12px;}
 .mdh-rest-list{
   list-style:none;margin:0 0 14px;padding:0;
   border-top:1px solid rgba(255,255,255,0.07);
 }
 .mdh-rest-row{
-  padding:10px 0;font-size:14px;color:#cbd5e1;
+  padding:10px 0;font-size:14px;color:#d9d3c8;
   border-bottom:1px solid rgba(255,255,255,0.05);
 }
 .mdh-rest-row:last-child{border-bottom:none;}
@@ -210,10 +210,10 @@
 .mpm-item{min-height:48px;}
 .mpm-ico{color:var(--mpm-accent,#c9505a);flex-shrink:0;}
 .mpm-item-text{display:flex;flex-direction:column;gap:2px;min-width:0;}
-.mpm-item-lbl{font-size:15px;font-weight:700;color:#e2e8f0;}
-.mpm-item-sub{font-size:12px;font-weight:500;color:#64748b;}
-.mc-item-cancel .mpm-item-lbl{color:#94a3b8;}
-.mpm-note{font-size:12px;line-height:1.5;color:#94a3b8;margin:0 14px 10px;}
+.mpm-item-lbl{font-size:15px;font-weight:700;color:#ede7d9;}
+.mpm-item-sub{font-size:12px;font-weight:500;color:#797267;}
+.mc-item-cancel .mpm-item-lbl{color:#a8a196;}
+.mpm-note{font-size:12px;line-height:1.5;color:#a8a196;margin:0 14px 10px;}
 
 .mpm-toggles{display:flex;flex-direction:column;gap:6px;padding:0 8px 8px;}
 .mpm-toggle{
@@ -224,7 +224,7 @@
   font-family:inherit;-webkit-tap-highlight-color:transparent;
 }
 .mpm-toggle:active{background:rgba(255,255,255,0.07);}
-.mpm-toggle-pos{font-size:15px;font-weight:700;color:#e2e8f0;}
+.mpm-toggle-pos{font-size:15px;font-weight:700;color:#ede7d9;}
 .mpm-toggle-state{
   font-family:'Archivo',system-ui,sans-serif;
   font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;
@@ -233,7 +233,7 @@
   border:1px solid var(--mpm-accent,#c9505a);color:var(--mpm-accent,#c9505a);
 }
 .mpm-toggle.is-rest .mpm-toggle-state{
-  background:rgba(148,163,184,0.12);border-color:rgba(148,163,184,0.35);color:#94a3b8;
+  background:rgba(168,161,150,0.12);border-color:rgba(168,161,150,0.35);color:#a8a196;
 }
 
 .mpm-list{list-style:none;margin:0;padding:0 8px 8px;}
@@ -244,10 +244,10 @@
   background:rgba(255,255,255,0.03);
 }
 .mpm-row.is-dragging{opacity:0.45;}
-.mpm-row-grip{color:#475569;font-size:15px;cursor:grab;flex-shrink:0;}
+.mpm-row-grip{color:#59534b;font-size:15px;cursor:grab;flex-shrink:0;}
 .mpm-row-ico{font-size:17px;flex-shrink:0;}
 .mpm-row-name{
-  flex:1;min-width:0;font-size:15px;font-weight:700;color:#e2e8f0;
+  flex:1;min-width:0;font-size:15px;font-weight:700;color:#ede7d9;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .mpm-row-btns{display:flex;gap:4px;flex-shrink:0;}
@@ -255,21 +255,21 @@
   width:44px;height:44px;
   display:flex;align-items:center;justify-content:center;
   border-radius:10px;border:1px solid rgba(255,255,255,0.1);
-  background:rgba(255,255,255,0.04);color:#cbd5e1;
+  background:rgba(255,255,255,0.04);color:#d9d3c8;
   font-size:12px;cursor:pointer;font-family:inherit;
   -webkit-tap-highlight-color:transparent;
 }
 .mpm-move:active{background:rgba(255,255,255,0.1);}
 .mpm-move[disabled]{opacity:0.28;cursor:default;}
 .mpm-row-actions{display:flex;flex-direction:column;}
-.mpm-reset{justify-content:center;color:#94a3b8;font-size:13px;}
+.mpm-reset{justify-content:center;color:#a8a196;font-size:13px;}
 
 /* ── top-bar meatball trigger (hosted by the page) ───────────────────────── */
 .mpd-menu-btn{
   width:44px;height:44px;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
   border-radius:12px;border:1px solid rgba(255,255,255,0.1);
-  background:rgba(255,255,255,0.05);color:#e2e8f0;
+  background:rgba(255,255,255,0.05);color:#ede7d9;
   cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;
 }
 .mpd-menu-btn:active{background:rgba(255,255,255,0.12);}

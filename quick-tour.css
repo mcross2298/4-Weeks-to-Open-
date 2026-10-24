@@ -11,7 +11,7 @@
   --bg:#0a0a0a;--surface:#111;--surface2:#161616;
   --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.1);
   --gold:#d4af37;--gold-dim:rgba(212,175,55,0.15);--gold-glow:rgba(212,175,55,0.25);
-  --text:#fff;--muted:#9ca3af;--muted2:var(--muted);
+  --text:#fff;--muted:#a8a297;--muted2:var(--muted);
   --ctrl-h:78px;
 
   /* COMPONENT TOKENS for this view's own type and corners.
@@ -125,7 +125,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 }
 .scene-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 30% 30%,var(--scene-glow,rgba(212,175,55,0.12)) 0%,transparent 62%);}
 .scene-glyph{font-size:var(--tour-fs-hero);line-height:1;margin-bottom:12px;filter:drop-shadow(0 4px 14px rgba(0,0,0,0.5));}
-.scene-caption{font-size:var(--fs-sm);font-weight:800;color:#e2e8f0;letter-spacing:0.01em;max-width:80%;line-height:1.45;}
+.scene-caption{font-size:var(--fs-sm);font-weight:800;color:#ede7d9;letter-spacing:0.01em;max-width:80%;line-height:1.45;}
 .scene-clip{
   position:absolute;left:12px;bottom:12px;display:inline-flex;align-items:center;gap:6px;
   font-size:var(--fs-3xs);font-weight:800;letter-spacing:0.08em;text-transform:uppercase;
@@ -146,7 +146,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   padding:14px 16px;margin-bottom:16px;position:relative;
 }
 .narration::before{content:'🎙️ COACH';position:absolute;top:-9px;left:14px;font-size:var(--fs-3xs);font-weight:900;letter-spacing:0.12em;color:var(--gold);background:var(--bg);padding:0 7px;}
-.narration p{font-size:var(--fs-md);line-height:1.6;color:#e2e8f0;margin-top:4px;}
+.narration p{font-size:var(--fs-md);line-height:1.6;color:#ede7d9;margin-top:4px;}
 
 /* ── STEPS ── */
 .steps-label{font-size:var(--fs-2xs);font-weight:900;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted2);margin:0 0 10px;display:flex;align-items:center;gap:8px;}
@@ -159,7 +159,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
   color:var(--gold);font-size:var(--fs-xs);font-weight:900;
   display:flex;align-items:center;justify-content:center;margin-top:1px;
 }
-.step-tx{font-size:var(--fs-sm);line-height:1.5;color:#cbd5e1;}
+.step-tx{font-size:var(--fs-sm);line-height:1.5;color:#d9d3c8;}
 .step-tx b{color:#fff;font-weight:800;}
 .step-tx .tap{color:var(--gold);font-weight:800;}
 
@@ -194,7 +194,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:var(
 }
 .finish-cta:active{opacity:0.85;}
 .finish-list{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:18px;}
-.finish-list li{display:flex;gap:10px;align-items:flex-start;font-size:var(--tour-fs-cta-nm);line-height:1.5;color:#cbd5e1;}
+.finish-list li{display:flex;gap:10px;align-items:flex-start;font-size:var(--tour-fs-cta-nm);line-height:1.5;color:#d9d3c8;}
 .finish-list .chk{color:var(--gold);font-weight:900;flex-shrink:0;}
 
 /* ── BOTTOM CONTROLS ── */
@@ -257,7 +257,7 @@ html[data-theme="light"] .scene-caption,
 html[data-theme="light"] .narration p,
 html[data-theme="light"] .step-tx,
 html[data-theme="light"] .finish-list li span:last-child,
-html[data-theme="light"] .tip-tx{color:#3d4756;}
+html[data-theme="light"] .tip-tx{color:#4b453f;}
 html[data-theme="light"] .scene{background:linear-gradient(135deg,var(--ink-9),var(--ink-10));}
 html[data-theme="light"] .scene-glyph,
 html[data-theme="light"] .try-cta-nm,

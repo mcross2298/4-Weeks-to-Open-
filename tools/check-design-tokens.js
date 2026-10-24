@@ -85,6 +85,8 @@ const COOL_SEMANTIC = new Map([
   ['#04222a', 'foreground ON the cyan cluster hue #22d3ee'],
   ['#0a0810', 'superset-card ground (violet)'],
   ['#100c16', 'superset-card ground (violet)'],
+  ['#334155', 'rest-day accent: the slate CLAUDE.md\'s 7-day standard ' +
+              'governs and check-day-colors.js holds as RECOVERY.rest'],
 ]);
 
 /* NEUTRALS that are still cool, each with the reason it has not been mapped
@@ -223,6 +225,66 @@ for (const f of files) {
   }
 }
 
+/* ── 6. cool neutrals OUTSIDE the stylesheets (flagship readiness G, D-32) ──
+   Everything above reads tracked .css files, and only hex. The audit measured
+   what that misses: 30 modules inject CSS from JavaScript, pages carry their
+   own <style> blocks and style="" attributes, and rgba() was never parsed at
+   all — the bottom nav's rgba(8,10,16,.96) sat on every page. Counted with
+   the value test below, that was 915 cool neutral literals across 153 files
+   against ZERO in the stylesheets this gate could see.
+
+   The test is a property of the value, as pass 5's is, widened from dark
+   surfaces to every lightness, because the slate family is mostly mid-tones
+   (#94a3b8, #e2e8f0, #64748b): blue-leaning, low chroma, and not one of the
+   hue families that do a job. Every match is a hard fail unless its value is
+   named in COOL_SEMANTIC or COOL_PENDING above — the same two lists, so a hue
+   is justified once for the whole tree.
+
+   It reads .css, .html and .js (comments stripped, so a value quoted in a
+   note recording its removal does not count) and both hex and rgb()/rgba(). */
+function coolNeutral(r, g, b) {
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+  if (g > b) return false;                   // green / teal lean
+  if (r - g > 6) return false;               // violet lean (superset tints)
+  if (g - r > 2 * (b - g) + 4) return false; // cyan lean: a tint of the cluster hue
+  if (chroma > 44) return false;             // a hue: sky, steel, indigo
+  if (lum < 40 && chroma > 16) return false; // a dark navy: a branded hero hue
+  return lum < 60 ? b - r >= 2 : b - r >= 4;
+}
+const COOL_SCOPE = execSync('git ls-files "*.css" "*.html" "*.js"', { cwd: ROOT, encoding: 'utf8' })
+  .split('\n').filter(Boolean)
+  .filter(f => !/^(tools|tests|GO_LIVE|supabase)\//.test(f))   // not app code
+  .filter(f => !/\.dc\.html$/.test(f))                         // design comps, stripped at deploy
+  .filter(f => f !== 'supabase-vendor.js');                     // vendored
+let coolSeen = 0;
+for (const f of COOL_SCOPE) {
+  let src = fs.readFileSync(path.join(ROOT, f), 'utf8');
+  const blank = m => m.replace(/[^\n]/g, ' ');
+  src = src.replace(/\/\*[\s\S]*?\*\//g, blank).replace(/<!--[\s\S]*?-->/g, blank);
+  /* A `//` line comment, but not the `//` inside a URL (preceded by ':'). */
+  if (!f.endsWith('.css')) {
+    src = src.replace(/(^|[\s;{}(),])(\/\/[^\n]*)/gm,
+      (m, pre, body, i, all) => all[i + pre.length - 1] === ':' ? m : pre + blank(body));
+  }
+  const lineOf = idx => src.slice(0, idx).split('\n').length;
+  const re = /#([0-9a-fA-F]{6})(?:[0-9a-fA-F]{2})?(?![0-9a-zA-Z_-])|rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/g;
+  for (const m of src.matchAll(re)) {
+    let r, g, b;
+    if (m[1]) { r = parseInt(m[1].slice(0, 2), 16); g = parseInt(m[1].slice(2, 4), 16); b = parseInt(m[1].slice(4, 6), 16); }
+    else { r = +m[2]; g = +m[3]; b = +m[4]; }
+    if (r > 255 || g > 255 || b > 255 || !coolNeutral(r, g, b)) continue;
+    coolSeen++;
+    const hex = '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+    if (COOL_SEMANTIC.has(hex) || COOL_PENDING.has(hex)) continue;
+    fail.push(`${f}:${lineOf(m.index)} — ${m[0]} is a COOL NEUTRAL (r${r} g${g} ` +
+      `b${b}) outside the warm ink ramp.\n    Use the --ink-* step it means, or ` +
+      `the warm value of equal luminance where a token cannot reach (a page ` +
+      `that does not load base.css, a canvas fill). If it is a hue doing a ` +
+      `job, name it in COOL_SEMANTIC with the job.`);
+  }
+}
+
 const now = {
   fontSizePx: counts.fontSizePx,
   distinctHex: counts.hex.size,
@@ -263,4 +325,5 @@ console.log(`check-design-tokens: OK — ${counts.weights} font-weight and ` +
             `${now.fontSizePx} px font-sizes / ${now.distinctHex} distinct ` +
             `hexes within ratchet; every cool dark value is either a declared ` +
             `hue (${COOL_SEMANTIC.size}) or a named pending neutral ` +
-            `(${COOL_PENDING.size}).`);
+            `(${COOL_PENDING.size}); ${COOL_SCOPE.length} css/html/js files ` +
+            `read for cool neutrals, ${coolSeen} found, all of them declared.`);

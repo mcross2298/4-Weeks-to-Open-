@@ -23,7 +23,7 @@
 .mc-nav{
   position:fixed;left:0;right:0;bottom:0;z-index:var(--z-nav,140);
   display:flex;
-  background:rgba(8,10,16,0.96);
+  background:rgba(10,10,9,0.96);
   -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
   border-top:1px solid rgba(255,255,255,0.10);
   padding:6px 0 calc(6px + env(safe-area-inset-bottom));
@@ -39,21 +39,24 @@
 .mc-nav-tab{
   flex:1 1 0;min-width:0;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  text-decoration:none;color:#94a3b8;
+  text-decoration:none;color:#a8a196;
   font-family:inherit;font-size:var(--fs-2xs,11px);font-weight:800;letter-spacing:0.03em;
   padding:4px 0;-webkit-tap-highlight-color:transparent;
   transition:color 0.15s;
-  /* VOC/VOA Kaizen audit W-I2 — 42px tall on 125 pages, under the 44px
-     floor. min-height + justify-content:center keeps the icon/label pair
+  /* VOC/VOA Kaizen audit W-I2 raised it from 42 to 44; flagship readiness G
+     to the owner's 48px floor (R6), now that this bar is the one nav on every
+     page. min-height + justify-content:center keeps the icon/label pair
      centred in the taller box rather than pinned to the top. */
-  min-height:44px;
+  min-height:48px;
 }
 /* the label is every child except the icon */
 .mc-nav-tab > :not(.mc-nav-ico){
   max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;
 }
-.mc-nav-tab .mc-nav-ico{font-size:var(--fs-2xl,18px);line-height:1;}
+.mc-nav-tab .mc-nav-ico{font-size:var(--fs-2xl,18px);line-height:1;display:flex;}
 .mc-nav-tab:active{color:#fff;transform:scale(0.94);}
+/* the screen you are on, in the dashboard's own active gold */
+.mc-nav-tab.is-current{color:#e6c579;}
 
 /* keep page content and the floating rest timer clear of the fixed bar */
 body.mc-has-nav{padding-bottom:76px !important;}
@@ -107,6 +110,7 @@ html[data-theme="light"] .mc-nav{
 }
 html[data-theme="light"] .mc-nav-tab{color:#8a8377;}
 html[data-theme="light"] .mc-nav-tab:active{color:#1c1a17;}
+html[data-theme="light"] .mc-nav-tab.is-current{color:var(--accent,#826919);}
 html[data-theme="light"] .mc-theme-toggle-float{
   background:rgba(28,26,23,0.05);border-color:rgba(28,26,23,0.12);
 }

@@ -31,27 +31,27 @@
     var css =
       '.mcle-back{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1390;opacity:0;transition:opacity .2s;}' +
       '.mcle-back.on{opacity:1;}' +
-      '.mcle{position:fixed;top:0;right:0;bottom:0;width:min(360px,88vw);z-index:1400;background:#0d1117;' +
-        'border-left:1px solid rgba(255,255,255,0.12);box-shadow:-12px 0 40px rgba(0,0,0,0.5);color:#e2e8f0;' +
+      '.mcle{position:fixed;top:0;right:0;bottom:0;width:min(360px,88vw);z-index:1400;background:#111110;' +
+        'border-left:1px solid rgba(255,255,255,0.12);box-shadow:-12px 0 40px rgba(0,0,0,0.5);color:#ede7d9;' +
         'display:flex;flex-direction:column;transform:translateX(100%);transition:transform .22s cubic-bezier(.4,0,.2,1);' +
         'font-family:"Segoe UI",system-ui,sans-serif;}' +
       '.mcle.on{transform:translateX(0);}' +
       '.mcle-hd{display:flex;align-items:center;gap:10px;padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,0.08);}' +
       '.mcle-hd .t{flex:1;font-size:15px;font-weight:900;color:#fff;}' +
       '.mcle-hd .draft{font-size:10px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#22d3ee;background:rgba(34,211,238,0.14);border:1px solid rgba(34,211,238,0.3);padding:3px 8px;border-radius:6px;}' +
-      '.mcle-x{background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;padding:2px 6px;}' +
+      '.mcle-x{background:none;border:none;color:#a8a196;font-size:20px;cursor:pointer;padding:2px 6px;}' +
       '.mcle-body{flex:1;overflow-y:auto;padding:14px 16px 20px;-webkit-overflow-scrolling:touch;}' +
-      '.mcle-sec{font-size:11px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#94a3b8;margin:18px 0 8px;}' +
+      '.mcle-sec{font-size:11px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#a8a196;margin:18px 0 8px;}' +
       '.mcle-sec:first-child{margin-top:4px;}' +
       '.mcle-row{display:flex;flex-wrap:wrap;gap:8px;}' +
       '.mcle-opt{padding:9px 13px;border-radius:10px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.05);' +
-        'color:#cbd5e1;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}' +
+        'color:#d9d3c8;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}' +
       '.mcle-opt.on{background:var(--accent,#22d3ee);border-color:var(--accent,#22d3ee);color:#03121b;}' +
       '.mcle-sw{width:34px;height:34px;border-radius:9px;border:2px solid rgba(255,255,255,0.18);cursor:pointer;padding:0;}' +
       '.mcle-sw.on{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,0.4);}' +
-      '.mcle-hint{font-size:11px;color:#64748b;font-weight:600;line-height:1.5;margin-top:7px;}' +
-      '.mcle-ft{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid rgba(255,255,255,0.08);background:#0a0e14;}' +
-      '.mcle-ft button{flex:1;padding:12px;border-radius:11px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.06);color:#e2e8f0;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;}' +
+      '.mcle-hint{font-size:11px;color:#797267;font-weight:600;line-height:1.5;margin-top:7px;}' +
+      '.mcle-ft{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid rgba(255,255,255,0.08);background:#0e0e0d;}' +
+      '.mcle-ft button{flex:1;padding:12px;border-radius:11px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.06);color:#ede7d9;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;}' +
       '.mcle-ft .pub{background:#22d3ee;border-color:#22d3ee;color:#03222b;}' +
       '.mcle-ft .disc{color:#f87171;border-color:rgba(248,113,113,0.4);}';
     var s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
@@ -236,9 +236,9 @@
   function showInfo(title, bodyHtml) {
     var ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:1500;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:24px;';
-    ov.innerHTML = '<div style="max-width:340px;background:#0d1117;border:1px solid rgba(255,255,255,0.14);border-radius:16px;padding:20px;color:#e2e8f0;font-family:\'Segoe UI\',system-ui,sans-serif;">' +
+    ov.innerHTML = '<div style="max-width:340px;background:#111110;border:1px solid rgba(255,255,255,0.14);border-radius:16px;padding:20px;color:#ede7d9;font-family:\'Segoe UI\',system-ui,sans-serif;">' +
       '<div style="font-size:16px;font-weight:900;color:#fff;margin-bottom:8px;">' + esc(title) + '</div>' +
-      '<div style="font-size:13px;line-height:1.5;color:#cbd5e1;margin-bottom:16px;">' + bodyHtml + '</div>' +
+      '<div style="font-size:13px;line-height:1.5;color:#d9d3c8;margin-bottom:16px;">' + bodyHtml + '</div>' +
       '<button style="width:100%;padding:11px;border-radius:11px;border:none;background:#22d3ee;color:#03222b;font-size:14px;font-weight:900;cursor:pointer;">OK</button></div>';
     ov.querySelector('button').onclick = function () { ov.remove(); };
     document.body.appendChild(ov);

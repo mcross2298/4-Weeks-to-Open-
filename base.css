@@ -251,7 +251,7 @@
      Reserved heights (content only, before env(safe-area-inset-*) is added
      on top by whichever rule positions each element — see below):
        .timer-float      64px, fixed
-       mc-nav.css's bar  ~58px (44px tap targets + 6px top/bottom padding)
+       mc-nav.css's bar  ~60px (48px tap targets + 6px top/bottom padding)
        .fw-bar            52px single-row baseline, ~109px in its stacked
                           layout (Finish button + progress line + Workout
                           Summary link) — the 109px is a measured value
@@ -575,7 +575,7 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .tb-barbell{background:rgba(138,131,119,0.2);color:var(--ink-8,#cfc9bf);}
 .tb-dumbbell{background:rgba(56,189,248,0.2);color:#7dd3fc;}
 .tb-cable{background:rgba(45,212,191,0.2);color:#5eead4;}
-.tb-machine{background:rgba(161,161,170,0.2);color:#d4d4d8;}
+.tb-machine{background:rgba(168,161,150,0.2);color:#dad4c8;}
 .tb-smith{background:rgba(192,132,252,0.15);color:#e9d5ff;}
 .tb-plate{background:rgba(120,113,108,0.25);color:#d6d3d1;}
 
@@ -1161,7 +1161,7 @@ html[data-theme="light"] .tb-finisher{background:rgba(16,185,129,0.16);color:#04
 html[data-theme="light"] .tb-barbell{background:rgba(107,100,89,0.16);color:var(--ink-6,#6b6459);}
 html[data-theme="light"] .tb-dumbbell{background:rgba(14,165,233,0.14);color:#0369a1;}
 html[data-theme="light"] .tb-cable{background:rgba(20,184,166,0.14);color:#0f766e;}
-html[data-theme="light"] .tb-machine{background:rgba(113,113,122,0.16);color:#52525b;}
+html[data-theme="light"] .tb-machine{background:rgba(120,113,101,0.16);color:#58524a;}
 html[data-theme="light"] .tb-smith{background:rgba(168,85,247,0.14);color:#7e22ce;}
 html[data-theme="light"] .tb-plate{background:rgba(120,113,108,0.18);color:#57534e;}
 

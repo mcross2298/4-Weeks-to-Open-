@@ -792,8 +792,8 @@
   //  publish. Superset is a one-tap toggle handled in the click router.    //
   // ====================================================================== //
   var piOverlay = null, piCard = null, piKind = null;
-  var PI_LBL = 'display:block;font-size:11px;font-weight:800;letter-spacing:0.04em;color:#94a3b8;margin:12px 2px 5px;text-transform:uppercase;';
-  var PI_IN = 'width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);border-radius:10px;padding:11px 12px;color:#e2e8f0;font-size:14px;font-family:inherit;outline:none;';
+  var PI_LBL = 'display:block;font-size:11px;font-weight:800;letter-spacing:0.04em;color:#a8a196;margin:12px 2px 5px;text-transform:uppercase;';
+  var PI_IN = 'width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);border-radius:10px;padding:11px 12px;color:#ede7d9;font-size:14px;font-family:inherit;outline:none;';
   function piEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
 
   function openPersonalIntensifier(card, kind) {

@@ -2415,6 +2415,25 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > - **Only the JSON backup counts as a backup** (`mc_backup_last_v1`, device-
 >   local). The CSV is for spreadsheets and cannot be restored.
 
+> **G shipped (2026-10-24).** The token gate now sees inline HTML,
+> JS-injected CSS and `rgba()`, which together held 915 cool neutral
+> literals it had never measured. All of them moved onto the warm ramp, and
+> there is one bottom nav. Four things to know before touching colour or nav:
+> - **`check-design-tokens.js` pass 6 hard-fails any cool neutral, by value,
+>   in `.css`/`.html`/`.js`.** A blue-leaning colour with chroma of 44 or less
+>   fails unless it leans green, cyan or violet, or is a dark navy. To keep one,
+>   name it in `COOL_SEMANTIC` with the job it does; `#334155` is there as the
+>   governed rest-day slate.
+> - **The migration matched WCAG luminance**, so contrast did not move (dark
+>   56 → 56). Use the same rule for a new neutral: the `--ink-*` step it means,
+>   or its warm equal-luminance literal where `base.css` is not loaded.
+> - **`mc-nav.js` is the one nav:** the dashboard's line icons, History
+>   (`workout-logs.html`) as the fifth tab, 48px tabs and an `is-current` gold.
+>   Stats lives in Home's Training Tools and at the top of History.
+> - **The visual ratchet's pixelmatch threshold (0.1) ignores an
+>   equal-luminance hue shift.** It measured 0% here while 2–25% of pixels
+>   moved. It guards layout and big colour changes, not a palette's warmth.
+
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the
 > owner's, not code: `WEEKLY_CHECKIN_SECRET` is still unset (per the 18 Oct

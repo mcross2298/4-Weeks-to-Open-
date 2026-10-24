@@ -19,15 +19,15 @@
 <link rel="stylesheet" href="mc-nav.css"/>
 <script src="mc-theme.js"></script>
 <style>
-body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;padding-bottom:120px;}
+body{background:#0a0a0a;min-height:100vh;color:#ede7d9;padding-bottom:120px;}
 .topbar{display:flex;align-items:center;gap:12px;padding:16px 18px 8px;}
 .back{font-size:20px;color:var(--accent,#d4af37);text-decoration:none;-webkit-tap-highlight-color:transparent;}
 .topbar-title{font-size:16px;font-weight:900;color:#fff;}
 .topbar-sub{font-size:11px;color:var(--muted);font-weight:600;}
 .content{max-width:680px;margin:0 auto;padding:8px 18px 0;}
-.sec-lbl{font-size:11px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#94a3b8;margin:20px 0 8px;}
+.sec-lbl{font-size:11px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#a8a196;margin:20px 0 8px;}
 .inp{width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);
-  background:rgba(255,255,255,0.05);color:#f1f5f9;font-size:15px;font-weight:700;font-family:inherit;outline:none;}
+  background:rgba(255,255,255,0.05);color:#f7f4ee;font-size:15px;font-weight:700;font-family:inherit;outline:none;}
 .inp:focus{border-color:var(--accent,#d4af37);}
 .row{display:flex;gap:10px;}
 .pick-row{display:flex;gap:8px;flex-wrap:wrap;}
@@ -38,7 +38,7 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;padding-bottom:120px;}
 .pick.color-pick .swatch{width:22px;height:22px;border-radius:50%;}
 .weeks-row{display:flex;gap:8px;}
 .wk-btn{flex:1;padding:11px 0;border-radius:11px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);
-  color:#94a3b8;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
+  color:#a8a196;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
 .wk-btn.sel{background:var(--accent,#d4af37);border-color:var(--accent,#d4af37);color:#000;}
 .day-card{background:#101010;border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:14px;margin-bottom:10px;}
 .day-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
@@ -49,7 +49,7 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;padding-bottom:120px;}
 .dx-row:last-child{border-bottom:none;}
 .dx-name{flex:1;font-size:13px;font-weight:700;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .dx-mini{width:52px;padding:6px 4px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);
-  background:rgba(255,255,255,0.04);color:#e2e8f0;font-size:12px;font-weight:700;text-align:center;font-family:inherit;outline:none;}
+  background:rgba(255,255,255,0.04);color:#ede7d9;font-size:12px;font-weight:700;text-align:center;font-family:inherit;outline:none;}
 .dx-del{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:4px;-webkit-tap-highlight-color:transparent;}
 .dx-hdr{display:flex;gap:8px;padding:2px 0 4px;font-size:10px;font-weight:900;letter-spacing:0.08em;color:var(--muted);text-transform:uppercase;}
 .dx-hdr span:first-child{flex:1;}
@@ -61,12 +61,12 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;padding-bottom:120px;}
 .dx-top{display:flex;align-items:center;gap:6px;}
 .dx-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .dx-lbl{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;}
-.dx-sel{flex:1 1 96px;min-width:96px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 8px;color:#e2e8f0;font-size:12px;font-weight:700;outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;font-family:inherit;}
-.dx-sel option{background:#0d1f3c;color:#e2e8f0;}
-.dx-move{font-size:12px;line-height:1;color:#94a3b8;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);border-radius:7px;padding:5px 7px;cursor:pointer;flex-shrink:0;font-family:inherit;}
+.dx-sel{flex:1 1 96px;min-width:96px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 8px;color:#ede7d9;font-size:12px;font-weight:700;outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;font-family:inherit;}
+.dx-sel option{background:#0d1f3c;color:#ede7d9;}
+.dx-move{font-size:12px;line-height:1;color:#a8a196;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);border-radius:7px;padding:5px 7px;cursor:pointer;flex-shrink:0;font-family:inherit;}
 .dx-move:hover:not(:disabled){border-color:var(--accent,#22d3ee);color:#67e8f9;}
 .dx-move:disabled{opacity:0.3;cursor:not-allowed;}
-.dx-ss{font-size:11px;font-weight:800;border-radius:8px;padding:5px 9px;cursor:pointer;font-family:inherit;flex-shrink:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);color:#94a3b8;}
+.dx-ss{font-size:11px;font-weight:800;border-radius:8px;padding:5px 9px;cursor:pointer;font-family:inherit;flex-shrink:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);color:#a8a196;}
 .dx-ss:hover{border-color:rgba(168,85,247,0.5);color:#c084fc;}
 .dx-ss.on{background:#a855f7;border-color:#a855f7;color:#0a0810;}
 .dx-sshint{font-size:11px;color:var(--muted2);flex-shrink:0;padding:0 4px;font-weight:800;}
@@ -82,9 +82,9 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;padding-bottom:120px;}
 .cluster-rep{width:38px;min-width:38px;}
 .cluster-count{flex:0 0 auto;min-width:80px;}
 .add-ex{width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1.5px dashed rgba(255,255,255,0.15);
-  background:none;color:#94a3b8;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
+  background:none;color:#a8a196;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
 .add-day{width:100%;padding:13px;border-radius:12px;border:1.5px dashed rgba(255,255,255,0.18);background:none;
-  color:#cbd5e1;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
+  color:#d9d3c8;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
 .save-bar{position:fixed;bottom:0;left:0;right:0;z-index:60;display:flex;gap:10px;align-items:center;
   padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(10,10,10,0.96);
   -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid rgba(255,255,255,0.08);}
@@ -98,15 +98,15 @@ body{background:#0a0a0a;min-height:100vh;color:#e2e8f0;padding-bottom:120px;}
 .pk-sheet{width:100%;max-width:680px;margin:0 auto;height:78vh;display:flex;flex-direction:column;
   background:#101010;border-radius:18px 18px 0 0;border:1px solid rgba(255,255,255,0.1);border-bottom:0;padding:14px 16px 0;}
 .pk-search{padding:11px 13px;border-radius:11px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);
-  color:#f1f5f9;font-size:14px;font-family:inherit;outline:none;margin-bottom:10px;}
+  color:#f7f4ee;font-size:14px;font-family:inherit;outline:none;margin-bottom:10px;}
 .pk-filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch;}
 .pk-f{flex-shrink:0;padding:6px 12px;border-radius:9px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);
-  color:#94a3b8;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
+  color:#a8a196;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
 .pk-f.on{background:var(--accent,#d4af37);border-color:var(--accent,#d4af37);color:#000;}
 .pk-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(16px + env(safe-area-inset-bottom));}
 .pk-row{display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .pk-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-.pk-nm{flex:1;font-size:14px;font-weight:700;color:#e2e8f0;}
+.pk-nm{flex:1;font-size:14px;font-weight:700;color:#ede7d9;}
 .pk-add{font-size:16px;color:#34d399;font-weight:900;}
 </style>
 <link rel="stylesheet" href="mc-light.css">

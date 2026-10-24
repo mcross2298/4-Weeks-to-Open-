@@ -460,16 +460,16 @@
       '.fw-done-emoji{font-size:46px;line-height:1;margin-bottom:6px;animation:fwPop .5s ease-out;}'+
       '@keyframes fwPop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1)}}'+
       '.fw-done-title{font-size:22px;font-weight:900;letter-spacing:-0.02em;color:#fff;}'+
-      '.fw-done-sub{font-size:13px;color:#64748b;font-weight:700;margin:2px 0 16px;}'+
+      '.fw-done-sub{font-size:13px;color:#797267;font-weight:700;margin:2px 0 16px;}'+
       '.fw-strain-wrap:not(:empty){display:flex;flex-direction:column;align-items:center;margin-bottom:16px;}'+
       '.fw-strain-circle{position:relative;width:76px;height:76px;}'+
       '.fw-strain-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}'+
       '.fw-strain-val{font-size:19px;font-weight:900;color:#d4af37;line-height:1.1;text-align:center;}'+
-      '.fw-strain-val span{display:block;font-size:9px;font-weight:800;color:#64748b;margin-top:2px;letter-spacing:0.02em;}'+
-      '.fw-strain-lbl{font-size:11px;font-weight:700;color:#94a3b8;margin-top:8px;}'+
+      '.fw-strain-val span{display:block;font-size:9px;font-weight:800;color:#797267;margin-top:2px;letter-spacing:0.02em;}'+
+      '.fw-strain-lbl{font-size:11px;font-weight:700;color:#a8a196;margin-top:8px;}'+
       '.fw-muscle-wrap:not(:empty){margin-bottom:16px;}'+
       '.fw-muscle-figs{display:flex;justify-content:center;gap:14px;}'+
-      '.fw-muscle-lbl{font-size:11px;font-weight:700;color:#94a3b8;margin-top:10px;}'+
+      '.fw-muscle-lbl{font-size:11px;font-weight:700;color:#a8a196;margin-top:10px;}'+
       '.fw-muscle-save{margin-top:10px;padding:9px 16px;border-radius:10px;border:1px solid rgba(212,175,55,0.35);'+
         'background:rgba(212,175,55,0.1);color:#f5d76e;font-size:12px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;'+
         /* ~34px tall at padding:9px 16px on 12px text -- under the 44px touch
@@ -479,7 +479,7 @@
       '.fw-done-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}'+
       '.fw-done-cell{background:#141414;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 8px;}'+
       '.fw-done-num{font-size:22px;font-weight:900;color:var(--accent,#d4af37);letter-spacing:-0.01em;}'+
-      '.fw-done-lbl{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;margin-top:4px;}'+
+      '.fw-done-lbl{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#797267;margin-top:4px;}'+
       '.fw-done-prs:not(:empty){margin-bottom:16px;}'+
       '.fw-done-prs-title{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#d4af37;margin-bottom:8px;}'+
       '.fw-pr-chip{display:inline-block;margin:3px;padding:7px 12px;border-radius:10px;background:rgba(212,175,55,0.14);border:1px solid rgba(212,175,55,0.35);color:#f5d76e;font-size:12px;font-weight:800;}'+
@@ -488,13 +488,13 @@
          buttons missed it by reusing classes whose padding base.css scopes
          elsewhere (PR #331), so these carry their own min-height. */
       '.fw-push-offer{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);}'+
-      '.fw-push-line{font-size:12px;font-weight:700;color:#cbd5e1;margin-bottom:9px;}'+
+      '.fw-push-line{font-size:12px;font-weight:700;color:#d9d3c8;margin-bottom:9px;}'+
       '.fw-push-offer button{min-height:44px;padding:0 14px;margin:0 4px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;}'+
       '.fw-push-yes{background:rgba(212,175,55,0.16);border:1px solid rgba(212,175,55,0.45);color:#f5d76e;}'+
-      '.fw-push-no{background:transparent;border:1px solid rgba(255,255,255,0.14);color:#94a3b8;}'+
+      '.fw-push-no{background:transparent;border:1px solid rgba(255,255,255,0.14);color:#a8a196;}'+
       '.fw-refuel-wrap:not(:empty){margin-bottom:16px;padding:14px;border-radius:14px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);text-align:left;}'+
       '.fw-refuel-title{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#d4af37;}'+
-      '.fw-refuel-sub{font-size:13px;font-weight:700;color:#e2e8f0;margin-top:4px;}'+
+      '.fw-refuel-sub{font-size:13px;font-weight:700;color:#ede7d9;margin-top:4px;}'+
       '.fw-refuel-btn{display:block;margin-top:10px;padding:11px;border-radius:10px;background:#d4af37;color:#0a0a0a;text-align:center;text-decoration:none;font-size:13px;font-weight:800;}';
     document.head.appendChild(st);
   }
@@ -595,7 +595,7 @@
         ctx.drawImage(frontImg,W/2-figW-20,220,figW,figH);
         ctx.drawImage(backImg,W/2+20,220,figW,figH);
       }
-      ctx.fillStyle='#64748b';ctx.font='600 26px system-ui';
+      ctx.fillStyle='#797267';ctx.font='600 26px system-ui';
       ctx.fillText('MC Training',W/2,H-50);
       cv.toBlob(function(blob){
         var file=new File([blob],'mc-session.png',{type:'image/png'});

@@ -57,11 +57,11 @@ function cardClass(tag){
 function amrapToInfinity(s){ return String(s).replace(/\bamrap\b/gi,'∞'); }
 
 function renderReps(sets){
-  if(!sets||sets==='—')return'<span style="color:#9ca3af;font-style:italic">—</span>';
+  if(!sets||sets==='—')return'<span style="color:#a8a297;font-style:italic">—</span>';
   if(sets.includes('→')){
     const parts=sets.split('→');
     const baseHtml=renderChips(parts[0].trim(),'#fbbf24');
-    const extHtml=`<span style="font-size:11px;font-weight:900;color:#94a3b8;margin:0 4px">→</span>`+renderChips(amrapToInfinity(parts[1].trim()),'#f87171');
+    const extHtml=`<span style="font-size:11px;font-weight:900;color:#a8a196;margin:0 4px">→</span>`+renderChips(amrapToInfinity(parts[1].trim()),'#f87171');
     return`<div class="a-leg">${baseHtml}${extHtml}</div>`;
   }
   const lower=sets.toLowerCase();
@@ -322,7 +322,7 @@ function renderDay(day,dIdx){
     ];
     const actsHtml=acts.map(a=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(51,65,85,0.2);">
       <span style="font-size:18px;flex-shrink:0">${a.icon}</span>
-      <div><div style="font-weight:800;font-size:13px;color:#94a3b8">${a.name}</div><div style="font-size:11px;color:#475569;margin-top:2px">${a.desc}</div></div>
+      <div><div style="font-weight:800;font-size:13px;color:#a8a196">${a.name}</div><div style="font-size:11px;color:#59534b;margin-top:2px">${a.desc}</div></div>
     </div>`).join('');
     const c=dayChrome(day);
     return backBtn()+`<div class="day-card open" data-d="${dIdx}" style="--day-rgb:${c.rgb}">

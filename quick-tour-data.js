@@ -30,12 +30,12 @@
       title:"Your Dashboard at a glance",
       tagline:"The dashboard is your hub. Three zones, one bottom tab bar — learn these and you can reach anything.",
       scene:{glyph:'⚡',caption:'Current Program · Training Tools · bottom tabs',color:'rgba(212,175,55,0.3)',glow:'rgba(212,175,55,0.14)'},
-      narration:"Start at the top: your Current Program hero card, with the search icon right beside the calendar and theme toggle. Below the hero, the Training Tools grid — Library, Logs, Build Your Own, Program Guide, and this tour. And pinned to the bottom: Dashboard, Programs, and Conditioning. That bar follows you everywhere.",
+      narration:"Start at the top: your Current Program hero card, with the search icon right beside the calendar and theme toggle. Below the hero, the Training Tools grid — Library, Logs, Build Your Own, Program Guide, and this tour. And pinned to the bottom: Dashboard, Programs, Conditioning, Nutrition and History. That bar is the same on every screen and follows you everywhere.",
       steps:[
         {tx:"<b>Top-right — Search:</b> tap the 🔍 icon on any tab to search across every program and the full exercise catalog at once — tap a result to jump straight there."},
         {tx:"<b>Top — Current Program:</b> the program you've pinned shows here with its splits."},
         {tx:"<b>Middle — Training Tools:</b> your 2×2 grid of power tools (plus this Quick Tour)."},
-        {tx:"<b>Bottom tabs:</b> <span class='tap'>⚡ Dashboard</span> · <span class='tap'>🏋️ Programs</span> · <span class='tap'>🔥 Conditioning</span> — always one tap away."},
+        {tx:"<b>Bottom tabs:</b> <span class='tap'>Dashboard</span> · <span class='tap'>Programs</span> · <span class='tap'>Conditioning</span> · <span class='tap'>Nutrition</span> · <span class='tap'>History</span> — the same five on every screen, always one tap away. The tab you're on is lit in gold. <b>Stats</b> is in Training Tools here, and at the top of History."},
         {tx:"<b>🤖 Coach Note:</b> tap to expand this collapsed card for a short AI read on your last 30 days — a headline summary plus chips for any per-lift flags, muscle-volume warnings, and swap ideas. Signed-in only; refreshes once a day."},
         {tx:"If your coach uses PM Mode to assign you a program or macro goals, a <b>🎯 “Your coach has a suggestion”</b> card appears here — tap Accept to apply it, or ✕ to dismiss. Nothing changes on your account unless you tap Accept."},
         {tx:"<b>🍳 Recipes:</b> tap the utensils icon next to the theme toggle to open Mike's Cookbook — recipes, meal planning, and the same macro tracker, without leaving your workout flow."},
@@ -76,7 +76,7 @@
         /* MARKET:STRIP influencer-tour END */
         ". Tap one, pick a split, and you're on the workout page with every exercise laid out.",
       steps:[
-        {tx:"Tap <span class='tap'>🏋️ Programs</span> in the bottom bar."},
+        {tx:"Tap <span class='tap'>Programs</span> in the bottom bar."},
         {tx:"Tap a <b>category card</b>"+
           /* MARKET:STRIP influencer-tour START */
           " (e.g. Daily Pump)"+
@@ -247,9 +247,9 @@
       title:"Track macros in the Nutrition tab",
       tagline:"Lifting is half the job — the 🍎 Nutrition tab tracks calories, protein, fat and carbs against your goals, day by day.",
       scene:{glyph:'🍎',caption:'Daily kcal · P/F/C rings · day calendar · food search + barcode',color:'rgba(239,68,68,0.32)',glow:'rgba(239,68,68,0.12)'},
-      narration:"Tap the apple on the bottom bar. Up top, a week calendar — tap any day to log against it. Below, your daily totals as rings filling toward your goals for calories, protein, fat and carbs. Set those goals once with the gear, then search a huge food database — or tap the barcode icon and scan a label to pull a food in instantly.",
+      narration:"Tap Nutrition on the bottom bar. Up top, a week calendar — tap any day to log against it. Below, your daily totals as rings filling toward your goals for calories, protein, fat and carbs. Set those goals once with the gear, then search a huge food database — or tap the barcode icon and scan a label to pull a food in instantly.",
       steps:[
-        {tx:"Tap <span class='tap'>🍎 Nutrition</span> in the bottom bar."},
+        {tx:"Tap <span class='tap'>Nutrition</span> in the bottom bar."},
         {tx:"Tap the <span class='tap'>⚙ gear</span> to set or auto-calculate your <b>calorie & macro goals</b>."},
         {tx:"Tap a day in the <b>week calendar</b> — the rings show how close you are to each goal."},
         {tx:"Tap <span class='tap'>Search food database</span>, or hit the <span class='tap'>▦ barcode</span> icon to scan a label."},

@@ -469,7 +469,7 @@ html[data-theme="light"] .sec-num,
 html[data-theme="light"] .stat-chip,
 html[data-theme="light"] .gold{color:#826919;}
 html[data-theme="light"] .sec-lede,
-html[data-theme="light"] .topbar-sub{color:#666f7f;}
+html[data-theme="light"] .topbar-sub{color:#756e62;}
 
 /* ── round 2: overview pages + per-module accent rows ─────────────────
    quick-tour-overview / pm-mode-overview put white bold runs inside
@@ -480,7 +480,7 @@ html[data-theme="light"] .ticks b,
 html[data-theme="light"] .card-tx b{color:var(--text,#1c1a17);}
 html[data-theme="light"] .card-tx,
 html[data-theme="light"] .sec p,
-html[data-theme="light"] .tier{color:#4a5464;}
+html[data-theme="light"] .tier{color:#58534a;}
 html[data-theme="light"] .tier.flag{color:#826919;}
 
 /* cat-pump-new4's module rows tint by class (.m-gold/.m-green/…), with
@@ -512,4 +512,4 @@ html[data-theme="light"] .phase8-badge{color:#826919;}
 /* pmc-workout's split picker tints its arrow/name per split; same story */
 html[data-theme="light"] .picker-arrow,
 html[data-theme="light"] .picker-split-name,
-html[data-theme="light"] .picker-split-label{color:#3d4756;}
+html[data-theme="light"] .picker-split-label{color:#4b453f;}

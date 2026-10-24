@@ -108,9 +108,9 @@
       '.subs-row{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid rgba(255,255,255,0.06);}' +
       '.subs-row:last-child{border-bottom:none;}' +
       '.subs-row-main{flex:1;min-width:0;}' +
-      '.subs-row-names{font-size:13.5px;font-weight:700;color:#f1f5f9;overflow-wrap:break-word;}' +
-      '.subs-arrow{color:#64748b;}' +
-      '.subs-row-scope{font-size:11px;font-weight:700;color:#94a3b8;margin-top:2px;letter-spacing:0.02em;}' +
+      '.subs-row-names{font-size:13.5px;font-weight:700;color:#f7f4ee;overflow-wrap:break-word;}' +
+      '.subs-arrow{color:#797267;}' +
+      '.subs-row-scope{font-size:11px;font-weight:700;color:#a8a196;margin-top:2px;letter-spacing:0.02em;}' +
       '.subs-revert{flex-shrink:0;font-size:12px;font-weight:800;color:#22d3ee;background:rgba(34,211,238,0.1);' +
         'border:1px solid rgba(34,211,238,0.25);border-radius:8px;padding:7px 12px;cursor:pointer;font-family:inherit;}' +
       '.subs-revert:active{background:rgba(34,211,238,0.2);}';

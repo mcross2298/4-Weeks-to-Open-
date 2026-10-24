@@ -58,8 +58,8 @@
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block;">' +
       '<path d="' + path + '" fill="none" stroke="' + col + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>' +
       dots +
-      '<text x="' + pad + '" y="11" font-size="10" font-weight="700" fill="#64748b">' + esc(opts.maxLabel != null ? opts.maxLabel : max) + '</text>' +
-      '<text x="' + pad + '" y="' + (H - 3) + '" font-size="10" font-weight="700" fill="#475569">' + esc(opts.minLabel != null ? opts.minLabel : min) + '</text>' +
+      '<text x="' + pad + '" y="11" font-size="10" font-weight="700" fill="#797267">' + esc(opts.maxLabel != null ? opts.maxLabel : max) + '</text>' +
+      '<text x="' + pad + '" y="' + (H - 3) + '" font-size="10" font-weight="700" fill="#59534b">' + esc(opts.minLabel != null ? opts.minLabel : min) + '</text>' +
       '<text x="' + (W - pad) + '" y="11" text-anchor="end" font-size="10" font-weight="800" fill="' + col + '">' + esc(lastY) + '</text>' +
       '</svg>';
   }
@@ -82,7 +82,7 @@
       return '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '"' +
         ' rx="3" fill="' + col + '" opacity="' + (hl ? '1' : v.value ? '0.55' : '0.18') + '">' +
         '<title>' + esc(v.label) + ': ' + esc(v.value) + '</title></rect>' +
-        (opts.labels ? '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 3) + '" text-anchor="middle" font-size="9" font-weight="700" fill="#64748b">' + esc(v.label) + '</text>' : '');
+        (opts.labels ? '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 3) + '" text-anchor="middle" font-size="9" font-weight="700" fill="#797267">' + esc(v.label) + '</text>' : '');
     }).join('');
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block;">' + out + '</svg>';
   }

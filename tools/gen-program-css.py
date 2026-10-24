@@ -58,6 +58,12 @@ MARKERS = {
 FLAGSHIP_BORDER_ALPHA = ".28"  # normalized; see module docstring
 
 
+
+# The card's dark gradient end. It was (20, 20, 22), a blue-biased near-black
+# that the flagship readiness G token gate counts as a cool neutral; this is the
+# warm ramp's value at the same WCAG luminance, so contrast is unchanged.
+CARD_GROUND = (21, 20, 19)
+
 def hex_to_rgb(h):
     h = h.lstrip('#')
     if len(h) == 3:
@@ -115,7 +121,7 @@ def render_cards_dark_flagship(programs):
             "#scr-programs .cat-card.%s .cat-icon{background:%s;}\n"
             "#scr-programs .cat-card.%s .cat-tag{background:%s;border:1px solid %s;color:%s;}\n"
             "#scr-programs .cat-card.%s:active{box-shadow:0 0 0 2px %s,0 0 26px %s!important;}" % (
-                p["id"], rgba(rgb, ".16"), rgba((20, 20, 22), ".5"),
+                p["id"], rgba(rgb, ".16"), rgba(CARD_GROUND, ".5"),
                 rgba(rgb, FLAGSHIP_BORDER_ALPHA), p["color"],
                 rgba(rgb, ".18"), rgba(rgb, ".4"), rgba(rgb, ".22"),
                 p["id"], rgba(rgb, ".18"),
@@ -137,7 +143,7 @@ def render_cards_dark_influencer(programs):
             "#scr-programs .cat-card.%s .cat-icon{background:%s;}\n"
             "#scr-programs .cat-card.%s .cat-tag{background:%s;border:1px solid %s;color:%s;}\n"
             "#scr-programs .cat-card.%s:active{box-shadow:0 0 0 2px %s,0 0 24px %s;}" % (
-                p["id"], rgba(rgb, ".14"), rgba((20, 20, 22), ".5"), rgba(rgb, ".26"), p["color"],
+                p["id"], rgba(rgb, ".14"), rgba(CARD_GROUND, ".5"), rgba(rgb, ".26"), p["color"],
                 p["id"], rgba(rgb, ".18"),
                 p["id"], rgba(rgb, ".2"), rgba(rgb, ".4"), p["tagTint"],
                 p["id"], p["color"], rgba(rgb, ".5"),
@@ -160,7 +166,7 @@ def render_rail_dark(programs):
             "--fs-rest:0 4px 18px %s;--fs-peak:0 6px 28px %s;--fs-ring:0 0 0 1px %s;}\n"
             "#scr-dashboard .rail-card.%s .rail-icon{background:%s;}\n"
             "#scr-dashboard .rail-card.%s:active{box-shadow:0 0 0 2px %s,0 0 24px %s!important;}" % (
-                p["id"], rgba(rgb, ".16"), rgba((20, 20, 22), ".4"),
+                p["id"], rgba(rgb, ".16"), rgba(CARD_GROUND, ".4"),
                 rgba(rgb, FLAGSHIP_BORDER_ALPHA), p["color"],
                 rgba(rgb, ".18"), rgba(rgb, ".4"), rgba(rgb, ".22"),
                 p["id"], rgba(rgb, ".16"),

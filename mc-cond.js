@@ -192,12 +192,12 @@
       '.mcc-btn{flex-shrink:0;padding:11px 14px;border-radius:11px;font-size:13px;font-weight:900;' +
         'text-decoration:none;border:none;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}' +
       '.mcc-go{background:#E24B4A;color:#fff;box-shadow:0 2px 14px rgba(226,75,74,0.4);}' +
-      '.mcc-log{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);color:#e2e8f0;}' +
+      '.mcc-log{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);color:#ede7d9;}' +
       '.mcc-best{margin-left:auto;font-size:12px;font-weight:800;color:#fbbf24;white-space:nowrap;}' +
       // result toast (replaces a blocking alert() for the post-log PB message)
       '.mcc-toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));z-index:1360;' +
         'transform:translate(-50%,16px);max-width:calc(100vw - 32px);text-align:center;' +
-        'padding:12px 16px;background:#0e0e0e;color:#e2e8f0;' +
+        'padding:12px 16px;background:#0e0e0e;color:#ede7d9;' +
         'border:1px solid rgba(255,255,255,0.1);border-radius:14px;' +
         'box-shadow:0 8px 28px rgba(0,0,0,0.55);font-size:13.5px;font-weight:700;' +
         'opacity:0;pointer-events:none;transition:opacity 200ms ease,transform 200ms ease;}' +

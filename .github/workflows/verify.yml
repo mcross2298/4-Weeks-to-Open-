@@ -516,6 +516,9 @@ jobs:
     # Separate job so the ~3-4 min Playwright install runs in parallel with the
     # fast checks above rather than serialising behind them.
     runs-on: ubuntu-latest
+    # It normally takes ~20 minutes. Without a limit a hung browser gate holds
+    # the runner for GitHub's 6-hour default (PR #369 sat 2.5 hours on one).
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -416,7 +416,7 @@
       '<div class="sum-hd" style="color:'+rgb(acc)+';">📊 Workout Summary'+
         '<span style="flex:1;height:1px;background:linear-gradient(90deg,'+rgba(acc,0.3)+',transparent);display:block;margin-left:8px;"></span>'+
       '</div>'+
-      '<div class="sum-card" style="background:rgba(10,14,24,0.92);border:1px solid '+rgba(acc,0.28)+';">'+
+      '<div class="sum-card" style="background:rgba(15,14,13,0.92);border:1px solid '+rgba(acc,0.28)+';">'+
         '<div class="mcs-progress">'+
           '<div class="mcs-progress-top"><span class="mcs-progress-label">Live progress</span>'+
           '<span class="mcs-progress-pct" style="color:'+rgb(acc)+';">'+pct+'%</span></div>'+

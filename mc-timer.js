@@ -715,14 +715,14 @@ function injectTimerEnhCss() {
     '.tf-head-text{display:flex;align-items:baseline;gap:8px;min-width:0;}' +
     '.timer-float-label{flex-shrink:0;}' +
     '.timer-float-ex{text-align:left!important;max-width:none!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
-    '.tf-head-text .timer-float-ex:not(:empty)::before{content:"· ";color:#475569;}' +
+    '.tf-head-text .timer-float-ex:not(:empty)::before{content:"· ";color:#59534b;}' +
     '.tf-gear{flex-shrink:0;width:34px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,0.12);' +
-      'background:rgba(255,255,255,0.05);color:#94a3b8;font-size:15px;cursor:pointer;display:flex;' +
+      'background:rgba(255,255,255,0.05);color:#a8a196;font-size:15px;cursor:pointer;display:flex;' +
       'align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:transform .2s;}' +
     '.tf-gear.on{color:#fbbf24;border-color:rgba(212,175,55,0.4);background:rgba(212,175,55,0.12);transform:rotate(60deg);}' +
     // ── List↔Video view toggle, same footprint as the gear ──
     '.tf-video-btn{flex-shrink:0;width:34px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,0.12);' +
-      'background:rgba(255,255,255,0.05);color:#94a3b8;font-size:15px;cursor:pointer;display:flex;' +
+      'background:rgba(255,255,255,0.05);color:#a8a196;font-size:15px;cursor:pointer;display:flex;' +
       'align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}' +
     // ── full-screen Video view: big countdown + Up Next, above the float and any scrim ──
     '.timer-video{display:none;position:fixed;inset:0;z-index:150;background:#0a0a0b;' +
@@ -730,24 +730,24 @@ function injectTimerEnhCss() {
     '.timer-video.visible{display:flex;}' +
     '.tv-list-btn{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));right:16px;' +
       'padding:8px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);' +
-      'color:#cbd5e1;font-size:12px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
-    '.tv-label{font-size:13px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:#64748b;}' +
-    '.tv-ex{font-size:15px;color:#94a3b8;max-width:320px;}' +
+      'color:#d9d3c8;font-size:12px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
+    '.tv-label{font-size:13px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:#797267;}' +
+    '.tv-ex{font-size:15px;color:#a8a196;max-width:320px;}' +
     '.tv-time{font-size:112px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;color:#fbbf24;transition:color .25s ease;}' +
     '.tv-time.done{color:#34d399;}' +
     '.tv-time.overtime{color:#f87171;}' +
-    '.tv-unit{font-size:12px;font-weight:800;letter-spacing:0.18em;color:#475569;margin-top:-10px;}' +
+    '.tv-unit{font-size:12px;font-weight:800;letter-spacing:0.18em;color:#59534b;margin-top:-10px;}' +
     '.tv-adjust{display:flex;gap:12px;}' +
     '.tv-adj{padding:10px 18px;border-radius:10px;border:1px solid rgba(255,255,255,0.14);' +
-      'background:rgba(255,255,255,0.05);color:#cbd5e1;font-size:14px;font-weight:800;cursor:pointer;' +
+      'background:rgba(255,255,255,0.05);color:#d9d3c8;font-size:14px;font-weight:800;cursor:pointer;' +
       'font-family:inherit;-webkit-tap-highlight-color:transparent;}' +
     '.tv-adj:active{background:rgba(212,175,55,0.16);color:#fbbf24;border-color:rgba(212,175,55,0.4);}' +
     '.tv-upnext{display:none;margin-top:18px;padding:14px 22px;border-radius:14px;' +
       'background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);max-width:340px;}' +
     '.tv-upnext.show{display:block;}' +
     '.tv-upnext-label{font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#a3e635;margin-bottom:6px;}' +
-    '.tv-upnext-name{font-size:17px;font-weight:800;color:#e2e8f0;}' +
-    '.tv-upnext-reps{font-size:13px;color:#64748b;margin-top:2px;}' +
+    '.tv-upnext-name{font-size:17px;font-weight:800;color:#ede7d9;}' +
+    '.tv-upnext-reps{font-size:13px;color:#797267;margin-top:2px;}' +
     '.tv-actions{display:flex;gap:10px;margin-top:20px;}' +
     '.tv-btn{padding:11px 20px;border-radius:10px;border:none;font-size:13px;font-weight:800;' +
       'letter-spacing:0.04em;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}' +
@@ -773,7 +773,7 @@ function injectTimerEnhCss() {
     '.timer-float-adjust{display:flex;gap:8px;margin:0!important;justify-content:flex-start;}' +
     '.timer-float-actions{display:flex;gap:8px;margin:0!important;}' +
     '.timer-float-adj{padding:9px 15px;border-radius:9px;border:1px solid rgba(255,255,255,0.14);' +
-      'background:rgba(255,255,255,0.05);color:#cbd5e1;font-size:13px;font-weight:800;letter-spacing:0.03em;' +
+      'background:rgba(255,255,255,0.05);color:#d9d3c8;font-size:13px;font-weight:800;letter-spacing:0.03em;' +
       'cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}' +
     '.timer-float-adj:active{background:rgba(212,175,55,0.16);color:#fbbf24;border-color:rgba(212,175,55,0.4);}' +
     '.timer-float-btn{padding:9px 16px!important;font-size:13px!important;}' +
@@ -897,7 +897,7 @@ function renderTimerPrefs() {
     st.textContent =
       '.timer-float-prefs{display:flex;gap:6px;margin-top:8px;justify-content:center;}' +
       '.tf-pref{padding:4px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);' +
-        'background:rgba(255,255,255,0.05);color:#475569;font-size:10px;font-weight:800;' +
+        'background:rgba(255,255,255,0.05);color:#59534b;font-size:10px;font-weight:800;' +
         'letter-spacing:0.05em;cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
       '.tf-pref.on{color:#fbbf24;border-color:rgba(212,175,55,0.4);background:rgba(212,175,55,0.12);}';
     document.head.appendChild(st);

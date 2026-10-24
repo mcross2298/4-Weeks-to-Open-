@@ -32,35 +32,35 @@
       '.acct-overlay.open{display:flex;}' +
       '.acct-sheet{width:100%;max-width:520px;background:#0e0e0e;' +
         'border-top:1px solid rgba(255,255,255,0.1);border-radius:24px 24px 0 0;' +
-        'padding:18px 18px calc(28px + env(safe-area-inset-bottom));color:#e2e8f0;}' +
+        'padding:18px 18px calc(28px + env(safe-area-inset-bottom));color:#ede7d9;}' +
       '.acct-handle{width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px;}' +
       '.acct-title{font-size:19px;font-weight:900;letter-spacing:-0.01em;margin-bottom:4px;}' +
-      '.acct-sub{font-size:13px;color:#94a3b8;margin-bottom:16px;line-height:1.5;}' +
-      '.acct-sub b{color:#e2e8f0;}' +
+      '.acct-sub{font-size:13px;color:#a8a196;margin-bottom:16px;line-height:1.5;}' +
+      '.acct-sub b{color:#ede7d9;}' +
       '.acct-sheet input{width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);' +
         'border:1px solid rgba(255,255,255,0.14);border-radius:12px;padding:13px 14px;margin-bottom:10px;' +
-        'color:#e2e8f0;font-size:15px;font-weight:600;outline:none;font-family:inherit;}' +
+        'color:#ede7d9;font-size:15px;font-weight:600;outline:none;font-family:inherit;}' +
       '.acct-btn{width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;' +
         'cursor:pointer;font-family:inherit;margin-top:4px;}' +
       '.acct-primary{background:#d4af37;color:#1a1200;}' +
       '.acct-primary:disabled{opacity:0.5;cursor:default;}' +
-      '.acct-secondary{background:rgba(255,255,255,0.07);color:#cbd5e1;border:1px solid rgba(255,255,255,0.14);}' +
-      '.acct-note{font-size:12px;color:#64748b;margin-top:14px;line-height:1.5;text-align:center;}' +
+      '.acct-secondary{background:rgba(255,255,255,0.07);color:#d9d3c8;border:1px solid rgba(255,255,255,0.14);}' +
+      '.acct-note{font-size:12px;color:#797267;margin-top:14px;line-height:1.5;text-align:center;}' +
       '.acct-info{font-size:13px;color:#86efac;background:rgba(34,197,94,0.08);' +
         'border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:11px 12px;margin-bottom:16px;line-height:1.5;}' +
       '.acct-err{font-size:13px;color:#fca5a5;margin-top:10px;min-height:18px;text-align:center;}' +
       '.avatar.acct-on{box-shadow:0 0 0 2px rgba(34,197,94,0.6);}' +
       '.acct-swatches{display:flex;gap:10px;margin-bottom:12px;}' +
       '.acct-swatch{width:32px;height:32px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;}' +
-      '.acct-swatch.on{border-color:#e2e8f0;}' +
+      '.acct-swatch.on{border-color:#ede7d9;}' +
       '.acct-density{display:flex;gap:8px;margin-bottom:4px;}' +
       '.acct-density-opt{flex:1;border:1px solid rgba(255,255,255,0.14);border-radius:10px;padding:9px;' +
-        'background:rgba(255,255,255,0.04);color:#94a3b8;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;}' +
-      '.acct-density-opt.on{background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.5);color:#e2e8f0;}' +
+        'background:rgba(255,255,255,0.04);color:#a8a196;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;}' +
+      '.acct-density-opt.on{background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.5);color:#ede7d9;}' +
       '.acct-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:48px;' +
         'border:1px solid rgba(255,255,255,0.14);border-radius:12px;padding:10px 14px;background:rgba(255,255,255,0.04);' +
-        'color:#e2e8f0;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left;}' +
-      '.acct-toggle-state{flex-shrink:0;font-size:12px;font-weight:800;color:#94a3b8;}' +
+        'color:#ede7d9;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left;}' +
+      '.acct-toggle-state{flex-shrink:0;font-size:12px;font-weight:800;color:#a8a196;}' +
       '.acct-toggle[aria-checked="true"] .acct-toggle-state{color:#34d399;}';
     var st = document.createElement('style');
     st.textContent = css;
@@ -203,7 +203,7 @@
       '<div style="border-top:1px solid rgba(255,255,255,0.1);margin:18px 0 14px;"></div>' +
       '<div class="acct-sub">Workouts — on this device.</div>' +
       '<button type="button" class="acct-toggle" id="acctKeepAwake" role="switch" aria-checked="' + on + '">' +
-        '<span>Keep screen on during workouts<br><span style="font-size:12px;font-weight:600;color:#94a3b8;">' +
+        '<span>Keep screen on during workouts<br><span style="font-size:12px;font-weight:600;color:#a8a196;">' +
         'From your first set until you finish. Off: only while a rest counts down.</span></span>' +
         '<span class="acct-toggle-state">' + (on ? 'On' : 'Off') + '</span>' +
       '</button>';

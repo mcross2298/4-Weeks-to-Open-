@@ -19,7 +19,7 @@
 <!-- MC:HEAD END -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:"Segoe UI",system-ui,sans-serif;}
-body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
+body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#ede7d9;}
 .header{background:linear-gradient(90deg,#0d1f3c,#050d1a);padding:60px 20px 22px;border-bottom:1px solid rgba(212,175,55,0.15);position:relative;}
 .back-link{position:absolute;top:18px;left:18px;color:#d4af37;text-decoration:none;font-size:13px;font-weight:700;background:rgba(212,175,55,0.12);padding:6px 14px;border-radius:20px;border:1px solid rgba(212,175,55,0.35);min-height:44px;display:inline-flex;align-items:center;box-sizing:border-box;}
 .header-inner{max-width:680px;margin:0 auto;}
@@ -28,12 +28,12 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 .subtitle{font-size:13px;color:var(--muted);font-weight:600;}
 .content{max-width:680px;margin:0 auto;padding:0 16px;}
 .sec-label{font-size:11px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;color:#34d399;margin:22px 0 10px;}
-.name-input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:13px 16px;color:#e2e8f0;font-size:15px;font-weight:700;outline:none;}
+.name-input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:13px 16px;color:#ede7d9;font-size:15px;font-weight:700;outline:none;}
 .name-input::placeholder{color:var(--muted2);}
 .search-wrap{position:sticky;top:0;z-index:10;background:#050d1a;padding:12px 0 8px;}
 .search-rel{position:relative;}
 .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
-.search-box{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 16px 12px 40px;color:#e2e8f0;font-size:14px;font-weight:600;outline:none;}
+.search-box{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 16px 12px 40px;color:#ede7d9;font-size:14px;font-weight:600;outline:none;}
 .search-box::placeholder{color:var(--muted2);}
 .filter-wrap{display:flex;gap:6px;overflow-x:auto;padding:10px 0 6px;-webkit-overflow-scrolling:touch;}
 .filter-wrap::-webkit-scrollbar{display:none;}
@@ -85,13 +85,13 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 .sel-top{display:flex;align-items:center;gap:8px;}
 .sel-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .sel-nm{flex:1;font-size:12px;font-weight:700;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.sel-inp{width:48px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 6px;color:#e2e8f0;font-size:12px;font-weight:700;text-align:center;outline:none;}
-.sel-sel{flex:1 1 96px;min-width:96px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 8px;color:#e2e8f0;font-size:12px;font-weight:700;outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;}
-.sel-sel option{background:#0d1f3c;color:#e2e8f0;}
+.sel-inp{width:48px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 6px;color:#ede7d9;font-size:12px;font-weight:700;text-align:center;outline:none;}
+.sel-sel{flex:1 1 96px;min-width:96px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 8px;color:#ede7d9;font-size:12px;font-weight:700;outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;}
+.sel-sel option{background:#0d1f3c;color:#ede7d9;}
 .sel-x{font-size:16px;color:#f87171;background:none;border:none;cursor:pointer;padding:0 4px;flex-shrink:0;}
 /* reorder controls — let any two exercises be placed adjacent so the user
    chooses which pair forms a superset, instead of being locked to a neighbour */
-.sel-move{font-size:12px;line-height:1;color:#94a3b8;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);border-radius:7px;padding:5px 7px;cursor:pointer;flex-shrink:0;font-family:inherit;}
+.sel-move{font-size:12px;line-height:1;color:#a8a196;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);border-radius:7px;padding:5px 7px;cursor:pointer;flex-shrink:0;font-family:inherit;}
 .sel-move:hover:not(:disabled){border-color:#22d3ee;color:#67e8f9;}
 .sel-move:disabled{opacity:0.3;cursor:not-allowed;}
 .sel-hint{font-size:11px;color:var(--muted);font-weight:600;line-height:1.5;margin-top:9px;}
@@ -101,7 +101,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 /* Off (default) state is a neutral, clearly-inactive "opt in" button so a
    freshly-added exercise never *looks* like it's already a superset. The
    purple ⚡ active look is reserved for when the link is explicitly toggled on. */
-.sel-ss{font-size:11px;font-weight:800;border-radius:8px;padding:5px 9px;cursor:pointer;font-family:inherit;flex-shrink:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);color:#94a3b8;}
+.sel-ss{font-size:11px;font-weight:800;border-radius:8px;padding:5px 9px;cursor:pointer;font-family:inherit;flex-shrink:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);color:#a8a196;}
 .sel-ss:hover{border-color:rgba(168,85,247,0.5);color:#c084fc;}
 .sel-ss.on{background:#a855f7;border-color:#a855f7;color:#0a0810;}
 .sel-sshint{font-size:11px;color:var(--muted2);flex-shrink:0;padding:0 4px;font-weight:800;}
@@ -128,7 +128,7 @@ body{background:#0a0a0a;min-height:100vh;padding-bottom:140px;color:#e2e8f0;}
 .del-btn{padding:10px 14px;border-radius:10px;background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.35);color:#f87171;font-size:13px;font-weight:800;cursor:pointer;}
 .no-saved{font-size:12px;color:var(--muted);font-weight:600;padding:6px 0 14px;}
 select.name-input{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%2364748b' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;}
-select.name-input option{background:#0d1f3c;color:#e2e8f0;}
+select.name-input option{background:#0d1f3c;color:#ede7d9;}
 .assign-hint{font-size:11px;color:var(--muted);font-weight:600;line-height:1.5;margin-top:7px;}
 .assign-hint strong{color:#7dd3fc;}
 .saved-flag{font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:6px;background:rgba(56,189,248,0.16);color:#7dd3fc;border:1px solid rgba(56,189,248,0.3);}
