@@ -87,6 +87,7 @@ node tools/test-mc-quick-pump-catalog.js  # compound-anchor selection vs. the re
 node tools/test-mc-bridge.js           # cross-app bridge read layer
 node tools/test-mc-sync-merge.js       # mc-sync.js merge logic
 node tools/test-mc-archive.js          # workouts past the newest 200 are archived, not dropped; CSV export; backup nudge (R7)
+node tools/test-mc-error-beacon.js     # field errors sent once, signed-in only, spaced, trimmed (E / D-35)
 node tools/test-mc-program-progress.js # per-program day model (continuous days, rest-as-data)
 node tools/test-mc-program-tabs.js     # program-landing list model (adaptive depth, day numbers)
 node tools/test-mc-sw.js               # service-worker fetch strategy (L1, L3, L4, L5)
