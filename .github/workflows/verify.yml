@@ -436,6 +436,15 @@ jobs:
         # store shapes.
         run: node tools/check-log-readers.js
 
+      - name: Workout-log single-writer check (flagship readiness R1 / D-38, D-24)
+        # Five places appended to mc_workout_log_v1 with their own copy of
+        # read-unshift-slice-write and two more deleted from it. The copies
+        # drifted: three skipped the storage-full warning, none stamped the id
+        # sync dedupes on, one banked zero sets through a retired key, and a
+        # delete left nothing behind, so the next pull resurrected it. Every
+        # write now goes through mc-log-read.js; this fails on any other.
+        run: node tools/check-workout-log-writers.js
+
       - name: Store coverage check (store-registry.json vs mc-sync.js / mc-export.js — audit G-01/G-02)
         # Sync coverage, export coverage and the code's actual key usage were
         # three hand-maintained lists with nothing comparing them. They had
@@ -572,6 +581,16 @@ jobs:
           # browser: the defect lives between two modules and a rendered
           # input's ghost state, which is why every other gate here missed it.
           if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-restore-fidelity.js http://localhost:8080; then EXIT=1; fi
+          # Session durability (flagship readiness R1). Every gate above logs a
+          # set and reloads at most; none logs a set and then does something
+          # ELSE, and every R1 defect lived there: a week-tab round trip
+          # deleted the live session on all seven tabbed engines, a running
+          # rest was never stored, a draft typed with the field focused was
+          # lost, an unticked set was banked anyway, a custom workout's Finish
+          # banked zero sets, and restoring an older backup erased newer
+          # workouts. 18 of 22 checks fail on the pre-R1 tree; its refresh
+          # control passes on both, so a broken harness cannot read as a pass.
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-session-durability.js http://localhost:8080; then echo "FAILED: test-mc-session-durability"; EXIT=1; fi
           # Light-mode contrast ratchet (audit G-04/G-3.1). Shares this job
           # because it needs the same Playwright install. Per-page budgets in
           # tools/contrast-budgets.json can only shrink; re-baseline with

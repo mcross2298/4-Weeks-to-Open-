@@ -739,7 +739,6 @@ buildTimerFloat();
 <script>
 /* ════════ FINISH-WORKOUT MODULE (wired to live totals) ════════ */
 (function(){
-  var WL_KEY='mc_workout_log_v1';
   var startTime=Date.now();
 
   function getDuration(){
@@ -801,12 +800,8 @@ buildTimerFloat();
         ropeMin:m.ropeMin, totalMin:m.totalMin,
         stepsComplete:m.stepsDone, sets:[], prs:0, setsChecked:m.stepsDone
       };
-      try{
-        var logs=JSON.parse(localStorage.getItem(WL_KEY)||'[]');
-        if(!Array.isArray(logs)) logs=[];   // L-03: else unshift() throws into the silent catch and the session is never saved
-        logs.unshift(entry); logs=logs.slice(0,200);
-        localStorage.setItem(WL_KEY,JSON.stringify(logs));
-      }catch(e){}
+      // R1 / D-38: the one append — id for sync, storage-full warning.
+      try{ MC_LOG.appendWorkout(entry); }catch(e){}
       window._FW.close();
       var btn=document.querySelector('.fw-btn');
       if(btn){ btn.textContent='✓ Saved!'; btn.style.background='#34d399'; }

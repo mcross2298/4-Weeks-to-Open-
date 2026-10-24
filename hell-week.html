@@ -599,7 +599,6 @@ window.addEventListener('beforeunload', persist);
 <script>
 /* ════════ FINISH-WORKOUT MODULE ════════ */
 (function(){
-  var WL_KEY='mc_workout_log_v1';
   function inject(){
     document.body.insertAdjacentHTML('beforeend',
       '<div class="fw-bar" id="fwBar"><span class="fw-progress" id="fwProgress">Round 0/3</span>'+
@@ -636,7 +635,8 @@ window.addEventListener('beforeunload', persist);
         time:new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),
         duration:fmtClock(m.elapsed), rounds:m.roundsDone+'/'+m.rounds, reps:m.reps,
         sets:[], prs:0, setsChecked:m.exDone};
-      try{ var logs=JSON.parse(localStorage.getItem(WL_KEY)||'[]'); if(!Array.isArray(logs)) logs=[]; logs.unshift(entry); logs=logs.slice(0,200); localStorage.setItem(WL_KEY,JSON.stringify(logs)); }catch(e){}
+      // R1 / D-38: the one append — id for sync, storage-full warning.
+      try{ MC_LOG.appendWorkout(entry); }catch(e){}
       window._FW.close();
       var btn=document.querySelector('.fw-btn'); if(btn){ btn.textContent='✓ Saved!'; btn.style.background='#34d399'; }
       var b=document.getElementById('fwAutoBanner'); if(b) b.classList.remove('show');

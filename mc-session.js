@@ -67,6 +67,7 @@
     Array.prototype.forEach.call(document.querySelectorAll('.mcl-ck.done'), function (ck) {
       var row = ck.closest('.mcl-row');
       if (!row || !row.id) return;
+      if (endedRows && endedRows[row.id]) return;   // banked or discarded already
       var owner = row.closest(CARD_SEL);
       sets.push({ id: row.id, card: owner ? cardKey(owner, all) : null });
     });
@@ -115,14 +116,71 @@
   //      MAX_AGE, and finishing a workout clears its own record explicitly.
   var restoreSettled = true;   // no stored session -> nothing to wait for
 
+  // Flagship readiness R1 / D-01: a week, phase or cycle tab round trip
+  // deleted the live session on all seven tabbed engines. DEF-CR-02 above
+  // fixed the rebuild for a page that ALREADY had a record at load; a session
+  // started on this page load never got the re-restore subscription, so the
+  // tab's rebuild produced a tick-free DOM and save() read that as "nothing
+  // in progress" and deleted the record.
+  //
+  // Wiring the subscription unconditionally (init() below) is half of it.
+  // The other half is that save() must stop inferring an UNTICK from the
+  // DOM. A tab, the day list, a lazily-built card and a re-render all remove
+  // ticked rows from view without unticking anything, and every one of them
+  // looked identical to an untick here. So the stored list is now only ever
+  // REDUCED by the three things that really end a set or a session:
+  //   - an untick, which mc-setlog.js announces as 'mc:set-unchecked';
+  //   - Finish, announced as 'mc:workout-finished';
+  //   - Discard, which deletes the record itself and leaves _FW.finished set.
+  // Everything else is a union of what was stored and what is ticked now.
+  // Records still expire through prune()'s MAX_AGE.
+  var endedRows = null;        // { rowId: 1 } ticked when the session ended
+
+  function mergedSets(snapSets) {
+    var out = [], seen = {};
+    function add(e) {
+      var id = typeof e === 'string' ? e : (e && e.id);
+      if (!id || seen[id] || (endedRows && endedRows[id])) return;
+      seen[id] = 1; out.push(e);
+    }
+    snapSets.forEach(add);                         // live owner keys win
+    ((session && session.sets) || []).forEach(add);
+    return out;
+  }
+
+  // Belt and braces for the delete branch: today's committed sets for this
+  // page are the durable record of a session in progress, so while
+  // mc_setlog_v1 holds any, "nothing ticked on screen" is never enough to
+  // drop the pointer to them.
+  function setlogHasToday() {
+    try {
+      var all = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}');
+      if (!all || typeof all !== 'object') return false;
+      var L = window.MC_LOG;
+      var today = L && L.dayKey ? L.dayKey() : null;
+      if (!today) return false;
+      var pre = PID + '|';
+      return Object.keys(all).some(function (k) {
+        if (k.indexOf(pre) !== 0 || !Array.isArray(all[k])) return false;
+        var list = L.normalizeSessions ? L.normalizeSessions(all[k]) : all[k];
+        var top = list[0];
+        return !!(top && top.d === today && top.sets && Object.keys(top.sets).length);
+      });
+    } catch (e) { return false; }
+  }
+
   function save() {
     clearTimeout(saveT);
     saveT = setTimeout(function () {
+      // Discard sets _FW.finished and deletes the record without an event.
+      if (window._FW && window._FW.finished && !endedRows) { endSession(); return; }
       var snap = capture();
+      var sets = mergedSets(snap.sets);
       var hasTimer = session && session.timer && session.timer.endTs > Date.now();
-      if (!snap.cards.length && !snap.sets.length && !hasTimer) {
+      if (!snap.cards.length && !sets.length && !hasTimer) {
         // DEF-CR-02: only "nothing in progress" once restore has settled.
         if (!restoreSettled) return;
+        if (setlogHasToday() && !endedRows) return;
         // nothing in progress — drop any stale record for this page
         var s0 = prune(readAll());
         if (s0[PID]) { delete s0[PID]; writeAll(s0); }
@@ -130,13 +188,33 @@
       }
       if (!session) session = { startedTs: Date.now() };
       session.cards = snap.cards;
-      session.sets = snap.sets;
+      session.sets = sets;
       session.activeCard = snap.activeCard;
       session.lastTs = Date.now();
       var s = prune(readAll());
       s[PID] = session;
       writeAll(s);
     }, 200);
+  }
+
+  // Finish or discard: remember which rows were ticked at that moment, so
+  // the still-ticked DOM of a banked workout cannot re-create the record it
+  // just cleared (a recap stays on screen after Finish, and pagehide used to
+  // write the session straight back). A set ticked AFTER this counts again.
+  function endSession() {
+    clearTimeout(saveT);
+    endedRows = {};
+    Array.prototype.forEach.call(document.querySelectorAll('.mcl-ck.done'), function (ck) {
+      var row = ck.closest('.mcl-row');
+      if (row && row.id) endedRows[row.id] = 1;
+    });
+    ((session && session.sets) || []).forEach(function (e) {
+      var id = typeof e === 'string' ? e : (e && e.id);
+      if (id) endedRows[id] = 1;
+    });
+    session = null;
+    var st = readAll();
+    if (st[PID]) { delete st[PID]; writeAll(st); }
   }
 
   // ---- restore ------------------------------------------------------------
@@ -177,6 +255,16 @@
   // saved before this change) have no owner key and fall back to the
   // original blind-retry behavior; mc_session_v1 prunes anything over 12h
   // old, so that shape ages out on its own.
+  function ownerByRowId(rowId) {
+    var found = null;
+    Array.prototype.forEach.call(document.querySelectorAll(CARD_SEL), function (c) {
+      if (found) return;
+      var pre;
+      try { pre = MCSetlogUtil.rowIdPrefix(c); } catch (e) { return; }
+      if (rowId.indexOf(pre) === 0 && /^\d+$/.test(rowId.slice(pre.length))) found = c;
+    });
+    return found;
+  }
   function restoreSets() {
     if (!session || !session.sets || !session.sets.length) return true;
     var done = true;
@@ -189,6 +277,14 @@
         if (owner) window.MCSetlogUtil.ensureRowsBuilt(owner);
       }
       var row = document.getElementById(rowId);
+      // R1 / D-01: a stored owner key is positional ('i0'), and a tab that
+      // re-renders a different set of cards moves it — so the owner may be
+      // another card now, and the row's real owner unbuilt. The row id
+      // carries the exercise identity, so find the card it belongs to.
+      if (!row && window.MCSetlogUtil && MCSetlogUtil.rowIdPrefix && MCSetlogUtil.ensureRowsBuilt) {
+        var real = ownerByRowId(rowId);
+        if (real) { MCSetlogUtil.ensureRowsBuilt(real); row = document.getElementById(rowId); }
+      }
       if (!row) { done = false; return; }
       var ck = row.querySelector('.mcl-ck');
       var wasDone = !!(ck && ck.classList.contains('done'));
@@ -220,25 +316,83 @@
   // start a fresh attempt while an older one is still polling, and the older
   // one must not clear the flag on the newer one's behalf.
   var restoreGen = 0;
+  // R1: since the re-restore is wired on every page, it also runs mid-session
+  // after a tab re-render. Re-painting ticks is its whole job there. It must
+  // not NAVIGATE — re-opening a day the athlete just closed, or re-activating
+  // a card they moved off. So restore may put the athlete back on their card
+  // until it has done that once for a session found at load (navPending; a
+  // DEF-CR-02 rebuild can undo the first attempt, and an athlete who taps the
+  // day straight after a reload still expects to land on their card), and
+  // otherwise only before they first touch the page. Bounded to 10 seconds
+  // after load either way. A synthetic header.click() fires no pointerdown,
+  // so restore's own navigation does not count as touching.
+  var userActed = false, navPending = false, NAV_WINDOW = 10000, loadTs = Date.now();
+  ['pointerdown', 'keydown'].forEach(function (t) {
+    document.addEventListener(t, function () { userActed = true; }, { capture: true, once: true });
+  });
+  function afterRestore() {
+    if ((navPending || !userActed) && Date.now() - loadTs < NAV_WINDOW) {
+      if (restoreActiveCard()) navPending = false;
+    }
+    restoreTimer();
+  }
   function runRestore() {
     restoreSettled = false;
     var gen = ++restoreGen, tries = 0;
     (function tryRestore() {
       if (gen !== restoreGen) return;               // superseded by a newer attempt
-      if (restoreSets()) { restoreSettled = true; restoreActiveCard(); return; }
-      if (++tries > 12) { restoreActiveCard(); return; }   // gave up: stay latched
+      if (restoreSets()) { restoreSettled = true; afterRestore(); return; }
+      if (++tries > 12) { afterRestore(); return; }   // gave up: stay latched
       setTimeout(tryRestore, 400);
     })();
   }
 
+  // R1 / D-04: a running rest used to come back as nothing. Two causes:
+  // the record was written BEFORE the original start(), whose own first act
+  // is stop() -- which this file wraps to clear the record -- so it was
+  // never stored at all; and the restore went through TMR.setTime(), which
+  // paints only the float, which M3b hides on any page with set rows.
+  // Now the record is taken from TMR's own state after start() returns, and
+  // the restore re-starts the same rest on the same card through start(),
+  // so the inline row the athlete was looking at is the one that comes
+  // back, counting from the original wall-clock end, not from a fresh rest.
+  // Runs once, after the rows are restored, because the inline row anchors
+  // to the last ticked row of its card.
+  var timerRestored = false;
+  function lastTickedCard() {
+    var list = (session && session.sets) || [], card = null;
+    for (var i = list.length - 1; i >= 0 && !card; i--) {
+      var e = list[i];
+      if (e && typeof e !== 'string') card = cardByKey(e.card);
+      if (!card) {
+        var row = document.getElementById(typeof e === 'string' ? e : (e && e.id));
+        card = row ? row.closest(CARD_SEL) : null;
+      }
+    }
+    return card;
+  }
   function restoreTimer() {
-    if (!session || !session.timer) return;
-    var remain = Math.round((session.timer.endTs - Date.now()) / 1000);
-    if (remain <= 0 || typeof TMR === 'undefined') { session.timer = null; return; }
+    if (timerRestored) return;
+    timerRestored = true;
+    if (!session || !session.timer || typeof TMR === 'undefined') return;
+    if (TMR.isRunning && TMR.isRunning()) return;   // a live rest is the truth
+    var t = session.timer;
+    var remainMs = (t.endTs || 0) - Date.now();
+    if (!(remainMs > 1000)) { session.timer = null; return; }
+    var rest = t.rest > 0 ? t.rest : Math.ceil(remainMs / 1000);
+    TMR.__mcsRestoring = true;
     try {
       if (typeof buildTimerFloat === 'function') buildTimerFloat();
-      if (TMR.setTime) TMR.setTime(remain, session.timer.label || 'REST');
+      var card = t.kind === 'preset' ? null : (cardByKey(t.card) || lastTickedCard());
+      if (card && TMR.start) {
+        TMR.start(card.querySelector('.rest-timer') || card, rest, t.label || 'Rest');
+      } else if (TMR.setTime) {
+        TMR.setTime(rest, t.label || 'REST');
+      }
+      TMR.startTime = t.endTs - rest * 1000;   // the original rest, not a new one
     } catch (e) {}
+    TMR.__mcsRestoring = false;
+    noteTimer(t.label, t.kind);   // start()'s own stop() cleared the record
   }
 
   // §3.4: re-open the exact card the athlete was on. window.MCSetlogUtil
@@ -249,19 +403,20 @@
   // day-header works regardless of which mechanism a given page uses,
   // because both listen for the same event a real tap would produce.
   function restoreActiveCard() {
-    if (!session || !session.activeCard) return;
-    if (!window.MCSetlogUtil || !MCSetlogUtil.activateCard) return;
+    if (!session || !session.activeCard) return false;
+    if (!window.MCSetlogUtil || !MCSetlogUtil.activateCard) return false;
     var all = document.querySelectorAll(CARD_SEL), card = null;
     Array.prototype.forEach.call(all, function (c) {
       if (!card && cardKey(c, all) === session.activeCard) card = c;
     });
-    if (!card) return;
+    if (!card) return false;
     var day = card.closest('.day-card');
     if (day && !day.classList.contains('open')) {
       var header = day.querySelector('.day-header');
       if (header) header.click();
     }
     MCSetlogUtil.activateCard(card);
+    return true;
   }
 
   // VOC-A2: a genuinely fresh visit — no mc_session_v1 record for this page
@@ -300,24 +455,42 @@
   // ---- record running rest timers (wall-clock, survives reload) -----------
   function wrapTimers() {
     if (typeof TMR === 'undefined') return;
-    var oStart = TMR.start, oSetTime = TMR.setTime, oStop = TMR.stop;
+    var oStart = TMR.start, oSetTime = TMR.setTime, oStop = TMR.stop, oAdjust = TMR.adjust;
+    // Each records AFTER the original runs: start() and setTime() both begin
+    // with this.stop(), which is the wrapper below and clears the record.
     if (oStart) TMR.start = function (el, secs, name) {
-      noteTimer(secs, name);
-      return oStart.call(TMR, el, secs, name);
+      var r = oStart.call(TMR, el, secs, name);
+      if (!TMR.__mcsRestoring) noteTimer(name);
+      return r;
     };
     if (oSetTime) TMR.setTime = function (secs, label) {
-      if (!TMR.__mcsRestoring) noteTimer(secs, label);
-      return oSetTime.call(TMR, secs, label);
+      var r = oSetTime.call(TMR, secs, label);
+      if (!TMR.__mcsRestoring) noteTimer(label, 'preset');
+      return r;
     };
     if (oStop) TMR.stop = function () {
       if (session && session.timer) { session.timer = null; save(); }
       return oStop.call(TMR);
     };
+    // ±15s moves the end time; the stored record has to move with it.
+    if (oAdjust) TMR.adjust = function (delta) {
+      var r = oAdjust.call(TMR, delta);
+      if (session && session.timer) noteTimer(session.timer.label, session.timer.kind);
+      return r;
+    };
   }
-  function noteTimer(secs, label) {
-    if (!secs || secs <= 0) return;
+  function noteTimer(label, kind) {
+    if (typeof TMR === 'undefined' || TMR.startTime == null || !(TMR.duration > 0)) return;
     if (!session) session = { startedTs: Date.now() };
-    session.timer = { endTs: Date.now() + secs * 1000, rest: secs, label: label || 'REST' };
+    var owner = TMR.activeEl && TMR.activeEl.closest ? TMR.activeEl.closest(CARD_SEL) : null;
+    var prev = session.timer || {};
+    session.timer = {
+      endTs: TMR.startTime + TMR.duration * 1000,
+      rest: TMR.duration,
+      label: label || prev.label || 'REST',
+      kind: kind || prev.kind || (TMR.activeEl ? 'rest' : 'preset'),
+      card: owner ? cardKey(owner, document.querySelectorAll(CARD_SEL)) : (prev.card || null)
+    };
     save();
   }
 
@@ -356,26 +529,33 @@
 
     wrapTimers();
 
+    // DEF-CR-02: some engines rebuild their day cards after the first paint,
+    // discarding the rows restore just ticked. MC_SCAN is the shared signal
+    // that cards have just rendered, so re-apply on every one of them. The
+    // work is idempotent -- restoreSets() skips a row already marked done --
+    // so a scan on an unchanged DOM costs a query and nothing else.
+    // R1 / D-01: wired whether or not a record existed at load. A session
+    // STARTED on this page load is rebuilt by a week tab exactly like a
+    // restored one, and the callback reads `session` at call time.
+    if (window.MC_SCAN && MC_SCAN.subscribe) {
+      MC_SCAN.subscribe(function () {
+        if (!session || !session.sets || !session.sets.length) return;
+        var painted = document.querySelectorAll('.mcl-ck.done').length;
+        if (painted >= session.sets.length) return;   // already whole
+        runRestore();
+      });
+      if (MC_SCAN.start) MC_SCAN.start();
+    }
+
+    // Only a session that existed at load has a rest to restore. One started
+    // on this page load already has its timer running, and a re-restore after
+    // a tab re-render must not restart it.
+    if (!session) timerRestored = true;
+    navPending = !!session;
+
     if (session) {
       restoreCards();
       runRestore();
-      // DEF-CR-02: some engines rebuild their day cards after the first paint,
-      // discarding the rows restore just ticked. MC_SCAN is the shared signal
-      // that cards have just rendered, so re-apply on every one of them. The
-      // work is idempotent -- restoreSets() skips a row already marked done --
-      // so a scan on an unchanged DOM costs a query and nothing else.
-      if (window.MC_SCAN && MC_SCAN.subscribe) {
-        MC_SCAN.subscribe(function () {
-          if (!session || !session.sets || !session.sets.length) return;
-          var painted = document.querySelectorAll('.mcl-ck.done').length;
-          if (painted >= session.sets.length) return;   // already whole
-          runRestore();
-        });
-        if (MC_SCAN.start) MC_SCAN.start();
-      }
-      if (typeof TMR !== 'undefined') TMR.__mcsRestoring = true;
-      restoreTimer();
-      if (typeof TMR !== 'undefined') TMR.__mcsRestoring = false;
     } else {
       // VOC-A2: nothing to restore — this is a fresh visit, so land on the
       // first unfinished exercise instead of leaving every day closed.
@@ -387,21 +567,32 @@
     mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
     window.addEventListener('pagehide', function () {
       clearTimeout(saveT);
+      if (window._FW && window._FW.finished && !endedRows) { endSession(); return; }
       // synchronous final write
       var snap = capture();
-      if (!snap.cards.length && !snap.sets.length) return;
+      var sets = mergedSets(snap.sets);
+      if (!snap.cards.length && !sets.length) return;
       if (!session) session = { startedTs: Date.now() };
-      session.cards = snap.cards; session.sets = snap.sets; session.lastTs = Date.now();
+      session.cards = snap.cards; session.sets = sets; session.lastTs = Date.now();
       var st = prune(readAll()); st[PID] = session; writeAll(st);
     });
 
-    // finishing a workout ends the session — stop resuming it
+    // R1 / D-01: an untick is the one thing that removes a single set from
+    // the stored list. mc-setlog.js owns the row and announces it.
+    document.addEventListener('mc:set-unchecked', function (e) {
+      var id = e && e.detail && e.detail.rowId;
+      if (!id || !session || !session.sets) return;
+      session.sets = session.sets.filter(function (x) {
+        return (typeof x === 'string' ? x : (x && x.id)) !== id;
+      });
+      save();
+    });
+
+    // finishing a workout ends the session — stop resuming it. The event
+    // covers a programmatic _FW.confirm() too, which the click never saw.
+    document.addEventListener('mc:workout-finished', endSession);
     document.addEventListener('click', function (e) {
-      if (e.target && e.target.classList && e.target.classList.contains('fw-confirm')) {
-        var st = readAll();
-        if (st[PID]) { delete st[PID]; writeAll(st); }
-        session = null;
-      }
+      if (e.target && e.target.classList && e.target.classList.contains('fw-confirm')) endSession();
     }, true);
   }
 

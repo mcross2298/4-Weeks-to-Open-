@@ -124,22 +124,6 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 
 
 
-/* ── WAVE3-SETLOG ── */
-.setlog-wrap{margin-top:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:2px;display:none;}
-.setlog-wrap.open{display:block;}
-.setlog-toggle{display:flex;align-items:center;gap:5px;margin-top:8px;cursor:pointer;user-select:none;font-size:11px;font-weight:900;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;-webkit-tap-highlight-color:transparent;}
-.setlog-hist{font-size:11px;font-weight:700;color:rgba(212,175,55,0.6);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
-.set-row{display:grid;grid-template-columns:24px 1fr 1fr 32px;gap:5px;align-items:center;padding:6px 2px;border-bottom:1px solid rgba(255,255,255,0.04);}
-.set-row:last-child{border-bottom:none;}
-.set-num{font-size:11px;font-weight:900;color:var(--muted2);text-align:center;}
-.set-input{width:100%;padding:6px 4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:var(--text);font-size:13px;font-weight:700;text-align:center;font-family:inherit;outline:none;-webkit-tap-highlight-color:transparent;}
-.set-input:focus{border-color:rgba(212,175,55,0.45);background:rgba(212,175,55,0.06);}
-.set-input::placeholder{color:#2d3748;font-size:11px;}
-.set-check{width:30px;height:30px;border-radius:7px;border:1.5px solid rgba(255,255,255,0.15);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;-webkit-tap-highlight-color:transparent;transition:all 0.15s;}
-.set-check.done{background:rgba(52,211,153,0.15);border-color:rgba(52,211,153,0.4);}
-.set-row.done-row .set-input{opacity:0.4;}
-.setlog-hdr{display:grid;grid-template-columns:24px 1fr 1fr 32px;gap:5px;padding:3px 2px 1px;}
-.setlog-hl{font-size:11px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#2d3748;text-align:center;}
 </style>
 <link rel="stylesheet" href="base.css?v=68"/>
 <link rel="stylesheet" href="mc-nav.css"/>
@@ -179,146 +163,12 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding:32px 18px 60px;}
 
 </div>
 
-<script>
-/* ── WAVE3-SETLOG MODULE ── */
-(function(){
-  var SKEY='mc_setlog_v1';
-  var PID=location.pathname.split('/').pop().replace('.html','');
-  function store(){try{return JSON.parse(localStorage.getItem(SKEY)||'{}')}catch(e){return{}}}
-  function ek(id){return PID+'|'+id}
-  function saveSet(exId,sn,w,r){
-    var s=store(),k=ek(exId);if(!s[k])s[k]=[];
-    var d=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
-    var sess=s[k][0];
-    if(!sess||sess.d!==d){sess={d:d,sets:{}};s[k].unshift(sess);s[k]=s[k].slice(0,20);}
-    sess.sets[sn]={w:w,r:r};localStorage.setItem(SKEY,JSON.stringify(s));
-  }
-  function lastSess(exId){var s=store();return(s[ek(exId)]||[])[0]||null;}
-  function lastSet(exId,sn){var sess=lastSess(exId);return sess?sess.sets[sn]||null:null;}
-  function renderHist(exId){
-    var el=document.getElementById('slh-'+exId);if(!el)return;
-    var sess=lastSess(exId);if(!sess){el.textContent='';return;}
-    var ws=Object.values(sess.sets).map(function(s){return parseFloat(s.w)||0;}).filter(Boolean);
-    el.textContent=ws.length?'Last: '+Math.max.apply(null,ws)+' lb \u00b7 '+sess.d:sess.d;
-  }
-  function pCount(s){
-    if(!s)return 3;
-    var x=s.match(/^(\d+)\s*[x\u00d7]/i);if(x)return Math.min(parseInt(x[1]),10);
-    var c=s.split(',');if(c.length>1)return c.length;
-    var n=s.match(/^(\d+)/);return n?Math.min(parseInt(n[1]),8):3;
-  }
-  function pReps(s,i){
-    if(!s)return'';
-    var c=s.split(',');if(c.length>1)return(c[i]||c[c.length-1]).trim();
-    var x=s.match(/[x\u00d7](\d+)/i);if(x)return x[1];return'';
-  }
-  function buildRows(exId,setsStr,restSecs){
-    var n=pCount(setsStr),h='';
-    h+='<div class="setlog-hdr"><div class="setlog-hl">SET</div><div class="setlog-hl">WEIGHT</div><div class="setlog-hl">REPS</div><div class="setlog-hl"></div></div>';
-    for(var i=0;i<n;i++){
-      var sn=i+1,last=lastSet(exId,sn),pr=pReps(setsStr,i);
-      var wp=last&&last.w?last.w+' lb':'lb';
-      var rp=pr||(last&&last.r?last.r:'reps');
-      h+='<div class="set-row" id="sr-'+exId+'-'+sn+'">'+
-        '<div class="set-num">'+sn+'</div>'+
-        '<input class="set-input" id="slw-'+exId+'-'+sn+'" type="number" inputmode="decimal" placeholder="'+wp+'" onclick="event.stopPropagation()" onfocus="this.select()">'+
-        '<input class="set-input" id="slr-'+exId+'-'+sn+'" type="number" inputmode="numeric" placeholder="'+rp+'" onclick="event.stopPropagation()" onfocus="this.select()">'+
-        '<div class="set-check" id="slc-'+exId+'-'+sn+'" onclick="event.stopPropagation();_SL(\''+exId+'\','+sn+','+restSecs+')" title="Done">\u2610</div>'+
-        '</div>';
-    }
-    return h;
-  }
-  function checkSet(exId,sn,restSecs){
-    var wEl=document.getElementById('slw-'+exId+'-'+sn);
-    var rEl=document.getElementById('slr-'+exId+'-'+sn);
-    var ck=document.getElementById('slc-'+exId+'-'+sn);
-    var row=document.getElementById('sr-'+exId+'-'+sn);
-    if(!ck)return;
-    if(ck.classList.contains('done')){
-      ck.classList.remove('done');ck.innerHTML='\u2610';
-      if(row)row.classList.remove('done-row');return;
-    }
-    saveSet(exId,sn,wEl?wEl.value.trim():'',rEl?rEl.value.trim():'');
-    ck.classList.add('done');ck.textContent='\u2713';
-    if(row)row.classList.add('done-row');
-    if(restSecs>0&&typeof TMR!=='undefined'){
-      var t=document.querySelector('.rest-timer');
-      if(t)TMR.start(t,restSecs,'Rest');
-    }
-    renderHist(exId);
-  }
-  window._SL=checkSet;
-  function getRestSecs(card){
-    var t=card.querySelector('.rest-timer');
-    if(t&&t.dataset&&t.dataset.rest&&typeof TMR!=='undefined')return TMR.parseSeconds(t.dataset.rest)||60;
-    return 60;
-  }
-  function attachLogger(content,exId,setsStr,restSecs){
-    if(!content||content.querySelector('.setlog-toggle'))return;
-    // Remove any old notes UI
-    var old=content.querySelector('.ex-notes-toggle,.ex-notes-wrap,.log-row');
-    while(old){old.remove();old=content.querySelector('.ex-notes-toggle,.ex-notes-wrap,.log-row');}
-    // Toggle button
-    var tgl=document.createElement('div');
-    tgl.className='setlog-toggle';tgl.id='slt-'+exId;
-    tgl.innerHTML='<span id="sla-'+exId+'">\u25be</span>&nbsp;<span id="sll-'+exId+'">LOG SETS</span><span class="setlog-hist" id="slh-'+exId+'"></span>';
-    tgl.addEventListener('click',function(e){
-      e.stopPropagation();
-      var wrap=document.getElementById('slw-'+exId+'-wrap');if(!wrap)return;
-      var open=wrap.classList.toggle('open');
-      document.getElementById('sll-'+exId).textContent=open?'HIDE':'LOG SETS';
-      document.getElementById('sla-'+exId).textContent=open?'\u25b4':'\u25be';
-    });
-    // Rows container
-    var wrap=document.createElement('div');
-    wrap.className='setlog-wrap';wrap.id='slw-'+exId+'-wrap';
-    wrap.innerHTML=buildRows(exId,setsStr,restSecs);
-    content.appendChild(tgl);
-    content.appendChild(wrap);
-    renderHist(exId);
-  }
-  function initLogger(){
-    // Single exercise cards
-    document.querySelectorAll('.ex-card[data-id]').forEach(function(card){
-      var exId=card.dataset.id;
-      var content=card.querySelector('.ex-content');if(!content)return;
-      var setsEl=card.querySelector('.ex-sets');
-      var setsStr=setsEl?setsEl.textContent.trim():'3x10';
-      attachLogger(content,exId,setsStr,getRestSecs(card));
-    });
-    // Superset exercise rows
-    document.querySelectorAll('.ss-ex[data-id]').forEach(function(row){
-      var exId=row.dataset.id;
-      var content=row.querySelector('.ss-content');if(!content)return;
-      var setsEl=row.querySelector('.ex-sets');
-      var setsStr=setsEl?setsEl.textContent.trim():'4x12';
-      attachLogger(content,exId,setsStr,90);
-    });
-  }
-  // Use MutationObserver to detect when render() populates #app
-  // This avoids ALL render() wrapping issues
-  function watchForCards(){
-    var app=document.getElementById('app');
-    if(!app){setTimeout(watchForCards,100);return;}
-    // If already populated, run immediately
-    if(app.querySelector('.ex-card')){initLogger();return;}
-    var obs=new MutationObserver(function(muts,o){
-      if(app.querySelector('.ex-card')){
-        o.disconnect();
-        setTimeout(initLogger,50);
-      }
-    });
-    obs.observe(app,{childList:true,subtree:true});
-    // Fallback timeout
-    setTimeout(function(){initLogger();},600);
-  }
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',watchForCards);
-  }else{
-    watchForCards();
-  }
-})();
-</script>
+<!-- Flagship readiness R1 / D-37: a page-local "WAVE3-SETLOG" set logger
+     lived here. This landing has no #app and no exercise card, so it never
+     attached to anything; its watchForCards() re-armed a 100ms timer looking
+     for #app for the life of the page. mc-setlog.js is the one logger, and a
+     second one writing year-less day labels into the same store is exactly
+     what FIX-06 retired. Removed with its CSS. -->
 
 <script>
 /* ── SMART BACK NAV ── */

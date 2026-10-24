@@ -87,10 +87,8 @@
         timeSec: Math.round(timeSec),
         programId: srcProg
       };
-      var wl = JSON.parse(localStorage.getItem('mc_workout_log_v1') || '[]');
-      if (!Array.isArray(wl)) wl = [];   // L-03: else unshift() throws and the result is never saved
-      wl.unshift(wlEntry);
-      localStorage.setItem('mc_workout_log_v1', JSON.stringify(wl.slice(0, 200)));
+      // R1 / D-38: the one append (shape guard, cap, id, storage-full warning).
+      MC_LOG.appendWorkout(wlEntry);
       try { sessionStorage.removeItem('mc_cond_src_prog'); } catch (e) {}
     } catch (e) {}
 
