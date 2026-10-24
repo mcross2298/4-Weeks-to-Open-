@@ -36,6 +36,8 @@ const OWNER = 'mc-log-read.js';
 
 const files = execSync('git ls-files "*.js" "*.html"', { cwd: ROOT, encoding: 'utf8' })
   .split('\n').filter(Boolean)
+  // generated copies of their members (tools/bundles.json, flagship readiness J)
+  .filter(f => !require('./bundle-outputs').isBundle(f))
   // tools/ seed fixtures into the store on purpose; GO_LIVE/ is scratch-listed
   // evidence. Both are excluded by every other gate in this tree.
   .filter(f => !f.startsWith('tools/') && !f.startsWith('GO_LIVE/'));

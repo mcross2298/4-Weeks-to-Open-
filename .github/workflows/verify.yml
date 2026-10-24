@@ -91,6 +91,7 @@ jobs:
           node tools/test-mc-bridge.js
           node tools/test-mc-sync-merge.js
           node tools/test-mc-archive.js
+          node tools/test-mc-error-beacon.js
 
       - name: Sync runtime cycle tests (mc-sync.js pull/push/reload, real cycle not a copy)
         # Findings S1 (a failed local write must never let push() re-upload a
@@ -328,6 +329,13 @@ jobs:
         # still lists the right URLs.
         run: python3 tools/build-sw.py --check
 
+      - name: Core bundles match their members (flagship readiness J, D-40)
+        # workout-core.js / workout-logger.js are committed copies of the
+        # modules listed in tools/bundles.json. Fails when a member changed
+        # without regenerating, when a page still carries a whole run as
+        # separate tags, or when a page loads a bundle AND one of its members.
+        run: node tools/build-bundles.js --check
+
       - name: Script-manifest drift check (clone pages load identical module lists — audit LS-3)
         run: python3 tools/check-script-manifest.py --check
 
@@ -544,7 +552,7 @@ jobs:
           # controls the session shell owns clear the 44pt touch floor.
           # Budgets in tools/journey-budgets.json; re-baseline deliberately with
           # `node tools/check-journey.js <url> --update`.
-          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/check-journey.js http://localhost:8080; then EXIT=1; fi
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/check-journey.js http://localhost:8080; then echo "FAILED: check-journey"; EXIT=1; fi
           # Concurrent-write durability on mc_setlog_v1 (engine-repair roadmap
           # Phase 0.1 / audit L-01, FIX-01). The journey gate drives ONE tab;
           # this one drives two, because two tabs of the same program page used
@@ -553,7 +561,7 @@ jobs:
           # half: it holds the store's own Web Lock and asserts a write waits on
           # it, so the gate fails on an unfixed build every run rather than
           # whenever scheduling happens to expose the race.
-          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-setlog-concurrency.js http://localhost:8080; then EXIT=1; fi
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-setlog-concurrency.js http://localhost:8080; then echo "FAILED: test-mc-setlog-concurrency"; EXIT=1; fi
           # Hostile-shape resilience (Phase 0.3 / audit L-03, FIX-04). Seeds a
           # corrupt store before the page loads. The shape that matters is not
           # malformed text -- every JSON.parse here is already wrapped, and that
@@ -561,7 +569,7 @@ jobs:
           # which went straight through the try/catch and left the dashboard,
           # the stats page and the history page half-rendered. Six failing page
           # loads on the pre-fix tree, zero after.
-          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-store-resilience.js http://localhost:8080; then EXIT=1; fi
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-store-resilience.js http://localhost:8080; then echo "FAILED: test-mc-store-resilience"; EXIT=1; fi
           # Crash durability and cloud recovery (Phase 0.2 / audit L-02,
           # FIX-02). Never asserts that a process kill loses nothing -- browser
           # storage is flushed to disk asynchronously and no web app defeats
@@ -569,7 +577,7 @@ jobs:
           # must recover the session from the cloud rows that already exist,
           # ticks included. Its graceful-close control runs in the same pass,
           # so a broken harness cannot read as a pass.
-          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-crash-recovery.js http://localhost:8080; then EXIT=1; fi
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-crash-recovery.js http://localhost:8080; then echo "FAILED: test-mc-crash-recovery"; EXIT=1; fi
           # Exercise identity (Phase 2.1 / audit EN-1, EN-8). A history key must
           # name the EXERCISE, never its POSITION. 170 of 456 cards measured
           # across the fleet carried a positional data-id, and on the page that
@@ -577,7 +585,7 @@ jobs:
           # were shared by DIFFERENT exercises -- the worst carrying eight, so a
           # squat's logged weight sat in the same bucket as a lat pulldown's.
           # Needs a browser: the identity is derived from the rendered card.
-          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-exercise-identity.js http://localhost:8080; then EXIT=1; fi
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-exercise-identity.js http://localhost:8080; then echo "FAILED: test-mc-exercise-identity"; EXIT=1; fi
           # A personal record belongs to the LIFT, not to the page it was logged
           # on. mc-finish.js derived "previous best" from this page's set-log key
           # alone, so one exercise carried a separate, invisible history per
@@ -586,7 +594,7 @@ jobs:
           # direction, real PRs went unflagged when the prior best lived
           # elsewhere. Needs a browser because the defect was in which KEYS the
           # arithmetic was handed, so it has to drive the real completion point.
-          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-pr-scope.js http://localhost:8080; then EXIT=1; fi
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-pr-scope.js http://localhost:8080; then echo "FAILED: test-mc-pr-scope"; EXIT=1; fi
           # Restore fidelity (GO LIVE clean-room run, DEF-CR-01). A restored set
           # must show what the athlete PERFORMED, not what the program
           # prescribed. Two restore paths had drifted: mc-setlog.js's cloud
@@ -599,7 +607,7 @@ jobs:
           # pre-fix tree across all four engine families, 0 after. Needs a
           # browser: the defect lives between two modules and a rendered
           # input's ghost state, which is why every other gate here missed it.
-          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-restore-fidelity.js http://localhost:8080; then EXIT=1; fi
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-restore-fidelity.js http://localhost:8080; then echo "FAILED: test-mc-restore-fidelity"; EXIT=1; fi
           # Session durability (flagship readiness R1). Every gate above logs a
           # set and reloads at most; none logs a set and then does something
           # ELSE, and every R1 defect lived there: a week-tab round trip

@@ -175,7 +175,7 @@ def check_log_reader_contract():
     pages = sorted(glob.glob("*.html"))
     consumer_pages = []
     for f in pages:
-        loaded = set(manifest(ROOT / f))
+        loaded = set(loaded_modules(ROOT / f))
         used = [m for m in LOG_CONSUMERS if m in loaded]
         if not used:
             continue
@@ -194,10 +194,10 @@ def check_capability_contract():
     pages = sorted(glob.glob("*.html"))
     workout_pages = [
         f for f in pages
-        if CAPABILITY_TRIGGER in manifest(ROOT / f) and f not in NOT_ACTUALLY_WORKOUT_PAGES
+        if CAPABILITY_TRIGGER in loaded_modules(ROOT / f) and f not in NOT_ACTUALLY_WORKOUT_PAGES
     ]
     for f in workout_pages:
-        loaded = set(manifest(ROOT / f))
+        loaded = set(loaded_modules(ROOT / f))
         missing = [m for m in REQUIRED_MODULES if m not in loaded]
         if missing:
             problems.append(
@@ -205,6 +205,21 @@ def check_capability_contract():
                 f"missing: {', '.join(missing)}"
             )
     return problems, len(workout_pages)
+
+
+# Flagship readiness J (D-40): a generated bundle tag stands for its members,
+# in order (tools/bundles.json). The capability and log-reader contracts are
+# about which MODULES a page runs, so they read the expanded list; the family
+# check compares tags as written, so clones still have to agree on the tags.
+import json as _json
+BUNDLES = _json.loads((ROOT / "tools" / "bundles.json").read_text(encoding="utf-8"))["bundles"]
+
+
+def loaded_modules(path):
+    out = []
+    for src in manifest(path):
+        out.extend(BUNDLES.get(src.split("?")[0], [src]))
+    return out
 
 
 def manifest(path):

@@ -130,7 +130,9 @@ const EXPORT_RE = /^\s*window\.([A-Za-z_][A-Za-z0-9_]*)\s*=/gm;
 
 let problems = 0, checked = 0, newOk = 0;
 
-for (const file of fs.readdirSync(ROOT).filter(f => f.endsWith('.js')).sort()) {
+// generated bundles are copies of their members (tools/bundles.json, flagship readiness J)
+const { isBundle } = require('./bundle-outputs');
+for (const file of fs.readdirSync(ROOT).filter(f => f.endsWith('.js') && !isBundle(f)).sort()) {
   const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
   const found = new Set();
   let m;

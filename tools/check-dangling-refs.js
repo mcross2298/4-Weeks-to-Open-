@@ -262,6 +262,8 @@ const G_READ = /window\.([A-Za-z_$][\w$]*)/g;
 function trackedFiles() {
   return execSync("git ls-files '*.js' '*.html'", { cwd: ROOT, encoding: 'utf8' })
     .trim().split('\n').filter(Boolean)
+    // generated copies of their members (tools/bundles.json, flagship readiness J)
+    .filter(f => !require('./bundle-outputs').isBundle(f))
     // GO_LIVE/ is scratch-listed release-assessment evidence that reaches
     // neither build. Its scenarios deliberately PROBE for globals to find out
     // whether a feature is present -- `window.MC_QUICK_PUMP || window.MCQuickPump`

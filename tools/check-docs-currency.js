@@ -183,6 +183,7 @@ const KNOWN_MODULES = [
   'mc-engine.js',
   'mc-exercise-catalog.js',
   'mc-exercise-trends.js',
+  'mc-error-beacon.js',
   'mc-export.js',
   'mc-finish.js',
   'mc-foodapi.js',

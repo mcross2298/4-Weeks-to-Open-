@@ -152,6 +152,13 @@
       "export": false,
       "note": "S6: capped ring buffer (last 20) of window 'error'/'unhandledrejection' events, written by the generated head-boot script on every page. Local debug breadcrumbs, not user data — deliberately not synced or backed up."
     },
+    "mc_errors_sent_v1": {
+      "owner": "mc-error-beacon.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Flagship readiness E: which mc_errors_v1 entries were already sent to client_errors, and when the last send was tried (10-minute spacing). Device-local bookkeeping."
+    },
     "mc_ex_favs": {
       "owner": "exercise-library.html",
       "storage": "local",

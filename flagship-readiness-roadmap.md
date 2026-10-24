@@ -465,6 +465,21 @@ Defect: D-32, plus the Phase 1 design items (one bottom nav, builder exercises-f
 
 ### E · Visibility · J · First-visit performance
 Defects: D-35, D-40.
+
+**E shipped (2026-10-24); the table is the owner's to run.** Decision: a new Supabase table, signed-in athletes only.
+- **The table:** `supabase/phase14-client-errors.sql`.
+  - Policies: insert only, the caller's own rows; admins may read.
+  - Limits: length checks on every text column.
+  - Duplicates: one row per (user, fingerprint, time).
+  - Deletion: rows cascade with the account.
+  - **Not applied.** The connector's approval prompt timed out twice, so the owner will run it in the SQL editor. Until then the client's insert fails and the entries simply wait.
+- **`mc-error-beacon.js` runs on Home.**
+  - It sends new `mc_errors_v1` entries at most every 10 minutes, each once (`mc_errors_sent_v1`).
+  - The source goes as a file name only; messages are cut to 500 characters.
+  - A failed send is silent and retried on a later visit.
+  - `tools/test-mc-error-beacon.js` (21 assertions) runs the real file in a sandbox.
+  - The Executive Summary says what is sent and what never is.
+- **`verify.yml`:** every browser gate in the smoke step echoes `FAILED: <gate>`. The roadmap and CLAUDE.md both asked for this after a failure was buried under later gates' output.
 - The error beacon needs a new Supabase table, so it asks first.
 - Add a per-gate `FAILED: <gate>` echo in `verify.yml`.
 - A core bundle would change the no-build stance, so it's an owner decision.

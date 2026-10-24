@@ -65,6 +65,8 @@ const WATCHED = Object.keys(CANONICAL_HOME);
 function trackedFiles() {
   const out = execSync('git ls-files "*.html" "*.js"', { cwd: ROOT, encoding: 'utf8' });
   return out.split('\n').filter(Boolean).filter(f => !f.endsWith('.dc.html'))
+    // generated copies of their members (tools/bundles.json, flagship readiness J)
+    .filter(f => !require('./bundle-outputs').isBundle(f))
     // git's index can still list a path that was `rm`'d but not yet staged
     // (e.g. mid-refactor, before `git add` runs) — skip rather than crash.
     .filter(f => fs.existsSync(path.join(ROOT, f)));
