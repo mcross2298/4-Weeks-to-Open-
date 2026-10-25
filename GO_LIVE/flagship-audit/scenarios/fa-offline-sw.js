@@ -98,6 +98,19 @@ setTimeout(() => { console.log('HARNESS TIMEOUT after 8 minutes'); process.exit(
     try { await page.goto(ORIGIN + p, { timeout: 15000 }); } catch (e) { return 'navigation error'; }
     await sleep(1300);
     return safe(() => (document.title.indexOf('Offline') !== -1 ? 'offline page' : 'loaded'));
+  }
+  // Right after a simulated deploy the page's own update check can find the
+  // new worker and reload the page at the moment the harness navigates, and
+  // Chromium reports the navigation it cut off as net::ERR_ABORTED (#372 CI,
+  // twice in four runs). That is the harness racing the app's update, not an
+  // app failure: S-06 to S-09 assert the update itself. Retry once.
+  async function gotoSettled(url) {
+    try { return await page.goto(url); }
+    catch (e) {
+      if (!/ERR_ABORTED/.test(String(e && e.message))) throw e;
+      await sleep(1000);
+      return page.goto(url);
+    }
   };
   const cached = () => safe(async () => {
     const out = [];
@@ -149,19 +162,26 @@ setTimeout(() => { console.log('HARNESS TIMEOUT after 8 minutes'); process.exit(
     let newCache = null;
     fs.writeFileSync(swPath, sw.replace(/mc-training-v(\d+)/, (m, n) => (newCache = 'mc-training-v' + (Number(n) + 1))));
     await up();
-    await page.goto(ORIGIN + 'dashboard.html'); await sleep(1500);
+    await gotoSettled(ORIGIN + 'dashboard.html'); await sleep(1500);
     await safe(() => navigator.serviceWorker.getRegistration().then((r) => r.update()));
     // Wait for the new worker to have ACTIVATED (its cache exists and nothing
     // is still installing or waiting) rather than for a fixed time. A flat 7s
     // was enough here and not always on a CI runner, where S-08 then went
     // offline mid-handover and saw a navigation error.
     const deadline = Date.now() + 45000;
+    // Activation is page-controlled (sw.js never calls skipWaiting itself), and
+    // the page's idle check does not always fire inside the window: 1 run in 3
+    // here left the worker parked in `waiting` for all 45s. After 10s the
+    // harness does what the "Update available" banner's tap does. S-08 to S-09
+    // test the deploy's caches, not when the page chooses to apply it.
+    const nudgeAt = Date.now() + 10000;
     let settled = false;
     while (!settled && Date.now() < deadline) {
-      settled = await safe(async (name) => {
+      settled = await safe(async ([name, nudge]) => {
         const r = await navigator.serviceWorker.getRegistration();
+        if (nudge && r && r.waiting) r.waiting.postMessage('skipWaiting');
         return !!(r && r.active && !r.installing && !r.waiting && (await caches.keys()).indexOf(name) !== -1);
-      }, newCache);
+      }, [newCache, Date.now() > nudgeAt]);
       if (!settled) await sleep(1000);
     }
     if (!settled) console.log('  note: the new service worker had not settled after 45s');
@@ -174,7 +194,7 @@ setTimeout(() => { console.log('HARNESS TIMEOUT after 8 minutes'); process.exit(
     const carried = await visit('mm-p2.html');
     report('S-08', 'right after a deploy, the carried copy loads offline', carried === 'loaded', 'mm-p2 loads', carried);
     await ctx.setOffline(false); await up();
-    await page.goto(ORIGIN + 'dashboard.html'); await sleep(1500);
+    await gotoSettled(ORIGIN + 'dashboard.html'); await sleep(1500);
 
     await safe(() => window.MCOfflinePrefetch && MCOfflinePrefetch.ensure({ id: 'mm' })); await sleep(1500);
     // S-09: the page side re-fills the NEW deploy's own cache, so the program

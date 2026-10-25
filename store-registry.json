@@ -422,6 +422,13 @@
       "export": true,
       "note": "Per-program schedule shifts. Training data (K-1.3)."
     },
+    "mc_setlog_deleted_v1": {
+      "owner": "mc-setlog.js",
+      "storage": "local",
+      "sync": "dictByTs",
+      "export": true,
+      "note": "{ 'storeKey|day|setNumber': {ts} }, one record per unticked set, pruned after 120 days. mc-sync.js's mergeSetlog() drops a set whose tick time is not newer than its record, so an untick on one device is not put back by the other device's copy. The backup import unions it and merges with it the same way."
+    },
     "mc_workout_log_deleted_v1": {
       "owner": "mc-log-read.js",
       "storage": "local",

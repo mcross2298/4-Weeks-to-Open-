@@ -537,11 +537,15 @@ jobs:
         run: |
           npm install --no-save --prefix /tmp/pw-ci playwright@latest pixelmatch pngjs
           /tmp/pw-ci/node_modules/.bin/playwright install --with-deps chromium
-          python3 -m http.server 8080 &
+          # Request logging off: one line per GET filled the Actions log, whose
+          # API returns only the last 5,000 lines, so a failing gate's own
+          # output was pushed out of reach (#372, flagship readiness N1).
+          python3 -m http.server 8080 > /dev/null 2>&1 &
           SERVER_PID=$!
           for i in $(seq 1 20); do curl -sf http://localhost:8080/index.html >/dev/null && break; sleep 0.5; done
           NODE_PATH=/tmp/pw-ci/node_modules node tools/smoke-test-pages.js http://localhost:8080
           EXIT=$?
+          [ "$EXIT" -eq 0 ] || echo "FAILED: smoke-test-pages"
           # Complete-workout journey gate. Every other check here inspects the
           # app AT REST -- none of them ever logs a set. Three defects shipped
           # through all of them and were caught only by driving a full session

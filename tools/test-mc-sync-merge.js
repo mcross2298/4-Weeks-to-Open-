@@ -775,6 +775,32 @@ async function runAsyncTests() {
     ok('EN-10 no ts is invented on a legacy entry', !('ts' in out[0]), JSON.stringify(out[0]));
   }
 
+  {
+    // Untick records (mc_setlog_deleted_v1): the set log used to have none, so
+    // a pull put an unticked set straight back from the other device's copy.
+    const d = '2026-10-24';
+    const local = { 'p|x': [{ d, ts: 5000, sets: { 1: { w: '100', t: 1000 } } }] };      // set 2 unticked here
+    const remote = { 'p|x': [{ d, ts: 4000, sets: { 1: { w: '100', t: 1000 }, 2: { w: '105', t: 2000 } } }] };
+    const unt = { ['p|x|' + d + '|2']: { ts: 3000 } };
+    let out = M.mergeSetlog(local, remote)['p|x'];
+    ok('untick: without the record, the union brings set 2 back (the defect)', !!out[0].sets[2], JSON.stringify(out[0].sets));
+    out = M.mergeSetlog(local, remote, unt)['p|x'];
+    ok('untick: with the record, set 2 stays unticked', out[0] && !out[0].sets[2] && !!out[0].sets[1], JSON.stringify(out));
+    // re-ticked on the other device after the untick: the later tick wins
+    const remote2 = { 'p|x': [{ d, sets: { 2: { w: '110', t: 9000 } } }] };
+    out = M.mergeSetlog(local, remote2, unt)['p|x'];
+    ok('untick: a set re-ticked after its untick stays', out[0] && out[0].sets[2] && out[0].sets[2].w === '110', JSON.stringify(out));
+    // a legacy entry (no t) with an untick record is dropped
+    out = M.mergeSetlog({}, { 'p|x': [{ d, sets: { 2: { w: '90' } } }] }, unt)['p|x'];
+    ok('untick: an unstamped (legacy) set with a record is dropped, and no empty day is kept', out === undefined, JSON.stringify(out));
+    // only the named slot is affected
+    out = M.mergeSetlog({ 'p|y': [{ d, sets: { 2: { w: '50', t: 1 } } }] }, {}, unt)['p|y'];
+    ok('untick: another exercise\'s set 2 is untouched', out && out[0].sets[2], JSON.stringify(out));
+    // the per-page pull path forwards the records
+    const pr = M.computeSetlogPullResult('mc_setlog_v1', local, { 'mc_setlog_v1|p': remote }, {}, unt);
+    ok('untick: computeSetlogPullResult applies the records', pr.whole['p|x'] && !pr.whole['p|x'][0].sets[2], JSON.stringify(pr.whole));
+  }
+
   if (fail) { console.error(`\ntest-mc-sync-merge: ${pass} passed, ${fail} FAILED`); process.exit(1); }
   console.log(`test-mc-sync-merge: all ${pass} assertions passed`);
 }

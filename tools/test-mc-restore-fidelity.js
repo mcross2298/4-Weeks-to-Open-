@@ -165,9 +165,23 @@ const storeSets = page => page.evaluate(() => {
       if (!s1 || String(s1.w) !== String(WEIGHT))
         bad(`${tag}: uncheck+re-check after reload rewrote set 1 weight to ${s1 && s1.w} (performed ${WEIGHT})`);
       else ok();
-      if (JSON.stringify(beforeStore) !== JSON.stringify(afterStore))
+      // Flagship readiness N3: every set carries its tick time `t`, and the
+      // untick + re-tick above is a real second tick, so set 1's `t` moves on
+      // purpose (it must outrank the untick record or sync would drop the set).
+      // What this assertion guards is the performed work, so `t` is compared
+      // separately: unchanged on the sets nobody touched, later on set 1.
+      const noT = (st) => JSON.stringify(st, (k, v) => (k === 't' ? undefined : v));
+      if (noT(beforeStore) !== noT(afterStore))
         bad(`${tag}: mc_setlog_v1 changed across reload+edit\n      before ${JSON.stringify(beforeStore)}\n      after  ${JSON.stringify(afterStore)}`);
       else ok();
+      if (toggled && beforeStore && afterStore) {
+        const moved = Object.keys(beforeStore).filter((sn) => sn !== '1' &&
+          (beforeStore[sn] || {}).t !== (afterStore[sn] || {}).t);
+        const t0 = (beforeStore['1'] || {}).t, t1 = (afterStore['1'] || {}).t;
+        if (moved.length || !(t1 > t0))
+          bad(`${tag}: tick times wrong after re-tick — set 1 ${t0} -> ${t1}, untouched sets moved: ${moved.join(',') || 'none'}`);
+        else ok();
+      }
 
       /* DEF-CR-02 — the in-flight SESSION record must survive the reload too.
          mc_setlog_v1 surviving is not enough: mc_session_v1 is what carries the
