@@ -2,8 +2,9 @@ name: Field reports → issues
 
 # field-feedback-roadmap.md FB2/FB4. Files redacted GitHub issues from the
 # app's problem reports (client_reports) and crash types (client_errors), and
-# tells Supabase when a triage issue is closed or reopened so the reporter's
-# app can say "Fixed". All the logic is in tools/field-reports-sync.js.
+# keeps Supabase's status in step with each triage issue: closed / reopened,
+# the in-progress and needs-decision labels, and a PR that says "Fixes #N"
+# (FB5), so the reporter's app can say "Being fixed" and then "Fixed". All the logic is in tools/field-reports-sync.js.
 #
 # Needs the repo secret WEEKLY_CHECKIN_SECRET (the same value as the Supabase
 # Edge Function secret CRON_SECRET, see weekly-checkin.yml). Without it the
@@ -14,7 +15,10 @@ on:
     - cron: '17 * * * *'
   workflow_dispatch:
   issues:
-    types: [closed, reopened]
+    types: [closed, reopened, labeled, unlabeled]
+  # FB5: a PR that says "Fixes #N" moves triage issue N to in progress.
+  pull_request:
+    types: [opened, reopened, edited, ready_for_review]
 
 permissions:
   contents: read
@@ -26,11 +30,16 @@ concurrency:
 
 jobs:
   sync:
-    # an issue event only matters for a triage issue
+    # an issue event only matters for a triage issue; a PR event only when it
+    # names an issue (the script checks that the issue is a triage one)
     if: >-
-      github.event_name != 'issues' ||
-      contains(github.event.issue.labels.*.name, 'field-report') ||
-      contains(github.event.issue.labels.*.name, 'field-error')
+      (github.event_name != 'issues' && github.event_name != 'pull_request') ||
+      (github.event_name == 'issues' && (
+        contains(github.event.issue.labels.*.name, 'field-report') ||
+        contains(github.event.issue.labels.*.name, 'field-error'))) ||
+      (github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        contains(format('{0} {1}', github.event.pull_request.title, github.event.pull_request.body), '#'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,4 +47,10 @@ jobs:
         env:
           FIELD_SECRET: ${{ secrets.WEEKLY_CHECKIN_SECRET }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # FB7, optional: the GitHub Project board. No token = no board. With no
+          # number, the owner's project titled "Field log" is used.
+          FIELD_PROJECT_TOKEN: ${{ secrets.FIELD_PROJECT_TOKEN }}
+          FIELD_PROJECT_NUMBER: ${{ vars.FIELD_PROJECT_NUMBER }}
+          FIELD_PROJECT_TITLE: ${{ vars.FIELD_PROJECT_TITLE }}
+          FIELD_PROJECT_OWNER: ${{ github.repository_owner }}
         run: node tools/field-reports-sync.js

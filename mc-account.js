@@ -314,6 +314,21 @@
     var panel = wrap.querySelector('#acctDiag');
     var rep = wrap.querySelector('#acctReport');
     if (rep) rep.addEventListener('click', function () { close(); MC_REPORT.open(); });
+    // FB6: the Field log (every report and crash type) is owner-only, so the
+    // link appears only once MC_SB.isOwner() says so.
+    try {
+      if (window.MC_SB && MC_SB.isOwner) MC_SB.isOwner().then(function (owner) {
+        if (!owner || wrap.querySelector('#acctFieldLog')) return;
+        var a = document.createElement('a');
+        a.id = 'acctFieldLog';
+        a.className = 'acct-btn acct-secondary';
+        a.href = 'field-log.html';
+        a.textContent = 'Field log (owner)';
+        a.style.cssText = 'display:flex;align-items:center;justify-content:center;text-decoration:none;box-sizing:border-box;margin-bottom:8px;';
+        var anchor = wrap.querySelector('#acctDiagBtn');
+        if (anchor) anchor.parentNode.insertBefore(a, anchor);
+      }).catch(function () {});
+    } catch (e) {}
     wrap.querySelector('#acctDiagBtn').addEventListener('click', function () {
       diagOpen = !diagOpen;
       this.setAttribute('aria-expanded', String(diagOpen));

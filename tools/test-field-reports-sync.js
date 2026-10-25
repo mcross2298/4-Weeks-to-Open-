@@ -79,7 +79,7 @@ const env = { FIELD_SECRET: 's3cret', GITHUB_TOKEN: 'ghs_x', GITHUB_REPOSITORY: 
   ok(created.every((c) => !/SECRET athlete words|uuid-123/.test(JSON.stringify(c.body))), 'no new issue carries the message or the user id');
   ok(world.calls.gh.some((c) => c.path === '/issues/50/comments'), 'known crash type gets a comment');
   ok(world.calls.gh.some((c) => c.method === 'PATCH' && c.path === '/issues/60' && c.body.state === 'open'), 'a resolved crash type that recurs is reopened');
-  ok(world.calls.fn.some((c) => c.body.action === 'resolve' && c.body.issue === 60 && c.body.outcome === 'reopen'), 'and the database is told it reopened');
+  ok(world.calls.fn.some((c) => c.body.action === 'status' && c.body.issue === 60 && c.body.status === 'filed'), 'and the database is told it reopened');
   const filedCall = world.calls.fn.find((c) => c.body.action === 'filed');
   ok(filedCall && filedCall.body.reports[0].id === 7 && filedCall.body.reports[0].issue === 100, 'report filing reported back');
   ok(filedCall && filedCall.body.errors.length === 3 && filedCall.body.errors.every((e) => e.count === 5), 'crash counts reported back');
@@ -96,11 +96,117 @@ const env = { FIELD_SECRET: 's3cret', GITHUB_TOKEN: 'ghs_x', GITHUB_REPOSITORY: 
   ok(S.outcomeFor('reopened', null) === 'reopen', 'reopened -> reopen');
   ok(S.outcomeFor('edited', null) === null, 'other actions ignored');
   const ev = fakeWorld({});
-  const out = await S.runIssueEvent(env, { action: 'closed', issue: { number: 100, state_reason: 'completed', labels: [{ name: 'field-report' }] } }, ev.fetchImpl, () => {});
-  ok(out === 'fixed' && ev.calls.fn[0].body.issue === 100, 'a closed triage issue resolves its reports');
+  const out = await S.runIssueEvent(env, { action: 'closed', issue: { number: 100, state: 'closed', state_reason: 'completed', labels: [{ name: 'field-report' }] } }, ev.fetchImpl, () => {});
+  ok(out === 'fixed' && ev.calls.fn[0].body.issue === 100 && ev.calls.fn[0].body.action === 'status' && ev.calls.fn[0].body.status === 'fixed', 'a closed triage issue sets its reports fixed');
   const ev2 = fakeWorld({});
   const out2 = await S.runIssueEvent(env, { action: 'closed', issue: { number: 5, labels: [{ name: 'bug' }] } }, ev2.fetchImpl, () => {});
   ok(out2 === null && ev2.calls.fn.length === 0, 'a non-triage issue is ignored');
+
+  // 4. FB5 — labels and PRs drive status
+  const L = (...n) => n.map((name) => ({ name }));
+  ok(S.statusFor({ state: 'open', labels: L('field-report') }) === 'filed', 'open, no status label -> filed');
+  ok(S.statusFor({ state: 'open', labels: L('field-report', 'in-progress') }) === 'fixing', 'in-progress -> fixing');
+  ok(S.statusFor({ state: 'open', labels: L('field-error', 'needs-decision') }) === 'needs_decision', 'needs-decision -> needs_decision');
+  ok(S.statusFor({ state: 'open', labels: L('field-report', 'needs-decision', 'in-progress') }) === 'fixing', 'in-progress outranks needs-decision');
+  ok(S.statusFor({ state: 'closed', state_reason: 'completed', labels: L('field-report', 'in-progress') }) === 'fixed', 'closed outranks labels');
+  ok(S.statusFor({ state: 'closed', state_reason: 'not_planned', labels: L('field-report') }) === 'wontfix', 'not planned -> wontfix');
+  for (const [action, labels, want] of [['labeled', L('field-report', 'in-progress'), 'fixing'], ['unlabeled', L('field-report'), 'filed'], ['reopened', L('field-report', 'needs-decision'), 'needs_decision']]) {
+    const w = fakeWorld({});
+    const r = await S.runIssueEvent(env, { action, issue: { number: 9, state: 'open', labels } }, w.fetchImpl, () => {});
+    ok(r === want && w.calls.fn[0].body.status === want, action + ' -> ' + want + ', got ' + r);
+  }
+  const wEdit = fakeWorld({});
+  ok((await S.runIssueEvent(env, { action: 'edited', issue: { number: 9, state: 'open', labels: L('field-report') } }, wEdit.fetchImpl, () => {})) === null && wEdit.calls.fn.length === 0, 'an edit changes nothing');
+
+  ok(JSON.stringify(S.closingRefs('Fixes #12, closes #3 and resolves: #4. Refs #9. Fixes #12')) === '[12,3,4]', 'closing keywords found once each, plain refs ignored');
+  ok(S.closingRefs('fixed #7').length === 1 && S.closingRefs('prefix#7').length === 0, 'keyword needed before the number');
+
+  // a PR that fixes a triage issue labels it and sets fixing; a non-triage or closed issue is left alone
+  function prWorld(issues) {
+    const calls = { gh: [], fn: [] };
+    const fetchImpl = async (url, init) => {
+      const body = init.body ? JSON.parse(init.body) : null;
+      if (/functions\/v1/.test(url)) { calls.fn.push(body); return { status: 200, text: async () => '{"reports":1}' }; }
+      const path = url.replace('https://api.github.com/repos/o/r', '');
+      calls.gh.push({ method: init.method, path, body });
+      const m = path.match(/^\/issues\/(\d+)$/);
+      if (init.method === 'GET' && m) { const i = issues[m[1]]; return { status: i ? 200 : 404, text: async () => JSON.stringify(i || {}) }; }
+      if (path === '/labels') return { status: 422, text: async () => '{}' };
+      return { status: 200, text: async () => '{}' };
+    };
+    return { calls, fetchImpl };
+  }
+  const pw = prWorld({
+    5: { number: 5, state: 'open', labels: L('field-report') },
+    6: { number: 6, state: 'open', labels: L('bug') },
+    7: { number: 7, state: 'closed', labels: L('field-error') },
+    8: { number: 8, state: 'open', labels: L('field-error', 'in-progress') }
+  });
+  const moved = await S.runPullRequestEvent(env, { action: 'opened', pull_request: { number: 50, title: 'Fix timer', body: 'Fixes #5\nFixes #6\nCloses #7\nResolves #8\nFixes #99' } }, pw.fetchImpl, () => {});
+  ok(JSON.stringify(moved) === '[5,8]', 'only open triage issues move to in progress, got ' + JSON.stringify(moved));
+  ok(pw.calls.gh.some((c) => c.method === 'POST' && c.path === '/issues/5/labels' && c.body.labels[0] === 'in-progress'), 'the in-progress label is added');
+  ok(!pw.calls.gh.some((c) => c.path === '/issues/8/labels'), 'an issue already in progress is not relabelled');
+  ok(pw.calls.fn.filter((b) => b.action === 'status' && b.status === 'fixing').map((b) => b.issue).join() === '5,8', 'the database is told both');
+  const pw2 = prWorld({});
+  ok((await S.runPullRequestEvent(env, { action: 'closed', pull_request: { number: 51, body: 'Fixes #5' } }, pw2.fetchImpl, () => {})).length === 0 && pw2.calls.gh.length === 0, 'a closed PR is not an in-progress signal');
+  ok(S.LABELS['in-progress'] && S.LABELS['needs-decision'], 'both status labels are created');
+
+  // 5. FB7 — the Project board
+  ok(!S.makeBoard({ GITHUB_REPOSITORY: 'o/r', FIELD_PROJECT_NUMBER: '3' }, null, () => {}).enabled, 'no token: the board is off');
+  ok(S.makeBoard({ GITHUB_REPOSITORY: 'o/r', FIELD_PROJECT_TOKEN: 't' }, null, () => {}).enabled, 'a token and no number: the board is on, found by title');
+  ok(!S.makeBoard({ GITHUB_REPOSITORY: 'o/r', FIELD_PROJECT_TOKEN: 't', FIELD_PROJECT_NUMBER: 'x' }, null, () => {}).enabled, 'a bad number: the board is off');
+  function boardWorld(opts) {
+    opts = opts || {};
+    const q = [];
+    const fetchImpl = async (url, init) => {
+      const body = JSON.parse(init.body);
+      q.push({ url, body, auth: init.headers.Authorization });
+      if (opts.fail) return { status: 401, text: async () => '{"message":"Bad credentials"}' };
+      if (/projectsV2\(first/.test(body.query)) return { status: 200, text: async () => JSON.stringify({ data: { user: { projectsV2: { nodes: opts.projects || [{ number: 2, title: 'Other' }, { number: 7, title: 'Field Log' }] } } } }) };
+      if (/projectV2\(number/.test(body.query)) return { status: 200, text: async () => JSON.stringify({ data: { user: { projectV2: { id: 'P1', field: { id: 'F1',
+        options: [{ id: 'o-new', name: 'New' }, { id: 'o-prog', name: 'In progress' }, { id: 'o-dec', name: 'Needs decision' }, { id: 'o-fix', name: 'Fixed' }] } } } } }) };
+      if (/addProjectV2ItemById/.test(body.query)) return { status: 200, text: async () => JSON.stringify({ data: { addProjectV2ItemById: { item: { id: 'I-' + body.variables.c } } } }) };
+      return { status: 200, text: async () => '{"data":{}}' };
+    };
+    return { q, fetchImpl };
+  }
+  const benv = { GITHUB_REPOSITORY: 'o/r', FIELD_PROJECT_TOKEN: 'pat', FIELD_PROJECT_NUMBER: '3' };
+  const bw = boardWorld();
+  const board = S.makeBoard(benv, bw.fetchImpl, () => {});
+  ok(board.enabled, 'token + number: the board is on');
+  ok(await board.sync('ISSUE_1', 'needs_decision'), 'sync succeeds');
+  const setq = bw.q.find((c) => /updateProjectV2ItemFieldValue/.test(c.body.query));
+  ok(setq && setq.body.variables.o === 'o-dec' && setq.body.variables.i === 'I-ISSUE_1' && setq.body.variables.f === 'F1', 'needs_decision lands in the Needs decision column');
+  ok(bw.q[0].body.variables.login === 'o' && bw.q[0].body.variables.n === 3, 'the board is looked up by owner and number');
+  ok(bw.q.every((c) => c.auth === 'Bearer pat'), 'the board uses its own token, not GITHUB_TOKEN');
+  await board.sync('ISSUE_2', 'fixed');
+  ok(bw.q.filter((c) => /projectV2\(number/.test(c.body.query)).length === 1, 'board metadata is read once per run');
+  const logs = [];
+  ok((await board.sync('ISSUE_3', 'wontfix')) === false, "a missing Won't fix column is a warning, not a crash");
+  const failw = boardWorld({ fail: true });
+  const failLogs = [];
+  ok((await S.makeBoard(benv, failw.fetchImpl, (m) => failLogs.push(m)).sync('X', 'filed')) === false && /warning/.test(failLogs.join()), 'a bad token warns and never throws');
+  ok(S.BOARD_OPTION.filed === 'New' && S.BOARD_OPTION.fixing === 'In progress', 'status -> column names');
+
+  // no number: the board is found by its title
+  const tw = boardWorld();
+  ok(await S.makeBoard({ GITHUB_REPOSITORY: 'o/r', FIELD_PROJECT_TOKEN: 'pat' }, tw.fetchImpl, () => {}).sync('ISSUE_T', 'fixing'), 'sync by title succeeds');
+  const tq = tw.q.find((c) => /projectV2\(number/.test(c.body.query));
+  ok(tq && tq.body.variables.n === 7, 'with no number, the project titled "Field log" is used (case-insensitive)');
+  const nw = boardWorld({ projects: [{ number: 2, title: 'Other' }] });
+  const nLogs = [];
+  ok((await S.makeBoard({ GITHUB_REPOSITORY: 'o/r', FIELD_PROJECT_TOKEN: 'pat' }, nw.fetchImpl, (m) => nLogs.push(m)).sync('X', 'filed')) === false && /no project titled/.test(nLogs.join()), 'no project with that title warns and never throws');
+  const cw = boardWorld();
+  await S.makeBoard({ GITHUB_REPOSITORY: 'o/r', FIELD_PROJECT_TOKEN: 'pat', FIELD_PROJECT_TITLE: 'Other' }, cw.fetchImpl, () => {}).sync('X', 'filed');
+  const cq = cw.q.find((c) => /projectV2\(number/.test(c.body.query));
+  ok(!!cq && cq.body.variables.n === 2, 'FIELD_PROJECT_TITLE picks a differently named board');
+
+  // the board is updated on an issue event when enabled
+  const ew = boardWorld();
+  const evFetch = async (url, init) => /graphql/.test(url) ? ew.fetchImpl(url, init) : { status: 200, text: async () => '{"reports":1}' };
+  await S.runIssueEvent(benv, { action: 'labeled', issue: { number: 4, node_id: 'N4', state: 'open', labels: L('field-report', 'in-progress') } }, evFetch, () => {});
+  const ev4 = ew.q.find((c) => /updateProjectV2ItemFieldValue/.test(c.body.query));
+  ok(ev4 && ev4.body.variables.o === 'o-prog', 'labelling in-progress moves the card to In progress');
 
   console.log((fail ? 'FAIL' : 'ok') + ' test-field-reports-sync: ' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
