@@ -53,7 +53,11 @@ function load() {
       return {
         upsert(row) {
           net.calls.push('up');
-          return { then: (res, rej) => result().then(() => { net.rows.set(rowKey(row), row); return { error: null }; }).then(res, rej) };
+          return { then: (res, rej) => result().then(() => {
+            if (net.refuse && net.refuse.has(row.set_number)) return { error: { code: '23514', message: 'violates check constraint' }, status: 400 };
+            if (net.flaky && net.flaky.has(row.set_number)) return { error: { code: 'PGRST301', message: 'JWT expired' }, status: 401 };
+            net.rows.set(rowKey(row), row); return { error: null };
+          }).then(res, rej) };
         },
         delete: deleter,
         select() { return { eq() { return this; }, order() { return this; }, limit() { return this; }, maybeSingle() { return Promise.resolve({ data: null }); }, then(r) { return Promise.resolve({ data: [] }).then(r); } }; },
@@ -86,10 +90,14 @@ function load() {
   vm.createContext(sandbox);
   vm.runInContext(SRC, sandbox, { filename: 'mc-supabase.js' });
   return {
-    SB: win.MC_SB, ls, net, nav,
+    SB: win.MC_SB, ls, net, nav, win,
     fire: (t) => (listeners[t] || []).forEach(cb => cb()),
     outbox: () => { try { return JSON.parse(ls[KEY] || '[]'); } catch (e) { return null; } },
   };
+}
+function vmRec(t, recs) {
+  // mc-supabase.js reads window.MC_ERRLOG at call time.
+  t.win.MC_ERRLOG = { rec: (k, m) => recs.push([k, m]) };
 }
 const set = (n, w) => ({ session_id: 's1', exercise: 'Incline DB Press', set_number: n, weight_lbs: w, reps: 8 });
 
@@ -173,6 +181,32 @@ const set = (n, w) => ({ session_id: 's1', exercise: 'Incline DB Press', set_num
     t.net.up = true;
     await t.SB.flushOutbox(); await flush();
     ok(t.net.rows.size === 1 && t.net.pushes.length === 0, '10: a stale replay writes the row and skips the push');
+  }
+
+  // 11. A write the server REFUSES (Phase T1.3) is dropped, recorded, and does
+  //     not hold back the writes queued behind it. An expired session is not a
+  //     refusal: that write waits.
+  {
+    const t = load();
+    const recs = [];
+    await t.SB.logSet(set(1, 60)).catch(() => {});
+    await t.SB.logSet(set(2, 60)).catch(() => {});
+    await t.SB.logSet(set(3, 60)).catch(() => {});
+    ok(t.outbox().length === 3, '11a: three writes queued offline');
+    t.net.up = true;
+    t.net.refuse = new Set([1]);
+    t.net.flaky = new Set([3]);
+    vmRec(t, recs);
+    await t.SB.flushOutbox(); await flush();
+    const left = t.outbox().map(o => o.entry.set_number);
+    ok(!left.includes(1), '11b: the refused write leaves the queue (left ' + JSON.stringify(left) + ')');
+    ok(t.net.rows.has('s1|Incline DB Press|2'), '11c: the write behind it still reached the table');
+    ok(left.length === 1 && left[0] === 3, '11d: the expired-session write stays queued');
+    ok(recs.length === 1 && /refused/.test(recs[0][1]) && recs[0][0] === 'network', '11e: the refusal is recorded once in diagnostics');
+    // A direct write the server refuses is not queued at all.
+    t.net.refuse = new Set([4]);
+    await t.SB.logSet(set(4, 60)).catch(() => {});
+    ok(!t.outbox().some(o => o.entry.set_number === 4), '11f: a refused direct write is not queued for a retry');
   }
 
   // 8. A corrupt outbox reads as empty rather than throwing.

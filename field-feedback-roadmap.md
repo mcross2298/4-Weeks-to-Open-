@@ -144,5 +144,5 @@ it needs a token the owner has to create.
 - ~~Run `phase15` and `phase16`.~~ Applied 2026-10-25, read back from `pg_catalog`.
 - ~~Set the `CRON_SECRET` / `WEEKLY_CHECKIN_SECRET` pair.~~ Set 2026-10-25; the
   first manual `field-reports.yml` run reached the function and found nothing new.
-- Add the **Supabase** connector to the "Weekly field review" scheduled task in
-  claude.ai, so it can read report descriptions.
+- ~~Add the **Supabase** connector to the "Weekly field review" scheduled task.~~
+  Attached (checked 2026-10-25).

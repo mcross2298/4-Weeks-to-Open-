@@ -68,6 +68,13 @@ jobs:
           python3 -c "import json; print(chr(10).join(json.load(open('content-manifest.json'))['scratch']))" \
             | xargs -d '\n' -r rm -rf
           rm -f ./*.dc.html content-manifest.json
+      - name: Minify the deploy artifact's JavaScript (Phase T2.3)
+        # The repository stays unminified; only what is uploaded below is.
+        # verify.yml's `minified` job drives the browser gates against a tree
+        # built by this same script and terser version. Keep the two equal.
+        run: |
+          npm install --no-save --prefix /tmp/min-ci terser@5.36.0
+          NODE_PATH=/tmp/min-ci/node_modules node tools/minify-deploy.js . --report
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

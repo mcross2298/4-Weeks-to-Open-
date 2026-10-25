@@ -5,15 +5,15 @@
      mc-muscle-map.js @ line 21
      mc-readiness.js @ line 114
      mc-setlog.js @ line 346
-     mc-session.js @ line 3371
-     mc-classify.js @ line 3976
-     mc-suggest.js @ line 4112
-     mc-chart.js @ line 4704
-     mc-exercise-trends.js @ line 4987
-     mc-cues-data.js @ line 5246
-     mc-cues.js @ line 5396
-     mc-rep-progress.js @ line 5486
-     mc-superset-hop.js @ line 5633
+     mc-session.js @ line 3555
+     mc-classify.js @ line 4160
+     mc-suggest.js @ line 4296
+     mc-chart.js @ line 4912
+     mc-exercise-trends.js @ line 5195
+     mc-cues-data.js @ line 5454
+     mc-cues.js @ line 5604
+     mc-rep-progress.js @ line 5694
+     mc-superset-hop.js @ line 5841
 */
 
 /* ---- mc-muscle-map.js ---- */
@@ -582,6 +582,9 @@ try {
   function forgetRecent(pagePrefix) {
     var pre = pagePrefix + '|';
     _recent = _recent.filter(function (r) { return r.k.indexOf(pre) !== 0; });
+    // T2.2: the crash journal holds the same sets, and would replay a
+    // discarded workout on the next load.
+    try { journalForget(pre); } catch (e) {}
     try { if (_bc) _bc.postMessage({ forget: pre, ts: Date.now() }); } catch (e) {}
   }
 
@@ -629,12 +632,21 @@ try {
     // the cross-tab replay and the locked write with no change to any of them.
     if (name) entry.n = name;
     if (from) entry.sw = from;         // R5: swapped from — shown in History
+    // Phase T1.5: which week of a multi-week program this was ticked on.
+    // The history key names the exercise, not the week (Phase 2.1), so a
+    // week-1 tick also painted on week 2's same lift. Repainting reads this.
+    var wkt = weekTag();
+    if (wkt) entry.wk = wkt;
+    // Phase T1.8: logged in the program's scheduled deload week, so the
+    // progression engine can read past it (mc-suggest.js completedSessions).
+    try { if (deloadNow()) entry.dl = 1; } catch (e) {}
     // When the tick happened. mc-sync.js's mergeSetlog() compares it with an
     // untick record (mc_setlog_deleted_v1): a set ticked AFTER its untick
     // was re-ticked and stays; one ticked before it was taken back.
     entry.t = Date.now();
     var rec = { k: k, d: d, sn: sn, entry: entry, ts: entry.t };
     noteRecent(rec);
+    journal(rec);
     try { if (_bc) _bc.postMessage(rec); } catch (e) {}
     withStore(null);                   // replayRecent() carries the new entry
   }
@@ -647,9 +659,122 @@ try {
   function unsave(exId, sn) {
     var rec = { k: ek(exId), d: dayStamp(), sn: sn, entry: null, ts: Date.now() };
     noteRecent(rec);
+    journal(rec);
     try { if (_bc) _bc.postMessage(rec); } catch (e) {}
     withStore(null);
     recordUntick(rec);
+  }
+
+  // ---- the crash journal (flagship readiness R1 step 9, Phase T2.2) -------
+  // localStorage reaches the disk on the browser's schedule, not the page's:
+  // measured with GO_LIVE/flagship-audit/scenarios/fa-kill-window.js, a set
+  // ticked 0.3 s or 1.5 s before the process was killed was gone after the
+  // relaunch. A signed-in athlete gets it back from the cloud (FIX-02); a
+  // signed-out one had no other copy. So every tick and untick is also
+  // written to IndexedDB with durability 'strict', which completes only once
+  // the write is on disk, and the next load replays any record the set log
+  // is missing through the same locked, replayed write a tick uses.
+  //
+  // It is a journal, not a second store: only today's records are kept, a
+  // record the set log already reflects is a no-op, and everything still
+  // reads mc_setlog_v1. Where IndexedDB is unavailable (some private modes)
+  // every call here is a silent no-op, which is the behaviour before it.
+  var JDB = 'mc-setlog-journal', JOS = 'recs';
+  var _jdb = null;
+  function jopen() {
+    if (_jdb) return _jdb;
+    _jdb = new Promise(function (resolve) {
+      try {
+        if (typeof indexedDB === 'undefined' || !indexedDB) return resolve(null);
+        var rq = indexedDB.open(JDB, 1);
+        rq.onupgradeneeded = function () {
+          try { rq.result.createObjectStore(JOS, { keyPath: 'id' }); } catch (e) {}
+        };
+        rq.onsuccess = function () { resolve(rq.result); };
+        rq.onerror = rq.onblocked = function () { resolve(null); };
+      } catch (e) { resolve(null); }
+    });
+    return _jdb;
+  }
+  function jtx(db, mode) {
+    try { return db.transaction(JOS, mode, { durability: 'strict' }); }
+    catch (e) { return db.transaction(JOS, mode); }   // a browser without the option
+  }
+  function journal(rec) {
+    jopen().then(function (db) {
+      if (!db) return;
+      try {
+        jtx(db, 'readwrite').objectStore(JOS).put({
+          id: rec.k + '|' + rec.d + '|' + rec.sn, k: rec.k, d: rec.d, sn: rec.sn, entry: rec.entry, ts: rec.ts
+        });
+      } catch (e) {}
+    });
+  }
+  // Discard (via forgetRecent): drop every record for the page, so what the
+  // athlete threw away is not put back.
+  function journalForget(pre) {
+    jopen().then(function (db) {
+      if (!db) return;
+      try {
+        var os = jtx(db, 'readwrite').objectStore(JOS), rq = os.getAllKeys();
+        rq.onsuccess = function () {
+          (rq.result || []).forEach(function (id) { if (String(id).indexOf(pre) === 0) os.delete(id); });
+        };
+      } catch (e) {}
+    });
+  }
+  // On load: put back what the set log lost, and drop records from other
+  // days. Returns how many records it replayed (for the tests).
+  function replayJournal() {
+    return jopen().then(function (db) {
+      if (!db) return 0;
+      return new Promise(function (resolve) {
+        var recs = [];
+        try {
+          var t = jtx(db, 'readonly'), rq = t.objectStore(JOS).getAll();
+          rq.onsuccess = function () { recs = rq.result || []; };
+          t.oncomplete = function () { resolve(recs); };
+          t.onerror = t.onabort = function () { resolve([]); };
+        } catch (e) { resolve([]); }
+      }).then(function (recs) {
+        var today = dayStamp(), store = st(), stale = [], todo = [];
+        recs.forEach(function (r) {
+          if (!r || !r.k || r.sn == null) return;
+          if (r.d !== today) { stale.push(r.id); return; }
+          if (r.k.indexOf(PID + '|') !== 0) return;          // another page's: it replays there
+          var top = Array.isArray(store[r.k]) ? store[r.k][0] : null;
+          var cur = (top && top.d === r.d && top.sets) ? top.sets[r.sn] : null;
+          if (r.entry == null) { if (cur && !(cur.t > r.ts)) todo.push(r); }
+          else if (!cur || (cur.t || 0) < r.ts) todo.push(r);
+        });
+        if (stale.length) {
+          try { var w = jtx(db, 'readwrite').objectStore(JOS); stale.forEach(function (id) { w.delete(id); }); } catch (e) {}
+        }
+        if (!todo.length) return 0;
+        todo.forEach(function (r) { noteRecent({ k: r.k, d: r.d, sn: r.sn, entry: r.entry, ts: r.ts }); });
+        return Promise.resolve(withStore(null)).then(function () {
+          // Repaint what is already on screen; anything built later reads the
+          // repaired store through the usual restore.
+          todo.forEach(function (r) {
+            var exId = r.k.slice(PID.length + 1);
+            var row = document.getElementById('mclr-' + cssId(exId) + '-' + r.sn);
+            if (!row) return;
+            if (r.entry) paintLoggedRow(row);
+            else {
+              var ck = row.querySelector('.mcl-ck');
+              if (ck && ck.classList.contains('done')) {
+                ck.classList.remove('done'); ck.textContent = '\u2610'; ck.setAttribute('aria-checked', 'false');
+                row.classList.remove('done-row');
+              }
+            }
+            var card = row.closest('.ex-card, .ss-ex, .ex-item, .lift-card');
+            if (card) updateCountByCard(card);
+          });
+          if (window.MC_SCAN && MC_SCAN.schedule) MC_SCAN.schedule();
+          return todo.length;
+        });
+      });
+    }).catch(function () { return 0; });
   }
 
   // An untick used to reach only THIS device's store. mergeSetlog() unions
@@ -1568,6 +1693,14 @@ try {
   // change week in place, so a page opened on week 5 and switched to its
   // deload week used to build that week at full volume (and the reverse kept
   // a deload after leaving it) until a reload.
+  // Phase T1.5: the program week the open page shows, as "prog|week", from
+  // the day-identity contract (F4). Only the pages that change week in place
+  // register a resolver; everywhere else this is '' and nothing changes.
+  function weekTag() {
+    var D = window.MC_PROGRAM_DAY, cur = null;
+    try { cur = D && D.current && D.current(); } catch (e) {}
+    return (cur && cur.prog && cur.week) ? cur.prog + '|' + cur.week : '';
+  }
   function deloadNow() {
     var D = window.MC_PROGRAM_DAY, P = window.MC_PROGRAM_PROGRESS;
     var cur = null;
@@ -2642,36 +2775,77 @@ try {
   // its name), so they are shown here as done and read-only, labelled with the
   // lift they were lifted on, and the next tick goes to the next row.
   function paintCarried(card, exId) {
-    var oid = preSwapIdOf(card);
-    if (!oid || oid === exId) return;
-    var d = dayStamp(), os = lsess(oid), own = lsess(exId);
-    if (!os || os.d !== d || !os.sets) return;
+    var d = dayStamp(), store = st(), own = lsess(exId);
     var mineToday = (own && own.d === d && own.sets) || {};
-    var from = swapFromOf(card) || 'the original';
-    var cid = cssId(exId), any = false;
-    Object.keys(os.sets).forEach(function (sn) {
-      var v = os.sets[sn];
-      if (!v || mineToday[sn]) return;
-      var row = card.querySelector('#mclr-' + cid + '-' + sn);
-      if (!row || row.classList.contains('mcl-carried')) return;
-      var w = row.querySelector('.mcl-w');
-      if (w && v.w != null && v.w !== '') { w.value = String(v.w); w.classList.remove('mcl-ghost'); delete w.dataset.ghost; }
-      Array.prototype.forEach.call(row.querySelectorAll('input'), function (inp) { inp.disabled = true; });
-      var ck = row.querySelector('.mcl-ck');
-      if (ck) {
-        ck.classList.add('done'); ck.textContent = '\u2713';
-        ck.setAttribute('aria-checked', 'true');
-        ck.disabled = true;
-        ck.setAttribute('aria-label', 'Set ' + sn + ' done as ' + from);
-      }
-      row.classList.add('done-row', 'mcl-carried');
-      var line = document.createElement('div');
-      line.className = 'mcl-carried-line';
-      line.textContent = 'Done as ' + from;
-      row.appendChild(line);
-      any = true;
+    // Where today's sets for this slot were logged under another identity:
+    //   - a swapped card: the original's own key (preSwapIdOf);
+    //   - an UN-swapped card (Phase T1.6): any substitute that stood in for
+    //     it today. Undoing a swap used to rebuild the card as if the sets on
+    //     the substitute never happened. Each of those sets records the lift
+    //     it replaced (`sw`, R5), so they are found from the store itself and
+    //     survive a reload with no record of the undo.
+    var sources = [];
+    var oid = preSwapIdOf(card);
+    if (oid && oid !== exId) {
+      var os = lsess(oid);
+      if (os && os.d === d && os.sets) sources.push({ sets: os.sets, from: swapFromOf(card) || 'the original' });
+    } else if (!card.getAttribute('data-mc-swap-name')) {
+      var me = displayNameOf(card), pre = PID + '|', myKey = ek(exId);
+      if (me) Object.keys(store).forEach(function (k) {
+        if (k === myKey || k.indexOf(pre) !== 0 || !Array.isArray(store[k])) return;
+        var top = store[k][0];
+        if (!top || top.d !== d || !top.sets) return;
+        var mine = {}, any = false, nm = '';
+        Object.keys(top.sets).forEach(function (sn) {
+          var v = top.sets[sn];
+          if (v && v.sw === me) { mine[sn] = v; any = true; nm = nm || v.n || ''; }
+        });
+        if (any) sources.push({ sets: mine, from: nm || 'a substitute' });
+      });
+    }
+    if (!sources.length) return;
+    var cid = cssId(exId), painted = 0, extra = {};
+    sources.forEach(function (src) {
+      Object.keys(src.sets).forEach(function (sn) {
+        var v = src.sets[sn];
+        if (!v || mineToday[sn]) return;
+        var row = card.querySelector('#mclr-' + cid + '-' + sn);
+        // Phase T1.7: a set number this card has no row for (the substitute
+        // prescribes fewer sets) used to vanish from the card. It still
+        // counts at Finish; now the card says so.
+        if (!row) { extra[src.from] = (extra[src.from] || 0) + 1; return; }
+        if (row.classList.contains('mcl-carried')) return;
+        var w = row.querySelector('.mcl-w');
+        if (w && v.w != null && v.w !== '') { w.value = String(v.w); w.classList.remove('mcl-ghost'); delete w.dataset.ghost; }
+        Array.prototype.forEach.call(row.querySelectorAll('input'), function (inp) { inp.disabled = true; });
+        var ck = row.querySelector('.mcl-ck');
+        if (ck) {
+          ck.classList.add('done'); ck.textContent = '\u2713';
+          ck.setAttribute('aria-checked', 'true');
+          ck.disabled = true;
+          ck.setAttribute('aria-label', 'Set ' + sn + ' done as ' + src.from);
+        }
+        row.classList.add('done-row', 'mcl-carried');
+        var line = document.createElement('div');
+        line.className = 'mcl-carried-line';
+        line.textContent = 'Done as ' + src.from;
+        row.appendChild(line);
+        painted++;
+      });
     });
-    if (any) updateCount(card, exId);
+    var wrap = card.querySelector('.mcl-wrap');
+    var old = wrap && wrap.querySelector('.mcl-carried-more');
+    if (old) old.remove();
+    var names = Object.keys(extra);
+    if (wrap && names.length) {
+      var more = document.createElement('div');
+      more.className = 'mcl-carried-line mcl-carried-more';
+      more.textContent = names.map(function (n) {
+        return '+' + extra[n] + ' more set' + (extra[n] === 1 ? '' : 's') + ' done as ' + n;
+      }).join(' · ');
+      wrap.appendChild(more);
+    }
+    if (painted) updateCount(card, exId);
   }
   // R5 / D-09: drop a card's logger so the next pass builds it under the
   // card's CURRENT identity. Called when a swap is applied or undone. Sets
@@ -3028,6 +3202,11 @@ try {
       if (!entry || !entry.sets) return false;
       vals = entry.sets[sn];
       if (!vals) return false;
+      // T1.5: a set ticked on another week of the same program is that
+      // week's. A set with no tag predates the tag, or came from a page
+      // without weeks, and paints as it always did.
+      var wkNow = weekTag();
+      if (vals.wk && wkNow && vals.wk !== wkNow) return false;
     }
     var solid = function (inp, v) {
       if (!inp || v == null || v === '') return;
@@ -3090,6 +3269,8 @@ try {
                                     // from the prescription, not from rendered
                                     // checkboxes (see planFor above)
     rekeyCard: rekeyCard,            // R5 / D-09: mc-replace.js re-keys a swapped card
+    deloadNow: deloadNow,            // T1.8: mc-suggest.js holds the load on a deload week
+    replayJournal: replayJournal,    // T2.2: the crash journal's load-time replay (tests)
     ensureRowsBuilt: ensureRowsBuilt,  // A-14: lets mc-session.js build a specific
                                     // card's rows before restoring checks onto it
     rowIdPrefix: function (card) {  // R1 / D-01: lets mc-session.js find a row's
@@ -3109,6 +3290,9 @@ try {
                                     // through here so a concurrent tab cannot
                                     // lose their write either.
   };
+  // T2.2: put back any tick the last page load lost to a hard kill.
+  try { replayJournal(); } catch (e) {}
+
 
   // ---- FIX-01, second half: notice a write from another tab ---------------
   // The lock stops the two tabs destroying each other's data. It does not
@@ -4391,7 +4575,24 @@ try {
     if (L && L.normalizeSessions) hist = L.normalizeSessions(hist);
     var today = (L && L.dayKey) ? L.dayKey()
       : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    return hist.filter(function (s) { return s && s.d !== today; });
+    var done = hist.filter(function (s) { return s && s.d !== today; });
+    // Phase T1.8: a session logged in the program's scheduled deload week is
+    // lighter ON PURPOSE (a third of the working sets gone), so judging it
+    // read as a stall: the week after a deload held the load, and the deload
+    // counted toward a plateau. The session before it is the real last one.
+    // If every session on record is a deload, they are all there is.
+    var real = done.filter(function (s) { return !isDeloadSession(s); });
+    return real.length ? real : done;
+  }
+  function isDeloadSession(s) {
+    if (!s || !s.sets || typeof s.sets !== 'object') return false;
+    return Object.keys(s.sets).some(function (k) { return s.sets[k] && s.sets[k].dl; });
+  }
+  // The open page is on the program's scheduled deload week (mc-setlog.js
+  // owns that answer: it is what trims the rows).
+  function inDeloadWeek() {
+    var U = (typeof window !== 'undefined') ? window.MCSetlogUtil : null;
+    try { return !!(U && U.deloadNow && U.deloadNow()); } catch (e) { return false; }
   }
 
   // Classify one logged session against the day's prescribed rep target:
@@ -4471,6 +4672,12 @@ try {
     var cls = classifySession(sessions[0], setsStr);
     if (!cls) return null;
     var out = baseSuggestion(cls, name);
+    // A deload holds the load and cuts the volume. It is not the week to add
+    // weight or chase reps, whatever the last session earned; that earned
+    // step waits for the week after, which reads past this deload (above).
+    if (inDeloadWeek()) {
+      return { w: cls.w, base: cls.w, status: 'match', why: 'deload week — keep your last load, fewer sets' };
+    }
     var goals = repGoals(sessions[0], setsStr, cls.status);
     if (goals.some(function (g) { return g != null; })) {
       out.r = goals;
@@ -4691,6 +4898,7 @@ try {
       computeIncrement: computeIncrement, topRep: topRep, repTargets: repTargets, isBigLift: isBigLift, equipCat: equipOf,
       repsOf: repsOf,
       classifySession: classifySession, detectPlateau: detectPlateau, suggestFor: suggestFor,
+      completedSessions: completedSessions, isDeloadSession: isDeloadSession,
       writeTarget: writeTarget, deloadWeight: deloadWeight,
       repFloors: repFloors, repGoals: repGoals, repGhosts: repGhosts,
       usableWeight: usableWeight

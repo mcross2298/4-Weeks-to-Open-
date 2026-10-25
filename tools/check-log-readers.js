@@ -137,15 +137,8 @@ const SETS_LOCAL = {
 // still BE an offender, so a fix that removes one fails the gate until the
 // entry is removed with it, and anything not listed fails immediately.
 const SETS_PENDING = {
-  // mc-bridge.js is byte-identity-checked against Mikes-Cookbook on deploy
-  // (verify.yml's cross-repo-drift step), so changing it here alone turns the
-  // main deploy red until the matching cookbook commit lands. The throw is
-  // real and reproduced -- todaysDayType() raises "(e.sets || []).forEach is
-  // not a function" on a wrong-shaped entry -- but mc-macros.js wraps the only
-  // caller in a try/catch returning null, so the cost is a silently lost day
-  // type in the macro generator, not a blank screen. Fix it in the same change
-  // as the cookbook's copy.
-  'mc-bridge.js': 1,
+  // Empty. mc-bridge.js was here until Phase T1.1 fixed it in both repos in
+  // the same change (it is byte-identity-checked against Mikes-Cookbook).
 };
 
 const setsOffenders = [];

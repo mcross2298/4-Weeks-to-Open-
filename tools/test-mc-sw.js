@@ -62,6 +62,7 @@ function loadSW(fetchImpl, store, named) {
                     put: async (req, resp) => { m.set(key(req), resp); },
                     match: async (req, opts) => matchIn(m, req, opts),
                     keys: async () => Array.from(m.keys()).map(url => ({ url })),
+                    delete: async (req) => m.delete(key(req)),
                 };
             },
             // Searches EVERY cache, like the real one. R3: the fetch path
@@ -273,6 +274,31 @@ const fallback = () => ({ status: 200, tag: 'OFFLINE', ok: true, headers: { get:
         assert(c.get('mm-p2.html') && c.get('mm-p2.html').tag === 'V100', '9h: the newest old copy is the one carried (v100 over v99, numeric order)');
         assert(c.get('old-only.html') && c.get('old-only.html').tag === 'V99', '9i: a page only an older deploy held is carried too');
         assert(!c.has('base.css'), '9j: nothing this deploy already holds is carried');
+    }
+
+    // 10. Phase T1.4: activate prunes the carry-over cache. A copy this deploy
+    //     holds goes; one fetched more than 60 days ago goes; a recent copy,
+    //     and one with no Date header, stay.
+    {
+        const CARRY = vm.runInContext('CARRY_CACHE_NAME', loadSW(async () => netResp('N'), new Map()));
+        const CUR = vm.runInContext('CACHE_NAME', loadSW(async () => netResp('N'), new Map()));
+        const dated = (tag, daysAgo) => netResp(tag, { headers: { date: new Date(Date.now() - daysAgo * 86400000).toUTCString() } });
+        const fresh = new Map([['mm-p1.html', { tag: 'NEW' }]]);
+        const named = {
+            [CARRY]: new Map([
+                ['mm-p1.html', dated('DUP', 1)],
+                ['old.html', dated('OLD', 61)],
+                ['recent.html', dated('RECENT', 5)],
+                ['undated.html', netResp('UNDATED')],
+            ]),
+        };
+        named[CUR] = fresh;
+        const sw = loadSW(async () => netResp('NET'), fresh, named);
+        await sw.retireOldCaches(Object.keys(named));
+        const c = named[CARRY];
+        assert(!c.has('mm-p1.html'), '10a: a carried copy this deploy holds is dropped');
+        assert(!c.has('old.html'), '10b: a carried copy older than 60 days is dropped');
+        assert(c.has('recent.html') && c.has('undated.html'), '10c: a recent copy and an undated one stay');
     }
 
     if (failures) { console.error(`\ntest-mc-sw: ${failures} FAILED of ${checks}`); process.exit(1); }

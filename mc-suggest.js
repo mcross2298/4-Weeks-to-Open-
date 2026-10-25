@@ -280,7 +280,24 @@
     if (L && L.normalizeSessions) hist = L.normalizeSessions(hist);
     var today = (L && L.dayKey) ? L.dayKey()
       : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    return hist.filter(function (s) { return s && s.d !== today; });
+    var done = hist.filter(function (s) { return s && s.d !== today; });
+    // Phase T1.8: a session logged in the program's scheduled deload week is
+    // lighter ON PURPOSE (a third of the working sets gone), so judging it
+    // read as a stall: the week after a deload held the load, and the deload
+    // counted toward a plateau. The session before it is the real last one.
+    // If every session on record is a deload, they are all there is.
+    var real = done.filter(function (s) { return !isDeloadSession(s); });
+    return real.length ? real : done;
+  }
+  function isDeloadSession(s) {
+    if (!s || !s.sets || typeof s.sets !== 'object') return false;
+    return Object.keys(s.sets).some(function (k) { return s.sets[k] && s.sets[k].dl; });
+  }
+  // The open page is on the program's scheduled deload week (mc-setlog.js
+  // owns that answer: it is what trims the rows).
+  function inDeloadWeek() {
+    var U = (typeof window !== 'undefined') ? window.MCSetlogUtil : null;
+    try { return !!(U && U.deloadNow && U.deloadNow()); } catch (e) { return false; }
   }
 
   // Classify one logged session against the day's prescribed rep target:
@@ -360,6 +377,12 @@
     var cls = classifySession(sessions[0], setsStr);
     if (!cls) return null;
     var out = baseSuggestion(cls, name);
+    // A deload holds the load and cuts the volume. It is not the week to add
+    // weight or chase reps, whatever the last session earned; that earned
+    // step waits for the week after, which reads past this deload (above).
+    if (inDeloadWeek()) {
+      return { w: cls.w, base: cls.w, status: 'match', why: 'deload week — keep your last load, fewer sets' };
+    }
     var goals = repGoals(sessions[0], setsStr, cls.status);
     if (goals.some(function (g) { return g != null; })) {
       out.r = goals;
@@ -580,6 +603,7 @@
       computeIncrement: computeIncrement, topRep: topRep, repTargets: repTargets, isBigLift: isBigLift, equipCat: equipOf,
       repsOf: repsOf,
       classifySession: classifySession, detectPlateau: detectPlateau, suggestFor: suggestFor,
+      completedSessions: completedSessions, isDeloadSession: isDeloadSession,
       writeTarget: writeTarget, deloadWeight: deloadWeight,
       repFloors: repFloors, repGoals: repGoals, repGhosts: repGhosts,
       usableWeight: usableWeight

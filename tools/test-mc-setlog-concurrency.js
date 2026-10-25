@@ -184,6 +184,8 @@ async function clearStore(pg) {
   await pg.evaluate(() => {
     try { localStorage.clear(); } catch (e) {}
     try { sessionStorage.clear(); } catch (e) {}
+    // T2.2: the crash journal is app state too; a clean setup clears it.
+    try { indexedDB.deleteDatabase('mc-setlog-journal'); } catch (e) {}
   });
 }
 

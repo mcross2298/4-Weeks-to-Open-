@@ -516,6 +516,68 @@ async function step(name, fn) {
     });
   }
 
+  // ---- T (the tail) ---------------------------------------------------------
+  // T1.5: a set ticked on week 1 is week 1's. The history key names the lift,
+  // not the week, so it used to paint on week 2's same lift too, on a tab
+  // switch and after a reload. Week 1 keeps it either way.
+  for (const url of ['/mm-p1.html?day=1&week=1', '/cat-strength.html?day=legs&week=1']) {
+    await step('WEEK-TICK ' + url, async () => {
+      const c = await ctx(browser); const p = await page(c, errs, 'weektick');
+      const ticks = () => p.evaluate(() => document.querySelectorAll('.mcl-ck.done').length);
+      await p.goto(BASE + url); await sleep(1500);
+      await logSet(p.locator('.ex-card, .ss-ex').first(), 0, 60, 5); await sleep(500);
+      const w1 = await ticks();
+      await p.locator('.wtab').nth(1).click(); await sleep(1200);
+      const w2 = await ticks();
+      await p.locator('.wtab').nth(0).click(); await sleep(1200);
+      const back = await ticks();
+      await p.goto(BASE + url.replace('week=1', 'week=2')); await sleep(1800);
+      const w2r = await ticks();
+      check(w1 === 1 && w2 === 0 && back === 1 && w2r === 0,
+        'WEEK-TICK ' + url + ': a week-1 tick stays on week 1 (tab switch and reload)', JSON.stringify({ w1, w2, back, w2r }));
+      await c.close();
+    });
+  }
+  // T1.6: undoing a swap keeps the sets done on the substitute on the card,
+  // labelled with the lift they were done on, after a reload too. They used
+  // to drop off the card (and out of its count) the moment the swap was undone.
+  await step('SWAP-UNDO', async () => {
+    const c = await ctx(browser); const p = await page(c, errs, 'swapundo');
+    await p.goto(BASE + '/mm-p1.html?day=1'); await sleep(2000);
+    const card = p.locator('.ex-card').first();
+    await logSet(card, 0, 60, 5); await logSet(card, 1, 60, 5);
+    await card.locator('.mc-meatball').click(); await sleep(400);
+    await p.locator('.mc-item[data-act=replace]').first().click();
+    await p.waitForSelector('.mc-sub-row', { timeout: 15000 });
+    await p.locator('.mc-sub-row').first().click(); await sleep(1200);
+    await logSet(card, 2, 70, 8);
+    // The Undo toast is short-lived; press it the moment the set is in.
+    const undone = await p.evaluate(() => { const b = document.querySelector('.mc-toast-btn'); if (!b) return false; b.click(); return true; });
+    await sleep(1500);
+    const read = () => p.evaluate(() => { const cd = document.querySelector('.ex-card');
+      return { done: cd.querySelectorAll('.mcl-ck.done').length, carried: cd.querySelectorAll('.mcl-row.mcl-carried').length }; });
+    const now = await read();
+    await p.reload(); await sleep(3000);
+    const after = await read();
+    check(undone && now.done === 3 && now.carried === 1 && after.done === 3 && after.carried === 1,
+      'SWAP-UNDO after an undo the substitute\'s set stays on the card, done and labelled (and after a reload)',
+      JSON.stringify({ undone, now, after }));
+    await c.close();
+  });
+  // T1.8: a set logged on the program's deload week is marked as one, so the
+  // progression engine reads past it the week after.
+  await step('DELOAD-TAG', async () => {
+    const c = await ctx(browser); const p = await page(c, errs, 'dltag');
+    await p.goto(BASE + '/cat-strength.html?day=legs&week=6'); await sleep(1500);
+    await logSet(p.locator('.ex-card, .ss-ex').first(), 0, 60, 5); await sleep(500);
+    const tagged = await p.evaluate(() => {
+      const s = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}');
+      return Object.keys(s).some((k) => (s[k] || []).some((x) => x && x.sets && Object.values(x.sets).some((v) => v && v.dl === 1)));
+    });
+    check(tagged, 'DELOAD-TAG a set logged on the deload week carries the deload mark');
+    await c.close();
+  });
+
   // Pos 4 is the Modality Matrix's TUT anchor (D-26): its tempo shows on the
   // card in every week, including inside the tri-set group mc-group-split.js
   // builds (whose digit match cut "3s down · 2s pause" to "3").

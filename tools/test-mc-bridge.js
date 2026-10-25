@@ -198,5 +198,19 @@ eq('below 3-set majority threshold -> null', B.todaysDayType(), null);
 B = loadBridge({}, undefined, undefined, undefined, CATALOG);
 eq('no log today -> null', B.todaysDayType(), null);
 
+// A wrong-shaped entry synced from another device: its sets are an object,
+// a string or a number, or the log carries a null member. todaysDayType()
+// used to throw "(e.sets || []).forEach is not a function" (L-03); a good
+// entry beside the bad ones still decides the day.
+const nowIso = new Date().toISOString();
+[{ sets: {} }, { sets: 'x' }, { sets: 7 }, null, { sets: [null] }].forEach(function (bad, i) {
+  var log = pushDayLog(['Bench Press', 'Overhead Press', 'Lateral Raise']);
+  log.push(bad && Object.assign({ id: 'b' + i, pageId: 'p', date: nowIso }, bad));
+  var Bb = loadBridge({ mc_workout_log_v1: JSON.stringify(log) }, undefined, undefined, undefined, CATALOG);
+  var got;
+  try { got = Bb.todaysDayType(); } catch (e) { got = 'threw: ' + e.message; }
+  eq('wrong-shaped entry #' + i + ' is skipped, not thrown on', got, 'push');
+});
+
 if (fail) { console.error(`\ntest-mc-bridge: ${pass} passed, ${fail} FAILED`); process.exit(1); }
 console.log(`test-mc-bridge: all ${pass} assertions passed`);

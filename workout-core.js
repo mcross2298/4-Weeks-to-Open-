@@ -4,16 +4,16 @@
    Members, in load order (line numbers are in this file):
      mc-replace.js @ line 21
      mc-log-read.js @ line 168
-     mc-strain.js @ line 855
-     mc-finish.js @ line 1170
-     mc-supabase.js @ line 2181
-     mc-sync.js @ line 3162
-     mc-biometric.js @ line 4273
-     program-overrides.js @ line 4377
-     mc-hints.js @ line 5356
-     mc-card-actions.js @ line 5484
-     program-manager.js @ line 6653
-     mc-live-tracker.js @ line 8531
+     mc-strain.js @ line 868
+     mc-finish.js @ line 1183
+     mc-supabase.js @ line 2194
+     mc-sync.js @ line 3211
+     mc-biometric.js @ line 4322
+     program-overrides.js @ line 4426
+     mc-hints.js @ line 5405
+     mc-card-actions.js @ line 5533
+     program-manager.js @ line 6702
+     mc-live-tracker.js @ line 8580
 */
 
 /* ---- mc-replace.js ---- */
@@ -608,6 +608,19 @@ try {
   // had to learn to skip a tombstone. A separate map changes no reader.
   var DEL_KEY = 'mc_workout_log_deleted_v1';   // { workoutKey: { ts } }
   var LOG_CAP = 200;
+  // A deletion record only has to outlive the copies of its workout that
+  // could still be on another device. A year covers a phone left in a drawer
+  // and keeps the store from growing for ever (Phase T1.2); it is pruned when
+  // a new deletion is written, the way mc-setlog.js prunes its untick records.
+  var DEL_KEEP_MS = 365 * 24 * 60 * 60 * 1000;
+  function pruneDeleted(del, now) {
+    var cut = (now || Date.now()) - DEL_KEEP_MS, out = {};
+    Object.keys(del || {}).forEach(function (k) {
+      var r = del[k];
+      if (r && isFinite(r.ts) && r.ts > cut) out[k] = r;
+    });
+    return out;
+  }
 
   // The identity mc-sync.js's merge already dedupes on: the id, or for an
   // entry that predates ids, page + timestamp.
@@ -751,7 +764,7 @@ try {
     var want = {}, n = 0, now = Date.now();
     (keys || []).forEach(function (k) { if (k) { want[k] = 1; n++; } });
     if (!n) return false;
-    var del = readDeletedWorkouts();
+    var del = pruneDeleted(readDeletedWorkouts(), now);
     Object.keys(want).forEach(function (k) { del[k] = { ts: now }; });
     writeStore(DEL_KEY, JSON.stringify(del));
     // R7: an archived workout can be deleted too (History's older list).
@@ -844,7 +857,7 @@ try {
       normalizeDay: normalizeDay, normalizeSessions: normalizeSessions,
       workoutKey: workoutKey, mergeWorkoutLogs: mergeWorkoutLogs,
       compactWorkout: compactWorkout, expandWorkout: expandWorkout, mergeArchive: mergeArchive,
-      LOG_CAP: LOG_CAP
+      LOG_CAP: LOG_CAP, pruneDeleted: pruneDeleted, DEL_KEEP_MS: DEL_KEEP_MS
     };
   }
 })();
@@ -2757,6 +2770,35 @@ try {
     var list = readOutbox(), kept = list.filter(function (o) { return opKey(o.entry) !== k; });
     if (kept.length !== list.length) writeOutbox(kept);
   }
+  // A write the server REFUSES (a bad value, a constraint) fails the same way
+  // on every retry, and used to be replayed until the 7-day limit dropped it,
+  // stopping every write queued behind it for that week (Phase T1.3). Only a
+  // refusal is final: no response at all, a timeout, an expired session, a
+  // rate limit or a 5xx is the network or the server having a bad moment,
+  // and the write waits as before. 401 and 403 wait too, since signing back
+  // in fixes both.
+  function rowResult(r) {
+    if (r && r.error) {
+      var err = r.error;
+      try { if (err && typeof err === 'object' && r.status && err.status == null) err.status = r.status; } catch (e) {}
+      throw err;
+    }
+    return r;
+  }
+  function isRefused(err) {
+    if (!err || typeof err !== 'object') return false;
+    var code = String(err.code || '');
+    if (/^(22|23)/.test(code)) return true;          // SQLSTATE data exception / integrity
+    return err.status === 400 || err.status === 404 || err.status === 409 || err.status === 422;
+  }
+  function noteRefused(op, err) {
+    try {
+      if (window.MC_ERRLOG && window.MC_ERRLOG.rec) {
+        window.MC_ERRLOG.rec('network', 'workout_logs ' + (op === 'del' ? 'delete' : 'write') +
+          ' refused: ' + String((err && (err.code || err.status)) || '') + ' ' + String((err && err.message) || '').slice(0, 120));
+      }
+    } catch (e) {}
+  }
   var _flushing = null;
   function flushOutbox() {
     if (_flushing) return _flushing;
@@ -2781,7 +2823,14 @@ try {
           }
           sent++;
           return true;
-        }, function () { return false; });
+        }, function (err) {
+          if (!isRefused(err)) return false;            // keep it, and stop here
+          noteRefused(o.op, err);
+          var cur = readOutbox();
+          var still = cur.filter(function (x) { return !(opKey(x.entry) === opKey(o.entry) && x.ts === o.ts); });
+          if (still.length !== cur.length) writeOutbox(still);
+          return true;                                  // the rest of the queue still goes
+        });
       });
     }, Promise.resolve(true)).then(function () { _flushing = null; return sent; },
                                    function () { _flushing = null; return sent; });
@@ -2797,7 +2846,7 @@ try {
       dequeue(entry);                                   // a direct success supersedes a queued copy
       return r;
     }, function (err) {
-      enqueue('up', entry, offlinePush);
+      if (isRefused(err)) noteRefused('up', err); else enqueue('up', entry, offlinePush);
       throw err;
     });
   }
@@ -2818,7 +2867,7 @@ try {
           workout_name: entry.workout_name || null,
           program_id:   entry.program_id   || null
         }, { onConflict: 'user_id,session_id,exercise,set_number' })
-          .then(function (r) { if (r.error) throw r.error; return r; });
+          .then(rowResult);
       });
     });
   }
@@ -2835,7 +2884,7 @@ try {
     // R3: a queued upsert for this set must not outlive the untick.
     dequeue(entry);
     return deleteRow(entry).then(null, function (err) {
-      enqueue('del', entry);
+      if (isRefused(err)) noteRefused('del', err); else enqueue('del', entry);
       throw err;
     });
   }
@@ -2849,7 +2898,7 @@ try {
           .eq('session_id', entry.session_id)
           .eq('exercise', entry.exercise)
           .eq('set_number', entry.set_number)
-          .then(function (r) { if (r.error) throw r.error; return r; });
+          .then(rowResult);
       });
     });
   }

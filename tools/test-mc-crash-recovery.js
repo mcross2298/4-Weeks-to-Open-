@@ -71,6 +71,7 @@ async function reset(pg) {
   await pg.evaluate(() => {
     try { localStorage.clear(); } catch (e) {}
     try { sessionStorage.clear(); } catch (e) {}
+    try { indexedDB.deleteDatabase('mc-setlog-journal'); } catch (e) {}   // a real wipe clears the crash journal too (T2.2)
   });
   await pg.goto(baseUrl + PAGE, { waitUntil: 'networkidle' });
   await waitStrips(pg);
@@ -193,7 +194,8 @@ const firstExerciseName = (pg) => pg.evaluate(() => {
   }, [exName, SETS]);
 
   await pg.goto(baseUrl + NEUTRAL, { waitUntil: 'load' });
-  await pg.evaluate(() => { try { localStorage.clear(); sessionStorage.clear(); } catch (e) {} });
+  // A wiped device: the crash journal (T2.2) goes with it, so only the cloud can restore.
+  await pg.evaluate(() => { try { localStorage.clear(); sessionStorage.clear(); } catch (e) {} try { indexedDB.deleteDatabase('mc-setlog-journal'); } catch (e) {} });
   await pg.goto(baseUrl + PAGE, { waitUntil: 'networkidle' });
   await waitStrips(pg);
   await pg.waitForTimeout(4000);          // rehydrate fires at 1200ms, then paints

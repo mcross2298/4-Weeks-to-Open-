@@ -205,11 +205,31 @@ self.addEventListener('install', event => {
 // on the couch left the athlete with no program at the gym. Before an old
 // cache is deleted, whatever the new one does not already hold is moved into
 // CARRY_CACHE_NAME (a newer old cache is copied last, so it wins).
+//
+// Phase T1.4: the carry-over cache used to only grow. Every activate now drops
+// a carried copy this deploy's cache holds (it can never be served, since
+// CACHE_NAME answers first) and one fetched more than CARRY_MAX_AGE_MS ago by
+// its Date header. A page opened online is refetched into CACHE_NAME and
+// carried again, fresh, by the next deploy, so only pages nobody has opened
+// for two months age out. A copy with no Date header is kept: its age is
+// unknown, and keeping it is the old behaviour.
+const CARRY_MAX_AGE_MS = 60 * 24 * 60 * 60 * 1000;
+function pruneCarry(fresh, carry, now) {
+    if (!carry.delete) return Promise.resolve();
+    return carry.keys().then(reqs => Promise.all(reqs.map(req =>
+        fresh.match(req).then(hit => {
+            if (hit) return carry.delete(req);
+            return carry.match(req).then(resp => {
+                const d = resp && resp.headers && resp.headers.get && Date.parse(resp.headers.get('date') || '');
+                return (d && now - d > CARRY_MAX_AGE_MS) ? carry.delete(req) : null;
+            });
+        }).catch(() => null))));
+}
 function retireOldCaches(keys) {
     const old = keys.filter(k => k !== CACHE_NAME && k !== FONT_CACHE_NAME && k !== CARRY_CACHE_NAME)
         // numeric order, so v99 sorts before v183 and the newest copy is written last
         .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-    if (!old.length) return Promise.resolve();
+    if (!old.length && keys.indexOf(CARRY_CACHE_NAME) < 0) return Promise.resolve();
     return Promise.all([caches.open(CACHE_NAME), caches.open(CARRY_CACHE_NAME)]).then(([fresh, carry]) =>
         old.reduce((p, k) => p.then(() => caches.open(k).then(oc => oc.keys().then(reqs =>
             Promise.all(reqs.map(req => fresh.match(req).then(hit => hit ? null :
@@ -218,6 +238,7 @@ function retireOldCaches(keys) {
             console.log('[SW] Removing old cache:', k);
             return caches.delete(k);
         })), Promise.resolve())
+        .then(() => pruneCarry(fresh, carry, Date.now()))
     );
 }
 self.addEventListener('activate', event => {

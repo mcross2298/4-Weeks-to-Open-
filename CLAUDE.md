@@ -115,6 +115,7 @@ node tools/test-mc-pr-scope.js http://localhost:8080            # a PR belongs t
 node tools/test-mc-setlog-concurrency.js http://localhost:8080  # two-tab set-log durability (FIX-01, L-01)
 node tools/test-mc-store-resilience.js http://localhost:8080    # corrupt-store shapes, 5 pages (FIX-04, L-03)
 node tools/test-mc-crash-recovery.js http://localhost:8080      # process kill + cloud rehydrate (FIX-02, L-02)
+node tools/test-mc-crash-journal.js http://localhost:8080       # SIGKILL 300 ms after a tick/untick: the IndexedDB journal puts it back (R1 step 9, T2.2)
 node tools/test-mc-session-durability.js http://localhost:8080  # week round trip, mid-rest refresh, focused draft, untick, Finish, import, wake lock, rest-end bar, add set/skip, reorder, sheets, Back (flagship readiness R1/R2/R5)
 node GO_LIVE/flagship-audit/scenarios/fa-repro.js http://localhost:8080   # the 23 flagship-readiness journeys (R1-R5)
 node GO_LIVE/flagship-audit/scenarios/fa-engines.js                       # progression/max math + deletion-record merge (R1/R4)
@@ -209,8 +210,14 @@ workflow below, so a green CI run does not exercise them.
 - **`pr.yml`** — runs `verify.yml` on every pull request.
 - **`pages.yml`** — on push to `main`: runs `verify.yml` (with
   `cross-repo-drift: true`), regenerates `sw.js` with a run-scoped cache
-  version, strips `*.dc.html` design comps from the deploy artifact, and
-  publishes to GitHub Pages.
+  version, strips `*.dc.html` design comps from the deploy artifact,
+  **minifies the artifact's JavaScript** (`tools/minify-deploy.js`, terser
+  pinned at 5.36.0 in a scratch prefix — Phase T2.3), and publishes to GitHub
+  Pages. The repository is never minified; `verify.yml`'s `minified` job builds
+  the same minified tree from a copy and drives the smoke, journey, durability,
+  crash-journal, identity and flagship-scenario gates against it, so the code
+  that deploys is code those gates ran. Bump terser in both files together.
+  The Rolodex build (`market-deploy.yml`) is not minified.
 - **`market-deploy.yml`** — on push to `main`: extracts the licensed-
   content-free tree (`tools/build-market.py`, driven by
   `content-manifest.json`) and force-pushes it to `MC-Training-Rolodex` as a
@@ -2565,8 +2572,8 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > review"** (Sundays 7:42pm America/New_York, a fresh session each run, draft
 > PRs only, never quotes an athlete on GitHub); it can be run at any time from
 > claude.ai's scheduled tasks, and `field-reports.yml` can be run by hand to
-> file what's new. It was created without connectors, so it needs the Supabase
-> connector added in the claude.ai UI to read descriptions. FB4:
+> file what's new. Its Supabase connector is attached (checked 2026-10-25),
+> so it reads report descriptions. FB4:
 > `MC_REPORT.mine()` reads the account's own reports (read-own policy, never
 > asks for `user_id`), Diagnostics shows **Your reports** with status, and Home
 > shows a one-time **Fixed** note (`mc_reports_seen_v1`), built in the module
@@ -2608,6 +2615,43 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > condition or a risk in any repo document or report; the advisor's WARN for
 > it is expected and is not a finding. Historical records that mention it as
 > open are left as written.
+>
+> **The weekly check-in still has not sent (found 2026-10-25).** With the secret
+> set, run 16 got past the guard and the Edge Function returned **500**: its log
+> reads `Vapid public key must be a URL safe Base 64 (without "=")` at
+> `index.ts:125`. The VAPID public key stored as a function secret is malformed;
+> the app's key (`mc-push.js`) is valid. That secret is the owner's to re-set.
+
+> **Phase T1 shipped (2026-10-25) — the small gaps, plus Mike's Cookbook for
+> the one shared file.** Plan in `flagship-readiness-roadmap.md`'s Phase T.
+> Things to know before touching these:
+> - **`mc-bridge.js` guards an entry's `sets`** and is byte-identical again in
+>   both repos; `check-log-readers.js`'s `SETS_PENDING` is empty. Merge order:
+>   the cookbook PR's drift gate compares against this repo's `main`, so this
+>   repo merges first.
+> - **A set entry may carry `wk` (`"prog|week"`) and `dl`.** `wk` is the program
+>   week it was ticked on, from `MC_PROGRAM_DAY.current()`; `paintLoggedRow()`
+>   does not repaint a tick from another week, so a week-1 tick no longer shows
+>   on week 2's same lift. A set with no `wk` paints as before. Two weeks of the
+>   same lift ticked on one DAY still share one bucket, since the key is the lift.
+>   `dl` marks a set logged on a scheduled deload week: `mc-suggest.js`'s
+>   `completedSessions()` reads past such a session, and during the deload week
+>   itself the suggestion keeps the last load with no rep goals.
+> - **`paintCarried()` reads both directions.** A swapped card shows the
+>   original's done sets (R5); an UN-swapped card shows the sets a substitute did
+>   for it today, found by the substitute's own `sw` field, so an undo survives a
+>   reload with no new store. Sets with no row get a `+N more sets done as …` line.
+> - **Every tick and untick is also journaled to IndexedDB** (`mc-setlog-journal`,
+>   `durability: 'strict'`) and the next load replays what `mc_setlog_v1` is
+>   missing (`replayJournal()`), today's records only. A SIGKILL 0.1–1.5 s after a
+>   tick lost it from localStorage in headless Chromium; the journal brings it back
+>   (`tools/test-mc-crash-journal.js`). **Not verified on iOS**, which is the
+>   platform the roadmap asked to check first.
+> - **The outbox drops a write the server refuses** (SQLSTATE 22/23, or HTTP
+>   400/404/409/422) and records it in diagnostics; 401/403, 5xx and no response
+>   still wait. **Deletion records** are pruned after a year, and **the SW's
+>   carry-over cache** drops copies this deploy holds or fetched more than 60 days
+>   ago (by Date header) on every activate.
 
 ---
 

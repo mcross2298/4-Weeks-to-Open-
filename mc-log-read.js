@@ -441,6 +441,19 @@
   // had to learn to skip a tombstone. A separate map changes no reader.
   var DEL_KEY = 'mc_workout_log_deleted_v1';   // { workoutKey: { ts } }
   var LOG_CAP = 200;
+  // A deletion record only has to outlive the copies of its workout that
+  // could still be on another device. A year covers a phone left in a drawer
+  // and keeps the store from growing for ever (Phase T1.2); it is pruned when
+  // a new deletion is written, the way mc-setlog.js prunes its untick records.
+  var DEL_KEEP_MS = 365 * 24 * 60 * 60 * 1000;
+  function pruneDeleted(del, now) {
+    var cut = (now || Date.now()) - DEL_KEEP_MS, out = {};
+    Object.keys(del || {}).forEach(function (k) {
+      var r = del[k];
+      if (r && isFinite(r.ts) && r.ts > cut) out[k] = r;
+    });
+    return out;
+  }
 
   // The identity mc-sync.js's merge already dedupes on: the id, or for an
   // entry that predates ids, page + timestamp.
@@ -584,7 +597,7 @@
     var want = {}, n = 0, now = Date.now();
     (keys || []).forEach(function (k) { if (k) { want[k] = 1; n++; } });
     if (!n) return false;
-    var del = readDeletedWorkouts();
+    var del = pruneDeleted(readDeletedWorkouts(), now);
     Object.keys(want).forEach(function (k) { del[k] = { ts: now }; });
     writeStore(DEL_KEY, JSON.stringify(del));
     // R7: an archived workout can be deleted too (History's older list).
@@ -677,7 +690,7 @@
       normalizeDay: normalizeDay, normalizeSessions: normalizeSessions,
       workoutKey: workoutKey, mergeWorkoutLogs: mergeWorkoutLogs,
       compactWorkout: compactWorkout, expandWorkout: expandWorkout, mergeArchive: mergeArchive,
-      LOG_CAP: LOG_CAP
+      LOG_CAP: LOG_CAP, pruneDeleted: pruneDeleted, DEL_KEEP_MS: DEL_KEEP_MS
     };
   }
 })();

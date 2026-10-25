@@ -123,7 +123,7 @@ must flip.
 | D-30 | Against the 48px / 8px / 13px standard: 25 of 32 session controls under 48, set rows 3–7px apart, 35 text nodes under 13px, floating timer controls 24–38px | session CSS, `mc-timer.js` | Phase 3 sweep | Medium | R6 |
 | D-31 | Light-mode suggested weight is 1.47:1 | `mc-setlog.css:93` keeps the dark `--ink-8` | — | Medium | R6 |
 | D-32 | The token gate can't see JS-injected or inline CSS or `rgba()` (119 + 446 slate literals) | `tools/check-design-tokens.js` reads `.css` and hex only | — | Medium | G |
-| D-33 | The weekly check-in has never sent | `WEEKLY_CHECKIN_SECRET` unset (workflow log, 18 Oct) | — | High | **Closed** — secret set 2026-10-25 |
+| D-33 | The weekly check-in has never sent | `WEEKLY_CHECKIN_SECRET` unset (workflow log, 18 Oct) | — | High | **Open** — secret set 2026-10-25; run 16 then failed on a malformed VAPID public key secret (owner) |
 | D-34 | Leaked-password protection is off | Supabase Auth setting | advisor | Low | **Closed — not applicable** (paid-plan feature; free plan, owner 2026-10-25) |
 | D-35 | Field errors never leave the device | `mc_errors_v1` is local only | — | Medium | E |
 | D-36 | No CSV export; no backup nudge for signed-out athletes | — | — | Medium | R7 |
@@ -523,6 +523,7 @@ Taken on the owner's go-ahead, as one PR, from the "Known residuals" lists above
 
 ### Owner actions (no code)
 - ~~Set the `WEEKLY_CHECKIN_SECRET` repo secret (D-33).~~ Done 2026-10-25.
+- Re-set the weekly check-in's VAPID public key function secret to the key in `mc-push.js` (D-33: run 16 returned 500, `Vapid public key must be a URL safe Base 64`).
 - ~~Turn on leaked-password protection (D-34).~~ Closed as not applicable: a paid-plan feature, and the project is on the free plan.
 - Run the device matrix below.
 
@@ -606,3 +607,101 @@ app, so this needs a server push, which is unproven).
 `workout-settings.html` is in `EAGER_HTML` because the rest row's ⚙️ Rest cues panel links to it
 mid-session; the session toolbar has no width left for another control. The account sheet keeps
 one row into the page.
+
+## Phase T · the tail (opened 2026-10-25)
+
+The owner asked for the open code items and the small known gaps to be closed,
+and approved bringing Mike's Cookbook into the change for the one shared file.
+Two parts, with an `AskUserQuestion` check-in between them.
+
+**T1 · small gaps (one PR here, one in Mike's Cookbook):**
+
+| Step | Gap | Files |
+|---|---|---|
+| T1.1 | `mc-bridge.js` reads an entry's `sets` unguarded (`SETS_PENDING`) | `mc-bridge.js` in both repos, `tools/check-log-readers.js`, `tools/test-mc-bridge.js` |
+| T1.2 | The workout deletion store has no cap | `mc-log-read.js` |
+| T1.3 | A write the server refuses for good is retried for 7 days | `mc-supabase.js`, `tools/test-mc-outbox.js` |
+| T1.4 | The offline carry-over cache is never pruned | `sw.js` |
+| T1.5 | On the Modality Matrix a set ticked in week 1 shows on week 2 | `mc-setlog.js`, `mc-session.js` |
+| T1.6 | Undoing a swap drops the substitute's done sets from the card | `mc-setlog.js`, `mc-card-actions.js` |
+| T1.7 | Carried sets beyond the substitute's row count are not shown | `mc-setlog.js` |
+| T1.8 | A deload week can suggest adding weight, and the deload session counts as a stall afterwards | `mc-setlog.js`, `mc-suggest.js`, `tools/test-mc-suggest.js` |
+| T1.9 | The owner layout editor's last OS dialog | `mc-pm-layout-editor.js` |
+
+**T2 · the optional items, each its own decision:** the IndexedDB crash
+journal (R1 step 9), bundling the Modality Matrix pages, and minification (J).
+
+**T1 shipped (2026-10-25), all nine steps.** Each fix has a check that fails on
+the code before it:
+- **T1.1** `test-mc-bridge.js` 37 → 42 (5 fail on the old file), mirrored to
+  Mike's Cookbook byte-identically; `SETS_PENDING` is empty.
+- **T1.2** `test-mc-archive.js`: a record older than 365 days, or malformed, is
+  dropped on the next deletion.
+- **T1.3** `test-mc-outbox.js` 17 → 23 (5 fail on the old file): the refused write
+  leaves, the one behind it is sent, the expired-session one stays.
+- **T1.4** `test-mc-sw.js` case 10 (2 fail on the old file).
+- **T1.5** reproduced first by driving `mm-p1.html` (week 2 showed the week-1
+  tick on a tab switch and on reload); `WEEK-TICK` in
+  `test-mc-session-durability.js` covers `mm-p1` and `cat-strength`.
+- **T1.6** `SWAP-UNDO`: 2 ticks, swap, 1 tick, Undo, reload → 3 done, 1 labelled.
+- **T1.7** driven: 7 original sets onto a 5-row substitute paints 5 and says
+  "+2 more sets done as Incline DB Press".
+- **T1.8** `test-mc-suggest.js` (4 fail on the old file) and `DELOAD-TAG`.
+- **T1.9** the layout editor's alert uses `MC_SHEET.alert()`.
+
+**Known residuals, not fixed here:**
+- **One day, two weeks, one lift:** ticking week 1 and week 2 of the same lift
+  on the same day writes both into one bucket, and the same set number is
+  overwritten. The week tag stops the wrong paint; it does not split the store.
+- **Only the pages that register a day resolver get week tags** (`mm`, `hv`,
+  `ss`); other multi-week pages keep the old shared paint.
+- **A carry-over copy with no Date header is never pruned**, since its age is
+  unknown.
+
+### T2 · the optional items (owner chose all three, 2026-10-25)
+
+**T2.1 · the Modality Matrix pages are bundled.** `mm-p1/p2/p3` and
+`hv-block` load `workout-core.js` and `workout-logger.js` now. Their runs were
+broken by three modules and, on the `mm` pages, by the `MM.init` /
+`MM.renderSummary` inline calls. `mc-program-progress.js` and
+`mc-program-day.js` load ahead of the run, `mc-pm-data.js` ahead of
+`mc-muscle-map.js` (still before `mc-setlog.js`, which needs it), and
+`mc-group-split.js` after `mc-superset-hop.js`. None of them reads the run's
+modules at load. The inline calls moved to just after the core run.
+
+**Proven by DOM equivalence, not by reasoning:** every day of all four pages
+(32 renders) was snapshotted before and after. The rendered DOM and the set of
+`MC*` globals are identical; the only differences are moved HTML comments and a
+hint's position, which also varies between two runs of the unchanged tree.
+
+| Slow 3G, median of 3 | requests before → after | first paint |
+|---|---|---|
+| `mm-p1.html` | 58 → 35 | 12.1 s → 12.1 s |
+| `hv-block.html` | 52 → 29 | 11.4 s → 7.6 s |
+
+`mm-p1` gains no first paint: its render (`MM.init`) used to run after only
+`mc-replace.js` and now waits for the core bundle. It is not slower, and its
+DOMContentLoaded moves 12.7 → 12.1 s. Making it faster would mean rendering
+before `mc-replace.js`, whose swap repaint the engine calls directly.
+
+**T2.2 · the crash journal (R1 step 9).** `mc-setlog.js` writes every tick and
+untick to IndexedDB (`mc-setlog-journal`) with `durability: 'strict'`, and on load
+replays whatever the set log is missing through the same locked write a tick
+uses, then repaints the row. Only today's records are kept. Journaled for every
+athlete, not only signed-out ones: it costs one small write, and the replay is a
+no-op where the store already has the set.
+
+| SIGKILL after the tick | localStorage alone | after reopening the page |
+|---|---|---|
+| 100 ms | lost | kept, ticked on screen |
+| 300 ms | lost | kept, ticked on screen |
+| 1500 ms | lost | kept, ticked on screen |
+| 3000 ms | kept | kept |
+
+`tools/test-mc-crash-journal.js` is a CI gate now (TICK, ONCE and UNTICK; 0 of 3
+pass without the journal, and its control confirms the kill really lost the
+write). `fa-kill-window.js` reports both columns.
+
+**Not verified:** iOS. The roadmap asked for an iOS check first. WebKit's
+IndexedDB durability and how an installed PWA is killed both differ from desktop
+Chromium; the device-matrix item 2 run is where to see it.

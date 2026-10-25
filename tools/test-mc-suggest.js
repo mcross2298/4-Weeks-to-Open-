@@ -161,6 +161,28 @@ check('suggestFor: progress carries its status', prog && prog.status, 'progress'
 check('suggestFor: progress adds the BIG increment', prog && prog.w, 145);
 check('suggestFor: base preserves last top weight for pyramid-safe prefill', prog && prog.base, 135);
 
+// ---- Phase T1.8: a scheduled deload week -----------------------------------
+// The deload session itself (fewer sets, `dl` on its sets) must not be judged
+// as a stall: the week after reads the session before it.
+setlogData['test-page|dlpress'] = [
+  session('2026-03-08', { 1: { w: 135, r: 8, dl: 1 }, 2: { w: 135, r: 8, dl: 1 } }),
+  session('2026-03-01', { 1: loggedSet(135, 8), 2: loggedSet(135, 8), 3: loggedSet(135, 8) })
+];
+check('T1.8 completedSessions reads past the deload session',
+  suggest.completedSessions('dlpress')[0].d, '2026-03-01');
+var after = suggest.suggestFor('dlpress', 'Overhead Press', '3x8');
+check('T1.8 the week after a deload progresses from the session before it', after && after.status, 'progress');
+check('T1.8 ... from that session\'s load', after && after.w, 145);
+setlogData['test-page|dlonly'] = [session('2026-03-08', { 1: { w: 95, r: 8, dl: 1 } })];
+check('T1.8 a history of only deload sessions is still used', suggest.completedSessions('dlonly').length, 1);
+// During the deload week itself, a session that earned a step does not add weight.
+global.window.MCSetlogUtil = { deloadNow: function () { return true; } };
+var during = suggest.suggestFor('press', 'Overhead Press', '2x8');
+check('T1.8 a deload week keeps the last load', during && during.w, 135);
+check('T1.8 a deload week carries no rep goals', during && during.r, undefined);
+global.window.MCSetlogUtil = undefined;
+check('T1.8 off the deload week the same history progresses again', suggest.suggestFor('press', 'Overhead Press', '2x8').w, 145);
+
 var kv = {};
 global.localStorage = {
   getItem: function (k) { return k === 'mc_setlog_v1' ? JSON.stringify(setlogData) : (kv[k] || null); },

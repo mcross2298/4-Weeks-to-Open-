@@ -211,7 +211,12 @@
       window.MC_PM_PUBLISH();
       return;
     }
-    if (!window.MC_PO || !MC_PO.exportData) { alert('Override layer not loaded.'); return; }
+    if (!window.MC_PO || !MC_PO.exportData) {
+      // The app's own sheet (R5 step 5); the OS dialog only where it is absent.
+      if (window.MC_SHEET && MC_SHEET.alert) MC_SHEET.alert('Override layer not loaded.');
+      else alert('Override layer not loaded.');
+      return;
+    }
     var data = MC_PO.exportData();
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     var a = document.createElement('a');

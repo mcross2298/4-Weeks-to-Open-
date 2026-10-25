@@ -45,18 +45,28 @@ async function trial(delay) {
   c = await launch(profile);
   p = c.pages()[0] || await c.newPage();
   await p.goto(BASE + '/manifest.json');
-  const kept = await p.evaluate(() => Object.keys(JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}')).length > 0);
+  const raw = await p.evaluate(() => Object.keys(JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}')).length > 0);
+  // Phase T2.2: the crash journal replays on the next visit to the page, so
+  // read the store again after opening it. `raw` is what localStorage alone
+  // kept; `kept` is what the athlete sees.
+  await p.goto(BASE + '/mm-p1.html?day=1'); await sleep(2500);
+  const kept = await p.evaluate(() => {
+    const s = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}');
+    return Object.keys(s).some((k) => (s[k] || []).some((x) => x && x.sets && Object.keys(x.sets).length));
+  });
+  const ticked = await p.evaluate(() => document.querySelectorAll('.mcl-ck.done').length);
   await c.close();
   fs.rmSync(profile, { recursive: true, force: true });
-  return kept;
+  return { raw, kept, ticked };
 }
 
 (async () => {
   const delays = DELAYS.length ? DELAYS : [300, 1500, 3000, 6000];
   console.log('Flagship audit — set survival vs time between tick and hard kill (' + BASE + ')\n');
   for (const d of delays) {
-    const kept = await trial(d);
-    console.log('  ' + String(d).padStart(6) + ' ms  →  ' + (kept ? 'kept' : 'LOST'));
+    const r = await trial(d);
+    console.log('  ' + String(d).padStart(6) + ' ms  →  localStorage ' + (r.raw ? 'kept' : 'LOST') +
+      ' · after reopening ' + (r.kept ? 'kept' : 'LOST') + ' (' + r.ticked + ' ticked on screen)');
   }
   console.log('\nMeasurement only; one trial per delay. iOS WebKit flush timing may differ.');
 })().catch((e) => { console.log('HARNESS ERROR ' + e.message); process.exit(2); });
