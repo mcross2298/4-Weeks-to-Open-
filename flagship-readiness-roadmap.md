@@ -559,3 +559,20 @@ on** (today's behaviour, now switchable), **after rest off** (new, opt-in).
 | S6 | Update lifecycle: a controller swap held mid-workout now shows the banner; the in-progress test reads `TMR.isRunning()` | `mc-sw-update.js` |
 | S7 | Reset local state (caches + UI only), refused offline | `mc-account.js` |
 | B  | Launch board: RAID log, go/no-go, runbook with numeric rollback triggers — published as an artifact | — |
+
+### Board B — outcome (2026-10-25)
+
+**CONDITIONAL GO**, signed by the owner, with the full writeup in the artifact
+`https://claude.ai/artifact/ScbXQhEsfybKyiyPCVCTJU`. The canary is the owner's devices plus testers for
+48 hours. Full rollout waits on four things: phase14 applied (my attempt timed out on the
+Supabase server's confirmation prompt; I verified the table is absent), `WEEKLY_CHECKIN_SECRET`
+(15 of 15 runs failed, latest 18 Oct), leaked-password protection, and the device matrix above.
+
+- **R-1 resolved before merge:** the rep goal goes in the hint only. The reps box ghosts what was
+  done (`repGhosts()`), because a ghost ticked unchanged is logged as-is.
+- **Rollback triggers:** ≥ 3 distinct new fingerprints, or one fingerprint on ≥ 2 athletes, within
+  24 h; any lost-set report; offline smoke failing on the live origin; any contrast, perf or
+  journey gate red on `main`. Rollback is a revert PR. It reaches a device on its next update
+  check and is held while a workout is in progress.
+- **Telemetry is opt-in**, so these triggers fire only if the canary cohort turns on
+  *Send error reports*.
