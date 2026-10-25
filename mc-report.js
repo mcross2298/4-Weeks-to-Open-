@@ -89,9 +89,18 @@
     });
     return best ? best + '.html' : '';
   }
+  // mc_active_prog holds the whole program CARD (dashboard.html's loadState),
+  // not an id; the first field test sent 40 characters of that JSON. Only the
+  // id is sent, and only id-shaped text, because a custom program's other
+  // fields are the athlete's own words and this field reaches a public issue.
   function program() {
-    try { var p = localStorage.getItem('mc_active_prog'); return p ? String(p).replace(/^"|"$/g, '').slice(0, 40) : ''; }
-    catch (e) { return ''; }
+    var raw = null;
+    try { raw = localStorage.getItem('mc_active_prog'); } catch (e) { return ''; }
+    if (!raw) return '';
+    var id = raw;
+    try { var v = JSON.parse(raw); id = (v && typeof v === 'object') ? v.id : v; } catch (e) {}
+    id = String(id == null ? '' : id);
+    return /^[A-Za-z0-9_-]{1,40}$/.test(id) ? id : '';
   }
   // Same rule as mc-error-beacon.js's platform(); kept here because this module
   // also runs on pages that do not load the beacon.
@@ -122,11 +131,14 @@
     }
     return out;
   }
+  // The app's own precache only: sw.js also keeps mc-training-carry-v1 (the
+  // previous deploy) and mc-training-fonts-v1, which name no build.
+  function isAppCache(k) { return /^mc-training/.test(k) && !/carry|fonts/.test(k); }
   var cachedBuild = '';
   function readBuild() {
     try {
       if (window.caches && caches.keys) return caches.keys().then(function (keys) {
-        var app = keys.filter(function (k) { return /^mc-training/.test(k) && !/carry/.test(k); });
+        var app = keys.filter(isAppCache);
         cachedBuild = app.join(',').slice(0, 80);
         return cachedBuild;
       }).catch(function () { return ''; });
@@ -439,7 +451,7 @@
 
   window.MC_REPORT = {
     open: open, flush: flush, queued: queued, mine: mine, checkFixed: checkFixed, renderList: renderList,
-    _buildRow: buildRow, _fingerprint: fingerprint, _workoutPage: workoutPage,
+    _buildRow: buildRow, _program: program, _isAppCache: isAppCache, _fingerprint: fingerprint, _workoutPage: workoutPage,
     _newlyFixed: newlyFixed, _statusLabel: statusLabel, _listHtml: listHtml, _showFixedNote: showFixedNote
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = window.MC_REPORT;

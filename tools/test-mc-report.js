@@ -142,6 +142,21 @@ function beaconFingerprint() {
     ok(/unique \(user_id, client_id\)/.test(sql), 'SQL de-duplicates on (user_id, client_id)');
   }
 
+  // 5b. the first field test: mc_active_prog is a program CARD, not an id,
+  // and the cache list includes the fonts cache, which names no build
+  {
+    const card = JSON.stringify({ id: 'pmc', desc: 'Constantly varied supersets', name: 'PMC' });
+    ok(sandbox({ store: { mc_active_prog: card } }).R._program() === 'pmc', 'program is the card id, not its JSON');
+    ok(sandbox({ store: { mc_active_prog: 'mm' } }).R._program() === 'mm', 'a bare id still works');
+    ok(sandbox({ store: { mc_active_prog: '"ss"' } }).R._program() === 'ss', 'a JSON string id works');
+    ok(sandbox({ store: { mc_active_prog: JSON.stringify({ id: 'My secret plan!' }) } }).R._program() === '',
+       'a non-id-shaped value is dropped, never sent');
+    ok(sandbox({ store: { mc_active_prog: '{broken' } }).R._program() === '', 'unparseable JSON is dropped');
+    const { R } = sandbox();
+    ok(R._isAppCache('mc-training-market-ci-354') && R._isAppCache('mc-training-v189'), 'app precaches count as the build');
+    ok(!R._isAppCache('mc-training-fonts-v1') && !R._isAppCache('mc-training-carry-v1'), 'fonts and carry caches are not a build');
+  }
+
   // 6. FB4 — status read-back and the one-time Fixed note
   {
     const { R } = sandbox();
