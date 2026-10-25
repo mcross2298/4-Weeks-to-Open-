@@ -114,10 +114,14 @@ PRs and closing move it. It needs:
 2. A token that can write to it, stored as the repo secret
    **`FIELD_PROJECT_TOKEN`**: a classic token with the `project` scope, or a
    fine-grained token with Projects read/write on the account.
-3. The board's number (the `/projects/N` in its URL) as the repo **variable**
-   **`FIELD_PROJECT_NUMBER`**.
-Without the token or the number it does nothing; a bad token warns and never
-fails the job.
+3. Nothing else, if the board is titled **Field log**: with no number set, the
+   workflow finds the owner's project by that title (case-insensitive). The
+   number is hard to find in the GitHub app, which is why the title is the
+   default. A board with another name: set the repo variable
+   **`FIELD_PROJECT_TITLE`**, or its number (the `/projects/N` in its web URL)
+   as **`FIELD_PROJECT_NUMBER`**, which wins when both are set.
+Without the token it does nothing; a bad token or a missing board warns and
+never fails the job.
 
 FB5 and FB6 ship together; FB7 opens with its own `AskUserQuestion` gate, since
 it needs a token the owner has to create.

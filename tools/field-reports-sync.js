@@ -205,16 +205,21 @@ async function ensureLabels(gh) {
 // ---- FB7: the GitHub Project board ------------------------------------------
 // A user-level Projects (v2) board with a single-select "Status" field. The
 // workflow's GITHUB_TOKEN cannot write to a user-owned board, so this runs only
-// when the owner has stored a token (FIELD_PROJECT_TOKEN) and the board's
-// number (repo variable FIELD_PROJECT_NUMBER); without them it does nothing.
+// when the owner has stored a token (FIELD_PROJECT_TOKEN); without one it does
+// nothing. The board is the one numbered FIELD_PROJECT_NUMBER (a repo
+// variable) when that is set, otherwise the owner's project titled
+// FIELD_PROJECT_TITLE (default "Field log") — the number is hard to find in
+// the GitHub app, the title is not.
 // It never fails the job: the database and the issue are the record, the
 // board is a view of them.
 const BOARD_OPTION = { 'new': 'New', filed: 'New', fixing: 'In progress', needs_decision: 'Needs decision',
   fixed: 'Fixed', wontfix: "Won't fix", duplicate: "Won't fix" };
 function makeBoard(env, fetchImpl, log) {
-  const token = env.FIELD_PROJECT_TOKEN, number = Number(env.FIELD_PROJECT_NUMBER);
+  const token = env.FIELD_PROJECT_TOKEN, rawNumber = String(env.FIELD_PROJECT_NUMBER || '').trim();
+  const number = rawNumber ? Number(rawNumber) : null;
+  const title = String(env.FIELD_PROJECT_TITLE || 'Field log').trim().toLowerCase();
   const owner = env.FIELD_PROJECT_OWNER || String(env.GITHUB_REPOSITORY || '').split('/')[0];
-  if (!token || !Number.isInteger(number) || number < 1 || !owner) return { enabled: false, sync: async () => false };
+  if (!token || !owner || (number !== null && (!Number.isInteger(number) || number < 1))) return { enabled: false, sync: async () => false };
   const f = fetchImpl || fetch;
   async function gql(query, variables) {
     const res = await f('https://api.github.com/graphql', {
@@ -229,10 +234,18 @@ function makeBoard(env, fetchImpl, log) {
   let meta = null;
   async function load() {
     if (meta) return meta;
+    let n = number;
+    if (n === null) {
+      const l = await gql('query($login:String!){user(login:$login){projectsV2(first:100){nodes{number title}}}}', { login: owner });
+      const nodes = (l && l.user && l.user.projectsV2 && l.user.projectsV2.nodes) || [];
+      const hit = nodes.find((p) => p && String(p.title).trim().toLowerCase() === title);
+      if (!hit) throw new Error('board: no project titled "' + title + '" (set FIELD_PROJECT_NUMBER or FIELD_PROJECT_TITLE)');
+      n = hit.number;
+    }
     const d = await gql('query($login:String!,$n:Int!){user(login:$login){projectV2(number:$n){id field(name:"Status"){... on ProjectV2SingleSelectField{id options{id name}}}}}}',
-      { login: owner, n: number });
+      { login: owner, n });
     const proj = d && d.user && d.user.projectV2;
-    if (!proj || !proj.field) throw new Error('board: project ' + number + ' or its Status field not found');
+    if (!proj || !proj.field) throw new Error('board: project ' + n + ' or its Status field not found');
     meta = { id: proj.id, field: proj.field.id, options: proj.field.options || [] };
     return meta;
   }

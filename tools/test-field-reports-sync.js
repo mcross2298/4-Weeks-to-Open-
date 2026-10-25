@@ -152,7 +152,8 @@ const env = { FIELD_SECRET: 's3cret', GITHUB_TOKEN: 'ghs_x', GITHUB_REPOSITORY: 
   ok(S.LABELS['in-progress'] && S.LABELS['needs-decision'], 'both status labels are created');
 
   // 5. FB7 — the Project board
-  ok(!S.makeBoard({ GITHUB_REPOSITORY: 'o/r' }, null, () => {}).enabled, 'no token or number: the board is off');
+  ok(!S.makeBoard({ GITHUB_REPOSITORY: 'o/r', FIELD_PROJECT_NUMBER: '3' }, null, () => {}).enabled, 'no token: the board is off');
+  ok(S.makeBoard({ GITHUB_REPOSITORY: 'o/r', FIELD_PROJECT_TOKEN: 't' }, null, () => {}).enabled, 'a token and no number: the board is on, found by title');
   ok(!S.makeBoard({ GITHUB_REPOSITORY: 'o/r', FIELD_PROJECT_TOKEN: 't', FIELD_PROJECT_NUMBER: 'x' }, null, () => {}).enabled, 'a bad number: the board is off');
   function boardWorld(opts) {
     opts = opts || {};
@@ -161,6 +162,7 @@ const env = { FIELD_SECRET: 's3cret', GITHUB_TOKEN: 'ghs_x', GITHUB_REPOSITORY: 
       const body = JSON.parse(init.body);
       q.push({ url, body, auth: init.headers.Authorization });
       if (opts.fail) return { status: 401, text: async () => '{"message":"Bad credentials"}' };
+      if (/projectsV2\(first/.test(body.query)) return { status: 200, text: async () => JSON.stringify({ data: { user: { projectsV2: { nodes: opts.projects || [{ number: 2, title: 'Other' }, { number: 7, title: 'Field Log' }] } } } }) };
       if (/projectV2\(number/.test(body.query)) return { status: 200, text: async () => JSON.stringify({ data: { user: { projectV2: { id: 'P1', field: { id: 'F1',
         options: [{ id: 'o-new', name: 'New' }, { id: 'o-prog', name: 'In progress' }, { id: 'o-dec', name: 'Needs decision' }, { id: 'o-fix', name: 'Fixed' }] } } } } }) };
       if (/addProjectV2ItemById/.test(body.query)) return { status: 200, text: async () => JSON.stringify({ data: { addProjectV2ItemById: { item: { id: 'I-' + body.variables.c } } } }) };
@@ -185,6 +187,19 @@ const env = { FIELD_SECRET: 's3cret', GITHUB_TOKEN: 'ghs_x', GITHUB_REPOSITORY: 
   const failLogs = [];
   ok((await S.makeBoard(benv, failw.fetchImpl, (m) => failLogs.push(m)).sync('X', 'filed')) === false && /warning/.test(failLogs.join()), 'a bad token warns and never throws');
   ok(S.BOARD_OPTION.filed === 'New' && S.BOARD_OPTION.fixing === 'In progress', 'status -> column names');
+
+  // no number: the board is found by its title
+  const tw = boardWorld();
+  ok(await S.makeBoard({ GITHUB_REPOSITORY: 'o/r', FIELD_PROJECT_TOKEN: 'pat' }, tw.fetchImpl, () => {}).sync('ISSUE_T', 'fixing'), 'sync by title succeeds');
+  const tq = tw.q.find((c) => /projectV2\(number/.test(c.body.query));
+  ok(tq && tq.body.variables.n === 7, 'with no number, the project titled "Field log" is used (case-insensitive)');
+  const nw = boardWorld({ projects: [{ number: 2, title: 'Other' }] });
+  const nLogs = [];
+  ok((await S.makeBoard({ GITHUB_REPOSITORY: 'o/r', FIELD_PROJECT_TOKEN: 'pat' }, nw.fetchImpl, (m) => nLogs.push(m)).sync('X', 'filed')) === false && /no project titled/.test(nLogs.join()), 'no project with that title warns and never throws');
+  const cw = boardWorld();
+  await S.makeBoard({ GITHUB_REPOSITORY: 'o/r', FIELD_PROJECT_TOKEN: 'pat', FIELD_PROJECT_TITLE: 'Other' }, cw.fetchImpl, () => {}).sync('X', 'filed');
+  const cq = cw.q.find((c) => /projectV2\(number/.test(c.body.query));
+  ok(!!cq && cq.body.variables.n === 2, 'FIELD_PROJECT_TITLE picks a differently named board');
 
   // the board is updated on an issue event when enabled
   const ew = boardWorld();

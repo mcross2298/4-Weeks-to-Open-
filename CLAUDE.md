@@ -2590,8 +2590,9 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >
 > **FB7 (2026-10-25):** the same workflow keeps a user-level GitHub Project
 > board in step (`makeBoard()`), but only when `FIELD_PROJECT_TOKEN` (secret)
-> and `FIELD_PROJECT_NUMBER` (variable) exist — `GITHUB_TOKEN` cannot write a
-> user-owned board. It never fails the job; the database and the issue are the
+> exists — `GITHUB_TOKEN` cannot write a user-owned board. The board is found
+> by its title, **Field log** by default (`FIELD_PROJECT_TITLE`), unless
+> `FIELD_PROJECT_NUMBER` (variable) names it. It never fails the job; the database and the issue are the
 > record, the board is a view.
 
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
