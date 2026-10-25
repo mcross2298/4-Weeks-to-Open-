@@ -91,6 +91,7 @@ node tools/test-mc-sync-merge.js       # mc-sync.js merge logic
 node tools/test-mc-archive.js          # workouts past the newest 200 are archived, not dropped; CSV export; backup nudge (R7)
 node tools/test-mc-error-beacon.js     # field errors sent once, signed-in only, spaced, trimmed (E / D-35)
 node tools/test-mc-report.js           # Report a problem: queued first, only accepted rows leave, fingerprints match the beacon (FB1)
+node tools/test-field-reports-sync.js  # report/crash -> redacted GitHub issue, de-duplicated; closed -> fixed (FB2)
 node tools/test-mc-program-progress.js # per-program day model (continuous days, rest-as-data)
 node tools/test-mc-program-tabs.js     # program-landing list model (adaptive depth, day numbers)
 node tools/test-mc-sw.js               # service-worker fetch strategy (L1, L3, L4, L5)
@@ -2545,6 +2546,20 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > `mc-error-beacon.js`, held equal by `tools/test-mc-report.js`, so a report
 > joins to `client_errors`. `supabase/phase15-client-reports.sql` is the
 > owner's to run.
+>
+> **FB2 shipped (2026-10-25).** `.github/workflows/field-reports.yml` runs
+> `tools/field-reports-sync.js` hourly, on demand, and when a triage issue is
+> closed or reopened. It asks the `field-reports` Edge Function (deployed,
+> `verify_jwt: false`, guarded by `CRON_SECRET` like `weekly-checkin`) for new
+> reports and crash types, opens **one issue per report and one per crash
+> fingerprint** (`field-report` / `field-error` labels), comments on a known
+> crash type's issue when it grows and reopens it if it recurs, and reports back
+> what it filed (`client_reports.issue_number`, `client_error_issues`). The
+> function never sends a report's message or a user id, and the sync script
+> never writes one: `tools/test-field-reports-sync.js` feeds it a leaky row and
+> fails if either reaches an issue. Device text cannot @mention or close a code
+> fence. Without `WEEKLY_CHECKIN_SECRET` the job warns and exits green.
+> `supabase/phase16-field-triage.sql` is the owner's to run, after phase 15.
 
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the

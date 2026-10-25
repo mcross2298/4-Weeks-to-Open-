@@ -54,8 +54,15 @@ head boot (crashes, opt-in) ──────────┤
 Each phase after FB1 opens with an `AskUserQuestion` check-in (the
 multi-phase rule in `CLAUDE.md`).
 
+## Shipped
+
+- **FB1 (2026-10-25)** — Report a problem sheet, outbox, `phase15` SQL, 34-check gate.
+- **FB2 (2026-10-25)** — `field-reports` Edge Function (deployed), `field-reports.yml`,
+  `tools/field-reports-sync.js`, `phase16` SQL, 32-check gate including a planted
+  redaction leak. Issue closed/reopened → report status already wired (FB4's server half).
+
 ## Owner actions
 
-- Run `supabase/phase15-client-reports.sql` (FB1).
+- Run `supabase/phase15-client-reports.sql` (FB1), then `supabase/phase16-field-triage.sql` (FB2).
 - FB2 reuses the `CRON_SECRET` / `WEEKLY_CHECKIN_SECRET` pair; if it is not
   set yet, set it (see `.github/workflows/weekly-checkin.yml`'s header).

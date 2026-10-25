@@ -1,0 +1,41 @@
+name: Field reports → issues
+
+# field-feedback-roadmap.md FB2/FB4. Files redacted GitHub issues from the
+# app's problem reports (client_reports) and crash types (client_errors), and
+# tells Supabase when a triage issue is closed or reopened so the reporter's
+# app can say "Fixed". All the logic is in tools/field-reports-sync.js.
+#
+# Needs the repo secret WEEKLY_CHECKIN_SECRET (the same value as the Supabase
+# Edge Function secret CRON_SECRET, see weekly-checkin.yml). Without it the
+# job warns and exits green rather than failing every hour.
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+  issues:
+    types: [closed, reopened]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: field-reports
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    # an issue event only matters for a triage issue
+    if: >-
+      github.event_name != 'issues' ||
+      contains(github.event.issue.labels.*.name, 'field-report') ||
+      contains(github.event.issue.labels.*.name, 'field-error')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync field reports
+        env:
+          FIELD_SECRET: ${{ secrets.WEEKLY_CHECKIN_SECRET }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node tools/field-reports-sync.js
