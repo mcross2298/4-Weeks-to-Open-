@@ -5,15 +5,15 @@
      mc-muscle-map.js @ line 21
      mc-readiness.js @ line 114
      mc-setlog.js @ line 346
-     mc-session.js @ line 3371
-     mc-classify.js @ line 3976
-     mc-suggest.js @ line 4112
-     mc-chart.js @ line 4704
-     mc-exercise-trends.js @ line 4987
-     mc-cues-data.js @ line 5246
-     mc-cues.js @ line 5396
-     mc-rep-progress.js @ line 5486
-     mc-superset-hop.js @ line 5633
+     mc-session.js @ line 3434
+     mc-classify.js @ line 4039
+     mc-suggest.js @ line 4175
+     mc-chart.js @ line 4791
+     mc-exercise-trends.js @ line 5074
+     mc-cues-data.js @ line 5333
+     mc-cues.js @ line 5483
+     mc-rep-progress.js @ line 5573
+     mc-superset-hop.js @ line 5720
 */
 
 /* ---- mc-muscle-map.js ---- */
@@ -629,6 +629,14 @@ try {
     // the cross-tab replay and the locked write with no change to any of them.
     if (name) entry.n = name;
     if (from) entry.sw = from;         // R5: swapped from — shown in History
+    // Phase T1.5: which week of a multi-week program this was ticked on.
+    // The history key names the exercise, not the week (Phase 2.1), so a
+    // week-1 tick also painted on week 2's same lift. Repainting reads this.
+    var wkt = weekTag();
+    if (wkt) entry.wk = wkt;
+    // Phase T1.8: logged in the program's scheduled deload week, so the
+    // progression engine can read past it (mc-suggest.js completedSessions).
+    try { if (deloadNow()) entry.dl = 1; } catch (e) {}
     // When the tick happened. mc-sync.js's mergeSetlog() compares it with an
     // untick record (mc_setlog_deleted_v1): a set ticked AFTER its untick
     // was re-ticked and stays; one ticked before it was taken back.
@@ -1568,6 +1576,14 @@ try {
   // change week in place, so a page opened on week 5 and switched to its
   // deload week used to build that week at full volume (and the reverse kept
   // a deload after leaving it) until a reload.
+  // Phase T1.5: the program week the open page shows, as "prog|week", from
+  // the day-identity contract (F4). Only the pages that change week in place
+  // register a resolver; everywhere else this is '' and nothing changes.
+  function weekTag() {
+    var D = window.MC_PROGRAM_DAY, cur = null;
+    try { cur = D && D.current && D.current(); } catch (e) {}
+    return (cur && cur.prog && cur.week) ? cur.prog + '|' + cur.week : '';
+  }
   function deloadNow() {
     var D = window.MC_PROGRAM_DAY, P = window.MC_PROGRAM_PROGRESS;
     var cur = null;
@@ -2642,36 +2658,77 @@ try {
   // its name), so they are shown here as done and read-only, labelled with the
   // lift they were lifted on, and the next tick goes to the next row.
   function paintCarried(card, exId) {
-    var oid = preSwapIdOf(card);
-    if (!oid || oid === exId) return;
-    var d = dayStamp(), os = lsess(oid), own = lsess(exId);
-    if (!os || os.d !== d || !os.sets) return;
+    var d = dayStamp(), store = st(), own = lsess(exId);
     var mineToday = (own && own.d === d && own.sets) || {};
-    var from = swapFromOf(card) || 'the original';
-    var cid = cssId(exId), any = false;
-    Object.keys(os.sets).forEach(function (sn) {
-      var v = os.sets[sn];
-      if (!v || mineToday[sn]) return;
-      var row = card.querySelector('#mclr-' + cid + '-' + sn);
-      if (!row || row.classList.contains('mcl-carried')) return;
-      var w = row.querySelector('.mcl-w');
-      if (w && v.w != null && v.w !== '') { w.value = String(v.w); w.classList.remove('mcl-ghost'); delete w.dataset.ghost; }
-      Array.prototype.forEach.call(row.querySelectorAll('input'), function (inp) { inp.disabled = true; });
-      var ck = row.querySelector('.mcl-ck');
-      if (ck) {
-        ck.classList.add('done'); ck.textContent = '\u2713';
-        ck.setAttribute('aria-checked', 'true');
-        ck.disabled = true;
-        ck.setAttribute('aria-label', 'Set ' + sn + ' done as ' + from);
-      }
-      row.classList.add('done-row', 'mcl-carried');
-      var line = document.createElement('div');
-      line.className = 'mcl-carried-line';
-      line.textContent = 'Done as ' + from;
-      row.appendChild(line);
-      any = true;
+    // Where today's sets for this slot were logged under another identity:
+    //   - a swapped card: the original's own key (preSwapIdOf);
+    //   - an UN-swapped card (Phase T1.6): any substitute that stood in for
+    //     it today. Undoing a swap used to rebuild the card as if the sets on
+    //     the substitute never happened. Each of those sets records the lift
+    //     it replaced (`sw`, R5), so they are found from the store itself and
+    //     survive a reload with no record of the undo.
+    var sources = [];
+    var oid = preSwapIdOf(card);
+    if (oid && oid !== exId) {
+      var os = lsess(oid);
+      if (os && os.d === d && os.sets) sources.push({ sets: os.sets, from: swapFromOf(card) || 'the original' });
+    } else if (!card.getAttribute('data-mc-swap-name')) {
+      var me = displayNameOf(card), pre = PID + '|', myKey = ek(exId);
+      if (me) Object.keys(store).forEach(function (k) {
+        if (k === myKey || k.indexOf(pre) !== 0 || !Array.isArray(store[k])) return;
+        var top = store[k][0];
+        if (!top || top.d !== d || !top.sets) return;
+        var mine = {}, any = false, nm = '';
+        Object.keys(top.sets).forEach(function (sn) {
+          var v = top.sets[sn];
+          if (v && v.sw === me) { mine[sn] = v; any = true; nm = nm || v.n || ''; }
+        });
+        if (any) sources.push({ sets: mine, from: nm || 'a substitute' });
+      });
+    }
+    if (!sources.length) return;
+    var cid = cssId(exId), painted = 0, extra = {};
+    sources.forEach(function (src) {
+      Object.keys(src.sets).forEach(function (sn) {
+        var v = src.sets[sn];
+        if (!v || mineToday[sn]) return;
+        var row = card.querySelector('#mclr-' + cid + '-' + sn);
+        // Phase T1.7: a set number this card has no row for (the substitute
+        // prescribes fewer sets) used to vanish from the card. It still
+        // counts at Finish; now the card says so.
+        if (!row) { extra[src.from] = (extra[src.from] || 0) + 1; return; }
+        if (row.classList.contains('mcl-carried')) return;
+        var w = row.querySelector('.mcl-w');
+        if (w && v.w != null && v.w !== '') { w.value = String(v.w); w.classList.remove('mcl-ghost'); delete w.dataset.ghost; }
+        Array.prototype.forEach.call(row.querySelectorAll('input'), function (inp) { inp.disabled = true; });
+        var ck = row.querySelector('.mcl-ck');
+        if (ck) {
+          ck.classList.add('done'); ck.textContent = '\u2713';
+          ck.setAttribute('aria-checked', 'true');
+          ck.disabled = true;
+          ck.setAttribute('aria-label', 'Set ' + sn + ' done as ' + src.from);
+        }
+        row.classList.add('done-row', 'mcl-carried');
+        var line = document.createElement('div');
+        line.className = 'mcl-carried-line';
+        line.textContent = 'Done as ' + src.from;
+        row.appendChild(line);
+        painted++;
+      });
     });
-    if (any) updateCount(card, exId);
+    var wrap = card.querySelector('.mcl-wrap');
+    var old = wrap && wrap.querySelector('.mcl-carried-more');
+    if (old) old.remove();
+    var names = Object.keys(extra);
+    if (wrap && names.length) {
+      var more = document.createElement('div');
+      more.className = 'mcl-carried-line mcl-carried-more';
+      more.textContent = names.map(function (n) {
+        return '+' + extra[n] + ' more set' + (extra[n] === 1 ? '' : 's') + ' done as ' + n;
+      }).join(' · ');
+      wrap.appendChild(more);
+    }
+    if (painted) updateCount(card, exId);
   }
   // R5 / D-09: drop a card's logger so the next pass builds it under the
   // card's CURRENT identity. Called when a swap is applied or undone. Sets
@@ -3028,6 +3085,11 @@ try {
       if (!entry || !entry.sets) return false;
       vals = entry.sets[sn];
       if (!vals) return false;
+      // T1.5: a set ticked on another week of the same program is that
+      // week's. A set with no tag predates the tag, or came from a page
+      // without weeks, and paints as it always did.
+      var wkNow = weekTag();
+      if (vals.wk && wkNow && vals.wk !== wkNow) return false;
     }
     var solid = function (inp, v) {
       if (!inp || v == null || v === '') return;
@@ -3090,6 +3152,7 @@ try {
                                     // from the prescription, not from rendered
                                     // checkboxes (see planFor above)
     rekeyCard: rekeyCard,            // R5 / D-09: mc-replace.js re-keys a swapped card
+    deloadNow: deloadNow,            // T1.8: mc-suggest.js holds the load on a deload week
     ensureRowsBuilt: ensureRowsBuilt,  // A-14: lets mc-session.js build a specific
                                     // card's rows before restoring checks onto it
     rowIdPrefix: function (card) {  // R1 / D-01: lets mc-session.js find a row's
@@ -4391,7 +4454,24 @@ try {
     if (L && L.normalizeSessions) hist = L.normalizeSessions(hist);
     var today = (L && L.dayKey) ? L.dayKey()
       : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    return hist.filter(function (s) { return s && s.d !== today; });
+    var done = hist.filter(function (s) { return s && s.d !== today; });
+    // Phase T1.8: a session logged in the program's scheduled deload week is
+    // lighter ON PURPOSE (a third of the working sets gone), so judging it
+    // read as a stall: the week after a deload held the load, and the deload
+    // counted toward a plateau. The session before it is the real last one.
+    // If every session on record is a deload, they are all there is.
+    var real = done.filter(function (s) { return !isDeloadSession(s); });
+    return real.length ? real : done;
+  }
+  function isDeloadSession(s) {
+    if (!s || !s.sets || typeof s.sets !== 'object') return false;
+    return Object.keys(s.sets).some(function (k) { return s.sets[k] && s.sets[k].dl; });
+  }
+  // The open page is on the program's scheduled deload week (mc-setlog.js
+  // owns that answer: it is what trims the rows).
+  function inDeloadWeek() {
+    var U = (typeof window !== 'undefined') ? window.MCSetlogUtil : null;
+    try { return !!(U && U.deloadNow && U.deloadNow()); } catch (e) { return false; }
   }
 
   // Classify one logged session against the day's prescribed rep target:
@@ -4471,6 +4551,12 @@ try {
     var cls = classifySession(sessions[0], setsStr);
     if (!cls) return null;
     var out = baseSuggestion(cls, name);
+    // A deload holds the load and cuts the volume. It is not the week to add
+    // weight or chase reps, whatever the last session earned; that earned
+    // step waits for the week after, which reads past this deload (above).
+    if (inDeloadWeek()) {
+      return { w: cls.w, base: cls.w, status: 'match', why: 'deload week — keep your last load, fewer sets' };
+    }
     var goals = repGoals(sessions[0], setsStr, cls.status);
     if (goals.some(function (g) { return g != null; })) {
       out.r = goals;
@@ -4691,6 +4777,7 @@ try {
       computeIncrement: computeIncrement, topRep: topRep, repTargets: repTargets, isBigLift: isBigLift, equipCat: equipOf,
       repsOf: repsOf,
       classifySession: classifySession, detectPlateau: detectPlateau, suggestFor: suggestFor,
+      completedSessions: completedSessions, isDeloadSession: isDeloadSession,
       writeTarget: writeTarget, deloadWeight: deloadWeight,
       repFloors: repFloors, repGoals: repGoals, repGhosts: repGhosts,
       usableWeight: usableWeight

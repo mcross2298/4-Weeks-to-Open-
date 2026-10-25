@@ -2565,8 +2565,8 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > review"** (Sundays 7:42pm America/New_York, a fresh session each run, draft
 > PRs only, never quotes an athlete on GitHub); it can be run at any time from
 > claude.ai's scheduled tasks, and `field-reports.yml` can be run by hand to
-> file what's new. It was created without connectors, so it needs the Supabase
-> connector added in the claude.ai UI to read descriptions. FB4:
+> file what's new. Its Supabase connector is attached (checked 2026-10-25),
+> so it reads report descriptions. FB4:
 > `MC_REPORT.mine()` reads the account's own reports (read-own policy, never
 > asks for `user_id`), Diagnostics shows **Your reports** with status, and Home
 > shows a one-time **Fixed** note (`mc_reports_seen_v1`), built in the module
@@ -2608,6 +2608,37 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > condition or a risk in any repo document or report; the advisor's WARN for
 > it is expected and is not a finding. Historical records that mention it as
 > open are left as written.
+>
+> **The weekly check-in still has not sent (found 2026-10-25).** With the secret
+> set, run 16 got past the guard and the Edge Function returned **500**: its log
+> reads `Vapid public key must be a URL safe Base 64 (without "=")` at
+> `index.ts:125`. The VAPID public key stored as a function secret is malformed;
+> the app's key (`mc-push.js`) is valid. That secret is the owner's to re-set.
+
+> **Phase T1 shipped (2026-10-25) — the small gaps, plus Mike's Cookbook for
+> the one shared file.** Plan in `flagship-readiness-roadmap.md`'s Phase T.
+> Things to know before touching these:
+> - **`mc-bridge.js` guards an entry's `sets`** and is byte-identical again in
+>   both repos; `check-log-readers.js`'s `SETS_PENDING` is empty. Merge order:
+>   the cookbook PR's drift gate compares against this repo's `main`, so this
+>   repo merges first.
+> - **A set entry may carry `wk` (`"prog|week"`) and `dl`.** `wk` is the program
+>   week it was ticked on, from `MC_PROGRAM_DAY.current()`; `paintLoggedRow()`
+>   does not repaint a tick from another week, so a week-1 tick no longer shows
+>   on week 2's same lift. A set with no `wk` paints as before. Two weeks of the
+>   same lift ticked on one DAY still share one bucket, since the key is the lift.
+>   `dl` marks a set logged on a scheduled deload week: `mc-suggest.js`'s
+>   `completedSessions()` reads past such a session, and during the deload week
+>   itself the suggestion keeps the last load with no rep goals.
+> - **`paintCarried()` reads both directions.** A swapped card shows the
+>   original's done sets (R5); an UN-swapped card shows the sets a substitute did
+>   for it today, found by the substitute's own `sw` field, so an undo survives a
+>   reload with no new store. Sets with no row get a `+N more sets done as …` line.
+> - **The outbox drops a write the server refuses** (SQLSTATE 22/23, or HTTP
+>   400/404/409/422) and records it in diagnostics; 401/403, 5xx and no response
+>   still wait. **Deletion records** are pruned after a year, and **the SW's
+>   carry-over cache** drops copies this deploy holds or fetched more than 60 days
+>   ago (by Date header) on every activate.
 
 ---
 

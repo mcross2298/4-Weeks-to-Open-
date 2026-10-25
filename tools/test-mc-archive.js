@@ -210,5 +210,23 @@ function W(i, extra) {
   ok('nudge: not with fewer than 3 workouts', few.MCExport.shouldNudge(false) === false);
 }
 
+// ---- deletion records are pruned after a year (Phase T1.2) ----------------
+{
+  const year = 365 * 86400000, now = Date.now();
+  const sb = makeSandbox({
+    mc_workout_log_v1: JSON.stringify([W(1), W(2)]),
+    mc_workout_log_deleted_v1: JSON.stringify({
+      'old|a': { ts: now - year - 86400000 },     // past a year: dropped
+      'recent|b': { ts: now - 30 * 86400000 },    // a month: kept
+      'bad|c': { ts: 'x' }, 'bad|d': null         // malformed: dropped
+    })
+  });
+  const L = sb.MC_LOG;
+  ok('deleteWorkouts still deletes', L.deleteWorkouts([W(1).id]));
+  const del = JSON.parse(sb.store.mc_workout_log_deleted_v1);
+  eq('pruned to the recent record and the new one', Object.keys(del).sort(), [W(1).id, 'recent|b'].sort());
+  eq('the deleted workout is gone from the log', L.readWorkoutLog().map(e => e.id), [W(2).id]);
+}
+
 console.log('test-mc-archive: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

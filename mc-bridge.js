@@ -211,8 +211,11 @@
     var tk = dayKey();
     var counts = {};
     log.forEach(function (e) {
-      if (!e.date || dayKey(new Date(e.date)) !== tk) return;
-      (e.sets || []).forEach(function (s) {
+      if (!e || !e.date || dayKey(new Date(e.date)) !== tk) return;
+      // The log syncs from every device, so an entry's sets are whatever was
+      // written: a list, or a wrong shape that would throw here (L-03).
+      (Array.isArray(e.sets) ? e.sets : []).forEach(function (s) {
+        if (!s) return;
         var group = DAY_TYPE_GROUPS[catalogMuscle(s.name)];
         if (group) counts[group] = (counts[group] || 0) + 1;
       });
