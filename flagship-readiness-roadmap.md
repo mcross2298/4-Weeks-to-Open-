@@ -123,8 +123,8 @@ must flip.
 | D-30 | Against the 48px / 8px / 13px standard: 25 of 32 session controls under 48, set rows 3–7px apart, 35 text nodes under 13px, floating timer controls 24–38px | session CSS, `mc-timer.js` | Phase 3 sweep | Medium | R6 |
 | D-31 | Light-mode suggested weight is 1.47:1 | `mc-setlog.css:93` keeps the dark `--ink-8` | — | Medium | R6 |
 | D-32 | The token gate can't see JS-injected or inline CSS or `rgba()` (119 + 446 slate literals) | `tools/check-design-tokens.js` reads `.css` and hex only | — | Medium | G |
-| D-33 | The weekly check-in has never sent | `WEEKLY_CHECKIN_SECRET` unset (workflow log, 18 Oct) | — | High | Owner |
-| D-34 | Leaked-password protection is off | Supabase Auth setting | advisor | Low | Owner |
+| D-33 | The weekly check-in has never sent | `WEEKLY_CHECKIN_SECRET` unset (workflow log, 18 Oct) | — | High | **Closed** — secret set 2026-10-25 |
+| D-34 | Leaked-password protection is off | Supabase Auth setting | advisor | Low | **Closed — not applicable** (paid-plan feature; free plan, owner 2026-10-25) |
 | D-35 | Field errors never leave the device | `mc_errors_v1` is local only | — | Medium | E |
 | D-36 | No CSV export; no backup nudge for signed-out athletes | — | — | Medium | R7 |
 | D-37 | An orphan set-logger on a licensed landing polls every 100 ms forever | `cat-gainz.html` WAVE3-SETLOG `watchForCards()` | — | Low | R1 |
@@ -522,8 +522,8 @@ Taken on the owner's go-ahead, as one PR, from the "Known residuals" lists above
 - **The carry-over is by set number.** If the substitute has fewer rows than the sets already done, the extra ones aren't shown on the card. They still count at Finish.
 
 ### Owner actions (no code)
-- Set the `WEEKLY_CHECKIN_SECRET` repo secret (D-33).
-- Turn on leaked-password protection (D-34).
+- ~~Set the `WEEKLY_CHECKIN_SECRET` repo secret (D-33).~~ Done 2026-10-25.
+- ~~Turn on leaked-password protection (D-34).~~ Closed as not applicable: a paid-plan feature, and the project is on the free plan.
 - Run the device matrix below.
 
 ## Device test matrix (cannot be proven from a sandbox)
@@ -580,6 +580,8 @@ on** (today's behaviour, now switchable), **after rest off** (new, opt-in).
 48 hours. Full rollout waits on four things: phase14 applied (my attempt timed out on the
 Supabase server's confirmation prompt; I verified the table is absent), `WEEKLY_CHECKIN_SECRET`
 (15 of 15 runs failed, latest 18 Oct), leaked-password protection, and the device matrix above.
+**Update 2026-10-25:** phase14 is applied and the secret is set. Leaked-password protection is
+closed as not applicable (paid-plan only). The device matrix is the one condition left.
 
 - **R-1 resolved before merge:** the rep goal goes in the hint only. The reps box ghosts what was
   done (`repGhosts()`), because a ghost ticked unchanged is logged as-is.
