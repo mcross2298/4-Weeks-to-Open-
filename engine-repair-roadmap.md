@@ -234,7 +234,8 @@ deletion outright), and add the missing delete policy on `daily_health`.
 > rows carry a muscle, 0 null**. `program_id` is still 0 filled, which is the
 > deliberate decision recorded above, not a regression. The only part of `1.6`
 > outstanding is leaked-password protection, still `WARN` on the live security
-> advisor and still an Auth dashboard setting, not SQL.
+> advisor and still an Auth dashboard setting, not SQL. **Closed 2026-10-25 as
+> not applicable:** it is a paid-plan feature and the project is on the free plan.
 >
 > **So every line of Phase 1 CODE is done.** What is left is `1.1` and that
 > setting.

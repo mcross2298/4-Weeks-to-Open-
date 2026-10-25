@@ -2574,9 +2574,18 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > the athlete rather than by a timer.
 
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
-> increment rule" is corrected to **18 plus 1**. Two items are still the
-> owner's, not code: `WEEKLY_CHECKIN_SECRET` is still unset (per the 18 Oct
-> workflow log), and leaked-password protection is off.
+> increment rule" is corrected to **18 plus 1**.
+>
+> **Owner items, closed (2026-10-25).** `WEEKLY_CHECKIN_SECRET` / `CRON_SECRET`
+> are set: the first `field-reports.yml` run reached the Edge Function (a
+> mismatch is a 401) and reported nothing new. `phase14`, `phase15` and
+> `phase16` are applied, read back from `pg_catalog`.
+> **Leaked-password protection is CLOSED as not applicable, permanently:** it
+> is a paid-plan Supabase feature and this project is on the free plan (owner,
+> 2026-10-25). Do not list it as an open item, an owner action, a launch
+> condition or a risk in any repo document or report; the advisor's WARN for
+> it is expected and is not a finding. Historical records that mention it as
+> open are left as written.
 
 ---
 
