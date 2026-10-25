@@ -5,15 +5,15 @@
      mc-muscle-map.js @ line 21
      mc-readiness.js @ line 114
      mc-setlog.js @ line 346
-     mc-session.js @ line 3183
-     mc-classify.js @ line 3788
-     mc-suggest.js @ line 3924
-     mc-chart.js @ line 4400
-     mc-exercise-trends.js @ line 4683
-     mc-cues-data.js @ line 4942
-     mc-cues.js @ line 5092
-     mc-rep-progress.js @ line 5182
-     mc-superset-hop.js @ line 5329
+     mc-session.js @ line 3255
+     mc-classify.js @ line 3860
+     mc-suggest.js @ line 3996
+     mc-chart.js @ line 4565
+     mc-exercise-trends.js @ line 4848
+     mc-cues-data.js @ line 5107
+     mc-cues.js @ line 5257
+     mc-rep-progress.js @ line 5347
+     mc-superset-hop.js @ line 5494
 */
 
 /* ---- mc-muscle-map.js ---- */
@@ -939,6 +939,71 @@ try {
     }
   }
 
+  // Workout prefs (mc_prefs_v1), read at call time: mc-timer.js's MC_PREFS
+  // when the page has it, the store itself otherwise, with the same defaults.
+  function prefOn(k, dflt) {
+    try {
+      if (typeof MC_PREFS !== 'undefined' && MC_PREFS.get) { var g = MC_PREFS.get(); if (k in g) return !!g[k]; }
+      var p = JSON.parse(localStorage.getItem('mc_prefs_v1') || '{}') || {};
+      return p[k] === undefined ? dflt : !!p[k];
+    } catch (e) { return dflt; }
+  }
+
+  // ---- Phase S3: "Auto move after rest" (opt-in) -------------------------
+  // When a rest runs to zero, bring the next set the athlete owes to the
+  // middle of the screen and put focus on its ✓ — not on a number field,
+  // which would raise the keyboard over the very set it is pointing at.
+  // In a superset the next set is the leg with the fewest sets done, earliest
+  // leg first, so the rest after B1 lands on A2 rather than B2.
+  function firstOpenRow(unit) {
+    if (unit && !unit.querySelector('.mcl-row')) ensureRowsBuilt(unit);
+    var rows = unit ? unit.querySelectorAll('.mcl-row') : [];
+    for (var i = 0; i < rows.length; i++) {
+      var ck = rows[i].querySelector('.mcl-ck');
+      if (ck && !ck.classList.contains('done')) return { row: rows[i], idx: i };
+    }
+    return null;
+  }
+  function nextOpenSet(fromEl) {
+    var unit = fromEl && fromEl.closest && fromEl.closest('.ex-card, .ss-ex, .ex-item');
+    if (!unit) unit = document.querySelector('.ex-card.active, .ss-ex.active') || null;
+    if (!unit) return null;
+    var top = topUnitOf(unit);
+    var legs = (top.classList && top.classList.contains('ss-card')) ? top.querySelectorAll('.ss-ex') : [unit];
+    var best = null;
+    Array.prototype.forEach.call(legs, function (leg) {
+      if (leg.dataset && leg.dataset.mcSkipped === '1') return;
+      var o = firstOpenRow(leg);
+      if (o && (!best || o.idx < best.idx)) best = { unit: leg, row: o.row, idx: o.idx };
+    });
+    if (best) return best;
+    var nu = nextIncompleteUnit(unit);
+    if (!nu) return null;
+    var o2 = firstOpenRow(nu);
+    return o2 ? { unit: nu, row: o2.row, idx: o2.idx } : { unit: nu, row: null, idx: 0 };
+  }
+  function moveAfterRest(ev) {
+    if (!prefOn('autoMoveRest', false)) return;
+    _flushDrafts();
+    var t = nextOpenSet(ev && ev.detail && ev.detail.el);
+    if (!t) return;
+    if (!t.unit.classList.contains('active')) setActiveCard(t.unit);
+    var target = t.row || t.unit;
+    try {
+      var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      target.scrollIntoView(reduced ? { block: 'center' } : { behavior: 'smooth', block: 'center' });
+    } catch (e) {}
+    var ck = t.row && t.row.querySelector('.mcl-ck');
+    if (ck) {
+      try { ck.focus({ preventScroll: true }); } catch (e) {}
+      t.row.classList.add('mcl-row-next');
+      setTimeout(function () { t.row.classList.remove('mcl-row-next'); }, 2400);
+    }
+  }
+  if (typeof document !== 'undefined' && document.addEventListener) {
+    document.addEventListener('mc:rest-over', moveAfterRest);
+  }
+
   // ---- §3.4 card handoff: find the next not-yet-finished exercise --------
   // Mirrors mc-timer.js's getUpNext() sibling-walk, at the same top-level
   // granularity (.ex-card / .ss-card) — a superset's two .ss-ex legs are
@@ -1822,6 +1887,13 @@ try {
       // real work for the first time, since every OTHER setActiveCard()
       // caller only fires on a wrap the athlete already opened by hand.
       card.__mclCollapseTimer = setTimeout(function () {
+        // Phase S3: whatever the athlete typed and has not saved yet is
+        // written before anything moves (the 300ms draft debounce would
+        // otherwise still be pending when the next card takes the screen).
+        _flushDrafts();
+        // Phase S1: "Auto move after logging" (default on). Off is what the
+        // app did before S3: the finished card closes and nothing opens.
+        if (!prefOn('autoMoveLog', true)) { setCollapsed(card, true); return; }
         var next = nextIncompleteUnit(card);
         // Collapsing is setActiveCard's job now, and it collapses everything
         // outside the NEXT exercise's group. That distinction is the whole
@@ -3943,6 +4015,13 @@ try {
    On a 'progress' suggestion the planned load replaces the last-logged-weight
    prefill on the sets that were at last session's top weight; lighter pyramid
    sets keep their own last weights.
+
+   Double progression (Phase S4): inside a rep RANGE ("3×8-12") the reps move
+   first and the load second. Short of the top → same load, and each set's
+   rep ghost asks for one more than it did last time (never past the top);
+   every set at the top → the load steps up and the rep ghost resets to the
+   bottom of the range. Fixed targets ("5×5", a "12,10,8" pyramid) have no
+   range to climb and keep the prescribed reps, as before.
    ========================================================================== */
 (function () {
   var isBrowser = typeof window !== 'undefined';
@@ -3967,8 +4046,11 @@ try {
       var all = JSON.parse(localStorage.getItem(PK) || '{}') || {};
       var k = historyKey(exId);
       var prev = all[k];
-      if (prev && prev.w === s.w && prev.status === s.status) return;
+      var r = Array.isArray(s.r) ? s.r : undefined;
+      if (prev && prev.w === s.w && prev.status === s.status &&
+          JSON.stringify(prev.r) === JSON.stringify(r)) return;
       all[k] = { w: s.w, status: s.status, why: s.why, ts: Date.now() };
+      if (r) all[k].r = r;
       localStorage.setItem(PK, JSON.stringify(all));
     } catch (e) {}
   }
@@ -4085,6 +4167,49 @@ try {
     }
     return targets;
   }
+  // The BOTTOM of each working set's range — the same per-set walk as
+  // repTargets() but without rewriting ranges to their top, so repFor()
+  // reads a range's first number ("8-12" -> 8). Equal to the target on a
+  // fixed prescription, which is how repGoals() knows there is no range.
+  function repFloors(setsStr) {
+    var tops = repTargets(setsStr);
+    if (!tops.length) return [];
+    var u = _setlog();
+    if (!u || !u.repFor) {
+      var m = String(setsStr).match(/^\s*\d+\s*[x\u00d7]\s*(\d+)/i);
+      var b = m ? parseInt(m[1], 10) : 0;
+      return tops.map(function () { return b; });
+    }
+    var work = u.stripDrop ? u.stripDrop(setsStr) : setsStr;
+    return tops.map(function (t, i) {
+      var r = parseInt(u.repFor(work, i), 10);
+      return isNaN(r) ? t : Math.min(r, t);
+    });
+  }
+
+  // Phase S4: per working set, the rep goal for the NEXT session, or null
+  // where there is nothing to climb (a fixed target, an open-ended row, no
+  // logged reps). `status` is classifySession()'s answer for that session.
+  //   progress → the load steps, so reps reset to the bottom of the range
+  //   repeat   → same load, one more rep than last time, capped at the top
+  //   hold     → last session was near max: ask for what was done, no more
+  function repGoals(sess, setsStr, status) {
+    var tops = repTargets(setsStr), floors = repFloors(setsStr);
+    if (!tops.length || !sess || !sess.sets) return [];
+    var ordered = Object.keys(sess.sets)
+      .sort(function (a, b) { return parseFloat(a) - parseFloat(b); })
+      .map(function (k) { return sess.sets[k]; });
+    return tops.map(function (top, i) {
+      var lo = floors[i];
+      if (!(top > 0) || !(lo > 0) || lo >= top) return null;   // not a range
+      if (status === 'progress') return lo;
+      var last = ordered[i] ? repsOf(ordered[i].r) : NaN;
+      if (isNaN(last)) return status === 'repeat' ? lo : null;
+      var want = status === 'repeat' ? last + 1 : last;
+      return Math.max(lo, Math.min(top, want));
+    });
+  }
+
   // The last working set's target (kept for callers that want one number).
   function topRep(setsStr) {
     var t = repTargets(setsStr);
@@ -4210,7 +4335,16 @@ try {
     if (!sessions.length) return null;
     var cls = classifySession(sessions[0], setsStr);
     if (!cls) return null;
-
+    var out = baseSuggestion(cls, name);
+    var goals = repGoals(sessions[0], setsStr, cls.status);
+    if (goals.some(function (g) { return g != null; })) {
+      out.r = goals;
+      if (cls.status === 'repeat') out.why = 'same load — one more rep per set, up to the top of the range';
+      if (cls.status === 'progress') out.why = 'top of the range on every set — load up, reps back to the bottom';
+    }
+    return out;
+  }
+  function baseSuggestion(cls, name) {
     if (cls.status === 'hold') return { w: cls.w, base: cls.w, status: 'hold', why: 'hold — last session was near max' };
     if (cls.status === 'repeat') return { w: cls.w, base: cls.w, status: 'repeat', why: 'repeat — chase the rep target' };
     if (cls.status === 'progress') {
@@ -4219,6 +4353,15 @@ try {
       return { w: cls.w + inc, base: cls.w, status: 'progress', why: 'all reps hit last time — move up' };
     }
     return { w: cls.w, base: cls.w, status: 'match', why: 'match your last session' };
+  }
+
+  // One number for the hint when every set asks for the same reps.
+  function uniformGoal(r) {
+    if (!r || !r.length) return null;
+    var g = r.filter(function (x) { return x != null; });
+    if (g.length !== r.length) return null;
+    for (var i = 1; i < g.length; i++) if (g[i] !== g[0]) return null;
+    return g[0];
   }
 
   // Plateau/deload signal: walk the completed-session history newest-first
@@ -4289,7 +4432,8 @@ try {
       hint.className = 'mcl-suggest';
       hint.title = s.why;
       var perHand = equipOf(nmStr) === 'Dumbbell' ? ' per hand' : '';
-      hint.textContent = 'Suggested: ' + s.w + ' lb' + perHand;
+      var ug = uniformGoal(s.r);
+      hint.textContent = 'Suggested: ' + s.w + ' lb' + perHand + (ug != null ? ' \u00d7 ' + ug : '');
       tgl.insertBefore(hint, hist);
 
       // A deload takes over the actual carried-forward target — 4 straight
@@ -4298,6 +4442,7 @@ try {
       var plateau = detectPlateau(exId, setsStr);
       var target = s;
       if (plateau && plateau.level === 'deload') {
+        // A deload is a lighter load, not a rep chase: no rep goals ride it.
         target = { w: deloadWeight(s.base, nmStr), base: s.base, status: 'deload', why: plateau.why };
       }
       writeTarget(exId, target);
@@ -4341,6 +4486,25 @@ try {
           if (ghost) inp.value = String(target.w);
         }
       });
+
+      // Phase S4: the rep half of double progression, on the same terms as
+      // the load above — only a ghosted or empty field is touched, so a typed
+      // or pending number always wins, and nothing here is ever persisted
+      // until the athlete ticks the set. Rows are working rows in order (drop
+      // rows excluded); a cluster's mini-set bubbles are never ghosted.
+      if (Array.isArray(target.r)) {
+        var rows = card.querySelectorAll('.mcl-row:not(.mcl-row-amrap)');
+        Array.prototype.forEach.call(rows, function (row, i) {
+          var g = target.r[i];
+          var rin = row.querySelector('.mcl-r:not(.mcl-rmini)');
+          if (g == null || !rin) return;
+          var rg = !!rin.dataset.ghost;
+          if (rin.value.trim() && !rg) return;
+          rin.dataset.fill = String(g);
+          rin.value = String(g);
+          if (!rg) { rin.classList.add('mcl-ghost'); rin.dataset.ghost = '1'; }
+        });
+      }
     });
   }
 
@@ -4389,6 +4553,7 @@ try {
       repsOf: repsOf,
       classifySession: classifySession, detectPlateau: detectPlateau, suggestFor: suggestFor,
       writeTarget: writeTarget, deloadWeight: deloadWeight,
+      repFloors: repFloors, repGoals: repGoals,
       usableWeight: usableWeight
     };
   }

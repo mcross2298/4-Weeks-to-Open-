@@ -533,3 +533,29 @@ Taken on the owner's go-ahead, as one PR (#372), after the R-phase residual list
 - Simulated backgrounding doesn't suspend timers the way a phone does.
 - Kill timings are one trial per delay; two separate runs agree.
 - All browser results come from this sandbox's Chromium 141 build.
+
+## Phases S (settings & intelligence) and B (launch board) — opened 2026-10-25
+
+A brief asked for a Phase 4 (settings, auto-progression, telemetry, update
+lifecycle, local reset) and a Phase 5 (an adversarial launch board). Surveyed
+against `main @ a3b2b7c` first. Much of it already exists: the wake-lock
+toggle (R2), the global `error` / `unhandledrejection` catchers (head boot),
+the beacon to `client_errors` (E), the rest-end bar (R2) and the update
+banner (`mc-sw-update.js`). The steps below are the real gaps only.
+
+Owner decisions (`AskUserQuestion`, 2026-10-25): extend `client_errors` rather
+than add `app_telemetry_logs`, opt-in and **default off**; Reset clears
+**caches and UI state only**, never history, set logs, macros or sign-in;
+settings keep **instant-apply** (no Cancel / Save); auto-move **after logging
+on** (today's behaviour, now switchable), **after rest off** (new, opt-in).
+
+| Step | Objective | Files |
+|---|---|---|
+| S1 | Workout settings: sounds, vibration, auto-move ×2 beside Keep screen on; every sheet control ≥ 48px with 8px gaps | `mc-account.js`, `mc-timer.js` |
+| S2 | Silent-switch fallback: a full-screen flash at 0s, independent of the sound pref | `mc-timer.js` |
+| S3 | Auto-move flushes typed drafts first; after-rest moves to the next open set without opening the keyboard | `mc-setlog.js`, `mc-timer.js` |
+| S4 | Double progression: inside a rep range, the rep ghost climbs one rep per session until the top, then the load steps and reps reset | `mc-suggest.js`, `tools/test-mc-suggest.js` |
+| S5 | Diagnostics drawer over `mc_errors_v1` (stack, kind, page, time), stacks captured, storage and network failures recorded; beacon opt-in | head contract, `mc-account.js`, `mc-error-beacon.js`, `mc-log-read.js`, phase14 SQL |
+| S6 | Update lifecycle: a controller swap held mid-workout now shows the banner; the in-progress test reads `TMR.isRunning()` | `mc-sw-update.js` |
+| S7 | Reset local state (caches + UI only), refused offline | `mc-account.js` |
+| B  | Launch board: RAID log, go/no-go, runbook with numeric rollback triggers — published as an artifact | — |

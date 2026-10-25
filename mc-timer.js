@@ -33,7 +33,12 @@ const MC_PREFS = {
              // Flagship readiness R2: "Keep screen on during workouts", default
              // on. Off keeps the screen awake only while a rest counts down,
              // which is what the app did before R2 (mc-live-tracker.js).
-             keepAwake: p.keepAwake !== false };
+             keepAwake: p.keepAwake !== false,
+             // Phase S1 (owner decision 2026-10-25): finishing an exercise
+             // opens the next one, as it has since S3 — now switchable — and,
+             // opt-in, a rest reaching zero moves to the next open set.
+             autoMoveLog: p.autoMoveLog !== false,
+             autoMoveRest: p.autoMoveRest === true };
   },
   set(k, v) {
     const p = this.get(); p[k] = v;
@@ -86,6 +91,25 @@ function _mcRestEndCue(upNext) {
     el.classList.toggle('mc-rest-end-under', below > 0);
     el.textContent = 'Rest over' + (upNext ? ' \u2014 ' + upNext : ' \u2014 next set');
     el.classList.add('show');
+    _mcRestFlash();
+  } catch (e) {}
+}
+// Phase S2: the bar above is 56px at the top of a phone that is usually lying
+// on a bench, face up, at arm's length. The web cannot read the iOS silent
+// switch, so this does not try to: the whole screen washes green twice at 0s
+// whatever the sound pref says. Two pulses over 1.2s stays under WCAG 2.3.1's
+// three-flashes-a-second ceiling; reduced motion gets one still tint instead.
+// Never tappable, removed when it ends, so it can never sit over a control.
+function _mcRestFlash() {
+  try {
+    const old = document.getElementById('mcRestFlash');
+    if (old) old.remove();
+    const f = document.createElement('div');
+    f.id = 'mcRestFlash';
+    f.className = 'mc-rest-flash';
+    f.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(f);
+    setTimeout(() => { try { f.remove(); } catch (e) {} }, 1300);
   } catch (e) {}
 }
 function _mcRestEndClear() {
@@ -598,6 +622,9 @@ const TMR = {
         if (tvTime) _mcSetCls(tvTime, 'tv-time done');
         if (tvLabel) _mcSetText(tvLabel, 'DONE!');
         _mcRestEndCue(this.upNext && this.upNext.name);
+        // Phase S3: a rest that ran to zero (not one skipped or stopped) —
+        // mc-setlog.js moves to the next open set when autoMoveRest is on.
+        try { document.dispatchEvent(new CustomEvent('mc:rest-over', { detail: { name: this.activeName || null, el: this.activeEl || null } })); } catch (e) {}
         if(!this._autoDismiss)this._autoDismiss=setTimeout(()=>this.stop(),4000);
       } else {
         // Overtime
@@ -792,6 +819,10 @@ function injectTimerEnhCss() {
     '.mc-rest-end.show{display:block;animation:mcRestEndIn .25s ease-out;}' +
     '@keyframes mcRestEndIn{from{transform:translateY(-100%)}to{transform:none}}' +
     '@media (prefers-reduced-motion:reduce){.mc-rest-end.show{animation:none;}}' +
+    '.mc-rest-flash{position:fixed;inset:0;z-index:159;pointer-events:none;background:#34d399;opacity:0;' +
+      'animation:mcRestFlash 1.2s ease-in-out forwards;}' +
+    '@keyframes mcRestFlash{0%{opacity:0}20%{opacity:.5}45%{opacity:0}70%{opacity:.5}100%{opacity:0}}' +
+    '@media (prefers-reduced-motion:reduce){.mc-rest-flash{animation:none;opacity:.22;}}' +
     // ── big glanceable numerals + full-width progress ──
     '.timer-float-time{font-size:54px!important;text-align:center;width:100%;line-height:1;margin:2px 0;transition:color .25s ease;}' +
     '.timer-float-bar{width:100%!important;margin:0!important;}' +

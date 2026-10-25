@@ -229,6 +229,24 @@
   // S4: the last pull/push error, surfaced on status() — previously nothing
   // outside this closure could ever learn that sync had started failing.
   var lastError = null;
+  // Phase S5: a failed pull/push also goes into the Diagnostics drawer's
+  // buffer — once per distinct failure per 30 minutes, and never while the
+  // browser knows it is offline. The buffer holds 20 entries; a sync loop
+  // retrying every minute would otherwise push the real crashes out of it,
+  // the exact D-20 trap mc-sw-update.js's update check fell into. A function
+  // declaration holding its state on itself, not a module-level var: this
+  // file's Node export hook runs before any var initialiser (Phase 5.1).
+  function netErr(err) {
+    try {
+      if (typeof window === 'undefined' || !window.MC_ERRLOG) return err;
+      if ('onLine' in navigator && !navigator.onLine) return err;
+      var sig = err.op + '|' + (err.key || '') + '|' + err.message, seen = netErr.seen || (netErr.seen = {});
+      if (seen[sig] && err.at - seen[sig] < 30 * 60 * 1000) return err;
+      seen[sig] = err.at;
+      window.MC_ERRLOG.rec('network', 'Sync ' + err.op + ' failed' + (err.key ? ' (' + err.key + ')' : '') + ': ' + err.message);
+    } catch (e) {}
+    return err;
+  }
   // S3: the current session's access token, kept in sync via
   // onAuthStateChange below. Needed synchronously (no await) by the
   // pagehide-triggered keepalive flush, which can't rely on an async
@@ -749,7 +767,7 @@
     if (!client || !user) return Promise.resolve();
     return client.from(TABLE).select('store_key, data').eq('user_id', user.id)
       .then(function (r) {
-        if (r.error) { lastError = { op: 'pull', message: r.error.message || String(r.error), at: Date.now() }; throw r.error; }
+        if (r.error) { lastError = netErr({ op: 'pull', message: r.error.message || String(r.error), at: Date.now() }); throw r.error; }
         var remoteByKey = {};
         (r.data || []).forEach(function (row) { remoteByKey[row.store_key] = row.data; });
         // Owned stores (STORES) are pulled+merged and later pushed; consumed
@@ -857,7 +875,7 @@
           // pushSetlogKey — snapshot only advances on success), so nothing
           // extra is needed for retry; this just makes the failure visible.
           if (!r.error) { snapshot[op.storeKey] = op.json; status.lastPush = Date.now(); }
-          else { lastError = { op: 'push', key: op.storeKey, message: r.error.message || String(r.error), at: Date.now() }; }
+          else { lastError = netErr({ op: 'push', key: op.storeKey, message: r.error.message || String(r.error), at: Date.now() }); }
         }));
       });
     }
@@ -885,7 +903,7 @@
         // (retried automatically next push() since snapshot[key] is
         // untouched) instead of discarding it silently.
         if (!r.error) { snapshot[key] = cur; status.lastPush = Date.now(); }
-        else { lastError = { op: 'push', key: key, message: r.error.message || String(r.error), at: Date.now() }; }
+        else { lastError = netErr({ op: 'push', key: key, message: r.error.message || String(r.error), at: Date.now() }); }
       }));
     });
     return ops.length ? Promise.all(ops) : Promise.resolve();

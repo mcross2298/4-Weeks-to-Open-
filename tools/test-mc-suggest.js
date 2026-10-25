@@ -173,6 +173,31 @@ check('writeTarget persists the planned load to mc_plan_targets_v1',
 check('writeTarget records the status alongside the load',
   targets['test-page|press'] && targets['test-page|press'].status, 'progress');
 
+// ---- Phase S4: double progression — reps climb inside a range, then load ----
+var J = function (a) { return JSON.stringify(a); };
+check('S4 repFloors reads the BOTTOM of a range (3x8-12 -> 8,8,8)', J(suggest.repFloors('3×8-12')), J([8, 8, 8]));
+check('S4 repFloors equals the target on a fixed scheme (5x5)', J(suggest.repFloors('5×5')), J([5, 5, 5, 5, 5]));
+var s10 = session('Jan 1', { 1: loggedSet(100, 10), 2: loggedSet(100, 9), 3: loggedSet(100, 8) });
+check('S4 repeat: one more rep per set (10,9,8 -> 11,10,9)',
+  J(suggest.repGoals(s10, '3×8-12', 'repeat')), J([11, 10, 9]));
+var s12 = session('Jan 1', { 1: loggedSet(100, 12), 2: loggedSet(100, 12), 3: loggedSet(100, 11) });
+check('S4 repeat: a set already at the top is capped there (12 stays 12)',
+  J(suggest.repGoals(s12, '3×8-12', 'repeat')), J([12, 12, 12]));
+check('S4 progress: reps reset to the bottom once the load steps',
+  J(suggest.repGoals(s12, '3×8-12', 'progress')), J([8, 8, 8]));
+var s6 = session('Jan 1', { 1: loggedSet(100, 6), 2: loggedSet(100, 6), 3: loggedSet(100, 6) });
+check('S4 repeat: a set under the floor is asked for the floor, not floor+1',
+  J(suggest.repGoals(s6, '3×8-12', 'repeat')), J([8, 8, 8]));
+check('S4 hold: near max asks for what was done, no more',
+  J(suggest.repGoals(s10, '3×8-12', 'hold')), J([10, 9, 8]));
+check('S4 a fixed target has no range to climb (5x5 -> nulls)',
+  J(suggest.repGoals(session('Jan 1', { 1: loggedSet(200, 4), 2: loggedSet(200, 5), 3: loggedSet(200, 5), 4: loggedSet(200, 5), 5: loggedSet(200, 5) }), '5×5', 'repeat')),
+  J([null, null, null, null, null]));
+check('S4 a pyramid has no range to climb', J(suggest.repGoals(s10, '12,10,8', 'repeat')), J([null, null, null]));
+check('S4 open-ended work has no goals', suggest.repGoals(s10, '3×AMRAP', 'repeat').some(function (g) { return g != null; }), false);
+check('S4 cluster reps are summed before +1 (4+4+3 = 11 -> 12 of 9-12)',
+  J(suggest.repGoals(session('Jan 1', { 1: { w: 100, r: '4+4+3' } }), '1×9-12', 'repeat')), J([12]));
+
 // ---- deloadWeight (Phase 2.1: auto-deload) ----
 check('deloadWeight: -10% off 200 lb barbell rounds to nearest 5 lb', suggest.deloadWeight(200, 'Barbell Squat'), 180);
 check('deloadWeight: -10% off 135 lb barbell rounds to nearest 5 lb', suggest.deloadWeight(135, 'Barbell Row'), 120);

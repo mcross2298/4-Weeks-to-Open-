@@ -415,7 +415,14 @@
   // act on false; callers that don't at least no longer report success.
   function writeStore(key, value) {
     try { localStorage.setItem(key, value); return true; }
-    catch (e) { warnStorageFull(isQuotaError(e)); return false; }
+    catch (e) {
+      warnStorageFull(isQuotaError(e));
+      // Phase S5: into the Diagnostics drawer as well. Best effort — with the
+      // device genuinely full this write can fail too, which is why the
+      // banner above, not this, is the athlete-facing signal.
+      try { if (typeof window !== 'undefined' && window.MC_ERRLOG) window.MC_ERRLOG.rec('storage', (isQuotaError(e) ? 'Storage full: ' : 'Storage write refused: ') + key, e && e.name); } catch (_) {}
+      return false;
+    }
   }
 
 

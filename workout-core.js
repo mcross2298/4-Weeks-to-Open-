@@ -4,16 +4,16 @@
    Members, in load order (line numbers are in this file):
      mc-replace.js @ line 21
      mc-log-read.js @ line 168
-     mc-strain.js @ line 848
-     mc-finish.js @ line 1163
-     mc-supabase.js @ line 2174
-     mc-sync.js @ line 3144
-     mc-biometric.js @ line 4237
-     program-overrides.js @ line 4341
-     mc-hints.js @ line 5320
-     mc-card-actions.js @ line 5448
-     program-manager.js @ line 6618
-     mc-live-tracker.js @ line 8496
+     mc-strain.js @ line 855
+     mc-finish.js @ line 1170
+     mc-supabase.js @ line 2181
+     mc-sync.js @ line 3151
+     mc-biometric.js @ line 4262
+     program-overrides.js @ line 4366
+     mc-hints.js @ line 5345
+     mc-card-actions.js @ line 5473
+     program-manager.js @ line 6643
+     mc-live-tracker.js @ line 8521
 */
 
 /* ---- mc-replace.js ---- */
@@ -582,7 +582,14 @@ try {
   // act on false; callers that don't at least no longer report success.
   function writeStore(key, value) {
     try { localStorage.setItem(key, value); return true; }
-    catch (e) { warnStorageFull(isQuotaError(e)); return false; }
+    catch (e) {
+      warnStorageFull(isQuotaError(e));
+      // Phase S5: into the Diagnostics drawer as well. Best effort — with the
+      // device genuinely full this write can fail too, which is why the
+      // banner above, not this, is the athlete-facing signal.
+      try { if (typeof window !== 'undefined' && window.MC_ERRLOG) window.MC_ERRLOG.rec('storage', (isQuotaError(e) ? 'Storage full: ' : 'Storage write refused: ') + key, e && e.name); } catch (_) {}
+      return false;
+    }
   }
 
 
@@ -3372,6 +3379,24 @@ try {
   // S4: the last pull/push error, surfaced on status() — previously nothing
   // outside this closure could ever learn that sync had started failing.
   var lastError = null;
+  // Phase S5: a failed pull/push also goes into the Diagnostics drawer's
+  // buffer — once per distinct failure per 30 minutes, and never while the
+  // browser knows it is offline. The buffer holds 20 entries; a sync loop
+  // retrying every minute would otherwise push the real crashes out of it,
+  // the exact D-20 trap mc-sw-update.js's update check fell into. A function
+  // declaration holding its state on itself, not a module-level var: this
+  // file's Node export hook runs before any var initialiser (Phase 5.1).
+  function netErr(err) {
+    try {
+      if (typeof window === 'undefined' || !window.MC_ERRLOG) return err;
+      if ('onLine' in navigator && !navigator.onLine) return err;
+      var sig = err.op + '|' + (err.key || '') + '|' + err.message, seen = netErr.seen || (netErr.seen = {});
+      if (seen[sig] && err.at - seen[sig] < 30 * 60 * 1000) return err;
+      seen[sig] = err.at;
+      window.MC_ERRLOG.rec('network', 'Sync ' + err.op + ' failed' + (err.key ? ' (' + err.key + ')' : '') + ': ' + err.message);
+    } catch (e) {}
+    return err;
+  }
   // S3: the current session's access token, kept in sync via
   // onAuthStateChange below. Needed synchronously (no await) by the
   // pagehide-triggered keepalive flush, which can't rely on an async
@@ -3892,7 +3917,7 @@ try {
     if (!client || !user) return Promise.resolve();
     return client.from(TABLE).select('store_key, data').eq('user_id', user.id)
       .then(function (r) {
-        if (r.error) { lastError = { op: 'pull', message: r.error.message || String(r.error), at: Date.now() }; throw r.error; }
+        if (r.error) { lastError = netErr({ op: 'pull', message: r.error.message || String(r.error), at: Date.now() }); throw r.error; }
         var remoteByKey = {};
         (r.data || []).forEach(function (row) { remoteByKey[row.store_key] = row.data; });
         // Owned stores (STORES) are pulled+merged and later pushed; consumed
@@ -4000,7 +4025,7 @@ try {
           // pushSetlogKey — snapshot only advances on success), so nothing
           // extra is needed for retry; this just makes the failure visible.
           if (!r.error) { snapshot[op.storeKey] = op.json; status.lastPush = Date.now(); }
-          else { lastError = { op: 'push', key: op.storeKey, message: r.error.message || String(r.error), at: Date.now() }; }
+          else { lastError = netErr({ op: 'push', key: op.storeKey, message: r.error.message || String(r.error), at: Date.now() }); }
         }));
       });
     }
@@ -4028,7 +4053,7 @@ try {
         // (retried automatically next push() since snapshot[key] is
         // untouched) instead of discarding it silently.
         if (!r.error) { snapshot[key] = cur; status.lastPush = Date.now(); }
-        else { lastError = { op: 'push', key: key, message: r.error.message || String(r.error), at: Date.now() }; }
+        else { lastError = netErr({ op: 'push', key: key, message: r.error.message || String(r.error), at: Date.now() }); }
       }));
     });
     return ops.length ? Promise.all(ops) : Promise.resolve();

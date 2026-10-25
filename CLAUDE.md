@@ -2479,6 +2479,33 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > tabs through one `.tabs-bar .tab` rule in `base.css`, which no per-page `.tab`
 > overrides because none sets a height.
 
+> **S1–S7 shipped (2026-10-25) — settings, double progression, diagnostics.**
+> Surveyed first: the wake-lock switch, the global error catchers, the beacon
+> and the update banner already existed, so only the gaps were built. Owner
+> decisions: one table (`client_errors`, extended) with sending **opt-in,
+> default off**; Repair clears **caches and UI state only**; settings stay
+> **instant-apply**; auto-move after logging **on**, after rest **off**.
+> Four things to know before touching these:
+> - **Workout prefs are `mc_prefs_v1`**, read through `MC_PREFS.get()` on
+>   workout pages and directly in `mc-account.js` (which never loads
+>   `mc-timer.js`). The two sets of defaults must match; `autoMoveLog` and
+>   `autoMoveRest` are new. A rest that runs to zero dispatches
+>   `mc:rest-over` and washes the screen green (`#mcRestFlash`), whatever the
+>   sound pref says — the web cannot read the silent switch.
+> - **Double progression is the rep half of `mc-suggest.js`** (`repGoals()`):
+>   inside a range the rep ghost asks for last + 1 up to the top; at the top the
+>   load steps and reps reset to the bottom. Only **6 authored prescriptions**
+>   use a range; it mostly serves custom workouts, whose reps are free text.
+> - **`MC_ERRLOG.rec(kind, message)`** (head boot) is the one recorder for
+>   failures that do not throw: `storage` from `MC_LOG.writeStore`, `network`
+>   from `mc-sync.js` — the latter once per distinct failure per 30 minutes and
+>   never offline, so a retry loop cannot flush the 20-entry buffer. Entries
+>   now carry a stack (`x`). The account sheet's **Diagnostics** reads it.
+> - **Repair is an allowlist** (`REPAIR_LOCAL_KEYS` in `mc-account.js`), not
+>   "every unsynced key": that set holds the live session, drafts and the
+>   outbox. It is refused offline. `phase14-client-errors.sql` is still **not
+>   applied**.
+
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the
 > owner's, not code: `WEEKLY_CHECKIN_SECRET` is still unset (per the 18 Oct
