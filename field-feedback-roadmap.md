@@ -60,6 +60,23 @@ multi-phase rule in `CLAUDE.md`).
 - **FB2 (2026-10-25)** — `field-reports` Edge Function (deployed), `field-reports.yml`,
   `tools/field-reports-sync.js`, `phase16` SQL, 32-check gate including a planted
   redaction leak. Issue closed/reopened → report status already wired (FB4's server half).
+- **FB3 (2026-10-25)** — scheduled task **"Weekly field review"**, Sundays 7:42pm
+  America/New_York (8pm, moved 18 minutes earlier so it doesn't land on the hour),
+  each run a fresh session. It files anything new, reviews up to 5 open triage
+  issues (blockers first), reads each description from Supabase, reproduces,
+  opens **draft** PRs that say `Fixes #N`, or comments one question. It marks
+  what it handled with `<!-- field-review -->` so the next run skips it until
+  something new arrives. It never quotes an athlete on GitHub.
+
+## Running it on demand
+
+Owner decision: weekly, **plus a way to pull reports and errors at any time.**
+- **File what's new right now:** GitHub → Actions → **Field reports → issues**
+  → Run workflow. New reports and crash types become issues within a minute.
+- **Run the full review right now:** claude.ai → scheduled tasks → **Weekly
+  field review** → Run now, or ask any session to fire it.
+- **Read the raw reports:** Supabase → Table Editor → `client_reports` /
+  `client_errors` (admins only).
 
 ## Owner actions
 
