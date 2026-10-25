@@ -79,7 +79,7 @@ const env = { FIELD_SECRET: 's3cret', GITHUB_TOKEN: 'ghs_x', GITHUB_REPOSITORY: 
   ok(created.every((c) => !/SECRET athlete words|uuid-123/.test(JSON.stringify(c.body))), 'no new issue carries the message or the user id');
   ok(world.calls.gh.some((c) => c.path === '/issues/50/comments'), 'known crash type gets a comment');
   ok(world.calls.gh.some((c) => c.method === 'PATCH' && c.path === '/issues/60' && c.body.state === 'open'), 'a resolved crash type that recurs is reopened');
-  ok(world.calls.fn.some((c) => c.body.action === 'resolve' && c.body.issue === 60 && c.body.outcome === 'reopen'), 'and the database is told it reopened');
+  ok(world.calls.fn.some((c) => c.body.action === 'status' && c.body.issue === 60 && c.body.status === 'filed'), 'and the database is told it reopened');
   const filedCall = world.calls.fn.find((c) => c.body.action === 'filed');
   ok(filedCall && filedCall.body.reports[0].id === 7 && filedCall.body.reports[0].issue === 100, 'report filing reported back');
   ok(filedCall && filedCall.body.errors.length === 3 && filedCall.body.errors.every((e) => e.count === 5), 'crash counts reported back');
@@ -150,6 +150,48 @@ const env = { FIELD_SECRET: 's3cret', GITHUB_TOKEN: 'ghs_x', GITHUB_REPOSITORY: 
   const pw2 = prWorld({});
   ok((await S.runPullRequestEvent(env, { action: 'closed', pull_request: { number: 51, body: 'Fixes #5' } }, pw2.fetchImpl, () => {})).length === 0 && pw2.calls.gh.length === 0, 'a closed PR is not an in-progress signal');
   ok(S.LABELS['in-progress'] && S.LABELS['needs-decision'], 'both status labels are created');
+
+  // 5. FB7 — the Project board
+  ok(!S.makeBoard({ GITHUB_REPOSITORY: 'o/r' }, null, () => {}).enabled, 'no token or number: the board is off');
+  ok(!S.makeBoard({ GITHUB_REPOSITORY: 'o/r', FIELD_PROJECT_TOKEN: 't', FIELD_PROJECT_NUMBER: 'x' }, null, () => {}).enabled, 'a bad number: the board is off');
+  function boardWorld(opts) {
+    opts = opts || {};
+    const q = [];
+    const fetchImpl = async (url, init) => {
+      const body = JSON.parse(init.body);
+      q.push({ url, body, auth: init.headers.Authorization });
+      if (opts.fail) return { status: 401, text: async () => '{"message":"Bad credentials"}' };
+      if (/projectV2\(number/.test(body.query)) return { status: 200, text: async () => JSON.stringify({ data: { user: { projectV2: { id: 'P1', field: { id: 'F1',
+        options: [{ id: 'o-new', name: 'New' }, { id: 'o-prog', name: 'In progress' }, { id: 'o-dec', name: 'Needs decision' }, { id: 'o-fix', name: 'Fixed' }] } } } } }) };
+      if (/addProjectV2ItemById/.test(body.query)) return { status: 200, text: async () => JSON.stringify({ data: { addProjectV2ItemById: { item: { id: 'I-' + body.variables.c } } } }) };
+      return { status: 200, text: async () => '{"data":{}}' };
+    };
+    return { q, fetchImpl };
+  }
+  const benv = { GITHUB_REPOSITORY: 'o/r', FIELD_PROJECT_TOKEN: 'pat', FIELD_PROJECT_NUMBER: '3' };
+  const bw = boardWorld();
+  const board = S.makeBoard(benv, bw.fetchImpl, () => {});
+  ok(board.enabled, 'token + number: the board is on');
+  ok(await board.sync('ISSUE_1', 'needs_decision'), 'sync succeeds');
+  const setq = bw.q.find((c) => /updateProjectV2ItemFieldValue/.test(c.body.query));
+  ok(setq && setq.body.variables.o === 'o-dec' && setq.body.variables.i === 'I-ISSUE_1' && setq.body.variables.f === 'F1', 'needs_decision lands in the Needs decision column');
+  ok(bw.q[0].body.variables.login === 'o' && bw.q[0].body.variables.n === 3, 'the board is looked up by owner and number');
+  ok(bw.q.every((c) => c.auth === 'Bearer pat'), 'the board uses its own token, not GITHUB_TOKEN');
+  await board.sync('ISSUE_2', 'fixed');
+  ok(bw.q.filter((c) => /projectV2\(number/.test(c.body.query)).length === 1, 'board metadata is read once per run');
+  const logs = [];
+  ok((await board.sync('ISSUE_3', 'wontfix')) === false, "a missing Won't fix column is a warning, not a crash");
+  const failw = boardWorld({ fail: true });
+  const failLogs = [];
+  ok((await S.makeBoard(benv, failw.fetchImpl, (m) => failLogs.push(m)).sync('X', 'filed')) === false && /warning/.test(failLogs.join()), 'a bad token warns and never throws');
+  ok(S.BOARD_OPTION.filed === 'New' && S.BOARD_OPTION.fixing === 'In progress', 'status -> column names');
+
+  // the board is updated on an issue event when enabled
+  const ew = boardWorld();
+  const evFetch = async (url, init) => /graphql/.test(url) ? ew.fetchImpl(url, init) : { status: 200, text: async () => '{"reports":1}' };
+  await S.runIssueEvent(benv, { action: 'labeled', issue: { number: 4, node_id: 'N4', state: 'open', labels: L('field-report', 'in-progress') } }, evFetch, () => {});
+  const ev4 = ew.q.find((c) => /updateProjectV2ItemFieldValue/.test(c.body.query));
+  ok(ev4 && ev4.body.variables.o === 'o-prog', 'labelling in-progress moves the card to In progress');
 
   console.log((fail ? 'FAIL' : 'ok') + ' test-field-reports-sync: ' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);

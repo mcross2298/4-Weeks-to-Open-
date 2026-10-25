@@ -202,9 +202,65 @@ async function ensureLabels(gh) {
   }
 }
 
+// ---- FB7: the GitHub Project board ------------------------------------------
+// A user-level Projects (v2) board with a single-select "Status" field. The
+// workflow's GITHUB_TOKEN cannot write to a user-owned board, so this runs only
+// when the owner has stored a token (FIELD_PROJECT_TOKEN) and the board's
+// number (repo variable FIELD_PROJECT_NUMBER); without them it does nothing.
+// It never fails the job: the database and the issue are the record, the
+// board is a view of them.
+const BOARD_OPTION = { 'new': 'New', filed: 'New', fixing: 'In progress', needs_decision: 'Needs decision',
+  fixed: 'Fixed', wontfix: "Won't fix", duplicate: "Won't fix" };
+function makeBoard(env, fetchImpl, log) {
+  const token = env.FIELD_PROJECT_TOKEN, number = Number(env.FIELD_PROJECT_NUMBER);
+  const owner = env.FIELD_PROJECT_OWNER || String(env.GITHUB_REPOSITORY || '').split('/')[0];
+  if (!token || !Number.isInteger(number) || number < 1 || !owner) return { enabled: false, sync: async () => false };
+  const f = fetchImpl || fetch;
+  async function gql(query, variables) {
+    const res = await f('https://api.github.com/graphql', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, variables })
+    });
+    const data = JSON.parse(await res.text() || '{}');
+    if (res.status !== 200 || data.errors) throw new Error('board: ' + JSON.stringify(data.errors || res.status).slice(0, 200));
+    return data.data;
+  }
+  let meta = null;
+  async function load() {
+    if (meta) return meta;
+    const d = await gql('query($login:String!,$n:Int!){user(login:$login){projectV2(number:$n){id field(name:"Status"){... on ProjectV2SingleSelectField{id options{id name}}}}}}',
+      { login: owner, n: number });
+    const proj = d && d.user && d.user.projectV2;
+    if (!proj || !proj.field) throw new Error('board: project ' + number + ' or its Status field not found');
+    meta = { id: proj.id, field: proj.field.id, options: proj.field.options || [] };
+    return meta;
+  }
+  async function sync(issueNodeId, status) {
+    try {
+      if (!issueNodeId) return false;
+      const m = await load();
+      const want = (BOARD_OPTION[status] || 'New').toLowerCase();
+      const opt = m.options.find((o) => String(o.name).toLowerCase() === want);
+      // Adding an issue already on the board returns the existing item.
+      const add = await gql('mutation($p:ID!,$c:ID!){addProjectV2ItemById(input:{projectId:$p,contentId:$c}){item{id}}}', { p: m.id, c: issueNodeId });
+      const item = add.addProjectV2ItemById.item.id;
+      if (!opt) { log('::warning::board has no "' + BOARD_OPTION[status] + '" Status option'); return false; }
+      await gql('mutation($p:ID!,$i:ID!,$f:ID!,$o:String!){updateProjectV2ItemFieldValue(input:{projectId:$p,itemId:$i,fieldId:$f,value:{singleSelectOptionId:$o}}){projectV2Item{id}}}',
+        { p: m.id, i: item, f: m.field, o: opt.id });
+      return true;
+    } catch (e) {
+      log('::warning::' + String(e.message || e).slice(0, 300));
+      return false;
+    }
+  }
+  return { enabled: true, sync };
+}
+
 async function runSync(env, fetchImpl, log) {
   log = log || console.log;
   const { gh, fn } = makeClients(env, fetchImpl);
+  const board = makeBoard(env, fetchImpl, log);
   const p = await fn({ action: 'pending' });
   const reports = (p && p.reports) || [], errors = (p && p.errors) || [];
   if (!reports.length && !errors.length) { log('field-reports: nothing new'); return { reports: 0, errors: 0 }; }
@@ -214,6 +270,7 @@ async function runSync(env, fetchImpl, log) {
     const res = await gh('POST', '/issues', { title: reportTitle(r), body: reportBody(r), labels: reportLabels(r) });
     if (res.status !== 201) { log('::warning::report ' + r.id + ' -> HTTP ' + res.status); continue; }
     filedReports.push({ id: r.id, issue: res.data.number });
+    await board.sync(res.data.node_id, 'filed');
     log('field-reports: report ' + r.id + ' -> #' + res.data.number);
   }
   for (const e of errors) {
@@ -222,6 +279,7 @@ async function runSync(env, fetchImpl, log) {
       const res = await gh('POST', '/issues', { title: errorTitle(e), body: errorBody(e), labels: errorLabels(e) });
       if (res.status !== 201) { log('::warning::crash ' + e.fingerprint + ' -> HTTP ' + res.status); continue; }
       issue = res.data.number;
+      await board.sync(res.data.node_id, 'filed');
       log('field-reports: crash ' + e.fingerprint + ' -> #' + issue);
     } else {
       const c = await gh('POST', '/issues/' + issue + '/comments', { body: errorUpdate(e) });
@@ -230,7 +288,8 @@ async function runSync(env, fetchImpl, log) {
         // An issue reopened with GITHUB_TOKEN fires no workflow, so the
         // database is told here rather than by the `issues` event.
         await gh('PATCH', '/issues/' + issue, { state: 'open' });
-        await fn({ action: 'resolve', issue, outcome: 'reopen' });
+        await fn({ action: 'status', issue, status: 'filed' });
+        if (board.enabled) { const g = await gh('GET', '/issues/' + issue); await board.sync(g.data && g.data.node_id, 'filed'); }
       }
       log('field-reports: crash ' + e.fingerprint + ' -> comment on #' + issue);
     }
@@ -249,6 +308,7 @@ async function runIssueEvent(env, payload, fetchImpl, log) {
   const status = statusFor(issue);
   const { fn } = makeClients(env, fetchImpl);
   const r = await fn({ action: 'status', issue: issue.number, status });
+  await makeBoard(env, fetchImpl, log).sync(issue.node_id, status);
   log('field-reports: #' + issue.number + ' -> ' + status + ' (' + ((r && r.reports) || 0) + ' report(s))');
   return status;
 }
@@ -264,6 +324,7 @@ async function runPullRequestEvent(env, payload, fetchImpl, log) {
   const refs = closingRefs((pr.title || '') + '\n' + (pr.body || ''));
   if (!refs.length) return [];
   const { gh, fn } = makeClients(env, fetchImpl);
+  const board = makeBoard(env, fetchImpl, log);
   const moved = [];
   for (const n of refs.slice(0, 10)) {
     const res = await gh('GET', '/issues/' + n);
@@ -274,6 +335,7 @@ async function runPullRequestEvent(env, payload, fetchImpl, log) {
       await gh('POST', '/issues/' + n + '/labels', { labels: ['in-progress'] });
     }
     await fn({ action: 'status', issue: n, status: 'fixing' });
+    await board.sync(issue.node_id, 'fixing');
     moved.push(n);
     log('field-reports: #' + n + ' -> fixing (PR #' + pr.number + ')');
   }
@@ -299,6 +361,6 @@ async function main() {
 
 module.exports = {
   reportTitle, reportBody, reportLabels, errorTitle, errorBody, errorLabels, errorUpdate,
-  outcomeFor, statusFor, closingRefs, labelNames, isTriageIssue, runSync, runIssueEvent, runPullRequestEvent, safe, LABELS
+  outcomeFor, statusFor, closingRefs, labelNames, isTriageIssue, runSync, runIssueEvent, runPullRequestEvent, makeBoard, BOARD_OPTION, safe, LABELS
 };
 if (require.main === module) main().catch((e) => { console.error('::error::' + e.message); process.exit(1); });

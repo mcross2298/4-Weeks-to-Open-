@@ -47,4 +47,8 @@ jobs:
         env:
           FIELD_SECRET: ${{ secrets.WEEKLY_CHECKIN_SECRET }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # FB7, optional: the GitHub Project board. Both unset = no board.
+          FIELD_PROJECT_TOKEN: ${{ secrets.FIELD_PROJECT_TOKEN }}
+          FIELD_PROJECT_NUMBER: ${{ vars.FIELD_PROJECT_NUMBER }}
+          FIELD_PROJECT_OWNER: ${{ github.repository_owner }}
         run: node tools/field-reports-sync.js

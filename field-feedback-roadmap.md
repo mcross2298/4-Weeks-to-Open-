@@ -103,6 +103,22 @@ status**.
 Edge Function is deployed (it writes the new status column, so it must not
 go out first).
 
+**FB7 shipped (2026-10-25), off until the owner sets it up.** The same
+workflow keeps a user-level Project board in step (`makeBoard()` in
+`tools/field-reports-sync.js`): a new issue lands in **New**, and labels,
+PRs and closing move it. It needs:
+1. A Project (Settings → Projects → New project, Board layout) whose **Status**
+   field has the options **New, In progress, Needs decision, Fixed, Won't fix**
+   (names matched case-insensitively; a missing option is a warning, not a
+   failure).
+2. A token that can write to it, stored as the repo secret
+   **`FIELD_PROJECT_TOKEN`**: a classic token with the `project` scope, or a
+   fine-grained token with Projects read/write on the account.
+3. The board's number (the `/projects/N` in its URL) as the repo **variable**
+   **`FIELD_PROJECT_NUMBER`**.
+Without the token or the number it does nothing; a bad token warns and never
+fails the job.
+
 FB5 and FB6 ship together; FB7 opens with its own `AskUserQuestion` gate, since
 it needs a token the owner has to create.
 

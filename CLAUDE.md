@@ -2587,6 +2587,12 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > filters, and is **read-only on purpose** so it can never disagree with the
 > issue. Its link appears in Diagnostics only for the owner. The athlete's
 > words are on that page and never on GitHub.
+>
+> **FB7 (2026-10-25):** the same workflow keeps a user-level GitHub Project
+> board in step (`makeBoard()`), but only when `FIELD_PROJECT_TOKEN` (secret)
+> and `FIELD_PROJECT_NUMBER` (variable) exist — `GITHUB_TOKEN` cannot write a
+> user-owned board. It never fails the job; the database and the issue are the
+> record, the board is a view.
 
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**.
