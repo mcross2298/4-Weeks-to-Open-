@@ -90,6 +90,7 @@ node tools/test-mc-bridge.js           # cross-app bridge read layer
 node tools/test-mc-sync-merge.js       # mc-sync.js merge logic
 node tools/test-mc-archive.js          # workouts past the newest 200 are archived, not dropped; CSV export; backup nudge (R7)
 node tools/test-mc-error-beacon.js     # field errors sent once, signed-in only, spaced, trimmed (E / D-35)
+node tools/test-mc-report.js           # Report a problem: queued first, only accepted rows leave, fingerprints match the beacon (FB1)
 node tools/test-mc-program-progress.js # per-program day model (continuous days, rest-as-data)
 node tools/test-mc-program-tabs.js     # program-landing list model (adaptive depth, day numbers)
 node tools/test-mc-sw.js               # service-worker fetch strategy (L1, L3, L4, L5)
@@ -2527,6 +2528,23 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   "every unsynced key": that set holds the live session, drafts and the
 >   outbox. It is refused offline. `phase14-client-errors.sql` is still **not
 >   applied**.
+
+> **Companion feedback plan:** [`field-feedback-roadmap.md`](field-feedback-roadmap.md)
+> (opened 2026-10-25, `FB1`–`FB4`) closes the loop from a report to a fix:
+> capture → redacted GitHub issue → scheduled Claude fix session (draft PRs
+> only) → the reporter sees "Fixed". **The repository is public, so an issue
+> never carries the athlete's words** — those stay in `client_reports`,
+> readable by admins only.
+>
+> **FB1 shipped (2026-10-25).** `mc-report.js` (`MC_REPORT.open()`) is the
+> **Report a problem** sheet, on the account sheet and at the foot of
+> `workout-settings.html` (which the rest row links to mid-session). A report
+> goes into `mc_reports_outbox_v1` FIRST and is sent from there, so offline or
+> signed out loses nothing; Home flushes it. It is an explicit act, so it does
+> not wait for the telemetry switch. Its `error_fps` use the same djb2 as
+> `mc-error-beacon.js`, held equal by `tools/test-mc-report.js`, so a report
+> joins to `client_errors`. `supabase/phase15-client-reports.sql` is the
+> owner's to run.
 
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the

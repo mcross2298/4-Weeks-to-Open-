@@ -55,6 +55,7 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
 .ws-row[aria-checked="true"] .ws-switch{background:var(--accent);box-shadow:none;}
 .ws-row[aria-checked="true"] .ws-switch::after{transform:translateX(20px);}
 @media (prefers-reduced-motion:reduce){.ws-switch,.ws-switch::after{transition:none;}}
+.ws-chev{flex-shrink:0;font-size:var(--fs-xl);color:var(--muted);}
 .ws-note{font-size:var(--fs-sm);color:var(--muted);line-height:1.5;margin:-14px 2px 28px;}
 .ws-bar{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;gap:12px;background:var(--body-bg);
   border-top:1px solid var(--hairline);
@@ -79,6 +80,14 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
   </a>
   <h1 class="ws-title">Workout Settings</h1>
   <form id="wsForm" onsubmit="return false"></form>
+  <section class="ws-group" aria-labelledby="wsgHelp">
+    <h2 class="ws-label" id="wsgHelp">Help</h2>
+    <div class="ws-card">
+      <button type="button" class="ws-row" id="wsReport">
+        <span class="ws-text"><span class="ws-name">Report a problem</span><span class="ws-sub">Something broke, was hard to use, or could be better. You'll see here when it's fixed.</span></span>
+        <span class="ws-chev" aria-hidden="true">›</span></button>
+    </div>
+  </section>
 </div>
 <div class="ws-bar">
   <div class="ws-bar-in">
@@ -89,6 +98,7 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
 <div class="ws-toast" id="wsToast" role="status" aria-live="polite"></div>
 
 <script src="mc-sheet.js"></script>
+<script src="mc-report.js"></script>
 <script>
 /* Every switch writes one key of mc_prefs_v1 — the store mc-timer.js's
    MC_PREFS.get() reads on every workout page. The defaults below MUST match
@@ -170,6 +180,10 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
   }
   document.getElementById('wsCancel').addEventListener('click', cancel);
   document.getElementById('wsBack').addEventListener('click', cancel);
+
+  document.getElementById('wsReport').addEventListener('click', function () {
+    if (window.MC_REPORT) MC_REPORT.open();
+  });
 
   var toast = document.getElementById('wsToast');
   saveBtn.addEventListener('click', function () {

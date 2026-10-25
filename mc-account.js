@@ -305,11 +305,15 @@
     var wrap = document.createElement('div');
     wrap.innerHTML =
       '<div style="border-top:1px solid rgba(255,255,255,0.1);margin:18px 0 14px;"></div>' +
+      // FB1: a person's report, beside what the app caught by itself.
+      (window.MC_REPORT ? '<button type="button" class="acct-btn acct-secondary" id="acctReport" style="margin-bottom:8px;">Report a problem</button>' : '') +
       '<button type="button" class="acct-btn acct-secondary" id="acctDiagBtn" aria-expanded="' + diagOpen + '" aria-controls="acctDiag">' +
         'Diagnostics' + (errs.length ? ' (' + errs.length + ' logged)' : '') + '</button>' +
       '<div id="acctDiag"' + (diagOpen ? '' : ' hidden') + '></div>';
     body.appendChild(wrap);
     var panel = wrap.querySelector('#acctDiag');
+    var rep = wrap.querySelector('#acctReport');
+    if (rep) rep.addEventListener('click', function () { close(); MC_REPORT.open(); });
     wrap.querySelector('#acctDiagBtn').addEventListener('click', function () {
       diagOpen = !diagOpen;
       this.setAttribute('aria-expanded', String(diagOpen));
