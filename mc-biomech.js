@@ -421,21 +421,40 @@
   // leverage table. Real logged history for the target movement always wins.
   function round5(n) { return n > 0 ? Math.max(5, Math.round(n / 5) * 5) : 0; }
 
+  // The heaviest weight logged in one set-log bucket. A bucket is a list of
+  // sessions, newest first ({d, sets: {sn: {w, r}}}); an object carrying
+  // .sets directly is the pre-session shape and is read too.
+  function heaviestIn(bucket) {
+    var best = 0;
+    (Array.isArray(bucket) ? bucket : [bucket]).forEach(function (sess) {
+      var sets = sess && sess.sets;
+      if (!sets || typeof sets !== 'object') return;
+      Object.keys(sets).forEach(function (sn) {
+        var w = parseFloat(sets[sn] && sets[sn].w);
+        if (isFinite(w) && w > best) best = w;
+      });
+    });
+    return best;
+  }
   function historyWeight(name) {
     // Scan mc_setlog_v1 for any logged set on the target movement; take the
-    // heaviest. Keys look like "PID|x-<slug>"; sets are { sn: {w, r} }.
+    // heaviest. Keys look like "PID|x-<slug>" (plus "-<n>" for a second card
+    // with the same name on one page), and the slug is the WHOLE name since
+    // R4. This used to match the first 24 characters anywhere in the key,
+    // which also caught a longer name sharing that prefix, and it read
+    // bucket.sets off what has been a LIST of sessions since EN-10, so it
+    // found nothing at all and every conversion fell back to an estimate.
     try {
       var store = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}');
-      var slug = String(name || '').trim().replace(/\s+/g, '-').toLowerCase().slice(0, 24);
+      if (!store || typeof store !== 'object' || Array.isArray(store)) return 0;
+      var slug = String(name || '').trim().replace(/\s+/g, '-').toLowerCase();
       if (!slug) return 0;
-      var best = 0;
+      var want = 'x-' + slug, best = 0;
       Object.keys(store).forEach(function (k) {
-        if (k.toLowerCase().indexOf(slug) < 0) return;
-        var sets = store[k] && store[k].sets; if (!sets) return;
-        Object.keys(sets).forEach(function (sn) {
-          var w = parseFloat(sets[sn] && sets[sn].w);
-          if (isFinite(w) && w > best) best = w;
-        });
+        var seg = k.slice(k.indexOf('|') + 1).toLowerCase();
+        if (seg !== want && !(seg.indexOf(want + '-') === 0 && /^\d+$/.test(seg.slice(want.length + 1)))) return;
+        var w = heaviestIn(store[k]);
+        if (w > best) best = w;
       });
       return best;
     } catch (e) { return 0; }
@@ -457,6 +476,8 @@
     alternatives: alternatives,
     fallbackCandidates: fallbackCandidates,
     convertWeight: convertWeight,
+    historyWeight: historyWeight,
+    heaviestIn: heaviestIn,
     EQUIP: EQUIP
   };
 })();

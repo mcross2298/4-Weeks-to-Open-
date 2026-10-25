@@ -358,19 +358,18 @@
   // Best-effort: the weight last logged for a card (heaviest set), so the
   // conversion has a real number to scale from. Reads mc-setlog's store.
   function lastLoggedWeight(card) {
+    // The card's own bucket, by the key the logger writes it under, so a
+    // renamed or swapped card reads its real history. Falls back to the
+    // name match when the logger is not on the page.
     try {
-      var store = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}');
-      var name = cardName(card);
-      var slug = name.trim().replace(/\s+/g, '-').toLowerCase().slice(0, 24);
-      var best = 0;
-      Object.keys(store).forEach(function (k) {
-        if (k.toLowerCase().indexOf(slug) < 0) return;
-        var sets = store[k] && store[k].sets; if (!sets) return;
-        Object.keys(sets).forEach(function (sn) {
-          var w = parseFloat(sets[sn] && sets[sn].w); if (isFinite(w) && w > best) best = w;
-        });
-      });
-      return best;
+      var B = window.MCBiomech, U = window.MCSetlogUtil;
+      if (!B) return 0;
+      if (U && U.histKey && U.exIdOf) {
+        var store = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}');
+        var own = store && typeof store === 'object' ? store[U.histKey(U.exIdOf(card))] : null;
+        if (own) return B.heaviestIn(own);
+      }
+      return B.historyWeight(cardName(card));
     } catch (e) { return 0; }
   }
 

@@ -679,10 +679,10 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 .sl-num{font-size:var(--fs-2xs);font-weight:900;color:var(--muted2);text-align:center;}
 .sl-inp{width:100%;min-height:44px;padding:6px 4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:var(--text);font-size:var(--fs-xl);font-weight:700;text-align:center;font-family:inherit;outline:none;-webkit-tap-highlight-color:transparent;}
 .sl-inp:focus{border-color:rgba(var(--accent-rgb),0.45);background:rgba(var(--accent-rgb),0.06);}
-.sl-inp::placeholder{color:#2d3748;font-size:var(--fs-2xs);}
+.sl-inp::placeholder{color:var(--muted);font-size:var(--fs-2xs);}
 .sl-row.sl-done .sl-inp{opacity:0.4;}
 .sl-hdr{display:grid;grid-template-columns:24px 1fr 1fr 44px;gap:5px;padding:3px 2px 1px;}
-.sl-hl{font-size:var(--fs-2xs);font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#2d3748;text-align:center;}
+.sl-hl{font-size:var(--fs-2xs);font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;}
 
 /* ── FINISH WORKOUT BAR & MODAL ─────────────────────────────────────────
    Stacked layout: Finish Workout is the primary action (full-width button,
@@ -1180,10 +1180,10 @@ html[data-theme="light"] .setlog-wrap{border-top-color:rgba(28,26,23,0.08);}
 html[data-theme="light"] .setlog-toggle{color:#8a8377;}
 html[data-theme="light"] .sl-row{border-bottom-color:rgba(28,26,23,0.06);}
 html[data-theme="light"] .sl-num,
-html[data-theme="light"] .sl-hl{color:#8a8377;}
+html[data-theme="light"] .sl-hl{color:var(--muted);}
 html[data-theme="light"] .sl-inp{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.14);}
 html[data-theme="light"] .sl-inp:focus{border-color:rgba(var(--accent-rgb),0.45);background:rgba(var(--accent-rgb),0.06);}
-html[data-theme="light"] .sl-inp::placeholder{color:#b7b0a3;}
+html[data-theme="light"] .sl-inp::placeholder{color:var(--muted);}
 html[data-theme="light"] .next-workout{background:rgba(28,26,23,0.03);border-color:rgba(28,26,23,0.1);}
 html[data-theme="light"] .next-workout:active{background:rgba(28,26,23,0.06);}
 html[data-theme="light"] .next-workout-label,

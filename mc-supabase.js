@@ -558,10 +558,18 @@
       else localStorage.removeItem(OUTBOX_KEY);
     } catch (e) {}
   }
-  function enqueue(op, entry) {
+  // A replayed set used to write its row and nothing else, so a record set
+  // with no signal never reached the lock screen. The caller hands over the
+  // push it would have sent, judged from the device's own history (the cloud
+  // baseline is exactly what was out of reach), and the replay sends it once
+  // the row is written. Only while it is still news: PUSH_FRESH_MS.
+  var PUSH_FRESH_MS = 12 * 60 * 60 * 1000;
+  function enqueue(op, entry, push) {
     var k = opKey(entry);
     var list = readOutbox().filter(function (o) { return opKey(o.entry) !== k; });
-    list.push({ op: op, entry: entry, ts: Date.now() });
+    var item = { op: op, entry: entry, ts: Date.now() };
+    if (push && push.title) item.push = { title: String(push.title), body: String(push.body || '') };
+    list.push(item);
     writeOutbox(list);
   }
   function dequeue(entry) {
@@ -588,6 +596,9 @@
           var cur = readOutbox();                       // re-read: a tick may have landed meanwhile
           var still = cur.filter(function (x) { return !(opKey(x.entry) === opKey(o.entry) && x.ts === o.ts); });
           if (still.length !== cur.length) writeOutbox(still);
+          if (o.op === 'up' && o.push && o.ts && Date.now() - o.ts < PUSH_FRESH_MS) {
+            try { sendPush(o.push).catch(function () {}); } catch (pe) {}
+          }
           sent++;
           return true;
         }, function () { return false; });
@@ -601,12 +612,12 @@
     setTimeout(function () { flushOutbox(); }, 4000);   // after sign-in has settled
   } catch (e) {}
 
-  function logSet(entry) {
+  function logSet(entry, offlinePush) {
     return upsertRow(entry).then(function (r) {
       dequeue(entry);                                   // a direct success supersedes a queued copy
       return r;
     }, function (err) {
-      enqueue('up', entry);
+      enqueue('up', entry, offlinePush);
       throw err;
     });
   }
