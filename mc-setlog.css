@@ -296,3 +296,6 @@ html[data-theme="light"] .mcl-rest-tool,
 html[data-theme="light"] .mcl-rest-cues .tf-pref{background:rgba(28,26,23,0.05);border-color:rgba(28,26,23,0.16);}
 html[data-theme="light"] .mcl-rest-tool.on,
 html[data-theme="light"] .mcl-rest-cues .tf-pref.on{color:#a87708;border-color:rgba(168,119,8,0.5);background:rgba(168,119,8,0.10);}
+/* Phase S3: "Auto move after rest" points at the next set for a moment. An
+   outline, not a fill, so the row's own ghost / done styling reads through. */
+.mcl-row.mcl-row-next{outline:2px solid var(--accent,#d4af37);outline-offset:2px;border-radius:var(--r-sm,8px);}

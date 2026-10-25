@@ -8,6 +8,16 @@
 -- Owner's decision (2026-10-24): a new table, signed-in athletes only.
 -- mc-error-beacon.js sends new entries from Home, at most every 10 minutes.
 --
+-- Extended in place (phase S5, 2026-10-25) — this file had not been applied
+-- (verified against information_schema: no client_errors table), so there is
+-- no live table to migrate. Owner's decision that day: ONE table, not a
+-- second app_telemetry_logs, and sending is OPT-IN, default off
+-- (mc_prefs_v1.telemetry, the "Send error reports" switch in the account
+-- sheet). Two additions: a `stack` column, and two more kinds the device now
+-- records — 'storage' (a write the browser refused) and 'network' (a sync
+-- pull/push that failed), plus 'note' for anything else MC_ERRLOG.rec() is
+-- handed.
+--
 -- Shape of the policy, deliberately narrow:
 --   * INSERT only, and only a row whose user_id is the caller's own.
 --   * No SELECT, UPDATE or DELETE for an athlete: a sent error is not read
@@ -28,8 +38,9 @@ create table if not exists public.client_errors (
   app          text not null default 'training' check (char_length(app) <= 32),
   occurred_at  timestamptz not null,
   received_at  timestamptz not null default now(),
-  kind         text not null check (kind in ('error', 'unhandledrejection')),
+  kind         text not null check (kind in ('error', 'unhandledrejection', 'storage', 'network', 'note')),
   message      text not null check (char_length(message) <= 500),
+  stack        text check (char_length(stack) <= 1200),
   source       text check (char_length(source) <= 300),
   line         integer,
   page         text check (char_length(page) <= 120),

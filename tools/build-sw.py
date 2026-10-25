@@ -71,9 +71,14 @@ DENY_DIRS = {"tools", "supabase", "templates", ".github", ".git"}
 # prefetch (which blocklists them on purpose) never fetched them and they
 # answered "You are offline" in the gym unless opened online first. Six small
 # HTML files; every script and stylesheet they load is already precached.
+#
+# workout-settings.html (2026-10-25) joins them for the same reason, and one
+# more: it is linked from the rest row MID-SESSION, which is exactly when the
+# gym has no signal. One small file; mc-sheet.js and base.css are precached.
 EAGER_HTML = {"index.html", "dashboard.html",
               "workout-logs.html", "workout-detail.html", "stats.html",
-              "exercise-library.html", "build-workout.html", "build-program.html"}
+              "exercise-library.html", "build-workout.html", "build-program.html",
+              "workout-settings.html"}
 
 # The M6 eager/lazy split above only ever applied to .html — every top-level
 # .css/.js file was swept into the eager precache unconditionally, with no

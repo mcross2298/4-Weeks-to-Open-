@@ -20,6 +20,16 @@
    On a 'progress' suggestion the planned load replaces the last-logged-weight
    prefill on the sets that were at last session's top weight; lighter pyramid
    sets keep their own last weights.
+
+   Double progression (Phase S4): inside a rep RANGE ("3×8-12") the reps move
+   first and the load second. Short of the top → same load, and each set's
+   rep ghost asks for one more than it did last time (never past the top);
+   every set at the top → the load steps up and the rep ghost resets to the
+   bottom of the range. Board decision (2026-10-25): the "one more rep" goal
+   is said in the HINT only ("Suggested: 100 lb × 11"); the reps box ghosts
+   what was actually done last time. A ghost ticked unchanged is logged as-is,
+   so a goal in the box would log reps nobody did. Fixed targets ("5×5", a "12,10,8" pyramid) have no
+   range to climb and keep the prescribed reps, as before.
    ========================================================================== */
 (function () {
   var isBrowser = typeof window !== 'undefined';
@@ -44,8 +54,11 @@
       var all = JSON.parse(localStorage.getItem(PK) || '{}') || {};
       var k = historyKey(exId);
       var prev = all[k];
-      if (prev && prev.w === s.w && prev.status === s.status) return;
+      var r = Array.isArray(s.r) ? s.r : undefined;
+      if (prev && prev.w === s.w && prev.status === s.status &&
+          JSON.stringify(prev.r) === JSON.stringify(r)) return;
       all[k] = { w: s.w, status: s.status, why: s.why, ts: Date.now() };
+      if (r) all[k].r = r;
       localStorage.setItem(PK, JSON.stringify(all));
     } catch (e) {}
   }
@@ -162,6 +175,65 @@
     }
     return targets;
   }
+  // The BOTTOM of each working set's range — the same per-set walk as
+  // repTargets() but without rewriting ranges to their top, so repFor()
+  // reads a range's first number ("8-12" -> 8). Equal to the target on a
+  // fixed prescription, which is how repGoals() knows there is no range.
+  function repFloors(setsStr) {
+    var tops = repTargets(setsStr);
+    if (!tops.length) return [];
+    var u = _setlog();
+    if (!u || !u.repFor) {
+      var m = String(setsStr).match(/^\s*\d+\s*[x\u00d7]\s*(\d+)/i);
+      var b = m ? parseInt(m[1], 10) : 0;
+      return tops.map(function () { return b; });
+    }
+    var work = u.stripDrop ? u.stripDrop(setsStr) : setsStr;
+    return tops.map(function (t, i) {
+      var r = parseInt(u.repFor(work, i), 10);
+      return isNaN(r) ? t : Math.min(r, t);
+    });
+  }
+
+  // Phase S4: per working set, the rep goal for the NEXT session, or null
+  // where there is nothing to climb (a fixed target, an open-ended row, no
+  // logged reps). `status` is classifySession()'s answer for that session.
+  //   progress → the load steps, so reps reset to the bottom of the range
+  //   repeat   → same load, one more rep than last time, capped at the top
+  //   hold     → last session was near max: ask for what was done, no more
+  function repGoals(sess, setsStr, status) {
+    var tops = repTargets(setsStr), floors = repFloors(setsStr);
+    if (!tops.length || !sess || !sess.sets) return [];
+    var ordered = Object.keys(sess.sets)
+      .sort(function (a, b) { return parseFloat(a) - parseFloat(b); })
+      .map(function (k) { return sess.sets[k]; });
+    return tops.map(function (top, i) {
+      var lo = floors[i];
+      if (!(top > 0) || !(lo > 0) || lo >= top) return null;   // not a range
+      if (status === 'progress') return lo;
+      var last = ordered[i] ? repsOf(ordered[i].r) : NaN;
+      if (isNaN(last)) return status === 'repeat' ? lo : null;
+      var want = status === 'repeat' ? last + 1 : last;
+      return Math.max(lo, Math.min(top, want));
+    });
+  }
+
+  // What the reps box may PRE-FILL, per working set: never more than was done.
+  // After a load step the bottom of the range (fewer reps than last time, at
+  // a heavier load, is an honest starting point); otherwise last session's
+  // own reps for that set. Null where there is no goal or no logged reps.
+  function repGhosts(sess, goals, status) {
+    var ordered = Object.keys((sess && sess.sets) || {})
+      .sort(function (a, b) { return parseFloat(a) - parseFloat(b); })
+      .map(function (k) { return sess.sets[k]; });
+    return goals.map(function (g, i) {
+      if (g == null) return null;
+      if (status === 'progress') return g;
+      var last = ordered[i] ? repsOf(ordered[i].r) : NaN;
+      return isNaN(last) ? null : last;
+    });
+  }
+
   // The last working set's target (kept for callers that want one number).
   function topRep(setsStr) {
     var t = repTargets(setsStr);
@@ -287,7 +359,17 @@
     if (!sessions.length) return null;
     var cls = classifySession(sessions[0], setsStr);
     if (!cls) return null;
-
+    var out = baseSuggestion(cls, name);
+    var goals = repGoals(sessions[0], setsStr, cls.status);
+    if (goals.some(function (g) { return g != null; })) {
+      out.r = goals;
+      out.rGhost = repGhosts(sessions[0], goals, cls.status);
+      if (cls.status === 'repeat') out.why = 'same load — one more rep per set, up to the top of the range';
+      if (cls.status === 'progress') out.why = 'top of the range on every set — load up, reps back to the bottom';
+    }
+    return out;
+  }
+  function baseSuggestion(cls, name) {
     if (cls.status === 'hold') return { w: cls.w, base: cls.w, status: 'hold', why: 'hold — last session was near max' };
     if (cls.status === 'repeat') return { w: cls.w, base: cls.w, status: 'repeat', why: 'repeat — chase the rep target' };
     if (cls.status === 'progress') {
@@ -296,6 +378,15 @@
       return { w: cls.w + inc, base: cls.w, status: 'progress', why: 'all reps hit last time — move up' };
     }
     return { w: cls.w, base: cls.w, status: 'match', why: 'match your last session' };
+  }
+
+  // One number for the hint when every set asks for the same reps.
+  function uniformGoal(r) {
+    if (!r || !r.length) return null;
+    var g = r.filter(function (x) { return x != null; });
+    if (g.length !== r.length) return null;
+    for (var i = 1; i < g.length; i++) if (g[i] !== g[0]) return null;
+    return g[0];
   }
 
   // Plateau/deload signal: walk the completed-session history newest-first
@@ -366,7 +457,8 @@
       hint.className = 'mcl-suggest';
       hint.title = s.why;
       var perHand = equipOf(nmStr) === 'Dumbbell' ? ' per hand' : '';
-      hint.textContent = 'Suggested: ' + s.w + ' lb' + perHand;
+      var ug = uniformGoal(s.r);
+      hint.textContent = 'Suggested: ' + s.w + ' lb' + perHand + (ug != null ? ' \u00d7 ' + ug : '');
       tgl.insertBefore(hint, hist);
 
       // A deload takes over the actual carried-forward target — 4 straight
@@ -375,6 +467,7 @@
       var plateau = detectPlateau(exId, setsStr);
       var target = s;
       if (plateau && plateau.level === 'deload') {
+        // A deload is a lighter load, not a rep chase: no rep goals ride it.
         target = { w: deloadWeight(s.base, nmStr), base: s.base, status: 'deload', why: plateau.why };
       }
       writeTarget(exId, target);
@@ -418,6 +511,28 @@
           if (ghost) inp.value = String(target.w);
         }
       });
+
+      // Phase S4: the rep half of double progression, on the same terms as
+      // the load above. The box carries rGhost (never more than was done);
+      // the goal itself is only in the hint — see the header.
+      // Same terms as
+      // the load above — only a ghosted or empty field is touched, so a typed
+      // or pending number always wins, and nothing here is ever persisted
+      // until the athlete ticks the set. Rows are working rows in order (drop
+      // rows excluded); a cluster's mini-set bubbles are never ghosted.
+      if (Array.isArray(target.rGhost)) {
+        var rows = card.querySelectorAll('.mcl-row:not(.mcl-row-amrap)');
+        Array.prototype.forEach.call(rows, function (row, i) {
+          var g = target.rGhost[i];
+          var rin = row.querySelector('.mcl-r:not(.mcl-rmini)');
+          if (g == null || !rin) return;
+          var rg = !!rin.dataset.ghost;
+          if (rin.value.trim() && !rg) return;
+          rin.dataset.fill = String(g);
+          rin.value = String(g);
+          if (!rg) { rin.classList.add('mcl-ghost'); rin.dataset.ghost = '1'; }
+        });
+      }
     });
   }
 
@@ -466,6 +581,7 @@
       repsOf: repsOf,
       classifySession: classifySession, detectPlateau: detectPlateau, suggestFor: suggestFor,
       writeTarget: writeTarget, deloadWeight: deloadWeight,
+      repFloors: repFloors, repGoals: repGoals, repGhosts: repGhosts,
       usableWeight: usableWeight
     };
   }

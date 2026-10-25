@@ -20,6 +20,12 @@
      * silently: a failed send (offline, or the table not created yet) is
        retried on a later visit and never surfaces to the athlete.
 
+   Phase S5 (owner decision 2026-10-25): sending is OPT-IN and off by
+   default — mc_prefs_v1.telemetry, the "Send error reports" switch in the
+   account sheet. Off, nothing is sent and nothing is marked sent, so turning
+   it on later sends what is still in the buffer. The stack (x, ≤1200 chars)
+   and the storage / network kinds ride along.
+
    Exposed as window.MC_ERROR_BEACON = { flush() } for tests.
    ========================================================================== */
 (function () {
@@ -65,10 +71,16 @@
     });
   }
 
+  var KINDS = { error: 1, unhandledrejection: 1, storage: 1, network: 1, note: 1 };
+  function optedIn() {
+    var p = read('mc_prefs_v1', {});
+    return !!(p && typeof p === 'object' && p.telemetry === true);
+  }
   function toRow(e) {
     return {
       occurred_at: new Date(e.t).toISOString(),
-      kind: e.k === 'unhandledrejection' ? 'unhandledrejection' : 'error',
+      kind: KINDS[e.k] ? e.k : 'error',
+      stack: e.x ? String(e.x).slice(0, 1200) : null,
       message: String(e.m || 'Unknown error').slice(0, 500),
       source: fileOf(e.s) || null,
       line: typeof e.l === 'number' ? e.l : null,
@@ -92,6 +104,7 @@
   // force: skip the 10-minute spacing (tests, or a manual call)
   function flush(force) {
     var SB = window.MC_SB;
+    if (!optedIn()) return Promise.resolve('opted-out');
     if (!SB || !SB.configured || !SB.currentUser) return Promise.resolve('no-backend');
     var sent = read(SENT_KEY, {});
     if (!force && typeof sent.at === 'number' && Date.now() - sent.at < EVERY_MS) return Promise.resolve('throttled');
@@ -112,7 +125,7 @@
     }).catch(function () { return 'failed'; });
   }
 
-  window.MC_ERROR_BEACON = { flush: flush, _pending: pending, _toRow: toRow };
+  window.MC_ERROR_BEACON = { flush: flush, optedIn: optedIn, _pending: pending, _toRow: toRow };
 
   // A few seconds after Home settles, off the critical path.
   function later() { setTimeout(function () { flush(false); }, 4000); }

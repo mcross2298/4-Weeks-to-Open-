@@ -546,3 +546,61 @@ Taken on the owner's go-ahead, as one PR, from the "Known residuals" lists above
 - Simulated backgrounding doesn't suspend timers the way a phone does.
 - Kill timings are one trial per delay; two separate runs agree.
 - All browser results come from this sandbox's Chromium 141 build.
+
+## Phases S (settings & intelligence) and B (launch board) — opened 2026-10-25
+
+A brief asked for a Phase 4 (settings, auto-progression, telemetry, update
+lifecycle, local reset) and a Phase 5 (an adversarial launch board). Surveyed
+against `main @ a3b2b7c` first. Much of it already exists: the wake-lock
+toggle (R2), the global `error` / `unhandledrejection` catchers (head boot),
+the beacon to `client_errors` (E), the rest-end bar (R2) and the update
+banner (`mc-sw-update.js`). The steps below are the real gaps only.
+
+Owner decisions (`AskUserQuestion`, 2026-10-25): extend `client_errors` rather
+than add `app_telemetry_logs`, opt-in and **default off**; Reset clears
+**caches and UI state only**, never history, set logs, macros or sign-in;
+settings keep **instant-apply** (no Cancel / Save); auto-move **after logging
+on** (today's behaviour, now switchable), **after rest off** (new, opt-in).
+
+| Step | Objective | Files |
+|---|---|---|
+| S1 | Workout settings: sounds, vibration, auto-move ×2 beside Keep screen on; every sheet control ≥ 48px with 8px gaps | `mc-account.js`, `mc-timer.js` |
+| S2 | Silent-switch fallback: a full-screen flash at 0s, independent of the sound pref | `mc-timer.js` |
+| S3 | Auto-move flushes typed drafts first; after-rest moves to the next open set without opening the keyboard | `mc-setlog.js`, `mc-timer.js` |
+| S4 | Double progression: inside a rep range, the rep ghost climbs one rep per session until the top, then the load steps and reps reset | `mc-suggest.js`, `tools/test-mc-suggest.js` |
+| S5 | Diagnostics drawer over `mc_errors_v1` (stack, kind, page, time), stacks captured, storage and network failures recorded; beacon opt-in | head contract, `mc-account.js`, `mc-error-beacon.js`, `mc-log-read.js`, phase14 SQL |
+| S6 | Update lifecycle: a controller swap held mid-workout now shows the banner; the in-progress test reads `TMR.isRunning()` | `mc-sw-update.js` |
+| S7 | Reset local state (caches + UI only), refused offline | `mc-account.js` |
+| B  | Launch board: RAID log, go/no-go, runbook with numeric rollback triggers — published as an artifact | — |
+
+### Board B — outcome (2026-10-25)
+
+**CONDITIONAL GO**, signed by the owner, with the full writeup in the artifact
+`https://claude.ai/artifact/ScbXQhEsfybKyiyPCVCTJU`. The canary is the owner's devices plus testers for
+48 hours. Full rollout waits on four things: phase14 applied (my attempt timed out on the
+Supabase server's confirmation prompt; I verified the table is absent), `WEEKLY_CHECKIN_SECRET`
+(15 of 15 runs failed, latest 18 Oct), leaked-password protection, and the device matrix above.
+
+- **R-1 resolved before merge:** the rep goal goes in the hint only. The reps box ghosts what was
+  done (`repGhosts()`), because a ghost ticked unchanged is logged as-is.
+- **Rollback triggers:** ≥ 3 distinct new fingerprints, or one fingerprint on ≥ 2 athletes, within
+  24 h; any lost-set report; offline smoke failing on the live origin; any contrast, perf or
+  journey gate red on `main`. Rollback is a revert PR. It reaches a device on its next update
+  check and is held while a workout is in progress.
+- **Telemetry is opt-in**, so these triggers fire only if the canary cohort turns on
+  *Send error reports*.
+
+### S8 — Workout Settings page (2026-10-25, owner's reference screen)
+
+The owner shared a reference Workout Settings screen. Four calls via `AskUserQuestion`: its own
+page, **staged Cancel / Save changes** (this reverses S1's instant-apply), two switches where
+the example's "Auto move after logging" meant something else (**Start rest after logging**, the
+example's meaning, plus **Auto move after logging**, which opens the next exercise), and I chose
+the extra switches. Added: **Show max weight logged** (off). Left out: *Show rest timer*
+(Start rest after logging already covers it), *Free navigation* (locking sets would reverse how
+every engine works today) and *Rest timer notifications* (an iPhone suspends a backgrounded web
+app, so this needs a server push, which is unproven).
+
+`workout-settings.html` is in `EAGER_HTML` because the rest row's ⚙️ Rest cues panel links to it
+mid-session; the session toolbar has no width left for another control. The account sheet keeps
+one row into the page.

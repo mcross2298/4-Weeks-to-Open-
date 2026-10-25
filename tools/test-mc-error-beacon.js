@@ -19,7 +19,8 @@ function eq(name, a, b) { const A = JSON.stringify(a), B = JSON.stringify(b); ok
 const SRC = fs.readFileSync(path.join(__dirname, '..', 'mc-error-beacon.js'), 'utf8');
 
 function sandbox(opts) {
-  const store = Object.assign({}, opts.store || {});
+  // Phase S5: sending is opt-in. Every case below opts in unless it says not to.
+  const store = Object.assign(opts.optOut ? {} : { mc_prefs_v1: JSON.stringify({ telemetry: true }) }, opts.store || {});
   const sent = [];
   const sb = {
     localStorage: {
@@ -91,6 +92,27 @@ const E = (t, m, extra) => Object.assign({ t, k: 'error', m, s: 'https://mcross2
     eq('rejection kind kept; empty source and page are null', [r.kind, r.source, r.page], ['unhandledrejection', null, null]);
     eq('same error, same fingerprint', B._toRow(E(1, 'm')).fingerprint, B._toRow(E(99, 'm')).fingerprint);
     ok('different error, different fingerprint', B._toRow(E(1, 'm')).fingerprint !== B._toRow(E(1, 'n')).fingerprint);
+  }
+  {
+    // Phase S5: off by default. Nothing leaves, nothing is marked sent, so
+    // switching it on later still sends what the buffer holds.
+    const { sent, B, store } = sandbox({ optOut: true, store: { mc_errors_v1: JSON.stringify([E(1, 'x')]) } });
+    eq('not opted in (the default): nothing leaves the device', await B.flush(true), 'opted-out');
+    eq('...no request', sent.length, 0);
+    eq('...and nothing is marked sent', store.mc_errors_sent_v1, undefined);
+    store.mc_prefs_v1 = JSON.stringify({ telemetry: false, sound: true });
+    eq('explicitly off: still nothing', await B.flush(true), 'opted-out');
+    store.mc_prefs_v1 = JSON.stringify({ telemetry: true });
+    eq('switched on later: the buffered entry goes', await B.flush(true), 'sent 1');
+  }
+  {
+    const { B } = sandbox({ store: {} });
+    const r = B._toRow(E(1, 'm', { x: 'TypeError: m\n    at f (mc-setlog.js:42:7)' }));
+    eq('the stack rides along', r.stack, 'TypeError: m\n    at f (mc-setlog.js:42:7)');
+    eq('stack cut to 1200', B._toRow(E(1, 'm', { x: 'y'.repeat(3000) })).stack.length, 1200);
+    eq('no stack is null', B._toRow(E(1, 'm')).stack, null);
+    eq('storage and network kinds kept', [B._toRow(E(1, 'm', { k: 'storage' })).kind, B._toRow(E(1, 'm', { k: 'network' })).kind], ['storage', 'network']);
+    eq('an unknown kind is filed as error (the table checks it)', B._toRow(E(1, 'm', { k: 'weird' })).kind, 'error');
   }
   {
     const { B } = sandbox({ store: { mc_errors_v1: '{"not":"an array"}' } });

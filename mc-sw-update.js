@@ -50,7 +50,12 @@
   navigator.serviceWorker.addEventListener('controllerchange', function () {
     if (window.__mcSwReloaded) return;
     if (!wasControlled) { wasControlled = true; return; }
-    if (workoutInProgress()) { pendingReload = true; return; }
+    // Held mid-workout, the page is still the old build while its controller
+    // (and so every asset it fetches from here on) is the new one. That hold
+    // used to be silent: the banner below was shown only for a worker THIS tab
+    // found, never for a swap another tab applied. Say so, so the athlete can
+    // reload at a moment of their choosing instead of running mixed builds.
+    if (workoutInProgress()) { pendingReload = true; showBanner(); return; }
     window.__mcSwReloaded = true;
     window.location.reload();
   });
@@ -200,6 +205,10 @@
   // A workout is "in progress" if a rest timer is counting or any set is
   // checked — i.e. the user is mid-session and must not be force-reloaded.
   function workoutInProgress() {
+    // M3b stopped setting #timerFloat's .visible on every page with set rows,
+    // so that test alone missed a rest running in the inline row (the same
+    // root cause R2 fixed in mc-live-tracker.js). TMR.isRunning() is the truth.
+    try { if (typeof TMR !== 'undefined' && typeof TMR.isRunning === 'function' && TMR.isRunning()) return true; } catch (e) {}
     var tf = document.getElementById('timerFloat');
     if (tf && tf.classList.contains('visible')) return true;
     return !!document.querySelector(

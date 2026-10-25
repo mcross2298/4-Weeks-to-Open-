@@ -2494,6 +2494,40 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > Also: `logSet(entry, push)` queues the push with an offline write and sends
 > it on replay, and `#2d3748` is `var(--muted)`.
 
+> **S1–S7 shipped (2026-10-25) — settings, double progression, diagnostics.**
+> Surveyed first: the wake-lock switch, the global error catchers, the beacon
+> and the update banner already existed, so only the gaps were built. Owner
+> decisions: one table (`client_errors`, extended) with sending **opt-in,
+> default off**; Repair clears **caches and UI state only**; settings stay
+> **instant-apply**; auto-move after logging **on**, after rest **off**.
+> Four things to know before touching these:
+> - **Workout prefs are `mc_prefs_v1`**, read through `MC_PREFS.get()` on
+>   workout pages and edited on **`workout-settings.html`** (the owner's
+>   reference screen: grouped cards, **staged Cancel / Save changes** — this
+>   reversed the earlier instant-apply decision the same day). The page's
+>   `GROUPS` defaults must match `MC_PREFS.get()`. New keys: `autoRest`
+>   (ticking a set starts the rest — the only auto-start site is
+>   `mc-setlog.js`), `autoMoveLog`, `autoMoveRest`, `showMax` (all-time max
+>   beside Last, from `readAllWorkouts()` by name). The page is in
+>   `EAGER_HTML`, because the rest row links to it mid-session. A rest that runs to zero dispatches
+>   `mc:rest-over` and washes the screen green (`#mcRestFlash`), whatever the
+>   sound pref says — the web cannot read the silent switch.
+> - **Double progression is the rep half of `mc-suggest.js`** (`repGoals()`):
+>   inside a range the goal is last + 1 up to the top; at the top the load steps
+>   and reps reset to the bottom. **The goal is in the hint only**; the reps box
+>   ghosts what was done (`repGhosts()`), because a ghost ticked unchanged is
+>   logged as-is (board decision R-1). Only **6 authored prescriptions**
+>   use a range; it mostly serves custom workouts, whose reps are free text.
+> - **`MC_ERRLOG.rec(kind, message)`** (head boot) is the one recorder for
+>   failures that do not throw: `storage` from `MC_LOG.writeStore`, `network`
+>   from `mc-sync.js` — the latter once per distinct failure per 30 minutes and
+>   never offline, so a retry loop cannot flush the 20-entry buffer. Entries
+>   now carry a stack (`x`). The account sheet's **Diagnostics** reads it.
+> - **Repair is an allowlist** (`REPAIR_LOCAL_KEYS` in `mc-account.js`), not
+>   "every unsynced key": that set holds the live session, drafts and the
+>   outbox. It is refused offline. `phase14-client-errors.sql` is still **not
+>   applied**.
+
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the
 > owner's, not code: `WEEKLY_CHECKIN_SECRET` is still unset (per the 18 Oct

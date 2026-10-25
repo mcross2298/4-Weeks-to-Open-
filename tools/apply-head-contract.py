@@ -144,12 +144,22 @@ THEME_BOOT = (
     "a.unshift(e);if(a.length>_erMax)a.length=_erMax;"
     "localStorage.setItem(_erK,JSON.stringify(a));"
     "}catch(_){}}"
+    # Phase S5: the stack too (x), cut to 1200 characters, because a message
+    # and a line number alone are rarely enough to find a bug from a phone.
+    # And one recorder for everything else that goes wrong without throwing —
+    # a storage write the browser refused, a sync request that failed —
+    # through MC_ERRLOG.rec(kind, message), so the Diagnostics drawer in the
+    # account sheet reads one buffer, not three.
+    "function _erP(){return location.pathname.split('/').pop()||''}"
+    "function _erX(o){try{return String((o&&o.stack)||'').slice(0,1200)}catch(_){return ''}}"
     "window.addEventListener('error',function(ev){_erRec({t:Date.now(),k:'error',"
     "m:(ev&&ev.message)||'Unknown error',s:(ev&&ev.filename)||'',l:(ev&&ev.lineno)||0,"
-    "p:(location.pathname.split('/').pop()||'')});});"
+    "x:_erX(ev&&ev.error),p:_erP()});});"
     "window.addEventListener('unhandledrejection',function(ev){var r=ev&&ev.reason;"
     "_erRec({t:Date.now(),k:'unhandledrejection',m:(r&&(r.message||String(r)))||'Unhandled rejection',"
-    "p:(location.pathname.split('/').pop()||'')});});"
+    "x:_erX(r),p:_erP()});});"
+    "window.MC_ERRLOG={rec:function(k,m,x){_erRec({t:Date.now(),k:String(k||'note'),"
+    "m:String(m||'').slice(0,500),x:String(x||'').slice(0,1200),p:_erP()})}};"
     '}catch(e){}</script>'
 )
 

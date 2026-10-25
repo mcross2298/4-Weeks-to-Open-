@@ -30,8 +30,13 @@
         'backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);' +
         'display:none;align-items:flex-end;justify-content:center;z-index:1200;}' +
       '.acct-overlay.open{display:flex;}' +
+      // Phase S1: the sheet had no height limit, so once it grew past the
+      // screen its top (the title and Sign out) was pushed off a phone with
+      // no way to scroll back to it. It scrolls inside itself now.
       '.acct-sheet{width:100%;max-width:520px;background:#0e0e0e;' +
         'border-top:1px solid rgba(255,255,255,0.1);border-radius:24px 24px 0 0;' +
+        'max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);' +
+        'overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;box-sizing:border-box;' +
         'padding:18px 18px calc(28px + env(safe-area-inset-bottom));color:#ede7d9;}' +
       '.acct-handle{width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px;}' +
       '.acct-title{font-size:19px;font-weight:900;letter-spacing:-0.01em;margin-bottom:4px;}' +
@@ -40,8 +45,11 @@
       '.acct-sheet input{width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);' +
         'border:1px solid rgba(255,255,255,0.14);border-radius:12px;padding:13px 14px;margin-bottom:10px;' +
         'color:#ede7d9;font-size:15px;font-weight:600;outline:none;font-family:inherit;}' +
-      '.acct-btn{width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;' +
-        'cursor:pointer;font-family:inherit;margin-top:4px;}' +
+      // Phase S1: every control in the sheet meets the 48px / 8px standard
+      // (flagship readiness R6). Buttons were ~46px, swatches 32px, the
+      // density chips ~33px.
+      '.acct-btn{width:100%;min-height:48px;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;' +
+        'cursor:pointer;font-family:inherit;margin-top:8px;}' +
       '.acct-primary{background:#d4af37;color:#1a1200;}' +
       '.acct-primary:disabled{opacity:0.5;cursor:default;}' +
       '.acct-secondary{background:rgba(255,255,255,0.07);color:#d9d3c8;border:1px solid rgba(255,255,255,0.14);}' +
@@ -50,18 +58,36 @@
         'border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:11px 12px;margin-bottom:16px;line-height:1.5;}' +
       '.acct-err{font-size:13px;color:#fca5a5;margin-top:10px;min-height:18px;text-align:center;}' +
       '.avatar.acct-on{box-shadow:0 0 0 2px rgba(34,197,94,0.6);}' +
-      '.acct-swatches{display:flex;gap:10px;margin-bottom:12px;}' +
-      '.acct-swatch{width:32px;height:32px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;}' +
+      '.acct-swatches{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}' +
+      '.acct-swatch{width:48px;height:48px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;}' +
       '.acct-swatch.on{border-color:#ede7d9;}' +
       '.acct-density{display:flex;gap:8px;margin-bottom:4px;}' +
-      '.acct-density-opt{flex:1;border:1px solid rgba(255,255,255,0.14);border-radius:10px;padding:9px;' +
+      '.acct-density-opt{flex:1;min-height:48px;border:1px solid rgba(255,255,255,0.14);border-radius:10px;padding:9px;' +
         'background:rgba(255,255,255,0.04);color:#a8a196;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;}' +
       '.acct-density-opt.on{background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.5);color:#ede7d9;}' +
       '.acct-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:48px;' +
         'border:1px solid rgba(255,255,255,0.14);border-radius:12px;padding:10px 14px;background:rgba(255,255,255,0.04);' +
         'color:#ede7d9;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left;}' +
       '.acct-toggle-state{flex-shrink:0;font-size:12px;font-weight:800;color:#a8a196;}' +
-      '.acct-toggle[aria-checked="true"] .acct-toggle-state{color:#34d399;}';
+      '.acct-toggle[aria-checked="true"] .acct-toggle-state{color:#34d399;}' +
+      '.acct-toggles{display:flex;flex-direction:column;gap:8px;}' +
+      '.acct-toggle-sub{display:block;font-size:13px;font-weight:600;color:#a8a196;margin-top:2px;}' +
+      // Phase S5: the Diagnostics drawer.
+      '.acct-diag-meta{font-size:13px;color:#a8a196;line-height:1.6;margin:8px 0;word-break:break-word;}' +
+      '.acct-diag-meta b{color:#ede7d9;font-weight:700;}' +
+      '.acct-err-list{display:flex;flex-direction:column;gap:8px;margin-top:8px;}' +
+      '.acct-err-item{border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;' +
+        'background:rgba(255,255,255,0.03);font-size:13px;line-height:1.45;}' +
+      '.acct-err-head{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;color:#a8a196;}' +
+      '.acct-err-kind{font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:#fca5a5;}' +
+      '.acct-err-kind.k-storage{color:#fbbf24;}.acct-err-kind.k-network{color:#93c5fd;}' +
+      '.acct-err-msg{color:#ede7d9;font-weight:700;margin-top:4px;word-break:break-word;}' +
+      '.acct-err-where{color:#a8a196;margin-top:2px;word-break:break-all;}' +
+      '.acct-err-item summary{min-height:48px;display:flex;align-items:center;cursor:pointer;color:#d9d3c8;font-weight:700;}' +
+      '.acct-err-item pre{white-space:pre-wrap;word-break:break-all;font-size:13px;color:#d9d3c8;margin:0;' +
+        'max-height:220px;overflow:auto;background:rgba(0,0,0,0.35);border-radius:8px;padding:8px;}' +
+      '.acct-row{display:flex;gap:8px;}.acct-row .acct-btn{flex:1;}' +
+      '.acct-danger{background:rgba(248,113,113,0.1);color:#fca5a5;border:1px solid rgba(248,113,113,0.35);}';
     var st = document.createElement('style');
     st.textContent = css;
     document.head.appendChild(st);
@@ -103,6 +129,7 @@
     appendWorkoutSection(body);
     appendInstallSection(body);
     appendBackupSection(body);
+    appendDiagnosticsSection(body);
   }
 
   // Add to Home Screen (L2 Sub-Phase B) — mc-install.js captures the native
@@ -196,23 +223,198 @@
   function readPrefs() {
     try { return JSON.parse(localStorage.getItem('mc_prefs_v1') || '{}') || {}; } catch (e) { return {}; }
   }
+  function writePref(k, v) {
+    var p = readPrefs();
+    p[k] = v;
+    try { localStorage.setItem('mc_prefs_v1', JSON.stringify(p)); } catch (e) {}
+    try { document.dispatchEvent(new CustomEvent('mc:prefs-changed', { detail: { key: k, value: v } })); } catch (e) {}
+  }
+  function prefValue(k, dflt) {
+    var v = readPrefs()[k];
+    return v === undefined ? dflt : v === true;
+  }
+  function esc(t) {
+    return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  // One switch, applied on tap like every other control in this sheet. Used
+  // only by Diagnostics now; the workout switches moved to their own staged
+  // page (workout-settings.html).
+  function toggleHtml(d) {
+    var on = prefValue(d.k, d.dflt);
+    return '<button type="button" class="acct-toggle" data-pref="' + d.k + '" data-dflt="' + (d.dflt ? 1 : 0) +
+      '" role="switch" aria-checked="' + on + '">' +
+      '<span>' + d.label + (d.sub ? '<span class="acct-toggle-sub">' + d.sub + '</span>' : '') + '</span>' +
+      '<span class="acct-toggle-state">' + (on ? 'On' : 'Off') + '</span></button>';
+  }
+  function wireToggles(wrap) {
+    Array.prototype.forEach.call(wrap.querySelectorAll('.acct-toggle[data-pref]'), function (b) {
+      b.addEventListener('click', function () {
+        var k = b.dataset.pref;
+        var on = !prefValue(k, b.dataset.dflt === '1');
+        writePref(k, on);
+        b.setAttribute('aria-checked', String(on));
+        b.querySelector('.acct-toggle-state').textContent = on ? 'On' : 'Off';
+      });
+    });
+  }
+  // The workout switches live on their own page now, workout-settings.html —
+  // the owner's reference screen (2026-10-25): grouped cards, staged Cancel /
+  // Save changes. This sheet keeps one row into it, so the one settings
+  // surface every athlete can reach still leads there.
   function appendWorkoutSection(body) {
-    var on = readPrefs().keepAwake !== false;
     var wrap = document.createElement('div');
     wrap.innerHTML =
       '<div style="border-top:1px solid rgba(255,255,255,0.1);margin:18px 0 14px;"></div>' +
-      '<div class="acct-sub">Workouts — on this device.</div>' +
-      '<button type="button" class="acct-toggle" id="acctKeepAwake" role="switch" aria-checked="' + on + '">' +
-        '<span>Keep screen on during workouts<br><span style="font-size:12px;font-weight:600;color:#a8a196;">' +
-        'From your first set until you finish. Off: only while a rest counts down.</span></span>' +
-        '<span class="acct-toggle-state">' + (on ? 'On' : 'Off') + '</span>' +
-      '</button>';
+      '<a class="acct-toggle" id="acctWorkoutSettings" href="workout-settings.html" style="text-decoration:none;">' +
+        '<span>Workout settings<span class="acct-toggle-sub">Rest timer, sounds, auto move, screen on, max weight.</span></span>' +
+        '<span class="acct-toggle-state" aria-hidden="true">\u203a</span></a>';
     body.appendChild(wrap);
-    wrap.querySelector('#acctKeepAwake').addEventListener('click', function () {
-      var p = readPrefs();
-      p.keepAwake = !(p.keepAwake !== false);
-      try { localStorage.setItem('mc_prefs_v1', JSON.stringify(p)); } catch (e) {}
-      render();
+  }
+
+  // ---- Phase S5: Diagnostics — the on-device error log ---------------------
+  // Reads mc_errors_v1, the ring buffer every page's head boot writes (runtime
+  // errors, unhandled rejections, and — via MC_ERRLOG.rec — refused storage
+  // writes and failed sync requests). Collapsed behind one button so it never
+  // crowds the settings an athlete actually uses.
+  var diagOpen = false;
+  function readErrors() {
+    try { var a = JSON.parse(localStorage.getItem('mc_errors_v1') || '[]'); return Array.isArray(a) ? a.filter(function (e) { return e && typeof e === 'object'; }) : []; }
+    catch (e) { return []; }
+  }
+  function fileOf(src) { return String(src || '').split('?')[0].split('#')[0].split('/').pop(); }
+  function errorItemHtml(e) {
+    var when = typeof e.t === 'number' ? new Date(e.t).toLocaleString() : '—';
+    var kind = String(e.k || 'error');
+    var where = [e.p ? 'on ' + e.p : '', e.s ? fileOf(e.s) + (e.l ? ':' + e.l : '') : ''].filter(Boolean).join(' · ');
+    return '<div class="acct-err-item">' +
+      '<div class="acct-err-head"><span class="acct-err-kind k-' + esc(kind.replace(/[^a-z]/gi, '')) + '">' + esc(kind) + '</span>' +
+        '<span>' + esc(when) + '</span></div>' +
+      '<div class="acct-err-msg">' + esc(e.m || 'Unknown error') + '</div>' +
+      (where ? '<div class="acct-err-where">' + esc(where) + '</div>' : '') +
+      (e.x ? '<details><summary>Stack trace</summary><pre>' + esc(e.x) + '</pre></details>' : '') +
+    '</div>';
+  }
+  function diagReport(meta) {
+    return JSON.stringify({ app: 'MC Training', at: new Date().toISOString(), meta: meta,
+      userAgent: navigator.userAgent, errors: readErrors() }, null, 2);
+  }
+  function appendDiagnosticsSection(body) {
+    var errs = readErrors();
+    var wrap = document.createElement('div');
+    wrap.innerHTML =
+      '<div style="border-top:1px solid rgba(255,255,255,0.1);margin:18px 0 14px;"></div>' +
+      '<button type="button" class="acct-btn acct-secondary" id="acctDiagBtn" aria-expanded="' + diagOpen + '" aria-controls="acctDiag">' +
+        'Diagnostics' + (errs.length ? ' (' + errs.length + ' logged)' : '') + '</button>' +
+      '<div id="acctDiag"' + (diagOpen ? '' : ' hidden') + '></div>';
+    body.appendChild(wrap);
+    var panel = wrap.querySelector('#acctDiag');
+    wrap.querySelector('#acctDiagBtn').addEventListener('click', function () {
+      diagOpen = !diagOpen;
+      this.setAttribute('aria-expanded', String(diagOpen));
+      panel.hidden = !diagOpen;
+      if (diagOpen) renderDiagnostics(panel);
+    });
+    if (diagOpen) renderDiagnostics(panel);
+  }
+  function renderDiagnostics(panel) {
+    var errs = readErrors();
+    var meta = { online: navigator.onLine, controlled: !!(navigator.serviceWorker && navigator.serviceWorker.controller) };
+    panel.innerHTML =
+      '<div class="acct-toggles" style="margin-top:8px;">' + toggleHtml({ k: 'telemetry', dflt: false,
+        label: 'Send error reports',
+        sub: currentUserObj
+          ? 'Off by default. Sends what is listed below — message, file, line, stack — never your workouts.'
+          : 'Only sent while signed in. Off by default.' }) + '</div>' +
+      '<div class="acct-diag-meta" id="acctDiagMeta">Online: <b>' + (meta.online ? 'yes' : 'no') + '</b> · ' +
+        'Offline cache: <b>' + (meta.controlled ? 'active' : 'not active') + '</b></div>' +
+      '<div class="acct-row"><button type="button" class="acct-btn acct-secondary" id="acctDiagCopy">Copy report</button>' +
+        '<button type="button" class="acct-btn acct-secondary" id="acctDiagClear"' + (errs.length ? '' : ' disabled') + '>Clear log</button></div>' +
+      '<div class="acct-err" id="acctDiagMsg" role="status"></div>' +
+      '<div class="acct-err-list">' + (errs.length ? errs.map(errorItemHtml).join('')
+        : '<div class="acct-diag-meta">No errors logged on this device.</div>') + '</div>' +
+      '<div style="border-top:1px solid rgba(255,255,255,0.1);margin:18px 0 14px;"></div>' +
+      '<div class="acct-sub">Repair this device — clears the offline copy of the app and its screen memory, then reloads. ' +
+        'Your workouts, set logs, macros, settings and sign-in are not touched. Needs a connection.</div>' +
+      '<button type="button" class="acct-btn acct-danger" id="acctRepair">Repair this device</button>';
+    wireToggles(panel);
+    // Which build is cached, read from the Cache API (the cache name carries
+    // the deploy's version, so this is what a support check compares).
+    try {
+      if (window.caches && caches.keys) caches.keys().then(function (keys) {
+        meta.caches = keys;
+        var el = panel.querySelector('#acctDiagMeta');
+        var app = keys.filter(function (k) { return /^mc-training/.test(k) && !/carry/.test(k); });
+        if (el && app.length) el.insertAdjacentHTML('beforeend', '<br>Build: <b>' + esc(app.join(', ')) + '</b>');
+      }).catch(function () {});
+      if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(function (est) {
+        meta.storage = est && { usage: est.usage, quota: est.quota };
+        var el = panel.querySelector('#acctDiagMeta');
+        if (el && est && est.quota) el.insertAdjacentHTML('beforeend', '<br>Storage used: <b>' +
+          (est.usage / 1048576).toFixed(1) + ' MB of ' + (est.quota / 1048576).toFixed(0) + ' MB</b>');
+      }).catch(function () {});
+    } catch (e) {}
+    var msg = panel.querySelector('#acctDiagMsg');
+    panel.querySelector('#acctDiagCopy').addEventListener('click', function () {
+      var text = diagReport(meta);
+      var done = function () { msg.style.color = '#86efac'; msg.textContent = 'Report copied.'; };
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text) ? done() : (msg.textContent = 'Could not copy.'); });
+        } else if (fallbackCopy(text)) done(); else msg.textContent = 'Could not copy.';
+      } catch (e) { msg.textContent = 'Could not copy.'; }
+    });
+    panel.querySelector('#acctDiagClear').addEventListener('click', function () {
+      try { localStorage.removeItem('mc_errors_v1'); } catch (e) {}
+      renderDiagnostics(panel);
+      var b = document.getElementById('acctDiagBtn'); if (b) b.textContent = 'Diagnostics';
+    });
+    panel.querySelector('#acctRepair').addEventListener('click', function () { repairDevice(msg); });
+  }
+  function fallbackCopy(text) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      var ok = document.execCommand('copy'); ta.remove(); return ok;
+    } catch (e) { return false; }
+  }
+
+  // ---- Phase S7: Repair this device ----------------------------------------
+  // Owner decision 2026-10-25: caches and UI state ONLY. An explicit allowlist,
+  // deliberately not "everything store-registry.json marks unsynced": that
+  // set includes the live session (mc_session_v1), typed drafts, the cloud
+  // outbox and the discard snapshot — all of them the athlete's data.
+  //   * every Cache Storage cache (the service worker refills on reload);
+  //   * derived, re-fetchable caches in localStorage (below);
+  //   * every mc_* key in sessionStorage (screen memory: tabs, filters).
+  // Refused offline: with the caches gone and no network, the reload has
+  // nothing to load — the one way this button could leave a blank screen.
+  var REPAIR_LOCAL_KEYS = ['mc_foodapi_cache_v1', 'mc_offline_prefetch_v1', 'mc_coach_report_v1', 'mc_published_programs_v1'];
+  function repairDevice(msg) {
+    if ('onLine' in navigator && !navigator.onLine) {
+      msg.style.color = ''; msg.textContent = 'You are offline. Repair needs a connection to download the app again.';
+      return;
+    }
+    var ask = window.MC_SHEET && MC_SHEET.confirm
+      ? MC_SHEET.confirm('Repair this device? The offline copy of the app is cleared and downloaded again. Your workouts, logs and sign-in stay.', { ok: 'Repair', cancel: 'Cancel', danger: true })
+      : Promise.resolve(window.confirm('Repair this device? Your workouts, logs and sign-in stay.'));
+    ask.then(function (yes) {
+      if (!yes) return;
+      msg.style.color = '#86efac'; msg.textContent = 'Repairing…';
+      REPAIR_LOCAL_KEYS.forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+      try {
+        for (var i = sessionStorage.length - 1; i >= 0; i--) {
+          var k = sessionStorage.key(i);
+          if (k && k.indexOf('mc_') === 0) sessionStorage.removeItem(k);
+        }
+      } catch (e) {}
+      var wipe = (window.caches && caches.keys)
+        ? caches.keys().then(function (keys) { return Promise.all(keys.map(function (k) { return caches.delete(k); })); })
+        : Promise.resolve();
+      try { if (window.MC_ERRLOG) MC_ERRLOG.rec('note', 'Repair this device run'); } catch (e) {}
+      wipe.catch(function () {}).then(function () { location.reload(); });
     });
   }
 
