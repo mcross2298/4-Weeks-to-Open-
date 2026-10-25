@@ -5,15 +5,15 @@
      mc-muscle-map.js @ line 21
      mc-readiness.js @ line 114
      mc-setlog.js @ line 346
-     mc-session.js @ line 3539
-     mc-classify.js @ line 4144
-     mc-suggest.js @ line 4280
-     mc-chart.js @ line 4896
-     mc-exercise-trends.js @ line 5179
-     mc-cues-data.js @ line 5438
-     mc-cues.js @ line 5588
-     mc-rep-progress.js @ line 5678
-     mc-superset-hop.js @ line 5825
+     mc-session.js @ line 3555
+     mc-classify.js @ line 4160
+     mc-suggest.js @ line 4296
+     mc-chart.js @ line 4912
+     mc-exercise-trends.js @ line 5195
+     mc-cues-data.js @ line 5454
+     mc-cues.js @ line 5604
+     mc-rep-progress.js @ line 5694
+     mc-superset-hop.js @ line 5841
 */
 
 /* ---- mc-muscle-map.js ---- */
@@ -582,6 +582,9 @@ try {
   function forgetRecent(pagePrefix) {
     var pre = pagePrefix + '|';
     _recent = _recent.filter(function (r) { return r.k.indexOf(pre) !== 0; });
+    // T2.2: the crash journal holds the same sets, and would replay a
+    // discarded workout on the next load.
+    try { journalForget(pre); } catch (e) {}
     try { if (_bc) _bc.postMessage({ forget: pre, ts: Date.now() }); } catch (e) {}
   }
 
@@ -704,6 +707,19 @@ try {
         jtx(db, 'readwrite').objectStore(JOS).put({
           id: rec.k + '|' + rec.d + '|' + rec.sn, k: rec.k, d: rec.d, sn: rec.sn, entry: rec.entry, ts: rec.ts
         });
+      } catch (e) {}
+    });
+  }
+  // Discard (via forgetRecent): drop every record for the page, so what the
+  // athlete threw away is not put back.
+  function journalForget(pre) {
+    jopen().then(function (db) {
+      if (!db) return;
+      try {
+        var os = jtx(db, 'readwrite').objectStore(JOS), rq = os.getAllKeys();
+        rq.onsuccess = function () {
+          (rq.result || []).forEach(function (id) { if (String(id).indexOf(pre) === 0) os.delete(id); });
+        };
       } catch (e) {}
     });
   }

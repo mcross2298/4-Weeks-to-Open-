@@ -17,6 +17,7 @@
              is NOT back after reopening.
      ONCE    reopening a second time changes nothing (the replay is a no-op on
              a store that already reflects the journal).
+     DISCARD a discarded workout is not put back on the next load.
    Plus a CONTROL that the kill really lost the write from localStorage, so a
    browser build that happens to flush in time cannot make this pass vacuously.
    The control is reported, not required: when it does not reproduce, the
@@ -109,6 +110,24 @@ async function reopen(profile) {
     check(r.sets === 0 && r.ticked === 0, 'UNTICK a set unticked 300 ms before a hard kill stays unticked',
       JSON.stringify({ raw: r.raw, sets: r.sets, ticked: r.ticked }));
     await r.c.close();
+    fs.rmSync(profile, { recursive: true, force: true });
+  }
+
+  // DISCARD: a discarded workout stays discarded. The journal holds the same
+  // sets, so a discard that cleared only mc_setlog_v1 had them put back on
+  // the next load (caught by test-mc-setlog-concurrency.js's clean-setup check).
+  {
+    const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'mc-journal-'));
+    const c = await launch(profile);
+    const p = c.pages()[0] || await c.newPage();
+    await p.goto(BASE + PAGE); await sleep(1800);
+    await tick(p); await sleep(1500);
+    await p.evaluate(() => window._FW._discardNow());
+    await sleep(2500);                                // it navigates to the dashboard
+    await p.goto(BASE + PAGE); await sleep(2500);
+    const sets = await setCount(p), ticked = await onScreen(p);
+    check(sets === 0 && ticked === 0, 'DISCARD a discarded workout is not replayed by the journal', JSON.stringify({ sets, ticked }));
+    await c.close();
     fs.rmSync(profile, { recursive: true, force: true });
   }
 

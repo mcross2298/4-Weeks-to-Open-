@@ -237,6 +237,9 @@
   function forgetRecent(pagePrefix) {
     var pre = pagePrefix + '|';
     _recent = _recent.filter(function (r) { return r.k.indexOf(pre) !== 0; });
+    // T2.2: the crash journal holds the same sets, and would replay a
+    // discarded workout on the next load.
+    try { journalForget(pre); } catch (e) {}
     try { if (_bc) _bc.postMessage({ forget: pre, ts: Date.now() }); } catch (e) {}
   }
 
@@ -359,6 +362,19 @@
         jtx(db, 'readwrite').objectStore(JOS).put({
           id: rec.k + '|' + rec.d + '|' + rec.sn, k: rec.k, d: rec.d, sn: rec.sn, entry: rec.entry, ts: rec.ts
         });
+      } catch (e) {}
+    });
+  }
+  // Discard (via forgetRecent): drop every record for the page, so what the
+  // athlete threw away is not put back.
+  function journalForget(pre) {
+    jopen().then(function (db) {
+      if (!db) return;
+      try {
+        var os = jtx(db, 'readwrite').objectStore(JOS), rq = os.getAllKeys();
+        rq.onsuccess = function () {
+          (rq.result || []).forEach(function (id) { if (String(id).indexOf(pre) === 0) os.delete(id); });
+        };
       } catch (e) {}
     });
   }

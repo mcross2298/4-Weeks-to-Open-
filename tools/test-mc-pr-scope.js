@@ -55,7 +55,7 @@ const eq = (m, got, want) =>
 async function reset(pg) {
   await pg.goto(baseUrl + NEUTRAL, { waitUntil: 'load' });
   for (let i = 0; i < 6; i++) {
-    await pg.evaluate(() => { try { localStorage.clear(); sessionStorage.clear(); } catch (e) {} });
+    await pg.evaluate(() => { try { localStorage.clear(); sessionStorage.clear(); } catch (e) {} try { indexedDB.deleteDatabase('mc-setlog-journal'); } catch (e) {} });
     await pg.waitForTimeout(200);
     const left = await pg.evaluate(() =>
       Object.keys(localStorage).filter((k) => k.indexOf('mc_') === 0).length);
