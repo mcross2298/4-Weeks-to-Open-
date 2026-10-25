@@ -326,6 +326,8 @@
     var errs = readErrors();
     var meta = { online: navigator.onLine, controlled: !!(navigator.serviceWorker && navigator.serviceWorker.controller) };
     panel.innerHTML =
+      // FB4: what happened to this account's reports
+      (window.MC_REPORT ? '<div class="acct-sub" style="margin:12px 0 0;"><b>Your reports</b></div><div id="acctReports"></div>' : '') +
       '<div class="acct-toggles" style="margin-top:8px;">' + toggleHtml({ k: 'telemetry', dflt: false,
         label: 'Send error reports',
         sub: currentUserObj
@@ -343,6 +345,7 @@
         'Your workouts, set logs, macros, settings and sign-in are not touched. Needs a connection.</div>' +
       '<button type="button" class="acct-btn acct-danger" id="acctRepair">Repair this device</button>';
     wireToggles(panel);
+    if (window.MC_REPORT) MC_REPORT.renderList(panel.querySelector('#acctReports'));
     // Which build is cached, read from the Cache API (the cache name carries
     // the deploy's version, so this is what a support check compares).
     try {

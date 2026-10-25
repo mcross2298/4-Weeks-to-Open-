@@ -2560,6 +2560,18 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > fails if either reaches an issue. Device text cannot @mention or close a code
 > fence. Without `WEEKLY_CHECKIN_SECRET` the job warns and exits green.
 > `supabase/phase16-field-triage.sql` is the owner's to run, after phase 15.
+>
+> **FB3 + FB4 shipped (2026-10-25).** FB3 is a scheduled task, **"Weekly field
+> review"** (Sundays 7:42pm America/New_York, a fresh session each run, draft
+> PRs only, never quotes an athlete on GitHub); it can be run at any time from
+> claude.ai's scheduled tasks, and `field-reports.yml` can be run by hand to
+> file what's new. It was created without connectors, so it needs the Supabase
+> connector added in the claude.ai UI to read descriptions. FB4:
+> `MC_REPORT.mine()` reads the account's own reports (read-own policy, never
+> asks for `user_id`), Diagnostics shows **Your reports** with status, and Home
+> shows a one-time **Fixed** note (`mc_reports_seen_v1`), built in the module
+> because no shared toast exists. The note sits above the tab bar, dismissed by
+> the athlete rather than by a timer.
 
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the

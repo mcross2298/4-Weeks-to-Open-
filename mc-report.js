@@ -26,6 +26,9 @@
      open({ from })   show the sheet; `from` names the page the problem was on
      flush()          send whatever is queued -> Promise<'sent N'|reason>
      queued()         the outbox, for Diagnostics and tests
+     mine()           this account's sent reports with status (FB4) -> Promise<rows|null>
+     renderList(el)   paint "Your reports" (queued + sent, with status) into el
+     checkFixed()     show the one-time "Fixed" note for newly fixed reports
    ========================================================================== */
 (function () {
   'use strict';
@@ -213,6 +216,22 @@
       '.mcr-send:disabled{opacity:0.5;cursor:default;}' +
       '.mcr-msg{font-size:14px;min-height:20px;margin-top:12px;text-align:center;color:var(--muted,#a8a196);}' +
       '.mcr-msg.ok{color:#86efac;}' +
+      // FB4: the one-time "Fixed" note (above the bottom nav) and the status list
+      '.mcr-fixed{position:fixed;left:12px;right:12px;bottom:calc(88px + env(safe-area-inset-bottom));z-index:10040;max-width:520px;margin:0 auto;' +
+        'display:flex;gap:8px;align-items:flex-start;padding:12px 8px 12px 14px;border-radius:14px;' +
+        'background:var(--card-bg,#121110);color:var(--text,#ede7d9);border:1px solid rgba(52,211,153,0.55);box-shadow:0 8px 24px rgba(0,0,0,0.35);}' +
+      '.mcr-fixed-txt{flex:1;font-size:14px;line-height:1.45;}' +
+      '.mcr-fixed-txt b{display:block;color:#34d399;font-size:15px;margin-bottom:2px;}' +
+      '.mcr-fixed-x{flex-shrink:0;width:48px;height:48px;border:none;background:transparent;color:var(--text,#ede7d9);font-size:24px;cursor:pointer;border-radius:12px;}' +
+      '.mcr-fixed-x:focus-visible{outline:2px solid var(--accent,#d4af37);}' +
+      '.mcr-li{border:1px solid var(--hairline,rgba(255,255,255,0.1));border-radius:10px;padding:10px 12px;margin-top:8px;font-size:13px;}' +
+      '.mcr-li-head{display:flex;gap:8px;justify-content:space-between;color:var(--muted,#a8a196);}' +
+      '.mcr-li-status{font-weight:800;color:var(--text,#ede7d9);}' +
+      '.mcr-li-status.is-fixed{color:#34d399;}' +
+      '.mcr-li-msg{margin-top:4px;color:var(--text,#ede7d9);word-break:break-word;}' +
+      '.mcr-list-empty{font-size:13px;color:var(--muted,#a8a196);margin-top:8px;}' +
+      'html[data-theme="light"] .mcr-fixed-txt b,html[data-theme="light"] .mcr-li-status.is-fixed{color:#15803d;}' +
+      'html[data-theme="light"] .mcr-fixed{border-color:rgba(21,128,61,0.5);}' +
       'html[data-theme="light"] .mcr-text{background:rgba(0,0,0,0.04);}' +
       'html[data-theme="light"] .mcr-msg.ok{color:#15803d;}';
     document.head.appendChild(st);
@@ -313,14 +332,128 @@
     setTimeout(function () { try { text.focus({ preventScroll: true }); } catch (e) {} }, 60);
   }
 
+  // ---- FB4: what happened to my reports ---------------------------------------
+  // client_reports.status is moved by the field-reports Edge Function when the
+  // report's GitHub issue is filed, closed or reopened. The athlete reads only
+  // their own rows (phase 15's read-own policy).
+  var SEEN = 'mc_reports_seen_v1';   // ids whose "Fixed" note was already shown
+  var STATUS = {
+    'new': 'Sent', filed: 'Being looked at', fixing: 'Being fixed',
+    fixed: 'Fixed', wontfix: 'Won’t fix', duplicate: 'Already reported'
+  };
+  function statusLabel(s) { return STATUS[s] || 'Sent'; }
+
+  function mine() {
+    var SB = window.MC_SB;
+    if (!SB || !SB.configured || !SB.currentUser) return Promise.resolve(null);
+    if ('onLine' in navigator && !navigator.onLine) return Promise.resolve(null);
+    return SB.currentUser().then(function (u) {
+      if (!u || !SB.client) return null;
+      return SB.client.from('client_reports')
+        .select('id, created_at, category, severity, message, status, resolved_at')
+        .order('created_at', { ascending: false })
+        .limit(20)
+        .then(function (r) { return r && !r.error && Array.isArray(r.data) ? r.data : null; });
+    }).catch(function () { return null; });
+  }
+
+  // Fixed reports this device has not announced yet, oldest fix first.
+  function newlyFixed(rows, seen) {
+    var had = {};
+    (Array.isArray(seen) ? seen : []).forEach(function (id) { had[id] = 1; });
+    return (Array.isArray(rows) ? rows : []).filter(function (r) {
+      return r && r.status === 'fixed' && r.id != null && !had[r.id];
+    }).sort(function (a, b) { return String(a.resolved_at || '').localeCompare(String(b.resolved_at || '')); });
+  }
+  function markSeen(ids) {
+    var seen = read(SEEN, []);
+    if (!Array.isArray(seen)) seen = [];
+    ids.forEach(function (id) { if (seen.indexOf(id) < 0) seen.push(id); });
+    try { localStorage.setItem(SEEN, JSON.stringify(seen.slice(-100))); } catch (e) {}
+  }
+  function snippet(s, n) {
+    s = String(s || '').replace(/\s+/g, ' ').trim();
+    return s.length > n ? s.slice(0, n - 1) + '…' : s;
+  }
+  function day(iso) {
+    try { return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); } catch (e) { return ''; }
+  }
+
+  // The one-time note. Built here (no shared toast exists — see CLAUDE.md's
+  // MC_TOAST record) and dismissed by the athlete, not by a timer, because a
+  // fix to something they reported is worth reading.
+  function showFixedNote(list) {
+    if (!list.length || document.getElementById('mcrFixed')) return false;
+    injectStyle();
+    var first = list[0];
+    var el = document.createElement('div');
+    el.id = 'mcrFixed';
+    el.className = 'mcr-fixed';
+    el.setAttribute('role', 'status');
+    el.innerHTML =
+      '<div class="mcr-fixed-txt"><b>Fixed' + (list.length > 1 ? ' — ' + list.length + ' of your reports' : '') + '</b>' +
+        '<span>Your report from ' + esc(day(first.created_at)) +
+        (first.message ? ' (“' + esc(snippet(first.message, 60)) + '”)' : '') +
+        (list.length > 1 ? ' and ' + (list.length - 1) + ' more' : '') +
+        '. The fix arrives with the next app update. Thank you for reporting it.</span></div>' +
+      '<button type="button" class="mcr-fixed-x" aria-label="Dismiss">×</button>';
+    el.querySelector('.mcr-fixed-x').addEventListener('click', function () { el.remove(); });
+    document.body.appendChild(el);
+    markSeen(list.map(function (r) { return r.id; }));
+    return true;
+  }
+  function checkFixed() {
+    return mine().then(function (rows) {
+      if (!rows) return 0;
+      var list = newlyFixed(rows, read(SEEN, []));
+      showFixedNote(list);
+      return list.length;
+    });
+  }
+
+  // For the account sheet's Diagnostics: queued reports first, then the
+  // athlete's own sent reports with their status.
+  function listHtml(rows) {
+    var q = queued();
+    var items = q.map(function (r) {
+      return { when: r.created_at, msg: r.message, status: 'Waiting to send' };
+    }).concat((rows || []).map(function (r) {
+      return { when: r.created_at, msg: r.message, status: statusLabel(r.status), fixed: r.status === 'fixed' };
+    }));
+    if (!items.length) return '<div class="mcr-list-empty">No reports from this account yet.</div>';
+    return items.map(function (it) {
+      return '<div class="mcr-li"><div class="mcr-li-head"><span class="mcr-li-status' + (it.fixed ? ' is-fixed' : '') + '">' +
+        esc(it.status) + '</span><span>' + esc(day(it.when)) + '</span></div>' +
+        '<div class="mcr-li-msg">' + esc(snippet(it.msg, 120)) + '</div></div>';
+    }).join('');
+  }
+  function renderList(container) {
+    if (!container) return;
+    injectStyle();
+    container.innerHTML = '<div class="mcr-list-empty">Loading your reports…</div>';
+    mine().then(function (rows) {
+      container.innerHTML = listHtml(rows) +
+        (rows ? '' : '<div class="mcr-list-empty">Sign in and go online to see what happened to sent reports.</div>');
+    });
+  }
+
   window.MC_REPORT = {
-    open: open, flush: flush, queued: queued,
-    _buildRow: buildRow, _fingerprint: fingerprint, _workoutPage: workoutPage
+    open: open, flush: flush, queued: queued, mine: mine, checkFixed: checkFixed, renderList: renderList,
+    _buildRow: buildRow, _fingerprint: fingerprint, _workoutPage: workoutPage,
+    _newlyFixed: newlyFixed, _statusLabel: statusLabel, _listHtml: listHtml, _showFixedNote: showFixedNote
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = window.MC_REPORT;
 
-  // Send anything a basement or a signed-out session left behind.
-  function later() { setTimeout(function () { flush(); }, 5000); }
+  // Send anything a basement or a signed-out session left behind, then — on
+  // Home only, which every athlete returns to — say if something they
+  // reported was fixed.
+  function later() {
+    setTimeout(function () {
+      flush().then(function () {
+        if (/(^|\/)(dashboard\.html)?$/.test(location.pathname)) checkFixed();
+      });
+    }, 5000);
+  }
   if (document.readyState === 'complete') later();
   else window.addEventListener('load', later);
   window.addEventListener('online', function () { flush(); });

@@ -142,6 +142,44 @@ function beaconFingerprint() {
     ok(/unique \(user_id, client_id\)/.test(sql), 'SQL de-duplicates on (user_id, client_id)');
   }
 
+  // 6. FB4 — status read-back and the one-time Fixed note
+  {
+    const { R } = sandbox();
+    const rows = [
+      { id: 1, status: 'fixed', resolved_at: '2026-10-27T00:00:00Z', created_at: '2026-10-25T00:00:00Z' },
+      { id: 2, status: 'filed' },
+      { id: 3, status: 'fixed', resolved_at: '2026-10-26T00:00:00Z', created_at: '2026-10-24T00:00:00Z' },
+      { id: 4, status: 'wontfix' }, null
+    ];
+    const nf = R._newlyFixed(rows, [3]);
+    ok(nf.length === 1 && nf[0].id === 1, 'only fixed reports not yet announced, got ' + JSON.stringify(nf.map((r) => r.id)));
+    ok(R._newlyFixed(rows, []).map((r) => r.id).join() === '3,1', 'oldest fix first');
+    ok(R._newlyFixed(rows, [1, 3]).length === 0, 'an announced fix is never announced again');
+    ok(R._newlyFixed(null, null).length === 0, 'no rows, no note');
+    ok(R._statusLabel('filed') === 'Being looked at' && R._statusLabel('fixed') === 'Fixed' &&
+       R._statusLabel('wontfix') === 'Won’t fix' && R._statusLabel('weird') === 'Sent', 'status labels');
+    const html = R._listHtml([{ created_at: '2026-10-25T00:00:00Z', message: '<img src=x onerror=alert(1)>', status: 'fixed' }]);
+    ok(!/<img/.test(html) && /&lt;img/.test(html), 'a report message is escaped in the list');
+    ok(/is-fixed/.test(html) && /Fixed/.test(html), 'fixed status shown');
+  }
+  {
+    // mine() asks only for this account's rows via the read-own policy and
+    // returns null rather than throwing when it cannot read.
+    const store = {};
+    const selects = [];
+    const s = sandbox({ store });
+    s.ctx.window.MC_SB.client.from = (t) => ({
+      select: (cols) => { selects.push({ t, cols }); return { order: () => ({ limit: () => Promise.resolve({ data: [{ id: 9, status: 'fixed' }] }) }) }; }
+    });
+    const rows = await s.R.mine();
+    ok(Array.isArray(rows) && rows[0].id === 9, 'mine() returns rows');
+    ok(selects[0].t === 'client_reports' && !/user_id/.test(selects[0].cols), 'mine() reads client_reports and never asks for user_id');
+    const off = sandbox({ offline: true });
+    ok((await off.R.mine()) === null, 'offline: mine() is null');
+    const so = sandbox({ signedOut: true });
+    ok((await so.R.mine()) === null, 'signed out: mine() is null');
+  }
+
   console.log((fail ? 'FAIL' : 'ok') + ' test-mc-report: ' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
 })();

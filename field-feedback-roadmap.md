@@ -68,6 +68,11 @@ multi-phase rule in `CLAUDE.md`).
   what it handled with `<!-- field-review -->` so the next run skips it until
   something new arrives. It never quotes an athlete on GitHub.
 
+- **FB4 (2026-10-25)** — Diagnostics → **Your reports** (Waiting to send / Sent /
+  Being looked at / Fixed / Won't fix), and a one-time **Fixed** note on Home
+  ("the fix arrives with the next app update" — the issue closes at merge, and the
+  deploy follows about 20 minutes later). 45-check gate.
+
 ## Running it on demand
 
 Owner decision: weekly, **plus a way to pull reports and errors at any time.**
