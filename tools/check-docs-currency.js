@@ -231,6 +231,7 @@ const KNOWN_MODULES = [
   'mc-recap.js',
   'mc-rep-progress.js',
   'mc-replace.js',
+  'mc-report.js',
   'mc-reps.js',
   'mc-resume.js',
   'mc-s3-engine.js',

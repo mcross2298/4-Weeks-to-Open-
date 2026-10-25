@@ -92,6 +92,8 @@ jobs:
           node tools/test-mc-sync-merge.js
           node tools/test-mc-archive.js
           node tools/test-mc-error-beacon.js
+          node tools/test-mc-report.js
+          node tools/test-field-reports-sync.js
 
       - name: Sync runtime cycle tests (mc-sync.js pull/push/reload, real cycle not a copy)
         # Findings S1 (a failed local write must never let push() re-upload a

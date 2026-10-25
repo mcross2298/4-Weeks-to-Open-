@@ -305,11 +305,15 @@
     var wrap = document.createElement('div');
     wrap.innerHTML =
       '<div style="border-top:1px solid rgba(255,255,255,0.1);margin:18px 0 14px;"></div>' +
+      // FB1: a person's report, beside what the app caught by itself.
+      (window.MC_REPORT ? '<button type="button" class="acct-btn acct-secondary" id="acctReport" style="margin-bottom:8px;">Report a problem</button>' : '') +
       '<button type="button" class="acct-btn acct-secondary" id="acctDiagBtn" aria-expanded="' + diagOpen + '" aria-controls="acctDiag">' +
         'Diagnostics' + (errs.length ? ' (' + errs.length + ' logged)' : '') + '</button>' +
       '<div id="acctDiag"' + (diagOpen ? '' : ' hidden') + '></div>';
     body.appendChild(wrap);
     var panel = wrap.querySelector('#acctDiag');
+    var rep = wrap.querySelector('#acctReport');
+    if (rep) rep.addEventListener('click', function () { close(); MC_REPORT.open(); });
     wrap.querySelector('#acctDiagBtn').addEventListener('click', function () {
       diagOpen = !diagOpen;
       this.setAttribute('aria-expanded', String(diagOpen));
@@ -322,6 +326,8 @@
     var errs = readErrors();
     var meta = { online: navigator.onLine, controlled: !!(navigator.serviceWorker && navigator.serviceWorker.controller) };
     panel.innerHTML =
+      // FB4: what happened to this account's reports
+      (window.MC_REPORT ? '<div class="acct-sub" style="margin:12px 0 0;"><b>Your reports</b></div><div id="acctReports"></div>' : '') +
       '<div class="acct-toggles" style="margin-top:8px;">' + toggleHtml({ k: 'telemetry', dflt: false,
         label: 'Send error reports',
         sub: currentUserObj
@@ -339,6 +345,7 @@
         'Your workouts, set logs, macros, settings and sign-in are not touched. Needs a connection.</div>' +
       '<button type="button" class="acct-btn acct-danger" id="acctRepair">Repair this device</button>';
     wireToggles(panel);
+    if (window.MC_REPORT) MC_REPORT.renderList(panel.querySelector('#acctReports'));
     // Which build is cached, read from the Cache API (the cache name carries
     // the deploy's version, so this is what a support check compares).
     try {

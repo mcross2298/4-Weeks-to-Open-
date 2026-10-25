@@ -152,6 +152,20 @@
       "export": false,
       "note": "S6: capped ring buffer (last 20) of window 'error'/'unhandledrejection' events, written by the generated head-boot script on every page. Local debug breadcrumbs, not user data — deliberately not synced or backed up."
     },
+    "mc_reports_seen_v1": {
+      "owner": "mc-report.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "field-feedback-roadmap.md FB4: ids of this account's reports whose one-time Fixed note this device already showed (last 100)."
+    },
+    "mc_reports_outbox_v1": {
+      "owner": "mc-report.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "field-feedback-roadmap.md FB1: Report a problem rows waiting to reach client_reports (offline or signed out). Sent and removed by MC_REPORT.flush(); capped at 20."
+    },
     "mc_errors_sent_v1": {
       "owner": "mc-error-beacon.js",
       "storage": "local",

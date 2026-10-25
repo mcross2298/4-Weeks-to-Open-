@@ -90,6 +90,8 @@ node tools/test-mc-bridge.js           # cross-app bridge read layer
 node tools/test-mc-sync-merge.js       # mc-sync.js merge logic
 node tools/test-mc-archive.js          # workouts past the newest 200 are archived, not dropped; CSV export; backup nudge (R7)
 node tools/test-mc-error-beacon.js     # field errors sent once, signed-in only, spaced, trimmed (E / D-35)
+node tools/test-mc-report.js           # Report a problem: queued first, only accepted rows leave, fingerprints match the beacon (FB1)
+node tools/test-field-reports-sync.js  # report/crash -> redacted GitHub issue, de-duplicated; closed -> fixed (FB2)
 node tools/test-mc-program-progress.js # per-program day model (continuous days, rest-as-data)
 node tools/test-mc-program-tabs.js     # program-landing list model (adaptive depth, day numbers)
 node tools/test-mc-sw.js               # service-worker fetch strategy (L1, L3, L4, L5)
@@ -2527,6 +2529,49 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   "every unsynced key": that set holds the live session, drafts and the
 >   outbox. It is refused offline. `phase14-client-errors.sql` is still **not
 >   applied**.
+
+> **Companion feedback plan:** [`field-feedback-roadmap.md`](field-feedback-roadmap.md)
+> (opened 2026-10-25, `FB1`–`FB4`) closes the loop from a report to a fix:
+> capture → redacted GitHub issue → scheduled Claude fix session (draft PRs
+> only) → the reporter sees "Fixed". **The repository is public, so an issue
+> never carries the athlete's words** — those stay in `client_reports`,
+> readable by admins only.
+>
+> **FB1 shipped (2026-10-25).** `mc-report.js` (`MC_REPORT.open()`) is the
+> **Report a problem** sheet, on the account sheet and at the foot of
+> `workout-settings.html` (which the rest row links to mid-session). A report
+> goes into `mc_reports_outbox_v1` FIRST and is sent from there, so offline or
+> signed out loses nothing; Home flushes it. It is an explicit act, so it does
+> not wait for the telemetry switch. Its `error_fps` use the same djb2 as
+> `mc-error-beacon.js`, held equal by `tools/test-mc-report.js`, so a report
+> joins to `client_errors`. `supabase/phase15-client-reports.sql` is the
+> owner's to run.
+>
+> **FB2 shipped (2026-10-25).** `.github/workflows/field-reports.yml` runs
+> `tools/field-reports-sync.js` hourly, on demand, and when a triage issue is
+> closed or reopened. It asks the `field-reports` Edge Function (deployed,
+> `verify_jwt: false`, guarded by `CRON_SECRET` like `weekly-checkin`) for new
+> reports and crash types, opens **one issue per report and one per crash
+> fingerprint** (`field-report` / `field-error` labels), comments on a known
+> crash type's issue when it grows and reopens it if it recurs, and reports back
+> what it filed (`client_reports.issue_number`, `client_error_issues`). The
+> function never sends a report's message or a user id, and the sync script
+> never writes one: `tools/test-field-reports-sync.js` feeds it a leaky row and
+> fails if either reaches an issue. Device text cannot @mention or close a code
+> fence. Without `WEEKLY_CHECKIN_SECRET` the job warns and exits green.
+> `supabase/phase16-field-triage.sql` is the owner's to run, after phase 15.
+>
+> **FB3 + FB4 shipped (2026-10-25).** FB3 is a scheduled task, **"Weekly field
+> review"** (Sundays 7:42pm America/New_York, a fresh session each run, draft
+> PRs only, never quotes an athlete on GitHub); it can be run at any time from
+> claude.ai's scheduled tasks, and `field-reports.yml` can be run by hand to
+> file what's new. It was created without connectors, so it needs the Supabase
+> connector added in the claude.ai UI to read descriptions. FB4:
+> `MC_REPORT.mine()` reads the account's own reports (read-own policy, never
+> asks for `user_id`), Diagnostics shows **Your reports** with status, and Home
+> shows a one-time **Fixed** note (`mc_reports_seen_v1`), built in the module
+> because no shared toast exists. The note sits above the tab bar, dismissed by
+> the athlete rather than by a timer.
 
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**. Two items are still the
