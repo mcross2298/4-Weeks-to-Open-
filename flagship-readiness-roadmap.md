@@ -576,3 +576,18 @@ Supabase server's confirmation prompt; I verified the table is absent), `WEEKLY_
   check and is held while a workout is in progress.
 - **Telemetry is opt-in**, so these triggers fire only if the canary cohort turns on
   *Send error reports*.
+
+### S8 — Workout Settings page (2026-10-25, owner's reference screen)
+
+The owner shared a reference Workout Settings screen. Four calls via `AskUserQuestion`: its own
+page, **staged Cancel / Save changes** (this reverses S1's instant-apply), two switches where
+the example's "Auto move after logging" meant something else (**Start rest after logging**, the
+example's meaning, plus **Auto move after logging**, which opens the next exercise), and I chose
+the extra switches. Added: **Show max weight logged** (off). Left out: *Show rest timer*
+(Start rest after logging already covers it), *Free navigation* (locking sets would reverse how
+every engine works today) and *Rest timer notifications* (an iPhone suspends a backgrounded web
+app, so this needs a server push, which is unproven).
+
+`workout-settings.html` is in `EAGER_HTML` because the rest row's ⚙️ Rest cues panel links to it
+mid-session; the session toolbar has no width left for another control. The account sheet keeps
+one row into the page.

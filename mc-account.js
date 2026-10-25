@@ -238,10 +238,9 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
-  // One switch, instant-apply (owner decision 2026-10-25: no Cancel / Save —
-  // every other control in this sheet applies on tap, and a staged form is
-  // one more way to lose a change). The defaults here MUST match MC_PREFS.get()
-  // in mc-timer.js, which is what the workout pages actually read.
+  // One switch, applied on tap like every other control in this sheet. Used
+  // only by Diagnostics now; the workout switches moved to their own staged
+  // page (workout-settings.html).
   function toggleHtml(d) {
     var on = prefValue(d.k, d.dflt);
     return '<button type="button" class="acct-toggle" data-pref="' + d.k + '" data-dflt="' + (d.dflt ? 1 : 0) +
@@ -260,30 +259,18 @@
       });
     });
   }
-  // Phase S1: the workout switches an athlete needs before a session, in the
-  // one place every athlete can reach. Sound, vibration and the 10s cue also
-  // live in the rest row's "Rest cues" panel (mc-timer.js renderPrefToggles);
-  // both write the same mc_prefs_v1 keys, so they cannot disagree.
-  var WORKOUT_PREFS = [
-    { k: 'keepAwake', dflt: true, label: 'Keep screen on during workouts',
-      sub: 'From your first set until you finish. Off: only while a rest counts down.' },
-    { k: 'sound', dflt: true, label: 'Rest countdown sounds',
-      sub: 'A tone when a rest ends. On silent the screen flashes green at 0 either way.' },
-    { k: 'haptics', dflt: true, label: 'Vibrate when a rest ends',
-      sub: 'Android only — iPhone does not let web apps vibrate.' },
-    { k: 'autoMoveLog', dflt: true, label: 'Auto move after logging',
-      sub: 'Finishing an exercise opens the next one. Anything you typed is saved first.' },
-    { k: 'autoMoveRest', dflt: false, label: 'Auto move after rest',
-      sub: 'When a rest reaches 0, jump to your next set (without opening the keyboard).' }
-  ];
+  // The workout switches live on their own page now, workout-settings.html —
+  // the owner's reference screen (2026-10-25): grouped cards, staged Cancel /
+  // Save changes. This sheet keeps one row into it, so the one settings
+  // surface every athlete can reach still leads there.
   function appendWorkoutSection(body) {
     var wrap = document.createElement('div');
     wrap.innerHTML =
       '<div style="border-top:1px solid rgba(255,255,255,0.1);margin:18px 0 14px;"></div>' +
-      '<div class="acct-sub" id="acctWorkoutHdr">Workout settings — on this device, saved as you tap.</div>' +
-      '<div class="acct-toggles" role="group" aria-labelledby="acctWorkoutHdr">' + WORKOUT_PREFS.map(toggleHtml).join('') + '</div>';
+      '<a class="acct-toggle" id="acctWorkoutSettings" href="workout-settings.html" style="text-decoration:none;">' +
+        '<span>Workout settings<span class="acct-toggle-sub">Rest timer, sounds, auto move, screen on, max weight.</span></span>' +
+        '<span class="acct-toggle-state" aria-hidden="true">\u203a</span></a>';
     body.appendChild(wrap);
-    wireToggles(wrap);
   }
 
   // ---- Phase S5: Diagnostics — the on-device error log ---------------------

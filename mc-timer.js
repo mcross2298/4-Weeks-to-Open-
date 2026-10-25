@@ -38,7 +38,12 @@ const MC_PREFS = {
              // opens the next one, as it has since S3 — now switchable — and,
              // opt-in, a rest reaching zero moves to the next open set.
              autoMoveLog: p.autoMoveLog !== false,
-             autoMoveRest: p.autoMoveRest === true };
+             autoMoveRest: p.autoMoveRest === true,
+             // Workout Settings page (owner's reference screen, 2026-10-25):
+             // ticking a set starts the rest, as it always has — now
+             // switchable; and the all-time heaviest weight beside "Last".
+             autoRest: p.autoRest !== false,
+             showMax: p.showMax === true };
   },
   set(k, v) {
     const p = this.get(); p[k] = v;
@@ -962,7 +967,9 @@ function renderPrefToggles(host) {
       '.tf-pref{padding:4px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);' +
         'background:rgba(255,255,255,0.05);color:#59534b;font-size:10px;font-weight:800;' +
         'letter-spacing:0.05em;cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
-      '.tf-pref.on{color:#fbbf24;border-color:rgba(212,175,55,0.4);background:rgba(212,175,55,0.12);}';
+      '.tf-pref.on{color:#fbbf24;border-color:rgba(212,175,55,0.4);background:rgba(212,175,55,0.12);}' +
+      '.tf-allset{display:inline-flex;align-items:center;min-height:48px;padding:0 12px;font-size:13px;font-weight:800;' +
+        'color:var(--accent,#d4af37);text-decoration:none;}';
     document.head.appendChild(st);
   }
   const defs = [
@@ -985,6 +992,17 @@ function renderPrefToggles(host) {
     });
     host.appendChild(b);
   });
+  // Every other workout switch lives on its own page. Linked from here because
+  // this panel is the one settings surface reachable mid-session: the session
+  // toolbar has no width left for another control. Leaving is safe — the
+  // session, ticks, drafts and a running rest all survive a navigation (R1).
+  if (!host.querySelector('.tf-allset')) {
+    const a = document.createElement('a');
+    a.className = 'tf-allset';
+    a.href = 'workout-settings.html';
+    a.textContent = 'All workout settings \u2192';
+    host.appendChild(a);
+  }
 }
 
 buildTimerFloat();

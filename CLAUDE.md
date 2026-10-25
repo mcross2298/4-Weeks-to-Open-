@@ -2487,9 +2487,14 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > **instant-apply**; auto-move after logging **on**, after rest **off**.
 > Four things to know before touching these:
 > - **Workout prefs are `mc_prefs_v1`**, read through `MC_PREFS.get()` on
->   workout pages and directly in `mc-account.js` (which never loads
->   `mc-timer.js`). The two sets of defaults must match; `autoMoveLog` and
->   `autoMoveRest` are new. A rest that runs to zero dispatches
+>   workout pages and edited on **`workout-settings.html`** (the owner's
+>   reference screen: grouped cards, **staged Cancel / Save changes** — this
+>   reversed the earlier instant-apply decision the same day). The page's
+>   `GROUPS` defaults must match `MC_PREFS.get()`. New keys: `autoRest`
+>   (ticking a set starts the rest — the only auto-start site is
+>   `mc-setlog.js`), `autoMoveLog`, `autoMoveRest`, `showMax` (all-time max
+>   beside Last, from `readAllWorkouts()` by name). The page is in
+>   `EAGER_HTML`, because the rest row links to it mid-session. A rest that runs to zero dispatches
 >   `mc:rest-over` and washes the screen green (`#mcRestFlash`), whatever the
 >   sound pref says — the web cannot read the silent switch.
 > - **Double progression is the rep half of `mc-suggest.js`** (`repGoals()`):

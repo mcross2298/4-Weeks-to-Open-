@@ -453,7 +453,7 @@
     var p = readPending(), k = pendingKey(exId, sn);
     if (p[k]) { delete p[k]; writeStore(PK, JSON.stringify(p)); }
   }
-  function histText(exId) {
+  function histText(exId, card) {
     var sess = lsess(exId); if (!sess) return '';
     var top = null;
     Object.keys(sess.sets).forEach(function (k) {
@@ -464,7 +464,46 @@
     // back to the "Sep 11" this cue has always read. The displayed string is
     // byte-identical to the pre-fix one; only the stored value changed.
     if (!top) return dayLabel(sess.d);
-    return 'Last: ' + top.w + ' lb' + (top.rpe ? ' @' + top.rpe : '') + ' · ' + dayLabel(sess.d);
+    var mx = prefOn('showMax', false) ? allTimeMax(exId, card ? displayNameOf(card) : '') : 0;
+    return 'Last: ' + top.w + ' lb' + (top.rpe ? ' @' + top.rpe : '') + ' · ' + dayLabel(sess.d) +
+      (mx ? ' · Max ' + mx + ' lb' : '');
+  }
+
+  // "Show max weight logged" (Workout Settings, default off): the heaviest
+  // weight ever logged for this exercise, from every finished workout
+  // (MC_LOG.readAllWorkouts, the log plus the R7 archive, matched by name)
+  // and this exercise's own recent sessions in mc_setlog_v1 (which include
+  // today). Built once per page load into a name -> max map; the setlog half
+  // is read per call, so a set ticked today counts at once.
+  var _maxByName = null;
+  function maxByName() {
+    if (_maxByName) return _maxByName;
+    _maxByName = {};
+    try {
+      var L = _mcLog();
+      var all = (L && L.readAllWorkouts) ? L.readAllWorkouts() : [];
+      all.forEach(function (e) {
+        var sets = (L && L.readSets) ? L.readSets(e) : [];
+        sets.forEach(function (x) {
+          var w = parseFloat(x.w), n = String(x.name || '').trim().toLowerCase();
+          if (!n || !isFinite(w) || w <= 0 || w > 5000) return;
+          if (!_maxByName[n] || w > _maxByName[n]) _maxByName[n] = w;
+        });
+      });
+    } catch (e) {}
+    return _maxByName;
+  }
+  function allTimeMax(exId, name) {
+    var best = maxByName()[String(name || '').trim().toLowerCase()] || 0;
+    var hist = st()[ek(exId)] || [];
+    (Array.isArray(hist) ? hist : []).forEach(function (sess) {
+      if (!sess || !sess.sets) return;
+      Object.keys(sess.sets).forEach(function (k) {
+        var w = parseFloat(sess.sets[k] && sess.sets[k].w);
+        if (isFinite(w) && w > 0 && w <= 5000 && w > best) best = w;
+      });
+    });
+    return best;
   }
 
   // ---- active-exercise highlight ------------------------------------------
@@ -1456,7 +1495,9 @@
     else MC_HAPTICS.tap();
     updateHist(card, exId);
     updateCount(card, exId);
-    if (rs > 0 && typeof TMR !== 'undefined' && TMR.start) {
+    // "Start rest after logging" (Workout Settings, default on). Off, a tick
+    // only logs; the rest chip still starts a countdown when tapped.
+    if (rs > 0 && typeof TMR !== 'undefined' && TMR.start && prefOn('autoRest', true)) {
       var t = card.querySelector('.rest-timer');
       if (t) {
         // Use the rest value carried on the timer (from the program's data),
@@ -1469,7 +1510,7 @@
   }
   function updateHist(card, exId) {
     var h = card.querySelector('.mcl-hist-' + cssId(exId));
-    if (h) h.textContent = histText(exId);
+    if (h) h.textContent = histText(exId, card);
   }
   // Collapsed-header "done / total" so set progress reads without expanding.
   function updateCount(card, exId) {
@@ -1729,7 +1770,7 @@
                          (plan.stated ? '' : ' title="This exercise\u2019s prescription does not say how many sets ' +
                            '\u2014 showing ' + total + ' by default"') + '>0/' + total + '</span>' +
                        (drop.is ? '<span class="mcl-amrap" title="' + dropTitle + '">' + dropTag + '</span>' : '') +
-                       '<span class="mcl-hist mcl-hist-' + cid + '">' + histText(exId) + '</span>';
+                       '<span class="mcl-hist mcl-hist-' + cid + '">' + histText(exId, card) + '</span>';
 
     // Manual collapse control — only visible once mcl-alldone is set on this
     // toggle (updateCount()), i.e. after every set is logged. Lets an athlete
