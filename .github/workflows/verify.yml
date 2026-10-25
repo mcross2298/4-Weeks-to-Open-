@@ -584,6 +584,10 @@ jobs:
           # ticks included. Its graceful-close control runs in the same pass,
           # so a broken harness cannot read as a pass.
           if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-crash-recovery.js http://localhost:8080; then echo "FAILED: test-mc-crash-recovery"; EXIT=1; fi
+          # Crash journal (flagship readiness R1 step 9, Phase T2.2). A SIGKILL
+          # 300 ms after a tick loses it from localStorage; the IndexedDB
+          # journal must put it back on the next load, and an untick likewise.
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-crash-journal.js http://localhost:8080; then echo "FAILED: test-mc-crash-journal"; EXIT=1; fi
           # Exercise identity (Phase 2.1 / audit EN-1, EN-8). A history key must
           # name the EXERCISE, never its POSITION. 170 of 456 cards measured
           # across the fleet carried a positional data-id, and on the page that

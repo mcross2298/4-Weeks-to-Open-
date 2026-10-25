@@ -5,15 +5,15 @@
      mc-muscle-map.js @ line 21
      mc-readiness.js @ line 114
      mc-setlog.js @ line 346
-     mc-session.js @ line 3434
-     mc-classify.js @ line 4039
-     mc-suggest.js @ line 4175
-     mc-chart.js @ line 4791
-     mc-exercise-trends.js @ line 5074
-     mc-cues-data.js @ line 5333
-     mc-cues.js @ line 5483
-     mc-rep-progress.js @ line 5573
-     mc-superset-hop.js @ line 5720
+     mc-session.js @ line 3539
+     mc-classify.js @ line 4144
+     mc-suggest.js @ line 4280
+     mc-chart.js @ line 4896
+     mc-exercise-trends.js @ line 5179
+     mc-cues-data.js @ line 5438
+     mc-cues.js @ line 5588
+     mc-rep-progress.js @ line 5678
+     mc-superset-hop.js @ line 5825
 */
 
 /* ---- mc-muscle-map.js ---- */
@@ -643,6 +643,7 @@ try {
     entry.t = Date.now();
     var rec = { k: k, d: d, sn: sn, entry: entry, ts: entry.t };
     noteRecent(rec);
+    journal(rec);
     try { if (_bc) _bc.postMessage(rec); } catch (e) {}
     withStore(null);                   // replayRecent() carries the new entry
   }
@@ -655,9 +656,109 @@ try {
   function unsave(exId, sn) {
     var rec = { k: ek(exId), d: dayStamp(), sn: sn, entry: null, ts: Date.now() };
     noteRecent(rec);
+    journal(rec);
     try { if (_bc) _bc.postMessage(rec); } catch (e) {}
     withStore(null);
     recordUntick(rec);
+  }
+
+  // ---- the crash journal (flagship readiness R1 step 9, Phase T2.2) -------
+  // localStorage reaches the disk on the browser's schedule, not the page's:
+  // measured with GO_LIVE/flagship-audit/scenarios/fa-kill-window.js, a set
+  // ticked 0.3 s or 1.5 s before the process was killed was gone after the
+  // relaunch. A signed-in athlete gets it back from the cloud (FIX-02); a
+  // signed-out one had no other copy. So every tick and untick is also
+  // written to IndexedDB with durability 'strict', which completes only once
+  // the write is on disk, and the next load replays any record the set log
+  // is missing through the same locked, replayed write a tick uses.
+  //
+  // It is a journal, not a second store: only today's records are kept, a
+  // record the set log already reflects is a no-op, and everything still
+  // reads mc_setlog_v1. Where IndexedDB is unavailable (some private modes)
+  // every call here is a silent no-op, which is the behaviour before it.
+  var JDB = 'mc-setlog-journal', JOS = 'recs';
+  var _jdb = null;
+  function jopen() {
+    if (_jdb) return _jdb;
+    _jdb = new Promise(function (resolve) {
+      try {
+        if (typeof indexedDB === 'undefined' || !indexedDB) return resolve(null);
+        var rq = indexedDB.open(JDB, 1);
+        rq.onupgradeneeded = function () {
+          try { rq.result.createObjectStore(JOS, { keyPath: 'id' }); } catch (e) {}
+        };
+        rq.onsuccess = function () { resolve(rq.result); };
+        rq.onerror = rq.onblocked = function () { resolve(null); };
+      } catch (e) { resolve(null); }
+    });
+    return _jdb;
+  }
+  function jtx(db, mode) {
+    try { return db.transaction(JOS, mode, { durability: 'strict' }); }
+    catch (e) { return db.transaction(JOS, mode); }   // a browser without the option
+  }
+  function journal(rec) {
+    jopen().then(function (db) {
+      if (!db) return;
+      try {
+        jtx(db, 'readwrite').objectStore(JOS).put({
+          id: rec.k + '|' + rec.d + '|' + rec.sn, k: rec.k, d: rec.d, sn: rec.sn, entry: rec.entry, ts: rec.ts
+        });
+      } catch (e) {}
+    });
+  }
+  // On load: put back what the set log lost, and drop records from other
+  // days. Returns how many records it replayed (for the tests).
+  function replayJournal() {
+    return jopen().then(function (db) {
+      if (!db) return 0;
+      return new Promise(function (resolve) {
+        var recs = [];
+        try {
+          var t = jtx(db, 'readonly'), rq = t.objectStore(JOS).getAll();
+          rq.onsuccess = function () { recs = rq.result || []; };
+          t.oncomplete = function () { resolve(recs); };
+          t.onerror = t.onabort = function () { resolve([]); };
+        } catch (e) { resolve([]); }
+      }).then(function (recs) {
+        var today = dayStamp(), store = st(), stale = [], todo = [];
+        recs.forEach(function (r) {
+          if (!r || !r.k || r.sn == null) return;
+          if (r.d !== today) { stale.push(r.id); return; }
+          if (r.k.indexOf(PID + '|') !== 0) return;          // another page's: it replays there
+          var top = Array.isArray(store[r.k]) ? store[r.k][0] : null;
+          var cur = (top && top.d === r.d && top.sets) ? top.sets[r.sn] : null;
+          if (r.entry == null) { if (cur && !(cur.t > r.ts)) todo.push(r); }
+          else if (!cur || (cur.t || 0) < r.ts) todo.push(r);
+        });
+        if (stale.length) {
+          try { var w = jtx(db, 'readwrite').objectStore(JOS); stale.forEach(function (id) { w.delete(id); }); } catch (e) {}
+        }
+        if (!todo.length) return 0;
+        todo.forEach(function (r) { noteRecent({ k: r.k, d: r.d, sn: r.sn, entry: r.entry, ts: r.ts }); });
+        return Promise.resolve(withStore(null)).then(function () {
+          // Repaint what is already on screen; anything built later reads the
+          // repaired store through the usual restore.
+          todo.forEach(function (r) {
+            var exId = r.k.slice(PID.length + 1);
+            var row = document.getElementById('mclr-' + cssId(exId) + '-' + r.sn);
+            if (!row) return;
+            if (r.entry) paintLoggedRow(row);
+            else {
+              var ck = row.querySelector('.mcl-ck');
+              if (ck && ck.classList.contains('done')) {
+                ck.classList.remove('done'); ck.textContent = '\u2610'; ck.setAttribute('aria-checked', 'false');
+                row.classList.remove('done-row');
+              }
+            }
+            var card = row.closest('.ex-card, .ss-ex, .ex-item, .lift-card');
+            if (card) updateCountByCard(card);
+          });
+          if (window.MC_SCAN && MC_SCAN.schedule) MC_SCAN.schedule();
+          return todo.length;
+        });
+      });
+    }).catch(function () { return 0; });
   }
 
   // An untick used to reach only THIS device's store. mergeSetlog() unions
@@ -3153,6 +3254,7 @@ try {
                                     // checkboxes (see planFor above)
     rekeyCard: rekeyCard,            // R5 / D-09: mc-replace.js re-keys a swapped card
     deloadNow: deloadNow,            // T1.8: mc-suggest.js holds the load on a deload week
+    replayJournal: replayJournal,    // T2.2: the crash journal's load-time replay (tests)
     ensureRowsBuilt: ensureRowsBuilt,  // A-14: lets mc-session.js build a specific
                                     // card's rows before restoring checks onto it
     rowIdPrefix: function (card) {  // R1 / D-01: lets mc-session.js find a row's
@@ -3172,6 +3274,9 @@ try {
                                     // through here so a concurrent tab cannot
                                     // lose their write either.
   };
+  // T2.2: put back any tick the last page load lost to a hard kill.
+  try { replayJournal(); } catch (e) {}
+
 
   // ---- FIX-01, second half: notice a write from another tab ---------------
   // The lock stops the two tabs destroying each other's data. It does not

@@ -115,6 +115,7 @@ node tools/test-mc-pr-scope.js http://localhost:8080            # a PR belongs t
 node tools/test-mc-setlog-concurrency.js http://localhost:8080  # two-tab set-log durability (FIX-01, L-01)
 node tools/test-mc-store-resilience.js http://localhost:8080    # corrupt-store shapes, 5 pages (FIX-04, L-03)
 node tools/test-mc-crash-recovery.js http://localhost:8080      # process kill + cloud rehydrate (FIX-02, L-02)
+node tools/test-mc-crash-journal.js http://localhost:8080       # SIGKILL 300 ms after a tick/untick: the IndexedDB journal puts it back (R1 step 9, T2.2)
 node tools/test-mc-session-durability.js http://localhost:8080  # week round trip, mid-rest refresh, focused draft, untick, Finish, import, wake lock, rest-end bar, add set/skip, reorder, sheets, Back (flagship readiness R1/R2/R5)
 node GO_LIVE/flagship-audit/scenarios/fa-repro.js http://localhost:8080   # the 23 flagship-readiness journeys (R1-R5)
 node GO_LIVE/flagship-audit/scenarios/fa-engines.js                       # progression/max math + deletion-record merge (R1/R4)
@@ -2634,6 +2635,12 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   original's done sets (R5); an UN-swapped card shows the sets a substitute did
 >   for it today, found by the substitute's own `sw` field, so an undo survives a
 >   reload with no new store. Sets with no row get a `+N more sets done as …` line.
+> - **Every tick and untick is also journaled to IndexedDB** (`mc-setlog-journal`,
+>   `durability: 'strict'`) and the next load replays what `mc_setlog_v1` is
+>   missing (`replayJournal()`), today's records only. A SIGKILL 0.1–1.5 s after a
+>   tick lost it from localStorage in headless Chromium; the journal brings it back
+>   (`tools/test-mc-crash-journal.js`). **Not verified on iOS**, which is the
+>   platform the roadmap asked to check first.
 > - **The outbox drops a write the server refuses** (SQLSTATE 22/23, or HTTP
 >   400/404/409/422) and records it in diagnostics; 401/403, 5xx and no response
 >   still wait. **Deletion records** are pruned after a year, and **the SW's

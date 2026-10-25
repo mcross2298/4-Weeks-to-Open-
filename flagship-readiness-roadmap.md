@@ -683,3 +683,25 @@ hint's position, which also varies between two runs of the unchanged tree.
 `mc-replace.js` and now waits for the core bundle. It is not slower, and its
 DOMContentLoaded moves 12.7 → 12.1 s. Making it faster would mean rendering
 before `mc-replace.js`, whose swap repaint the engine calls directly.
+
+**T2.2 · the crash journal (R1 step 9).** `mc-setlog.js` writes every tick and
+untick to IndexedDB (`mc-setlog-journal`) with `durability: 'strict'`, and on load
+replays whatever the set log is missing through the same locked write a tick
+uses, then repaints the row. Only today's records are kept. Journaled for every
+athlete, not only signed-out ones: it costs one small write, and the replay is a
+no-op where the store already has the set.
+
+| SIGKILL after the tick | localStorage alone | after reopening the page |
+|---|---|---|
+| 100 ms | lost | kept, ticked on screen |
+| 300 ms | lost | kept, ticked on screen |
+| 1500 ms | lost | kept, ticked on screen |
+| 3000 ms | kept | kept |
+
+`tools/test-mc-crash-journal.js` is a CI gate now (TICK, ONCE and UNTICK; 0 of 3
+pass without the journal, and its control confirms the kill really lost the
+write). `fa-kill-window.js` reports both columns.
+
+**Not verified:** iOS. The roadmap asked for an iOS check first. WebKit's
+IndexedDB durability and how an installed PWA is killed both differ from desktop
+Chromium; the device-matrix item 2 run is where to see it.
