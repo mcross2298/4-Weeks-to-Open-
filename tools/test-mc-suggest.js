@@ -198,6 +198,14 @@ check('S4 open-ended work has no goals', suggest.repGoals(s10, '3×AMRAP', 'repe
 check('S4 cluster reps are summed before +1 (4+4+3 = 11 -> 12 of 9-12)',
   J(suggest.repGoals(session('Jan 1', { 1: { w: 100, r: '4+4+3' } }), '1×9-12', 'repeat')), J([12]));
 
+// Board decision: the box never pre-fills more reps than were done.
+check('S4 ghost on repeat is last session\'s reps, not the goal',
+  J(suggest.repGhosts(s10, suggest.repGoals(s10, '3×8-12', 'repeat'), 'repeat')), J([10, 9, 8]));
+check('S4 ghost after a load step is the bottom of the range',
+  J(suggest.repGhosts(s12, suggest.repGoals(s12, '3×8-12', 'progress'), 'progress')), J([8, 8, 8]));
+check('S4 no goal, no ghost',
+  J(suggest.repGhosts(s10, suggest.repGoals(s10, '12,10,8', 'repeat'), 'repeat')), J([null, null, null]));
+
 // ---- deloadWeight (Phase 2.1: auto-deload) ----
 check('deloadWeight: -10% off 200 lb barbell rounds to nearest 5 lb', suggest.deloadWeight(200, 'Barbell Squat'), 180);
 check('deloadWeight: -10% off 135 lb barbell rounds to nearest 5 lb', suggest.deloadWeight(135, 'Barbell Row'), 120);

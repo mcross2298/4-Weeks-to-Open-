@@ -25,7 +25,10 @@
    first and the load second. Short of the top → same load, and each set's
    rep ghost asks for one more than it did last time (never past the top);
    every set at the top → the load steps up and the rep ghost resets to the
-   bottom of the range. Fixed targets ("5×5", a "12,10,8" pyramid) have no
+   bottom of the range. Board decision (2026-10-25): the "one more rep" goal
+   is said in the HINT only ("Suggested: 100 lb × 11"); the reps box ghosts
+   what was actually done last time. A ghost ticked unchanged is logged as-is,
+   so a goal in the box would log reps nobody did. Fixed targets ("5×5", a "12,10,8" pyramid) have no
    range to climb and keep the prescribed reps, as before.
    ========================================================================== */
 (function () {
@@ -215,6 +218,22 @@
     });
   }
 
+  // What the reps box may PRE-FILL, per working set: never more than was done.
+  // After a load step the bottom of the range (fewer reps than last time, at
+  // a heavier load, is an honest starting point); otherwise last session's
+  // own reps for that set. Null where there is no goal or no logged reps.
+  function repGhosts(sess, goals, status) {
+    var ordered = Object.keys((sess && sess.sets) || {})
+      .sort(function (a, b) { return parseFloat(a) - parseFloat(b); })
+      .map(function (k) { return sess.sets[k]; });
+    return goals.map(function (g, i) {
+      if (g == null) return null;
+      if (status === 'progress') return g;
+      var last = ordered[i] ? repsOf(ordered[i].r) : NaN;
+      return isNaN(last) ? null : last;
+    });
+  }
+
   // The last working set's target (kept for callers that want one number).
   function topRep(setsStr) {
     var t = repTargets(setsStr);
@@ -344,6 +363,7 @@
     var goals = repGoals(sessions[0], setsStr, cls.status);
     if (goals.some(function (g) { return g != null; })) {
       out.r = goals;
+      out.rGhost = repGhosts(sessions[0], goals, cls.status);
       if (cls.status === 'repeat') out.why = 'same load — one more rep per set, up to the top of the range';
       if (cls.status === 'progress') out.why = 'top of the range on every set — load up, reps back to the bottom';
     }
@@ -493,14 +513,17 @@
       });
 
       // Phase S4: the rep half of double progression, on the same terms as
+      // the load above. The box carries rGhost (never more than was done);
+      // the goal itself is only in the hint — see the header.
+      // Same terms as
       // the load above — only a ghosted or empty field is touched, so a typed
       // or pending number always wins, and nothing here is ever persisted
       // until the athlete ticks the set. Rows are working rows in order (drop
       // rows excluded); a cluster's mini-set bubbles are never ghosted.
-      if (Array.isArray(target.r)) {
+      if (Array.isArray(target.rGhost)) {
         var rows = card.querySelectorAll('.mcl-row:not(.mcl-row-amrap)');
         Array.prototype.forEach.call(rows, function (row, i) {
-          var g = target.r[i];
+          var g = target.rGhost[i];
           var rin = row.querySelector('.mcl-r:not(.mcl-rmini)');
           if (g == null || !rin) return;
           var rg = !!rin.dataset.ghost;
@@ -558,7 +581,7 @@
       repsOf: repsOf,
       classifySession: classifySession, detectPlateau: detectPlateau, suggestFor: suggestFor,
       writeTarget: writeTarget, deloadWeight: deloadWeight,
-      repFloors: repFloors, repGoals: repGoals,
+      repFloors: repFloors, repGoals: repGoals, repGhosts: repGhosts,
       usableWeight: usableWeight
     };
   }

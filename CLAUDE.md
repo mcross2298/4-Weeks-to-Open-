@@ -2493,8 +2493,10 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   `mc:rest-over` and washes the screen green (`#mcRestFlash`), whatever the
 >   sound pref says — the web cannot read the silent switch.
 > - **Double progression is the rep half of `mc-suggest.js`** (`repGoals()`):
->   inside a range the rep ghost asks for last + 1 up to the top; at the top the
->   load steps and reps reset to the bottom. Only **6 authored prescriptions**
+>   inside a range the goal is last + 1 up to the top; at the top the load steps
+>   and reps reset to the bottom. **The goal is in the hint only**; the reps box
+>   ghosts what was done (`repGhosts()`), because a ghost ticked unchanged is
+>   logged as-is (board decision R-1). Only **6 authored prescriptions**
 >   use a range; it mostly serves custom workouts, whose reps are free text.
 > - **`MC_ERRLOG.rec(kind, message)`** (head boot) is the one recorder for
 >   failures that do not throw: `storage` from `MC_LOG.writeStore`, `network`
