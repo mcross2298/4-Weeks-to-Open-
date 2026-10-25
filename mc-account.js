@@ -352,7 +352,7 @@
       if (window.caches && caches.keys) caches.keys().then(function (keys) {
         meta.caches = keys;
         var el = panel.querySelector('#acctDiagMeta');
-        var app = keys.filter(function (k) { return /^mc-training/.test(k) && !/carry/.test(k); });
+        var app = keys.filter(function (k) { return /^mc-training/.test(k) && !/carry|fonts/.test(k); });
         if (el && app.length) el.insertAdjacentHTML('beforeend', '<br>Build: <b>' + esc(app.join(', ')) + '</b>');
       }).catch(function () {});
       if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(function (est) {
