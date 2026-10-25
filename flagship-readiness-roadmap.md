@@ -657,3 +657,29 @@ the code before it:
   `ss`); other multi-week pages keep the old shared paint.
 - **A carry-over copy with no Date header is never pruned**, since its age is
   unknown.
+
+### T2 · the optional items (owner chose all three, 2026-10-25)
+
+**T2.1 · the Modality Matrix pages are bundled.** `mm-p1/p2/p3` and
+`hv-block` load `workout-core.js` and `workout-logger.js` now. Their runs were
+broken by three modules and, on the `mm` pages, by the `MM.init` /
+`MM.renderSummary` inline calls. `mc-program-progress.js` and
+`mc-program-day.js` load ahead of the run, `mc-pm-data.js` ahead of
+`mc-muscle-map.js` (still before `mc-setlog.js`, which needs it), and
+`mc-group-split.js` after `mc-superset-hop.js`. None of them reads the run's
+modules at load. The inline calls moved to just after the core run.
+
+**Proven by DOM equivalence, not by reasoning:** every day of all four pages
+(32 renders) was snapshotted before and after. The rendered DOM and the set of
+`MC*` globals are identical; the only differences are moved HTML comments and a
+hint's position, which also varies between two runs of the unchanged tree.
+
+| Slow 3G, median of 3 | requests before → after | first paint |
+|---|---|---|
+| `mm-p1.html` | 58 → 35 | 12.1 s → 12.1 s |
+| `hv-block.html` | 52 → 29 | 11.4 s → 7.6 s |
+
+`mm-p1` gains no first paint: its render (`MM.init`) used to run after only
+`mc-replace.js` and now waits for the core bundle. It is not slower, and its
+DOMContentLoaded moves 12.7 → 12.1 s. Making it faster would mean rendering
+before `mc-replace.js`, whose swap repaint the engine calls directly.

@@ -165,51 +165,30 @@ html[data-theme="light"] .wtb-label{color:var(--accent);}
 <script src="mc-haptics.js"></script>
 <script src="mm-data.js"></script>
 <script src="mm-engine.js"></script>
+<div style="max-width:680px;margin:0 auto;" id="programSummary"></div>
 <!-- CI initiative roadmap Volume II Phase 4 / Initiative 06 — mc-replace.js
      re-paints saved exercise swaps; mm-engine.js's render() calls its
      MC_REPLACE.apply() hook directly (see mc-replace.js's own comment). -->
-<script src="mc-replace.js"></script>
-<script>MM.init('p1');</script>
-
-<div style="max-width:680px;margin:0 auto;" id="programSummary"></div>
-<script>MM.renderSummary();</script>
-
-<script src="mc-log-read.js"></script>
-<script src="mc-strain.js"></script>
+<!-- Phase T2.1: the program progress + day contracts load ahead of the
+     shared run so it can be one bundle; neither reads it at load. -->
 <script src="mc-program-progress.js"></script>
 <script src="mc-program-day.js"></script>
-<script src="mc-finish.js"></script>
-<script src="mc-supabase.js"></script>
-<script src="mc-sync.js"></script>
-<script src="mc-biometric.js"></script>
-<script src="program-overrides.js"></script>
-<script src="mc-hints.js"></script>
-<script src="mc-card-actions.js"></script>
-<script src="program-manager.js"></script>
-<script src="mc-live-tracker.js"></script>
+<script src="workout-core.js"></script>
+<!-- Phase T2.1: rendered after the shared run (it used to sit inside it). -->
+<script>MM.init('p1');</script>
+<script>MM.renderSummary();</script>
 <script src="mc-nav.js"></script>
 <script src="mc-summary.js"></script>
-<script src="mc-muscle-map.js"></script>
-<script src="mc-readiness.js"></script>
 <!-- Roadmap Phase 4 step 3: the deload week is read off the program's own
      schedule record, so mc-setlog.js needs mc-pm-data.js LOADED, not
      injected asynchronously later. Without this tag the record arrived
      after the first cards were built and a deload week silently
      prescribed full volume. -->
 <script src="mc-pm-data.js"></script>
-<script src="mc-setlog.js"></script>
-<script src="mc-session.js"></script>
-<script src="mc-classify.js"></script>
-<script src="mc-suggest.js"></script>
-<script src="mc-chart.js"></script>
-<script src="mc-exercise-trends.js"></script>
-<script src="mc-cues-data.js"></script>
-<script src="mc-cues.js"></script>
 <!-- Volume II Phase 5 / Initiative 07 -- mc-rep-progress.js shipped fleet-wide
      (owner decision, AskUserQuestion) for module-coverage consistency. -->
-<script src="mc-rep-progress.js"></script>
+<script src="workout-logger.js"></script>
 <script src="mc-group-split.js"></script>
-<script src="mc-superset-hop.js"></script>
 <script src="mc-sw-update.js"></script>
 <script src="conditioning-data.js"></script>
 <script src="mc-input-sheet.js"></script>
