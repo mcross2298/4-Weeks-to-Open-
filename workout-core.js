@@ -8,12 +8,12 @@
      mc-finish.js @ line 1163
      mc-supabase.js @ line 2174
      mc-sync.js @ line 3144
-     mc-biometric.js @ line 4212
-     program-overrides.js @ line 4316
-     mc-hints.js @ line 5295
-     mc-card-actions.js @ line 5423
-     program-manager.js @ line 6593
-     mc-live-tracker.js @ line 8471
+     mc-biometric.js @ line 4237
+     program-overrides.js @ line 4341
+     mc-hints.js @ line 5320
+     mc-card-actions.js @ line 5448
+     program-manager.js @ line 6618
+     mc-live-tracker.js @ line 8496
 */
 
 /* ---- mc-replace.js ---- */
@@ -3229,6 +3229,7 @@ try {
 
   var TABLE = 'user_sync';
   var DELETED_KEY = 'mc_workout_log_deleted_v1';   // R1 / D-24, see mergeWorkoutLog()
+  var UNTICK_KEY = 'mc_setlog_deleted_v1';          // see mergeSetlog()
   // store_key -> merge strategy
   var STORES = {
     'mc_setlog_v1':          'setlog',
@@ -3241,6 +3242,10 @@ try {
     // mergeWorkoutLog() drops every keyed entry, so a delete on one device
     // holds on all of them. Owned by mc-log-read.js's deleteWorkouts().
     'mc_workout_log_deleted_v1': 'dictByTs',
+    // { 'key|day|set': {ts} } — one record per unticked set, written by
+    // mc-setlog.js's unsave(). Same union rule as the workout deletions;
+    // mergeSetlog() drops the set on every device.
+    'mc_setlog_deleted_v1':   'dictByTs',
     // Flagship readiness R7 / D-39: workouts past the log's newest 200,
     // compacted by mc-log-read.js. Synced untrimmed, so the cloud keeps them.
     'mc_workout_archive_v1':  'workoutArchive',
@@ -3555,7 +3560,13 @@ try {
     return (L && L.normalizeSessions) ? L.normalizeSessions(arr)
                                       : (Array.isArray(arr) ? arr : []);
   }
-  function mergeSetlog(local, remote) {
+  // `unticked` (optional) is mc_setlog_deleted_v1, unioned from both sides:
+  // { 'key|day|set': { ts } }. A set entry whose tick time `t` is not newer
+  // than its untick record is dropped, so an untick on one device holds on
+  // the others; a set re-ticked after its untick carries a later `t` and
+  // stays. An entry with no `t` predates tick stamps, and any untick record
+  // for it is newer by construction.
+  function mergeSetlog(local, remote, unticked) {
     local = local || {}; remote = remote || {};
     var out = {}, keys = {}, k;
     for (k in local) keys[k] = 1;
@@ -3604,6 +3615,16 @@ try {
         });
       }
       days.forEach(function (x) { if (!x.ts) delete x.ts; }); // don't invent a field
+      if (unticked && typeof unticked === 'object') {
+        days = days.filter(function (x) {
+          Object.keys(x.sets).forEach(function (sn) {
+            var u = unticked[k + '|' + x.d + '|' + sn], e = x.sets[sn];
+            if (u && (u.ts || 0) >= ((e && e.t) || 0)) delete x.sets[sn];
+          });
+          return Object.keys(x.sets).length > 0;   // no empty day, as dropSet() does
+        });
+        if (!days.length) continue;
+      }
       out[k] = days.slice(0, 5);
     }
     return out;
@@ -3733,7 +3754,7 @@ try {
   // snapshot already held per page-group, returns the merged whole store and
   // the snapshot values to record. mergeSetlog itself is untouched — this
   // only decides WHICH slice of the store each remote row merges into.
-  function computeSetlogPullResult(wholeKey, localWhole, remoteByKey, snapshotByKey) {
+  function computeSetlogPullResult(wholeKey, localWhole, remoteByKey, snapshotByKey, unticked) {
     var localGroups = splitSetlogByPage(localWhole);
     var mergedGroups = {};
     Object.keys(localGroups).forEach(function (p) { mergedGroups[p] = localGroups[p]; });
@@ -3743,7 +3764,7 @@ try {
       if (rk.indexOf(prefix) !== 0) return;
       var page = rk.slice(prefix.length);
       var remoteGroup = remoteByKey[rk];
-      mergedGroups[page] = mergeSetlog(localGroups[page] || {}, remoteGroup);
+      mergedGroups[page] = mergeSetlog(localGroups[page] || {}, remoteGroup, unticked);
       newSnapshot[rk] = JSON.stringify(remoteGroup);
     });
     var whole = joinSetlogGroups(mergedGroups);
@@ -3752,7 +3773,7 @@ try {
     // device has migrated it simply stops changing and stops mattering —
     // deliberately left in the table rather than deleted from client code.
     if (remoteByKey[wholeKey] != null) {
-      whole = mergeSetlog(whole, remoteByKey[wholeKey]);
+      whole = mergeSetlog(whole, remoteByKey[wholeKey], unticked);
     }
     return { whole: whole, newSnapshot: newSnapshot };
   }
@@ -3918,7 +3939,11 @@ try {
         function pullSetlogKey(key) {
           var localWhole = parse(readRaw(key)) || {};
           var before = readRaw(key);
-          var result = computeSetlogPullResult(key, localWhole, remoteByKey, snapshot);
+          // The untick records from BOTH sides, as the workout log's deletion
+          // records are: an untick made on the other device arrives in the
+          // same pull as the set it takes back.
+          var unticked = mergeDictByTs(parse(readRaw(UNTICK_KEY)), remoteByKey[UNTICK_KEY]);
+          var result = computeSetlogPullResult(key, localWhole, remoteByKey, snapshot, unticked);
           // S1: same reasoning as pullKey() above — only record the
           // per-group snapshots (what pushSetlogKey() treats as "server
           // holds this") if the merged whole actually made it into

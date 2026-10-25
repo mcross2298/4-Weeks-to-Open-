@@ -37,6 +37,7 @@
     'mc_daily_v1', 'mc_plan_targets_v1', 'mc_macros_v1',
     'mc_session_summary_v1',        // synced since B-era; was missing here
     'mc_workout_log_deleted_v1',    // flagship readiness R1 / D-24
+    'mc_setlog_deleted_v1',         // unticked sets, so an import does not put them back
     'mc_workout_archive_v1',        // flagship readiness R7 / D-39
     'mc_custom_exercises_v1',       // G-01
     'mc_active_prog', 'mc_weekly_overrides_v1',
@@ -215,6 +216,7 @@
   //     those merge-safe too is R7's data-mobility work, not this step.
   var WL = 'mc_workout_log_v1', WLD = 'mc_workout_log_deleted_v1', SL = 'mc_setlog_v1';
   var WLA = 'mc_workout_archive_v1';   // R7: merged like the log, never replaced
+  var SLD = 'mc_setlog_deleted_v1';    // unticked sets, unioned like WLD
 
   function readJSON(k, fallback) {
     try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? fallback : v; }
@@ -243,7 +245,14 @@
       var local = readJSON(SL, {});
       if (!isDict(local)) local = {};
       var merged;
-      if (window.MC_MERGE && MC_MERGE.mergeSetlog) merged = MC_MERGE.mergeSetlog(local, data[SL]);
+      var unt = {};
+      [readJSON(SLD, {}), data[SLD]].forEach(function (d) {
+        if (isDict(d)) Object.keys(d).forEach(function (k) {
+          if (!unt[k] || ((d[k] && d[k].ts) || 0) > ((unt[k] && unt[k].ts) || 0)) unt[k] = d[k];
+        });
+      });
+      if (Object.keys(unt).length) plan.writes[SLD] = unt;
+      if (window.MC_MERGE && MC_MERGE.mergeSetlog) merged = MC_MERGE.mergeSetlog(local, data[SL], unt);
       else { merged = {}; Object.keys(data[SL]).forEach(function (k) { merged[k] = data[SL][k]; });
              Object.keys(local).forEach(function (k) { merged[k] = local[k]; }); }   // device wins per exercise
       plan.writes[SL] = merged;
@@ -257,7 +266,7 @@
       plan.archiveIn = data[WLA].length;
     }
     Object.keys(data).forEach(function (k) {
-      if (!isExportable(k) || k === WL || k === WLD || k === SL || k === WLA) return;
+      if (!isExportable(k) || k === WL || k === WLD || k === SL || k === WLA || k === SLD) return;
       plan.writes[k] = data[k];
       plan.replaced.push(k);
     });

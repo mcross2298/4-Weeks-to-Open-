@@ -276,3 +276,21 @@ html[data-theme="light"] .mcl-rest-adj{
   background:rgba(28,26,23,0.05);border-color:rgba(28,26,23,0.16);color:#1c1a17;
 }
 html[data-theme="light"] .mcl-rest-val{color:#a87708;}
+/* The way to video view and the cue toggles, on the row that replaced the
+   float that used to carry them. Second grid line, so the countdown and its
+   +/-15s stay where they were. */
+.mcl-rest-tools{grid-column:1 / -1;display:flex;gap:8px;}
+.mcl-rest-tool{
+  flex:1 1 0;min-width:0;min-height:48px;border-radius:8px;cursor:pointer;
+  background:transparent;border:1px solid rgba(255,255,255,0.14);
+  color:var(--muted,var(--ink-7,#8a8377));font-size:var(--fs-sm);font-weight:700;
+  font-family:inherit;-webkit-tap-highlight-color:transparent;
+}
+.mcl-rest-tool.on{color:var(--accent,#e0a82e);border-color:rgba(var(--accent-rgb,224,168,46),0.5);}
+.mcl-rest-cues{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:8px;}
+.mcl-rest-cues[hidden]{display:none;}
+.mcl-rest-cues .tf-pref{flex:1 1 calc(50% - 4px);min-height:48px;font-size:var(--fs-sm);padding:4px 10px;color:var(--muted,var(--ink-7,#8a8377));}
+html[data-theme="light"] .mcl-rest-tool,
+html[data-theme="light"] .mcl-rest-cues .tf-pref{background:rgba(28,26,23,0.05);border-color:rgba(28,26,23,0.16);}
+html[data-theme="light"] .mcl-rest-tool.on,
+html[data-theme="light"] .mcl-rest-cues .tf-pref.on{color:#a87708;border-color:rgba(168,119,8,0.5);background:rgba(168,119,8,0.10);}

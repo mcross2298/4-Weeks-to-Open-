@@ -480,9 +480,33 @@ Defects: D-35, D-40.
   - `tools/test-mc-error-beacon.js` (21 assertions) runs the real file in a sandbox.
   - The Executive Summary says what is sent and what never is.
 - **`verify.yml`:** every browser gate in the smoke step echoes `FAILED: <gate>`. The roadmap and CLAUDE.md both asked for this after a failure was buried under later gates' output.
-- The error beacon needs a new Supabase table, so it asks first.
-- Add a per-gate `FAILED: <gate>` echo in `verify.yml`.
-- A core bundle would change the no-build stance, so it's an owner decision.
+
+**J shipped (2026-10-24).** Decision: a generated core bundle — a committed file plus a `--check` gate, still no bundler and no `package.json`.
+- **`tools/build-bundles.js`** writes `workout-core.js` (12 modules: persistence, finish, sync, card actions) and `workout-logger.js` (12 modules: the set logger and session) from `tools/bundles.json`. It swaps a run for one tag only where the members appear **contiguously and in order** (HTML comments between them are kept, moved above the tag), so no module runs earlier or later than before. `workout-core.js` loads on 67 pages and `workout-logger.js` on 62; 6 and 14 pages interleave another script inside the run and keep their separate tags. `--check` runs in `verify.yml`: a stale bundle, a page still carrying a whole run, or a page loading a bundle and one of its members all fail.
+- **Each member is wrapped in its own `try/catch`.** As separate files, one module throwing at load stopped only itself; concatenated, it would stop everything after it. The catch re-throws on a timer with the member's name on the message, so it still reaches `mc_errors_v1` and the beacon. That is only safe for a member with no top-level declaration, so the generator refuses one with a top-level `function`/`const`/`let`/`class` or a file-level `'use strict'`. All 24 are a single IIFE today (or one assignment).
+- **The gates read source, not copies.** Ten source-scanning gates skip the bundles (`tools/bundle-outputs.js`, read from `bundles.json`), or "exactly once", "only writer" and "every reader guards" would count the copy as a second implementation. `check-script-manifest.py` expands a bundle tag back into its members for the capability and log-reader contracts.
+- **Measured** with the new `tools/measure-first-visit.js`: HTTP/2 + gzip (how Pages serves it), DevTools Slow 3G, service worker blocked, median of 3, this sandbox's Chromium.
+
+  | Page | Scripts | Script KB | First paint | DOMContentLoaded | Load |
+  |---|---|---|---|---|---|
+  | `mc-s1-back.html` | 43 → 21 | 386 → 373 | 12.0 → 7.4 s | 12.1 → 10.9 s | 16.6 → 15.4 s |
+  | `kitchen-sink-s3.html` | 45 → 23 | 389 → 376 | 11.6 → 7.5 s | 12.0 → 11.0 s | 16.4 → 15.5 s |
+  | `mm-p1.html` | 49 → 49 | 416 → 416 | 12.0 → 11.9 s | unchanged | unchanged |
+
+  First paint falls by about a third where the bundles apply; parsing and load move 7–10%. **Bytes barely move**, because concatenation is not minification, and bytes are what dominate a slow link. `mm-p1.html` is one of the pages that interleave a script inside the run, so it is not bundled.
+- **Not done:** minification (it needs a real JavaScript parser to be safe, which is a build-tool decision), and bundling the Modality Matrix pages (their run would need reordering, and module order is the risk this design avoids).
+- **Editing a member now means regenerating:** `node tools/build-bundles.js`. CI fails until you do.
+
+### N1–N3 · The three residuals after E · J
+
+Taken on the owner's go-ahead, as one PR (#372), after the R-phase residual lists.
+- **N3 · an untick survives sync (R1 residual).** `unsave()` writes `mc_setlog_deleted_v1` (`{'key|day|set': {ts}}`, pruned after 120 days) and `save()` stamps each set's tick time `t`. `mergeSetlog()` drops a set whose tick is not newer than its record, so a set re-ticked later stays; the per-page pull and the backup import union the records from both sides. Six assertions in `test-mc-sync-merge.js`, one of them the defect.
+- **N2 · video view and the cue toggles reachable (R2 residual).** The inline rest row gains **Full screen** and **Rest cues** (48px). Rest cues renders the same toggle list as the float's tray. Back from video view mid-rest remounts the row at the time remaining.
+- **N1 · page chrome at 48 (R6/G residual).** Back link (base.css and 53 per-page copies), week tabs (one `.tabs-bar .tab` rule; they were 42), the back icon, the dashboard topbar icons, PM unlock (36) and See all (16 tall), the landing icon, nutrition icons, Surprise Me, the guide link, the tour dot and Skip (31). `chrome-budgets.json` heights raised by hand, and the week tab is measured now. A one-shot `workflow_dispatch` job re-baselined the visual ratchet from CI, seeding the day-mode entry for the first time, and was then removed.
+
+**Known residuals, not fixed here:**
+- **The dashboard greeting has less room.** It was already cut off at every width; with five 48px controls it goes 92 → 72px at 390 and 84 → 66px at 320. Rearranging that row is a design call.
+- **The untick record keys on the day.** A set unticked on one day and the same set number ticked on a later day are different keys, as intended; a clock skew between devices larger than the gap between a tick and its untick could misorder them.
 
 ### Owner actions (no code)
 - Set the `WEEKLY_CHECKIN_SECRET` repo secret (D-33).

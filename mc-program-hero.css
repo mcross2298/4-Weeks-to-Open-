@@ -120,7 +120,7 @@
    the same family as the .mc-surprise-btn / .inst-header-link shortfall
    CLAUDE.md records as caught by no gate today: check-journey.js only
    measures session-shell controls, and no landing is in its table. */
-.pl-icon-btn{width:44px;height:44px;border-radius:var(--pl-r-md);background:rgba(255,255,255,.06);border:1px solid var(--pl-border-dim);display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;}
+.pl-icon-btn{width:48px;height:48px;border-radius:var(--pl-r-md);background:rgba(255,255,255,.06);border:1px solid var(--pl-border-dim);display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;}
 .pl-topbar-sp{flex:1;}
 .pl-tier-label{font-family:var(--pl-font-display);font-weight:var(--pl-fw-bold);font-size:var(--pl-fs-2xs);letter-spacing:.16em;text-transform:uppercase;color:var(--pl-ink-7);}
 .pl-tier-tappable{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity var(--pl-duration-fast) var(--pl-ease-standard);}
