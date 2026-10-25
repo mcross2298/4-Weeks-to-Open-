@@ -19,10 +19,14 @@
 //   Records what the workflow filed: a report becomes 'filed' with its issue
 //   number; a fingerprint's issue and reported count are upserted.
 //
+// POST { action: "status", issue, status: filed | fixing | needs_decision | fixed | wontfix }
+//   FB5. The workflow derives the status from the issue's state and labels
+//   (in-progress, needs-decision) and sends it here. Every report filed under
+//   the issue, and the crash type's row, follow. FB4's in-app "Fixed" note and
+//   the Field log read client_reports.status.
+//
 // POST { action: "resolve", issue, outcome: "fixed" | "wontfix" | "reopen" }
-//   An issue was closed (completed / not planned) or reopened. Every report
-//   filed under it, and the fingerprint row, follows. FB4's in-app "Fixed"
-//   note reads client_reports.status.
+//   The FB2 form, kept as an alias of "status".
 //
 // Deploy with verify_jwt: false — the cron secret is the authentication, as
 // for weekly-checkin.
@@ -132,23 +136,37 @@ async function filed(sb: ReturnType<typeof createClient>, body: any) {
   return { reports, errors };
 }
 
-async function resolve(sb: ReturnType<typeof createClient>, body: any) {
-  const issue = body.issue;
+// The statuses a triage issue can be in, as both tables store them. A report's
+// own 'new' / 'duplicate' are never set from here.
+const ISSUE_STATUSES = ["filed", "fixing", "needs_decision", "fixed", "wontfix"];
+
+// POST { action: "status", issue, status } — FB5. Labels on GitHub drive this:
+// the workflow works out the status from the issue's state and labels and
+// sends it. Every report filed under the issue, and the crash type's row,
+// follow. resolved_at is set on the way into fixed / wontfix and cleared on
+// the way out, so "when was this closed" stays true through a reopen.
+async function setStatus(sb: ReturnType<typeof createClient>, issue: unknown, status: unknown) {
   if (!Number.isInteger(issue)) throw new Error("issue must be an integer");
-  const outcome = body.outcome;
-  if (!["fixed", "wontfix", "reopen"].includes(outcome)) throw new Error("bad outcome");
-  const now = new Date().toISOString();
-  const status = outcome === "reopen" ? "filed" : outcome;
+  if (typeof status !== "string" || !ISSUE_STATUSES.includes(status)) throw new Error("bad status");
+  const closed = status === "fixed" || status === "wontfix";
+  const resolved_at = closed ? new Date().toISOString() : null;
   const { data: reps, error } = await sb.from("client_reports")
-    .update({ status, resolved_at: outcome === "reopen" ? null : now })
+    .update({ status, resolved_at })
     .eq("issue_number", issue)
     .select("id");
   if (error) throw new Error("client_reports: " + error.message);
   const { error: e2 } = await sb.from("client_error_issues")
-    .update({ resolved_at: outcome === "reopen" ? null : now })
+    .update({ status, resolved_at })
     .eq("issue_number", issue);
   if (e2) throw new Error("client_error_issues: " + e2.message);
-  return { reports: (reps || []).length };
+  return { reports: (reps || []).length, status };
+}
+
+// POST { action: "resolve", issue, outcome } — the FB2 form, kept as an alias.
+function resolve(sb: ReturnType<typeof createClient>, body: any) {
+  const map: Record<string, string> = { fixed: "fixed", wontfix: "wontfix", reopen: "filed" };
+  if (!(body.outcome in map)) throw new Error("bad outcome");
+  return setStatus(sb, body.issue, map[body.outcome]);
 }
 
 Deno.serve(async (req) => {
@@ -163,6 +181,7 @@ Deno.serve(async (req) => {
     if (body.action === "pending") return json(await pending(sb));
     if (body.action === "filed") return json(await filed(sb, body));
     if (body.action === "resolve") return json(await resolve(sb, body));
+    if (body.action === "status") return json(await setStatus(sb, body.issue, body.status));
     return json({ error: "Unknown action" }, 400);
   } catch (err) {
     return json({ error: String((err as Error).message || err).slice(0, 300) }, 500);

@@ -96,11 +96,60 @@ const env = { FIELD_SECRET: 's3cret', GITHUB_TOKEN: 'ghs_x', GITHUB_REPOSITORY: 
   ok(S.outcomeFor('reopened', null) === 'reopen', 'reopened -> reopen');
   ok(S.outcomeFor('edited', null) === null, 'other actions ignored');
   const ev = fakeWorld({});
-  const out = await S.runIssueEvent(env, { action: 'closed', issue: { number: 100, state_reason: 'completed', labels: [{ name: 'field-report' }] } }, ev.fetchImpl, () => {});
-  ok(out === 'fixed' && ev.calls.fn[0].body.issue === 100, 'a closed triage issue resolves its reports');
+  const out = await S.runIssueEvent(env, { action: 'closed', issue: { number: 100, state: 'closed', state_reason: 'completed', labels: [{ name: 'field-report' }] } }, ev.fetchImpl, () => {});
+  ok(out === 'fixed' && ev.calls.fn[0].body.issue === 100 && ev.calls.fn[0].body.action === 'status' && ev.calls.fn[0].body.status === 'fixed', 'a closed triage issue sets its reports fixed');
   const ev2 = fakeWorld({});
   const out2 = await S.runIssueEvent(env, { action: 'closed', issue: { number: 5, labels: [{ name: 'bug' }] } }, ev2.fetchImpl, () => {});
   ok(out2 === null && ev2.calls.fn.length === 0, 'a non-triage issue is ignored');
+
+  // 4. FB5 — labels and PRs drive status
+  const L = (...n) => n.map((name) => ({ name }));
+  ok(S.statusFor({ state: 'open', labels: L('field-report') }) === 'filed', 'open, no status label -> filed');
+  ok(S.statusFor({ state: 'open', labels: L('field-report', 'in-progress') }) === 'fixing', 'in-progress -> fixing');
+  ok(S.statusFor({ state: 'open', labels: L('field-error', 'needs-decision') }) === 'needs_decision', 'needs-decision -> needs_decision');
+  ok(S.statusFor({ state: 'open', labels: L('field-report', 'needs-decision', 'in-progress') }) === 'fixing', 'in-progress outranks needs-decision');
+  ok(S.statusFor({ state: 'closed', state_reason: 'completed', labels: L('field-report', 'in-progress') }) === 'fixed', 'closed outranks labels');
+  ok(S.statusFor({ state: 'closed', state_reason: 'not_planned', labels: L('field-report') }) === 'wontfix', 'not planned -> wontfix');
+  for (const [action, labels, want] of [['labeled', L('field-report', 'in-progress'), 'fixing'], ['unlabeled', L('field-report'), 'filed'], ['reopened', L('field-report', 'needs-decision'), 'needs_decision']]) {
+    const w = fakeWorld({});
+    const r = await S.runIssueEvent(env, { action, issue: { number: 9, state: 'open', labels } }, w.fetchImpl, () => {});
+    ok(r === want && w.calls.fn[0].body.status === want, action + ' -> ' + want + ', got ' + r);
+  }
+  const wEdit = fakeWorld({});
+  ok((await S.runIssueEvent(env, { action: 'edited', issue: { number: 9, state: 'open', labels: L('field-report') } }, wEdit.fetchImpl, () => {})) === null && wEdit.calls.fn.length === 0, 'an edit changes nothing');
+
+  ok(JSON.stringify(S.closingRefs('Fixes #12, closes #3 and resolves: #4. Refs #9. Fixes #12')) === '[12,3,4]', 'closing keywords found once each, plain refs ignored');
+  ok(S.closingRefs('fixed #7').length === 1 && S.closingRefs('prefix#7').length === 0, 'keyword needed before the number');
+
+  // a PR that fixes a triage issue labels it and sets fixing; a non-triage or closed issue is left alone
+  function prWorld(issues) {
+    const calls = { gh: [], fn: [] };
+    const fetchImpl = async (url, init) => {
+      const body = init.body ? JSON.parse(init.body) : null;
+      if (/functions\/v1/.test(url)) { calls.fn.push(body); return { status: 200, text: async () => '{"reports":1}' }; }
+      const path = url.replace('https://api.github.com/repos/o/r', '');
+      calls.gh.push({ method: init.method, path, body });
+      const m = path.match(/^\/issues\/(\d+)$/);
+      if (init.method === 'GET' && m) { const i = issues[m[1]]; return { status: i ? 200 : 404, text: async () => JSON.stringify(i || {}) }; }
+      if (path === '/labels') return { status: 422, text: async () => '{}' };
+      return { status: 200, text: async () => '{}' };
+    };
+    return { calls, fetchImpl };
+  }
+  const pw = prWorld({
+    5: { number: 5, state: 'open', labels: L('field-report') },
+    6: { number: 6, state: 'open', labels: L('bug') },
+    7: { number: 7, state: 'closed', labels: L('field-error') },
+    8: { number: 8, state: 'open', labels: L('field-error', 'in-progress') }
+  });
+  const moved = await S.runPullRequestEvent(env, { action: 'opened', pull_request: { number: 50, title: 'Fix timer', body: 'Fixes #5\nFixes #6\nCloses #7\nResolves #8\nFixes #99' } }, pw.fetchImpl, () => {});
+  ok(JSON.stringify(moved) === '[5,8]', 'only open triage issues move to in progress, got ' + JSON.stringify(moved));
+  ok(pw.calls.gh.some((c) => c.method === 'POST' && c.path === '/issues/5/labels' && c.body.labels[0] === 'in-progress'), 'the in-progress label is added');
+  ok(!pw.calls.gh.some((c) => c.path === '/issues/8/labels'), 'an issue already in progress is not relabelled');
+  ok(pw.calls.fn.filter((b) => b.action === 'status' && b.status === 'fixing').map((b) => b.issue).join() === '5,8', 'the database is told both');
+  const pw2 = prWorld({});
+  ok((await S.runPullRequestEvent(env, { action: 'closed', pull_request: { number: 51, body: 'Fixes #5' } }, pw2.fetchImpl, () => {})).length === 0 && pw2.calls.gh.length === 0, 'a closed PR is not an in-progress signal');
+  ok(S.LABELS['in-progress'] && S.LABELS['needs-decision'], 'both status labels are created');
 
   console.log((fail ? 'FAIL' : 'ok') + ' test-field-reports-sync: ' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);

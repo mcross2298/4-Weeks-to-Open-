@@ -91,7 +91,7 @@ node tools/test-mc-sync-merge.js       # mc-sync.js merge logic
 node tools/test-mc-archive.js          # workouts past the newest 200 are archived, not dropped; CSV export; backup nudge (R7)
 node tools/test-mc-error-beacon.js     # field errors sent once, signed-in only, spaced, trimmed (E / D-35)
 node tools/test-mc-report.js           # Report a problem: queued first, only accepted rows leave, fingerprints match the beacon (FB1)
-node tools/test-field-reports-sync.js  # report/crash -> redacted GitHub issue, de-duplicated; closed -> fixed (FB2)
+node tools/test-field-reports-sync.js  # report/crash -> redacted GitHub issue, de-duplicated; labels/PRs/close -> status (FB2, FB5)
 node tools/test-mc-program-progress.js # per-program day model (continuous days, rest-as-data)
 node tools/test-mc-program-tabs.js     # program-landing list model (adaptive depth, day numbers)
 node tools/test-mc-sw.js               # service-worker fetch strategy (L1, L3, L4, L5)
@@ -2572,6 +2572,21 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > shows a one-time **Fixed** note (`mc_reports_seen_v1`), built in the module
 > because no shared toast exists. The note sits above the tab bar, dismissed by
 > the athlete rather than by a timer.
+>
+> **FB5 + FB6 (2026-10-25) — status follows GitHub labels, and an owner-only
+> Field log.** The loop was tested end to end on a real phone (report #1 →
+> issue #377 → closed → Fixed), and that first report found two wrong fields
+> (#378: the program sent its card JSON, the build listed the fonts cache).
+> Status is now set **only on GitHub**: closing, reopening, the `in-progress`
+> and `needs-decision` labels, and a PR that says `Fixes #N` (which adds
+> `in-progress` itself). `field-reports.yml` runs on those events and sends one
+> `status` action to the Edge Function, which writes both `client_reports` and
+> `client_error_issues` (`supabase/phase17-field-status.sql` adds
+> `needs_decision` and the crash-type status column). `field-log.html` reads
+> both tables for an admin (`MC_SB.isOwner()`), newest first with status
+> filters, and is **read-only on purpose** so it can never disagree with the
+> issue. Its link appears in Diagnostics only for the owner. The athlete's
+> words are on that page and never on GitHub.
 
 > **Corrections and owner items.** Phase 2's "25 of 580 lifts off the ×0.5
 > increment rule" is corrected to **18 plus 1**.

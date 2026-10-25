@@ -350,7 +350,7 @@
   // their own rows (phase 15's read-own policy).
   var SEEN = 'mc_reports_seen_v1';   // ids whose "Fixed" note was already shown
   var STATUS = {
-    'new': 'Sent', filed: 'Being looked at', fixing: 'Being fixed',
+    'new': 'Sent', filed: 'Being looked at', fixing: 'Being fixed', needs_decision: 'Being looked at',
     fixed: 'Fixed', wontfix: 'Won’t fix', duplicate: 'Already reported'
   };
   function statusLabel(s) { return STATUS[s] || 'Sent'; }

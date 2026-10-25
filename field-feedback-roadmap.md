@@ -83,6 +83,42 @@ Owner decision: weekly, **plus a way to pull reports and errors at any time.**
 - **Read the raw reports:** Supabase → Table Editor → `client_reports` /
   `client_errors` (admins only).
 
+## FB5–FB7 — the history, and an "in progress" that means something (opened 2026-10-25)
+
+The loop test passed end to end (report #1 → issue #377 → closed → Fixed on the
+phone). Two gaps the owner named next: **a historical log** with open / in
+progress / closed, fed automatically, and a clear path for a real problem that
+needs a code or design change. Decisions (`AskUserQuestion`, 2026-10-25):
+**both** an in-app admin page and a GitHub Project board; **labels drive
+status**.
+
+| Phase | Objective | Files |
+|---|---|---|
+| FB5 | Labels drive status. `in-progress` (or a PR whose body says `Fixes #N`) → `fixing`, so the athlete sees **Being fixed**; `needs-decision` (added by the weekly review when it asks a question) → `needs_decision`; removing them, or reopening, goes back to `filed`. One new Edge Function action (`status`) replaces the closed-only `resolve`, which stays as an alias. `client_error_issues` gains the same status, so crash types read the same way. | `supabase/phase17-field-status.sql`, `supabase/functions/field-reports/`, `tools/field-reports-sync.js`, `.github/workflows/field-reports.yml`, `mc-report.js` |
+| FB6 | **Field log** (`field-log.html`), admins only (`MC_SB.isOwner()`): every report and crash type, newest first, with status filters (All / Open / In progress / Needs decision / Closed), the athlete's own words (admins can read them under the phase-15 policy), a link to the GitHub issue, and counts. Read-only: status is changed by labels on GitHub, one source of truth. Reached from Diagnostics, shown only to an admin. | `field-log.html`, `mc-account.js`, `sw.js` |
+| FB7 | **GitHub Project board.** Every triage issue is added to a user-level Project with a Status of New / In progress / Needs decision / Fixed / Won't fix, kept in step by the same workflow. Needs a fine-grained personal access token (Projects read/write) stored as a repo secret, because `GITHUB_TOKEN` cannot write to a user-level board. Redacted like the issues. | `.github/workflows/field-reports.yml`, `tools/field-reports-sync.js` |
+
+**FB5 + FB6 shipped (2026-10-25).** Owner action: run
+`supabase/phase17-field-status.sql`, after which the updated `field-reports`
+Edge Function is deployed (it writes the new status column, so it must not
+go out first).
+
+FB5 and FB6 ship together; FB7 opens with its own `AskUserQuestion` gate, since
+it needs a token the owner has to create.
+
+### What happens to a real problem
+
+1. A report or a new crash type becomes a redacted issue within the hour.
+2. The weekly review (or **Run now**) reads the full report from Supabase and
+   reproduces it. A plain code bug becomes a **draft PR** that says `Fixes #N`,
+   which moves the issue to **In progress**. Anything that needs a product or
+   design call gets **one question** on the issue and the `needs-decision` label.
+3. The owner answers on the issue, or opens a session with "work on #N". A
+   design change follows `CLAUDE.md`'s planning rule (a short roadmap or
+   mockup first, an `AskUserQuestion` between phases).
+4. Merging the PR closes the issue; the report becomes **Fixed** and the athlete
+   sees it after the next deploy.
+
 ## Owner actions
 
 - ~~Run `phase15` and `phase16`.~~ Applied 2026-10-25, read back from `pg_catalog`.
