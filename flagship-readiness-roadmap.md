@@ -508,6 +508,19 @@ Taken on the owner's go-ahead, as one PR (#372), after the R-phase residual list
 - **The dashboard greeting has less room.** It was already cut off at every width; with five 48px controls it goes 92 → 72px at 390 and 84 → 66px at 320. Rearranging that row is a design call.
 - **The untick record keys on the day.** A set unticked on one day and the same set number ticked on a later day are different keys, as intended; a clock skew between devices larger than the gap between a tick and its untick could misorder them.
 
+### Residuals 1–5 · after R3, R4, R5, R6 and G
+
+Taken on the owner's go-ahead, as one PR, from the "Known residuals" lists above.
+- **1 · The PR line survives a reload (R6).** A new best stores the weight it beat on the set (`pr` on the `mc_setlog_v1` entry). `paintLoggedRow()` redraws the line from it, without a second announcement. `prCheck()` can't simply be re-run on reload: by then the set itself, and any heavier set ticked after it, count as today's.
+- **2 · `#2d3748` has a readable value (G).** The set-logger placeholder and `.sl-hl` header read `var(--muted)` on `base.css` and the 12 pages carrying their own copy, in both themes. The light rules (`#b7b0a3`, `#8a8377`) were as faint as the dark one. `COOL_PENDING` is empty now.
+- **3 · A swap mid-exercise keeps its done sets (R5).** The substitute shows the sets already done on the original as done, read-only, labelled "Done as <original>", and the next tick goes to the next row. They stay in the original's bucket, so Finish banks them under the lift they were lifted on. Verified by driving `kitchen-sink-s3.html?day=1`: 2 ticks, swap, 2/4, reload, 2/4, tick set 3, 3/4, with set 3 stored under the substitute.
+- **4 · A record set ticked offline still notifies (R3).** `logSet()` takes the push the in-session check found, from local history, and the outbox replays it after the row is written. Only within 12 hours (`PUSH_FRESH_MS`). After that it is old news. Two cases in `tools/test-mc-outbox.js` (17 assertions).
+- **5 · Substitute weights read the right history (R4).** `mc-biomech.js`'s `historyWeight()` and `mc-card-actions.js`'s `lastLoggedWeight()` matched the first 24 characters anywhere in a key, so they also matched longer names sharing the prefix. **Measuring found a worse bug:** both read `bucket.sets`, but a bucket has been a list of sessions since EN-10. So neither had found any logged weight since then, and every "from your log" weight was really an estimate. Now a key matches on the whole name (plus a `-<n>` occurrence suffix), every session is read, and the card's own bucket is read by the logger's key. Five cases in `tools/test-mc-biomech.js`, one of which fails on the old code.
+
+**Known residuals, not fixed here:**
+- **Undoing a swap** rebuilds the card under the original. Sets ticked on the substitute stay the substitute's and are not shown on the original's rows.
+- **The carry-over is by set number.** If the substitute has fewer rows than the sets already done, the extra ones aren't shown on the card. They still count at Finish.
+
 ### Owner actions (no code)
 - Set the `WEEKLY_CHECKIN_SECRET` repo secret (D-33).
 - Turn on leaked-password protection (D-34).

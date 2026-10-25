@@ -2478,6 +2478,21 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > `renderPrefToggles()` as the float; and the page chrome is at 48 — the week
 > tabs through one `.tabs-bar .tab` rule in `base.css`, which no per-page `.tab`
 > overrides because none sets a height.
+> **Residuals 1–5 shipped (2026-10-25).** These are from the R-phase residual
+> lists. Three things to know:
+> - **A new-best set stores the weight it beat** (`pr` on its `mc_setlog_v1`
+>   entry), and `paintLoggedRow()` repaints the PR line from it. Don't re-run
+>   `prCheck()` on a reload: by then the set itself counts as today's.
+> - **A swapped card shows the original's done sets as done and read-only**
+>   (`paintCarried()`, `.mcl-carried`), keyed by `preSwapIdOf()`. They stay in
+>   the original's bucket.
+> - **A set-log bucket is a LIST of sessions.** `mc-biomech.js` read
+>   `bucket.sets` and so found no history after EN-10. Use
+>   `MCBiomech.heaviestIn()`, or `MCSetlogUtil.histKey()` for a card's own key.
+>   Never match a key by substring.
+>
+> Also: `logSet(entry, push)` queues the push with an offline write and sends
+> it on replay, and `#2d3748` is `var(--muted)`.
 
 > **S1–S7 shipped (2026-10-25) — settings, double progression, diagnostics.**
 > Surveyed first: the wake-lock switch, the global error catchers, the beacon
