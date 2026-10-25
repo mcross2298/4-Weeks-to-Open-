@@ -210,8 +210,14 @@ workflow below, so a green CI run does not exercise them.
 - **`pr.yml`** — runs `verify.yml` on every pull request.
 - **`pages.yml`** — on push to `main`: runs `verify.yml` (with
   `cross-repo-drift: true`), regenerates `sw.js` with a run-scoped cache
-  version, strips `*.dc.html` design comps from the deploy artifact, and
-  publishes to GitHub Pages.
+  version, strips `*.dc.html` design comps from the deploy artifact,
+  **minifies the artifact's JavaScript** (`tools/minify-deploy.js`, terser
+  pinned at 5.36.0 in a scratch prefix — Phase T2.3), and publishes to GitHub
+  Pages. The repository is never minified; `verify.yml`'s `minified` job builds
+  the same minified tree from a copy and drives the smoke, journey, durability,
+  crash-journal, identity and flagship-scenario gates against it, so the code
+  that deploys is code those gates ran. Bump terser in both files together.
+  The Rolodex build (`market-deploy.yml`) is not minified.
 - **`market-deploy.yml`** — on push to `main`: extracts the licensed-
   content-free tree (`tools/build-market.py`, driven by
   `content-manifest.json`) and force-pushes it to `MC-Training-Rolodex` as a
