@@ -269,10 +269,14 @@
     return Promise.resolve();
   }
 
-  function save(exId, sn, w, r, rpe, name, from) {
+  function save(exId, sn, w, r, rpe, name, from, pr) {
     var k = ek(exId), d = dayStamp();
     var entry = { w: w, r: r };
     if (rpe) entry.rpe = rpe;          // optional — older readers ignore it
+    // The best this set beat, when it was a new one, so a reload can repaint
+    // the PR line: prCheck() cannot be re-run then, because by then this set
+    // and any heavier one ticked after it are part of "today".
+    if (pr) entry.pr = pr.prev;
     // R4 / D-11: the lift's readable name, so a finished workout can bank
     // "Incline DB Press" instead of this key's segment. Kept on the SET, not
     // the session: mc-sync.js's mergeSetlog() rebuilds each session as
@@ -383,13 +387,14 @@
     live.textContent = '';
     setTimeout(function () { live.textContent = msg; }, 50);
   }
-  function markPR(row, pr, name) {
+  function markPR(row, pr, name, quiet) {
     clearPR(row);
     row.classList.add('mcl-pr');
     var line = document.createElement('div');
     line.className = 'mcl-pr-line';
     line.textContent = '\uD83C\uDFC6 New best \u2014 ' + pr.w + ' lb, up from ' + pr.prev;
     row.appendChild(line);
+    if (quiet) return;               // a repaint, not the moment itself
     announce('New personal record' + (name ? ' on ' + name : '') + ': ' + pr.w +
              ' pounds, up from ' + pr.prev + '.');
   }
@@ -1274,6 +1279,8 @@
     return Array.prototype.map.call(mini, function (m) { return m.value.trim() || m.placeholder || ''; }).join('+');
   }
   function onCheck(card, exId, sn, rs) {
+    var carriedRow = card.querySelector('#mclr-' + cssId(exId) + '-' + sn);
+    if (carriedRow && carriedRow.classList.contains('mcl-carried')) return;
     var row = card.querySelector('#mclr-' + cssId(exId) + '-' + sn);
     if (!row) return;
     var ck = row.querySelector('.mcl-ck');
@@ -1318,7 +1325,7 @@
     // silently erased an answer the athlete had already given.
     var rpeVal = storedEffort(exId, sn);
     var pr = row.classList.contains('mcl-row-amrap') ? null : prCheck(exId, sn, wVal);
-    save(exId, sn, wVal, rVal, rpeVal, displayNameOf(card), swapFromOf(card));
+    save(exId, sn, wVal, rVal, rpeVal, displayNameOf(card), swapFromOf(card), pr);
     // Now committed for real — checking always solidifies a ghosted
     // suggestion (typing is not required), and the pending draft is
     // superseded by the real entry mc_setlog_v1 now holds.
@@ -1355,8 +1362,15 @@
         // this exercise's first checked set THIS page load; every later one
         // this session is a synchronous cache read.
         var prevMaxP = wNum ? localMaxP(exName) : Promise.resolve(null);
+        // R3 residual: if this write has to wait for a signal, the replay
+        // sends the push the in-session check (prCheck(), local history) found.
+        var offlinePush = pr ? {
+          title: '\uD83C\uDFC6 New PR \u2014 ' + exName,
+          body: pr.w + ' lb, up from ' + pr.prev + ' lb. That is +' +
+                Math.round(pr.w - pr.prev) + ' on your best.'
+        } : null;
         prevMaxP.then(function (prevMax) {
-          MC_SB.logSet(logEntry).then(function () {
+          MC_SB.logSet(logEntry, offlinePush).then(function () {
             // PR detected: new weight beats a REAL historical max (audit G-03).
             // prevMax === null does not mean "no record to beat" — getMaxWeight()
             // returns null for three different situations: no Supabase client,
@@ -1380,7 +1394,7 @@
             noteMax(exName, wNum);
           }).catch(function () {});
         }).catch(function () {
-          MC_SB.logSet(logEntry).catch(function () {});
+          MC_SB.logSet(logEntry, offlinePush).catch(function () {});
         });
       }
     } catch (e) {}
@@ -2009,6 +2023,7 @@
 
     host.appendChild(toggle);
     host.appendChild(wrap);
+    paintCarried(card, exId);
     // Strip creation lives in buildStrip() now, called at the top of this
     // function — nothing left to do here once the rows are appended.
   }
@@ -2051,13 +2066,17 @@
   // used to land in the original's bucket because the rows had already been
   // built under the original's key. mc-replace.js marks a swapped card with
   // data-mc-swap-name, which wins here, and rekeyCard() rebuilds its logger.
-  function origNameOf(el) {
+  function origNameOf(el, preSwap) {
     if (!el) return '';
     var card = el.closest('.ex-card, .ss-ex, .ex-item, .lift-card');
-    var swapped = card && card.getAttribute('data-mc-swap-name');
+    var swapped = !preSwap && card && card.getAttribute('data-mc-swap-name');
     if (swapped) return swapped;
     var orig = card && card.getAttribute('data-mc-orig-name');
     if (orig) return orig;
+    // A swap repaints the visible name, so before it the name is the one the
+    // swap recorded as its "from" (mc-replace.js markSwapped()).
+    var from = preSwap && card && card.getAttribute('data-mc-swap-from');
+    if (from) return from;
     // injectTrend() below already states the rule this guards: NOTHING may be
     // written inside the name element, because origNameOf() and slugOf() read
     // its textContent as the exercise's IDENTITY for the history key and the
@@ -2144,6 +2163,58 @@
   // data-id is left alone on the card: the engines use it for their own
   // checkState bookkeeping, and it is page-local session state, not history.
   function exIdOf(card) { return nameId(card); }
+  // The key a swapped card logged under BEFORE the swap: the same occurrence
+  // rule as buildNameIdx(), over every card's pre-swap name. null when the
+  // card is not swapped.
+  function preSwapIdOf(card) {
+    if (!card || !card.getAttribute('data-mc-swap-name')) return null;
+    var mine = card.querySelector('.ex-name, .ss-name, .lift-name');
+    if (!mine) return null;
+    var all = document.querySelectorAll('.ex-name, .ss-name, .lift-name'), counts = Object.create(null);
+    for (var i = 0; i < all.length; i++) {
+      var base = origNameOf(all[i], true).trim().replace(/\s+/g, '-').toLowerCase() || 'ex';
+      var occ = counts[base] || 0;
+      counts[base] = occ + 1;
+      if (all[i] === mine) return 'x-' + base + (occ ? '-' + occ : '');
+    }
+    return null;
+  }
+  // A swap made mid-exercise used to start the substitute at 0/N. The sets
+  // already done stay the original's in the store (and count at Finish under
+  // its name), so they are shown here as done and read-only, labelled with the
+  // lift they were lifted on, and the next tick goes to the next row.
+  function paintCarried(card, exId) {
+    var oid = preSwapIdOf(card);
+    if (!oid || oid === exId) return;
+    var d = dayStamp(), os = lsess(oid), own = lsess(exId);
+    if (!os || os.d !== d || !os.sets) return;
+    var mineToday = (own && own.d === d && own.sets) || {};
+    var from = swapFromOf(card) || 'the original';
+    var cid = cssId(exId), any = false;
+    Object.keys(os.sets).forEach(function (sn) {
+      var v = os.sets[sn];
+      if (!v || mineToday[sn]) return;
+      var row = card.querySelector('#mclr-' + cid + '-' + sn);
+      if (!row || row.classList.contains('mcl-carried')) return;
+      var w = row.querySelector('.mcl-w');
+      if (w && v.w != null && v.w !== '') { w.value = String(v.w); w.classList.remove('mcl-ghost'); delete w.dataset.ghost; }
+      Array.prototype.forEach.call(row.querySelectorAll('input'), function (inp) { inp.disabled = true; });
+      var ck = row.querySelector('.mcl-ck');
+      if (ck) {
+        ck.classList.add('done'); ck.textContent = '\u2713';
+        ck.setAttribute('aria-checked', 'true');
+        ck.disabled = true;
+        ck.setAttribute('aria-label', 'Set ' + sn + ' done as ' + from);
+      }
+      row.classList.add('done-row', 'mcl-carried');
+      var line = document.createElement('div');
+      line.className = 'mcl-carried-line';
+      line.textContent = 'Done as ' + from;
+      row.appendChild(line);
+      any = true;
+    });
+    if (any) updateCount(card, exId);
+  }
   // R5 / D-09: drop a card's logger so the next pass builds it under the
   // card's CURRENT identity. Called when a swap is applied or undone. Sets
   // already logged stay in the store under the key they were logged under —
@@ -2529,6 +2600,10 @@
       ck.setAttribute('aria-checked', 'true');
     }
     row.classList.add('done-row');
+    // The PR line the tick drew, repainted without a second announcement.
+    var prW = parseFloat(vals.w);
+    if (vals.pr != null && prW > 0) markPR(row, { w: prW, prev: vals.pr }, '', true);
+    else clearPR(row);
     return true;
   }
 

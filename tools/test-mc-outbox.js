@@ -29,7 +29,7 @@ const flush = async () => { for (let i = 0; i < 6; i++) await new Promise(r => s
 
 function load() {
   const ls = {};
-  const net = { up: false, rows: new Map(), calls: [] };
+  const net = { up: false, rows: new Map(), calls: [], pushes: [] };
   const rowKey = (r) => r.session_id + '|' + r.exercise + '|' + r.set_number;
   const result = () => (net.up ? Promise.resolve({ data: null, error: null }) : Promise.reject(new Error('Failed to fetch')));
   function deleter() {
@@ -80,6 +80,7 @@ function load() {
     location: win.location,
     setTimeout: () => 0, clearTimeout() {}, setInterval: () => 0, clearInterval() {},
     Promise, Date, JSON, Math,
+    fetch: (url, opts) => { net.pushes.push({ url, body: opts && opts.body }); return Promise.resolve({ ok: true, json: () => Promise.resolve({}) }); },
   };
   sandbox.self = win;
   vm.createContext(sandbox);
@@ -146,6 +147,32 @@ const set = (n, w) => ({ session_id: 's1', exercise: 'Incline DB Press', set_num
     const n = t.outbox().length;
     await t.SB.flushOutbox();
     ok(t.outbox().length === n && n === 2, '7: a flush on a dead network keeps every queued write (' + t.outbox().length + ' of ' + n + ')');
+  }
+
+  // 9. A record set ticked offline sends its push when the replay lands —
+  //    once, and not for a write queued without one.
+  {
+    const t = load();
+    const push = { title: 'New PR — Incline DB Press', body: '70 lb, up from 65 lb.' };
+    await t.SB.logSet(set(1, 70), push).catch(() => {});
+    await t.SB.logSet(set(2, 60)).catch(() => {});
+    ok(t.outbox().filter(o => o.push).length === 1, '9a: the queued record set carries its push');
+    t.net.up = true;
+    await t.SB.flushOutbox(); await flush();
+    const sent = t.net.pushes.filter(p => /push-notify/.test(p.url));
+    ok(sent.length === 1 && /Incline DB Press/.test(sent[0].body), '9b: the replay sends exactly that push (sent ' + sent.length + ')');
+    await t.SB.flushOutbox(); await flush();
+    ok(t.net.pushes.length === 1, '9c: a second flush does not send it again');
+  }
+  // 10. A push queued more than 12 hours ago is old news and is not sent.
+  {
+    const t = load();
+    await t.SB.logSet(set(1, 70), { title: 'New PR', body: 'x' }).catch(() => {});
+    const q = t.outbox(); q[0].ts = Date.now() - 13 * 60 * 60 * 1000;
+    t.ls[KEY] = JSON.stringify(q);
+    t.net.up = true;
+    await t.SB.flushOutbox(); await flush();
+    ok(t.net.rows.size === 1 && t.net.pushes.length === 0, '10: a stale replay writes the row and skips the push');
   }
 
   // 8. A corrupt outbox reads as empty rather than throwing.

@@ -62,7 +62,8 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 
 const win = {};
-const ctx = vm.createContext({ window: win, console, localStorage: { getItem: () => null, setItem() {} } });
+const LS = {};
+const ctx = vm.createContext({ window: win, console, localStorage: { getItem: (k) => (k in LS ? LS[k] : null), setItem() {} } });
 ['exercise-catalog.js', 'mc-classify.js', 'mc-biomech.js'].forEach(function (f) {
   vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), ctx, { filename: f });
 });
@@ -282,6 +283,29 @@ expectFixed.forEach(function (n) {
   ok('now resolves (no longer \'other\'): ' + n,
      stillOtherNames.indexOf(n) === -1, 'still \'other\'');
 });
+
+// ---- historyWeight(): the real set-log shape, and whole-name keys --------
+// Buckets are LISTS of sessions; the old reader took bucket.sets and so found
+// nothing, and it matched the first 24 characters anywhere in a key.
+LS.mc_setlog_v1 = JSON.stringify({
+  'mm-p1|x-seated-cable-row-(wide-grip)': [
+    { d: '2026-10-24', sets: { 1: { w: '120', r: '10' }, 2: { w: '130', r: '8' } } },
+    { d: '2026-10-17', sets: { 1: { w: '125', r: '10' } } }
+  ],
+  'mm-p2|x-seated-cable-row-(wide-grip)-1': [{ d: '2026-10-20', sets: { 1: { w: '135', r: '6' } } }],
+  'mm-p1|x-seated-cable-row-(wide-grip)-machine': [{ d: '2026-10-24', sets: { 1: { w: '300', r: '5' } } }],
+  'mm-p1|x-seated-cable-row-(close-grip)': [{ d: '2026-10-24', sets: { 1: { w: '400', r: '5' } } }],
+  'legacy|x-incline-db-press': { sets: { 1: { w: '70' } } }
+});
+ok('historyWeight reads a list of sessions, across pages and occurrences',
+   MCBiomech.historyWeight('Seated Cable Row (wide grip)') === 135, 'got ' + MCBiomech.historyWeight('Seated Cable Row (wide grip)'));
+ok('historyWeight does not take a longer name that shares the prefix',
+   MCBiomech.historyWeight('Seated Cable Row (wide grip)') !== 300);
+ok('historyWeight still reads the old single-session shape',
+   MCBiomech.historyWeight('Incline DB Press') === 70);
+ok('historyWeight is 0 for a lift never logged', MCBiomech.historyWeight('Zercher Squat') === 0);
+LS.mc_setlog_v1 = '["not","a","dict"]';
+ok('historyWeight survives a wrong-shaped store', MCBiomech.historyWeight('Incline DB Press') === 0);
 
 console.log('\n' + pass + ' assertions, ' + fail + ' failed');
 if (fail > 0) {

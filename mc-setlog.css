@@ -137,6 +137,8 @@
 
 /* R6: the in-session PR moment — a full-width line inside the row's grid. */
 .mcl-pr-line{grid-column:1/-1;padding:4px 2px 2px;font-size:var(--fs-sm);font-weight:800;color:#fbbf24;}
+.mcl-carried-line{grid-column:1/-1;padding:4px 2px 2px;font-size:var(--fs-sm);font-weight:700;color:var(--muted);}
+.mcl-row.mcl-carried .mcl-ck.done{opacity:0.75;}
 .mcl-row.mcl-pr .mcl-ck.done{border-color:rgba(251,191,36,0.6);}
 
 /* ── Cluster-set mini-set bubbles ────────────────────────────────────────

@@ -95,11 +95,8 @@ const COOL_SEMANTIC = new Map([
    between this and a count-based ratchet, where swapping one offender for a
    different one passes silently. */
 const COOL_PENDING = new Map([
-  ['#2d3748', '.sl-inp::placeholder / .sl-hl (base.css) — a Tailwind slate on ' +
-              'a near-black ground at roughly 1.5:1. That is a LEGIBILITY ' +
-              'defect, not a warmth one: remapping it onto the ramp at equal ' +
-              'luminance would keep it invisible. It needs a readable value ' +
-              'chosen for it, which is its own change.'],
+  // '#2d3748' (the set-logger placeholder and header slate, ~1.5:1 on its
+  // ground) left this list on 2026-10-25: it reads var(--muted) now.
 ]);
 
 /* Files where a literal is the point rather than drift. */
