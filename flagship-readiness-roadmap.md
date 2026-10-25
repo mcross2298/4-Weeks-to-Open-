@@ -705,3 +705,32 @@ write). `fa-kill-window.js` reports both columns.
 **Not verified:** iOS. The roadmap asked for an iOS check first. WebKit's
 IndexedDB durability and how an installed PWA is killed both differ from desktop
 Chromium; the device-matrix item 2 run is where to see it.
+
+**T2.2 follow-up · a discard is not replayed.** Discard cleared the page's sets
+from `mc_setlog_v1` but not from the journal, so the next load put a discarded
+workout back. `test-mc-setlog-concurrency.js`'s clean-setup check caught it.
+`forgetRecent()`, the discard path's existing hook, now also drops the page's
+journal records; `test-mc-crash-journal.js` gained a DISCARD journey (fails on
+the commit before the fix). The browser tests that clear storage to stand for a
+fresh or wiped device now delete the journal too, since a real wipe would.
+
+**T2.3 · the deploy artifact is minified.** `tools/minify-deploy.js` (terser
+5.36.0, scratch prefix, no `package.json`) minifies the JavaScript `pages.yml`
+uploads. Top-level names, function names and class names are kept, so classic
+scripts still share their globals and error stacks still name their functions;
+the vendored Supabase bundle ships as is; a parse failure fails the deploy. The
+repository is never minified. `verify.yml`'s new `minified` job builds the same
+tree and drives the smoke, journey, durability, crash-journal, identity and
+flagship-scenario gates against it, so the code that deploys is code they ran.
+The Rolodex build is not minified.
+
+| Slow 3G, HTTP/2 + gzip, median of 3 | script transferred | first paint | load |
+|---|---|---|---|
+| `kitchen-sink-s3.html`, source → minified | 388 → 192 KB | 7.6 → 7.0 s | 15.8 → 12.0 s |
+| `mm-p1.html`, T2.1 → T2.1 + minified | 414 → 206 KB | 12.1 → 8.3 s | 16.5 → 12.5 s |
+| `hv-block.html`, T2.1 → T2.1 + minified | 384 → 186 KB | 7.6 → 7.0 s | 15.8 → 12.2 s |
+
+Uncompressed, the shipped JavaScript goes 3,213 → 1,698 KB. Verified in this
+sandbox on both trees (one gate, `check-journey`'s back-link width, fails here
+on unchanged `main` too: a text-derived width this Chromium build renders 3.7px
+narrower) and on CI, where all three jobs passed on `8e24abf`.
