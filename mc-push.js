@@ -9,6 +9,7 @@
      MC_PUSH.requestAndSubscribe()  -> Promise<PushSubscription|null>
      MC_PUSH.unsubscribe()          -> Promise<void>
      MC_PUSH.isSubscribed()         -> Promise<bool>
+     MC_PUSH.enable()               -> Promise<{ok, reason?}>  (Settings switch)
    ========================================================================== */
 (function () {
   'use strict';
@@ -110,6 +111,39 @@
     }).catch(function () { return null; });
   }
 
+  // The Workout Settings switch (2026-10-26). Unlike requestAndSubscribe(),
+  // it WAITS for the Supabase save and says how it went, because a
+  // subscription that never reached push_subscriptions looks "on" on the
+  // phone while the server has nobody to send to. It also re-saves an
+  // existing subscription, for a device that subscribed while signed out.
+  // Resolves { ok: true } or { ok: false, reason }, reason one of
+  // 'unsupported' | 'denied' | 'dismissed' | 'signed-out' | 'error'.
+  function enable() {
+    if (!isSupported()) return Promise.resolve({ ok: false, reason: 'unsupported' });
+    return Notification.requestPermission().then(function (perm) {
+      if (perm === 'denied') return { ok: false, reason: 'denied' };
+      if (perm !== 'granted') return { ok: false, reason: 'dismissed' };
+      return navigator.serviceWorker.ready.then(function (reg) {
+        return dropStale(reg).then(function (sub) {
+          if (sub) return sub;
+          return reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+          });
+        });
+      }).then(function (sub) {
+        try { localStorage.setItem(KEY_STORE, VAPID_PUBLIC_KEY); } catch (e) {}
+        if (!window.MC_SB || !MC_SB.savePushSubscription) return { ok: false, reason: 'signed-out' };
+        var raw = sub.toJSON();
+        return MC_SB.savePushSubscription({
+          endpoint: raw.endpoint,
+          p256dh: raw.keys && raw.keys.p256dh,
+          auth: raw.keys && raw.keys.auth
+        }).then(function (r) { return r ? { ok: true } : { ok: false, reason: 'signed-out' }; });
+      });
+    }).catch(function () { return { ok: false, reason: 'error' }; });
+  }
+
   function unsubscribe() {
     if (!isSupported()) return Promise.resolve();
     return navigator.serviceWorker.ready.then(function (reg) {
@@ -132,6 +166,7 @@
     isSubscribed: isSubscribed,
     requestAndSubscribe: requestAndSubscribe,
     unsubscribe: unsubscribe,
+    enable: enable,
     migrate: migrate
   };
   // After sign-in has settled, so the new subscription is saved to the account.

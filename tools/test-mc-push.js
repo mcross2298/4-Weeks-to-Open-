@@ -41,7 +41,7 @@ function load(opts) {
   const timers = [];
   const win = {
     MC_SB: {
-      savePushSubscription: (s) => { log.saved.push(s.endpoint); return Promise.resolve(); },
+      savePushSubscription: (s) => { if (opts.signedOut) return Promise.resolve(null); log.saved.push(s.endpoint); return Promise.resolve({}); },
       deletePushSubscription: (e) => { log.deleted.push(e); return Promise.resolve(); },
     },
   };
@@ -98,6 +98,32 @@ function load(opts) {
     const t = load({ existing: true, ls: { mc_push_key_v1: KEY } });
     await t.P.migrate(); await flush();
     ok(t.log.unsubscribed === 0 && t.log.subscribed.length === 0, '5: current-key subscription is left alone');
+  }
+  // 6. The Workout Settings switch: enable() waits for the Supabase save.
+  {
+    const t = load({ existing: false });
+    const r = await t.P.enable(); await flush();
+    ok(r && r.ok === true && t.log.saved[0] === 'https://push/new' && t.log.subscribed[0] === KEY, '6a: enable() subscribes and saves');
+  }
+  {
+    const t = load({ existing: true, ls: { mc_push_key_v1: KEY } });
+    const r = await t.P.enable(); await flush();
+    ok(r.ok && t.log.subscribed.length === 0 && t.log.saved[0] === 'https://push/old', '6b: an existing current-key subscription is re-saved, not replaced');
+  }
+  {
+    const t = load({ existing: false, signedOut: true });
+    const r = await t.P.enable(); await flush();
+    ok(!r.ok && r.reason === 'signed-out' && t.log.subscribed.length === 1, '6c: signed out is reported, not shown as fully on');
+  }
+  {
+    const t = load({ existing: false, permission: 'denied' });
+    const r = await t.P.enable(); await flush();
+    ok(!r.ok && r.reason === 'denied' && t.log.subscribed.length === 0, '6d: denied permission is reported');
+  }
+  {
+    const t = load({ existing: true });
+    const r = await t.P.enable(); await flush();
+    ok(r.ok && t.log.unsubscribed === 1 && t.log.subscribed[0] === KEY, '6e: an old-key subscription is replaced first');
   }
   console.log('test-mc-push: ' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
