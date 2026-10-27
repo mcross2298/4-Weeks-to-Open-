@@ -77,7 +77,12 @@ function loadSW(fetchImpl, store, named) {
             delete: async name => { const had = name in named; delete named[name]; return had; },
         },
         fetch: fetchImpl,
-        Response: class { constructor(body, init) { this.body = body; this.init = init; this.status = (init && init.status) || 200; } clone() { return this; } },
+        Response: class { constructor(body, init) { this.body = body; this.init = init; this.status = (init && init.status) || 200; this.headers = (init && init.headers) || { get: () => null }; if (body && body.tag) this.tag = body.tag; } clone() { return this; } },
+        Headers: class {
+            constructor(src) { this.m = new Map(); if (src && src.get) for (const n of ['date', 'content-type', 'x-mc-carried-at']) { const v = src.get(n); if (v != null) this.m.set(n, v); } }
+            get(n) { return this.m.has(n) ? this.m.get(n) : null; }
+            set(n, v) { this.m.set(n, String(v)); }
+        },
         setTimeout, clearTimeout, console,
     };
     vm.createContext(sandbox);
@@ -92,6 +97,7 @@ const netResp = (tag, opts) => ({
     status: (opts && opts.status) || 200,
     ok: opts && 'ok' in opts ? opts.ok : true,
     tag,
+    body: { tag },   // so a response the SW re-wraps (T3 carry stamp) keeps its tag
     headers: { get: name => (opts && opts.headers && opts.headers[name]) || null },
     clone() { return this; },
 });
@@ -260,8 +266,8 @@ const fallback = () => ({ status: 200, tag: 'OFFLINE', ok: true, headers: { get:
         // f: activate moves what the new cache lacks, deletes the old cache, keeps fonts + carry
         const fresh = new Map([['base.css', { tag: 'NEW' }]]);
         const named = {
-            'mc-training-v99': new Map([['mm-p2.html', { tag: 'V99' }], ['old-only.html', { tag: 'V99' }]]),
-            'mc-training-v100': new Map([['mm-p2.html', { tag: 'V100' }], ['base.css', { tag: 'OLDCSS' }]]),
+            'mc-training-v99': new Map([['mm-p2.html', netResp('V99')], ['old-only.html', netResp('V99')]]),
+            'mc-training-v100': new Map([['mm-p2.html', netResp('V100')], ['base.css', netResp('OLDCSS')]]),
             'mc-training-fonts-v1': new Map([['f.woff2', { tag: 'FONT' }]]),
             [CARRY]: new Map(),
         };
@@ -299,6 +305,14 @@ const fallback = () => ({ status: 200, tag: 'OFFLINE', ok: true, headers: { get:
         assert(!c.has('mm-p1.html'), '10a: a carried copy this deploy holds is dropped');
         assert(!c.has('old.html'), '10b: a carried copy older than 60 days is dropped');
         assert(c.has('recent.html') && c.has('undated.html'), '10c: a recent copy and an undated one stay');
+        // T3: an undated copy is stamped on the first prune and ages from there.
+        const st = c.get('undated.html');
+        const at = st && st.headers && Number(st.headers.get('x-mc-carried-at'));
+        assert(at && Math.abs(at - Date.now()) < 60000, '10d: an undated copy is stamped with the time it was first pruned');
+        await sw.pruneCarry(await sw.caches.open(CUR), await sw.caches.open(CARRY), Date.now() + 30 * 86400000);
+        assert(c.has('undated.html'), '10e: a stamped copy 30 days on stays');
+        await sw.pruneCarry(await sw.caches.open(CUR), await sw.caches.open(CARRY), Date.now() + 61 * 86400000);
+        assert(!c.has('undated.html'), '10f: 61 days after its stamp it is dropped');
     }
 
     if (failures) { console.error(`\ntest-mc-sw: ${failures} FAILED of ${checks}`); process.exit(1); }

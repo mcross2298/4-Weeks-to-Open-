@@ -734,3 +734,42 @@ Uncompressed, the shipped JavaScript goes 3,213 → 1,698 KB. Verified in this
 sandbox on both trees (one gate, `check-journey`'s back-link width, fails here
 on unchanged `main` too: a text-derived width this Chromium build renders 3.7px
 narrower) and on CI, where all three jobs passed on `8e24abf`.
+
+### T3 · the small known limitations (owner, 2026-10-27)
+
+Scope: the residuals the T1 and N lists recorded as "not fixed here". The
+three below ship as one PR; the rest are scoped out at the end, with the reason.
+
+- **Week tags on every multi-week page.** T1.5 tagged a tick with its program
+  week only where a day resolver exists (`mm`, `hv`, `ss`), so on every other
+  page with week tabs a week-1 tick still painted on week 2's same lift.
+  Measured on `main`: tick set 1 on `mc-s1-back.html?w=1`, open `?w=2`, and the
+  tick is there. Those pages keep their week in a top-level `let activeWeek`
+  (or `let week`), which classic scripts share by name, so `weekTag()` now
+  falls back to it as `page:<PID>|<week>` (19 page and engine sources). A page
+  with neither still tags nothing. New durability check `WEEK-TICK-PAGE`.
+- **A carried page with no Date header ages out.** `pruneCarry()` kept such a
+  copy forever. The first prune that meets one now stamps it with
+  `x-mc-carried-at`, and it goes 60 days later like any other
+  (`test-mc-sw.js` 10d–10f).
+- **Home's greeting has its own row.** With five 48px controls in the bar it
+  was cut off at every width (72px at 390, 66 at 320). Fixing it found a real
+  bug: the avatar is **not** decorative, `mc-account.js` makes it the
+  account-sheet button, and a rule hid it below 360px, so Home lost its way
+  into the account sheet there. The bar keeps the controls, right-aligned 8px
+  apart, and stays sticky; the greeting and the 48px avatar sit under it and
+  scroll away. Measured at 320 and 390: greeting 124px of 124, avatar 48×48,
+  no sideways overflow.
+
+**Scoped out, with the reason:**
+- **One day, two weeks, one lift** still share a bucket and a set number. With
+  the week tag everywhere, a tick is never *painted* on the wrong week; a
+  second week's tick of the same set on the same day overwrites the first.
+  Splitting the store means changing the set key that 49 read sites across nine
+  modules, the journal, the untick records and the sync merge all rely on — a
+  store migration for a case that needs two program weeks of one lift on one
+  calendar day. Not worth its risk until it is seen in use.
+- **The untick record and clock skew** stay as recorded: a misorder needs two
+  devices' clocks to disagree by more than the gap between a tick and its untick.
+- **`F3-5`** (the four licensed pages still on the old day layout) is a phase,
+  not a residual, and needs its own `AskUserQuestion` gate.

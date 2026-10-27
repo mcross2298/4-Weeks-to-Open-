@@ -211,17 +211,36 @@ self.addEventListener('install', event => {
 // CACHE_NAME answers first) and one fetched more than CARRY_MAX_AGE_MS ago by
 // its Date header. A page opened online is refetched into CACHE_NAME and
 // carried again, fresh, by the next deploy, so only pages nobody has opened
-// for two months age out. A copy with no Date header is kept: its age is
-// unknown, and keeping it is the old behaviour.
+// for two months age out.
+//
+// Phase T3: a copy with no Date header used to be kept forever, its age
+// unknown. The first prune that meets one now stamps it with CARRY_STAMP, so
+// it ages from then and goes 60 days later like any other.
 const CARRY_MAX_AGE_MS = 60 * 24 * 60 * 60 * 1000;
+const CARRY_STAMP = 'x-mc-carried-at';
+function carriedAt(resp) {
+    const h = resp && resp.headers && resp.headers.get ? resp.headers : null;
+    if (!h) return 0;
+    return Date.parse(h.get('date') || '') || Number(h.get(CARRY_STAMP)) || 0;
+}
+function stampCarry(resp, now) {
+    try {
+        const headers = new Headers(resp.headers);
+        headers.set(CARRY_STAMP, String(now));
+        return new Response(resp.body, { status: resp.status, statusText: resp.statusText, headers });
+    } catch (e) { return null; }
+}
 function pruneCarry(fresh, carry, now) {
     if (!carry.delete) return Promise.resolve();
     return carry.keys().then(reqs => Promise.all(reqs.map(req =>
         fresh.match(req).then(hit => {
             if (hit) return carry.delete(req);
             return carry.match(req).then(resp => {
-                const d = resp && resp.headers && resp.headers.get && Date.parse(resp.headers.get('date') || '');
-                return (d && now - d > CARRY_MAX_AGE_MS) ? carry.delete(req) : null;
+                if (!resp) return null;
+                const d = carriedAt(resp);
+                if (d) return (now - d > CARRY_MAX_AGE_MS) ? carry.delete(req) : null;
+                const stamped = stampCarry(resp, now);
+                return stamped ? carry.put(req, stamped) : null;
             });
         }).catch(() => null))));
 }

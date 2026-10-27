@@ -5,15 +5,15 @@
      mc-muscle-map.js @ line 21
      mc-readiness.js @ line 114
      mc-setlog.js @ line 346
-     mc-session.js @ line 3555
-     mc-classify.js @ line 4160
-     mc-suggest.js @ line 4296
-     mc-chart.js @ line 4912
-     mc-exercise-trends.js @ line 5195
-     mc-cues-data.js @ line 5454
-     mc-cues.js @ line 5604
-     mc-rep-progress.js @ line 5694
-     mc-superset-hop.js @ line 5841
+     mc-session.js @ line 3566
+     mc-classify.js @ line 4171
+     mc-suggest.js @ line 4307
+     mc-chart.js @ line 4923
+     mc-exercise-trends.js @ line 5206
+     mc-cues-data.js @ line 5465
+     mc-cues.js @ line 5615
+     mc-rep-progress.js @ line 5705
+     mc-superset-hop.js @ line 5852
 */
 
 /* ---- mc-muscle-map.js ---- */
@@ -1694,12 +1694,23 @@ try {
   // deload week used to build that week at full volume (and the reverse kept
   // a deload after leaving it) until a reload.
   // Phase T1.5: the program week the open page shows, as "prog|week", from
-  // the day-identity contract (F4). Only the pages that change week in place
-  // register a resolver; everywhere else this is '' and nothing changes.
+  // the day-identity contract (F4). Only mm, hv and ss register a resolver.
+  // Phase T3: every other page that switches week in place keeps the week in
+  // a top-level `let activeWeek` (or `let week`), and classic scripts share
+  // one global scope, so it is readable here by name; its tag is
+  // "page:<PID>|<week>". A page with neither tags nothing, as before.
+  function pageWeek() {
+    var w = null;
+    try { if (typeof activeWeek !== 'undefined') w = activeWeek; } catch (e) {}
+    if (w == null) { try { if (typeof week !== 'undefined') w = week; } catch (e2) {} }
+    return (w == null || w === '' || typeof w === 'object') ? '' : String(w);
+  }
   function weekTag() {
     var D = window.MC_PROGRAM_DAY, cur = null;
     try { cur = D && D.current && D.current(); } catch (e) {}
-    return (cur && cur.prog && cur.week) ? cur.prog + '|' + cur.week : '';
+    if (cur && cur.prog && cur.week) return cur.prog + '|' + cur.week;
+    var w = pageWeek();
+    return w ? 'page:' + PID + '|' + w : '';
   }
   function deloadNow() {
     var D = window.MC_PROGRAM_DAY, P = window.MC_PROGRAM_PROGRESS;

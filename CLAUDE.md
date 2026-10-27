@@ -2660,6 +2660,18 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   carry-over cache** drops copies this deploy holds or fetched more than 60 days
 >   ago (by Date header) on every activate.
 
+> **T3 shipped (2026-10-27) — the small known limitations.** Three things to
+> know:
+> - **`weekTag()` now covers every page with week tabs.** Without a day resolver
+>   it reads the page's top-level `activeWeek` (or `week`) by name and tags
+>   `page:<PID>|<week>`. Keep that name if you write a new multi-week page.
+> - **Home's greeting is not in the sticky bar any more** (`.dash-hello`). The
+>   avatar under it is the account-sheet button (`mc-account.js`), never
+>   decoration: do not hide it to make room.
+> - **A carried page with no Date header is stamped `x-mc-carried-at`** on its
+>   first prune and ages from there. Same-lift-two-weeks-one-day still shares a
+>   set number, deliberately; see the roadmap's T3 section.
+
 ---
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2
