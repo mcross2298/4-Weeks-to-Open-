@@ -127,12 +127,17 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
    ellipsis never engages because the title element itself is never the thing
    that overflows. Measured at 320px: parent 86px, inner block 156px. */
 .topbar-left > div{min-width:0;}
-/* At 320px the bar carries four 44px icons plus the PM lock (198px) and 36px
-   of padding, leaving 86px -- the avatar and its gap eat 54 of that and the
-   greeting ellipsises to a single letter. The avatar is decorative (initials,
-   no handler), so it yields below 360px and the greeting gets the 54px back.
-   Measured, not assumed: 86px -> 140px for the title block at 320. */
-@media (max-width:359px){ .topbar-left .avatar{display:none;} }
+/* Phase T3: Home's greeting has its own row under the bar. With five 48px
+   controls in the bar it was cut off at every width (72px at 390, 66 at 320),
+   and the avatar -- which is NOT decorative: mc-account.js makes it the
+   account-sheet button -- was hidden below 360px, taking Home's way into the
+   account sheet with it. The bar keeps the controls, right-aligned 8px apart,
+   and stays sticky; the greeting scrolls away with the page. */
+#scr-dashboard > .dash-bar{justify-content:flex-end;gap:8px;}
+#scr-dashboard > .dash-bar > div:first-child{overflow:visible;}
+.dash-hello{padding:2px 18px 16px;}
+.dash-hello .topbar-left{overflow:visible;}
+.dash-hello .avatar{width:48px;height:48px;cursor:pointer;}
 .avatar{
   width:42px;height:42px;border-radius:50%;flex-shrink:0;
   background:linear-gradient(135deg,#d4af37,#8a6a10);
@@ -1407,14 +1412,7 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
 ══════════════════════════════════════ -->
 <div class="screen active" id="scr-dashboard">
 
-  <div class="topbar">
-    <div class="topbar-left">
-      <div class="avatar">MC</div>
-      <div>
-        <div class="topbar-title" id="greeting">Workout</div>
-        <div class="topbar-sub" id="todayDate"></div>
-      </div>
-    </div>
+  <div class="topbar dash-bar">
     <div class="topbar-icon mc-global-search-btn" onclick="if(window.MC_GLOBAL_SEARCH)MC_GLOBAL_SEARCH.open();" style="cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Search programs &amp; exercises" role="button" tabindex="0" aria-label="Search programs and exercises" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#cfc9bf" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="#cfc9bf" stroke-width="2" stroke-linecap="round"/></svg>
     </div>
@@ -1441,6 +1439,15 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
     </a>
     MARKET:ADD cookbook-nav END -->
     <div id="pmUnlockBtn" onclick="if(window.MC_PM)MC_PM.unlock();" style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0.15;font-size:18px;-webkit-tap-highlight-color:transparent;">🔐</div>
+  </div>
+  <div class="dash-hello">
+    <div class="topbar-left">
+      <div class="avatar">MC</div>
+      <div>
+        <div class="topbar-title" id="greeting">Workout</div>
+        <div class="topbar-sub" id="todayDate"></div>
+      </div>
+    </div>
   </div>
 
   <div id="offlineBar" class="offline-bar">📵 Offline — showing cached content</div>

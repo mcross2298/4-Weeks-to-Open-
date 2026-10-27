@@ -1349,12 +1349,23 @@
   // deload week used to build that week at full volume (and the reverse kept
   // a deload after leaving it) until a reload.
   // Phase T1.5: the program week the open page shows, as "prog|week", from
-  // the day-identity contract (F4). Only the pages that change week in place
-  // register a resolver; everywhere else this is '' and nothing changes.
+  // the day-identity contract (F4). Only mm, hv and ss register a resolver.
+  // Phase T3: every other page that switches week in place keeps the week in
+  // a top-level `let activeWeek` (or `let week`), and classic scripts share
+  // one global scope, so it is readable here by name; its tag is
+  // "page:<PID>|<week>". A page with neither tags nothing, as before.
+  function pageWeek() {
+    var w = null;
+    try { if (typeof activeWeek !== 'undefined') w = activeWeek; } catch (e) {}
+    if (w == null) { try { if (typeof week !== 'undefined') w = week; } catch (e2) {} }
+    return (w == null || w === '' || typeof w === 'object') ? '' : String(w);
+  }
   function weekTag() {
     var D = window.MC_PROGRAM_DAY, cur = null;
     try { cur = D && D.current && D.current(); } catch (e) {}
-    return (cur && cur.prog && cur.week) ? cur.prog + '|' + cur.week : '';
+    if (cur && cur.prog && cur.week) return cur.prog + '|' + cur.week;
+    var w = pageWeek();
+    return w ? 'page:' + PID + '|' + w : '';
   }
   function deloadNow() {
     var D = window.MC_PROGRAM_DAY, P = window.MC_PROGRAM_PROGRESS;

@@ -538,6 +538,23 @@ async function step(name, fn) {
       await c.close();
     });
   }
+  // T3: the same for a page with no day resolver. mc-engine.js keeps its week
+  // in a top-level `activeWeek`, which mc-setlog.js now reads, so a week-1
+  // tick no longer paints on week 2 after a reload (it did on main).
+  await step('WEEK-TICK-PAGE', async () => {
+    const c = await ctx(browser); const p = await page(c, errs, 'weektickpage');
+    const ticks = () => p.evaluate(() => document.querySelectorAll('.mcl-ck.done').length);
+    await p.goto(BASE + '/mc-s1-back.html?w=1'); await sleep(1800);
+    await logSet(p.locator('.ex-card, .ss-ex').first(), 0, 60, 5); await sleep(500);
+    const w1 = await ticks();
+    await p.goto(BASE + '/mc-s1-back.html?w=2'); await sleep(1800);
+    const w2 = await ticks();
+    await p.goto(BASE + '/mc-s1-back.html?w=1'); await sleep(1800);
+    const back = await ticks();
+    check(w1 === 1 && w2 === 0 && back === 1,
+      'WEEK-TICK-PAGE a week-1 tick stays on week 1 on a page with no day resolver', JSON.stringify({ w1, w2, back }));
+    await c.close();
+  });
   // T1.6: undoing a swap keeps the sets done on the substitute on the card,
   // labelled with the lift they were done on, after a reload too. They used
   // to drop off the card (and out of its count) the moment the swap was undone.
