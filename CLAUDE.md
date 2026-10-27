@@ -2628,6 +2628,16 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > key. A subscription is bound to the key it was made under, so `migrate()`
 > replaces a subscription made under any other key on the next load, without a
 > new permission prompt (`mc_push_key_v1` records the key; `tools/test-mc-push.js`).
+> **The app asks only once**, so PR #382 also added a **Notifications** switch to
+> Workout Settings (`MC_PUSH.enable()`). It waits for the Supabase save and says
+> why when it cannot finish: an iPhone not opened from the Home Screen, blocked
+> permission, or signed out. Before it existed, `push_subscriptions` held 0 rows.
+>
+> **CONFIRMED SENT (2026-10-27, run 20):** the first successful weekly check-in.
+> The owner's phone re-subscribed on the new key at 21:52 UTC after the deploy, and
+> `weekly-checkin` answered `HTTP 200 {"sent":1,"skipped":0,"total":1}`. Runs 1–19
+> had all failed. **Still unseen:** the record push from `push-notify`. It uses the
+> same two secrets, so it should work, but it has not been observed on a phone.
 
 > **Phase T1 shipped (2026-10-25) — the small gaps, plus Mike's Cookbook for
 > the one shared file.** Plan in `flagship-readiness-roadmap.md`'s Phase T.

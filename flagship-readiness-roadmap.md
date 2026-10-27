@@ -123,7 +123,7 @@ must flip.
 | D-30 | Against the 48px / 8px / 13px standard: 25 of 32 session controls under 48, set rows 3–7px apart, 35 text nodes under 13px, floating timer controls 24–38px | session CSS, `mc-timer.js` | Phase 3 sweep | Medium | R6 |
 | D-31 | Light-mode suggested weight is 1.47:1 | `mc-setlog.css:93` keeps the dark `--ink-8` | — | Medium | R6 |
 | D-32 | The token gate can't see JS-injected or inline CSS or `rgba()` (119 + 446 slate literals) | `tools/check-design-tokens.js` reads `.css` and hex only | — | Medium | G |
-| D-33 | The weekly check-in has never sent | `WEEKLY_CHECKIN_SECRET` unset (workflow log, 18 Oct) | — | High | **Open** — secret set 2026-10-25; run 16 then failed on a malformed VAPID public key secret (owner) |
+| D-33 | The weekly check-in has never sent | `WEEKLY_CHECKIN_SECRET` unset (workflow log, 18 Oct) | — | High | **Closed 2026-10-27** — secret set 2026-10-25; VAPID pair rotated (#382); run 20 sent 1 of 1 |
 | D-34 | Leaked-password protection is off | Supabase Auth setting | advisor | Low | **Closed — not applicable** (paid-plan feature; free plan, owner 2026-10-25) |
 | D-35 | Field errors never leave the device | `mc_errors_v1` is local only | — | Medium | E |
 | D-36 | No CSV export; no backup nudge for signed-out athletes | — | — | Medium | R7 |
@@ -523,7 +523,8 @@ Taken on the owner's go-ahead, as one PR, from the "Known residuals" lists above
 
 ### Owner actions (no code)
 - ~~Set the `WEEKLY_CHECKIN_SECRET` repo secret (D-33).~~ Done 2026-10-25.
-- Re-set the weekly check-in's VAPID public key function secret to the key in `mc-push.js` (D-33: run 16 returned 500, `Vapid public key must be a URL safe Base 64`).
+- ~~Re-set the weekly check-in's VAPID public key function secret (D-33).~~ Done 2026-10-27: the pair was rotated in #382 and both secrets set; run 20 sent 1 of 1.
+- Confirm a record push (`push-notify`) arrives on a phone the next time a lift is beaten. It uses the same secrets, so it should work, but no one has seen one yet.
 - ~~Turn on leaked-password protection (D-34).~~ Closed as not applicable: a paid-plan feature, and the project is on the free plan.
 - Run the device matrix below.
 
