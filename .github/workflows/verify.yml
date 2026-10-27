@@ -426,6 +426,9 @@ jobs:
         # there is no working behaviour anyone would notice losing.
         run: node tools/check-push-chain.js
 
+      - name: Push subscription key rotation (mc-push.js migrate)
+        run: node tools/test-mc-push.js
+
       - name: Documentation-currency check (Quick Tour renders; every program has a guide)
         # CLAUDE.md's Documentation currency rule had NO automated enforcement,
         # and for months CLAUDE.md claimed two gates provided it that have

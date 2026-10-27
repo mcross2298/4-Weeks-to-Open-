@@ -146,6 +146,7 @@ node tools/check-dangling-refs.js      # no element id or global is read but pro
 node tools/check-log-readers.js        # every parse of mc_workout_log_v1 — and every read of an entry's own .sets — guards its shape (L-03)
 node tools/check-workout-log-writers.js # every write to mc_workout_log_v1 goes through mc-log-read.js (flagship readiness R1, D-38/D-24)
 node tools/check-push-chain.js         # the notification opt-in chain is reachable end to end (Phase 1.1)
+node tools/test-mc-push.js             # a subscription made under an old VAPID key is replaced on load (key rotation, 2026-10-26)
 node tools/check-docs-currency.js      # the tour renders; every non-licensed program has its guide; module list pinned
 node tools/check-store-coverage.js     # store-registry.json vs mc-sync.js STORES / mc-export.js KEYS
 node tools/check-topbar-inset.js       # sticky .topbar pins at top:0, absorbs the inset as padding, opaque
@@ -2621,6 +2622,12 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > reads `Vapid public key must be a URL safe Base 64 (without "=")` at
 > `index.ts:125`. The VAPID public key stored as a function secret is malformed;
 > the app's key (`mc-push.js`) is valid. That secret is the owner's to re-set.
+> **Resolved by rotating the pair (2026-10-26):** the old pair's private key was
+> not recoverable (both secrets had been set to the public key), so a new pair was
+> generated, both Supabase secrets set, and `mc-push.js` carries the new public
+> key. A subscription is bound to the key it was made under, so `migrate()`
+> replaces a subscription made under any other key on the next load, without a
+> new permission prompt (`mc_push_key_v1` records the key; `tools/test-mc-push.js`).
 
 > **Phase T1 shipped (2026-10-25) — the small gaps, plus Mike's Cookbook for
 > the one shared file.** Plan in `flagship-readiness-roadmap.md`'s Phase T.

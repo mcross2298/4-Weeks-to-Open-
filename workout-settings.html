@@ -80,6 +80,15 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
   </a>
   <h1 class="ws-title">Workout Settings</h1>
   <form id="wsForm" onsubmit="return false"></form>
+  <section class="ws-group" aria-labelledby="wsgNotify">
+    <h2 class="ws-label" id="wsgNotify">Notifications</h2>
+    <div class="ws-card">
+      <button type="button" class="ws-row" role="switch" id="wsPush" aria-checked="false">
+        <span class="ws-text"><span class="ws-name">Notifications</span><span class="ws-sub" id="wsPushSub">A push when you beat a lift, and a weekly check-in.</span></span>
+        <span class="ws-switch" aria-hidden="true"></span></button>
+    </div>
+  </section>
+  <p class="ws-note">This one takes effect as soon as you tap it, because your phone asks for permission right then.</p>
   <section class="ws-group" aria-labelledby="wsgHelp">
     <h2 class="ws-label" id="wsgHelp">Help</h2>
     <div class="ws-card">
@@ -99,6 +108,8 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
 
 <script src="mc-sheet.js"></script>
 <script src="mc-report.js"></script>
+<script src="mc-supabase.js"></script>
+<script src="mc-push.js"></script>
 <script>
 /* Every switch writes one key of mc_prefs_v1 — the store mc-timer.js's
    MC_PREFS.get() reads on every workout page. The defaults below MUST match
@@ -186,6 +197,53 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
   });
 
   var toast = document.getElementById('wsToast');
+  function say(msg) {
+    toast.textContent = msg; toast.classList.add('show');
+    setTimeout(function () { toast.classList.remove('show'); }, 3200);
+  }
+
+  // Notifications: not staged with the switches above. The permission prompt
+  // has to come from the tap itself, so this acts immediately.
+  var pushRow = document.getElementById('wsPush');
+  var pushSub = document.getElementById('wsPushSub');
+  var PUSH_DEFAULT_SUB = pushSub.textContent;
+  var pushBusy = false;
+  function standalone() {
+    try { return navigator.standalone === true || matchMedia('(display-mode: standalone)').matches; } catch (e) { return false; }
+  }
+  function paintPush(on, sub) {
+    pushRow.setAttribute('aria-checked', String(!!on));
+    pushSub.textContent = sub || PUSH_DEFAULT_SUB;
+  }
+  function pushStatus() {
+    var P = window.MC_PUSH;
+    if (!P || !P.isSupported()) {
+      var ios = /iPhone|iPad|iPod/.test(navigator.userAgent || '') && !standalone();
+      return paintPush(false, ios ? 'On iPhone, add this app to your Home Screen and open it from there first.'
+                                  : 'This browser does not support notifications.');
+    }
+    if (P.getState() === 'denied') return paintPush(false, 'Blocked in your phone\u2019s settings. Allow notifications for this app there, then come back.');
+    P.isSubscribed().then(function (yes) { paintPush(yes && P.getState() === 'granted'); }, function () { paintPush(false); });
+  }
+  pushStatus();
+  pushRow.addEventListener('click', function () {
+    var P = window.MC_PUSH;
+    if (pushBusy || !P || !P.isSupported() || P.getState() === 'denied') { pushStatus(); return; }
+    pushBusy = true;
+    var turningOn = pushRow.getAttribute('aria-checked') !== 'true';
+    var job = turningOn ? P.enable() : P.unsubscribe().then(function () { return { ok: true }; });
+    job.then(function (r) {
+      pushBusy = false;
+      try { localStorage.setItem('mc_push_asked_v1', String(Date.now())); } catch (e) {}
+      if (!turningOn) { paintPush(false); say('Notifications off'); return; }
+      if (r && r.ok) { paintPush(true); say('Notifications on'); return; }
+      var why = r && r.reason;
+      if (why === 'signed-out') { paintPush(true, 'On for this phone, but sign in so the weekly check-in can reach it.'); return; }
+      pushStatus();
+      say(why === 'denied' ? 'Notifications are blocked for this app' : why === 'dismissed' ? 'Not turned on' : 'Could not turn on notifications. Try again.');
+    }, function () { pushBusy = false; pushStatus(); say('Could not change notifications. Try again.'); });
+  });
+
   saveBtn.addEventListener('click', function () {
     var changed = dirtyKeys();
     if (!changed.length) return;
