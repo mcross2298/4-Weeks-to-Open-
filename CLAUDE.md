@@ -2680,6 +2680,9 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   logging pages the rest chip, ⓘ or the Log Sets strip also marked the
 >   exercise done. A new handler of that kind starts with
 >   `if(e.target.closest(window.MC_CARD_TAP_IGNORE||'button,a,input,select,textarea'))return;`.
+> - **A card with the set logger is completed by its sets only** (owner
+>   decision). `mc-setlog.js` marks it `.mcl-host` and the ignore list names
+>   that class, so the old name-tap gesture does nothing there.
 > - **`--z-modal` is 175, above every fixed bar.** It was 110, under the
 >   bottom nav, and End workout is on screen while the nav is. A fixed
 >   element joins the `base.css` scale. The superset hop bar's literal 1000 is

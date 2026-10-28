@@ -710,6 +710,9 @@ html[data-theme="light"] .summary-row{border-bottom-color:rgba(28,26,23,0.08);}
   }
 
   function toggleCheck(card) {
+    // A card carrying the set logger is completed by its sets only (QA
+    // collision audit): mc-setlog.js marks it .mcl-host.
+    if (card.classList.contains('mcl-host')) return;
     const isChecked = card.classList.toggle('checked');
     const icon = card.querySelector('.check-icon');
     icon.textContent = isChecked ? '✅' : '⬜';

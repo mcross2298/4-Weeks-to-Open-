@@ -45,8 +45,15 @@ lands on.
   fallback gesture. The superset handlers called `stopPropagation()` before
   their old guard, and now return before it, so a control inside a superset
   member is no longer swallowed either.
-- `stndr-checkoff.js` keeps `.checked` on any card whose every set is
-  ticked, and ignores body taps on such a card.
+- **Owner decision (2026-10-28): a card with the set logger is completed by
+  its sets only.** The "tap the exercise name to check it off" gesture is
+  removed there. `mc-setlog.js`'s `buildStrip()` marks every card it attaches
+  to `.mcl-host` (on the strip pass, so lazily built cards are covered), and
+  `MC_CARD_TAP_IGNORE` names that class, so every handler above ignores any
+  tap on such a card. `pmc-s7-giant.html`'s inline `toggleCheck()` checks the
+  class directly. The gesture survives only on pages with no logger.
+- `stndr-checkoff.js` reads a logger card's completion from its sets alone, so
+  a mark saved by the old gesture cannot leave a card stuck as done.
 - `base.css`: `--z-modal` 110 → **175**. That is above the nav (140/141),
   `mc-timer.js`'s video view (150), rest-over wash and bar (159/160), and
   `mc-guided.js`'s exit pill (170). It stays below the app's own sheets
@@ -59,8 +66,8 @@ lands on.
   "log or discard?" dialogs can no longer disagree.
 - **`tools/check-tap-intent.js`**, wired into `verify.yml`'s smoke step and the
   minified-tree loop. It drives one page per handler family plus the three
-  layering scenarios and the recap count. It runs 16 checks: **12 fail on the
-  pre-fix tree and 16 pass after.**
+  layering scenarios and the recap count. It runs 17 checks, including name taps. **12 of the original 16 fail
+  on the pre-fix tree; all 17 pass after.**
 
 ## Verified
 
@@ -76,9 +83,6 @@ not alter any page at rest, which is what that ratchet measures.
 
 ## Not changed, deliberately
 
-- **Tapping the exercise name still checks a card off** on pages that had
-  that gesture. Removing it is a product decision, not a collision fix. On
-  logger pages it is now the only body tap that does so.
 - The live summary's "Sets Done" (not the recap) still counts finished
   exercises. It is a progress readout by design.
 - `.tf` in the frequency pages' inline CSS (z-index 200) styles an element

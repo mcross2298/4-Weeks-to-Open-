@@ -1805,6 +1805,12 @@
   // legs (see run(), and the note there on why supersets stay eager).
   function buildStrip(host, card, exId, setsStr, rs) {
     if (!host) return;
+    // A card that carries this logger is completed by its sets and nothing
+    // else (owner decision, QA collision audit): MC_CARD_TAP_IGNORE names this
+    // class, so the old "tap the card body to check it off" handlers ignore
+    // every tap on it, the exercise name included. Set on every strip pass,
+    // so a lazily-built card (A-14) is covered before its rows exist.
+    if (card && card.classList) card.classList.add('mcl-host');
     // Strip any OTHER wave3 logger / notes UI EVERY pass (before the early
     // return), so page-native scripts that re-add their UI after us (e.g.
     // pmc-workout's .ex-notes) don't win the race. Runs here (not in
@@ -2911,7 +2917,11 @@
   }
 
   // The ONE list of targets that must never also tick an exercise off when a
-  // card or row carries its own tap-to-check handler. 51 of the 79 logging
+  // card or row carries its own tap-to-check handler. Its last entry,
+  // .mcl-host, is every card this logger is attached to: closest() reaches
+  // the card itself, so on such a card no tap at all checks it off — the
+  // exercise is done when its sets are (owner decision, 2026-10-28). The
+  // gesture survives only where there is no logger to do the job. 51 of the 79 logging
   // pages had a handler whose own ignore list predated this logger, so a tap
   // on the rest chip, the coaching-note button or the Log Sets strip ALSO
   // toggled the card's .checked — the struck-through, dimmed "done" state
@@ -2923,7 +2933,7 @@
   // site keeps a generic fallback for a page that never loads this file.
   window.MC_CARD_TAP_IGNORE =
     'button,a,input,select,textarea,label,[role="button"],[role="checkbox"],' +
-    '[contenteditable="true"],.mcl-wrap,.a-notes,.rest-timer,.mc-menu-overlay';
+    '[contenteditable="true"],.mcl-wrap,.a-notes,.rest-timer,.mc-menu-overlay,.mcl-host';
 
   // shared parsing helpers for mc-suggest.js (and future analytics) — avoids
   // re-implementing the prescribed-scheme parser anywhere else

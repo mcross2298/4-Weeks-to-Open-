@@ -93,7 +93,10 @@
     injectStyle();
     var saved = bag();
     document.querySelectorAll('.ex-card').forEach(function (card) {
-      card.classList.toggle('checked', !!saved[keyFor(card)] || allLogged(card));
+      // A logger card reads its sets only: its body tap is ignored now, so a
+      // mark saved before that change could never be cleared again.
+      var logger = card.classList.contains('mcl-host');
+      card.classList.toggle('checked', logger ? allLogged(card) : (!!saved[keyFor(card)] || allLogged(card)));
     });
   }
 

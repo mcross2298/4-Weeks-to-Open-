@@ -29,6 +29,10 @@
       264px above the screen. This pass hit-tests every control of the open
       dialog with elementFromPoint, which is what a finger hits.
 
+   The exercise NAME is tapped too: a card carrying the set logger is
+   completed by its sets only (owner decision, 2026-10-28; mc-setlog.js marks
+   such a card .mcl-host, which MC_CARD_TAP_IGNORE names).
+
    Also: the End workout recap's "Total sets" must count ticked sets (it read
    0 after three were logged, and emphasised Exit & discard because of it).
 
@@ -51,9 +55,13 @@ const FAMILIES = [
   { page: 'bro-split.html?day=1',      family: 'stndr-checkoff.js' },
   { page: '2on-1off.html?day=1',       family: 'mc-freq-engine.js' },
 ];
-// In-card controls that have a job of their own. .mcl-ck is not here: ticking
-// the last set legitimately completes the card.
-const CTRLS = ['.mcl-strip', '.mc-meatball', '.a-info', '.mcl-inp', '.rest-timer', '.mcl-rest-adj'];
+// In-card controls that have a job of their own, plus the exercise NAME: on a
+// card that carries the set logger, ticking its sets is the only thing that
+// completes it (owner decision, 2026-10-28), so the old "tap the card body"
+// gesture is gone there too. .mcl-ck is not here: ticking the last set
+// legitimately completes the card.
+const CTRLS = ['.mcl-strip', '.mc-meatball', '.a-info', '.mcl-inp', '.rest-timer', '.mcl-rest-adj',
+               '.ex-name', '.ss-name'];
 const SCOPES = ['.ss-ex', '.ex-card:not(.ss-card)', '.ex-item'];
 
 const HIT = (rootSel) => {
@@ -120,7 +128,7 @@ const check = (ok, msg) => { if (ok) { passed++; console.log('  ✓ ' + msg); } 
   }
 
   console.log('HOP — a control inside a superset member never starts the hop');
-  for (const sel of ['.mcl-inp', '.rest-timer', '.mc-meatball']) {
+  for (const sel of ['.mcl-inp', '.rest-timer', '.mc-meatball', '.ss-name']) {
     const { ctx, p } = await open('mc-s1-bis-tris.html?day=1');
     const loc = p.locator('.ss-ex ' + sel + ':visible').first();
     if (await loc.count()) {
