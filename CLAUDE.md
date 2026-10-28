@@ -2690,6 +2690,16 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   its overlay pads for both insets.
 > `tools/check-tap-intent.js` guards all of it (12 of 16 checks fail on the
 > pre-fix tree).
+>
+> **Continuous QA (2026-10-28).** Two layers keep running it against the
+> DEPLOYED app: `.github/workflows/live-qa.yml` (nightly 03:17 ET + on demand)
+> runs the browser gates against the live site and opens or updates one
+> `live-qa` issue on a failure; the **"Weekly live QA"** scheduled task
+> (Wednesdays 20:23 ET, fresh session, draft PRs only, never merges) reads open
+> `live-qa` issues first, then explores. A gate added to that workflow must
+> build URLs as `base + '/' + page`, because the live site lives under
+> `/4-Weeks-to-Open-/`. This environment denies `mcross2298.github.io`, so the
+> agent falls back to local `main` until the owner allows that host.
 
 > **T3 shipped (2026-10-27) — the small known limitations.** Three things to
 > know:
