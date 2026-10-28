@@ -1810,7 +1810,12 @@
     // class, so the old "tap the card body to check it off" handlers ignore
     // every tap on it, the exercise name included. Set on every strip pass,
     // so a lazily-built card (A-14) is covered before its rows exist.
-    if (card && card.classList) card.classList.add('mcl-host');
+    // Write only on change: classList.add() rewrites the class attribute even
+    // when the class is already there, and this runs on every strip pass, so
+    // an unconditional add queued a mutation per card per pass and MC_SCAN
+    // answered each with another pass. Measured on mm-p1 with a rest running:
+    // 398.8 mutation records/s against a budget of 15 (A-2's rule, again).
+    if (card && card.classList && !card.classList.contains('mcl-host')) card.classList.add('mcl-host');
     // Strip any OTHER wave3 logger / notes UI EVERY pass (before the early
     // return), so page-native scripts that re-add their UI after us (e.g.
     // pmc-workout's .ex-notes) don't win the race. Runs here (not in
