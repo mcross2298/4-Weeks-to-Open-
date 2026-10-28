@@ -552,7 +552,8 @@ jobs:
           EXIT=0
           for g in tools/smoke-test-pages.js tools/check-journey.js tools/test-mc-session-durability.js \
                    tools/test-mc-crash-journal.js tools/test-mc-exercise-identity.js \
-                   tools/check-tap-intent.js GO_LIVE/flagship-audit/scenarios/fa-repro.js; do
+                   tools/test-mc-overlay-stack.js tools/check-tap-intent.js \
+                   GO_LIVE/flagship-audit/scenarios/fa-repro.js; do
             if ! NODE_PATH=/tmp/pw-ci/node_modules node "$g" http://localhost:8080; then echo "FAILED: $g (minified)"; EXIT=1; fi
           done
           exit $EXIT
@@ -660,6 +661,15 @@ jobs:
           # browser: the defect lives between two modules and a rendered
           # input's ghost state, which is why every other gate here missed it.
           if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-restore-fidelity.js http://localhost:8080; then echo "FAILED: test-mc-restore-fidelity"; EXIT=1; fi
+          # Overlay stacking (collision review, 2026-10-27). Every gate above
+          # measures one surface at a time; these three defects existed only
+          # with two on screen together, found on the owner's phone: a tap on
+          # a collapsed superset row started a round rest with no set logged,
+          # the hop buffer (a bare z-index 1000) covered the Finish sheet's
+          # buttons, and the bottom nav covered Session Complete's Done.
+          # Hit-tests each control at its centre; 10 of 18 checks fail on the
+          # pre-fix tree.
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/test-mc-overlay-stack.js http://localhost:8080; then echo "FAILED: test-mc-overlay-stack"; EXIT=1; fi
           # Session durability (flagship readiness R1). Every gate above logs a
           # set and reloads at most; none logs a set and then does something
           # ELSE, and every R1 defect lived there: a week-tab round trip

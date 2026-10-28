@@ -262,6 +262,19 @@
                           1350, mc-account.js 1200) stay above it, which is
                           what lets a confirm open from inside one.
 
+     --z-modal moved off 110 twice on 2026-10-27/28, by two reviews that
+     found the same defect from two directions: at 110 it sat UNDER
+     --z-fw-bar-nav and --z-nav, so whenever the nav was on screen — End
+     workout before the first tick, or a session finished with no ticked set
+     (body.mc-in-session is never set, so the nav never hides) — the nav
+     painted over the dialog's bottom buttons (owner's phone screenshot; QA
+     collision audit). The collision review set 145; the QA audit's merge
+     settled on 175 so the dialog also covers mc-timer.js's full-screen rest
+     Video view (150) and rest-over bar (160): the finished-workout summary
+     winning over a now-pointless countdown is the reason --z-modal sat above
+     the timer in the first place. mc-superset-hop.js's buffer was a bare
+     1000 that beat both dialogs; it now sits on --z-timer-float.
+
      Reserved heights (content only, before env(safe-area-inset-*) is added
      on top by whichever rule positions each element — see below):
        .timer-float      64px, fixed
@@ -715,15 +728,16 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 /* --z-modal — see the stacking-contract block at the top of this file for
    why this sits above --z-timer-float (mc-summary.css's .fw-recap-overlay
    uses the same token, for the same reason). */
-/* The sheet scrolls INSIDE itself and the overlay pads for both insets. It had
-   neither: Session Complete (strain ring + muscle map + stats + refuel) measured
-   816px, and in a 568px viewport its top 264px — the title among it — sat above
-   the screen with no way to scroll to it, because a flex-end item that
-   overflows spills off the START edge. On an iPhone the home bar also sat on
-   the sheet's bottom edge (16px of padding against a 34px inset). */
-.fw-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-end;padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));z-index:var(--z-modal);}
+/* Column + margin-top:auto, not align-items:flex-end: a flex-end card taller
+   than the screen overflows off the TOP, where no scroll can reach it. The
+   Session Complete card grows with the strain ring, muscle map, records and
+   refuel block, so its Done button is the first thing a short phone loses.
+   With an auto margin the card still sits on the bottom when it fits and
+   scrolls from its own top when it doesn't. The bottom padding clears the
+   home indicator, which the old flat 16px sat on. */
+.fw-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));z-index:var(--z-modal,175);}
 .fw-modal-overlay.open{display:flex;}
-.fw-modal{width:100%;max-height:100%;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;background:#0e0e0e;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:24px 20px 20px;}
+.fw-modal{margin-top:auto;flex-shrink:0;width:100%;background:#0e0e0e;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:24px 20px 20px;}
 .fw-modal-title{font-size:var(--fs-3xl);font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;}
 .fw-modal-sub{font-size:var(--fs-sm);color:var(--muted);margin-bottom:18px;line-height:1.5;}
 .fw-summary{background:#111;border-radius:12px;padding:14px;margin-bottom:16px;}

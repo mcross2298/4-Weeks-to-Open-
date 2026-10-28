@@ -774,3 +774,57 @@ three below ship as one PR; the rest are scoped out at the end, with the reason.
   devices' clocks to disagree by more than the gap between a tick and its untick.
 - **`F3-5`** (the four licensed pages still on the old day layout) is a phase,
   not a residual, and needs its own `AskUserQuestion` gate.
+
+### T4 · overlay collisions (owner's phone screenshots, 2026-10-27)
+
+Scope: two screenshots from an `iron-engine.html` session — the Finish sheet
+with a "Round rest · next round" bar across its buttons and reading **0 sets**,
+and Session Complete with its Done button under the bottom nav. Driven
+headlessly before any change: all three defects below reproduced on `main`.
+Each is two independently correct pieces colliding, the shape the journey gate
+was built for, and none of them shows on a page measured one surface at a time.
+
+- **A row tap started a round rest with nothing logged.** Since R3 every card
+  rests as a 76px strip, and tapping its body is how an athlete opens it. On a
+  superset row that tap was also `mc-group-split.js`'s "tap to check off"
+  gesture and `mc-superset-hop.js`'s fallback hop trigger, so the lift was
+  marked done and a hop started with 0 sets ticked. That is where the
+  screenshot's "0 sets" under a running round rest came from. A row that
+  carries a set logger is now finished by its set checks only: a body tap opens
+  the logger, and the hop fires only from a real tick, which it already did.
+  Rows with no logger keep the tap-to-check gesture.
+- **The hop buffer covered the Finish sheet.** It was a bare `z-index:1000`,
+  off the `base.css` stacking scale, above both dialog layers (110). It is a
+  rest bar, so it now sits on `--z-timer-float`.
+- **The nav covered Session Complete.** `--z-modal` (110) sat under
+  `--z-fw-bar-nav` (120) and `--z-nav` (140). The nav hides only once a set is
+  ticked (`body.mc-in-session`), so any session finished with no tick — exactly
+  the state the first defect produced — showed the nav over the card's Done
+  button. `--z-modal` is now **145**: above every bar, still under the rest
+  Video view (150), the rest-over flash (159) and `mc-sheet.js` (1360).
+  *(Raised to 175 on 2026-10-28 when the QA collision audit, which fixed the
+  same defect in parallel, was merged with this: see `qa-collision-audit.md`.)*
+- **Found on the way: a tall Session Complete card was unreachable.** The
+  overlay bottom-aligned its card with `align-items:flex-end`, so a card taller
+  than the screen overflowed off the top, where nothing scrolls. It is now a
+  scrolling column with the card on `margin-top:auto`: it still sits on the
+  bottom when it fits, and its bottom padding clears the home indicator.
+
+New CI gate `tools/test-mc-overlay-stack.js` (`verify.yml`, and the minified
+run): it hit-tests each control at its centre at 390 and 320. **10 of 18 checks
+fail on the pre-fix tree, 18 of 18 pass after.** Also run green on this change:
+session durability 70/70, `fa-repro` 23/23, exercise identity 61/61, restore
+fidelity 105/105, smoke 38 pages, and the static gates. `check-journey` reports
+2 `back link` chrome-width failures, identical on the pre-fix tree; that width
+is text-derived and differs between this sandbox's Chromium and CI's (see
+CLAUDE.md's `chrome-budgets` revert), so it is not this change's.
+
+**Not fixed here, recorded:**
+- `mc-pmc-engine.js` and a few hand-written pages keep their own tap-to-check
+  on cards that also carry a logger. `mc-setlog.js` re-derives `.checked` from
+  ticks on its next count, so a stray tap there does not survive, and those
+  cards start no hop. Not seen in use.
+- The rest Video view (150) still covers a dialog if both are open. That was
+  true before this change too (110 < 150).
+- Not verified on a real phone. The fix is z-order and hit-testing, which
+  headless Chromium measures directly, but iOS Safari has not been checked.

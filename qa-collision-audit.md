@@ -81,6 +81,26 @@ the text-width/font constraint recorded in CLAUDE.md. `check-visual-ratchet.js`
 was not run here (`pngjs` is not installed in this sandbox). This change does
 not alter any page at rest, which is what that ratchet measures.
 
+## Overlap with T4 (PR #385)
+
+A parallel session fixed three of these defects (F4/F5 hop bar and nav vs the
+dialog, and the superset row tap) as `flagship-readiness-roadmap.md`'s T4,
+which merged to `main` first. The two were merged keeping both behaviours:
+
+- **`--z-modal` 175**, not T4's 145, so the dialog also covers the rest Video
+  view (150) and rest-over bar (160); the scale's own reason for sitting above
+  the timer is that a finished-workout dialog must win over a countdown.
+- **T4's dialog layout** (the overlay scrolls, the card sits on
+  `margin-top:auto`) replaces this audit's inner-scroll version, plus this
+  audit's top safe-area inset. `check-tap-intent.js`'s Session Complete check
+  now asserts the card's top is on screen and its end is reachable by scrolling,
+  which holds for either layout.
+- **Superset rows** keep T4's open-on-tap gesture: `mc-group-split.js` checks
+  its controls first, then opens a logger row, and only then reads
+  `MC_CARD_TAP_IGNORE`.
+- Both gates run in CI: T4's `test-mc-overlay-stack.js` (18/18) and
+  `check-tap-intent.js` (17/17) on the merged tree.
+
 ## Not changed, deliberately
 
 - The live summary's "Sets Done" (not the recap) still counts finished

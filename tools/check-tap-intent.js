@@ -190,14 +190,22 @@ const check = (ok, msg) => { if (ok) { passed++; console.log('  ✓ ' + msg); } 
       const recap = await p.evaluate(() => document.querySelector('.fw-recap-overlay.open .fw-stat-val:last-of-type, .fw-recap-overlay.open .fw-stats-row') ? document.querySelector('.fw-recap-overlay.open .fw-stats-row').innerText : '');
       check(/\b3 sets\b/.test(recap), `End workout recap counts ticked sets: "${recap.replace(/\s+/g, ' ').trim()}"`);
       await p.locator('#fwRecapSave').tap(); await p.waitForTimeout(1500);
+      // Either the card scrolls inside itself or the overlay scrolls around
+      // it (the merged layout since #385): what matters is that the card's
+      // top is on screen at rest and its bottom is reachable by scrolling.
       const m = await p.evaluate(() => {
-        const o = document.querySelector('#fwDone.open .fw-modal, .fw-modal-overlay.open .fw-modal');
-        if (!o) return null;
-        const r = o.getBoundingClientRect();
-        return { top: r.top, bottom: r.bottom, vh: innerHeight, scrolls: o.scrollHeight <= o.clientHeight + 1 || getComputedStyle(o).overflowY === 'auto' };
+        const card = document.querySelector('.fw-modal-overlay.open .fw-modal');
+        if (!card) return null;
+        const ov = card.closest('.fw-modal-overlay');
+        ov.scrollTop = 0; card.scrollTop = 0;
+        const top = card.getBoundingClientRect().top;
+        ov.scrollTop = ov.scrollHeight; card.scrollTop = card.scrollHeight;
+        const last = card.lastElementChild.getBoundingClientRect();
+        return { top, lastBottom: last.bottom, vh: innerHeight };
       });
-      check(!!m && m.top >= 0 && m.bottom <= m.vh && m.scrolls,
-        'Session Complete @320x568 fits the screen and scrolls' + (m ? ` (top ${Math.round(m.top)}, bottom ${Math.round(m.bottom)} of ${m.vh})` : ' — not found'));
+      check(!!m && m.top >= 0 && m.lastBottom <= m.vh,
+        'Session Complete @320x568: its top is on screen and scrolling reaches its end' +
+        (m ? ` (top ${Math.round(m.top)}, end ${Math.round(m.lastBottom)} of ${m.vh} after scroll)` : ' — not found'));
       await ctx.close();
     }
   }

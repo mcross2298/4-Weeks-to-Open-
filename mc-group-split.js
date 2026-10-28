@@ -165,9 +165,22 @@
 
     // Tap-to-check-off parity with PMC rows (ignores logger / inputs / timer).
     ex.addEventListener('click', function (e) {
-      if (e.target.closest(window.MC_CARD_TAP_IGNORE ||
-        '.mcl-toggle,.mcl-wrap,.mcl-ck,.mcl-inp,.setlog-toggle,' +
-        '.setlog-wrap,.sl-inp,.rest-timer,input,button,a,select,textarea')) return;
+      // A control in the row keeps its own job. Checked before the logger
+      // branch below and without MC_CARD_TAP_IGNORE's .mcl-host, which names
+      // the whole row and would swallow the open-on-tap gesture.
+      if (e.target.closest('.mcl-toggle,.mcl-wrap,.mcl-ck,.mcl-inp,.setlog-toggle,' +
+        '.setlog-wrap,.sl-inp,.rest-timer,.a-notes,input,button,a,select,textarea,label,' +
+        '[role="button"],[role="checkbox"]')) return;
+      // With a set logger on the row, completion is the logger's
+      // (mc-setlog.js sets .checked from its own ticks), so a body tap opens
+      // the logger instead of marking the lift done with nothing logged.
+      // Since R3 a collapsed row's body is what an athlete taps to open it.
+      if (ex.querySelector('.mcl-wrap, .setlog-wrap')) {
+        var strip = ex.querySelector('.mcl-strip');
+        if (strip && ex.classList.contains('mcl-collapsed')) strip.click();
+        return;
+      }
+      if (window.MC_CARD_TAP_IGNORE && e.target.closest(window.MC_CARD_TAP_IGNORE)) return;
       ex.classList.toggle('checked');
     });
     return ex;
