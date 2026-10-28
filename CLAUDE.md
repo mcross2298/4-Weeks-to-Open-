@@ -112,6 +112,7 @@ node tools/test-mc-day-key.js          # dated set-log day key + the legacy-labe
 # these need a static server + Playwright (see verify.yml)
 node tools/test-mc-exercise-identity.js http://localhost:8080   # history keys name the exercise, not its position (Phase 2.1, EN-1/EN-8); whole-name keys, readable History, planned-load prefill (R4)
 node tools/test-mc-pr-scope.js http://localhost:8080            # a PR belongs to the LIFT, not the page it was logged on (go-live assessment)
+node tools/test-mc-overlay-stack.js http://localhost:8080      # two surfaces at once: hop buffer vs Finish sheet, nav vs Session Complete, row tap vs hop (collision review)
 node tools/test-mc-setlog-concurrency.js http://localhost:8080  # two-tab set-log durability (FIX-01, L-01)
 node tools/test-mc-store-resilience.js http://localhost:8080    # corrupt-store shapes, 5 pages (FIX-04, L-03)
 node tools/test-mc-crash-recovery.js http://localhost:8080      # process kill + cloud rehydrate (FIX-02, L-02)
@@ -2681,6 +2682,20 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > - **A carried page with no Date header is stamped `x-mc-carried-at`** on its
 >   first prune and ages from there. Same-lift-two-weeks-one-day still shares a
 >   set number, deliberately; see the roadmap's T3 section.
+
+> **T4 shipped (2026-10-27) — overlay collisions, from the owner's phone.**
+> Three things to know before touching fixed bars, dialogs or row gestures:
+> - **A dialog covers every bar.** `--z-modal` is **145**, above the nav (140).
+>   At 110 the nav covered Session Complete's Done whenever a session ended with
+>   no tick (the nav hides only once a set is ticked). A new fixed bar goes on
+>   `base.css`'s scale below it, never a bare literal: the hop buffer's `1000`
+>   covered the Finish sheet.
+> - **A row with a set logger is finished by its ticks only.** Since R3 a body
+>   tap is how a collapsed row opens; it used to mark the lift done and start a
+>   round rest with 0 sets logged.
+> - **`tools/test-mc-overlay-stack.js`** hit-tests the controls with two
+>   surfaces on screen at once. Use the same check (`elementFromPoint` at the
+>   control's centre) for any new overlay.
 
 ---
 

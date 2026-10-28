@@ -234,7 +234,9 @@
                          is supposed to cover it, hence a slot below
                          --z-timer-float rather than above everything.
        --z-timer-float   Rest timer floating bar
-       --z-modal         .fw-modal-overlay, and mc-summary.css's
+       --z-modal         (listed out of numeric order: it is 145, above
+                         the nav — see the note after --z-nav-toggle)
+                         .fw-modal-overlay, and mc-summary.css's
                           .fw-recap-overlay at the same value — deliberately
                           ABOVE the timer: mc-finish.js's auto-trigger can
                           open one the instant the same check that starts a
@@ -247,6 +249,18 @@
                          render together so this isn't a real collision
        --z-nav           mc-nav.css's persistent bottom nav
        --z-nav-toggle    mc-nav.css's floating theme-toggle button
+
+     --z-modal moved from 110 to 145 (collision review, 2026-10-27). At 110
+     it sat UNDER --z-fw-bar-nav and --z-nav, so the moment the nav came
+     back — a session finished with no ticked set never sets
+     body.mc-in-session, so the nav never hid — it painted over the bottom
+     of the Session Complete card and covered its Done button (owner's
+     phone screenshot). A dialog covers every bar; that is the whole rule.
+     It stays under the full-screen rest Video view (mc-timer.js, 150) and
+     the rest-over flash (159), as it always did, and far under
+     mc-sheet.js's 1360, which a dialog can open on top of itself.
+     mc-superset-hop.js's buffer was a bare 1000 that beat both dialogs; it
+     now sits on --z-timer-float, the rest bar it is.
 
      Reserved heights (content only, before env(safe-area-inset-*) is added
      on top by whichever rule positions each element — see below):
@@ -276,10 +290,10 @@
   --z-sw-update:   60;
   --z-session-bar: 70;
   --z-timer-float: 100;
-  --z-modal:       110;
   --z-fw-bar-nav:  120;
   --z-nav:         140;
   --z-nav-toggle:  141;
+  --z-modal:       145;
 }
 
 /* ── PM Phase 2 — ThemeConfig knobs (set by mc-theme.js on <html>) ──── */
@@ -701,9 +715,16 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 /* --z-modal — see the stacking-contract block at the top of this file for
    why this sits above --z-timer-float (mc-summary.css's .fw-recap-overlay
    uses the same token, for the same reason). */
-.fw-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-end;padding:16px;z-index:var(--z-modal);}
+/* Column + margin-top:auto, not align-items:flex-end: a flex-end card taller
+   than the screen overflows off the TOP, where no scroll can reach it. The
+   Session Complete card grows with the strain ring, muscle map, records and
+   refuel block, so its Done button is the first thing a short phone loses.
+   With an auto margin the card still sits on the bottom when it fits and
+   scrolls from its own top when it doesn't. The bottom padding clears the
+   home indicator, which the old flat 16px sat on. */
+.fw-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;padding:16px 16px calc(16px + env(safe-area-inset-bottom));z-index:var(--z-modal,145);}
 .fw-modal-overlay.open{display:flex;}
-.fw-modal{width:100%;background:#0e0e0e;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:24px 20px 20px;}
+.fw-modal{margin-top:auto;flex-shrink:0;width:100%;background:#0e0e0e;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:24px 20px 20px;}
 .fw-modal-title{font-size:var(--fs-3xl);font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;}
 .fw-modal-sub{font-size:var(--fs-sm);color:var(--muted);margin-bottom:18px;line-height:1.5;}
 .fw-summary{background:#111;border-radius:12px;padding:14px;margin-bottom:16px;}

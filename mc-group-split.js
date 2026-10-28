@@ -167,6 +167,15 @@
     ex.addEventListener('click', function (e) {
       if (e.target.closest('.mcl-toggle,.mcl-wrap,.mcl-ck,.mcl-inp,.setlog-toggle,' +
         '.setlog-wrap,.sl-inp,.rest-timer,input,button,a,select,textarea')) return;
+      // With a set logger on the row, completion is the logger's
+      // (mc-setlog.js sets .checked from its own ticks), so a body tap opens
+      // the logger instead of marking the lift done with nothing logged.
+      // Since R3 a collapsed row's body is what an athlete taps to open it.
+      if (ex.querySelector('.mcl-wrap, .setlog-wrap')) {
+        var strip = ex.querySelector('.mcl-strip');
+        if (strip && ex.classList.contains('mcl-collapsed')) strip.click();
+        return;
+      }
       ex.classList.toggle('checked');
     });
     return ex;

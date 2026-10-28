@@ -5910,7 +5910,11 @@ try {
         '100%{box-shadow:inset 0 0 0 2px rgba(168,85,247,0);}}',
       '.mcl-row.sshop-nextset,.sl-row.sshop-nextset{' +
         'box-shadow:inset 0 0 0 1.5px rgba(168,85,247,0.85);border-radius:8px;}',
-      '.sshop-buffer{position:fixed;left:0;right:0;bottom:0;z-index:1000;' +
+      // --z-timer-float (base.css): this is a rest bar, so it sits where the
+      // rest bar sits. It was a bare 1000, which beat --z-modal and covered
+      // the Finish sheet's buttons whenever a round rest was still counting
+      // (collision review, 2026-10-27, owner's phone screenshot).
+      '.sshop-buffer{position:fixed;left:0;right:0;bottom:0;z-index:var(--z-timer-float,100);' +
         'padding:14px 18px calc(14px + env(safe-area-inset-bottom));' +
         'background:rgba(13,6,24,0.97);backdrop-filter:blur(16px);' +
         '-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(168,85,247,0.45);' +
@@ -6250,6 +6254,13 @@ try {
     var ex = e.target.closest('.ss-ex[data-type="ssex"]');
     if (!ex) return;
     if (e.target.closest(IGNORE_SEL)) return;
+    // A member that carries a set logger is finished by its set checks,
+    // which trigger (1) already hops on. Since R3 every card rests as a
+    // 76px strip, so a tap on its body is how an athlete OPENS it -- and
+    // this gesture turned that tap into a hop and a round rest with no set
+    // logged (collision review, 2026-10-27: "Round rest · next round" over
+    // a Finish sheet reading 0 sets).
+    if (ex.querySelector('.mcl-wrap, .setlog-wrap')) return;
     var willCheck = !ex.classList.contains('checked'); // pre-toggle
     if (!willCheck) return;                            // un-checking -> no hop
     triggerHop(ex);
