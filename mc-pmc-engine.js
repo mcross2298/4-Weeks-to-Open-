@@ -81,7 +81,7 @@ function renderEx(ex,wk){return ex.type==='superset'?renderSS(ex,wk):renderSingl
 
 function attachEvents(){
   document.querySelectorAll('[data-type="single"]').forEach(function(c){
-    c.addEventListener('click',function(e){if(e.target.closest('.setlog-toggle,.setlog-wrap,.set-check,.set-input'))return;var id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');});
+    c.addEventListener('click',function(e){if(e.target.closest(window.MC_CARD_TAP_IGNORE||'button,a,input,select,textarea'))return;var id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');});
   });
   document.querySelectorAll('[data-type="ssex"]').forEach(function(c){
     // Same exemption as the .rest-timer guard in mc-freq-engine.js, and the
@@ -90,7 +90,7 @@ function attachEvents(){
     // Without it the unconditional stopPropagation() ate the rest chip's click
     // before mc-timer.js's delegated document listener could see it, leaving
     // every superset rest chip on this engine's 5 pages inert.
-    c.addEventListener('click',function(e){if(e.target.closest('.rest-timer'))return;e.stopPropagation();var id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');});
+    c.addEventListener('click',function(e){if(e.target.closest(window.MC_CARD_TAP_IGNORE||'button,a,input,select,textarea'))return;e.stopPropagation();var id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');});
   });
   document.querySelectorAll('.wtab').forEach(function(b){
     b.addEventListener('click',function(){activeWeek=parseInt(b.dataset.w);render();});

@@ -1156,13 +1156,13 @@ function renderNotFound(){
 // ── EVENTS ────────────────────────────────────────────────────────
 function attachEvents(){
   document.querySelectorAll('[data-type="single"]').forEach(c=>{
-    c.addEventListener('click',()=>{const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');updateProgress();});
+    c.addEventListener('click',e=>{if(e.target.closest(window.MC_CARD_TAP_IGNORE||'button,a,input,select,textarea'))return;const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');updateProgress();});
   });
   document.querySelectorAll('[data-type="ssex"]').forEach(c=>{
-    c.addEventListener('click',e=>{e.stopPropagation();const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');updateProgress();});
+    c.addEventListener('click',e=>{if(e.target.closest(window.MC_CARD_TAP_IGNORE||'button,a,input,select,textarea'))return;e.stopPropagation();const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');updateProgress();});
   });
   document.querySelectorAll('[data-type="bex"]').forEach(c=>{
-    c.addEventListener('click',()=>{const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');updateProgress();});
+    c.addEventListener('click',e=>{if(e.target.closest(window.MC_CARD_TAP_IGNORE||'button,a,input,select,textarea'))return;const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');updateProgress();});
   });
   document.querySelectorAll('.wtab').forEach(b=>{
     b.addEventListener('click',()=>{

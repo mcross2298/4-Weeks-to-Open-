@@ -552,7 +552,7 @@ jobs:
           EXIT=0
           for g in tools/smoke-test-pages.js tools/check-journey.js tools/test-mc-session-durability.js \
                    tools/test-mc-crash-journal.js tools/test-mc-exercise-identity.js \
-                   tools/test-mc-overlay-stack.js \
+                   tools/test-mc-overlay-stack.js tools/check-tap-intent.js \
                    GO_LIVE/flagship-audit/scenarios/fa-repro.js; do
             if ! NODE_PATH=/tmp/pw-ci/node_modules node "$g" http://localhost:8080; then echo "FAILED: $g (minified)"; EXIT=1; fi
           done
@@ -596,6 +596,12 @@ jobs:
           # Budgets in tools/journey-budgets.json; re-baseline deliberately with
           # `node tools/check-journey.js <url> --update`.
           if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/check-journey.js http://localhost:8080; then echo "FAILED: check-journey"; EXIT=1; fi
+          # One tap, one intent; dialogs above every fixed bar (QA collision
+          # audit, qa-collision-audit.md). check-journey drives a session but
+          # never taps a control and then looks at the CARD, or opens a dialog
+          # while the nav / superset hop bar is up. 12 of its 16 checks failed
+          # on the tree before that audit.
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/check-tap-intent.js http://localhost:8080; then echo "FAILED: check-tap-intent"; EXIT=1; fi
           # Concurrent-write durability on mc_setlog_v1 (engine-repair roadmap
           # Phase 0.1 / audit L-01, FIX-01). The journey gate drives ONE tab;
           # this one drives two, because two tabs of the same program page used

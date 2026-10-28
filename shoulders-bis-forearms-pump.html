@@ -235,7 +235,7 @@ function render() {
   document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => {
     activeIdx = parseInt(b.dataset.i); render();
   }));
-  document.querySelectorAll(".ex-card").forEach(c => c.addEventListener("click", () => {
+  document.querySelectorAll(".ex-card").forEach(c => c.addEventListener("click", e => { if(e.target.closest(window.MC_CARD_TAP_IGNORE||'button,a,input,select,textarea'))return;
     const id = c.dataset.id;
     checkState[id] = !checkState[id];
     c.classList.toggle("checked");

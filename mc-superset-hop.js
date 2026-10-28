@@ -402,7 +402,10 @@
     // (2) Tapping the exercise card to check it off (fallback gesture).
     var ex = e.target.closest('.ss-ex[data-type="ssex"]');
     if (!ex) return;
-    if (e.target.closest(IGNORE_SEL)) return;
+    // and the same shared list the card's own tap-to-check handler reads, so
+    // the hop fires exactly when that handler ticks the member off
+    if (e.target.closest(IGNORE_SEL) ||
+        (window.MC_CARD_TAP_IGNORE && e.target.closest(window.MC_CARD_TAP_IGNORE))) return;
     // A member that carries a set logger is finished by its set checks,
     // which trigger (1) already hops on. Since R3 every card rests as a
     // 76px strip, so a tap on its body is how an athlete OPENS it -- and

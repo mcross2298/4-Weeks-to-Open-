@@ -213,11 +213,11 @@
 
   // tap card to check off (same behavior as program pages)
   Array.prototype.forEach.call(app.querySelectorAll('.ex-card'), function (c) {
-    c.addEventListener('click', function () { c.classList.toggle('checked'); });
+    c.addEventListener('click', function (e) { if(e.target.closest(window.MC_CARD_TAP_IGNORE||'button,a,input,select,textarea'))return; c.classList.toggle('checked'); });
   });
   // superset legs check off individually; stop the tap bubbling to the group
   Array.prototype.forEach.call(app.querySelectorAll('.ss-ex'), function (c) {
-    c.addEventListener('click', function (e) { e.stopPropagation(); c.classList.toggle('checked'); });
+    c.addEventListener('click', function (e) { if(e.target.closest(window.MC_CARD_TAP_IGNORE||'button,a,input,select,textarea'))return; e.stopPropagation(); c.classList.toggle('checked'); });
   });
 })();
 </script>

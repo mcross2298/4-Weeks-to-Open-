@@ -102,7 +102,7 @@ function render() {
       <div class="tap-hint">Tap any exercise to check off</div>
       ${PAGE_EXERCISES.map((e,i) => renderEx(e,i)).join("")}
     </div>`;
-  document.querySelectorAll(".ex-card").forEach(c => c.addEventListener("click", () => {
+  document.querySelectorAll(".ex-card").forEach(c => c.addEventListener("click", e => { if(e.target.closest(window.MC_CARD_TAP_IGNORE||'button,a,input,select,textarea'))return;
     const id = c.dataset.id; checkState[id]=!checkState[id]; c.classList.toggle("checked");
   }));
 }

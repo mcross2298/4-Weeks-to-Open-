@@ -118,6 +118,7 @@ node tools/test-mc-store-resilience.js http://localhost:8080    # corrupt-store 
 node tools/test-mc-crash-recovery.js http://localhost:8080      # process kill + cloud rehydrate (FIX-02, L-02)
 node tools/test-mc-crash-journal.js http://localhost:8080       # SIGKILL 300 ms after a tick/untick: the IndexedDB journal puts it back (R1 step 9, T2.2)
 node tools/test-mc-session-durability.js http://localhost:8080  # week round trip, mid-rest refresh, focused draft, untick, Finish, import, wake lock, rest-end bar, add set/skip, reorder, sheets, Back (flagship readiness R1/R2/R5)
+node tools/check-tap-intent.js http://localhost:8080          # an in-card control never also checks the card off; dialogs above nav/hop bar; Session Complete fits 320x568 (QA collision audit)
 node GO_LIVE/flagship-audit/scenarios/fa-repro.js http://localhost:8080   # the 23 flagship-readiness journeys (R1-R5)
 node GO_LIVE/flagship-audit/scenarios/fa-engines.js                       # progression/max math + deletion-record merge (R1/R4)
 node GO_LIVE/flagship-audit/scenarios/fa-offline-sw.js          # the REAL service worker, served as the production origin: offline screens, deploys (R3); starts its own HTTPS server
@@ -2671,6 +2672,39 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   carry-over cache** drops copies this deploy holds or fetched more than 60 days
 >   ago (by Date header) on every activate.
 
+> **QA collision audit shipped (2026-10-28) — [`qa-collision-audit.md`](qa-collision-audit.md).**
+> Six defects found by tapping a control and then looking at something else.
+> Two things to know:
+> - **A card's tap-to-check handler must ignore `window.MC_CARD_TAP_IGNORE`**
+>   (`mc-setlog.js`), read at click time. Before this, about 30 handlers kept
+>   private ignore lists that were older than the logger, so on 51 of 79
+>   logging pages the rest chip, ⓘ or the Log Sets strip also marked the
+>   exercise done. A new handler of that kind starts with
+>   `if(e.target.closest(window.MC_CARD_TAP_IGNORE||'button,a,input,select,textarea'))return;`.
+> - **A card with the set logger is completed by its sets only** (owner
+>   decision). `mc-setlog.js` marks it `.mcl-host` and the ignore list names
+>   that class, so the old name-tap gesture does nothing there.
+> - **`--z-modal` is 175, above every fixed bar.** It was 110, under the
+>   bottom nav, and End workout is on screen while the nav is. A fixed
+>   element joins the `base.css` scale. The superset hop bar's literal 1000 is
+>   what covered the recap's buttons. The dialog overlay scrolls (T4's
+>   layout) and pads for both insets.
+> `tools/check-tap-intent.js` guards all of it (12 of 16 checks fail on the
+> pre-fix tree). **T4 below (PR #385) fixed three of the same defects in
+> parallel and merged first**; the two were merged with both behaviours kept:
+> T4's scrolling overlay and open-on-tap superset rows, this audit's shared
+> ignore list and the 175 value. Both gates run in CI.
+>
+> **Continuous QA (2026-10-28).** Two layers keep running it against the
+> DEPLOYED app: `.github/workflows/live-qa.yml` (nightly 03:17 ET + on demand)
+> runs the browser gates against the live site and opens or updates one
+> `live-qa` issue on a failure; the **"Weekly live QA"** scheduled task
+> (Wednesdays 20:23 ET, fresh session, draft PRs only, never merges) reads open
+> `live-qa` issues first, then explores. A gate added to that workflow must
+> build URLs as `base + '/' + page`, because the live site lives under
+> `/4-Weeks-to-Open-/`. This environment denies `mcross2298.github.io`, so the
+> agent falls back to local `main` until the owner allows that host.
+
 > **T3 shipped (2026-10-27) — the small known limitations.** Three things to
 > know:
 > - **`weekTag()` now covers every page with week tabs.** Without a day resolver
@@ -2685,7 +2719,8 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 
 > **T4 shipped (2026-10-27) — overlay collisions, from the owner's phone.**
 > Three things to know before touching fixed bars, dialogs or row gestures:
-> - **A dialog covers every bar.** `--z-modal` is **145**, above the nav (140).
+> - **A dialog covers every bar.** `--z-modal` is **175** (T4 set 145; the QA
+>   collision audit's merge raised it above the rest Video view, 150), above the nav (140).
 >   At 110 the nav covered Session Complete's Done whenever a session ended with
 >   no tick (the nav hides only once a set is ticked). A new fixed bar goes on
 >   `base.css`'s scale below it, never a bare literal: the hop buffer's `1000`

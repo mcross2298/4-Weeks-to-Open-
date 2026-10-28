@@ -10,7 +10,7 @@
      moment that same check also starts a rest timer — the finished-workout
      summary must win that race, not get buried under a now-pointless
      "rest before the next set" countdown. */
-  z-index:var(--z-modal,145);display:none;align-items:flex-end;
+  z-index:var(--z-modal,175);display:none;align-items:flex-end;
 }
 .fw-recap-overlay.open{display:flex;}
 .fw-recap-sheet{

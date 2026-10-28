@@ -110,7 +110,9 @@ function bindEvents(){
       // tap rather than reading the source, and it predates this change --
       // the chip was a live countdown before, so it LOOKED responsive while
       // being just as untappable.
-      if(e.target.closest(".rest-timer"))return;
+      // MC_CARD_TAP_IGNORE (mc-setlog.js) covers the chip and every other
+      // control in the row, so none of them also ticks the row off.
+      if(e.target.closest(window.MC_CARD_TAP_IGNORE||'button,a,input,select,textarea'))return;
       e.stopPropagation();
       const id=item.dataset.id;
       checkState[id]=!checkState[id];

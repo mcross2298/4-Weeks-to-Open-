@@ -93,6 +93,7 @@
     }
   },
   "scratch": [
+    "qa-collision-audit.md",
     "lean-six-sigma-audit.md",
     "icon-maskable.svg",
     "stndr-card-concepts.html",

@@ -802,6 +802,8 @@ was built for, and none of them shows on a page measured one surface at a time.
   the state the first defect produced — showed the nav over the card's Done
   button. `--z-modal` is now **145**: above every bar, still under the rest
   Video view (150), the rest-over flash (159) and `mc-sheet.js` (1360).
+  *(Raised to 175 on 2026-10-28 when the QA collision audit, which fixed the
+  same defect in parallel, was merged with this: see `qa-collision-audit.md`.)*
 - **Found on the way: a tall Session Complete card was unreachable.** The
   overlay bottom-aligned its card with `align-items:flex-end`, so a card taller
   than the screen overflowed off the top, where nothing scrolls. It is now a
