@@ -2687,13 +2687,23 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > - **`--z-modal` is 175, above every fixed bar.** It was 110, under the
 >   bottom nav, and End workout is on screen while the nav is. A fixed
 >   element joins the `base.css` scale. The superset hop bar's literal 1000 is
->   what covered the recap's buttons. `.fw-modal` scrolls inside itself and
->   its overlay pads for both insets.
+>   what covered the recap's buttons. The dialog overlay scrolls (T4's
+>   layout) and pads for both insets.
 > `tools/check-tap-intent.js` guards all of it (12 of 16 checks fail on the
 > pre-fix tree). **T4 below (PR #385) fixed three of the same defects in
 > parallel and merged first**; the two were merged with both behaviours kept:
 > T4's scrolling overlay and open-on-tap superset rows, this audit's shared
 > ignore list and the 175 value. Both gates run in CI.
+>
+> **Continuous QA (2026-10-28).** Two layers keep running it against the
+> DEPLOYED app: `.github/workflows/live-qa.yml` (nightly 03:17 ET + on demand)
+> runs the browser gates against the live site and opens or updates one
+> `live-qa` issue on a failure; the **"Weekly live QA"** scheduled task
+> (Wednesdays 20:23 ET, fresh session, draft PRs only, never merges) reads open
+> `live-qa` issues first, then explores. A gate added to that workflow must
+> build URLs as `base + '/' + page`, because the live site lives under
+> `/4-Weeks-to-Open-/`. This environment denies `mcross2298.github.io`, so the
+> agent falls back to local `main` until the owner allows that host.
 
 > **T3 shipped (2026-10-27) — the small known limitations.** Three things to
 > know:

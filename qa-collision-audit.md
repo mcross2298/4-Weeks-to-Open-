@@ -109,3 +109,30 @@ which merged to `main` first. The two were merged keeping both behaviours:
   nothing renders. It is dead CSS, not a live layer.
 - Not verified on a real iOS device: safe-area insets resolve to 0
   headlessly, so the inset padding is a source change checked by reading.
+
+## Continuous QA (opened 2026-10-28)
+
+The owner asked for QA that keeps running against the live app, in two layers.
+Decisions, taken with `AskUserQuestion`: both layers, against the **live
+site**, the agent may open **draft PRs and a report**, **nightly scripts and a
+weekly agent**, with a push notification only when something is found.
+
+| Layer | Where | When | Does |
+|---|---|---|---|
+| **Nightly scripts** | `.github/workflows/live-qa.yml`, GitHub runner | 03:17 ET nightly + on demand | Runs the browser gates against `https://mcross2298.github.io/4-Weeks-to-Open-/`. On a failure it opens one `live-qa` issue (or comments on the open one), naming each failing gate and linking the run. Never changes code. |
+| **Weekly agent** | Claude scheduled task "Weekly live QA" | Wednesdays 20:23 ET, fresh session | Reads open `live-qa` issues first, then explores the app in headless Chromium. Fixes confirmed defects in draft PRs with a regression check, publishes a findings report, and never merges. |
+
+**Why live and not the tree.** The deploy serves minified JavaScript (T2.3)
+and a real service worker that only activates on the production origin. A
+defect in either can only be seen on the deployed site.
+
+**Phases.** (1) The workflow and the scheduled task. (2) The first manual run
+of the workflow after merge settles which gates hold on the live origin. A gate
+that fails there for an environmental reason is fixed in the gate, never
+dropped from the list.
+
+**Known constraint.** This repository's cloud environment denies
+`mcross2298.github.io`, so the weekly agent cannot reach the live site until
+the owner adds that host to the environment's allowed domains. Until then it
+tests a local checkout of `main`, says so at the top of its report, and leaves
+live-only checks to the nightly workflow.
