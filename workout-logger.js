@@ -5,15 +5,15 @@
      mc-muscle-map.js @ line 21
      mc-readiness.js @ line 114
      mc-setlog.js @ line 346
-     mc-session.js @ line 3566
-     mc-classify.js @ line 4171
-     mc-suggest.js @ line 4307
-     mc-chart.js @ line 4923
-     mc-exercise-trends.js @ line 5206
-     mc-cues-data.js @ line 5465
-     mc-cues.js @ line 5615
-     mc-rep-progress.js @ line 5705
-     mc-superset-hop.js @ line 5852
+     mc-session.js @ line 3581
+     mc-classify.js @ line 4186
+     mc-suggest.js @ line 4322
+     mc-chart.js @ line 4938
+     mc-exercise-trends.js @ line 5221
+     mc-cues-data.js @ line 5480
+     mc-cues.js @ line 5630
+     mc-rep-progress.js @ line 5720
+     mc-superset-hop.js @ line 5867
 */
 
 /* ---- mc-muscle-map.js ---- */
@@ -3255,6 +3255,21 @@ try {
     return true;
   }
 
+  // The ONE list of targets that must never also tick an exercise off when a
+  // card or row carries its own tap-to-check handler. 51 of the 79 logging
+  // pages had a handler whose own ignore list predated this logger, so a tap
+  // on the rest chip, the coaching-note button or the Log Sets strip ALSO
+  // toggled the card's .checked — the struck-through, dimmed "done" state
+  // that mc-summary.js counts — and tapping the chip a second time un-did it
+  // (QA collision audit, 2026-10-28). Every control in a card is a real
+  // <button>/<input> now, so the generic part does most of the work; the
+  // class names cover the non-control areas around them. Read at click time,
+  // so a handler registered before this file loaded still gets it; each call
+  // site keeps a generic fallback for a page that never loads this file.
+  window.MC_CARD_TAP_IGNORE =
+    'button,a,input,select,textarea,label,[role="button"],[role="checkbox"],' +
+    '[contenteditable="true"],.mcl-wrap,.a-notes,.rest-timer,.mc-menu-overlay';
+
   // shared parsing helpers for mc-suggest.js (and future analytics) — avoids
   // re-implementing the prescribed-scheme parser anywhere else
   window.MCSetlogUtil = {
@@ -5910,7 +5925,11 @@ try {
         '100%{box-shadow:inset 0 0 0 2px rgba(168,85,247,0);}}',
       '.mcl-row.sshop-nextset,.sl-row.sshop-nextset{' +
         'box-shadow:inset 0 0 0 1.5px rgba(168,85,247,0.85);border-radius:8px;}',
-      '.sshop-buffer{position:fixed;left:0;right:0;bottom:0;z-index:1000;' +
+      // On the base.css scale, not above it: at 1000 the buffer sat over the
+      // Finish dialogs (--z-modal) and covered their Cancel / Log workout
+      // buttons whenever End workout was tapped inside a hop. It only has to
+      // beat page content and the rest float it stacks on (bottomOffset()).
+      '.sshop-buffer{position:fixed;left:0;right:0;bottom:0;z-index:var(--z-timer-float,100);' +
         'padding:14px 18px calc(14px + env(safe-area-inset-bottom));' +
         'background:rgba(13,6,24,0.97);backdrop-filter:blur(16px);' +
         '-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(168,85,247,0.45);' +
@@ -6249,7 +6268,10 @@ try {
     // (2) Tapping the exercise card to check it off (fallback gesture).
     var ex = e.target.closest('.ss-ex[data-type="ssex"]');
     if (!ex) return;
-    if (e.target.closest(IGNORE_SEL)) return;
+    // and the same shared list the card's own tap-to-check handler reads, so
+    // the hop fires exactly when that handler ticks the member off
+    if (e.target.closest(IGNORE_SEL) ||
+        (window.MC_CARD_TAP_IGNORE && e.target.closest(window.MC_CARD_TAP_IGNORE))) return;
     var willCheck = !ex.classList.contains('checked'); // pre-toggle
     if (!willCheck) return;                            // un-checking -> no hop
     triggerHop(ex);

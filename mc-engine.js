@@ -63,9 +63,9 @@ function rSS(ex,wk){
 function rEx(ex,wk){return ex.type==='ss'?rSS(ex,wk):rS(ex,wk);}
 function attachEv(){
   document.querySelectorAll('[data-type="single"]').forEach(c=>
-    c.addEventListener('click',()=>{const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');}));
+    c.addEventListener('click',e=>{if(e.target.closest(window.MC_CARD_TAP_IGNORE||'button,a,input,select,textarea'))return;const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');}));
   document.querySelectorAll('[data-type="ssex"]').forEach(c=>
-    c.addEventListener('click',e=>{e.stopPropagation();const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');}));
+    c.addEventListener('click',e=>{if(e.target.closest(window.MC_CARD_TAP_IGNORE||'button,a,input,select,textarea'))return;e.stopPropagation();const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');}));
 }
 
 function render(rec){

@@ -116,7 +116,7 @@ function render() {
       <div class="section-label biceps">Biceps</div>${w.biceps.map((e,i)=>renderEx(e,'b',i)).join("")}
     </div>`;
   document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => { activeIdx=parseInt(b.dataset.i); render(); }));
-  document.querySelectorAll(".ex-card").forEach(c => c.addEventListener("click", () => { const id=c.dataset.id; checkState[id]=!checkState[id]; c.classList.toggle("checked"); }));
+  document.querySelectorAll(".ex-card").forEach(c => c.addEventListener("click", e => { if(e.target.closest(window.MC_CARD_TAP_IGNORE||'button,a,input,select,textarea'))return; const id=c.dataset.id; checkState[id]=!checkState[id]; c.classList.toggle("checked"); }));
 }
 render();
 if(typeof updateProgress!=="undefined")updateProgress();

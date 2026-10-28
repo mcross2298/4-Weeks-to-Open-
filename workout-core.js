@@ -6,14 +6,14 @@
      mc-log-read.js @ line 168
      mc-strain.js @ line 868
      mc-finish.js @ line 1183
-     mc-supabase.js @ line 2194
-     mc-sync.js @ line 3211
-     mc-biometric.js @ line 4322
-     program-overrides.js @ line 4426
-     mc-hints.js @ line 5405
-     mc-card-actions.js @ line 5533
-     program-manager.js @ line 6702
-     mc-live-tracker.js @ line 8580
+     mc-supabase.js @ line 2198
+     mc-sync.js @ line 3215
+     mc-biometric.js @ line 4326
+     program-overrides.js @ line 4430
+     mc-hints.js @ line 5409
+     mc-card-actions.js @ line 5537
+     program-manager.js @ line 6706
+     mc-live-tracker.js @ line 8584
 */
 
 /* ---- mc-replace.js ---- */
@@ -1979,6 +1979,10 @@ try {
 
   window._FW={
     finished:false,   // once true, updateProgress()'s auto-trigger stops firing
+    // Ticked sets in the open day — what this modal's own "Total sets" shows.
+    // mc-summary.js's End workout recap reads it too, so the two dialogs that
+    // ask "log or discard?" cannot report different numbers.
+    checkedSets:function(){return getCheckedSets();},
     open:function(){
       var elapsed=Date.now()-startTime;
       var checked=getCheckedSets();

@@ -84,7 +84,7 @@ function render(){
     '<div class="tabs-bar"><div class="tabs">'+tabs+'</div></div>'+
     '<div class="content"><div style="font-size:17px;font-weight:900;color:#fff;margin-bottom:6px;">'+w.title+'</div>'+noteHtml+'<div class="tap-hint">Tap any exercise to check off</div>'+body+'</div>';
   document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{activeIdx=parseInt(b.dataset.i);render();updateProgress();}));
-  document.querySelectorAll('.ex-card').forEach(c=>c.addEventListener('click',()=>{const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');updateProgress();}));
+  document.querySelectorAll('.ex-card').forEach(c=>c.addEventListener('click',e=>{if(e.target.closest(window.MC_CARD_TAP_IGNORE||'button,a,input,select,textarea'))return;const id=c.dataset.id;checkState[id]=!checkState[id];c.classList.toggle('checked');updateProgress();}));
   updateProgress();
 }
 render();

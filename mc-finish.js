@@ -797,6 +797,10 @@
 
   window._FW={
     finished:false,   // once true, updateProgress()'s auto-trigger stops firing
+    // Ticked sets in the open day — what this modal's own "Total sets" shows.
+    // mc-summary.js's End workout recap reads it too, so the two dialogs that
+    // ask "log or discard?" cannot report different numbers.
+    checkedSets:function(){return getCheckedSets();},
     open:function(){
       var elapsed=Date.now()-startTime;
       var checked=getCheckedSets();

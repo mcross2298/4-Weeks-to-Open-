@@ -165,7 +165,8 @@
 
     // Tap-to-check-off parity with PMC rows (ignores logger / inputs / timer).
     ex.addEventListener('click', function (e) {
-      if (e.target.closest('.mcl-toggle,.mcl-wrap,.mcl-ck,.mcl-inp,.setlog-toggle,' +
+      if (e.target.closest(window.MC_CARD_TAP_IGNORE ||
+        '.mcl-toggle,.mcl-wrap,.mcl-ck,.mcl-inp,.setlog-toggle,' +
         '.setlog-wrap,.sl-inp,.rest-timer,input,button,a,select,textarea')) return;
       ex.classList.toggle('checked');
     });

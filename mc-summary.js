@@ -474,7 +474,14 @@
 
     var t=totals();
     var timeStr=fmtElapsedWords(_elapsedSecs);
-    var emphasizeDiscard=t.doneSets===0&&_elapsedSecs<30;
+    // Sets the athlete actually TICKED. totals().doneSets adds the prescribed
+    // sets of fully finished exercises only, so with three sets logged across
+    // a half-done exercise this read "0 sets" — and then emphasised Exit &
+    // discard, the one control here that throws those sets away (QA collision
+    // audit). A page with no set rows keeps the exercise-based count.
+    var logged=(window._FW&&_FW.checkedSets&&document.querySelector('.set-check'))
+      ?_FW.checkedSets():t.doneSets;
+    var emphasizeDiscard=logged===0&&_elapsedSecs<30;
 
     var el=document.createElement('div');
     el.className='fw-recap-overlay';
@@ -486,7 +493,7 @@
         "<div class=\"fw-modal-sub\">Log your workout to complete it and track your progress. If you exit, your workout won't be recorded.</div>"+
         '<div class="fw-stats-row">'+
           '<div class="fw-stat-cell"><div class="fw-stat-val">'+esc(timeStr)+'</div><div class="fw-stat-lbl">Total time</div></div>'+
-          '<div class="fw-stat-cell"><div class="fw-stat-val">'+t.doneSets+' set'+(t.doneSets===1?'':'s')+'</div><div class="fw-stat-lbl">Total sets</div></div>'+
+          '<div class="fw-stat-cell"><div class="fw-stat-val">'+logged+' set'+(logged===1?'':'s')+'</div><div class="fw-stat-lbl">Total sets</div></div>'+
         '</div>'+
         '<div class="fw-modal-btns'+(emphasizeDiscard?' fw-emph':'')+'" id="fwRecapBtns">'+
           '<button class="fw-cancel" id="fwRecapCancel">Exit &amp; discard</button>'+

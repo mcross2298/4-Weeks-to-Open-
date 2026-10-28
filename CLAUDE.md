@@ -117,6 +117,7 @@ node tools/test-mc-store-resilience.js http://localhost:8080    # corrupt-store 
 node tools/test-mc-crash-recovery.js http://localhost:8080      # process kill + cloud rehydrate (FIX-02, L-02)
 node tools/test-mc-crash-journal.js http://localhost:8080       # SIGKILL 300 ms after a tick/untick: the IndexedDB journal puts it back (R1 step 9, T2.2)
 node tools/test-mc-session-durability.js http://localhost:8080  # week round trip, mid-rest refresh, focused draft, untick, Finish, import, wake lock, rest-end bar, add set/skip, reorder, sheets, Back (flagship readiness R1/R2/R5)
+node tools/check-tap-intent.js http://localhost:8080          # an in-card control never also checks the card off; dialogs above nav/hop bar; Session Complete fits 320x568 (QA collision audit)
 node GO_LIVE/flagship-audit/scenarios/fa-repro.js http://localhost:8080   # the 23 flagship-readiness journeys (R1-R5)
 node GO_LIVE/flagship-audit/scenarios/fa-engines.js                       # progression/max math + deletion-record merge (R1/R4)
 node GO_LIVE/flagship-audit/scenarios/fa-offline-sw.js          # the REAL service worker, served as the production origin: offline screens, deploys (R3); starts its own HTTPS server
@@ -2669,6 +2670,23 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   still wait. **Deletion records** are pruned after a year, and **the SW's
 >   carry-over cache** drops copies this deploy holds or fetched more than 60 days
 >   ago (by Date header) on every activate.
+
+> **QA collision audit shipped (2026-10-28) — [`qa-collision-audit.md`](qa-collision-audit.md).**
+> Six defects found by tapping a control and then looking at something else.
+> Two things to know:
+> - **A card's tap-to-check handler must ignore `window.MC_CARD_TAP_IGNORE`**
+>   (`mc-setlog.js`), read at click time. Before this, about 30 handlers kept
+>   private ignore lists that were older than the logger, so on 51 of 79
+>   logging pages the rest chip, ⓘ or the Log Sets strip also marked the
+>   exercise done. A new handler of that kind starts with
+>   `if(e.target.closest(window.MC_CARD_TAP_IGNORE||'button,a,input,select,textarea'))return;`.
+> - **`--z-modal` is 175, above every fixed bar.** It was 110, under the
+>   bottom nav, and End workout is on screen while the nav is. A fixed
+>   element joins the `base.css` scale. The superset hop bar's literal 1000 is
+>   what covered the recap's buttons. `.fw-modal` scrolls inside itself and
+>   its overlay pads for both insets.
+> `tools/check-tap-intent.js` guards all of it (12 of 16 checks fail on the
+> pre-fix tree).
 
 > **T3 shipped (2026-10-27) — the small known limitations.** Three things to
 > know:

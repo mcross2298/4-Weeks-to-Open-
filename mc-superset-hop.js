@@ -59,7 +59,11 @@
         '100%{box-shadow:inset 0 0 0 2px rgba(168,85,247,0);}}',
       '.mcl-row.sshop-nextset,.sl-row.sshop-nextset{' +
         'box-shadow:inset 0 0 0 1.5px rgba(168,85,247,0.85);border-radius:8px;}',
-      '.sshop-buffer{position:fixed;left:0;right:0;bottom:0;z-index:1000;' +
+      // On the base.css scale, not above it: at 1000 the buffer sat over the
+      // Finish dialogs (--z-modal) and covered their Cancel / Log workout
+      // buttons whenever End workout was tapped inside a hop. It only has to
+      // beat page content and the rest float it stacks on (bottomOffset()).
+      '.sshop-buffer{position:fixed;left:0;right:0;bottom:0;z-index:var(--z-timer-float,100);' +
         'padding:14px 18px calc(14px + env(safe-area-inset-bottom));' +
         'background:rgba(13,6,24,0.97);backdrop-filter:blur(16px);' +
         '-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(168,85,247,0.45);' +
@@ -398,7 +402,10 @@
     // (2) Tapping the exercise card to check it off (fallback gesture).
     var ex = e.target.closest('.ss-ex[data-type="ssex"]');
     if (!ex) return;
-    if (e.target.closest(IGNORE_SEL)) return;
+    // and the same shared list the card's own tap-to-check handler reads, so
+    // the hop fires exactly when that handler ticks the member off
+    if (e.target.closest(IGNORE_SEL) ||
+        (window.MC_CARD_TAP_IGNORE && e.target.closest(window.MC_CARD_TAP_IGNORE))) return;
     var willCheck = !ex.classList.contains('checked'); // pre-toggle
     if (!willCheck) return;                            // un-checking -> no hop
     triggerHop(ex);

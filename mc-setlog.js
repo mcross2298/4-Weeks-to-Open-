@@ -2910,6 +2910,21 @@
     return true;
   }
 
+  // The ONE list of targets that must never also tick an exercise off when a
+  // card or row carries its own tap-to-check handler. 51 of the 79 logging
+  // pages had a handler whose own ignore list predated this logger, so a tap
+  // on the rest chip, the coaching-note button or the Log Sets strip ALSO
+  // toggled the card's .checked — the struck-through, dimmed "done" state
+  // that mc-summary.js counts — and tapping the chip a second time un-did it
+  // (QA collision audit, 2026-10-28). Every control in a card is a real
+  // <button>/<input> now, so the generic part does most of the work; the
+  // class names cover the non-control areas around them. Read at click time,
+  // so a handler registered before this file loaded still gets it; each call
+  // site keeps a generic fallback for a page that never loads this file.
+  window.MC_CARD_TAP_IGNORE =
+    'button,a,input,select,textarea,label,[role="button"],[role="checkbox"],' +
+    '[contenteditable="true"],.mcl-wrap,.a-notes,.rest-timer,.mc-menu-overlay';
+
   // shared parsing helpers for mc-suggest.js (and future analytics) — avoids
   // re-implementing the prescribed-scheme parser anywhere else
   window.MCSetlogUtil = {

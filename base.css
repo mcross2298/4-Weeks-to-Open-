@@ -233,20 +233,34 @@
                          non-fixed stack in the fleet); a full-screen dialog
                          is supposed to cover it, hence a slot below
                          --z-timer-float rather than above everything.
-       --z-timer-float   Rest timer floating bar
-       --z-modal         .fw-modal-overlay, and mc-summary.css's
-                          .fw-recap-overlay at the same value — deliberately
-                          ABOVE the timer: mc-finish.js's auto-trigger can
-                          open one the instant the same check that starts a
-                          rest timer completes the workout, and the
-                          finished-workout summary must win that race, not
-                          get buried under a now-pointless countdown
+       --z-timer-float   Rest timer floating bar, and mc-superset-hop.js's
+                         "Next up" buffer, which stacks on it from below
        --z-fw-bar-nav    .fw-bar when mc-nav.css's bottom nav is also
                          present (body.mc-has-nav .fw-bar) — same value as
                          conditioning-elite.css's .sum-drawer; the two never
                          render together so this isn't a real collision
        --z-nav           mc-nav.css's persistent bottom nav
        --z-nav-toggle    mc-nav.css's floating theme-toggle button
+       --z-modal         .fw-modal-overlay, and mc-summary.css's
+                          .fw-recap-overlay at the same value — a full-screen
+                          dialog covers ALL fixed chrome. It sat at 110,
+                          between the timer and the nav, on the assumption
+                          that the nav is always hidden while a dialog is up.
+                          It is not: End workout shows before the first tick,
+                          while the nav still does, and the nav (140) then
+                          covered the recap's Cancel / Log workout buttons, so
+                          a tap meant for them opened another tab (QA
+                          collision audit, 2026-10-28). Still deliberately
+                          ABOVE the timer: mc-finish.js's auto-trigger can
+                          open one the instant the same check that starts a
+                          rest timer completes the workout, and the
+                          finished-workout summary must win that race. Above
+                          mc-timer.js's literals too (video rest view 150,
+                          rest-over wash 159, rest-over bar 160) and
+                          mc-guided.js's exit pill (170). The app's own
+                          sheets (mc-sheet.js 1360, mc-card-actions.css
+                          1350, mc-account.js 1200) stay above it, which is
+                          what lets a confirm open from inside one.
 
      Reserved heights (content only, before env(safe-area-inset-*) is added
      on top by whichever rule positions each element — see below):
@@ -276,10 +290,10 @@
   --z-sw-update:   60;
   --z-session-bar: 70;
   --z-timer-float: 100;
-  --z-modal:       110;
   --z-fw-bar-nav:  120;
   --z-nav:         140;
   --z-nav-toggle:  141;
+  --z-modal:       175;
 }
 
 /* ── PM Phase 2 — ThemeConfig knobs (set by mc-theme.js on <html>) ──── */
@@ -701,9 +715,15 @@ body{background:var(--body-bg);min-height:100vh;color:var(--text);padding-bottom
 /* --z-modal — see the stacking-contract block at the top of this file for
    why this sits above --z-timer-float (mc-summary.css's .fw-recap-overlay
    uses the same token, for the same reason). */
-.fw-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-end;padding:16px;z-index:var(--z-modal);}
+/* The sheet scrolls INSIDE itself and the overlay pads for both insets. It had
+   neither: Session Complete (strain ring + muscle map + stats + refuel) measured
+   816px, and in a 568px viewport its top 264px — the title among it — sat above
+   the screen with no way to scroll to it, because a flex-end item that
+   overflows spills off the START edge. On an iPhone the home bar also sat on
+   the sheet's bottom edge (16px of padding against a 34px inset). */
+.fw-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-end;padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));z-index:var(--z-modal);}
 .fw-modal-overlay.open{display:flex;}
-.fw-modal{width:100%;background:#0e0e0e;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:24px 20px 20px;}
+.fw-modal{width:100%;max-height:100%;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;background:#0e0e0e;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:24px 20px 20px;}
 .fw-modal-title{font-size:var(--fs-3xl);font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;}
 .fw-modal-sub{font-size:var(--fs-sm);color:var(--muted);margin-bottom:18px;line-height:1.5;}
 .fw-summary{background:#111;border-radius:12px;padding:14px;margin-bottom:16px;}
