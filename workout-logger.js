@@ -5,15 +5,15 @@
      mc-muscle-map.js @ line 21
      mc-readiness.js @ line 114
      mc-setlog.js @ line 346
-     mc-session.js @ line 3591
-     mc-classify.js @ line 4196
-     mc-suggest.js @ line 4332
-     mc-chart.js @ line 4948
-     mc-exercise-trends.js @ line 5231
-     mc-cues-data.js @ line 5490
-     mc-cues.js @ line 5640
-     mc-rep-progress.js @ line 5730
-     mc-superset-hop.js @ line 5877
+     mc-session.js @ line 3596
+     mc-classify.js @ line 4201
+     mc-suggest.js @ line 4337
+     mc-chart.js @ line 4953
+     mc-exercise-trends.js @ line 5236
+     mc-cues-data.js @ line 5495
+     mc-cues.js @ line 5645
+     mc-rep-progress.js @ line 5735
+     mc-superset-hop.js @ line 5882
 */
 
 /* ---- mc-muscle-map.js ---- */
@@ -2155,7 +2155,12 @@ try {
     // class, so the old "tap the card body to check it off" handlers ignore
     // every tap on it, the exercise name included. Set on every strip pass,
     // so a lazily-built card (A-14) is covered before its rows exist.
-    if (card && card.classList) card.classList.add('mcl-host');
+    // Write only on change: classList.add() rewrites the class attribute even
+    // when the class is already there, and this runs on every strip pass, so
+    // an unconditional add queued a mutation per card per pass and MC_SCAN
+    // answered each with another pass. Measured on mm-p1 with a rest running:
+    // 398.8 mutation records/s against a budget of 15 (A-2's rule, again).
+    if (card && card.classList && !card.classList.contains('mcl-host')) card.classList.add('mcl-host');
     // Strip any OTHER wave3 logger / notes UI EVERY pass (before the early
     // return), so page-native scripts that re-add their UI after us (e.g.
     // pmc-workout's .ex-notes) don't win the race. Runs here (not in
