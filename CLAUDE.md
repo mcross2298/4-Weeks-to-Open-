@@ -2732,6 +2732,21 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   surfaces on screen at once. Use the same check (`elementFromPoint` at the
 >   control's centre) for any new overlay.
 
+> **T5 shipped (2026-10-31) — the three deferred items.** Three things to know:
+> - **`F3-5` is done; all 23 `F3` pages are on the day list.** The four STNDR
+>   pages follow `bro-split.html`. A tab switch with a day open goes through
+>   `clampOpenDay()`.
+> - **A tick or untick is stamped after the event it follows**
+>   (`causalStamp()` in `mc-setlog.js`): an untick after the tick it removes,
+>   a re-tick after any untick record this device holds. A skewed clock on
+>   another device can no longer reorder them. The merge rule is unchanged.
+> - **A set-log session's keys are SLOTS.** A slot is the plain set number,
+>   or `"<n>@<week>"` when today's `n` already belongs to another program
+>   week (`slotFor()`; map a slot to its row with `baseSn()`). Code that
+>   wants set numbers must not assume every key is an integer: use
+>   `parseInt`/`parseFloat`, or skip `@` slots the way `mc-suggest.js` does.
+>   `mergeSetlog()` splits two devices' different weeks into slots the same way.
+
 ---
 
 ## Previous plan (historical) — workout_cookbook_dev_plan_v2

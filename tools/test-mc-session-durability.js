@@ -22,6 +22,14 @@
                 value must come back (D-05: drafts were saved on blur only).
      UNTICK     log two sets, untick one, finish. One set is banked (D-03:
                 untick removed the cloud row and left the local set).
+     SKEW       an untick made on a device whose clock runs BEHIND the one
+                that ticked still wins the merge, and a re-tick after a
+                "future" untick still stays (the N3 clock-skew residual: both
+                stamps used to be the bare local clock).
+     TWO-WEEKS  the same lift ticked in week 1 and week 2 on ONE day keeps
+                both sets, each painted on its own week, and an untick on
+                week 2 leaves week 1's set (they used to share one slot, and
+                the second tick overwrote the first).
      CUSTOM     a custom workout's Finish banks its sets (D-02: its own Finish
                 read a retired key and banked zero).
      FINISHED   after Finish, the session record is gone and STAYS gone while
@@ -220,6 +228,53 @@ async function step(name, fn) {
     check(!(await sessionOf(p, 'iron-engine')), 'FINISHED the session record is cleared and stays cleared under the recap');
     await p.goto(BASE + '/dashboard.html'); await sleep(800);
     check(!(await sessionOf(p, 'iron-engine')), 'FINISHED leaving the page does not write it back');
+    await c.close();
+  });
+
+  await step('SKEW', async () => {
+    // A set ticked on another device whose clock runs an hour AHEAD arrives
+    // here through sync carrying t = now + 1h. Unticking it here used to stamp
+    // the untick with this device's clock -- an hour EARLIER than the tick --
+    // so the merge kept the set and the next pull put it back.
+    const AHEAD = 3600000;
+    const c = await ctx(browser); const p = await page(c, errs, 'skew');
+    await p.goto(BASE + '/iron-engine.html?day=1&week=1'); await sleep(2000);
+    const card = p.locator('.ex-card').first();
+    await logSet(card, 0, 135, 12); await sleep(700);
+    const key = await p.evaluate((ahead) => {
+      const s = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}');
+      const k = Object.keys(s).find((x) => x.indexOf('iron-engine|') === 0 && s[x][0] && s[x][0].sets && s[x][0].sets[1]);
+      s[k][0].sets[1].t = Date.now() + ahead;           // as if synced from the fast device
+      localStorage.setItem('mc_setlog_v1', JSON.stringify(s));
+      return k;
+    }, AHEAD);
+    await p.reload(); await sleep(2500);
+    await p.locator('.ex-card').first().locator('.mcl-row').nth(0).locator('.mcl-ck').click(); await sleep(800);
+    const r = await p.evaluate((k) => {
+      const s = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}');
+      const day = Object.keys(JSON.parse(localStorage.getItem('mc_setlog_deleted_v1') || '{}')).find((x) => x.indexOf(k + '|') === 0);
+      const rec = day ? JSON.parse(localStorage.getItem('mc_setlog_deleted_v1'))[day] : null;
+      return { rec: rec && rec.ts, now: Date.now(), still: !!(s[k] && s[k][0] && s[k][0].sets && s[k][0].sets[1]) };
+    }, key);
+    check(r.rec && r.rec > r.now + AHEAD - 60000 && !r.still,
+      'SKEW an untick is stamped after the tick it removes, even when that tick came from a clock running ahead',
+      JSON.stringify(r));
+    // The other direction: the untick record is the "future" one now. A
+    // re-tick here must still be stamped after it, or the merge drops it.
+    await p.evaluate(() => {
+      const m = JSON.parse(localStorage.getItem('mc_setlog_deleted_v1') || '{}');
+      Object.keys(m).forEach((x) => { if (x.indexOf('iron-engine|') === 0) m[x].ts = Date.now() + 7200000; });
+      localStorage.setItem('mc_setlog_deleted_v1', JSON.stringify(m));
+    });
+    await logSet(p.locator('.ex-card').first(), 0, 140, 10); await sleep(700);
+    const t = await p.evaluate((k) => {
+      const s = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}');
+      const m = JSON.parse(localStorage.getItem('mc_setlog_deleted_v1') || '{}');
+      const set = s[k] && s[k][0] && s[k][0].sets && s[k][0].sets[1];
+      const rk = Object.keys(m).find((x) => x.indexOf(k + '|') === 0);
+      return { t: set && set.t, rec: rk && m[rk].ts };
+    }, key);
+    check(t.t && t.rec && t.t > t.rec, 'SKEW a re-tick is stamped after an untick record from a clock running ahead', JSON.stringify(t));
     await c.close();
   });
 
@@ -555,6 +610,43 @@ async function step(name, fn) {
       'WEEK-TICK-PAGE a week-1 tick stays on week 1 on a page with no day resolver', JSON.stringify({ w1, w2, back }));
     await c.close();
   });
+  // One lift, two program weeks, one calendar day: both sets are kept. The
+  // Modality Matrix is the program whose lifts stay fixed across weeks, so it
+  // is where this happens (cat-strength's week 2 prescribes different lifts).
+  for (const pg of ['/mm-p1.html?day=1&week=']) {
+    await step('TWO-WEEKS ' + pg, async () => {
+      const c = await ctx(browser); const p = await page(c, errs, 'twoweeks');
+      const wOf = () => p.evaluate(() => { const r = document.querySelector('.mcl-row .mcl-ck.done');
+        const row = r && r.closest('.mcl-row'); const w = row && row.querySelector('.mcl-w'); return w ? w.value : null; });
+      const first = () => p.locator('.ex-card, .ss-ex').first();
+      // After a tick the logger moves on to the next exercise (S3) and a
+      // reload reopens THAT one, so the first card's rows may be unbuilt.
+      const openFirst = () => p.evaluate(() => { const cd = document.querySelector('.ex-card, .ss-ex');
+        if (window.MCSetlogUtil && MCSetlogUtil.ensureRowsBuilt) MCSetlogUtil.ensureRowsBuilt(cd);
+        const row = cd.querySelector('.mcl-row'); if (row && !row.offsetParent) { const st = cd.querySelector('.mcl-strip'); if (st) st.click(); } }).then(() => sleep(400));
+      await p.goto(BASE + pg + '1'); await sleep(1800);
+      await logSet(first(), 0, 100, 5); await sleep(500);
+      await p.goto(BASE + pg + '2'); await sleep(1800);
+      await openFirst(); await logSet(first(), 0, 110, 5); await sleep(700);
+      const stored = await p.evaluate(() => {
+        const s = JSON.parse(localStorage.getItem('mc_setlog_v1') || '{}');
+        const k = Object.keys(s).find((x) => s[x][0] && s[x][0].sets && s[x][0].sets[1]);
+        return k ? Object.keys(s[k][0].sets).map((n) => n + '=' + s[k][0].sets[n].w).sort().join(',') : '';
+      });
+      await p.reload(); await sleep(2500);
+      const w2 = await wOf();
+      await p.goto(BASE + pg + '1'); await sleep(1800);
+      const w1 = await wOf();
+      await p.goto(BASE + pg + '2'); await sleep(1800);
+      await openFirst(); await first().locator('.mcl-row').nth(0).locator('.mcl-ck').click(); await sleep(800);
+      await p.goto(BASE + pg + '1'); await sleep(1800);
+      const w1After = await wOf();
+      check(/^1=100,1@\w+=110$/.test(stored) && w2 === '110' && w1 === '100' && w1After === '100',
+        'TWO-WEEKS ' + pg + ' both weeks keep their own set 1, and an untick on one leaves the other',
+        JSON.stringify({ stored, w2, w1, w1After }));
+      await c.close();
+    });
+  }
   // T1.6: undoing a swap keeps the sets done on the substitute on the card,
   // labelled with the lift they were done on, after a reload too. They used
   // to drop off the card (and out of its count) the moment the swap was undone.

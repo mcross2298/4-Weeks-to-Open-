@@ -801,6 +801,25 @@ async function runAsyncTests() {
     ok('untick: computeSetlogPullResult applies the records', pr.whole['p|x'] && !pr.whole['p|x'][0].sets[2], JSON.stringify(pr.whole));
   }
 
+  {
+    // One lift, two program weeks, one day (mc-setlog.js slotFor()): each
+    // device holds a DIFFERENT week in plain slot 1. First-wins used to drop
+    // the other week's set; it now moves to that week's slot.
+    const d = '2026-10-31';
+    const a = { 'p|x': [{ d, sets: { 1: { w: '100', wk: 'mm|1', t: 1 } } }] };
+    const b = { 'p|x': [{ d, sets: { 1: { w: '110', wk: 'mm|2', t: 2 } } }] };
+    let out = M.mergeSetlog(a, b)['p|x'][0].sets;
+    ok('two weeks: both weeks\' set 1 survive a merge', out[1] && out[1].w === '100' && out['1@2'] && out['1@2'].w === '110', JSON.stringify(out));
+    out = M.mergeSetlog(M.mergeSetlog(a, b), b)['p|x'][0].sets;
+    ok('two weeks: merging again is stable (no third copy)', Object.keys(out).length === 2, JSON.stringify(out));
+    out = M.mergeSetlog({ 'p|x': [{ d, sets: { 1: { w: '100', wk: 'mm|1' }, '1@2': { w: '110', wk: 'mm|2' } } }] }, a)['p|x'][0].sets;
+    ok('two weeks: a slot written on the device itself is kept as-is', out['1@2'] && out['1@2'].w === '110' && Object.keys(out).length === 2, JSON.stringify(out));
+    out = M.mergeSetlog(a, { 'p|x': [{ d, sets: { 1: { w: '120', wk: 'mm|1', t: 3 } } }] })['p|x'][0].sets;
+    ok('two weeks: a same-week collision keeps first-wins', out[1].w === '100' && Object.keys(out).length === 1, JSON.stringify(out));
+    out = M.mergeSetlog({ 'p|x': [{ d, sets: { 1: { w: '100' } } }] }, b)['p|x'][0].sets;
+    ok('two weeks: an untagged set is not split (no week to tell them apart)', Object.keys(out).length === 1, JSON.stringify(out));
+  }
+
   if (fail) { console.error(`\ntest-mc-sync-merge: ${pass} passed, ${fail} FAILED`); process.exit(1); }
   console.log(`test-mc-sync-merge: all ${pass} assertions passed`);
 }

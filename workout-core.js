@@ -8,12 +8,12 @@
      mc-finish.js @ line 1183
      mc-supabase.js @ line 2198
      mc-sync.js @ line 3215
-     mc-biometric.js @ line 4326
-     program-overrides.js @ line 4430
-     mc-hints.js @ line 5409
-     mc-card-actions.js @ line 5537
-     program-manager.js @ line 6706
-     mc-live-tracker.js @ line 8584
+     mc-biometric.js @ line 4338
+     program-overrides.js @ line 4442
+     mc-hints.js @ line 5421
+     mc-card-actions.js @ line 5549
+     program-manager.js @ line 6718
+     mc-live-tracker.js @ line 8596
 */
 
 /* ---- mc-replace.js ---- */
@@ -3667,8 +3667,20 @@ try {
       la.concat(ra).forEach(function (s) {
         if (!s || !s.d) return;
         if (!byDay[s.d]) { byDay[s.d] = { d: s.d, sets: {}, ts: 0 }; order.push(s.d); }
-        var sets = s.sets || {};
-        for (var sn in sets) if (byDay[s.d].sets[sn] == null) byDay[s.d].sets[sn] = sets[sn];
+        var sets = s.sets || {}, into = byDay[s.d].sets;
+        for (var sn in sets) {
+          var v = sets[sn], have = into[sn];
+          if (have == null) { into[sn] = v; continue; }
+          // One lift, two program weeks, one day (mc-setlog.js slotFor()):
+          // each device may hold a DIFFERENT week in the same plain slot. The
+          // first stays; the other moves to its week slot rather than being
+          // dropped. Same-week collisions keep the old first-wins rule.
+          if (v && have && v.wk && have.wk && v.wk !== have.wk && String(sn).indexOf('@') < 0) {
+            var wi = String(v.wk).lastIndexOf('|');
+            var alt = sn + '@' + (wi < 0 ? v.wk : String(v.wk).slice(wi + 1));
+            if (into[alt] == null) into[alt] = v;
+          }
+        }
         // carry the newest timestamp either side has for this day
         if (typeof s.ts === 'number' && s.ts > byDay[s.d].ts) byDay[s.d].ts = s.ts;
       });

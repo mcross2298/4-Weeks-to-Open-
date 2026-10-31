@@ -201,10 +201,17 @@
   //   progress → the load steps, so reps reset to the bottom of the range
   //   repeat   → same load, one more rep than last time, capped at the top
   //   hold     → last session was near max: ask for what was done, no more
+  // A slot written as "2@3" is the same lift's set 2 in a SECOND program week
+  // ticked the same day (mc-setlog.js slotFor()). Ordering a session by set
+  // number would interleave the two weeks' sets, so progression reads the
+  // day's plain slots -- exactly the sets it read before slots existed.
+  function firstWeekSlot(k) { return String(k).indexOf('@') < 0; }
+
   function repGoals(sess, setsStr, status) {
     var tops = repTargets(setsStr), floors = repFloors(setsStr);
     if (!tops.length || !sess || !sess.sets) return [];
     var ordered = Object.keys(sess.sets)
+      .filter(firstWeekSlot)
       .sort(function (a, b) { return parseFloat(a) - parseFloat(b); })
       .map(function (k) { return sess.sets[k]; });
     return tops.map(function (top, i) {
@@ -224,6 +231,7 @@
   // own reps for that set. Null where there is no goal or no logged reps.
   function repGhosts(sess, goals, status) {
     var ordered = Object.keys((sess && sess.sets) || {})
+      .filter(firstWeekSlot)
       .sort(function (a, b) { return parseFloat(a) - parseFloat(b); })
       .map(function (k) { return sess.sets[k]; });
     return goals.map(function (g, i) {
@@ -344,7 +352,8 @@
     var targets = repTargets(setsStr).filter(function (t) { return t > 0; });
     if (targets.length) {
       var ordered = Object.keys(sess.sets)
-        .sort(function (a, b) { return parseFloat(a) - parseFloat(b); })
+        .filter(firstWeekSlot)
+      .sort(function (a, b) { return parseFloat(a) - parseFloat(b); })
         .map(function (k) { return sess.sets[k]; });
       var working = ordered.slice(0, targets.length);
       var anyLogged = working.some(function (s) { return !isNaN(repsOf(s.r)); });

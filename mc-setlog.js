@@ -298,8 +298,14 @@
     // When the tick happened. mc-sync.js's mergeSetlog() compares it with an
     // untick record (mc_setlog_deleted_v1): a set ticked AFTER its untick
     // was re-ticked and stays; one ticked before it was taken back.
-    entry.t = Date.now();
-    var rec = { k: k, d: d, sn: sn, entry: entry, ts: entry.t };
+    //
+    // Never stamped at or before an untick of this set that this device has
+    // already seen (see causalStamp()): a re-tick on a phone whose clock runs
+    // behind the device that unticked would otherwise carry an EARLIER time
+    // than the untick, and the merge would take the set back.
+    var slot = slotFor(todaySets(exId), sn, wkt);
+    entry.t = causalStamp(untickTs(k, d, slot));
+    var rec = { k: k, d: d, sn: slot, entry: entry, ts: entry.t };
     noteRecent(rec);
     journal(rec);
     try { if (_bc) _bc.postMessage(rec); } catch (e) {}
@@ -312,7 +318,11 @@
   // lifted. Same path as save(): a recent record (with no entry) broadcast to
   // peers and replayed into the locked write.
   function unsave(exId, sn) {
-    var rec = { k: ek(exId), d: dayStamp(), sn: sn, entry: null, ts: Date.now() };
+    // Stamped after the tick it removes, whatever this device's clock says:
+    // that tick may have been made on another device whose clock runs ahead.
+    var slot = slotFor(todaySets(exId), sn, weekTag());
+    var cur = lsess(exId), curSet = cur && cur.sets ? cur.sets[slot] : null;
+    var rec = { k: ek(exId), d: dayStamp(), sn: slot, entry: null, ts: causalStamp(curSet && curSet.t) };
     noteRecent(rec);
     journal(rec);
     try { if (_bc) _bc.postMessage(rec); } catch (e) {}
@@ -412,7 +422,9 @@
           // repaired store through the usual restore.
           todo.forEach(function (r) {
             var exId = r.k.slice(PID.length + 1);
-            var row = document.getElementById('mclr-' + cssId(exId) + '-' + r.sn);
+            // A week slot ("2@3") is set 2's row, and only on week 3's screen.
+            if (String(r.sn).indexOf('@') >= 0 && slotFor(lsess(exId) && lsess(exId).sets, baseSn(r.sn), weekTag()) !== String(r.sn)) return;
+            var row = document.getElementById('mclr-' + cssId(exId) + '-' + baseSn(r.sn));
             if (!row) return;
             if (r.entry) paintLoggedRow(row);
             else {
@@ -440,6 +452,28 @@
   // the set log can hold are pruned here, so the store stays small.
   var UNTICK_KEY = 'mc_setlog_deleted_v1';
   var UNTICK_KEEP_MS = 120 * 86400000;
+
+  // Clock skew (the residual N3 left recorded). A tick's `t` and an untick's
+  // `ts` come from two devices' clocks, and mergeSetlog() orders them by
+  // comparing the two numbers. If the device that unticks runs behind the one
+  // that ticked, the untick carries the smaller number and loses: the set
+  // comes back on the next pull. The order that matters is CAUSAL -- an untick
+  // is always of a tick its device has in hand, and a re-tick follows an
+  // untick only if its device has the record -- so each stamp is taken as
+  // max(now, the stamp it follows + 1), the rule of a Lamport clock. Two edits
+  // neither device had seen yet still fall back to wall-clock order; there is
+  // no "after" between them to preserve.
+  function causalStamp(after) {
+    var now = Date.now();
+    return (typeof after === 'number' && after >= now) ? after + 1 : now;
+  }
+  function untickTs(k, d, sn) {
+    try {
+      var m = JSON.parse(localStorage.getItem(UNTICK_KEY) || '{}');
+      var r = m && typeof m === 'object' ? m[k + '|' + d + '|' + sn] : null;
+      return r && typeof r.ts === 'number' ? r.ts : 0;
+    } catch (e) { return 0; }
+  }
   function recordUntick(rec) {
     try {
       var m = JSON.parse(localStorage.getItem(UNTICK_KEY) || '{}');
@@ -468,7 +502,12 @@
     });
     return out;
   }
-  function lset(exId, sn) { var sess = lsess(exId); return sess ? sess.sets[sn] || null : null; }
+  function lset(exId, sn) {
+    var sess = lsess(exId);
+    if (!sess) return null;
+    var slot = (sess.d === dayStamp()) ? slotFor(sess.sets, sn, weekTag()) : String(sn);
+    return sess.sets[slot] || null;
+  }
 
   // ---- the in-session PR moment (flagship readiness R6) --------------------
   // A new best used to be noticed only by a push notification -- signed in,
@@ -1360,6 +1399,37 @@
     if (w == null) { try { if (typeof week !== 'undefined') w = week; } catch (e2) {} }
     return (w == null || w === '' || typeof w === 'object') ? '' : String(w);
   }
+  // ---- one lift, two program weeks, one calendar day ----------------------
+  // A set-log bucket is keyed by the LIFT (Phase 2.1) and a session by the
+  // DAY, so ticking week 1 and week 2 of the same lift on the same calendar
+  // day wrote both into one session under the same set number, and the
+  // second overwrote the first. T1.5's week tag kept the paint honest; it did
+  // not keep the set. So a set has a SLOT: its plain number ("2"), unless
+  // that number is already held today by a set tagged with another week, in
+  // which case it goes to "2@<week>". Nothing is migrated -- every slot
+  // written before this, and every slot on a page without weeks, is still
+  // plain -- and readers that only want numbers get them from baseSn().
+  // mc-sync.js's mergeSetlog() applies the same rule when two devices each
+  // hold a different week in the same plain slot.
+  function weekPart(wk) {
+    wk = String(wk || '');
+    var i = wk.lastIndexOf('|');
+    return i < 0 ? wk : wk.slice(i + 1);
+  }
+  function baseSn(slot) { return String(slot).split('@')[0]; }
+  // The slot this week's set `sn` lives in, given today's sets (or null).
+  function slotFor(sets, sn, wk) {
+    sn = String(sn);
+    if (!wk || !sets) return sn;
+    var alt = sn + '@' + weekPart(wk);
+    if (sets[alt]) return alt;
+    var cur = sets[sn];
+    return (cur && cur.wk && cur.wk !== wk) ? alt : sn;
+  }
+  function todaySets(exId) {
+    var sess = lsess(exId);
+    return (sess && sess.d === dayStamp() && sess.sets) ? sess.sets : null;
+  }
   function weekTag() {
     var D = window.MC_PROGRAM_DAY, cur = null;
     try { cur = D && D.current && D.current(); } catch (e) {}
@@ -1542,8 +1612,13 @@
       updateHist(card, exId);
       // mc-session.js drops this row from the live session record; it no
       // longer infers an untick from a row missing from the DOM (D-01).
+      // `keep`: the same row is still ticked on ANOTHER program week today
+      // (slotFor()), so the session record must keep pointing at it --
+      // restore repaints a row only from its own week's set.
       try {
-        document.dispatchEvent(new CustomEvent('mc:set-unchecked', { detail: { rowId: row.id } }));
+        var left = todaySets(exId), keep = false;
+        if (left) Object.keys(left).forEach(function (k) { if (baseSn(k) === String(sn) && left[k]) keep = true; });
+        document.dispatchEvent(new CustomEvent('mc:set-unchecked', { detail: { rowId: row.id, keep: keep } }));
       } catch (ee) {}
       // A-10: unchecking re-opens the row for edits, so it is typed-but-
       // unconfirmed again — re-arm the pending snapshot from whatever is in
@@ -2483,9 +2558,11 @@
     if (!sources.length) return;
     var cid = cssId(exId), painted = 0, extra = {};
     sources.forEach(function (src) {
-      Object.keys(src.sets).forEach(function (sn) {
-        var v = src.sets[sn];
-        if (!v || mineToday[sn]) return;
+      var wkNow = weekTag();
+      Object.keys(src.sets).forEach(function (slot) {
+        var v = src.sets[slot], sn = baseSn(slot);
+        if (!v || mineToday[slotFor(mineToday, sn, wkNow)]) return;
+        if (v.wk && wkNow && v.wk !== wkNow) return;    // another week's (T1.5)
         var row = card.querySelector('#mclr-' + cid + '-' + sn);
         // Phase T1.7: a set number this card has no row for (the substitute
         // prescribes fewer sets) used to vanish from the card. It still
@@ -2877,12 +2954,12 @@
         if (hist[i] && hist[i].d === today) { entry = hist[i]; break; }
       }
       if (!entry || !entry.sets) return false;
-      vals = entry.sets[sn];
+      var wkNow = weekTag();
+      vals = entry.sets[slotFor(entry.sets, sn, wkNow)];
       if (!vals) return false;
       // T1.5: a set ticked on another week of the same program is that
       // week's. A set with no tag predates the tag, or came from a page
       // without weeks, and paints as it always did.
-      var wkNow = weekTag();
       if (vals.wk && wkNow && vals.wk !== wkNow) return false;
     }
     var solid = function (inp, v) {

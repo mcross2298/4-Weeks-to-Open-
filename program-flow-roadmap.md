@@ -742,6 +742,19 @@ yet: `bro-split` is one of five workouts under `cat-stndr` and the other four
 convert in `F3-5`, so documenting the new flow now would be true of one page in
 five. It is `F3-5`'s to write.
 
+#### `F3-5` shipped (2026-10-31) — the last four STNDR pages
+
+`weeks-to-open.html`, `push-pull-legs.html`, `arnold-legacy.html` and
+`legacy-prep.html` take `bro-split.html`'s `F3-4` shape: a session list, one
+session per screen, `← All days`, a clamped `?day=N` (rest days rejected) and
+`?week=N` / `?phase=N` on the two tabbed pages. **All 23 `F3` pages are
+converted.** No new pattern and no engine was touched. One addition over
+`F3-4`: a tab switch with a session open clamps the open day
+(`clampOpenDay()`), so a day that is a rest day in the new week or phase
+returns to the list instead of rendering nothing. The STNDR guide's flow copy,
+held back in `F3-4` because it would have been true of one page in five, is
+written now. Full notes are in `flagship-readiness-roadmap.md` (T5).
+
 ### `F4` — the day-identity contract
 
 With one workout per screen, a day page can finally name itself. Publish

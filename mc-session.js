@@ -582,6 +582,9 @@
     document.addEventListener('mc:set-unchecked', function (e) {
       var id = e && e.detail && e.detail.rowId;
       if (!id || !session || !session.sets) return;
+      // The row is still ticked on another program week today; its own
+      // week's screen repaints it from the set log.
+      if (e.detail.keep) return;
       session.sets = session.sets.filter(function (x) {
         return (typeof x === 'string' ? x : (x && x.id)) !== id;
       });
