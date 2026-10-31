@@ -854,6 +854,37 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > and their budgets are re-baselined, since a ratchet left at the old value
 > would let the chrome regress back to it and still pass.
 >
+> **`F3-5` shipped (2026-10-31) — the remaining STNDR pages, closing out `F3`
+> at 23/23.** An alignment check found this phase's own status board stale —
+> `weeks-to-open.html`, `push-pull-legs.html`, `arnold-legacy.html` and
+> `legacy-prep.html` (the four pages deliberately deferred past `F3-4`/`F4`/`F5`
+> since they all belong to `stndr`, which gets no schedule record) were still
+> on the pre-`F3` accordion, verified by diffing their `renderDay()` against
+> `bro-split.html`'s own two-mode split rather than trusting the roadmap's
+> "deferred" note at face value. All four took the same transformation `F3-4`
+> already proved. **One real latent bug caught before shipping:** three of the
+> four read `--day-rgb` from a CSS custom property their old JS set on open and
+> the F3 rewrite (matching `bro-split`'s own pattern) does not — their
+> `.day-card.open` rule had no fallback value, unlike `bro-split`'s and
+> `push-pull-legs`'s own rule, so removing the setter would have left the open
+> day's border glow computing to nothing. Fixed with the same `var(--day-rgb,
+> 212,175,55)` fallback shape those two pages already carry (their resolved
+> gold accent); `legacy-prep` keeps its per-day dynamic `--day-rgb` inline
+> instead, since its template already supplied it directly. Verified by
+> driving all four in real headless Chromium: list/day-mode split, Back,
+> `?day=N`/`?week=N`/`?phase=N` deep links, the `?day=9999` clamp, and
+> touch-floor all hold; `check-journey` stays 9/9 (`legacy-prep` was already
+> one of its 9 probe pages), and its two `back link` CHROME-CONTROL findings
+> reproduce identically with these four changes stashed out — a pre-existing
+> sandbox Chromium-build artifact, not caused here.
+> `check-dangling-refs`/`check-single-impl`/`check-design-tokens`/
+> `check-docs-currency`/`check-program-data`/`build-market.py --check` all
+> green. `stndr-instructions.html` was checked and found to describe no
+> per-page navigation mechanism at all, so there was no stale copy to correct;
+> a separate, pre-existing gap found in passing and left unfixed — its program
+> list and `mc-pm-data.js`'s own `meta` field both still say 4 STNDR programs
+> against 5 real workout pages (Arnold Legacy is the missing one).
+>
 > **`F4` shipped (2026-08-24) — the day-identity contract.** `mc-program-day.js`
 > (`MC_PROGRAM_DAY`) publishes `current() → {prog, week, position}` plus
 > `dayNumber()`/`bank()`, covered by 39 vm-sandboxed assertions in
