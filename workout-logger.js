@@ -5,15 +5,15 @@
      mc-muscle-map.js @ line 21
      mc-readiness.js @ line 114
      mc-setlog.js @ line 346
-     mc-session.js @ line 3686
-     mc-classify.js @ line 4294
-     mc-suggest.js @ line 4430
-     mc-chart.js @ line 5055
-     mc-exercise-trends.js @ line 5342
-     mc-cues-data.js @ line 5601
-     mc-cues.js @ line 5751
-     mc-rep-progress.js @ line 5841
-     mc-superset-hop.js @ line 5988
+     mc-session.js @ line 3732
+     mc-classify.js @ line 4340
+     mc-suggest.js @ line 4476
+     mc-chart.js @ line 5101
+     mc-exercise-trends.js @ line 5388
+     mc-cues-data.js @ line 5647
+     mc-cues.js @ line 5797
+     mc-rep-progress.js @ line 5887
+     mc-superset-hop.js @ line 6034
 */
 
 /* ---- mc-muscle-map.js ---- */
@@ -1121,6 +1121,49 @@ try {
       members.forEach(function (m) { setCollapsed(m, false); openLogger(m); });
     }
   }
+
+  // ---- closing the open card (owner decision, 2026-10-31) -----------------
+  // Before this, an open card could only be closed by opening ANOTHER one, by
+  // finishing its last set, or — once every set was logged — by Collapse.
+  // "Hide" cleared .active and folded the set rows away but left the card
+  // expanded (header, prescription, notes), a half-open state nothing else
+  // produces. Two ways out now, both closing the whole GROUP back to its
+  // strip, the same unit setActiveCard() opens:
+  //   • Hide, in the Log Sets row (the toggle handler in buildRows()).
+  //   • A tap on the card's header — the exercise name block. Not a tap in
+  //     open page space: the gaps between cards are a few px and a tap there
+  //     reads as the start of a scroll, so it would close a card mid-set.
+  // The header is .a-hdr on every consolidated card (S4b: one header in the
+  // tree), the letter + name on a superset leg, the group label on the
+  // superset itself, and the name on a frequency-family row. A control inside
+  // the header keeps its own job: ⓘ, ⋯ and every badge editor are buttons or
+  // stop propagation, and MC_CARD_TAP_IGNORE's control list is checked first.
+  // A card with no strip (a page this logger has not adopted) is never
+  // collapsed, since mc-setlog.css would hide everything it has.
+  var CLOSE_HDR_SEL = '.a-hdr, .ss-ex > .ss-num, .ss-ex .ss-name, ' +
+                      '.ss-card > .ss-header, .ex-item > .ex-name';
+  var CLOSE_SKIP_SEL = 'button,a,input,select,textarea,label,[role="button"],' +
+                       '[role="checkbox"],[contenteditable="true"],[data-mcpo-click-wired],.editable';
+  function closeUnit(unit) {
+    var members = membersOf(unit).filter(function (m) { return m.querySelector('.mcl-strip'); });
+    if (!members.length) return false;
+    members.forEach(function (m) {
+      clearTimeout(m.__mclCollapseTimer);
+      m.classList.remove('active');
+      setCollapsed(m, true);
+    });
+    return true;
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (!t || !t.closest || t.closest(CLOSE_SKIP_SEL)) return;
+    var hdr = t.closest(CLOSE_HDR_SEL);
+    if (!hdr) return;
+    var unit = hdr.closest(UNIT_SEL_R3) ||
+               (hdr.parentNode && hdr.parentNode.querySelector && hdr.parentNode.querySelector('.ss-ex'));
+    if (!unit || unit.classList.contains('mcl-collapsed')) return;
+    closeUnit(unit);
+  });
 
   // A-14: build a specific card's rows on demand, from whatever setActiveCard()
   // or a session restore hands it — resolves host/exId/setsStr/rs the same
@@ -2511,7 +2554,10 @@ try {
       var open = wrap.classList.toggle('open');
       toggle.classList.toggle('open', open);
       toggle.querySelector('.mcl-lbl').textContent = open ? 'Hide' : 'Log Sets';
-      setActiveCard(open ? card : null);
+      // Hide closes the whole card to its strip, not just the set rows — the
+      // rows-only state left the header and notes up with nothing to log.
+      if (open) setActiveCard(card);
+      else if (!closeUnit(card)) setActiveCard(null);
     });
     wrap.addEventListener('click', function (e) { e.stopPropagation(); });
     Array.prototype.forEach.call(wrap.querySelectorAll('.mcl-ck'), function (ck) {

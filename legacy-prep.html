@@ -37,7 +37,7 @@
 .legend strong{color:var(--accent);font-weight:800;}
 .hint{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;text-align:center;opacity:0.6;}
 /* ── DAY ACCORDION ── */
-.day-card.open{border-color:rgba(var(--day-rgb),0.4);box-shadow:0 4px 24px rgba(var(--day-rgb),0.12),0 0 0 1px rgba(var(--day-rgb),0.1);}
+.day-card.open{border-color:rgba(var(--day-rgb,212,175,55),0.4);box-shadow:0 4px 24px rgba(var(--day-rgb,212,175,55),0.12),0 0 0 1px rgba(var(--day-rgb,212,175,55),0.1);}
 .day-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background 0.15s;}
 .day-card.open .day-header{background:rgba(var(--day-rgb),0.06);}
 .day-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:#fff;}
@@ -334,6 +334,7 @@ function hexToRgb(hex){
   const b=parseInt(hex.slice(5,7),16);
   return r+','+g+','+b;
 }
+let openDayIdx = null;
 
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
@@ -402,13 +403,10 @@ function renderExercise(ex,dIdx,eIdx){
   </div></div>`;
 }
 
-// Roadmap F3-5: null = the DAY LIST, a number = that day on its own screen.
-let openDayIdx = null;
-
 // A day ROW -- the list level. Reuses .day-card/.day-header/.day-icon/.day-info/
 // .day-toggle so this page's existing CSS styles it unchanged; the row and Back
 // affordances are the shared .mc-day-row / .mc-day-back from base.css that every
-// F3-converted family uses (bro-split.html is this page's F3-4 sibling).
+// F3-converted family uses.
 function renderDayRow(day,dIdx){
   return `<div class="day-card mc-day-row" data-d="${dIdx}">
     <div class="day-header">
@@ -417,13 +415,13 @@ function renderDayRow(day,dIdx){
         <div class="day-session">${escapeHtml(day.session)}</div>
         <div class="day-meta">${escapeHtml(day.label)} · ${day.exercises.length} exercises</div>
       </div>
-      <div class="day-toggle">\u203A</div>
+      <div class="day-toggle">›</div>
     </div>
   </div>`;
 }
 
 function backBtn(){
-  return `<button type="button" class="mc-day-back" data-mc-day-back>\u2190 All days</button>`;
+  return `<button type="button" class="mc-day-back" data-mc-day-back>← All days</button>`;
 }
 
 function renderDay(day,dIdx){
@@ -462,28 +460,28 @@ function render(){
       </div>
     </div>
     <div class="legend-bar"><div class="legend">
-      <strong>Cluster Set:</strong> Multiple sets w/ 10–15 sec rest · 
-      <strong>Drop AMRAP:</strong> Multiple sets, 0 sec rest, max reps · 
+      <strong>Cluster Set:</strong> Multiple sets w/ 10–15 sec rest ·
+      <strong>Drop AMRAP:</strong> Multiple sets, 0 sec rest, max reps ·
       <strong>Superset:</strong> 0 or 45 sec b/t sets
     </div></div>
     <div class="content">
-      <div class="hint">${openDayIdx===null?'Pick a session to start training':'Tap any field to edit \u00B7 Back returns to the session list'}</div>
+      <div class="hint">${openDayIdx===null?'Pick a session to start training':'Tap any field to edit · Back returns to the session list'}</div>
       ${days}
     </div>`;
   bindEvents();
 }
 
 function bindEvents(){
+  // F3: a header no longer shows/hides a panel in place -- it moves between the
+  // two screens, so a day's cards are BUILT on open and gone on close. The
+  // header stays the control, which keeps mc-session.js's "reopen the athlete's
+  // day by synthesising a real .day-header click" (S3) working here unchanged.
   document.querySelectorAll(".day-card").forEach(card=>{
     const header=card.querySelector(".day-header");
     header.addEventListener("click",e=>{
       if(e.target.classList.contains("editable"))return;
-      // F3-5: a header no longer shows/hides a panel in place -- it moves
-      // between the two screens, so a day's cards are BUILT on open and gone on
-      // close. The header stays the control, which keeps mc-session.js's
-      // "reopen the athlete's day by synthesising a real .day-header click" (S3).
       const dIdx=parseInt(card.dataset.d,10);
-      openDayIdx = (openDayIdx===dIdx) ? null : dIdx;
+      openDayIdx=openDayIdx===dIdx?null:dIdx;
       render();
       window.scrollTo(0,0);
     });
@@ -510,18 +508,17 @@ function bindEvents(){
   });
 }
 
-// `?day=N` (1-based) opens straight into a day. CLAMPED -- an unclamped index
-// renders every day as "" and leaves a blank screen with no way back (F3-1's
-// first draft shipped exactly that). Rest days are rejected: not destinations.
+// `?day=N` (1-based) opens straight into a day. CLAMPED -- an unclamped
+// index renders every day as "" and leaves a blank screen with no way back
+// (F3-1's first draft shipped exactly that). Rest days are rejected: they
+// are not destinations here.
 (function applyDeepLink(){
   let q; try { q = new URLSearchParams(location.search); } catch(e){ return; }
-  const days = DATA.days;
   const d = parseInt(q.get('day'),10);
-  if(!isNaN(d) && d>=1 && d<=days.length && days[d-1].type!=='rest') openDayIdx = d-1;
+  if(!isNaN(d) && d>=1 && d<=DATA.days.length && DATA.days[d-1].type!=='rest') openDayIdx = d-1;
 })();
 
 render();
-if(typeof updateProgress!=="undefined")updateProgress();
 
 // ── TIMER ENGINE ──────────────────────────────────────────────────
 

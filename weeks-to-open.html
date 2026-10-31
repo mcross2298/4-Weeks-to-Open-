@@ -38,7 +38,7 @@
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
 .hint{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;text-align:center;opacity:0.6;}
 /* ── DAY ACCORDION ── */
-.day-card.open{border-color:rgba(var(--day-rgb),0.4);box-shadow:0 4px 24px rgba(var(--day-rgb),0.12),0 0 0 1px rgba(var(--day-rgb),0.1);}
+.day-card.open{border-color:rgba(var(--day-rgb,212,175,55),0.4);box-shadow:0 4px 24px rgba(var(--day-rgb,212,175,55),0.12),0 0 0 1px rgba(var(--day-rgb,212,175,55),0.1);}
 .day-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background 0.15s;}
 .day-card.open .day-header{background:rgba(var(--day-rgb),0.06);}
 .day-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:#fff;}
@@ -261,6 +261,9 @@ function hexToRgb(hex){
 }
 let activeWeek = "w1";
 
+// Roadmap F3: null = the DAY LIST, a number = that day on its own screen.
+let openDayIdx = null;
+
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 // A drop/burnout AMRAP set renders as a bare "∞" (one per AMRAP set), never
@@ -327,28 +330,25 @@ function renderExercise(ex,dIdx,eIdx){
   </div></div>`;
 }
 
-// Roadmap F3-5: null = the DAY LIST, a number = that day on its own screen.
-let openDayIdx = null;
-
 // A day ROW -- the list level. Reuses .day-card/.day-header/.day-icon/.day-info/
 // .day-toggle so this page's existing CSS styles it unchanged; the row and Back
 // affordances are the shared .mc-day-row / .mc-day-back from base.css that every
-// F3-converted family uses (bro-split.html is this page's F3-4 sibling).
+// F3-converted family uses.
 function renderDayRow(day,dIdx){
   return `<div class="day-card mc-day-row" data-d="${dIdx}">
     <div class="day-header">
-      <div class="day-icon" style="background:${day.color};box-shadow:0 2px 10px ${day.color}66">${day.icon}</div>
+      <div class="day-icon" style="background:${day.color};box-shadow:0 2px 8px ${day.color}55">${day.icon}</div>
       <div class="day-info">
         <div class="day-session">${escapeHtml(day.session)}</div>
         <div class="day-meta">${escapeHtml(day.label)} · ${day.exercises.length} exercises</div>
       </div>
-      <div class="day-toggle">\u203A</div>
+      <div class="day-toggle">›</div>
     </div>
   </div>`;
 }
 
 function backBtn(){
-  return `<button type="button" class="mc-day-back" data-mc-day-back>\u2190 All days</button>`;
+  return `<button type="button" class="mc-day-back" data-mc-day-back>← All days</button>`;
 }
 
 function renderDay(day,dIdx){
@@ -362,14 +362,14 @@ function renderDay(day,dIdx){
     return `<div class="rest-day"><span style="font-size:20px">😴</span><div><div class="rest-label">REST DAY</div><div class="rest-sub">Recovery & Growth</div></div></div>`;
   }
   const exHtml=day.exercises.map((ex,eIdx)=>renderExercise(ex,dIdx,eIdx)).join("");
-  return backBtn() + `<div class="day-card open" data-d="${dIdx}" style="--day-rgb:${hexToRgb(day.color)};border-color:${day.color}99;box-shadow:0 4px 24px ${day.color}22">
-    <div class="day-header" style="background:${day.color}0d">
+  return backBtn() + `<div class="day-card open" data-d="${dIdx}" style="">
+    <div class="day-header">
       <div class="day-icon" style="background:${day.color};box-shadow:0 2px 8px ${day.color}55">${day.icon}</div>
       <div class="day-info">
         <div class="day-session">${escapeHtml(day.session)}</div>
         <div class="day-meta">${escapeHtml(day.label)} · ${day.exercises.length} exercises</div>
       </div>
-      <div class="day-toggle" style="background:${day.color}cc">▲</div>
+      <div class="day-toggle">▲</div>
     </div>
     <div class="exercises" style="border-top-color:${day.color}33">${exHtml}</div>
   </div>`;
@@ -387,7 +387,7 @@ function render(){
     </div></div>
     <div class="tabs-bar"><div class="tabs">${tabs}</div></div>
     <div class="content">
-      <div class="hint">${openDayIdx===null?'Pick a session to start training':'Tap any field to edit \u00B7 Back returns to the session list'}</div>
+      <div class="hint">${openDayIdx===null?'Pick a session to start training':'Tap any field to edit · Back returns to the session list'}</div>
       ${days}
     </div>`;
   bindEvents();
@@ -397,14 +397,14 @@ function bindEvents(){
   document.querySelectorAll(".tab").forEach(b=>{
     b.addEventListener("click",()=>{activeWeek=b.dataset.week;clampOpenDay();render();});
   });
+  // F3: a header no longer shows/hides a panel in place -- it moves between the
+  // two screens, so a day's cards are BUILT on open and gone on close. The
+  // header stays the control, which keeps mc-session.js's "reopen the athlete's
+  // day by synthesising a real .day-header click" (S3) working here unchanged.
   document.querySelectorAll(".day-card").forEach(card=>{
     const header=card.querySelector(".day-header");
     header.addEventListener("click",e=>{
       if(e.target.classList.contains("editable"))return;
-      // F3-5: a header no longer shows/hides a panel in place -- it moves
-      // between the two screens, so a day's cards are BUILT on open and gone on
-      // close. The header stays the control, which keeps mc-session.js's
-      // "reopen the athlete's day by synthesising a real .day-header click" (S3).
       const dIdx=parseInt(card.dataset.d,10);
       openDayIdx = (openDayIdx===dIdx) ? null : dIdx;
       render();
@@ -436,27 +436,27 @@ function bindEvents(){
   });
 }
 
-// The open day must exist and be trainable in the current week; otherwise the
-// page would render every day as "" -- a blank screen with no way back.
+// T5: the open day must exist and be trainable in the current week; otherwise
+// the page would render every day as "" -- a blank screen with no way back.
 function clampOpenDay(){
   const days = (DATA.weeks.find(w=>w.id===activeWeek)||{}).days || [];
   if(openDayIdx!==null && !(openDayIdx<days.length && days[openDayIdx].type!=='rest')) openDayIdx=null;
 }
 
-// `?day=N` (1-based) opens straight into a day; `?week=N` picks the week. CLAMPED -- an unclamped index
-// renders every day as "" and leaves a blank screen with no way back (F3-1's
-// first draft shipped exactly that). Rest days are rejected: not destinations.
+// `?day=N` (1-based) opens straight into a day; `?week=N` picks the week.
+// Both CLAMPED -- an unclamped index renders every day as "" and leaves a blank
+// screen with no way back (F3-1's first draft shipped exactly that). Rest days
+// are rejected: they are not destinations here.
 (function applyDeepLink(){
   let q; try { q = new URLSearchParams(location.search); } catch(e){ return; }
-  const g = parseInt(q.get('week'),10);
-  if(!isNaN(g) && g>=1 && g<=DATA.weeks.length) activeWeek = DATA.weeks[g-1].id;
+  const wk = parseInt(q.get('week'),10);
+  if(!isNaN(wk) && wk>=1 && wk<=DATA.weeks.length) activeWeek = DATA.weeks[wk-1].id;
   const days = (DATA.weeks.find(w=>w.id===activeWeek)||{}).days || [];
   const d = parseInt(q.get('day'),10);
   if(!isNaN(d) && d>=1 && d<=days.length && days[d-1].type!=='rest') openDayIdx = d-1;
 })();
 
 render();
-if(typeof updateProgress!=="undefined")updateProgress();
 
 // ── TIMER ENGINE ──────────────────────────────────────────────────
 

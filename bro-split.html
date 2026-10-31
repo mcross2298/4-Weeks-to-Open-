@@ -297,9 +297,17 @@ function render(){
   bindEvents();
 }
 
+// T5: the open day must exist and be trainable in the current phase; otherwise
+// the page would render every day as "" -- a blank screen with no way back.
+// Phase 2 has 4 days, so phase 1's day 5 or 6 open + a phase-2 tap hit exactly that.
+function clampOpenDay(){
+  const days = (DATA.phases.find(p=>p.id===activePhase)||{}).days || [];
+  if(openDayIdx!==null && !(openDayIdx<days.length && days[openDayIdx].type!=='rest')) openDayIdx=null;
+}
+
 function bindEvents(){
   document.querySelectorAll(".tab").forEach(b=>{
-    b.addEventListener("click",()=>{activePhase=b.dataset.phase;render();});
+    b.addEventListener("click",()=>{activePhase=b.dataset.phase;clampOpenDay();render();});
   });
   // F3: a header no longer shows/hides a panel in place -- it moves between the
   // two screens, so a day's cards are BUILT on open and gone on close. The
