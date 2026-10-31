@@ -322,7 +322,11 @@
   // that is not the same one is swallowed. "The same one" is compared by
   // tag, class and text, so a control re-rendered in place (+ Set, +15s)
   // still takes a deliberate double tap. Window capture runs before every
-  // document-level listener. Keyboard activations (no pointer) never count.
+  // document-level listener. Keyboard activations (no pointer) never count,
+  // and neither does a mouse: a ghost tap is a finger's second tap, and a
+  // mouse user who clicks Replace and then the first suggestion fast is
+  // choosing both (it failed the swap journeys on CI, where a scripted mouse
+  // picks a substitute well inside 450ms).
   var GHOST_MS = 450, GHOST_PX = 24;
   var lastTap = null, ghost = false;
   function tapTarget(t) {
@@ -335,6 +339,7 @@
       '|' + (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 40);
   }
   window.addEventListener('pointerdown', function (e) {
+    if (e.pointerType !== 'touch' && e.pointerType !== 'pen') { lastTap = null; ghost = false; return; }
     var el = tapTarget(e.target), now = Date.now();
     ghost = !!(lastTap && now - lastTap.t < GHOST_MS &&
       Math.abs(e.clientX - lastTap.x) < GHOST_PX && Math.abs(e.clientY - lastTap.y) < GHOST_PX &&

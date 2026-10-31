@@ -2700,7 +2700,9 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > - **A second tap on a DIFFERENT control within 450ms / 24px is swallowed**
 >   (`mc-sheet.js`). Before this, a double-tap on Log workout closed Session
 >   Complete, on Skip ticked the next exercise's set, and on ⋯ opened Replace.
->   A probe that needs two fast taps on different controls must wait 450ms.
+>   Touch and pen only: a mouse click is never swallowed, so scripted
+>   `.click()` journeys are unaffected; a `touchscreen.tap()` probe that needs
+>   two fast taps on different controls must wait 450ms.
 > - **A light-theme dialog needs its own light rules.** The contrast ratchet
 >   measures pages at rest, so text inside an open sheet is unmeasured there;
 >   Session Complete kept dark-card ink on a cream card (title 1.12:1).

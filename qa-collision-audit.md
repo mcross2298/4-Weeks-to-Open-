@@ -203,7 +203,11 @@ In every case one workout was saved per Log burst; the damage was to what
 the athlete saw and, for Skip, to the log itself. `mc-sheet.js` (loaded by
 `mc-nav.js` on every page) now swallows a second tap that lands on a
 DIFFERENT control within 450ms and 24px of the first. A genuine double tap
-on the SAME control (a set check ticked then unticked) is untouched.
+on the SAME control (a set check ticked then unticked) is untouched. It
+applies to touch and pen only: the first version also caught mouse clicks,
+and CI's minified-build job failed both swap journeys (`SWAP-UNDO`, `R-09`),
+where a scripted mouse picks a substitute within 450ms of opening the sheet.
+A fast mouse user is choosing, not double-tapping.
 
 Separately, ticking a set and unticking it at once left the rest timer the
 tick had auto-started running. `mc-setlog.js` now stops that rest on the
