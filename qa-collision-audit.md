@@ -136,3 +136,87 @@ dropped from the list.
 the owner adds that host to the environment's allowed domains. Until then it
 tests a local checkout of `main`, says so at the top of its report, and leaves
 live-only checks to the nightly workflow.
+
+## Cycle 2 (opened 2026-10-31): the three queued checks
+
+The owner asked for the three follow-up checks queued after cycle 1. Same
+method as cycle 1: drive the app headlessly at 390×844 and 320×568 with
+touch emulation, and count a defect only when it reproduces and its cause is
+named in the code. Fixes ship in one PR with regression checks added to
+`tools/check-tap-intent.js` (or a sibling gate).
+
+| Check | Scope | What is measured |
+|---|---|---|
+| A. Non-workout pages | Home (all tabs), Stats, History, workout detail, Workout Settings, exercise library, builder, collections, Max Out, Wrapped, program guide; the account, Report-a-problem, macros and calendar sheets | every control of every open sheet is what a finger hits; no sideways overflow; nothing hidden under the nav at the end of the page; console errors |
+| B. Light theme | the same pages plus the session surfaces, with `mc_theme_mode = 'light'` | contrast of text inside OPEN dialogs and fixed bars (the contrast ratchet only measures pages at rest); dark-only literals on light surfaces |
+| C. Rapid repeated taps | set check, rest chip, End workout, Log workout, + Set, Skip, Finish | one finished workout per Log tap burst, one set per check burst, one sheet per open burst, one rest timer per chip burst |
+
+### Results
+
+**A. Non-workout pages — no defects found.** 14 page views at 390 and 320:
+no sideways overflow, nothing left under the nav at the end of a page, no
+console errors. 15 sheets opened (12 from the sweep, plus the builder tray,
+the account sheet and Diagnostics): every control was what a finger hits,
+and the tall ones scroll and pad for both safe-area insets. Four apparent
+failures were the probe's own mistakes, not the app's, and are not counted:
+a ⋯ tapped while it sat under the nav, a builder tray measured while closed,
+a storage error from a test script running inside a sandboxed iframe, and
+an empty result list read as "no sheets".
+
+**B. Light theme — six dialog defects, fixed.** Measured with an in-page
+WCAG check that composites ancestor backgrounds and scores a gradient by its
+worst stop.
+
+| Where | Before | After | Cause |
+|---|---|---|---|
+| Session Complete title | 1.12:1 (white on cream) | 15.5:1 | `mc-finish.js` injects dark-card literals; `base.css` turns the card cream in light theme. Every element in it now has a light rule. |
+| Session Complete: Save card, refuel line, labels | 1.05–4.26:1 | 4.84–12.2:1 | same |
+| Body map outline (Session Complete, Stats, readiness brief) | invisible | visible | neutral shapes fill `rgba(255,255,255,0.06)`; now marked `.is-neutral` and re-inked by one `base.css` light rule. The canvas export keeps the dark ink, since a standalone SVG carries no page CSS. |
+| Done / Begin (`.fw-confirm` on the accent) | 3.98:1 | 5.27:1 | black on the light accent `#826919`, measured the same on all 79 pages that load the finish sheet; white text in light theme |
+| Readiness brief warning, deload line | 2.48:1 | passes | dark-ground red and cyan |
+| Report sheet text, Send report | 3.10 / 3.52:1 | passes | the dashboard's light `--muted` was `--ink-7`, one step LIGHTER than `base.css`'s `--ink-6`, which costs contrast on cream; now `--ink-6` |
+
+Also lifted to `--ink-6` (`#6b6459`) in light theme: the bottom nav labels,
+the dashboard tab bar, and the session toolbar's `0/31` counter (all
+3.36:1). These were already counted by the at-rest contrast ratchet, so
+they were known rather than new. The dashboard's active tab went from
+`#a9762f` (3.53:1) to the shared light accent `#826919`. The substitute
+sheet's Bodyweight chip went from 4.19:1 to passing.
+
+**Left as is:** the account sheet stays dark in light theme (a hardcoded
+dark card). That is a design choice, not a contrast failure; its one low
+line (`.acct-note`, 4.06:1) now passes.
+
+**C. Rapid repeated taps — five ghost taps and a stray rest, fixed.** A
+second tap 120ms after the first, at the same spot, landed on whatever the
+first tap had just put under the finger:
+
+| Double-tap | What the second tap hit |
+|---|---|
+| Log workout | Session Complete's Done, which closed the card before it was read |
+| the last set's check | the auto-opened recap's backdrop, which closed the recap |
+| ⋯ | Replace exercise, which left the page |
+| Skip | the next exercise's first set check: a phantom logged set (0/31 became 1/26) |
+| + Set | a different control in the shifted row |
+
+In every case one workout was saved per Log burst; the damage was to what
+the athlete saw and, for Skip, to the log itself. `mc-sheet.js` (loaded by
+`mc-nav.js` on every page) now swallows a second tap that lands on a
+DIFFERENT control within 450ms and 24px of the first. A genuine double tap
+on the SAME control (a set check ticked then unticked) is untouched. It
+applies to touch and pen only: the first version also caught mouse clicks,
+and CI's minified-build job failed both swap journeys (`SWAP-UNDO`, `R-09`),
+where a scripted mouse picks a substitute within 450ms of opening the sheet.
+A fast mouse user is choosing, not double-tapping.
+
+Separately, ticking a set and unticking it at once left the rest timer the
+tick had auto-started running. `mc-setlog.js` now stops that rest on the
+untick, but only if it is still the same rest (same row, same start time),
+so a rest the athlete started by hand is never cancelled.
+
+### Regression checks
+
+`tools/check-tap-intent.js` grew 17 → 28 checks: GHOST (double-tap ⋯, Skip
+and Log workout; tick then untick stops the rest) and LIGHT (six Session
+Complete elements measured in light theme). 10 of the 11 new checks fail on
+the pre-fix tree; the eleventh only asserts the title was found.

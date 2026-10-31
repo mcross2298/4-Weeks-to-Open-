@@ -229,7 +229,11 @@
   function bodyMapShapeMarkup(tag, attrs, fill, extra) {
     var a = '';
     for (var k in attrs) { if (attrs.hasOwnProperty(k)) a += ' ' + k + '="' + attrs[k] + '"'; }
-    return '<' + tag + a + ' fill="' + fill + '"' + (extra || '') + ' class="mcchart-bodymap-region"/>';
+    // A neutral (no-data) shape is marked so a light theme can re-ink it:
+    // its white-alpha fill is invisible on cream (QA cycle 2, check B).
+    // A CSS rule outranks a presentation attribute, and a standalone SVG
+    // (H2's canvas export) carries no page CSS, so it keeps the dark ink.
+    return '<' + tag + a + ' fill="' + fill + '"' + (extra || '') + ' class="mcchart-bodymap-region' + (extra ? ' is-neutral' : '') + '"/>';
   }
 
   function bodyMapFigure(allIds, primaryIds, data, opts) {
