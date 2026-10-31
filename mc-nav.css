@@ -108,7 +108,7 @@ html[data-theme="light"] .mc-nav{
   background:rgba(245,242,236,0.94);
   border-top:1px solid rgba(28,26,23,0.08);
 }
-html[data-theme="light"] .mc-nav-tab{color:#8a8377;}
+html[data-theme="light"] .mc-nav-tab{color:#6b6459;}
 html[data-theme="light"] .mc-nav-tab:active{color:#1c1a17;}
 html[data-theme="light"] .mc-nav-tab.is-current{color:var(--accent,#826919);}
 html[data-theme="light"] .mc-theme-toggle-float{

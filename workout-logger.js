@@ -5,15 +5,15 @@
      mc-muscle-map.js @ line 21
      mc-readiness.js @ line 114
      mc-setlog.js @ line 346
-     mc-session.js @ line 3596
-     mc-classify.js @ line 4201
-     mc-suggest.js @ line 4337
-     mc-chart.js @ line 4953
-     mc-exercise-trends.js @ line 5236
-     mc-cues-data.js @ line 5495
-     mc-cues.js @ line 5645
-     mc-rep-progress.js @ line 5735
-     mc-superset-hop.js @ line 5882
+     mc-session.js @ line 3609
+     mc-classify.js @ line 4214
+     mc-suggest.js @ line 4350
+     mc-chart.js @ line 4966
+     mc-exercise-trends.js @ line 5253
+     mc-cues-data.js @ line 5512
+     mc-cues.js @ line 5662
+     mc-rep-progress.js @ line 5752
+     mc-superset-hop.js @ line 5899
 */
 
 /* ---- mc-muscle-map.js ---- */
@@ -1871,6 +1871,8 @@ try {
     if (mini.length <= 1) return mini.length ? mini[0].value.trim() : '';
     return Array.prototype.map.call(mini, function (m) { return m.value.trim() || m.placeholder || ''; }).join('+');
   }
+  // The row whose tick started the running auto-rest, and that rest's start.
+  var lastAutoRest = null;
   function onCheck(card, exId, sn, rs) {
     var carriedRow = card.querySelector('#mclr-' + cssId(exId) + '-' + sn);
     if (carriedRow && carriedRow.classList.contains('mcl-carried')) return;
@@ -1882,6 +1884,16 @@ try {
     if (ck.classList.contains('done')) {
       ck.classList.remove('done'); ck.textContent = '☐'; ck.setAttribute('aria-checked', 'false');
       row.classList.remove('done-row');
+      // The rest this row's own tick started is for a set that is no longer
+      // done (QA cycle 2: a double-tap ticked, unticked, and left a rest
+      // running). A rest started any other way is left alone.
+      if (lastAutoRest && lastAutoRest.row === row.id) {
+        if (typeof TMR !== 'undefined' && TMR.startTime != null &&
+            TMR.startTime === lastAutoRest.start && TMR.stop) {
+          try { TMR.stop(); } catch (e) {}
+        }
+        lastAutoRest = null;
+      }
       unsave(exId, sn);
       updateCount(card, exId);
       updateHist(card, exId);
@@ -2008,6 +2020,7 @@ try {
         var secs = (TMR.parseSeconds && TMR.parseSeconds(t.dataset.rest)) || rs;
         try { (typeof buildTimerFloat === 'function') && buildTimerFloat(); } catch (e) {}
         TMR.start(t, secs, 'Rest');
+        lastAutoRest = { row: row.id, start: TMR.startTime };
       }
     }
   }
@@ -5181,7 +5194,11 @@ try {
   function bodyMapShapeMarkup(tag, attrs, fill, extra) {
     var a = '';
     for (var k in attrs) { if (attrs.hasOwnProperty(k)) a += ' ' + k + '="' + attrs[k] + '"'; }
-    return '<' + tag + a + ' fill="' + fill + '"' + (extra || '') + ' class="mcchart-bodymap-region"/>';
+    // A neutral (no-data) shape is marked so a light theme can re-ink it:
+    // its white-alpha fill is invisible on cream (QA cycle 2, check B).
+    // A CSS rule outranks a presentation attribute, and a standalone SVG
+    // (H2's canvas export) carries no page CSS, so it keeps the dark ink.
+    return '<' + tag + a + ' fill="' + fill + '"' + (extra || '') + ' class="mcchart-bodymap-region' + (extra ? ' is-neutral' : '') + '"/>';
   }
 
   function bodyMapFigure(allIds, primaryIds, data, opts) {

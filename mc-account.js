@@ -53,7 +53,7 @@
       '.acct-primary{background:#d4af37;color:#1a1200;}' +
       '.acct-primary:disabled{opacity:0.5;cursor:default;}' +
       '.acct-secondary{background:rgba(255,255,255,0.07);color:#d9d3c8;border:1px solid rgba(255,255,255,0.14);}' +
-      '.acct-note{font-size:12px;color:#797267;margin-top:14px;line-height:1.5;text-align:center;}' +
+      '.acct-note{font-size:12px;color:#a8a196;margin-top:14px;line-height:1.5;text-align:center;}' +
       '.acct-info{font-size:13px;color:#86efac;background:rgba(34,197,94,0.08);' +
         'border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:11px 12px;margin-bottom:16px;line-height:1.5;}' +
       '.acct-err{font-size:13px;color:#fca5a5;margin-top:10px;min-height:18px;text-align:center;}' +

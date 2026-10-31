@@ -256,6 +256,11 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
    already gives Skip/Begin rather than the exit-dialog's white/ink-4 reskin. */
 .rb-btns .fw-cancel,.rb-btns .fw-confirm{padding:14px;-webkit-tap-highlight-color:transparent;}
 .rb-btns .fw-cancel:active,.rb-btns .fw-confirm:active{opacity:0.85;transform:scale(0.98);}
+/* QA cycle 2 (check B): the warning red and the deload cyan are dark-ground
+   hues -- 2.48:1 and lower on the cream sheet -- and Skip/Lighter inherit
+   this page's light --muted, which was ink-7 (3.36:1) and is ink-6 now. */
+html[data-theme="light"] .rb-note{color:#b91c1c;}
+html[data-theme="light"] .rb-deload{color:#0e7490;}
 
 /* ── SECTION HEADERS ── */
 .sec-header{
@@ -1222,8 +1227,8 @@ html[data-theme="light"] #scr-programs .topbar-sub,
 html[data-theme="light"] #scr-conditioning .topbar-sub,
 html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
 html[data-theme="light"] .tab-bar{background:rgba(245,242,236,.92);border-top:1px solid rgba(28,26,23,.08);}
-html[data-theme="light"] .tab{color:#8a8377;}
-html[data-theme="light"] .tab.active{color:#a9762f;}
+html[data-theme="light"] .tab{color:#6b6459;}
+html[data-theme="light"] .tab.active{color:#826919;}
 html[data-theme="light"] .theme-icon-dark{display:none;}
 html[data-theme="light"] .theme-icon-light{display:block!important;}
 
@@ -1247,7 +1252,7 @@ html[data-theme="light"]{
   --border:rgba(28,26,23,.08);
   --border2:rgba(28,26,23,.12);
   --text:var(--ink-3);
-  --muted:var(--ink-7);
+  --muted:var(--ink-6);
   --muted2:var(--ink-6);
 }
 /* Body-appended sheets: a few backgrounds/inputs are hardcoded hex
