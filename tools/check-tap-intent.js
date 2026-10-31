@@ -168,6 +168,59 @@ const check = (ok, msg) => { if (ok) { passed++; console.log('  ✓ ' + msg); } 
     await ctx.close();
   }
 
+  // CLOSE (owner decision, 2026-10-31): an open card folds back to its strip
+  // from a tap on its header or from Hide — and from nothing else in the
+  // card. Hide used to leave the card half open (header and notes up, set
+  // rows gone). Where the exercise NAME is an inline rename field
+  // (.editable, ~10 page families), the name keeps renaming and the rest of
+  // the header closes. Taps are 500ms apart: mc-sheet.js swallows a second
+  // touch on a different control inside 450ms (GHOST, below).
+  console.log('CLOSE — a tap on an open card\'s header, or Hide, folds it to its strip');
+  for (const page of ['mm-p1.html?day=1', 'pmc-back.html?day=1', '2on-1off.html?day=1']) {
+    const { ctx, p } = await open(page);
+    const U = '.ex-card:not(.ss-ex),.ex-item';
+    const state = () => p.evaluate(U => {
+      const c = document.querySelectorAll(U)[1];
+      return { open: !c.classList.contains('mcl-collapsed'), done: c.querySelectorAll('.mcl-ck.done').length };
+    }, U);
+    const nth = sel => p.locator(`:is(${U}) >> nth=1`).locator(sel).first();
+    // A control that is not on screen fails the check it belongs to rather
+    // than throwing, so the pass reports every outcome on a broken tree.
+    const tapIn = async sel => {
+      const l = nth(sel);
+      if (!(await l.count()) || !(await l.isVisible())) return false;
+      await l.scrollIntoViewIfNeeded(); await l.tap(); await p.waitForTimeout(500); return true;
+    };
+    await tapIn('.mcl-strip');
+    await tapIn('.mcl-ck');
+    const before = await state();
+    const stay = [];
+    for (const sel of ['.a-info', '.mcl-inp']) {
+      if (!(await nth(sel).count()) || !(await nth(sel).isVisible())) continue;
+      await tapIn(sel); if (!(await state()).open) stay.push(sel);
+      await p.keyboard.press('Escape');
+    }
+    check(before.open && !stay.length, `${page}: open card stays open through its own controls${stay.length ? ' (closed by ' + stay.join(', ') + ')' : ''}`);
+    const hdr = (await nth('.a-idx').count()) ? '.a-idx' : '.ex-name';
+    await tapIn(hdr);
+    const afterHdr = await state();
+    check(!afterHdr.open, `${page}: tapping the header (${hdr}) closes the card`);
+    await tapIn('.mcl-strip');
+    const re = await state();
+    check(re.open && re.done === before.done, `${page}: reopening keeps its ${before.done} logged set(s) (${re.done})`);
+    await tapIn('.mcl-toggle');
+    check(!(await state()).open, `${page}: Hide closes the whole card, not just its set rows`);
+    if (await nth('.ex-name .editable').count()) {
+      await tapIn('.mcl-strip');
+      await tapIn('.ex-name .editable');
+      const r = await p.evaluate(U => ({
+        renaming: !!document.querySelectorAll(U)[1].querySelector('input.edit-input'),
+        open: !document.querySelectorAll(U)[1].classList.contains('mcl-collapsed') }), U);
+      check(r.renaming && r.open, `${page}: an editable name still renames and does not close (rename ${r.renaming}, open ${r.open})`);
+    }
+    await ctx.close();
+  }
+
   console.log('LAYER — the open dialog is what a finger hits');
   {
     // End workout before the first tick: the bottom nav is still on screen.
