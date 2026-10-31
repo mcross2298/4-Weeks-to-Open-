@@ -305,6 +305,53 @@
     });
   }
 
+  // ---- ghost taps ----------------------------------------------------------
+  // QA cycle 2 (qa-collision-audit.md): a second tap that lands where the
+  // first one did, a moment later, on a DIFFERENT control is not a decision
+  // the athlete made. Something appeared or moved under the finger between
+  // the two taps. Measured, each with a double-tap 120ms apart:
+  //   Log workout -> Session Complete opens with Done on the same spot, and
+  //                  closes before it is read;
+  //   last set    -> the auto-opened recap's backdrop takes the second tap
+  //                  and closes it;
+  //   ⋯ menu      -> the second tap picks "Replace exercise";
+  //   Skip        -> the next exercise expands under the finger and the
+  //                  second tap TICKS ITS FIRST SET (a phantom logged set);
+  //   + Set       -> lands on another card's strip or a weight field.
+  // So: within GHOST_MS and GHOST_PX of the previous tap, a tap on a control
+  // that is not the same one is swallowed. "The same one" is compared by
+  // tag, class and text, so a control re-rendered in place (+ Set, +15s)
+  // still takes a deliberate double tap. Window capture runs before every
+  // document-level listener. Keyboard activations (no pointer) never count.
+  var GHOST_MS = 450, GHOST_PX = 24;
+  var lastTap = null, ghost = false;
+  function tapTarget(t) {
+    var el = t && t.closest ? t.closest('button,a,input,select,textarea,label,[role="button"],[role="checkbox"],[onclick],.mcl-strip') : null;
+    return el || t;
+  }
+  function sig(el) {
+    if (!el || !el.tagName) return '';
+    return el.tagName + '|' + (typeof el.className === 'string' ? el.className.replace(/\b(done|open|active|is-done|mcl-ghost)\b/g, '').replace(/\s+/g, ' ').trim() : '') +
+      '|' + (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+  }
+  window.addEventListener('pointerdown', function (e) {
+    var el = tapTarget(e.target), now = Date.now();
+    ghost = !!(lastTap && now - lastTap.t < GHOST_MS &&
+      Math.abs(e.clientX - lastTap.x) < GHOST_PX && Math.abs(e.clientY - lastTap.y) < GHOST_PX &&
+      el !== lastTap.el && sig(el) !== lastTap.sig);
+    // a swallowed tap does not become the reference for the next one
+    if (!ghost) lastTap = { t: now, x: e.clientX, y: e.clientY, el: el, sig: sig(el) };
+  }, true);
+  function swallow(e) {
+    if (!ghost) return;
+    if (e.type === 'click') { if (!e.detail) return; ghost = false; }
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  }
+  window.addEventListener('touchend', swallow, true);   // also stops the focus a tap gives an input
+  window.addEventListener('mousedown', swallow, true);
+  window.addEventListener('click', swallow, true);
+
   window.MC_SHEET = {
     confirm: function (message, opts) { return dialog(message, opts, true); },
     alert: function (message, opts) { return dialog(message, opts, false).then(function () {}); },

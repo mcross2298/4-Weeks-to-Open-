@@ -2695,6 +2695,18 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > T4's scrolling overlay and open-on-tap superset rows, this audit's shared
 > ignore list and the 175 value. Both gates run in CI.
 >
+> **QA cycle 2 (2026-10-31) — the three queued checks.** Non-workout pages:
+> clean. Two things to know:
+> - **A second tap on a DIFFERENT control within 450ms / 24px is swallowed**
+>   (`mc-sheet.js`). Before this, a double-tap on Log workout closed Session
+>   Complete, on Skip ticked the next exercise's set, and on ⋯ opened Replace.
+>   A probe that needs two fast taps on different controls must wait 450ms.
+> - **A light-theme dialog needs its own light rules.** The contrast ratchet
+>   measures pages at rest, so text inside an open sheet is unmeasured there;
+>   Session Complete kept dark-card ink on a cream card (title 1.12:1).
+>   `check-tap-intent.js`'s LIGHT pass measures it now. Body-map neutral
+>   shapes carry `.is-neutral` for the same reason.
+>
 > **Continuous QA (2026-10-28).** Two layers keep running it against the
 > DEPLOYED app: `.github/workflows/live-qa.yml` (nightly 03:17 ET + on demand)
 > runs the browser gates against the live site and opens or updates one

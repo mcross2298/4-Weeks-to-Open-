@@ -36,6 +36,20 @@
    Also: the End workout recap's "Total sets" must count ticked sets (it read
    0 after three were logged, and emphasised Exit & discard because of it).
 
+   Cycle 2 (2026-10-31) adds two passes:
+
+   3. GHOST TAPS. A fast second tap (120ms, same spot) used to land on
+      whatever the first tap put under the finger: Log workout's second tap
+      hit Session Complete's Done and closed it unread; Skip's hit the next
+      exercise's set check (a phantom set); the ⋯ menu's hit Replace exercise
+      and left the page. mc-sheet.js swallows a second tap that lands on a
+      DIFFERENT control within 450ms and 24px. A set check ticked then
+      unticked also used to leave the rest it auto-started running.
+
+   4. LIGHT THEME INSIDE DIALOGS. The contrast ratchet measures pages at
+      rest, with every dialog closed. Session Complete kept the dark card's
+      ink on base.css's cream card: its title measured 1.12:1.
+
    Not a ratchet: every assertion here is a hard pass/fail, and every one was
    seen failing on the pre-fix tree before this file landed.
    ========================================================================== */
@@ -208,6 +222,83 @@ const check = (ok, msg) => { if (ok) { passed++; console.log('  ✓ ' + msg); } 
         (m ? ` (top ${Math.round(m.top)}, end ${Math.round(m.lastBottom)} of ${m.vh} after scroll)` : ' — not found'));
       await ctx.close();
     }
+  }
+
+  console.log('GHOST — a fast second tap never lands on what the first one opened');
+  {
+    const centre = async (p, loc) => {
+      await loc.evaluate(e => e.scrollIntoView({ block: 'center' })); await p.waitForTimeout(400);
+      const b = await loc.boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2];
+    };
+    const dbl = async (p, xy) => { await p.touchscreen.tap(xy[0], xy[1]); await p.waitForTimeout(120); await p.touchscreen.tap(xy[0], xy[1]); await p.waitForTimeout(900); };
+    const ticked = p => p.evaluate(() => document.querySelectorAll('.mcl-ck[aria-checked="true"]').length);
+    {
+      const { ctx, p } = await open('hv-block.html?day=1');
+      await dbl(p, await centre(p, p.locator('.mc-meatball:visible').first()));
+      const r = await p.evaluate(() => ({ page: location.pathname.split('/').pop(), menu: !!document.querySelector('.mc-menu-overlay.open') }));
+      check(r.page === 'hv-block.html' && r.menu, `double-tap ⋯: the menu stays open on the page (${r.page}, menu ${r.menu})`);
+      await ctx.close();
+    }
+    {
+      const { ctx, p } = await open('hv-block.html?day=1');
+      const skip = p.locator('.mcl-actions button:visible', { hasText: 'Skip' }).first();
+      if (await skip.count()) {
+        await dbl(p, await centre(p, skip));
+        const n = await ticked(p);
+        check(n === 0, `double-tap Skip: no set is ticked by the second tap (${n} ticked)`);
+      } else check(false, 'double-tap Skip: Skip not found');
+      await ctx.close();
+    }
+    {
+      const { ctx, p } = await open('kitchen-sink.html?day=1');
+      await tick(p, '', 1);
+      await p.locator('#mcsEnd').tap(); await p.waitForTimeout(600);
+      await dbl(p, await centre(p, p.locator('#fwRecapSave')));
+      const done = await p.evaluate(() => !!document.querySelector('.fw-modal-overlay.open .fw-done-title'));
+      check(done, 'double-tap Log workout: Session Complete stays open');
+      await ctx.close();
+    }
+    {
+      const { ctx, p } = await open('kitchen-sink.html?day=1');
+      const ck = p.locator('.mcl-ck[aria-checked="false"]:visible').first();
+      await ck.scrollIntoViewIfNeeded(); await ck.tap(); await p.waitForTimeout(400);
+      const started = await p.evaluate(() => typeof TMR !== 'undefined' && TMR.isRunning());
+      await p.locator('.mcl-ck[aria-checked="true"]:visible').first().tap(); await p.waitForTimeout(400);
+      const still = await p.evaluate(() => typeof TMR !== 'undefined' && TMR.isRunning());
+      check(started && !still, `tick then untick a set: the rest it started stops (started ${started}, running after ${still})`);
+      await ctx.close();
+    }
+  }
+
+  console.log('LIGHT — dialog text is readable on the light theme');
+  {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+    await ctx.addInitScript(() => { try { localStorage.setItem('mc_theme_mode', 'light'); } catch (e) {} });
+    const p = await ctx.newPage();
+    await p.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
+    await p.goto(baseUrl + '/kitchen-sink.html?day=1', { waitUntil: 'load' }); await p.waitForTimeout(1200);
+    await tick(p, '', 1);
+    await p.locator('#mcsEnd').tap(); await p.waitForTimeout(600);
+    await p.locator('#fwRecapSave').tap(); await p.waitForTimeout(1500);
+    const rows = await p.evaluate(() => {
+      const rgb = s => (s.match(/[\d.]+/g) || []).map(Number);
+      const lum = c => { const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; return .2126 * f(c[0]) + .7152 * f(c[1]) + .0722 * f(c[2]); };
+      const bgOf = el => { const stack = []; for (let e = el; e; e = e.parentElement) { const c = rgb(getComputedStyle(e).backgroundColor); if (c.length >= 3 && (c[3] === undefined || c[3] > 0)) { stack.push(c); if (c[3] === undefined || c[3] >= 1) break; } }
+        let out = [255, 255, 255]; for (let i = stack.length - 1; i >= 0; i--) { const c = stack[i], a = c[3] === undefined ? 1 : c[3]; out = out.map((v, k) => c[k] * a + v * (1 - a)); } return out; };
+      return ['.fw-done-title', '.fw-done-sub', '.fw-done-lbl', '.fw-muscle-save', '.fw-refuel-sub', '.fw-modal-overlay.open .fw-confirm'].map(sel => {
+        const el = document.querySelector('.fw-modal-overlay.open ' + sel.replace('.fw-modal-overlay.open ', ''));
+        if (!el || !el.offsetParent) return { sel, ratio: null };
+        const a = lum(rgb(getComputedStyle(el).color)), b = lum(bgOf(el));
+        return { sel, ratio: +((Math.max(a, b) + .05) / (Math.min(a, b) + .05)).toFixed(2), need: sel === '.fw-done-title' ? 3 : 4.5 };
+      });
+    });
+    const theme = await p.evaluate(() => document.documentElement.dataset.theme);
+    for (const r of rows) {
+      if (r.ratio == null) continue; // a section this session has no content for
+      check(theme === 'light' && r.ratio >= r.need, `light Session Complete ${r.sel}: ${r.ratio}:1 (needs ${r.need})`);
+    }
+    check(rows.some(r => r.sel === '.fw-done-title' && r.ratio != null), 'light Session Complete: the title was measured');
+    await ctx.close();
   }
 
   await browser.close();

@@ -1526,6 +1526,8 @@
     if (mini.length <= 1) return mini.length ? mini[0].value.trim() : '';
     return Array.prototype.map.call(mini, function (m) { return m.value.trim() || m.placeholder || ''; }).join('+');
   }
+  // The row whose tick started the running auto-rest, and that rest's start.
+  var lastAutoRest = null;
   function onCheck(card, exId, sn, rs) {
     var carriedRow = card.querySelector('#mclr-' + cssId(exId) + '-' + sn);
     if (carriedRow && carriedRow.classList.contains('mcl-carried')) return;
@@ -1537,6 +1539,16 @@
     if (ck.classList.contains('done')) {
       ck.classList.remove('done'); ck.textContent = '☐'; ck.setAttribute('aria-checked', 'false');
       row.classList.remove('done-row');
+      // The rest this row's own tick started is for a set that is no longer
+      // done (QA cycle 2: a double-tap ticked, unticked, and left a rest
+      // running). A rest started any other way is left alone.
+      if (lastAutoRest && lastAutoRest.row === row.id) {
+        if (typeof TMR !== 'undefined' && TMR.startTime != null &&
+            TMR.startTime === lastAutoRest.start && TMR.stop) {
+          try { TMR.stop(); } catch (e) {}
+        }
+        lastAutoRest = null;
+      }
       unsave(exId, sn);
       updateCount(card, exId);
       updateHist(card, exId);
@@ -1663,6 +1675,7 @@
         var secs = (TMR.parseSeconds && TMR.parseSeconds(t.dataset.rest)) || rs;
         try { (typeof buildTimerFloat === 'function') && buildTimerFloat(); } catch (e) {}
         TMR.start(t, secs, 'Rest');
+        lastAutoRest = { row: row.id, start: TMR.startTime };
       }
     }
   }

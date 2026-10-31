@@ -1232,7 +1232,12 @@ html[data-theme="light"] .summary-section .sum-card{background:#efe9db!important
 html[data-theme="light"] .summary-section .sum-row{border-bottom-color:rgba(28,26,23,0.08)!important;}
 
 html[data-theme="light"] .fw-bar{background:rgba(245,242,236,0.96);border-top-color:rgba(28,26,23,0.08);}
-html[data-theme="light"] .fw-progress{color:#8a8377;}
+html[data-theme="light"] .fw-progress{color:#6b6459;}
+/* QA cycle 2 (check B): black on the light theme's accent (#826919 on every
+   page that loads the finish sheet) is 3.98:1; white is 5.27:1. The two
+   #fwModalBtns/#fwRecapBtns variants paint their own background and win
+   on specificity, so they keep their colours. */
+html[data-theme="light"] .fw-confirm{color:#fff;}
 html[data-theme="light"] .fw-modal-overlay{background:rgba(28,26,23,0.35);}
 html[data-theme="light"] .fw-modal{background:#f5f2ec;border-color:rgba(28,26,23,0.1);}
 html[data-theme="light"] .fw-modal-sub{color:#6b6459;}
@@ -1241,6 +1246,7 @@ html[data-theme="light"] .fw-summary-row{border-bottom-color:rgba(28,26,23,0.06)
 html[data-theme="light"] .fw-summary-label{color:#6b6459;}
 html[data-theme="light"] .fw-summary-val{color:#1c1a17;}
 html[data-theme="light"] .fw-stat-cell{background:rgba(28,26,23,0.04);}
+html[data-theme="light"] .mcchart-bodymap .is-neutral{fill:rgba(28,26,23,0.07);stroke:rgba(28,26,23,0.18);}
 html[data-theme="light"] .fw-stat-val{color:#1c1a17;}
 html[data-theme="light"] .fw-stat-lbl{color:#6b6459;}
 html[data-theme="light"] #fwModalBtns .fw-confirm,html[data-theme="light"] #fwRecapBtns .fw-confirm{border:1px solid rgba(28,26,23,0.15);}

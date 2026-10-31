@@ -245,7 +245,10 @@
       'html[data-theme="light"] .mcr-fixed-txt b,html[data-theme="light"] .mcr-li-status.is-fixed{color:#15803d;}' +
       'html[data-theme="light"] .mcr-fixed{border-color:rgba(21,128,61,0.5);}' +
       'html[data-theme="light"] .mcr-text{background:rgba(0,0,0,0.04);}' +
-      'html[data-theme="light"] .mcr-msg.ok{color:#15803d;}';
+      'html[data-theme="light"] .mcr-msg.ok{color:#15803d;}' +
+      // QA cycle 2 (check B): the dark ink on the light theme's darker accent
+      // measured 3.52:1; white on it is about 6:1.
+      'html[data-theme="light"] .mcr-send{color:#fff;}';
     document.head.appendChild(st);
   }
 

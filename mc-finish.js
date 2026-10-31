@@ -495,7 +495,21 @@
       '.fw-refuel-wrap:not(:empty){margin-bottom:16px;padding:14px;border-radius:14px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);text-align:left;}'+
       '.fw-refuel-title{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#d4af37;}'+
       '.fw-refuel-sub{font-size:13px;font-weight:700;color:#ede7d9;margin-top:4px;}'+
-      '.fw-refuel-btn{display:block;margin-top:10px;padding:11px;border-radius:10px;background:#d4af37;color:#0a0a0a;text-align:center;text-decoration:none;font-size:13px;font-weight:800;}';
+      '.fw-refuel-btn{display:block;margin-top:10px;padding:11px;border-radius:10px;background:#d4af37;color:#0a0a0a;text-align:center;text-decoration:none;font-size:13px;font-weight:800;}'+
+      /* QA cycle 2 (check B): base.css turns .fw-modal cream in light theme,
+         and every literal above was written for the dark card -- the title
+         measured 1.12:1 (white on cream), Save card 1.19:1, the refuel line
+         was invisible. The same jobs, on the light theme's own ink. */
+      'html[data-theme="light"] .fw-done-title{color:#1c1a17;}'+
+      'html[data-theme="light"] .fw-done-sub,html[data-theme="light"] .fw-done-lbl,html[data-theme="light"] .fw-strain-val span{color:#6b6459;}'+
+      'html[data-theme="light"] .fw-strain-lbl,html[data-theme="light"] .fw-muscle-lbl,html[data-theme="light"] .fw-push-no{color:#6b6459;}'+
+      'html[data-theme="light"] .fw-strain-val,html[data-theme="light"] .fw-done-prs-title,html[data-theme="light"] .fw-refuel-title{color:#7a5a12;}'+
+      'html[data-theme="light"] .fw-muscle-save,html[data-theme="light"] .fw-pr-chip,html[data-theme="light"] .fw-push-yes{color:#6e4f0c;background:rgba(169,118,47,0.10);border-color:rgba(169,118,47,0.40);}'+
+      'html[data-theme="light"] .fw-done-cell{background:rgba(28,26,23,0.04);border-color:rgba(28,26,23,0.08);}'+
+      'html[data-theme="light"] .fw-done-num{color:#7a5a12;}'+
+      'html[data-theme="light"] .fw-push-offer{border-top-color:rgba(28,26,23,0.10);}'+
+      'html[data-theme="light"] .fw-push-line,html[data-theme="light"] .fw-refuel-sub{color:#2e2a24;}'+
+      'html[data-theme="light"] .fw-push-no{border-color:rgba(28,26,23,0.16);}';
     document.head.appendChild(st);
   }
 
