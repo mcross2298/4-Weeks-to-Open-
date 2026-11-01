@@ -77,9 +77,10 @@ people.
   `supabase/functions/` live (`deploy-functions` job). Agents do not change
   `supabase/` or the Plaid flow unless the owner files that work as an
   initiative. Plaid go-live is not in scope.
-- **Lenses here:** money-math correctness, data safety, then friction,
-  design and features (it has no performance or reliability lens; use
-  `lens:money-math` and `lens:data-safety`).
+- **Lenses here:** when the weekly lens is reliability, use
+  `lens:data-safety`; when it is performance, use `lens:money-math`.
+  Friction, design and feature carry over unchanged. Money-math
+  correctness and data safety outrank everything else in this repo.
 - **Sync baseline.** Files in `scripts/sync/manifest.json` are shared with
   the public `household-finance` repo, which is not in the cycle. Run
   `check-sync-drift`. When a change touches a shared unit, say in the PR
