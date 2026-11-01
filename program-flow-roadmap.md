@@ -742,18 +742,91 @@ yet: `bro-split` is one of five workouts under `cat-stndr` and the other four
 convert in `F3-5`, so documenting the new flow now would be true of one page in
 five. It is `F3-5`'s to write.
 
-#### `F3-5` shipped (2026-10-31) — the last four STNDR pages
+#### `F3-5` shipped (2026-10-31) — the remaining STNDR pages
 
 `weeks-to-open.html`, `push-pull-legs.html`, `arnold-legacy.html` and
-`legacy-prep.html` take `bro-split.html`'s `F3-4` shape: a session list, one
-session per screen, `← All days`, a clamped `?day=N` (rest days rejected) and
-`?week=N` / `?phase=N` on the two tabbed pages. **All 23 `F3` pages are
-converted.** No new pattern and no engine was touched. One addition over
-`F3-4`: a tab switch with a session open clamps the open day
-(`clampOpenDay()`), so a day that is a rest day in the new week or phase
-returns to the list instead of rendering nothing. The STNDR guide's flow copy,
-held back in `F3-4` because it would have been true of one page in five, is
-written now. Full notes are in `flagship-readiness-roadmap.md` (T5).
+`legacy-prep.html` converted — the four `stndr` pages left over from `F3-4`.
+**23 of 23 done.**
+
+A verification pass against the live repo found the roadmap's own status
+board stale: `launch-roadmap.md` and this file both still described these
+four as deferred/not-started, but no shipped note existed anywhere for them —
+the same stale-bookkeeping shape `L1`'s and `L4`'s AskUserQuestion alignment
+checks caught earlier. Re-checked against the real source rather than the
+prose: all four still rendered every day open-or-closed via `.day-card.open`
+CSS (the pre-`F3` accordion), confirmed by diffing their `renderDay()` against
+`bro-split.html`'s two-mode `renderDayRow()`/`renderDay()` split.
+
+**Three of the four (`weeks-to-open`, `push-pull-legs`, `arnold-legacy`) are
+`bro-split`'s own clone family** — `check-journey.js`'s own header comment
+already named them as carrying "near-identical toggle bodies" to
+`iron-engine.html`, the family's unlicensed probe. **`legacy-prep` is the
+family's largest member** (34 entries, 26 training days) and already used an
+`openDayIdx` + full-rerender mechanism pre-`F3`, just without the list/day-mode
+split — the shape `check-journey.js`'s own "re-render on toggle" row names it
+under. All four took the same transformation `F3-4` already proved on
+`bro-split`: a day ROW at the list level (`renderDayRow()`, shared
+`.mc-day-row`/`.mc-day-back` affordances from `base.css`), one workout per
+screen when open, rest days staying list-only informational cards, and
+`?day=N`/`?week=N`/`?phase=N` deep links (clamped — an unclamped index is
+`F3-1`'s first-draft blank-screen bug).
+
+**A real, latent visual bug was caught before it could ship.** Three of the
+four pages' old `bindEvents()` set `--day-rgb` via
+`card.style.setProperty('--day-rgb', hexToRgb(day.color))` on open, which the
+F3 rewrite's header-click handler does not do (matching `bro-split`'s own
+established pattern). Their `.day-card.open` CSS read `rgba(var(--day-rgb),0.4)`
+with **no fallback** — unlike `bro-split`'s and `push-pull-legs`'s own rule,
+which already carried one. Removing the JS setter without a CSS fallback would
+have left the open day's border/shadow glow computing to nothing. Fixed by
+giving `weeks-to-open`, `arnold-legacy` and `legacy-prep`'s `.day-card.open`
+rule the same `var(--day-rgb,212,175,55)` fallback shape (their resolved
+accent, gold) that `push-pull-legs` already had — correcting, not propagating,
+that page's own pre-existing `rgba(var(--day-rgb,251,146,0.15),0.12)` box-shadow
+typo (left alone, out of scope, not introduced here). `legacy-prep` keeps its
+per-day dynamic `--day-rgb` inline on the open card instead, since its
+template already set it directly and losing that would have been a real,
+page-specific regression the other three never had (no CSS fallback needed
+there as a result, though one was added anyway for defense).
+
+**Verified by driving all four, not by reading the diff**, on a local static
+server with real headless Chromium: list mode renders rows only (zero
+`.ex-card`, zero back button); opening a day renders exactly that day's cards
+plus one back button and zero rows; Back returns to the list; `?day=1` opens
+straight into a day; `?day=9999` falls back to the list rather than blanking
+the screen (`F3-1`'s regression, re-checked on every subsequent page since);
+tab+day combos (`?week=2&day=1`, `?phase=2&day=1`) resolve both params
+together; day-row header height measures 70px, clear of the floor. Zero
+console errors beyond this sandbox's known Google Fonts / Supabase egress
+block. `check-journey.js` stays 9/9 (`legacy-prep` was already one of its 9
+probe pages); the two `back link` CHROME-CONTROL width findings it also
+reports are a pre-existing sandbox Chromium-build rendering artifact —
+reproduced identically with these four changes stashed out, so unrelated to
+this change. `check-dangling-refs.js`, `check-single-impl.js`,
+`check-design-tokens.js`, `check-docs-currency.js`, `check-program-data.js`
+and `build-market.py --check` (the licensed-content leak scan, since all four
+are `stndr` pages) all green. `tools/smoke-test-pages.js`'s 38-page sample is
+unaffected (none of the four are in its sample) and stays clean.
+
+**Documentation:** `stndr-instructions.html` was checked, not assumed clean —
+it describes the program's set-type vocabulary and philosophy only, with no
+description anywhere of the per-page accordion/list navigation mechanism that
+just changed, so there is no stale copy to correct. **A separate, pre-existing
+gap found in passing, not fixed here:** its own program list names only 4 of
+`stndr`'s 5 workouts (`weeks-to-open`, `push-pull-legs`, `legacy-prep`,
+`bro-split`) — Arnold Legacy is missing, and `mc-pm-data.js`'s `stndr` entry
+still says `meta: '4 Programs'` against 5 real workout pages. Unrelated to
+this phase's own scope (a content gap, not a navigation one); flagged rather
+than silently fixed.
+
+**Addition from T5 (PR #409, merged on top of the above):** a week or phase tab
+switch with a session open now clamps the open day (`clampOpenDay()` on
+`weeks-to-open.html` and `push-pull-legs.html`, the two tabbed pages), so a
+day that is a rest day in the new week or phase returns to the list instead of
+rendering nothing. T5 had converted the same four pages independently; its
+page conversions were dropped in favour of the ones above, and only this
+clamp was carried over.
+
 
 ### `F4` — the day-identity contract
 
