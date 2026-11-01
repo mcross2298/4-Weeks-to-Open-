@@ -1,0 +1,248 @@
+<title>CI Scout — 2026-11-06</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!--
+  MC Training CI report template. Every CI agent copies this file, replaces
+  the EXAMPLE content, and publishes it as a private artifact.
+
+  How to fill it:
+  - <title>: "<Agent> — <YYYY-MM-DD>", e.g. "Weekly Decisions — 2026-11-08".
+  - Delete the .example-banner element.
+  - Keep section order. Delete a whole <section> when it would be empty.
+  - Status chips use exactly these classes: chip--pass, chip--fail,
+    chip--warn, chip--info. Target badge: target--live or target--local.
+  - Screenshots: JPEG data URIs, 390 px wide, quality ~70. Keep the page
+    under 8 MB. Never show real logged data.
+  - Aggregates only. No names, emails, ids, report wording, or health numbers.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: one reading column; summary first, decisions next, evidence below.
+     Gold-on-black follows the MC Training app; light theme is a warm paper. */
+  :root {
+    --bg: #f7f5ef;
+    --surface: #ffffff;
+    --line: #e2ddcf;
+    --fg: #1c1a15;
+    --muted: #6b6455;
+    --gold: #8a6a12;
+    --gold-soft: #f3e7c4;
+    --pass: #1f7a3d;  --pass-bg: #e3f3e8;
+    --fail: #b42318;  --fail-bg: #fbe5e2;
+    --warn: #9a5b00;  --warn-bg: #fdf0d9;
+    --info: #2f5d8a;  --info-bg: #e3edf7;
+    --display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d0c0a; --surface: #17150f; --line: #2c281d;
+      --fg: #f1ece0; --muted: #a39b88;
+      --gold: #e2b33c; --gold-soft: #2b2310;
+      --pass: #5fd08a; --pass-bg: #12291a;
+      --fail: #ff8a7a; --fail-bg: #331614;
+      --warn: #f2b64f; --warn-bg: #30230c;
+      --info: #8ab8e6; --info-bg: #13233a;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d0c0a; --surface: #17150f; --line: #2c281d;
+    --fg: #f1ece0; --muted: #a39b88;
+    --gold: #e2b33c; --gold-soft: #2b2310;
+    --pass: #5fd08a; --pass-bg: #12291a;
+    --fail: #ff8a7a; --fail-bg: #331614;
+    --warn: #f2b64f; --warn-bg: #30230c;
+    --info: #8ab8e6; --info-bg: #13233a;
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--bg); color: var(--fg);
+    font: 15px/1.55 var(--body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 20px 48px;
+  }
+  .page { max-width: 760px; margin: 0 auto; display: grid; gap: 28px; }
+  a { color: var(--gold); text-underline-offset: 2px; }
+  a:focus-visible, summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 2px; }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.1; }
+  h1 { font-size: 2.2rem; letter-spacing: .01em; }
+  h2 { font-size: 1.35rem; text-transform: uppercase; letter-spacing: .06em; }
+  h3 { font-size: 1.2rem; }
+  p { margin: 0; }
+  .muted { color: var(--muted); }
+  .mono, code { font-family: var(--mono); font-size: .86em; }
+
+  .example-banner {
+    border: 1px dashed var(--warn); background: var(--warn-bg); color: var(--warn);
+    padding: 10px 12px; border-radius: 6px; font-size: .9rem;
+  }
+
+  /* Header */
+  header { display: grid; gap: 8px; }
+  .eyebrow { font: 600 .78rem/1 var(--body); text-transform: uppercase; letter-spacing: .12em; color: var(--gold); }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font-size: .88rem; align-items: center; }
+  .target { font: 600 .75rem/1 var(--body); text-transform: uppercase; letter-spacing: .08em; padding: 5px 8px; border-radius: 4px; }
+  .target--live { background: var(--pass-bg); color: var(--pass); }
+  .target--local { background: var(--warn-bg); color: var(--warn); }
+
+  /* Summary counts */
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .stat { background: var(--surface); padding: 12px 14px; display: grid; gap: 2px; }
+  .stat b { font: 700 1.9rem/1 var(--display); font-variant-numeric: tabular-nums; }
+  .stat span { font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .stat--attn b { color: var(--gold); }
+
+  section { display: grid; gap: 14px; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; border-bottom: 2px solid var(--fg); padding-bottom: 6px; }
+
+  /* Chips */
+  .chip { display: inline-block; font: 600 .72rem/1 var(--body); text-transform: uppercase; letter-spacing: .07em; padding: 5px 7px; border-radius: 4px; white-space: nowrap; }
+  .chip--pass { background: var(--pass-bg); color: var(--pass); }
+  .chip--fail { background: var(--fail-bg); color: var(--fail); }
+  .chip--warn { background: var(--warn-bg); color: var(--warn); }
+  .chip--info { background: var(--info-bg); color: var(--info); }
+  .score { font: 700 1rem/1 var(--display); font-variant-numeric: tabular-nums; background: var(--gold-soft); color: var(--gold); padding: 5px 8px; border-radius: 4px; }
+
+  /* Decisions */
+  .decisions { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .decision { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 6px; padding: 12px 14px; display: grid; gap: 6px; }
+  .decision-top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .decision q { font-weight: 600; quotes: none; }
+  .rec { font-size: .92rem; }
+  .rec strong { color: var(--gold); }
+
+  /* Before / after */
+  .proposal { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px; display: grid; gap: 12px; }
+  .proposal-top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  figure { margin: 0; display: grid; gap: 6px; min-width: 0; }
+  figure img { width: 100%; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+  figcaption { font-size: .78rem; color: var(--muted); }
+  figcaption b { color: var(--fg); text-transform: uppercase; letter-spacing: .06em; font-size: .72rem; margin-right: 4px; }
+  dl.facts { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; font-size: .92rem; }
+  dl.facts dt { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; padding-top: 3px; }
+  dl.facts dd { margin: 0; min-width: 0; }
+  @media (max-width: 420px) {
+    dl.facts { grid-template-columns: 1fr; gap: 2px; }
+    dl.facts dd { margin-bottom: 8px; }
+  }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: .88rem; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  td.num { text-align: right; white-space: nowrap; }
+  td code { white-space: nowrap; }
+  td:last-child { min-width: 12rem; }
+
+  ul.plain { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
+  footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line); padding-top: 12px; }
+</style>
+
+<div class="page">
+
+  <div class="example-banner">EXAMPLE CONTENT. Agents: delete this banner and replace every example below.</div>
+
+  <header>
+    <div class="eyebrow">MC Training · CI Scout</div>
+    <h1>Week of Nov 2 – Nov 6, 2026</h1>
+    <div class="meta">
+      <span class="target target--live">Tested live site</span>
+      <span>Commit <code>1cace3b</code></span>
+      <span>Lens: Friction</span>
+      <span>Run took 38 min</span>
+    </div>
+  </header>
+
+  <div class="summary" aria-label="Run summary">
+    <div class="stat stat--attn"><b>2</b><span>Decisions needed</span></div>
+    <div class="stat"><b>4</b><span>New ideas</span></div>
+    <div class="stat"><b>11/12</b><span>Gates passed</span></div>
+    <div class="stat"><b>20</b><span>Open crash types</span></div>
+  </div>
+
+  <section>
+    <div class="section-head"><h2>Decisions needed</h2><span class="muted">Answer on the issue</span></div>
+    <ol class="decisions">
+      <li class="decision">
+        <div class="decision-top"><span class="score">60</span><span class="chip chip--info">Friction</span><a href="#">#412</a></div>
+        <q>Should the rest timer start automatically when a set is checked off?</q>
+        <p class="rec"><strong>Recommend: yes, behind a setting defaulting on.</strong> Example evidence: most logged sets are followed by a manual timer tap within a few seconds.</p>
+      </li>
+      <li class="decision">
+        <div class="decision-top"><span class="score">48</span><span class="chip chip--warn">Reliability</span><a href="#">#413</a></div>
+        <q>Group repeated "Sync push failed" crash types into one issue per root cause?</q>
+        <p class="rec"><strong>Recommend: yes.</strong> Example evidence: one network-failure message currently files a separate issue per storage key.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Before / after</h2><span class="muted">390 × 844</span></div>
+    <article class="proposal">
+      <div class="proposal-top">
+        <h3>Fewer taps to start rest</h3>
+        <div class="decision-top"><span class="score">60</span><span class="chip chip--info">Friction</span></div>
+      </div>
+      <div class="shots">
+        <figure>
+          <img alt="Before: example placeholder" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 844'%3E%3Crect width='390' height='844' fill='%23888' fill-opacity='.15'/%3E%3Ctext x='195' y='422' font-family='sans-serif' font-size='28' text-anchor='middle' fill='%23888'%3EBefore%3C/text%3E%3C/svg%3E">
+          <figcaption><b>Before</b>main @ 1cace3b</figcaption>
+        </figure>
+        <figure>
+          <img alt="After: example placeholder" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 844'%3E%3Crect width='390' height='844' fill='%23888' fill-opacity='.15'/%3E%3Ctext x='195' y='422' font-family='sans-serif' font-size='28' text-anchor='middle' fill='%23888'%3EAfter%3C/text%3E%3C/svg%3E">
+          <figcaption><b>After</b>local prototype, not pushed</figcaption>
+        </figure>
+      </div>
+      <dl class="facts">
+        <dt>Problem</dt><dd>Starting rest takes a second tap after every set.</dd>
+        <dt>Evidence</dt><dd>Aggregate of logged sessions in the last 30 days (example).</dd>
+        <dt>Proposal</dt><dd>Start the rest timer when the set's check is ticked.</dd>
+        <dt>Measure</dt><dd>Manual timer taps per session, checked 3 weeks after merge.</dd>
+        <dt>Links</dt><dd><a href="#">Issue #412</a></dd>
+      </dl>
+    </article>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Gates &amp; audits</h2><span class="muted">Exact counts</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Check</th><th>Result</th><th class="num">Pass</th><th class="num">Fail</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td><code>check-tap-intent.js</code></td><td><span class="chip chip--pass">Pass</span></td><td class="num">42</td><td class="num">0</td><td></td></tr>
+          <tr><td><code>check-journey.js</code></td><td><span class="chip chip--warn">Known</span></td><td class="num">30</td><td class="num">2</td><td>Back-link font artifact (see CLAUDE.md)</td></tr>
+          <tr><td><code>smoke-test-pages.js</code></td><td><span class="chip chip--fail">Fail</span></td><td class="num">160</td><td class="num">1</td><td>Example: one page 404s</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Error log</h2><span class="muted">Aggregates only</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Type</th><th class="num">Count</th><th class="num">Devices</th><th>Last seen</th><th>Issue</th></tr></thead>
+        <tbody>
+          <tr><td>Sync push failed · network</td><td class="num">20</td><td class="num">1</td><td>Oct 31</td><td><a href="#">#388–#407</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Could not do</h2></div>
+    <ul class="plain">
+      <li>Example: performance lens skipped this week; the measurement tool needs a browser build this sandbox lacks.</li>
+    </ul>
+  </section>
+
+  <footer>Generated by the CI Scout scheduled task. Rules: <code>.github/ci-agents/README.md</code>. Nothing here is merged; every change is a draft PR for owner review.</footer>
+</div>
