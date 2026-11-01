@@ -18,8 +18,14 @@ repo they are working in.
 |---|---|---|---|---|
 | `mcross2298/4-Weeks-to-Open-` | MC Training | https://mcross2298.github.io/4-Weeks-to-Open-/ | All | Field reports, crash types, Supabase aggregates |
 | `mcross2298/Mikes-Cookbook` | Mike's Cookbook | https://mcross2298.github.io/Mikes-Cookbook/ | Live QA, scout, critic, builder, digest, retro | No field-report pipeline, so the field review skips it |
+| `mcross2298/Cross-Household-` (PRIVATE) | Cross Household (finance) | Behind Cloudflare Access — not reachable by agents; test a local copy | Live QA, scout, critic, builder, digest, retro | Real money data — see its rules below |
 
-**Shared caps across repos.** These are per run, not per repo:
+Agents work in **every repo in this table that lists them**. Adding a repo
+to the cycle is an edit to this table plus that repo's own
+`.github/ci-agents/DECISIONS.md` and labels — the scheduled prompts do not
+change.
+
+**Shared caps across repos.** These are per run, across all repos:
 - scout: 5 ideas
 - builder: 2 builds
 - Live QA: 3 PRs
@@ -41,6 +47,46 @@ Give each repo at least one slot when it has evidence worth acting on.
   ideas will be `hypothesis` with a measurement plan, and that is expected.
 - Licensed content and brand terms follow `content-manifest.json`'s
   `cookbook` section in 4-Weeks-to-Open- (watch "Kelli Cross' Recipes").
+
+**Per-repo QA** (Live QA runs these, and the builder runs the gates before a PR):
+
+| Repo | Gates | Explore one area per week, rotating |
+|---|---|---|
+| MC Training | `tools/check-tap-intent.js`, `tools/test-mc-overlay-stack.js`, `tools/check-journey.js`, `tools/test-mc-session-durability.js`, `GO_LIVE/flagship-audit/scenarios/fa-repro.js`, `tools/smoke-test-pages.js`, plus everything in CLAUDE.md's "Build, test & CI" (check-journey's two sandbox "back link" findings are a known font artifact) | dashboard and non-workout pages · light-theme layering · rapid repeated taps · in-card one-tap-one-action and sheets over fixed bars |
+| Mike's Cookbook | the `verify` job in `.github/workflows/pages.yml`, including `tools/smoke-test.js` and `tools/check-a11y.mjs` | Home, search and Smart Week · recipe detail, scaling and grocery · Cooking Mode and timers · pantry, favorites and import |
+| Cross Household | the gate jobs in `.github/workflows/tests.yml`: `scripts/run-tests.mjs` (money math), `check-token-drift`, `check-a11y`, `check-doc-drift`, `check-sw-shell`, `check-sync-drift`, `check-plaid-invariants` | budget, safe-to-spend and goals · paycheck allocation and pay cycles · forecast, net worth and history · backup, restore and CSV export |
+
+**Cross Household rules** (on top of its own `CLAUDE.md`, which wins).
+This is the owner's private finance app with real figures for two named
+people.
+- **Never render or screenshot the real seed.** Render the app ONLY after
+  pre-loading the fictional fixture into `localStorage` (the app reads saved
+  state before its seed). Until that fixture exists, run gates only and
+  publish no screenshots. Do not add an in-app demo mode or replace the seed.
+  Its CLAUDE.md forbids copying `household-finance`'s fictional-demo pattern
+  into the app; a test fixture loaded by the harness does not change the app.
+- **No figures anywhere.** No real amounts, balances, account names,
+  institutions or income in issues, PRs, commits, test names or artifacts —
+  even though the repo is private. Describe problems structurally ("the
+  safe-to-spend total double-counts a transfer between two accounts").
+- **Database: health metadata only.** On its Supabase project
+  (`iijctamxaoqvdlvinclq`), use security/performance advisors, Edge Function
+  and cron logs, and function status. Never run SQL against it, not even
+  counts.
+- **Hands off Plaid and Edge Functions.** A push to `main` deploys
+  `supabase/functions/` live (`deploy-functions` job). Agents do not change
+  `supabase/` or the Plaid flow unless the owner files that work as an
+  initiative. Plaid go-live is not in scope.
+- **Lenses here:** money-math correctness, data safety, then friction,
+  design and features (it has no performance or reliability lens; use
+  `lens:money-math` and `lens:data-safety`).
+- **Sync baseline.** Files in `scripts/sync/manifest.json` are shared with
+  the public `household-finance` repo, which is not in the cycle. Run
+  `check-sync-drift`. When a change touches a shared unit, say in the PR
+  that `household-finance` needs a matching change or a deliberate baseline
+  update. Never put real data in `household-finance`.
+- **Escalate immediately** for any money-math defect that produces a wrong
+  number on a screen the owner uses to decide spending or saving.
 
 ## The pipeline
 
