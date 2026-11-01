@@ -45,6 +45,33 @@ opens a `needs-decision` issue "Continue <initiative> to phase 2?", and builds
 the next phase the Monday after the owner approves (CLAUDE.md's between-phase
 check-in).
 
+## Escalation — do not wait for Sunday
+
+Send ONE push notification immediately (the PushNotification tool, status
+`proactive`) when you find any of these. Give the issue or PR link and one
+line on what is wrong:
+
+- a `severity:blocker` field report, or a crash type seen on more than one
+  device in 24 hours
+- a regression caused by a PR merged in the last 8 days
+- a risk of losing logged workout data
+- your own run blocked on something only the owner can fix (a secret, a
+  permission, a setting)
+
+Everything else waits for the digest. One push per run at most. Bundle
+several escalations into that one message.
+
+## Chain of custody
+
+At the start of your run, if the `list_triggers` tool is available, confirm
+that the agent in the previous stage of the cycle ran this week and its last
+run SUCCEEDED. The cycle is builder → Live QA → scout → critic → field
+review → digest → builder.
+
+If it did not, say so at the top of your report, work from whatever it
+did produce, and escalate (above). A silent gap in the cycle is the failure
+this rule exists for.
+
 ## Hard rules (every agent)
 
 1. **Never merge, never push to `main`, never push to `MC-Training-Rolodex`,
