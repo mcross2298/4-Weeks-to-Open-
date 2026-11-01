@@ -15,14 +15,16 @@ produced, so the owner decides once a week with everything in front of them.
 
 | Stage | Agent | When (America/New_York) | Reads first | Produces | Notifies owner |
 |---|---|---|---|---|---|
+| Act | **Builder** | Monday 7:43 pm | Open `ci-approved` issues with no PR; approved "continue to phase N?" issues | Up to 2 draft PRs implementing approved work (large initiatives one phase at a time) + a "CI Builder" artifact | Push |
 | Check + identify | **Live QA** | Wednesday 8:23 pm | PRs merged to `main` in the last 8 days; `live-qa` issues | Verification of last week's merges; draft fix PRs; `needs-decision` issues; a "Live QA" artifact with unconfirmed suspicions | Push |
 | Propose | **Scout** | Thursday 8:41 pm | The newest "Live QA" artifact; `live-qa`, `field-*` issues; draft PRs | Up to 5 `ci-idea` issues + a "CI Scout" artifact | No |
 | Qualify | **Critic** | Friday 8:13 pm | Unscored `ci-idea` issues; overlap with field and live-qa issues and open PRs | A score comment per idea; the decision-log PR | No |
 | Change | **Field review** | Saturday 2:37 pm | `field-*` issues; `ci-idea` scores; open PRs | Draft fix PRs, or deferral to the `ci-idea` that fixes the root cause; `needs-decision` issues | Default |
 | Decide | **Digest** | Sunday 8:17 pm | Everything above | One "Weekly Decisions" artifact; refreshes the pinned Agent Control page | Yes — one push |
 
-The owner decides Sunday night and merges early in the week. The next
-Wednesday's Live QA is the check on what was merged.
+The owner decides Sunday night, the builder turns approvals into draft PRs on
+Monday, and the owner merges early in the week. The next Wednesday's Live QA
+is the check on what was merged.
 
 Always-on inputs run outside the cycle: `.github/workflows/field-reports.yml`
 (hourly) files field issues and `.github/workflows/live-qa.yml` (nightly)
@@ -35,9 +37,13 @@ files `live-qa` issues.
   holds those issues. The field review defers them to the idea until the
   owner approves it, then may implement the idea itself.
 
-Builders (agents that implement an approved idea) are **phase 2** and do not
-run yet. Until then an approved idea waits for the owner, an interactive
-session, or the field review when the idea covers field issues.
+**Starting work.** The builder acts only on `ci-approved`. To start an
+initiative of your own, open an issue describing it and add `ci-approved`
+yourself; it enters the same queue, ahead of agent ideas. A large or
+multi-phase initiative is built one phase per week: the builder ships phase 1,
+opens a `needs-decision` issue "Continue <initiative> to phase 2?", and builds
+the next phase the Monday after the owner approves (CLAUDE.md's between-phase
+check-in).
 
 ## Hard rules (every agent)
 
