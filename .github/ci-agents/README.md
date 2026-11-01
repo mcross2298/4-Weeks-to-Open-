@@ -109,7 +109,17 @@ is the check on what was merged.
 
 Always-on inputs run outside the cycle: `.github/workflows/field-reports.yml`
 (hourly) files field issues and `.github/workflows/live-qa.yml` (nightly)
-files `live-qa` issues.
+files `live-qa` issues. GitHub starts scheduled workflows late: all 4
+`live-qa.yml` runs so far started 6–7 hours after their 07:17 UTC cron. So
+"nightly" means "by mid-morning". Do not treat a missing overnight run as a
+failure before about 15:00 UTC.
+
+**Bursts are one finding.** When 5 or more `field-error` issues are opened on
+the same day, treat them as one cluster until shown otherwise: link them from
+one idea or issue, and count them as one item in reports. On 2026-10-28, 20
+crash-type issues (#388–#407) were opened in one day, and by the scout's
+evidence all 20 came from one network fault (#416). That was 20 of the 21
+open field-error issues.
 
 **Hand-off rules.**
 - A defect already covered by an open PR or a `ci-idea` is linked, never
@@ -314,6 +324,37 @@ and app: **repeat rate** (carried items ÷ all items), **no-change rate**, and
 **ledger spread** (areas covered ÷ areas available, last 30 days). An agent
 with a repeat rate above 40%, or one that covered fewer than half its areas,
 gets a concrete prompt or playbook change proposed in the retro PR.
+
+## Retro — how the monthly numbers are counted
+
+Added by the 2026-11 retro, which ran on the pipeline's first day and found
+that most of its own metrics had no definition precise enough to compute.
+These make next month's numbers comparable with this month's.
+
+- **An agent PR is one opened from a pipeline branch:** `claude/ci-*` (except
+  `claude/ci-agents-*` and `claude/ci-retro-*`, which change the pipeline
+  itself), `claude/live-qa-*` or `claude/field-fix-*`. Other `claude/`
+  branches are interactive sessions the owner drove. In the 30 days to
+  2026-11-01, MC Training had 34 `claude/` PRs and 1 agent PR by this rule
+  (#387); counting all 34 would make merge rate and days open measure the
+  owner's own sessions, not the agents.
+- **Rework** = a commit pushed to an agent PR after the owner's first review
+  or comment on it. A rebase with no content change does not count.
+- **Escaped defect** = a `live-qa`, `field-report` or `field-error` issue whose
+  root cause a later PR names as a merged agent PR. Every fix PR, by any
+  agent, says "Regressed by #N" in its body when it knows the cause, so the
+  retro can count by search instead of by judgement.
+- **Decision date** = the owner's `ci-approved` label event, or the
+  issue's close date for a rejection. Ideas still open are not in the median.
+- **Critic calibration** needs at least 5 approved and 5 rejected ideas
+  before it is reported as a finding. Below that, report the counts only.
+- **A missed week** is a stage with no hub report for that week. A stage that
+  was rescheduled counts as missed for the gap it leaves (the field review
+  moved from Sunday to Saturday on 2026-11-01, so W44 has no run of it).
+- **The first retro is the baseline.** Month-over-month change starts the
+  month after a retro report exists in the hub.
+- The retro keeps its own coverage ledger, `coverage/retro__<app>`, with the
+  evidence sources it actually read, the same way every other agent does.
 
 ## Reports — write to the Agent Control hub, never publish a page
 
