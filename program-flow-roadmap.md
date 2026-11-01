@@ -819,6 +819,15 @@ still says `meta: '4 Programs'` against 5 real workout pages. Unrelated to
 this phase's own scope (a content gap, not a navigation one); flagged rather
 than silently fixed.
 
+**Addition from T5 (PR #409, merged on top of the above):** a week or phase tab
+switch with a session open now clamps the open day (`clampOpenDay()` on
+`weeks-to-open.html` and `push-pull-legs.html`, the two tabbed pages), so a
+day that is a rest day in the new week or phase returns to the list instead of
+rendering nothing. T5 had converted the same four pages independently; its
+page conversions were dropped in favour of the ones above, and only this
+clamp was carried over.
+
+
 ### `F4` — the day-identity contract
 
 With one workout per screen, a day page can finally name itself. Publish

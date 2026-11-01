@@ -395,7 +395,7 @@ function render(){
 
 function bindEvents(){
   document.querySelectorAll(".tab").forEach(b=>{
-    b.addEventListener("click",()=>{activeWeek=b.dataset.week;render();});
+    b.addEventListener("click",()=>{activeWeek=b.dataset.week;clampOpenDay();render();});
   });
   // F3: a header no longer shows/hides a panel in place -- it moves between the
   // two screens, so a day's cards are BUILT on open and gone on close. The
@@ -434,6 +434,13 @@ function bindEvents(){
       input.addEventListener("keydown",ev=>{if(ev.key==="Enter")input.blur();});
     });
   });
+}
+
+// T5: the open day must exist and be trainable in the current week; otherwise
+// the page would render every day as "" -- a blank screen with no way back.
+function clampOpenDay(){
+  const days = (DATA.weeks.find(w=>w.id===activeWeek)||{}).days || [];
+  if(openDayIdx!==null && !(openDayIdx<days.length && days[openDayIdx].type!=='rest')) openDayIdx=null;
 }
 
 // `?day=N` (1-based) opens straight into a day; `?week=N` picks the week.

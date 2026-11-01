@@ -828,3 +828,64 @@ CLAUDE.md's `chrome-budgets` revert), so it is not this change's.
   true before this change too (110 < 150).
 - Not verified on a real phone. The fix is z-order and hit-testing, which
   headless Chromium measures directly, but iOS Safari has not been checked.
+
+### T5 · the three deferred items (owner, 2026-10-31)
+
+Scope: the three items T3 left "scoped out, with the reason". The owner asked
+for all three to be addressed. Each was reproduced before it was changed, and
+each new check fails on the tree before this change.
+
+- **`F3-5` · the last four STNDR pages are on the day list.**
+  `weeks-to-open.html`, `push-pull-legs.html`, `arnold-legacy.html` and
+  `legacy-prep.html` now work like `bro-split.html` (`F3-4`): a session list,
+  one session per screen, **← All days**, `?day=N` (clamped, rest days
+  rejected), and `?week=N` / `?phase=N` on the two tabbed pages. A tab switch
+  with a session open keeps it open on the new week or phase, or goes back to
+  the list if that day is a rest day there. Each page's old open-state colours
+  are now set inline on the open card. `stndr-instructions.html` gains a
+  "Using a Program" section, the guide copy `F3-4` left for this step. Driven
+  at 320 and 390: list rows 72px, Back 44px, no sideways overflow, no
+  exercise card built on the list, a ticked set restored on reopen, `?day=99`
+  back on the list, zero page errors. All 23 `F3` pages are converted now.
+- **Clock skew can no longer reorder a tick and an untick.** Both stamps were
+  the bare local clock, so an untick made on a device running behind the one
+  that ticked carried a smaller number, and `mergeSetlog()` kept the set.
+  `causalStamp()` in `mc-setlog.js` stamps an untick after the tick it removes
+  and a re-tick after any untick record this device holds
+  (`max(now, previous + 1)`, the Lamport-clock rule). The merge rule is
+  unchanged. Two edits neither device had seen are still ordered by wall
+  clock, because there is no causal order between them to keep. `SKEW` in
+  `test-mc-session-durability.js` (2 fail on the old file).
+- **One lift, two program weeks, one day: both sets are kept.** A set now has
+  a slot. It is its plain number ("2") unless today's "2" already belongs to
+  a different week, in which case it goes in "2@<week>" (`slotFor()`). Nothing
+  is migrated: every slot written before this, and every slot on a page with
+  no weeks, is still plain. The places that needed to know about slots:
+  - `save` / `unsave` / `lset` / `paintLoggedRow`, the journal replay and
+    `paintCarried` (they map a slot back to its row with `baseSn()`).
+  - `mergeSetlog()`, which moves the second week's set into its slot when two
+    devices each hold a different week in the same plain slot. Same-week and
+    untagged collisions keep first-wins.
+  - `mc-suggest.js`, which orders a session by the plain slots only, so
+    progression reads the same sets it read before.
+  - `mc-session.js`, which keeps a row in the live-session record when the
+    untick leaves another week's set on it (`detail.keep`).
+
+  Finish still banks every set ticked today on the page, both weeks included,
+  and none is overwritten now. `parseInt("2@3")` gives each banked set its
+  number. Five assertions in `test-mc-sync-merge.js` (2 fail on the old file)
+  and `TWO-WEEKS` on `mm-p1` (fails on the old file). Only the Modality Matrix
+  keeps its lifts across weeks, so in practice this is where it happens.
+
+Gates run green on this change: every node/python gate in CLAUDE.md, session
+durability 73/73, `fa-repro` 23/23, `fa-offline-sw` 9/9, exercise identity
+61/61, crash journal, crash recovery, set-log concurrency, store resilience,
+overlay stack, tap intent, PR scope, smoke 38 pages, the light and dark
+contrast ratchets, and the three perf probes. `check-journey` reports the same
+2 `back link` width failures on the unchanged tree in this sandbox, which is
+the text-width issue T4 recorded. The visual ratchet did not run here
+(`pngjs` is not installed). Its baselines are kitchen-sink pages, which this
+change does not touch.
+
+**Not verified:** a real two-device skew (the stamps are tested, the sync
+round trip is unit-tested) and any real phone.
