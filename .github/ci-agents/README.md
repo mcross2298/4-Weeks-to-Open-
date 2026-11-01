@@ -96,12 +96,12 @@ produced, so the owner decides once a week with everything in front of them.
 
 | Stage | Agent | When (America/New_York) | Reads first | Produces | Notifies owner |
 |---|---|---|---|---|---|
-| Act | **Builder** | Monday 7:43 pm | Open `ci-approved` issues with no PR; approved "continue to phase N?" issues | Up to 2 draft PRs implementing approved work (large initiatives one phase at a time) + a "CI Builder" artifact | Push |
-| Check + identify | **Live QA** | Wednesday 8:23 pm | PRs merged to `main` in the last 8 days; `live-qa` issues | Verification of last week's merges; draft fix PRs; `needs-decision` issues; a "Live QA" artifact with unconfirmed suspicions | Push |
-| Propose | **Scout** | Thursday 8:41 pm | The newest "Live QA" artifact; `live-qa`, `field-*` issues; draft PRs | Up to 5 `ci-idea` issues + a "CI Scout" artifact | No |
+| Act | **Builder** | Monday 7:43 pm | Open `ci-approved` issues with no PR; approved "continue to phase N?" issues | Up to 2 draft PRs implementing approved work (large initiatives one phase at a time) + its hub report | Push |
+| Check + identify | **Live QA** | Wednesday 8:23 pm | PRs merged to `main` in the last 8 days; `live-qa` issues | Verification of last week's merges; draft fix PRs; `needs-decision` issues; a hub report with unconfirmed suspicions | Push |
+| Propose | **Scout** | Thursday 8:41 pm | This week's Live QA hub reports; `live-qa`, `field-*` issues; draft PRs | Up to 5 `ci-idea` issues + a hub report | No |
 | Qualify | **Critic** | Friday 8:13 pm | Unscored `ci-idea` issues; overlap with field and live-qa issues and open PRs | A score comment per idea; the decision-log PR | No |
 | Change | **Field review** (MC Training only) | Saturday 2:37 pm | `field-*` issues; `ci-idea` scores; open PRs | Draft fix PRs, or deferral to the `ci-idea` that fixes the root cause; `needs-decision` issues | Default |
-| Decide | **Digest** | Sunday 8:17 pm | Everything above | One "Weekly Decisions" artifact; refreshes the pinned Agent Control page | Yes — one push |
+| Decide | **Digest** | Sunday 8:17 pm | Everything above | The hub's `weeks/<week>` and `meta/hub` (the Decisions tab) | Yes — one push |
 
 The owner decides Sunday night, the builder turns approvals into draft PRs on
 Monday, and the owner merges early in the week. The next Wednesday's Live QA
@@ -197,7 +197,7 @@ how long, what result would confirm it).
 ## Lenses
 
 The scout rotates its primary lens weekly and records which one it used in
-its artifact, so coverage is even:
+its hub report (`lens`), so coverage is even:
 
 1. **Friction** — taps, steps, dead ends, confusing states during a workout.
 2. **Reliability** — errors, sync failures, data loss risk, offline gaps.
@@ -215,8 +215,8 @@ Body sections, in order:
 - **Problem** — what happens now, for whom, how often (with the number).
 - **Evidence** — sources and numbers; links to issues, runs, or URLs.
 - **Proposal** — the smallest change that tests the idea.
-- **Before / after** — link to the scout artifact card (screenshots live in
-  the private artifact, not on GitHub).
+- **Before / after** — name the hub report (app tab, week) — screenshots
+  live in the private hub, not on GitHub.
 - **Success measure** — the metric, the target, and when to check it.
 - **Risks / open questions** — including anything that needs an owner call.
 
@@ -259,17 +259,38 @@ owner's reason in the owner's own words — owner text is not athlete data).
 Until that PR merges, agents also read the decisions directly from the
 issues, so an unmerged log never causes a re-pitch.
 
-## Reports (every agent that publishes one)
+## Reports — write to the Agent Control hub, never publish a page
 
-Use `report-template.html` in this folder. Load the `artifact-design` skill
-before writing the page, then fill the template — keep its structure so every
-report reads the same way. Publish it as a **private** artifact titled
-`<Agent> — <YYYY-MM-DD>`.
+All agents report to **one** private, pinned artifact, the Agent Control hub:
+`https://claude.ai/artifact/C5FsvJKBKpzbr6XdjRix16`. It has a Decisions tab and
+one tab per app, with a picker for the last 12 weeks. **Do not publish a
+separate artifact for a report.** Write records into the hub's database with
+the `ArtifactData` tool (load it with ToolSearch). Use one `batch` per run.
+Writing to a doc that already exists needs its `if_version`, so `get` it first.
 
-- Screenshots: JPEG, 390 px wide, quality ~70, embedded as data URIs. Keep the
-  page under 8 MB. "Before" = `main`; "after" = the branch or a local
-  prototype that is **not pushed**. Label which.
-- Sections in order: decisions needed, before/after cards, gate and audit
+Week key: ISO week of the run date in America/New_York, e.g. `2026-W45`.
+Agent ids: `builder`, `live-qa`, `scout`, `critic`, `field-review`, `digest`,
+`retro`, `cookbook-checkin`. App ids: `mc`, `cookbook`, `cross`.
+
+| Collection / doc | Written by | Shape |
+|---|---|---|
+| `reports/<week>__<agent>__<app>` | every agent, one per app it covered | `{week, agent, app, generatedAt, status: ok\|warn\|fail, headline, lens?, target?, sections: [{title, items: [{label, url?, status: pass\|fail\|warn\|info, detail?}]}], shots?: [{caption, before?, after?, beforeLabel, afterLabel}]}` |
+| `agents/<agent>` | every agent, at the end of its run | `update` only: `{lastStatus: SUCCEEDED\|FAILED, lastRun, nextRun}` |
+| `weeks/<week>` | digest | `{week, generatedAt, decisions: [{app, ref, url, score, question, recommendation}], prs: [{app, ref, title, url, agent, ci, daysOpen}], approvedNotBuilt: [{app, ref, title, url}], fieldHealth}` |
+| `meta/hub` | digest; any agent escalating | `{updatedAt, needsYou: [{title, detail, links: [{label, url}]}]}` |
+
+- **Screenshots** are assets, not data URIs: upload a JPEG (390 px wide,
+  quality ~70) with `Artifact` publish `asset: true`, `url` = the hub, and
+  store the returned 32-hex id in `shots[].before` / `.after`. "Before" =
+  `main`; "after" = the branch or an unpushed local prototype. Label which.
+  **Cross Household: no screenshots unless they are of the fictional fixture**,
+  and never a figure in any text field.
+- Items go in this order: decisions needed, before/after, gate and audit
   results with exact pass/fail counts, error log summary, what could not be
-  done and why. Omit a section that would be empty.
-- Never paste raw user data into a report; aggregates only.
+  done and why. Leave out a section that would be empty.
+- Never paste raw user data. Aggregates only. Every `url` must be https.
+- **Retention (digest):** delete `reports/*` and `weeks/*` older than 12 weeks,
+  plus the assets their `shots` name (`Artifact` delete with `url` + `path`).
+- The hub is the only report surface. `report-template.html` is kept for a
+  run where the hub can't be written: then publish it once, private, titled
+  `<Agent> — <YYYY-MM-DD>`, and say so in the PR or issue.
