@@ -8,6 +8,40 @@ both.
 
 Change the rules by editing this file in a PR, not by editing the prompts.
 
+## Repos in the cycle
+
+This playbook is canonical for every repo below. Each repo also keeps its own
+`.github/ci-agents/DECISIONS.md`, and agents read the one belonging to the
+repo they are working in.
+
+| Repo | App | Live site | Agents that cover it | Notes |
+|---|---|---|---|---|
+| `mcross2298/4-Weeks-to-Open-` | MC Training | https://mcross2298.github.io/4-Weeks-to-Open-/ | All | Field reports, crash types, Supabase aggregates |
+| `mcross2298/Mikes-Cookbook` | Mike's Cookbook | https://mcross2298.github.io/Mikes-Cookbook/ | Live QA, scout, critic, builder, digest, retro | No field-report pipeline, so the field review skips it |
+
+**Shared caps across repos.** These are per run, not per repo:
+- scout: 5 ideas
+- builder: 2 builds
+- Live QA: 3 PRs
+
+Give each repo at least one slot when it has evidence worth acting on.
+
+**Mike's Cookbook rules** (on top of its own `CLAUDE.md`, which wins):
+- Its gates are the `verify` job in `.github/workflows/pages.yml`. Run every
+  one that applies before a PR. It has no build step beyond
+  `tools/build-sw.py` and `tools/build-data.js`.
+- `mc-bridge.js`, `mc-install.js`, `mc-backup-status.js` and
+  `tools/test-mc-bridge.js` are byte-identical copies of MC Training's, and
+  `tracker-*.js` are generated from it. Never hand-edit them in the
+  cookbook. Change them in 4-Weeks-to-Open- first, regenerate with that
+  repo's `tools/sync-shared-modules.py`, and open the matching cookbook PR.
+  MC Training merges first.
+- Usage evidence is thin: most state is on the device, and only signed-in
+  stores reach Supabase `user_sync`. Aggregate counts only. Most cookbook
+  ideas will be `hypothesis` with a measurement plan, and that is expected.
+- Licensed content and brand terms follow `content-manifest.json`'s
+  `cookbook` section in 4-Weeks-to-Open- (watch "Kelli Cross' Recipes").
+
 ## The pipeline
 
 One weekly cycle, in this order. Each agent reads what the one before it
@@ -19,7 +53,7 @@ produced, so the owner decides once a week with everything in front of them.
 | Check + identify | **Live QA** | Wednesday 8:23 pm | PRs merged to `main` in the last 8 days; `live-qa` issues | Verification of last week's merges; draft fix PRs; `needs-decision` issues; a "Live QA" artifact with unconfirmed suspicions | Push |
 | Propose | **Scout** | Thursday 8:41 pm | The newest "Live QA" artifact; `live-qa`, `field-*` issues; draft PRs | Up to 5 `ci-idea` issues + a "CI Scout" artifact | No |
 | Qualify | **Critic** | Friday 8:13 pm | Unscored `ci-idea` issues; overlap with field and live-qa issues and open PRs | A score comment per idea; the decision-log PR | No |
-| Change | **Field review** | Saturday 2:37 pm | `field-*` issues; `ci-idea` scores; open PRs | Draft fix PRs, or deferral to the `ci-idea` that fixes the root cause; `needs-decision` issues | Default |
+| Change | **Field review** (MC Training only) | Saturday 2:37 pm | `field-*` issues; `ci-idea` scores; open PRs | Draft fix PRs, or deferral to the `ci-idea` that fixes the root cause; `needs-decision` issues | Default |
 | Decide | **Digest** | Sunday 8:17 pm | Everything above | One "Weekly Decisions" artifact; refreshes the pinned Agent Control page | Yes — one push |
 
 The owner decides Sunday night, the builder turns approvals into draft PRs on
