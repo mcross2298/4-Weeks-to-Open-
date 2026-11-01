@@ -10,17 +10,34 @@ Change the rules by editing this file in a PR, not by editing the prompts.
 
 ## The pipeline
 
-| Agent | When (America/New_York) | Produces | Notifies owner |
-|---|---|---|---|
-| **Scout** | Friday 8:41 pm | Up to 5 new `ci-idea` issues + a private "CI Scout" artifact | No |
-| **Critic** | Saturday 9:13 am | A score comment on every unscored `ci-idea`; closes nothing; keeps the decision-log PR current | No |
-| **Digest** | Sunday 8:17 pm | One private "Weekly Decisions" artifact across all agents | Yes — one push |
-| Field review (existing) | Sunday 6:32 pm | Draft fix PRs / `needs-decision` from field reports | — |
-| Live QA (existing) | Wednesday 8:23 pm | Draft fix PRs / `needs-decision` from live testing | Push |
+One weekly cycle, in this order. Each agent reads what the one before it
+produced, so the owner decides once a week with everything in front of them.
+
+| Stage | Agent | When (America/New_York) | Reads first | Produces | Notifies owner |
+|---|---|---|---|---|---|
+| Check + identify | **Live QA** | Wednesday 8:23 pm | PRs merged to `main` in the last 8 days; `live-qa` issues | Verification of last week's merges; draft fix PRs; `needs-decision` issues; a "Live QA" artifact with unconfirmed suspicions | Push |
+| Propose | **Scout** | Thursday 8:41 pm | The newest "Live QA" artifact; `live-qa`, `field-*` issues; draft PRs | Up to 5 `ci-idea` issues + a "CI Scout" artifact | No |
+| Qualify | **Critic** | Friday 8:13 pm | Unscored `ci-idea` issues; overlap with field and live-qa issues and open PRs | A score comment per idea; the decision-log PR | No |
+| Change | **Field review** | Saturday 2:37 pm | `field-*` issues; `ci-idea` scores; open PRs | Draft fix PRs, or deferral to the `ci-idea` that fixes the root cause; `needs-decision` issues | Default |
+| Decide | **Digest** | Sunday 8:17 pm | Everything above | One "Weekly Decisions" artifact; refreshes the pinned Agent Control page | Yes — one push |
+
+The owner decides Sunday night and merges early in the week. The next
+Wednesday's Live QA is the check on what was merged.
+
+Always-on inputs run outside the cycle: `.github/workflows/field-reports.yml`
+(hourly) files field issues and `.github/workflows/live-qa.yml` (nightly)
+files `live-qa` issues.
+
+**Hand-off rules.**
+- A defect already covered by an open PR or a `ci-idea` is linked, never
+  fixed twice.
+- An idea that is the root-cause fix for several field or live-qa issues
+  holds those issues. The field review defers them to the idea until the
+  owner approves it, then may implement the idea itself.
 
 Builders (agents that implement an approved idea) are **phase 2** and do not
-run yet. Until then an approved idea waits for the owner or an interactive
-session.
+run yet. Until then an approved idea waits for the owner, an interactive
+session, or the field review when the idea covers field issues.
 
 ## Hard rules (every agent)
 
