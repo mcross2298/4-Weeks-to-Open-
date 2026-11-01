@@ -197,7 +197,9 @@ how long, what result would confirm it).
 ## Lenses
 
 The scout rotates its primary lens weekly and records which one it used in
-its hub report (`lens`), so coverage is even:
+its hub report (`lens`), so coverage is even. The coverage ledger (Freshness
+rule 4) picks the lens: the least recently used one. The ISO-week-mod-5 order
+below is only the fallback while the ledger is empty.
 
 1. **Friction** — taps, steps, dead ends, confusing states during a workout.
 2. **Reliability** — errors, sync failures, data loss risk, offline gaps.
@@ -259,6 +261,60 @@ owner's reason in the owner's own words — owner text is not athlete data).
 Until that PR merges, agents also read the decisions directly from the
 issues, so an unmerged log never causes a re-pitch.
 
+## Freshness — every report earns its place
+
+A report exists to change what the owner knows or decides. Repeating last
+week is noise. Before writing, **read your own previous report** for the same
+app from the hub (`reports/<last week>__<agent>__<app>`) and your coverage
+ledger, then apply these rules.
+
+**1. The bar for "new".** Report an item only when at least one is true:
+- it was not in your previous report;
+- a number in it moved past a threshold — a gate count changed, a metric
+  moved ≥10% or crossed a budget, a severity or device count rose;
+- it changes what the owner would decide — a new option, a new risk, a
+  recommendation that flipped.
+Everything else is not reported. "Still passing", "no new issues", and
+re-stated context are not findings.
+
+**2. Nothing changed → one line.** If nothing clears the bar, write the
+report with `noChange: true`, `since: "<last week>"` and the headline
+`No change since <last week>`, with no sections. The hub shows it as one line.
+Do not pad it.
+
+**3. Repeats collapse, then escalate.** Give every item a stable `key` (the
+issue or PR URL, or `area:<slug>` for a finding with no issue) and carry
+`firstSeen` (the week it first appeared). An item that is still open but has
+not changed is written with `carried: true` and `weeksOpen` — the hub folds
+these into one "Still open" line per report instead of listing them as news.
+At **3 weeks** open and unchanged, the digest moves it to `meta/hub.needsYou`
+as one forced question — **approve, close, or defer to a named date** — and it
+stops appearing in agent reports until it is answered or the date passes.
+
+**4. Coverage ledger — always the least recently covered ground.** Each agent
+keeps `coverage/<agent>__<app>` in the hub:
+`{areas: {<area>: "<week last covered>"}, outsideIn: "<week>"}`. At the start
+of a run, pick the area with the **oldest** week (never covered = oldest);
+at the end, `update` the ledger with the areas you actually covered. Areas are
+the rows of the "Per-repo QA" table for Live QA, the five lenses for the scout,
+and the playbook's evidence sources for the critic and retro. A deep dive may
+not repeat an area covered in the last 4 weeks unless an escalation or a merged
+change sends you there — say which.
+
+**5. Outside-in, one run in four.** When the ISO week number is divisible by
+4, the scout spends its primary pass **outside the repo**: how comparable apps
+solve the current lens's problems, browser and OS release notes that touch
+PWA features this app uses (service workers, storage, wake lock, push,
+iOS Safari), and new web platform APIs worth adopting. Live QA spends one
+explore slot the same week checking those platform changes against the live
+app. Cite URLs; copy nothing. Record the week in the ledger's `outsideIn`.
+
+**6. The retro audits staleness.** Each month the retro computes, per agent
+and app: **repeat rate** (carried items ÷ all items), **no-change rate**, and
+**ledger spread** (areas covered ÷ areas available, last 30 days). An agent
+with a repeat rate above 40%, or one that covered fewer than half its areas,
+gets a concrete prompt or playbook change proposed in the retro PR.
+
 ## Reports — write to the Agent Control hub, never publish a page
 
 All agents report to **one** private, pinned artifact, the Agent Control hub:
@@ -268,15 +324,18 @@ separate artifact for a report.** Write records into the hub's database with
 the `ArtifactData` tool (load it with ToolSearch). Use one `batch` per run.
 Writing to a doc that already exists needs its `if_version`, so `get` it first.
 
+Every report follows **Freshness** above.
+
 Week key: ISO week of the run date in America/New_York, e.g. `2026-W45`.
 Agent ids: `builder`, `live-qa`, `scout`, `critic`, `field-review`, `digest`,
 `retro`, `cookbook-checkin`. App ids: `mc`, `cookbook`, `cross`.
 
 | Collection / doc | Written by | Shape |
 |---|---|---|
-| `reports/<week>__<agent>__<app>` | every agent, one per app it covered | `{week, agent, app, generatedAt, status: ok\|warn\|fail, headline, lens?, target?, sections: [{title, items: [{label, url?, status: pass\|fail\|warn\|info, detail?}]}], shots?: [{caption, before?, after?, beforeLabel, afterLabel}]}` |
+| `reports/<week>__<agent>__<app>` | every agent, one per app it covered | `{week, agent, app, generatedAt, status: ok\|warn\|fail, headline, noChange?, since?, lens?, target?, sections: [{title, items: [{label, url?, status: pass\|fail\|warn\|info, detail?, key, firstSeen, carried?, weeksOpen?}]}], shots?: [{caption, before?, after?, beforeLabel, afterLabel}]}` |
 | `agents/<agent>` | every agent, at the end of its run | `update` only: `{lastStatus: SUCCEEDED\|FAILED, lastRun, nextRun}` |
 | `weeks/<week>` | digest | `{week, generatedAt, decisions: [{app, ref, url, score, question, recommendation}], prs: [{app, ref, title, url, agent, ci, daysOpen}], approvedNotBuilt: [{app, ref, title, url}], fieldHealth}` |
+| `coverage/<agent>__<app>` | every agent, at the end of its run | `{areas: {<area>: <week>}, outsideIn?}` |
 | `meta/hub` | digest; any agent escalating | `{updatedAt, needsYou: [{title, detail, links: [{label, url}]}]}` |
 
 - **Screenshots** are assets, not data URIs: upload a JPEG (390 px wide,
