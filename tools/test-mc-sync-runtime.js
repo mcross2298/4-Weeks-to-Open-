@@ -68,7 +68,7 @@ function loadModule(throwOnKeys, wip, log, pullRows, opts) {
                 upserted.push(row.store_key);
                 if (opts.upsertShouldFail && opts.upsertShouldFail(row.store_key)) {
                     log.push('upsert-fail:' + row.store_key);
-                    return Promise.resolve({ error: { message: 'simulated failure' } });
+                    return Promise.resolve({ error: { message: opts.failMessage ? opts.failMessage(row.store_key) : 'simulated failure' } });
                 }
                 log.push('upsert:' + row.store_key);
                 return Promise.resolve({ error: null });
@@ -102,9 +102,11 @@ function loadModule(throwOnKeys, wip, log, pullRows, opts) {
         window: win, document: doc, location,
         localStorage, sessionStorage,
         fetch: fetchMock,
+        navigator: { onLine: true },
         setInterval: () => 0, clearInterval() {}, setTimeout, clearTimeout,
         console,
     };
+    if (opts.errlog) win.MC_ERRLOG = { rec: (k, m, x) => opts.errlog.push({ k, m, x }) };
     win.MC_SB = MC_SB;        // module reads window.MC_SB in the early-return guard...
     sandbox.MC_SB = MC_SB;    // ...and bare MC_SB everywhere else (both resolve to `window` in a real page)
     vm.createContext(sandbox);
@@ -261,6 +263,43 @@ function loadModule(throwOnKeys, wip, log, pullRows, opts) {
         const err = M.getLastError();
         ok('S4: a failed push is recorded on getLastError() instead of silently discarded',
             !!(err && err.op === 'push' && err.key === 'mc_workout_log_v1'));
+    }
+
+    // ---- #416: one lost connection is one diagnostics entry, not one per store ----
+    {
+        const log = [], errlog = [];
+        const { M, store, upserted } = loadModule(new Set(), {}, log, [],
+            { upsertShouldFail: () => true, errlog });
+        store['mc_workout_log_v1'] = JSON.stringify([{ id: 'w1', ts: 1 }]);
+        store['mc_body_v1'] = JSON.stringify([{ id: 'b1' }]);
+        store['mc_macros_v1'] = JSON.stringify({ goals: {} });
+        store['mc_setlog_v1'] = JSON.stringify({ 'p|bench': [{ d: '2026-11-01', sets: {} }], 'q|row': [{ d: '2026-11-01', sets: {} }] });
+        await flush();
+        ok('#416: the push really did fail on several stores (fixture check)', upserted.length >= 4);
+        ok('#416: a push that fails on every store records exactly 1 entry', errlog.length === 1);
+        ok('#416: the entry is kind network', errlog[0] && errlog[0].k === 'network');
+        ok('#416: the message names no store key, so the fingerprint is stable',
+            errlog[0] && errlog[0].m === 'Sync push failed: simulated failure');
+        ok('#416: the store keys stay available in the stack field',
+            !!(errlog[0] && /mc_workout_log_v1/.test(errlog[0].x) && /mc_body_v1/.test(errlog[0].x)));
+        ok('#416: the stack field says how many stores failed',
+            !!(errlog[0] && errlog[0].x.indexOf(upserted.length + ' stores: ') === 0));
+        ok('#416: getLastError() still names a store', !!(M.getLastError() && M.getLastError().key));
+        await M.push();
+        ok('#416: a retry inside 30 minutes records nothing new', errlog.length === 1);
+    }
+
+    // ---- #416: a different failure in the same cycle is its own entry ----
+    {
+        const errlog = [];
+        const { store } = loadModule(new Set(), {}, [], [], {
+            upsertShouldFail: k => k === 'mc_workout_log_v1' || k === 'mc_body_v1', errlog,
+            failMessage: k => (k === 'mc_body_v1' ? 'permission denied' : 'Load failed')
+        });
+        store['mc_workout_log_v1'] = JSON.stringify([{ id: 'w1', ts: 1 }]);
+        store['mc_body_v1'] = JSON.stringify([{ id: 'b1' }]);
+        await flush();
+        ok('#416: two distinct messages stay two entries', errlog.length === 2);
     }
 
     // ---- S5 (partial): reconnecting retries immediately, not on the next
