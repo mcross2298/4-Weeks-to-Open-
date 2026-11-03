@@ -319,6 +319,15 @@ jobs:
           pip install --quiet pytest "psycopg[binary]"
           pytest tests/test_rls.py -q
 
+      - name: Ops signals migration, executed (#421)
+        # TEST 5 above reads the live database, so it cannot see a migration
+        # the owner has not applied yet. This runs the real SQL file in PGlite,
+        # a real Postgres, so RLS, grants and the trigger are tested with no
+        # credential. Pinned; bump it here and nowhere else.
+        run: |
+          npm install --no-save --prefix /tmp/pg-ci @electric-sql/pglite@0.2.17
+          NODE_PATH=/tmp/pg-ci/node_modules node tools/test-ops-signals.js
+
       - name: Gesture contract (overscroll-behavior + touch-action — findings U1/U3)
         # A source check, like check-topbar-inset.js below — a real Android
         # pull-to-refresh or the native double-tap-to-zoom timer can't be

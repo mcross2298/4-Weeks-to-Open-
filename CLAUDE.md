@@ -92,6 +92,7 @@ node tools/test-mc-archive.js          # workouts past the newest 200 are archiv
 node tools/test-mc-error-beacon.js     # field errors sent once, signed-in only, spaced, trimmed (E / D-35)
 node tools/test-mc-report.js           # Report a problem: queued first, only accepted rows leave, fingerprints match the beacon (FB1)
 node tools/test-field-reports-sync.js  # report/crash -> redacted GitHub issue, de-duplicated; labels/PRs/close -> status (FB2, FB5)
+NODE_PATH=... node tools/test-ops-signals.js   # phase18 SQL executed in PGlite: producer, RLS, grants, cascade (#421); needs @electric-sql/pglite
 node tools/test-mc-program-progress.js # per-program day model (continuous days, rest-as-data)
 node tools/test-mc-program-tabs.js     # program-landing list model (adaptive depth, day numbers)
 node tools/test-mc-sw.js               # service-worker fetch strategy (L1, L3, L4, L5)
@@ -2793,6 +2794,21 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   wants set numbers must not assume every key is an integer: use
 >   `parseInt`/`parseFloat`, or skip `@` slots the way `mc-suggest.js` does.
 >   `mergeSetlog()` splits two devices' different weeks into slots the same way.
+
+> **Companion ops plan:** [`ops-signals-roadmap.md`](ops-signals-roadmap.md)
+> (opened 2026-11-02, issue #421, `O1`–`O3`) gives the apps a shared event log,
+> starting with training. Each phase keeps its own check-in. Scratch-listed.
+>
+> **`O1` written (2026-11-02); the owner applies the SQL.** Three things to know:
+> - **`supabase/phase18-ops-signals.sql` is not applied until the owner runs it.**
+>   `tests/test_rls.py` skips the ops tables by name until then. The file is
+>   tested without a credential by `tools/test-ops-signals.js`, which executes
+>   it in PGlite, a real Postgres.
+> - **The trigger on `workout_logs` must never fail a set.** Its failure becomes
+>   a warning. Keep the inner `exception` block if you edit it.
+> - **No client writes these tables,** and an event carries ids only, no load.
+
+---
 
 ---
 
