@@ -8,12 +8,12 @@
      mc-finish.js @ line 1183
      mc-supabase.js @ line 2212
      mc-sync.js @ line 3229
-     mc-biometric.js @ line 4352
-     program-overrides.js @ line 4456
-     mc-hints.js @ line 5435
-     mc-card-actions.js @ line 5563
-     program-manager.js @ line 6732
-     mc-live-tracker.js @ line 8610
+     mc-biometric.js @ line 4380
+     program-overrides.js @ line 4484
+     mc-hints.js @ line 5463
+     mc-card-actions.js @ line 5591
+     program-manager.js @ line 6760
+     mc-live-tracker.js @ line 8638
 */
 
 /* ---- mc-replace.js ---- */
@@ -3464,16 +3464,37 @@ try {
   // the exact D-20 trap mc-sw-update.js's update check fell into. A function
   // declaration holding its state on itself, not a module-level var: this
   // file's Node export hook runs before any var initialiser (Phase 5.1).
-  function netErr(err) {
+  //
+  // #416: the signature carries no store key, because one lost connection
+  // fails every store in the same push. On 2026-10-28 one such push recorded
+  // 20 entries within 2 ms, filled the whole buffer and filed 20 issues, since
+  // the fingerprint hashes the message. A push now reports once per distinct
+  // message (pushFailed() below), and the store keys go in `detail`, which is
+  // the entry's stack field. The fingerprint never reads that field, so the
+  // same fault gives the same fingerprint however many stores it hit.
+  function netErr(err, detail) {
     try {
       if (typeof window === 'undefined' || !window.MC_ERRLOG) return err;
       if ('onLine' in navigator && !navigator.onLine) return err;
-      var sig = err.op + '|' + (err.key || '') + '|' + err.message, seen = netErr.seen || (netErr.seen = {});
+      var sig = err.op + '|' + err.message, seen = netErr.seen || (netErr.seen = {});
       if (seen[sig] && err.at - seen[sig] < 30 * 60 * 1000) return err;
       seen[sig] = err.at;
-      window.MC_ERRLOG.rec('network', 'Sync ' + err.op + ' failed' + (err.key ? ' (' + err.key + ')' : '') + ': ' + err.message);
+      window.MC_ERRLOG.rec('network', 'Sync ' + err.op + ' failed: ' + err.message, detail);
     } catch (e) {}
     return err;
+  }
+  // One push cycle's failures, grouped by message. lastError keeps the per-key
+  // record it always had (status() reads it); only the diagnostics entry is
+  // collapsed.
+  function pushFailed(failed) {
+    var byMessage = {};
+    failed.forEach(function (f) { (byMessage[f.message] = byMessage[f.message] || []).push(f); });
+    Object.keys(byMessage).forEach(function (m) {
+      var group = byMessage[m];
+      netErr({ op: 'push', message: m, at: group[0].at },
+        group.length + (group.length === 1 ? ' store: ' : ' stores: ') +
+        group.map(function (f) { return f.key; }).join(', '));
+    });
   }
   // S3: the current session's access token, kept in sync via
   // onAuthStateChange below. Needed synchronously (no await) by the
@@ -4087,7 +4108,7 @@ try {
 
   function push() {
     if (!client || !user) return Promise.resolve();   // S4: user can go null (SIGNED_OUT) mid-session
-    var ops = [];
+    var ops = [], failed = [];
     // K-3.2/A-16: mc_setlog_v1 uploads only the page-group(s) that actually
     // changed, not the whole store. There is deliberately no snapshot[key]
     // (whole-store) entry for this store at all — only snapshot['mc_setlog_v1
@@ -4115,7 +4136,7 @@ try {
           // pushSetlogKey — snapshot only advances on success), so nothing
           // extra is needed for retry; this just makes the failure visible.
           if (!r.error) { snapshot[op.storeKey] = op.json; status.lastPush = Date.now(); }
-          else { lastError = netErr({ op: 'push', key: op.storeKey, message: r.error.message || String(r.error), at: Date.now() }); }
+          else { lastError = { op: 'push', key: op.storeKey, message: r.error.message || String(r.error), at: Date.now() }; failed.push(lastError); }
         }));
       });
     }
@@ -4143,10 +4164,17 @@ try {
         // (retried automatically next push() since snapshot[key] is
         // untouched) instead of discarding it silently.
         if (!r.error) { snapshot[key] = cur; status.lastPush = Date.now(); }
-        else { lastError = netErr({ op: 'push', key: key, message: r.error.message || String(r.error), at: Date.now() }); }
+        else { lastError = { op: 'push', key: key, message: r.error.message || String(r.error), at: Date.now() }; failed.push(lastError); }
       }));
     });
-    return ops.length ? Promise.all(ops) : Promise.resolve();
+    if (!ops.length) return Promise.resolve();
+    return Promise.all(ops).then(function (r) {
+      if (failed.length) pushFailed(failed);
+      return r;
+    }, function (e) {
+      if (failed.length) pushFailed(failed);
+      throw e;
+    });
   }
 
   // S2: same mid-workout signals mc-sw-update.js's workoutInProgress() checks
