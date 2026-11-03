@@ -93,6 +93,7 @@
     }
   },
   "scratch": [
+    "ops-signals-roadmap.md",
     "qa-collision-audit.md",
     "lean-six-sigma-audit.md",
     "icon-maskable.svg",

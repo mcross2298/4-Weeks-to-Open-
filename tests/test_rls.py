@@ -284,3 +284,102 @@ def test_no_override_row_targets_a_licensed_page(anonymous):
         "program_overrides is world-readable and holds edits to licensed pages: "
         + ", ".join(f"{p} ({n})" for p, n in rows)
     )
+
+
+# ---------------------------------------------------------------------------
+# #421 phase 1 — the ops signal tables (supabase/phase18-ops-signals.sql).
+#
+# Agents do not apply migrations, so these tables are absent until the owner
+# runs the file, and this suite runs against the live database. A missing
+# table skips by name rather than failing every PR in the meantime. The file
+# itself is tested with no credential by tools/test-ops-signals.js; these
+# cases are the check on what is actually deployed.
+# ---------------------------------------------------------------------------
+
+OPS_TABLES = ["ops_events", "ops_state", "metric_baselines"]
+
+
+def _require_table(cur, table):
+    cur.execute("select to_regclass(%s)", (f"public.{table}",))
+    if cur.fetchone()[0] is None:
+        pytest.skip(f"{table} not applied yet: run supabase/phase18-ops-signals.sql")
+
+
+@pytest.mark.parametrize("table", OPS_TABLES)
+def test_ops_table_has_rls(service, table):
+    _require_table(service, table)
+    service.execute(
+        "select relrowsecurity from pg_class where oid = %s::regclass",
+        (f"public.{table}",),
+    )
+    assert service.fetchone()[0], f"row-level security is OFF on {table}"
+
+
+@pytest.mark.parametrize("table", OPS_TABLES)
+def test_ops_table_no_cross_user_read(attacker, table):
+    _require_table(attacker, table)
+    attacker.execute(f"select count(*) from public.{table}")
+    assert attacker.fetchone()[0] == 0, f"{table} leaked rows to a non-admin"
+
+
+@pytest.mark.parametrize("table", OPS_TABLES)
+def test_ops_table_closed_to_anonymous(service, table):
+    """No policy for anon, and no grant either: the read must be refused."""
+    _require_table(service, table)
+    service.execute(
+        "select has_table_privilege('anon', %s, 'select')", (f"public.{table}",)
+    )
+    assert service.fetchone()[0] is False, f"anon holds a grant on {table}"
+
+
+@pytest.mark.parametrize("table", OPS_TABLES)
+def test_ops_table_no_client_delete(attacker, table):
+    _require_table(attacker, table)
+    with pytest.raises(psycopg.Error):
+        attacker.execute(f"delete from public.{table}")
+
+
+def test_ops_event_cannot_be_forged(attacker):
+    _require_table(attacker, "ops_events")
+    with pytest.raises(psycopg.Error):
+        attacker.execute(
+            "insert into public.ops_events(source_app, type, idempotency_key) "
+            "values ('training', 'workout.logged', 'forged')"
+        )
+
+
+def test_ops_state_cannot_be_written(attacker):
+    _require_table(attacker, "ops_state")
+    with pytest.raises(psycopg.Error):
+        attacker.execute(
+            "insert into public.ops_state(key, owner_app) values ('forged', 'training')"
+        )
+
+
+def test_ops_baseline_cannot_be_written(attacker):
+    _require_table(attacker, "metric_baselines")
+    with pytest.raises(psycopg.Error):
+        attacker.execute(
+            "insert into public.metric_baselines"
+            "(user_id, metric, window_days, center, spread, n) "
+            "values (%s, 'forged', 7, 0, 0, 0)",
+            (VICTIM,),
+        )
+
+
+def test_ops_producer_is_not_an_rpc(service):
+    _require_table(service, "ops_events")
+    service.execute(
+        "select has_function_privilege('authenticated', "
+        "'public.ops_workout_logged()', 'execute')"
+    )
+    assert service.fetchone()[0] is False
+
+
+def test_ops_trigger_is_installed(service):
+    _require_table(service, "ops_events")
+    service.execute(
+        "select 1 from pg_trigger where tgname = 'ops_workout_logged' "
+        "and tgrelid = 'public.workout_logs'::regclass and not tgisinternal"
+    )
+    assert service.fetchone(), "workout_logs has no ops_workout_logged trigger"
