@@ -220,3 +220,19 @@ so a rest the athlete started by hand is never cancelled.
 and Log workout; tick then untick stops the rest) and LIGHT (six Session
 Complete elements measured in light theme). 10 of the 11 new checks fail on
 the pre-fix tree; the eleventh only asserts the title was found.
+
+## Cycle 3 (2026-W45): a reload lost the athlete's place
+
+Found by the weekly live QA run, against a local `main` (the agent cannot reach
+the live host). **Objective:** a reload mid-session returns to the open day.
+**Scope:** `mc-session.js` and the 23 day-list pages it serves. **Phases:** one.
+
+| Defect | Reach | Root cause |
+|---|---|---|
+| Tap a day, tick a set, reload: the page opens on the day list, on week 1, with the session looking gone. The same happens when iOS drops the PWA between sets and when the dashboard's Resume opens the page. No data is lost, and the rest timer waits until a day is opened. | all 23 F3 pages | `restoreActiveCard()` looks for a card a day list has not built, and `init()` defers until one exists. The place was never stored: the URL holds no day after a tap, and engines start on their first week. Every reload journey used a `?day=` link, which keeps the place in the URL. |
+
+**Fix.** `mc_session_v1` records `view: {day, tab}`, the list row tapped and the
+active week tab. On a day list, `restoreView()` clicks that tab and that row, the
+mechanism S3 already uses. Going back to the list clears `view`, and a link
+naming a day, week or phase wins. **`RELOAD-DAY`** in
+`tools/test-mc-session-durability.js` drives eight pages, entered from the list.

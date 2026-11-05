@@ -52,6 +52,7 @@
                 cannot miss. It must never take a tap and must leave End
                 workout reachable (its first draft covered it; check-journey
                 caught that), and it clears when the rest ends.
+     RELOAD-DAY a reload after tapping into a day returns to that day and week
      DAY-LIST   the same lock when the session is entered the normal way —
                 from the day list, not a ?day= deep link — on all three F3
                 engine families. mc-live-tracker.js returned at load when no
@@ -439,6 +440,41 @@ async function step(name, fn) {
     }
     await c.close();
   });
+
+  // Live QA 2026-W45: every reload check above used a ?day= link, which keeps
+  // the athlete's place in the URL. Tapping in from the list keeps it nowhere,
+  // so a reload dropped the session back on the list and on week 1. One page
+  // per mechanism, on a week past the first where the page has tabs.
+  for (const [pg, tabSel] of [['weeks-to-open.html', '.tabs .tab'], ['mm-p1.html', '.week-selector .wtab'],
+    ['kitchen-sink.html', '.tabs .tab'], ['hv-block.html', '.week-selector .wtab'], ['push-pull-legs.html', '.tabs .tab'],
+    ['2on-1off.html', null], ['legacy-prep.html', null], ['bro-split.html', null]]) {
+    await step('RELOAD-DAY ' + pg, async () => {
+      const c = await ctx(browser, null); const p = await page(c, errs, 'reload-day');
+      await p.goto(BASE + '/' + pg); await sleep(1200);
+      const tabs = tabSel ? await p.locator(tabSel).count() : 0;
+      const tab = tabs > 1 ? 1 : -1;
+      if (tab > 0) { await p.locator(tabSel).nth(tab).click(); await sleep(500); }
+      await p.locator('.day-card .day-header').nth(1).click(); await sleep(900);
+      const name = () => p.evaluate(() => { const n = document.querySelector('.ex-name,.ss-name'); return n ? n.textContent.trim() : null; });
+      const before = await name();
+      const open = p.locator('.mcl-ck:visible');
+      if (!(await open.count())) { await p.locator('.mcl-strip').first().click(); await sleep(400); }
+      await p.locator('.mcl-ck:visible').first().click(); await sleep(900);
+      await p.reload(); await sleep(2500);
+      const after = await p.evaluate((ts) => ({
+        cards: document.querySelectorAll('.ex-card,.ss-card,.ex-item').length,
+        tab: ts ? [...document.querySelectorAll(ts)].findIndex((t) => t.classList.contains('active')) : -1,
+        done: document.querySelectorAll('.mcl-ck.done').length,
+      }), tabSel);
+      check(after.cards > 0 && after.done === 1 && after.tab === tab && (await name()) === before,
+        'RELOAD-DAY ' + pg + ': a reload returns to the open day, on its week, with the tick', JSON.stringify({ before, after, tab }));
+      // Going back to the list on purpose is not undone by the next reload.
+      await p.locator('.mc-day-back').first().click(); await sleep(700);
+      await p.reload(); await sleep(1800);
+      check((await p.locator('.day-card').count()) > 1, 'RELOAD-DAY ' + pg + ': a reload after going back stays on the list');
+      await c.close();
+    });
+  }
 
   for (const pg of ['mm-p1.html', 'kitchen-sink.html', '2on-1off.html']) {
     await step('DAY-LIST ' + pg, async () => {
