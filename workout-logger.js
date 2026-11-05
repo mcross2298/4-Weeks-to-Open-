@@ -6,14 +6,14 @@
      mc-readiness.js @ line 114
      mc-setlog.js @ line 346
      mc-session.js @ line 3732
-     mc-classify.js @ line 4340
-     mc-suggest.js @ line 4476
-     mc-chart.js @ line 5101
-     mc-exercise-trends.js @ line 5388
-     mc-cues-data.js @ line 5647
-     mc-cues.js @ line 5797
-     mc-rep-progress.js @ line 5887
-     mc-superset-hop.js @ line 6034
+     mc-classify.js @ line 4392
+     mc-suggest.js @ line 4528
+     mc-chart.js @ line 5153
+     mc-exercise-trends.js @ line 5440
+     mc-cues-data.js @ line 5699
+     mc-cues.js @ line 5849
+     mc-rep-progress.js @ line 5939
+     mc-superset-hop.js @ line 6086
 */
 
 /* ---- mc-muscle-map.js ---- */
@@ -3921,6 +3921,7 @@ try {
       session.cards = snap.cards;
       session.sets = sets;
       session.activeCard = snap.activeCard;
+      session.view = currentView();
       session.lastTs = Date.now();
       var s = prune(readAll());
       s[PID] = session;
@@ -4150,6 +4151,55 @@ try {
     return true;
   }
 
+  // Live QA 2026-W45: F3 put a day list in front of every multi-day page, so
+  // restoreActiveCard() above stopped reaching the day it reopens. After a
+  // reload, or an iPhone dropping the PWA between sets, the card it looks for
+  // is not in the DOM, and the engines all start on their first week. The
+  // athlete came back to the list on week 1 with no way to tell the session
+  // was alive. So the session also records which week tab and which day row
+  // were open, and the same real-click mechanism walks back to them.
+  //
+  // A list row is only ever known at the moment it is tapped, since day mode
+  // leaves one .day-card in the DOM. Capture phase, so an engine rebuilding
+  // the list in its own handler cannot remove the row first.
+  var TAB_SEL = '.tabs .tab, .week-selector .wtab';
+  var openDayIdx = null;
+  function urlDay() {
+    try {
+      var n = parseInt(new URLSearchParams(location.search).get('day'), 10);
+      return n > 0 ? n - 1 : null;
+    } catch (e) { return null; }
+  }
+  document.addEventListener('click', function (e) {
+    var h = e.target && e.target.closest && e.target.closest('.day-header');
+    if (!h) return;
+    var days = document.querySelectorAll('.day-card');
+    if (days.length < 2) return;                    // day mode: not a list row
+    openDayIdx = Array.prototype.indexOf.call(days, h.closest('.day-card'));
+  }, true);
+  function currentView() {
+    // More than one row means the athlete went back to the list on purpose,
+    // whichever control did it, so a reload should stay there.
+    if (document.querySelectorAll('.day-card').length !== 1) return null;
+    var day = openDayIdx != null ? openDayIdx : urlDay();
+    if (day == null) return null;
+    var tab = -1;
+    Array.prototype.forEach.call(document.querySelectorAll(TAB_SEL), function (t, i) {
+      if (t.classList.contains('active')) tab = i;
+    });
+    return { day: day, tab: tab };
+  }
+  function restoreView() {
+    if (/[?&](day|week|phase)=/.test(location.search)) return;   // the link decides
+    var rec = prune(readAll())[PID];
+    if (!rec || !rec.view || !((rec.sets && rec.sets.length) || rec.timer)) return;
+    var tabs = document.querySelectorAll(TAB_SEL), t = tabs[rec.view.tab];
+    if (t && !t.classList.contains('active')) t.click();
+    var day = document.querySelectorAll('.day-card')[rec.view.day];
+    var header = day && day.querySelector('.day-header');
+    if (header) header.click();
+  }
+
   // VOC-A2: a genuinely fresh visit — no mc_session_v1 record for this page
   // at all, not even an empty one — used to leave every day collapsed and
   // every card resting at its 0/N strip, so reaching the very first loggable
@@ -4250,6 +4300,8 @@ try {
         });
         if (MC_SCAN.start) MC_SCAN.start();
       }
+      restoreView();                                 // cards render, MC_SCAN re-runs init()
+      if (document.querySelector(CARD_SEL)) init();  // rendered synchronously
       return;                                        // not a workout page (yet)
     }
     inited = true;
@@ -4304,7 +4356,7 @@ try {
       var sets = mergedSets(snap.sets);
       if (!snap.cards.length && !sets.length) return;
       if (!session) session = { startedTs: Date.now() };
-      session.cards = snap.cards; session.sets = sets; session.lastTs = Date.now();
+      session.cards = snap.cards; session.sets = sets; session.view = currentView(); session.lastTs = Date.now();
       var st = prune(readAll()); st[PID] = session; writeAll(st);
     });
 
