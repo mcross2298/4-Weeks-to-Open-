@@ -21,4 +21,6 @@ log through its rolling draft PR (`claude/ci-decision-log`).
 - YYYY-MM-DD — #<issue> <title> — APPROVED | REJECTED | DEFERRED — <owner's reason>
 -->
 
-_No decisions yet._
+- 2026-11-03 — #416 CI idea: one network blip files one crash type, not twenty — APPROVED (shipped) — no reason given
+- 2026-11-01 — #421 Initiative: cross-app ops signals — event log, ops state, metric baselines (MC Training first) — APPROVED (owner-filed initiative) — no reason given
+- 2026-11-01 — #414 CI idea: a safe first session back after a long break — APPROVED — no reason given
