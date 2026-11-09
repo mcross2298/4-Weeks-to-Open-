@@ -258,7 +258,21 @@
   // One push cycle's failures, grouped by message. lastError keeps the per-key
   // record it always had (status() reads it); only the diagnostics entry is
   // collapsed.
-  function pushFailed(failed) {
+  //
+  // A push that began, or ended, with the page hidden never reaches
+  // diagnostics (it still sets lastError and is still retried). flush() runs
+  // on visibilitychange -> hidden, and iOS suspends a backgrounded PWA with
+  // that request in flight; on resume the fetch rejects with the browser's
+  // generic `TypeError: Load failed`. That is an app switch, not a fault, and
+  // it is what every field-error issue #388-#407 and #418 was: all ios-pwa,
+  // all `Load failed`. A real, lasting fault also fails the next push made
+  // in the foreground (the periodic timer, focus, online), so it is still
+  // reported there.
+  function pageHidden() {
+    try { return typeof document !== 'undefined' && document.visibilityState === 'hidden'; } catch (e) { return false; }
+  }
+  function pushFailed(failed, startedHidden) {
+    if (startedHidden || pageHidden()) return;
     var byMessage = {};
     failed.forEach(function (f) { (byMessage[f.message] = byMessage[f.message] || []).push(f); });
     Object.keys(byMessage).forEach(function (m) {
@@ -880,7 +894,7 @@
 
   function push() {
     if (!client || !user) return Promise.resolve();   // S4: user can go null (SIGNED_OUT) mid-session
-    var ops = [], failed = [];
+    var ops = [], failed = [], startedHidden = pageHidden();
     // K-3.2/A-16: mc_setlog_v1 uploads only the page-group(s) that actually
     // changed, not the whole store. There is deliberately no snapshot[key]
     // (whole-store) entry for this store at all — only snapshot['mc_setlog_v1
@@ -941,10 +955,10 @@
     });
     if (!ops.length) return Promise.resolve();
     return Promise.all(ops).then(function (r) {
-      if (failed.length) pushFailed(failed);
+      if (failed.length) pushFailed(failed, startedHidden);
       return r;
     }, function (e) {
-      if (failed.length) pushFailed(failed);
+      if (failed.length) pushFailed(failed, startedHidden);
       throw e;
     });
   }
