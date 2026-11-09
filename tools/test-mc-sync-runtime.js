@@ -113,7 +113,7 @@ function loadModule(throwOnKeys, wip, log, pullRows, opts) {
     vm.runInContext(SRC, sandbox, { filename: 'mc-sync.js' });
     return {
         M: sandbox.module.exports,
-        store, upserted, fetchCalls,
+        store, upserted, fetchCalls, doc,
         fireFocus: () => (windowListeners.focus || []).forEach(cb => cb()),
         firePagehide: () => (windowListeners.pagehide || []).forEach(cb => cb()),
         fireOnline: () => (windowListeners.online || []).forEach(cb => cb()),
@@ -300,6 +300,36 @@ function loadModule(throwOnKeys, wip, log, pullRows, opts) {
         store['mc_body_v1'] = JSON.stringify([{ id: 'b1' }]);
         await flush();
         ok('#416: two distinct messages stay two entries', errlog.length === 2);
+    }
+
+    // ---- field-error #388-#407, #418: a push cut off by backgrounding the
+    // app is not a crash. iOS rejects a suspended fetch with `Load failed`. ----
+    {
+        const errlog = [];
+        const { M, store, doc } = loadModule(new Set(), {}, [], [],
+            { upsertShouldFail: () => true, errlog, failMessage: () => 'TypeError: Load failed' });
+        doc.visibilityState = 'hidden';
+        store['mc_workout_log_v1'] = JSON.stringify([{ id: 'w1', ts: 1 }]);
+        await flush();
+        ok('hidden: a push failing while the page is hidden records no diagnostics entry', errlog.length === 0);
+        ok('hidden: getLastError() still records it', !!(M.getLastError() && M.getLastError().op === 'push'));
+        doc.visibilityState = 'visible';
+        await M.push();
+        ok('hidden: the change is retried, and a foreground failure IS recorded', errlog.length === 1);
+    }
+    {
+        // started hidden, rejected after the app came back to the foreground
+        const errlog = [];
+        const { M, store, doc } = loadModule(new Set(), {}, [], [],
+            { upsertShouldFail: () => true, errlog, failMessage: () => 'TypeError: Load failed' });
+        await flush();
+        errlog.length = 0;
+        store['mc_body_v1'] = JSON.stringify([{ id: 'b1' }]);
+        doc.visibilityState = 'hidden';
+        const p = M.push();
+        doc.visibilityState = 'visible';
+        await p;
+        ok('hidden: a push STARTED hidden records nothing even if it fails after resume', errlog.length === 0);
     }
 
     // ---- S5 (partial): reconnecting retries immediately, not on the next
