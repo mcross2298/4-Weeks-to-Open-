@@ -353,6 +353,28 @@ const check = (ok, msg) => { if (ok) { passed++; console.log('  ✓ ' + msg); } 
     check(rows.some(r => r.sel === '.fw-done-title' && r.ratio != null), 'light Session Complete: the title was measured');
     await ctx.close();
   }
+  // The in-app confirm (MC_SHEET) kept dark ink on its primary button while
+  // light theme's --accent turns darker: 3.29:1. Measured on the open sheet,
+  // which check-contrast.js never sees.
+  {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+    await ctx.addInitScript(() => { try { localStorage.setItem('mc_theme_mode', 'light'); } catch (e) {} });
+    const p = await ctx.newPage();
+    await p.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
+    await p.goto(baseUrl + '/kitchen-sink.html?day=1', { waitUntil: 'load' }); await p.waitForTimeout(1000);
+    await p.evaluate(() => { window.MC_SHEET.confirm('Discard this workout?', { ok: 'Discard', cancel: 'Keep' }); });
+    await p.waitForTimeout(400);
+    const ratio = await p.evaluate(() => {
+      const el = document.querySelector('.mcsh-btn.ok');
+      if (!el || !el.offsetParent) return null;
+      const rgb = s => (s.match(/[\d.]+/g) || []).map(Number);
+      const lum = c => { const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; return .2126 * f(c[0]) + .7152 * f(c[1]) + .0722 * f(c[2]); };
+      const a = lum(rgb(getComputedStyle(el).color)), b = lum(rgb(getComputedStyle(el).backgroundColor));
+      return +((Math.max(a, b) + .05) / (Math.min(a, b) + .05)).toFixed(2);
+    });
+    check(ratio != null && ratio >= 4.5, `light confirm sheet OK button: ${ratio}:1 (needs 4.5)`);
+    await ctx.close();
+  }
 
   await browser.close();
   console.log(`\n${passed + failed} checks: ${passed} passed, ${failed} failed`);
