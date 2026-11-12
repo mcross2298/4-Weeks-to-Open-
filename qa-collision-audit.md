@@ -236,3 +236,18 @@ active week tab. On a day list, `restoreView()` clicks that tab and that row, th
 mechanism S3 already uses. Going back to the list clears `view`, and a link
 naming a day, week or phase wins. **`RELOAD-DAY`** in
 `tools/test-mc-session-durability.js` drives eight pages, entered from the list.
+
+## Cycle 4 (2026-W46): light theme over fixed bars and sheets
+
+Found by the weekly live QA run, against a local `main` (the agent cannot reach
+the live host). **Objective:** text on the light theme's bars and sheets reads at
+WCAG AA. **Scope:** three root causes, one draft PR each. **Phases:** one.
+
+| Defect | Reach | Root cause | PR |
+|---|---|---|---|
+| The active week tab reads 1.92:1 (amber) or 2.51:1 (orange) on the cream bar. | `iron-engine.html` and the five `kitchen-sink*.html` pages; `bro-split.html` (1.72:1) and `weeks-to-open.html` (3.76:1) are licensed and left for the owner. | Each page flips `.tabs-bar` to cream in light but keeps the dark theme's bright `.tab.active` ink. The contrast ratchet counted it (budget 1 each) and its one-finding tolerance meant it could never fail on it. | `claude/live-qa-light-week-tabs` |
+| The in-app confirm's primary button reads 3.29:1 in light theme. | Every `MC_SHEET.confirm()` / `.alert()` (End workout, discard, restore). | `.mcsh-btn.ok` keeps dark ink `#1c1a17` while `--accent` flips to the darker light accent. `.fw-confirm` already sets white ink in light. | `claude/live-qa-sheet-ok-ink` |
+| The exercise-progress sheet's empty and single-point text reads 4.0:1, both themes. | Every page with card actions (⋯ → Exercise progress) for a lift with fewer than two sessions. | `.mct-empty` is a hardcoded `#797267` on the sheet's hardcoded `#101010`. | `claude/live-qa-trends-empty-ink` |
+
+Checks: `tools/check-tap-intent.js`'s LIGHT pass, extended per PR. None of these
+is visible to `check-contrast.js`, which measures pages at rest with sheets closed.
