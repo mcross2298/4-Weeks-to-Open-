@@ -271,7 +271,10 @@
         'cursor:pointer;border:1px solid var(--hairline,rgba(255,255,255,0.14));background:transparent;color:inherit;}' +
       '.mcsh-btn.ok{background:var(--accent,#e6c579);color:#1c1a17;border-color:transparent;}' +
       '.mcsh-btn.ok.danger{background:#dc2626;color:#fff;}' +
-      'html[data-theme="light"] .mcsh-card{background:#fffdf8;color:#1c1a17;border-color:rgba(28,26,23,0.12);}';
+      'html[data-theme="light"] .mcsh-card{background:#fffdf8;color:#1c1a17;border-color:rgba(28,26,23,0.12);}' +
+      // Light theme's --accent is the darker #826919, so dark ink on it is
+      // 3.29:1; white is 5.3:1, the same answer base.css gives .fw-confirm.
+      'html[data-theme="light"] .mcsh-btn.ok{color:#fff;}';
     document.head.appendChild(st);
   }
   function dialog(message, opts, withCancel) {
