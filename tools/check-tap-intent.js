@@ -353,6 +353,31 @@ const check = (ok, msg) => { if (ok) { passed++; console.log('  ✓ ' + msg); } 
     check(rows.some(r => r.sel === '.fw-done-title' && r.ratio != null), 'light Session Complete: the title was measured');
     await ctx.close();
   }
+  // The exercise-progress sheet is a hardcoded dark card in both themes; its
+  // empty-state line read 4.0:1. Opened from the card's ⋯ for a lift with no
+  // history, which check-contrast.js (sheets closed) never sees.
+  for (const theme of ['dark', 'light']) {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+    await ctx.addInitScript(t => { try { localStorage.setItem('mc_theme_mode', t); } catch (e) {} }, theme);
+    const p = await ctx.newPage();
+    await p.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
+    await p.goto(baseUrl + '/kitchen-sink.html?day=1', { waitUntil: 'load' }); await p.waitForTimeout(1000);
+    const m = p.locator('.mc-meatball:visible').first();
+    await m.scrollIntoViewIfNeeded(); await m.tap(); await p.waitForTimeout(500);
+    await p.locator('[data-act="trends"]:visible').first().tap(); await p.waitForTimeout(800);
+    const ratio = await p.evaluate(() => {
+      const el = document.querySelector('.mct-overlay.open .mct-empty');
+      if (!el || !el.offsetParent) return null;
+      const rgb = s => (s.match(/[\d.]+/g) || []).map(Number);
+      const lum = c => { const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; return .2126 * f(c[0]) + .7152 * f(c[1]) + .0722 * f(c[2]); };
+      let bg = [255, 255, 255];
+      for (let e = el; e; e = e.parentElement) { const c = rgb(getComputedStyle(e).backgroundColor); if (c.length >= 3 && (c[3] === undefined || c[3] >= 1)) { bg = c; break; } }
+      const a = lum(rgb(getComputedStyle(el).color)), b = lum(bg);
+      return +((Math.max(a, b) + .05) / (Math.min(a, b) + .05)).toFixed(2);
+    });
+    check(ratio != null && ratio >= 4.5, `${theme} exercise-progress sheet empty text: ${ratio}:1 (needs 4.5)`);
+    await ctx.close();
+  }
 
   await browser.close();
   console.log(`\n${passed + failed} checks: ${passed} passed, ${failed} failed`);

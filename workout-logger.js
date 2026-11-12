@@ -10,10 +10,10 @@
      mc-suggest.js @ line 4528
      mc-chart.js @ line 5153
      mc-exercise-trends.js @ line 5440
-     mc-cues-data.js @ line 5699
-     mc-cues.js @ line 5849
-     mc-rep-progress.js @ line 5939
-     mc-superset-hop.js @ line 6086
+     mc-cues-data.js @ line 5700
+     mc-cues.js @ line 5850
+     mc-rep-progress.js @ line 5940
+     mc-superset-hop.js @ line 6087
 */
 
 /* ---- mc-muscle-map.js ---- */
@@ -5582,10 +5582,11 @@ try {
         '-webkit-tap-highlight-color:transparent;}' +
       '.mct-tab.on{color:#fbbf24;border-color:rgba(212,175,55,0.45);background:rgba(212,175,55,0.12);}' +
       '.mct-chart{min-height:120px;}' +
-      '.mct-meta{margin-top:10px;font-size:11px;font-weight:700;color:#797267;text-align:center;}' +
+      // #8a8377 on the sheet's #101010 is 5.07:1; the old #797267 was 4.0:1.
+      '.mct-meta{margin-top:10px;font-size:11px;font-weight:700;color:#8a8377;text-align:center;}' +
       '.mct-cap{margin-top:10px;font-size:11px;font-weight:400;line-height:1.6;color:#a8a196;' +
         'border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;}' +
-      '.mct-empty{padding:28px 0;text-align:center;color:#797267;font-size:13px;font-weight:700;}';
+      '.mct-empty{padding:28px 0;text-align:center;color:#8a8377;font-size:13px;font-weight:700;}';
     document.head.appendChild(st);
   }
 
