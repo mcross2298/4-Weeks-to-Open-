@@ -251,3 +251,18 @@ WCAG AA. **Scope:** three root causes, one draft PR each. **Phases:** one.
 
 Checks: `tools/check-tap-intent.js`'s LIGHT pass, extended per PR. None of these
 is visible to `check-contrast.js`, which measures pages at rest with sheets closed.
+
+## Cycle 5 (2026-W47): the Rolodex leak scan called a 503 a leak
+
+Found by the weekly live QA run, against a local `main` (the agent cannot reach
+the live host). **Objective:** the post-deploy leak scan reports only what it
+measured. **Scope:** `tools/check-deploy-artifact.js`. **Phases:** one.
+
+| Defect | Reach | Root cause | PR |
+|---|---|---|---|
+| The Rolodex deploy for `b50e654` (2026-11-15) failed with 29 scratch and licensed files "reachable", every one with status 503. Nothing was served; Pages was answering 503 to a burst of requests. The deploy stayed red and nothing re-ran it. | `market-deploy.yml`'s `verify-deploy` job, every deploy | The scan treated every status except 404 and a network error as "reachable". So a 5xx was a leak, and a network error counted as absent: a scan that reached nothing would have passed. | `claude/live-qa-deploy-check-503` |
+
+**Fix.** Only a 404 is absent and only a 2xx/3xx is reachable. Anything else is
+retried with backoff and, if it persists, reported as "could not be verified
+absent" (still a failure, worded as one). Check: `tools/test-check-deploy-artifact.js`
+in `verify.yml`.

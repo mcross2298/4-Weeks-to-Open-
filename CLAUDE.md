@@ -150,6 +150,7 @@ node tools/check-log-readers.js        # every parse of mc_workout_log_v1 — an
 node tools/check-workout-log-writers.js # every write to mc_workout_log_v1 goes through mc-log-read.js (flagship readiness R1, D-38/D-24)
 node tools/check-push-chain.js         # the notification opt-in chain is reachable end to end (Phase 1.1)
 node tools/test-mc-push.js             # a subscription made under an old VAPID key is replaced on load (key rotation, 2026-10-26)
+node tools/test-check-deploy-artifact.js # the Rolodex leak scan: only a 404 is absent, a 5xx/network error is retried then 'unverified' (live QA, 2026-11-19)
 node tools/check-docs-currency.js      # the tour renders; every non-licensed program has its guide; module list pinned
 node tools/check-store-coverage.js     # store-registry.json vs mc-sync.js STORES / mc-export.js KEYS
 node tools/check-topbar-inset.js       # sticky .topbar pins at top:0, absorbs the inset as padding, opaque
