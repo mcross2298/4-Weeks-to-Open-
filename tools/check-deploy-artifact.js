@@ -24,14 +24,9 @@
 
 const fs = require('fs');
 const path = require('path');
-const { chromium } = require('playwright');
 
 const argv = process.argv.slice(2);
 const baseUrl = (argv[0] || '').replace(/\/$/, '');
-if (!baseUrl || baseUrl.startsWith('--')) {
-  console.error('usage: node tools/check-deploy-artifact.js <baseUrl> [--timeout-ms N] [--poll-ms N]');
-  process.exit(1);
-}
 function opt(name, dflt) {
   const i = argv.indexOf('--' + name);
   return i === -1 || i === argv.length - 1 ? dflt : argv[i + 1];
@@ -62,6 +57,30 @@ async function fetchStatus(url) {
   }
 }
 
+// The leak scan asks one question per file: is it served? Only a 404 says
+// no, and only a 2xx/3xx says yes. Anything else — a 5xx, a 429, a network
+// error — answers neither, so it is retried and, if it persists, reported as
+// UNVERIFIED rather than guessed. Before this, a 503 burst from Pages on
+// 2026-11-15 reported 29 files as "reachable" (nothing was served), and a
+// network error counted as "confirmed absent", which passed a scan that had
+// checked nothing.
+function absenceVerdict(status) {
+  if (status === 404) return 'absent';
+  if (status !== null && status >= 200 && status < 400) return 'reachable';
+  return 'unknown';
+}
+
+async function checkAbsent(url, { attempts = 4, backoffMs = 2000, fetchStatusFn = fetchStatus } = {}) {
+  let status = null;
+  for (let i = 0; i < attempts; i++) {
+    status = await fetchStatusFn(url);
+    const v = absenceVerdict(status);
+    if (v !== 'unknown') return { verdict: v, status };
+    if (i < attempts - 1) await new Promise((r) => setTimeout(r, backoffMs * 2 ** i));
+  }
+  return { verdict: 'unknown', status };
+}
+
 async function waitUntilLive(url, timeoutMs, pollMs) {
   const deadline = Date.now() + timeoutMs;
   let last = null;
@@ -76,6 +95,11 @@ async function waitUntilLive(url, timeoutMs, pollMs) {
 }
 
 async function main() {
+  if (!baseUrl || baseUrl.startsWith('--')) {
+    console.error('usage: node tools/check-deploy-artifact.js <baseUrl> [--timeout-ms N] [--poll-ms N]');
+    process.exit(1);
+  }
+  const { chromium } = require('playwright');
   const failures = [];
   const dashboardUrl = baseUrl + '/dashboard.html';
 
@@ -130,9 +154,11 @@ async function main() {
   const mustBeAbsent = [...new Set([...SCRATCH, ...LICENSED])]
     .filter((f) => !f.includes('/') && !REGENERATED_BY_EXTRACT.has(f));
   for (const f of mustBeAbsent) {
-    const status = await fetchStatus(baseUrl + '/' + f);
-    if (status !== 404 && status !== null) {
+    const { verdict, status } = await checkAbsent(baseUrl + '/' + f);
+    if (verdict === 'reachable') {
       failures.push(`${f} is reachable on the live Rolodex site (status ${status}) — should be scratch/licensed-excluded`);
+    } else if (verdict === 'unknown') {
+      failures.push(`${f} could not be verified absent: the live site kept answering ${status === null ? 'with a network error' : status} after retries — re-run this job`);
     }
   }
 
@@ -144,7 +170,11 @@ async function main() {
   console.log(`\nOK — shell boots clean, ${mustBeAbsent.length} scratch/licensed files confirmed unreachable, precache sample resolves.`);
 }
 
-main().catch((e) => {
-  console.error('check-deploy-artifact.js crashed: ' + (e && e.stack || e));
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((e) => {
+    console.error('check-deploy-artifact.js crashed: ' + (e && e.stack || e));
+    process.exit(1);
+  });
+}
+
+module.exports = { absenceVerdict, checkAbsent };

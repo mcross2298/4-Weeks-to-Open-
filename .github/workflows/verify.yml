@@ -438,6 +438,9 @@ jobs:
       - name: Push subscription key rotation (mc-push.js migrate)
         run: node tools/test-mc-push.js
 
+      - name: Rolodex leak-scan verdicts (check-deploy-artifact.js — a 5xx is not a leak, a network error is not absence)
+        run: node tools/test-check-deploy-artifact.js
+
       - name: Documentation-currency check (Quick Tour renders; every program has a guide)
         # CLAUDE.md's Documentation currency rule had NO automated enforcement,
         # and for months CLAUDE.md claimed two gates provided it that have
