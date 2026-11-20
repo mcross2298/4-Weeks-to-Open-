@@ -2809,6 +2809,19 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   a warning. Keep the inner `exception` block if you edit it.
 > - **No client writes these tables,** and an event carries ids only, no load.
 
+> **12-Week Boxing Camp shipped (2026-11-20) — [`boxing-camp-roadmap.md`](boxing-camp-roadmap.md).**
+> It is a "Fight Camp" routine on the Conditioning tab (`boxing-camp.html`).
+> Things to know before you change it:
+> - **The data is `boxing-camp-data.js` (`MC_BOXING_CAMP`).** A heavy-bag
+>   round lists only what it ADDS (or `same:N`); "carried over" is derived by
+>   `roundCombos()`. Never write a round's full list by hand.
+>   `tools/test-boxing-camp-data.js` holds the data to the brief.
+> - **The engine is `boxing-camp.js`**, the same Countdown / CountUp shape as
+>   `boxing-routine.html`. It has no `protocol`, so it has no guided-timer link.
+>   The page is dark-locked, and its CSS (`boxing-camp.css`) uses tokens only.
+> - The last phase opened is stored in `mc_boxing_camp_v1`, on this device
+>   only. `?phase=N` deep-links to a phase.
+
 ---
 
 ---

@@ -238,7 +238,7 @@
       steps:[
         {tx:"<span class='tap'>📚 Exercise Library</span> — search & filter every exercise by muscle group."},
         {tx:"<span class='tap'>📋 Program Guide</span> — methodology, set styles & rep ranges per program."},
-        {tx:"<span class='tap'>🔥 Conditioning</span> tab — cardio & core to finish a lift or run standalone."}
+        {tx:"<span class='tap'>🔥 Conditioning</span> tab — cardio & core to finish a lift or run standalone. Under <b>Fight Camp</b>, the <b>12-Week Boxing Camp</b> has three phases. Its heavy-bag combos are short number chips (1 = Jab, 2 = Cross…) with the new ones marked, and the round you're on shows its combos right under the timer."}
       ],
       cta:{ico:'📚',label:'Try it now',name:'Open the Exercise Library',href:'exercise-library.html'}
     },

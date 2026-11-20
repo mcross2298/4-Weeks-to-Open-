@@ -93,6 +93,7 @@
     }
   },
   "scratch": [
+    "boxing-camp-roadmap.md",
     "ops-signals-roadmap.md",
     "qa-collision-audit.md",
     "lean-six-sigma-audit.md",
