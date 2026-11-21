@@ -41,6 +41,7 @@ function run(opts) {
     const sess = Object.assign({}, opts.sessionStorage || {});
     let redirected = null;
     const listeners = {};
+    const attrs = {};
     const win = {
         navigator: { standalone: !!opts.standalone },
         matchMedia: () => ({ matches: !!opts.standaloneMedia }),
@@ -51,13 +52,13 @@ function run(opts) {
         sessionStorage: { getItem: k => (k in sess ? sess[k] : null), setItem: (k, v) => { sess[k] = v; } },
         localStorage: { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = v; } },
         location: { pathname: opts.pathname || '/mm-p1.html', replace: url => { redirected = url; } },
-        document: { documentElement: { getAttribute: () => null, setAttribute: () => {} }, querySelector: () => null },
+        document: { documentElement: { getAttribute: () => null, setAttribute: (k, v) => { attrs[k] = v; } }, querySelector: () => null },
         Date, JSON, Array,
     };
     vm.createContext(sandbox);
     vm.runInContext(SRC, sandbox, { filename: 'mm-p1.html head boot' });
     return {
-        redirected, store,
+        redirected, store, attrs,
         fireError: ev => (listeners.error || []).forEach(cb => cb(ev)),
         fireRejection: ev => (listeners.unhandledrejection || []).forEach(cb => cb(ev)),
     };
@@ -103,6 +104,21 @@ assert(run({ standalone: true, sessionStorage: { mc_launched: '1' } }).redirecte
 // pre-existing behaviour, still exercised here as a regression net).
 assert(run({ standalone: true, pathname: '/dashboard.html' }).redirected === null,
     'G: dashboard.html itself is never redirected to itself');
+
+// ---- SP3: display choices applied before first paint ------------------
+{
+    const on = run({ localStorage: { mc_personal_theme_v1: JSON.stringify({ density: 'compact', motion: 'off', text: 'large' }) } }).attrs;
+    assert(on['data-density'] === 'compact' && on['data-motion'] === 'off' && on['data-text'] === 'large',
+        'SP3a: saved density, motion and text size are set on <html> before paint');
+    const none = run({}).attrs;
+    assert(!('data-density' in none) && !('data-motion' in none) && !('data-text' in none),
+        'SP3b: nothing saved, nothing set');
+    const junk = run({ localStorage: { mc_personal_theme_v1: JSON.stringify({ density: 'huge', motion: 'subtle', text: '<b>' }) } }).attrs;
+    assert(!('data-density' in junk) && !('data-motion' in junk) && !('data-text' in junk),
+        'SP3c: unknown values are ignored');
+    const broken = run({ localStorage: { mc_personal_theme_v1: '{not json' } });
+    assert(broken.redirected === null && !('data-text' in broken.attrs), 'SP3d: a corrupt store does not throw or set anything');
+}
 
 // ---- S6: error / unhandledrejection capture --------------------------
 {

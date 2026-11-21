@@ -1241,7 +1241,7 @@ try {
     if (!t.unit.classList.contains('active')) setActiveCard(t.unit);
     var target = t.row || t.unit;
     try {
-      var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var reduced = document.documentElement.getAttribute('data-motion') === 'off' || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
       target.scrollIntoView(reduced ? { block: 'center' } : { behavior: 'smooth', block: 'center' });
     } catch (e) {}
     var ck = t.row && t.row.querySelector('.mcl-ck');
@@ -2237,7 +2237,7 @@ try {
         if (!next) { setCollapsed(card, true); return; }
         setActiveCard(next);
         try {
-          var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+          var reduced = document.documentElement.getAttribute('data-motion') === 'off' || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
           next.scrollIntoView(reduced ? { block: 'nearest' } : { behavior: 'smooth', block: 'nearest' });
         } catch (e) {}
       }, 600);
