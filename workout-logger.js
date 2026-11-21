@@ -5,15 +5,15 @@
      mc-muscle-map.js @ line 21
      mc-readiness.js @ line 114
      mc-setlog.js @ line 346
-     mc-session.js @ line 3732
-     mc-classify.js @ line 4392
-     mc-suggest.js @ line 4528
-     mc-chart.js @ line 5153
-     mc-exercise-trends.js @ line 5440
-     mc-cues-data.js @ line 5700
-     mc-cues.js @ line 5850
-     mc-rep-progress.js @ line 5940
-     mc-superset-hop.js @ line 6087
+     mc-session.js @ line 3734
+     mc-classify.js @ line 4394
+     mc-suggest.js @ line 4530
+     mc-chart.js @ line 5155
+     mc-exercise-trends.js @ line 5442
+     mc-cues-data.js @ line 5702
+     mc-cues.js @ line 5852
+     mc-rep-progress.js @ line 5942
+     mc-superset-hop.js @ line 6089
 */
 
 /* ---- mc-muscle-map.js ---- */
@@ -2088,6 +2088,7 @@ try {
         // R3 residual: if this write has to wait for a signal, the replay
         // sends the push the in-session check (prCheck(), local history) found.
         var offlinePush = pr ? {
+          type: 'pr',
           title: '\uD83C\uDFC6 New PR \u2014 ' + exName,
           body: pr.w + ' lb, up from ' + pr.prev + ' lb. That is +' +
                 Math.round(pr.w - pr.prev) + ' on your best.'
@@ -2109,6 +2110,7 @@ try {
               // nothing; the number it BEAT is the part worth reading on a
               // lock screen, and it is already in hand here.
               MC_SB.sendPush({
+                type: 'pr',
                 title: '🏆 New PR — ' + exName,
                 body: wNum + ' lb, up from ' + prevMax + ' lb. That is +' +
                       Math.round(wNum - prevMax) + ' on your best.'

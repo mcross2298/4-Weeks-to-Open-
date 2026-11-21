@@ -3045,7 +3045,7 @@ try {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + session.access_token
           },
-          body: JSON.stringify({ title: opts.title || 'MC Training', body: opts.body || '' })
+          body: JSON.stringify({ title: opts.title || 'MC Training', body: opts.body || '', type: opts.type || undefined })
         }).then(function (res) {
           if (!res.ok) throw new Error('push-notify failed: ' + res.status);
           return res.json();

@@ -225,6 +225,7 @@ const KNOWN_MODULES = [
   'mc-program-tabs.js',
   'mc-pump-engine.js',
   'mc-push.js',
+  'mc-push-route.js',
   'mc-quick-pump.js',
   'mc-readiness-brief.js',
   'mc-readiness.js',

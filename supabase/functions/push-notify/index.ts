@@ -23,6 +23,7 @@ const VAPID_PRIVATE = Deno.env.get("VAPID_PRIVATE_KEY") ?? "";
 const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT")     ?? "mailto:noreply@example.com";
 const SB_URL        = Deno.env.get("SUPABASE_URL")!;
 const SB_SERVICE    = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const PUSH_TYPES = ["pr", "checkin", "streak"];
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -43,10 +44,14 @@ Deno.serve(async (req) => {
   if (authErr || !user) return json({ sent: false, reason: "invalid_token" }, 401);
 
   let title = "MC Training", body = "You have a new milestone!";
+  let type: string | undefined;
   try {
     const payload = await req.json();
     if (payload.title) title = String(payload.title).slice(0, 100);
     if (payload.body)  body  = String(payload.body).slice(0, 200);
+    // SP1: the service worker routes a tap by type (mc-push-route.js). Only
+    // a known type is forwarded, so a client cannot steer the tap elsewhere.
+    if (PUSH_TYPES.includes(payload.type)) type = payload.type;
   } catch (_) { /* use defaults */ }
 
   // Look up the user's push subscription
@@ -70,7 +75,7 @@ Deno.serve(async (req) => {
   try {
     await webpush.sendNotification(
       { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-      JSON.stringify({ title, body, icon: "./icon.svg", badge: "./icon.svg" })
+      JSON.stringify({ title, body, type, icon: "./icon.svg", badge: "./icon.svg" })
     );
     return json({ sent: true });
   } catch (err: any) {
