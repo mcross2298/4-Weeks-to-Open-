@@ -2848,8 +2848,9 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   `mc-theme.js` on purpose. Code that checks reduced motion in JS must read
 >   `data-motion="off"` as well as the media query.
 > - **Larger text is the `--fs-*` scale, ~15% up.** It reaches only
->   token-sized text: 33% of History, 100% of Settings. A px literal never
->   grows.
+>   token-sized text. A px literal never grows. History and workout detail are
+>   fully tokenized; the bottom-nav label reads `--fs-nav`, which Larger text
+>   deliberately leaves at 11px so five labels still fit a phone-width bar.
 >
 > **`SP4` shipped (2026-11-21) — a made-up athlete, and the roadmap is closed.**
 > Things to know:

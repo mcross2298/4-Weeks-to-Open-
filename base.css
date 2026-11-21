@@ -148,6 +148,9 @@
      ~36-38px. Premium reads from a WIDER dynamic range — 10px micro-labels
      against a 38px display size — not from a larger middle. */
   --fs-display: 38px; /* program name / landing display title */
+  /* The bottom-nav label. Deliberately NOT stepped by Larger text: five
+     labels share one phone-width bar, and a larger size cuts them off. */
+  --fs-nav: 11px;
 
   /* ── WEIGHT SCALE (L1 Phase B; extended P1) ─────────────────────────
      The app had NO light type weight. Measured across every stylesheet:
