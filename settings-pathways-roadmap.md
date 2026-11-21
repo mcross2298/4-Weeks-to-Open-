@@ -95,6 +95,16 @@ covers the phone it was made on.
   Modality Matrix day, 68% on Kitchen Sink, 56% on Home and **33% on
   History**; the rest is written as px literals and does not move. No page
   overflowed. Tokenizing those literals is its own change.
+  **History and workout detail, done (2026-11-21).** The 33% was measured on
+  an empty History; with the made-up athlete loaded it was **3%** (6 of 200
+  text runs) and workout detail 12%. All 50 `font-size` literals on the two
+  pages are now tokens — exact at today's size (19/22/26px became
+  `calc(var(--fs-…) + Npx)`), so default-size rendering is identical, checked
+  element by element. Larger text now reaches every text run on both pages
+  except the bottom-nav labels, on purpose: five labels share a phone-width
+  bar and grew into being cut off at 320px, so they read a new fixed
+  `--fs-nav` (11px) that Larger text does not step. "Conditioning" is already
+  cut off at default on 320–360px screens; that is older and unchanged.
 - **Larger text with Compact** first came out *smaller* than default (an
   exercise name went 15px → 13.9px, because compact multiplies by 0.82).
   Together they now use a 0.9 density, so text never ends below default.
