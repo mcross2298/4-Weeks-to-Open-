@@ -76,16 +76,32 @@ Not done: a sync on the Settings page itself. It does not load `mc-sync.js`
 reaches the account the next time Home syncs. Until then the client check
 covers the phone it was made on.
 
-## `SP3` — display & accessibility
+## `SP3` — display & accessibility ✅ shipped (2026-11-21)
 
-Note for the check-in: the account sheet already has an Appearance section
-(accent colour and a Default / Compact / Spacious density, `MC_THEME.personal`),
-so SP3 starts by moving that into Settings rather than building density again.
-
-In the Settings hub, per device: density (comfortable / compact), Reduce
-motion (alongside the phone's own setting), and larger text. Tokens only, so
-`check-design-tokens.js` keeps holding; the 48px / 13px session floor is a
-minimum the larger text may only raise.
+- **Appearance moved into Settings** (`#appearance`): Theme (dark/light),
+  Spacing (Default / Compact / Spacious), Text size (Default / Larger),
+  Accent colour, and **Reduce motion**. Staged with Save changes like the
+  rest of the page. The account sheet's Appearance section is gone.
+- **The choices now reach every page.** They lived in `mc-theme.js`, which
+  only 14 of 145 pages load, so a density chosen on Home never reached a
+  workout. The head boot (`tools/apply-head-contract.py`) now reads
+  `mc_personal_theme_v1` before first paint and sets `data-density`,
+  `data-motion="off"` and `data-text="large"` on every page, known values
+  only (`tools/test-head-boot-guard.js` SP3a–d). **Accent stays on the pages
+  that load `mc-theme.js`** (Home, History, Stats, the builders): applying it
+  everywhere would repaint pages that carry a program's own colour.
+- **Larger text** steps the whole `--fs-*` scale up about 15% in `base.css`.
+  Measured at 390px, it reaches 100% of the text on Settings, 78% on a
+  Modality Matrix day, 68% on Kitchen Sink, 56% on Home and **33% on
+  History**; the rest is written as px literals and does not move. No page
+  overflowed. Tokenizing those literals is its own change.
+- **Larger text with Compact** first came out *smaller* than default (an
+  exercise name went 15px → 13.9px, because compact multiplies by 0.82).
+  Together they now use a 0.9 density, so text never ends below default.
+- **Reduce motion** uses `base.css`'s existing `data-motion="off"` rule, and
+  the three smooth scrolls that read only the phone's setting now read the
+  switch too. The rest-over green flash keeps a static wash with motion off,
+  as it already did under the phone's own setting.
 
 ## `SP4` — made-up athlete fixture
 

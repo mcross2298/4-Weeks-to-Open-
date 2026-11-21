@@ -612,7 +612,7 @@
       btn.type='button';btn.id='mcsToTop';btn.className='mcs-totop';
       btn.textContent='\u2191 Back to top';
       btn.addEventListener('click',function(){
-        var smooth=!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+        var smooth=!(document.documentElement.getAttribute('data-motion')==='off'||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches));
         window.scrollTo({top:0,behavior:smooth?'smooth':'auto'});
       });
     }

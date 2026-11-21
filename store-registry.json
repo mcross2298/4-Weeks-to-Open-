@@ -276,7 +276,7 @@
       "storage": "local",
       "sync": false,
       "export": false,
-      "note": "Custom theme values. Device preference, same rule as mc_theme_mode."
+      "note": "Appearance from Settings: accent, density (compact/spacious), motion (off) and text (large). Device preference, same rule as mc_theme_mode. The head boot applies density, motion and text on every page (SP3)."
     },
     "mc_plan_targets_v1": {
       "owner": "mc-suggest.js",
