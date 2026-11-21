@@ -103,9 +103,31 @@ covers the phone it was made on.
   switch too. The rest-over green flash keeps a static wash with motion off,
   as it already did under the phone's own setting.
 
-## `SP4` — made-up athlete fixture
+## `SP4` — made-up athlete fixture ✅ shipped (2026-11-21)
 
-One invented athlete (programs, finished workouts, set log, body and macro
-entries) loaded into `localStorage` before any page script runs, for
-screenshots and the browser gates. A gate fails if any fixture value equals
-real data. No demo mode in the app itself.
+- `tools/fixture-athlete.js` (`athlete(today)`): 12 finished workouts over four
+  weeks across two programs, a bodyweight trend, macro goals with a week of
+  food, and an active program — generated from the date and a fixed seed, so
+  one day always gives the same athlete. Program pages and exercise names are
+  the app's own content; every number is invented.
+- `tools/fixture-harness.js`: loads it into `localStorage` before any page
+  script, blocks the service worker and every outside host, and `openRoute()`
+  refuses a page whose saved log is not the fixture's. From the command line:
+  `node tools/fixture-harness.js <baseUrl> <page> --width 390 --out shot.png`.
+- `tools/check-fixture.js` (CI, static and browser): every fixture key is a
+  declared store, the app's own `MC_LOG` reader returns all 12 workouts with
+  their sets, and Home, History, Stats and Settings render it with no page
+  error and no sideways overflow. Proven to fail on an undeclared store and on
+  a workout with no sets.
+- **Not ported from the finance app: "no fixture value may equal a real one."**
+  That app keeps its household's real figures in its repo; this one keeps
+  none (training lives on the phone and in Supabase), so there is nothing to
+  compare against, and comparing against Supabase from CI would put real data
+  on a test path.
+- **It found a real bug on its first render.** History filed every Strength &
+  Supersets workout under **Individual / Standalone**: programs were matched by
+  id prefix (`ss-…`, `cat-ss…`), but that program is trained on its landing,
+  `cat-strength`. `workout-logs.html` and `workout-detail.html` now also match a
+  program's own `href`; the gate checks History files every fixture workout
+  under a program, and fails on the old code.
+

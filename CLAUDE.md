@@ -155,6 +155,8 @@ node tools/check-docs-currency.js      # the tour renders; every non-licensed pr
 node tools/check-store-coverage.js     # store-registry.json vs mc-sync.js STORES / mc-export.js KEYS
 node tools/check-topbar-inset.js       # sticky .topbar pins at top:0, absorbs the inset as padding, opaque
 node tools/check-design-tokens.js      # font-weight on-scale; radius/size/hex ratchets; no cool dark neutral; no glob-closed CSS comment
+node tools/check-fixture.js [url]      # the made-up athlete: declared stores, MC_LOG reads it, key pages render it (SP4)
+node tools/test-mc-push-route.js       # where a tapped push opens; every sender's type and mute (SP1, SP2)
 python3 tools/build-market.py --check  # no licensed content leaks into the Rolodex build
 ```
 
@@ -2848,6 +2850,17 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 > - **Larger text is the `--fs-*` scale, ~15% up.** It reaches only
 >   token-sized text: 33% of History, 100% of Settings. A px literal never
 >   grows.
+>
+> **`SP4` shipped (2026-11-21) — a made-up athlete, and the roadmap is closed.**
+> Things to know:
+> - **Use `tools/fixture-harness.js` for screenshots and browser gates that
+>   need a trained athlete** (`fixtureContext()` + `openRoute()`, or the CLI).
+>   It loads `tools/fixture-athlete.js` before any script and refuses a page
+>   whose saved log is not the fixture's. `tools/check-fixture.js` runs in CI;
+>   a store the fixture writes must be in `store-registry.json`.
+> - **History and workout detail match a program by its `href` too**, because
+>   Strength & Supersets is trained on its landing (`cat-strength`), which no id
+>   prefix matches. Before this, all of its workouts showed as standalone.
 
 > **12-Week Boxing Camp shipped (2026-11-20) — [`boxing-camp-roadmap.md`](boxing-camp-roadmap.md).**
 > It is a "Fight Camp" routine on the Conditioning tab (`boxing-camp.html`).
