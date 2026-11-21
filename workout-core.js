@@ -8,12 +8,12 @@
      mc-finish.js @ line 1183
      mc-supabase.js @ line 2212
      mc-sync.js @ line 3229
-     mc-biometric.js @ line 4394
-     program-overrides.js @ line 4498
-     mc-hints.js @ line 5477
-     mc-card-actions.js @ line 5605
-     program-manager.js @ line 6774
-     mc-live-tracker.js @ line 8652
+     mc-biometric.js @ line 4395
+     program-overrides.js @ line 4499
+     mc-hints.js @ line 5478
+     mc-card-actions.js @ line 5606
+     program-manager.js @ line 6775
+     mc-live-tracker.js @ line 8653
 */
 
 /* ---- mc-replace.js ---- */
@@ -4076,7 +4076,8 @@ try {
           // overflow to the archive. Without it (a page that never loads that
           // file) the log just stays longer until the next page that does.
           if (wrote && strategy === 'workoutLog' && window.MC_LOG && window.MC_LOG.rollover) {
-            try { window.MC_LOG.rollover(); } catch (e) {}
+            try { window.MC_LOG.rollover(); }
+            catch (e) { try { if (window.MC_ERRLOG) window.MC_ERRLOG.rec('storage', 'workout archive rollover failed: ' + ((e && e.message) || e)); } catch (_) {} }
           }
           if (readRaw(key) !== before) pulledChange = true;
           if (wrote) snapshot[key] = remote != null ? JSON.stringify(remote) : null;

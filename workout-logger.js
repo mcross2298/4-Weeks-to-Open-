@@ -5,15 +5,15 @@
      mc-muscle-map.js @ line 21
      mc-readiness.js @ line 114
      mc-setlog.js @ line 346
-     mc-session.js @ line 3734
-     mc-classify.js @ line 4394
-     mc-suggest.js @ line 4530
-     mc-chart.js @ line 5155
-     mc-exercise-trends.js @ line 5442
-     mc-cues-data.js @ line 5702
-     mc-cues.js @ line 5852
-     mc-rep-progress.js @ line 5942
-     mc-superset-hop.js @ line 6089
+     mc-session.js @ line 3737
+     mc-classify.js @ line 4397
+     mc-suggest.js @ line 4533
+     mc-chart.js @ line 5158
+     mc-exercise-trends.js @ line 5445
+     mc-cues-data.js @ line 5705
+     mc-cues.js @ line 5855
+     mc-rep-progress.js @ line 5945
+     mc-superset-hop.js @ line 6092
 */
 
 /* ---- mc-muscle-map.js ---- */
@@ -3470,7 +3470,10 @@ try {
                                     // lose their write either.
   };
   // T2.2: put back any tick the last page load lost to a hard kill.
-  try { replayJournal(); } catch (e) {}
+  // A failure here means crash recovery is off for this load, which nobody
+  // would otherwise ever learn; recorded for Diagnostics (council audit cleanup).
+  try { replayJournal(); }
+  catch (e) { try { if (window.MC_ERRLOG) window.MC_ERRLOG.rec('storage', 'set-log journal replay failed: ' + ((e && e.message) || e)); } catch (_) {} }
 
 
   // ---- FIX-01, second half: notice a write from another tab ---------------

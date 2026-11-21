@@ -337,8 +337,19 @@
       name: built.name, created: now, publishedAt: now,
       program: '', collection: '', exercises: built.exercises
     };
+    if (!Array.isArray(all)) all = [];
     all.unshift(wk);
-    try { localStorage.setItem(CW_KEY, JSON.stringify(all)); } catch (e) {}
+    // Council audit cleanup: on a full device the write used to fail silently
+    // and run-workout.html then opened on an id that was never saved -- a
+    // "workout not found" screen with no reason. Stay here and say why.
+    var v = JSON.stringify(all), saved;
+    if (window.MC_LOG && typeof window.MC_LOG.writeStore === 'function') saved = window.MC_LOG.writeStore(CW_KEY, v);
+    else { try { localStorage.setItem(CW_KEY, v); saved = true; } catch (e) { saved = false; } }
+    if (!saved) {
+      var msg = 'Quick Pump could not save this workout \u2014 this device is out of storage space.';
+      if (window.MC_SHEET && MC_SHEET.alert) MC_SHEET.alert(msg); else window.alert(msg);
+      return;
+    }
     location.href = 'run-workout.html?id=' + encodeURIComponent(wk.id);
   }
 

@@ -105,7 +105,11 @@
     var iso = new Date().toISOString();
     var a = maxes();
     a.unshift({ id: name + '|' + iso, exercise: name, weight: weight, date: iso });
-    try { localStorage.setItem(MAX_KEY, JSON.stringify(a.slice(0, 300))); } catch (e) {}
+    // Council audit cleanup: a failed save of athlete data shows the storage-full
+    // banner (MC_LOG.writeStore) instead of vanishing in an empty catch.
+    var _v = JSON.stringify(a.slice(0, 300));
+    if (window.MC_LOG && typeof window.MC_LOG.writeStore === 'function') window.MC_LOG.writeStore(MAX_KEY, _v);
+    else { try { localStorage.setItem(MAX_KEY, _v); } catch (e) {} }
     try { if (window.MC_SYNC && MC_SYNC.push) MC_SYNC.push(); } catch (e) {}
   }
 

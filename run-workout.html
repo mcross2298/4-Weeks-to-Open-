@@ -226,7 +226,12 @@ function saveWorkoutClusterEdit(wk){
   // An edit in place needs an edit time: mc-sync.js resolves this store by the
   // newest entry, and without one an edit on this device lost to the other
   // device's older copy (council audit fix 2, same merge rule).
-  if(idx>=0){ wk.updatedAt = new Date().toISOString(); all[idx] = wk; try{ localStorage.setItem(CW_KEY, JSON.stringify(all)); }catch(e){} }
+  if(idx>=0){
+    wk.updatedAt = new Date().toISOString(); all[idx] = wk;
+    var v = JSON.stringify(all);   // a failed save shows the storage-full banner (cleanup)
+    if(window.MC_LOG && typeof window.MC_LOG.writeStore === 'function') window.MC_LOG.writeStore(CW_KEY, v);
+    else { try{ localStorage.setItem(CW_KEY, v); }catch(e){} }
+  }
 }
 
 // --- prescribed rest ------------------------------------------------------

@@ -78,7 +78,7 @@ body{background:#0a0a0a;min-height:100vh;color:#ede7d9;}
         (d.days || []).map(function (day) {
           return '<div class="imp-day"><div class="imp-day-name">' + esc(day.name) + '</div>' +
             '<div class="imp-day-ex">' + (day.exercises || []).map(function (x) {
-              return esc(x.name) + ' ' + (x.sets || 3) + '×' + esc(x.reps || '10');
+              return esc(x.name) + ' ' + Math.min(12, Math.max(1, parseInt(x.sets, 10) || 3)) + '×' + esc(x.reps || '10');
             }).join(' · ') + '</div></div>';
         }).join('') +
         '<button class="imp-btn" id="impGo">📥 Import program</button>' +
@@ -94,7 +94,7 @@ body{background:#0a0a0a;min-height:100vh;color:#ede7d9;}
             name: String(day.name || 'Day').slice(0, 28),
             exercises: (day.exercises || []).map(function (x) {
               return { name: String(x.name || '').slice(0, 60), muscle: String(x.muscle || '').slice(0, 20),
-                       sets: parseInt(x.sets, 10) || 3, reps: String(x.reps || '10').slice(0, 6),
+                       sets: Math.min(12, Math.max(1, parseInt(x.sets, 10) || 3)), reps: String(x.reps || '10').slice(0, 6),
                        rest: parseInt(x.rest, 10) || 90 };
             })
           };
@@ -109,7 +109,7 @@ body{background:#0a0a0a;min-height:100vh;color:#ede7d9;}
         '<div class="imp-name">⚡ ' + esc(d.name) + '</div>' +
         '<div class="imp-meta">' + (d.exercises || []).length + ' exercises</div>' +
         '<div class="imp-day"><div class="imp-day-ex">' + (d.exercises || []).map(function (x) {
-          return esc(x.name) + ' ' + (x.sets || 3) + '×' + esc(x.reps || '10');
+          return esc(x.name) + ' ' + Math.min(12, Math.max(1, parseInt(x.sets, 10) || 3)) + '×' + esc(x.reps || '10');
         }).join(' · ') + '</div></div>' +
         '<button class="imp-btn" id="impGo">📥 Import workout</button>' +
       '</div>';
@@ -120,13 +120,21 @@ body{background:#0a0a0a;min-height:100vh;color:#ede7d9;}
         created: new Date().toISOString(),
         exercises: (d.exercises || []).map(function (x) {
           return { name: String(x.name || '').slice(0, 60), muscle: String(x.muscle || '').slice(0, 20),
-                   sets: parseInt(x.sets, 10) || 3, reps: String(x.reps || '10').slice(0, 6) };
+                   sets: Math.min(12, Math.max(1, parseInt(x.sets, 10) || 3)), reps: String(x.reps || '10').slice(0, 6) };
         })
       };
       var all;
       try { all = JSON.parse(localStorage.getItem('mc_custom_workouts_v1') || '[]'); } catch (e) { all = []; }
+      if (!Array.isArray(all)) all = [];
       all.unshift(wk);
-      try { localStorage.setItem('mc_custom_workouts_v1', JSON.stringify(all)); } catch (e) {}
+      // A failed save used to navigate away as if it had worked (cleanup).
+      var saved;
+      try { localStorage.setItem('mc_custom_workouts_v1', JSON.stringify(all)); saved = true; } catch (e) { saved = false; }
+      if (!saved) {
+        var msg = 'This workout could not be imported \u2014 this device is out of storage space.';
+        if (window.MC_SHEET && MC_SHEET.alert) MC_SHEET.alert(msg); else window.alert(msg);
+        return;
+      }
       try { if (window.MC_SYNC && MC_SYNC.push) MC_SYNC.push(); } catch (e) {}
       location.href = 'build-workout.html';
     });

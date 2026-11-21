@@ -31,7 +31,11 @@
   function liveOf(a) { return a.filter(function (x) { return x && typeof x === 'object' && !x.deleted; }); }
   function readRaw() { return arr(KEY); }
   function read() { return liveOf(arr(KEY)); }
-  function write(a) { try { localStorage.setItem(KEY, JSON.stringify(a)); return true; } catch (e) { return false; } }
+  function write(a) {
+    var v = JSON.stringify(a);   // a failed save shows the storage-full banner when mc-log-read.js is loaded
+    if (window.MC_LOG && typeof window.MC_LOG.writeStore === 'function') return window.MC_LOG.writeStore(KEY, v);
+    try { localStorage.setItem(KEY, v); return true; } catch (e) { return false; }
+  }
   function readWk() { return liveOf(arr(WK_KEY)); }
   function sync() { try { if (window.MC_SYNC && MC_SYNC.push) MC_SYNC.push(); } catch (e) {} }
   function uid() { return 'col-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }

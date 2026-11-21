@@ -25,7 +25,15 @@
     try { return JSON.parse(localStorage.getItem(KEY) || '[]') || []; }
     catch (e) { return []; }
   }
-  function write(a) { try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} }
+  // Council audit cleanup: a failed write of athlete data used to vanish in an
+  // empty catch. MC_LOG.writeStore (mc-log-read.js) shows the storage-full
+  // banner and records it in Diagnostics; without that module the old quiet
+  // fallback stands. Returns whether the write landed.
+  function write(a) {
+    var _v = JSON.stringify(a);
+    if (window.MC_LOG && typeof window.MC_LOG.writeStore === 'function') return window.MC_LOG.writeStore(KEY, _v);
+    try { localStorage.setItem(KEY, _v); return true; } catch (e) { return false; }
+  }
 
   // Same 'mc_activity' shape/format mc-live-tracker.js reads for the dashboard's
   // streak strip — duplicated in full rather than imported, since this module

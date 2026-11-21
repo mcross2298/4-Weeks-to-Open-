@@ -561,6 +561,19 @@ function toggleEx(i){
 function clearSelected(){ selected = []; renderList(); renderTray(); }
 function removeSel(i){ selected.splice(i,1); renderList(); renderTray(); }
 function updSel(i, field, val){ if(selected[i]) selected[i][field] = val; }
+// Council audit cleanup: the box says 1-12 but a typed 0, 20 or blank was
+// accepted, then silently became 3 sets on save (0/blank) or 12 rows in the
+// logger (anything above 12). Clamp where the athlete can see it: the box
+// shows the number that will actually be used.
+function updSets(i, el){
+  var raw = parseInt(el.value, 10);
+  var n = isFinite(raw) ? Math.min(12, Math.max(1, raw)) : 3;
+  if(String(n) !== String(el.value).trim()){
+    el.value = n;
+    el.setAttribute('title', raw > 12 ? 'Up to 12 sets per exercise' : 'At least 1 set');
+  }
+  updSel(i, 'sets', n);
+}
 
 // Height of the fixed bottom nav (added late by mc-nav.js), so the review
 // pill can rest on top of it rather than being hidden behind it.
@@ -691,7 +704,7 @@ function renderTray(){
       +   '<button class="sel-x" onclick="removeSel('+i+')" aria-label="Remove '+esc(s.name)+'">✕</button>'
       + '</div>'
       + '<div class="sel-controls">'
-      +   '<input class="sel-inp" type="number" inputmode="numeric" min="1" max="12" value="'+esc(s.sets)+'" onchange="updSel('+i+',\'sets\',this.value)" aria-label="Sets"/>'
+      +   '<input class="sel-inp" type="number" inputmode="numeric" min="1" max="12" value="'+esc(s.sets)+'" onchange="updSets('+i+',this)" aria-label="Sets (1 to 12)"/>'
       +   '<span class="sel-lbl">sets</span>'
       +   '<input class="sel-inp" type="text" value="'+esc(s.reps)+'" onchange="updSel('+i+',\'reps\',this.value)" aria-label="Reps"/>'
       +   '<span class="sel-lbl">reps</span>'

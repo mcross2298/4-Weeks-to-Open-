@@ -38,7 +38,9 @@ for (const [p, url, keep] of cases) {
   check('route(' + JSON.stringify(p) + ') keepOpen=' + keep, r.keepOpen === keep);
   check('route(' + JSON.stringify(p) + ') stays in the app', /^[a-z-]+\.html$/.test(r.url));
 }
-check('each type has its own tag', R.tag({ type: 'pr' }) === 'mc-pr' && R.tag({ type: 'checkin' }) === 'mc-checkin');
+check('each type has its own tag', /^mc-pr-/.test(R.tag({ type: 'pr' })) && R.tag({ type: 'checkin' }) === 'mc-checkin');
+check('two PR pushes never share a tag (one does not replace the other)', R.tag({ type: 'pr' }) !== R.tag({ type: 'pr' }));
+check('a check-in still replaces the last one (same tag)', R.tag({ type: 'checkin' }) === R.tag({ type: 'checkin' }));
 check('an untyped push keeps the old tag', R.tag({}) === 'mc-milestone');
 for (const t of R.TYPES) check('route target exists: ' + R.route({ type: t }).url, fs.existsSync(path.join(ROOT, R.route({ type: t }).url)));
 

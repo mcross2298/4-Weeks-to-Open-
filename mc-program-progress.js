@@ -59,7 +59,11 @@
     catch (e) { return {}; }
   }
   function writeAll(all) {
-    try { localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) {}
+    // A failed save shows the storage-full banner (MC_LOG.writeStore) rather
+    // than vanishing -- a banked day lost here silently un-banks (cleanup).
+    var v = JSON.stringify(all);
+    if (window.MC_LOG && typeof window.MC_LOG.writeStore === 'function') window.MC_LOG.writeStore(KEY, v);
+    else { try { localStorage.setItem(KEY, v); } catch (e) {} }
     try { if (window.MC_SYNC && MC_SYNC.push) MC_SYNC.push(); } catch (e) {}
   }
   function nowIso() { return new Date().toISOString(); }

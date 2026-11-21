@@ -12,7 +12,7 @@
   'use strict';
   var HOME = 'dashboard.html';
   var ROUTES = {
-    pr: { url: 'workout-logs.html', keepOpen: true },
+    pr: { url: 'workout-logs.html', keepOpen: true, stack: true },
     checkin: { url: 'stats.html' },
     streak: { url: HOME }
   };
@@ -23,9 +23,16 @@
     return r ? { type: p.type, url: r.url, keepOpen: !!r.keepOpen } : { type: null, url: HOME, keepOpen: false };
   }
 
+  // A notification with the same tag REPLACES the one before it. That is right
+  // for a check-in or a streak (only the newest matters) and wrong for records:
+  // three PRs in one session used to leave one notification. A `stack` type
+  // gets a tag of its own per push (council audit cleanup).
+  var seq = 0;
   function tag(payload) {
     var t = route(payload).type;
-    return t ? 'mc-' + t : 'mc-milestone';
+    if (!t) return 'mc-milestone';
+    if (ROUTES[t].stack) return 'mc-' + t + '-' + Date.now().toString(36) + '-' + (seq++);
+    return 'mc-' + t;
   }
 
   root.MC_PUSH_ROUTE = { route: route, tag: tag, TYPES: Object.keys(ROUTES) };
