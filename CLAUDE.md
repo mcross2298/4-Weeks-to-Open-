@@ -2837,6 +2837,17 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   sheet's panel (`MC_ACCOUNT.openDiagnostics()`). The account sheet no
 >   longer carries it.
 > - Settings does not load `mc-sync.js`, so a change syncs when Home next runs.
+>
+> **`SP3` shipped (2026-11-21) — Appearance in Settings, applied everywhere.**
+> Things to know:
+> - **The head boot applies `mc_personal_theme_v1`'s density, motion and text
+>   on every page** (`data-density`, `data-motion="off"`, `data-text="large"`),
+>   because `mc-theme.js` loads on only 14 pages. Accent stays with
+>   `mc-theme.js` on purpose. Code that checks reduced motion in JS must read
+>   `data-motion="off"` as well as the media query.
+> - **Larger text is the `--fs-*` scale, ~15% up.** It reaches only
+>   token-sized text: 33% of History, 100% of Settings. A px literal never
+>   grows.
 
 > **12-Week Boxing Camp shipped (2026-11-20) — [`boxing-camp-roadmap.md`](boxing-camp-roadmap.md).**
 > It is a "Fight Camp" routine on the Conditioning tab (`boxing-camp.html`).

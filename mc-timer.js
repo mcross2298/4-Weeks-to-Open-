@@ -828,6 +828,7 @@ function injectTimerEnhCss() {
       'animation:mcRestFlash 1.2s ease-in-out forwards;}' +
     '@keyframes mcRestFlash{0%{opacity:0}20%{opacity:.5}45%{opacity:0}70%{opacity:.5}100%{opacity:0}}' +
     '@media (prefers-reduced-motion:reduce){.mc-rest-flash{animation:none;opacity:.22;}}' +
+    'html[data-motion="off"] .mc-rest-flash{opacity:.22;}' +
     // ── big glanceable numerals + full-width progress ──
     '.timer-float-time{font-size:54px!important;text-align:center;width:100%;line-height:1;margin:2px 0;transition:color .25s ease;}' +
     '.timer-float-bar{width:100%!important;margin:0!important;}' +

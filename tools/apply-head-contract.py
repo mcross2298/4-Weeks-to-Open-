@@ -133,6 +133,17 @@ THEME_BOOT = (
     "if(_m)_m.setAttribute('content',_l?'" + LIGHT_BG + "':'" + DARK_BG + "');"
     '}catch(e){}'
     'try{'
+    # SP3: the athlete's display choices (Settings -> Appearance), applied on
+    # every page before first paint. mc-theme.js applies the same store, but
+    # only 14 pages load it, so a choice made there never reached a workout
+    # page. Only known values are applied.
+    "var _pt=JSON.parse(localStorage.getItem('mc_personal_theme_v1')||'{}')||{};"
+    "var _he=document.documentElement;"
+    "if(_pt.density==='compact'||_pt.density==='spacious')_he.setAttribute('data-density',_pt.density);"
+    "if(_pt.motion==='off')_he.setAttribute('data-motion','off');"
+    "if(_pt.text==='large')_he.setAttribute('data-text','large');"
+    '}catch(e){}'
+    'try{'
     # S6: nothing in the app reported a runtime error anywhere outside a
     # CI/local console — a broken build was indistinguishable from a working
     # one until a user complained. A capped ring buffer (last 20), not a

@@ -91,9 +91,11 @@
   }
 
   // Personal layer (Phase 2.5) — device-local, unsynced, same "for non-PM
-  // users" pattern as program-overrides.js's mc_personal_intensifiers. Only
-  // accent + density are personalizable; typography/motion/backgrounds stay
-  // owner-controlled. Wins over the owner's published/local ThemeConfig and
+  // users" pattern as program-overrides.js's mc_personal_intensifiers.
+  // Accent, density, motion ('off') and text size ('large', SP3) are
+  // personalizable; typography and backgrounds stay owner-controlled. The
+  // head boot (tools/apply-head-contract.py) applies density, motion and
+  // text on every page; accent only reaches the pages that load this file. Wins over the owner's published/local ThemeConfig and
   // any preset, since it's a deliberate per-device choice, not a fallback.
   var PERSONAL_KEY = 'mc_personal_theme_v1';
   function personalConfig() {
@@ -119,7 +121,8 @@
       accent:     personal.accent || cfg.accent     || base.accent || null,
       typography: cfg.typography || base.typography || null,
       density:    personal.density || cfg.density    || null,
-      motion:     cfg.motion     || null
+      motion:     personal.motion || cfg.motion     || null,
+      text:       personal.text   || null
     };
   }
 
@@ -245,6 +248,7 @@
     if (cfg.typography) html.setAttribute('data-typography', cfg.typography); else html.removeAttribute('data-typography');
     if (cfg.density)    html.setAttribute('data-density', cfg.density);       else html.removeAttribute('data-density');
     if (cfg.motion)     html.setAttribute('data-motion', cfg.motion);         else html.removeAttribute('data-motion');
+    if (cfg.text === 'large') html.setAttribute('data-text', 'large');        else html.removeAttribute('data-text');
 
     // Keep the browser/standalone chrome in step with the resolved theme. An
     // owner ThemeConfig wins; otherwise follow light/dark, matching the value

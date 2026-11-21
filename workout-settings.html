@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="MC Training"/>
 <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
 <meta name="theme-color" content="#0a0a0a"/>
-<script>/* MC head boot (audit G-02/G-03) — PWA cold-launch guard + theme, before first paint */try{if((window.navigator.standalone===true||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches))&&!sessionStorage.getItem('mc_launched')){sessionStorage.setItem('mc_launched','1');var _p=(location.pathname.split('/').pop()||'').toLowerCase();if(_p!==''&&_p!=='index.html'&&_p!=='dashboard.html'&&!/[?&]from=push(&|$)/.test(location.search)){var _hasLive=false;try{var _sess=JSON.parse(localStorage.getItem('mc_session_v1')||'{}');var _rec=_sess[_p.replace('.html','')];_hasLive=!!(_rec&&(Date.now()-(_rec.lastTs||0))<43200000);}catch(e){}if(!_hasLive)location.replace('dashboard.html');}}}catch(e){}try{var _lk=document.documentElement.getAttribute('data-theme-lock');var _l=!_lk&&localStorage.getItem('mc_theme_mode')==='light';if(_l)document.documentElement.setAttribute('data-theme','light');var _m=document.querySelector('meta[name="theme-color"]');if(_m)_m.setAttribute('content',_l?'#f5f2ec':'#0a0a0a');}catch(e){}try{var _erK='mc_errors_v1',_erMax=20;function _erRec(e){try{var a=JSON.parse(localStorage.getItem(_erK)||'[]');if(!Array.isArray(a))a=[];a.unshift(e);if(a.length>_erMax)a.length=_erMax;localStorage.setItem(_erK,JSON.stringify(a));}catch(_){}}function _erP(){return location.pathname.split('/').pop()||''}function _erX(o){try{return String((o&&o.stack)||'').slice(0,1200)}catch(_){return ''}}window.addEventListener('error',function(ev){_erRec({t:Date.now(),k:'error',m:(ev&&ev.message)||'Unknown error',s:(ev&&ev.filename)||'',l:(ev&&ev.lineno)||0,x:_erX(ev&&ev.error),p:_erP()});});window.addEventListener('unhandledrejection',function(ev){var r=ev&&ev.reason;_erRec({t:Date.now(),k:'unhandledrejection',m:(r&&(r.message||String(r)))||'Unhandled rejection',x:_erX(r),p:_erP()});});window.MC_ERRLOG={rec:function(k,m,x){_erRec({t:Date.now(),k:String(k||'note'),m:String(m||'').slice(0,500),x:String(x||'').slice(0,1200),p:_erP()})}};}catch(e){}</script>
+<script>/* MC head boot (audit G-02/G-03) — PWA cold-launch guard + theme, before first paint */try{if((window.navigator.standalone===true||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches))&&!sessionStorage.getItem('mc_launched')){sessionStorage.setItem('mc_launched','1');var _p=(location.pathname.split('/').pop()||'').toLowerCase();if(_p!==''&&_p!=='index.html'&&_p!=='dashboard.html'&&!/[?&]from=push(&|$)/.test(location.search)){var _hasLive=false;try{var _sess=JSON.parse(localStorage.getItem('mc_session_v1')||'{}');var _rec=_sess[_p.replace('.html','')];_hasLive=!!(_rec&&(Date.now()-(_rec.lastTs||0))<43200000);}catch(e){}if(!_hasLive)location.replace('dashboard.html');}}}catch(e){}try{var _lk=document.documentElement.getAttribute('data-theme-lock');var _l=!_lk&&localStorage.getItem('mc_theme_mode')==='light';if(_l)document.documentElement.setAttribute('data-theme','light');var _m=document.querySelector('meta[name="theme-color"]');if(_m)_m.setAttribute('content',_l?'#f5f2ec':'#0a0a0a');}catch(e){}try{var _pt=JSON.parse(localStorage.getItem('mc_personal_theme_v1')||'{}')||{};var _he=document.documentElement;if(_pt.density==='compact'||_pt.density==='spacious')_he.setAttribute('data-density',_pt.density);if(_pt.motion==='off')_he.setAttribute('data-motion','off');if(_pt.text==='large')_he.setAttribute('data-text','large');}catch(e){}try{var _erK='mc_errors_v1',_erMax=20;function _erRec(e){try{var a=JSON.parse(localStorage.getItem(_erK)||'[]');if(!Array.isArray(a))a=[];a.unshift(e);if(a.length>_erMax)a.length=_erMax;localStorage.setItem(_erK,JSON.stringify(a));}catch(_){}}function _erP(){return location.pathname.split('/').pop()||''}function _erX(o){try{return String((o&&o.stack)||'').slice(0,1200)}catch(_){return ''}}window.addEventListener('error',function(ev){_erRec({t:Date.now(),k:'error',m:(ev&&ev.message)||'Unknown error',s:(ev&&ev.filename)||'',l:(ev&&ev.lineno)||0,x:_erX(ev&&ev.error),p:_erP()});});window.addEventListener('unhandledrejection',function(ev){var r=ev&&ev.reason;_erRec({t:Date.now(),k:'unhandledrejection',m:(r&&(r.message||String(r)))||'Unhandled rejection',x:_erX(r),p:_erP()});});window.MC_ERRLOG={rec:function(k,m,x){_erRec({t:Date.now(),k:String(k||'note'),m:String(m||'').slice(0,500),x:String(x||'').slice(0,1200),p:_erP()})}};}catch(e){}</script>
 <!-- MC:HEAD END -->
 <link rel="stylesheet" href="base.css?v=68"/>
 <script src="mc-theme.js"></script>
@@ -56,6 +56,17 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
 .ws-row[aria-checked="true"] .ws-switch::after{transform:translateX(20px);}
 @media (prefers-reduced-motion:reduce){.ws-switch,.ws-switch::after{transition:none;}}
 .ws-chev{flex-shrink:0;font-size:var(--fs-xl);color:var(--muted);}
+/* SP3: a choice of a few (theme, density, text size) and the accent swatches */
+.ws-pick{padding:14px 0;border-bottom:1px solid var(--hairline);}
+.ws-pick:last-child{border-bottom:none;}
+.ws-seg{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.ws-opt{flex:1 1 0;min-width:88px;min-height:48px;border-radius:var(--r-md);border:1px solid var(--ws-edge);background:transparent;
+  color:var(--text);font:inherit;font-size:var(--fs-md);font-weight:var(--fw-semi);cursor:pointer;}
+.ws-opt[aria-checked="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);font-weight:var(--fw-bold);}
+.ws-opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.ws-swatch{flex:0 0 48px;min-width:48px;width:48px;height:48px;border-radius:50%;padding:0;}
+.ws-swatch[aria-checked="true"]{box-shadow:0 0 0 2px var(--body-bg),0 0 0 4px var(--text);}
+.ws-swatch-def{font-size:var(--fs-xs);font-weight:var(--fw-bold);}
 .ws-note{font-size:var(--fs-sm);color:var(--muted);line-height:1.5;margin:-14px 2px 28px;}
 .ws-bar{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;gap:12px;background:var(--body-bg);
   border-top:1px solid var(--hairline);
@@ -80,6 +91,11 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
   </a>
   <h1 class="ws-title">Settings</h1>
   <form id="wsForm" onsubmit="return false"></form>
+  <section class="ws-group" id="appearance" aria-labelledby="wsgLook">
+    <h2 class="ws-label" id="wsgLook">Appearance</h2>
+    <div class="ws-card" id="wsLook"></div>
+  </section>
+  <p class="ws-note">Appearance is saved on this phone only. Accent colour shows on Home, History, Stats and the builders; the rest applies on every screen.</p>
   <section class="ws-group" id="notifications" aria-labelledby="wsgNotify">
     <h2 class="ws-label" id="wsgNotify">Notifications</h2>
     <div class="ws-card">
@@ -182,6 +198,60 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
       }).join('') + '</div></section>';
   }).join('');
 
+  // SP3: Appearance. Theme is mc_theme_mode; accent, density, motion and text
+  // size are mc_personal_theme_v1, which the head boot applies on every page.
+  // Staged like the switches above.
+  var PKEY = 'mc_personal_theme_v1';
+  function readPersonal() {
+    try { var t = JSON.parse(localStorage.getItem(PKEY) || '{}'); return (t && typeof t === 'object' && !Array.isArray(t)) ? t : {}; }
+    catch (e) { return {}; }
+  }
+  var presets = (window.MC_THEME && MC_THEME.presets) || {};
+  var pStored = readPersonal();
+  var themeMode = (function () { try { return localStorage.getItem('mc_theme_mode') === 'light' ? 'light' : 'dark'; } catch (e) { return 'dark'; } })();
+  var aSaved = {
+    theme: themeMode,
+    accent: pStored.accent || '',
+    density: pStored.density === 'compact' || pStored.density === 'spacious' ? pStored.density : '',
+    text: pStored.text === 'large' ? 'large' : '',
+    motion: pStored.motion === 'off' ? 'off' : ''
+  };
+  var aDraft = JSON.parse(JSON.stringify(aSaved));
+  var CHOICES = [
+    { k: 'theme', name: 'Theme', opts: [['dark', 'Dark'], ['light', 'Light']] },
+    { k: 'density', name: 'Spacing', sub: 'How much room cards and lists take.', opts: [['', 'Default'], ['compact', 'Compact'], ['spacious', 'Spacious']] },
+    { k: 'text', name: 'Text size', sub: 'About 15% larger across the app.', opts: [['', 'Default'], ['large', 'Larger']] }
+  ];
+  var look = document.getElementById('wsLook');
+  function lookHtml() {
+    var swatches = '<button type="button" class="ws-opt ws-swatch ws-swatch-def" role="radio" data-a="accent" data-v="" aria-label="App default" aria-checked="' + (aDraft.accent === '') + '">Auto</button>' +
+      Object.keys(presets).map(function (id) {
+        var pr = presets[id];
+        return '<button type="button" class="ws-opt ws-swatch" role="radio" data-a="accent" data-v="' + esc(pr.accent) + '" aria-label="' + esc(pr.name) +
+          '" aria-checked="' + (aDraft.accent === pr.accent) + '" style="background:' + esc(pr.accent) + '"></button>';
+      }).join('');
+    return CHOICES.map(function (c) {
+      return '<div class="ws-pick"><span class="ws-name" id="wsl-' + c.k + '">' + esc(c.name) + '</span>' +
+        (c.sub ? '<span class="ws-sub">' + esc(c.sub) + '</span>' : '') +
+        '<div class="ws-seg" role="radiogroup" aria-labelledby="wsl-' + c.k + '">' + c.opts.map(function (o) {
+          return '<button type="button" class="ws-opt" role="radio" data-a="' + c.k + '" data-v="' + o[0] + '" aria-checked="' + (aDraft[c.k] === o[0]) + '">' + esc(o[1]) + '</button>';
+        }).join('') + '</div></div>';
+    }).join('') +
+    '<div class="ws-pick"><span class="ws-name" id="wsl-accent">Accent colour</span>' +
+      '<div class="ws-seg" role="radiogroup" aria-labelledby="wsl-accent">' + swatches + '</div></div>' +
+    '<button type="button" class="ws-row" role="switch" id="wsMotion" aria-checked="' + (aDraft.motion === 'off') + '">' +
+      '<span class="ws-text"><span class="ws-name">Reduce motion</span><span class="ws-sub">Turns off animations and smooth scrolling. Your phone\u2019s own setting does this too.</span></span>' +
+      '<span class="ws-switch" aria-hidden="true"></span></button>';
+  }
+  function paintLook() { look.innerHTML = lookHtml(); }
+  paintLook();
+  look.addEventListener('click', function (e) {
+    var opt = e.target.closest('.ws-opt');
+    if (opt) { aDraft[opt.dataset.a] = opt.dataset.v; paintLook(); refresh(); return; }
+    if (e.target.closest('#wsMotion')) { aDraft.motion = aDraft.motion === 'off' ? '' : 'off'; paintLook(); refresh(); }
+  });
+  function dirtyLook() { return Object.keys(aDraft).filter(function (k) { return aDraft[k] !== aSaved[k]; }); }
+
   var alerts = document.getElementById('wsAlerts');
   alerts.innerHTML = NOTIFY.map(function (r) {
     return '<button type="button" class="ws-row" role="switch" id="wsn-' + r.k + '" data-n="' + r.k + '" aria-checked="' + nDraft[r.k] + '">' +
@@ -192,7 +262,7 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
   var saveBtn = document.getElementById('wsSave');
   function dirtyKeys() { return Object.keys(draft).filter(function (k) { return draft[k] !== saved[k]; }); }
   function dirtyNotify() { return Object.keys(nDraft).filter(function (k) { return nDraft[k] !== nSaved[k]; }); }
-  function refresh() { saveBtn.disabled = dirtyKeys().length + dirtyNotify().length === 0; }
+  function refresh() { saveBtn.disabled = dirtyKeys().length + dirtyNotify().length + dirtyLook().length === 0; }
 
   alerts.addEventListener('click', function (e) {
     var row = e.target.closest('.ws-row');
@@ -222,7 +292,7 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
     else location.href = 'dashboard.html';
   }
   function confirmDiscard() {
-    if (!dirtyKeys().length && !dirtyNotify().length) return Promise.resolve(true);
+    if (!dirtyKeys().length && !dirtyNotify().length && !dirtyLook().length) return Promise.resolve(true);
     return window.MC_SHEET && MC_SHEET.confirm
       ? MC_SHEET.confirm('Discard your changes?', { ok: 'Discard', cancel: 'Keep editing', danger: true })
       : Promise.resolve(true);
@@ -292,8 +362,8 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
   });
 
   saveBtn.addEventListener('click', function () {
-    var changed = dirtyKeys(), nChanged = dirtyNotify();
-    if (!changed.length && !nChanged.length) return;
+    var changed = dirtyKeys(), nChanged = dirtyNotify(), lChanged = dirtyLook();
+    if (!changed.length && !nChanged.length && !lChanged.length) return;
     // Re-read the store at save time and merge only the changed keys, so a
     // key another tab or the rest row's own pills wrote meanwhile survives.
     var p = readStore();
@@ -303,6 +373,12 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
     try {
       if (changed.length) localStorage.setItem(KEY, JSON.stringify(p));
       if (nChanged.length) localStorage.setItem(NKEY, JSON.stringify(n));
+      if (lChanged.indexOf('theme') >= 0) localStorage.setItem('mc_theme_mode', aDraft.theme);
+      if (lChanged.some(function (k) { return k !== 'theme'; })) {
+        var pt = readPersonal();
+        ['accent', 'density', 'text', 'motion'].forEach(function (k) { if (aDraft[k]) pt[k] = aDraft[k]; else delete pt[k]; });
+        localStorage.setItem(PKEY, JSON.stringify(pt));
+      }
     }
     catch (err) {
       toast.textContent = 'Could not save — this device is out of storage.';
@@ -310,6 +386,12 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
       return;
     }
     nChanged.forEach(function (k) { nSaved[k] = nDraft[k]; });
+    if (lChanged.length) {
+      lChanged.forEach(function (k) { aSaved[k] = aDraft[k]; });
+      var he = document.documentElement;
+      if (aSaved.theme === 'light') he.setAttribute('data-theme', 'light'); else he.removeAttribute('data-theme');
+      try { if (window.MC_THEME) MC_THEME.apply(); document.dispatchEvent(new CustomEvent('mc:theme-changed')); } catch (e) {}
+    }
     changed.forEach(function (k) {
       saved[k] = draft[k];
       try { document.dispatchEvent(new CustomEvent('mc:prefs-changed', { detail: { key: k, value: draft[k] } })); } catch (e) {}
