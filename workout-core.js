@@ -8,12 +8,12 @@
      mc-finish.js @ line 1183
      mc-supabase.js @ line 2212
      mc-sync.js @ line 3236
-     mc-biometric.js @ line 4405
-     program-overrides.js @ line 4509
-     mc-hints.js @ line 5488
-     mc-card-actions.js @ line 5616
-     program-manager.js @ line 6785
-     mc-live-tracker.js @ line 8663
+     mc-biometric.js @ line 4406
+     program-overrides.js @ line 4510
+     mc-hints.js @ line 5489
+     mc-card-actions.js @ line 5617
+     program-manager.js @ line 6786
+     mc-live-tracker.js @ line 8664
 */
 
 /* ---- mc-replace.js ---- */
@@ -4087,7 +4087,8 @@ try {
           // overflow to the archive. Without it (a page that never loads that
           // file) the log just stays longer until the next page that does.
           if (wrote && strategy === 'workoutLog' && window.MC_LOG && window.MC_LOG.rollover) {
-            try { window.MC_LOG.rollover(); } catch (e) {}
+            try { window.MC_LOG.rollover(); }
+            catch (e) { try { if (window.MC_ERRLOG) window.MC_ERRLOG.rec('storage', 'workout archive rollover failed: ' + ((e && e.message) || e)); } catch (_) {} }
           }
           if (readRaw(key) !== before) pulledChange = true;
           if (wrote) snapshot[key] = remote != null ? JSON.stringify(remote) : null;
@@ -8922,6 +8923,9 @@ try {
         var src = MC_PM_DATA.program(prog.id);
         var def = src && P.defFromSchedule(src.schedule);
         if (def) {
+          // Stats reads the streak without visiting Home, so the owed
+          // conditioning days are banked here too before it is counted.
+          if (P.reconcileFromLog) P.reconcileFromLog(prog.id, def);
           var rec = P.get(prog.id, def);
           out.rec = rec;
           out.isRest = function (d) { return P.isRest(rec, d); };

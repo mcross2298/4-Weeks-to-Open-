@@ -94,7 +94,12 @@ THEME_BOOT = (
     "('(display-mode: standalone)').matches))&&!sessionStorage.getItem('mc_launched')){"
     "sessionStorage.setItem('mc_launched','1');"
     "var _p=(location.pathname.split('/').pop()||'').toLowerCase();"
-    "if(_p!==''&&_p!=='index.html'&&_p!=='dashboard.html'){"
+    # A window the service worker opened from a tapped push carries
+    # ?from=push (sw.js notificationclick). That launch was asked for, so it
+    # opens where the push points instead of being sent back to Home -- the
+    # guard below used to undo SP1's routing on every cold start (council
+    # audit fix 4).
+    "if(_p!==''&&_p!=='index.html'&&_p!=='dashboard.html'&&!/[?&]from=push(&|$)/.test(location.search)){"
     # L7: iOS can silently kill a backgrounded installed PWA and hand the
     # relaunch a FRESH sessionStorage, so this guard's own launch flag reads
     # as unset — a trainee mid-set who only switched apps for a moment gets

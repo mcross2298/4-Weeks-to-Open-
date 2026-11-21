@@ -852,7 +852,8 @@
           // overflow to the archive. Without it (a page that never loads that
           // file) the log just stays longer until the next page that does.
           if (wrote && strategy === 'workoutLog' && window.MC_LOG && window.MC_LOG.rollover) {
-            try { window.MC_LOG.rollover(); } catch (e) {}
+            try { window.MC_LOG.rollover(); }
+            catch (e) { try { if (window.MC_ERRLOG) window.MC_ERRLOG.rec('storage', 'workout archive rollover failed: ' + ((e && e.message) || e)); } catch (_) {} }
           }
           if (readRaw(key) !== before) pulledChange = true;
           if (wrote) snapshot[key] = remote != null ? JSON.stringify(remote) : null;

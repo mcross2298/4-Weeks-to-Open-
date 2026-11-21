@@ -104,10 +104,16 @@
     else el.removeAttribute('data-cond-layout');
   }
 
+  // A throw here leaves a section unpainted with nothing in the console (the
+  // catch swallows it), so it is recorded for Diagnostics instead of dropped
+  // (council audit cleanup) -- the loadWrapped() lesson.
+  function noteRender(name, e) {
+    try { if (window.MC_ERRLOG) window.MC_ERRLOG.rec('render', name + ': ' + ((e && e.message) || e)); } catch (_) {}
+  }
   function repaint() {
-    try { paintProgramCards(); } catch (e) {}
-    try { paintWorkout(); } catch (e) {}
-    try { paintConditioning(); } catch (e) {}
+    try { paintProgramCards(); } catch (e) { noteRender('paintProgramCards', e); }
+    try { paintWorkout(); } catch (e) { noteRender('paintWorkout', e); }
+    try { paintConditioning(); } catch (e) { noteRender('paintConditioning', e); }
   }
 
   window.MC_LAYOUT = {

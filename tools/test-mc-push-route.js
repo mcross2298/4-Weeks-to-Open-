@@ -38,7 +38,9 @@ for (const [p, url, keep] of cases) {
   check('route(' + JSON.stringify(p) + ') keepOpen=' + keep, r.keepOpen === keep);
   check('route(' + JSON.stringify(p) + ') stays in the app', /^[a-z-]+\.html$/.test(r.url));
 }
-check('each type has its own tag', R.tag({ type: 'pr' }) === 'mc-pr' && R.tag({ type: 'checkin' }) === 'mc-checkin');
+check('each type has its own tag', /^mc-pr-/.test(R.tag({ type: 'pr' })) && R.tag({ type: 'checkin' }) === 'mc-checkin');
+check('two PR pushes never share a tag (one does not replace the other)', R.tag({ type: 'pr' }) !== R.tag({ type: 'pr' }));
+check('a check-in still replaces the last one (same tag)', R.tag({ type: 'checkin' }) === R.tag({ type: 'checkin' }));
 check('an untyped push keeps the old tag', R.tag({}) === 'mc-milestone');
 for (const t of R.TYPES) check('route target exists: ' + R.route({ type: t }).url, fs.existsSync(path.join(ROOT, R.route({ type: t }).url)));
 
@@ -113,17 +115,17 @@ async function click(data, windows) {
   let r = await click({ type: 'pr' }, [B + 'mm-p1.html?day=2']);
   check('PR tap mid-session focuses the open workout', r.focused[0] === B + 'mm-p1.html?day=2' && !r.opened.length, JSON.stringify(r));
   r = await click({ type: 'pr' }, []);
-  check('PR tap with no window opens History', r.opened[0] === './workout-logs.html', JSON.stringify(r));
+  check('PR tap with no window opens History', r.opened[0] === './workout-logs.html?from=push', JSON.stringify(r));
   r = await click({ type: 'checkin' }, [B + 'mm-p1.html']);
-  check('check-in tap never navigates an open workout away', r.opened[0] === './stats.html' && !r.focused.length, JSON.stringify(r));
+  check('check-in tap never navigates an open workout away', r.opened[0] === './stats.html?from=push' && !r.focused.length, JSON.stringify(r));
   r = await click({ type: 'checkin' }, [B + 'mm-p1.html', B + 'stats.html']);
   check('check-in tap focuses an open Stats window', r.focused[0] === B + 'stats.html' && !r.opened.length, JSON.stringify(r));
   r = await click({ type: 'streak' }, [B + 'dashboard.html?tab=programs']);
   check('streak tap focuses an open Home', r.focused.length === 1 && !r.opened.length, JSON.stringify(r));
   r = await click(null, []);
-  check('an untyped push opens Home, as before SP1', r.opened[0] === './dashboard.html', JSON.stringify(r));
+  check('an untyped push opens Home, as before SP1', r.opened[0] === './dashboard.html?from=push', JSON.stringify(r));
   r = await click({ type: 'stats' }, [B + 'workout-logs.html']);
-  check('an unknown type opens Home', r.opened[0] === './dashboard.html', JSON.stringify(r));
+  check('an unknown type opens Home', r.opened[0] === './dashboard.html?from=push', JSON.stringify(r));
 
   console.log((failed ? 'FAILED' : 'OK') + '  test-mc-push-route: ' + passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);

@@ -110,7 +110,11 @@
     catch (e) { return {}; }
   }
   function write(obj) {
-    try { localStorage.setItem(KEY, JSON.stringify(obj)); } catch (e) {}
+    // Council audit cleanup: a failed save of athlete data shows the storage-full
+    // banner (MC_LOG.writeStore) instead of vanishing in an empty catch.
+    var _v = JSON.stringify(obj);
+    if (window.MC_LOG && typeof window.MC_LOG.writeStore === 'function') window.MC_LOG.writeStore(KEY, _v);
+    else { try { localStorage.setItem(KEY, _v); } catch (e) {} }
     try { if (window.MC_SYNC && MC_SYNC.push) MC_SYNC.push(); } catch (e) {}
   }
   function getDay(obj, key) {

@@ -171,7 +171,8 @@
   function repaintConditioning() {
     if (typeof window.renderConditioning !== 'function') return;
     if (!document.getElementById('condBody')) return;
-    try { window.renderConditioning(); } catch (e) {}
+    try { window.renderConditioning(); }
+    catch (e) { try { if (window.MC_ERRLOG) window.MC_ERRLOG.rec('render', 'renderConditioning: ' + ((e && e.message) || e)); } catch (_) {} }   // recorded, not dropped (cleanup)
   }
 
   // ---- MAIN PAINT TICK -----------------------------------------------------

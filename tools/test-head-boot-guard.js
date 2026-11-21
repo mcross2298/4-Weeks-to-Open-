@@ -51,7 +51,7 @@ function run(opts) {
         window: win,
         sessionStorage: { getItem: k => (k in sess ? sess[k] : null), setItem: (k, v) => { sess[k] = v; } },
         localStorage: { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = v; } },
-        location: { pathname: opts.pathname || '/mm-p1.html', replace: url => { redirected = url; } },
+        location: { pathname: opts.pathname || '/mm-p1.html', search: opts.search || '', replace: url => { redirected = url; } },
         document: { documentElement: { getAttribute: () => null, setAttribute: (k, v) => { attrs[k] = v; } }, querySelector: () => null },
         Date, JSON, Array,
     };
@@ -104,6 +104,20 @@ assert(run({ standalone: true, sessionStorage: { mc_launched: '1' } }).redirecte
 // pre-existing behaviour, still exercised here as a regression net).
 assert(run({ standalone: true, pathname: '/dashboard.html' }).redirected === null,
     'G: dashboard.html itself is never redirected to itself');
+
+// H. a window the service worker opened from a tapped push (?from=push) is
+// let through: the push chose that page (SP1), and the guard used to send
+// every such cold start back to Home (council audit fix 4).
+assert(run({ standalone: true, pathname: '/workout-logs.html', search: '?from=push' }).redirected === null,
+    'H: a push-opened cold start opens where the push points');
+assert(run({ standalone: true, pathname: '/stats.html', search: '?x=1&from=push' }).redirected === null,
+    'H: ...wherever from=push sits in the query');
+
+// I. the exemption is exact: a lookalike parameter still redirects.
+assert(run({ standalone: true, pathname: '/workout-logs.html', search: '?from=pushy' }).redirected === 'dashboard.html',
+    'I: from=pushy is not a push launch');
+assert(run({ standalone: true, pathname: '/workout-logs.html', search: '?notfrom=push' }).redirected === 'dashboard.html',
+    'I: notfrom=push is not a push launch');
 
 // ---- SP3: display choices applied before first paint ------------------
 {

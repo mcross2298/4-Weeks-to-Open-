@@ -59,7 +59,11 @@
     catch (e) { return {}; }
   }
   function writeAll(all) {
-    try { localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) {}
+    // A failed save shows the storage-full banner (MC_LOG.writeStore) rather
+    // than vanishing -- a banked day lost here silently un-banks (cleanup).
+    var v = JSON.stringify(all);
+    if (window.MC_LOG && typeof window.MC_LOG.writeStore === 'function') window.MC_LOG.writeStore(KEY, v);
+    else { try { localStorage.setItem(KEY, v); } catch (e) {} }
     try { if (window.MC_SYNC && MC_SYNC.push) MC_SYNC.push(); } catch (e) {}
   }
   function nowIso() { return new Date().toISOString(); }
@@ -299,7 +303,10 @@
     if (!rec.startedAt) rec.startedAt = nowIso();
     meta = meta || {};
     rec.completed[String(day)] = {
-      ts: Date.now(),
+      // A caller banking a session that already happened (reconcileOpen())
+      // passes the session's own time, so the next open day anchors after
+      // THAT session rather than after the moment the reconcile ran.
+      ts: (typeof meta.ts === 'number' && isFinite(meta.ts)) ? meta.ts : Date.now(),
       week: weekOf(rec, day),
       workoutId: meta.workoutId || workoutFor(rec, day),
       logId: meta.logId || null
@@ -337,7 +344,7 @@
     var rec = get(progId, def);
     if (!order || !order.length) {
       delete rec.weekOrder[String(weekNum)];
-    } else if (order.join(' ') === rec.order.join(' ')) {
+    } else if (order.join('\u0000') === rec.order.join('\u0000')) {
       delete rec.weekOrder[String(weekNum)];
     } else {
       rec.weekOrder[String(weekNum)] = order.slice();
@@ -424,14 +431,105 @@
       perWeek: sc.perWeek,
       rest: (sc.rest || []).slice(),
       deloadWeeks: (sc.deloadWeeks || []).slice(),
+      // Training days that prescribe NO exercises of their own -- The Modality
+      // Matrix's "Conditioning Corner" days (ex: 0). No lift page can finish
+      // one, so mc-program-day.js's bank() never reaches them; reconcileOpen()
+      // banks them from a finished conditioning routine instead.
+      openDays: sc.days.filter(function (d) { return d && d.id && d.ex === 0; })
+                       .map(function (d) { return d.id; }),
       phases: phases,
       order: (phases.length ? phases[0].order
                             : sc.days.map(function (d) { return d.id; })).slice()
     };
   }
 
+  // ---- open (conditioning) days ---------------------------------------------
+  //
+  // THE DEFECT (council audit, 2026-11-21). The Modality Matrix prescribes two
+  // "Conditioning Corner" days a week as TRAINING positions. The only thing
+  // that completes a program day is mc-program-day.js's bank(), on a lift page
+  // that registers a day resolver -- and a conditioning routine page has
+  // neither a resolver nor a program. So those days could never be completed:
+  // Home's cursor sat on the first one every week and the adherence streak
+  // (mc-streak.js) ended there.
+  //
+  // THE RULE (owner decision): finishing ANY Conditioning Corner routine while
+  // the program is active completes the next open day that is owed.
+  //   * "owed" = the first non-rest day after the furthest completed day. The
+  //     cursor is deliberately NOT used: tapping a future pill to look ahead
+  //     moves it, and a look-ahead must not decide which day a session counts
+  //     for.
+  //   * a session counts only if it ended AFTER that furthest completion (or
+  //     after the program was started), so a routine done last week cannot be
+  //     claimed by this week's conditioning day.
+  //   * one session banks one day; a session already banked (its log id sits
+  //     in `completed`) is never reused.
+  // It is DERIVED from mc_workout_log_v1 rather than written by the
+  // conditioning page, so a session logged on another device banks the day
+  // here once both stores have synced, and nothing new has to load on the ten
+  // conditioning pages.
+  function entryTime(e) {
+    var t = e && Date.parse(e.date);
+    return isFinite(t) ? t : NaN;
+  }
+  function furthestCompleted(rec) {
+    var best = 0;
+    for (var k in rec.completed) {
+      if (!Object.prototype.hasOwnProperty.call(rec.completed, k)) continue;
+      var n = intOr(k, 0);
+      if (n > best) best = n;
+    }
+    return best;
+  }
+  function reconcileOpen(progId, def, entries) {
+    if (!def || !def.openDays || !def.openDays.length) return 0;
+    var list = (Array.isArray(entries) ? entries : []).filter(function (e) {
+      return e && typeof e === 'object' && e.type === 'conditioning' && e.id && isFinite(entryTime(e));
+    }).sort(function (a, b) { return entryTime(a) - entryTime(b); });
+    if (!list.length) return 0;
+    var rec = get(progId, def);
+    if (!rec.startedAt) return 0;               // never opened: nothing is owed yet
+    var used = {};
+    Object.keys(rec.completed).forEach(function (k) {
+      var c = rec.completed[k];
+      if (c && c.logId) used[c.logId] = 1;
+    });
+    var total = totalDays(rec), banked = 0;
+    for (var guard = 0; guard < total; guard++) {
+      var last = furthestCompleted(rec);
+      var day = nextTrainingFrom(rec, last + 1);
+      if (!day || isComplete(rec, day)) break;
+      var wid = workoutFor(rec, day);
+      if (def.openDays.indexOf(wid) < 0) break;   // a lift day is owed: not ours
+      var prior = last ? completionOf(rec, last) : null;
+      var anchor = (prior && prior.ts) || Date.parse(rec.startedAt) || 0;
+      var hit = null;
+      for (var i = 0; i < list.length; i++) {
+        if (!used[list[i].id] && entryTime(list[i]) > anchor) { hit = list[i]; break; }
+      }
+      if (!hit) break;
+      used[hit.id] = 1;
+      complete(progId, day, { logId: hit.id, workoutId: wid, ts: entryTime(hit) }, def);
+      rec = get(progId, def);
+      banked++;
+    }
+    return banked;
+  }
+  // The same, reading the log itself. Uses mc-log-read.js when the page has it
+  // (all of history, archive included); returns 0 when it does not, rather
+  // than parsing the store a second, unguarded way.
+  function reconcileFromLog(progId, def) {
+    try {
+      var L = window.MC_LOG;
+      if (!L || typeof L.readAllWorkouts !== 'function') return 0;
+      return reconcileOpen(progId, def, L.readAllWorkouts());
+    } catch (e) { return 0; }
+  }
+
   window.MC_PROGRAM_PROGRESS = {
     KEY: KEY,
+    reconcileOpen: reconcileOpen,
+    reconcileFromLog: reconcileFromLog,
     get: get,
     defFromSchedule: defFromSchedule,
     ensure: ensure,

@@ -25,7 +25,15 @@
     try { return JSON.parse(localStorage.getItem(KEY) || '[]') || []; }
     catch (e) { return []; }
   }
-  function write(a) { try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} }
+  // Council audit cleanup: a failed write of athlete data used to vanish in an
+  // empty catch. MC_LOG.writeStore (mc-log-read.js) shows the storage-full
+  // banner and records it in Diagnostics; without that module the old quiet
+  // fallback stands. Returns whether the write landed.
+  function write(a) {
+    var _v = JSON.stringify(a);
+    if (window.MC_LOG && typeof window.MC_LOG.writeStore === 'function') return window.MC_LOG.writeStore(KEY, _v);
+    try { localStorage.setItem(KEY, _v); return true; } catch (e) { return false; }
+  }
 
   // Same 'mc_activity' shape/format mc-live-tracker.js reads for the dashboard's
   // streak strip — duplicated in full rather than imported, since this module
@@ -98,6 +106,21 @@
   }
 
   window.MCCond = { log: log, best: best, all: all, fmt: fmt };
+
+  // A routine page with its own session engine (boxing-camp.js) announces a
+  // finished session with its total time. Nothing listened before, so a
+  // completed camp session reached no history, no PB and no program day
+  // unless the athlete also typed the time into "Log result" (council audit
+  // fix 1: a finished routine is what completes a conditioning day).
+  document.addEventListener('mc:cond-session-done', function (ev) {
+    var d = (ev && ev.detail) || {};
+    var secs = Math.round(Number(d.timeSec) || 0);
+    if (!d.routineId || !(secs > 0)) return;
+    if (!log(d.routineId, secs)) return;
+    // No personal-best claim here: a fixed-structure session's "best" is its
+    // shortest time, which would reward skipping rounds.
+    try { toast('🏁 Session logged — ' + fmt(secs) + '. No need to tap Log result.'); } catch (e) {}
+  });
 
   // ---- routines lookup ------------------------------------------------------
   function routines() {

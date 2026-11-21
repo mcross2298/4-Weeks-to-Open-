@@ -20,9 +20,23 @@
   var KEY = 'mc_collections_v1';
   var WK_KEY = 'mc_custom_workouts_v1';
 
-  function read() { try { return JSON.parse(localStorage.getItem(KEY) || '[]') || []; } catch (e) { return []; } }
-  function write(a) { try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} }
-  function readWk() { try { return JSON.parse(localStorage.getItem(WK_KEY) || '[]') || []; } catch (e) { return []; } }
+  // Council audit fix 2: both stores sync as a union by id where the newer
+  // entry wins, so a delete must be a newer RECORD ({id, deleted:true,
+  // updatedAt}), not a removal -- a filtered-out entry came back from the
+  // server copy on the next pull. readRaw() keeps those records for
+  // read-modify-write; read()/readWk() are what everything else sees.
+  function arr(key) {
+    try { var a = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+  }
+  function liveOf(a) { return a.filter(function (x) { return x && typeof x === 'object' && !x.deleted; }); }
+  function readRaw() { return arr(KEY); }
+  function read() { return liveOf(arr(KEY)); }
+  function write(a) {
+    var v = JSON.stringify(a);   // a failed save shows the storage-full banner when mc-log-read.js is loaded
+    if (window.MC_LOG && typeof window.MC_LOG.writeStore === 'function') return window.MC_LOG.writeStore(KEY, v);
+    try { localStorage.setItem(KEY, v); return true; } catch (e) { return false; }
+  }
+  function readWk() { return liveOf(arr(WK_KEY)); }
   function sync() { try { if (window.MC_SYNC && MC_SYNC.push) MC_SYNC.push(); } catch (e) {} }
   function uid() { return 'col-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
@@ -38,7 +52,7 @@
   function getAll() { return read(); }
   function get(id) { return read().filter(function (c) { return c.id === id; })[0] || null; }
   function save(c) {
-    var a = read();
+    var a = readRaw();
     if (!c.id) { c.id = uid(); c.createdAt = new Date().toISOString(); }
     // EN-9: this is the one arrayById store that is EDITED IN PLACE — same id,
     // new contents. Without an edit timestamp there is nothing for the sync
@@ -46,12 +60,16 @@
     // stale copy the other device happened to hold. "Resolve by timestamp"
     // is impossible until something writes one; this writes it.
     c.updatedAt = new Date().toISOString();
-    var i = a.findIndex(function (x) { return x.id === c.id; });
+    var i = a.findIndex(function (x) { return x && x.id === c.id; });
     if (i >= 0) a[i] = c; else a.unshift(c);
     write(a); sync();
     return c;
   }
-  function remove(id) { write(read().filter(function (c) { return c.id !== id; })); sync(); }
+  function remove(id) {
+    var stamp = new Date().toISOString();
+    write(readRaw().map(function (c) { return (c && c.id === id) ? { id: id, deleted: true, updatedAt: stamp } : c; }));
+    sync();
+  }
 
   function workoutsIn(id) {
     return readWk().filter(function (w) { return w.collection === id; })

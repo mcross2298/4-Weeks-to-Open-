@@ -3125,7 +3125,10 @@
                                     // lose their write either.
   };
   // T2.2: put back any tick the last page load lost to a hard kill.
-  try { replayJournal(); } catch (e) {}
+  // A failure here means crash recovery is off for this load, which nobody
+  // would otherwise ever learn; recorded for Diagnostics (council audit cleanup).
+  try { replayJournal(); }
+  catch (e) { try { if (window.MC_ERRLOG) window.MC_ERRLOG.rec('storage', 'set-log journal replay failed: ' + ((e && e.message) || e)); } catch (_) {} }
 
 
   // ---- FIX-01, second half: notice a write from another tab ---------------

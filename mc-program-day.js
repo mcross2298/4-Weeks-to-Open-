@@ -154,6 +154,11 @@
     if (!PD || !def) return null;
     var day = dayNumber();
     if (!day) return null;
+    // Conditioning sessions done since the last lift bank their open days
+    // FIRST. Otherwise finishing day 8 here would put day 8 ahead of the
+    // Modality Matrix's conditioning days 6 and 7, and reconcileOpen() only
+    // ever banks the day owed after the furthest completion.
+    if (PD.reconcileFromLog) { try { PD.reconcileFromLog(d.prog, def); } catch (e) {} }
     var rec = PD.get(d.prog, def);
     // A rest slot is not a workout. If a page ever reports one, that is a bug
     // in its resolver, not something to record as a trained day.

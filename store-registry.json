@@ -93,6 +93,13 @@
       "export": false,
       "note": "Which 12-Week Boxing Camp phase this device last opened. A view preference, not training data."
     },
+    "mc_boxing_camp_session_v1": {
+      "owner": "boxing-camp.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "The 12-Week Boxing Camp session in progress on this device (steps, round clock as wall-clock end times), so a reload resumes it. Cleared on finish, reset or phase switch; ignored after 12 hours. Device-local: the clock belongs to the device running it."
+    },
     "mc_cond_log_v1": {
       "owner": "mc-cond.js",
       "storage": "local",
