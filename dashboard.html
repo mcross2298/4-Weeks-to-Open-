@@ -2877,7 +2877,7 @@ function maybeCheckStreak(){
     if(localStorage.getItem(streakKey)) return;
     localStorage.setItem(streakKey,'1');
     if(window.MC_SB&&MC_SB.sendPush){
-      MC_SB.sendPush({title:'🔥 7-Workout Streak!',body:'Seven prescribed sessions in a row, rest days included. Incredible consistency — keep it going!'}).catch(function(){});
+      MC_SB.sendPush({type:'streak',title:'🔥 7-Workout Streak!',body:'Seven prescribed sessions in a row, rest days included. Incredible consistency — keep it going!'}).catch(function(){});
     }
   }catch(e){}
 }

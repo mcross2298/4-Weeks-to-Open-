@@ -2809,6 +2809,24 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   a warning. Keep the inner `exception` block if you edit it.
 > - **No client writes these tables,** and an event carries ids only, no load.
 
+> **Companion settings plan:** [`settings-pathways-roadmap.md`](settings-pathways-roadmap.md)
+> (opened 2026-11-21, `SP1`–`SP4`) brings four patterns over from the household
+> finance app: typed push routing, one Settings hub with per-alert push
+> switches, display & accessibility settings, and a made-up athlete fixture.
+> Each later phase keeps its own check-in. Scratch-listed.
+>
+> **`SP1` shipped (2026-11-21) — a tapped push opens what it is about.** Before
+> this, every push opened `dashboard.html`. Three things to know:
+> - **`mc-push-route.js` (`MC_PUSH_ROUTE`) is the one router.** `sw.js` loads it
+>   with `importScripts`; `tools/test-mc-push-route.js` runs the same file and
+>   drives `sw.js`'s real `notificationclick`. A new push type goes in its
+>   `ROUTES` and in `push-notify`'s `PUSH_TYPES`; the test fails if they differ.
+> - **A tap never navigates an open window.** It focuses a window already on
+>   the target page (a PR focuses any open window, since it fires mid-session),
+>   or opens a new one.
+> - **Untyped pushes open Home, as before**, so the client and Edge Functions
+>   can deploy in either order.
+
 > **12-Week Boxing Camp shipped (2026-11-20) — [`boxing-camp-roadmap.md`](boxing-camp-roadmap.md).**
 > It is a "Fight Camp" routine on the Conditioning tab (`boxing-camp.html`).
 > Things to know before you change it:

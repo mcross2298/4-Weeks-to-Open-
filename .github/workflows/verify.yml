@@ -443,6 +443,8 @@ jobs:
 
       - name: Push subscription key rotation (mc-push.js migrate)
         run: node tools/test-mc-push.js
+      - name: Push tap routing (mc-push-route.js, SP1)
+        run: node tools/test-mc-push-route.js
 
       - name: Rolodex leak-scan verdicts (check-deploy-artifact.js — a 5xx is not a leak, a network error is not absence)
         run: node tools/test-check-deploy-artifact.js

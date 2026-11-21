@@ -1743,6 +1743,7 @@
         // R3 residual: if this write has to wait for a signal, the replay
         // sends the push the in-session check (prCheck(), local history) found.
         var offlinePush = pr ? {
+          type: 'pr',
           title: '\uD83C\uDFC6 New PR \u2014 ' + exName,
           body: pr.w + ' lb, up from ' + pr.prev + ' lb. That is +' +
                 Math.round(pr.w - pr.prev) + ' on your best.'
@@ -1764,6 +1765,7 @@
               // nothing; the number it BEAT is the part worth reading on a
               // lock screen, and it is already in hand here.
               MC_SB.sendPush({
+                type: 'pr',
                 title: '🏆 New PR — ' + exName,
                 body: wNum + ' lb, up from ' + prevMax + ' lb. That is +' +
                       Math.round(wNum - prevMax) + ' on your best.'

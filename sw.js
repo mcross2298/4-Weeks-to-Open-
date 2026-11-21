@@ -1,7 +1,10 @@
 // MC Training — Service Worker v2
 // Relative-path precache so the app works at any GitHub Pages project subpath
 
-const CACHE_NAME = 'mc-training-v191';
+const CACHE_NAME = 'mc-training-v192';
+// SP1: where a tapped push opens. Guarded so a vm sandbox without
+// importScripts (tools/test-mc-sw.js) still loads this file.
+if (typeof importScripts === 'function') { try { importScripts('./mc-push-route.js'); } catch (_) {} }
 const BASE = 'https://mcross2298.github.io/4-Weeks-to-Open-/';
 
 // DG-1/DG-2: the app's one type identity (Archivo+Manrope) is loaded from
@@ -121,6 +124,7 @@ const CACHE_URLS = [
     './mc-program-tabs.css',
     './mc-program-tabs.js',
     './mc-pump-engine.js',
+    './mc-push-route.js',
     './mc-push.js',
     './mc-quick-pump.js',
     './mc-readiness-brief.js',
@@ -473,34 +477,42 @@ self.addEventListener('fetch', event => {
 
 // Push — show notification from server-sent milestone alert
 self.addEventListener('push', event => {
-    let title = 'MC Training', body = 'You have a new milestone!', icon = './icon.svg';
+    let title = 'MC Training', body = 'You have a new milestone!', icon = './icon.svg', d = {};
     try {
         if (event.data) {
-            const d = event.data.json();
+            d = event.data.json() || {};
             if (d.title) title = d.title;
             if (d.body)  body  = d.body;
             if (d.icon)  icon  = d.icon;
         }
     } catch (_) {}
+    const R = self.MC_PUSH_ROUTE;
     event.waitUntil(
         self.registration.showNotification(title, {
             body,
             icon,
             badge: './icon.svg',
-            tag: 'mc-milestone',
-            renotify: true
+            tag: R ? R.tag(d) : 'mc-milestone',
+            renotify: true,
+            data: { type: typeof d.type === 'string' ? d.type : null }
         })
     );
 });
 
-// Notification click — open the dashboard
+// Notification click — open the screen the push is about (mc-push-route.js).
+// A window already on that page is focused; a PR focuses any open window,
+// because it fires mid-session. Otherwise a new window opens, so a tap never
+// navigates an open workout away.
 self.addEventListener('notificationclick', event => {
     event.notification.close();
+    const R = self.MC_PUSH_ROUTE;
+    const r = R ? R.route(event.notification.data) : { url: 'dashboard.html', keepOpen: false };
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-            const dash = list.find(c => c.url.includes('dashboard.html'));
-            if (dash) return dash.focus();
-            return clients.openWindow('./dashboard.html');
+            const onPage = list.find(c => new URL(c.url).pathname.endsWith('/' + r.url));
+            const target = onPage || (r.keepOpen ? list[0] : null);
+            if (target) return target.focus();
+            return clients.openWindow('./' + r.url);
         })
     );
 });

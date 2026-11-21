@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
 
       await webpush.sendNotification(
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-        JSON.stringify({ title: "Your weekly check-in", body, icon: "./icon.svg", badge: "./icon.svg" })
+        JSON.stringify({ type: "checkin", title: "Your weekly check-in", body, icon: "./icon.svg", badge: "./icon.svg" })
       );
       sent++;
     } catch (err: any) {
