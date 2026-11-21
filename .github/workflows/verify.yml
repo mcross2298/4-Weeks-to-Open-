@@ -445,6 +445,8 @@ jobs:
         run: node tools/test-mc-push.js
       - name: Push tap routing (mc-push-route.js, SP1)
         run: node tools/test-mc-push-route.js
+      - name: Made-up athlete fixture (static, SP4)
+        run: node tools/check-fixture.js
 
       - name: Rolodex leak-scan verdicts (check-deploy-artifact.js — a 5xx is not a leak, a network error is not absence)
         run: node tools/test-check-deploy-artifact.js
@@ -622,6 +624,8 @@ jobs:
           # while the nav / superset hop bar is up. 12 of its 16 checks failed
           # on the tree before that audit.
           if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/check-tap-intent.js http://localhost:8080; then echo "FAILED: check-tap-intent"; EXIT=1; fi
+          # SP4: Home, History, Stats and Settings with the made-up athlete loaded.
+          if ! NODE_PATH=/tmp/pw-ci/node_modules node tools/check-fixture.js http://localhost:8080; then echo "FAILED: check-fixture"; EXIT=1; fi
           # Concurrent-write durability on mc_setlog_v1 (engine-repair roadmap
           # Phase 0.1 / audit L-01, FIX-01). The journey gate drives ONE tab;
           # this one drives two, because two tabs of the same program page used
