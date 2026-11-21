@@ -74,6 +74,12 @@ jobs:
       - name: Nutrition goal-calculator math (published Mifflin-St Jeor / Atwater)
         run: node tools/test-mc-macrocalc.js
 
+      # The 12-Week Boxing Camp's data held to its brief: phase round counts,
+      # the 3:00 / 0:30 clock, cumulative heavy-bag combos (new vs. carried)
+      # and finisher targets (boxing-camp-roadmap.md).
+      - name: Boxing camp data vs. the camp brief
+        run: node tools/test-boxing-camp-data.js
+
       - name: Muscle readiness math regression tests (real source, not a duplicated copy)
         run: node tools/test-mc-readiness.js
 

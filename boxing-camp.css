@@ -1,0 +1,145 @@
+/* ==========================================================================
+   boxing-camp.css — 12-Week Boxing Camp components (boxing-camp.html)
+   --------------------------------------------------------------------------
+   Loads after base.css + conditioning-elite.css and reuses the latter's
+   crimson-ember tokens (--c-accent, --c-ember, --c-text, --c-muted). Every
+   size, radius and weight reads a base.css token, so this file adds nothing
+   to tools/check-design-tokens.js's ratchets. Controls clear the owner's 48px
+   floor with 8px spacing; all text is >= 13px except the NEW marker and the
+   uppercase micro labels (--fs-2xs, matching .sec-head).
+   ========================================================================== */
+
+/* ── phase switcher ─────────────────────────────────────────────────── */
+.bc-phases{display:flex;gap:var(--sp-2);margin:0 0 var(--sp-3);}
+.bc-phase{
+  flex:1 1 0;min-width:0;min-height:56px;padding:var(--sp-2) var(--sp-1);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  border-radius:var(--r-md);border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.04);color:var(--c-text);
+  font-family:inherit;cursor:pointer;touch-action:manipulation;
+}
+.bc-phase-wk{font-size:var(--fs-md);font-weight:var(--fw-bold);white-space:nowrap;}
+.bc-phase-lbl{font-size:var(--fs-sm);font-weight:var(--fw-medium);color:var(--c-muted);}
+.bc-phase.is-on{
+  background:rgba(var(--c-accent-rgb),0.18);border-color:var(--c-accent);
+  box-shadow:0 0 0 1px rgba(var(--c-accent-rgb),0.35) inset;
+}
+.bc-phase.is-on .bc-phase-lbl{color:var(--c-ember);}
+
+/* ── what-changes strip ─────────────────────────────────────────────── */
+.bc-strip{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin:0 0 var(--sp-3);}
+.bc-stat{
+  font-size:var(--fs-sm);font-weight:var(--fw-semi);color:var(--c-text);
+  padding:6px var(--sp-3);border-radius:var(--r-pill);
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+  white-space:nowrap;
+}
+
+/* ── punch legend ───────────────────────────────────────────────────── */
+.bc-legend{
+  margin:0 0 var(--sp-3);border-radius:var(--r-md);
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);
+}
+.bc-legend summary{
+  list-style:none;cursor:pointer;min-height:48px;padding:0 var(--sp-4);
+  display:flex;align-items:center;gap:var(--sp-3);touch-action:manipulation;
+}
+.bc-legend summary::-webkit-details-marker{display:none;}
+.bc-legend summary::after{content:'▾';margin-left:auto;color:var(--c-muted);font-size:var(--fs-md);transition:transform .2s;}
+.bc-legend[open] summary::after{transform:rotate(180deg);}
+.bc-legend-t{font-size:var(--fs-sm);font-weight:var(--fw-bold);color:var(--c-ember);text-transform:uppercase;letter-spacing:0.08em;}
+.bc-legend-keys{font-size:var(--fs-md);font-weight:var(--fw-bold);color:var(--c-text);font-variant-numeric:tabular-nums;}
+.bc-legend-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:var(--sp-2);
+  padding:0 var(--sp-4) var(--sp-4);
+}
+.bc-key{display:flex;align-items:center;gap:var(--sp-2);}
+.bc-key-n{
+  flex:0 0 auto;width:28px;height:28px;border-radius:var(--r-sm);
+  display:inline-flex;align-items:center;justify-content:center;
+  background:rgba(var(--c-accent-rgb),0.18);color:var(--c-ember);
+  font-size:var(--fs-md);font-weight:var(--fw-black);
+}
+.bc-key-nm{font-size:var(--fs-sm);font-weight:var(--fw-regular);color:var(--c-text);}
+
+/* ── combo board ────────────────────────────────────────────────────── */
+.bc-board-wrap{margin:0 0 var(--sp-4);}
+.bc-board-ctrls{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center;margin-bottom:var(--sp-2);}
+.bc-rounds{display:flex;gap:var(--sp-2);flex:1 1 220px;min-width:0;}
+.bc-rpill,.bc-mode button{
+  min-height:48px;min-width:48px;padding:0 var(--sp-2);
+  border-radius:var(--r-md);border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.04);color:var(--c-text);
+  font-family:inherit;font-size:var(--fs-md);font-weight:var(--fw-bold);
+  cursor:pointer;touch-action:manipulation;
+}
+.bc-rpill{flex:1 1 0;}
+.bc-rpill.is-on,.bc-mode button.is-on{background:rgba(var(--c-accent-rgb),0.2);border-color:var(--c-accent);color:var(--c-text);}
+.bc-mode{display:flex;gap:var(--sp-2);flex:0 0 auto;}
+.bc-mode button{padding:0 var(--sp-3);}
+
+.bc-board-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--sp-2);margin:var(--sp-1) 0 var(--sp-2);}
+.bc-bh-r{font-size:var(--fs-lg);font-weight:var(--fw-bold);color:var(--c-text);}
+.bc-bh-c{font-size:var(--fs-sm);font-weight:var(--fw-medium);color:var(--c-muted);}
+.bc-bh-note{font-size:var(--fs-sm);font-weight:var(--fw-semi);color:var(--c-ember);}
+
+/* ── combo chips (board + live panel) ───────────────────────────────── */
+.bc-chips{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-2);}
+.bc-chip{
+  position:relative;display:inline-flex;flex-direction:column;align-items:flex-start;
+  padding:6px var(--sp-3);border-radius:var(--r-sm);
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);
+}
+.bc-code{font-size:var(--fs-xl);font-weight:var(--fw-black);color:var(--c-text);font-variant-numeric:tabular-nums;letter-spacing:0.02em;line-height:1.2;}
+.bc-name{font-size:var(--fs-sm);font-weight:var(--fw-regular);color:var(--c-muted);line-height:1.3;}
+.bc-chip.is-new.no-tag{padding-right:var(--sp-3);}
+.bc-chip.is-new{background:rgba(var(--c-accent-rgb),0.14);border-color:rgba(var(--c-accent-rgb),0.6);padding-right:44px;}
+.bc-chip.is-new .bc-name{color:var(--c-text);}
+.bc-new{
+  position:absolute;top:6px;right:6px;
+  font-size:var(--fs-2xs);font-weight:var(--fw-black);letter-spacing:0.06em;text-transform:uppercase;
+  color:var(--c-ember);
+}
+.bc-chip.is-carried .bc-code{color:var(--c-text);}
+.bc-chip.is-sm{padding:4px var(--sp-2);}
+.bc-chip.is-sm .bc-code{font-size:var(--fs-md);}
+.bc-carried-lbl{
+  font-size:var(--fs-2xs);font-weight:var(--fw-black);letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--c-muted);margin:var(--sp-1) 0 var(--sp-2);
+}
+.bc-empty{font-size:var(--fs-sm);color:var(--c-muted);padding:var(--sp-2) 0;}
+
+/* ── live panel in the Heavy Bag card ───────────────────────────────── */
+.bc-live{
+  margin:var(--sp-3) 0 var(--sp-1);padding:var(--sp-3);border-radius:var(--r-md);
+  background:rgba(0,0,0,0.35);border:1px solid rgba(var(--c-accent-rgb),0.35);
+  text-align:left;
+}
+.bc-live-hd{display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-2);flex-wrap:wrap;}
+.bc-live-tag{
+  font-size:var(--fs-2xs);font-weight:var(--fw-black);letter-spacing:0.1em;text-transform:uppercase;
+  padding:3px var(--sp-2);border-radius:var(--r-xs);background:var(--c-accent);color:var(--ink-0);
+}
+.bc-live-r{font-size:var(--fs-lg);font-weight:var(--fw-bold);color:var(--c-text);}
+.bc-live-c{font-size:var(--fs-sm);font-weight:var(--fw-medium);color:var(--c-muted);margin-left:auto;}
+
+/* ── session controls at the owner's floor ──────────────────────────── */
+.bc-page .bc-btn{min-height:48px;min-width:48px;font-size:var(--fs-sm);touch-action:manipulation;}
+.bc-page .rn-ctrls,.bc-page .cd-btns{gap:var(--sp-2);}
+.bc-page .rn-chip{font-size:var(--fs-sm);}
+.bc-page .pstep-target{font-size:var(--fs-sm);}
+.bc-page .log-row label{font-size:var(--fs-sm);}
+.bc-page .log-input{min-height:48px;}
+.bc-page .sum-handle{min-height:48px;}
+.bc-page .sum-reset{min-height:48px;}
+.bc-page [hidden]{display:none !important;}
+/* Only the active drill shows its timer: locked and finished cards collapse
+   to their one-line header, so the timeline reads as a list. */
+.bc-page .pstep.locked .rn-wrap,.bc-page .pstep.locked .cd-box,
+.bc-page .pstep.locked .log-row,.bc-page .pstep.locked .pstep-complete,
+.bc-page .pstep.done .rn-wrap,.bc-page .pstep.done .cd-box,
+.bc-page .pstep.done .pstep-complete{display:none;}
+
+@media (prefers-reduced-motion: reduce){
+  .bc-legend summary::after{transition:none;}
+}

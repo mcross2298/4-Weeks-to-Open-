@@ -94,6 +94,19 @@ const CONDITIONING = {
       ]
     },
     {
+      id: 'fight-camp',
+      type: 'routines',
+      name: 'Fight Camp',
+      icon: '🥊',
+      color: '#f43f5e',
+      blurb: 'Multi-week camps that build round by round.',
+      routines: [
+        { id: 'boxing-camp', name: '12-Week Boxing Camp', tag: '🥊 3 Phases · 12 Weeks', href: 'boxing-camp.html',
+          meta: 'Rope and heavy-bag rounds grow 3 → 4 → 5 across the camp. The bag combos build round by round, and the finishers get longer each phase.',
+          stats: ['⏱️ 3:00 / 0:30 rounds', '🥊 Combo progression'] }
+      ]
+    },
+    {
       id: 'cardio-core',
       type: 'exercises',
       name: 'Cardio & Core',

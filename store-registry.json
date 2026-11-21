@@ -86,6 +86,13 @@
       "sync": "arrayByIdTs",
       "export": true
     },
+    "mc_boxing_camp_v1": {
+      "owner": "boxing-camp.js",
+      "storage": "local",
+      "sync": false,
+      "export": false,
+      "note": "Which 12-Week Boxing Camp phase this device last opened. A view preference, not training data."
+    },
     "mc_cond_log_v1": {
       "owner": "mc-cond.js",
       "storage": "local",
