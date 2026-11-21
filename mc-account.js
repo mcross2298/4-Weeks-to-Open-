@@ -17,7 +17,7 @@
   window.__mcAccount = true;
   if (!window.MC_SB || !MC_SB.configured) return;
 
-  var overlay = null, currentUserObj = null;
+  var overlay = null, currentUserObj = null, sheetView = '';
 
   function initials(email) {
     var p = (email || '').split('@')[0].replace(/[^a-z0-9]/gi, '');
@@ -97,6 +97,14 @@
 
   function render() {
     var body = overlay.querySelector('#acctBody');
+    // SP2: Settings opens this sheet with Diagnostics alone. The sheet keeps
+    // its own dark surface, so the panel reads the same wherever it opens.
+    if (sheetView === 'diagnostics') {
+      body.innerHTML = '<div class="acct-title">Diagnostics</div>';
+      diagOpen = true;
+      appendDiagnosticsSection(body, true);
+      return;
+    }
     if (currentUserObj) {
       body.innerHTML =
         '<div class="acct-title">Account</div>' +
@@ -129,7 +137,6 @@
     appendWorkoutSection(body);
     appendInstallSection(body);
     appendBackupSection(body);
-    appendDiagnosticsSection(body);
   }
 
   // Add to Home Screen (L2 Sub-Phase B) — mc-install.js captures the native
@@ -268,7 +275,7 @@
     wrap.innerHTML =
       '<div style="border-top:1px solid rgba(255,255,255,0.1);margin:18px 0 14px;"></div>' +
       '<a class="acct-toggle" id="acctWorkoutSettings" href="workout-settings.html" style="text-decoration:none;">' +
-        '<span>Workout settings<span class="acct-toggle-sub">Rest timer, sounds, auto move, screen on, max weight.</span></span>' +
+        '<span>Settings<span class="acct-toggle-sub">Rest timer, notifications, screen on, Report a problem, Diagnostics.</span></span>' +
         '<span class="acct-toggle-state" aria-hidden="true">\u203a</span></a>';
     body.appendChild(wrap);
   }
@@ -300,15 +307,15 @@
     return JSON.stringify({ app: 'MC Training', at: new Date().toISOString(), meta: meta,
       userAgent: navigator.userAgent, errors: readErrors() }, null, 2);
   }
-  function appendDiagnosticsSection(body) {
+  function appendDiagnosticsSection(body, alone) {
     var errs = readErrors();
     var wrap = document.createElement('div');
     wrap.innerHTML =
-      '<div style="border-top:1px solid rgba(255,255,255,0.1);margin:18px 0 14px;"></div>' +
+      (alone ? '' : '<div style="border-top:1px solid rgba(255,255,255,0.1);margin:18px 0 14px;"></div>') +
       // FB1: a person's report, beside what the app caught by itself.
-      (window.MC_REPORT ? '<button type="button" class="acct-btn acct-secondary" id="acctReport" style="margin-bottom:8px;">Report a problem</button>' : '') +
-      '<button type="button" class="acct-btn acct-secondary" id="acctDiagBtn" aria-expanded="' + diagOpen + '" aria-controls="acctDiag">' +
-        'Diagnostics' + (errs.length ? ' (' + errs.length + ' logged)' : '') + '</button>' +
+      (window.MC_REPORT && !alone ? '<button type="button" class="acct-btn acct-secondary" id="acctReport" style="margin-bottom:8px;">Report a problem</button>' : '') +
+      (alone ? '' : '<button type="button" class="acct-btn acct-secondary" id="acctDiagBtn" aria-expanded="' + diagOpen + '" aria-controls="acctDiag">' +
+        'Diagnostics' + (errs.length ? ' (' + errs.length + ' logged)' : '') + '</button>') +
       '<div id="acctDiag"' + (diagOpen ? '' : ' hidden') + '></div>';
     body.appendChild(wrap);
     var panel = wrap.querySelector('#acctDiag');
@@ -325,11 +332,12 @@
         a.href = 'field-log.html';
         a.textContent = 'Field log (owner)';
         a.style.cssText = 'display:flex;align-items:center;justify-content:center;text-decoration:none;box-sizing:border-box;margin-bottom:8px;';
-        var anchor = wrap.querySelector('#acctDiagBtn');
+        var anchor = wrap.querySelector('#acctDiagBtn') || wrap.querySelector('#acctDiag');
         if (anchor) anchor.parentNode.insertBefore(a, anchor);
       }).catch(function () {});
     } catch (e) {}
-    wrap.querySelector('#acctDiagBtn').addEventListener('click', function () {
+    var diagBtn = wrap.querySelector('#acctDiagBtn');
+    if (diagBtn) diagBtn.addEventListener('click', function () {
       diagOpen = !diagOpen;
       this.setAttribute('aria-expanded', String(diagOpen));
       panel.hidden = !diagOpen;
@@ -500,7 +508,8 @@
     });
   }
 
-  function openSheet() {
+  function openSheet(view) {
+    sheetView = typeof view === 'string' ? view : '';
     if (!overlay) {
       overlay = document.createElement('div');
       overlay.className = 'acct-overlay';
@@ -552,10 +561,15 @@
     var av = document.querySelector('.avatar');
     if (!av) return;
     av.style.cursor = 'pointer';
-    av.onclick = openSheet;
+    av.onclick = function () { openSheet(); };
     if (user) { av.textContent = initials(user.email); av.classList.add('acct-on'); }
     else { av.textContent = 'MC'; av.classList.remove('acct-on'); }
   }
+
+  window.MC_ACCOUNT = {
+    open: function () { openSheet(); },
+    openDiagnostics: function () { openSheet('diagnostics'); }
+  };
 
   function init() {
     injectStyles();

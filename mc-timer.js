@@ -1000,7 +1000,7 @@ function renderPrefToggles(host) {
     const a = document.createElement('a');
     a.className = 'tf-allset';
     a.href = 'workout-settings.html';
-    a.textContent = 'All workout settings \u2192';
+    a.textContent = 'All settings \u2192';
     host.appendChild(a);
   }
 }

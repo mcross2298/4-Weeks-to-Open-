@@ -65,6 +65,22 @@ for (const [f, re, n] of senders) {
 }
 check('mc-supabase.js sendPush forwards type', /type: opts\.type/.test(read('mc-supabase.js')));
 
+// SP2: one Settings switch per push type, and every sender honours it.
+const ws = read('workout-settings.html');
+const nb = ws.match(/var NOTIFY = \[([\s\S]*?)\];/);
+check('workout-settings.html declares NOTIFY', !!nb);
+if (nb) {
+  const keys = Array.from(nb[1].matchAll(/k: '([a-z]+)'/g)).map(x => x[1]).sort();
+  check('Settings has a switch for every push type', JSON.stringify(keys) === JSON.stringify(Array.from(R.TYPES).sort()), keys.join(','));
+}
+check('Settings saves the switches to mc_notify_v1', /var NKEY = 'mc_notify_v1'/.test(ws) && /localStorage\.setItem\(NKEY/.test(ws));
+check('mc-supabase.js sendPush skips a muted type', /mc_notify_v1[\s\S]{0,120}\[opts\.type\] === false/.test(read('mc-supabase.js')));
+check('push-notify skips a muted type', /store_key", "mc_notify_v1"[\s\S]{0,200}prefs\[type\] === false/.test(pn));
+const wc = read('supabase/functions/weekly-checkin/index.ts');
+check('weekly-checkin reads mc_notify_v1', /"mc_notify_v1"\]/.test(wc) && /\.checkin === false/.test(wc));
+check('weekly-checkin skips a muted user', /if \(body === null\) \{ muted\+\+; continue; \}/.test(wc));
+check('mc_notify_v1 syncs per key', /'mc_notify_v1':\s*'dictBase'/.test(read('mc-sync.js')));
+
 // sw.js loads the router and routes the tap through it.
 const sw = read('sw.js');
 check('sw.js importScripts mc-push-route.js', /importScripts\('\.\/mc-push-route\.js'\)/.test(sw));

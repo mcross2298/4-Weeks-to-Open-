@@ -7,13 +7,13 @@
      mc-strain.js @ line 868
      mc-finish.js @ line 1183
      mc-supabase.js @ line 2212
-     mc-sync.js @ line 3229
-     mc-biometric.js @ line 4395
-     program-overrides.js @ line 4499
-     mc-hints.js @ line 5478
-     mc-card-actions.js @ line 5606
-     program-manager.js @ line 6775
-     mc-live-tracker.js @ line 8653
+     mc-sync.js @ line 3236
+     mc-biometric.js @ line 4406
+     program-overrides.js @ line 4510
+     mc-hints.js @ line 5489
+     mc-card-actions.js @ line 5617
+     program-manager.js @ line 6786
+     mc-live-tracker.js @ line 8664
 */
 
 /* ---- mc-replace.js ---- */
@@ -3034,6 +3034,13 @@ try {
   // the callers still swallow — but the promise tells the truth, and the
   // console carries the status.
   function sendPush(opts) {
+    // SP2: a push type switched off in Settings (mc_notify_v1, unset is on)
+    // is not sent. push-notify checks the synced copy too, for a phone that
+    // has not pulled the change yet.
+    try {
+      var muted = opts && opts.type && JSON.parse(localStorage.getItem('mc_notify_v1') || '{}');
+      if (muted && muted[opts.type] === false) return Promise.resolve({ sent: false, reason: 'muted' });
+    } catch (e) {}
     return ready.then(function (c) {
       if (!c) return null;
       return c.auth.getSession().then(function (r) {
@@ -3382,7 +3389,11 @@ try {
     'mc_personal_intensifiers': 'dictBase',   // { pageId: { baseKey: patch } }
     // Favourites are an ARRAY of names, not a dict, so none of the strategies
     // above fit — see mergeStringSetBase().
-    'mc_ex_favs':               'stringSetBase'
+    'mc_ex_favs':               'stringSetBase',
+    // SP2: which push types are switched off ({ pr: false }; unset is on).
+    // Per key, so muting PRs on the phone and the check-in on the tablet both
+    // hold. push-notify and weekly-checkin read the synced copy.
+    'mc_notify_v1':             'dictBase'
   };
 
   // Dynamic key FAMILIES, where the key itself carries data (the page id) and

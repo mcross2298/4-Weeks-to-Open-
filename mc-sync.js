@@ -154,7 +154,11 @@
     'mc_personal_intensifiers': 'dictBase',   // { pageId: { baseKey: patch } }
     // Favourites are an ARRAY of names, not a dict, so none of the strategies
     // above fit — see mergeStringSetBase().
-    'mc_ex_favs':               'stringSetBase'
+    'mc_ex_favs':               'stringSetBase',
+    // SP2: which push types are switched off ({ pr: false }; unset is on).
+    // Per key, so muting PRs on the phone and the check-in on the tablet both
+    // hold. push-notify and weekly-checkin read the synced copy.
+    'mc_notify_v1':             'dictBase'
   };
 
   // Dynamic key FAMILIES, where the key itself carries data (the page id) and

@@ -326,6 +326,13 @@
       "export": false,
       "note": "PM publish queue; drains to Supabase."
     },
+    "mc_notify_v1": {
+      "owner": "workout-settings.html",
+      "storage": "local",
+      "sync": "dictBase",
+      "export": true,
+      "note": "SP2: which push types are switched off ({ pr: false }; unset is on). Synced so a mute holds on every phone; push-notify and weekly-checkin read the synced copy, and mc-supabase.js's sendPush() checks it before calling."
+    },
     "mc_prefs_v1": {
       "owner": "mc-timer.js",
       "storage": "local",
