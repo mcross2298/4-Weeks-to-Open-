@@ -42,6 +42,7 @@
     'mc_custom_exercises_v1',       // G-01
     'mc_active_prog', 'mc_weekly_overrides_v1',
     'mc_program_progress_v1',       // program-day-view-roadmap.md D0
+    'mc_notify_v1',                 // settings-pathways-roadmap.md SP2
     // export-only: per-exercise personalization. Real user decisions worth
     // restoring, but not synced yet — these dicts carry no per-entry
     // timestamp, so a live merge needs a conflict rule of its own (owner

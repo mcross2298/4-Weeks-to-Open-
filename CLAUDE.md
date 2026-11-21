@@ -2826,6 +2826,17 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   or opens a new one.
 > - **Untyped pushes open Home, as before**, so the client and Edge Functions
 >   can deploy in either order.
+>
+> **`SP2` shipped (2026-11-21) — one Settings page, a switch per push.**
+> `workout-settings.html` is titled **Settings**. Things to know:
+> - **`mc_notify_v1` is which push types are off** (`{ pr: false }`, unset is
+>   on), synced per key. `sendPush()` checks it, and so do `push-notify` and
+>   `weekly-checkin` on the server. A new push type needs a row in Settings'
+>   `NOTIFY` as well as `ROUTES` and `PUSH_TYPES`; the test holds all three.
+> - **Diagnostics lives under Settings → Help** and opens as the account
+>   sheet's panel (`MC_ACCOUNT.openDiagnostics()`). The account sheet no
+>   longer carries it.
+> - Settings does not load `mc-sync.js`, so a change syncs when Home next runs.
 
 > **12-Week Boxing Camp shipped (2026-11-20) — [`boxing-camp-roadmap.md`](boxing-camp-roadmap.md).**
 > It is a "Fight Camp" routine on the Conditioning tab (`boxing-camp.html`).

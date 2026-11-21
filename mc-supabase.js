@@ -823,6 +823,13 @@
   // the callers still swallow — but the promise tells the truth, and the
   // console carries the status.
   function sendPush(opts) {
+    // SP2: a push type switched off in Settings (mc_notify_v1, unset is on)
+    // is not sent. push-notify checks the synced copy too, for a phone that
+    // has not pulled the change yet.
+    try {
+      var muted = opts && opts.type && JSON.parse(localStorage.getItem('mc_notify_v1') || '{}');
+      if (muted && muted[opts.type] === false) return Promise.resolve({ sent: false, reason: 'muted' });
+    } catch (e) {}
     return ready.then(function (c) {
       if (!c) return null;
       return c.auth.getSession().then(function (r) {

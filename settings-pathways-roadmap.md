@@ -48,21 +48,39 @@ patterns the owner chose to bring over. Decided with the owner across two
 - Not done: opening a specific exercise's trend. Neither History nor Stats
   reads a URL parameter yet; that is its own change.
 
-## `SP2` — one Settings hub + per-alert push switches
+## `SP2` — one Settings hub + per-alert push switches ✅ shipped (2026-11-21)
 
-`workout-settings.html` becomes the one Settings page: today's groups, plus
-Notifications (with a switch per alert type), Diagnostics, Report a problem
-and Repair moved out of the account sheet. The account sheet keeps account
-actions and links here. Each section gets an anchor (`#notifications`,
-`#diagnostics`) so a push or a link can open it.
+**Decision (owner, 2026-11-21): a synced store.** `mc_notify_v1`
+(`{ pr: false }`, unset is on) syncs per key (`dictBase`), so muting PRs on one
+phone and the check-in on another both hold.
 
-**Decision needed at the check-in:** where per-alert preferences live.
-`mc_prefs_v1` is device-only, a PR push is sent from the client and the
-check-in from the server. The options are a synced store that `weekly-checkin`
-reads (as it already reads `mc_body_v1`), or a column on `push_subscriptions`
-(per device, needs a migration the owner applies).
+- `workout-settings.html` is **Settings** (same file, so the rest row's link
+  and bookmarks still land): the workout switches, then Notifications (the
+  permission switch, unchanged), **Which pushes** (one switch per push type,
+  staged with Save changes like the rest), and **Help** (Report a problem,
+  Diagnostics). Sections carry anchors: `#notifications`, `#alerts`, `#help`.
+- **Every sender honours the switch.** `mc-supabase.js`'s `sendPush()` skips
+  a muted type before calling out; `push-notify` reads the synced copy and
+  answers `muted`, for a phone that has not pulled the change yet;
+  `weekly-checkin` reads it beside `mc_body_v1` and counts the user as
+  `muted`. Unset or unsynced means on, so nobody loses a push by default.
+- **Diagnostics moved out of the account sheet.** Settings opens it through
+  `MC_ACCOUNT.openDiagnostics()`, as the account sheet's own dark panel, so
+  nothing was restyled onto the page. The account sheet keeps account,
+  appearance, install and backup, and one row into Settings.
+- `tools/test-mc-push-route.js` holds Settings' switches equal to
+  `MC_PUSH_ROUTE.TYPES` and checks each sender's mute.
+
+Not done: a sync on the Settings page itself. It does not load `mc-sync.js`
+(a pull's one-shot reload would throw away an unsaved form), so a change
+reaches the account the next time Home syncs. Until then the client check
+covers the phone it was made on.
 
 ## `SP3` — display & accessibility
+
+Note for the check-in: the account sheet already has an Appearance section
+(accent colour and a Default / Compact / Spacious density, `MC_THEME.personal`),
+so SP3 starts by moving that into Settings rather than building density again.
 
 In the Settings hub, per device: density (comfortable / compact), Reduce
 motion (alongside the phone's own setting), and larger text. Tokens only, so
