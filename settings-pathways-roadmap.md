@@ -105,6 +105,17 @@ covers the phone it was made on.
   bar and grew into being cut off at 320px, so they read a new fixed
   `--fs-nav` (11px) that Larger text does not step. "Conditioning" is already
   cut off at default on 320–360px screens; that is older and unchanged.
+  **Home, done (2026-11-21).** With the made-up athlete, 34% of Home's text
+  grew. 61 more literals became tokens, in `dashboard.html` and the four
+  modules Home renders (`mc-program-day.css`, `mc-recap.js`,
+  `mc-calendar.js`; the module copies carry a px fallback). Default rendering
+  is identical on Home, Stats and the Strength landing at 320 and 390 (every
+  computed size hashed), and Home's Training, Programs and Conditioning
+  screens now grow 90–92%. Left fixed on purpose: Home's own tab-bar labels
+  (same reason as the nav) and four emoji icons. The Nutrition screen
+  (`mc-macros.js`, 79 literals) is still at 5% and is its own change.
+  `tools/design-token-budgets.json`'s `fontSizePx` is lowered 90 → 56 so the
+  count cannot climb back.
 - **Larger text with Compact** first came out *smaller* than default (an
   exercise name went 15px → 13.9px, because compact multiplies by 0.82).
   Together they now use a 0.9 density, so text never ends below default.
