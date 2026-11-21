@@ -14,7 +14,7 @@
 //
 //   POST /functions/v1/weekly-checkin
 //   Header: x-cron-secret: <CRON_SECRET>
-//   -> { sent: number, skipped: number, total: number }
+//   -> { sent: number, skipped: number, muted: number, total: number }
 //
 // Secrets (set with `supabase secrets set`):
 //   CRON_SECRET                              (shared secret — generate your own, e.g. `openssl rand -hex 32`)
@@ -90,14 +90,17 @@ async function computeRecap(sb: ReturnType<typeof createClient>, userId: string)
     .from("user_sync")
     .select("store_key, data")
     .eq("user_id", userId)
-    .in("store_key", ["mc_body_v1", "mc_macros_v1"]);
+    .in("store_key", ["mc_body_v1", "mc_macros_v1", "mc_notify_v1"]);
 
   let bodyweightDelta: number | null = null;
   let macroDaysLogged = 0;
   let macroAvgKcal: number | null = null;
   let macroGoalKcal: number | null = null;
+  let muted = false;
 
   for (const row of syncRows || []) {
+    // SP2: the weekly check-in switched off in Settings (unset is on).
+    if (row.store_key === "mc_notify_v1" && row.data && (row.data as Record<string, unknown>).checkin === false) muted = true;
     if (row.store_key === "mc_body_v1" && Array.isArray(row.data)) {
       const recent = (row.data as BodyEntry[])
         .filter((e) => e.date && e.date >= since30.slice(0, 10) && typeof e.w === "number")
@@ -121,7 +124,7 @@ async function computeRecap(sb: ReturnType<typeof createClient>, userId: string)
     }
   }
 
-  return { trainingDays, bodyweightDelta, macroDaysLogged, macroAvgKcal, macroGoalKcal };
+  return { trainingDays, bodyweightDelta, macroDaysLogged, macroAvgKcal, macroGoalKcal, muted };
 }
 
 Deno.serve(async (req) => {
@@ -146,17 +149,18 @@ Deno.serve(async (req) => {
   // One recap per user (a user can only have distinct endpoints, but we only
   // need to compute the recap text once per user_id even if they somehow
   // have more than one device subscribed).
-  const recapCache = new Map<string, string>();
-  let sent = 0, skipped = 0;
+  const recapCache = new Map<string, string | null>();
+  let sent = 0, skipped = 0, muted = 0;
 
   for (const sub of subs) {
     try {
       let body = recapCache.get(sub.user_id);
       if (body === undefined) {
         const r = await computeRecap(sb, sub.user_id);
-        body = buildRecap(r.trainingDays, r.bodyweightDelta, r.macroDaysLogged, r.macroAvgKcal, r.macroGoalKcal);
+        body = r.muted ? null : buildRecap(r.trainingDays, r.bodyweightDelta, r.macroDaysLogged, r.macroAvgKcal, r.macroGoalKcal);
         recapCache.set(sub.user_id, body);
       }
+      if (body === null) { muted++; continue; }
 
       await webpush.sendNotification(
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
@@ -173,5 +177,5 @@ Deno.serve(async (req) => {
     }
   }
 
-  return json({ sent, skipped, total: subs.length });
+  return json({ sent, skipped, muted, total: subs.length });
 });

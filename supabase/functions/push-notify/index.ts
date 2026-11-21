@@ -54,6 +54,18 @@ Deno.serve(async (req) => {
     if (PUSH_TYPES.includes(payload.type)) type = payload.type;
   } catch (_) { /* use defaults */ }
 
+  // SP2: a type switched off in Settings (mc_notify_v1, synced) is not sent.
+  if (type) {
+    const { data: prefRow } = await sb
+      .from("user_sync")
+      .select("data")
+      .eq("user_id", user.id)
+      .eq("store_key", "mc_notify_v1")
+      .maybeSingle();
+    const prefs = prefRow?.data as Record<string, unknown> | null;
+    if (prefs && prefs[type] === false) return json({ sent: false, reason: "muted" });
+  }
+
   // Look up the user's push subscription
   const { data: rows } = await sb
     .from("push_subscriptions")
