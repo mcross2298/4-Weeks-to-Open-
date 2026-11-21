@@ -37,10 +37,13 @@
     Calves: '🦿', Abs: '🔥', Core: '🔥', Forearms: '🤝', Cardio: '🏃', Traps: '🔝'
   };
 
+  // Raw store, deletion records included -- for read-modify-write, so writing
+  // back cannot drop one (council audit fix 2). live() is what lists show.
   function read() {
-    try { return JSON.parse(localStorage.getItem(KEY) || '[]') || []; }
+    try { var a = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(a) ? a : []; }
     catch (e) { return []; }
   }
+  function live() { return read().filter(function (w) { return w && typeof w === 'object' && !w.deleted; }); }
   function write(a) { try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} }
   function sync() { try { if (window.MC_SYNC && MC_SYNC.push) MC_SYNC.push(); } catch (e) {} }
   function esc(s) {
@@ -65,7 +68,7 @@
 
   // Bonus workouts, descending by publish date (newest at top).
   function list() {
-    return read().filter(isBonus).sort(function (a, b) {
+    return live().filter(isBonus).sort(function (a, b) {
       return publishDate(b).localeCompare(publishDate(a));
     });
   }
@@ -74,8 +77,9 @@
   function assign(id, programId) {
     var all = read(), changed = false;
     for (var i = 0; i < all.length; i++) {
-      if (all[i].id === id) {
+      if (all[i] && all[i].id === id && !all[i].deleted) {
         all[i].program = programId || '';
+        all[i].updatedAt = new Date().toISOString();   // an edit in place: see mc-sync.js mergeArrayByIdTs
         if (!all[i].publishedAt) all[i].publishedAt = all[i].created || new Date().toISOString();
         changed = true;
         break;

@@ -512,7 +512,12 @@ self.addEventListener('notificationclick', event => {
             const onPage = list.find(c => new URL(c.url).pathname.endsWith('/' + r.url));
             const target = onPage || (r.keepOpen ? list[0] : null);
             if (target) return target.focus();
-            return clients.openWindow('./' + r.url);
+            // `from=push` lets this launch past the head boot's cold-launch
+            // guard, which otherwise sends any installed-app cold start that
+            // is not on Home back to Home -- exactly what a new window opened
+            // from a tap is (council audit fix 4). The cache lookup for
+            // navigations ignores the query, so offline still finds the page.
+            return clients.openWindow('./' + r.url + (r.url.indexOf('?') < 0 ? '?' : '&') + 'from=push');
         })
     );
 });

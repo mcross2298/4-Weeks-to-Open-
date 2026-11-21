@@ -104,6 +104,8 @@
   function initialPhase() {
     var q = parseInt(new URLSearchParams(location.search).get('phase'), 10);
     if (CAMP.phaseById(q)) return q;
+    var sv = readSession();
+    if (sv) return sv.phase;
     try {
       var s = JSON.parse(localStorage.getItem(STORE) || 'null');
       if (s && CAMP.phaseById(s.phase)) return s.phase;
@@ -329,26 +331,30 @@
     if (st.combos) renderLive(st);
   }
 
-  function ivWork(st) {
-    st.iphase = 'work'; ivUI(st); buzz([300]);
-    st.itimer = new Countdown(st.work, {
+  // `secs` starts the phase part-way through and `quiet` skips the cue: both
+  // are for resuming a saved session, where the round did not just begin.
+  function ivWork(st, secs, quiet) {
+    st.iphase = 'work'; ivUI(st); if (!quiet) buzz([300]);
+    st.itimer = new Countdown(secs || st.work, {
       onTick: function (rem) { var d = $('rndisp-' + st.key); if (d) d.textContent = fmt(rem); st.ielapsed = st.iround * (st.work + st.rest) + (st.work - rem); },
       onDone: function () { buzz([200, 100, 200, 100, 400]); ivRest(st); }
     });
     st.itimer.start();
   }
-  function ivRest(st) {
+  function ivRest(st, secs) {
     st.iphase = 'rest'; ivUI(st);
-    st.itimer = new Countdown(st.rest, {
+    st.itimer = new Countdown(secs || st.rest, {
       onTick: function (rem) { var d = $('rndisp-' + st.key); if (d) d.textContent = fmt(rem); st.ielapsed = st.iround * (st.work + st.rest) + st.work + (st.rest - rem); },
       onDone: function () { st.iround++; if (st.iround >= st.rounds) ivFinish(st); else ivWork(st); }
     });
     st.itimer.start();
   }
-  function ivFinish(st) {
+  function ivFinish(st, quiet) {
     st.iphase = 'done'; st.itimer = null; st.done = true;
     st.ielapsed = Math.max(st.ielapsed, st.rounds * st.work);
-    ivUI(st); buzz([200, 100, 200, 100, 500]); advance();
+    ivUI(st);
+    if (quiet) return;
+    buzz([200, 100, 200, 100, 500]); advance();
   }
 
   function act(kind, key) {
@@ -386,7 +392,10 @@
     } else {
       S.complete = true; $('doneBanner').classList.add('show');
       $('sumTitleText').textContent = '🏆 Complete'; buzz([200, 100, 200, 100, 500]);
-      try { document.dispatchEvent(new CustomEvent('mc:cond-session-done', { detail: { routineId: 'boxing-camp', phase: phase.id } })); } catch (e) {}
+      clearSession();
+      // mc-cond.js logs it (history, conditioning log, the program's owed
+      // conditioning day) from the total time carried here.
+      try { document.dispatchEvent(new CustomEvent('mc:cond-session-done', { detail: { routineId: 'boxing-camp', phase: phase.id, timeSec: totalSec() } })); } catch (e) {}
     }
     updateSummary();
   }
@@ -407,6 +416,142 @@
   }
 
   function byKey(k) { for (var i = 0; i < S.steps.length; i++) if (S.steps[i].key === k) return S.steps[i]; return null; }
+
+  /* ── session save / resume (council audit fix 5) ────────────────────────
+     Only the phase used to be remembered, so a reload, a deploy's update
+     reload, or the OS dropping a backgrounded tab started the session over.
+     The session is saved as wall-clock facts — a running countdown's endAt,
+     a count-up's start time — so a resume can tell how much time passed while
+     the page was gone and catch the round clock up, exactly as the timers
+     themselves already compute time. Device-local, not synced: an in-progress
+     session belongs to the device running its clock. Dropped after 12 hours,
+     the same window mc-session.js uses for a lifting session. */
+  var SESSION_KEY = 'mc_boxing_camp_session_v1';
+  var SESSION_MAX_MS = 12 * 3600 * 1000;
+  var lastSaved = null;
+
+  function snapshot() {
+    return {
+      v: 1, phase: phase.id, activeIdx: S.activeIdx, complete: S.complete,
+      steps: S.steps.map(function (st) {
+        if (st.type === 'interval') {
+          var t = st.itimer;
+          return { key: st.key, done: st.done, iround: st.iround, iphase: st.iphase,
+            running: !!(t && t.running), endAt: t && t.running ? t.endAt : 0,
+            remaining: t && !t.running ? t.remaining : 0 };
+        }
+        var inp = $('log-' + st.key);
+        return { key: st.key, done: st.done, logged: st.logged, loggedSec: st.loggedSec,
+          elapsed: st.up ? st.up.elapsed : 0, running: !!(st.up && st.up.running),
+          startAt: st.up && st.up.running ? st.up.startAt : 0,
+          input: inp && !inp.disabled ? inp.value : '' };
+      })
+    };
+  }
+  function saveSession() {
+    // Nothing started yet, or already finished and logged: nothing to keep.
+    // Removal is explicit (clearSession), never inferred here, so opening
+    // another phase by link cannot silently erase a session saved for this one.
+    if (!S.steps.length || S.complete || !started()) return;
+    var json;
+    try { json = JSON.stringify(snapshot()); } catch (e) { return; }
+    if (json === lastSaved) return;            // only on a real state change
+    lastSaved = json;
+    try {
+      localStorage.setItem(SESSION_KEY, '{"ts":' + Date.now() + ',"s":' + json + '}');
+    } catch (e) {
+      try { if (window.MC_ERRLOG) MC_ERRLOG.rec('storage', 'boxing camp session save failed'); } catch (_) {}
+    }
+  }
+  function clearSession() {
+    lastSaved = null;
+    try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+  }
+  function readSession() {
+    try {
+      var w = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+      if (!w || !w.s || !Array.isArray(w.s.steps) || !CAMP.phaseById(w.s.phase)) return null;
+      if (!(Date.now() - (w.ts || 0) < SESSION_MAX_MS)) return null;
+      return w.s;
+    } catch (e) { return null; }
+  }
+
+  // Walk a running interval's clock forward past every phase boundary that
+  // fell while the page was gone. Returns the remaining seconds in the phase
+  // the step is in now, or -1 when the step finished meanwhile.
+  function catchUp(st, saved) {
+    var endAt = saved.endAt, now = Date.now();
+    st.iround = saved.iround; st.iphase = saved.iphase;
+    var guard = 0;
+    while (endAt <= now && guard++ < 1000) {
+      if (st.iphase === 'work') { st.iphase = 'rest'; endAt += st.rest * 1000; }
+      else { st.iround++; if (st.iround >= st.rounds) return -1; st.iphase = 'work'; endAt += st.work * 1000; }
+    }
+    return Math.max(1, Math.round((endAt - now) / 1000));
+  }
+
+  function restoreSession(saved) {
+    var any = false;
+    saved.steps.forEach(function (ss) {
+      var st = byKey(ss.key); if (!st) return;
+      if (st.type === 'interval') {
+        if (ss.done || ss.iphase === 'done') { st.iround = st.rounds; st.iphase = 'done'; st.done = true; st.ielapsed = st.rounds * (st.work + st.rest); ivUI(st); any = true; return; }
+        if (ss.iphase !== 'work' && ss.iphase !== 'rest') return;
+        any = true;
+        var rem = ss.running ? catchUp(st, ss) : Math.max(1, ss.remaining | 0);
+        if (!ss.running) { st.iround = ss.iround; st.iphase = ss.iphase; }
+        if (rem < 0) { ivFinish(st, true); return; }
+        var len = st.iphase === 'work' ? st.work : st.rest;
+        st.ielapsed = st.iround * (st.work + st.rest) + (st.iphase === 'rest' ? st.work : 0) + (len - rem);
+        // The same Countdown the live path builds, at the time left, no cue.
+        if (st.iphase === 'work') ivWork(st, rem, true); else ivRest(st, rem);
+        if (!ss.running) {
+          st.itimer.pause();
+          var go = $('rngo-' + st.key);
+          if (go) { go.textContent = '▶ Resume'; go.className = 'rn-ctrl go bc-btn'; }
+        }
+      } else {
+        if (!st.up) return;
+        st.up.elapsed = Math.max(0, Number(ss.elapsed) || 0);
+        if (ss.running && ss.startAt > 0) {
+          // Time since it was started counts, as it would have live.
+          st.up.elapsed += Math.max(0, Date.now() - ss.startAt);
+        }
+        if (st.up.elapsed > 0 || ss.done) any = true;
+        var inp = $('log-' + st.key);
+        if (ss.done) {
+          st.done = true; st.logged = ss.logged; st.loggedSec = ss.loggedSec || 0;
+          if (inp) { inp.value = ss.logged != null ? ss.logged : ''; inp.disabled = true; }
+        } else if (inp && ss.input) { inp.value = ss.input; any = true; }
+        st.up.onTick(st.up.now());
+        if (ss.running && !ss.done) {
+          st.up.toggle();                         // resumes counting from elapsed
+          var b = $('cu-go-' + st.key), dd = $('cu-disp-' + st.key);
+          if (b) { b.textContent = '⏸ Pause'; b.className = 'cd-btn bc-btn pause'; }
+          if (dd) dd.className = 'cd-disp running';
+        } else if (st.up.elapsed > 0 && !ss.done) {
+          var b2 = $('cu-go-' + st.key); if (b2) b2.textContent = '▶ Resume';
+        }
+      }
+    });
+    if (!any) return false;
+    S.activeIdx = 0;
+    while (S.activeIdx < S.steps.length && S.steps[S.activeIdx].done) S.activeIdx++;
+    S.complete = S.activeIdx >= S.steps.length;
+    refreshStates();
+    if (S.complete) { $('doneBanner').classList.add('show'); $('sumTitleText').textContent = '🏆 Complete'; }
+    updateSummary();
+    return true;
+  }
+
+  function totalSec() {
+    var sec = 0;
+    S.steps.forEach(function (st) {
+      if (st.type === 'interval') sec += st.ielapsed || 0;
+      else if (st.up) sec += st.up.now();
+    });
+    return Math.round(sec);
+  }
 
   function liveValue(key) {
     var st = byKey(key); if (!st) return null;
@@ -440,13 +585,14 @@
     var done = S.steps.filter(function (s) { return s.done; }).length, total = S.steps.length;
     $('sumStep').textContent = 'Step ' + (S.complete ? total : Math.min(S.activeIdx + 1, total)) + ' / ' + total;
     var fill = $('progFill'); if (fill) fill.style.width = Math.round((done / total) * 100) + '%';
+    saveSession();
   }
 
   /* ── phase switching ────────────────────────────────────────────────── */
   function setPhase(id) {
     if (id === phase.id) return;
     function go() {
-      stopAll();
+      stopAll(); clearSession();
       phase = CAMP.phaseById(id); rememberPhase(id);
       board.round = 1;
       renderPhases(); renderStrip(); renderBoard();
@@ -461,7 +607,7 @@
   function resetSession() {
     var q = 'Reset this session? All timers and logged reps clear.';
     (window.MC_SHEET ? MC_SHEET.confirm(q, { ok: 'Reset', danger: true }) : Promise.resolve(window.confirm(q)))
-      .then(function (ok) { if (ok) { stopAll(); build(); renderSession(); } });
+      .then(function (ok) { if (ok) { stopAll(); clearSession(); build(); renderSession(); } });
   }
 
   /* ── wiring ─────────────────────────────────────────────────────────── */
@@ -487,6 +633,12 @@
   rememberPhase(phase.id);
   renderPhases(); renderStrip(); renderLegend(); renderBoard();
   build(); renderSession();
+  (function () {
+    var sv = readSession();
+    if (sv && sv.phase === phase.id && restoreSession(sv)) {
+      lastSaved = null; saveSession();
+    }
+  })();
 
   window.MC_BOXING_CAMP_UI = {
     phase: function () { return phase.id; },

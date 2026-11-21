@@ -355,5 +355,80 @@ const SS = {
   ok('12k ...and week 10, the end of a phase, is not', !P.isDeloadWeek(mm, 10));
 }
 
+// ── 13. open (conditioning) days bank from a finished routine ───────────────
+// Council audit fix 1. The Modality Matrix rests at position 5 and prescribes
+// "Conditioning Corner" at 6 and 7 -- training positions no lift page can
+// finish. Shaped like the real generated record: defFromSchedule() derives
+// openDays from the days with ex: 0.
+{
+  const MM_SC = {
+    weeks: 15, perWeek: 7, rest: [5], deloadWeeks: [15],
+    days: [
+      { id: 'p1-1', ex: 10 }, { id: 'p1-2', ex: 10 }, { id: 'p1-3', ex: 10 }, { id: 'p1-4', ex: 10 },
+      { id: 'p1-6', ex: 0 }, { id: 'p1-7', ex: 0 }
+    ],
+    phases: [{ weeks: 15, days: ['p1-1', 'p1-2', 'p1-3', 'p1-4', 'p1-6', 'p1-7'] }]
+  };
+  const T0 = Date.parse('2026-11-01T10:00:00Z');
+  const H = 3600000;
+  const cond = (n, h) => ({ id: 'the-500|' + n, type: 'conditioning', date: new Date(T0 + h * H).toISOString() });
+
+  const { P } = load({});
+  const def = P.defFromSchedule(MM_SC);
+  eq('13a openDays are the days that prescribe no exercises', def.openDays, ['p1-6', 'p1-7']);
+  eq('13b ss-shaped schedules (every day has exercises) have none',
+     P.defFromSchedule({ weeks: 6, perWeek: 7, rest: [6, 7], days: [{ id: 'legs', ex: 8 }, { id: 'cardio', ex: 3 }] }).openDays, []);
+
+  // Never started: nothing is owed, so nothing banks.
+  eq('13c an unstarted program banks nothing', P.reconcileOpen('mm', def, [cond(1, 1)]), 0);
+
+  // Day 1 starts the program at T0; finish days 1-4 at T0+1..4h.
+  const rec0 = P.ensure('mm', def);
+  const started = Date.parse(rec0.startedAt);
+  [1, 2, 3, 4].forEach((d, i) => P.complete('mm', d, { ts: started + (i + 1) * H }, def));
+  eq('13d meta.ts is the completion time when given',
+     P.get('mm', def).completed['4'].ts, started + 4 * H);
+
+  // A routine finished BEFORE day 4 does not count toward day 6.
+  const early = { id: 'hell-week|early', type: 'conditioning', date: new Date(started + 2.5 * H).toISOString() };
+  eq('13e a session before the furthest completion is not claimed', P.reconcileOpen('mm', def, [early]), 0);
+
+  // A non-conditioning entry never banks an open day.
+  const lift = { id: 'mm-p1|x', date: new Date(started + 5 * H).toISOString() };
+  eq('13f a lift entry never banks a conditioning day', P.reconcileOpen('mm', def, [lift]), 0);
+
+  // Two routines after day 4 bank days 6 and 7, in order, one each.
+  const a = { id: 'the-500|a', type: 'conditioning', date: new Date(started + 30 * H).toISOString() };
+  const b = { id: 'popeye|b', type: 'conditioning', date: new Date(started + 54 * H).toISOString() };
+  eq('13g two sessions bank the two conditioning days', P.reconcileOpen('mm', def, [b, early, a, lift]), 2);
+  const r = P.get('mm', def);
+  eq('13h day 6 is banked with the earlier session', r.completed['6'].logId, 'the-500|a');
+  eq('13i day 7 with the later one', r.completed['7'].logId, 'popeye|b');
+  eq('13j ...anchored at the session time, not the reconcile time', r.completed['7'].ts, started + 54 * H);
+  ok('13k the rest day stays unbanked', !r.completed['5']);
+  eq('13l the cursor moves on to week 2 day 1', P.currentDayFrom(r), 8);
+
+  // Idempotent: running again finds nothing owed and reuses nothing.
+  eq('13m a second reconcile banks nothing', P.reconcileOpen('mm', def, [a, b]), 0);
+
+  // Next week: one session banks only day 13 (position 6) once days 8-11 are done.
+  [8, 9, 10, 11].forEach((d, i) => P.complete('mm', d, { ts: started + (100 + i) * H }, def));
+  const c = { id: 'the-500|c', type: 'conditioning', date: new Date(started + 120 * H).toISOString() };
+  eq('13n one session banks one day', P.reconcileOpen('mm', def, [a, b, c]), 1);
+  ok('13o ...the first owed conditioning day', !!P.get('mm', def).completed['13'] && !P.get('mm', def).completed['14']);
+
+  // When a lift day is owed, a conditioning session does not jump over it.
+  const { P: P2 } = load({});
+  const d2 = P2.defFromSchedule(MM_SC);
+  P2.ensure('mm', d2);
+  P2.complete('mm', 1, {}, d2);
+  eq('13p a lift day owed blocks the bank', P2.reconcileOpen('mm', d2, [cond('z', 9999)]), 0);
+
+  // Bad shapes are ignored, not thrown on.
+  eq('13q junk entries are ignored', P2.reconcileOpen('mm', d2, [null, 7, 'x', { type: 'conditioning' }, { id: 'q', type: 'conditioning', date: 'never' }]), 0);
+  eq('13r a non-array log is ignored', P2.reconcileOpen('mm', d2, { not: 'an array' }), 0);
+  eq('13s no openDays means a no-op', P2.reconcileOpen('mm', { weeks: 1, perWeek: 7 }, [cond('y', 1)]), 0);
+}
+
 console.log((fail ? '✗' : '✓') + ' mc-program-progress: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

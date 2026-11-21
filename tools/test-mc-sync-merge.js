@@ -89,6 +89,23 @@ ok('module.exports captured all 7 merge fns', !!(M && M.mergeArrayById && M.merg
   const out = M.mergeArrayByIdTs(local, remote);
   eq('arrayByIdTs: newer local edit beats older remote', out.find(e => e.id === 'a').v, 'local-newer');
 }
+{
+  // Council audit fix 2, in the exact shape build-workout.html now writes: a
+  // custom workout (timestamped only by `created`) deleted on this device. The
+  // old delete FILTERED the entry out, so the server's copy came straight back
+  // on the next pull -- shown first, so the gap stays on record.
+  const wk = { id: 'cw-1', name: 'Chest Day', created: '2026-11-01T10:00:00.000Z', exercises: [] };
+  const filtered = M.mergeArrayByIdTs([], [wk]);
+  ok('custom workout: a filtered-out delete is resurrected by the server copy', filtered.some(e => e.id === 'cw-1' && !e.deleted));
+  const rec = { id: 'cw-1', deleted: true, updatedAt: '2026-11-21T09:00:00.000Z' };
+  ok('custom workout: a deletion record beats the stale server copy', M.mergeArrayByIdTs([rec], [wk]).every(e => e.id !== 'cw-1' || e.deleted));
+  ok('custom workout: ...and a stale copy on the OTHER device', M.mergeArrayByIdTs([wk], [rec]).every(e => e.id !== 'cw-1' || e.deleted));
+  // A collection renamed later (updatedAt) after the delete wins back: the
+  // newest intent stands either way.
+  const col = { id: 'col-1', name: 'A', createdAt: '2026-11-01T00:00:00Z', updatedAt: '2026-11-22T00:00:00Z' };
+  const colDel = { id: 'col-1', deleted: true, updatedAt: '2026-11-21T00:00:00Z' };
+  ok('collection: an edit newer than the delete wins', M.mergeArrayByIdTs([colDel], [col]).some(e => e.id === 'col-1' && !e.deleted));
+}
 
 // ---- mergeWorkoutLog: dedupe by id||pageId|date, sort desc, no cap (R7) ----
 {

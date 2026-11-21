@@ -99,6 +99,21 @@
 
   window.MCCond = { log: log, best: best, all: all, fmt: fmt };
 
+  // A routine page with its own session engine (boxing-camp.js) announces a
+  // finished session with its total time. Nothing listened before, so a
+  // completed camp session reached no history, no PB and no program day
+  // unless the athlete also typed the time into "Log result" (council audit
+  // fix 1: a finished routine is what completes a conditioning day).
+  document.addEventListener('mc:cond-session-done', function (ev) {
+    var d = (ev && ev.detail) || {};
+    var secs = Math.round(Number(d.timeSec) || 0);
+    if (!d.routineId || !(secs > 0)) return;
+    if (!log(d.routineId, secs)) return;
+    // No personal-best claim here: a fixed-structure session's "best" is its
+    // shortest time, which would reward skipping rounds.
+    try { toast('🏁 Session logged — ' + fmt(secs) + '. No need to tap Log result.'); } catch (e) {}
+  });
+
   // ---- routines lookup ------------------------------------------------------
   function routines() {
     var out = [];

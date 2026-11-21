@@ -8911,6 +8911,9 @@ try {
         var src = MC_PM_DATA.program(prog.id);
         var def = src && P.defFromSchedule(src.schedule);
         if (def) {
+          // Stats reads the streak without visiting Home, so the owed
+          // conditioning days are banked here too before it is counted.
+          if (P.reconcileFromLog) P.reconcileFromLog(prog.id, def);
           var rec = P.get(prog.id, def);
           out.rec = rec;
           out.isRest = function (d) { return P.isRest(rec, d); };

@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="MC Training"/>
 <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
 <meta name="theme-color" content="#0a0a0a"/>
-<script>/* MC head boot (audit G-02/G-03) — PWA cold-launch guard + theme, before first paint */try{if((window.navigator.standalone===true||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches))&&!sessionStorage.getItem('mc_launched')){sessionStorage.setItem('mc_launched','1');var _p=(location.pathname.split('/').pop()||'').toLowerCase();if(_p!==''&&_p!=='index.html'&&_p!=='dashboard.html'){var _hasLive=false;try{var _sess=JSON.parse(localStorage.getItem('mc_session_v1')||'{}');var _rec=_sess[_p.replace('.html','')];_hasLive=!!(_rec&&(Date.now()-(_rec.lastTs||0))<43200000);}catch(e){}if(!_hasLive)location.replace('dashboard.html');}}}catch(e){}try{var _lk=document.documentElement.getAttribute('data-theme-lock');var _l=!_lk&&localStorage.getItem('mc_theme_mode')==='light';if(_l)document.documentElement.setAttribute('data-theme','light');var _m=document.querySelector('meta[name="theme-color"]');if(_m)_m.setAttribute('content',_l?'#f5f2ec':'#0a0a0a');}catch(e){}try{var _erK='mc_errors_v1',_erMax=20;function _erRec(e){try{var a=JSON.parse(localStorage.getItem(_erK)||'[]');if(!Array.isArray(a))a=[];a.unshift(e);if(a.length>_erMax)a.length=_erMax;localStorage.setItem(_erK,JSON.stringify(a));}catch(_){}}function _erP(){return location.pathname.split('/').pop()||''}function _erX(o){try{return String((o&&o.stack)||'').slice(0,1200)}catch(_){return ''}}window.addEventListener('error',function(ev){_erRec({t:Date.now(),k:'error',m:(ev&&ev.message)||'Unknown error',s:(ev&&ev.filename)||'',l:(ev&&ev.lineno)||0,x:_erX(ev&&ev.error),p:_erP()});});window.addEventListener('unhandledrejection',function(ev){var r=ev&&ev.reason;_erRec({t:Date.now(),k:'unhandledrejection',m:(r&&(r.message||String(r)))||'Unhandled rejection',x:_erX(r),p:_erP()});});window.MC_ERRLOG={rec:function(k,m,x){_erRec({t:Date.now(),k:String(k||'note'),m:String(m||'').slice(0,500),x:String(x||'').slice(0,1200),p:_erP()})}};}catch(e){}</script>
+<script>/* MC head boot (audit G-02/G-03) — PWA cold-launch guard + theme, before first paint */try{if((window.navigator.standalone===true||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches))&&!sessionStorage.getItem('mc_launched')){sessionStorage.setItem('mc_launched','1');var _p=(location.pathname.split('/').pop()||'').toLowerCase();if(_p!==''&&_p!=='index.html'&&_p!=='dashboard.html'&&!/[?&]from=push(&|$)/.test(location.search)){var _hasLive=false;try{var _sess=JSON.parse(localStorage.getItem('mc_session_v1')||'{}');var _rec=_sess[_p.replace('.html','')];_hasLive=!!(_rec&&(Date.now()-(_rec.lastTs||0))<43200000);}catch(e){}if(!_hasLive)location.replace('dashboard.html');}}}catch(e){}try{var _lk=document.documentElement.getAttribute('data-theme-lock');var _l=!_lk&&localStorage.getItem('mc_theme_mode')==='light';if(_l)document.documentElement.setAttribute('data-theme','light');var _m=document.querySelector('meta[name="theme-color"]');if(_m)_m.setAttribute('content',_l?'#f5f2ec':'#0a0a0a');}catch(e){}try{var _erK='mc_errors_v1',_erMax=20;function _erRec(e){try{var a=JSON.parse(localStorage.getItem(_erK)||'[]');if(!Array.isArray(a))a=[];a.unshift(e);if(a.length>_erMax)a.length=_erMax;localStorage.setItem(_erK,JSON.stringify(a));}catch(_){}}function _erP(){return location.pathname.split('/').pop()||''}function _erX(o){try{return String((o&&o.stack)||'').slice(0,1200)}catch(_){return ''}}window.addEventListener('error',function(ev){_erRec({t:Date.now(),k:'error',m:(ev&&ev.message)||'Unknown error',s:(ev&&ev.filename)||'',l:(ev&&ev.lineno)||0,x:_erX(ev&&ev.error),p:_erP()});});window.addEventListener('unhandledrejection',function(ev){var r=ev&&ev.reason;_erRec({t:Date.now(),k:'unhandledrejection',m:(r&&(r.message||String(r)))||'Unhandled rejection',x:_erX(r),p:_erP()});});window.MC_ERRLOG={rec:function(k,m,x){_erRec({t:Date.now(),k:String(k||'note'),m:String(m||'').slice(0,500),x:String(x||'').slice(0,1200),p:_erP()})}};}catch(e){}</script>
 <!-- MC:HEAD END -->
 <style>
 /* Flagship readiness I: the builder on the warm ink ramp with the one gold
@@ -412,8 +412,23 @@ function clusterEditor(i, s){
 // was created with. Consumed once, then cleared.
 var CREATE_INTENT = (function(){ try{ var i=JSON.parse(localStorage.getItem('mc_pm_create_intent')||'null'); localStorage.removeItem('mc_pm_create_intent'); return i; }catch(e){ return null; } })();
 
-function getSaved(){ try{ return JSON.parse(localStorage.getItem(CW_KEY)||'[]'); }catch(e){ return []; } }
-function setSaved(a){ try{ localStorage.setItem(CW_KEY, JSON.stringify(a)); }catch(e){} }
+// Council audit fix 2: a delete is a RECORD ({id, deleted:true, updatedAt}),
+// not a removal. mc-sync.js merges this store as a union by id where the newer
+// entry wins, so a workout that was simply filtered out came back from the
+// server copy (or another device) on the next pull; a newer deletion record
+// beats the old entry instead. getSavedRaw() is for read-modify-write -- it
+// keeps those records so writing back cannot drop one. getSaved() is what the
+// screen shows.
+function getSavedRaw(){
+  try{ var a = JSON.parse(localStorage.getItem(CW_KEY)||'[]'); return Array.isArray(a) ? a : []; }catch(e){ return []; }
+}
+function getSaved(){ return getSavedRaw().filter(function(w){ return w && typeof w === 'object' && !w.deleted; }); }
+// Council audit fix 3: reports whether the write landed. A full device throws
+// here; the caller must keep the athlete's draft when it does.
+function setSaved(a){
+  try{ localStorage.setItem(CW_KEY, JSON.stringify(a)); return true; }
+  catch(e){ try{ if(window.MC_ERRLOG) MC_ERRLOG.rec('storage', 'custom workout save failed: ' + (e && e.name || e)); }catch(_){} return false; }
+}
 function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 
 /* program assignment — '' (None) routes the workout into Bonus Workouts.
@@ -701,7 +716,7 @@ function createWorkout(){
   // R5 / D-16: in-app notices (mc-sheet.js), not the OS dialog.
   if(!name){ (window.MC_SHEET ? MC_SHEET.alert('Give your workout a name first.') : Promise.resolve(window.alert('Give your workout a name first.'))).then(function(){ document.getElementById('wkName').focus(); }); return; }
   if(!selected.length){ (window.MC_SHEET ? MC_SHEET.alert('Add at least one exercise.') : Promise.resolve(window.alert('Add at least one exercise.'))); return; }
-  var saved = getSaved();
+  var saved = getSavedRaw();
   var now = new Date().toISOString();
   var program = (document.getElementById('wkProgram')||{}).value || '';
   var collection = (document.getElementById('wkCollection')||{}).value || '';
@@ -721,7 +736,14 @@ function createWorkout(){
   // Automated routing: an unassigned workout is stamped + collected into Bonus.
   if(window.MC_BONUS) MC_BONUS.route(wk);
   saved.unshift(wk);
-  setSaved(saved);
+  if(!setSaved(saved)){
+    // Nothing below may run: it clears the selection and deletes the draft,
+    // and the old code then said "saved" about a workout that was not.
+    var msg = 'Your workout could not be saved — this device is out of storage space. '
+      + 'Your exercises are still here. Delete a workout you no longer need, then tap Save again.';
+    (window.MC_SHEET ? MC_SHEET.alert(msg) : Promise.resolve(window.alert(msg)));
+    return;
+  }
   try{ if(window.MC_SYNC && MC_SYNC.push) MC_SYNC.push(); }catch(e){}
   selected = [];
   nameTouched = false;
@@ -750,7 +772,16 @@ function delWorkout(id){
   var q='Delete this workout?';
   (window.MC_SHEET ? MC_SHEET.confirm(q, {ok:'Delete', danger:true}) : Promise.resolve(window.confirm(q))).then(function(ok){
     if(!ok) return;
-    setSaved(getSaved().filter(function(w){ return w.id!==id; }));
+    var stamp = new Date().toISOString();
+    var all = getSavedRaw().map(function(w){
+      return (w && w.id===id) ? { id:id, deleted:true, updatedAt:stamp } : w;
+    });
+    if(!setSaved(all)){
+      var msg = 'That workout could not be deleted — this device is out of storage space.';
+      (window.MC_SHEET ? MC_SHEET.alert(msg) : Promise.resolve(window.alert(msg)));
+      return;
+    }
+    try{ if(window.MC_SYNC && MC_SYNC.push) MC_SYNC.push(); }catch(e){}
     renderSaved();
   });
 }
