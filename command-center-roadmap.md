@@ -17,7 +17,7 @@ The executive round that followed is in
 
 | PR | What | Status |
 |---|---|---|
-| 1 | Home figures: block position row with vs last week, a block progress ring, the block sheet (done, missed, rest, upcoming), a sync chip shown only when something is waiting | Planned |
+| 1 | Home figures: block position row with vs last week, a block progress ring, the block sheet (done, missed, rest, upcoming), a sync chip shown only when something is waiting | Built |
 | 2 | Drill-downs: Recovery explained (per muscle and the Recovery ring), tappable readiness chips, last-time compare on workout detail, a lift history sheet | Planned |
 | 3 | Visuals and normal: the training calendar shaded by volume (a day opens its workout), and "what's normal", a trailing six-week sets, volume and sessions line | Planned |
 | 4 | Autonomy: auto-finish a stale session, a Done-for-you log with Undo, the kill switch (from the executive round) | Planned |
@@ -126,22 +126,54 @@ rings stay as they are.
   `mc:workout-finished` agree. Undo removes it through the deletion records
   (`mc_workout_log_deleted_v1`) and puts the session back.
 
-## PR 1: Home figures and the block (planned)
+## PR 1 as built
 
-- A block row under the day module: `Week X of Y · Day N of M`, and days
-  done this week against the same weekday last week (an arrow and the
-  change; only a drop is colored). Read from `mc-program-progress.js` and
-  the program's `schedule`. Hidden without a schedule.
-- A block progress ring beside it (`MC_CHART.ring`): prescribed days done
-  out of the block's training days. Rest days are not counted.
-- The block sheet, from the row, the ring and the streak strip: each week as
-  a row of days marked done, missed, rest or upcoming, today marked. A done
-  day opens its workout (`workout-detail.html`), its second level. Built on
-  `mc-sheet.js`.
-- The sync chip in the top bar, shown only when something is waiting.
-- Controls at 48px with 8px between. The fixture athlete gets a schedule
-  so `check-fixture.js` renders the row. `quick-tour-data.js` gains the
-  block sheet per the documentation rule.
+- **`mc-block.js` (`window.MC_BLOCK`)** renders the block from
+  `mc-program-progress.js`'s record and keeps no state of its own.
+  `summary(rec, now)` gives the week and day, training days done out of the
+  block's (rest days never counted, each week's own rest pattern respected),
+  and this week against last week. Those two are counted by when a day was
+  done: Monday to now, against last Monday to the same moment a week ago.
+  `grid(rec, now)` marks every day done, missed, rest, today or upcoming;
+  missed is a training day before the current one with no completion.
+- **The block row** (`#dmBlock`, under the day module): `Week X of Y · Day N
+  of M`, `N days this week · ↑1 vs last week` (only a drop is colored), and
+  a 44px progress ring with its percentage. The whole row is one 48px+
+  button; its label reads every figure.
+- **The block sheet**, from the row and from the streak strip (which was a
+  dead end): each week as a row of seven 48px cells, deload weeks labelled,
+  today scrolled into view. A done day opens its workout
+  (`workout-detail.html`), the second and last level. Adopted by
+  `mc-sheet.js` (dialog role, focus, Escape and Back). Text on a done day is
+  the darkest or lightest end of the ink ramp, picked from the accent's own
+  luminance (`inkOn()`), so it holds in the light theme: 5.39:1 on the
+  Modality Matrix's accent.
+- **The sync chip** (`#syncChip`, under the top bar, beside the offline
+  bar): shown when sets wait in the outbox, a store can't be written
+  (storage full), or a sync failed after the last good one. Hidden
+  otherwise, and while offline the offline bar speaks instead. It opens
+  Diagnostics. Checked on load, on coming back online and on returning to
+  the app; no timer, so the perf gate's counters don't move.
+- `tools/test-mc-block.js` (24 assertions, vm-sandboxed against the real
+  source) runs in `verify.yml` beside the progress tests.
+  `quick-tour-data.js` describes the row and the sheet.
+
+Where it departs from the plan:
+
+- **No "last pull older than a day" signal.** `mc-sync.js` keeps `lastPull`
+  in memory only, so a fresh page always reads 0. The chip uses a failure
+  newer than the last good pull or push instead (`lastError.at`, which
+  `mc-sync.js` never clears).
+- **The chip sits under the top bar, not in it.** The bar is a row of 48px
+  icons with no room for text at 320px, so the chip takes the offline bar's
+  place in the layout.
+
+Verified with the fixture athlete in headless Chromium at 390 and 320 (no
+sideways scroll, every cell 48px, Escape closes, a done day opens its log),
+with progress seeded in the light theme, and through `check-fixture`,
+`check-tap-intent`, `smoke-test-pages` and both contrast ratchets (which
+measure Home at rest, not the open sheet; the sheet's contrast was measured
+by hand above).
 
 ## PR 2: drill-downs (planned)
 

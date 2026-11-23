@@ -457,6 +457,10 @@ html[data-theme="light"] .bn-btn.bn-go{color:#fff;}
   border-radius:10px;padding:8px 14px;margin:0 18px 16px;font-size:var(--fs-xs);font-weight:700;
   color:#f87171;text-align:center;letter-spacing:0.04em;}
 .offline-bar.show{display:block;}
+.sync-chip{display:none;width:calc(100% - 36px);min-height:48px;margin:0 18px 16px;padding:8px 14px;border-radius:var(--r-md);
+  border:1px solid var(--hairline);background:transparent;color:var(--muted);font:inherit;font-size:var(--fs-sm);font-weight:700;cursor:pointer;}
+.sync-chip.show{display:block;}
+.momentum-strip.mcb-tap{cursor:pointer;width:calc(100% - 36px);font:inherit;color:inherit;text-align:left;min-height:48px;}
 .sw-update{display:none;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.25);
   border-radius:10px;padding:8px 14px;margin:0 18px 16px;font-size:var(--fs-xs);font-weight:700;
   color:#34d399;text-align:center;cursor:pointer;letter-spacing:0.04em;}
@@ -1456,6 +1460,10 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
   </div>
 
   <div id="offlineBar" class="offline-bar">📵 Offline — showing cached content</div>
+  <!-- command-center-roadmap.md PR 1 — shown only when something is waiting
+       to reach the cloud; hidden while synced, and the offline bar above
+       already covers being offline. -->
+  <button type="button" id="syncChip" class="sync-chip"></button>
   <div id="swUpdate" class="sw-update" onclick="doSwUpdate()">🔄 Update available — tap to reload</div>
 
   <!-- Universal momentum strip (streak) — market-safe, hidden until earned -->
@@ -1531,7 +1539,7 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
          built-in program that declares a `schedule` in mc-pm-data.js; every
          other case (custom, owner-published, or a built-in not yet given a
          schedule) falls through to #heroCard below, unchanged. -->
-    <div id="dayModule"><div id="dmBar"></div><div id="dmHero"></div></div>
+    <div id="dayModule"><div id="dmBar"></div><div id="dmHero"></div><div id="dmBlock"></div></div>
     <!-- The fatigue chips live inside #heroCard, so they would vanish for any
          program showing the day module instead. Second target, same class —
          renderFatigue() paints every .hero-fatigue, so neither branch loses
@@ -1863,6 +1871,7 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
 <script src="mc-program-progress.js"></script>
 <script src="mc-week-bar.js"></script>
 <script src="mc-day-hero.js"></script>
+<script src="mc-block.js"></script>
 <script src="mc-readiness-brief.js"></script>
 <script src="mc-offline-prefetch.js"></script>
 <script src="mc-recap.js"></script>
@@ -2284,6 +2293,19 @@ function renderDayModule(cfg){
     },
     onPreview:function(next){ P.setCursor(cfg.prog.id,next,cfg.def); dmWeek=P.weekOf(rec,next); renderDayModule(cfg); }
   });
+  // command-center-roadmap.md PR 1: block position + ring + the block sheet.
+  // The streak strip opens the same sheet, so it is no longer a dead end.
+  if(window.MC_BLOCK){
+    const bopts={rec:P.get(cfg.prog.id,cfg.def),accent:accent,title:cfg.prog.name||'Block'};
+    MC_BLOCK.mountRow(document.getElementById('dmBlock'),bopts);
+    const ms=document.getElementById('momentumStrip');
+    if(ms){
+      ms.classList.add('mcb-tap');ms.setAttribute('role','button');ms.setAttribute('tabindex','0');
+      ms.setAttribute('aria-description','Opens the block');
+      ms.onclick=function(){MC_BLOCK.openSheet(bopts);};
+      ms.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();MC_BLOCK.openSheet(bopts);}};
+    }
+  }
 }
 
 function renderHero(){
@@ -2580,6 +2602,30 @@ function startOnboardProgram(id){
 window.addEventListener('online',()=>document.getElementById('offlineBar').classList.remove('show'));
 window.addEventListener('offline',()=>document.getElementById('offlineBar').classList.add('show'));
 if(!navigator.onLine)document.getElementById('offlineBar').classList.add('show');
+
+// ── SYNC CHIP (command-center-roadmap.md PR 1) ──
+// Shown only when something is waiting: sets queued in the outbox, a store the
+// device can't write, or a sync that failed after the last good one. Offline is
+// the offline bar's job. No timer: checked on load and when the app comes back.
+function paintSyncChip(){
+  const chip=document.getElementById('syncChip'); if(!chip) return;
+  let outbox=0; try{const v=JSON.parse(localStorage.getItem('mc_workout_logs_outbox_v1')||'[]');outbox=Array.isArray(v)?v.length:0;}catch(e){}
+  const st=(window.MC_SYNC&&MC_SYNC.status)?MC_SYNC.status():null;
+  let text='';
+  if(st&&st.blocked&&st.blocked.length) text='Storage full — '+st.blocked.length+(st.blocked.length===1?' store isn’t':' stores aren’t')+' syncing';
+  else if(outbox) text=outbox+(outbox===1?' set':' sets')+' waiting to sync';
+  else if(st&&st.signedIn&&st.lastError&&st.lastError.at>Math.max(st.lastPull||0,st.lastPush||0)) text='Last sync failed — will retry';
+  if(!text||!navigator.onLine&&!(st&&st.blocked&&st.blocked.length)){chip.classList.remove('show');return;}
+  chip.textContent=text+' ›';
+  chip.setAttribute('aria-label',text+'. Open diagnostics.');
+  chip.classList.add('show');
+}
+document.getElementById('syncChip').onclick=function(){
+  if(window.MC_ACCOUNT&&MC_ACCOUNT.openDiagnostics) MC_ACCOUNT.openDiagnostics(); else location.href='workout-settings.html';
+};
+window.addEventListener('load',function(){setTimeout(paintSyncChip,4000);});
+window.addEventListener('online',function(){setTimeout(paintSyncChip,4000);});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(paintSyncChip,4000);});
 
 // ── SW ── registration + reliable auto-update handled by mc-sw-update.js
 // (loaded near the end of body). It defines window.doSwUpdate for the banner.
