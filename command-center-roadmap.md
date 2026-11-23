@@ -19,7 +19,7 @@ The executive round that followed is in
 |---|---|---|
 | 1 | Home figures: block position row with vs last week, a block progress ring, the block sheet (done, missed, rest, upcoming), a sync chip shown only when something is waiting | Built |
 | 2 | Drill-downs: Recovery explained (per muscle and the Recovery ring), tappable readiness chips, last-time compare on workout detail, a lift history sheet | Built |
-| 3 | Visuals and normal: the training calendar shaded by volume (a day opens its workout), and "what's normal", a trailing six-week sets, volume and sessions line | Planned |
+| 3 | Visuals and normal: the training calendar shaded by volume (a day opens its workout), and "what's normal", a trailing six-week sets, volume and sessions line | Built |
 | 4 | Autonomy: auto-finish a stale session, a Done-for-you log with Undo, the kill switch (from the executive round) | Planned |
 
 Each PR keeps its own `AskUserQuestion` check-in before it starts, per the
@@ -241,14 +241,52 @@ each hop lands on the right lift or workout, and there are no page errors.
 In the light theme the Recovery sheet's text measures 4.83 to 14.34:1 and
 the last-time line 5.23:1.
 
-## PR 3: visuals and normal (planned)
+## PR 3 as built
 
-- The calendar's day cells shaded by that day's working sets. The number
-  stays on the surface color and a swatch carries the shade, so contrast
-  never depends on volume. Rest days have their own mark.
-- **What's normal:** weekly sets, volume and sessions averaged over the up to
-  six finished weeks before this one (shown only with three or more), and
-  this week beside it. On Stats, and as one line in the block sheet.
+- **The calendar shaded by volume** (`mc-calendar.js`, Home's History
+  calendar). The diagonal slashes on a finished day are gone. Instead, a
+  6px bar along the bottom of the cell shows that day's working sets, in
+  four steps against the busiest day in the 90 days to today. The scale is
+  relative so that a lighter program still reads as a range. The day
+  number stays on the plain cell, so its contrast never depends on the
+  shade. Each day's label reads its set count ("November 4, workout
+  completed, 12 sets"). The legend reads "Fewer sets ▢▢▢▢ More" at 13px,
+  up from 10px uppercase at 4:1.
+- **A day opens its workout.** Tapping a day lists its workouts as before;
+  each finished one is now a link to its read-only page (48px+). The month
+  arrows went from 34px to 48px.
+- **What's normal** (`MC_RECAP.weekNormal(offset)` in `mc-recap.js`): the
+  sessions, sets and tonnage of the up to six calendar weeks before a week
+  that have training in them, averaged. It's built from `statsForWeek()`,
+  so it is the same arithmetic as the week it sits beside. A week with no
+  training is left out, and with fewer than three such weeks there is no
+  normal yet. Stats' Weekly Review shows it under the week's four numbers.
+  Each past week gets its own normal as you step back. The block sheet on
+  Home shows this week so far beside it.
+- `tools/test-mc-normal.js` (8 assertions, real `mc-log-read.js` and
+  `mc-recap.js` in a vm sandbox) runs in `verify.yml`. The Quick Tour now
+  describes the History calendar, which it never had, and the normal-week
+  line.
+
+Where it departs from the plan:
+
+- **No rest-day mark on the calendar.** The calendar is keyed by date, and
+  a program's rest days are positions in its block, not dates, until
+  they've happened. The block sheet (PR 1) already marks rest days in
+  block terms. Putting the same marks on dates would mean guessing which
+  date each day landed on.
+- **What's normal is not on its own Stats card.** It's one line in Weekly
+  Review, beside the week it describes, and one line in the block sheet.
+- **The calendar's day cells stay under 48px at 320** (33px; 43px at 390).
+  Seven columns can't each be 48px in a 320px card. Each day is still a
+  real button, and it's the same ceiling the week strip records (F0).
+
+Verified with the fixture athlete at 390 and 320 in headless Chromium: the
+calendar's shade and labels, the day's link to its workout, the
+normal-week line on Stats (this week and a past week) and in the block
+sheet, no sideways scroll and no page errors. The fixture logs 12 sets on
+every day it trains, so days of 3, 6 and 9 sets were added on empty dates
+after load: they rendered as steps 1, 2 and 3 beside the 12-set days' 4.
 
 ## PR 4: autonomy (planned)
 

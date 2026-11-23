@@ -120,6 +120,7 @@ jobs:
           node tools/test-mc-program-day.js
           node tools/test-mc-block.js
           node tools/test-mc-lift-sheet.js
+          node tools/test-mc-normal.js
 
       - name: Adherence streak (roadmap Phase 4 step 1, audit EN-4)
         # Every program in the app rests at least one day a week, so the old
