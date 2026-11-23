@@ -18,7 +18,7 @@ The executive round that followed is in
 | PR | What | Status |
 |---|---|---|
 | 1 | Home figures: block position row with vs last week, a block progress ring, the block sheet (done, missed, rest, upcoming), a sync chip shown only when something is waiting | Built |
-| 2 | Drill-downs: Recovery explained (per muscle and the Recovery ring), tappable readiness chips, last-time compare on workout detail, a lift history sheet | Planned |
+| 2 | Drill-downs: Recovery explained (per muscle and the Recovery ring), tappable readiness chips, last-time compare on workout detail, a lift history sheet | Built |
 | 3 | Visuals and normal: the training calendar shaded by volume (a day opens its workout), and "what's normal", a trailing six-week sets, volume and sessions line | Planned |
 | 4 | Autonomy: auto-finish a stale session, a Done-for-you log with Undo, the kill switch (from the executive round) | Planned |
 
@@ -175,21 +175,71 @@ with progress seeded in the light theme, and through `check-fixture`,
 measure Home at rest, not the open sheet; the sheet's contrast was measured
 by hand above).
 
-## PR 2: drill-downs (planned)
+## PR 2 as built
 
-- **Recovery, per muscle:** a sheet listing the sessions and sets that
-  loaded each muscle in its window, its estimated recovered %, and when it
-  reads fresh again, labelled an estimate. It opens from the Stats readiness
-  chips (made into 48px buttons) and the body-map legend. The legend chip's
-  link to an exercise trend moves into the sheet as one of its rows.
-- **Recovery ring:** a sheet of the score's inputs (sleep, resting HR, the
-  readiness answer) and how each moved it, from `mc-vitals.js`'s own
-  `recoveryScore()`.
-- **Last time:** workout detail sets each lift beside the previous session
-  of the same program day: top set and total reps, with the change.
-- **Lift history sheet:** `MCTrends` gains the best set, the last five
-  sessions and the next suggested load. Lift names on History, detail and
-  Stats open it.
+- **Recovery, per muscle.** `MC_READY.explain(id)` in `mc-readiness.js`
+  returns what a muscle's figure is made of: the last workout that trained
+  it, its sets for that muscle and how many went to failure, the curve's
+  time constant, the hours until it reads fresh (70%), and each lift with
+  its sets. It reads the same `lastStimulus()` and time constant that
+  `recoveryFor()` uses, so the sheet can't explain a different number from
+  the one shown. `mc-recovery-sheet.js` (`MC_RECOVERY_SHEET.muscle()`)
+  shows it, labelled an estimate, with how it's worked out. The last
+  workout row opens that workout and each lift row opens its history: the
+  second and last level.
+- **Where it opens.** On Stats, This Week's Readiness chips were divs whose
+  figure lived only in a `title` tooltip. They are 48px+ buttons now (79px
+  measured) that show the % and open the sheet. In Recovery mode the body
+  map's legend chips open it too; in Volume mode they still open the
+  muscle's top lift.
+- **The Recovery ring.** `MC_VITALS.explain()` returns the score's parts:
+  the readiness answer that sets the start, sleep's nudge, and resting HR
+  shown but not counted. `MC_RECOVERY_SHEET.vitals()` opens from the ring
+  and its line on Home (`#vtOpen`, a 48px button). The parts are tested to
+  add up to the ring.
+- **Last time.** Workout detail sets each lift beside the last session
+  before this one that included it: top set, total reps, and how far the top
+  weight moved, or "First time logged". The line opens that earlier
+  workout, and the lift's name opens its history.
+- **Lift history sheet.** `MCTrends` (`mc-exercise-trends.js`) gains the
+  next suggested load (with mc-suggest.js's reason), the best set
+  (heaviest, more reps breaking a tie), and the last five sessions, each
+  opening its workout. Its tabs went from about 30px to 48px and from 11px
+  to 13px text. It opens from a lift's name on workout detail and from each
+  record in Stats' Personal Records and Verified Maxes, as well as from the
+  ⋮ menu and the "Last:" cue as before.
+- **Finding the next load off a workout page.** `mc_plan_targets_v1` is
+  keyed by page and card, which a page with no card can't derive.
+  `mc-suggest.js` now records the lift's name with each carried-forward
+  target (`n`), and the sheet finds the newest target with that name.
+  Targets written before this change have no name, so they show "none yet"
+  until the lift's workout is opened again.
+- `tools/test-mc-lift-sheet.js` (14 assertions: next load, best set, the
+  vitals parts adding up) and 9 new `explain()` checks in
+  `tools/test-mc-readiness.js`. Quick Tour updated.
+
+Where it departs from the plan:
+
+- **Last time is the last session with that lift, not "the same program
+  day".** A finished workout doesn't record which program day it was
+  (`cat-strength` logs every day under one page and title), so "same day"
+  can't be found reliably. The last session that included the lift always
+  can.
+- **History's list doesn't open the lift sheet.** Each row in History is
+  already one tap target that opens the workout; putting a second target
+  inside it is the collision `qa-collision-audit.md` warns about. The lift
+  names are tappable one level in, on the workout itself.
+- **A light-theme defect fixed in passing.** Workout detail's lift names
+  were white on the light theme's light card (1.12:1, now 15.54:1). The
+  contrast gate opens that page with no workout loaded, so it never saw
+  them. Its set numbers still read 3.32:1 there, and that is left as it
+  was.
+
+Verified with the fixture athlete at 390 and 320 in headless Chromium:
+every sheet is a dialog with no control under 48px and no sideways scroll,
+each hop lands on the right lift or workout, and there are no page errors.
+In the light theme the Recovery sheet's text measures 4.83 to 14.34:1 and
+the last-time line 5.23:1.
 
 ## PR 3: visuals and normal (planned)
 

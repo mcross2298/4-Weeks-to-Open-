@@ -49,15 +49,19 @@
   // Persist the current suggestion as next session's planned target so the
   // prescription survives page loads, rides the sync whitelist, and is
   // readable by other engines (recap, quick-pump, future deload insertion).
-  function writeTarget(exId, s) {
+  // `name` (command-center-roadmap.md PR 2) lets the lift history sheet find
+  // a lift's next load by its name on a page with no card to derive a key from.
+  function writeTarget(exId, s, name) {
     try {
       var all = JSON.parse(localStorage.getItem(PK) || '{}') || {};
       var k = historyKey(exId);
       var prev = all[k];
       var r = Array.isArray(s.r) ? s.r : undefined;
-      if (prev && prev.w === s.w && prev.status === s.status &&
+      var n = name ? String(name).trim() : (prev && prev.n);
+      if (prev && prev.w === s.w && prev.status === s.status && prev.n === n &&
           JSON.stringify(prev.r) === JSON.stringify(r)) return;
       all[k] = { w: s.w, status: s.status, why: s.why, ts: Date.now() };
+      if (n) all[k].n = n;
       if (r) all[k].r = r;
       localStorage.setItem(PK, JSON.stringify(all));
     } catch (e) {}
@@ -502,7 +506,7 @@
         // A deload is a lighter load, not a rep chase: no rep goals ride it.
         target = { w: deloadWeight(s.base, nmStr), base: s.base, status: 'deload', why: plateau.why };
       }
-      writeTarget(exId, target);
+      writeTarget(exId, target, nmStr);
 
       if (plateau) {
         var flag = document.createElement('span');

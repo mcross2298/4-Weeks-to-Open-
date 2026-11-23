@@ -231,6 +231,7 @@ const KNOWN_MODULES = [
   'mc-readiness-brief.js',
   'mc-readiness.js',
   'mc-recap.js',
+  'mc-recovery-sheet.js',
   'mc-rep-progress.js',
   'mc-replace.js',
   'mc-report.js',

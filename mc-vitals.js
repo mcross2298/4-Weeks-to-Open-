@@ -83,5 +83,24 @@
     return Math.round(Math.max(0, Math.min(100, score)));
   }
 
-  window.MC_VITALS = { log: log, latest: latest, recoveryScore: recoveryScore };
+  // command-center-roadmap.md PR 2: the score's parts, for the Recovery
+  // sheet. Built from the same arithmetic as recoveryScore() above and checked
+  // against it, so the sheet adds up to the ring.
+  function explain() {
+    var e = latest();
+    if (!e) return null;
+    var parts = [];
+    var base = (e.readiness != null) ? e.readiness * 20 : 70;
+    parts.push(e.readiness != null
+      ? { label: 'How ready you said you felt', value: e.readiness + ' of 5', effect: base, base: true }
+      : { label: 'No readiness answer', value: 'starts at 70', effect: 70, base: true });
+    if (e.sleepHrs != null) {
+      var nudge = Math.round(Math.max(-15, Math.min(15, (e.sleepHrs - 8) * 6)));
+      parts.push({ label: 'Sleep, against 8 hours', value: e.sleepHrs + ' h', effect: nudge });
+    }
+    if (e.restingHr != null) parts.push({ label: 'Resting heart rate', value: e.restingHr + ' bpm', effect: 0, info: true });
+    return { score: recoveryScore(), date: e.date, parts: parts };
+  }
+
+  window.MC_VITALS = { log: log, latest: latest, recoveryScore: recoveryScore, explain: explain };
 })();

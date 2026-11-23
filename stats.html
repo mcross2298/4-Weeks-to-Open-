@@ -44,6 +44,7 @@ body{background:var(--body-bg,#0a0a0a);}
 .mg-val{width:60px;text-align:right;font-size:11px;font-weight:800;color:#a8a196;flex-shrink:0;}
 .pr-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
 .pr-row:last-child{border-bottom:none;}
+button.pr-row{width:100%;min-height:48px;background:transparent;border-width:0 0 1px;font:inherit;color:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .pr-ico{font-size:15px;}
 .pr-name{flex:1;font-size:13px;font-weight:800;color:#ede7d9;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .pr-wt{font-size:13px;font-weight:900;color:var(--accent);flex-shrink:0;}
@@ -72,6 +73,8 @@ body{background:var(--body-bg,#0a0a0a);}
 .ready-lbl{display:block;font-size:10px;font-weight:800;letter-spacing:0.02em;color:#ede7d9;margin-top:5px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ready-bar{display:block;height:3px;margin-top:9px;border-radius:0;}
+button.ready-chip{font:inherit;color:inherit;width:100%;min-height:64px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.rd-chip .mg-chip-val{padding-bottom:4px;}
 
 /* Spatial Muscle Map (flagship-immersive-roadmap.md H1) — reuses .ready-board/
    .ready-chip's visual language for the tap-through legend rather than a
@@ -89,7 +92,7 @@ body{background:var(--body-bg,#0a0a0a);}
 .mg-chip{cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:64px;}
 .mg-chip:active{transform:scale(0.96);}
 .mg-chip.static{cursor:default;}
-.mg-chip-val{display:block;font-size:9px;font-weight:700;color:#797267;margin-top:2px;}
+.mg-chip-val{display:block;font-size:var(--fs-sm);font-weight:700;color:#a8a196;margin-top:2px;}
 
 /* Sand light mode (Phase 6, Stats page). Flat hardcoded hex here (no
    Onyx token system on this page), so each dark value gets a direct
@@ -249,6 +252,7 @@ html[data-theme="light"] .theme-icon-light{display:block!important;}
 <script src="mc-log-read.js"></script>
 <script src="mc-recap.js"></script>
 <script src="mc-readiness.js"></script>
+<script src="mc-recovery-sheet.js"></script>
 <script src="mc-exercise-trends.js"></script>
 <script src="mc-stats.js"></script>
 <script src="mc-input-sheet.js"></script>
