@@ -84,6 +84,9 @@
       var d = new Date(e.date || 0);
       out.push({
         date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        ts: d.getTime(),
+        logId: e.id || null,
+        topReps: best.r,
         weight: best.w,
         e1rm: e1rmOf(best.w, best.r, name),
         reps: reps,
@@ -112,12 +115,16 @@
         '</div>' +
         '<div class="mct-chart" id="mctChart"></div>' +
         '<div class="mct-meta" id="mctMeta"></div>' +
+        '<div class="mct-facts" id="mctFacts"></div>' +
         '<div class="mct-cap" id="mctCap"></div>' +
       '</div>';
     document.body.appendChild(overlay);
 
+    overlay.setAttribute('aria-label', 'Lift history');
     overlay.addEventListener('click', function (e) {
       if (e.target === overlay) close();
+      var go = e.target.closest('[data-mct-log]');
+      if (go) { close(); location.href = 'workout-detail.html?id=' + encodeURIComponent(go.getAttribute('data-mct-log')); return; }
       var tab = e.target.closest('.mct-tab');
       if (tab) {
         mode = tab.dataset.mode;
@@ -138,8 +145,8 @@
       '.mct-handle{width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,0.18);margin:2px auto 12px;}' +
       '.mct-title{font-size:15px;font-weight:900;color:#ede7d9;margin-bottom:12px;}' +
       '.mct-tabs{display:flex;gap:6px;margin-bottom:14px;}' +
-      '.mct-tab{flex:1;padding:7px 0;border-radius:9px;border:1px solid rgba(255,255,255,0.1);' +
-        'background:rgba(255,255,255,0.04);color:#a8a196;font-size:11px;font-weight:800;cursor:pointer;' +
+      '.mct-tab{flex:1;min-height:48px;padding:0;border-radius:9px;border:1px solid rgba(255,255,255,0.1);' +
+        'background:rgba(255,255,255,0.04);color:#a8a196;font-size:var(--fs-sm,13px);font-weight:800;cursor:pointer;' +
         '-webkit-tap-highlight-color:transparent;}' +
       '.mct-tab.on{color:#fbbf24;border-color:rgba(212,175,55,0.45);background:rgba(212,175,55,0.12);}' +
       '.mct-chart{min-height:120px;}' +
@@ -147,7 +154,16 @@
       '.mct-meta{margin-top:10px;font-size:11px;font-weight:700;color:#8a8377;text-align:center;}' +
       '.mct-cap{margin-top:10px;font-size:11px;font-weight:400;line-height:1.6;color:#a8a196;' +
         'border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;}' +
-      '.mct-empty{padding:28px 0;text-align:center;color:#8a8377;font-size:13px;font-weight:700;}';
+      '.mct-empty{padding:28px 0;text-align:center;color:#8a8377;font-size:13px;font-weight:700;}' +
+      '.mct-sheet{max-height:calc(100% - 24px);overflow:auto;}' +
+      '.mct-facts{margin-top:12px;border-top:1px solid rgba(255,255,255,0.08);}' +
+      '.mct-fact,.mct-sess{display:flex;align-items:center;gap:12px;min-height:48px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);' +
+        'font-size:var(--fs-md,14px);color:#ede7d9;width:100%;background:transparent;border-left:0;border-right:0;border-top:0;font-family:inherit;text-align:left;}' +
+      'button.mct-sess{cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
+      '.mct-fact span:first-child,.mct-sess span:first-child{flex:1;min-width:0;color:#a8a196;}' +
+      '.mct-fact b,.mct-sess b{font-weight:800;white-space:nowrap;}' +
+      '.mct-why{font-size:var(--fs-sm,13px);color:#a8a196;line-height:1.5;margin:6px 0 0;}' +
+      '.mct-h{font-size:var(--fs-sm,13px);font-weight:800;color:#a8a196;margin:12px 0 0;text-transform:uppercase;letter-spacing:0.04em;}';
     document.head.appendChild(st);
   }
 
@@ -199,6 +215,8 @@
     var meta = document.getElementById('mctMeta');
     var cap = document.getElementById('mctCap');
     if (cap) { cap.textContent = capNote(); cap.hidden = !cap.textContent; }
+    var facts = document.getElementById('mctFacts');
+    if (facts) facts.innerHTML = factsHtml(series, curName);
     if (!series.length) {
       chart.innerHTML = '<div class="mct-empty">No finished workouts with this exercise yet.<br>' +
         'Log sets and tap Finish Workout — the trend builds from there.</div>';
@@ -233,6 +251,58 @@
       (prs ? ' · 🏆 ' + prs + ' PR' + (prs === 1 ? '' : 's') : '');
   }
 
+  // ---- command-center-roadmap.md PR 2: the lift history sheet ---------------
+  function escH(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  // The heaviest set ever logged for the lift, more reps breaking a tie.
+  function bestSet(series) {
+    var b = null;
+    series.forEach(function (p) {
+      if (!p.weight) return;
+      if (!b || p.weight > b.weight || (p.weight === b.weight && p.topReps > b.topReps)) b = p;
+    });
+    return b;
+  }
+
+  // The next load mc-suggest.js carried forward for this lift, found by the
+  // name it now records with the target; the newest one wins when the lift
+  // is trained on more than one page. Null until a workout has suggested one.
+  function nextFor(name) {
+    var all;
+    try { all = JSON.parse(localStorage.getItem('mc_plan_targets_v1') || '{}') || {}; } catch (e) { return null; }
+    var want = norm(name), hit = null;
+    Object.keys(all).forEach(function (k) {
+      var t = all[k];
+      if (!t || norm(t.n) !== want || !(t.w > 0)) return;
+      if (!hit || (t.ts || 0) > (hit.ts || 0)) hit = t;
+    });
+    return hit;
+  }
+
+  function factsHtml(series, name) {
+    var out = '';
+    var nx = nextFor(name);
+    var reps = nx && Array.isArray(nx.r) && nx.r.length && nx.r.every(function (v) { return v === nx.r[0]; }) ? nx.r[0] : null;
+    out += '<div class="mct-fact"><span>Next suggested load</span><b>' +
+      (nx ? escH(nx.w) + ' lb' + (reps ? ' × ' + reps : '') : 'none yet') + '</b></div>';
+    out += nx && nx.why ? '<p class="mct-why">' + escH(nx.why) + '</p>'
+      : (nx ? '' : '<p class="mct-why">A suggestion appears once this lift is logged in a workout and opened again.</p>');
+    var b = bestSet(series);
+    if (b) out += '<div class="mct-fact"><span>Best set</span><b>' + escH(b.weight) + ' lb × ' + escH(b.topReps) + ' · ' + escH(b.date) + '</b></div>';
+    var last = series.slice(-5).reverse();
+    if (last.length) {
+      out += '<div class="mct-h">Last ' + (last.length === 1 ? 'session' : last.length + ' sessions') + '</div>' +
+        last.map(function (p) {
+          var txt = '<span>' + escH(p.date) + (p.pr ? ' · 🏆' : '') + '</span><b>' +
+            (p.weight ? escH(p.weight) + ' × ' + escH(p.topReps) : escH(p.topReps) + ' reps') + ' · ' + escH(p.reps) + ' total' + (p.logId ? ' ›' : '') + '</b>';
+          return p.logId
+            ? '<button type="button" class="mct-sess" data-mct-log="' + escH(p.logId) + '" aria-label="' + escH(p.date + ', open that workout') + '">' + txt + '</button>'
+            : '<div class="mct-sess">' + txt + '</div>';
+        }).join('');
+    }
+    return out;
+  }
+
   function open(name) {
     if (!name) return;
     build();
@@ -243,7 +313,7 @@
   }
   function close() { if (overlay) overlay.classList.remove('open'); }
 
-  window.MCTrends = { open: open, close: close };
+  window.MCTrends = { open: open, close: close, _bestSet: bestSet, _nextFor: nextFor };
 
   // the "Last: …" cue on every Log Sets toggle doubles as a trend shortcut
   document.addEventListener('click', function (e) {

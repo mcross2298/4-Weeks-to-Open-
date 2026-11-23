@@ -130,6 +130,27 @@ if (!(agg.pct < 100)) { console.error('::error::overall(): one just-hit, overrea
 setLog([{ date: iso(1), sets: [setOf('Random Machine Thing')] }]); // matches none of the mock's patterns -> 'other'
 check("overall(): a set classified to 'other' does not drag the aggregate down", ready.overall().pct, 100);
 
+// ---- explain(): the Recovery sheet's figures add up to the shown pct -------
+setLog([]);
+check('explain(): an untrained muscle is not "trained"', ready.explain('chest').trained, false);
+check('explain(): an untrained muscle reads 100', ready.explain('chest').pct, 100);
+
+setLog([
+  { id: 'new', date: iso(10), workoutName: 'Push', sets: [setOf('Bench Press'), setOf('Bench Press', 'F'), setOf('Incline Bench Press'), setOf('Row')] },
+  { id: 'old', date: iso(60), sets: [setOf('Bench Press')] }
+]);
+var ex = ready.explain('chest');
+check('explain(): pct is score()\'s', ex.pct, ready.score('chest'));
+check('explain(): reads the newest session that hit the muscle', ex.logId, 'new');
+check('explain(): counts only that muscle\'s sets', ex.sets, 3);
+check('explain(): counts sets to failure', ex.nearFailureSets, 1);
+check('explain(): lists each lift once, with its sets', JSON.stringify(ex.lifts), JSON.stringify([{ name: 'Bench Press', sets: 2 }, { name: 'Incline Bench Press', sets: 1 }]));
+check('explain(): tau stretches for sets and failure (20 x 1.3 x 1.25)', ex.tauHours, Math.round(20 * 1.3 * 1.25));
+var tau = 20 * 1.3 * 1.25, toFresh = tau * Math.log(100 / 30);
+check('explain(): hours until the curve reaches 70%', ex.freshInHours, Math.max(0, Math.round(toFresh - 10)));
+setLog([{ id: 'x', date: iso(200), sets: [setOf('Bench Press')] }]);
+check('explain(): long recovered reads fresh in 0 hours', ready.explain('chest').freshInHours, 0);
+
 delete global.localStorage;
 delete global.window;
 

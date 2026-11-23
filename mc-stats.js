@@ -147,7 +147,7 @@
 
   // dataPct: {groupId: 0-100}. tapNameByGroup: {groupId: exerciseName|undefined}.
   // labelFor(groupId) -> display string for a group WITH data (never called otherwise).
-  function renderMuscleChips(dataPct, tapNameByGroup, labelFor) {
+  function renderMuscleChips(dataPct, tapNameByGroup, labelFor, byMuscleTap) {
     var groups = MC_MUSCLES.groups.filter(function (g) { return g.id !== 'other'; });
     return '<div class="ready-board">' + groups.map(function (g) {
       var pct = dataPct[g.id];
@@ -155,14 +155,18 @@
       var col = hasData ? MC_CHART.bodyMapColorFor(Math.max(0, Math.min(100, pct)), {}) : 'rgba(255,255,255,0.12)';
       var label = hasData ? labelFor(g.id) : '';
       var exName = tapNameByGroup[g.id];
-      var cls = 'ready-chip mg-chip' + (exName ? '' : ' static');
-      return '<div class="' + cls + '"' + (exName ? ' data-ex="' + escAttr(exName) + '"' : '') +
-        ' title="' + escAttr(g.label + (label ? ' — ' + label : '')) + '">' +
+      // command-center-roadmap.md PR 2: in Recovery mode a chip explains its
+      // figure (MC_RECOVERY_SHEET); in Volume mode it opens the top lift.
+      var tap = byMuscleTap ? ' data-muscle="' + g.id + '"' : (exName ? ' data-ex="' + escAttr(exName) + '"' : '');
+      var tag = tap ? 'button' : 'div';
+      var cls = 'ready-chip mg-chip' + (tap ? '' : ' static');
+      return '<' + tag + (tap ? ' type="button"' : '') + ' class="' + cls + '"' + tap +
+        ' aria-label="' + escAttr(g.label + (label ? ', ' + label : '') + (byMuscleTap ? '. Explain this figure.' : exName ? '. Open ' + exName + '.' : '')) + '">' +
         '<span class="ready-icon">' + g.icon + '</span>' +
         '<span class="ready-lbl">' + g.label + '</span>' +
         '<span class="ready-bar" style="background:' + col + '"></span>' +
         '<span class="mg-chip-val">' + (label || '—') + '</span>' +
-      '</div>';
+      '</' + tag + '>';
     }).join('') + '</div>';
   }
 
@@ -183,7 +187,7 @@
         chipHtml = '<div class="empty">Log a session or two to see your recovery by muscle group.</div>';
       } else {
         Object.keys(ready).forEach(function (id) { bodyData[id] = ready[id].pct; });
-        chipHtml = renderMuscleChips(bodyData, tapNameByGroup, function (id) { return Math.round(ready[id].pct) + '%'; });
+        chipHtml = renderMuscleChips(bodyData, tapNameByGroup, function (id) { return Math.round(ready[id].pct) + '%'; }, !!window.MC_RECOVERY_SHEET);
       }
     } else {
       var rows = Object.keys(tally30).map(function (k) { return tally30[k]; });
@@ -223,6 +227,16 @@
       });
     });
   }
+
+  // One delegated listener for every chip that explains a recovery figure,
+  // on the map's legend and on This Week's Readiness alike.
+  document.addEventListener('click', function (e) {
+    var chip = e.target.closest ? e.target.closest('[data-muscle]') : null;
+    if (chip && window.MC_RECOVERY_SHEET) MC_RECOVERY_SHEET.muscle(chip.getAttribute('data-muscle'));
+    // A record's lift name opens that lift's history sheet.
+    var lift = e.target.closest ? e.target.closest('.pr-row[data-lift]') : null;
+    if (lift && window.MCTrends) MCTrends.open(lift.getAttribute('data-lift'));
+  });
 
   function renderTonnage(all) {
     var host = document.getElementById('tonnageCard');
@@ -271,12 +285,12 @@
     }
     host.innerHTML = prs.slice(0, 30).map(function (p) {
       var d = new Date(p.date || 0).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      return '<div class="pr-row">' +
+      return '<button type="button" class="pr-row" data-lift="' + escAttr(p.name) + '">' +
         '<span class="pr-ico">🏆</span>' +
         '<span class="pr-name">' + String(p.name || '').replace(/</g, '&lt;') + '</span>' +
         '<span class="pr-wt">' + p.weight + ' lb × ' + (p.reps || '?') + '</span>' +
         '<span class="pr-date">' + d + '</span>' +
-      '</div>';
+      '</button>';
     }).join('');
   }
 
@@ -299,10 +313,10 @@
     }
     host.innerHTML = rows.slice(0, 12).map(function (m) {
       var d = new Date(m.date || 0).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      return '<div class="pr-row"><span class="pr-ico">🥇</span>' +
+      return '<button type="button" class="pr-row" data-lift="' + escAttr(m.exercise) + '"><span class="pr-ico">🥇</span>' +
         '<span class="pr-name">' + String(m.exercise).replace(/</g, '&lt;') + '</span>' +
         '<span class="pr-wt">' + m.weight + ' lb</span>' +
-        '<span class="pr-date">' + d + '</span></div>';
+        '<span class="pr-date">' + d + '</span></button>';
     }).join('');
   }
 
@@ -355,11 +369,16 @@
     var STATUS_COLOR = { fresh: '#34d399', accumulating: '#f59e0b', overreached: '#f87171' };
     return '<div class="ready-board">' + groups.map(function (g) {
       var r = data[g.id] || { pct: 100, status: 'fresh' };
-      return '<div class="ready-chip" title="' + g.label + ' — ' + r.pct + '% recovered (' + r.status + ')">' +
+      // command-center-roadmap.md PR 2: the figure was only in a title tooltip,
+      // which a phone never shows. It is on the chip now, and the chip opens
+      // what the figure is made of.
+      return '<button type="button" class="ready-chip rd-chip" data-muscle="' + g.id + '" aria-label="' + escAttr(g.label + ', ' + r.pct +
+          '% recovered, ' + r.status + '. Explain this figure.') + '">' +
         '<span class="ready-icon">' + g.icon + '</span>' +
         '<span class="ready-lbl">' + g.label + '</span>' +
         '<span class="ready-bar" style="background:' + STATUS_COLOR[r.status] + '"></span>' +
-      '</div>';
+        '<span class="mg-chip-val">' + r.pct + '%</span>' +
+      '</button>';
     }).join('') + '</div>';
   }
 

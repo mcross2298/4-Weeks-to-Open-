@@ -211,7 +211,10 @@ body{background:var(--bg);min-height:100vh;color:var(--text);padding-bottom:calc
 }
 .vitals-strip.show{display:flex;}
 .vt-ring{flex-shrink:0;width:40px;height:40px;display:flex;align-items:center;justify-content:center;}
-.vt-body{min-width:0;flex:1;}
+.vt-body{min-width:0;flex:1;display:block;}
+.vt-line,.vt-sub{display:block;}
+.vt-open{display:flex;align-items:center;gap:inherit;flex:1;min-width:0;min-height:48px;padding:0;border:0;background:transparent;
+  color:inherit;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .vt-line{font-size:var(--fs-md);font-weight:900;color:var(--text);letter-spacing:-0.01em;line-height:1.15;}
 .vt-sub{font-size:var(--fs-2xs);font-weight:700;color:var(--muted2);margin-top:2px;}
 .vt-log{
@@ -1512,11 +1515,15 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
        sleep/resting-HR/readiness entry, its own Recovery ring. Hidden with
        no entry logged yet, same convention as the two strips above. -->
   <div class="vitals-strip" id="vitalsStrip">
-    <div class="vt-ring" id="vtRing"></div>
-    <div class="vt-body">
-      <div class="vt-line" id="vtLine"></div>
-      <div class="vt-sub" id="vtSub">Recovery</div>
-    </div>
+    <!-- command-center-roadmap.md PR 2: the ring and its line open what the
+         score is made of (mc-recovery-sheet.js). -->
+    <button type="button" class="vt-open" id="vtOpen" aria-label="Recovery score. Explain this figure.">
+      <span class="vt-ring" id="vtRing"></span>
+      <span class="vt-body">
+        <span class="vt-line" id="vtLine"></span>
+        <span class="vt-sub" id="vtSub">Recovery</span>
+      </span>
+    </button>
     <button type="button" class="vt-log" id="vtLog">Log</button>
   </div>
 
@@ -1872,6 +1879,7 @@ html[data-theme="light"] #scr-nutrition .topbar-sub{color:#6b6459;}
 <script src="mc-week-bar.js"></script>
 <script src="mc-day-hero.js"></script>
 <script src="mc-block.js"></script>
+<script src="mc-recovery-sheet.js"></script>
 <script src="mc-readiness-brief.js"></script>
 <script src="mc-offline-prefetch.js"></script>
 <script src="mc-recap.js"></script>
@@ -2057,6 +2065,9 @@ function paintVitalsStrip(){
   if(e.sleepHrs!=null) bits.push(e.sleepHrs+'h sleep');
   if(e.restingHr!=null) bits.push(e.restingHr+' bpm resting');
   document.getElementById('vtLine').textContent=score+'% recovery';
+  const vo=document.getElementById('vtOpen');
+  if(vo){vo.setAttribute('aria-label',score+'% recovery. Explain this figure.');
+    vo.onclick=function(){if(window.MC_RECOVERY_SHEET)MC_RECOVERY_SHEET.vitals();};}
   document.getElementById('vtSub').textContent=bits.length?bits.join(' · '):'Recovery';
   strip.classList.add('show');
 }

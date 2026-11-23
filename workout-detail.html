@@ -66,7 +66,14 @@ body{background:#0a0a0a;min-height:100vh;color:#fff;padding-bottom:40px;}
    notes aren't in the saved data, so each exercise renders standalone). */
 .ex-card{background:#111;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:16px;margin-bottom:10px;position:relative;overflow:hidden;}
 .ex-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#34d399;border-radius:0 2px 2px 0;}
-.ex-card-name{font-size:var(--fs-lg);font-weight:800;color:#fff;margin-bottom:10px;line-height:1.3;}
+.ex-card-name{display:block;width:100%;min-height:48px;padding:0;border:0;background:transparent;text-align:left;cursor:pointer;
+  font:inherit;font-size:var(--fs-lg);font-weight:800;color:#fff;margin-bottom:4px;line-height:1.3;-webkit-tap-highlight-color:transparent;}
+.ex-card-name::after{content:' ›';color:var(--muted,#8a8377);}
+html[data-theme="light"] .ex-card-name{color:var(--text);}
+.ex-last{display:flex;align-items:center;min-height:48px;font-size:var(--fs-sm);font-weight:600;color:var(--muted,#8a8377);
+  text-decoration:none;margin:-4px 0 8px;line-height:1.4;}
+.ex-last .up{color:var(--success,#34d399);font-weight:800;}
+.ex-last .down{color:var(--danger,#f87171);font-weight:800;}
 .ex-card-swap{font-size:var(--fs-sm);font-weight:600;color:var(--muted,#8a8377);margin:-6px 0 10px;}
 .ex-set-rows{display:flex;flex-direction:column;gap:6px;}
 .ex-set-row{display:flex;align-items:center;gap:10px;padding:7px 10px;background:#0d0d0d;border-radius:8px;}
@@ -177,9 +184,51 @@ function groupByExercise(sets){
   return order.map(k=>({name:nameOf[k], from:fromOf[k], sets:byKey[k]}));
 }
 
+// command-center-roadmap.md PR 2: each lift beside the last session before
+// this one that included it, whichever workout that was. Top set is the
+// heaviest set (more reps break a tie); total reps uses MC_LOG's own count, so
+// a cluster set counts all its reps.
+function normName(n){ return String(n||'').trim().toLowerCase(); }
+function liftSummary(sets){
+  let top = null, reps = 0;
+  sets.forEach(s=>{
+    const w = parseFloat(s.weight)||0;
+    const r = (window.MC_LOG && MC_LOG.repsTop) ? MC_LOG.repsTop(s.reps) : (parseInt(s.reps,10)||0);
+    reps += (window.MC_LOG && MC_LOG.repsTotal) ? MC_LOG.repsTotal(s.reps) : r;
+    if(!top || w > top.w || (w === top.w && r > top.r)) top = {w, r};
+  });
+  return {top, reps};
+}
+function lastTime(all, log, name){
+  const when = new Date(log.date||0).getTime(), want = normName(name);
+  let best = null;
+  all.forEach(e=>{
+    if(e === log || e.id === log.id) return;
+    const t = new Date(e.date||0).getTime();
+    if(!(t < when) || (best && t <= best.t)) return;
+    const mine = ((window.MC_LOG && MC_LOG.readSets) ? MC_LOG.readSets(e) : []).filter(s=>normName(s.name) === want);
+    if(mine.length) best = {t, e, sets: mine};
+  });
+  return best;
+}
+function lastTimeHtml(all, log, ex){
+  const prev = lastTime(all, log, ex.name);
+  if(!prev) return '<div class="ex-last">First time logged</div>';
+  const now = liftSummary(ex.sets), then = liftSummary(prev.sets);
+  const d = new Date(prev.t).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  const topTxt = s => s.top && s.top.w ? s.top.w+' × '+s.top.r : s.reps+' reps';
+  let delta = '';
+  if(now.top && then.top && now.top.w && then.top.w){
+    const dw = Math.round((now.top.w - then.top.w)*10)/10;
+    delta = dw ? (dw > 0 ? ' · <b class="up">+'+dw+' lb</b>' : ' · <b class="down">'+dw+' lb</b>') : ' · same top weight';
+  }
+  return '<a class="ex-last" href="workout-detail.html?id='+encodeURIComponent(prev.e.id||'')+'">Last time · '+esc(d)+': '+
+    esc(topTxt(then))+' top, '+then.reps+' reps total'+delta+' ›</a>';
+}
 function render(){
   const id = new URLSearchParams(location.search).get('id') || '';
-  const log = getLogs().filter(l=>l.id===id)[0];
+  const allLogs = getLogs();
+  const log = allLogs.filter(l=>l.id===id)[0];
   const page = document.getElementById('page');
 
   if(!log){
@@ -228,7 +277,8 @@ function render(){
       <div class="readonly-note">🔒 This is a completed session — read-only. Exercises are grouped from what was actually logged; original superset/tri-set groupings aren't stored in your history.</div>
       ${exercises.length ? exercises.map(ex=>`
         <div class="ex-card">
-          <div class="ex-card-name">${esc(ex.name)}</div>${ex.from?`<div class="ex-card-swap">Swapped from ${esc(ex.from)}</div>`:''}
+          <button type="button" class="ex-card-name" data-lift="${esc(ex.name)}" aria-label="${esc(ex.name)}. Open its history.">${esc(ex.name)}</button>${ex.from?`<div class="ex-card-swap">Swapped from ${esc(ex.from)}</div>`:''}
+          ${lastTimeHtml(allLogs, log, ex)}
           <div class="ex-set-rows">
             ${ex.sets.map((s,i)=>`
               <div class="ex-set-row">
@@ -243,7 +293,13 @@ function render(){
 }
 
 render();
+document.addEventListener('click',function(e){
+  const b = e.target.closest && e.target.closest('.ex-card-name[data-lift]');
+  if(b && window.MCTrends) MCTrends.open(b.getAttribute('data-lift'));
+});
 </script>
+<script src="mc-chart.js"></script>
+<script src="mc-exercise-trends.js"></script>
 <script src="mc-nav.js"></script>
 <script src="mc-supabase.js"></script>
 <!-- FIX-06 (roadmap Phase 5.1): mergeSetlog() dates a legacy year-less day

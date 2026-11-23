@@ -99,7 +99,8 @@
         date: e.date,
         hoursSince: (Date.now() - new Date(e.date).getTime()) / HOUR,
         sets: matching.length,
-        nearFailureSets: nearFailure
+        nearFailureSets: nearFailure,
+        entry: e
       };
     }
     return null;
@@ -152,7 +153,37 @@
     return stim.hoursSince >= (days || 7) * 24;
   }
 
-  var API = { byMuscle: byMuscle, score: score, stale: stale, overall: overall };
+  // command-center-roadmap.md PR 2: what a muscle's figure is made of, for the
+  // Recovery sheet. The same lastStimulus() and tau recoveryFor() use, so the
+  // explanation can never describe a different number than the one shown.
+  // freshInHours is how long until the curve reaches FRESH_MIN (0 once there).
+  function explain(muscleId) {
+    var stim = lastStimulus(muscleId);
+    if (!stim) return { pct: 100, status: 'fresh', trained: false, lifts: [] };
+    var tau = BASE_TAU_HOURS * (1 + stim.sets / 10) * (stim.nearFailureSets >= 1 ? 1.25 : 1);
+    var r = recoveryFor(muscleId);
+    var toFresh = tau * Math.log(100 / (100 - FRESH_MIN));
+    var lifts = [], idx = {};
+    (stim.entry ? setsOf(stim.entry) : []).forEach(function (s) {
+      if (classify(s.name) !== muscleId) return;
+      var nm = String(s.name || '').trim() || 'Exercise';
+      if (!(nm in idx)) { idx[nm] = lifts.length; lifts.push({ name: nm, sets: 0 }); }
+      lifts[idx[nm]].sets++;
+    });
+    return {
+      pct: r.pct, status: r.status, trained: true,
+      date: stim.date, hoursSince: Math.round(stim.hoursSince),
+      sets: stim.sets, nearFailureSets: stim.nearFailureSets,
+      tauHours: Math.round(tau),
+      freshInHours: Math.max(0, Math.round(toFresh - stim.hoursSince)),
+      logId: stim.entry ? stim.entry.id : null,
+      workoutName: stim.entry ? stim.entry.workoutName : null,
+      lifts: lifts
+    };
+  }
+
+  var API = { byMuscle: byMuscle, score: score, stale: stale, overall: overall, explain: explain,
+    FRESH_MIN: FRESH_MIN };
   if (isBrowser) window.MC_READY = API;
 
   // Node-side hook so CI can regression-test the real recovery math (see
