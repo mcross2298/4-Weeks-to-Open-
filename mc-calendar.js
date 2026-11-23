@@ -104,9 +104,31 @@
     render();
   }
 
+  // command-center-roadmap.md PR 3: a finished day is shaded by its working
+  // sets, against the busiest day in the 90 days to today, in four steps.
+  // Relative rather than fixed so a lighter program still reads as a range.
+  function daySets(rec) {
+    return rec ? rec.finished.reduce(function (t, e) { return t + setsOf(e).length; }, 0) : 0;
+  }
+  var HEAT_DAYS = 90;
+  function heatScale() {
+    var from = keyOf(new Date(today.getFullYear(), today.getMonth(), today.getDate() - HEAT_DAYS));
+    var max = 0;
+    Object.keys(byDay).forEach(function (k) {
+      if (k < from || k > todayKey) return;
+      max = Math.max(max, daySets(byDay[k]));
+    });
+    return max || 1;
+  }
+  function heatLevel(sets, scale) {
+    if (!sets) return 1;
+    return Math.max(1, Math.min(4, Math.ceil(sets / scale * 4)));
+  }
+
   // ── render ──
   function render() {
     byDay = indexHistory();
+    var scale = heatScale();
 
     var first = new Date(viewY, viewM, 1);
     var lead = (first.getDay() + 6) % 7;            // Mon=0 offset of the 1st
@@ -126,9 +148,11 @@
       if (key === todayKey) cls += ' cal-today';
       if (key === selKey) cls += ' cal-sel';
       if (future) cls += ' cal-future';
+      var ds = done ? daySets(rec) : 0;
       cells += '<button class="' + cls + '" data-key="' + key + '" ' +
-        'aria-label="' + esc(MONTHS[viewM] + ' ' + day) + (done ? ', workout completed' : '') + '">' +
+        'aria-label="' + esc(MONTHS[viewM] + ' ' + day) + (done ? ', workout completed, ' + ds + (ds === 1 ? ' set' : ' sets') : '') + '">' +
         '<span class="cal-num">' + day + '</span>' +
+        (done ? '<span class="cal-heat cal-h' + heatLevel(ds, scale) + '"></span>' : '') +
         (live ? '<span class="cal-dot"></span>' : '') +
         '</button>';
     }
@@ -156,7 +180,8 @@
         dow +
         '<div class="cal-grid">' + cells + '</div>' +
         '<div class="cal-legend">' +
-          '<span class="cal-lg"><i class="cal-lg-slash"></i>Completed</span>' +
+          '<span class="cal-lg">Fewer sets <i class="cal-lg-heat cal-h1"></i><i class="cal-lg-heat cal-h2"></i>' +
+            '<i class="cal-lg-heat cal-h3"></i><i class="cal-lg-heat cal-h4"></i> More</span>' +
           '<span class="cal-lg"><i class="cal-lg-dot"></i>In progress</span>' +
         '</div>' +
         '<div class="cal-detail" id="calDetail"></div>' +
@@ -223,10 +248,12 @@
     if (hasFinished) {
       rec.finished.forEach(function (log) {
         var sets = setsOf(log).length;
+        // A day opens its workout: each finished one links to its read-only page.
+        var tag = log.id ? 'a' : 'div';
         html +=
-          '<div class="cal-log">' +
+          '<' + tag + ' class="cal-log"' + (log.id ? ' href="workout-detail.html?id=' + encodeURIComponent(log.id) + '"' : '') + '>' +
             '<div class="cal-log-head">' +
-              '<span class="cal-log-name">' + esc(log.workoutName || 'Workout') + '</span>' +
+              '<span class="cal-log-name">' + esc(log.workoutName || 'Workout') + (log.id ? ' ›' : '') + '</span>' +
               (log.time ? '<span class="cal-log-time">' + esc(log.time) + '</span>' : '') +
             '</div>' +
             '<div class="cal-log-tags">' +
@@ -234,7 +261,7 @@
               (log.duration ? '<span class="cal-tag">⏱ ' + esc(log.duration) + '</span>' : '') +
               (log.prs ? '<span class="cal-tag gold">🏆 ' + log.prs + ' PR' + (log.prs > 1 ? 's' : '') + '</span>' : '') +
             '</div>' +
-          '</div>';
+          '</' + tag + '>';
       });
     }
 
@@ -268,7 +295,7 @@
       '.cal-chevron{font-size:var(--fs-md,14px);color:var(--muted2,#797267);margin-left:6px;transition:transform 0.2s;}' +
       '.cal-card{margin:0 18px 28px;background:var(--card-bg,#0f0f0f);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:14px 14px 16px;}' +
       '.cal-monthbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}' +
-      '.cal-nav{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:var(--gold,#d4af37);font-size:var(--fs-2xl,18px);font-weight:900;cursor:pointer;line-height:1;-webkit-tap-highlight-color:transparent;}' +
+      '.cal-nav{width:48px;height:48px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:var(--gold,#d4af37);font-size:var(--fs-2xl,18px);font-weight:900;cursor:pointer;line-height:1;-webkit-tap-highlight-color:transparent;}' +
       '.cal-nav:active{background:rgba(255,255,255,0.1);}' +
       '.cal-month{flex:1;text-align:center;background:none;border:none;color:var(--text,#fff);font-size:var(--fs-lg,15px);font-weight:900;letter-spacing:-0.01em;cursor:pointer;font-family:inherit;}' +
       '.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;}' +
@@ -281,20 +308,23 @@
       '.cal-num{position:relative;z-index:1;}' +
       '.cal-future{opacity:0.4;}' +
       // green diagonal slashes for completed days
-      '.cal-done{border-color:rgba(52,211,153,0.55);color:#eafff5;}' +
-      '.cal-done::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(52,211,153,0.45) 3px,rgba(52,211,153,0.45) 5px);z-index:0;}' +
+      '.cal-done{border-color:rgba(52,211,153,0.55);}' +
+      '.cal-heat{position:absolute;left:0;right:0;bottom:0;height:6px;z-index:0;}' +
+      '.cal-h1{background:rgba(52,211,153,0.3);}.cal-h2{background:rgba(52,211,153,0.55);}' +
+      '.cal-h3{background:rgba(52,211,153,0.8);}.cal-h4{background:#34d399;}' +
       '.cal-dot{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#34d399;z-index:1;}' +
       '.cal-today{box-shadow:inset 0 0 0 1.5px var(--gold,#d4af37);color:var(--gold,#d4af37);}' +
       '.cal-sel{outline:2px solid var(--gold,#d4af37);outline-offset:1px;}' +
       '.cal-sel .cal-num{color:#fff;}' +
-      '.cal-legend{display:flex;gap:16px;justify-content:center;margin-top:12px;}' +
-      '.cal-lg{display:flex;align-items:center;gap:6px;font-size:var(--fs-3xs,10px);font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#797267;}' +
-      '.cal-lg-slash{width:14px;height:14px;border-radius:4px;border:1px solid rgba(52,211,153,0.55);background:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(52,211,153,0.5) 2px,rgba(52,211,153,0.5) 4px);}' +
+      '.cal-legend{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;margin-top:12px;}' +
+      '.cal-lg{display:flex;align-items:center;gap:6px;font-size:var(--fs-sm,13px);font-weight:700;color:#a8a196;}' +
+      '.cal-lg-heat{display:inline-block;width:12px;height:12px;border-radius:3px;margin:0 1px;vertical-align:middle;}' +
       '.cal-lg-dot{width:7px;height:7px;border-radius:50%;background:#34d399;margin:0 3px;}' +
       '.cal-detail{margin-top:14px;border-top:1px solid rgba(255,255,255,0.07);padding-top:12px;}' +
       '.cal-detail-date{font-size:var(--fs-sm,13px);font-weight:900;color:var(--text,#ede7d9);margin-bottom:10px;display:flex;align-items:center;gap:8px;}' +
       '.cal-detail-today{font-size:calc(var(--fs-3xs,10px) - 1px);font-weight:900;letter-spacing:0.08em;color:#000;background:var(--gold,#d4af37);border-radius:5px;padding:2px 6px;}' +
       '.cal-empty{font-size:var(--fs-xs,12px);font-weight:600;color:#797267;padding:8px 0 4px;}' +
+      'a.cal-log{display:block;text-decoration:none;color:inherit;min-height:48px;-webkit-tap-highlight-color:transparent;}' +
       '.cal-log{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-left:3px solid #34d399;border-radius:10px;padding:10px 12px;margin-bottom:8px;}' +
       '.cal-log-live{border-left-color:#fbbf24;}' +
       '.cal-log-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px;}' +

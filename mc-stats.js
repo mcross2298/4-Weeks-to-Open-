@@ -407,6 +407,15 @@
         '<div class="wk-cell"><div class="wk-val">' + wk.sets + '</div><div class="wk-lbl">Sets</div></div>' +
         '<div class="wk-cell"><div class="wk-val">' + fmtTons(wk.tonnage) + '</div><div class="wk-lbl">Tonnage (lb)</div></div>' +
         '<div class="wk-cell"><div class="wk-val">' + (wk.prs ? '🏆 ' + wk.prs : '—') + '</div><div class="wk-lbl">PRs</div></div>';
+      // command-center-roadmap.md PR 3: the week beside a normal one.
+      var normEl = document.getElementById('weekNormal');
+      if (normEl) {
+        var nm = MC_RECAP.weekNormal ? MC_RECAP.weekNormal(weekOffset) : null;
+        normEl.innerHTML = nm
+          ? 'A normal week: <b>' + nm.sessions + '</b> workouts · <b>' + nm.sets + '</b> sets · <b>' + fmtTons(nm.tonnage) +
+            '</b> lb (average of the ' + nm.weeks + ' weeks with training before this one).'
+          : '';
+      }
       sparkEl.innerHTML = (window.MC_CHART && wk.perDay.some(function (p) { return p.value > 0; }))
         ? MC_CHART.bars(wk.perDay, { labels: true, height: 64 })
         : '';

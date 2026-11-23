@@ -151,6 +151,18 @@
     return (L + 0.05) / 0.05 >= 1.05 / (L + 0.05) ? 'var(--ink-0)' : 'var(--ink-11)';
   }
 
+  // command-center-roadmap.md PR 3: this week beside a normal one, from
+  // mc-recap.js's weekNormal() (the same weekly totals Stats shows).
+  function normalLine() {
+    var R = window.MC_RECAP;
+    if (!R || !R.weekNormal || !R.statsForWeek) return '';
+    var nm = R.weekNormal(0);
+    if (!nm) return '';
+    var wk = R.statsForWeek(0);
+    return '<p class="mcb-stat">This week so far: ' + wk.sessions + (wk.sessions === 1 ? ' workout' : ' workouts') + ' · ' + wk.sets +
+      ' sets. A normal week: ' + nm.sessions + ' · ' + nm.sets + ' sets (last ' + nm.weeks + ' weeks with training).</p>';
+  }
+
   var LABEL = { done: 'done', missed: 'missed', rest: 'rest', today: 'today', upcoming: 'upcoming' };
 
   function openSheet(opts) {
@@ -168,6 +180,7 @@
       '<div class="mcb-head"><h2>' + esc(opts.title || 'Block') + '</h2>' +
         '<button type="button" class="mcb-close" aria-label="Close">×</button></div>' +
       '<p class="mcb-stat">' + s.trainDone + ' of ' + s.trainTotal + ' training days done · week ' + s.week + ' of ' + s.weeks + '</p>' +
+      normalLine() +
       '<div class="mcb-key"><span><i class="mcb-i-done"></i>Done</span><span><i class="mcb-i-today"></i>Today</span>' +
         '<span><i class="mcb-i-missed"></i>Missed</span><span><i class="mcb-i-rest"></i>Rest</span></div>' +
       g.map(function (w) {

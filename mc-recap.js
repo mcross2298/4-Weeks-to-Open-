@@ -126,7 +126,30 @@
     return s;
   }
 
-  window.MC_RECAP = { weeklyStats: weeklyStats, statsForWeek: statsForWeek };
+  // command-center-roadmap.md PR 3: what's normal. The average of the up to
+  // six calendar weeks before week `offset` that have a finished workout in
+  // them, built from statsForWeek() so it is the same arithmetic as the week
+  // it sits beside. A week with no training is left out (a holiday is not a
+  // normal week), and with fewer than three weeks to go on there is no normal
+  // yet: null, never an average of one or two.
+  var NORMAL_WEEKS = 6, NORMAL_MIN = 3;
+  function weekNormal(offset) {
+    var base = offset || 0, got = [];
+    for (var i = 1; i <= NORMAL_WEEKS; i++) {
+      var w = statsForWeek(base + i);
+      if (w.sessions > 0) got.push(w);
+    }
+    if (got.length < NORMAL_MIN) return null;
+    function avg(k) { return got.reduce(function (t, w) { return t + w[k]; }, 0) / got.length; }
+    return {
+      weeks: got.length,
+      sessions: Math.round(avg('sessions') * 10) / 10,
+      sets: Math.round(avg('sets')),
+      tonnage: Math.round(avg('tonnage'))
+    };
+  }
+
+  window.MC_RECAP = { weeklyStats: weeklyStats, statsForWeek: statsForWeek, weekNormal: weekNormal };
 
   // ---- dashboard pulse strip (#weeklyPulseStrip) ---------------------------
   // Same "empty host, hidden until earned" convention as #todayStrip/

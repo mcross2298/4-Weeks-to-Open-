@@ -66,6 +66,9 @@ button.pr-row{width:100%;min-height:48px;background:transparent;border-width:0 0
 .wk-val{font-size:17px;font-weight:900;color:#ede7d9;}
 .wk-lbl{font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#797267;margin-top:3px;}
 .wk-spark{margin:4px 2px 0;}
+.wk-normal{font-size:var(--fs-sm);font-weight:600;color:#a8a196;line-height:1.5;margin:-4px 0 12px;}
+.wk-normal:empty{display:none;}
+.wk-normal b{color:#ede7d9;font-weight:800;}
 .ready-board{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 .ready-chip{background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px 6px 0;
   text-align:center;overflow:hidden;}
@@ -124,6 +127,8 @@ html[data-theme="light"] .mg-toggle button.active{background:rgba(var(--accent-r
 html[data-theme="light"] .mg-fig-cap,
 html[data-theme="light"] .mg-note,
 html[data-theme="light"] .mg-chip-val{color:#6b6459;}
+html[data-theme="light"] .wk-normal{color:#6b6459;}
+html[data-theme="light"] .wk-normal b{color:var(--text);}
 html[data-theme="light"] .mg-bar-wrap{background:rgba(28,26,23,.08);}
 html[data-theme="light"] .pr-row{border-bottom-color:rgba(28,26,23,.08);}
 html[data-theme="light"] .topbar-icon{background:rgba(28,26,23,.05);border-color:rgba(28,26,23,.12);}
@@ -188,6 +193,7 @@ html[data-theme="light"] .theme-icon-light{display:block!important;}
         <button id="weekNext" aria-label="Next week" disabled>›</button>
       </div>
       <div class="wk-grid" id="weekStatsGrid"></div>
+      <div class="wk-normal" id="weekNormal"></div>
       <div class="wk-spark" id="weekSpark"></div>
     </div>
   </div>
