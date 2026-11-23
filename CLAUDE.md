@@ -2863,6 +2863,19 @@ Whenever asked to **create a new program**, follow this pipeline exactly:
 >   Strength & Supersets is trained on its landing (`cat-strength`), which no id
 >   prefix matches. Before this, all of its workouts showed as standalone.
 
+> **Companion Home plan:** [`command-center-roadmap.md`](command-center-roadmap.md)
+> and [`autonomy-exec-roadmap.md`](autonomy-exec-roadmap.md) (opened
+> 2026-11-23, Command Center PRs 1–4, executive Parts 1–3) record the owner's
+> two interviews, shaped like the household finance app's, from the athlete's
+> point of view only. Read their decisions-on-record before changing Home.
+> Four of them are easy to undo by accident. Home has **no verdict**: it shows
+> figures, and the Readiness Brief stays as built. The app is **logbook and
+> suggestions only**: it never changes a program, a load or a day. **No new
+> push types** are added. An automatic action pauses after **two Undos in 30
+> days**. The 12-month measure is friction in the gym: open to first set
+> under 30 s, and one tap per unchanged set. Each PR keeps its own check-in.
+> Scratch-listed.
+
 > **12-Week Boxing Camp shipped (2026-11-20) — [`boxing-camp-roadmap.md`](boxing-camp-roadmap.md).**
 > It is a "Fight Camp" routine on the Conditioning tab (`boxing-camp.html`).
 > Things to know before you change it:

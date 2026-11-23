@@ -166,6 +166,7 @@ const KNOWN_MODULES = [
   'mc-barcode.js',
   'mc-biomech.js',
   'mc-biometric.js',
+  'mc-block.js',
   'mc-body.js',
   'mc-bonus-routing.js',
   'mc-bridge.js',
