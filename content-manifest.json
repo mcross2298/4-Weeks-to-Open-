@@ -124,7 +124,8 @@
     "claude_code_go_live_protocol.md",
     "flagship-readiness-roadmap.md",
     "GO_LIVE",
-    "field-feedback-roadmap.md", "settings-pathways-roadmap.md", "council-audit-roadmap.md"
+    "field-feedback-roadmap.md", "settings-pathways-roadmap.md", "council-audit-roadmap.md",
+    "command-center-roadmap.md", "autonomy-exec-roadmap.md"
   ],
   "shippable": [],
   "brand_terms": [
