@@ -20,7 +20,7 @@ The executive round that followed is in
 | 1 | Home figures: block position row with vs last week, a block progress ring, the block sheet (done, missed, rest, upcoming), a sync chip shown only when something is waiting | Planned |
 | 2 | Drill-downs: Recovery explained (per muscle and the Recovery ring), tappable readiness chips, last-time compare on workout detail, a lift history sheet | Planned |
 | 3 | Visuals and normal: the training calendar shaded by volume (a day opens its workout), and "what's normal", a trailing six-week sets, volume and sessions line | Planned |
-| 4 | Autonomy: auto-finish a stale session, a weekly backup, a Done-for-you log with Undo, the kill switch (from the executive round) | Planned, one decision open |
+| 4 | Autonomy: auto-finish a stale session, a Done-for-you log with Undo, the kill switch (from the executive round) | Planned |
 
 Each PR keeps its own `AskUserQuestion` check-in before it starts, per the
 multi-phase rule in `CLAUDE.md`.
@@ -116,9 +116,9 @@ rings stay as they are.
   position rather than a target. No goal store is added.
 - **Auto-backup on the web.** A page cannot save a file to the phone without
   a tap, so a fully automatic weekly backup file cannot be built as asked.
-  A copy in the app's own storage would not survive a lost phone either. The
-  owner decides before PR 4. Until then the backup nudge (R7) stays the only
-  backup prompt.
+  A copy in the app's own storage would not survive a lost phone either.
+  **Decided (owner, Nov 23, 2026): keep the R7 backup nudge as it is.** No
+  automatic backup is built.
 - **Auto-finish and the resume window.** `mc-resume.js` drops a session
   snapshot after 36 hours. Auto-finish acts at 12 hours, checked when the app
   next opens (a PWA has no background run). It banks through the same path
@@ -168,8 +168,8 @@ rings stay as they are.
   six finished weeks before this one (shown only with three or more), and
   this week beside it. On Stats, and as one line in the block sheet.
 
-## PR 4: autonomy (planned, one decision open)
+## PR 4: autonomy (planned)
 
 The rules are in `autonomy-exec-roadmap.md`: the Done-for-you log, Undo,
 and the kill switch after two Undos in 30 days. Auto-finish as described
-above. The weekly backup waits for the decision recorded above.
+above. No automatic backup (the owner kept the R7 nudge as it is).

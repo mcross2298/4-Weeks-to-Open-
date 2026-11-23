@@ -29,7 +29,7 @@ Scratch-listed (`content-manifest.json`).
 | The friction target | **Both**: open to first ticked set under 30 seconds, and one tap per set when the suggestion is taken unchanged. |
 | How it is measured | The app logs it, synced, per phone and week. |
 | The untested iOS journal | Verified on the owner's iPhone by a manual script. |
-| A lost signed-out phone | No further answer chosen. The weekly backup (Command Center PR 4, decision open) is the only plan. |
+| A lost signed-out phone | No further answer chosen. The backup nudge (R7) stays as it is; no automatic backup is built (owner, Nov 23). Recorded as an open risk. |
 | Attention between gym sessions | **None unless the app is opened.** No new nudges. |
 
 ### Where an answer met an existing rule
@@ -38,9 +38,7 @@ Scratch-listed (`content-manifest.json`).
   already builds fewer sets (`reduceFor()` in `mc-setlog.js`, phase C).
   That is the program's own prescription, written by its author, not a
   change the app makes. It stays. Lighter stays a tap the athlete makes.
-- **What the kill switch covers.** Only auto-finish can be undone. A backup
-  changes nothing of the athlete's, so it cannot pause. The weekly backup's
-  shape is still open.
+- **What the kill switch covers.** Auto-finish, the one automatic action.
 - **Attention: none.** No push type is added (Command Center: "keep as is").
   The Done-for-you log is read when the app is opened, never pushed. The
   monthly friction report is a screen, not a notification.
