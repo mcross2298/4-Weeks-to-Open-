@@ -257,6 +257,7 @@ const KNOWN_MODULES = [
   'mc-sync.js',
   'mc-theme.js',
   'mc-timer.js',
+  'mc-usage.js',
   'mc-vitals.js',
   'mc-voice.js',
   'mc-week-bar.js',

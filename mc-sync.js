@@ -115,6 +115,7 @@
     'mc_plan_targets_v1':    'dictByTs',
     'mc_session_summary_v1': 'dictByTs',
     'mc_auto_v1':            'dictByTs',
+    'mc_usage_v1':           'dictByTs',
     'mc_macros_v1':          'macros',
     // Wave 1 (audit G-01/K-1.2): mc-exercise-catalog.js's own header has always
     // documented this store as "synced across the user's own devices via

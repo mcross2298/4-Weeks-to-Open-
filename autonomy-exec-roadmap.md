@@ -14,7 +14,7 @@ Scratch-listed (`content-manifest.json`).
 | Part | What | Status |
 |---|---|---|
 | 1 | Kill switch: an automatic action undone twice in 30 days pauses and asks instead | Built (with Command Center PR 4) |
-| 2 | Friction measured: open-to-first-set seconds and taps per logged set, per phone and week, synced, in a monthly report | Planned |
+| 2 | Friction measured: open-to-first-set seconds and taps per logged set, per phone and week, synced, in a monthly report | Built |
 | 3 | The iOS crash-journal check: a manual script the owner runs on the iPhone, results recorded here | Planned |
 
 ## Decisions on record (owner, Nov 23, 2026)
@@ -69,18 +69,48 @@ Scratch-listed (`content-manifest.json`).
   second within 30 days does, a paused action banks nothing, and after
   Turn back on one more Undo doesn't pause again.
 
-## Part 2: friction measured (planned)
+## Part 2 as built: friction measured
 
-- **Open to first set:** from the page load that opened a session to its
-  first ticked set, in whole seconds, one figure per session.
-- **Taps per logged set:** taps on the session surface between one tick and
-  the next, divided by sets logged. Counted separately when the suggestion
-  was taken unchanged (`dataset.ghost` still set at the tick), since that is
-  the case the target names.
-- `mc_usage_v1[device][monday] = { sessions, firstSetSecs[], taps, sets, ghostSets, ghostTaps }`,
-  kept 13 months, synced.
-- A monthly report under Stats: each week's median open-to-first-set
-  against 30 seconds, and taps per unchanged set against 1.
+- **Counted where a set is ticked.** `mc-setlog.js` loads on every page that
+  can tick a set, so the counting lives there rather than in a new script
+  on ~80 pages.
+  - Taps are a `pointerdown` count held in memory, so a rest's runtime
+    counters don't move.
+  - On each tick the logger writes this phone's week in `mc_usage_v1`: the
+    set, the taps since the last tick (or since the page opened), and
+    whether the suggestion was ticked unchanged (`dataset.ghost` still on
+    every field). That last case is counted apart, since it's the one-tap
+    case the target names.
+  - The first tick of a session (no set ticked today on that page yet)
+    records the whole seconds since the page opened.
+- **The store.** `mc_usage_v1 = { <device>: { ts, weeks: { <monday>: {
+  sessions, firstSetSecs[], taps, sets, ghostSets, ghostTaps } } } }`.
+  - Each phone writes only its own key, so `dictByTs` never has two writers.
+  - Kept about 13 months; at most 60 first-set times a week.
+  - Synced and exported, declared in `store-registry.json`.
+- **The report.** `mc-usage.js` (`MC_USAGE.weeks()`) adds the phones up per
+  week: the median seconds to the first set, taps per set and taps per
+  unchanged set. A figure with nothing behind it is null, never 0. Stats'
+  **In the Gym** card shows the last five weeks with training against 30
+  seconds and 1 tap, with a miss shown in amber.
+- `tools/test-mc-usage.js` (10 assertions on the real `mc-usage.js`) runs in
+  `verify.yml`. The Quick Tour describes the card.
+
+Where it departs from the plan:
+
+- **Five weeks on Stats, not a calendar month.** A month would cut weeks in
+  half, and the five most recent weeks always cover the last month.
+- **The month review.** This app has no month-review screen like the
+  finance app's, so the report sits on Stats beside the Weekly Review.
+- **"Opening a workout" is the page load.** A session reopened from History
+  or reloaded mid-workout isn't a new session, because its first-set time is
+  only taken when no set was ticked on that page today.
+
+Verified in headless Chromium with the fixture athlete. On `mm-p1.html`,
+ticking two sets recorded one session, its seconds to the first set, and
+two taps for two sets, and Stats' card showed them. With a past session
+seeded so the first row was ghosted (105 × 5), one tap ticked it unchanged
+and counted one unchanged set and one tap.
 
 ## Part 3: the iOS crash-journal check (script)
 

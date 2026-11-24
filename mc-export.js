@@ -37,6 +37,7 @@
     'mc_daily_v1', 'mc_plan_targets_v1', 'mc_macros_v1',
     'mc_session_summary_v1',        // synced since B-era; was missing here
     'mc_auto_v1',                   // command-center-roadmap.md PR 4: automatic actions and their Undos
+    'mc_usage_v1',                  // autonomy-exec-roadmap.md Part 2: friction in the gym
     'mc_workout_log_deleted_v1',    // flagship readiness R1 / D-24
     'mc_setlog_deleted_v1',         // unticked sets, so an import does not put them back
     'mc_workout_archive_v1',        // flagship readiness R7 / D-39

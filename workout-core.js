@@ -8,12 +8,12 @@
      mc-finish.js @ line 1235
      mc-supabase.js @ line 2175
      mc-sync.js @ line 3199
-     mc-biometric.js @ line 4370
-     program-overrides.js @ line 4474
-     mc-hints.js @ line 5453
-     mc-card-actions.js @ line 5581
-     program-manager.js @ line 6750
-     mc-live-tracker.js @ line 8628
+     mc-biometric.js @ line 4371
+     program-overrides.js @ line 4475
+     mc-hints.js @ line 5454
+     mc-card-actions.js @ line 5582
+     program-manager.js @ line 6751
+     mc-live-tracker.js @ line 8629
 */
 
 /* ---- mc-replace.js ---- */
@@ -3313,6 +3313,7 @@ try {
     'mc_plan_targets_v1':    'dictByTs',
     'mc_session_summary_v1': 'dictByTs',
     'mc_auto_v1':            'dictByTs',
+    'mc_usage_v1':           'dictByTs',
     'mc_macros_v1':          'macros',
     // Wave 1 (audit G-01/K-1.2): mc-exercise-catalog.js's own header has always
     // documented this store as "synced across the user's own devices via
