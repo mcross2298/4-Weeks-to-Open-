@@ -4,16 +4,16 @@
    Members, in load order (line numbers are in this file):
      mc-replace.js @ line 21
      mc-log-read.js @ line 168
-     mc-strain.js @ line 868
-     mc-finish.js @ line 1183
-     mc-supabase.js @ line 2212
-     mc-sync.js @ line 3236
-     mc-biometric.js @ line 4406
-     program-overrides.js @ line 4510
-     mc-hints.js @ line 5489
-     mc-card-actions.js @ line 5617
-     program-manager.js @ line 6786
-     mc-live-tracker.js @ line 8664
+     mc-strain.js @ line 920
+     mc-finish.js @ line 1235
+     mc-supabase.js @ line 2175
+     mc-sync.js @ line 3199
+     mc-biometric.js @ line 4370
+     program-overrides.js @ line 4474
+     mc-hints.js @ line 5453
+     mc-card-actions.js @ line 5581
+     program-manager.js @ line 6750
+     mc-live-tracker.js @ line 8628
 */
 
 /* ---- mc-replace.js ---- */
@@ -810,6 +810,56 @@ try {
              skippedDeleted: skippedDeleted, archived: over, dropped: 0 };
   }
 
+  // ---- the sets a finished workout banks (command-center-roadmap.md PR 4) --
+  // Moved here from mc-finish.js's getSessionSets() so Finish and the
+  // automatic finish on Home (mc-auto.js) bank a session the same way: every
+  // set logged under `pageId` on `day`, under its lift's NAME (R4 / D-11; a
+  // set from before names were stored resolves through setName()), with its
+  // key kept for PR detection. A PR is a set heavier than the lift's best in
+  // any EARLIER session on any page (a first-ever log is never one, and a
+  // session on `day` is never a previous best: audit G-03).
+  function prevBestByExercise(store, day) {
+    var best = {};
+    Object.keys(store || {}).forEach(function (k) {
+      var i = k.indexOf('|');
+      if (i < 0) return;
+      var exId = k.slice(i + 1);
+      normalizeSessions(store[k]).forEach(function (sess) {
+        if (!sess || !sess.sets || sess.d === day) return;
+        Object.keys(sess.sets).forEach(function (sn) {
+          var w = parseFloat((sess.sets[sn] || {}).w);
+          if (isFinite(w) && w > (best[exId] || 0)) best[exId] = w;
+        });
+      });
+    });
+    return best;
+  }
+  function sessionSets(store, pageId, day) {
+    var sets = [];
+    store = store || {};
+    Object.keys(store).forEach(function (k) {
+      if (k.indexOf(pageId + '|') !== 0) return;
+      var exKey = k.split('|')[1] || k;
+      var sess = normalizeSessions(store[k])[0];
+      if (!sess || sess.d !== day || !sess.sets) return;
+      Object.keys(sess.sets).forEach(function (sn) {
+        var s = sess.sets[sn];
+        if (!s) return;
+        var name = (typeof s.n === 'string' && s.n.trim()) ? s.n.trim() : setName({ name: exKey });
+        var e = { name: name, key: exKey, setNum: parseInt(sn, 10), weight: s.w, reps: s.r, pr: false };
+        if (s.sw) e.swappedFrom = s.sw;
+        if (s.rpe) e.rpe = s.rpe;
+        sets.push(e);
+      });
+    });
+    var prior = prevBestByExercise(store, day);
+    sets.forEach(function (s) {
+      var prevMax = prior[s.key];
+      if (prevMax > 0 && parseFloat(s.weight) > prevMax) s.pr = true;
+    });
+    return sets;
+  }
+
   function writeWorkoutLog(arr) {
     return capLog(Array.isArray(arr) ? arr : []);
   }
@@ -844,6 +894,7 @@ try {
     window.MC_LOG.findWorkout = findWorkout;
     window.MC_LOG.readAllWorkouts = readAllWorkouts;
     window.MC_LOG.LOG_CAP = LOG_CAP;
+    window.MC_LOG.sessionSets = sessionSets;
   }
 
   // Node-side hook so tools/test-mc-numeric-guards.js can call the real
@@ -857,7 +908,8 @@ try {
       normalizeDay: normalizeDay, normalizeSessions: normalizeSessions,
       workoutKey: workoutKey, mergeWorkoutLogs: mergeWorkoutLogs,
       compactWorkout: compactWorkout, expandWorkout: expandWorkout, mergeArchive: mergeArchive,
-      LOG_CAP: LOG_CAP, pruneDeleted: pruneDeleted, DEL_KEEP_MS: DEL_KEEP_MS
+      LOG_CAP: LOG_CAP, pruneDeleted: pruneDeleted, DEL_KEEP_MS: DEL_KEEP_MS,
+      sessionSets: sessionSets
     };
   }
 })();
@@ -1296,95 +1348,16 @@ try {
     return n;
   }
 
-  // Heaviest weight ever logged for each exercise id, across every page, from
-  // sessions dated before today. The set-log key is `<pageId>|<exerciseId>`, so
-  // the exercise is the part after the first '|' — and since Phase 2.1 that id
-  // is derived from the exercise NAME, which is what makes it comparable
-  // between pages in the first place.
-  //
-  // Known narrower case left alone: a page listing the same exercise twice
-  // keys the second one `<exId>-2`, and those are still counted as separate
-  // lifts here. Folding the occurrence suffix in is a second behaviour change
-  // and wants its own measurement.
-  function prevBestByExercise(store,today){
-    var best={};
-    Object.keys(store).forEach(function(k){
-      var i=k.indexOf('|');
-      if(i<0)return;
-      var exId=k.slice(i+1);
-      datedSessions(store[k]).forEach(function(sess){
-        if(!sess||!sess.sets||sess.d===today)return;   // today is never a previous best
-        Object.keys(sess.sets).forEach(function(sn){
-          var w=parseFloat((sess.sets[sn]||{}).w);
-          if(isFinite(w)&&w>(best[exId]||0))best[exId]=w;
-        });
-      });
-    });
-    return best;
-  }
-
-  function setDisplayName(s,exKey){
-    if(s&&typeof s.n==='string'&&s.n.trim())return s.n.trim();
-    var L=window.MC_LOG;
-    return (L&&L.setName)?L.setName({name:exKey}):deSlug(exKey);
-  }
-  // Get all logged set data for this session
+  // The sets this workout banks: every set logged on this page today, under
+  // its lift's name, with PRs marked against every earlier session of that
+  // lift on any page (R4 / D-11, G-03). The rules live in mc-log-read.js's
+  // sessionSets() since command-center-roadmap.md PR 4, so the automatic
+  // finish on Home banks a session exactly the way this button does.
   function getSessionSets(){
     try{
       var store=JSON.parse(localStorage.getItem(SL_KEY)||'{}');
-      var today=dayToday();
-      var sets=[];
-      Object.keys(store).forEach(function(k){
-        if(!k.startsWith(pageId+'|'))return;
-        var exKey=k.split('|')[1]||k;
-        var sess=datedSessions(store[k])[0];
-        if(sess&&sess.d===today){
-          Object.keys(sess.sets).forEach(function(sn){
-            var s=sess.sets[sn];
-            // R4 / D-11: bank the lift's NAME, not the history key's segment
-            // ("x-incline-db-press"), which every history screen showed as the
-            // name and muscle attribution classified. mc-setlog.js stores the
-            // name on each set (`n`); a set logged before that resolves through
-            // the same reader History uses for old entries. The key is kept,
-            // separately, because PR detection below compares by key.
-            var e={name:setDisplayName(s,exKey),key:exKey,setNum:parseInt(sn),weight:s.w,reps:s.r,pr:false};
-            if(s&&s.sw)e.swappedFrom=s.sw;   // R5: History shows "swapped from …"
-            if(s.rpe)e.rpe=s.rpe;
-            sets.push(e);
-          });
-        }
-      });
-      // Detect PRs — compare against every PRIOR session of this exercise,
-      // on every page, not just the page being finished.
-      //
-      // This used to read store[pageId+'|'+exId] alone, so a "personal record"
-      // meant "your best on THIS PAGE". The same lift is prescribed by several
-      // programs (one catalog, ten programs), and each program page owns its
-      // own key — so an athlete who benched 300 lb under one program had that
-      // history invisible to every other program, and a 150 lb set was banked
-      // with a gold PR. Measured: seed 300 lb under kitchen-sink, log 150 lb on
-      // mm-p1, and the finished workout came back prs:1.
-      //
-      // The app already held the correct notion one layer down — mc-setlog.js's
-      // signed-in push path asks MC_SB.getMaxWeight(exName), which is scoped to
-      // the EXERCISE — so the recap and the push notification disagreed about
-      // the same set. Both now mean "your best for this lift".
-      //
-      // Two rules are kept deliberately:
-      //   * a prior session must exist, or a first-ever log would read as a
-      //     record (audit G-03's false-positive guard — that is what made the
-      //     old history.length<2 check necessary, and it still applies once
-      //     the history is gathered from every page);
-      //   * a session dated TODAY is never a "previous best", on any page, so
-      //     logging 200 then 205 in one session still flags 205 and the 200
-      //     does not block it.
-      var priorMax=prevBestByExercise(store,today);
-      sets.forEach(function(s){
-        var prevMax=priorMax[s.key];
-        if(!(prevMax>0))return;               // no prior session anywhere for this lift
-        if(parseFloat(s.weight)>prevMax)s.pr=true;
-      });
-      return sets;
+      var L=_mcLog();
+      return (L&&L.sessionSets)?L.sessionSets(store,pageId,dayToday()):[];
     }catch(e){return[];}
   }
 
@@ -1393,16 +1366,6 @@ try {
     return String(s).replace(/[&<>"]/g,function(c){
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
     });
-  }
-  // The set store keys exercises by their synthetic id (e.g. "x-bench-press" or
-  // "x-bench-press-2" for a duplicate). Reconstruct a clean display name.
-  function deSlug(id){
-    return String(id)
-      .replace(/^x-/,'')          // synthetic id prefix
-      .replace(/-\d+$/,'')        // duplicate-occurrence suffix
-      .replace(/-/g,' ')
-      .replace(/\b\w/g,function(c){return c.toUpperCase();})
-      .trim() || String(id);
   }
   function sessionTonnage(sets){
     var t=0;
@@ -3349,6 +3312,7 @@ try {
     'mc_daily_v1':           'dictByTs',
     'mc_plan_targets_v1':    'dictByTs',
     'mc_session_summary_v1': 'dictByTs',
+    'mc_auto_v1':            'dictByTs',
     'mc_macros_v1':          'macros',
     // Wave 1 (audit G-01/K-1.2): mc-exercise-catalog.js's own header has always
     // documented this store as "synced across the user's own devices via

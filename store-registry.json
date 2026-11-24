@@ -388,6 +388,13 @@
       "export": false,
       "note": "VOC-C2: dedup guard (keyed by mc_activity.last.ts) so the \"Session saved\" toast fires once per departure, not once per re-render. Tab-scoped bookkeeping, not user data."
     },
+    "mc_auto_v1": {
+      "owner": "mc-auto.js",
+      "storage": "local",
+      "sync": "dictByTs",
+      "export": true,
+      "note": "What the app did on its own (command-center-roadmap.md PR 4): each automatic action for 30 days with its Undo, the kill switch's pause state, and sessions left alone. Synced so both phones count the same Undos."
+    },
     "mc_session_summary_v1": {
       "owner": "mc-finish.js",
       "storage": "local",

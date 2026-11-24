@@ -18,42 +18,42 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
   function injectCss() {
-    if (document.getElementById('mcRecCss')) return;
+    if (document.getElementById('mcRecsCss')) return;
     var st = document.createElement('style');
-    st.id = 'mcRecCss';
+    st.id = 'mcRecsCss';
     st.textContent =
-      '.mcr-ov{position:fixed;inset:0;z-index:var(--z-modal,175);background:rgba(0,0,0,0.55);display:flex;align-items:flex-end;justify-content:center;' +
+      '.mcrs-ov{position:fixed;inset:0;z-index:var(--z-modal,175);background:rgba(0,0,0,0.55);display:flex;align-items:flex-end;justify-content:center;' +
         'padding:16px;padding-top:calc(16px + env(safe-area-inset-top));padding-bottom:calc(16px + env(safe-area-inset-bottom));}' +
-      '.mcr-card{width:100%;max-width:480px;max-height:100%;overflow:auto;background:var(--surface-bg,var(--ink-1));color:var(--text);' +
+      '.mcrs-card{width:100%;max-width:480px;max-height:100%;overflow:auto;background:var(--surface-bg,var(--ink-1));color:var(--text);' +
         'border:1px solid var(--hairline);border-radius:var(--r-lg);padding:16px;}' +
-      '.mcr-head{display:flex;align-items:center;gap:12px;}' +
-      '.mcr-head h2{flex:1;margin:0;font-size:var(--fs-2xl);font-weight:var(--fw-bold);}' +
-      '.mcr-close{min-width:48px;min-height:48px;border:0;background:transparent;color:var(--text);font-size:var(--fs-3xl);cursor:pointer;}' +
-      '.mcr-big{font-size:var(--fs-hero);font-weight:var(--fw-bold);margin:4px 0 0;}' +
-      '.mcr-tag{font-size:var(--fs-sm);color:var(--muted);margin:0 0 12px;}' +
-      '.mcr-rows{border-top:1px solid var(--hairline);margin:0 0 12px;}' +
-      '.mcr-row{display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 0;border-bottom:1px solid var(--hairline);' +
+      '.mcrs-head{display:flex;align-items:center;gap:12px;}' +
+      '.mcrs-head h2{flex:1;margin:0;font-size:var(--fs-2xl);font-weight:var(--fw-bold);}' +
+      '.mcrs-close{min-width:48px;min-height:48px;border:0;background:transparent;color:var(--text);font-size:var(--fs-3xl);cursor:pointer;}' +
+      '.mcrs-big{font-size:var(--fs-hero);font-weight:var(--fw-bold);margin:4px 0 0;}' +
+      '.mcrs-tag{font-size:var(--fs-sm);color:var(--muted);margin:0 0 12px;}' +
+      '.mcrs-rows{border-top:1px solid var(--hairline);margin:0 0 12px;}' +
+      '.mcrs-row{display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 0;border-bottom:1px solid var(--hairline);' +
         'font-size:var(--fs-md);width:100%;background:transparent;border-left:0;border-right:0;border-top:0;color:var(--text);font-family:inherit;text-align:left;}' +
-      'button.mcr-row{cursor:pointer;}' +
-      '.mcr-row span:first-child{flex:1;min-width:0;}' +
-      '.mcr-row b{font-weight:var(--fw-bold);white-space:nowrap;}' +
-      '.mcr-note{font-size:var(--fs-sm);color:var(--muted);line-height:1.5;margin:0;}';
+      'button.mcrs-row{cursor:pointer;}' +
+      '.mcrs-row span:first-child{flex:1;min-width:0;}' +
+      '.mcrs-row b{font-weight:var(--fw-bold);white-space:nowrap;}' +
+      '.mcrs-note{font-size:var(--fs-sm);color:var(--muted);line-height:1.5;margin:0;}';
     document.head.appendChild(st);
   }
 
   function open(title, bodyHtml, onRow) {
     injectCss();
     var ov = document.createElement('div');
-    ov.className = 'mcr-ov';
+    ov.className = 'mcrs-ov';
     ov.setAttribute('data-mc-sheet', '');
     ov.setAttribute('aria-label', title);
-    ov.innerHTML = '<div class="mcr-card"><div class="mcr-head"><h2>' + esc(title) + '</h2>' +
-      '<button type="button" class="mcr-close" aria-label="Close">×</button></div>' + bodyHtml + '</div>';
+    ov.innerHTML = '<div class="mcrs-card"><div class="mcrs-head"><h2>' + esc(title) + '</h2>' +
+      '<button type="button" class="mcrs-close" aria-label="Close">×</button></div>' + bodyHtml + '</div>';
     function close() { ov.remove(); if (window.MC_SHEET) MC_SHEET.check(); }
     ov.addEventListener('click', function (e) {
       var row = e.target.closest ? e.target.closest('[data-lift],[data-log]') : null;
       if (row) { close(); onRow && onRow(row); return; }
-      if (e.target === ov || (e.target.closest && e.target.closest('.mcr-close'))) close();
+      if (e.target === ov || (e.target.closest && e.target.closest('.mcrs-close'))) close();
     });
     document.body.appendChild(ov);
     if (window.MC_SHEET) MC_SHEET.check();
@@ -79,26 +79,26 @@
     var fresh = MC_READY.FRESH_MIN || 70;
     var body;
     if (!x.trained) {
-      body = '<p class="mcr-big">100%</p><p class="mcr-tag">Estimate · nothing logged for ' + esc(label.toLowerCase()) + ' yet</p>' +
-        '<p class="mcr-note">With no finished workout that trains it, there is nothing to recover from, so it reads fully fresh.</p>';
+      body = '<p class="mcrs-big">100%</p><p class="mcrs-tag">Estimate · nothing logged for ' + esc(label.toLowerCase()) + ' yet</p>' +
+        '<p class="mcrs-note">With no finished workout that trains it, there is nothing to recover from, so it reads fully fresh.</p>';
     } else {
-      body = '<p class="mcr-big">' + x.pct + '%</p>' +
-        '<p class="mcr-tag">Estimate · ' + STATUS[x.status] + '</p>' +
-        '<div class="mcr-rows">' +
+      body = '<p class="mcrs-big">' + x.pct + '%</p>' +
+        '<p class="mcrs-tag">Estimate · ' + STATUS[x.status] + '</p>' +
+        '<div class="mcrs-rows">' +
           (x.logId
-            ? '<button type="button" class="mcr-row" data-log="' + esc(x.logId) + '"><span>Last trained · ' + esc(dayOf(x.date)) +
+            ? '<button type="button" class="mcrs-row" data-log="' + esc(x.logId) + '"><span>Last trained · ' + esc(dayOf(x.date)) +
               (x.workoutName ? ' · ' + esc(x.workoutName) : '') + '</span><b>' + x.hoursSince + ' h ago ›</b></button>'
-            : '<div class="mcr-row"><span>Last trained · ' + esc(dayOf(x.date)) + '</span><b>' + x.hoursSince + ' h ago</b></div>') +
-          '<div class="mcr-row"><span>Sets for ' + esc(label.toLowerCase()) + ' that day</span><b>' + x.sets + '</b></div>' +
-          (x.nearFailureSets ? '<div class="mcr-row"><span>Of those, to failure or RPE 9.5+</span><b>' + x.nearFailureSets + '</b></div>' : '') +
-          '<div class="mcr-row"><span>' + (x.freshInHours ? 'Reads fresh (' + fresh + '%) in' : 'Reads fresh (' + fresh + '%+)') + '</span><b>' +
+            : '<div class="mcrs-row"><span>Last trained · ' + esc(dayOf(x.date)) + '</span><b>' + x.hoursSince + ' h ago</b></div>') +
+          '<div class="mcrs-row"><span>Sets for ' + esc(label.toLowerCase()) + ' that day</span><b>' + x.sets + '</b></div>' +
+          (x.nearFailureSets ? '<div class="mcrs-row"><span>Of those, to failure or RPE 9.5+</span><b>' + x.nearFailureSets + '</b></div>' : '') +
+          '<div class="mcrs-row"><span>' + (x.freshInHours ? 'Reads fresh (' + fresh + '%) in' : 'Reads fresh (' + fresh + '%+)') + '</span><b>' +
             (x.freshInHours ? when(x.freshInHours) : 'now') + '</b></div>' +
           x.lifts.map(function (l) {
-            return '<button type="button" class="mcr-row" data-lift="' + esc(l.name) + '"><span>' + esc(l.name) + '</span><b>' +
+            return '<button type="button" class="mcrs-row" data-lift="' + esc(l.name) + '"><span>' + esc(l.name) + '</span><b>' +
               l.sets + (l.sets === 1 ? ' set' : ' sets') + ' ›</b></button>';
           }).join('') +
         '</div>' +
-        '<p class="mcr-note">How it’s worked out: from the last workout that trained ' + esc(label.toLowerCase()) +
+        '<p class="mcrs-note">How it’s worked out: from the last workout that trained ' + esc(label.toLowerCase()) +
           ', recovery climbs on a curve over the hours since. More sets stretch the curve, and a set taken to failure stretches it a quarter more. ' +
           'It’s a model of recovery, not a measurement, and it doesn’t read sleep or soreness.</p>';
     }
@@ -113,12 +113,12 @@
     if (!window.MC_VITALS || !MC_VITALS.explain) return;
     var x = MC_VITALS.explain();
     if (!x) return;
-    var body = '<p class="mcr-big">' + x.score + '%</p><p class="mcr-tag">Estimate · from your entry on ' + esc(dayOf(x.date)) + '</p>' +
-      '<div class="mcr-rows">' + x.parts.map(function (p) {
+    var body = '<p class="mcrs-big">' + x.score + '%</p><p class="mcrs-tag">Estimate · from your entry on ' + esc(dayOf(x.date)) + '</p>' +
+      '<div class="mcrs-rows">' + x.parts.map(function (p) {
         var eff = p.info ? 'not counted' : p.base ? 'starts at ' + p.effect : (p.effect >= 0 ? '+' : '−') + Math.abs(p.effect);
-        return '<div class="mcr-row"><span>' + esc(p.label) + ' · ' + esc(p.value) + '</span><b>' + eff + '</b></div>';
+        return '<div class="mcrs-row"><span>' + esc(p.label) + ' · ' + esc(p.value) + '</span><b>' + eff + '</b></div>';
       }).join('') + '</div>' +
-      '<p class="mcr-note">How it’s worked out: your readiness answer sets the start (each point is 20), and sleep moves it up to 15 either way around 8 hours. ' +
+      '<p class="mcrs-note">How it’s worked out: your readiness answer sets the start (each point is 20), and sleep moves it up to 15 either way around 8 hours. ' +
       'Resting heart rate is shown but not counted until there’s a history to compare it with. This ring is separate from the per-muscle recovery on Stats.</p>';
     open('Recovery score', body);
   }

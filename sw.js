@@ -1,7 +1,7 @@
 // MC Training — Service Worker v2
 // Relative-path precache so the app works at any GitHub Pages project subpath
 
-const CACHE_NAME = 'mc-training-v200';
+const CACHE_NAME = 'mc-training-v201';
 // SP1: where a tapped push opens. Guarded so a vm sandbox without
 // importScripts (tools/test-mc-sw.js) still loads this file.
 if (typeof importScripts === 'function') { try { importScripts('./mc-push-route.js'); } catch (_) {} }
@@ -55,6 +55,7 @@ const CACHE_URLS = [
     './manifest.json',
     './mc-account.js',
     './mc-appearance.js',
+    './mc-auto.js',
     './mc-backup-status.js',
     './mc-barcode.js',
     './mc-biomech.js',

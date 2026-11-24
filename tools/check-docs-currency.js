@@ -161,6 +161,7 @@ if (!pmSrc) {
 // ---------------------------------------------------------------------------
 const KNOWN_MODULES = [
   'mc-account.js',
+  'mc-auto.js',
   'mc-appearance.js',
   'mc-backup-status.js',
   'mc-barcode.js',

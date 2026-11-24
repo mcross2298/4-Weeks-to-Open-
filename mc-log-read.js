@@ -643,6 +643,56 @@
              skippedDeleted: skippedDeleted, archived: over, dropped: 0 };
   }
 
+  // ---- the sets a finished workout banks (command-center-roadmap.md PR 4) --
+  // Moved here from mc-finish.js's getSessionSets() so Finish and the
+  // automatic finish on Home (mc-auto.js) bank a session the same way: every
+  // set logged under `pageId` on `day`, under its lift's NAME (R4 / D-11; a
+  // set from before names were stored resolves through setName()), with its
+  // key kept for PR detection. A PR is a set heavier than the lift's best in
+  // any EARLIER session on any page (a first-ever log is never one, and a
+  // session on `day` is never a previous best: audit G-03).
+  function prevBestByExercise(store, day) {
+    var best = {};
+    Object.keys(store || {}).forEach(function (k) {
+      var i = k.indexOf('|');
+      if (i < 0) return;
+      var exId = k.slice(i + 1);
+      normalizeSessions(store[k]).forEach(function (sess) {
+        if (!sess || !sess.sets || sess.d === day) return;
+        Object.keys(sess.sets).forEach(function (sn) {
+          var w = parseFloat((sess.sets[sn] || {}).w);
+          if (isFinite(w) && w > (best[exId] || 0)) best[exId] = w;
+        });
+      });
+    });
+    return best;
+  }
+  function sessionSets(store, pageId, day) {
+    var sets = [];
+    store = store || {};
+    Object.keys(store).forEach(function (k) {
+      if (k.indexOf(pageId + '|') !== 0) return;
+      var exKey = k.split('|')[1] || k;
+      var sess = normalizeSessions(store[k])[0];
+      if (!sess || sess.d !== day || !sess.sets) return;
+      Object.keys(sess.sets).forEach(function (sn) {
+        var s = sess.sets[sn];
+        if (!s) return;
+        var name = (typeof s.n === 'string' && s.n.trim()) ? s.n.trim() : setName({ name: exKey });
+        var e = { name: name, key: exKey, setNum: parseInt(sn, 10), weight: s.w, reps: s.r, pr: false };
+        if (s.sw) e.swappedFrom = s.sw;
+        if (s.rpe) e.rpe = s.rpe;
+        sets.push(e);
+      });
+    });
+    var prior = prevBestByExercise(store, day);
+    sets.forEach(function (s) {
+      var prevMax = prior[s.key];
+      if (prevMax > 0 && parseFloat(s.weight) > prevMax) s.pr = true;
+    });
+    return sets;
+  }
+
   function writeWorkoutLog(arr) {
     return capLog(Array.isArray(arr) ? arr : []);
   }
@@ -677,6 +727,7 @@
     window.MC_LOG.findWorkout = findWorkout;
     window.MC_LOG.readAllWorkouts = readAllWorkouts;
     window.MC_LOG.LOG_CAP = LOG_CAP;
+    window.MC_LOG.sessionSets = sessionSets;
   }
 
   // Node-side hook so tools/test-mc-numeric-guards.js can call the real
@@ -690,7 +741,8 @@
       normalizeDay: normalizeDay, normalizeSessions: normalizeSessions,
       workoutKey: workoutKey, mergeWorkoutLogs: mergeWorkoutLogs,
       compactWorkout: compactWorkout, expandWorkout: expandWorkout, mergeArchive: mergeArchive,
-      LOG_CAP: LOG_CAP, pruneDeleted: pruneDeleted, DEL_KEEP_MS: DEL_KEEP_MS
+      LOG_CAP: LOG_CAP, pruneDeleted: pruneDeleted, DEL_KEEP_MS: DEL_KEEP_MS,
+      sessionSets: sessionSets
     };
   }
 })();
