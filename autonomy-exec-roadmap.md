@@ -13,7 +13,7 @@ Scratch-listed (`content-manifest.json`).
 
 | Part | What | Status |
 |---|---|---|
-| 1 | Kill switch: an automatic action undone twice in 30 days pauses and asks instead | Planned (ships with Command Center PR 4) |
+| 1 | Kill switch: an automatic action undone twice in 30 days pauses and asks instead | Built (with Command Center PR 4) |
 | 2 | Friction measured: open-to-first-set seconds and taps per logged set, per phone and week, synced, in a monthly report | Planned |
 | 3 | The iOS crash-journal check: a manual script the owner runs on the iPhone, results recorded here | Planned |
 
@@ -52,14 +52,22 @@ Scratch-listed (`content-manifest.json`).
   recorded here once it has been run. Until then the journal stays verified
   in Chromium only.
 
-## Part 1: the kill switch (planned)
+## Part 1 as built: the kill switch
 
-- Each automatic action is logged (kind, when, what it touched) for 30 days
-  in a synced store. Settings → Help lists it as Done for you, each with
-  Undo.
-- The second Undo of a kind within 30 days pauses that kind. A paused kind
-  asks instead ("Finish this session?") until turned back on from the same
-  list. Turning it back on resets the count.
+- `mc-auto.js` logs each automatic action in `mc_auto_v1` (`act:<n>`) for
+  30 days. `undo()` stamps `undoneAt` on the action.
+- `undoCount()` counts a kind's Undos within 30 days and since it was last
+  turned back on (`pause:<kind>.resumedAt`). The second sets
+  `pause:<kind> = { paused: true }`, and `undo()` returns `'paused'`. Home
+  then says so once.
+- While paused, `finishStale()` banks nothing. Home asks about the stale
+  session instead: Bank it (the athlete's own act, not logged as automatic)
+  or Leave it. Either way that session is left alone afterwards.
+- Settings → Help → Done for you shows the paused state with Turn back on
+  (`resume()`), which records `resumedAt`, so the old Undos stop counting.
+- `tools/test-mc-auto.js` holds all of it: one Undo doesn't pause, the
+  second within 30 days does, a paused action banks nothing, and after
+  Turn back on one more Undo doesn't pause again.
 
 ## Part 2: friction measured (planned)
 

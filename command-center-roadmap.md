@@ -20,7 +20,7 @@ The executive round that followed is in
 | 1 | Home figures: block position row with vs last week, a block progress ring, the block sheet (done, missed, rest, upcoming), a sync chip shown only when something is waiting | Built |
 | 2 | Drill-downs: Recovery explained (per muscle and the Recovery ring), tappable readiness chips, last-time compare on workout detail, a lift history sheet | Built |
 | 3 | Visuals and normal: the training calendar shaded by volume (a day opens its workout), and "what's normal", a trailing six-week sets, volume and sessions line | Built |
-| 4 | Autonomy: auto-finish a stale session, a Done-for-you log with Undo, the kill switch (from the executive round) | Planned |
+| 4 | Autonomy: auto-finish a stale session, a Done-for-you log with Undo, the kill switch (from the executive round) | Built |
 
 Each PR keeps its own `AskUserQuestion` check-in before it starts, per the
 multi-phase rule in `CLAUDE.md`.
@@ -288,8 +288,60 @@ sheet, no sideways scroll and no page errors. The fixture logs 12 sets on
 every day it trains, so days of 3, 6 and 9 sets were added on empty dates
 after load: they rendered as steps 1, 2 and 3 beside the 12-set days' 4.
 
-## PR 4: autonomy (planned)
+## PR 4 as built
 
-The rules are in `autonomy-exec-roadmap.md`: the Done-for-you log, Undo,
-and the kill switch after two Undos in 30 days. Auto-finish as described
-above. No automatic backup (the owner kept the R7 nudge as it is).
+- **One way to build a workout's sets.** Finish built a workout's sets
+  inside `mc-finish.js`. That rule (each set under its lift's name, PRs
+  against every earlier session of the lift on any page) is now
+  `MC_LOG.sessionSets(store, pageId, day)` in `mc-log-read.js`. Finish calls
+  it, and so does the automatic finish on Home, so the two can't bank a
+  session differently. Finish's output is unchanged: the PR-scope,
+  exercise-identity, session-durability and flagship-scenario gates all
+  pass on it.
+- **Auto-finish** (`mc-auto.js`, `window.MC_AUTO`, run on Home after load).
+  A session is stale when its `mc_daily_v1` entry (which Finish deletes) is
+  12 hours past its last write, its page has no workout banked that day,
+  it has ticked sets in `mc_setlog_v1`, and it wasn't left alone. Home then
+  banks it the way Finish would, marked `auto: true`, under the id
+  `<page>|<last tick>`. Two phones banking the same synced session make the
+  same workout, and the log's merge keeps one. On a signed-in phone nothing
+  is banked until that load's first sync pull, so a session finished on
+  the other phone isn't banked twice. A note above the tab bar says what
+  was banked, with Undo.
+- **Undo** deletes the workout through `MC_LOG.deleteWorkouts()`, so a sync
+  can't bring it back. It puts the session's entry back and marks the
+  session left alone, so it is never banked again.
+- **Done for you** (Settings → Help): every automatic action for 30 days,
+  each with Undo, and the paused state with Turn back on.
+- **The kill switch** is `autonomy-exec-roadmap.md` Part 1, below.
+- Store: `mc_auto_v1`, synced (`dictByTs`) and exported, declared in
+  `store-registry.json`. Both phones count the same Undos.
+- `tools/test-mc-auto.js` (32 assertions on the real `mc-log-read.js` and
+  `mc-auto.js`) runs in `verify.yml`. The Quick Tour describes Done for you.
+- **Fixed in passing:** PR 2's Recovery sheet used `.mcr-row`, a class
+  `mc-report.js` also styles, and both load on Home and Settings. Whichever
+  stylesheet loaded second restyled the other's rows. The sheet's classes
+  are `mcrs-` now.
+
+Where it departs from the plan:
+
+- **An auto-finished workout doesn't tick its program day.** Finish knows
+  which block day a page has open from that page's own resolver
+  (`mc-program-day.js`). Home doesn't load the program page, so it can't
+  know which day the session was. The workout counts everywhere a workout
+  counts (History, Stats, the calendar, records, normal weeks), but the
+  block sheet still shows that day as missed. Guessing the day would risk
+  banking it against the wrong one.
+- **Undoing several at once from one note counts each Undo.** Two sessions
+  banked together and undone together pause the action. That's the rule
+  as written (two Undos in 30 days), even though it was one tap.
+- **No duration.** Finish records the session timer, which lives on the
+  page and is gone by then. The banked workout has no duration rather than
+  a made-up one.
+
+Verified with the fixture athlete at 390 and 320 in headless Chromium: an
+unfinished session from yesterday was banked on opening Home (2 sets, under
+its program's name), the note sat above the tab bar with 48px Undo and
+dismiss, Undo removed the workout and the session stayed unbanked, and
+Settings' Done for you listed it as undone. No sideways scroll and no page
+errors.

@@ -116,6 +116,9 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
       <button type="button" class="ws-row" id="wsReport">
         <span class="ws-text"><span class="ws-name">Report a problem</span><span class="ws-sub">Something broke, was hard to use, or could be better. You'll see here when it's fixed.</span></span>
         <span class="ws-chev" aria-hidden="true">›</span></button>
+      <button type="button" class="ws-row" id="wsAuto">
+        <span class="ws-text"><span class="ws-name">Done for you</span><span class="ws-sub">Unfinished workouts the app banked for you, each with Undo.</span></span>
+        <span class="ws-chev" aria-hidden="true">›</span></button>
       <button type="button" class="ws-row" id="wsDiag">
         <span class="ws-text"><span class="ws-name">Diagnostics</span><span class="ws-sub">Errors this phone has logged, Send error reports, and Repair this device.</span></span>
         <span class="ws-chev" aria-hidden="true">›</span></button>
@@ -131,6 +134,8 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
 <div class="ws-toast" id="wsToast" role="status" aria-live="polite"></div>
 
 <script src="mc-sheet.js"></script>
+<script src="mc-log-read.js"></script>
+<script src="mc-auto.js"></script>
 <script src="mc-report.js"></script>
 <script src="mc-supabase.js"></script>
 <script src="mc-push.js"></script>
@@ -306,6 +311,9 @@ body{background:var(--body-bg);color:var(--text);font-family:var(--font-ui);min-
 
   document.getElementById('wsReport').addEventListener('click', function () {
     if (window.MC_REPORT) MC_REPORT.open();
+  });
+  document.getElementById('wsAuto').addEventListener('click', function () {
+    if (window.MC_AUTO) MC_AUTO.openLog();
   });
   var diagRow = document.getElementById('wsDiag');
   if (!window.MC_ACCOUNT) diagRow.hidden = true;
