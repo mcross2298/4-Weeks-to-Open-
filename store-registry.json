@@ -388,6 +388,13 @@
       "export": false,
       "note": "VOC-C2: dedup guard (keyed by mc_activity.last.ts) so the \"Session saved\" toast fires once per departure, not once per re-render. Tab-scoped bookkeeping, not user data."
     },
+    "mc_usage_v1": {
+      "owner": "mc-setlog.js",
+      "storage": "local",
+      "sync": "dictByTs",
+      "export": true,
+      "note": "Friction in the gym (autonomy-exec-roadmap.md Part 2): per phone and week, seconds to the first set and taps per set. Each phone writes only its own key, so dictByTs never has two writers. Counts only, never which screen."
+    },
     "mc_auto_v1": {
       "owner": "mc-auto.js",
       "storage": "local",

@@ -56,6 +56,52 @@
   // Unique id for this page-load session; groups all sets into one session row.
   var SESSION_ID = 'sess-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 
+  // ---- friction in the gym (autonomy-exec-roadmap.md Part 2) ---------------
+  // The 12-month measure the owner chose: seconds from opening a workout to
+  // its first ticked set, and taps per logged set (apart for a set ticked with
+  // the suggestion unchanged, the one-tap case). Taps are counted in memory
+  // and written once per tick, so a rest's runtime counters don't move. Only
+  // whole seconds and counts are kept, per phone and week, never which
+  // screen or which lift. mc-usage.js reads it on Stats.
+  var USAGE_KEY = 'mc_usage_v1', USAGE_T0 = Date.now(), usageTaps = 0, USAGE_KEEP_MS = 400 * 864e5;
+  try { document.addEventListener('pointerdown', function () { usageTaps++; }, true); } catch (e) {}
+  function usageMonday(t) {
+    var d = new Date(t); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    var L = _mcLog(); return (L && L.dayKey) ? L.dayKey(d) : d.toISOString().slice(0, 10);
+  }
+  function sessionStarted() {
+    var store = st(), today = dayStamp(), hit = false;
+    Object.keys(store).forEach(function (k) {
+      if (hit || k.indexOf(PID + '|') !== 0) return;
+      var sess = (store[k] || [])[0];
+      if (sess && sess.d === today && sess.sets && Object.keys(sess.sets).length) hit = true;
+    });
+    return hit;
+  }
+  function usageRecord(first, ghost) {
+    try {
+      var dev = localStorage.getItem('mc_device_id') || 'this-device', now = Date.now();
+      var all = JSON.parse(localStorage.getItem(USAGE_KEY) || '{}');
+      if (!all || typeof all !== 'object' || Array.isArray(all)) all = {};
+      var me = all[dev] && typeof all[dev] === 'object' ? all[dev] : {};
+      var weeks = me.weeks && typeof me.weeks === 'object' ? me.weeks : {};
+      var mk = usageMonday(now);
+      var w = weeks[mk] || { sessions: 0, firstSetSecs: [], taps: 0, sets: 0, ghostSets: 0, ghostTaps: 0 };
+      if (first) {
+        w.sessions++;
+        w.firstSetSecs = (w.firstSetSecs || []).concat(Math.round((now - USAGE_T0) / 1000)).slice(-60);
+      }
+      w.sets++; w.taps += usageTaps;
+      if (ghost) { w.ghostSets++; w.ghostTaps += usageTaps; }
+      usageTaps = 0;
+      weeks[mk] = w;
+      var cut = usageMonday(now - USAGE_KEEP_MS);
+      Object.keys(weeks).forEach(function (k) { if (k < cut) delete weeks[k]; });
+      all[dev] = { ts: now, weeks: weeks };
+      localStorage.setItem(USAGE_KEY, JSON.stringify(all));
+    } catch (e) {}
+  }
+
   // A-9: PR-check local high-water mark. getMaxWeight() was called before
   // EVERY checked set to learn the historical max for that exercise — a real
   // network round trip on the hottest path in the app, to answer a question
@@ -1703,7 +1749,11 @@
     // silently erased an answer the athlete had already given.
     var rpeVal = storedEffort(exId, sn);
     var pr = row.classList.contains('mcl-row-amrap') ? null : prCheck(exId, sn, wVal);
+    var usageFirst = !sessionStarted();
+    var usageIn = [w, rEl].filter(Boolean);
+    var usageGhost = usageIn.length > 0 && usageIn.every(function (inp) { return !!inp.dataset.ghost; });
     save(exId, sn, wVal, rVal, rpeVal, displayNameOf(card), swapFromOf(card), pr);
+    usageRecord(usageFirst, usageGhost);
     // Now committed for real — checking always solidifies a ghosted
     // suggestion (typing is not required), and the pending draft is
     // superseded by the real entry mc_setlog_v1 now holds.
