@@ -93,11 +93,11 @@
       '.mcgs-overlay.open{display:flex;}' +
       '.mcgs-bar{display:flex;align-items:center;gap:10px;padding:14px 16px;' +
         'padding-top:calc(14px + env(safe-area-inset-top));border-bottom:1px solid rgba(255,255,255,0.08);}' +
-      '.mcgs-input{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);' +
+      '.mcgs-input{flex:1;min-width:0;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);' +
         'border-radius:12px;padding:12px 14px;color:#ede7d9;font-size:16px;font-weight:600;outline:none;' +
         'font-family:inherit;}' +
       '.mcgs-input::placeholder{color:#59534b;}' +
-      '.mcgs-close{flex-shrink:0;width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.06);' +
+      '.mcgs-close{flex-shrink:0;width:48px;height:48px;border-radius:10px;background:rgba(255,255,255,0.06);' +
         'border:1px solid rgba(255,255,255,0.1);color:#ede7d9;font-size:16px;display:flex;' +
         'align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
       '.mcgs-results{flex:1;overflow-y:auto;padding:6px 10px calc(20px + env(safe-area-inset-bottom));}' +

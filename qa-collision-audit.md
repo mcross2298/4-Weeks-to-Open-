@@ -266,3 +266,17 @@ measured. **Scope:** `tools/check-deploy-artifact.js`. **Phases:** one.
 retried with backoff and, if it persists, reported as "could not be verified
 absent" (still a failure, worded as one). Check: `tools/test-check-deploy-artifact.js`
 in `verify.yml`.
+
+## Cycle 6 (2026-W48): the search overlay's Close button left the screen at 320
+
+Found by the weekly live QA run, against a local `main` (the agent cannot reach
+the live host). **Objective:** every way out of an overlay is on screen and at
+least 48px at 320 and 390. **Scope:** `mc-global-search.js`. **Phases:** one.
+
+| Defect | Reach | Root cause | PR |
+|---|---|---|---|
+| At 320 wide, the global search's ✕ Close sat at 309–345px, mostly off a 320px screen, so a finger could not reach it. On an installed iPhone there is no Back, so the overlay had no other exit. At 390 it was on screen but 36×36. | Home's search button, on every phone 320–344px wide | `.mcgs-input` is `flex:1` with no `min-width:0`, so the input kept its intrinsic width and pushed Close past the edge. Close was sized at 36px. | `claude/live-qa-search-close-320` |
+
+**Fix.** `min-width:0` on the input, and Close is 48×48. Check: a new pass in
+`tools/check-tap-intent.js` opens the search at 390 and 320, hit-tests Close,
+and taps it.

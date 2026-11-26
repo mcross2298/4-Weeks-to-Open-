@@ -423,6 +423,27 @@ const check = (ok, msg) => { if (ok) { passed++; console.log('  ✓ ' + msg); } 
     await ctx.close();
   }
 
+  // Live QA 2026-W48: the global search's input is flex:1 with no
+  // min-width:0, so it kept its intrinsic width and pushed ✕ Close past the
+  // right edge at 320 (309-345px of a 320px screen). On an installed iPhone
+  // there is no Back, so that sliver was the only way out of the overlay.
+  for (const vp of [{ width: 390, height: 844 }, { width: 320, height: 568 }]) {
+    const { ctx, p } = await open('dashboard.html', vp);
+    await p.evaluate(() => window.MC_GLOBAL_SEARCH && MC_GLOBAL_SEARCH.open()); await p.waitForTimeout(500);
+    const r = await p.evaluate(() => {
+      const ov = document.querySelector('.mcgs-overlay.open'), c = document.getElementById('mcgsClose');
+      if (!ov || !c) return null;
+      const b = c.getBoundingClientRect(), hit = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+      return { inside: b.left >= 0 && b.right <= innerWidth, hit: !!hit && (hit === c || c.contains(hit)),
+        w: Math.round(b.width), h: Math.round(b.height), overflow: ov.scrollWidth - innerWidth };
+    });
+    let closed = false;
+    if (r && r.hit) { await p.locator('#mcgsClose').tap(); await p.waitForTimeout(400); closed = !(await p.locator('.mcgs-overlay.open').count()); }
+    check(!!r && r.inside && r.hit && r.w >= 48 && r.h >= 48 && r.overflow <= 0 && closed,
+      `global search @${vp.width}x${vp.height}: ✕ Close is on screen, 48px, and closes it — ${JSON.stringify(r)} closed=${closed}`);
+    await ctx.close();
+  }
+
   await browser.close();
   console.log(`\n${passed + failed} checks: ${passed} passed, ${failed} failed`);
   process.exit(failed ? 1 : 0);
